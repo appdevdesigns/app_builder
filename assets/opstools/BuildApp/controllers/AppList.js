@@ -1,6 +1,7 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/models/ABApplication.js',
 	'opstools/BuildApp/views/AppList/AppList.ejs',
 	function () {
         System.import('appdev').then(function () {
@@ -24,6 +25,9 @@ steal(
 
 
 							this.dataSource = this.options.dataSource; // AD.models.Projects;
+
+                            this.Model = AD.Model.get('opstools.BuildApp.ABApplication');
+							this.data = [];
 
 							this.initDOM();
 
@@ -52,6 +56,7 @@ steal(
 							// Application list
 							var appListControl = {
 								id: self.webixUiId.appListRow,
+								autoheight: true,
 								rows: [
 									{
 										view: "toolbar",
@@ -69,6 +74,7 @@ steal(
 									{
 										id: self.webixUiId.appList,
 										view: "list",
+										minHeight: 227,
 										autoheight: true,
 										template: "<div style='position: relative;' class='ab-app-item'>" +
 										"<div style='width: 95%; display: inline-block;'>" +
@@ -86,10 +92,6 @@ steal(
 										select: false,
 										ready: function () {
 											webix.extend(this, webix.OverlayBox);
-
-											if (!this.count()) { //if no data is available
-												this.showOverlay("There is no application data");
-											}
 										},
 										onClick: {
 											"ab-app-item": function (e, id, trg) {
@@ -126,10 +128,10 @@ steal(
 									select: false,
 									on: {
 										'onItemClick': function (timestamp, e, trg) {
+											var selectedApp = $$(self.webixUiId.appList).getSelectedItem();
+
 											switch (trg.textContent) {
 												case 'Edit':
-													var selectedApp = $$(self.webixUiId.appList).getSelectedItem();
-
 													// Popuplate data to form
 													for (var key in selectedApp) {
 														if ($$(self.webixUiId.appListForm).elements[key])
@@ -139,10 +141,53 @@ steal(
 													$$(self.webixUiId.appListForm).show();
 													break;
 												case 'Delete':
-													var selectedAppId = $$(self.webixUiId.appList).getSelectedId()
-													// $$(self.webixUiId.appList).showProgress({ type: "icon" });
-													webix.message("Delete row: " + selectedAppId);
-													self.resetState();
+													// TODO : Get from translation
+													var deleteConfirmTitle = "Delete application",
+														deleteConfirmMessage = "Do you want to delete <b>{0}</b>?".replace('{0}', selectedApp.name),
+														yes = "Yes",
+														no = "No";
+
+													webix.confirm({
+														title: deleteConfirmTitle,
+														ok: yes,
+														cancel: no,
+														text: deleteConfirmMessage,
+														callback: function (result) {
+															if (result) {
+																// Delete application data
+																$$(self.webixUiId.appList).showProgress({ type: "icon" });
+																self.Model.destroy(selectedApp.id)
+																	.fail(function (err) {
+																		$$(self.webixUiId.appList).hideProgress();
+
+																		webix.message({
+																			type: "error",
+																			text: "System could not delete <b>{0}</b>.".replace("{0}", selectedApp.name)
+																		});
+
+																		AD.error.log('App Builder : Error delete application data', { error: err });
+																	})
+																	.then(function (result) {
+																		self.data.forEach(function (item, index, list) {
+																			if (item && item.id === result.id)
+																				self.data.splice(index, 1);
+																		});
+
+																		self.refreshList();
+
+																		$$(self.webixUiId.appList).hideProgress();
+
+																		webix.message({
+																			type: "success",
+																			text: "<b>" + selectedApp.name + "</b> is deleted."
+																		});
+																	});
+															}
+
+															self.resetState();
+														}
+													});
+
 													break;
 											}
 
@@ -163,16 +208,83 @@ steal(
 									{
 										margin: 5, cols: [
 											{
+												view: "button", value: "Save", type: "form", click: function () {
+													var selectedId = $$(self.webixUiId.appList).getSelectedId();
+
+													var updateData = {};
+
+													for (var key in $$(self.webixUiId.appListForm).elements) {
+														updateData[key] = $$(self.webixUiId.appListForm).elements[key].getValue();
+													}
+
+													$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
+													if (selectedId) { // Update application data
+														self.Model.update(selectedId, updateData)
+															.fail(function (err) {
+																$$(self.webixUiId.appListForm).hideProgress();
+
+																webix.message({
+																	type: "error",
+																	text: "System could not update <b>" + result.name + "</b>." // TODO : translation
+																});
+
+																AD.error.log('App Builder : Error update application data', { error: err });
+
+															})
+															.then(function (result) {
+																var existApp = self.data.filter(function (item, index, list) {
+																	return item.id === result.id;
+																})[0];
+
+																for (var key in result) {
+																	existApp.attr(key, result[key]);
+																}
+																self.refreshList();
+
+																$$(self.webixUiId.appListForm).hideProgress();
+																$$(self.webixUiId.appListRow).show();
+
+																webix.message({
+																	type: "success",
+																	text: "<b>" + result.name + "</b> is updated." // TODO : translation
+																});
+
+															});
+													} else { // Create application data
+														self.Model.create(updateData)
+															.fail(function (err) {
+																$$(self.webixUiId.appListForm).hideProgress();
+
+																webix.message({
+																	type: "error",
+																	text: "System could not create <b>" + result.name + "</b>." // TODO : translation
+																});
+
+																AD.error.log('App Builder : Error create application data', { error: err });
+															})
+															.then(function (result) {
+																self.data.push(result);
+																self.refreshList();
+
+																$$(self.webixUiId.appListForm).hideProgress();
+																$$(self.webixUiId.appListRow).show();
+
+																webix.message({
+																	type: "success",
+																	text: "<b>" + result.name + "</b> is created." // TODO : translation
+																});
+
+															});
+													}
+												}
+											},
+											{
 												view: "button", value: "Cancel", click: function () {
 													self.resetState();
 													$$(self.webixUiId.appListRow).show();
 												}
-											},
-											{
-												view: "button", value: "Save", type: "form", click: function () {
-													$$(self.webixUiId.appListForm).save();
-												}
 											}
+
 										]
 									}
 								]
@@ -191,17 +303,28 @@ steal(
 
 							// Define loading cursor
 							webix.extend($$(self.webixUiId.appList), webix.ProgressBar);
+							webix.extend($$(self.webixUiId.appListForm), webix.ProgressBar);
 						},
 
 						loadData: function () {
 							var self = this;
 
-							// MOCK : application data
+							// Get applications data from the server
 							$$(self.webixUiId.appList).showProgress({ type: "icon" });
-							$$(self.webixUiId.appList).parse([
-								{ id: 1, name: "Sample 1", description: 'This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description This is sample 1 description' },
-								{ id: 2, name: "Sample 2", description: 'This is sample 2 description' }
-							]);
+							self.Model.findAll()
+								.fail(function (err) {
+									$$(self.webixUiId.appList).hideProgress();
+									webix.message({
+										type: "error",
+										text: err
+									});
+                                    AD.error.log('App Builder : Error loading application data', { error: err });
+                                })
+								.then(function (data) {
+									self.data = data;
+
+									self.refreshList();
+								});
 
 						},
 
@@ -210,6 +333,20 @@ steal(
 
 							$$(self.webixUiId.appList).unselectAll();
 							$$(self.webixUiId.appListForm).clear();
+						},
+
+						refreshList: function () {
+							var self = this;
+
+							$$(self.webixUiId.appList).clearAll();
+							$$(self.webixUiId.appList).parse(self.data.attr());
+
+							if (!$$(self.webixUiId.appList).count()) //if no data is available
+								$$(self.webixUiId.appList).showOverlay("There is no application data"); // TODO: translate
+							else
+								$$(self.webixUiId.appList).hideOverlay();
+
+							$$(self.webixUiId.appList).refresh();
 						},
 
 						resize: function (height) {

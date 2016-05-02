@@ -17,9 +17,24 @@
 	text-align: right;
 }
 
+/* Webbix message */
+.webix_success {
+  background-color: #BFF2BF;	
+}
+.webix_success div {
+  background-color: #BFF2BF;
+  border: 1px solid #007A00;
+  color: #000;
+}
+
+/* Application list */
 .ab-app-list {
 	min-height: 300px;
 	padding: 40px 100px;
+}
+.ab-app-list .webix_selected {
+	color: #000;
+	background-color: #fff;
 }
 .ab-app-list-name {
 	font-weight: bold;
