@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "role":1,
+    "language_code":"en",
+    "role_label": "TestRole",
+    "role_description": "A sample role just for testing purposes.",
+    "updatedAt": "2015-05-20 15:06:44",
+    "createdAt": "2015-05-19 15:37:39"
+  }
+]

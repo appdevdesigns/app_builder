@@ -1,0 +1,19 @@
+language: node_js
+node_js:
+- "0.12"
+
+sudo: false
+
+before_script:
+- npm install -g  balderdashy/sails appdevdesigns/appdev-cli#develop
+- cd /tmp
+- chmod +x /home/travis/build/appdevdesigns/app_builder/test/setup/install.sh
+- /home/travis/build/appdevdesigns/app_builder/test/setup/install.sh
+- cd ad-test/node_modules
+- mv /home/travis/build/appdevdesigns/app_builder .
+- cd app_builder
+- npm install
+
+script:
+- npm test
+ 

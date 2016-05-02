@@ -1,0 +1,31 @@
+.ab-main-container {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.pointer{
+	cursor: pointer;
+}
+.left{
+	text-align: left;
+}
+.center{
+	text-align: center;
+}
+.right{
+	text-align: right;
+}
+
+.ab-app-list {
+	min-height: 300px;
+	padding: 40px 100px;
+}
+.ab-app-list-name {
+	font-weight: bold;
+	font-size: large;
+}
+.ab-app-list-description {
+	color: darkgrey;
+	font-size: small;
+}
