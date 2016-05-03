@@ -2,7 +2,6 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABApplication.js',
-	'opstools/BuildApp/views/AppList/AppList.ejs',
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -16,7 +15,7 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								templateDOM: '/opstools/BuildApp/views/AppList/AppList.ejs',
+								selectedAppEvent: 'AB_Application.Selected'
 							}, options);
 							this.options = options;
 
@@ -29,16 +28,10 @@ steal(
                             this.Model = AD.Model.get('opstools.BuildApp.ABApplication');
 							this.data = [];
 
-							this.initDOM();
-
 							webix.ready(function () {
 								self.initWebixUI();
 								self.loadData();
 							});
-						},
-
-						initDOM: function () {
-							this.element.html(can.view(this.options.templateDOM, {}));
 						},
 
 						initWebixUI: function () {
@@ -90,15 +83,15 @@ steal(
 											iconGear: "<span class='webix_icon fa-cog'></span>"
 										},
 										select: false,
-										ready: function () {
-											webix.extend(this, webix.OverlayBox);
-										},
 										onClick: {
 											"ab-app-item": function (e, id, trg) {
+												// Trigger select app event
+												self.element.trigger(self.options.selectedAppEvent, id);
 
 												return false; //here it blocks default behavior
 											},
 											"ab-edit-app": function (e, id, trg) {
+												// Show menu
 												$$(self.webixUiId.appListMenu).show(trg);
 												this.select(id);
 
@@ -118,19 +111,19 @@ steal(
 								body: {
 									view: "list",
 									data: [
-										{ command: "Edit" },
-										{ command: "Delete" }
+										{ command: "Edit", icon: "fa-pencil-square-o" },
+										{ command: "Delete", icon: "fa-trash" }
 									],
 									datatype: "json",
 
-									template: "#command#",
+									template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
 									autoheight: true,
 									select: false,
 									on: {
 										'onItemClick': function (timestamp, e, trg) {
 											var selectedApp = $$(self.webixUiId.appList).getSelectedItem();
 
-											switch (trg.textContent) {
+											switch (trg.textContent.trim()) {
 												case 'Edit':
 													// Popuplate data to form
 													for (var key in selectedApp) {
@@ -203,12 +196,16 @@ steal(
 								id: self.webixUiId.appListForm,
 								scroll: false,
 								elements: [
-									{ view: "text", label: "Name", id: "name", name: "name", placeholder: "Application name", labelWidth: 100 },
+									{ view: "text", label: "Name", id: "name", name: "name", required: true, placeholder: "Application name", labelWidth: 100 },
 									{ view: "textarea", label: "Description", id: "description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },
 									{
 										margin: 5, cols: [
+											{ fillspace: true },
 											{
-												view: "button", value: "Save", type: "form", click: function () {
+												view: "button", label: "Save", type: "form", width: 100, click: function () {
+													if (!$$(self.webixUiId.appListForm).validate())
+														return false;
+
 													var selectedId = $$(self.webixUiId.appList).getSelectedId();
 
 													var updateData = {};
@@ -279,7 +276,7 @@ steal(
 												}
 											},
 											{
-												view: "button", value: "Cancel", click: function () {
+												view: "button", value: "Cancel", width: 100, click: function () {
 													self.resetState();
 													$$(self.webixUiId.appListRow).show();
 												}
@@ -292,7 +289,7 @@ steal(
 
 							// Application multi-views
 							webix.ui({
-								container: self.element.find('.ab-app-list')[0],
+								container: self.element[0],
 								id: self.webixUiId.appView,
 								autoheight: true,
 								cells: [
@@ -303,6 +300,7 @@ steal(
 
 							// Define loading cursor
 							webix.extend($$(self.webixUiId.appList), webix.ProgressBar);
+							webix.extend($$(self.webixUiId.appList), webix.OverlayBox);
 							webix.extend($$(self.webixUiId.appListForm), webix.ProgressBar);
 						},
 
@@ -333,6 +331,7 @@ steal(
 
 							$$(self.webixUiId.appList).unselectAll();
 							$$(self.webixUiId.appListForm).clear();
+							$$(self.webixUiId.appListForm).clearValidation();
 						},
 
 						refreshList: function () {
@@ -352,7 +351,7 @@ steal(
 						resize: function (height) {
 							var self = this;
 
-							var appListDom = $(self.element.find('.ab-app-list')[0]);
+							var appListDom = $(self.element);
 
 							if (appListDom) {
 								var width = appListDom.parent().css('width');

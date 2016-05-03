@@ -4,16 +4,16 @@
 	height: 100%;
 }
 
-.pointer{
+.ab-main-container .pointer {
 	cursor: pointer;
 }
-.left{
+.ab-main-container .left {
 	text-align: left;
 }
-.center{
+.ab-main-container .center {
 	text-align: center;
 }
-.right{
+.ab-main-container .right {
 	text-align: right;
 }
 
@@ -25,6 +25,11 @@
   background-color: #BFF2BF;
   border: 1px solid #007A00;
   color: #000;
+}
+
+/* Webbix list */
+.ab-main-container .webix_selected {
+	background-color: #3498db;
 }
 
 /* Application list */
@@ -43,4 +48,9 @@
 .ab-app-list-description {
 	color: darkgrey;
 	font-size: small;
+}
+
+/* Application workspace */
+.ab-app-workspace {
+	min-height: 400px;
 }
