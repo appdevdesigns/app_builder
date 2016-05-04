@@ -1,8 +1,9 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/ModelWorkspace.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -14,6 +15,7 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
+								backToAppPageEvent: 'AB_Application.GoToAppPage'
 							}, options);
 							this.options = options;
 
@@ -24,57 +26,78 @@ steal(
 							this.dataSource = this.options.dataSource; // AD.models.Projects;
 							this.data = {};
 
-							self.initWebixUI();
+							this.webixUiId = {
+								appNameLabel: 'ab-name-label',
+
+								appWorkspaceView: 'ab-workspace-view',
+								appWorkspaceToolbar: 'ab-workspace-toolbar',
+								appWorkspaceMenu: 'ab-workspace-tabbar',
+								appWorkspace: 'ab-workspace',
+
+								modelView: 'ab-app-model-view',
+								interfaceView: 'ab-app-interface-view'
+							};
+
+							this.initControllers();
+							this.getUIDefinitions();
+
+							webix.ready(function () {
+								self.initWebixUI();
+							});
+						},
+
+						initControllers: function () {
+							var self = this;
+							self.controllers = {};
+
+							var ModelWorkspace = AD.Control.get('opstools.BuildApp.ModelWorkspace');
+
+							self.controllers.ModelWorkspace = new ModelWorkspace(self.element, { 'modelView': self.webixUiId.modelView });
+
+						},
+
+						getUIDefinitions: function () {
+							var self = this;
+							self.UIDefinitions = {};
+
+							self.UIDefinitions.modelWorkspace = self.controllers.ModelWorkspace.getUIDefinition();
 						},
 
 						initWebixUI: function () {
 							var self = this;
 
-							self.webixUiId = {
-								appWorkspace: 'ab-workspace',
-								menuTabbar: 'ab-workspace-tabbar',
-								modelView: 'ab-app-model-view',
-								interfaceView: 'ab-app-interface-view'
-							};
-
 							// Tab menu
 							webix.ui({
-								id: self.webixUiId.appWorkspace,
+								id: self.webixUiId.appWorkspaceView,
 								container: self.element[0],
 								autoheight: true,
 								autowidth: true,
 								rows: [
 									{
-										view: "tabbar", id: self.webixUiId.menutabbar, value: self.webixUiId.modelView, multiview: true, options: [
-											{ id: self.webixUiId.modelView, value: 'Model', width: 120, disabled: true },
+										view: "toolbar",
+										id: self.webixUiId.appWorkspaceToolbar,
+										autowidth: true,
+										cols: [
+											{ view: "label", id: self.webixUiId.appNameLabel, label: "Application name", width: 400, align: "left" },
+											{ fillspace: true },
+											{
+												view: "button", value: "Back to Application page", width: 250, align: "right", click: function () {
+													self.element.trigger(self.options.backToAppPageEvent, {});
+												}
+											}
+										]
+									},
+									{ height: 10 },
+									{
+										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.modelView, multiview: true, options: [
+											{ id: self.webixUiId.modelView, value: 'Model', width: 120 },
 											{ id: self.webixUiId.interfaceView, value: 'Interface', width: 120 }
 										]
 									},
 									{
+										id: self.webixUiId.appWorkspace,
 										cells: [
-											{
-												// Model view
-												id: self.webixUiId.modelView,
-												cols: [
-													{
-														view: "list",
-														width: 250,
-														select: true,
-														borderless: true,
-														editable: true,
-														editaction: "click",
-														data: [
-															{ id: 1, value: "Translate", submenu: ["English", "French", "German"] },
-															{ id: 2, value: "Post" },
-															{ id: 3, value: "Info" }
-														]
-													},
-													{ view: "resizer" },
-													{
-														view: "datatable"
-													}
-												]
-											},
+											self.UIDefinitions.modelWorkspace,
 											{
 												// Interface view
 												id: self.webixUiId.interfaceView,
@@ -86,31 +109,48 @@ steal(
 							});
 						},
 
-						setApplicationId: function (appId) {
-							this.data.appId = appId;
+						setApplication: function (app) {
+							var self = this;
+
+							self.data.app = app;
+
+							$$(self.webixUiId.appNameLabel).define('label', app.name);
+							$$(self.webixUiId.appNameLabel).refresh();
 						},
 
 						resize: function (height) {
 							var self = this;
 
-							var appWorkspaceDom = $(self.element);
+							var appWorkspaceDom = $(self.element[0]);
 
 							if (appWorkspaceDom) {
 								var width = appWorkspaceDom.parent().css('width');
 								if (width) {
 									width = parseInt(width.replace('px', ''));
 								}
-								appWorkspaceDom.width(width - 410);
+								appWorkspaceDom.width(width);
 
-								var computedHeight = height - 40;
-								if (appWorkspaceDom.css('min-height') < computedHeight)
-									appWorkspaceDom.height(computedHeight);
-								else
-									appWorkspaceDom.height(appWorkspaceDom.css('min-height'));
+								var computedHeight = height - 300;
+								var minHeight = parseInt(appWorkspaceDom.css('min-height').replace('px', ''));
+								var workspaceHeight = minHeight < computedHeight ? computedHeight : minHeight;
 
-								if (self.webixUiId && self.webixUiId.appWorkspace)
-									$$(self.webixUiId.appWorkspace).adjust();
+								appWorkspaceDom.height(workspaceHeight);
+
+								if (self.webixUiId) {
+									if (self.webixUiId.appWorkspaceView) {
+										$$(self.webixUiId.appWorkspaceView).define('height', height);
+										$$(self.webixUiId.appWorkspaceView).adjust();
+									}
+
+									if (self.webixUiId.appWorkspace) {
+										$$(self.webixUiId.appWorkspace).define('height', height - 100);
+										$$(self.webixUiId.appWorkspace).adjust();
+									}
+								}
+
 							}
+
+							self.controllers.ModelWorkspace.resize(height);
 						}
 
 					});

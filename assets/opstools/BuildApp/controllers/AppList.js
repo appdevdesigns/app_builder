@@ -50,6 +50,7 @@ steal(
 							var appListControl = {
 								id: self.webixUiId.appListRow,
 								autoheight: true,
+								autowidth: true,
 								rows: [
 									{
 										view: "toolbar",
@@ -68,13 +69,13 @@ steal(
 										id: self.webixUiId.appList,
 										view: "list",
 										minHeight: 227,
-										autoheight: true,
-										template: "<div style='position: relative;' class='ab-app-item'>" +
-										"<div style='width: 95%; display: inline-block;'>" +
+										autowidth: true,
+										template: "<div class='ab-app-list-item'>" +
+										"<div class='ab-app-list-info'>" +
 										"<div class='ab-app-list-name'>#name#</div>" +
 										"<div class='ab-app-list-description'>#description#</div>" +
 										"</div>" +
-										"<div style='position: absolute; top: 10px; right: 10px;' class='ab-edit-app'>" +
+										"<div class='ab-app-list-edit'>" +
 										"{common.iconGear}" +
 										"</div>" +
 										"</div>",
@@ -84,13 +85,16 @@ steal(
 										},
 										select: false,
 										onClick: {
-											"ab-app-item": function (e, id, trg) {
+											"ab-app-list-item": function (e, id, trg) {
+												this.select(id);
+												var selectedApp = $$(self.webixUiId.appList).getSelectedItem();
+
 												// Trigger select app event
-												self.element.trigger(self.options.selectedAppEvent, id);
+												self.element.trigger(self.options.selectedAppEvent, selectedApp);
 
 												return false; //here it blocks default behavior
 											},
-											"ab-edit-app": function (e, id, trg) {
+											"ab-app-list-edit": function (e, id, trg) {
 												// Show menu
 												$$(self.webixUiId.appListMenu).show(trg);
 												this.select(id);
@@ -359,6 +363,9 @@ steal(
 									width = parseInt(width.replace('px', ''));
 								}
 								appListDom.width(width - 410);
+
+								$$(self.webixUiId.appList).define('height', height - 140);
+								$$(self.webixUiId.appList).adjust();
 
 								var computedHeight = height - 140;
 								if (appListDom.css('min-height') < computedHeight)

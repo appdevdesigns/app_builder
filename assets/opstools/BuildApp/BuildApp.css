@@ -1,9 +1,12 @@
-.ab-main-container {
-	display: block;
-	width: 100%;
-	height: 100%;
+.op-stage {
+     overflow-y: hidden !important; 
 }
 
+.ab-main-container {
+	position: relative;
+	display: block;
+	width: 100%;
+}
 .ab-main-container .pointer {
 	cursor: pointer;
 }
@@ -41,6 +44,10 @@
 	color: #000;
 	background-color: #fff;
 }
+.ab-app-list-item {
+	position: relative;
+	height: 100%;
+}
 .ab-app-list-name {
 	font-weight: bold;
 	font-size: large;
@@ -49,8 +56,29 @@
 	color: darkgrey;
 	font-size: small;
 }
+.ab-app-list-info {
+	width: 95%;
+	display: inline-block;
+}
+.ab-app-list-edit {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+}
 
 /* Application workspace */
 .ab-app-workspace {
-	min-height: 400px;
+	min-height: 100px;
+}
+
+/* Model list */
+.ab-model-list-item {
+	position: relative;
+	height: 100%;
+}
+.ab-model-list-edit {
+	position: absolute;
+	top: 0px;
+	right: 5px;
+	display: none;
 }

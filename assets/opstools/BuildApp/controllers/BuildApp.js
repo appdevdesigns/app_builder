@@ -17,6 +17,7 @@ steal(
 					AD.Control.OpsTool.extend('BuildApp', {
 						CONST: {
 							APP_SELECTED: 'AB_Application.Selected',
+							GO_TO_APP_PAGE: 'AB_Application.GoToAppPage'
 						},
 
 						init: function (element, options) {
@@ -57,24 +58,33 @@ steal(
 								AppWorkspace = AD.Control.get('opstools.BuildApp.AppWorkspace');
 
                             this.controllers.AppList = new AppList(this.element.find(".ab-app-list"), { selectedAppEvent: this.CONST.APP_SELECTED });
-							this.controllers.AppWorkspace = new AppWorkspace(this.element.find(".ab-app-workspace"));
+							this.controllers.AppWorkspace = new AppWorkspace(this.element.find(".ab-app-workspace"), { backToAppPageEvent: this.CONST.GO_TO_APP_PAGE });
 						},
 
 						initEvents: function () {
 							var self = this;
 
-							self.controllers.AppList.element.on(self.CONST.APP_SELECTED, function (event, appId) {
+							self.controllers.AppList.element.on(self.CONST.APP_SELECTED, function (event, app) {
 								self.element.find(".ab-app-list").hide();
 
-								self.controllers.AppWorkspace.setApplicationId(appId);
+								self.controllers.AppWorkspace.setApplication(app);
 								self.element.find(".ab-app-workspace").show();
 								self.controllers.AppWorkspace.resize(self.data.height);
+							});
+
+							self.controllers.AppWorkspace.element.on(self.CONST.GO_TO_APP_PAGE, function (event) {
+								self.element.find(".ab-app-workspace").hide();
+								self.element.find(".ab-app-list").show();
+								self.controllers.AppList.resetState();
+								self.controllers.AppList.resize(self.data.height);
 							});
 						},
 
 						resize: function (data) {
 							this._super(data);
 							this.data.height = data.height;
+
+							$('.ab-main-container').height(data.height);
 
 							this.controllers.AppList.resize(data.height);
 							this.controllers.AppWorkspace.resize(data.height);
