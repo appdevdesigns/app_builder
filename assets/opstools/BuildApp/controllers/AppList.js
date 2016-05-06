@@ -129,13 +129,13 @@ steal(
 
 											switch (trg.textContent.trim()) {
 												case 'Edit':
+													$$(self.webixUiId.appListForm).show();
+
 													// Popuplate data to form
 													for (var key in selectedApp) {
 														if ($$(self.webixUiId.appListForm).elements[key])
 															$$(self.webixUiId.appListForm).elements[key].setValue(selectedApp[key]);
 													}
-
-													$$(self.webixUiId.appListForm).show();
 													break;
 												case 'Delete':
 													// TODO : Get from translation
@@ -200,8 +200,8 @@ steal(
 								id: self.webixUiId.appListForm,
 								scroll: false,
 								elements: [
-									{ view: "text", label: "Name", id: "name", name: "name", required: true, placeholder: "Application name", labelWidth: 100 },
-									{ view: "textarea", label: "Description", id: "description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },
+									{ view: "text", label: "Name", name: "name", required: true, placeholder: "Application name", labelWidth: 100 },
+									{ view: "textarea", label: "Description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },
 									{
 										margin: 5, cols: [
 											{ fillspace: true },
@@ -289,7 +289,7 @@ steal(
 										]
 									}
 								]
-							}
+							};
 
 							// Application multi-views
 							webix.ui({
@@ -302,7 +302,7 @@ steal(
 								]
 							});
 
-							// Define loading cursor
+							// Define loading cursor & overlay
 							webix.extend($$(self.webixUiId.appList), webix.ProgressBar);
 							webix.extend($$(self.webixUiId.appList), webix.OverlayBox);
 							webix.extend($$(self.webixUiId.appListForm), webix.ProgressBar);

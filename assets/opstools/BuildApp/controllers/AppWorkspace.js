@@ -81,7 +81,7 @@ steal(
 											{ view: "label", id: self.webixUiId.appNameLabel, label: "Application name", width: 400, align: "left" },
 											{ fillspace: true },
 											{
-												view: "button", value: "Back to Application page", width: 250, align: "right", click: function () {
+												view: "button", value: "Back to Applications page", width: 250, align: "right", click: function () {
 													self.element.trigger(self.options.backToAppPageEvent, {});
 												}
 											}
@@ -116,6 +116,8 @@ steal(
 
 							$$(self.webixUiId.appNameLabel).define('label', app.name);
 							$$(self.webixUiId.appNameLabel).refresh();
+
+							self.controllers.ModelWorkspace.setModelList(app.id);
 						},
 
 						resize: function (height) {

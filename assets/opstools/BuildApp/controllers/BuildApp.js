@@ -3,6 +3,7 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/BuildApp.css',
 	'opstools/BuildApp/views/BuildApp/BuildApp.ejs',
+	'opstools/BuildApp/controllers/CustomWebixControls.js',
 	'opstools/BuildApp/controllers/AppList.js',
 	'opstools/BuildApp/controllers/AppWorkspace.js',
 	function () {
@@ -54,10 +55,12 @@ steal(
 
 							this.controllers = {};  // hold my controller references here.
 
-							var AppList = AD.Control.get('opstools.BuildApp.AppList'),
+							var CustomWebixControls = AD.Control.get('opstools.BuildApp.CustomWebixControls'),
+								AppList = AD.Control.get('opstools.BuildApp.AppList'),
 								AppWorkspace = AD.Control.get('opstools.BuildApp.AppWorkspace');
 
-                            this.controllers.AppList = new AppList(this.element.find(".ab-app-list"), { selectedAppEvent: this.CONST.APP_SELECTED });
+							this.controllers.CustomWebixControls = new CustomWebixControls();
+							this.controllers.AppList = new AppList(this.element.find(".ab-app-list"), { selectedAppEvent: this.CONST.APP_SELECTED });
 							this.controllers.AppWorkspace = new AppWorkspace(this.element.find(".ab-app-workspace"), { backToAppPageEvent: this.CONST.GO_TO_APP_PAGE });
 						},
 
