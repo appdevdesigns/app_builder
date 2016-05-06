@@ -1,7 +1,7 @@
 
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/ModelWorkspace.js',
+	'opstools/BuildApp/controllers/ModelPage.js',
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -50,9 +50,9 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var ModelWorkspace = AD.Control.get('opstools.BuildApp.ModelWorkspace');
+							var ModelPage = AD.Control.get('opstools.BuildApp.ModelPage');
 
-							self.controllers.ModelWorkspace = new ModelWorkspace(self.element, { 'modelView': self.webixUiId.modelView });
+							self.controllers.ModelPage = new ModelPage(self.element, { 'modelView': self.webixUiId.modelView });
 
 						},
 
@@ -60,7 +60,7 @@ steal(
 							var self = this;
 							self.UIDefinitions = {};
 
-							self.UIDefinitions.modelWorkspace = self.controllers.ModelWorkspace.getUIDefinition();
+							self.UIDefinitions.modelList = self.controllers.ModelPage.getUIDefinition();
 						},
 
 						initWebixUI: function () {
@@ -97,7 +97,7 @@ steal(
 									{
 										id: self.webixUiId.appWorkspace,
 										cells: [
-											self.UIDefinitions.modelWorkspace,
+											self.UIDefinitions.modelList,
 											{
 												// Interface view
 												id: self.webixUiId.interfaceView,
@@ -117,7 +117,7 @@ steal(
 							$$(self.webixUiId.appNameLabel).define('label', app.name);
 							$$(self.webixUiId.appNameLabel).refresh();
 
-							self.controllers.ModelWorkspace.setModelList(app.id);
+							self.controllers.ModelPage.setAppId(app.id);
 						},
 
 						resize: function (height) {
@@ -152,7 +152,7 @@ steal(
 
 							}
 
-							self.controllers.ModelWorkspace.resize(height);
+							self.controllers.ModelPage.resize(height);
 						}
 
 					});

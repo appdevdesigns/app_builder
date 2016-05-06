@@ -42,6 +42,7 @@ steal(
 								appListToolbar: 'ab-app-list-toolbar',
 								appList: 'ab-app-list',
 								appListMenu: 'ab-app-list-menu',
+								appListFormView: 'ab-app-list-form-view',
 								appListForm: 'ab-app-list-form',
 								appListLoading: 'ab-app-list-loading'
 							};
@@ -61,7 +62,7 @@ steal(
 												view: "button", value: "Add new application", width: 200,
 												click: function () {
 													self.resetState();
-													$$(self.webixUiId.appListForm).show();
+													$$(self.webixUiId.appListFormView).show();
 												}
 											}]
 									},
@@ -129,7 +130,7 @@ steal(
 
 											switch (trg.textContent.trim()) {
 												case 'Edit':
-													$$(self.webixUiId.appListForm).show();
+													$$(self.webixUiId.appListFormView).show();
 
 													// Popuplate data to form
 													for (var key in selectedApp) {
@@ -196,96 +197,105 @@ steal(
 
 							// Application form
 							var appFormControl = {
-								view: "form",
-								id: self.webixUiId.appListForm,
-								scroll: false,
-								elements: [
-									{ view: "text", label: "Name", name: "name", required: true, placeholder: "Application name", labelWidth: 100 },
-									{ view: "textarea", label: "Description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },
+								id: self.webixUiId.appListFormView,
+								rows: [
 									{
-										margin: 5, cols: [
-											{ fillspace: true },
+										view: "toolbar",
+										cols: [{ view: "label", label: "Application Info", fillspace: true }]
+									},
+									{
+										view: "form",
+										id: self.webixUiId.appListForm,
+										scroll: false,
+										elements: [
+											{ view: "text", label: "Name", name: "name", required: true, placeholder: "Application name", labelWidth: 100 },
+											{ view: "textarea", label: "Description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },
 											{
-												view: "button", label: "Save", type: "form", width: 100, click: function () {
-													if (!$$(self.webixUiId.appListForm).validate())
-														return false;
+												margin: 5, cols: [
+													{ fillspace: true },
+													{
+														view: "button", label: "Save", type: "form", width: 100, click: function () {
+															if (!$$(self.webixUiId.appListForm).validate())
+																return false;
 
-													var selectedId = $$(self.webixUiId.appList).getSelectedId();
+															var selectedId = $$(self.webixUiId.appList).getSelectedId();
 
-													var updateData = {};
+															var updateData = {};
 
-													for (var key in $$(self.webixUiId.appListForm).elements) {
-														updateData[key] = $$(self.webixUiId.appListForm).elements[key].getValue();
+															for (var key in $$(self.webixUiId.appListForm).elements) {
+																updateData[key] = $$(self.webixUiId.appListForm).elements[key].getValue();
+															}
+
+															$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
+															if (selectedId) { // Update application data
+																self.Model.update(selectedId, updateData)
+																	.fail(function (err) {
+																		$$(self.webixUiId.appListForm).hideProgress();
+
+																		webix.message({
+																			type: "error",
+																			text: "System could not update <b>" + result.name + "</b>." // TODO : translation
+																		});
+
+																		AD.error.log('App Builder : Error update application data', { error: err });
+
+																	})
+																	.then(function (result) {
+																		var existApp = self.data.filter(function (item, index, list) {
+																			return item.id === result.id;
+																		})[0];
+
+																		for (var key in result) {
+																			existApp.attr(key, result[key]);
+																		}
+																		self.refreshList();
+
+																		$$(self.webixUiId.appListForm).hideProgress();
+																		$$(self.webixUiId.appListRow).show();
+
+																		webix.message({
+																			type: "success",
+																			text: "<b>" + result.name + "</b> is updated." // TODO : translation
+																		});
+
+																	});
+															} else { // Create application data
+																self.Model.create(updateData)
+																	.fail(function (err) {
+																		$$(self.webixUiId.appListForm).hideProgress();
+
+																		webix.message({
+																			type: "error",
+																			text: "System could not create <b>" + result.name + "</b>." // TODO : translation
+																		});
+
+																		AD.error.log('App Builder : Error create application data', { error: err });
+																	})
+																	.then(function (result) {
+																		self.data.push(result);
+																		self.refreshList();
+
+																		$$(self.webixUiId.appListForm).hideProgress();
+																		$$(self.webixUiId.appListRow).show();
+
+																		webix.message({
+																			type: "success",
+																			text: "<b>" + result.name + "</b> is created." // TODO : translation
+																		});
+
+																	});
+															}
+														}
+													},
+													{
+														view: "button", value: "Cancel", width: 100, click: function () {
+															self.resetState();
+															$$(self.webixUiId.appListRow).show();
+														}
 													}
 
-													$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
-													if (selectedId) { // Update application data
-														self.Model.update(selectedId, updateData)
-															.fail(function (err) {
-																$$(self.webixUiId.appListForm).hideProgress();
-
-																webix.message({
-																	type: "error",
-																	text: "System could not update <b>" + result.name + "</b>." // TODO : translation
-																});
-
-																AD.error.log('App Builder : Error update application data', { error: err });
-
-															})
-															.then(function (result) {
-																var existApp = self.data.filter(function (item, index, list) {
-																	return item.id === result.id;
-																})[0];
-
-																for (var key in result) {
-																	existApp.attr(key, result[key]);
-																}
-																self.refreshList();
-
-																$$(self.webixUiId.appListForm).hideProgress();
-																$$(self.webixUiId.appListRow).show();
-
-																webix.message({
-																	type: "success",
-																	text: "<b>" + result.name + "</b> is updated." // TODO : translation
-																});
-
-															});
-													} else { // Create application data
-														self.Model.create(updateData)
-															.fail(function (err) {
-																$$(self.webixUiId.appListForm).hideProgress();
-
-																webix.message({
-																	type: "error",
-																	text: "System could not create <b>" + result.name + "</b>." // TODO : translation
-																});
-
-																AD.error.log('App Builder : Error create application data', { error: err });
-															})
-															.then(function (result) {
-																self.data.push(result);
-																self.refreshList();
-
-																$$(self.webixUiId.appListForm).hideProgress();
-																$$(self.webixUiId.appListRow).show();
-
-																webix.message({
-																	type: "success",
-																	text: "<b>" + result.name + "</b> is created." // TODO : translation
-																});
-
-															});
-													}
-												}
-											},
-											{
-												view: "button", value: "Cancel", width: 100, click: function () {
-													self.resetState();
-													$$(self.webixUiId.appListRow).show();
-												}
+												]
 											}
-
 										]
 									}
 								]
@@ -320,8 +330,8 @@ steal(
 										type: "error",
 										text: err
 									});
-                                    AD.error.log('App Builder : Error loading application data', { error: err });
-                                })
+									AD.error.log('App Builder : Error loading application data', { error: err });
+								})
 								.then(function (data) {
 									self.data = data;
 
