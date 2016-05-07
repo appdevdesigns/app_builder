@@ -83,6 +83,10 @@ steal(
 												// Show gear icon
 												$(this.getItemNode(id)).find('.ab-model-list-edit').show();
 											},
+											onAfterDelete: function (id) {
+												// Fire unselect event 
+												self.element.trigger(self.options.selectedModelEvent, null);
+											},
 											onBeforeEditStop: function (state, editor) {
 												// Validation - check duplicate
 												if (!self.rules.preventDuplicateName(state.value) && state.value != state.old) {

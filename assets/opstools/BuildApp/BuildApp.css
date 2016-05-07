@@ -48,6 +48,9 @@
 	position: relative;
 	height: 100%;
 }
+div[view_id='ab-app-list'] div.webix_list_item:hover, div[view_id='ab-model-list'] div.webix_list_item:hover {
+	background-color: #eee;	
+}
 .ab-app-list-name {
 	font-weight: bold;
 	font-size: large;

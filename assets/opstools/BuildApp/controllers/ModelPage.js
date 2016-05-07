@@ -79,8 +79,10 @@ steal(
 						resize: function (height) {
 							var self = this;
 
-							$$(self.options.modelView).define('height', height - 120);
-							$$(self.options.modelView).adjust();
+							if ($$(self.options.modelView)) {
+								$$(self.options.modelView).define('height', height - 120);
+								$$(self.options.modelView).adjust();
+							}
 						}
 
 

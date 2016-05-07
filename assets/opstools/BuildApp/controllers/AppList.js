@@ -198,6 +198,7 @@ steal(
 							// Application form
 							var appFormControl = {
 								id: self.webixUiId.appListFormView,
+								scroll: true,
 								rows: [
 									{
 										view: "toolbar",
@@ -206,7 +207,6 @@ steal(
 									{
 										view: "form",
 										id: self.webixUiId.appListForm,
-										scroll: false,
 										elements: [
 											{ view: "text", label: "Name", name: "name", required: true, placeholder: "Application name", labelWidth: 100 },
 											{ view: "textarea", label: "Description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },

@@ -33,12 +33,25 @@ steal(
 							var self = this;
 
 							self.data.definition = {
-								view: "datatable",
-								id: self.webixUiId.modelDatatable,
-								autoheight: true,
-								ready: function () {
-									webix.extend(this, webix.ProgressBar);
-								}
+								rows: [
+									{
+										view: 'toolbar',
+										cols: [
+											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120 },
+											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120 },
+											{ view: 'button', label: 'Apply sort', icon: "sort", type: "icon", width: 120 },
+											{ view: 'button', label: 'Add new column', icon: "plus", type: "icon", width: 150 }
+										]
+									},
+									{
+										view: "datatable",
+										id: self.webixUiId.modelDatatable,
+										autoheight: true,
+										ready: function () {
+											webix.extend(this, webix.ProgressBar);
+										}
+									}
+								]
 							};
 						},
 
@@ -49,39 +62,53 @@ steal(
 						setModelId: function (id) {
 							var self = this;
 
+							self.data.modelId = id;
+
 							if ($$(self.webixUiId.modelDatatable).showProgress)
 								$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
 
-							async.parallel([
-								function () {
-									// TODO : Get columns from server
-									var columns = [
-										{ id: "name", header: "Name", width: 100 },
-										{ id: "description", header: "Description" },
-										{ id: "addNew", header: "+", width: 50 }
-									];
+							// Clear columns & data
+							$$(self.webixUiId.modelDatatable).define('columns', []);
+							$$(self.webixUiId.modelDatatable).clearAll();
 
-									$$(self.webixUiId.modelDatatable).config.columns = columns;
-								},
-								function () {
-									// TODO : Get data from server
-									var data = [
-										{ name: 'Test 1', description: 'Description 1' },
-										{ name: 'Test 2', description: 'Description 2' },
-										{ name: 'Test 3', description: 'Description 3' }
-									];
+							if (self.data.modelId) {
+								async.parallel([
+									function () {
+										// TODO : Get columns from server
+										var columns = [
+											{ id: "name", header: "Name", width: 100 },
+											{ id: "description", header: "Description" }
+										];
 
-									$$(self.webixUiId.modelDatatable).clearAll();
-									$$(self.webixUiId.modelDatatable).parse(data);
-								}
-							], function () {
+										$$(self.webixUiId.modelDatatable).define('columns', columns);
+									},
+									function () {
+										// TODO : Get data from server
+										var data = [
+											{ name: 'Test 1', description: 'Description 1' },
+											{ name: 'Test 2', description: 'Description 2' },
+											{ name: 'Test 3', description: 'Description 3' }
+										];
+
+										$$(self.webixUiId.modelDatatable).parse(data);
+									}
+								], function () {
+									$$(self.webixUiId.modelDatatable).refreshColumns();
+									$$(self.webixUiId.modelDatatable).refresh();
+
+									if ($$(self.webixUiId.modelDatatable).hideProgress)
+										$$(self.webixUiId.modelDatatable).hideProgress();
+
+								});
+							}
+							else {
 								$$(self.webixUiId.modelDatatable).refreshColumns();
 								$$(self.webixUiId.modelDatatable).refresh();
 
 								if ($$(self.webixUiId.modelDatatable).hideProgress)
 									$$(self.webixUiId.modelDatatable).hideProgress();
+							}
 
-							});
 
 						}
 
