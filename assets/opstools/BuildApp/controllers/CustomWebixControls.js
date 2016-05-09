@@ -314,7 +314,7 @@ steal(
                                                 cells: [
                                                     {
                                                         id: "ab-new-none",
-                                                        template: "Choose field type..."
+                                                        rows: [{ view: "label", label: "Choose field type..." }]
                                                     },
                                                     {
                                                         id: "ab-new-singleText",
@@ -378,6 +378,11 @@ steal(
                                                 ]
                                             }
                                         ]
+                                    },
+                                    on: {
+                                        onHide: function () {
+                                            // TODO : Reset state
+                                        }
                                     }
                                 },
                             }, webix.ui.popup);
