@@ -32,6 +32,11 @@ steal(
 						initWebixUI: function () {
 							var self = this;
 
+							webix.ui({
+								id: 'add-fields-popup',
+								view: "add_fields_popup",
+							});
+
 							self.data.definition = {
 								rows: [
 									{
@@ -40,7 +45,7 @@ steal(
 											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120 },
 											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120 },
 											{ view: 'button', label: 'Apply sort', icon: "sort", type: "icon", width: 120 },
-											{ view: 'button', label: 'Add new column', icon: "plus", type: "icon", width: 150 }
+											{ view: 'button', label: 'Add new column', icon: "plus", type: "icon", width: 150, popup: 'add-fields-popup' }
 										]
 									},
 									{

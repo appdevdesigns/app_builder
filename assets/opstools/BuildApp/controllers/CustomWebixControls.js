@@ -1,43 +1,43 @@
 
 steal(
-	// List your Controller's dependencies here:
-	function () {
+    // List your Controller's dependencies here:
+    function () {
         System.import('appdev').then(function () {
-			steal.import('appdev/ad',
-				'appdev/control/control').then(function () {
+            steal.import('appdev/ad',
+                'appdev/control/control').then(function () {
 
-					// Namespacing conventions:
-					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-					AD.Control.extend('opstools.BuildApp.CustomWebixControls', {
-
-
-						init: function (element, options) {
-							var self = this;
-							options = AD.defaults({
-							}, options);
-							this.options = options;
-
-							// Call parent init
-							this._super(element, options);
+                    // Namespacing conventions:
+                    // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
+                    AD.Control.extend('opstools.BuildApp.CustomWebixControls', {
 
 
-							this.dataSource = this.options.dataSource; // AD.models.Projects;
+                        init: function (element, options) {
+                            var self = this;
+                            options = AD.defaults({
+                            }, options);
+                            this.options = options;
 
-							this.initWebixControls();
-						},
+                            // Call parent init
+                            this._super(element, options);
 
-						initWebixControls: function () {
-							// Webix list editable
-							webix.protoUI({
-								name: "editlist"
-							}, webix.EditAbility, webix.ui.list);
 
-							// Webix datatable filter
-							webix.protoUI({
-								name: "filter_popup",
-								$init: function (config) {
-									//functions executed on component initialization
-									this.fieldList = [];
+                            this.dataSource = this.options.dataSource; // AD.models.Projects;
+
+                            this.initWebixControls();
+                        },
+
+                        initWebixControls: function () {
+                            // Webix list editable
+                            webix.protoUI({
+                                name: "editlist"
+                            }, webix.EditAbility, webix.ui.list);
+
+                            // Webix datatable filter
+                            webix.protoUI({
+                                name: "filter_popup",
+                                $init: function (config) {
+                                    //functions executed on component initialization
+                                    this.fieldList = [];
                                     this.combineCondition = 'And';
                                 },
                                 defaults: {
@@ -106,8 +106,8 @@ steal(
 
                                                                 inputView = { view: "datepicker" };
 
-																if (columnConfig.format)
-																	inputView.format = columnConfig.format;
+                                                                if (columnConfig.format)
+                                                                    inputView.format = columnConfig.format;
 
                                                                 break;
                                                             case "number":
@@ -218,19 +218,19 @@ steal(
                                                     break;
                                                 // Date filter
                                                 case "is before":
-													if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                     condResult = objValue < cond.inputValue;
                                                     break;
                                                 case "is after":
-													if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                     condResult = objValue > cond.inputValue;
                                                     break;
                                                 case "is on or before":
-													if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                     condResult = objValue <= cond.inputValue;
                                                     break;
                                                 case "is on or after":
-													if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                     condResult = objValue >= cond.inputValue;
                                                     break;
                                                 // Number filter
@@ -271,12 +271,122 @@ steal(
                                     })
                                 }
                             }, webix.ui.popup);
-						}
+
+                            // Webix add new datable columns
+                            webix.protoUI({
+                                name: "add_fields_popup",
+                                $init: function (config) {
+                                    this.fieldList = [];
+                                    this.combineCondition = 'And';
+                                },
+                                defaults: {
+                                    height: 300,
+                                    ready: function () {
+                                        $$("ab-new-none").show();
+                                    },
+                                    body: {
+                                        width: 380,
+                                        rows: [
+                                            {
+                                                view: "menu",
+                                                data: [
+                                                    {
+                                                        value: "Choose field type...",
+                                                        submenu: [
+                                                            { view: 'button', value: 'Single line text', icon: 'font', type: 'icon', viewName: 'ab-new-singleText' },
+                                                            { view: 'button', value: 'Long text', icon: 'align-right', type: 'icon', viewName: 'ab-new-longText' },
+                                                            { view: 'button', value: 'Number', icon: 'slack', type: 'icon', viewName: 'ab-new-number' },
+                                                            { view: 'button', value: 'Date', icon: 'calendar', type: 'icon', viewName: 'ab-new-date' },
+                                                            { view: 'button', value: 'Checkbox', icon: 'check-square-o', type: 'icon', viewName: 'ab-new-boolean' },
+                                                            { view: 'button', value: 'Attachment', icon: 'file', type: 'icon', viewName: 'ab-new-attachment' },
+                                                        ]
+                                                    }
+                                                ],
+                                                on: {
+                                                    onMenuItemClick: function (id) {
+                                                        if (this.getMenuItem(id).viewName)
+                                                            $$(this.getMenuItem(id).viewName).show();
+                                                    }
+                                                }
+                                            },
+                                            { height: 10 },
+                                            {
+                                                cells: [
+                                                    {
+                                                        id: "ab-new-none",
+                                                        template: "Choose field type..."
+                                                    },
+                                                    {
+                                                        id: "ab-new-singleText",
+                                                        rows: [
+                                                            { view: "label", label: "<span class='webix_icon fa-font'></span>Single line text" },
+                                                            { view: "text", placeholder: "Default text" }
+                                                        ]
+                                                    },
+                                                    {
+                                                        id: "ab-new-longText",
+                                                        rows: [
+                                                            { view: "label", label: "<span class='webix_icon fa-align-right'></span>Long line text" },
+                                                            { view: "label", label: "A long text field that can span multiple lines." }
+                                                        ]
+                                                    },
+                                                    {
+                                                        id: "ab-new-number",
+                                                        rows: [
+                                                            { view: "label", label: "<span class='webix_icon fa-slack'></span>Number" },
+                                                            { view: "checkbox", labelRight: "Allow decimal numbers", labelWidth: 0 },
+                                                            { view: "text", placeholder: "Default number" }
+                                                        ]
+                                                    },
+                                                    {
+                                                        id: "ab-new-date",
+                                                        rows: [
+                                                            { view: "label", label: "<span class='webix_icon fa-calendar'></span>Date" },
+                                                            { view: "label", label: "Pick one from a calendar." },
+                                                            { view: "checkbox", labelRight: "Include time", labelWidth: 0 },
+                                                        ]
+                                                    },
+                                                    {
+                                                        id: "ab-new-boolean",
+                                                        rows: [
+                                                            { view: "label", label: "<span class='webix_icon fa-check-square-o'></span>Checkbox" },
+                                                            { view: "label", label: "A single checkbox that can be checked or unchecked." }
+                                                        ]
+                                                    },
+                                                    {
+                                                        id: "ab-new-attachment",
+                                                        rows: [
+                                                            { view: "label", label: "<span class='webix_icon fa-file'></span>Attachment" },
+                                                            { view: "label", label: "Under construction..." }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            { height: 10 },
+                                            {
+                                                cols: [
+                                                    {
+                                                        view: "button", label: "Add Column", type: "form", width: 120, click: function () {
+                                                            // TODO : under construction to attachment 
+                                                        }
+                                                    },
+                                                    {
+                                                        view: "button", value: "Cancel", width: 100, click: function () {
+                                                            this.getTopParentView().hide();
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                },
+                            }, webix.ui.popup);
+                        }
 
 
-					});
+                    });
 
-				});
-		});
+                });
+        });
 
-	});
+    });
