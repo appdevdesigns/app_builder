@@ -22,7 +22,9 @@ steal(
 							this.data = {};
 
 							this.webixUiId = {
-								modelDatatable: 'ab-model-datatable'
+								modelToolbar: 'ab-model-toolbar',
+								modelDatatable: 'ab-model-datatable',
+								addFieldsPopup: 'add-fields-popup'
 							};
 
 							this.initWebixUI();
@@ -33,7 +35,7 @@ steal(
 							var self = this;
 
 							webix.ui({
-								id: 'add-fields-popup',
+								id: self.webixUiId.addFieldsPopup,
 								view: "add_fields_popup",
 							});
 
@@ -41,6 +43,7 @@ steal(
 								rows: [
 									{
 										view: 'toolbar',
+										id: self.webixUiId.modelToolbar,
 										cols: [
 											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120 },
 											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120 },
@@ -52,8 +55,18 @@ steal(
 										view: "datatable",
 										id: self.webixUiId.modelDatatable,
 										autoheight: true,
+										resizeColumn: true,
+										resizeRow: true,
+										editable: true,
+										editaction: "custom",
+										select: "cell",
 										ready: function () {
 											webix.extend(this, webix.ProgressBar);
+										},
+										on: {
+											onAfterSelect: function (data, prevent) {
+												this.editCell(data.row, data.column);
+											}
 										}
 									}
 								]
@@ -75,14 +88,19 @@ steal(
 							// Clear columns & data
 							$$(self.webixUiId.modelDatatable).define('columns', []);
 							$$(self.webixUiId.modelDatatable).clearAll();
+							$$(self.webixUiId.modelDatatable).refreshColumns();
+							$$(self.webixUiId.modelDatatable).refresh();
+
+							// Register table to add new fields popup
+							$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 
 							if (self.data.modelId) {
 								async.parallel([
 									function () {
 										// TODO : Get columns from server
 										var columns = [
-											{ id: "name", header: "Name", width: 100 },
-											{ id: "description", header: "Description" }
+											{ id: "name", header: "<span class='webix_icon fa-font'></span> Name", editor: "text", width: 100 },
+											{ id: "description", header: "<span class='webix_icon fa-align-right'></span> Description", editor: "popup", width: 150 }
 										];
 
 										$$(self.webixUiId.modelDatatable).define('columns', columns);

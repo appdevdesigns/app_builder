@@ -265,7 +265,7 @@ steal(
 
 														// TODO : Add new model to server
 														var newModel = {
-															id: Math.random(),
+															id: webix.uid(), // TODO
 															name: newModelName
 														};
 														$$(self.webixUiId.modelList).showProgress({ type: 'icon' });

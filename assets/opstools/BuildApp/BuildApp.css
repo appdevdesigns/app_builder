@@ -19,6 +19,9 @@
 .ab-main-container .right {
 	text-align: right;
 }
+.ab-main-container .bold {
+	font-weight: bold;
+}
 
 /* Webbix message */
 .webix_success {
