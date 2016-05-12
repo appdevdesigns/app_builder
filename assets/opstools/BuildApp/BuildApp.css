@@ -88,3 +88,13 @@ div[view_id='ab-app-list'] div.webix_list_item:hover, div[view_id='ab-model-list
 	right: 5px;
 	display: none;
 }
+
+/* Model datatable */
+.ab-model-data-header {
+	position: relative;
+}
+.ab-model-data-header-edit {
+	position: absolute;
+	top: 15px;
+	right: 10px;
+}

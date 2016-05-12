@@ -286,6 +286,7 @@ steal(
                                 numberIcon: 'slack',
                                 numberView: 'ab-new-number',
                                 numberAllowDecimal: 'ab-new-number-allow-decimal',
+                                numberFormat: 'ab-new-number-format',
                                 numberDefault: 'ab-new-number-default',
 
                                 dateIcon: 'calendar',
@@ -385,7 +386,13 @@ steal(
                                                         id: addFieldComIds.numberView,
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>Number".replace('{0}', addFieldComIds.numberIcon) },
-                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 50 },
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 60 },
+                                                            {
+                                                                view: "combo", id: addFieldComIds.numberFormat, value: "Number", label: 'Format', labelWidth: 60, options: [
+                                                                    { format: webix.i18n.numberFormat, value: "Number" },
+                                                                    { format: webix.i18n.priceFormat, value: "Price" },
+                                                                ]
+                                                            },
                                                             { view: "checkbox", id: addFieldComIds.numberAllowDecimal, labelRight: "Allow decimal numbers", labelWidth: 0 },
                                                             { view: "text", id: addFieldComIds.numberDefault, placeholder: "Default number" }
                                                         ]
@@ -484,6 +491,12 @@ steal(
                                                                     fieldName = base.getFieldName(addFieldComIds.numberView);
                                                                     iconHeader = addFieldComIds.numberIcon;
                                                                     fieldSettings.editor = 'number';
+
+                                                                    var selectedFormat = $$(addFieldComIds.numberFormat).getList().find(function (format) {
+                                                                        return format.value == $$(addFieldComIds.numberFormat).getValue();
+                                                                    })[0];
+                                                                    fieldSettings.format = selectedFormat.format;
+
                                                                     break;
                                                                 case 'Date':
                                                                     fieldName = base.getFieldName(addFieldComIds.dateView);
@@ -502,8 +515,26 @@ steal(
                                                                 case 'Select list':
                                                                     fieldName = base.getFieldName(addFieldComIds.selectListView);
                                                                     iconHeader = addFieldComIds.selectListIcon;
-                                                                    
-                                                                    return; // TODO;
+
+                                                                    if ($$(addFieldComIds.selectListOptions).data.count() > 0) {
+                                                                        fieldSettings.editor = 'richselect';
+                                                                        fieldSettings.options = [];
+
+                                                                        $$(addFieldComIds.selectListOptions).data.each(function (opt) {
+                                                                            fieldSettings.options.push(opt.name);
+                                                                        });
+                                                                    }
+                                                                    else {
+                                                                        webix.alert({
+                                                                            title: "Option required",
+                                                                            ok: "Ok",
+                                                                            text: "Enter at least one option."
+                                                                        })
+
+                                                                        return;
+                                                                    }
+
+                                                                    break;
                                                                 case 'Attachment':
                                                                     fieldName = base.getFieldName(addFieldComIds.attachmentView);
                                                                     iconHeader = addFieldComIds.attachmentIcon;
@@ -515,7 +546,8 @@ steal(
                                                             var columns = webix.toArray(dataTable.config.columns);
                                                             var newColumn = $.extend(fieldSettings, {
                                                                 id: "c" + webix.uid(),
-                                                                header: "<span class='webix_icon fa-{0}'></span>".replace('{0}', iconHeader) + fieldName
+                                                                header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', iconHeader).replace('{1}', fieldName),
+                                                                width: 170
                                                             });
 
                                                             columns.insertAt(newColumn, dataTable.config.columns.length);
