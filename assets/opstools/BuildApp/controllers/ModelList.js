@@ -1,6 +1,7 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -44,9 +45,19 @@ steal(
 								}
 							};
 
+							this.initControllers();
+
 							webix.ready(function () {
 								self.initWebixUI();
 							});
+						},
+
+						initControllers: function() {
+							this.controllers = {};
+
+							var EditList = AD.Control.get('opstools.BuildApp.EditList');
+
+							this.controllers.EditList = new EditList();
 						},
 
 						initWebixUI: function () {

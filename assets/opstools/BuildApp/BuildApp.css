@@ -94,7 +94,11 @@ div[view_id='ab-app-list'] div.webix_list_item:hover, div[view_id='ab-model-list
 	position: relative;
 }
 .ab-model-data-header-edit {
+	display: none;
 	position: absolute;
 	top: 15px;
 	right: 10px;
+}
+.ab-model-data-header:hover .ab-model-data-header-edit {
+	display: block;
 }

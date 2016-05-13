@@ -1,6 +1,10 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditor.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableVisibleFieldsPopup.js',
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -24,20 +28,141 @@ steal(
 							this.webixUiId = {
 								modelToolbar: 'ab-model-toolbar',
 								modelDatatable: 'ab-model-datatable',
-								addFieldsPopup: 'add-fields-popup'
+
+								editHeaderPopup: 'ab-edit-header-popup',
+								visibleFieldsPopup: 'ab-visible-fields-popup',
+								filterFieldsPopup: 'ab-filter-popup',
+								addFieldsPopup: 'ab-add-fields-popup'
 							};
 
+							this.initControllers();
 							this.initWebixUI();
 
+						},
+
+						initControllers: function() {
+							this.controllers = {};
+
+							var AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup'),
+								DataTableEditor = AD.Control.get('opstools.BuildApp.DataTableEditor'),
+								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
+								VisibleFieldsPopup = AD.Control.get('opstools.BuildApp.DataTableVisibleFieldsPopup');
+
+							this.controllers.AddFieldPopup = new AddFieldPopup();
+							this.controllers.DataTableEditor = new DataTableEditor();
+							this.controllers.FilterPopup = new FilterPopup();
+							this.controllers.VisibleFieldsPopup = new VisibleFieldsPopup();
 						},
 
 						initWebixUI: function () {
 							var self = this;
 
 							webix.ui({
+								id: self.webixUiId.visibleFieldsPopup,
+								view: "visible_fields_popup"
+							}).hide();
+
+							webix.ui({
+								id: self.webixUiId.filterFieldsPopup,
+								view: "filter_popup",
+							}).hide();
+
+							webix.ui({
 								id: self.webixUiId.addFieldsPopup,
 								view: "add_fields_popup",
-							});
+							}).hide();
+
+							webix.ui({
+								id: self.webixUiId.editHeaderPopup,
+								view: 'popup',
+								width: 180,
+								body: {
+									view: 'list',
+									data: [
+										{ command: "Hide field", icon: "fa-columns" },
+										{ command: "Rename field", icon: "fa-pencil-square-o" },
+										{ command: "Delete field", icon: "fa-trash" }
+									],
+									datatype: "json",
+
+									template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
+									autoheight: true,
+									select: false,
+									on: {
+										'onItemClick': function (timestamp, e, trg) {
+											var columns = webix.toArray($$(self.webixUiId.modelDatatable).config.columns),
+												selectedField = {};
+
+											columns.each(function (c) {
+												if (c.id == self.data.selectedFieldId)
+													selectedField = c;
+											});
+
+											var selectedFieldName = $(selectedField.header[0].text).text().trim();
+
+											switch (trg.textContent.trim()) {
+												case 'Hide field':
+													$$(self.webixUiId.modelDatatable).hideColumn(self.data.selectedFieldId);
+													$$(self.webixUiId.editHeaderPopup).hide();
+													break;
+												case 'Rename field':
+
+													break;
+												case 'Delete field':
+													// Validate
+													if (columns.length < 2) {
+														webix.alert({
+															title: "Could not delete",
+															ok: "Ok",
+															text: "Object should have at least one field."
+														});
+														$$(self.webixUiId.editHeaderPopup).hide();
+														return;
+													}
+
+													// TODO : Get from translation
+													var deleteConfirmTitle = "Delete data field",
+														deleteConfirmMessage = "Do you want to delete <b>{0}</b>?".replace('{0}', selectedFieldName),
+														yes = "Yes",
+														no = "No";
+
+													webix.confirm({
+														title: deleteConfirmTitle,
+														ok: yes,
+														cancel: no,
+														text: deleteConfirmMessage,
+														callback: function (result) {
+															if (result) {
+																// TODO: Call server to delete model data
+																$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
+
+																// Remove column
+																columns.removeAt(columns.find(selectedField));
+																$$(self.webixUiId.modelDatatable).refreshColumns();
+
+																$$(self.webixUiId.editHeaderPopup).hide();
+
+																webix.message({
+																	type: "success",
+																	text: "<b>" + selectedFieldName + "</b> is deleted."
+																});
+
+																// Clear selected field
+																self.data.selectedFieldId = null;
+
+																$$(self.webixUiId.modelDatatable).hideProgress();
+
+															}
+
+														}
+													});
+
+													break;
+											}
+										}
+									}
+								}
+							}).hide();
 
 							self.data.definition = {
 								rows: [
@@ -45,10 +170,11 @@ steal(
 										view: 'toolbar',
 										id: self.webixUiId.modelToolbar,
 										cols: [
-											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120 },
-											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120 },
+											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
+											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup },
 											{ view: 'button', label: 'Apply sort', icon: "sort", type: "icon", width: 120 },
-											{ view: 'button', label: 'Add new column', icon: "plus", type: "icon", width: 150, popup: 'add-fields-popup' }
+											{ view: 'button', label: 'Permission', icon: "lock", type: "icon", width: 120 },
+											{ view: 'button', label: 'Add new column', icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
 										]
 									},
 									{
@@ -64,6 +190,11 @@ steal(
 											webix.extend(this, webix.ProgressBar);
 										},
 										on: {
+											onHeaderClick(id, e, trg) {
+												self.data.selectedFieldId = id.column;
+
+												$$(self.webixUiId.editHeaderPopup).show(trg);
+											},
 											onAfterSelect: function (data, prevent) {
 												this.editCell(data.row, data.column);
 											}
@@ -91,21 +222,20 @@ steal(
 							$$(self.webixUiId.modelDatatable).refreshColumns();
 							$$(self.webixUiId.modelDatatable).refresh();
 
-							// Register table to add new fields popup
-							$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
-
 							if (self.data.modelId) {
-								async.parallel([
-									function () {
+								async.series([
+									function (next) {
 										// TODO : Get columns from server
 										var columns = [
-											{ id: "name", header: "<span class='webix_icon fa-font'></span> Name", editor: "text", width: 100 },
-											{ id: "description", header: "<span class='webix_icon fa-align-right'></span> Description", editor: "popup", width: 150 }
+											{ id: "name", header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', 'font').replace('{1}', 'Name'), editor: "text", filter_type: "text", width: 100 },
+											{ id: "description", header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', 'align-right').replace('{1}', 'Description'), editor: "popup", filter_type: "text", width: 150 }
 										];
 
 										$$(self.webixUiId.modelDatatable).define('columns', columns);
+
+										next();
 									},
-									function () {
+									function (next) {
 										// TODO : Get data from server
 										var data = [
 											{ name: 'Test 1', description: 'Description 1' },
@@ -114,10 +244,17 @@ steal(
 										];
 
 										$$(self.webixUiId.modelDatatable).parse(data);
+
+										next();
 									}
 								], function () {
 									$$(self.webixUiId.modelDatatable).refreshColumns();
 									$$(self.webixUiId.modelDatatable).refresh();
+
+									// Register table to add new fields popup
+									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 
 									if ($$(self.webixUiId.modelDatatable).hideProgress)
 										$$(self.webixUiId.modelDatatable).hideProgress();
