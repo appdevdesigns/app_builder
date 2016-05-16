@@ -1,6 +1,7 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
 	function () {
         System.import('appdev').then(function () {
@@ -21,6 +22,7 @@ steal(
 							// Call parent init
 							this._super(element, options);
 
+                            this.Model = AD.Model.get('opstools.BuildApp.ABObject');
 							this.data = {};
 
 							this.webixUiId = {
@@ -52,7 +54,7 @@ steal(
 							});
 						},
 
-						initControllers: function() {
+						initControllers: function () {
 							this.controllers = {};
 
 							var EditList = AD.Control.get('opstools.BuildApp.EditList');
@@ -112,19 +114,38 @@ steal(
 											},
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
 												if (state.value != state.old) {
+													var _this = this;
 
-													// TODO: Call server to rename
 													this.showProgress({ type: 'icon' });
-													this.hideProgress();
 
-													// Show success message
-													webix.message({
-														type: "success",
-														text: "Rename to <b>" + state.value + "</b>."
-													});
+													var selectedModel = self.data.modelList.filter(function (item, index, list) { return item.id == editor.id; })[0];
+													selectedModel.attr('name', state.value);
+													selectedModel.attr('label', state.value);
 
-													// Show gear icon
-													$(this.getItemNode(editor.id)).find('.ab-model-list-edit').show();
+													// Call server to rename
+													selectedModel.save()
+														.fail(function () {
+															_this.hideProgress();
+
+															webix.message({
+																type: "error",
+																text: "System could not rename <b>{0}</b>.".replace("{0}", state.old)
+															});
+
+															AD.error.log('Object List : Error rename object data', { error: err });
+														})
+														.then(function () {
+															_this.hideProgress();
+
+															// Show success message
+															webix.message({
+																type: "success",
+																text: "Rename to <b>" + state.value + "</b>."
+															});
+
+															// Show gear icon
+															$(_this.getItemNode(editor.id)).find('.ab-model-list-edit').show();
+														});
 												}
 											}
 										},
@@ -188,49 +209,37 @@ steal(
 														text: deleteConfirmMessage,
 														callback: function (result) {
 															if (result) {
-																// TODO: Call server to delete model data
+
 																$$(self.webixUiId.modelList).showProgress({ type: "icon" });
 
-																self.data.modelList.forEach(function (item, index, list) {
-																	if (item && item.id === selectedModel.id)
-																		self.data.modelList.splice(index, 1);
-																});
+																// Call server to delete model data
+																self.Model.destroy(selectedModel.id)
+																	.fail(function (err) {
+																		$$(self.webixUiId.modelList).hideProgress();
 
-																$$(self.webixUiId.modelList).remove(selectedModel.id);
+																		webix.message({
+																			type: "error",
+																			text: "System could not delete <b>{0}</b>.".replace("{0}", selectedModel.name)
+																		});
 
-																webix.message({
-																	type: "success",
-																	text: "<b>" + selectedModel.name + "</b> is deleted."
-																});
+																		AD.error.log('Object List : Error delete object data', { error: err });
+																	})
+																	.then(function (result) {
+																		self.data.modelList.forEach(function (item, index, list) {
+																			if (item && item.id === selectedModel.id)
+																				self.data.modelList.splice(index, 1);
+																		});
 
-																$$(self.webixUiId.modelList).hideProgress();
+																		$$(self.webixUiId.modelList).remove(selectedModel.id);
 
-																// self.Model.destroy(selectedModel.id)
-																// 	.fail(function (err) {
-																// 		$$(self.webixUiId.modelList).hideProgress();
+																		webix.message({
+																			type: "success",
+																			text: "<b>" + selectedModel.name + "</b> is deleted."
+																		});
 
-																// 		webix.message({
-																// 			type: "error",
-																// 			text: "System could not delete <b>{0}</b>.".replace("{0}", selectedModel.name)
-																// 		});
+																		$$(self.webixUiId.modelList).hideProgress();
 
-																// 		AD.error.log('App Builder : Error delete application data', { error: err });
-																// 	})
-																// 	.then(function (result) {
-																// 		self.data.forEach(function (item, index, list) {
-																// 			if (item && item.id === result.id)
-																// 				self.data.splice(index, 1);
-																// 		});
-
-																// 		self.refreshList();
-
-																// 		$$(self.webixUiId.modelList).hideProgress();
-
-																// 		webix.message({
-																// 			type: "success",
-																// 			text: "<b>" + selectedModel.name + "</b> is deleted."
-																// 		});
-																// 	});
+																	});
 															}
 
 														}
@@ -274,25 +283,41 @@ steal(
 
 														var newModelName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
 
-														// TODO : Add new model to server
-														var newModel = {
-															id: webix.uid(), // TODO
-															name: newModelName
-														};
 														$$(self.webixUiId.modelList).showProgress({ type: 'icon' });
-														$$(self.webixUiId.addNewPopup).hide();
 
-														$$(self.webixUiId.modelList).add(newModel);
-														$$(self.webixUiId.modelList).unselectAll();
-														$$(self.webixUiId.modelList).select(newModel.id);
+														var newModel = {
+															name: newModelName,
+															label: newModelName,
+															application: self.data.appId
+														};
 
-														$$(self.webixUiId.modelList).hideProgress();
+														// Add new model to server
+														self.Model.create(newModel).fail(function () {
+															$$(self.webixUiId.modelList).hideProgress();
 
-														// Show success message
-														webix.message({
-															type: "success",
-															text: "<b>" + newModel.name + "</b> is created."
+															webix.message({
+																type: "error",
+																text: "System could not create <b>{0}</b>.".replace("{0}", newModel.name)
+															});
+
+															AD.error.log('Object : Error create object data', { error: err });
+
+														}).then(function (result) {
+															$$(self.webixUiId.addNewPopup).hide();
+
+															$$(self.webixUiId.modelList).add(result);
+															$$(self.webixUiId.modelList).unselectAll();
+															$$(self.webixUiId.modelList).select(result.id);
+
+															$$(self.webixUiId.modelList).hideProgress();
+
+															// Show success message
+															webix.message({
+																type: "success",
+																text: "<b>" + newModel.name + "</b> is created."
+															});
 														});
+
 													}
 												},
 												{ view: "button", value: "Cancel", click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
@@ -316,14 +341,24 @@ steal(
 
 							self.data.appId = appId;
 
-							// TODO : Get model list from server
-							self.data.modelList = [
-								{ id: 1, name: "Translate" },
-								{ id: 2, name: "Post" },
-								{ id: 3, name: "Info" }
-							];
+							if ($$(self.webixUiId.modelList).showProgress)
+								$$(self.webixUiId.modelList).showProgress({ type: "icon" });
 
-							self.refreshModelList();
+							// Get model list from server
+							self.Model.findAll({ application: appId })
+								.fail(function (err) {
+									$$(self.webixUiId.modelList).hideProgress();
+									webix.message({
+										type: "error",
+										text: err
+									});
+									AD.error.log('Model list : Error loading model list data', { error: err });
+								})
+								.then(function (data) {
+									self.data.modelList = data;
+
+									self.refreshModelList();
+								});
 						},
 
 						refreshModelList: function () {
@@ -332,7 +367,7 @@ steal(
 							if ($$(self.webixUiId.modelList).showProgress)
 								$$(self.webixUiId.modelList).showProgress({ type: "icon" });
 
-							$$(self.webixUiId.modelList).parse(self.data.modelList);
+							$$(self.webixUiId.modelList).parse(self.data.modelList.attr());
 							$$(self.webixUiId.modelList).refresh();
 							$$(self.webixUiId.modelList).unselectAll();
 

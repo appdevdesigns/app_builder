@@ -40,7 +40,7 @@ steal(
 
 						},
 
-						initControllers: function() {
+						initControllers: function () {
 							this.controllers = {};
 
 							var AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup'),
@@ -60,7 +60,7 @@ steal(
 							webix.ui({
 								id: self.webixUiId.visibleFieldsPopup,
 								view: "visible_fields_popup"
-							}).hide();
+							});
 
 							webix.ui({
 								id: self.webixUiId.filterFieldsPopup,
@@ -197,6 +197,12 @@ steal(
 											},
 											onAfterSelect: function (data, prevent) {
 												this.editCell(data.row, data.column);
+											},
+											onAfterColumnShow: function (id) {
+												$$(self.webixUiId.visibleFieldsPopup).showField(id);
+											},
+											onAfterColumnHide: function (id) {
+												$$(self.webixUiId.visibleFieldsPopup).hideField(id);
 											}
 										}
 									}
@@ -217,19 +223,22 @@ steal(
 								$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
 
 							// Clear columns & data
-							$$(self.webixUiId.modelDatatable).define('columns', []);
 							$$(self.webixUiId.modelDatatable).clearAll();
-							$$(self.webixUiId.modelDatatable).refreshColumns();
 							$$(self.webixUiId.modelDatatable).refresh();
+							$$(self.webixUiId.modelDatatable).define('columns', []);
+							$$(self.webixUiId.modelDatatable).refreshColumns();
 
 							if (self.data.modelId) {
 								async.series([
 									function (next) {
 										// TODO : Get columns from server
 										var columns = [
-											{ id: "name", header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', 'font').replace('{1}', 'Name'), editor: "text", filter_type: "text", width: 100 },
-											{ id: "description", header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', 'align-right').replace('{1}', 'Description'), editor: "popup", filter_type: "text", width: 150 }
+											{ id: "name", header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', 'font').replace('{1}', 'Name'), editor: "text", filter_type: "text", adjust: true },
+											{ id: "description", header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', 'align-right').replace('{1}', 'Description'), editor: "popup", filter_type: "text", adjust: true }
 										];
+
+										if (Math.floor((Math.random() * 10) + 1) % 2 === 0)
+											columns.push({ id: "optional", header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', 'align-right').replace('{1}', 'Optional'), editor: "popup", filter_type: "text", adjust: true });
 
 										$$(self.webixUiId.modelDatatable).define('columns', columns);
 
@@ -238,9 +247,9 @@ steal(
 									function (next) {
 										// TODO : Get data from server
 										var data = [
-											{ name: 'Test 1', description: 'Description 1' },
-											{ name: 'Test 2', description: 'Description 2' },
-											{ name: 'Test 3', description: 'Description 3' }
+											{ name: 'Test 1', description: 'Description 1', optional: 'Option 1' },
+											{ name: 'Test 2', description: 'Description 2', optional: 'Option 2' },
+											{ name: 'Test 3', description: 'Description 3', optional: 'Option 3' }
 										];
 
 										$$(self.webixUiId.modelDatatable).parse(data);
@@ -251,10 +260,10 @@ steal(
 									$$(self.webixUiId.modelDatatable).refreshColumns();
 									$$(self.webixUiId.modelDatatable).refresh();
 
-									// Register table to add new fields popup
-									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									// Register table to popups
 									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 
 									if ($$(self.webixUiId.modelDatatable).hideProgress)
 										$$(self.webixUiId.modelDatatable).hideProgress();

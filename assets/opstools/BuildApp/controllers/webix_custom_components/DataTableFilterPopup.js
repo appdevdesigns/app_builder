@@ -19,20 +19,28 @@ steal(
                             // Call parent init
                             this._super(element, options);
 
+                            this.componentIds = {
+                                filterPopup: 'ab-filter-popup',
+                                filterForm: 'ab-filter-form'
+                            };
+
                             this.initWebixControls();
                         },
 
-						initWebixControls: function () {
+                        initWebixControls: function () {
+                            var self = this;
 
                             webix.protoUI({
+                                id: self.componentIds.filterPopup,
                                 name: "filter_popup",
                                 $init: function (config) {
                                     //functions executed on component initialization
-                                    this.combineCondition = 'And';
+                                    self.combineCondition = 'And';
                                 },
                                 defaults: {
                                     width: 800,
                                     body: {
+                                        id: self.componentIds.filterForm,
                                         view: "form",
                                         autoheight: true,
                                         elements: [{
@@ -40,18 +48,24 @@ steal(
                                                 this.getTopParentView().addNewFilter();
                                             }
                                         }]
+                                    },
+                                    on: {
+                                        onShow: function () {
+                                            if ($$(self.componentIds.filterForm).getChildViews().length < 2)
+                                                $$(self.componentIds.filterForm).getTopParentView().addNewFilter();
+                                        }
                                     }
                                 },
                                 addNewFilter: function () {
-                                    var _this = this;
-                                    var viewIndex = _this.getBody().getChildViews().length - 1;
+                                    var viewIndex = $$(self.componentIds.filterForm).getChildViews().length - 1;
 
-                                    _this.getBody().addView({
+                                    $$(self.componentIds.filterForm).addView({
+                                        id: 'f' + webix.uid(),
                                         cols: [
                                             {
-                                                view: "combo", value: _this.combineCondition, options: ["And", "Or"], css: 'combine-condition', width: 80, on: {
+                                                view: "combo", value: self.combineCondition, options: ["And", "Or"], css: 'combine-condition', width: 80, on: {
                                                     "onChange": function (newValue, oldValue) {
-                                                        _this.combineCondition = newValue;
+                                                        self.combineCondition = newValue;
 
                                                         var filterList = $('.combine-condition').webix_combo();
 
@@ -64,14 +78,14 @@ steal(
                                                             filterList.setValue(newValue);
                                                         }
 
-                                                        _this.filter();
+                                                        $$(self.componentIds.filterPopup).filter();
                                                     }
                                                 }
                                             },
                                             {
-                                                view: "combo", options: _this.getFieldList(), on: {
+                                                view: "combo", options: $$(self.componentIds.filterPopup).getFieldList(), on: {
                                                     "onChange": function (columnId) {
-                                                        var columnConfig = _this.dataTable.getColumnConfig(columnId);
+                                                        var columnConfig = self.dataTable.getColumnConfig(columnId);
                                                         var conditionList = [];
                                                         var inputView = {};
 
@@ -119,9 +133,16 @@ steal(
                                                                 ];
 
                                                                 inputView = {
-                                                                    view: "multicombo",
+                                                                    view: "combo",
                                                                     options: columnConfig.filter_options
                                                                 };
+                                                                break;
+                                                            case "boolean":
+                                                                conditionList = [
+                                                                    "is checked",
+                                                                    "is not checked"
+                                                                ];
+
                                                                 break;
                                                         }
 
@@ -131,73 +152,90 @@ steal(
 
                                                         this.getParentView().removeView(this.getParentView().getChildViews()[3]);
                                                         this.getParentView().addView(inputView, 3);
-                                                        if (columnConfig.filter_type === 'text')
-                                                            this.getParentView().getChildViews()[3].attachEvent("onTimedKeyPress", function () { _this.filter(); });
+                                                        if (columnConfig.filter_type === 'boolean') {
+                                                            // There is not any condition values 
+                                                        }
+                                                        else if (columnConfig.filter_type === 'text')
+                                                            this.getParentView().getChildViews()[3].attachEvent("onTimedKeyPress", function () { $$(self.componentIds.filterPopup).filter(); });
                                                         else
-                                                            this.getParentView().getChildViews()[3].attachEvent("onChange", function () { _this.filter(); });
+                                                            this.getParentView().getChildViews()[3].attachEvent("onChange", function () { $$(self.componentIds.filterPopup).filter(); });
 
-                                                        _this.filter();
+                                                        $$(self.componentIds.filterPopup).filter();
                                                     }
                                                 }
                                             },
-                                            { view: "combo", options: [], width: 155, on: { "onChange": function () { _this.filter(); } } },
+                                            { view: "combo", options: [], width: 155, on: { "onChange": function () { $$(self.componentIds.filterPopup).filter(); } } },
                                             {},
                                             {
                                                 view: "button", value: "X", width: 30, click: function () {
-                                                    this.getFormView().removeView(this.getParentView());
-                                                    _this.filter();
+                                                    $$(self.componentIds.filterForm).removeView(this.getParentView());
+                                                    $$(self.componentIds.filterPopup).filter();
                                                 }
                                             }
                                         ]
                                     }, viewIndex);
                                 },
                                 registerDataTable: function (dataTable) {
-                                    var _this = this;
-                                    _this.dataTable = dataTable;
+                                    self.dataTable = dataTable;
 
-                                    this.addNewFilter();
+                                    // Reset form
+                                    $$(self.componentIds.filterForm).clear();
+                                    $$(self.componentIds.filterForm).clearValidation();
+
+                                    var cViews = [];
+                                    var childViews = $$(self.componentIds.filterForm).getChildViews();
+                                    for (var i = 0; i < childViews.length; i++) {
+                                        if (i < childViews.length - 1)
+                                            cViews.push(childViews[i]);
+                                    }
+
+                                    cViews.forEach(function (v) {
+                                        $$(self.componentIds.filterForm).removeView(v);
+                                    });
                                 },
                                 getFieldList: function () {
-                                    var _this = this,
-                                        fieldList = [];
+                                    var fieldList = [];
 
-                                    _this.dataTable.eachColumn(function (columnId) {
-                                        var columnConfig = _this.dataTable.getColumnConfig(columnId);
-                                        if (columnConfig.filter_type && columnConfig.header && columnConfig.header.length > 0 && columnConfig.header[0].text) {
-                                            fieldList.push({
-                                                id: columnId,
-                                                value: $(columnConfig.header[0].text).text().trim()
-                                            });
-                                        }
-                                    });
+                                    if (self.dataTable) {
+                                        self.dataTable.eachColumn(function (columnId) {
+                                            var columnConfig = self.dataTable.getColumnConfig(columnId);
+                                            if (columnConfig.filter_type && columnConfig.header && columnConfig.header.length > 0 && columnConfig.header[0].text) {
+                                                fieldList.push({
+                                                    id: columnId,
+                                                    value: $(columnConfig.header[0].text).text().trim()
+                                                });
+                                            }
+                                        });
+                                    }
 
                                     return fieldList;
                                 },
                                 filter: function () {
-                                    var _this = this;
 
                                     var filterCondition = [];
 
-                                    _this.getChildViews()[0].getChildViews().forEach(function (view, index, viewList) {
+                                    $$(self.componentIds.filterForm).getChildViews().forEach(function (view, index, viewList) {
+
                                         if (index < viewList.length - 1) { // Ignore 'Add a filter' button
-                                            if (view.getChildViews()[1].getValue() && view.getChildViews()[2].getValue() && view.getChildViews()[3].getValue()) {
+                                            var condValue = view.getChildViews()[3] && view.getChildViews()[3].getValue ? view.getChildViews()[3].getValue() : ''; // Support none conditon control
+                                            if (view.getChildViews()[1].getValue() && view.getChildViews()[2].getValue()) {
                                                 filterCondition.push({
                                                     combineCondtion: view.getChildViews()[0].getValue(),
                                                     fieldName: view.getChildViews()[1].getValue(),
                                                     operator: view.getChildViews()[2].getValue(),
-                                                    inputValue: view.getChildViews()[3].getValue(),
+                                                    inputValue: condValue,
                                                 });
                                             }
                                         }
                                     });
 
-                                    _this.dataTable.filter(function (obj) {
+                                    self.dataTable.filter(function (obj) {
                                         var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : 'And');
                                         var isValid = (combineCond === 'And' ? true : false);
 
                                         filterCondition.forEach(function (cond) {
                                             var condResult;
-                                            var objValue = _this.dataTable.getColumnConfig(cond.fieldName).filter_value ? _this.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
+                                            var objValue = self.dataTable.getColumnConfig(cond.fieldName).filter_value ? self.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
 
                                             switch (cond.operator) {
                                                 // Text filter
@@ -251,10 +289,21 @@ steal(
                                                     break;
                                                 // List filter
                                                 case "equals":
-                                                    condResult = cond.inputValue.toLowerCase().indexOf(objValue.trim().toLowerCase()) > -1;
+                                                    if (objValue)
+                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue.trim().toLowerCase()) > -1;
                                                     break;
                                                 case "does not equal":
-                                                    condResult = cond.inputValue.toLowerCase().indexOf(objValue.trim().toLowerCase()) < 0;
+                                                    if (objValue)
+                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue.trim().toLowerCase()) < 0;
+                                                    else
+                                                        condResult = true;
+                                                    break;
+                                                // Boolean/Checkbox filter
+                                                case "is checked":
+                                                    condResult = (objValue === true || objValue === 1);
+                                                    break;
+                                                case "is not checked":
+                                                    condResult = !objValue;
                                                     break;
                                             }
                                             if (combineCond === 'And') {
@@ -270,9 +319,9 @@ steal(
                             }, webix.ui.popup);
 
 
-						}
-					});
-				});
-		});
-	}
+                        }
+                    });
+                });
+        });
+    }
 );

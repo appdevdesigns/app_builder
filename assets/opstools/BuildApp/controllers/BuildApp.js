@@ -37,6 +37,8 @@ steal(
 							this.initDOM();
 							this.initControllers();
 							this.initEvents();
+
+							this.translate();
 						},
 
 

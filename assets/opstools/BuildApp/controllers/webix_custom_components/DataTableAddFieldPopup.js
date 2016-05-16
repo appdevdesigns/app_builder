@@ -19,12 +19,7 @@ steal(
                             // Call parent init
                             this._super(element, options);
 
-                            this.initWebixControls();
-                        },
-
-                        initWebixControls: function () {
-
-                            var addFieldComIds = {
+                            this.componentIds = {
                                 chooseTypeView: 'ab-new-none',
 
                                 singleTextIcon: 'font',
@@ -58,6 +53,12 @@ steal(
                                 headerNameText: 'ab-new-field-name'
                             };
 
+                            this.initWebixControls();
+                        },
+
+                        initWebixControls: function () {
+                            var self = this;
+
                             webix.protoUI({
                                 name: "add_fields_popup",
                                 $init: function (config) {
@@ -75,13 +76,13 @@ steal(
                                                     {
                                                         value: "Choose field type...",
                                                         submenu: [
-                                                            { view: 'button', value: 'Single line text', icon: addFieldComIds.singleTextIcon, type: 'icon', viewName: addFieldComIds.singleTextView },
-                                                            { view: 'button', value: 'Long text', icon: addFieldComIds.longTextIcon, type: 'icon', viewName: addFieldComIds.longTextView },
-                                                            { view: 'button', value: 'Number', icon: addFieldComIds.numberIcon, type: 'icon', viewName: addFieldComIds.numberView },
-                                                            { view: 'button', value: 'Date', icon: addFieldComIds.dateIcon, type: 'icon', viewName: addFieldComIds.dateView },
-                                                            { view: 'button', value: 'Checkbox', icon: addFieldComIds.booleanIcon, type: 'icon', viewName: addFieldComIds.booleanView },
-                                                            { view: 'button', value: 'Select list', icon: addFieldComIds.selectListIcon, type: 'icon', viewName: addFieldComIds.selectListView },
-                                                            { view: 'button', value: 'Attachment', icon: addFieldComIds.attachmentIcon, type: 'icon', viewName: addFieldComIds.attachmentView },
+                                                            { view: 'button', value: 'Single line text', icon: self.componentIds.singleTextIcon, type: 'icon', viewName: self.componentIds.singleTextView },
+                                                            { view: 'button', value: 'Long text', icon: self.componentIds.longTextIcon, type: 'icon', viewName: self.componentIds.longTextView },
+                                                            { view: 'button', value: 'Number', icon: self.componentIds.numberIcon, type: 'icon', viewName: self.componentIds.numberView },
+                                                            { view: 'button', value: 'Date', icon: self.componentIds.dateIcon, type: 'icon', viewName: self.componentIds.dateView },
+                                                            { view: 'button', value: 'Checkbox', icon: self.componentIds.booleanIcon, type: 'icon', viewName: self.componentIds.booleanView },
+                                                            { view: 'button', value: 'Select list', icon: self.componentIds.selectListIcon, type: 'icon', viewName: self.componentIds.selectListView },
+                                                            { view: 'button', value: 'Attachment', icon: self.componentIds.attachmentIcon, type: 'icon', viewName: self.componentIds.attachmentView },
                                                         ]
                                                     }
                                                 ],
@@ -93,7 +94,7 @@ steal(
                                                         if (selectedMenuItem.viewName) {
                                                             $$(selectedMenuItem.viewName).show();
 
-                                                            var headerNameClass = '.' + addFieldComIds.headerNameText;
+                                                            var headerNameClass = '.' + self.componentIds.headerNameText;
 
                                                             // Set default header name
                                                             if ($(headerNameClass) && $(headerNameClass).length > 0) {
@@ -115,85 +116,85 @@ steal(
                                             {
                                                 cells: [
                                                     {
-                                                        id: addFieldComIds.chooseTypeView,
+                                                        id: self.componentIds.chooseTypeView,
                                                         rows: [{ view: "label", label: "Choose field type..." }]
                                                     },
                                                     {
-                                                        id: addFieldComIds.singleTextView,
+                                                        id: self.componentIds.singleTextView,
                                                         rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Single line text".replace('{0}', addFieldComIds.singleTextIcon) },
-                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 50 },
-                                                            { view: "text", id: addFieldComIds.singleTextDefault, placeholder: "Default text" }
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Single line text".replace('{0}', self.componentIds.singleTextIcon) },
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            { view: "text", id: self.componentIds.singleTextDefault, placeholder: "Default text" }
                                                         ]
                                                     },
                                                     {
-                                                        id: addFieldComIds.longTextView,
+                                                        id: self.componentIds.longTextView,
                                                         rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Long line text".replace('{0}', addFieldComIds.longTextIcon) },
-                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 50 },
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Long line text".replace('{0}', self.componentIds.longTextIcon) },
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
                                                             { view: "label", label: "A long text field that can span multiple lines." }
                                                         ]
                                                     },
                                                     {
-                                                        id: addFieldComIds.numberView,
+                                                        id: self.componentIds.numberView,
                                                         rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Number".replace('{0}', addFieldComIds.numberIcon) },
-                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 60 },
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Number".replace('{0}', self.componentIds.numberIcon) },
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 60 },
                                                             {
-                                                                view: "combo", id: addFieldComIds.numberFormat, value: "Number", label: 'Format', labelWidth: 60, options: [
+                                                                view: "combo", id: self.componentIds.numberFormat, value: "Number", label: 'Format', labelWidth: 60, options: [
                                                                     { format: webix.i18n.numberFormat, value: "Number" },
                                                                     { format: webix.i18n.priceFormat, value: "Price" },
                                                                 ]
                                                             },
-                                                            { view: "checkbox", id: addFieldComIds.numberAllowDecimal, labelRight: "Allow decimal numbers", labelWidth: 0 },
-                                                            { view: "text", id: addFieldComIds.numberDefault, placeholder: "Default number" }
+                                                            { view: "checkbox", id: self.componentIds.numberAllowDecimal, labelRight: "Allow decimal numbers", labelWidth: 0 },
+                                                            { view: "text", id: self.componentIds.numberDefault, placeholder: "Default number" }
                                                         ]
                                                     },
                                                     {
-                                                        id: addFieldComIds.dateView,
+                                                        id: self.componentIds.dateView,
                                                         rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Date".replace('{0}', addFieldComIds.dateIcon) },
-                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 50 },
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Date".replace('{0}', self.componentIds.dateIcon) },
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
                                                             { view: "label", label: "Pick one from a calendar." },
-                                                            { view: "checkbox", id: addFieldComIds.dateIncludeTime, labelRight: "Include time", labelWidth: 0 },
+                                                            { view: "checkbox", id: self.componentIds.dateIncludeTime, labelRight: "Include time", labelWidth: 0 },
                                                         ]
                                                     },
                                                     {
-                                                        id: addFieldComIds.booleanView,
+                                                        id: self.componentIds.booleanView,
                                                         rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Checkbox".replace('{0}', addFieldComIds.booleanIcon) },
-                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 50 },
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Checkbox".replace('{0}', self.componentIds.booleanIcon) },
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
                                                             { view: "label", label: "A single checkbox that can be checked or unchecked." }
                                                         ]
                                                     },
                                                     {
-                                                        id: addFieldComIds.selectListView,
+                                                        id: self.componentIds.selectListView,
                                                         rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Select list".replace('{0}', addFieldComIds.selectListIcon) },
-                                                            { view: "text", label: "Name", placeholder: "Header name", css: addFieldComIds.headerNameText, labelWidth: 50 },
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Select list".replace('{0}', self.componentIds.selectListIcon) },
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
                                                             { view: "template", template: "Single select allows you to select a single predefined options below from a dropdown.", autoheight: true, borderless: true },
                                                             { view: "label", label: "<b>Options</b>" },
                                                             {
                                                                 view: "list",
-                                                                id: addFieldComIds.selectListOptions,
+                                                                id: self.componentIds.selectListOptions,
                                                                 type: {
                                                                     template: "<div style='position: relative;'>#name#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>"
                                                                 },
                                                                 autoheight: true,
                                                                 onClick: {
                                                                     "ab-new-field-remove": function (e, id, trg) {
-                                                                        $$(addFieldComIds.selectListOptions).remove(id);
+                                                                        $$(self.componentIds.selectListOptions).remove(id);
                                                                     }
                                                                 }
                                                             },
                                                             {
                                                                 cols: [
-                                                                    { view: "text", id: addFieldComIds.selectListNewOption },
+                                                                    { view: "text", id: self.componentIds.selectListNewOption },
                                                                     {
                                                                         view: "button", value: "Add", width: 100, click: function () {
-                                                                            if ($$(addFieldComIds.selectListNewOption).getValue()) {
-                                                                                $$(addFieldComIds.selectListOptions).add({ name: $$(addFieldComIds.selectListNewOption).getValue() });
-                                                                                $$(addFieldComIds.selectListNewOption).setValue('');
+                                                                            if ($$(self.componentIds.selectListNewOption).getValue()) {
+                                                                                $$(self.componentIds.selectListOptions).add({ name: $$(self.componentIds.selectListNewOption).getValue() });
+                                                                                $$(self.componentIds.selectListNewOption).setValue('');
                                                                             }
                                                                         }
                                                                     }
@@ -202,9 +203,9 @@ steal(
                                                         ]
                                                     },
                                                     {
-                                                        id: addFieldComIds.attachmentView,
+                                                        id: self.componentIds.attachmentView,
                                                         rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Attachment".replace('{0}', addFieldComIds.attachmentIcon) },
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Attachment".replace('{0}', self.componentIds.attachmentIcon) },
                                                             { view: "label", label: "Under construction..." }
                                                         ]
                                                     }
@@ -229,56 +230,60 @@ steal(
 
                                                             switch (base.selectedType) {
                                                                 case 'Single line text':
-                                                                    fieldName = base.getFieldName(addFieldComIds.singleTextView);
-                                                                    iconHeader = addFieldComIds.singleTextIcon;
+                                                                    fieldName = base.getFieldName(self.componentIds.singleTextView);
+                                                                    iconHeader = self.componentIds.singleTextIcon;
                                                                     fieldSettings.editor = 'text';
-																	fieldSettings.filter_type = 'text';
-                                                                    fieldSettings.value = $$(addFieldComIds.singleTextDefault).getValue();
+                                                                    fieldSettings.filter_type = 'text';
+                                                                    fieldSettings.value = $$(self.componentIds.singleTextDefault).getValue();
                                                                     break;
                                                                 case 'Long text':
-                                                                    fieldName = base.getFieldName(addFieldComIds.longTextView);
-                                                                    iconHeader = addFieldComIds.longTextIcon;
+                                                                    fieldName = base.getFieldName(self.componentIds.longTextView);
+                                                                    iconHeader = self.componentIds.longTextIcon;
                                                                     fieldSettings.editor = 'popup';
-																	fieldSettings.filter_type = 'text';
+                                                                    fieldSettings.filter_type = 'text';
                                                                     break;
                                                                 case 'Number':
-                                                                    fieldName = base.getFieldName(addFieldComIds.numberView);
-                                                                    iconHeader = addFieldComIds.numberIcon;
+                                                                    fieldName = base.getFieldName(self.componentIds.numberView);
+                                                                    iconHeader = self.componentIds.numberIcon;
                                                                     fieldSettings.editor = 'number';
-																	fieldSettings.filter_type = 'number';
+                                                                    fieldSettings.filter_type = 'number';
 
-                                                                    var selectedFormat = $$(addFieldComIds.numberFormat).getList().find(function (format) {
-                                                                        return format.value == $$(addFieldComIds.numberFormat).getValue();
+                                                                    var selectedFormat = $$(self.componentIds.numberFormat).getList().find(function (format) {
+                                                                        return format.value == $$(self.componentIds.numberFormat).getValue();
                                                                     })[0];
                                                                     fieldSettings.format = selectedFormat.format;
 
                                                                     break;
                                                                 case 'Date':
-                                                                    fieldName = base.getFieldName(addFieldComIds.dateView);
-                                                                    iconHeader = addFieldComIds.dateIcon;
-																	
-																	fieldSettings.filter_type = 'date';
-                                                                    if ($$(addFieldComIds.dateIncludeTime).getValue())
+                                                                    fieldName = base.getFieldName(self.componentIds.dateView);
+                                                                    iconHeader = self.componentIds.dateIcon;
+
+                                                                    fieldSettings.filter_type = 'date';
+                                                                    if ($$(self.componentIds.dateIncludeTime).getValue())
                                                                         fieldSettings.editor = 'datetime';
                                                                     else
                                                                         fieldSettings.editor = 'date';
                                                                     break;
                                                                 case 'Checkbox':
-                                                                    fieldName = base.getFieldName(addFieldComIds.booleanView);
-                                                                    iconHeader = addFieldComIds.booleanIcon;
+                                                                    fieldName = base.getFieldName(self.componentIds.booleanView);
+                                                                    iconHeader = self.componentIds.booleanIcon;
                                                                     // editor = 'checkbox';
+                                                                    fieldSettings.filter_type = 'boolean';
                                                                     fieldSettings.template = "{common.checkbox()}";
                                                                     break;
                                                                 case 'Select list':
-                                                                    fieldName = base.getFieldName(addFieldComIds.selectListView);
-                                                                    iconHeader = addFieldComIds.selectListIcon;
+                                                                    fieldName = base.getFieldName(self.componentIds.selectListView);
+                                                                    iconHeader = self.componentIds.selectListIcon;
 
-                                                                    if ($$(addFieldComIds.selectListOptions).data.count() > 0) {
+                                                                    if ($$(self.componentIds.selectListOptions).data.count() > 0) {
+                                                                        fieldSettings.filter_type = 'list';
                                                                         fieldSettings.editor = 'richselect';
+                                                                        fieldSettings.filter_options = [];
                                                                         fieldSettings.options = [];
 
-                                                                        $$(addFieldComIds.selectListOptions).data.each(function (opt) {
+                                                                        $$(self.componentIds.selectListOptions).data.each(function (opt) {
                                                                             fieldSettings.options.push(opt.name);
+                                                                            fieldSettings.filter_options.push({ id: opt.name, value: opt.name });
                                                                         });
                                                                     }
                                                                     else {
@@ -293,8 +298,8 @@ steal(
 
                                                                     break;
                                                                 case 'Attachment':
-                                                                    fieldName = base.getFieldName(addFieldComIds.attachmentView);
-                                                                    iconHeader = addFieldComIds.attachmentIcon;
+                                                                    fieldName = base.getFieldName(self.componentIds.attachmentView);
+                                                                    iconHeader = self.componentIds.attachmentIcon;
                                                                     alert('Under construction !!');
                                                                     return; // TODO;
                                                             }
@@ -304,7 +309,7 @@ steal(
                                                             var newColumn = $.extend(fieldSettings, {
                                                                 id: "c" + webix.uid(),
                                                                 header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', iconHeader).replace('{1}', fieldName),
-                                                                width: 170
+                                                                adjust: true
                                                             });
 
                                                             columns.insertAt(newColumn, dataTable.config.columns.length);
@@ -346,8 +351,8 @@ steal(
                                 resetState: function () {
                                     var _this = this;
 
-                                    $$(addFieldComIds.selectListOptions).clearAll();
-                                    $$(addFieldComIds.selectListNewOption).setValue('');
+                                    $$(self.componentIds.selectListOptions).clearAll();
+                                    $$(self.componentIds.selectListNewOption).setValue('');
                                     $$("ab-new-none").show();
                                 },
 
@@ -371,9 +376,9 @@ steal(
                                         return '';
                                 }
                             }, webix.ui.popup);
-						}
-					});
-				});
-		});
-	}
+                        }
+                    });
+                });
+        });
+    }
 );

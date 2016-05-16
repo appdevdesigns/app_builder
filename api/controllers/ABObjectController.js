@@ -1,14 +1,14 @@
 /**
- * ABApplicationController
+ * ABObjectController
  *
- * @description :: Server-side logic for managing Abapplications
+ * @description :: Server-side logic for managing Abobjects
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
 module.exports = {
 
     _config: {
-        model: "abapplication", // all lowercase model name
+        model: "abobject", // all lowercase model name
         actions: false,
         shortcuts: false,
         rest: true

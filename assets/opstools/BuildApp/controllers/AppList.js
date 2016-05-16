@@ -220,11 +220,11 @@ steal(
 
 															var selectedId = $$(self.webixUiId.appList).getSelectedId();
 
-															var updateData = {};
-
-															for (var key in $$(self.webixUiId.appListForm).elements) {
-																updateData[key] = $$(self.webixUiId.appListForm).elements[key].getValue();
-															}
+															var updateData = {
+																name: $$(self.webixUiId.appListForm).elements['name'].getValue(),
+																label: $$(self.webixUiId.appListForm).elements['name'].getValue(),
+																description: $$(self.webixUiId.appListForm).elements['description'].getValue()
+															};
 
 															$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
 															if (selectedId) { // Update application data

@@ -1,5 +1,5 @@
 /**
- * ABApplication.js
+ * ABColumn.js
  *
  * @description :: TODO: You might write a short summary of how this model works and what it represents here.
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
@@ -7,7 +7,7 @@
 
 module.exports = {
 
-    tableName: 'appbuilder_application',
+    tableName: 'appbuilder_column',
 
 
     connection: 'appdev_default',
@@ -18,29 +18,37 @@ module.exports = {
 
         // this will pull in the translations using .populate('translations')
         translations: {
-            collection: 'ABApplicationTrans',
-            via: 'abapplication'
+            collection: 'ABColumnTrans',
+            via: 'abcolumn'
         },
 
         translate: function (code) {
             return ADCore.model.translate({
                 model: this,         // this instance of a Model
                 code: code,          // the language code of the translation to use.
-                ignore: ['abapplication']     // don't include this field when translating
+                ignore: ['abcolumn']     // don't include this field when translating
             });
         },
 
         _Klass: function () {
-            return ABApplication;
+            return ABColumn;
         },
 
-        object: { collection: 'ABObject', via: 'application' },
+        object: { model: 'ABObject' },
 
         name: {
             type: 'string',
-            required: true,
-            unique: true
-        }
+            required: true
+        },
+
+        type: {
+            type: 'string',
+            required: true
+        },
+
+        required: { type: 'boolean' },
+
+        unique: { type: 'boolean' }
     },
 
     beforeCreate: function (values, cb) {
@@ -55,7 +63,6 @@ module.exports = {
             values.name = values.name.replace(' ', '_');
 
         cb();
-    },
-
+    }
 };
 
