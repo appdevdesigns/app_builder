@@ -225,26 +225,34 @@ steal(
                                                             }
 
                                                             var fieldName = '',
-                                                                iconHeader = '',
+                                                                fieldType = '',
                                                                 fieldSettings = {};
 
                                                             switch (base.selectedType) {
                                                                 case 'Single line text':
                                                                     fieldName = base.getFieldName(self.componentIds.singleTextView);
-                                                                    iconHeader = self.componentIds.singleTextIcon;
+                                                                    fieldType = 'string';
+                                                                    fieldSettings.icon = self.componentIds.singleTextIcon;
                                                                     fieldSettings.editor = 'text';
                                                                     fieldSettings.filter_type = 'text';
                                                                     fieldSettings.value = $$(self.componentIds.singleTextDefault).getValue();
                                                                     break;
                                                                 case 'Long text':
                                                                     fieldName = base.getFieldName(self.componentIds.longTextView);
-                                                                    iconHeader = self.componentIds.longTextIcon;
+                                                                    fieldType = 'text';
+                                                                    fieldSettings.icon = self.componentIds.longTextIcon;
                                                                     fieldSettings.editor = 'popup';
                                                                     fieldSettings.filter_type = 'text';
                                                                     break;
                                                                 case 'Number':
                                                                     fieldName = base.getFieldName(self.componentIds.numberView);
-                                                                    iconHeader = self.componentIds.numberIcon;
+
+                                                                    if ($$(self.componentIds.numberAllowDecimal).getValue())
+                                                                        fieldType = 'float';
+                                                                    else
+                                                                        fieldType = 'integer';
+
+                                                                    fieldSettings.icon = self.componentIds.numberIcon;
                                                                     fieldSettings.editor = 'number';
                                                                     fieldSettings.filter_type = 'number';
 
@@ -256,24 +264,30 @@ steal(
                                                                     break;
                                                                 case 'Date':
                                                                     fieldName = base.getFieldName(self.componentIds.dateView);
-                                                                    iconHeader = self.componentIds.dateIcon;
+                                                                    fieldSettings.icon = self.componentIds.dateIcon;
 
                                                                     fieldSettings.filter_type = 'date';
-                                                                    if ($$(self.componentIds.dateIncludeTime).getValue())
+                                                                    if ($$(self.componentIds.dateIncludeTime).getValue()) {
+                                                                        fieldType = 'datetime';
                                                                         fieldSettings.editor = 'datetime';
-                                                                    else
+                                                                    }
+                                                                    else {
+                                                                        fieldType = 'date';
                                                                         fieldSettings.editor = 'date';
+                                                                    }
                                                                     break;
                                                                 case 'Checkbox':
                                                                     fieldName = base.getFieldName(self.componentIds.booleanView);
-                                                                    iconHeader = self.componentIds.booleanIcon;
+                                                                    fieldType = 'boolean';
+                                                                    fieldSettings.icon = self.componentIds.booleanIcon;
                                                                     // editor = 'checkbox';
                                                                     fieldSettings.filter_type = 'boolean';
                                                                     fieldSettings.template = "{common.checkbox()}";
                                                                     break;
                                                                 case 'Select list':
                                                                     fieldName = base.getFieldName(self.componentIds.selectListView);
-                                                                    iconHeader = self.componentIds.selectListIcon;
+                                                                    fieldType = 'string';
+                                                                    fieldSettings.icon = self.componentIds.selectListIcon;
 
                                                                     if ($$(self.componentIds.selectListOptions).data.count() > 0) {
                                                                         fieldSettings.filter_type = 'list';
@@ -299,29 +313,24 @@ steal(
                                                                     break;
                                                                 case 'Attachment':
                                                                     fieldName = base.getFieldName(self.componentIds.attachmentView);
-                                                                    iconHeader = self.componentIds.attachmentIcon;
+                                                                    fieldSettings.icon = self.componentIds.attachmentIcon;
                                                                     alert('Under construction !!');
                                                                     return; // TODO;
                                                             }
 
-                                                            // Add new column
-                                                            var columns = webix.toArray(dataTable.config.columns);
-                                                            var newColumn = $.extend(fieldSettings, {
-                                                                id: "c" + webix.uid(),
-                                                                header: "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>".replace('{0}', iconHeader).replace('{1}', fieldName),
-                                                                adjust: true
-                                                            });
+                                                            if (base.addFieldCallback) {
+                                                                var newFieldInfo = {
+                                                                    name: fieldName,
+                                                                    type: fieldType,
+                                                                    setting: fieldSettings
+                                                                };
 
-                                                            columns.insertAt(newColumn, dataTable.config.columns.length);
-                                                            dataTable.refreshColumns();
+                                                                // Call callback function
+                                                                base.addFieldCallback(newFieldInfo);
 
-                                                            base.hide();
-
-                                                            if (base.addColumnEvent) {
-                                                                // TODO: Call event (to the server)
+                                                                base.hide(); // TODO : if fail, then should not hide
                                                             }
 
-                                                            webix.message({ type: "success", text: "<b>{0}</b> is added.".replace("{0}", fieldName) });
                                                         }
                                                     },
                                                     {
@@ -344,8 +353,8 @@ steal(
                                     this.dataTable = dataTable;
                                 },
 
-                                registerAddColumnEvent: function (addColumnEvent) {
-                                    this.addColumnEvent = addColumnEvent;
+                                registerAddNewFieldEvent: function (addFieldCallback) {
+                                    this.addFieldCallback = addFieldCallback;
                                 },
 
                                 resetState: function () {

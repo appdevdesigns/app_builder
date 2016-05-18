@@ -48,7 +48,11 @@ module.exports = {
 
         required: { type: 'boolean' },
 
-        unique: { type: 'boolean' }
+        unique: { type: 'boolean' },
+
+        default: { type: 'string' },
+
+        setting: { type: 'json' }
     },
 
     beforeCreate: function (values, cb) {
