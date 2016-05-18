@@ -362,6 +362,7 @@ steal(
 
                                     $$(self.componentIds.selectListOptions).clearAll();
                                     $$(self.componentIds.selectListNewOption).setValue('');
+                                    $('.' + self.componentIds.headerNameText).val('');
                                     $$("ab-new-none").show();
                                 },
 

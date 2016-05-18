@@ -160,7 +160,7 @@ steal(
 									},
 									{
 										view: 'button',
-										value: 'Add new model',
+										value: 'Add new object',
 										click: function () {
 											$$(self.webixUiId.addNewPopup).show();
 										}
@@ -367,6 +367,7 @@ steal(
 							if ($$(self.webixUiId.modelList).showProgress)
 								$$(self.webixUiId.modelList).showProgress({ type: "icon" });
 
+							$$(self.webixUiId.modelList).clearAll();
 							$$(self.webixUiId.modelList).parse(self.data.modelList.attr());
 							$$(self.webixUiId.modelList).refresh();
 							$$(self.webixUiId.modelList).unselectAll();

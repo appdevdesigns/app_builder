@@ -1,10 +1,11 @@
 
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditor.js',
-	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableVisibleFieldsPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 	'opstools/BuildApp/models/ABColumn.js',
 	function () {
         System.import('appdev').then(function () {
@@ -37,6 +38,7 @@ steal(
 
 								visibleFieldsPopup: 'ab-visible-fields-popup',
 								filterFieldsPopup: 'ab-filter-popup',
+								sortFieldsPopup: 'ab-sort-popup',
 								addFieldsPopup: 'ab-add-fields-popup'
 							};
 
@@ -48,15 +50,17 @@ steal(
 						initControllers: function () {
 							this.controllers = {};
 
-							var AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup'),
-								DataTableEditor = AD.Control.get('opstools.BuildApp.DataTableEditor'),
+							var DataTableEditor = AD.Control.get('opstools.BuildApp.DataTableEditor'),
+								VisibleFieldsPopup = AD.Control.get('opstools.BuildApp.DataTableVisibleFieldsPopup'),
 								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
-								VisibleFieldsPopup = AD.Control.get('opstools.BuildApp.DataTableVisibleFieldsPopup');
+								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
+								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup');
 
-							this.controllers.AddFieldPopup = new AddFieldPopup();
 							this.controllers.DataTableEditor = new DataTableEditor();
-							this.controllers.FilterPopup = new FilterPopup();
 							this.controllers.VisibleFieldsPopup = new VisibleFieldsPopup();
+							this.controllers.FilterPopup = new FilterPopup();
+							this.controllers.SortPopup = new SortPopup();
+							this.controllers.AddFieldPopup = new AddFieldPopup();
 						},
 
 						initWebixUI: function () {
@@ -70,6 +74,11 @@ steal(
 							webix.ui({
 								id: self.webixUiId.filterFieldsPopup,
 								view: "filter_popup",
+							}).hide();
+
+							webix.ui({
+								id: self.webixUiId.sortFieldsPopup,
+								view: "sort_popup",
 							}).hide();
 
 							webix.ui({
@@ -148,7 +157,8 @@ steal(
 								body: {
 									view: 'list',
 									data: [
-										{ command: "Hide field", icon: "fa-columns" },
+										{ command: "Hide field", icon: "fa-columns", badge: 7 },
+										{ command: "Filter field", icon: "fa-filter" },
 										{ command: "Rename field", icon: "fa-pencil-square-o" },
 										{ command: "Delete field", icon: "fa-trash" }
 									],
@@ -160,24 +170,23 @@ steal(
 									on: {
 										'onItemClick': function (timestamp, e, trg) {
 											var columns = webix.toArray($$(self.webixUiId.modelDatatable).config.columns),
-												selectedField = {};
-
-											columns.each(function (c) {
-												if (c.id == self.data.selectedFieldId)
-													selectedField = c;
-											});
-
-											var selectedFieldName = $(selectedField.header[0].text).text().trim();
+												selectedField = $.grep(columns, function (c) {
+													return c.dataId == self.data.selectedFieldId;
+												})[0],
+												selectedFieldName = $(selectedField.header[0].text).text().trim();
 
 											switch (trg.textContent.trim()) {
 												case 'Hide field':
-													$$(self.webixUiId.modelDatatable).hideColumn(self.data.selectedFieldId);
+													$$(self.webixUiId.modelDatatable).hideColumn(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
 													break;
+												case 'Filter field':
+													break;
+												case 'Sort field':
+													break;
 												case 'Rename field':
-													// TODO : Show old name in head popup
-													// $$(self.webixUiId.renameHeaderPopup).define('head', "Rename <b>{0}</b> column".replace('{0}', ''));
-													$$(self.webixUiId.renameHeaderPopup).config.head = "Rename <b>{0}</b> column".replace('{0}', '');
+													// Show old name in head popup
+													$$(self.webixUiId.renameHeaderPopup).getHead().setHTML("Rename <b>{0}</b> column".replace('{0}', selectedFieldName));
 													$$(self.webixUiId.renameHeaderPopup).show();
 
 													$$(self.webixUiId.editHeaderPopup).hide();
@@ -210,7 +219,7 @@ steal(
 																$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
 
 																// Call server to delete field data
-																self.Model.destroy(selectedField.id)
+																self.Model.destroy(selectedField.dataId)
 																	.fail(function (err) {
 																		$$(self.webixUiId.modelDatatable).hideProgress();
 
@@ -258,7 +267,7 @@ steal(
 										cols: [
 											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
 											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup },
-											{ view: 'button', label: 'Apply sort', icon: "sort", type: "icon", width: 120 },
+											{ view: 'button', label: 'Apply sort', icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup },
 											{ view: 'button', label: 'Permission', icon: "lock", type: "icon", width: 120 },
 											{ view: 'button', label: 'Add new column', icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
 										]
@@ -277,7 +286,8 @@ steal(
 										},
 										on: {
 											onHeaderClick(id, e, trg) {
-												self.data.selectedFieldId = id.column;
+												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(id.column);
+												self.data.selectedFieldId = columnConfig.dataId;
 
 												$$(self.webixUiId.editHeaderPopup).show(trg);
 											},
@@ -343,9 +353,10 @@ steal(
 									function (next) {
 										// TODO : Get data from server
 										var data = [
-											{ name: 'Test 1', description: 'Description 1', optional: 'Option 1' },
-											{ name: 'Test 2', description: 'Description 2', optional: 'Option 2' },
-											{ name: 'Test 3', description: 'Description 3', optional: 'Option 3' }
+											{ name: 'Test 1', description: 'Description 1', optional: 'Option 1', number: 70 },
+											{ name: 'Test 2', description: 'Description 2', optional: 'Option 2', number: 50 },
+											{ name: 'Test 3', description: 'Description 3', optional: 'Option 3', number: 90 },
+											{ name: 'Test 3', description: 'Description 1', optional: 'Option 2', number: 20 }
 										];
 
 										$$(self.webixUiId.modelDatatable).parse(data);
@@ -356,8 +367,9 @@ steal(
 									$$(self.webixUiId.modelDatatable).refresh();
 
 									// Register table to popups
-									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 
 									// Register add new column callback
@@ -392,7 +404,8 @@ steal(
 												// Add new column
 												var columns = webix.toArray($$(self.webixUiId.modelDatatable).config.columns);
 												var addColumnHeader = $.extend(columnInfo.setting, {
-													id: data.id,
+													id: data.name,
+													dataId: data.id,
 													header: self.getHeader(columnInfo.setting.icon, columnInfo.name)
 												});
 
@@ -427,7 +440,8 @@ steal(
 
 							var columns = $.map(self.data.columns.attr(), function (col, i) {
 								return $.extend(col.setting, {
-									id: col.id,
+									id: col.name,
+									dataId: col.id,
 									header: self.getHeader(col.setting.icon, col.name)
 								});
 							});

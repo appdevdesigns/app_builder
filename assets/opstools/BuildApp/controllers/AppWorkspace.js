@@ -90,8 +90,8 @@ steal(
 									{ height: 10 },
 									{
 										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.modelView, multiview: true, options: [
-											{ id: self.webixUiId.modelView, value: 'Model', width: 120 },
-											{ id: self.webixUiId.interfaceView, value: 'Interface', width: 120 }
+											{ id: self.webixUiId.modelView, value: 'Objects', width: 120 },
+											{ id: self.webixUiId.interfaceView, value: 'Views', width: 120 }
 										]
 									},
 									{
