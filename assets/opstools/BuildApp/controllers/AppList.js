@@ -73,7 +73,7 @@ steal(
 										autowidth: true,
 										template: "<div class='ab-app-list-item'>" +
 										"<div class='ab-app-list-info'>" +
-										"<div class='ab-app-list-name'>#name#</div>" +
+										"<div class='ab-app-list-name'>#label#</div>" +
 										"<div class='ab-app-list-description'>#description#</div>" +
 										"</div>" +
 										"<div class='ab-app-list-edit'>" +
@@ -140,10 +140,10 @@ steal(
 													break;
 												case 'Delete':
 													// TODO : Get from translation
-													var deleteConfirmTitle = "Delete application",
-														deleteConfirmMessage = "Do you want to delete <b>{0}</b>?".replace('{0}', selectedApp.name),
-														yes = "Yes",
-														no = "No";
+													var deleteConfirmTitle = AD.lang.label.getLabel('ab.application.delete.title') || "Delete application",
+														deleteConfirmMessage = (AD.lang.label.getLabel('ab.application.delete.message') || "Do you want to delete <b>{0}</b>?").replace('{0}', selectedApp.name),
+														yes = AD.lang.label.getLabel('ab.common.yes') || "Yes",
+														no = AD.lang.label.getLabel('ab.common.no') || "No";
 
 													webix.confirm({
 														title: deleteConfirmTitle,
@@ -208,7 +208,7 @@ steal(
 										view: "form",
 										id: self.webixUiId.appListForm,
 										elements: [
-											{ view: "text", label: "Name", name: "name", required: true, placeholder: "Application name", labelWidth: 100 },
+											{ view: "text", label: "Name", name: "label", required: true, placeholder: "Application name", labelWidth: 100 },
 											{ view: "textarea", label: "Description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },
 											{
 												margin: 5, cols: [
@@ -218,17 +218,16 @@ steal(
 															if (!$$(self.webixUiId.appListForm).validate())
 																return false;
 
-															var selectedId = $$(self.webixUiId.appList).getSelectedId();
-
-															var updateData = {
-																name: $$(self.webixUiId.appListForm).elements['name'].getValue(),
-																label: $$(self.webixUiId.appListForm).elements['name'].getValue(),
-																description: $$(self.webixUiId.appListForm).elements['description'].getValue()
-															};
-
 															$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
-															if (selectedId) { // Update application data
-																self.Model.update(selectedId, updateData)
+
+															var selectedId = $$(self.webixUiId.appList).getSelectedId();
+															var updateApp = self.data.filter(function (d) { return d.id == selectedId })[0];
+
+															if (updateApp) { // Update application data
+																updateApp.attr('label', $$(self.webixUiId.appListForm).elements['label'].getValue());
+																updateApp.attr('description', $$(self.webixUiId.appListForm).elements['description'].getValue());
+
+																updateApp.save()
 																	.fail(function (err) {
 																		$$(self.webixUiId.appListForm).hideProgress();
 
@@ -245,9 +244,12 @@ steal(
 																			return item.id === result.id;
 																		})[0];
 
-																		for (var key in result) {
-																			existApp.attr(key, result[key]);
-																		}
+																		if (result.translate) result.translate();
+
+																		existApp.attr('name', result.name);
+																		existApp.attr('label', result.label);
+																		existApp.attr('description', result.description);
+
 																		self.refreshList();
 
 																		$$(self.webixUiId.appListForm).hideProgress();
@@ -260,7 +262,13 @@ steal(
 
 																	});
 															} else { // Create application data
-																self.Model.create(updateData)
+																var newApp = {
+																	name: $$(self.webixUiId.appListForm).elements['label'].getValue(),
+																	label: $$(self.webixUiId.appListForm).elements['label'].getValue(),
+																	description: $$(self.webixUiId.appListForm).elements['description'].getValue()
+																};
+
+																self.Model.create(newApp)
 																	.fail(function (err) {
 																		$$(self.webixUiId.appListForm).hideProgress();
 
@@ -272,6 +280,9 @@ steal(
 																		AD.error.log('App Builder : Error create application data', { error: err });
 																	})
 																	.then(function (result) {
+																		// TODO : Why it does not have translations property when create
+																		if (result.translate) result.translate();
+
 																		self.data.push(result);
 																		self.refreshList();
 
@@ -333,6 +344,11 @@ steal(
 									AD.error.log('App Builder : Error loading application data', { error: err });
 								})
 								.then(function (data) {
+									// Popupate translate properties to object
+									data.forEach(function (d) {
+										if (d.translate) d.translate();
+									});
+
 									self.data = data;
 
 									self.refreshList();

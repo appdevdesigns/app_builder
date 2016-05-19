@@ -19,6 +19,8 @@ steal(
                             // Call parent init
                             this._super(element, options);
 
+                            this.data = {};
+
                             this.componentIds = {
                                 fieldsList: 'ab-visible-fields-list'
                             };
@@ -57,9 +59,9 @@ steal(
                                                                 columns.push(c.id);
                                                             });
 
-                                                            for (key in columns) {
-                                                                self.dataTable.hideColumn(columns[key]);
-                                                            }
+                                                            columns.forEach(function (c) {
+                                                                self.dataTable.hideColumn(c);
+                                                            });
                                                         }
                                                     }
                                                 ]
@@ -97,22 +99,35 @@ steal(
                                         }
                                     }
                                 },
+
                                 registerDataTable: function (dataTable) {
                                     self.dataTable = dataTable;
+                                },
+
+                                setFieldList: function (fieldList) {
+                                    // We can remove it when we can get all column from webix datatable (include hidden fields)
+                                    self.data.fieldList = fieldList;
+
+                                    this.bindFieldList();
+                                },
+
+                                bindFieldList: function () {
                                     $$(self.componentIds.fieldsList).clearAll();
                                     $$(self.componentIds.fieldsList).parse(this.getFieldList());
                                 },
+
                                 getFieldList: function () {
                                     var fieldList = [];
 
-                                    self.dataTable.eachColumn(function (id) {
-                                        var columnConfig = self.dataTable.getColumnConfig(id);
-
-                                        fieldList.push({
-                                            id: id,
-                                            value: $(columnConfig.header[0].text).text().trim()
+                                    // Get all columns include hidden columns
+                                    if (self.data.fieldList) {
+                                        self.data.fieldList.forEach(function (f) {
+                                            fieldList.push({
+                                                id: f.name,
+                                                value: f.name
+                                            });
                                         });
-                                    });
+                                    }
 
                                     return fieldList;
                                 },

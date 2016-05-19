@@ -75,9 +75,9 @@ steal(
 										editaction: 'custom',
 										editable: true,
 										editor: "text",
-										editValue: "name",
+										editValue: "label",
 										template: "<div class='ab-model-list-item'>" +
-										"#name#" +
+										"#label#" +
 										"<div class='ab-model-list-edit'>" +
 										"{common.iconGear}" +
 										"</div>" +
@@ -119,7 +119,6 @@ steal(
 													this.showProgress({ type: 'icon' });
 
 													var selectedModel = self.data.modelList.filter(function (item, index, list) { return item.id == editor.id; })[0];
-													selectedModel.attr('name', state.value);
 													selectedModel.attr('label', state.value);
 
 													// Call server to rename
@@ -172,7 +171,7 @@ steal(
 							webix.ui({
 								view: "popup",
 								id: self.webixUiId.modelListMenu,
-								head: "Model Menu",
+								head: "Object Menu",
 								width: 130,
 								body: {
 									view: "list",
@@ -197,7 +196,7 @@ steal(
 													break;
 												case 'Delete':
 													// TODO : Get from translation
-													var deleteConfirmTitle = "Delete model",
+													var deleteConfirmTitle = "Delete object",
 														deleteConfirmMessage = "Do you want to delete <b>{0}</b>?".replace('{0}', selectedModel.name),
 														yes = "Yes",
 														no = "No";
@@ -261,7 +260,7 @@ steal(
 								width: 300,
 								position: "center",
 								modal: true,
-								head: "Add new model",
+								head: "Add new object",
 								on: {
 									"onBeforeShow": function () {
 										$$(self.webixUiId.addNewForm).clearValidation();
@@ -291,7 +290,7 @@ steal(
 															application: self.data.appId
 														};
 
-														// Add new model to server
+														// Add new object to server
 														self.Model.create(newModel).fail(function () {
 															$$(self.webixUiId.modelList).hideProgress();
 
@@ -305,6 +304,10 @@ steal(
 														}).then(function (result) {
 															$$(self.webixUiId.addNewPopup).hide();
 
+															if (result.translate) result.translate();
+
+															self.data.modelList.push(result);
+															
 															$$(self.webixUiId.modelList).add(result);
 															$$(self.webixUiId.modelList).unselectAll();
 															$$(self.webixUiId.modelList).select(result.id);
@@ -355,6 +358,11 @@ steal(
 									AD.error.log('Model list : Error loading model list data', { error: err });
 								})
 								.then(function (data) {
+									// Popupate translate properties to object
+									data.forEach(function (d) {
+										if (d.translate) d.translate();
+									});
+
 									self.data.modelList = data;
 
 									self.refreshModelList();
@@ -375,6 +383,14 @@ steal(
 
 							if ($$(self.webixUiId.modelList).hideProgress)
 								$$(self.webixUiId.modelList).hideProgress();
+						},
+
+						resetState: function () {
+							var self = this;
+
+							$$(self.webixUiId.modelList).unselectAll();
+							$$(self.webixUiId.modelList).clearAll();
+							$$(self.webixUiId.modelList).refresh();
 						}
 
 					}); // end AD.Control.extend

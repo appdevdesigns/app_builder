@@ -122,10 +122,14 @@ steal(
 																.then(function (data) {
 																	self.bindColumns();
 
+																	if (data.translate) data.translate();
+
 																	webix.message({
 																		type: "success",
 																		text: "Rename to <b>" + newName + "</b>."
 																	});
+
+																	self.refreshPopupData();
 
 																	$$(self.webixUiId.modelDatatable).hideProgress();
 
@@ -157,8 +161,9 @@ steal(
 								body: {
 									view: 'list',
 									data: [
-										{ command: "Hide field", icon: "fa-columns", badge: 7 },
+										{ command: "Hide field", icon: "fa-columns" },
 										{ command: "Filter field", icon: "fa-filter" },
+										{ command: "Sort field", icon: "fa-sort" },
 										{ command: "Rename field", icon: "fa-pencil-square-o" },
 										{ command: "Delete field", icon: "fa-trash" }
 									],
@@ -232,6 +237,13 @@ steal(
 																	})
 																	.then(function (data) {
 																		// Remove column
+																		self.data.columns.forEach(function (c, index) {
+																			if (c.name == selectedField.id) {
+																				self.data.columns.splice(index, 1);
+																				return false;
+																			}
+																		});
+
 																		columns.removeAt(columns.find(selectedField));
 																		$$(self.webixUiId.modelDatatable).refreshColumns();
 
@@ -244,6 +256,8 @@ steal(
 
 																		// Clear selected field
 																		self.data.selectedFieldId = null;
+
+																		self.refreshPopupData();
 
 																		$$(self.webixUiId.modelDatatable).hideProgress();
 																	});
@@ -264,6 +278,7 @@ steal(
 									{
 										view: 'toolbar',
 										id: self.webixUiId.modelToolbar,
+										hidden: true,
 										cols: [
 											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
 											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup },
@@ -342,6 +357,10 @@ steal(
 												next(err);
 											})
 											.then(function (data) {
+												data.forEach(function (d) {
+													if (d.translate) d.translate();
+												});
+
 												self.data.columns = data;
 
 												self.bindColumns();
@@ -364,6 +383,8 @@ steal(
 										next();
 									}
 								], function () {
+									$$(self.webixUiId.modelToolbar).show();
+									$$(self.webixUiId.modelDatatable).show();
 									$$(self.webixUiId.modelDatatable).refresh();
 
 									// Register table to popups
@@ -371,6 +392,9 @@ steal(
 									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+
+									// Bind columns data
+									self.refreshPopupData();
 
 									// Register add new column callback
 									$$(self.webixUiId.addFieldsPopup).registerAddNewFieldEvent(function (columnInfo) {
@@ -401,16 +425,22 @@ steal(
 												AD.error.log('Add Column : Error add new field data', { error: err });
 											})
 											.then(function (data) {
+												if (data.translate) data.translate();
+
+												self.data.columns.push(data);
+
 												// Add new column
-												var columns = webix.toArray($$(self.webixUiId.modelDatatable).config.columns);
+												var columns = $$(self.webixUiId.modelDatatable).config.columns;
 												var addColumnHeader = $.extend(columnInfo.setting, {
 													id: data.name,
 													dataId: data.id,
-													header: self.getHeader(columnInfo.setting.icon, columnInfo.name)
+													header: self.getHeader(columnInfo.setting.icon, data.label)
 												});
-
-												columns.insertAt(addColumnHeader, $$(self.webixUiId.modelDatatable).config.columns.length);
+												columns.push(addColumnHeader);
+												$$(self.webixUiId.modelDatatable).define('columns', columns);
 												$$(self.webixUiId.modelDatatable).refreshColumns();
+
+												self.refreshPopupData();
 
 												$$(self.webixUiId.modelDatatable).hideProgress();
 
@@ -426,8 +456,10 @@ steal(
 								});
 							}
 							else {
+								$$(self.webixUiId.modelToolbar).hide();
 								$$(self.webixUiId.modelDatatable).refreshColumns();
 								$$(self.webixUiId.modelDatatable).refresh();
+								$$(self.webixUiId.modelDatatable).hide();
 
 								if ($$(self.webixUiId.modelDatatable).hideProgress)
 									$$(self.webixUiId.modelDatatable).hideProgress();
@@ -442,7 +474,7 @@ steal(
 								return $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
-									header: self.getHeader(col.setting.icon, col.name)
+									header: self.getHeader(col.setting.icon, col.label)
 								});
 							});
 
@@ -451,10 +483,35 @@ steal(
 							$$(self.webixUiId.modelDatatable).refreshColumns();
 						},
 
-						getHeader: function (icon, name) {
+						getHeader: function (icon, label) {
 							return "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>"
 								.replace('{0}', icon)
-								.replace('{1}', name);
+								.replace('{1}', label);
+						},
+
+						refreshPopupData: function () {
+							var self = this;
+
+							if (self.data.columns) {
+								$$(self.webixUiId.visibleFieldsPopup).setFieldList(self.data.columns.attr());
+								$$(self.webixUiId.filterFieldsPopup).setFieldList(self.data.columns.attr());
+							}
+
+							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
+							$$(self.webixUiId.filterFieldsPopup).refreshFieldList();
+						},
+
+						resetState: function () {
+							var self = this;
+
+							$$(self.webixUiId.modelToolbar).hide();
+							$$(self.webixUiId.modelDatatable).clearAll();
+							$$(self.webixUiId.modelDatatable).define('columns', []);
+							$$(self.webixUiId.modelDatatable).refresh();
+							$$(self.webixUiId.modelDatatable).refreshColumns();
+							$$(self.webixUiId.modelDatatable).hide();
+
+							self.refreshPopupData();
 						}
 
 					});

@@ -117,6 +117,7 @@ steal(
 										]
 									}, viewIndex);
 								},
+
 								registerDataTable: function (dataTable) {
 									self.dataTable = dataTable;
 
@@ -143,6 +144,7 @@ steal(
 										return fieldList;
 
 									// Get field header list
+									// TODO: Get all columns include hidden fields
 									self.dataTable.eachColumn(function (columnId) {
 										var columnConfig = self.dataTable.getColumnConfig(columnId);
 										if (columnConfig.header && columnConfig.header.length > 0 && columnConfig.header[0].text) {
@@ -155,42 +157,54 @@ steal(
 
 									// Remove selected field
 									if (excludeSelected) {
-										var cViews = $$(self.componentIds.sortForm).getChildViews();
-										for (var i = 0; i < cViews.length - 1; i++) {
-											var selectedValue = cViews[i].getChildViews()[0].getValue();
-											if (selectedValue) {
-												var removeItem = $.grep(fieldList, function (f) {
-													return f.id == selectedValue;
-												});
-												fieldList.splice(removeItem, 1);
-											}
+										var childViews = $$(self.componentIds.sortForm).getChildViews();
+										if (childViews.length > 1) { // Ignore 'Add new sort' button
+											childViews.forEach(function (cView, index) {
+												if (childViews.length - 1 <= index)
+													return false;
+
+												var selectedValue = cView.getChildViews()[0].getValue();
+												if (selectedValue) {
+													var removeItem = $.grep(fieldList, function (f) {
+														return f.id == selectedValue;
+													});
+													fieldList.splice(removeItem, 1);
+												}
+											});
 										}
 									}
 
 									return fieldList;
 								},
 
+								refreshFieldList: function () {
+									var fieldList = this.getFieldList(false);
+
+								},
+
 								sort: function () {
 									var columnOrders = [];
 
-									var cViews = $$(self.componentIds.sortForm).getChildViews();
-									for (var i = 0; i < cViews.length - 1; i++) {
-										var columnId = cViews[i].getChildViews()[0].getValue();
-										var order = cViews[i].getChildViews()[1].getValue();
+									$$(self.componentIds.sortForm).getChildViews().forEach(function (cView, index) {
+										if ($$(self.componentIds.sortForm).getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
+											return;
+
+										var columnId = cView.getChildViews()[0].getValue();
+										var order = cView.getChildViews()[1].getValue();
 
 										var columnConfig = self.dataTable.getColumnConfig(columnId);
 										columnOrders.push({
 											name: columnConfig.id,
 											order: order
 										});
-									}
+									});
 
 									self.dataTable.sort(function (a, b) {
 										var result = false;
 
 										for (var i = 0; i < columnOrders.length; i++) {
 											var column = columnOrders[i];
-											
+
 											if (a[column.name] != b[column.name]) {
 												if (column.order == 'asc') {
 													result = a[column.name] > b[column.name] ? 1 : -1;

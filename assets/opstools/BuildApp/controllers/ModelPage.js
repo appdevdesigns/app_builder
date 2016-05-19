@@ -73,6 +73,8 @@ steal(
 						setAppId: function (appId) {
 							var self = this;
 
+							self.controllers.ModelWorkspace.resetState();
+							self.controllers.ModelList.resetState();
 							self.controllers.ModelList.setAppId(appId);
 						},
 

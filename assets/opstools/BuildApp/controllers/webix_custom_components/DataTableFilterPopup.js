@@ -19,6 +19,8 @@ steal(
                             // Call parent init
                             this._super(element, options);
 
+                            this.data = {};
+
                             this.componentIds = {
                                 filterPopup: 'ab-filter-popup',
                                 filterForm: 'ab-filter-form'
@@ -63,6 +65,7 @@ steal(
                                         id: 'f' + webix.uid(),
                                         cols: [
                                             {
+                                                // Add / Or
                                                 view: "combo", value: self.combineCondition, options: ["And", "Or"], css: 'combine-condition', width: 80, on: {
                                                     "onChange": function (newValue, oldValue) {
                                                         self.combineCondition = newValue;
@@ -83,6 +86,7 @@ steal(
                                                 }
                                             },
                                             {
+                                                // Field list
                                                 view: "combo", options: $$(self.componentIds.filterPopup).getFieldList(), on: {
                                                     "onChange": function (columnId) {
                                                         var columnConfig = self.dataTable.getColumnConfig(columnId);
@@ -164,7 +168,9 @@ steal(
                                                     }
                                                 }
                                             },
+                                            // Comparer
                                             { view: "combo", options: [], width: 155, on: { "onChange": function () { $$(self.componentIds.filterPopup).filter(); } } },
+                                            // Value
                                             {},
                                             {
                                                 view: "button", value: "X", width: 30, click: function () {
@@ -182,33 +188,69 @@ steal(
                                     $$(self.componentIds.filterForm).clear();
                                     $$(self.componentIds.filterForm).clearValidation();
 
+                                    // Get all filter conditions to remove
                                     var cViews = [];
                                     var childViews = $$(self.componentIds.filterForm).getChildViews();
                                     for (var i = 0; i < childViews.length; i++) {
-                                        if (i < childViews.length - 1)
-                                            cViews.push(childViews[i]);
+                                        if (i >= childViews.length - 1) // Ignore 'Add a filter' button
+                                            break;
+
+                                        cViews.push(childViews[i]);
                                     }
 
+                                    // Remove all filter conditions
                                     cViews.forEach(function (v) {
                                         $$(self.componentIds.filterForm).removeView(v);
                                     });
                                 },
+                                setFieldList: function (fieldList) {
+                                    // We can remove it when we can get all column from webix datatable (include hidden fields)
+                                    self.data.fieldList = fieldList;
+
+                                    this.refreshFieldList();
+                                },
                                 getFieldList: function () {
                                     var fieldList = [];
 
-                                    if (self.dataTable) {
-                                        self.dataTable.eachColumn(function (columnId) {
-                                            var columnConfig = self.dataTable.getColumnConfig(columnId);
-                                            if (columnConfig.filter_type && columnConfig.header && columnConfig.header.length > 0 && columnConfig.header[0].text) {
+                                    // Get all columns include hidden fields
+                                    if (self.data.fieldList) {
+                                        self.data.fieldList.forEach(function (f) {
+                                            if (f.setting.filter_type) {
                                                 fieldList.push({
-                                                    id: columnId,
-                                                    value: $(columnConfig.header[0].text).text().trim()
+                                                    id: f.name,
+                                                    value: f.label
                                                 });
                                             }
                                         });
                                     }
 
                                     return fieldList;
+                                },
+                                refreshFieldList: function () {
+                                    var childViews = $$(self.componentIds.filterForm).getChildViews(),
+                                        fieldList = this.getFieldList(),
+                                        removeChildViews = [];
+
+                                    childViews.forEach(function (cView, index) {
+                                        if (index >= childViews.length - 1) // Ignore 'Add a filter' button
+                                            return false;
+
+                                        var fieldId = cView.getChildViews()[1].getValue();
+                                        if ($.grep(fieldList, function (f) { f.id == fieldId }).length < 1) {
+                                            // Add condition to remove
+                                            removeChildViews.push(cView);
+                                        }
+                                        else {
+                                            // Update field list
+                                            cView.getChildViews()[1].define('options', fieldList);
+                                            cView.getChildViews()[1].refresh();
+                                        }
+                                    });
+
+                                    // Remove filter conditions
+                                    removeChildViews.forEach(function (cView, index) {
+                                        $$(self.componentIds.filterForm).removeView(cView);
+                                    });
                                 },
                                 filter: function () {
 
@@ -237,19 +279,25 @@ steal(
                                             var condResult;
                                             var objValue = self.dataTable.getColumnConfig(cond.fieldName).filter_value ? self.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
 
+                                            if (!objValue)
+                                                return;
+
+                                            if (objValue.trim)
+                                                objValue = objValue.trim().toLowerCase();
+
                                             switch (cond.operator) {
                                                 // Text filter
                                                 case "contains":
-                                                    condResult = objValue.trim().toLowerCase().indexOf(cond.inputValue.trim().toLowerCase()) > -1;
+                                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
                                                     break;
                                                 case "doesn't contain":
-                                                    condResult = objValue.trim().toLowerCase().indexOf(cond.inputValue.trim().toLowerCase()) < 0;
+                                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
                                                     break;
                                                 case "is":
-                                                    condResult = objValue.trim().toLowerCase() == cond.inputValue.trim().toLowerCase();
+                                                    condResult = objValue == cond.inputValue.trim().toLowerCase();
                                                     break;
                                                 case "is not":
-                                                    condResult = objValue.trim().toLowerCase() != cond.inputValue.trim().toLowerCase();
+                                                    condResult = objValue != cond.inputValue.trim().toLowerCase();
                                                     break;
                                                 // Date filter
                                                 case "is before":
@@ -290,11 +338,11 @@ steal(
                                                 // List filter
                                                 case "equals":
                                                     if (objValue)
-                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue.trim().toLowerCase()) > -1;
+                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
                                                     break;
                                                 case "does not equal":
                                                     if (objValue)
-                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue.trim().toLowerCase()) < 0;
+                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
                                                     else
                                                         condResult = true;
                                                     break;
