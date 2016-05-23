@@ -236,7 +236,7 @@ steal(
                                             return false;
 
                                         var fieldId = cView.getChildViews()[1].getValue();
-                                        if ($.grep(fieldList, function (f) { f.id == fieldId }).length < 1) {
+                                        if ($.grep(fieldList, function (f) { return f.id == fieldId }).length < 1) {
                                             // Add condition to remove
                                             removeChildViews.push(cView);
                                         }
@@ -251,6 +251,8 @@ steal(
                                     removeChildViews.forEach(function (cView, index) {
                                         $$(self.componentIds.filterForm).removeView(cView);
                                     });
+
+                                    this.filter();
                                 },
                                 filter: function () {
 
@@ -271,98 +273,100 @@ steal(
                                         }
                                     });
 
-                                    self.dataTable.filter(function (obj) {
-                                        var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : 'And');
-                                        var isValid = (combineCond === 'And' ? true : false);
+                                    if (self.dataTable) {
+                                        self.dataTable.filter(function (obj) {
+                                            var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : 'And');
+                                            var isValid = (combineCond === 'And' ? true : false);
 
-                                        filterCondition.forEach(function (cond) {
-                                            var condResult;
-                                            var objValue = self.dataTable.getColumnConfig(cond.fieldName).filter_value ? self.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
+                                            filterCondition.forEach(function (cond) {
+                                                var condResult;
+                                                var objValue = self.dataTable.getColumnConfig(cond.fieldName).filter_value ? self.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
 
-                                            if (!objValue)
-                                                return;
+                                                if (!objValue)
+                                                    return;
 
-                                            if (objValue.trim)
-                                                objValue = objValue.trim().toLowerCase();
+                                                if (objValue.trim)
+                                                    objValue = objValue.trim().toLowerCase();
 
-                                            switch (cond.operator) {
-                                                // Text filter
-                                                case "contains":
-                                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
-                                                    break;
-                                                case "doesn't contain":
-                                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
-                                                    break;
-                                                case "is":
-                                                    condResult = objValue == cond.inputValue.trim().toLowerCase();
-                                                    break;
-                                                case "is not":
-                                                    condResult = objValue != cond.inputValue.trim().toLowerCase();
-                                                    break;
-                                                // Date filter
-                                                case "is before":
-                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                                    condResult = objValue < cond.inputValue;
-                                                    break;
-                                                case "is after":
-                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                                    condResult = objValue > cond.inputValue;
-                                                    break;
-                                                case "is on or before":
-                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                                    condResult = objValue <= cond.inputValue;
-                                                    break;
-                                                case "is on or after":
-                                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                                    condResult = objValue >= cond.inputValue;
-                                                    break;
-                                                // Number filter
-                                                case "=":
-                                                    condResult = Number(objValue) == Number(cond.inputValue);
-                                                    break;
-                                                case "≠":
-                                                    condResult = Number(objValue) != Number(cond.inputValue);
-                                                    break;
-                                                case "<":
-                                                    condResult = Number(objValue) < Number(cond.inputValue);
-                                                    break;
-                                                case ">":
-                                                    condResult = Number(objValue) > Number(cond.inputValue);
-                                                    break;
-                                                case "≤":
-                                                    condResult = Number(objValue) <= Number(cond.inputValue);
-                                                    break;
-                                                case "≥":
-                                                    condResult = Number(objValue) >= Number(cond.inputValue);
-                                                    break;
-                                                // List filter
-                                                case "equals":
-                                                    if (objValue)
-                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
-                                                    break;
-                                                case "does not equal":
-                                                    if (objValue)
-                                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
-                                                    else
-                                                        condResult = true;
-                                                    break;
-                                                // Boolean/Checkbox filter
-                                                case "is checked":
-                                                    condResult = (objValue === true || objValue === 1);
-                                                    break;
-                                                case "is not checked":
-                                                    condResult = !objValue;
-                                                    break;
-                                            }
-                                            if (combineCond === 'And') {
-                                                isValid = isValid && condResult;
-                                            } else {
-                                                isValid = isValid || condResult;
-                                            }
+                                                switch (cond.operator) {
+                                                    // Text filter
+                                                    case "contains":
+                                                        condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
+                                                        break;
+                                                    case "doesn't contain":
+                                                        condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
+                                                        break;
+                                                    case "is":
+                                                        condResult = objValue == cond.inputValue.trim().toLowerCase();
+                                                        break;
+                                                    case "is not":
+                                                        condResult = objValue != cond.inputValue.trim().toLowerCase();
+                                                        break;
+                                                    // Date filter
+                                                    case "is before":
+                                                        if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                        condResult = objValue < cond.inputValue;
+                                                        break;
+                                                    case "is after":
+                                                        if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                        condResult = objValue > cond.inputValue;
+                                                        break;
+                                                    case "is on or before":
+                                                        if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                        condResult = objValue <= cond.inputValue;
+                                                        break;
+                                                    case "is on or after":
+                                                        if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                                        condResult = objValue >= cond.inputValue;
+                                                        break;
+                                                    // Number filter
+                                                    case "=":
+                                                        condResult = Number(objValue) == Number(cond.inputValue);
+                                                        break;
+                                                    case "≠":
+                                                        condResult = Number(objValue) != Number(cond.inputValue);
+                                                        break;
+                                                    case "<":
+                                                        condResult = Number(objValue) < Number(cond.inputValue);
+                                                        break;
+                                                    case ">":
+                                                        condResult = Number(objValue) > Number(cond.inputValue);
+                                                        break;
+                                                    case "≤":
+                                                        condResult = Number(objValue) <= Number(cond.inputValue);
+                                                        break;
+                                                    case "≥":
+                                                        condResult = Number(objValue) >= Number(cond.inputValue);
+                                                        break;
+                                                    // List filter
+                                                    case "equals":
+                                                        if (objValue)
+                                                            condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
+                                                        break;
+                                                    case "does not equal":
+                                                        if (objValue)
+                                                            condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
+                                                        else
+                                                            condResult = true;
+                                                        break;
+                                                    // Boolean/Checkbox filter
+                                                    case "is checked":
+                                                        condResult = (objValue === true || objValue === 1);
+                                                        break;
+                                                    case "is not checked":
+                                                        condResult = !objValue;
+                                                        break;
+                                                }
+                                                if (combineCond === 'And') {
+                                                    isValid = isValid && condResult;
+                                                } else {
+                                                    isValid = isValid || condResult;
+                                                }
+                                            });
+
+                                            return isValid;
                                         });
-
-                                        return isValid;
-                                    })
+                                    }
                                 }
                             }, webix.ui.popup);
 

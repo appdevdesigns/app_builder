@@ -104,7 +104,8 @@ steal(
 															$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
 
 															var selectedModel = self.data.columns.filter(function (item, index, list) { return item.id == self.data.selectedFieldId; })[0];
-															selectedModel.attr('name', newName);
+
+															// selectedModel.attr('name', newName);
 															selectedModel.attr('label', newName);
 
 															// Rename column
@@ -126,7 +127,7 @@ steal(
 
 																	webix.message({
 																		type: "success",
-																		text: "Rename to <b>" + newName + "</b>."
+																		text: "Rename to <b>" + data.label + "</b>."
 																	});
 
 																	self.refreshPopupData();
@@ -245,7 +246,7 @@ steal(
 																		});
 
 																		columns.removeAt(columns.find(selectedField));
-																		$$(self.webixUiId.modelDatatable).refreshColumns();
+																		$$(self.webixUiId.modelDatatable).refreshColumns(columns, true);
 
 																		$$(self.webixUiId.editHeaderPopup).hide();
 
@@ -333,11 +334,7 @@ steal(
 							if ($$(self.webixUiId.modelDatatable).showProgress)
 								$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
 
-							// Clear columns & data
-							$$(self.webixUiId.modelDatatable).clearAll();
-							$$(self.webixUiId.modelDatatable).refresh();
-							$$(self.webixUiId.modelDatatable).define('columns', []);
-							$$(self.webixUiId.modelDatatable).refreshColumns();
+							self.resetState();
 
 							if (self.data.modelId) {
 								async.series([
@@ -357,13 +354,14 @@ steal(
 												next(err);
 											})
 											.then(function (data) {
+
 												data.forEach(function (d) {
 													if (d.translate) d.translate();
 												});
 
 												self.data.columns = data;
 
-												self.bindColumns();
+												self.bindColumns(true);
 
 												next();
 
@@ -437,8 +435,7 @@ steal(
 													header: self.getHeader(columnInfo.setting.icon, data.label)
 												});
 												columns.push(addColumnHeader);
-												$$(self.webixUiId.modelDatatable).define('columns', columns);
-												$$(self.webixUiId.modelDatatable).refreshColumns();
+												$$(self.webixUiId.modelDatatable).refreshColumns(columns);
 
 												self.refreshPopupData();
 
@@ -456,18 +453,15 @@ steal(
 								});
 							}
 							else {
-								$$(self.webixUiId.modelToolbar).hide();
-								$$(self.webixUiId.modelDatatable).refreshColumns();
-								$$(self.webixUiId.modelDatatable).refresh();
-								$$(self.webixUiId.modelDatatable).hide();
-
 								if ($$(self.webixUiId.modelDatatable).hideProgress)
 									$$(self.webixUiId.modelDatatable).hideProgress();
+
+								$$(self.webixUiId.modelDatatable).hide();
 							}
 
 						},
 
-						bindColumns: function () {
+						bindColumns: function (resetColumns) {
 							var self = this;
 
 							var columns = $.map(self.data.columns.attr(), function (col, i) {
@@ -478,9 +472,7 @@ steal(
 								});
 							});
 
-							$$(self.webixUiId.modelDatatable).define('columns', columns);
-
-							$$(self.webixUiId.modelDatatable).refreshColumns();
+							$$(self.webixUiId.modelDatatable).refreshColumns(columns, resetColumns || false);
 						},
 
 						getHeader: function (icon, label) {
@@ -495,21 +487,23 @@ steal(
 							if (self.data.columns) {
 								$$(self.webixUiId.visibleFieldsPopup).setFieldList(self.data.columns.attr());
 								$$(self.webixUiId.filterFieldsPopup).setFieldList(self.data.columns.attr());
+								$$(self.webixUiId.sortFieldsPopup).setFieldList(self.data.columns.attr());
 							}
 
 							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
 							$$(self.webixUiId.filterFieldsPopup).refreshFieldList();
+							$$(self.webixUiId.sortFieldsPopup).refreshFieldList();
 						},
 
 						resetState: function () {
 							var self = this;
 
 							$$(self.webixUiId.modelToolbar).hide();
+							$$(self.webixUiId.modelDatatable).clearValidation();
+							$$(self.webixUiId.modelDatatable).clearSelection();
 							$$(self.webixUiId.modelDatatable).clearAll();
-							$$(self.webixUiId.modelDatatable).define('columns', []);
 							$$(self.webixUiId.modelDatatable).refresh();
-							$$(self.webixUiId.modelDatatable).refreshColumns();
-							$$(self.webixUiId.modelDatatable).hide();
+							$$(self.webixUiId.modelDatatable).refreshColumns([], true);
 
 							self.refreshPopupData();
 						}
