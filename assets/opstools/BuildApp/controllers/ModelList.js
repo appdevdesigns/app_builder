@@ -15,7 +15,8 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								selectedModelEvent: 'AB_Model.Selected'
+								selectedModelEvent: 'AB_Model.Selected',
+								updatedModelEvent: 'AB_Model.Updated'
 							}, options);
 							this.options = options;
 
@@ -144,6 +145,8 @@ steal(
 
 															// Show gear icon
 															$(_this.getItemNode(editor.id)).find('.ab-model-list-edit').show();
+
+															self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
 														});
 												}
 											}
@@ -161,6 +164,7 @@ steal(
 										view: 'button',
 										value: 'Add new object',
 										click: function () {
+											$$(self.webixUiId.addNewPopup).define('selectNewObject', true);
 											$$(self.webixUiId.addNewPopup).show();
 										}
 									}
@@ -231,6 +235,8 @@ steal(
 
 																		$$(self.webixUiId.modelList).remove(selectedModel.id);
 
+																		self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
+
 																		webix.message({
 																			type: "success",
 																			text: "<b>" + selectedModel.name + "</b> is deleted."
@@ -261,6 +267,7 @@ steal(
 								position: "center",
 								modal: true,
 								head: "Add new object",
+								selectNewObject: true,
 								on: {
 									"onBeforeShow": function () {
 										$$(self.webixUiId.addNewForm).clearValidation();
@@ -307,10 +314,15 @@ steal(
 															if (result.translate) result.translate();
 
 															self.data.modelList.push(result);
-															
+
 															$$(self.webixUiId.modelList).add(result);
-															$$(self.webixUiId.modelList).unselectAll();
-															$$(self.webixUiId.modelList).select(result.id);
+
+															if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
+																$$(self.webixUiId.modelList).unselectAll();
+																$$(self.webixUiId.modelList).select(result.id);
+															}
+
+															self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
 
 															$$(self.webixUiId.modelList).hideProgress();
 
@@ -366,6 +378,8 @@ steal(
 									self.data.modelList = data;
 
 									self.refreshModelList();
+
+									self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
 								});
 						},
 

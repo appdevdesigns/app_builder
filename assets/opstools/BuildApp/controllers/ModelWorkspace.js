@@ -1,6 +1,7 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditor.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableVisibleFieldsPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
@@ -34,6 +35,8 @@ steal(
 
 								editHeaderPopup: 'ab-edit-header-popup',
 								renameHeaderPopup: 'ab-rename-header-popup',
+								addConnectObjectDataPopup: 'ab-connect-object-data-popup',
+								connectObjectDataList: 'ab-connect-object-data-list',
 								newFieldName: 'ab-new-name-header',
 
 								visibleFieldsPopup: 'ab-visible-fields-popup',
@@ -86,6 +89,7 @@ steal(
 								view: "add_fields_popup",
 							}).hide();
 
+							// Rename header popup
 							webix.ui({
 								id: self.webixUiId.renameHeaderPopup,
 								view: "window",
@@ -155,6 +159,7 @@ steal(
 								}
 							}).hide();
 
+							// Edit header popup
 							webix.ui({
 								id: self.webixUiId.editHeaderPopup,
 								view: 'popup',
@@ -274,6 +279,77 @@ steal(
 								}
 							}).hide();
 
+							// Select connected object data popup
+							webix.ui({
+								id: self.webixUiId.addConnectObjectDataPopup,
+								view: 'window',
+								modal: true,
+								head: "Select any connect data",
+								position: "center",
+								autowidth: true,
+								autoheight: true,
+								body: {
+									rows: [
+										{
+											id: self.webixUiId.connectObjectDataList,
+											view: 'list',
+											width: 600,
+											height: 400,
+											select: true,
+											multiselect: true,
+											type: {
+												height: 80, // Defines item height
+											},
+											ready: function () {
+												webix.extend(this, webix.ProgressBar);
+											},
+											on: {
+												onAfterLoad: function () {
+													var curSelectivity = self.getCurSelectivityNode(),
+														selectedData = curSelectivity.selectivity('data'),
+														selectedIds = $.map(selectedData, function (d) { return d.id; });
+
+													if (selectedIds && selectedIds.length > 0)
+														$$(self.webixUiId.connectObjectDataList).select(selectedIds);
+													else
+														$$(self.webixUiId.connectObjectDataList).unselectAll();
+												},
+												onSelectChange: function () {
+													var curSelectivity = self.getCurSelectivityNode(),
+														selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId(true),
+														selectedItems = [];
+
+													selectedIds.forEach(function (id) {
+														var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
+														var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
+
+														selectedItems.push({ id: id, text: connectData });
+													});
+
+													curSelectivity.selectivity('data', selectedItems);
+												}
+											}
+										},
+										{
+											view: "button",
+											value: "Close",
+											align: "right",
+											width: 150,
+											click: function () {
+												$$(self.webixUiId.addConnectObjectDataPopup).hide();
+											}
+										}
+									]
+								},
+								on: {
+									onHide: function () {
+										self.data.selectedCell = null
+										$$(self.webixUiId.connectObjectDataList).unselectAll();
+										$$(self.webixUiId.connectObjectDataList).clearAll();
+									}
+								}
+							}).hide();
+
 							self.data.definition = {
 								rows: [
 									{
@@ -297,17 +373,141 @@ steal(
 										editable: true,
 										editaction: "custom",
 										select: "cell",
+										type: {
+											autoheight: true
+										},
 										ready: function () {
 											webix.extend(this, webix.ProgressBar);
 										},
 										on: {
-											onHeaderClick(id, e, trg) {
+											onAfterRender: function (data) {
+												// Initial multi-combo
+												$('.connect-data-values').selectivity({
+													allowClear: true,
+													multiple: true,
+													removeOnly: true,
+													showDropdown: false,
+													showSearchInputInDropdown: false,
+													placeholder: 'No data selected'
+												});
+
+												// Popuplate multi-combo
+												var linkCols = $.grep(self.data.columns, function (c) {
+													return c.type === 'link';
+												});
+
+												linkCols.forEach(function (c) {
+													data.each(function (d) {
+														if (d[c.name]) {
+															var connectFieldNode = $($$(self.webixUiId.modelDatatable).getItemNode({ row: d.id, column: c.name }));
+															connectFieldNode.find('.connect-data-values').selectivity('data', d[c.name]);
+														}
+													})
+												});
+											},
+											onHeaderClick: function (id, e, trg) {
 												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(id.column);
 												self.data.selectedFieldId = columnConfig.dataId;
 
 												$$(self.webixUiId.editHeaderPopup).show(trg);
 											},
+											onBeforeSelect: function (data, preserve) {
+												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(data.column);
+
+												if (columnConfig.editor === 'selectivity') {
+													// Get column data
+													var columnData = self.data.columns.filter(function (f) {
+														return f.name === data.column;
+													});
+
+													if (!columnData || columnData.length < 1)
+														return false;
+
+													columnData = columnData[0];
+
+													// Show windows popup
+													$$(self.webixUiId.addConnectObjectDataPopup).show();
+
+													if ($$(self.webixUiId.connectObjectDataList).showProgress)
+														$$(self.webixUiId.connectObjectDataList).showProgress();
+
+													$$(self.webixUiId.connectObjectDataList).define('multiselect', columnData.isMultipleRecords);
+
+													self.data.selectedCell = { row: data.row, column: data.column };
+
+													var linkToObject = columnData.linkToObject,
+														columns = null;
+
+													async.series([
+														function (next) {
+															// Get columns of connected object
+															var object = $.grep(self.data.objectList, function (o) {
+																return o.name === linkToObject;
+															});
+
+															if (!object || object.length < 1)
+																return false;
+
+															self.Model.findAll({ object: object[0].id })
+																.then(function (data) {
+
+																	data.forEach(function (d) {
+																		if (d.translate) d.translate();
+																	});
+
+																	columns = data;
+
+																	next();
+
+																});
+														}, function (next) {
+															// Generate template to display
+															var template = '<div>{0}{1}</div>',
+																header = '<div>',
+																info = '<div class="ab-connect-data">';
+
+															columns.attr().forEach(function (c) {
+																header += '<span class="ab-connect-data-info"><b>{0}:</b></span>&nbsp;'.replace('{0}', c.label);
+																info += '<span class="ab-connect-data-info">#{0}#</span>&nbsp;'.replace('{0}', c.name);
+															});
+
+															header += '</div>';
+															info += '</div>';
+															template = template.replace('{0}', header).replace('{1}', info);
+
+															$$(self.webixUiId.connectObjectDataList).define('template', template);
+															$$(self.webixUiId.connectObjectDataList).refresh();
+
+															// TODO: Load the connect data
+															// Mock: connect data
+															var mockData = [];
+															for (var i = 0; i < 4; i++) {
+																mockData[i] = {};
+
+																columns.forEach(function (c) {
+																	mockData[i].id = 'Mock' + i;
+																	mockData[i][c.name] = c.label + ' ' + (i + 1);
+																});
+															}
+
+															$$(self.webixUiId.connectObjectDataList).parse(mockData);
+														}
+													], function () {
+														if ($$(self.webixUiId.connectObjectDataList).hideProgress)
+															$$(self.webixUiId.connectObjectDataList).hideProgress();
+													});
+
+													return false;
+												}
+												else {
+													return true;
+												}
+											},
 											onAfterSelect: function (data, prevent) {
+												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(data.column);
+												if (columnConfig.editor === 'selectivity')
+													return false;
+
 												this.editCell(data.row, data.column);
 											},
 											onAfterColumnShow: function (id) {
@@ -335,6 +535,12 @@ steal(
 								$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
 
 							self.resetState();
+
+							// Set enable connect object list to the add new column popup
+							var enableConnectObjects = $.grep(self.data.objectList, function (o) {
+								return o.id != self.data.modelId;
+							});
+							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
 
 							if (self.data.modelId) {
 								async.series([
@@ -370,8 +576,8 @@ steal(
 									function (next) {
 										// TODO : Get data from server
 										var data = [
-											{ name: 'Test 1', description: 'Description 1', optional: 'Option 1', number: 70 },
-											{ name: 'Test 2', description: 'Description 2', optional: 'Option 2', number: 50 },
+											{ name: 'Test 1', description: 'Description 1', optional: 'Option 1', number: 70, Link: [{ id: 'Mock1', text: 'Test Description' }, { id: 'Mock2', text: 'Test2 Description2' }] },
+											{ name: 'Test 2', description: 'Description 2', optional: 'Option 2', number: 50, Link: [{ id: 'Mock3', text: 'Test3 Description3' }] },
 											{ name: 'Test 3', description: 'Description 3', optional: 'Option 3', number: 90 },
 											{ name: 'Test 3', description: 'Description 1', optional: 'Option 2', number: 20 }
 										];
@@ -400,13 +606,21 @@ steal(
 										if ($$(self.webixUiId.modelDatatable).showProgress)
 											$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
 
+										columnInfo.label = columnInfo.name;
+
 										var newColumn = {
 											object: self.data.modelId,
 											name: columnInfo.name,
-											label: columnInfo.name,
+											label: columnInfo.label,
 											type: columnInfo.type,
 											setting: columnInfo.setting
 										};
+
+										if (columnInfo.linkToObject != null)
+											newColumn.linkToObject = columnInfo.linkToObject;
+
+										if (columnInfo.isMultipleRecords != null)
+											newColumn.isMultipleRecords = columnInfo.isMultipleRecords ? true : false;
 
 										if (columnInfo.setting.value)
 											newColumn.default = columnInfo.setting.value;
@@ -429,10 +643,11 @@ steal(
 
 												// Add new column
 												var columns = $$(self.webixUiId.modelDatatable).config.columns;
+
 												var addColumnHeader = $.extend(columnInfo.setting, {
 													id: data.name,
 													dataId: data.id,
-													header: self.getHeader(columnInfo.setting.icon, data.label)
+													header: self.getHeader(columnInfo)
 												});
 												columns.push(addColumnHeader);
 												$$(self.webixUiId.modelDatatable).refreshColumns(columns);
@@ -444,7 +659,11 @@ steal(
 												webix.message({ type: "success", text: "<b>{0}</b> is added.".replace("{0}", columnInfo.name) });
 											});
 
+									});
 
+									$$(self.webixUiId.addFieldsPopup).registerCreateNewObjectEvent(function () {
+										$$('ab-model-add-new-popup').define('selectNewObject', false);
+										$$('ab-model-add-new-popup').show(); // Mark : show add new object popup in ObjectList page
 									});
 
 									if ($$(self.webixUiId.modelDatatable).hideProgress)
@@ -468,17 +687,48 @@ steal(
 								return $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
-									header: self.getHeader(col.setting.icon, col.label)
+									header: self.getHeader(col)
 								});
 							});
 
 							$$(self.webixUiId.modelDatatable).refreshColumns(columns, resetColumns || false);
 						},
 
-						getHeader: function (icon, label) {
+						getHeader: function (col) {
+							var self = this,
+								label = col.label;
+
+							// Show connect object name in header
+							if (col.setting.editor === 'selectivity') {
+								// Find label of connect object
+								var connectObj = $.grep(self.data.objectList, function (o) {
+									return o.name == col.linkToObject;
+								});
+
+								label += ' (Connect to <b>{0}</b>)'.replace('{0}', connectObj[0].label);
+							}
+
 							return "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>"
-								.replace('{0}', icon)
+								.replace('{0}', col.setting.icon)
 								.replace('{1}', label);
+						},
+
+						setObjectList: function (objectList) {
+							var self = this;
+
+							self.data.objectList = objectList;
+						},
+
+						getCurSelectivityNode: function (selectedCell) {
+							var self = this;
+
+							if (selectedCell || self.data.selectedCell) {
+								var rowNode = $($$(self.webixUiId.modelDatatable).getItemNode(selectedCell || self.data.selectedCell));
+								return rowNode.find('.connect-data-values');
+							}
+							else {
+								return $('');
+							}
 						},
 
 						refreshPopupData: function () {

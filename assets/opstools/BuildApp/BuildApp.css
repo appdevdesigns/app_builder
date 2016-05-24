@@ -22,8 +22,11 @@
 .ab-main-container .bold {
 	font-weight: bold;
 }
-
-/* Webbix message */
+/* Webix selected item */
+.webix_list_item.webix_selected {
+	background-color: #3498db !important;
+}
+/* Webix message */
 .webix_success {
   background-color: #BFF2BF;	
 }
@@ -51,7 +54,9 @@
 	position: relative;
 	height: 100%;
 }
-div[view_id='ab-app-list'] div.webix_list_item:hover, div[view_id='ab-model-list'] div.webix_list_item:hover {
+div[view_id='ab-app-list'] div.webix_list_item:hover, 
+div[view_id='ab-model-list'] div.webix_list_item:hover,
+div[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover {
 	background-color: #eee;	
 }
 .ab-app-list-name {
@@ -101,4 +106,23 @@ div[view_id='ab-app-list'] div.webix_list_item:hover, div[view_id='ab-model-list
 }
 .ab-model-data-header:hover .ab-model-data-header-edit {
 	display: block;
+}
+
+/* Connect object data */
+.ab-connect-data-info {
+	display: inline-block;
+	width: 90px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Custom selectivity */
+.ab-main-container .selectivity-multiple-input-container {
+	background: none !important;  
+	padding: 0px !important;
+}
+.ab-main-container .selectivity-multiple-selected-item {
+	background: #3498db;
+	/*max-width: 70px;*/
 }

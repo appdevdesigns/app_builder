@@ -52,7 +52,11 @@ module.exports = {
 
         default: { type: 'string' },
 
-        setting: { type: 'json' }
+        setting: { type: 'json' },
+
+        linkToObject: { type: 'string' },
+
+        isMultipleRecords: { type: 'boolean' }
     },
 
     beforeCreate: function (values, cb) {

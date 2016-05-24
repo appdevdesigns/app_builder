@@ -16,7 +16,8 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								selectedModelEvent: 'AB_Model.Selected'
+								selectedModelEvent: 'AB_Model.Selected',
+								updatedModelEvent: 'AB_Model.Updated'
 							}, options);
 							this.options = options;
 
@@ -37,7 +38,7 @@ steal(
 							var ModelList = AD.Control.get('opstools.BuildApp.ModelList');
 							var ModelWorkspace = AD.Control.get('opstools.BuildApp.ModelWorkspace');
 
-							self.controllers.ModelList = new ModelList(self.element, { selectedModelEvent: self.options.selectedModelEvent });
+							self.controllers.ModelList = new ModelList(self.element, { selectedModelEvent: self.options.selectedModelEvent, updatedModelEvent: self.options.updatedModelEvent });
 							self.controllers.ModelWorkspace = new ModelWorkspace(self.element);
 						},
 
@@ -63,6 +64,10 @@ steal(
 
 							self.controllers.ModelList.on(self.options.selectedModelEvent, function (event, id) {
 								self.controllers.ModelWorkspace.setModelId(id);
+							});
+
+							self.controllers.ModelList.on(self.options.updatedModelEvent, function (event, data) {
+								self.controllers.ModelWorkspace.setObjectList(data.objectList);
 							});
 						},
 

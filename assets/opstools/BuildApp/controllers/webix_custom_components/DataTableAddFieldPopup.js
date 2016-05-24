@@ -22,6 +22,12 @@ steal(
                             this.componentIds = {
                                 chooseTypeView: 'ab-new-none',
 
+                                connectObjectIcon: 'external-link',
+                                connectObjectView: 'ab-new-connectObject',
+                                connectObjectList: 'ab-new-connectObject-list-item',
+                                connectObjectCreateNew: 'ab-new-connectObject-create-new',
+                                connectObjectIsMultipleRecords: 'ab-new-connectObject-multiple-records',
+
                                 singleTextIcon: 'font',
                                 singleTextView: 'ab-new-singleText',
                                 singleTextDefault: 'ab-new-singleText-default',
@@ -71,11 +77,14 @@ steal(
                                         width: 380,
                                         rows: [
                                             {
+                                                minWidth: 500,
                                                 view: "menu",
+                                                autowidth: true,
                                                 data: [
                                                     {
                                                         value: "Choose field type...",
                                                         submenu: [
+                                                            { view: 'button', value: 'Connect to another record', icon: self.componentIds.connectObjectIcon, type: 'icon', viewName: self.componentIds.connectObjectView },
                                                             { view: 'button', value: 'Single line text', icon: self.componentIds.singleTextIcon, type: 'icon', viewName: self.componentIds.singleTextView },
                                                             { view: 'button', value: 'Long text', icon: self.componentIds.longTextIcon, type: 'icon', viewName: self.componentIds.longTextView },
                                                             { view: 'button', value: 'Number', icon: self.componentIds.numberIcon, type: 'icon', viewName: self.componentIds.numberView },
@@ -117,7 +126,39 @@ steal(
                                                 cells: [
                                                     {
                                                         id: self.componentIds.chooseTypeView,
-                                                        rows: [{ view: "label", label: "Choose field type..." }]
+                                                        rows: [
+                                                            { view: "label", label: "Choose field type..." }
+                                                        ]
+                                                    },
+                                                    {
+                                                        id: self.componentIds.connectObjectView,
+                                                        rows: [
+                                                            { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>Connect to Object".replace('{0}', self.componentIds.connectObjectIcon) },
+                                                            {
+                                                                view: "list",
+                                                                id: self.componentIds.connectObjectList,
+                                                                select: true,
+                                                                height: 180,
+                                                                template: "<div class='ab-new-connectObject-list-item'>#label#</div>"
+                                                            },
+                                                            {
+                                                                view: 'button',
+                                                                id: self.componentIds.connectObjectCreateNew,
+                                                                value: 'Connect to new Object',
+                                                                click: function () {
+                                                                    if (self.createNewObjectEvent)
+                                                                        self.createNewObjectEvent();
+                                                                }
+                                                            },
+                                                            {
+                                                                view: "checkbox",
+                                                                id: self.componentIds.connectObjectIsMultipleRecords,
+                                                                labelWidth: 0,
+                                                                labelRight: "Allow connecting to multiple records",
+                                                                value: false
+                                                            }
+                                                        ]
                                                     },
                                                     {
                                                         id: self.componentIds.singleTextView,
@@ -226,9 +267,31 @@ steal(
 
                                                             var fieldName = '',
                                                                 fieldType = '',
+                                                                linkToObject = null,
+                                                                isMultipleRecords = null,
                                                                 fieldSettings = {};
 
                                                             switch (base.selectedType) {
+                                                                case 'Connect to another record':
+                                                                    var linkObject = $$(self.componentIds.connectObjectList).getSelectedItem();
+                                                                    if (!linkObject) {
+                                                                        webix.alert({
+                                                                            title: "Object required",
+                                                                            ok: "Ok",
+                                                                            text: "Please select object to connect."
+                                                                        })
+                                                                        return false;
+                                                                    }
+
+                                                                    fieldName = base.getFieldName(self.componentIds.connectObjectView);
+                                                                    fieldType = 'link';
+                                                                    linkToObject = linkObject.name;
+                                                                    isMultipleRecords = $$(self.componentIds.connectObjectIsMultipleRecords).getValue();
+                                                                    fieldSettings.icon = self.componentIds.connectObjectIcon;
+                                                                    fieldSettings.editor = 'selectivity';
+                                                                    fieldSettings.template = '<div class="connect-data-values"></div>';
+                                                                    // fieldSettings.filter_type = ; // TODO
+                                                                    break;
                                                                 case 'Single line text':
                                                                     fieldName = base.getFieldName(self.componentIds.singleTextView);
                                                                     fieldType = 'string';
@@ -325,6 +388,12 @@ steal(
                                                                     setting: fieldSettings
                                                                 };
 
+                                                                if (linkToObject != null)
+                                                                    newFieldInfo.linkToObject = linkToObject;
+
+                                                                if (isMultipleRecords != null)
+                                                                    newFieldInfo.isMultipleRecords = isMultipleRecords;
+
                                                                 // Call callback function
                                                                 base.addFieldCallback(newFieldInfo);
 
@@ -357,11 +426,24 @@ steal(
                                     this.addFieldCallback = addFieldCallback;
                                 },
 
+                                registerCreateNewObjectEvent: function (createNewObjectEvent) {
+                                    self.createNewObjectEvent = createNewObjectEvent;
+                                },
+
+                                setObjectList: function (objectList) {
+                                    $$(self.componentIds.connectObjectList).clearAll();
+                                    $$(self.componentIds.connectObjectList).parse(objectList);
+                                    $$(self.componentIds.connectObjectList).refresh();
+                                },
+
                                 resetState: function () {
                                     var _this = this;
 
                                     $$(self.componentIds.selectListOptions).clearAll();
                                     $$(self.componentIds.selectListNewOption).setValue('');
+                                    $$(self.componentIds.connectObjectList).unselectAll();
+                                    $$(self.componentIds.connectObjectIsMultipleRecords).setValue(false);
+                                    $$(self.componentIds.connectObjectIsMultipleRecords).refresh();
                                     $('.' + self.componentIds.headerNameText).val('');
                                     $$("ab-new-none").show();
                                 },

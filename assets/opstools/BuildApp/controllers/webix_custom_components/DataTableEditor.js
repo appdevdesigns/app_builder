@@ -22,8 +22,7 @@ steal(
                             this.initWebixControls();
                         },
 
-						initWebixControls: function () {
-
+                        initWebixControls: function () {
                             // Number text
                             webix.editors.number = webix.extend({
                                 // TODO : Validate number only
@@ -39,9 +38,9 @@ steal(
                                 popupType: "datetime"
                             }, webix.editors.date);
 
-						}
-					});
-				});
-		});
-	}
+                        }
+                    });
+                });
+        });
+    }
 );
