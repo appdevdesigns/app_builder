@@ -28,10 +28,47 @@ steal(
                             this.Model = AD.Model.get('opstools.BuildApp.ABApplication');
 							this.data = [];
 
+							this.initMultilingualLabels();
+
 							webix.ready(function () {
 								self.initWebixUI();
 								self.loadData();
 							});
+						},
+
+						initMultilingualLabels: function () {
+							var self = this;
+							self.labels = {};
+
+							self.labels.common = {};
+							self.labels.common.edit = AD.lang.label.getLabel('ab.common.edit') || "Edit";
+							self.labels.common.save = AD.lang.label.getLabel('ab.common.save') || "Save";
+							self.labels.common.delete = AD.lang.label.getLabel('ab.common.delete') || "Delete";
+							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
+							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
+							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
+							self.labels.common.createErrorMessage = AD.lang.label.getLabel('ab.common.create.error') || "System could not create <b>{0}</b>.";
+							self.labels.common.createSuccessMessage = AD.lang.label.getLabel('ab.common.create.success') || "<b>{0}</b> is created.";
+							self.labels.common.updateErrorMessage = AD.lang.label.getLabel('ab.common.update.error') || "System could not update <b>{0}</b>.";
+							self.labels.common.updateSucessMessage = AD.lang.label.getLabel('ab.common.update.success') || "<b>{0}</b> is updated.";
+							self.labels.common.deleteErrorMessage = AD.lang.label.getLabel('ab.common.delete.error') || "System could not delete <b>{0}</b>.";
+							self.labels.common.deleteSuccessMessage = AD.lang.label.getLabel('ab.common.delete.success') || "<b>{0}</b> is deleted.";
+							self.labels.common.formName = AD.lang.label.getLabel('ab.common.form.name') || "Name";
+							self.labels.common.formDescription = AD.lang.label.getLabel('ab.common.form.description') || "Description";
+
+							self.labels.application = {};
+							self.labels.application.title = AD.lang.label.getLabel('ab.application.application') || "Application";
+							self.labels.application.createNew = AD.lang.label.getLabel('ab.application.createNew') || "Add new application";
+							self.labels.application.menu = AD.lang.label.getLabel('ab.application.menu') || "Application Menu";
+
+							// Delete
+							self.labels.application.confirmDeleteTitle = AD.lang.label.getLabel('ab.application.delete.title') || "Delete application";
+							self.labels.application.confirmDeleteMessage = AD.lang.label.getLabel('ab.application.delete.message') || "Do you want to delete <b>{0}</b>?";
+
+							// Form
+							self.labels.application.formHeader = AD.lang.label.getLabel('ab.application.form.header') || "Application Info";
+							self.labels.application.placeholderName = AD.lang.label.getLabel('ab.application.form.placeholderName') || "Application name";
+							self.labels.application.placeholderDescription = AD.lang.label.getLabel('ab.application.form.placeholderDescription') || "Application description";
 						},
 
 						initWebixUI: function () {
@@ -57,9 +94,9 @@ steal(
 										view: "toolbar",
 										id: self.webixUiId.appListToolbar,
 										cols: [
-											{ view: "label", label: "Applications", fillspace: true },
+											{ view: "label", label: self.labels.application.title, fillspace: true },
 											{
-												view: "button", value: "Add new application", width: 200,
+												view: "button", value: self.labels.application.createNew, width: 200,
 												click: function () {
 													self.resetState();
 													$$(self.webixUiId.appListFormView).show();
@@ -111,13 +148,13 @@ steal(
 							webix.ui({
 								view: "popup",
 								id: self.webixUiId.appListMenu,
-								head: "Application Menu",
+								head: self.labels.application.menu,
 								width: 100,
 								body: {
 									view: "list",
 									data: [
-										{ command: "Edit", icon: "fa-pencil-square-o" },
-										{ command: "Delete", icon: "fa-trash" }
+										{ command: self.labels.common.edit, icon: "fa-pencil-square-o" },
+										{ command: self.labels.common.delete, icon: "fa-trash" }
 									],
 									datatype: "json",
 
@@ -129,7 +166,7 @@ steal(
 											var selectedApp = $$(self.webixUiId.appList).getSelectedItem();
 
 											switch (trg.textContent.trim()) {
-												case 'Edit':
+												case self.labels.common.edit:
 													$$(self.webixUiId.appListFormView).show();
 
 													// Popuplate data to form
@@ -138,18 +175,12 @@ steal(
 															$$(self.webixUiId.appListForm).elements[key].setValue(selectedApp[key]);
 													}
 													break;
-												case 'Delete':
-													// TODO : Get from translation
-													var deleteConfirmTitle = AD.lang.label.getLabel('ab.application.delete.title') || "Delete application",
-														deleteConfirmMessage = (AD.lang.label.getLabel('ab.application.delete.message') || "Do you want to delete <b>{0}</b>?").replace('{0}', selectedApp.name),
-														yes = AD.lang.label.getLabel('ab.common.yes') || "Yes",
-														no = AD.lang.label.getLabel('ab.common.no') || "No";
-
+												case self.labels.common.delete:
 													webix.confirm({
-														title: deleteConfirmTitle,
-														ok: yes,
-														cancel: no,
-														text: deleteConfirmMessage,
+														title: self.labels.application.confirmDeleteTitle,
+														ok: self.labels.common.yes,
+														cancel: self.labels.common.no,
+														text: self.labels.application.confirmDeleteMessage.replace('{0}', selectedApp.name),
 														callback: function (result) {
 															if (result) {
 																// Delete application data
@@ -160,7 +191,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: "System could not delete <b>{0}</b>.".replace("{0}", selectedApp.name)
+																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedApp.name)
 																		});
 
 																		AD.error.log('App Builder : Error delete application data', { error: err });
@@ -177,7 +208,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: "<b>" + selectedApp.name + "</b> is deleted."
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedApp.name)
 																		});
 																	});
 															}
@@ -202,19 +233,19 @@ steal(
 								rows: [
 									{
 										view: "toolbar",
-										cols: [{ view: "label", label: "Application Info", fillspace: true }]
+										cols: [{ view: "label", label: self.labels.application.formHeader, fillspace: true }]
 									},
 									{
 										view: "form",
 										id: self.webixUiId.appListForm,
 										elements: [
-											{ view: "text", label: "Name", name: "label", required: true, placeholder: "Application name", labelWidth: 100 },
-											{ view: "textarea", label: "Description", name: "description", placeholder: "Application description", labelWidth: 100, height: 150 },
+											{ view: "text", label: self.labels.common.formName, name: "label", required: true, placeholder: self.labels.application.placeholderName, labelWidth: 100 },
+											{ view: "textarea", label: self.labels.common.formDescription, name: "description", placeholder: self.labels.application.placeholderDescription, labelWidth: 100, height: 150 },
 											{
 												margin: 5, cols: [
 													{ fillspace: true },
 													{
-														view: "button", label: "Save", type: "form", width: 100, click: function () {
+														view: "button", label: self.labels.common.save, type: "form", width: 100, click: function () {
 															if (!$$(self.webixUiId.appListForm).validate())
 																return false;
 
@@ -233,7 +264,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: "System could not update <b>" + result.name + "</b>." // TODO : translation
+																			text: self.labels.common.updateErrorMessage.replace('{0}', result.name)
 																		});
 
 																		AD.error.log('App Builder : Error update application data', { error: err });
@@ -257,7 +288,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: "<b>" + result.name + "</b> is updated." // TODO : translation
+																			text: self.labels.common.updateSucessMessage.replace('{0}', result.name)
 																		});
 
 																	});
@@ -274,13 +305,12 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: "System could not create <b>" + result.name + "</b>." // TODO : translation
+																			text: self.labels.common.createErrorMessage.replace('{0}', result.name)
 																		});
 
 																		AD.error.log('App Builder : Error create application data', { error: err });
 																	})
 																	.then(function (result) {
-																		// TODO : Why it does not have translations property when create
 																		if (result.translate) result.translate();
 
 																		self.data.push(result);
@@ -291,7 +321,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: "<b>" + result.name + "</b> is created." // TODO : translation
+																			text: self.labels.common.createSuccessMessage.replace('{0}', result.name)
 																		});
 
 																	});
@@ -299,7 +329,7 @@ steal(
 														}
 													},
 													{
-														view: "button", value: "Cancel", width: 100, click: function () {
+														view: "button", value: self.labels.common.cancel, width: 100, click: function () {
 															self.resetState();
 															$$(self.webixUiId.appListRow).show();
 														}

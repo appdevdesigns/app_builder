@@ -48,11 +48,46 @@ steal(
 								}
 							};
 
+							this.initMultilingualLabels();
 							this.initControllers();
 
 							webix.ready(function () {
 								self.initWebixUI();
 							});
+						},
+
+						initMultilingualLabels: function () {
+							var self = this;
+							self.labels = {};
+							self.labels.common = {};
+							self.labels.object = {};
+
+							self.labels.common.ok = AD.lang.label.getLabel('ab.common.ok') || "Ok";
+							self.labels.common.delete = AD.lang.label.getLabel('ab.common.delete') || "Delete";
+							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
+							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
+							self.labels.common.add = AD.lang.label.getLabel('ab.common.add') || "Add";
+							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
+							self.labels.common.formName = AD.lang.label.getLabel('ab.common.form.name') || "Name";
+							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
+							self.labels.common.renameErrorMessage = AD.lang.label.getLabel('ab.common.rename.error') || "System could not rename <b>{0}</b>.";
+							self.labels.common.renameSuccessMessage = AD.lang.label.getLabel('ab.common.rename.success') || "Rename to <b>{0}</b>.";
+							self.labels.common.deleteErrorMessage = AD.lang.label.getLabel('ab.common.delete.error') || "System could not delete <b>{0}</b>.";
+							self.labels.common.deleteSuccessMessage = AD.lang.label.getLabel('ab.common.delete.success') || "<b>{0}</b> is deleted.";
+							self.labels.common.createErrorMessage = AD.lang.label.getLabel('ab.common.create.error') || "System could not create <b>{0}</b>.";
+							self.labels.common.createSuccessMessage = AD.lang.label.getLabel('ab.common.create.success') || "<b>{0}</b> is created.";
+
+							// Delete
+							self.labels.object.confirmDeleteTitle = AD.lang.label.getLabel('ab.object.delete.title') || "Delete object";
+							self.labels.object.confirmDeleteMessage = AD.lang.label.getLabel('ab.object.delete.message') || "Do you want to delete <b>{0}</b>?";
+
+							self.labels.object.invalidName = AD.lang.label.getLabel('ab.object.invalidName') || "This name is invalid";
+							self.labels.object.duplicateName = AD.lang.label.getLabel('ab.object.duplicateName') || "<b>{0}</b> is duplicate";
+							self.labels.object.addNew = AD.lang.label.getLabel('ab.object.addNew') || 'Add new object';
+							self.labels.object.menu = AD.lang.label.getLabel('ab.object.menu') || "Object Menu";
+
+							// Form
+							self.labels.object.placeholderName = AD.lang.label.getLabel('ab.object.form.placeholderName') || "Object name";
 						},
 
 						initControllers: function () {
@@ -105,9 +140,9 @@ steal(
 												// Validation - check duplicate
 												if (!self.rules.preventDuplicateName(state.value) && state.value != state.old) {
 													webix.alert({
-														title: "This name is invalid",
-														ok: "Ok",
-														text: "<b>" + state.value + "</b> is duplicate"
+														title: self.labels.object.invalidName,
+														ok: self.labels.common.ok,
+														text: self.labels.object.duplicateName.replace("{0}", state.value)
 													})
 
 													return false;
@@ -129,7 +164,7 @@ steal(
 
 															webix.message({
 																type: "error",
-																text: "System could not rename <b>{0}</b>.".replace("{0}", state.old)
+																text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
 															});
 
 															AD.error.log('Object List : Error rename object data', { error: err });
@@ -140,7 +175,7 @@ steal(
 															// Show success message
 															webix.message({
 																type: "success",
-																text: "Rename to <b>" + state.value + "</b>."
+																text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
 															});
 
 															// Show gear icon
@@ -162,7 +197,7 @@ steal(
 									},
 									{
 										view: 'button',
-										value: 'Add new object',
+										value: self.labels.object.addNew,
 										click: function () {
 											$$(self.webixUiId.addNewPopup).define('selectNewObject', true);
 											$$(self.webixUiId.addNewPopup).show();
@@ -175,13 +210,13 @@ steal(
 							webix.ui({
 								view: "popup",
 								id: self.webixUiId.modelListMenu,
-								head: "Object Menu",
+								head: self.labels.object.menu,
 								width: 130,
 								body: {
 									view: "list",
 									data: [
-										{ command: "Rename", icon: "fa-pencil-square-o" },
-										{ command: "Delete", icon: "fa-trash" }
+										{ command: self.labels.common.rename, icon: "fa-pencil-square-o" },
+										{ command: self.labels.common.delete, icon: "fa-trash" }
 									],
 									datatype: "json",
 
@@ -193,23 +228,17 @@ steal(
 											var selectedModel = $$(self.webixUiId.modelList).getSelectedItem();
 
 											switch (trg.textContent.trim()) {
-												case 'Rename':
+												case self.labels.common.rename:
 													// Show textbox to rename
 													$$(self.webixUiId.modelList).edit(selectedModel.id);
 
 													break;
-												case 'Delete':
-													// TODO : Get from translation
-													var deleteConfirmTitle = "Delete object",
-														deleteConfirmMessage = "Do you want to delete <b>{0}</b>?".replace('{0}', selectedModel.name),
-														yes = "Yes",
-														no = "No";
-
+												case self.labels.common.delete:
 													webix.confirm({
-														title: deleteConfirmTitle,
-														ok: yes,
-														cancel: no,
-														text: deleteConfirmMessage,
+														title: self.labels.object.confirmDeleteTitle,
+														ok: self.labels.common.yes,
+														cancel: self.labels.common.no,
+														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedModel.name),
 														callback: function (result) {
 															if (result) {
 
@@ -222,7 +251,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: "System could not delete <b>{0}</b>.".replace("{0}", selectedModel.name)
+																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedModel.name)
 																		});
 
 																		AD.error.log('Object List : Error delete object data', { error: err });
@@ -239,7 +268,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: "<b>" + selectedModel.name + "</b> is deleted."
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedModel.name)
 																		});
 
 																		$$(self.webixUiId.modelList).hideProgress();
@@ -266,7 +295,7 @@ steal(
 								width: 300,
 								position: "center",
 								modal: true,
-								head: "Add new object",
+								head: self.labels.object.addNew,
 								selectNewObject: true,
 								on: {
 									"onBeforeShow": function () {
@@ -279,11 +308,11 @@ steal(
 									id: self.webixUiId.addNewForm,
 									width: 300,
 									elements: [
-										{ view: "text", label: "Name", name: "name", required: true, placeholder: "Model name", labelWidth: 70 },
+										{ view: "text", label: self.labels.common.formName, name: "name", required: true, placeholder: self.labels.object.placeholderName, labelWidth: 70 },
 										{
 											margin: 5, cols: [
 												{
-													view: "button", value: "Add", type: "form", click: function () {
+													view: "button", value: self.labels.common.add, type: "form", click: function () {
 														if (!$$(self.webixUiId.addNewForm).validate())
 															return false;
 
@@ -303,7 +332,7 @@ steal(
 
 															webix.message({
 																type: "error",
-																text: "System could not create <b>{0}</b>.".replace("{0}", newModel.name)
+																text: self.labels.common.createErrorMessage.replace("{0}", newModel.name)
 															});
 
 															AD.error.log('Object : Error create object data', { error: err });
@@ -329,13 +358,13 @@ steal(
 															// Show success message
 															webix.message({
 																type: "success",
-																text: "<b>" + newModel.name + "</b> is created."
+																text: self.labels.common.createSuccessMessage.replace('{0}', newModel.name)
 															});
 														});
 
 													}
 												},
-												{ view: "button", value: "Cancel", click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
+												{ view: "button", value: self.labels.common.cancel, click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
 											]
 										}
 									],

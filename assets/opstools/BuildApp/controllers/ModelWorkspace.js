@@ -46,9 +46,59 @@ steal(
 								addFieldsPopup: 'ab-add-fields-popup'
 							};
 
+							this.initMultilingualLabels();
 							this.initControllers();
 							this.initWebixUI();
 
+						},
+
+						initMultilingualLabels: function () {
+							var self = this;
+							self.labels = {};
+							self.labels.common = {};
+							self.labels.object = {};
+
+							self.labels.common.newName = AD.lang.label.getLabel('ab.common.newName') || 'New name';
+							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
+							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
+							self.labels.common.save = AD.lang.label.getLabel('ab.common.save') || "Save";
+							self.labels.common.search = AD.lang.label.getLabel('ab.common.search') || "Search";
+							self.labels.common.close = AD.lang.label.getLabel('ab.common.close') || "Close";
+							self.labels.common.ok = AD.lang.label.getLabel('ab.common.ok') || "Ok";
+							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
+							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
+							self.labels.common.renameErrorMessage = AD.lang.label.getLabel('ab.common.rename.error') || "System could not rename <b>{0}</b>.";
+							self.labels.common.renameSuccessMessage = AD.lang.label.getLabel('ab.common.rename.success') || "Rename to <b>{0}</b>.";
+							self.labels.common.createErrorMessage = AD.lang.label.getLabel('ab.common.create.error') || "System could not create <b>{0}</b>.";
+							self.labels.common.createSuccessMessage = AD.lang.label.getLabel('ab.common.create.success') || "<b>{0}</b> is created.";
+							self.labels.common.deleteErrorMessage = AD.lang.label.getLabel('ab.common.delete.error') || "System could not delete <b>{0}</b>.";
+							self.labels.common.deleteSuccessMessage = AD.lang.label.getLabel('ab.common.delete.success') || "<b>{0}</b> is deleted.";
+
+							self.labels.object.hideField = AD.lang.label.getLabel('ab.object.hideField') || "Hide field";
+							self.labels.object.filterField = AD.lang.label.getLabel('ab.object.filterField') || "Filter field";
+							self.labels.object.sortField = AD.lang.label.getLabel('ab.object.sortField') || "Sort field";
+							self.labels.object.renameField = AD.lang.label.getLabel('ab.object.renameField') || "Rename field";
+							self.labels.object.deleteField = AD.lang.label.getLabel('ab.object.deleteField') || "Delete field";
+
+							self.labels.object.renameFieldMessage = AD.lang.label.getLabel('ab.object.renameFieldMessage') || "Rename <b>{0}</b> column";
+							self.labels.object.couldNotDeleteField = AD.lang.label.getLabel('ab.object.couldNotDeleteField') || "Could not delete";
+							self.labels.object.atLeastOneField = AD.lang.label.getLabel('ab.object.atLeastOneField') || "Object should have at least one field.";
+
+							// Delete
+							self.labels.object.confirmDeleteTitle = AD.lang.label.getLabel('ab.object.delete.title') || "Delete data field";
+							self.labels.object.confirmDeleteMessage = AD.lang.label.getLabel('ab.object.delete.message') || "Do you want to delete <b>{0}</b>?";
+
+							// Connected data
+							self.labels.object.selectConnectedData = AD.lang.label.getLabel('ab.object.selectConnectedData') || "Select data to connect";
+							self.labels.object.noConnectedData = AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected";
+							self.labels.object.connectToObjectName = AD.lang.label.getLabel('ab.object.noConnectedData') || " (Connect to <b>{0}</b>)";
+
+							// Toolbar
+							self.labels.object.toolbar.hideFields = AD.lang.label.getLabel('ab.object.toolbar.hideFields') || "Hide fields";
+							self.labels.object.toolbar.filterFields = AD.lang.label.getLabel('ab.object.toolbar.filterFields') || "Add filters";
+							self.labels.object.toolbar.sortFields = AD.lang.label.getLabel('ab.object.toolbar.sortFields') || "Apply sort";
+							self.labels.object.toolbar.permission = AD.lang.label.getLabel('ab.object.toolbar.permission') || "Permission";
+							self.labels.object.toolbar.AddFields = AD.lang.label.getLabel('ab.object.toolbar.AddFields') || "Add new column";
 						},
 
 						initControllers: function () {
@@ -96,14 +146,14 @@ steal(
 								view: "window",
 								position: "center",
 								modal: true,
-								head: 'Rename',
+								head: self.labels.common.rename,
 								body: {
 									rows: [
-										{ view: 'text', id: self.webixUiId.newFieldName, label: 'New name' },
+										{ view: 'text', id: self.webixUiId.newFieldName, label: self.labels.common.newName },
 										{
 											cols: [
 												{
-													view: "button", label: "Save", type: "form", click: function () {
+													view: "button", label: self.labels.common.save, type: "form", click: function () {
 														var newName = $$(self.webixUiId.newFieldName).getValue().trim();
 														if (newName.length > 0) {
 															$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
@@ -120,7 +170,7 @@ steal(
 
 																	webix.message({
 																		type: "error",
-																		text: "System could not rename <b>{0}</b>.".replace('{0}', selectedModel.name)
+																		text: self.labels.common.renameErrorMessage.replace('{0}', selectedModel.name)
 																	});
 
 																	AD.error.log('Column : Error rename column', { error: err });
@@ -132,7 +182,7 @@ steal(
 
 																	webix.message({
 																		type: "success",
-																		text: "Rename to <b>" + data.label + "</b>."
+																		text: self.labels.common.renameSuccessMessage.replace('{0}', data.label)
 																	});
 
 																	self.refreshPopupData();
@@ -145,7 +195,7 @@ steal(
 													}
 												},
 												{
-													view: "button", value: "Cancel", click: function () {
+													view: "button", value: self.labels.common.cancel, click: function () {
 														$$(self.webixUiId.renameHeaderPopup).hide();
 													}
 												}
@@ -168,11 +218,11 @@ steal(
 								body: {
 									view: 'list',
 									data: [
-										{ command: "Hide field", icon: "fa-columns" },
-										{ command: "Filter field", icon: "fa-filter" },
-										{ command: "Sort field", icon: "fa-sort" },
-										{ command: "Rename field", icon: "fa-pencil-square-o" },
-										{ command: "Delete field", icon: "fa-trash" }
+										{ command: self.labels.object.hideField, icon: "fa-columns" },
+										{ command: self.labels.object.filterField, icon: "fa-filter" },
+										{ command: self.labels.object.sortField, icon: "fa-sort" },
+										{ command: self.labels.object.renameField, icon: "fa-pencil-square-o" },
+										{ command: self.labels.object.deleteField, icon: "fa-trash" }
 									],
 									datatype: "json",
 
@@ -188,44 +238,40 @@ steal(
 												selectedFieldName = $(selectedField.header[0].text).text().trim();
 
 											switch (trg.textContent.trim()) {
-												case 'Hide field':
+												case self.labels.object.hideField:
 													$$(self.webixUiId.modelDatatable).hideColumn(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
 													break;
-												case 'Filter field':
+												case self.labels.object.filterField:
+													// TODO
 													break;
-												case 'Sort field':
+												case self.labels.object.sortField:
+													// TODO
 													break;
-												case 'Rename field':
+												case self.labels.object.renameField:
 													// Show old name in head popup
-													$$(self.webixUiId.renameHeaderPopup).getHead().setHTML("Rename <b>{0}</b> column".replace('{0}', selectedFieldName));
+													$$(self.webixUiId.renameHeaderPopup).getHead().setHTML(self.labels.object.renameFieldMessage.replace('{0}', selectedFieldName));
 													$$(self.webixUiId.renameHeaderPopup).show();
 
 													$$(self.webixUiId.editHeaderPopup).hide();
 													break;
-												case 'Delete field':
+												case self.labels.object.deleteField:
 													// Validate
 													if (columns.length < 2) {
 														webix.alert({
-															title: "Could not delete",
-															ok: "Ok",
-															text: "Object should have at least one field."
+															title: self.labels.object.couldNotDeleteField,
+															ok: self.labels.common.ok,
+															text: self.labels.object.atLeastOneField
 														});
 														$$(self.webixUiId.editHeaderPopup).hide();
 														return;
 													}
 
-													// TODO : Get from translation
-													var deleteConfirmTitle = "Delete data field",
-														deleteConfirmMessage = "Do you want to delete <b>{0}</b>?".replace('{0}', selectedFieldName),
-														yes = "Yes",
-														no = "No";
-
 													webix.confirm({
-														title: deleteConfirmTitle,
-														ok: yes,
-														cancel: no,
-														text: deleteConfirmMessage,
+														title: self.labels.object.confirmDeleteTitle,
+														ok: self.labels.common.yes,
+														cancel: self.labels.common.no,
+														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedFieldName),
 														callback: function (result) {
 															if (result) {
 																$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
@@ -237,7 +283,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: "System could not delete <b>{0}</b>.".replace('{0}', selectedFieldName)
+																			text: self.labels.common.deleteErrorMessage.replace('{0}', selectedFieldName)
 																		});
 
 																		AD.error.log('Column list : Error delete column', { error: err });
@@ -258,7 +304,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: "<b>" + selectedFieldName + "</b> is deleted."
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedFieldName)
 																		});
 
 																		// Clear selected field
@@ -285,7 +331,7 @@ steal(
 								id: self.webixUiId.addConnectObjectDataPopup,
 								view: 'window',
 								modal: true,
-								head: "Select data to connect",
+								head: self.labels.object.selectConnectedData,
 								position: "center",
 								autowidth: true,
 								autoheight: true,
@@ -296,7 +342,7 @@ steal(
 											cols: [{
 												view: 'search',
 												id: self.webixUiId.connectObjectSearch,
-												label: 'Search',
+												label: self.labels.common.search,
 												keyPressTimeout: 140,
 												on: {
 													onTimedKeyPress: function () {
@@ -376,7 +422,7 @@ steal(
 										},
 										{
 											view: "button",
-											value: "Close",
+											value: self.labels.common.close,
 											align: "right",
 											width: 150,
 											click: function () {
@@ -423,11 +469,11 @@ steal(
 										id: self.webixUiId.modelToolbar,
 										hidden: true,
 										cols: [
-											{ view: "button", label: "Hide fields", icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
-											{ view: 'button', label: "Add filters", icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup },
-											{ view: 'button', label: 'Apply sort', icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup },
-											{ view: 'button', label: 'Permission', icon: "lock", type: "icon", width: 120 },
-											{ view: 'button', label: 'Add new column', icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
+											{ view: "button", label: self.labels.object.toolbar.hideFields, icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
+											{ view: 'button', label: self.labels.object.toolbar.filterFields, icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup },
+											{ view: 'button', label: self.labels.object.toolbar.sortFields, icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup },
+											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
+											{ view: 'button', label: self.labels.object.toolbar.AddFields, icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
 										]
 									},
 									{
@@ -444,7 +490,9 @@ steal(
 										},
 										on: {
 											onAfterRender: function (data) {
+												console.log(data);
 												// Initial multi-combo
+												console.log('selectivity initial');
 												$('.connect-data-values').selectivity('destroy');
 												$('.connect-data-values').selectivity({
 													allowClear: true,
@@ -452,23 +500,25 @@ steal(
 													removeOnly: true,
 													showDropdown: false,
 													showSearchInputInDropdown: false,
-													placeholder: 'No data selected'
+													placeholder: self.labels.object.noConnectedData
 												}).on('change', function (ev) {
 													if (ev.removed) {
+														console.log('remove: ', ev.removed);
+
 														var columnIndex = $(this).parents('.webix_column').attr('column'),
 															columnId = $$(self.webixUiId.modelDatatable).columnId(columnIndex),
 															rowIndex = $(this).parent('.webix_cell').index(),
 															rowId = $$(self.webixUiId.modelDatatable).getIdByIndex(rowIndex),
 															item = $$(self.webixUiId.modelDatatable).getItem(rowId),
-															data = item[columnId];
+															itemData = item[columnId];
 
 														// Delete removed value
-														data.forEach(function (d, index) {
+														itemData.forEach(function (d, index) {
 															if (d.id == ev.removed.id)
-																data.splice(index, 1);
+																itemData.splice(index, 1);
 														});
 
-														$$(self.webixUiId.modelDatatable).updateItem(rowId, data);
+														$$(self.webixUiId.modelDatatable).updateItem(rowId, itemData);
 
 														// TODO : Call server to remove value
 														$$(self.webixUiId.modelDatatable).render({ column: columnId });
@@ -646,7 +696,7 @@ steal(
 
 												webix.message({
 													type: "error",
-													text: "System could not get fields data."
+													text: err
 												});
 
 												AD.error.log('Column List : Error get fields data', { error: err });
@@ -725,7 +775,7 @@ steal(
 
 												webix.message({
 													type: "error",
-													text: "System could not add <b>{0}</b>.".replace('{0}', columnInfo.name)
+													text: self.labels.common.createErrorMessage.replace('{0}', columnInfo.name)
 												});
 
 												AD.error.log('Add Column : Error add new field data', { error: err });
@@ -750,7 +800,10 @@ steal(
 
 												$$(self.webixUiId.modelDatatable).hideProgress();
 
-												webix.message({ type: "success", text: "<b>{0}</b> is added.".replace("{0}", columnInfo.name) });
+												webix.message({
+													type: "success",
+													text: self.labels.common.createSuccessMessage.replace("{0}", columnInfo.name)
+												});
 											});
 
 									});
@@ -799,7 +852,7 @@ steal(
 									return o.name == col.linkToObject;
 								});
 
-								label += ' (Connect to <b>{0}</b>)'.replace('{0}', connectObj[0].label);
+								label += self.labels.object.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
 							return "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>"

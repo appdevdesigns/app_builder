@@ -38,12 +38,26 @@ steal(
 								interfaceView: 'ab-app-interface-view'
 							};
 
+							this.initMultilingualLabels();
+
 							this.initControllers();
 							this.getUIDefinitions();
 
 							webix.ready(function () {
 								self.initWebixUI();
 							});
+						},
+
+						initMultilingualLabels: function () {
+							var self = this;
+							self.labels = {};
+							self.labels.application = {};
+							self.labels.object = {};
+							self.labels.view = {};
+
+							self.labels.application.backToApplication = AD.lang.label.getLabel('ab.application.backToApplication') || "Back to Applications page";
+							self.labels.object.title = AD.lang.label.getLabel('ab.object.title') || "Objects";
+							self.labels.view.title = AD.lang.label.getLabel('ab.view.title') || "Views";
 						},
 
 						initControllers: function () {
@@ -78,10 +92,10 @@ steal(
 										id: self.webixUiId.appWorkspaceToolbar,
 										autowidth: true,
 										cols: [
-											{ view: "label", id: self.webixUiId.appNameLabel, label: "Application name", width: 400, align: "left" },
+											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
 											{ fillspace: true },
 											{
-												view: "button", value: "Back to Applications page", width: 250, align: "right", click: function () {
+												view: "button", value: self.labels.application.backToApplication, width: 250, align: "right", click: function () {
 													self.element.trigger(self.options.backToAppPageEvent, {});
 												}
 											}
@@ -90,8 +104,8 @@ steal(
 									{ height: 10 },
 									{
 										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.modelView, multiview: true, options: [
-											{ id: self.webixUiId.modelView, value: 'Objects', width: 120 },
-											{ id: self.webixUiId.interfaceView, value: 'Views', width: 120 }
+											{ id: self.webixUiId.modelView, value: self.labels.object.title, width: 120 },
+											{ id: self.webixUiId.interfaceView, value: self.labels.view.title, width: 120 }
 										]
 									},
 									{
@@ -114,7 +128,7 @@ steal(
 
 							self.data.app = app;
 
-							$$(self.webixUiId.appNameLabel).define('label', app.name);
+							$$(self.webixUiId.appNameLabel).define('label', app.label);
 							$$(self.webixUiId.appNameLabel).refresh();
 
 							self.controllers.ModelPage.setAppId(app.id);

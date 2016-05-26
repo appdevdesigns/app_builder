@@ -1,0 +1,145 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8"
+"Content-Transfer-Encoding: 8bit"
+
+#. #########################################
+#. Labels for context: app_builder
+#. Source language: en
+#. Target language: en
+#. #########################################
+
+
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.edit
+msgid "Edit"
+msgstr "Edit"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.save
+msgid "Save"
+msgstr "Save"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.delete
+msgid "Delete"
+msgstr "Delete"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.cancel
+msgid "Cancel"
+msgstr "Cancel"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.yes
+msgid "Yes"
+msgstr "Yes"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.no
+msgid "No"
+msgstr "No"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.ok
+msgid "Ok"
+msgstr "Ok"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.add
+msgid "Add"
+msgstr "Add"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.search
+msgid "Search"
+msgstr "Search"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.close
+msgid "Close"
+msgstr "Close"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.newName
+msgid "New Name"
+msgstr "New Name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.rename
+msgid "Rename"
+msgstr "Rename"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.form.name
+msgid "Name"
+msgstr "Name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.form.description
+msgid "Description"
+msgstr "Description"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.create.error
+msgid "System could not create <b>{0}</b>."
+msgstr "System could not create <b>{0}</b>."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.create.success
+msgid "<b>{0}</b> is created."
+msgstr "<b>{0}</b> is created."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.update.error
+msgid "System could not update <b>{0}</b>."
+msgstr "System could not update <b>{0}</b>."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.update.success
+msgid "<b>{0}</b> is updated."
+msgstr "<b>{0}</b> is updated."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.rename.error
+msgid "System could not rename <b>{0}</b>."
+msgstr "System could not rename <b>{0}</b>."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.rename.success
+msgid "Rename to <b>{0}</b>."
+msgstr "Rename to <b>{0}</b>."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.delete.error
+msgid "System could not delete <b>{0}</b>."
+msgstr "System could not delete <b>{0}</b>."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.delete.success
+msgid "<b>{0}</b> is deleted."
+msgstr "<b>{0}</b> is deleted."
+
