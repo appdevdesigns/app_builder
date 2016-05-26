@@ -121,8 +121,9 @@ div[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover {
 .ab-main-container .selectivity-multiple-input-container {
 	background: none !important;  
 	padding: 0px !important;
+	overflow: hidden !important;
 }
 .ab-main-container .selectivity-multiple-selected-item {
-	background: #3498db;
-	/*max-width: 70px;*/
+	background: #3498db !important;
+	max-width: 100px !important;
 }

@@ -36,6 +36,7 @@ steal(
 								editHeaderPopup: 'ab-edit-header-popup',
 								renameHeaderPopup: 'ab-rename-header-popup',
 								addConnectObjectDataPopup: 'ab-connect-object-data-popup',
+								connectObjectSearch: 'ab-connect-object-search',
 								connectObjectDataList: 'ab-connect-object-data-list',
 								newFieldName: 'ab-new-name-header',
 
@@ -284,19 +285,42 @@ steal(
 								id: self.webixUiId.addConnectObjectDataPopup,
 								view: 'window',
 								modal: true,
-								head: "Select any connect data",
+								head: "Select data to connect",
 								position: "center",
 								autowidth: true,
 								autoheight: true,
 								body: {
 									rows: [
 										{
+											view: 'toolbar',
+											cols: [{
+												view: 'search',
+												id: self.webixUiId.connectObjectSearch,
+												label: 'Search',
+												keyPressTimeout: 140,
+												on: {
+													onTimedKeyPress: function () {
+														var searchText = $$(self.webixUiId.connectObjectSearch).getValue();
+
+														$$(self.webixUiId.connectObjectDataList).filter(function (obj) {
+															var result = false;
+
+															for (var key in obj) {
+																if (key != 'id')
+																	result = obj[key].indexOf(searchText) > -1 || result;
+															}
+
+															return result;
+														});
+													}
+												}
+											}]
+										},
+										{
 											id: self.webixUiId.connectObjectDataList,
 											view: 'list',
 											width: 600,
 											height: 400,
-											select: true,
-											multiselect: true,
 											type: {
 												height: 80, // Defines item height
 											},
@@ -313,6 +337,26 @@ steal(
 														$$(self.webixUiId.connectObjectDataList).select(selectedIds);
 													else
 														$$(self.webixUiId.connectObjectDataList).unselectAll();
+												},
+												onItemClick: function (id, e, node) {
+													if ($$(self.webixUiId.connectObjectDataList).isSelected(id)) {
+														$$(self.webixUiId.connectObjectDataList).unselect(id);
+													}
+													else {
+														var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId();
+
+														if (typeof selectedIds === 'string') {
+															if (selectedIds)
+																selectedIds = [selectedIds];
+															else
+																selectedIds = [];
+														}
+
+														selectedIds.push(id);
+
+														$$(self.webixUiId.connectObjectDataList).select(selectedIds);
+													}
+
 												},
 												onSelectChange: function () {
 													var curSelectivity = self.getCurSelectivityNode(),
@@ -343,6 +387,28 @@ steal(
 								},
 								on: {
 									onHide: function () {
+										if ($$(self.webixUiId.modelDatatable).showProgress)
+											$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
+
+										// TODO : Call Save change values to server
+
+										var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId(true);
+
+										var rowData = $$(self.webixUiId.modelDatatable).getItem(self.data.selectedCell.row);
+										rowData[self.data.selectedCell.column] = $.map(selectedIds, function (id) {
+											var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
+											var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
+
+											return { id: id, text: connectData };
+										});
+										$$(self.webixUiId.modelDatatable).updateItem(self.data.selectedCell.row, rowData);
+
+										// Resize row height
+										self.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
+
+										if ($$(self.webixUiId.modelDatatable).hideProgress)
+											$$(self.webixUiId.modelDatatable).hideProgress();
+
 										self.data.selectedCell = null
 										$$(self.webixUiId.connectObjectDataList).unselectAll();
 										$$(self.webixUiId.connectObjectDataList).clearAll();
@@ -373,15 +439,13 @@ steal(
 										editable: true,
 										editaction: "custom",
 										select: "cell",
-										type: {
-											autoheight: true
-										},
 										ready: function () {
 											webix.extend(this, webix.ProgressBar);
 										},
 										on: {
 											onAfterRender: function (data) {
 												// Initial multi-combo
+												$('.connect-data-values').selectivity('destroy');
 												$('.connect-data-values').selectivity({
 													allowClear: true,
 													multiple: true,
@@ -389,6 +453,26 @@ steal(
 													showDropdown: false,
 													showSearchInputInDropdown: false,
 													placeholder: 'No data selected'
+												}).on('change', function (ev) {
+													if (ev.removed) {
+														var columnIndex = $(this).parents('.webix_column').attr('column'),
+															columnId = $$(self.webixUiId.modelDatatable).columnId(columnIndex),
+															rowIndex = $(this).parent('.webix_cell').index(),
+															rowId = $$(self.webixUiId.modelDatatable).getIdByIndex(rowIndex),
+															item = $$(self.webixUiId.modelDatatable).getItem(rowId),
+															data = item[columnId];
+
+														// Delete removed value
+														data.forEach(function (d, index) {
+															if (d.id == ev.removed.id)
+																data.splice(index, 1);
+														});
+
+														$$(self.webixUiId.modelDatatable).updateItem(rowId, data);
+
+														// TODO : Call server to remove value
+														$$(self.webixUiId.modelDatatable).render({ column: columnId });
+													}
 												});
 
 												// Popuplate multi-combo
@@ -398,9 +482,12 @@ steal(
 
 												linkCols.forEach(function (c) {
 													data.each(function (d) {
-														if (d[c.name]) {
+														var connectedData = d[c.name];
+														if (connectedData && connectedData.length > 0) {
 															var connectFieldNode = $($$(self.webixUiId.modelDatatable).getItemNode({ row: d.id, column: c.name }));
-															connectFieldNode.find('.connect-data-values').selectivity('data', d[c.name]);
+															connectFieldNode.find('.connect-data-values').selectivity('data', connectedData);
+
+															self.calculateRowHeight(d.id, c.name, connectedData.length);
 														}
 													})
 												});
@@ -429,7 +516,7 @@ steal(
 													$$(self.webixUiId.addConnectObjectDataPopup).show();
 
 													if ($$(self.webixUiId.connectObjectDataList).showProgress)
-														$$(self.webixUiId.connectObjectDataList).showProgress();
+														$$(self.webixUiId.connectObjectDataList).showProgress({ type: 'icon' });
 
 													$$(self.webixUiId.connectObjectDataList).define('multiselect', columnData.isMultipleRecords);
 
@@ -509,6 +596,13 @@ steal(
 													return false;
 
 												this.editCell(data.row, data.column);
+											},
+											onColumnResize: function (id, newWidth, oldWidth, user_action) {
+												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(id);
+												if (columnConfig.editor === 'selectivity') {
+													// For calculate/refresh row height
+													$$(self.webixUiId.modelDatatable).render();
+												}
 											},
 											onAfterColumnShow: function (id) {
 												$$(self.webixUiId.visibleFieldsPopup).showField(id);
@@ -743,6 +837,27 @@ steal(
 							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
 							$$(self.webixUiId.filterFieldsPopup).refreshFieldList();
 							$$(self.webixUiId.sortFieldsPopup).refreshFieldList();
+						},
+
+						calculateRowHeight: function (row, column, dataNumber) {
+							var self = this,
+								rowHeight = 35,
+								maxItemWidth = 100, // Max item width
+								columnInfo = $$(self.webixUiId.modelDatatable).getColumnConfig(column),
+								curSpace = columnInfo.width * rowHeight,
+								expectedSpace = (dataNumber * rowHeight * maxItemWidth),
+								calHeight = 0;
+
+							if (expectedSpace > curSpace) {
+								while (expectedSpace > (calHeight * columnInfo.width)) {
+									calHeight += rowHeight;
+								}
+							}
+							else {
+								calHeight = rowHeight;
+							}
+
+							$$(self.webixUiId.modelDatatable).setRowHeight(row, calHeight);
 						},
 
 						resetState: function () {
