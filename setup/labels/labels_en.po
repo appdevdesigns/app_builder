@@ -143,3 +143,207 @@ msgstr "System could not delete <b>{0}</b>."
 msgid "<b>{0}</b> is deleted."
 msgstr "<b>{0}</b> is deleted."
 
+#. path: app_builder
+#. code: en
+#. key: ab.application.application
+msgid "Application"
+msgstr "Application"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.createNew
+msgid "Add new application"
+msgstr "Add new application"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.menu
+msgid "Application Menu"
+msgstr "Application Menu"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.backToApplication
+msgid "Back to Applications page"
+msgstr "Back to Applications page"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.delete.title
+msgid "Delete application"
+msgstr "Delete application"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.delete.message
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "Do you want to delete <b>{0}</b>?"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.form.header
+msgid "Application Info"
+msgstr "Application Info"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.form.placeholderName
+msgid "Application name"
+msgstr "Application name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.form.placeholderDescription
+msgid "Application description"
+msgstr "Application description"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.title
+msgid "Objects"
+msgstr "Objects"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.invalidName
+msgid "This name is invalid"
+msgstr "This name is invalid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.duplicateName
+msgid "<b>{0}</b> is duplicate"
+msgstr "<b>{0}</b> is duplicate"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.addNew
+msgid "Add new object"
+msgstr "Add new object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.menu
+msgid "Object Menu"
+msgstr "Object Menu"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.form.placeholderName
+msgid "Object name"
+msgstr "Object name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.hideField
+msgid "Hide field"
+msgstr "Hide field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.filterField
+msgid "Filter field"
+msgstr "Filter field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.sortField
+msgid "Sort field"
+msgstr "Sort field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.renameField
+msgid "Rename field"
+msgstr "Rename field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.deleteField
+msgid "Delete field"
+msgstr "Delete field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.renameFieldMessage
+msgid "Rename <b>{0}</b> column"
+msgstr "Rename <b>{0}</b> column"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.couldNotDeleteField
+msgid "Could not delete"
+msgstr "Could not delete"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.atLeastOneField
+msgid "Object should have at least one field."
+msgstr "Object should have at least one field."
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.selectConnectedData
+msgid "Select data to connect"
+msgstr "Select data to connect"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.noConnectedData
+msgid "No data selected"
+msgstr "No data selected"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.connectToObjectName
+msgid " (Connect to <b>{0}</b>)"
+msgstr " (Connect to <b>{0}</b>)"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.delete.title
+msgid "Delete data field"
+msgstr "Delete data field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.delete.message
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "Do you want to delete <b>{0}</b>?"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.hideFields
+msgid "Hide fields"
+msgstr "Hide fields"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.filterFields
+msgid "Add filters"
+msgstr "Add filters"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.sortFields
+msgid "Apply sort"
+msgstr "Apply sort"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.permission
+msgid "Permission"
+msgstr "Permission"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.addFields
+msgid "Add new column"
+msgstr "Add new column"
+
+#. path: app_builder
+#. code: en
+#. key: ab.view.title
+msgid "Views"
+msgstr "Views"
+

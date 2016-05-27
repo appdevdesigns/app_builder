@@ -57,6 +57,7 @@ steal(
 							self.labels = {};
 							self.labels.common = {};
 							self.labels.object = {};
+							self.labels.object.toolbar = {};
 
 							self.labels.common.newName = AD.lang.label.getLabel('ab.common.newName') || 'New name';
 							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
@@ -91,14 +92,14 @@ steal(
 							// Connected data
 							self.labels.object.selectConnectedData = AD.lang.label.getLabel('ab.object.selectConnectedData') || "Select data to connect";
 							self.labels.object.noConnectedData = AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected";
-							self.labels.object.connectToObjectName = AD.lang.label.getLabel('ab.object.noConnectedData') || " (Connect to <b>{0}</b>)";
+							self.labels.object.connectToObjectName = AD.lang.label.getLabel('ab.object.connectToObjectName') || " (Connect to <b>{0}</b>)";
 
 							// Toolbar
 							self.labels.object.toolbar.hideFields = AD.lang.label.getLabel('ab.object.toolbar.hideFields') || "Hide fields";
 							self.labels.object.toolbar.filterFields = AD.lang.label.getLabel('ab.object.toolbar.filterFields') || "Add filters";
 							self.labels.object.toolbar.sortFields = AD.lang.label.getLabel('ab.object.toolbar.sortFields') || "Apply sort";
 							self.labels.object.toolbar.permission = AD.lang.label.getLabel('ab.object.toolbar.permission') || "Permission";
-							self.labels.object.toolbar.AddFields = AD.lang.label.getLabel('ab.object.toolbar.AddFields') || "Add new column";
+							self.labels.object.toolbar.addFields = AD.lang.label.getLabel('ab.object.toolbar.addFields') || "Add new column";
 						},
 
 						initControllers: function () {
@@ -473,7 +474,7 @@ steal(
 											{ view: 'button', label: self.labels.object.toolbar.filterFields, icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup },
 											{ view: 'button', label: self.labels.object.toolbar.sortFields, icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
-											{ view: 'button', label: self.labels.object.toolbar.AddFields, icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
+											{ view: 'button', label: self.labels.object.toolbar.addFields, icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
 										]
 									},
 									{

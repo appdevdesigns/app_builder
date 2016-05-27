@@ -6,140 +6,344 @@ msgstr ""
 #. #########################################
 #. Labels for context: app_builder
 #. Source language: en
-#. Target language: en
+#. Target language: th
 #. #########################################
 
 
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.edit
 msgid "Edit"
 msgstr "แก้ไข"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.save
 msgid "Save"
 msgstr "บันทึก"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.delete
 msgid "Delete"
 msgstr "ลบ"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.cancel
 msgid "Cancel"
 msgstr "ยกเลิก"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.yes
 msgid "Yes"
 msgstr "ใช่"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.no
 msgid "No"
 msgstr "ไม่"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.ok
 msgid "Ok"
 msgstr "ตกลง"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.add
 msgid "Add"
 msgstr "เพิ่ม"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.search
 msgid "Search"
 msgstr "ค้นหา"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.close
 msgid "Close"
 msgstr "ปิด"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.newName
 msgid "New Name"
 msgstr "ชื่อใหม่"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.rename
 msgid "Rename"
 msgstr "เปลี่ยนชื่อ"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.form.name
 msgid "Name"
 msgstr "ชื่อ"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.form.description
 msgid "Description"
 msgstr "อธิบาย"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.create.error
 msgid "System could not create <b>{0}</b>."
 msgstr "ระบบไม่สามารถสร้าง <b>{0}</b>"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.create.success
 msgid "<b>{0}</b> is created."
 msgstr "<b>{0}</b> ถูกสร้างแล้ว"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.update.error
 msgid "System could not update <b>{0}</b>."
 msgstr "ระบบไม่สมารถแก้ไข <b>{0}</b>"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.update.success
 msgid "<b>{0}</b> is updated."
 msgstr "<b>{0}</b> ถูกแก้ไขแล้ว"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.rename.error
 msgid "System could not rename <b>{0}</b>."
 msgstr "ระบบไม่สามารถเปลี่ยนชื่อ <b>{0}</b>"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.rename.success
 msgid "Rename to <b>{0}</b>."
 msgstr "เปลี่ยนชื่อเป็น <b>{0}</b>."
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.delete.error
 msgid "System could not delete <b>{0}</b>."
 msgstr "ระบบไม่สามารถลบ <b>{0}</b>"
 
 #. path: app_builder
-#. code: en
+#. code: th
 #. key: ab.common.delete.success
 msgid "<b>{0}</b> is deleted."
 msgstr "<b>{0}</b> ถูกลบแล้ว"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.application
+msgid "Application"
+msgstr "แอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.createNew
+msgid "Add new application"
+msgstr "เพิ่มแอปพลิเคชั่นใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.menu
+msgid "Application Menu"
+msgstr "แอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.backToApplication
+msgid "Back to Applications page"
+msgstr "กลับไปหน้าแอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.delete.title
+msgid "Delete application"
+msgstr "ลบแอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.delete.message
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "คุณต้องการลบ <b>{0}</b> หรือไม่?"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.form.header
+msgid "Application Info"
+msgstr "ข้อมูลแอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.form.placeholderName
+msgid "Application name"
+msgstr "ชื่อแอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.form.placeholderDescription
+msgid "Application description"
+msgstr "รายละเอียดแอปพลิเคชั่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.title
+msgid "Objects"
+msgstr "Objects"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.invalidName
+msgid "This name is invalid"
+msgstr "ชื่อนี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.duplicateName
+msgid "<b>{0}</b> is duplicate"
+msgstr "<b>{0}</b> มีซ้ำแล้ว"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.addNew
+msgid "Add new object"
+msgstr "Add new object"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.menu
+msgid "Object Menu"
+msgstr "Object Menu"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.form.placeholderName
+msgid "Object name"
+msgstr "Object name"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.hideField
+msgid "Hide field"
+msgstr "ซ่อนข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.filterField
+msgid "Filter field"
+msgstr "กรองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.sortField
+msgid "Sort field"
+msgstr "เรียงลำดับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.renameField
+msgid "Rename field"
+msgstr "เปลี่ยนชื่อคอลัมน์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.deleteField
+msgid "Delete field"
+msgstr "ลบคอลัมน์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.renameFieldMessage
+msgid "Rename <b>{0}</b> column"
+msgstr "เปลี่ยนชื่อคอลัมน์ <b>{0}</b>"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.couldNotDeleteField
+msgid "Could not delete"
+msgstr "ไม่สามารถลบได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.atLeastOneField
+msgid "Object should have at least one field."
+msgstr "ออบเจ็คควรมีคอลัมน์อย่างน้อย 1"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.selectConnectedData
+msgid "Select data to connect"
+msgstr "เลือกข้อมูลที่เชื่อมต่อ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.noConnectedData
+msgid "No data selected"
+msgstr "ไม่มีข้อมูลที่ถูกเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.connectToObjectName
+msgid " (Connect to <b>{0}</b>)"
+msgstr " (ลิ้งค์ไปยัง <b>{0}</b>)"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.delete.title
+msgid "Delete data field"
+msgstr "ลบคอลัมน์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.delete.message
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "คุณต้องการลบ <b>{0}</b> หรือไม่?"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.hideFields
+msgid "Hide fields"
+msgstr "ซ่อนข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.filterFields
+msgid "Add filters"
+msgstr "เพิ่มกรองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.sortFields
+msgid "Apply sort"
+msgstr "เรียงลำดับข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.permission
+msgid "Permission"
+msgstr "สิทธิ์การเข้าถึง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.toolbar.addFields
+msgid "Add new column"
+msgstr "เพิ่มคอลัมน์ใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.view.title
+msgid "Views"
+msgstr "Views"
 
