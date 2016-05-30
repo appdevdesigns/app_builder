@@ -33,7 +33,12 @@ steal(
 								modelToolbar: 'ab-model-toolbar',
 								modelDatatable: 'ab-model-datatable',
 
+								filterButton: 'ab-filter-fields-toolbar',
+								sortButton: 'ab-sort-fields-toolbar',
+
 								editHeaderPopup: 'ab-edit-header-popup',
+								editHeaderItems: 'ab-edit-header-items',
+
 								renameHeaderPopup: 'ab-rename-header-popup',
 								addConnectObjectDataPopup: 'ab-connect-object-data-popup',
 								connectObjectSearch: 'ab-connect-object-search',
@@ -217,14 +222,8 @@ steal(
 								view: 'popup',
 								width: 180,
 								body: {
+									id: self.webixUiId.editHeaderItems,
 									view: 'list',
-									data: [
-										{ command: self.labels.object.hideField, icon: "fa-columns" },
-										{ command: self.labels.object.filterField, icon: "fa-filter" },
-										{ command: self.labels.object.sortField, icon: "fa-sort" },
-										{ command: self.labels.object.renameField, icon: "fa-pencil-square-o" },
-										{ command: self.labels.object.deleteField, icon: "fa-trash" }
-									],
 									datatype: "json",
 
 									template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
@@ -244,10 +243,14 @@ steal(
 													$$(self.webixUiId.editHeaderPopup).hide();
 													break;
 												case self.labels.object.filterField:
-													// TODO
+													$$(self.webixUiId.filterFieldsPopup).addNewFilter(selectedField.id);
+													$$(self.webixUiId.editHeaderPopup).hide();
+													$$(self.webixUiId.filterFieldsPopup).show($$(self.webixUiId.filterButton).getNode());
 													break;
 												case self.labels.object.sortField:
-													// TODO
+													// $$(self.webixUiId.sortFieldsPopup).addSort(selectedField.id);
+													$$(self.webixUiId.editHeaderPopup).hide();
+													$$(self.webixUiId.sortFieldsPopup).show($$(self.webixUiId.sortButton).getNode());
 													break;
 												case self.labels.object.renameField:
 													// Show old name in head popup
@@ -390,6 +393,10 @@ steal(
 														$$(self.webixUiId.connectObjectDataList).unselect(id);
 													}
 													else {
+														// Single select mode
+														if (!$$(self.webixUiId.connectObjectDataList).config.multiselect)
+															$$(self.webixUiId.connectObjectDataList).unselectAll();
+
 														var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId();
 
 														if (typeof selectedIds === 'string') {
@@ -471,8 +478,8 @@ steal(
 										hidden: true,
 										cols: [
 											{ view: "button", label: self.labels.object.toolbar.hideFields, icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
-											{ view: 'button', label: self.labels.object.toolbar.filterFields, icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup },
-											{ view: 'button', label: self.labels.object.toolbar.sortFields, icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup },
+											{ view: 'button', label: self.labels.object.toolbar.filterFields, icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup, id: self.webixUiId.filterButton },
+											{ view: 'button', label: self.labels.object.toolbar.sortFields, icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup, id: self.webixUiId.sortButton },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
 											{ view: 'button', label: self.labels.object.toolbar.addFields, icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
 										]
@@ -546,6 +553,23 @@ steal(
 											onHeaderClick: function (id, e, trg) {
 												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(id.column);
 												self.data.selectedFieldId = columnConfig.dataId;
+
+												var data = [
+													{ command: self.labels.object.hideField, icon: "fa-columns" },
+													{ command: self.labels.object.filterField, icon: "fa-filter" },
+													{ command: self.labels.object.sortField, icon: "fa-sort" },
+													{ command: self.labels.object.renameField, icon: "fa-pencil-square-o" },
+													{ command: self.labels.object.deleteField, icon: "fa-trash" }
+												];
+
+												// When user choose multi-select (selectivity) item, then remove 'Sort' item
+												if (columnConfig.editor === 'selectivity') {
+													data = $.grep(data, function (d) { return d.command !== self.labels.object.sortField; });
+												}
+
+												$$(self.webixUiId.editHeaderItems).clearAll();
+												$$(self.webixUiId.editHeaderItems).parse(data);
+												$$(self.webixUiId.editHeaderItems).refresh();
 
 												$$(self.webixUiId.editHeaderPopup).show(trg);
 											},

@@ -10,7 +10,7 @@ steal(
 			steal.import('appdev/ad',
 				'appdev/control/control',
 				'OpsPortal/classes/OpsTool',
-				'site/labels/opstool-BuildApp').then(function () {
+				'site/labels/app_builder').then(function () {
 
 					// Namespacing conventions:
 					// AD.Control.OpsTool.extend('[ToolName]', [{ static },] {instance} );

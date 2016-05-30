@@ -290,7 +290,7 @@ steal(
                                                                     fieldSettings.icon = self.componentIds.connectObjectIcon;
                                                                     fieldSettings.editor = 'selectivity';
                                                                     fieldSettings.template = '<div class="connect-data-values"></div>';
-                                                                    // fieldSettings.filter_type = ; // TODO
+                                                                    fieldSettings.filter_type = 'multiselect';
                                                                     break;
                                                                 case 'Single line text':
                                                                     fieldName = base.getFieldName(self.componentIds.singleTextView);

@@ -58,7 +58,7 @@ steal(
                                         }
                                     }
                                 },
-                                addNewFilter: function () {
+                                addNewFilter: function (fieldId) {
                                     var viewIndex = $$(self.componentIds.filterForm).getChildViews().length - 1;
 
                                     $$(self.componentIds.filterForm).addView({
@@ -95,6 +95,7 @@ steal(
 
                                                         switch (columnConfig.filter_type) {
                                                             case "text":
+                                                            case "multiselect":
                                                                 conditionList = [
                                                                     "contains",
                                                                     "doesn't contain",
@@ -159,7 +160,7 @@ steal(
                                                         if (columnConfig.filter_type === 'boolean') {
                                                             // There is not any condition values 
                                                         }
-                                                        else if (columnConfig.filter_type === 'text')
+                                                        else if (columnConfig.filter_type === 'text' || columnConfig.filter_type === 'multiselect')
                                                             this.getParentView().getChildViews()[3].attachEvent("onTimedKeyPress", function () { $$(self.componentIds.filterPopup).filter(); });
                                                         else
                                                             this.getParentView().getChildViews()[3].attachEvent("onChange", function () { $$(self.componentIds.filterPopup).filter(); });
@@ -180,6 +181,11 @@ steal(
                                             }
                                         ]
                                     }, viewIndex);
+
+                                    if (fieldId) {
+                                        var fieldsCombo = $$(self.componentIds.filterForm).getChildViews()[viewIndex].getChildViews()[1];
+                                        fieldsCombo.setValue(fieldId);
+                                    }
                                 },
                                 registerDataTable: function (dataTable) {
                                     self.dataTable = dataTable;
@@ -282,8 +288,17 @@ steal(
                                                 var condResult;
                                                 var objValue = self.dataTable.getColumnConfig(cond.fieldName).filter_value ? self.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
 
-                                                if (!objValue)
+                                                // Empty value
+                                                if (!objValue) {
+                                                    if (cond.inputValue) {
+                                                        isValid = (combineCond === 'And' ? false : true);
+                                                    }
+
                                                     return;
+                                                }
+
+                                                if ($.isArray(objValue))
+                                                    objValue = $.map(objValue, function (o) { return o.text; }).join(' ');
 
                                                 if (objValue.trim)
                                                     objValue = objValue.trim().toLowerCase();
