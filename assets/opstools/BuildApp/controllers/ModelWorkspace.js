@@ -934,21 +934,23 @@ steal(
 						},
 						calculateRowHeight: function (row, column, dataNumber) {
 							var self = this,
-								rowHeight = 35,
-								maxItemWidth = 100, // Max item width
-								columnInfo = $$(self.webixUiId.modelDatatable).getColumnConfig(column),
-								curSpace = columnInfo.width * rowHeight,
-								expectedSpace = (dataNumber * rowHeight * maxItemWidth),
-								calHeight = 0;
+								rowHeight = 35;
+								// maxItemWidth = 100, // Max item width
+								// columnInfo = $$(self.webixUiId.modelDatatable).getColumnConfig(column),
+								// curSpace = columnInfo.width * rowHeight,
+								// expectedSpace = (dataNumber * rowHeight * maxItemWidth),
+								// calHeight = 0;
 
-							if (expectedSpace > curSpace) {
-								while (expectedSpace > (calHeight * columnInfo.width)) {
-									calHeight += rowHeight;
-								}
-							}
-							else {
-								calHeight = rowHeight;
-							}
+							var calHeight = dataNumber * rowHeight;
+
+							// if (expectedSpace > curSpace) {
+							// 	while (expectedSpace > (calHeight * columnInfo.width)) {
+							// 		calHeight += rowHeight;
+							// 	}
+							// }
+							// else {
+							// 	calHeight = rowHeight;
+							// }
 
 							$$(self.webixUiId.modelDatatable).setRowHeight(row, calHeight);
 						},
