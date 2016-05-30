@@ -818,6 +818,9 @@ steal(
 													dataId: data.id,
 													header: self.getHeader(columnInfo)
 												});
+
+												addColumnHeader.width = self.calculateColumnWidth(data);
+
 												columns.push(addColumnHeader);
 												$$(self.webixUiId.modelDatatable).refreshColumns(columns);
 
@@ -856,6 +859,9 @@ steal(
 							var self = this;
 
 							var columns = $.map(self.data.columns.attr(), function (col, i) {
+
+								col.setting.width = self.calculateColumnWidth(col);
+
 								return $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
@@ -916,7 +922,15 @@ steal(
 							$$(self.webixUiId.filterFieldsPopup).refreshFieldList();
 							$$(self.webixUiId.sortFieldsPopup).refreshFieldList();
 						},
+						calculateColumnWidth: function (col) {
+							var charWidth = 7,
+								width = (col.label.length * charWidth) + 80;
 
+							if (col.linkToObject) // Connect to... label
+								width += col.linkToObject.length * charWidth + 55;
+
+							return width;
+						},
 						calculateRowHeight: function (row, column, dataNumber) {
 							var self = this,
 								rowHeight = 35,
