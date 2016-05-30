@@ -216,12 +216,13 @@ steal(
                                                             { view: "template", template: "Single select allows you to select a single predefined options below from a dropdown.", autoheight: true, borderless: true },
                                                             { view: "label", label: "<b>Options</b>" },
                                                             {
-                                                                view: "list",
+                                                                view: "editlist",
                                                                 id: self.componentIds.selectListOptions,
-                                                                type: {
-                                                                    template: "<div style='position: relative;'>#name#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>"
-                                                                },
+                                                                template: "<div style='position: relative;'>#name#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
                                                                 autoheight: true,
+                                                                editable: true,
+                                                                editor: "text",
+                                                                editValue: "name",
                                                                 onClick: {
                                                                     "ab-new-field-remove": function (e, id, trg) {
                                                                         $$(self.componentIds.selectListOptions).remove(id);
@@ -229,17 +230,10 @@ steal(
                                                                 }
                                                             },
                                                             {
-                                                                cols: [
-                                                                    { view: "text", id: self.componentIds.selectListNewOption },
-                                                                    {
-                                                                        view: "button", value: "Add", width: 100, click: function () {
-                                                                            if ($$(self.componentIds.selectListNewOption).getValue()) {
-                                                                                $$(self.componentIds.selectListOptions).add({ name: $$(self.componentIds.selectListNewOption).getValue() });
-                                                                                $$(self.componentIds.selectListNewOption).setValue('');
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                ]
+                                                                view: "button", value: "Add new option", click: function () {
+                                                                    var itemId = $$(self.componentIds.selectListOptions).add({ name: '' }, $$(self.componentIds.selectListOptions).count());
+                                                                    $$(self.componentIds.selectListOptions).edit(itemId);
+                                                                }
                                                             }
                                                         ]
                                                     },
@@ -348,22 +342,27 @@ steal(
                                                                     fieldSettings.template = "{common.checkbox()}";
                                                                     break;
                                                                 case 'Select list':
+                                                                    $$(self.componentIds.selectListOptions).editStop(); // Close edit mode
+
                                                                     fieldName = base.getFieldName(self.componentIds.selectListView);
                                                                     fieldType = 'string';
                                                                     fieldSettings.icon = self.componentIds.selectListIcon;
 
-                                                                    if ($$(self.componentIds.selectListOptions).data.count() > 0) {
-                                                                        fieldSettings.filter_type = 'list';
-                                                                        fieldSettings.editor = 'richselect';
-                                                                        fieldSettings.filter_options = [];
-                                                                        fieldSettings.options = [];
+                                                                    fieldSettings.filter_type = 'list';
+                                                                    fieldSettings.editor = 'richselect';
+                                                                    fieldSettings.filter_options = [];
+                                                                    fieldSettings.options = [];
 
-                                                                        $$(self.componentIds.selectListOptions).data.each(function (opt) {
-                                                                            fieldSettings.options.push(opt.name);
-                                                                            fieldSettings.filter_options.push({ id: opt.name, value: opt.name });
-                                                                        });
-                                                                    }
-                                                                    else {
+                                                                    $$(self.componentIds.selectListOptions).data.each(function (opt) {
+                                                                        fieldSettings.filter_options.push(opt.name);
+                                                                        fieldSettings.options.push({ id: opt.name, value: opt.name });
+                                                                    });
+
+                                                                    // Filter value is not empty
+                                                                    fieldSettings.filter_options = $.grep(fieldSettings.filter_options, function (name) { return name && name.length > 0; });
+                                                                    fieldSettings.options = $.grep(fieldSettings.options, function (opt) { return opt && opt.value && opt.value.length > 0; });
+
+                                                                    if (fieldSettings.options.length < 1) {
                                                                         webix.alert({
                                                                             title: "Option required",
                                                                             ok: "Ok",
@@ -397,6 +396,7 @@ steal(
                                                                 // Call callback function
                                                                 base.addFieldCallback(newFieldInfo);
 
+                                                                base.resetState();
                                                                 base.hide(); // TODO : if fail, then should not hide
                                                             }
 
@@ -404,6 +404,7 @@ steal(
                                                     },
                                                     {
                                                         view: "button", value: "Cancel", width: 100, click: function () {
+                                                            this.getTopParentView().resetState();
                                                             this.getTopParentView().hide();
                                                         }
                                                     }
@@ -412,7 +413,7 @@ steal(
                                         ]
                                     },
                                     on: {
-                                        onHide: function () {
+                                        onBeforeShow: function () {
                                             this.resetState();
                                         }
                                     }
@@ -439,8 +440,9 @@ steal(
                                 resetState: function () {
                                     var _this = this;
 
+                                    $$(self.componentIds.selectListOptions).editCancel();
+                                    $$(self.componentIds.selectListOptions).unselectAll();
                                     $$(self.componentIds.selectListOptions).clearAll();
-                                    $$(self.componentIds.selectListNewOption).setValue('');
                                     $$(self.componentIds.connectObjectList).unselectAll();
                                     $$(self.componentIds.connectObjectIsMultipleRecords).setValue(false);
                                     $$(self.componentIds.connectObjectIsMultipleRecords).refresh();
