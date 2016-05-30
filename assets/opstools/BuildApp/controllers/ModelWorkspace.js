@@ -895,6 +895,7 @@ steal(
 							var self = this;
 
 							self.data.objectList = objectList;
+							$$(self.webixUiId.addFieldsPopup).setObjectList(objectList);
 						},
 
 						getCurSelectivityNode: function (selectedCell) {
