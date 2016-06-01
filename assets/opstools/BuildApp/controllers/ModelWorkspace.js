@@ -415,7 +415,6 @@ steal(
 									{
 										view: "datatable",
 										id: self.webixUiId.modelDatatable,
-										autoheight: true,
 										resizeColumn: true,
 										resizeRow: true,
 										editable: true,
@@ -679,6 +678,12 @@ steal(
 											{ name: 'Test 3', description: 'Description 1', optional: 'Option 2', number: 20 }
 										];
 
+										// for (var i = 0; i < 20; i++) {
+										// 	data.push({
+										// 		name: 'Test ' + i, description: 'Description ' + i, optional: 'Option ' + i, number: i,
+										// 	});
+										// }
+
 										$$(self.webixUiId.modelDatatable).parse(data);
 
 										next();
@@ -742,7 +747,6 @@ steal(
 
 												self.data.columns.push(data);
 
-												// Add new column
 												var columns = $$(self.webixUiId.modelDatatable).config.columns;
 
 												var addColumnHeader = $.extend(columnInfo.setting, {
@@ -775,7 +779,7 @@ steal(
 												});
 											});
 
-										if (columnInfo.id) {
+										if (columnInfo.id) { // Update
 											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
 
 											for (var key in newColumn) {
@@ -792,7 +796,7 @@ steal(
 													saveDeferred.resolve(data);
 												});
 										}
-										else {
+										else { // Add new
 											self.Model.create(newColumn)
 												.fail(function (err) {
 													saveDeferred.reject(err);
@@ -939,6 +943,15 @@ steal(
 							$$(self.webixUiId.modelDatatable).refreshColumns([], true);
 
 							self.refreshPopupData();
+						},
+
+						resize: function (height) {
+							var self = this;
+
+							if ($$(self.webixUiId.modelDatatable)) {
+								$$(self.webixUiId.modelDatatable).define("height", height - 150);
+								$$(self.webixUiId.modelDatatable).resize();
+							}
 						}
 
 					});

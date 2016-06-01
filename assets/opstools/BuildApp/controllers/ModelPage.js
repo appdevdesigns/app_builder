@@ -90,6 +90,8 @@ steal(
 								$$(self.options.modelView).define('height', height - 120);
 								$$(self.options.modelView).adjust();
 							}
+
+							self.controllers.ModelWorkspace.resize(height);
 						}
 
 
