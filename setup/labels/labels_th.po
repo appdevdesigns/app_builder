@@ -253,21 +253,15 @@ msgstr "เรียงลำดับ"
 
 #. path: app_builder
 #. code: th
-#. key: ab.object.renameField
-msgid "Rename field"
-msgstr "เปลี่ยนชื่อคอลัมน์"
+#. key: ab.object.editField
+msgid "Edit field"
+msgstr "แก้ไขคอลัมน์"
 
 #. path: app_builder
 #. code: th
 #. key: ab.object.deleteField
 msgid "Delete field"
 msgstr "ลบคอลัมน์"
-
-#. path: app_builder
-#. code: th
-#. key: ab.object.renameFieldMessage
-msgid "Rename <b>{0}</b> column"
-msgstr "เปลี่ยนชื่อคอลัมน์ <b>{0}</b>"
 
 #. path: app_builder
 #. code: th

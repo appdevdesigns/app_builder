@@ -19,7 +19,9 @@ steal(
                             // Call parent init
                             this._super(element, options);
 
+                            this.data = {};
                             this.componentIds = {
+                                chooseTypeMenu: 'ab-new-type-menu',
                                 chooseTypeView: 'ab-new-none',
 
                                 connectObjectIcon: 'external-link',
@@ -56,7 +58,9 @@ steal(
                                 attachmentIcon: 'file',
                                 attachmentView: 'ab-new-attachment',
 
-                                headerNameText: 'ab-new-field-name'
+                                headerNameText: 'ab-new-field-name',
+
+                                saveButton: 'ab-new-save-button'
                             };
 
                             this.initWebixControls();
@@ -77,31 +81,33 @@ steal(
                                         width: 380,
                                         rows: [
                                             {
-                                                minWidth: 500,
                                                 view: "menu",
+                                                id: self.componentIds.chooseTypeMenu,
+                                                minWidth: 500,
                                                 autowidth: true,
                                                 data: [
                                                     {
                                                         value: "Choose field type...",
                                                         submenu: [
-                                                            { view: 'button', value: 'Connect to another record', icon: self.componentIds.connectObjectIcon, type: 'icon', viewName: self.componentIds.connectObjectView },
-                                                            { view: 'button', value: 'Single line text', icon: self.componentIds.singleTextIcon, type: 'icon', viewName: self.componentIds.singleTextView },
-                                                            { view: 'button', value: 'Long text', icon: self.componentIds.longTextIcon, type: 'icon', viewName: self.componentIds.longTextView },
-                                                            { view: 'button', value: 'Number', icon: self.componentIds.numberIcon, type: 'icon', viewName: self.componentIds.numberView },
-                                                            { view: 'button', value: 'Date', icon: self.componentIds.dateIcon, type: 'icon', viewName: self.componentIds.dateView },
-                                                            { view: 'button', value: 'Checkbox', icon: self.componentIds.booleanIcon, type: 'icon', viewName: self.componentIds.booleanView },
-                                                            { view: 'button', value: 'Select list', icon: self.componentIds.selectListIcon, type: 'icon', viewName: self.componentIds.selectListView },
-                                                            { view: 'button', value: 'Attachment', icon: self.componentIds.attachmentIcon, type: 'icon', viewName: self.componentIds.attachmentView },
+                                                            { view: 'button', value: 'Connect to another record', fieldType: 'link', icon: self.componentIds.connectObjectIcon, type: 'icon' },
+                                                            { view: 'button', value: 'Single line text', fieldType: 'string', icon: self.componentIds.singleTextIcon, type: 'icon' },
+                                                            { view: 'button', value: 'Long text', fieldType: 'text', icon: self.componentIds.longTextIcon, type: 'icon' },
+                                                            { view: 'button', value: 'Number', fieldType: ['float', 'integer'], icon: self.componentIds.numberIcon, type: 'icon' },
+                                                            { view: 'button', value: 'Date', fieldType: ['datetime', 'date'], icon: self.componentIds.dateIcon, type: 'icon' },
+                                                            { view: 'button', value: 'Checkbox', fieldType: 'boolean', icon: self.componentIds.booleanIcon, type: 'icon' },
+                                                            { view: 'button', value: 'Select list', fieldType: 'list', icon: self.componentIds.selectListIcon, type: 'icon' },
+                                                            { view: 'button', value: 'Attachment', fieldType: 'attachment', icon: self.componentIds.attachmentIcon, type: 'icon' },
                                                         ]
                                                     }
                                                 ],
                                                 on: {
                                                     onMenuItemClick: function (id) {
-                                                        var base = this.getTopParentView();
-                                                        var selectedMenuItem = this.getMenuItem(id);
+                                                        var base = this.getTopParentView(),
+                                                            selectedMenuItem = this.getMenuItem(id),
+                                                            viewName = base.getViewName(selectedMenuItem.fieldType);
 
-                                                        if (selectedMenuItem.viewName) {
-                                                            $$(selectedMenuItem.viewName).show();
+                                                        if (viewName) {
+                                                            $$(viewName).show();
 
                                                             var headerNameClass = '.' + self.componentIds.headerNameText;
 
@@ -183,8 +189,8 @@ steal(
                                                             { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 60 },
                                                             {
                                                                 view: "combo", id: self.componentIds.numberFormat, value: "Number", label: 'Format', labelWidth: 60, options: [
-                                                                    { format: webix.i18n.numberFormat, value: "Number" },
-                                                                    { format: webix.i18n.priceFormat, value: "Price" },
+                                                                    { format: 'numberFormat', value: "Number" },
+                                                                    { format: 'priceFormat', value: "Price" },
                                                                 ]
                                                             },
                                                             { view: "checkbox", id: self.componentIds.numberAllowDecimal, labelRight: "Allow decimal numbers", labelWidth: 0 },
@@ -250,7 +256,7 @@ steal(
                                             {
                                                 cols: [
                                                     {
-                                                        view: "button", label: "Add Column", type: "form", width: 120, click: function () {
+                                                        view: "button", id: self.componentIds.saveButton, label: "Add Column", type: "form", width: 120, click: function () {
                                                             var base = this.getTopParentView();
                                                             var dataTable = base.dataTable;
 
@@ -317,7 +323,7 @@ steal(
                                                                         return format.value == $$(self.componentIds.numberFormat).getValue();
                                                                     })[0];
                                                                     fieldSettings.format = selectedFormat.format;
-
+                                                                    fieldSettings.value = $$(self.componentIds.numberDefault).getValue();
                                                                     break;
                                                                 case 'Date':
                                                                     fieldName = base.getFieldName(self.componentIds.dateView);
@@ -380,22 +386,24 @@ steal(
                                                                     return; // TODO;
                                                             }
 
-                                                            if (base.addFieldCallback) {
-                                                                var newFieldInfo = {
-                                                                    name: fieldName,
-                                                                    type: fieldType,
-                                                                    setting: fieldSettings
-                                                                };
+                                                            var newFieldInfo = {
+                                                                name: fieldName,
+                                                                type: fieldType,
+                                                                setting: fieldSettings
+                                                            };
 
-                                                                if (linkToObject != null)
-                                                                    newFieldInfo.linkToObject = linkToObject;
+                                                            if (linkToObject != null)
+                                                                newFieldInfo.linkToObject = linkToObject;
 
-                                                                if (isMultipleRecords != null)
-                                                                    newFieldInfo.isMultipleRecords = isMultipleRecords;
+                                                            if (isMultipleRecords != null)
+                                                                newFieldInfo.isMultipleRecords = isMultipleRecords;
 
-                                                                // Call callback function
-                                                                base.addFieldCallback(newFieldInfo);
+                                                            if (self.data.editFieldId)
+                                                                newFieldInfo.id = self.data.editFieldId;
 
+                                                            // Call callback function
+                                                            if (base.saveFieldCallback && base.selectedType) {
+                                                                base.saveFieldCallback(newFieldInfo);
                                                                 base.resetState();
                                                                 base.hide(); // TODO : if fail, then should not hide
                                                             }
@@ -415,6 +423,9 @@ steal(
                                     on: {
                                         onBeforeShow: function () {
                                             this.resetState();
+                                        },
+                                        onHide: function () {
+                                            this.resetState();
                                         }
                                     }
                                 },
@@ -423,12 +434,89 @@ steal(
                                     this.dataTable = dataTable;
                                 },
 
-                                registerAddNewFieldEvent: function (addFieldCallback) {
-                                    this.addFieldCallback = addFieldCallback;
+                                registerSaveFieldEvent: function (saveFieldCallback) {
+                                    this.saveFieldCallback = saveFieldCallback;
                                 },
 
                                 registerCreateNewObjectEvent: function (createNewObjectEvent) {
-                                    self.createNewObjectEvent = createNewObjectEvent;
+                                    this.createNewObjectEvent = createNewObjectEvent;
+                                },
+
+                                editMode: function (data, fieldName) {
+                                    $$(self.componentIds.chooseTypeMenu).hide();
+
+                                    $$(self.componentIds.saveButton).define('label', 'Save');
+                                    $$(self.componentIds.saveButton).refresh();
+
+                                    self.data.editFieldId = data.id;
+
+                                    // Check and Change type to list
+                                    if (data.type === 'string' && data.setting.options && data.setting.options.length > 0) {
+                                        data.type = 'list';
+                                    }
+
+                                    // Get view name
+                                    var viewName = this.getViewName(data.type);
+
+                                    // Populate data
+                                    switch (data.type) {
+                                        case 'link':
+                                            this.selectedType = 'Connect to another record';
+
+                                            var selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) { return obj.name == data.linkToObject; })[0];
+                                            $$(self.componentIds.connectObjectList).select(selectedObject.id);
+                                            $$(self.componentIds.connectObjectIsMultipleRecords).setValue(data.isMultipleRecords);
+                                            break;
+                                        case 'string':
+                                            this.selectedType = 'Single line text';
+                                            $$(self.componentIds.singleTextDefault).setValue(data.default);
+                                            break;
+                                        case 'text':
+                                            this.selectedType = 'Long text';
+                                            break;
+                                        case 'float': // Number
+                                        case 'integer':
+                                            this.selectedType = 'Number';
+
+                                            $$(self.componentIds.numberAllowDecimal).setValue(data.type == 'float');
+                                            $$(self.componentIds.numberAllowDecimal).disable();
+
+                                            var selectedFormat = $$(self.componentIds.numberFormat).getList().find(function (format) {
+                                                return format.format == data.setting.format;
+                                            });
+
+                                            if (selectedFormat && selectedFormat.length > 0)
+                                                $$(self.componentIds.numberFormat).setValue(selectedFormat[0].value);
+
+                                            $$(self.componentIds.numberDefault).setValue(data.default);
+                                            break;
+                                        case 'datetime': // Date
+                                        case 'data':
+                                            this.selectedType = 'Date';
+
+                                            $$(self.componentIds.dateIncludeTime).setValue(data.type == 'datetime');
+                                            $$(self.componentIds.dateIncludeTime).disable();
+                                            break;
+                                        case 'boolean':
+                                            this.selectedType = 'Checkbox';
+                                            break;
+                                        case 'list':
+                                            this.selectedType = 'Select list';
+                                            var options = [];
+                                            data.setting.options.forEach(function (optName) {
+                                                options.push({ name: optName });
+                                            });
+                                            $$(self.componentIds.selectListOptions).parse(options);
+                                            $$(self.componentIds.selectListOptions).refresh();
+                                            break;
+                                    }
+
+                                    $$(viewName).show();
+
+                                    // Set header name
+                                    $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
+                                        $(txtName).webix_text().setValue(fieldName);
+                                    });
                                 },
 
                                 setObjectList: function (objectList) {
@@ -438,16 +526,26 @@ steal(
                                 },
 
                                 resetState: function () {
-                                    var _this = this;
+                                    self.data.editFieldId = null;
 
+                                    $$(self.componentIds.saveButton).define('label', 'Add column');
+                                    $$(self.componentIds.saveButton).refresh();
+                                    $$(self.componentIds.chooseTypeView).show();
+                                    $$(self.componentIds.chooseTypeMenu).show();
                                     $$(self.componentIds.selectListOptions).editCancel();
                                     $$(self.componentIds.selectListOptions).unselectAll();
                                     $$(self.componentIds.selectListOptions).clearAll();
                                     $$(self.componentIds.connectObjectList).unselectAll();
                                     $$(self.componentIds.connectObjectIsMultipleRecords).setValue(false);
                                     $$(self.componentIds.connectObjectIsMultipleRecords).refresh();
-                                    $('.' + self.componentIds.headerNameText).val('');
-                                    $$("ab-new-none").show();
+                                    $$(self.componentIds.numberFormat).setValue("Number");
+                                    $$(self.componentIds.numberAllowDecimal).setValue(false);
+                                    $$(self.componentIds.numberAllowDecimal).enable();
+                                    $$(self.componentIds.dateIncludeTime).setValue(false);
+                                    $$(self.componentIds.dateIncludeTime).enable();
+                                    $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
+                                        $(txtName).webix_text().setValue('');
+                                    });
                                 },
 
                                 getDefaultFieldName: function () {
@@ -468,7 +566,33 @@ steal(
                                         return fieldName[0].getValue();
                                     else
                                         return '';
+                                },
+
+                                getViewName: function (fieldType) {
+                                    if ($.isArray(fieldType)) fieldType = fieldType[0];
+
+                                    switch (fieldType) {
+                                        case 'link':
+                                            return self.componentIds.connectObjectView;
+                                        case 'string':
+                                            return self.componentIds.singleTextView;
+                                        case 'text':
+                                            return self.componentIds.longTextView;
+                                        case 'float':
+                                        case 'integer':
+                                            return self.componentIds.numberView;
+                                        case 'datetime':
+                                        case 'date':
+                                            return self.componentIds.dateView;
+                                        case 'boolean':
+                                            return self.componentIds.booleanView;
+                                        case 'list':
+                                            return self.componentIds.selectListView;
+                                        case 'attachment':
+                                            return self.componentIds.attachmentView;
+                                    }
                                 }
+
                             }, webix.ui.popup);
                         }
                     });

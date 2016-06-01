@@ -253,21 +253,15 @@ msgstr "Sort field"
 
 #. path: app_builder
 #. code: en
-#. key: ab.object.renameField
-msgid "Rename field"
-msgstr "Rename field"
+#. key: ab.object.editField
+msgid "Edit field"
+msgstr "Edit field"
 
 #. path: app_builder
 #. code: en
 #. key: ab.object.deleteField
 msgid "Delete field"
 msgstr "Delete field"
-
-#. path: app_builder
-#. code: en
-#. key: ab.object.renameFieldMessage
-msgid "Rename <b>{0}</b> column"
-msgstr "Rename <b>{0}</b> column"
 
 #. path: app_builder
 #. code: en

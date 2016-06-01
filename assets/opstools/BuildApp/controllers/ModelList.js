@@ -213,6 +213,7 @@ steal(
 								head: self.labels.object.menu,
 								width: 130,
 								body: {
+									// id: self.webixUiId
 									view: "list",
 									data: [
 										{ command: self.labels.common.rename, icon: "fa-pencil-square-o" },

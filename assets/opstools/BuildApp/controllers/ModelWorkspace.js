@@ -39,11 +39,9 @@ steal(
 								editHeaderPopup: 'ab-edit-header-popup',
 								editHeaderItems: 'ab-edit-header-items',
 
-								renameHeaderPopup: 'ab-rename-header-popup',
 								addConnectObjectDataPopup: 'ab-connect-object-data-popup',
 								connectObjectSearch: 'ab-connect-object-search',
 								connectObjectDataList: 'ab-connect-object-data-list',
-								newFieldName: 'ab-new-name-header',
 
 								visibleFieldsPopup: 'ab-visible-fields-popup',
 								filterFieldsPopup: 'ab-filter-popup',
@@ -83,10 +81,9 @@ steal(
 							self.labels.object.hideField = AD.lang.label.getLabel('ab.object.hideField') || "Hide field";
 							self.labels.object.filterField = AD.lang.label.getLabel('ab.object.filterField') || "Filter field";
 							self.labels.object.sortField = AD.lang.label.getLabel('ab.object.sortField') || "Sort field";
-							self.labels.object.renameField = AD.lang.label.getLabel('ab.object.renameField') || "Rename field";
+							self.labels.object.editField = AD.lang.label.getLabel('ab.object.editField') || "Edit field";
 							self.labels.object.deleteField = AD.lang.label.getLabel('ab.object.deleteField') || "Delete field";
 
-							self.labels.object.renameFieldMessage = AD.lang.label.getLabel('ab.object.renameFieldMessage') || "Rename <b>{0}</b> column";
 							self.labels.object.couldNotDeleteField = AD.lang.label.getLabel('ab.object.couldNotDeleteField') || "Could not delete";
 							self.labels.object.atLeastOneField = AD.lang.label.getLabel('ab.object.atLeastOneField') || "Object should have at least one field.";
 
@@ -146,76 +143,6 @@ steal(
 								view: "add_fields_popup",
 							}).hide();
 
-							// Rename header popup
-							webix.ui({
-								id: self.webixUiId.renameHeaderPopup,
-								view: "window",
-								position: "center",
-								modal: true,
-								head: self.labels.common.rename,
-								body: {
-									rows: [
-										{ view: 'text', id: self.webixUiId.newFieldName, label: self.labels.common.newName },
-										{
-											cols: [
-												{
-													view: "button", label: self.labels.common.save, type: "form", click: function () {
-														var newName = $$(self.webixUiId.newFieldName).getValue().trim();
-														if (newName.length > 0) {
-															$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
-
-															var selectedModel = self.data.columns.filter(function (item, index, list) { return item.id == self.data.selectedFieldId; })[0];
-
-															// selectedModel.attr('name', newName);
-															selectedModel.attr('label', newName);
-
-															// Rename column
-															selectedModel.save()
-																.fail(function (err) {
-																	$$(self.webixUiId.modelDatatable).hideProgress();
-
-																	webix.message({
-																		type: "error",
-																		text: self.labels.common.renameErrorMessage.replace('{0}', selectedModel.name)
-																	});
-
-																	AD.error.log('Column : Error rename column', { error: err });
-																})
-																.then(function (data) {
-																	self.bindColumns();
-
-																	if (data.translate) data.translate();
-
-																	webix.message({
-																		type: "success",
-																		text: self.labels.common.renameSuccessMessage.replace('{0}', data.label)
-																	});
-
-																	self.refreshPopupData();
-
-																	$$(self.webixUiId.modelDatatable).hideProgress();
-
-																	$$(self.webixUiId.renameHeaderPopup).hide();
-																});
-														}
-													}
-												},
-												{
-													view: "button", value: self.labels.common.cancel, click: function () {
-														$$(self.webixUiId.renameHeaderPopup).hide();
-													}
-												}
-											]
-										}
-									]
-								},
-								on: {
-									onShow: function () {
-										$$(self.webixUiId.newFieldName).setValue('');
-									}
-								}
-							}).hide();
-
 							// Edit header popup
 							webix.ui({
 								id: self.webixUiId.editHeaderPopup,
@@ -225,7 +152,6 @@ steal(
 									id: self.webixUiId.editHeaderItems,
 									view: 'list',
 									datatype: "json",
-
 									template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
 									autoheight: true,
 									select: false,
@@ -252,12 +178,15 @@ steal(
 													$$(self.webixUiId.editHeaderPopup).hide();
 													$$(self.webixUiId.sortFieldsPopup).show($$(self.webixUiId.sortButton).getNode());
 													break;
-												case self.labels.object.renameField:
-													// Show old name in head popup
-													$$(self.webixUiId.renameHeaderPopup).getHead().setHTML(self.labels.object.renameFieldMessage.replace('{0}', selectedFieldName));
-													$$(self.webixUiId.renameHeaderPopup).show();
-
+												case self.labels.object.editField:
+													var itemNode = $$(self.webixUiId.modelDatatable).getHeaderNode(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
+
+													var selectedObject = $.grep(self.data.objectList, function (obj) { return obj.id == self.data.modelId; })[0],
+														selectedColumn = $.grep(selectedObject.columns, function (c) { return c.id == self.data.selectedFieldId; })[0];
+
+													$$(self.webixUiId.addFieldsPopup).show(itemNode);
+													$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedFieldName);
 													break;
 												case self.labels.object.deleteField:
 													// Validate
@@ -558,7 +487,7 @@ steal(
 													{ command: self.labels.object.hideField, icon: "fa-columns" },
 													{ command: self.labels.object.filterField, icon: "fa-filter" },
 													{ command: self.labels.object.sortField, icon: "fa-sort" },
-													{ command: self.labels.object.renameField, icon: "fa-pencil-square-o" },
+													{ command: self.labels.object.editField, icon: "fa-pencil-square-o" },
 													{ command: self.labels.object.deleteField, icon: "fa-trash" }
 												];
 
@@ -770,7 +699,7 @@ steal(
 									self.refreshPopupData();
 
 									// Register add new column callback
-									$$(self.webixUiId.addFieldsPopup).registerAddNewFieldEvent(function (columnInfo) {
+									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo) {
 
 										if ($$(self.webixUiId.modelDatatable).showProgress)
 											$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
@@ -794,7 +723,8 @@ steal(
 										if (columnInfo.setting.value)
 											newColumn.default = columnInfo.setting.value;
 
-										self.Model.create(newColumn)
+										var saveDeferred = $.Deferred();
+										saveDeferred
 											.fail(function (err) {
 												$$(self.webixUiId.modelDatatable).hideProgress();
 
@@ -821,7 +751,16 @@ steal(
 
 												addColumnHeader.width = self.calculateColumnWidth(data);
 
-												columns.push(addColumnHeader);
+												var existsColumn = $.grep(columns, function (c) { return c.dataId == data.id; });
+												if (existsColumn && existsColumn.length > 0) { // Update
+													for (var i = 0; i < columns.length; i++) {
+														if (columns[i].dataId == data.id)
+															columns[i] = addColumnHeader;
+													}
+												} else { // Add 
+													columns.push(addColumnHeader);
+												}
+
 												$$(self.webixUiId.modelDatatable).refreshColumns(columns);
 
 												self.refreshPopupData();
@@ -833,6 +772,35 @@ steal(
 													text: self.labels.common.createSuccessMessage.replace("{0}", columnInfo.name)
 												});
 											});
+
+										if (columnInfo.id) {
+											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
+
+											for (var key in newColumn) {
+												updateColumn.attr(key, newColumn[key]);
+											}
+
+											updateColumn.save()
+												.fail(function (err) {
+													saveDeferred.reject(err);
+												})
+												.then(function (data) {
+													if (data.translate) data.translate();
+
+													saveDeferred.resolve(data);
+												});
+										}
+										else {
+											self.Model.create(newColumn)
+												.fail(function (err) {
+													saveDeferred.reject(err);
+												})
+												.then(function (data) {
+													if (data.translate) data.translate();
+
+													saveDeferred.resolve(data);
+												});
+										}
 
 									});
 
@@ -861,6 +829,9 @@ steal(
 							var columns = $.map(self.data.columns.attr(), function (col, i) {
 
 								col.setting.width = self.calculateColumnWidth(col);
+
+								if (col.setting.format)
+									col.setting.format = webix.i18n[col.setting.format];
 
 								return $.extend(col.setting, {
 									id: col.name,
@@ -935,11 +906,11 @@ steal(
 						calculateRowHeight: function (row, column, dataNumber) {
 							var self = this,
 								rowHeight = 35;
-								// maxItemWidth = 100, // Max item width
-								// columnInfo = $$(self.webixUiId.modelDatatable).getColumnConfig(column),
-								// curSpace = columnInfo.width * rowHeight,
-								// expectedSpace = (dataNumber * rowHeight * maxItemWidth),
-								// calHeight = 0;
+							// maxItemWidth = 100, // Max item width
+							// columnInfo = $$(self.webixUiId.modelDatatable).getColumnConfig(column),
+							// curSpace = columnInfo.width * rowHeight,
+							// expectedSpace = (dataNumber * rowHeight * maxItemWidth),
+							// calHeight = 0;
 
 							var calHeight = dataNumber * rowHeight;
 
