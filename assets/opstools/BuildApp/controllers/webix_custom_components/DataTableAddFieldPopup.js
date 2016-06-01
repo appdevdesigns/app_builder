@@ -519,7 +519,7 @@ steal(
                                             this.selectedType = 'Select list';
                                             var options = [];
                                             data.setting.options.forEach(function (optName) {
-                                                options.push({ name: optName });
+                                                options.push({ name: optName.value });
                                             });
                                             $$(self.componentIds.selectListOptions).parse(options);
                                             $$(self.componentIds.selectListOptions).refresh();

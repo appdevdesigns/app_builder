@@ -325,6 +325,12 @@ msgstr "Apply sort"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.toolbar.frozenColumns
+msgid "Frozen columns"
+msgstr "Frozen columns"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.toolbar.permission
 msgid "Permission"
 msgstr "Permission"

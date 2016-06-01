@@ -324,6 +324,12 @@ msgid "Apply sort"
 msgstr "เรียงลำดับข้อมูล"
 
 #. path: app_builder
+#. code: en
+#. key: ab.object.toolbar.frozenColumns
+msgid "Frozen columns"
+msgstr "ล็อคคอลัมน์"
+
+#. path: app_builder
 #. code: th
 #. key: ab.object.toolbar.permission
 msgid "Permission"

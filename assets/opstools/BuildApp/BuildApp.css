@@ -57,7 +57,8 @@
 div[view_id='ab-app-list'] div.webix_list_item:hover, 
 div[view_id='ab-model-list'] div.webix_list_item:hover,
 div[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover,
-div[view_id='ab-edit-header-items'] div.webix_list_item:hover {
+div[view_id='ab-edit-header-items'] div.webix_list_item:hover,
+div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	background-color: #eee;	
 }
 .ab-app-list-name {

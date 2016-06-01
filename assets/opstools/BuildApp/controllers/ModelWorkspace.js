@@ -6,6 +6,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableVisibleFieldsPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableFrozenColumnPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 	'opstools/BuildApp/models/ABColumn.js',
 	function () {
@@ -35,6 +36,7 @@ steal(
 
 								filterButton: 'ab-filter-fields-toolbar',
 								sortButton: 'ab-sort-fields-toolbar',
+								frozenButton: 'ab-frozen-columns-toolbar',
 
 								editHeaderPopup: 'ab-edit-header-popup',
 								editHeaderItems: 'ab-edit-header-items',
@@ -46,6 +48,7 @@ steal(
 								visibleFieldsPopup: 'ab-visible-fields-popup',
 								filterFieldsPopup: 'ab-filter-popup',
 								sortFieldsPopup: 'ab-sort-popup',
+								frozenColumnsPopup: 'ab-frozen-popup',
 								addFieldsPopup: 'ab-add-fields-popup'
 							};
 
@@ -100,6 +103,7 @@ steal(
 							self.labels.object.toolbar.hideFields = AD.lang.label.getLabel('ab.object.toolbar.hideFields') || "Hide fields";
 							self.labels.object.toolbar.filterFields = AD.lang.label.getLabel('ab.object.toolbar.filterFields') || "Add filters";
 							self.labels.object.toolbar.sortFields = AD.lang.label.getLabel('ab.object.toolbar.sortFields') || "Apply sort";
+							self.labels.object.toolbar.frozenColumns = AD.lang.label.getLabel('ab.object.toolbar.frozenColumns') || "Frozen columns";
 							self.labels.object.toolbar.permission = AD.lang.label.getLabel('ab.object.toolbar.permission') || "Permission";
 							self.labels.object.toolbar.addFields = AD.lang.label.getLabel('ab.object.toolbar.addFields') || "Add new column";
 						},
@@ -111,12 +115,14 @@ steal(
 								VisibleFieldsPopup = AD.Control.get('opstools.BuildApp.DataTableVisibleFieldsPopup'),
 								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
 								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
+								FrozenPopup = AD.Control.get('opstools.BuildApp.DataTableFrozenColumnPopup'),
 								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup');
 
 							this.controllers.DataTableEditor = new DataTableEditor();
 							this.controllers.VisibleFieldsPopup = new VisibleFieldsPopup();
 							this.controllers.FilterPopup = new FilterPopup();
 							this.controllers.SortPopup = new SortPopup();
+							this.controllers.FrozenPopup = new FrozenPopup();
 							this.controllers.AddFieldPopup = new AddFieldPopup();
 						},
 
@@ -136,6 +142,11 @@ steal(
 							webix.ui({
 								id: self.webixUiId.sortFieldsPopup,
 								view: "sort_popup",
+							}).hide();
+
+							webix.ui({
+								id: self.webixUiId.frozenColumnsPopup,
+								view: "frozen_popup",
 							}).hide();
 
 							webix.ui({
@@ -408,6 +419,7 @@ steal(
 											{ view: "button", label: self.labels.object.toolbar.hideFields, icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
 											{ view: 'button', label: self.labels.object.toolbar.filterFields, icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup, id: self.webixUiId.filterButton },
 											{ view: 'button', label: self.labels.object.toolbar.sortFields, icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup, id: self.webixUiId.sortButton },
+											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, icon: "table", type: "icon", width: 150, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
 											{ view: 'button', label: self.labels.object.toolbar.addFields, icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
 										]
@@ -697,6 +709,7 @@ steal(
 									$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 
 									// Bind columns data
@@ -842,6 +855,7 @@ steal(
 								return $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
+									label: col.label,
 									header: self.getHeader(col)
 								});
 							});
@@ -894,11 +908,13 @@ steal(
 								$$(self.webixUiId.visibleFieldsPopup).setFieldList(self.data.columns.attr());
 								$$(self.webixUiId.filterFieldsPopup).setFieldList(self.data.columns.attr());
 								$$(self.webixUiId.sortFieldsPopup).setFieldList(self.data.columns.attr());
+								$$(self.webixUiId.frozenColumnsPopup).setFieldList(self.data.columns.attr());
 							}
 
 							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
 							$$(self.webixUiId.filterFieldsPopup).refreshFieldList();
 							$$(self.webixUiId.sortFieldsPopup).refreshFieldList();
+							$$(self.webixUiId.frozenColumnsPopup).bindFieldList();
 						},
 						calculateColumnWidth: function (col) {
 							var charWidth = 7,
@@ -936,6 +952,7 @@ steal(
 							var self = this;
 
 							$$(self.webixUiId.modelToolbar).hide();
+							$$(self.webixUiId.modelDatatable).define('leftSplit', 0);
 							$$(self.webixUiId.modelDatatable).clearValidation();
 							$$(self.webixUiId.modelDatatable).clearSelection();
 							$$(self.webixUiId.modelDatatable).clearAll();
