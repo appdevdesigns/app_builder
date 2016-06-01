@@ -33,9 +33,11 @@ steal(
                                 singleTextIcon: 'font',
                                 singleTextView: 'ab-new-singleText',
                                 singleTextDefault: 'ab-new-singleText-default',
+                                singleSupportMultilingual: 'ab-new-singleText-support-multilingual',
 
                                 longTextIcon: 'align-right',
                                 longTextView: 'ab-new-longText',
+                                longSupportMultilingual: 'ab-new-longText-support-multilingual',
 
                                 numberIcon: 'slack',
                                 numberView: 'ab-new-number',
@@ -54,6 +56,7 @@ steal(
                                 selectListView: 'ab-new-select-list',
                                 selectListOptions: 'ab-new-select-option',
                                 selectListNewOption: 'ab-new-select-new',
+                                selectListSupportMultilingual: 'ab-new-list-support-multilingual',
 
                                 attachmentIcon: 'file',
                                 attachmentView: 'ab-new-attachment',
@@ -171,7 +174,8 @@ steal(
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>Single line text".replace('{0}', self.componentIds.singleTextIcon) },
                                                             { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
-                                                            { view: "text", id: self.componentIds.singleTextDefault, placeholder: "Default text" }
+                                                            { view: "text", id: self.componentIds.singleTextDefault, placeholder: "Default text" },
+                                                            { view: "checkbox", id: self.componentIds.singleSupportMultilingual, labelRight: "Support multilingual", labelWidth: 0, value: true }
                                                         ]
                                                     },
                                                     {
@@ -179,7 +183,8 @@ steal(
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>Long line text".replace('{0}', self.componentIds.longTextIcon) },
                                                             { view: "text", label: "Name", placeholder: "Header name", css: self.componentIds.headerNameText, labelWidth: 50 },
-                                                            { view: "label", label: "A long text field that can span multiple lines." }
+                                                            { view: "label", label: "A long text field that can span multiple lines." },
+                                                            { view: "checkbox", id: self.componentIds.longSupportMultilingual, labelRight: "Support multilingual", labelWidth: 0, value: true }
                                                         ]
                                                     },
                                                     {
@@ -240,7 +245,8 @@ steal(
                                                                     var itemId = $$(self.componentIds.selectListOptions).add({ name: '' }, $$(self.componentIds.selectListOptions).count());
                                                                     $$(self.componentIds.selectListOptions).edit(itemId);
                                                                 }
-                                                            }
+                                                            },
+                                                            { view: "checkbox", id: self.componentIds.selectListSupportMultilingual, labelRight: "Support multilingual", labelWidth: 0, value: true }
                                                         ]
                                                     },
                                                     {
@@ -269,6 +275,7 @@ steal(
                                                                 fieldType = '',
                                                                 linkToObject = null,
                                                                 isMultipleRecords = null,
+                                                                supportMultilingual = null,
                                                                 fieldSettings = {};
 
                                                             switch (base.selectedType) {
@@ -295,6 +302,7 @@ steal(
                                                                 case 'Single line text':
                                                                     fieldName = base.getFieldName(self.componentIds.singleTextView);
                                                                     fieldType = 'string';
+                                                                    supportMultilingual = $$(self.componentIds.singleSupportMultilingual).getValue();
                                                                     fieldSettings.icon = self.componentIds.singleTextIcon;
                                                                     fieldSettings.editor = 'text';
                                                                     fieldSettings.filter_type = 'text';
@@ -303,6 +311,7 @@ steal(
                                                                 case 'Long text':
                                                                     fieldName = base.getFieldName(self.componentIds.longTextView);
                                                                     fieldType = 'text';
+                                                                    supportMultilingual = $$(self.componentIds.longSupportMultilingual).getValue();
                                                                     fieldSettings.icon = self.componentIds.longTextIcon;
                                                                     fieldSettings.editor = 'popup';
                                                                     fieldSettings.filter_type = 'text';
@@ -352,6 +361,7 @@ steal(
 
                                                                     fieldName = base.getFieldName(self.componentIds.selectListView);
                                                                     fieldType = 'string';
+                                                                    supportMultilingual = $$(self.componentIds.selectListSupportMultilingual).getValue();
                                                                     fieldSettings.icon = self.componentIds.selectListIcon;
 
                                                                     fieldSettings.filter_type = 'list';
@@ -397,6 +407,9 @@ steal(
 
                                                             if (isMultipleRecords != null)
                                                                 newFieldInfo.isMultipleRecords = isMultipleRecords;
+
+                                                            if (supportMultilingual != null)
+                                                                newFieldInfo.supportMultilingual = supportMultilingual;
 
                                                             if (self.data.editFieldId)
                                                                 newFieldInfo.id = self.data.editFieldId;
@@ -470,9 +483,11 @@ steal(
                                         case 'string':
                                             this.selectedType = 'Single line text';
                                             $$(self.componentIds.singleTextDefault).setValue(data.default);
+                                            $$(self.componentIds.singleSupportMultilingual).setValue(data.supportMultilingual);
                                             break;
                                         case 'text':
                                             this.selectedType = 'Long text';
+                                            $$(self.componentIds.longSupportMultilingual).setValue(data.supportMultilingual);
                                             break;
                                         case 'float': // Number
                                         case 'integer':
@@ -508,6 +523,7 @@ steal(
                                             });
                                             $$(self.componentIds.selectListOptions).parse(options);
                                             $$(self.componentIds.selectListOptions).refresh();
+                                            $$(self.componentIds.selectListSupportMultilingual).setValue(data.supportMultilingual);
                                             break;
                                     }
 

@@ -56,7 +56,9 @@ module.exports = {
 
         linkToObject: { type: 'string' },
 
-        isMultipleRecords: { type: 'boolean' }
+        isMultipleRecords: { type: 'boolean' },
+
+        supportMultilingual: { type: 'boolean' }
     },
 
     beforeCreate: function (values, cb) {

@@ -182,8 +182,7 @@ steal(
 													var itemNode = $$(self.webixUiId.modelDatatable).getHeaderNode(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
 
-													var selectedObject = $.grep(self.data.objectList, function (obj) { return obj.id == self.data.modelId; })[0],
-														selectedColumn = $.grep(selectedObject.columns, function (c) { return c.id == self.data.selectedFieldId; })[0];
+													var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == self.data.selectedFieldId; })[0];
 
 													$$(self.webixUiId.addFieldsPopup).show(itemNode);
 													$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedFieldName);
@@ -719,6 +718,9 @@ steal(
 
 										if (columnInfo.isMultipleRecords != null)
 											newColumn.isMultipleRecords = columnInfo.isMultipleRecords ? true : false;
+
+										if (columnInfo.supportMultilingual != null)
+											newColumn.supportMultilingual = columnInfo.supportMultilingual ? true : false;
 
 										if (columnInfo.setting.value)
 											newColumn.default = columnInfo.setting.value;
