@@ -34,6 +34,7 @@ steal(
 								modelToolbar: 'ab-model-toolbar',
 								modelDatatable: 'ab-model-datatable',
 
+								visibleButton: 'ab-visible-fields-toolbar',
 								filterButton: 'ab-filter-fields-toolbar',
 								sortButton: 'ab-sort-fields-toolbar',
 								frozenButton: 'ab-frozen-columns-toolbar',
@@ -185,7 +186,7 @@ steal(
 													$$(self.webixUiId.filterFieldsPopup).show($$(self.webixUiId.filterButton).getNode());
 													break;
 												case self.labels.object.sortField:
-													// $$(self.webixUiId.sortFieldsPopup).addSort(selectedField.id);
+													$$(self.webixUiId.sortFieldsPopup).addNewSort(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
 													$$(self.webixUiId.sortFieldsPopup).show($$(self.webixUiId.sortButton).getNode());
 													break;
@@ -416,12 +417,12 @@ steal(
 										id: self.webixUiId.modelToolbar,
 										hidden: true,
 										cols: [
-											{ view: "button", label: self.labels.object.toolbar.hideFields, icon: "columns", type: "icon", width: 120, popup: self.webixUiId.visibleFieldsPopup },
-											{ view: 'button', label: self.labels.object.toolbar.filterFields, icon: "filter", type: "icon", width: 120, popup: self.webixUiId.filterFieldsPopup, id: self.webixUiId.filterButton },
-											{ view: 'button', label: self.labels.object.toolbar.sortFields, icon: "sort", type: "icon", width: 120, popup: self.webixUiId.sortFieldsPopup, id: self.webixUiId.sortButton },
-											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, icon: "table", type: "icon", width: 150, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton },
+											{ view: "button", label: self.labels.object.toolbar.hideFields, popup: self.webixUiId.visibleFieldsPopup, id: self.webixUiId.visibleButton, icon: "columns", type: "icon", width: 120, badge: 0 },
+											{ view: 'button', label: self.labels.object.toolbar.filterFields, popup: self.webixUiId.filterFieldsPopup, id: self.webixUiId.filterButton, icon: "filter", type: "icon", width: 120, badge: 0 },
+											{ view: 'button', label: self.labels.object.toolbar.sortFields, popup: self.webixUiId.sortFieldsPopup, id: self.webixUiId.sortButton, icon: "sort", type: "icon", width: 120, badge: 0 },
+											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton, icon: "table", type: "icon", width: 150, badge: 0 },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
-											{ view: 'button', label: self.labels.object.toolbar.addFields, icon: "plus", type: "icon", width: 150, popup: self.webixUiId.addFieldsPopup }
+											{ view: 'button', label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 }
 										]
 									},
 									{
@@ -712,6 +713,9 @@ steal(
 									$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
 
+									// Listen popup events
+									self.attachPopupEvents();
+
 									// Bind columns data
 									self.refreshPopupData();
 
@@ -916,6 +920,28 @@ steal(
 							$$(self.webixUiId.sortFieldsPopup).refreshFieldList();
 							$$(self.webixUiId.frozenColumnsPopup).bindFieldList();
 						},
+
+						attachPopupEvents: function () {
+							var self = this;
+
+							$$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (number) {
+								$$(self.webixUiId.visibleButton).define('badge', number);
+								$$(self.webixUiId.visibleButton).refresh();
+							});
+							$$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (number) {
+								$$(self.webixUiId.filterButton).define('badge', number);
+								$$(self.webixUiId.filterButton).refresh();
+							});
+							$$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (number) {
+								$$(self.webixUiId.sortButton).define('badge', number);
+								$$(self.webixUiId.sortButton).refresh();
+							});
+							$$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (number) {
+								$$(self.webixUiId.frozenButton).define('badge', number);
+								$$(self.webixUiId.frozenButton).refresh();
+							});
+						},
+
 						calculateColumnWidth: function (col) {
 							var charWidth = 7,
 								width = (col.label.length * charWidth) + 80;

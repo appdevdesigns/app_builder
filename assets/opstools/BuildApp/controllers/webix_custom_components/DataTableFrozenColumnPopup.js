@@ -52,7 +52,8 @@ steal(
 														self.dataTable.define('leftSplit', self.dataTable.getColumnIndex(id) + 1);
 														self.dataTable.refreshColumns();
 
-														this.getTopParentView().refreshShowIcons();
+														$$(self.componentIds.frozenPopup).refreshShowIcons();
+														$$(self.componentIds.frozenPopup).callChangeEvent();
 													}
 												}
 											},
@@ -61,14 +62,15 @@ steal(
 													self.dataTable.define('leftSplit', 0);
 													self.dataTable.refreshColumns();
 
-													this.getTopParentView().refreshShowIcons();
+													$$(self.componentIds.frozenPopup).refreshShowIcons();
+													$$(self.componentIds.frozenPopup).callChangeEvent();
 												}
 											}
 										]
 									},
 									on: {
 										onShow: function () {
-											this.getTopParentView().refreshShowIcons();
+											$$(self.componentIds.frozenPopup).refreshShowIcons();
 										}
 									}
 								},
@@ -114,6 +116,10 @@ steal(
 											$($$(self.componentIds.fieldsList).getItemNode(c.id)).find('.ab-frozen-field-icon').show();
 										}
 									}
+								},
+
+								callChangeEvent: function () {
+									$$(self.componentIds.frozenPopup).callEvent('onChange', [self.dataTable.config.leftSplit]);
 								}
 							}, webix.ui.popup);
 						}

@@ -45,21 +45,42 @@ steal(
 										elements: [{
 											view: "button", value: "Add a sort", click: function () {
 												this.getTopParentView().addNewSort();
+												this.getTopParentView().callChangeEvent();
 											}
 										}]
 									},
 									on: {
 										onShow: function () {
-											if ($$(self.componentIds.sortForm).getChildViews().length < 2)
+											if ($$(self.componentIds.sortForm).getChildViews().length < 2) {
 												$$(self.componentIds.sortForm).getTopParentView().addNewSort();
+												this.getTopParentView().callChangeEvent();
+											}
 										}
 									}
 								},
-								addNewSort: function () {
+								addNewSort: function (fieldId) {
+									// Prevent duplicate fields
+									var isExists = false;
+									if (fieldId) {
+										$$(self.componentIds.sortForm).getChildViews().forEach(function (v, index) {
+											if (index >= $$(self.componentIds.sortForm).getChildViews().length - 1)
+												return;
+
+											if (fieldId == v.getChildViews()[0].getValue()) {
+												isExists = true;
+												return;
+											}
+										});
+
+										// If field exists, it will not add new sort
+										if (isExists)
+											return;
+									}
+
 									var viewIndex = $$(self.componentIds.sortForm).getChildViews().length - 1;
 									var fieldList = $$(self.componentIds.sortPopup).getFieldList(true);
 									$$(self.componentIds.sortForm).addView({
-										id: 's' + webix.uid(),
+										id: 'sort' + webix.uid(),
 										cols: [
 											{
 												view: "combo",
@@ -70,6 +91,9 @@ steal(
 														var columnConfig = self.dataTable.getColumnConfig(columnId),
 															sortInput = this.getParentView().getChildViews()[1],
 															options = null;
+
+														if (!columnConfig)
+															return;
 
 														switch (columnConfig.filter_type) {
 															case "text":
@@ -100,6 +124,8 @@ steal(
 
 														$$(self.componentIds.sortPopup).refreshFieldList();
 														$$(self.componentIds.sortPopup).sort();
+
+														this.getTopParentView().callChangeEvent();
 													}
 												}
 											},
@@ -114,12 +140,21 @@ steal(
 											{
 												view: "button", value: "X", width: 30, click: function () {
 													$$(self.componentIds.sortForm).removeView(this.getParentView());
-													$$(self.componentIds.sortPopup).refreshFieldList();
+													$$(self.componentIds.sortPopup).refreshFieldList(true);
 													$$(self.componentIds.sortPopup).sort();
+
+													this.getTopParentView().callChangeEvent();
 												}
 											}
 										]
 									}, viewIndex);
+
+									// Select field
+									if (fieldId) {
+										var fieldsCombo = $$(self.componentIds.sortForm).getChildViews()[viewIndex].getChildViews()[0];
+										fieldsCombo.setValue(fieldId);
+										this.getTopParentView().callChangeEvent();
+									}
 								},
 
 								registerDataTable: function (dataTable) {
@@ -155,7 +190,7 @@ steal(
 									// Get all columns include hidden fields
 									if (self.data.fieldList) {
 										self.data.fieldList.forEach(function (f) {
-											if (f.setting.filter_type) {
+											if (f.setting.filter_type && f.type != 'link') {
 												fieldList.push({
 													id: f.name,
 													value: f.label
@@ -193,7 +228,7 @@ steal(
 									return fieldList;
 								},
 
-								refreshFieldList: function () {
+								refreshFieldList: function (ignoreRemoveViews) {
 									var fieldList = this.getFieldList(false),
 										selectedFields = [],
 										removeChildViews = [];
@@ -219,9 +254,11 @@ steal(
 									}
 
 									// Remove filter conditions when column is deleted
-									removeChildViews.forEach(function (cView, index) {
-										$$(self.componentIds.sortForm).removeView(cView);
-									});
+									if (!ignoreRemoveViews) {
+										removeChildViews.forEach(function (cView, index) {
+											$$(self.componentIds.sortForm).removeView(cView);
+										});
+									}
 
 									// Field list should not duplicate field items
 									childViews = $$(self.componentIds.sortForm).getChildViews();
@@ -254,11 +291,16 @@ steal(
 										var columnId = cView.getChildViews()[0].getValue();
 										var order = cView.getChildViews()[1].getValue();
 
-										var columnConfig = self.dataTable.getColumnConfig(columnId);
-										columnOrders.push({
-											name: columnConfig.id,
-											order: order
-										});
+										if (columnId) {
+											var columnConfig = self.dataTable.getColumnConfig(columnId);
+
+											if (columnConfig) {
+												columnOrders.push({
+													name: columnConfig.id,
+													order: order
+												});
+											}
+										}
 									});
 
 									self.dataTable.sort(function (a, b) {
@@ -280,7 +322,21 @@ steal(
 
 										return result;
 									});
+								},
+
+								callChangeEvent: function () {
+									var conditionNumber = 0;
+									$$(self.componentIds.sortForm).getChildViews().forEach(function (v, index) {
+										if (index >= $$(self.componentIds.sortForm).getChildViews().length - 1)
+											return;
+
+										if (v.getChildViews()[0].getValue())
+											conditionNumber++;
+									});
+
+									this.getTopParentView().callEvent('onChange', [conditionNumber]);
 								}
+
 							}, webix.ui.popup);
 						}
 

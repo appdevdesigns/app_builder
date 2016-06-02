@@ -170,13 +170,22 @@ steal(
                                                 }
                                             },
                                             // Comparer
-                                            { view: "combo", options: [], width: 155, on: { "onChange": function () { $$(self.componentIds.filterPopup).filter(); } } },
+                                            {
+                                                view: "combo", options: [], width: 155, on: {
+                                                    "onChange": function () {
+                                                        $$(self.componentIds.filterPopup).filter();
+                                                        $$(self.componentIds.filterPopup).callChangeEvent();
+                                                    }
+                                                }
+                                            },
                                             // Value
                                             {},
                                             {
                                                 view: "button", value: "X", width: 30, click: function () {
                                                     $$(self.componentIds.filterForm).removeView(this.getParentView());
                                                     $$(self.componentIds.filterPopup).filter();
+
+                                                    this.getTopParentView().callChangeEvent();
                                                 }
                                             }
                                         ]
@@ -186,6 +195,8 @@ steal(
                                         var fieldsCombo = $$(self.componentIds.filterForm).getChildViews()[viewIndex].getChildViews()[1];
                                         fieldsCombo.setValue(fieldId);
                                     }
+
+                                    this.getTopParentView().callChangeEvent();
                                 },
                                 registerDataTable: function (dataTable) {
                                     self.dataTable = dataTable;
@@ -382,6 +393,19 @@ steal(
                                             return isValid;
                                         });
                                     }
+                                },
+
+                                callChangeEvent: function () {
+                                    var conditionNumber = 0;
+                                    $$(self.componentIds.filterForm).getChildViews().forEach(function (v, index) {
+                                        if (index >= $$(self.componentIds.filterForm).getChildViews().length - 1)
+                                            return;
+
+                                        if (v.getChildViews()[1].getValue() && v.getChildViews()[2].getValue())
+                                            conditionNumber++;
+                                    });
+
+                                    this.getTopParentView().callEvent('onChange', [conditionNumber]);
                                 }
                             }, webix.ui.popup);
 

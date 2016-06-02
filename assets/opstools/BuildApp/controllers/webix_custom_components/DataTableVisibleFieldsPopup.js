@@ -47,6 +47,8 @@ steal(
                                                             $$(self.componentIds.fieldsList).data.each(function (d) {
                                                                 self.dataTable.showColumn(d.id);
                                                             });
+
+                                                            this.getTopParentView().callChangeEvent();
                                                         }
                                                     },
                                                     {
@@ -62,6 +64,8 @@ steal(
                                                             columns.forEach(function (c) {
                                                                 self.dataTable.hideColumn(c);
                                                             });
+
+                                                            this.getTopParentView().callChangeEvent();
                                                         }
                                                     }
                                                 ]
@@ -82,6 +86,7 @@ steal(
                                                         else
                                                             dataTable.showColumn(id);
 
+                                                        this.getTopParentView().callChangeEvent();;
                                                     }
                                                 }
                                             }
@@ -130,6 +135,17 @@ steal(
                                     }
 
                                     return fieldList;
+                                },
+
+                                callChangeEvent: function () {
+                                    var hiddenNumber = 0;
+
+                                    self.dataTable.eachColumn(function (cId) {
+                                        if (!self.dataTable.isColumnVisible(cId))
+                                            hiddenNumber++;
+                                    }, true);
+
+                                    this.getTopParentView().callEvent('onChange', [hiddenNumber]);
                                 },
 
                                 showField: function (id) {
