@@ -482,12 +482,15 @@ steal(
 													data.each(function (d) {
 														var connectedData = d[c.name];
 														if (connectedData && connectedData.length > 0) {
-															var connectFieldNode = $($$(self.webixUiId.modelDatatable).getItemNode({ row: d.id, column: c.name }));
-															connectFieldNode.find('.connect-data-values').selectivity('data', connectedData);
 
-															self.calculateRowHeight(d.id, c.name, connectedData.length);
+															if ($$(self.webixUiId.modelDatatable).isColumnVisible(c.name)) {
+																var connectFieldNode = $($$(self.webixUiId.modelDatatable).getItemNode({ row: d.id, column: c.name }));
+																connectFieldNode.find('.connect-data-values').selectivity('data', connectedData);
+
+																self.calculateRowHeight(d.id, c.name, connectedData.length);
+															}
 														}
-													})
+													});
 												});
 											},
 											onHeaderClick: function (id, e, trg) {
