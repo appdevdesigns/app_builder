@@ -55,7 +55,7 @@
 	height: 100%;
 }
 div[view_id='ab-app-list'] div.webix_list_item:hover, 
-div[view_id='ab-model-list'] div.webix_list_item:hover,
+div[view_id='ab-object-list'] div.webix_list_item:hover,
 div[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover,
 div[view_id='ab-edit-header-items'] div.webix_list_item:hover,
 div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
@@ -84,29 +84,29 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	min-height: 100px;
 }
 
-/* Model list */
-.ab-model-list-item {
+/* Object list */
+.ab-object-list-item {
 	position: relative;
 	height: 100%;
 }
-.ab-model-list-edit {
+.ab-object-list-edit {
 	position: absolute;
 	top: 0px;
 	right: 5px;
 	display: none;
 }
 
-/* Model datatable */
-.ab-model-data-header {
+/* Object datatable */
+.ab-object-data-header {
 	position: relative;
 }
-.ab-model-data-header-edit {
+.ab-object-data-header-edit {
 	display: none;
 	position: absolute;
 	top: 15px;
 	right: 10px;
 }
-.ab-model-data-header:hover .ab-model-data-header-edit {
+.ab-object-data-header:hover .ab-object-data-header-edit {
 	display: block;
 }
 

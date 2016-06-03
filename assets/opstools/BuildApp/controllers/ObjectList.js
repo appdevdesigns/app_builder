@@ -10,13 +10,13 @@ steal(
 
 					// Namespacing conventions:
 					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-					AD.Control.extend('opstools.BuildApp.ModelList', {
+					AD.Control.extend('opstools.BuildApp.ObjectList', {
 
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								selectedModelEvent: 'AB_Model.Selected',
-								updatedModelEvent: 'AB_Model.Updated'
+								selectedObjectEvent: 'AB_Object.Selected',
+								updatedObjectEvent: 'AB_Object.Updated'
 							}, options);
 							this.options = options;
 
@@ -27,20 +27,20 @@ steal(
 							this.data = {};
 
 							this.webixUiId = {
-								modelList: 'ab-model-list',
-								modelListMenu: 'ab-model-list-menu',
-								addNewPopup: 'ab-model-add-new-popup',
-								addNewForm: 'ab-model-add-new-form'
+								objectList: 'ab-object-list',
+								objectListMenu: 'ab-object-list-menu',
+								addNewPopup: 'ab-object-add-new-popup',
+								addNewForm: 'ab-object-add-new-form'
 							};
 
 							this.rules = {};
 							this.rules.preventDuplicateName = function (value) {
 								// Check duplicate
-								var duplicateModel = jQuery.grep(self.data.modelList, function (m, index) {
+								var duplicateObject = jQuery.grep(self.data.objectList, function (m, index) {
 									return m.name.toLowerCase().trim() == value.toLowerCase();
 								});
 
-								if (duplicateModel && duplicateModel.length > 0) {
+								if (duplicateObject && duplicateObject.length > 0) {
 									return false;
 								}
 								else {
@@ -105,16 +105,16 @@ steal(
 								rows: [
 									{
 										view: "editlist",
-										id: self.webixUiId.modelList,
+										id: self.webixUiId.objectList,
 										width: 250,
 										select: true,
 										editaction: 'custom',
 										editable: true,
 										editor: "text",
 										editValue: "label",
-										template: "<div class='ab-model-list-item'>" +
+										template: "<div class='ab-object-list-item'>" +
 										"#label#" +
-										"<div class='ab-model-list-edit'>" +
+										"<div class='ab-object-list-edit'>" +
 										"{common.iconGear}" +
 										"</div>" +
 										"</div>",
@@ -126,15 +126,15 @@ steal(
 										},
 										on: {
 											onAfterSelect: function (id) {
-												// Fire select model event
-												self.element.trigger(self.options.selectedModelEvent, id);
+												// Fire select object event
+												self.element.trigger(self.options.selectedObjectEvent, id);
 
 												// Show gear icon
-												$(this.getItemNode(id)).find('.ab-model-list-edit').show();
+												$(this.getItemNode(id)).find('.ab-object-list-edit').show();
 											},
 											onAfterDelete: function (id) {
 												// Fire unselect event 
-												self.element.trigger(self.options.selectedModelEvent, null);
+												self.element.trigger(self.options.selectedObjectEvent, null);
 											},
 											onBeforeEditStop: function (state, editor) {
 												// Validation - check duplicate
@@ -154,11 +154,11 @@ steal(
 
 													this.showProgress({ type: 'icon' });
 
-													var selectedModel = self.data.modelList.filter(function (item, index, list) { return item.id == editor.id; })[0];
-													selectedModel.attr('label', state.value);
+													var selectedObject = self.data.objectList.filter(function (item, index, list) { return item.id == editor.id; })[0];
+													selectedObject.attr('label', state.value);
 
 													// Call server to rename
-													selectedModel.save()
+													selectedObject.save()
 														.fail(function () {
 															_this.hideProgress();
 
@@ -179,17 +179,17 @@ steal(
 															});
 
 															// Show gear icon
-															$(_this.getItemNode(editor.id)).find('.ab-model-list-edit').show();
+															$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
 
-															self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
+															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
 														});
 												}
 											}
 										},
 										onClick: {
-											"ab-model-list-edit": function (e, id, trg) {
+											"ab-object-list-edit": function (e, id, trg) {
 												// Show menu
-												$$(self.webixUiId.modelListMenu).show(trg);
+												$$(self.webixUiId.objectListMenu).show(trg);
 
 												return false;
 											}
@@ -206,10 +206,10 @@ steal(
 								]
 							};
 
-							// Model menu
+							// Object menu
 							webix.ui({
 								view: "popup",
-								id: self.webixUiId.modelListMenu,
+								id: self.webixUiId.objectListMenu,
 								head: self.labels.object.menu,
 								width: 130,
 								body: {
@@ -226,12 +226,12 @@ steal(
 									select: false,
 									on: {
 										'onItemClick': function (timestamp, e, trg) {
-											var selectedModel = $$(self.webixUiId.modelList).getSelectedItem();
+											var selectedObject = $$(self.webixUiId.objectList).getSelectedItem();
 
 											switch (trg.textContent.trim()) {
 												case self.labels.common.rename:
 													// Show textbox to rename
-													$$(self.webixUiId.modelList).edit(selectedModel.id);
+													$$(self.webixUiId.objectList).edit(selectedObject.id);
 
 													break;
 												case self.labels.common.delete:
@@ -239,40 +239,40 @@ steal(
 														title: self.labels.object.confirmDeleteTitle,
 														ok: self.labels.common.yes,
 														cancel: self.labels.common.no,
-														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedModel.name),
+														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedObject.name),
 														callback: function (result) {
 															if (result) {
 
-																$$(self.webixUiId.modelList).showProgress({ type: "icon" });
+																$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
-																// Call server to delete model data
-																self.Model.destroy(selectedModel.id)
+																// Call server to delete object data
+																self.Object.destroy(selectedObject.id)
 																	.fail(function (err) {
-																		$$(self.webixUiId.modelList).hideProgress();
+																		$$(self.webixUiId.objectList).hideProgress();
 
 																		webix.message({
 																			type: "error",
-																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedModel.name)
+																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedObject.name)
 																		});
 
 																		AD.error.log('Object List : Error delete object data', { error: err });
 																	})
 																	.then(function (result) {
-																		self.data.modelList.forEach(function (item, index, list) {
-																			if (item && item.id === selectedModel.id)
-																				self.data.modelList.splice(index, 1);
+																		self.data.objectList.forEach(function (item, index, list) {
+																			if (item && item.id === selectedObject.id)
+																				self.data.objectList.splice(index, 1);
 																		});
 
-																		$$(self.webixUiId.modelList).remove(selectedModel.id);
+																		$$(self.webixUiId.objectList).remove(selectedObject.id);
 
-																		self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
+																		self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
 
 																		webix.message({
 																			type: "success",
-																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedModel.name)
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedObject.name)
 																		});
 
-																		$$(self.webixUiId.modelList).hideProgress();
+																		$$(self.webixUiId.objectList).hideProgress();
 
 																	});
 															}
@@ -283,13 +283,13 @@ steal(
 													break;
 											}
 
-											$$(self.webixUiId.modelListMenu).hide();
+											$$(self.webixUiId.objectListMenu).hide();
 										}
 									}
 								}
 							}).hide(); // end webix.ui
 
-							// Add new model popup
+							// Add new object popup
 							webix.ui({
 								view: "window",
 								id: self.webixUiId.addNewPopup,
@@ -317,19 +317,19 @@ steal(
 														if (!$$(self.webixUiId.addNewForm).validate())
 															return false;
 
-														var newModelName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
+														var newObjectName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
 
-														$$(self.webixUiId.modelList).showProgress({ type: 'icon' });
+														$$(self.webixUiId.objectList).showProgress({ type: 'icon' });
 
-														var newModel = {
-															name: newModelName,
-															label: newModelName,
+														var newObject = {
+															name: newObjectName,
+															label: newObjectName,
 															application: self.data.appId
 														};
 
 														// Add new object to server
-														self.Model.create(newModel).fail(function () {
-															$$(self.webixUiId.modelList).hideProgress();
+														self.Model.create(newObject).fail(function () {
+															$$(self.webixUiId.objectList).hideProgress();
 
 															webix.message({
 																type: "error",
@@ -343,23 +343,23 @@ steal(
 
 															if (result.translate) result.translate();
 
-															self.data.modelList.push(result);
+															self.data.objectList.push(result);
 
-															$$(self.webixUiId.modelList).add(result);
+															$$(self.webixUiId.objectList).add(result);
 
 															if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
-																$$(self.webixUiId.modelList).unselectAll();
-																$$(self.webixUiId.modelList).select(result.id);
+																$$(self.webixUiId.objectList).unselectAll();
+																$$(self.webixUiId.objectList).select(result.id);
 															}
 
-															self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
+															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
 
-															$$(self.webixUiId.modelList).hideProgress();
+															$$(self.webixUiId.objectList).hideProgress();
 
 															// Show success message
 															webix.message({
 																type: "success",
-																text: self.labels.common.createSuccessMessage.replace('{0}', newModel.name)
+																text: self.labels.common.createSuccessMessage.replace('{0}', newObject.name)
 															});
 														});
 
@@ -386,18 +386,18 @@ steal(
 
 							self.data.appId = appId;
 
-							if ($$(self.webixUiId.modelList).showProgress)
-								$$(self.webixUiId.modelList).showProgress({ type: "icon" });
+							if ($$(self.webixUiId.objectList).showProgress)
+								$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
-							// Get model list from server
+							// Get object list from server
 							self.Model.findAll({ application: appId })
 								.fail(function (err) {
-									$$(self.webixUiId.modelList).hideProgress();
+									$$(self.webixUiId.objectList).hideProgress();
 									webix.message({
 										type: "error",
 										text: err
 									});
-									AD.error.log('Model list : Error loading model list data', { error: err });
+									AD.error.log('Object list : Error loading object list data', { error: err });
 								})
 								.then(function (data) {
 									// Popupate translate properties to object
@@ -405,36 +405,36 @@ steal(
 										if (d.translate) d.translate();
 									});
 
-									self.data.modelList = data;
+									self.data.objectList = data;
 
-									self.refreshModelList();
+									self.refreshObjectList();
 
-									self.element.trigger(self.options.updatedModelEvent, { objectList: self.data.modelList.attr() });
+									self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
 								});
 						},
 
-						refreshModelList: function () {
+						refreshObjectList: function () {
 							var self = this;
 
-							if ($$(self.webixUiId.modelList).showProgress)
-								$$(self.webixUiId.modelList).showProgress({ type: "icon" });
+							if ($$(self.webixUiId.objectList).showProgress)
+								$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
-							$$(self.webixUiId.modelList).clearAll();
-							$$(self.webixUiId.modelList).parse(self.data.modelList.attr());
-							$$(self.webixUiId.modelList).refresh();
-							$$(self.webixUiId.modelList).unselectAll();
+							$$(self.webixUiId.objectList).clearAll();
+							$$(self.webixUiId.objectList).parse(self.data.objectList.attr());
+							$$(self.webixUiId.objectList).refresh();
+							$$(self.webixUiId.objectList).unselectAll();
 
 
-							if ($$(self.webixUiId.modelList).hideProgress)
-								$$(self.webixUiId.modelList).hideProgress();
+							if ($$(self.webixUiId.objectList).hideProgress)
+								$$(self.webixUiId.objectList).hideProgress();
 						},
 
 						resetState: function () {
 							var self = this;
 
-							$$(self.webixUiId.modelList).unselectAll();
-							$$(self.webixUiId.modelList).clearAll();
-							$$(self.webixUiId.modelList).refresh();
+							$$(self.webixUiId.objectList).unselectAll();
+							$$(self.webixUiId.objectList).clearAll();
+							$$(self.webixUiId.objectList).refresh();
 						}
 
 					}); // end AD.Control.extend

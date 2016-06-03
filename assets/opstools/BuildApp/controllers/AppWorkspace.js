@@ -1,7 +1,7 @@
 
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/ModelPage.js',
+	'opstools/BuildApp/controllers/ObjectPage.js',
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -34,7 +34,7 @@ steal(
 								appWorkspaceMenu: 'ab-workspace-tabbar',
 								appWorkspace: 'ab-workspace',
 
-								modelView: 'ab-app-model-view',
+								objectView: 'ab-app-object-view',
 								interfaceView: 'ab-app-interface-view'
 							};
 
@@ -64,9 +64,9 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var ModelPage = AD.Control.get('opstools.BuildApp.ModelPage');
+							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage');
 
-							self.controllers.ModelPage = new ModelPage(self.element, { 'modelView': self.webixUiId.modelView });
+							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 
 						},
 
@@ -74,7 +74,7 @@ steal(
 							var self = this;
 							self.UIDefinitions = {};
 
-							self.UIDefinitions.modelList = self.controllers.ModelPage.getUIDefinition();
+							self.UIDefinitions.objectList = self.controllers.ObjectPage.getUIDefinition();
 						},
 
 						initWebixUI: function () {
@@ -103,15 +103,15 @@ steal(
 									},
 									{ height: 10 },
 									{
-										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.modelView, multiview: true, options: [
-											{ id: self.webixUiId.modelView, value: self.labels.object.title, width: 120 },
+										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.objectView, multiview: true, options: [
+											{ id: self.webixUiId.objectView, value: self.labels.object.title, width: 120 },
 											{ id: self.webixUiId.interfaceView, value: self.labels.view.title, width: 120 }
 										]
 									},
 									{
 										id: self.webixUiId.appWorkspace,
 										cells: [
-											self.UIDefinitions.modelList,
+											self.UIDefinitions.objectList,
 											{
 												// Interface view
 												id: self.webixUiId.interfaceView,
@@ -131,7 +131,7 @@ steal(
 							$$(self.webixUiId.appNameLabel).define('label', app.label);
 							$$(self.webixUiId.appNameLabel).refresh();
 
-							self.controllers.ModelPage.setAppId(app.id);
+							self.controllers.ObjectPage.setAppId(app.id);
 						},
 
 						resize: function (height) {
@@ -166,7 +166,7 @@ steal(
 
 							}
 
-							self.controllers.ModelPage.resize(height);
+							self.controllers.ObjectPage.resize(height);
 						}
 
 					});

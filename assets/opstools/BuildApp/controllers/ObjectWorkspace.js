@@ -16,7 +16,7 @@ steal(
 
 					// Namespacing conventions:
 					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-					AD.Control.extend('opstools.BuildApp.ModelWorkspace', {
+					AD.Control.extend('opstools.BuildApp.ObjectWorkspace', {
 
 						init: function (element, options) {
 							var self = this;
@@ -31,8 +31,8 @@ steal(
 							this.data = {};
 
 							this.webixUiId = {
-								modelToolbar: 'ab-model-toolbar',
-								modelDatatable: 'ab-model-datatable',
+								objectToolbar: 'ab-object-toolbar',
+								objectDatatable: 'ab-object-datatable',
 
 								visibleButton: 'ab-visible-fields-toolbar',
 								filterButton: 'ab-filter-fields-toolbar',
@@ -169,7 +169,7 @@ steal(
 									select: false,
 									on: {
 										'onItemClick': function (timestamp, e, trg) {
-											var columns = webix.toArray($$(self.webixUiId.modelDatatable).config.columns),
+											var columns = webix.toArray($$(self.webixUiId.objectDatatable).config.columns),
 												selectedField = $.grep(columns, function (c) {
 													return c.dataId == self.data.selectedFieldId;
 												})[0],
@@ -177,7 +177,7 @@ steal(
 
 											switch (trg.textContent.trim()) {
 												case self.labels.object.hideField:
-													$$(self.webixUiId.modelDatatable).hideColumn(selectedField.id);
+													$$(self.webixUiId.objectDatatable).hideColumn(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
 													break;
 												case self.labels.object.filterField:
@@ -191,7 +191,7 @@ steal(
 													$$(self.webixUiId.sortFieldsPopup).show($$(self.webixUiId.sortButton).getNode());
 													break;
 												case self.labels.object.editField:
-													var itemNode = $$(self.webixUiId.modelDatatable).getHeaderNode(selectedField.id);
+													var itemNode = $$(self.webixUiId.objectDatatable).getHeaderNode(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
 
 													var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == self.data.selectedFieldId; })[0];
@@ -218,12 +218,12 @@ steal(
 														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedFieldName),
 														callback: function (result) {
 															if (result) {
-																$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
+																$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
 																// Call server to delete field data
 																self.Model.destroy(selectedField.dataId)
 																	.fail(function (err) {
-																		$$(self.webixUiId.modelDatatable).hideProgress();
+																		$$(self.webixUiId.objectDatatable).hideProgress();
 
 																		webix.message({
 																			type: "error",
@@ -242,7 +242,7 @@ steal(
 																		});
 
 																		columns.removeAt(columns.find(selectedField));
-																		$$(self.webixUiId.modelDatatable).refreshColumns(columns, true);
+																		$$(self.webixUiId.objectDatatable).refreshColumns(columns, true);
 
 																		$$(self.webixUiId.editHeaderPopup).hide();
 
@@ -256,7 +256,7 @@ steal(
 
 																		self.refreshPopupData();
 
-																		$$(self.webixUiId.modelDatatable).hideProgress();
+																		$$(self.webixUiId.objectDatatable).hideProgress();
 																	});
 															}
 
@@ -381,27 +381,27 @@ steal(
 								},
 								on: {
 									onHide: function () {
-										if ($$(self.webixUiId.modelDatatable).showProgress)
-											$$(self.webixUiId.modelDatatable).showProgress({ type: "icon" });
+										if ($$(self.webixUiId.objectDatatable).showProgress)
+											$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
 										// TODO : Call Save change values to server
 
 										var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId(true);
 
-										var rowData = $$(self.webixUiId.modelDatatable).getItem(self.data.selectedCell.row);
+										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
 										rowData[self.data.selectedCell.column] = $.map(selectedIds, function (id) {
 											var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
 											var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
 
 											return { id: id, text: connectData };
 										});
-										$$(self.webixUiId.modelDatatable).updateItem(self.data.selectedCell.row, rowData);
+										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
 										// Resize row height
 										self.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
 
-										if ($$(self.webixUiId.modelDatatable).hideProgress)
-											$$(self.webixUiId.modelDatatable).hideProgress();
+										if ($$(self.webixUiId.objectDatatable).hideProgress)
+											$$(self.webixUiId.objectDatatable).hideProgress();
 
 										self.data.selectedCell = null
 										$$(self.webixUiId.connectObjectDataList).unselectAll();
@@ -414,7 +414,7 @@ steal(
 								rows: [
 									{
 										view: 'toolbar',
-										id: self.webixUiId.modelToolbar,
+										id: self.webixUiId.objectToolbar,
 										hidden: true,
 										cols: [
 											{ view: "button", label: self.labels.object.toolbar.hideFields, popup: self.webixUiId.visibleFieldsPopup, id: self.webixUiId.visibleButton, icon: "columns", type: "icon", width: 120, badge: 0 },
@@ -427,7 +427,7 @@ steal(
 									},
 									{
 										view: "datatable",
-										id: self.webixUiId.modelDatatable,
+										id: self.webixUiId.objectDatatable,
 										resizeColumn: true,
 										resizeRow: true,
 										editable: true,
@@ -454,10 +454,10 @@ steal(
 														console.log('remove: ', ev.removed);
 
 														var columnIndex = $(this).parents('.webix_column').attr('column'),
-															columnId = $$(self.webixUiId.modelDatatable).columnId(columnIndex),
+															columnId = $$(self.webixUiId.objectDatatable).columnId(columnIndex),
 															rowIndex = $(this).parent('.webix_cell').index(),
-															rowId = $$(self.webixUiId.modelDatatable).getIdByIndex(rowIndex),
-															item = $$(self.webixUiId.modelDatatable).getItem(rowId),
+															rowId = $$(self.webixUiId.objectDatatable).getIdByIndex(rowIndex),
+															item = $$(self.webixUiId.objectDatatable).getItem(rowId),
 															itemData = item[columnId];
 
 														// Delete removed value
@@ -466,10 +466,10 @@ steal(
 																itemData.splice(index, 1);
 														});
 
-														$$(self.webixUiId.modelDatatable).updateItem(rowId, itemData);
+														$$(self.webixUiId.objectDatatable).updateItem(rowId, itemData);
 
 														// TODO : Call server to remove value
-														$$(self.webixUiId.modelDatatable).render({ column: columnId });
+														$$(self.webixUiId.objectDatatable).render({ column: columnId });
 													}
 												});
 
@@ -483,8 +483,8 @@ steal(
 														var connectedData = d[c.name];
 														if (connectedData && connectedData.length > 0) {
 
-															if ($$(self.webixUiId.modelDatatable).isColumnVisible(c.name)) {
-																var connectFieldNode = $($$(self.webixUiId.modelDatatable).getItemNode({ row: d.id, column: c.name }));
+															if ($$(self.webixUiId.objectDatatable).isColumnVisible(c.name)) {
+																var connectFieldNode = $($$(self.webixUiId.objectDatatable).getItemNode({ row: d.id, column: c.name }));
 																connectFieldNode.find('.connect-data-values').selectivity('data', connectedData);
 
 																self.calculateRowHeight(d.id, c.name, connectedData.length);
@@ -494,7 +494,7 @@ steal(
 												});
 											},
 											onHeaderClick: function (id, e, trg) {
-												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(id.column);
+												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id.column);
 												self.data.selectedFieldId = columnConfig.dataId;
 
 												var data = [
@@ -517,7 +517,7 @@ steal(
 												$$(self.webixUiId.editHeaderPopup).show(trg);
 											},
 											onBeforeSelect: function (data, preserve) {
-												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(data.column);
+												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
 
 												if (columnConfig.editor === 'selectivity') {
 													// Get column data
@@ -609,17 +609,17 @@ steal(
 												}
 											},
 											onAfterSelect: function (data, prevent) {
-												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(data.column);
+												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
 												if (columnConfig.editor === 'selectivity')
 													return false;
 
 												this.editCell(data.row, data.column);
 											},
 											onColumnResize: function (id, newWidth, oldWidth, user_action) {
-												var columnConfig = $$(self.webixUiId.modelDatatable).getColumnConfig(id);
+												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
 												if (columnConfig.editor === 'selectivity') {
 													// For calculate/refresh row height
-													$$(self.webixUiId.modelDatatable).render();
+													$$(self.webixUiId.objectDatatable).render();
 												}
 											},
 											onAfterColumnShow: function (id) {
@@ -638,29 +638,29 @@ steal(
 							return this.data.definition;
 						},
 
-						setModelId: function (id) {
+						setObjectId: function (id) {
 							var self = this;
 
-							self.data.modelId = id;
+							self.data.objectId = id;
 
-							if ($$(self.webixUiId.modelDatatable).showProgress)
-								$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
+							if ($$(self.webixUiId.objectDatatable).showProgress)
+								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 							self.resetState();
 
 							// Set enable connect object list to the add new column popup
 							var enableConnectObjects = $.grep(self.data.objectList, function (o) {
-								return o.id != self.data.modelId;
+								return o.id != self.data.objectId;
 							});
 							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
 
-							if (self.data.modelId) {
+							if (self.data.objectId) {
 								async.series([
 									function (next) {
 										// Get columns from server
-										self.Model.findAll({ object: self.data.modelId })
+										self.Model.findAll({ object: self.data.objectId })
 											.fail(function (err) {
-												$$(self.webixUiId.modelDatatable).hideProgress();
+												$$(self.webixUiId.objectDatatable).hideProgress();
 
 												webix.message({
 													type: "error",
@@ -700,21 +700,21 @@ steal(
 										// 	});
 										// }
 
-										$$(self.webixUiId.modelDatatable).parse(data);
+										$$(self.webixUiId.objectDatatable).parse(data);
 
 										next();
 									}
 								], function () {
-									$$(self.webixUiId.modelToolbar).show();
-									$$(self.webixUiId.modelDatatable).show();
-									$$(self.webixUiId.modelDatatable).refresh();
+									$$(self.webixUiId.objectToolbar).show();
+									$$(self.webixUiId.objectDatatable).show();
+									$$(self.webixUiId.objectDatatable).refresh();
 
 									// Register table to popups
-									$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
-									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
-									$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
-									$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
-									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.modelDatatable));
+									$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+									$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+									$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 
 									// Listen popup events
 									self.attachPopupEvents();
@@ -725,13 +725,13 @@ steal(
 									// Register add new column callback
 									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo) {
 
-										if ($$(self.webixUiId.modelDatatable).showProgress)
-											$$(self.webixUiId.modelDatatable).showProgress({ type: 'icon' });
+										if ($$(self.webixUiId.objectDatatable).showProgress)
+											$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 										columnInfo.label = columnInfo.name;
 
 										var newColumn = {
-											object: self.data.modelId,
+											object: self.data.objectId,
 											name: columnInfo.name,
 											label: columnInfo.label,
 											type: columnInfo.type,
@@ -753,7 +753,7 @@ steal(
 										var saveDeferred = $.Deferred();
 										saveDeferred
 											.fail(function (err) {
-												$$(self.webixUiId.modelDatatable).hideProgress();
+												$$(self.webixUiId.objectDatatable).hideProgress();
 
 												webix.message({
 													type: "error",
@@ -767,7 +767,7 @@ steal(
 
 												self.data.columns.push(data);
 
-												var columns = $$(self.webixUiId.modelDatatable).config.columns;
+												var columns = $$(self.webixUiId.objectDatatable).config.columns;
 
 												var addColumnHeader = $.extend(columnInfo.setting, {
 													id: data.name,
@@ -787,11 +787,11 @@ steal(
 													columns.push(addColumnHeader);
 												}
 
-												$$(self.webixUiId.modelDatatable).refreshColumns(columns);
+												$$(self.webixUiId.objectDatatable).refreshColumns(columns);
 
 												self.refreshPopupData();
 
-												$$(self.webixUiId.modelDatatable).hideProgress();
+												$$(self.webixUiId.objectDatatable).hideProgress();
 
 												webix.message({
 													type: "success",
@@ -831,20 +831,20 @@ steal(
 									});
 
 									$$(self.webixUiId.addFieldsPopup).registerCreateNewObjectEvent(function () {
-										$$('ab-model-add-new-popup').define('selectNewObject', false);
-										$$('ab-model-add-new-popup').show(); // Mark : show add new object popup in ObjectList page
+										$$('ab-object-add-new-popup').define('selectNewObject', false);
+										$$('ab-object-add-new-popup').show(); // Mark : show add new object popup in ObjectList page
 									});
 
-									if ($$(self.webixUiId.modelDatatable).hideProgress)
-										$$(self.webixUiId.modelDatatable).hideProgress();
+									if ($$(self.webixUiId.objectDatatable).hideProgress)
+										$$(self.webixUiId.objectDatatable).hideProgress();
 
 								});
 							}
 							else {
-								if ($$(self.webixUiId.modelDatatable).hideProgress)
-									$$(self.webixUiId.modelDatatable).hideProgress();
+								if ($$(self.webixUiId.objectDatatable).hideProgress)
+									$$(self.webixUiId.objectDatatable).hideProgress();
 
-								$$(self.webixUiId.modelDatatable).hide();
+								$$(self.webixUiId.objectDatatable).hide();
 							}
 
 						},
@@ -867,7 +867,7 @@ steal(
 								});
 							});
 
-							$$(self.webixUiId.modelDatatable).refreshColumns(columns, resetColumns || false);
+							$$(self.webixUiId.objectDatatable).refreshColumns(columns, resetColumns || false);
 						},
 
 						getHeader: function (col) {
@@ -884,7 +884,7 @@ steal(
 								label += self.labels.object.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
-							return "<div class='ab-model-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-model-data-header-edit fa fa-angle-down'></i></div>"
+							return "<div class='ab-object-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-object-data-header-edit fa fa-angle-down'></i></div>"
 								.replace('{0}', col.setting.icon)
 								.replace('{1}', label);
 						},
@@ -900,7 +900,7 @@ steal(
 							var self = this;
 
 							if (selectedCell || self.data.selectedCell) {
-								var rowNode = $($$(self.webixUiId.modelDatatable).getItemNode(selectedCell || self.data.selectedCell));
+								var rowNode = $($$(self.webixUiId.objectDatatable).getItemNode(selectedCell || self.data.selectedCell));
 								return rowNode.find('.connect-data-values');
 							}
 							else {
@@ -958,7 +958,7 @@ steal(
 							var self = this,
 								rowHeight = 35;
 							// maxItemWidth = 100, // Max item width
-							// columnInfo = $$(self.webixUiId.modelDatatable).getColumnConfig(column),
+							// columnInfo = $$(self.webixUiId.objectDatatable).getColumnConfig(column),
 							// curSpace = columnInfo.width * rowHeight,
 							// expectedSpace = (dataNumber * rowHeight * maxItemWidth),
 							// calHeight = 0;
@@ -974,19 +974,19 @@ steal(
 							// 	calHeight = rowHeight;
 							// }
 
-							$$(self.webixUiId.modelDatatable).setRowHeight(row, calHeight);
+							$$(self.webixUiId.objectDatatable).setRowHeight(row, calHeight);
 						},
 
 						resetState: function () {
 							var self = this;
 
-							$$(self.webixUiId.modelToolbar).hide();
-							$$(self.webixUiId.modelDatatable).define('leftSplit', 0);
-							$$(self.webixUiId.modelDatatable).clearValidation();
-							$$(self.webixUiId.modelDatatable).clearSelection();
-							$$(self.webixUiId.modelDatatable).clearAll();
-							$$(self.webixUiId.modelDatatable).refresh();
-							$$(self.webixUiId.modelDatatable).refreshColumns([], true);
+							$$(self.webixUiId.objectToolbar).hide();
+							$$(self.webixUiId.objectDatatable).define('leftSplit', 0);
+							$$(self.webixUiId.objectDatatable).clearValidation();
+							$$(self.webixUiId.objectDatatable).clearSelection();
+							$$(self.webixUiId.objectDatatable).clearAll();
+							$$(self.webixUiId.objectDatatable).refresh();
+							$$(self.webixUiId.objectDatatable).refreshColumns([], true);
 
 							self.refreshPopupData();
 						},
@@ -994,9 +994,9 @@ steal(
 						resize: function (height) {
 							var self = this;
 
-							if ($$(self.webixUiId.modelDatatable)) {
-								$$(self.webixUiId.modelDatatable).define("height", height - 150);
-								$$(self.webixUiId.modelDatatable).resize();
+							if ($$(self.webixUiId.objectDatatable)) {
+								$$(self.webixUiId.objectDatatable).define("height", height - 150);
+								$$(self.webixUiId.objectDatatable).resize();
 							}
 						}
 
