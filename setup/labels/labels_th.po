@@ -343,7 +343,7 @@ msgstr "เพิ่มคอลัมน์ใหม่"
 
 #. path: app_builder
 #. code: th
-#. key: ab.view.title
-msgid "Views"
-msgstr "Views"
+#. key: ab.view.interface
+msgid "Interface"
+msgstr "หน้าแสดง"
 

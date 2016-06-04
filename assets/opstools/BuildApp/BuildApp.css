@@ -129,3 +129,8 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	background: #3498db !important;
 	/*max-width: 100px !important;*/
 }
+
+/* Interface tree view */
+.ab-main-container .webix_tree_item.webix_selected span {
+	background: #3498db !important;
+}

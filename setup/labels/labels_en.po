@@ -343,7 +343,7 @@ msgstr "Add new column"
 
 #. path: app_builder
 #. code: en
-#. key: ab.view.title
-msgid "Views"
-msgstr "Views"
+#. key: ab.view.interface
+msgid "Interface"
+msgstr "Interface"
 

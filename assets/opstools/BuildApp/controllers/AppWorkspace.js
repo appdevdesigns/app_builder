@@ -2,6 +2,7 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/ObjectPage.js',
+	'opstools/BuildApp/controllers/InterfacePage.js',
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -53,28 +54,30 @@ steal(
 							self.labels = {};
 							self.labels.application = {};
 							self.labels.object = {};
-							self.labels.view = {};
+							self.labels.interface = {};
 
 							self.labels.application.backToApplication = AD.lang.label.getLabel('ab.application.backToApplication') || "Back to Applications page";
 							self.labels.object.title = AD.lang.label.getLabel('ab.object.title') || "Objects";
-							self.labels.view.title = AD.lang.label.getLabel('ab.view.title') || "Views";
+							self.labels.interface.title = AD.lang.label.getLabel('ab.interface.title') || "Interface";
 						},
 
 						initControllers: function () {
 							var self = this;
 							self.controllers = {};
 
-							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage');
+							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage'),
+								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage');
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
-
+							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
 						},
 
 						getUIDefinitions: function () {
 							var self = this;
 							self.UIDefinitions = {};
 
-							self.UIDefinitions.objectList = self.controllers.ObjectPage.getUIDefinition();
+							self.UIDefinitions.objectPage = self.controllers.ObjectPage.getUIDefinition();
+							self.UIDefinitions.interfacePage = self.controllers.InterfacePage.getUIDefinition();
 						},
 
 						initWebixUI: function () {
@@ -105,18 +108,23 @@ steal(
 									{
 										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.objectView, multiview: true, options: [
 											{ id: self.webixUiId.objectView, value: self.labels.object.title, width: 120 },
-											{ id: self.webixUiId.interfaceView, value: self.labels.view.title, width: 120 }
-										]
+											{ id: self.webixUiId.interfaceView, value: self.labels.interface.title, width: 120 }
+										],
+										on: {
+											onChange: function (newv, oldv) {
+												if (newv != oldv) {
+													if (newv == self.webixUiId.interfaceView) {
+														self.controllers.InterfacePage.open();
+													}
+												}
+											}
+										}
 									},
 									{
 										id: self.webixUiId.appWorkspace,
 										cells: [
-											self.UIDefinitions.objectList,
-											{
-												// Interface view
-												id: self.webixUiId.interfaceView,
-												template: "Under construction..."
-											}
+											self.UIDefinitions.objectPage,
+											self.UIDefinitions.interfacePage
 										]
 									}
 								]
