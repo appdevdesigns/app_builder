@@ -28,6 +28,7 @@ steal(
 
 							this.webixUiId = {
 								objectList: 'ab-object-list',
+								objectListMenuPopup: 'ab-object-list-menu-popup',
 								objectListMenu: 'ab-object-list-menu',
 								addNewPopup: 'ab-object-add-new-popup',
 								addNewForm: 'ab-object-add-new-form'
@@ -189,7 +190,7 @@ steal(
 										onClick: {
 											"ab-object-list-edit": function (e, id, trg) {
 												// Show menu
-												$$(self.webixUiId.objectListMenu).show(trg);
+												$$(self.webixUiId.objectListMenuPopup).show(trg);
 
 												return false;
 											}
@@ -206,14 +207,14 @@ steal(
 								]
 							};
 
-							// Object menu
+							// Edit object menu
 							webix.ui({
 								view: "popup",
-								id: self.webixUiId.objectListMenu,
+								id: self.webixUiId.objectListMenuPopup,
 								head: self.labels.object.menu,
 								width: 130,
 								body: {
-									// id: self.webixUiId
+									id: self.webixUiId.objectListMenu,
 									view: "list",
 									data: [
 										{ command: self.labels.common.rename, icon: "fa-pencil-square-o" },
@@ -283,7 +284,7 @@ steal(
 													break;
 											}
 
-											$$(self.webixUiId.objectListMenu).hide();
+											$$(self.webixUiId.objectListMenuPopup).hide();
 										}
 									}
 								}

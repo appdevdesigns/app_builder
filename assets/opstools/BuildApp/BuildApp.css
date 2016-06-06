@@ -56,6 +56,7 @@
 }
 div[view_id='ab-app-list'] div.webix_list_item:hover, 
 div[view_id='ab-object-list'] div.webix_list_item:hover,
+div[view_id='ab-object-list-menu'] div.webix_list_item:hover,
 div[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover,
 div[view_id='ab-edit-header-items'] div.webix_list_item:hover,
 div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
@@ -90,6 +91,19 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	height: 100%;
 }
 .ab-object-list-edit {
+	position: absolute;
+	top: 0px;
+	right: 5px;
+	display: none;
+}
+
+
+/* Interface list */
+.ab-page-list-item {
+	position: relative;
+	height: 100%;
+}
+.ab-page-list-edit {
 	position: absolute;
 	top: 0px;
 	right: 5px;
