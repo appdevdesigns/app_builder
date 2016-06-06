@@ -98,6 +98,7 @@ steal(
 														switch (columnConfig.filter_type) {
 															case "text":
 															case "list":
+															case "multiselect":
 																options = [
 																	{ id: 'asc', value: 'A -> Z' },
 																	{ id: 'desc', value: 'Z -> A' }];
@@ -132,7 +133,7 @@ steal(
 											{
 												view: "segmented", width: 200, options: [{ id: '', value: 'Please select field' }],
 												on: {
-													onChange: function (newv, oldv) {
+													onChange: function (newv, oldv) { // 'asc' or 'desc' values
 														$$(self.componentIds.sortPopup).sort();
 													}
 												}
@@ -190,7 +191,7 @@ steal(
 									// Get all columns include hidden fields
 									if (self.data.fieldList) {
 										self.data.fieldList.forEach(function (f) {
-											if (f.setting.filter_type && f.type != 'link') {
+											if (f.setting.filter_type) {
 												fieldList.push({
 													id: f.name,
 													value: f.label
@@ -307,14 +308,24 @@ steal(
 										var result = false;
 
 										for (var i = 0; i < columnOrders.length; i++) {
-											var column = columnOrders[i];
+											var column = columnOrders[i],
+												aValue = a[column.name],
+												bValue = b[column.name];
 
-											if (a[column.name] != b[column.name]) {
+											if ($.isArray(aValue)) {
+												aValue = $.map(aValue, function (item) { return item.text }).join(' ');
+											}
+
+											if ($.isArray(bValue)) {
+												bValue = $.map(bValue, function (item) { return item.text }).join(' ');
+											}
+
+											if (aValue != bValue) {
 												if (column.order == 'asc') {
-													result = a[column.name] > b[column.name] ? 1 : -1;
+													result = aValue > bValue ? 1 : -1;
 												}
 												else {
-													result = a[column.name] < b[column.name] ? 1 : -1;
+													result = aValue < bValue ? 1 : -1;
 												}
 												break;
 											}

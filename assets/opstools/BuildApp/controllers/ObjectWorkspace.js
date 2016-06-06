@@ -505,11 +505,6 @@ steal(
 													{ command: self.labels.object.deleteField, icon: "fa-trash" }
 												];
 
-												// When user choose multi-select (selectivity) item, then remove 'Sort' item
-												if (columnConfig.editor === 'selectivity') {
-													data = $.grep(data, function (d) { return d.command !== self.labels.object.sortField; });
-												}
-
 												$$(self.webixUiId.editHeaderItems).clearAll();
 												$$(self.webixUiId.editHeaderItems).parse(data);
 												$$(self.webixUiId.editHeaderItems).refresh();
@@ -979,6 +974,16 @@ steal(
 
 						resetState: function () {
 							var self = this;
+
+							// Reset indicator
+							$$(self.webixUiId.visibleButton).define('badge', 0);
+							$$(self.webixUiId.filterButton).define('badge', 0);
+							$$(self.webixUiId.sortButton).define('badge', 0);
+							$$(self.webixUiId.frozenButton).define('badge', 0);
+							$$(self.webixUiId.visibleButton).refresh();
+							$$(self.webixUiId.filterButton).refresh();
+							$$(self.webixUiId.sortButton).refresh();
+							$$(self.webixUiId.frozenButton).refresh();
 
 							$$(self.webixUiId.objectToolbar).hide();
 							$$(self.webixUiId.objectDatatable).define('leftSplit', 0);

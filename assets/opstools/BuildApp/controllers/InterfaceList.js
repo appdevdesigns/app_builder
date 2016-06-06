@@ -66,7 +66,11 @@ steal(
 										id: self.webixUiId.interfaceTree,
 										view: 'tree',
 										width: 250,
-										select: true
+										select: true,
+										drag: true,
+										ready: function () {
+											webix.extend(this, webix.ProgressBar);
+										}
 									},
 									{
 										view: 'button',
@@ -87,9 +91,6 @@ steal(
 								modal: true,
 								head: self.labels.interface.addNewPage,
 								selectNewObject: true,
-								ready: function () {
-									webix.extend(this, webix.ProgressBar);
-								},
 								on: {
 									"onBeforeShow": function () {
 										$$(self.webixUiId.addNewForm).clearValidation();
@@ -100,7 +101,7 @@ steal(
 											var val = d.value;
 
 											if (d.$level > 1)
-												val = '-'.repeat(d.$level - 1) + ' ' + val; // Include - to sub page
+												val = '- '.repeat(d.$level - 1) + val; // Include - to sub page
 
 											options.push({ id: d.id, value: val });
 										});
@@ -112,6 +113,8 @@ steal(
 											$$(self.webixUiId.addNewParentList).setValue($$(self.webixUiId.interfaceTree).getSelectedId());
 										else
 											$$(self.webixUiId.addNewParentList).setValue('');
+
+										$$(self.webixUiId.addNewParentList).render();
 									}
 								},
 								body: {
@@ -130,9 +133,6 @@ steal(
 
 														var parentPageId = $$(self.webixUiId.addNewForm).elements['parent'].getValue(),
 															newPageName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
-
-														if (parentPageId)
-															parentPageId = parseInt(parentPageId);
 
 														if ($$(self.webixUiId.interfaceTree).showProgress)
 															$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
@@ -159,10 +159,18 @@ steal(
 
 														// if (result.translate) result.translate();
 
+														var resultId = webix.uid(); // TODO: result.id
+
 														$$(self.webixUiId.interfaceTree).add({
-															id: webix.uid, // TODO: result.id,
+															id: resultId,
 															value: newPage.label // TODO
 														}, -1, newPage.parentPageId || null);
+
+														if (newPage.parentPageId)
+															$$(self.webixUiId.interfaceTree).open(newPage.parentPageId, true);
+
+														$$(self.webixUiId.interfaceTree).unselectAll();
+														$$(self.webixUiId.interfaceTree).select(resultId);
 
 														if ($$(self.webixUiId.interfaceTree).hideProgress)
 															$$(self.webixUiId.interfaceTree).hideProgress();
