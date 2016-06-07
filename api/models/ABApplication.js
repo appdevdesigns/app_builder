@@ -5,6 +5,9 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
+var async = require('async'),
+    _ = require('lodash');
+
 module.exports = {
 
     tableName: 'appbuilder_application',
@@ -56,6 +59,38 @@ module.exports = {
 
         cb();
     },
+
+    afterDestroy: function (destroyedApplications, cb) {
+
+        var ids = _.map(destroyedApplications, 'id');
+
+        if (ids && ids.length) {
+            async.parallel([
+                function (callback) {
+                    ABApplicationTrans.destroy({ abapplication: ids })
+                        .fail(function (err) {
+                            callback(err)
+                        })
+                        .then(function () {
+                            callback();
+                        });
+                },
+                function (callback) {
+                    ABObject.destroy({ application: ids })
+                        .fail(function (err) {
+                            callback(err)
+                        })
+                        .then(function () {
+                            callback();
+                        });
+                }
+            ], cb);
+        }
+        else {
+            cb();
+        }
+
+    }
 
 };
 

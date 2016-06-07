@@ -4,15 +4,15 @@ steal(function() {
 
 			// Namespacing conventions:
 			// AD.Model.Base.extend("[application].[Model]" , { static }, {instance} );  --> Object
-			AD.Model.Base.extend("opstools.BuildApp.ABApplication", {
-				findAll: 'GET /app_builder/abapplication',
-				findOne: 'GET /app_builder/abapplication/{id}',
-				create: 'POST /app_builder/abapplication',
-				update: 'PUT /app_builder/abapplication/{id}',
-				destroy: 'DELETE /app_builder/abapplication/{id}',
-				describe: function() { return { 'name':'string', 'description':'text' };  },
+			AD.Model.Base.extend("opstools.BuildApp.ABList", {
+				findAll: 'GET /app_builder/ablist',
+				findOne: 'GET /app_builder/ablist/{id}',
+				create: 'POST /app_builder/ablist',
+				update: 'PUT /app_builder/ablist/{id}',
+				destroy: 'DELETE /app_builder/ablist/{id}',
+				describe: function() { return { 'key':'string', 'value':'string' };  },
 				// associations:['field1', 'field2', ..., 'fieldN'],
-				multilingualFields:['label', 'description'], 
+				multilingualFields:['label'],
 				// validations: {
 				//     "role_label" : [ 'notEmpty' ],
 				//     "role_description" : [ 'notEmpty' ]
@@ -21,7 +21,7 @@ steal(function() {
 				fieldLabel: 'label'
 			}, {
 				// model: function() {
-				//     return AD.Model.get('opstools.BuildApp.ABApplication'); //AD.models.opstools.BuildApp.ABApplication;
+				//     return AD.Model.get('opstools.BuildApp.ABList'); //AD.models.opstools.BuildApp.ABList;
 				// },
 				// getID: function() {
 				//     return this.attr(this.model().fieldId) || 'unknown id field';
