@@ -696,7 +696,7 @@ steal(
 																		if (listItem.translate) listItem.translate();
 																	});
 
-																	c.setting.attr('options', listResult.attr());
+																	c.setting.attr('options', listResult.attr().sort(function (a, b) { return a.weight - b.weight; }));
 
 																	cb();
 																});
@@ -961,7 +961,7 @@ steal(
 
 														var newItem = new self.Model.ABList({
 															key: list_key,
-															weight: index,
+															weight: index + 1,
 															column: data.id,
 															label: opt.value
 														});
@@ -1001,6 +1001,8 @@ steal(
 										});
 
 										if (list_options && list_options.length > 0) {
+											list_options.sort(function (a, b) { return a.weight - b.weight; });
+
 											data.setting.attr('options', list_options);
 
 											addColumnHeader.options = $.map(list_options, function (opt) {

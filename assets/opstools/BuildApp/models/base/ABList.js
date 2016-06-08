@@ -12,7 +12,7 @@ steal(function() {
 				destroy: 'DELETE /app_builder/ablist/{id}',
 				describe: function() { return { 'key':'string', 'value':'string' };  },
 				// associations:['field1', 'field2', ..., 'fieldN'],
-				multilingualFields:['label'],
+				multilingualFields:['label', 'weight'],
 				// validations: {
 				//     "role_label" : [ 'notEmpty' ],
 				//     "role_description" : [ 'notEmpty' ]
