@@ -56,7 +56,6 @@ steal(
                                 selectListView: 'ab-new-select-list',
                                 selectListOptions: 'ab-new-select-option',
                                 selectListNewOption: 'ab-new-select-new',
-                                selectListSupportMultilingual: 'ab-new-list-support-multilingual',
 
                                 attachmentIcon: 'file',
                                 attachmentView: 'ab-new-attachment',
@@ -77,6 +76,7 @@ steal(
                                 $init: function (config) {
                                 },
                                 defaults: {
+                                    modal: true,
                                     ready: function () {
                                         this.resetState();
                                     },
@@ -229,11 +229,12 @@ steal(
                                                             {
                                                                 view: "editlist",
                                                                 id: self.componentIds.selectListOptions,
-                                                                template: "<div style='position: relative;'>#name#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
+                                                                template: "<div style='position: relative;'>#label#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
                                                                 autoheight: true,
+                                                                drag: true,
                                                                 editable: true,
                                                                 editor: "text",
-                                                                editValue: "name",
+                                                                editValue: "label",
                                                                 onClick: {
                                                                     "ab-new-field-remove": function (e, id, trg) {
                                                                         $$(self.componentIds.selectListOptions).remove(id);
@@ -242,11 +243,10 @@ steal(
                                                             },
                                                             {
                                                                 view: "button", value: "Add new option", click: function () {
-                                                                    var itemId = $$(self.componentIds.selectListOptions).add({ name: '' }, $$(self.componentIds.selectListOptions).count());
+                                                                    var itemId = $$(self.componentIds.selectListOptions).add({ id: 'temp_id_' + webix.uid(), label: '' }, $$(self.componentIds.selectListOptions).count());
                                                                     $$(self.componentIds.selectListOptions).edit(itemId);
                                                                 }
-                                                            },
-                                                            { view: "checkbox", id: self.componentIds.selectListSupportMultilingual, labelRight: "Support multilingual", labelWidth: 0, value: true }
+                                                            }
                                                         ]
                                                     },
                                                     {
@@ -275,6 +275,7 @@ steal(
                                                                 fieldType = '',
                                                                 linkToObject = null,
                                                                 isMultipleRecords = null,
+                                                                options = [],
                                                                 supportMultilingual = null,
                                                                 fieldSettings = {};
 
@@ -361,24 +362,23 @@ steal(
 
                                                                     fieldName = base.getFieldName(self.componentIds.selectListView);
                                                                     fieldType = 'string';
-                                                                    supportMultilingual = $$(self.componentIds.selectListSupportMultilingual).getValue();
                                                                     fieldSettings.icon = self.componentIds.selectListIcon;
 
                                                                     fieldSettings.filter_type = 'list';
                                                                     fieldSettings.editor = 'richselect';
                                                                     fieldSettings.filter_options = [];
-                                                                    fieldSettings.options = [];
 
                                                                     $$(self.componentIds.selectListOptions).data.each(function (opt) {
-                                                                        fieldSettings.filter_options.push(opt.name);
-                                                                        fieldSettings.options.push({ id: opt.name, value: opt.name });
+                                                                        fieldSettings.filter_options.push(opt.label);
+                                                                        var optId = typeof opt.id == 'string' && opt.id.startsWith('temp_id') ? null : opt.id;
+                                                                        options.push({ id: optId, value: opt.label });
                                                                     });
 
                                                                     // Filter value is not empty
                                                                     fieldSettings.filter_options = $.grep(fieldSettings.filter_options, function (name) { return name && name.length > 0; });
-                                                                    fieldSettings.options = $.grep(fieldSettings.options, function (opt) { return opt && opt.value && opt.value.length > 0; });
+                                                                    options = $.grep(options, function (opt) { return opt && opt.value && opt.value.length > 0; });
 
-                                                                    if (fieldSettings.options.length < 1) {
+                                                                    if (options.length < 1) {
                                                                         webix.alert({
                                                                             title: "Option required",
                                                                             ok: "Ok",
@@ -407,6 +407,9 @@ steal(
 
                                                             if (isMultipleRecords != null)
                                                                 newFieldInfo.isMultipleRecords = isMultipleRecords;
+
+                                                            if (options != null && options.length > 0)
+                                                                newFieldInfo.options = options;
 
                                                             if (supportMultilingual != null)
                                                                 newFieldInfo.supportMultilingual = supportMultilingual;
@@ -518,12 +521,11 @@ steal(
                                         case 'list':
                                             this.selectedType = 'Select list';
                                             var options = [];
-                                            data.setting.options.forEach(function (optName) {
-                                                options.push({ name: optName.value });
+                                            data.setting.options.forEach(function (opt) {
+                                                options.push({ id: opt.id, label: opt.label });
                                             });
                                             $$(self.componentIds.selectListOptions).parse(options);
                                             $$(self.componentIds.selectListOptions).refresh();
-                                            $$(self.componentIds.selectListSupportMultilingual).setValue(data.supportMultilingual);
                                             break;
                                     }
 

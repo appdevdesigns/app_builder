@@ -42,10 +42,15 @@ module.exports = {
   },
 
   beforeCreate: function (values, cb) {
+    if (values.value)
+      values.value = values.value.replace(' ', '_');
+
     cb();
   },
 
   beforeUpdate: function (values, cb) {
+    if (values.value)
+      values.value = values.value.replace(' ', '_');
 
     cb();
   },

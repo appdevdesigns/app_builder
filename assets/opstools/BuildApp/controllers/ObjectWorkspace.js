@@ -8,7 +8,9 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFrozenColumnPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
+	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
+	'opstools/BuildApp/models/ABList.js',
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -27,7 +29,11 @@ steal(
 							// Call parent init
 							this._super(element, options);
 
-                            this.Model = AD.Model.get('opstools.BuildApp.ABColumn');
+							this.Model = {
+								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
+								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
+								ABList: AD.Model.get('opstools.BuildApp.ABList')
+							};
 							this.data = {};
 
 							this.webixUiId = {
@@ -221,7 +227,7 @@ steal(
 																$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
 																// Call server to delete field data
-																self.Model.destroy(selectedField.dataId)
+																self.Model.ABColumn.destroy(selectedField.dataId)
 																	.fail(function (err) {
 																		$$(self.webixUiId.objectDatatable).hideProgress();
 
@@ -438,7 +444,6 @@ steal(
 										},
 										on: {
 											onAfterRender: function (data) {
-												console.log(data);
 												// Initial multi-combo
 												console.log('selectivity initial');
 												$('.connect-data-values').selectivity('destroy');
@@ -548,7 +553,7 @@ steal(
 															if (!object || object.length < 1)
 																return false;
 
-															self.Model.findAll({ object: object[0].id })
+															self.Model.ABColumn.findAll({ object: object[0].id })
 																.then(function (data) {
 
 																	data.forEach(function (d) {
@@ -560,7 +565,8 @@ steal(
 																	next();
 
 																});
-														}, function (next) {
+														},
+														function (next) {
 															// Generate template to display
 															var template = '<div>{0}{1}</div>',
 																header = '<div>',
@@ -653,7 +659,7 @@ steal(
 								async.series([
 									function (next) {
 										// Get columns from server
-										self.Model.findAll({ object: self.data.objectId })
+										self.Model.ABColumn.findAll({ object: self.data.objectId })
 											.fail(function (err) {
 												$$(self.webixUiId.objectDatatable).hideProgress();
 
@@ -674,11 +680,40 @@ steal(
 
 												self.data.columns = data;
 
-												self.bindColumns(true);
+												// Find option list
+												var listCols = $.grep(self.data.columns, function (col) { return col.setting.editor === 'richselect'; });
 
-												next();
+												if (listCols && listCols.length > 0) {
+													var getListEvents = [];
 
+													listCols.forEach(function (c) {
+														getListEvents.push(function (cb) {
+															self.Model.ABList.findAll({ column: c.id })
+																.fail(function (err) { cb(err); })
+																.then(function (listResult) {
+
+																	listResult.forEach(function (listItem) {
+																		if (listItem.translate) listItem.translate();
+																	});
+
+																	c.setting.attr('options', listResult.attr());
+
+																	cb();
+																});
+														});
+													});
+
+													AD.util.async.parallel(getListEvents, next);
+												}
+												else {
+													next();
+												}
 											});
+									},
+									function (next) {
+										self.bindColumns(true);
+
+										next();
 									},
 									function (next) {
 										// TODO : Get data from server
@@ -745,54 +780,8 @@ steal(
 										if (columnInfo.setting.value)
 											newColumn.default = columnInfo.setting.value;
 
-										var saveDeferred = $.Deferred();
-										saveDeferred
-											.fail(function (err) {
-												$$(self.webixUiId.objectDatatable).hideProgress();
-
-												webix.message({
-													type: "error",
-													text: self.labels.common.createErrorMessage.replace('{0}', columnInfo.name)
-												});
-
-												AD.error.log('Add Column : Error add new field data', { error: err });
-											})
-											.then(function (data) {
-												if (data.translate) data.translate();
-
-												self.data.columns.push(data);
-
-												var columns = $$(self.webixUiId.objectDatatable).config.columns;
-
-												var addColumnHeader = $.extend(columnInfo.setting, {
-													id: data.name,
-													dataId: data.id,
-													header: self.getHeader(columnInfo)
-												});
-
-												addColumnHeader.width = self.calculateColumnWidth(data);
-
-												var existsColumn = $.grep(columns, function (c) { return c.dataId == data.id; });
-												if (existsColumn && existsColumn.length > 0) { // Update
-													for (var i = 0; i < columns.length; i++) {
-														if (columns[i].dataId == data.id)
-															columns[i] = addColumnHeader;
-													}
-												} else { // Add 
-													columns.push(addColumnHeader);
-												}
-
-												$$(self.webixUiId.objectDatatable).refreshColumns(columns);
-
-												self.refreshPopupData();
-
-												$$(self.webixUiId.objectDatatable).hideProgress();
-
-												webix.message({
-													type: "success",
-													text: self.labels.common.createSuccessMessage.replace("{0}", columnInfo.name)
-												});
-											});
+										// Get deferred when save complete
+										var saveDeferred = self.getSaveColumnDeferred(columnInfo);
 
 										if (columnInfo.id) { // Update
 											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
@@ -812,7 +801,7 @@ steal(
 												});
 										}
 										else { // Add new
-											self.Model.create(newColumn)
+											self.Model.ABColumn.create(newColumn)
 												.fail(function (err) {
 													saveDeferred.reject(err);
 												})
@@ -822,6 +811,7 @@ steal(
 													saveDeferred.resolve(data);
 												});
 										}
+
 
 									});
 
@@ -854,11 +844,22 @@ steal(
 								if (col.setting.format)
 									col.setting.format = webix.i18n[col.setting.format];
 
+								var options = [];
+								if (col.setting.options && col.setting.options.length > 0) {
+									col.setting.options.forEach(function (opt) {
+										options.push({
+											id: opt.id,
+											value: opt.label
+										});
+									});
+								}
+
 								return $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
 									label: col.label,
-									header: self.getHeader(col)
+									header: self.getHeader(col),
+									options: options
 								});
 							});
 
@@ -889,6 +890,143 @@ steal(
 
 							self.data.objectList = objectList;
 							$$(self.webixUiId.addFieldsPopup).setObjectList(objectList);
+						},
+
+						getSaveColumnDeferred: function (columnInfo) {
+							var self = this,
+								saveDeferred = $.Deferred();
+
+							saveDeferred
+								.fail(function (err) {
+									$$(self.webixUiId.objectDatatable).hideProgress();
+
+									webix.message({
+										type: "error",
+										text: self.labels.common.createErrorMessage.replace('{0}', columnInfo.name)
+									});
+
+									AD.error.log('Add Column : Error add new field data', { error: err });
+								})
+								.then(function (data) {
+									if (data.translate) data.translate();
+
+									var list_key = null,
+										list_options = [];
+
+									AD.util.async.series([
+										function (cb) {
+											// Find key of option list
+											if (columnInfo.options && columnInfo.options.length > 0) {
+												self.Model.ABObject.findOne({ id: self.data.objectId })
+													.fail(function (err) { cb(err); })
+													.then(function (obj) {
+														list_key = '{0}.{1}.{2}'
+															.replace('{0}', obj.application.name)
+															.replace('{1}', obj.name)
+															.replace('{2}', data.name);
+
+														cb();
+													});
+											}
+											else {
+												cb();
+											}
+										},
+										function (cb) {
+											cb();
+											// Destroy options list data
+											if (columnInfo.options && columnInfo.options.length > 0) {
+											}
+										},
+										function (cb) {
+											// Popuplate options list data
+											if (columnInfo.options && columnInfo.options.length > 0) {
+												var createListEvents = [];
+
+												columnInfo.options.forEach(function (opt, index) {
+													createListEvents.push(function (next) {
+
+														var newItem = new self.Model.ABList({
+															key: list_key,
+															weight: index,
+															column: data.id,
+															label: opt.value
+														});
+
+														if (opt.id) // Update
+															newItem.attr('id', opt.id);
+														else // Add new
+															newItem.attr('value', newItem.label);
+
+														newItem.save()
+															.fail(function (err) {
+																next(err);
+															}).then(function (result) {
+																if (result.translate) result.translate();
+
+																list_options.push(result);
+
+																next();
+															});
+													});
+												});
+
+												AD.util.async.parallel(createListEvents, function () { cb() });
+											}
+											else {
+												cb();
+											}
+										}
+									], function () {
+
+										var columns = $$(self.webixUiId.objectDatatable).config.columns;
+
+										var addColumnHeader = $.extend(columnInfo.setting, {
+											id: data.name,
+											dataId: data.id,
+											header: self.getHeader(columnInfo)
+										});
+
+										if (list_options && list_options.length > 0) {
+											data.setting.attr('options', list_options);
+
+											addColumnHeader.options = $.map(list_options, function (opt) {
+												return {
+													id: opt.id,
+													value: opt.label
+												};
+											});
+										}
+
+										addColumnHeader.width = self.calculateColumnWidth(data);
+
+										self.data.columns.push(data);
+
+										var existsColumn = $.grep(columns, function (c) { return c.dataId == data.id; });
+										if (existsColumn && existsColumn.length > 0) { // Update
+											for (var i = 0; i < columns.length; i++) {
+												if (columns[i].dataId == data.id) {
+													columns[i] = addColumnHeader;
+												}
+											}
+										} else { // Add 
+											columns.push(addColumnHeader);
+										}
+
+										$$(self.webixUiId.objectDatatable).refreshColumns(columns);
+
+										self.refreshPopupData();
+
+										$$(self.webixUiId.objectDatatable).hideProgress();
+
+										webix.message({
+											type: "success",
+											text: self.labels.common.createSuccessMessage.replace("{0}", columnInfo.name)
+										});
+									});
+								});
+
+							return saveDeferred;
 						},
 
 						getCurSelectivityNode: function (selectedCell) {
@@ -949,6 +1087,7 @@ steal(
 
 							return width;
 						},
+
 						calculateRowHeight: function (row, column, dataNumber) {
 							var self = this,
 								rowHeight = 35;

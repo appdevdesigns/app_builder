@@ -247,7 +247,7 @@ steal(
 																$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
 																// Call server to delete object data
-																self.Object.destroy(selectedObject.id)
+																self.Model.destroy(selectedObject.id)
 																	.fail(function (err) {
 																		$$(self.webixUiId.objectList).hideProgress();
 

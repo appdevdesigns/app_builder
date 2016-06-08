@@ -16,6 +16,8 @@ module.exports = {
     connection: 'appdev_default',
 
 
+    schema: true,
+
 
     attributes: {
 
@@ -71,62 +73,14 @@ module.exports = {
         if (values.name)
             values.name = values.name.replace(' ', '_');
 
-        // Add select list data
-        if (values.options && values.options.length > 0) {
-            var list_key = '',
-                createEvents = [],
-                listIds = [];
-
-            list_key = 'TODO';
-
-            values.options.forEach(function (opt, index) {
-
-                createEvents.push(function (callback) {
-                    Multilingual.model.create({
-                        model: ABList,
-                        data: {
-                            key: list_key,
-                            weight: index,
-                            value: opt.value,
-                            label: opt.value,
-                            language_code: 'en'
-                        }
-                    }).fail(function (err) {
-                        callback(err);
-                    }).then(function (result) {
-
-                        listIds.push(result.id);
-
-                        callback();
-                    });
-                });
-
-            });
-
-            async.parallel(createEvents, function (err) {
-                delete values.options;
-                console.log('list: ', listIds);
-                values.list = listIds;
-
-                cb(err);
-            });
-        }
-        else {
-            cb();
-        }
+        cb();
     },
 
     beforeUpdate: function (values, cb) {
         if (values.name)
             values.name = values.name.replace(' ', '_');
 
-        // Add select list data
-        if (values.options && values.options.length > 0) {
-            cb();
-        }
-        else {
-            cb();
-        }
+        cb();
     },
 
     afterDestroy: function (destroyedColumns, cb) {
