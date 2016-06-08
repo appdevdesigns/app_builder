@@ -753,7 +753,7 @@ steal(
 									self.refreshPopupData();
 
 									// Register add new column callback
-									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo) {
+									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo, removedListId) {
 
 										if ($$(self.webixUiId.objectDatatable).showProgress)
 											$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
@@ -781,7 +781,7 @@ steal(
 											newColumn.default = columnInfo.setting.value;
 
 										// Get deferred when save complete
-										var saveDeferred = self.getSaveColumnDeferred(columnInfo);
+										var saveDeferred = self.getSaveColumnDeferred(columnInfo, removedListId);
 
 										if (columnInfo.id) { // Update
 											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
@@ -892,7 +892,7 @@ steal(
 							$$(self.webixUiId.addFieldsPopup).setObjectList(objectList);
 						},
 
-						getSaveColumnDeferred: function (columnInfo) {
+						getSaveColumnDeferred: function (columnInfo, removedListIds) {
 							var self = this,
 								saveDeferred = $.Deferred();
 
@@ -933,9 +933,22 @@ steal(
 											}
 										},
 										function (cb) {
-											cb();
-											// Destroy options list data
-											if (columnInfo.options && columnInfo.options.length > 0) {
+											// Delete options list data
+											if (removedListIds && removedListIds.length > 0) {
+												var deleteListEvents = [];
+
+												removedListIds.forEach(function (id) {
+													deleteListEvents.push(function (next) {
+														self.Model.ABList.destroy(id)
+															.fail(function (err) { next(err); })
+															.then(function () { next(); });
+													});
+												});
+
+												AD.util.async.parallel(deleteListEvents, cb);
+											}
+											else {
+												cb();
 											}
 										},
 										function (cb) {
@@ -971,7 +984,7 @@ steal(
 													});
 												});
 
-												AD.util.async.parallel(createListEvents, function () { cb() });
+												AD.util.async.parallel(createListEvents, cb);
 											}
 											else {
 												cb();

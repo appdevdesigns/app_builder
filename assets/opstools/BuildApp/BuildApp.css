@@ -22,10 +22,15 @@
 .ab-main-container .bold {
 	font-weight: bold;
 }
+
 /* Webix selected item */
-.webix_list_item.webix_selected {
+.ab-main-container .webix_list_item.webix_selected,
+.ab-main-container .webix_column>div.webix_cell_select,
+.ab-main-container .webix_column>div.webix_column_select,
+.ab-main-container .webix_column>div.webix_row_select {
 	background-color: #3498db !important;
 }
+
 /* Webix message */
 .webix_success {
   background-color: #BFF2BF;	

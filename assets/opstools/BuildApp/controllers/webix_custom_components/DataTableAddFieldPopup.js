@@ -237,6 +237,13 @@ steal(
                                                                 editValue: "label",
                                                                 onClick: {
                                                                     "ab-new-field-remove": function (e, id, trg) {
+                                                                        // Store removed id to array
+                                                                        if (!id.startsWith('temp_id')) {
+                                                                            if (!self.data.removedListIds) self.data.removedListIds = [];
+
+                                                                            self.data.removedListIds.push(id);
+                                                                        }
+
                                                                         $$(self.componentIds.selectListOptions).remove(id);
                                                                     }
                                                                 }
@@ -419,7 +426,7 @@ steal(
 
                                                             // Call callback function
                                                             if (base.saveFieldCallback && base.selectedType) {
-                                                                base.saveFieldCallback(newFieldInfo);
+                                                                base.saveFieldCallback(newFieldInfo, self.data.removedListIds);
                                                                 base.resetState();
                                                                 base.hide(); // TODO : if fail, then should not hide
                                                             }
@@ -545,6 +552,8 @@ steal(
 
                                 resetState: function () {
                                     self.data.editFieldId = null;
+
+                                    self.data.removedListIds = [];
 
                                     $$(self.componentIds.saveButton).define('label', 'Add column');
                                     $$(self.componentIds.saveButton).refresh();

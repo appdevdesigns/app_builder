@@ -16,9 +16,6 @@ module.exports = {
     connection: 'appdev_default',
 
 
-    schema: true,
-
-
     attributes: {
 
         // this will pull in the translations using .populate('translations')
