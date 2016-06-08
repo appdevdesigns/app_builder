@@ -16,7 +16,8 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								backToAppPageEvent: 'AB_Application.GoToAppPage'
+								backToAppPageEvent: 'AB_Application.GoToAppPage',
+								synchronizeEvent: 'AB_Application.Synchronize'
 							}, options);
 							this.options = options;
 
@@ -57,6 +58,7 @@ steal(
 							self.labels.interface = {};
 
 							self.labels.application.backToApplication = AD.lang.label.getLabel('ab.application.backToApplication') || "Back to Applications page";
+							self.labels.application.synchronize = AD.lang.label.getLabel('ab.application.synchronize') || "Synchronize";
 							self.labels.object.title = AD.lang.label.getLabel('ab.object.title') || "Objects";
 							self.labels.interface.title = AD.lang.label.getLabel('ab.interface.title') || "Interface";
 						},
@@ -97,6 +99,18 @@ steal(
 										cols: [
 											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
 											{ fillspace: true },
+											{
+												view: "button", 
+												type: "iconButton",
+												icon: "refresh",
+												label: self.labels.application.synchronize, 
+												width: 250,
+												//autowidth: true,
+												align: "right", 
+												click: function () {
+													self.element.trigger(self.options.synchronizeEvent, {});
+												}
+											},
 											{
 												view: "button", value: self.labels.application.backToApplication, width: 250, align: "right", click: function () {
 													self.element.trigger(self.options.backToAppPageEvent, {});
