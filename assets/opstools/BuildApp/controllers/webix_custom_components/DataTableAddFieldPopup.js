@@ -487,7 +487,11 @@ steal(
                                             this.selectedType = 'Connect to another record';
 
                                             var selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) { return obj.id == data.linkToObject; })[0];
+
+                                            $$(self.componentIds.connectObjectList).disable();
                                             $$(self.componentIds.connectObjectList).select(selectedObject.id);
+                                            $$(self.componentIds.connectObjectCreateNew).disable();
+                                            $$(self.componentIds.connectObjectIsMultipleRecords).disable();
                                             $$(self.componentIds.connectObjectIsMultipleRecords).setValue(data.isMultipleRecords);
                                             break;
                                         case 'string':
@@ -559,6 +563,9 @@ steal(
                                     $$(self.componentIds.saveButton).refresh();
                                     $$(self.componentIds.chooseTypeView).show();
                                     $$(self.componentIds.chooseTypeMenu).show();
+                                    $$(self.componentIds.connectObjectList).enable();
+                                    $$(self.componentIds.connectObjectCreateNew).enable();
+                                    $$(self.componentIds.connectObjectIsMultipleRecords).enable();
                                     $$(self.componentIds.selectListOptions).editCancel();
                                     $$(self.componentIds.selectListOptions).unselectAll();
                                     $$(self.componentIds.selectListOptions).clearAll();

@@ -189,8 +189,7 @@ steal(
 											var columns = webix.toArray($$(self.webixUiId.objectDatatable).config.columns),
 												selectedField = $.grep(columns, function (c) {
 													return c.dataId == self.data.selectedFieldId;
-												})[0],
-												selectedFieldName = $(selectedField.header[0].text).text().trim();
+												})[0];
 
 											switch (trg.textContent.trim()) {
 												case self.labels.object.hideField:
@@ -214,7 +213,7 @@ steal(
 													var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == self.data.selectedFieldId; })[0];
 
 													$$(self.webixUiId.addFieldsPopup).show(itemNode);
-													$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedFieldName);
+													$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedField.label);
 													break;
 												case self.labels.object.deleteField:
 													// Validate
@@ -232,7 +231,7 @@ steal(
 														title: self.labels.object.confirmDeleteTitle,
 														ok: self.labels.common.yes,
 														cancel: self.labels.common.no,
-														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedFieldName),
+														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedField.label),
 														callback: function (result) {
 															if (result) {
 																$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
@@ -244,7 +243,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: self.labels.common.deleteErrorMessage.replace('{0}', selectedFieldName)
+																			text: self.labels.common.deleteErrorMessage.replace('{0}', selectedField.label)
 																		});
 
 																		AD.error.log('Column list : Error delete column', { error: err });
@@ -265,7 +264,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedFieldName)
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedField.label)
 																		});
 
 																		// Clear selected field
@@ -462,7 +461,6 @@ steal(
 										on: {
 											onAfterRender: function (data) {
 												// Initial multi-combo
-												console.log('selectivity initial');
 												$('.connect-data-values').selectivity('destroy');
 												$('.connect-data-values').selectivity({
 													allowClear: true,
@@ -473,8 +471,6 @@ steal(
 													placeholder: self.labels.object.noConnectedData
 												}).on('change', function (ev) {
 													if (ev.removed) {
-														console.log('remove: ', ev.removed);
-
 														var columnIndex = $(this).parents('.webix_column').attr('column'),
 															columnId = $$(self.webixUiId.objectDatatable).columnId(columnIndex),
 															rowIndex = $(this).parent('.webix_cell').index(),
@@ -1259,7 +1255,9 @@ steal(
 								data = [];
 
 							for (var i = 0; i < 4; i++) {
-								var mockData = {};
+								var mockData = {
+									id: i + 1
+								};
 
 								columns.forEach(function (c) {
 									switch (c.setting.filter_type) {
@@ -1273,7 +1271,9 @@ steal(
 												if (c.isMultipleRecords) itemNums = 2;
 
 												for (var j = 0; j < itemNums; j++) {
-													var linkedModel = {};
+													var linkedModel = {
+														id: j + 1
+													};
 
 													linkedObj.columns.forEach(function (linkedCol) {
 														switch (linkedCol.setting.filter_type) {
@@ -1296,7 +1296,7 @@ steal(
 													var label = linkedObj.getDataLabel(linkedModel);
 
 													linkedData.push({
-														id: j,
+														id: j + 1,
 														text: label
 													});
 												}

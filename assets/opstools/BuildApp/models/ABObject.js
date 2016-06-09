@@ -30,7 +30,7 @@ steal(
 							var labelFormat = this.labelFormat || '{' + this.columns[0].name + '}';
 
 							for (var c in data) {
-								labelFormat = labelFormat.replace('{' + c + '}', data[c]);
+								labelFormat = labelFormat.replace(new RegExp('{' + c + '}', 'g'), data[c]);
 							}
 
 							return labelFormat;

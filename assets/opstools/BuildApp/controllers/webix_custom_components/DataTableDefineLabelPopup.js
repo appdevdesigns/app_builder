@@ -79,7 +79,7 @@ steal(
 														var selectedItem = $$(self.componentIds.fieldsList).getItem(id);
 
 														var labelFormat = $$(self.componentIds.labelFormat).getValue();
-														labelFormat += '{{0}}'.replace('{0}', selectedItem.label);
+														labelFormat += '{{0}}'.replace(/[{0}]/g, selectedItem.label);
 
 														$$(self.componentIds.labelFormat).setValue(labelFormat);
 													}
@@ -94,7 +94,7 @@ steal(
 														view: "button", id: self.componentIds.saveButton, label: "Save", type: "form", width: 120, click: function () {
 															var labelFormat = $$(self.componentIds.labelFormat).getValue();
 															$$(self.componentIds.fieldsList).data.each(function (d) {
-																labelFormat = labelFormat.replace('{' + d.label + '}', '{' + d.id + '}');
+																labelFormat = labelFormat.replace(new RegExp('{' + d.label + '}', 'g'), '{' + d.id + '}');
 															});
 
 															if (self.saveLabelEvent)
@@ -132,15 +132,19 @@ steal(
 													$$(self.componentIds.fieldsList).enable();
 													$$(self.componentIds.saveButton).enable();
 
-													if (!labelFormat) return;
-
-													if ($$(self.componentIds.fieldsList).data && $$(self.componentIds.fieldsList).data.count() > 0) {
-														$$(self.componentIds.fieldsList).data.each(function (d) {
-															labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
-														});
+													if (labelFormat) {
+														if ($$(self.componentIds.fieldsList).data && $$(self.componentIds.fieldsList).data.count() > 0) {
+															$$(self.componentIds.fieldsList).data.each(function (d) {
+																labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
+															});
+														}
+													}
+													else { // Default label format
+														if (self.data.fieldList && self.data.fieldList.length > 0)
+															labelFormat = '{' + self.data.fieldList[0].label + '}';
 													}
 
-													$$(self.componentIds.labelFormat).setValue(labelFormat);
+													$$(self.componentIds.labelFormat).setValue(labelFormat || '');
 												});
 
 										}
