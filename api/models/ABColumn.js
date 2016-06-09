@@ -14,7 +14,7 @@ module.exports = {
 
 
     connection: 'appdev_default',
-
+    migrate: 'alter',
 
     attributes: {
 
@@ -58,7 +58,7 @@ module.exports = {
 
         setting: { type: 'json' },
 
-        linkToObject: { type: 'string' },
+        linkToObject: { type: 'integer', required: false, defaultsTo: 0 },
 
         isMultipleRecords: { type: 'boolean' },
 

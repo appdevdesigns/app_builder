@@ -75,7 +75,7 @@ steal(
                                                 id: self.componentIds.fieldsList,
                                                 autoheight: true,
                                                 select: false,
-                                                template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #value#',
+                                                template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
                                                 on: {
                                                     onItemClick: function (id, e, node) {
                                                         var item = this.getItem(id),
@@ -129,7 +129,7 @@ steal(
                                         self.data.fieldList.forEach(function (f) {
                                             fieldList.push({
                                                 id: f.name,
-                                                value: f.name
+                                                label: f.label
                                             });
                                         });
                                     }

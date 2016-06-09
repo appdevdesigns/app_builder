@@ -7,6 +7,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFrozenColumnPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableDefineLabelPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
@@ -44,6 +45,7 @@ steal(
 								filterButton: 'ab-filter-fields-toolbar',
 								sortButton: 'ab-sort-fields-toolbar',
 								frozenButton: 'ab-frozen-columns-toolbar',
+								defineLabelButton: 'ab-define-label-toolbar',
 
 								editHeaderPopup: 'ab-edit-header-popup',
 								editHeaderItems: 'ab-edit-header-items',
@@ -56,6 +58,7 @@ steal(
 								filterFieldsPopup: 'ab-filter-popup',
 								sortFieldsPopup: 'ab-sort-popup',
 								frozenColumnsPopup: 'ab-frozen-popup',
+								defineLabelPopup: 'ab-define-label-popup',
 								addFieldsPopup: 'ab-add-fields-popup'
 							};
 
@@ -111,6 +114,7 @@ steal(
 							self.labels.object.toolbar.filterFields = AD.lang.label.getLabel('ab.object.toolbar.filterFields') || "Add filters";
 							self.labels.object.toolbar.sortFields = AD.lang.label.getLabel('ab.object.toolbar.sortFields') || "Apply sort";
 							self.labels.object.toolbar.frozenColumns = AD.lang.label.getLabel('ab.object.toolbar.frozenColumns') || "Frozen columns";
+							self.labels.object.toolbar.defineLabel = AD.lang.label.getLabel('ab.object.toolbar.defineLabel') || "Define label";
 							self.labels.object.toolbar.permission = AD.lang.label.getLabel('ab.object.toolbar.permission') || "Permission";
 							self.labels.object.toolbar.addFields = AD.lang.label.getLabel('ab.object.toolbar.addFields') || "Add new column";
 						},
@@ -123,6 +127,7 @@ steal(
 								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
 								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
 								FrozenPopup = AD.Control.get('opstools.BuildApp.DataTableFrozenColumnPopup'),
+								DefineLabelPopup = AD.Control.get('opstools.BuildApp.DataTableDefineLabelPopup'),
 								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup');
 
 							this.controllers.DataTableEditor = new DataTableEditor();
@@ -130,6 +135,7 @@ steal(
 							this.controllers.FilterPopup = new FilterPopup();
 							this.controllers.SortPopup = new SortPopup();
 							this.controllers.FrozenPopup = new FrozenPopup();
+							this.controllers.DefineLabelPopup = new DefineLabelPopup();
 							this.controllers.AddFieldPopup = new AddFieldPopup();
 						},
 
@@ -154,6 +160,11 @@ steal(
 							webix.ui({
 								id: self.webixUiId.frozenColumnsPopup,
 								view: "frozen_popup",
+							}).hide();
+
+							webix.ui({
+								id: self.webixUiId.defineLabelPopup,
+								view: "define_label_popup",
 							}).hide();
 
 							webix.ui({
@@ -318,7 +329,7 @@ steal(
 											width: 600,
 											height: 400,
 											type: {
-												height: 80, // Defines item height
+												height: 40, // Defines item height
 											},
 											ready: function () {
 												webix.extend(this, webix.ProgressBar);
@@ -365,6 +376,8 @@ steal(
 
 													selectedIds.forEach(function (id) {
 														var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
+														if (!htmlNode) return;
+
 														var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
 
 														selectedItems.push({ id: id, text: connectData });
@@ -397,6 +410,8 @@ steal(
 										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
 										rowData[self.data.selectedCell.column] = $.map(selectedIds, function (id) {
 											var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
+											if (!htmlNode) return;
+
 											var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
 
 											return { id: id, text: connectData };
@@ -427,6 +442,7 @@ steal(
 											{ view: 'button', label: self.labels.object.toolbar.filterFields, popup: self.webixUiId.filterFieldsPopup, id: self.webixUiId.filterButton, icon: "filter", type: "icon", width: 120, badge: 0 },
 											{ view: 'button', label: self.labels.object.toolbar.sortFields, popup: self.webixUiId.sortFieldsPopup, id: self.webixUiId.sortButton, icon: "sort", type: "icon", width: 120, badge: 0 },
 											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton, icon: "table", type: "icon", width: 150, badge: 0 },
+											{ view: 'button', label: self.labels.object.toolbar.defineLabel, popup: self.webixUiId.defineLabelPopup, id: self.webixUiId.defineLabelButton, icon: "newspaper-o", type: "icon", width: 130 },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
 											{ view: 'button', label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 }
 										]
@@ -439,6 +455,7 @@ steal(
 										editable: true,
 										editaction: "custom",
 										select: "cell",
+										dragColumn: true,
 										ready: function () {
 											webix.extend(this, webix.ProgressBar);
 										},
@@ -483,6 +500,8 @@ steal(
 													return c.type === 'link';
 												});
 
+												var maxDataCell = [];
+
 												linkCols.forEach(function (c) {
 													data.each(function (d) {
 														var connectedData = d[c.name];
@@ -492,10 +511,35 @@ steal(
 																var connectFieldNode = $($$(self.webixUiId.objectDatatable).getItemNode({ row: d.id, column: c.name }));
 																connectFieldNode.find('.connect-data-values').selectivity('data', connectedData);
 
-																self.calculateRowHeight(d.id, c.name, connectedData.length);
+																var cell = $.grep(maxDataCell, function (cell) { return cell.dataId == d.id; });
+																if (cell && cell.length > 0) {
+
+																	if (cell[0].dataNum < connectedData.length) {
+																		// Replace cell to calculate row height
+																		maxDataCell.forEach(function (cellObj) {
+																			if (cellObj.dataId == d.id) {
+																				cellObj.colName = c.name;
+																				cellObj.dataNum = connectedData.length;
+																			}
+																		})
+																	}
+																}
+																else {
+																	// Add cell to calculate row height
+																	maxDataCell.push({
+																		dataId: d.id,
+																		colName: c.name,
+																		dataNum: connectedData.length
+																	})
+																}
 															}
 														}
 													});
+												});
+
+												// Call to calculate row height
+												maxDataCell.forEach(function (cell) {
+													self.calculateRowHeight(cell.dataId, cell.colName, cell.dataNum);
 												});
 											},
 											onHeaderClick: function (id, e, trg) {
@@ -530,7 +574,7 @@ steal(
 
 													columnData = columnData[0];
 
-													// Show windows popup
+													// Show connect data windows popup
 													$$(self.webixUiId.addConnectObjectDataPopup).show();
 
 													if ($$(self.webixUiId.connectObjectDataList).showProgress)
@@ -543,16 +587,16 @@ steal(
 													var linkToObject = columnData.linkToObject,
 														columns = null;
 
+													// Get columns of connected object
+													var object = self.data.objectList.filter(function (o) {
+														return o.id === linkToObject;
+													});
+
+													if (!object || object.length < 1)
+														return false;
+
 													async.series([
 														function (next) {
-															// Get columns of connected object
-															var object = $.grep(self.data.objectList, function (o) {
-																return o.name === linkToObject;
-															});
-
-															if (!object || object.length < 1)
-																return false;
-
 															self.Model.ABColumn.findAll({ object: object[0].id })
 																.then(function (data) {
 
@@ -568,33 +612,17 @@ steal(
 														},
 														function (next) {
 															// Generate template to display
-															var template = '<div>{0}{1}</div>',
-																header = '<div>',
-																info = '<div class="ab-connect-data">';
-
-															columns.attr().forEach(function (c) {
-																header += '<span class="ab-connect-data-info"><b>{0}:</b></span>&nbsp;'.replace('{0}', c.label);
-																info += '<span class="ab-connect-data-info">#{0}#</span>&nbsp;'.replace('{0}', c.name);
-															});
-
-															header += '</div>';
-															info += '</div>';
-															template = template.replace('{0}', header).replace('{1}', info);
+															var template = "<div class='ab-connect-data'>";
+															template += object[0].labelFormat || '#' + object[0].columns[0].name + '#';
+															template += "</div>";
+															template = template.replace(/[{]/g, '#').replace(/[}]/g, '#');
 
 															$$(self.webixUiId.connectObjectDataList).define('template', template);
 															$$(self.webixUiId.connectObjectDataList).refresh();
 
 															// TODO: Load the connect data
-															// Mock: connect data
-															var mockData = [];
-															for (var i = 0; i < 4; i++) {
-																mockData[i] = {};
 
-																columns.forEach(function (c) {
-																	mockData[i].id = 'Mock' + i;
-																	mockData[i][c.name] = c.label + ' ' + (i + 1);
-																});
-															}
+															var mockData = self.getMockData(object[0].columns);
 
 															$$(self.webixUiId.connectObjectDataList).parse(mockData);
 														}
@@ -650,7 +678,7 @@ steal(
 							self.resetState();
 
 							// Set enable connect object list to the add new column popup
-							var enableConnectObjects = $.grep(self.data.objectList, function (o) {
+							var enableConnectObjects = self.data.objectList.filter(function (o) {
 								return o.id != self.data.objectId;
 							});
 							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
@@ -717,18 +745,7 @@ steal(
 									},
 									function (next) {
 										// TODO : Get data from server
-										var data = [
-											{ name: 'Test 1', description: 'Description 1', optional: 'Option 1', number: 70, Link: [{ id: 'Mock1', text: 'Test Description' }, { id: 'Mock2', text: 'Test2 Description2' }] },
-											{ name: 'Test 2', description: 'Description 2', optional: 'Option 2', number: 50, Link: [{ id: 'Mock3', text: 'Test3 Description3' }] },
-											{ name: 'Test 3', description: 'Description 3', optional: 'Option 3', number: 90 },
-											{ name: 'Test 3', description: 'Description 1', optional: 'Option 2', number: 20 }
-										];
-
-										// for (var i = 0; i < 20; i++) {
-										// 	data.push({
-										// 		name: 'Test ' + i, description: 'Description ' + i, optional: 'Option ' + i, number: i,
-										// 	});
-										// }
+										var data = self.getMockData(self.data.columns);
 
 										$$(self.webixUiId.objectDatatable).parse(data);
 
@@ -744,6 +761,7 @@ steal(
 									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 									$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 									$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+									$$(self.webixUiId.defineLabelPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 
 									// Listen popup events
@@ -811,8 +829,40 @@ steal(
 													saveDeferred.resolve(data);
 												});
 										}
+									});
 
+									// Register load label format
+									$$(self.webixUiId.defineLabelPopup).registerLoadLabelEvent(function () {
+										var q = $.Deferred();
 
+										self.Model.ABObject.findOne({ id: self.data.objectId })
+											.fail(function (err) { q.reject(err); })
+											.then(function (objResult) { q.resolve(objResult.labelFormat); });
+
+										return q;
+									});
+
+									// Register save label format
+									$$(self.webixUiId.defineLabelPopup).registerSaveLabelEvent(function (labelFormat) {
+										if ($$(self.webixUiId.objectDatatable).showProgress)
+											$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+										var currentObject = self.data.objectList.filter(function (o) {
+											return o.id == self.data.objectId;
+										})[0];
+
+										currentObject.attr('labelFormat', labelFormat);
+										currentObject.save()
+											.fail(function (err) {
+												if ($$(self.webixUiId.objectDatatable).hideProgress)
+													$$(self.webixUiId.objectDatatable).hideProgress();
+											})
+											.then(function () {
+												$$(self.webixUiId.defineLabelPopup).hide();
+
+												if ($$(self.webixUiId.objectDatatable).hideProgress)
+													$$(self.webixUiId.objectDatatable).hideProgress();
+											});
 									});
 
 									$$(self.webixUiId.addFieldsPopup).registerCreateNewObjectEvent(function () {
@@ -854,13 +904,17 @@ steal(
 									});
 								}
 
-								return $.extend(col.setting, {
+								var mapCol = $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
 									label: col.label,
 									header: self.getHeader(col),
-									options: options
 								});
+
+								if (options && options.length > 0)
+									mapCol.options = options;
+
+								return mapCol;
 							});
 
 							$$(self.webixUiId.objectDatatable).refreshColumns(columns, resetColumns || false);
@@ -873,8 +927,8 @@ steal(
 							// Show connect object name in header
 							if (col.setting.editor === 'selectivity') {
 								// Find label of connect object
-								var connectObj = $.grep(self.data.objectList, function (o) {
-									return o.name == col.linkToObject;
+								var connectObj = self.data.objectList.filter(function (o) {
+									return o.id == col.linkToObject;
 								});
 
 								label += self.labels.object.connectToObjectName.replace('{0}', connectObj[0].label);
@@ -889,7 +943,11 @@ steal(
 							var self = this;
 
 							self.data.objectList = objectList;
-							$$(self.webixUiId.addFieldsPopup).setObjectList(objectList);
+
+							var enableConnectObjects = self.data.objectList.filter(function (o) {
+								return o.id != self.data.objectId;
+							});
+							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
 						},
 
 						getSaveColumnDeferred: function (columnInfo, removedListIds) {
@@ -959,20 +1017,33 @@ steal(
 												columnInfo.options.forEach(function (opt, index) {
 													createListEvents.push(function (next) {
 
-														var newItem = new self.Model.ABList({
-															key: list_key,
-															weight: index + 1,
-															column: data.id,
-															label: opt.value
-														});
+														if (opt.id) { // Update
+															self.Model.ABList.findOne({ id: opt.id })
+																.fail(function (err) { next(err) })
+																.then(function (li) {
+																	li.attr('key', list_key);
+																	li.attr('weight', index + 1);
+																	li.attr('column', data.id);
+																	li.attr('label', opt.value);
 
-														if (opt.id) // Update
-															newItem.attr('id', opt.id);
-														else // Add new
-															newItem.attr('value', newItem.label);
+																	li.save()
+																		.fail(function (saveErr) { next(saveErr); })
+																		.then(function (result) {
+																			if (result.translate) result.translate();
 
-														newItem.save()
-															.fail(function (err) {
+																			list_options.push(result);
+
+																			next();
+																		});
+																});
+														} else {// Add new
+															self.Model.ABList.create({
+																key: list_key,
+																weight: index + 1,
+																column: data.id,
+																label: opt.value,
+																value: opt.value
+															}).fail(function (err) {
 																next(err);
 															}).then(function (result) {
 																if (result.translate) result.translate();
@@ -981,6 +1052,8 @@ steal(
 
 																next();
 															});
+														}
+
 													});
 												});
 
@@ -1015,8 +1088,19 @@ steal(
 
 										addColumnHeader.width = self.calculateColumnWidth(data);
 
-										self.data.columns.push(data);
+										// Update columns data
+										var existsColumnData = $.grep(self.data.columns, function (c) { c.id == data.id; });
+										if (existsColumnData && existsColumnData.length > 0) { // Update
+											for (var i = 0; i < self.data.columns.length; i++) {
+												if (self.data.columns[i].dataId == data.id) {
+													self.data.columns[i] = data;
+												}
+											}
+										} else { // Add 
+											self.data.columns.push(data);
+										}
 
+										// Update columns UI
 										var existsColumn = $.grep(columns, function (c) { return c.dataId == data.id; });
 										if (existsColumn && existsColumn.length > 0) { // Update
 											for (var i = 0; i < columns.length; i++) {
@@ -1064,12 +1148,14 @@ steal(
 								$$(self.webixUiId.filterFieldsPopup).setFieldList(self.data.columns.attr());
 								$$(self.webixUiId.sortFieldsPopup).setFieldList(self.data.columns.attr());
 								$$(self.webixUiId.frozenColumnsPopup).setFieldList(self.data.columns.attr());
+								$$(self.webixUiId.defineLabelPopup).setFieldList(self.data.columns.attr());
 							}
 
 							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
 							$$(self.webixUiId.filterFieldsPopup).refreshFieldList();
 							$$(self.webixUiId.sortFieldsPopup).refreshFieldList();
 							$$(self.webixUiId.frozenColumnsPopup).bindFieldList();
+							$$(self.webixUiId.defineLabelPopup).bindFieldList();
 						},
 
 						attachPopupEvents: function () {
@@ -1094,11 +1180,18 @@ steal(
 						},
 
 						calculateColumnWidth: function (col) {
-							var charWidth = 7,
+							var self = this,
+								charWidth = 7,
 								width = (col.label.length * charWidth) + 80;
 
-							if (col.linkToObject) // Connect to... label
-								width += col.linkToObject.length * charWidth + 55;
+							if (col.linkToObject) {// Connect to... label
+								var object = self.data.objectList.filter(function (o) {
+									return o.id === col.linkToObject;
+								});
+
+								if (object && object.length > 0)
+									width += object[0].label.length * charWidth + 55;
+							}
 
 							return width;
 						},
@@ -1123,7 +1216,8 @@ steal(
 							// 	calHeight = rowHeight;
 							// }
 
-							$$(self.webixUiId.objectDatatable).setRowHeight(row, calHeight);
+							if ($$(self.webixUiId.objectDatatable).getItem(row).$height != calHeight)
+								$$(self.webixUiId.objectDatatable).setRowHeight(row, calHeight);
 						},
 
 						resetState: function () {
@@ -1157,6 +1251,78 @@ steal(
 								$$(self.webixUiId.objectDatatable).define("height", height - 150);
 								$$(self.webixUiId.objectDatatable).resize();
 							}
+						},
+
+						// Mock data
+						getMockData: function (columns) {
+							var self = this,
+								data = [];
+
+							for (var i = 0; i < 4; i++) {
+								var mockData = {};
+
+								columns.forEach(function (c) {
+									switch (c.setting.filter_type) {
+										case 'multiselect':
+											var linkedObj = self.data.objectList.filter(function (o) { return o.id == c.linkToObject; })[0];
+
+											if (linkedObj) {
+												var linkedData = [];
+
+												var itemNums = 1;
+												if (c.isMultipleRecords) itemNums = 2;
+
+												for (var j = 0; j < itemNums; j++) {
+													var linkedModel = {};
+
+													linkedObj.columns.forEach(function (linkedCol) {
+														switch (linkedCol.setting.filter_type) {
+															case 'text':
+																linkedModel[linkedCol.name] = 'lorem ipsum ' + (j + 1);
+																break;
+															case 'number':
+																linkedModel[linkedCol.name] = j + 100;
+																break;
+															case 'date':
+																linkedModel[linkedCol.name] = new Date();
+																break;
+															case 'boolean':
+																linkedModel[linkedCol.name] = j % 2;
+																break;
+														}
+													});
+
+													// Get label
+													var label = linkedObj.getDataLabel(linkedModel);
+
+													linkedData.push({
+														id: j,
+														text: label
+													});
+												}
+
+												mockData[c.name] = linkedData;
+											}
+											break;
+										case 'text':
+											mockData[c.name] = 'lorem ipsum ' + (i + 1)
+											break;
+										case 'number':
+											mockData[c.name] = i + 100;
+											break;
+										case 'date':
+											mockData[c.name] = new Date();
+											break;
+										case 'boolean':
+											mockData[c.name] = i % 2;
+											break;
+									}
+								});
+
+								data.push(mockData);
+							}
+
+							return data;
 						}
 
 					});

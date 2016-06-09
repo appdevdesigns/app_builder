@@ -156,8 +156,8 @@ steal(
                                                                 id: self.componentIds.connectObjectCreateNew,
                                                                 value: 'Connect to new Object',
                                                                 click: function () {
-                                                                    if (self.createNewObjectEvent)
-                                                                        self.createNewObjectEvent();
+                                                                    if (this.getTopParentView().createNewObjectEvent)
+                                                                        this.getTopParentView().createNewObjectEvent();
                                                                 }
                                                             },
                                                             {
@@ -300,7 +300,7 @@ steal(
 
                                                                     fieldName = base.getFieldName(self.componentIds.connectObjectView);
                                                                     fieldType = 'link';
-                                                                    linkToObject = linkObject.name;
+                                                                    linkToObject = linkObject.id;
                                                                     isMultipleRecords = $$(self.componentIds.connectObjectIsMultipleRecords).getValue();
                                                                     fieldSettings.icon = self.componentIds.connectObjectIcon;
                                                                     fieldSettings.editor = 'selectivity';
@@ -486,7 +486,7 @@ steal(
                                         case 'link':
                                             this.selectedType = 'Connect to another record';
 
-                                            var selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) { return obj.name == data.linkToObject; })[0];
+                                            var selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) { return obj.id == data.linkToObject; })[0];
                                             $$(self.componentIds.connectObjectList).select(selectedObject.id);
                                             $$(self.componentIds.connectObjectIsMultipleRecords).setValue(data.isMultipleRecords);
                                             break;
@@ -546,7 +546,7 @@ steal(
 
                                 setObjectList: function (objectList) {
                                     $$(self.componentIds.connectObjectList).clearAll();
-                                    $$(self.componentIds.connectObjectList).parse(objectList);
+                                    $$(self.componentIds.connectObjectList).parse(objectList.attr ? objectList.attr() : objectList);
                                     $$(self.componentIds.connectObjectList).refresh();
                                 },
 

@@ -46,7 +46,7 @@ steal(
 												width: 250,
 												autoheight: true,
 												select: false,
-												template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #value#',
+												template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
 												on: {
 													onItemClick: function (id, e, node) {
 														self.dataTable.define('leftSplit', self.dataTable.getColumnIndex(id) + 1);
@@ -99,7 +99,7 @@ steal(
 										self.data.fieldList.forEach(function (f) {
 											fieldList.push({
 												id: f.name,
-												value: f.name
+												label: f.label
 											});
 										});
 									}

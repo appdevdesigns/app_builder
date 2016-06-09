@@ -43,6 +43,8 @@ module.exports = {
             unique: true
         },
 
+        labelFormat: { type: 'string' },
+
         columns: { collection: 'ABColumn', via: 'object' },
 
         application: { model: 'ABApplication' }

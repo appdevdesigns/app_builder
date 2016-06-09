@@ -24,10 +24,10 @@
 }
 
 /* Webix selected item */
-.ab-main-container .webix_list_item.webix_selected,
-.ab-main-container .webix_column>div.webix_cell_select,
-.ab-main-container .webix_column>div.webix_column_select,
-.ab-main-container .webix_column>div.webix_row_select {
+.webix_list_item.webix_selected,
+.webix_column>div.webix_cell_select,
+.webix_column>div.webix_column_select,
+.webix_column>div.webix_row_select {
 	background-color: #3498db !important;
 }
 

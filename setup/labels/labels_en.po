@@ -331,6 +331,12 @@ msgstr "Frozen columns"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.toolbar.defineLabel
+msgid "Define label"
+msgstr "Define label"
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.toolbar.permission
 msgid "Permission"
 msgstr "Permission"

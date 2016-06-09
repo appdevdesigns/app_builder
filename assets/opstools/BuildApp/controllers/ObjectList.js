@@ -182,7 +182,7 @@ steal(
 															// Show gear icon
 															$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
 
-															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
+															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
 														});
 												}
 											}
@@ -266,7 +266,7 @@ steal(
 
 																		$$(self.webixUiId.objectList).remove(selectedObject.id);
 
-																		self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
+																		self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
 
 																		webix.message({
 																			type: "success",
@@ -353,7 +353,7 @@ steal(
 																$$(self.webixUiId.objectList).select(result.id);
 															}
 
-															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
+															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
 
 															$$(self.webixUiId.objectList).hideProgress();
 
@@ -410,7 +410,7 @@ steal(
 
 									self.refreshObjectList();
 
-									self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
+									self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
 								});
 						},
 
