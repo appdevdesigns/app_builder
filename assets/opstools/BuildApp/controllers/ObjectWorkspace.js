@@ -647,6 +647,12 @@ steal(
 													$$(self.webixUiId.objectDatatable).render();
 												}
 											},
+											onAfterColumnDrop: function (sourceId, targetId, event) {
+												// TODO
+												console.log('sourceId: ', sourceId);
+												console.log('targetId: ', targetId);
+												console.log('event: ', event);
+											},
 											onAfterColumnShow: function (id) {
 												$$(self.webixUiId.visibleFieldsPopup).showField(id);
 											},
@@ -843,12 +849,10 @@ steal(
 										if ($$(self.webixUiId.objectDatatable).showProgress)
 											$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-										var currentObject = self.data.objectList.filter(function (o) {
-											return o.id == self.data.objectId;
-										})[0];
-
-										currentObject.attr('labelFormat', labelFormat);
-										currentObject.save()
+										self.Model.ABObject.update(self.data.objectId,
+											{
+												labelFormat: labelFormat
+											})
 											.fail(function (err) {
 												if ($$(self.webixUiId.objectDatatable).hideProgress)
 													$$(self.webixUiId.objectDatatable).hideProgress();

@@ -58,7 +58,10 @@ module.exports = {
 
         setting: { type: 'json' },
 
-        linkToObject: { type: 'integer', required: false, defaultsTo: 0 },
+        linkToObject: {
+            type: 'integer',
+            required: false,
+        },
 
         isMultipleRecords: { type: 'boolean' },
 
@@ -67,6 +70,7 @@ module.exports = {
     },
 
     beforeCreate: function (values, cb) {
+        console.log('beforeCreate: ', values);
         if (values.name)
             values.name = values.name.replace(' ', '_');
 
@@ -74,6 +78,7 @@ module.exports = {
     },
 
     beforeUpdate: function (values, cb) {
+        console.log('beforeUpdate: ', values);
         if (values.name)
             values.name = values.name.replace(' ', '_');
 

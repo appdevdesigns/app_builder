@@ -79,7 +79,7 @@ steal(
 														var selectedItem = $$(self.componentIds.fieldsList).getItem(id);
 
 														var labelFormat = $$(self.componentIds.labelFormat).getValue();
-														labelFormat += '{{0}}'.replace(/[{0}]/g, selectedItem.label);
+														labelFormat += '{{0}}'.replace('{0}', selectedItem.label);
 
 														$$(self.componentIds.labelFormat).setValue(labelFormat);
 													}
