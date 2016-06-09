@@ -21,24 +21,20 @@
 
 module.exports = {
 
-/*
-  //// 
-  //// Define your plugin specific connection settings:
-  ////
-  
-  // MySQL is the world's most popular relational database.
-  // http://en.wikipedia.org/wiki/MySQL
-  //
-  // Run:
-  // npm install sails-mysql
-  //
-  someMysqlServer: {
-    adapter: 'sails-mysql',
-    host: 'YOUR_MYSQL_SERVER_HOSTNAME_OR_IP_ADDRESS',
-    user: 'YOUR_MYSQL_USER',
-    password: 'YOUR_MYSQL_PASSWORD',
-    database: 'YOUR_MYSQL_DB'
-  },
-*/
+    /**
+     * api/hooks/appbuilder.js will set these to follow the default connection
+     * by default if nothing is explicitly defined.
+     *
+     * Except for database, which is 'appbuilder' by default.
+     *
+     * Put your custom settings into config/local.js
+     */
+    appBuilder: {
+        adapter: null,
+        host: null,
+        user: null,
+        password: null,
+        database: 'appbuilder'
+    }
 
 };

@@ -1,0 +1,29 @@
+/**
+ * Model generated from App Builder Object
+ */
+
+module.exports = {
+
+    tableName: '<%= tableName %>',
+    connection: 'appBuilder',
+    migrate: 'alter',
+
+    attributes: {
+
+        _Klass: function () {
+            return <%= modelName %>;
+        },
+        
+        <% columns.forEach(function(col) { %>
+        "<%= col.name %>": {
+            type: '<%= col.type %>',
+            required: <%= col.required || 'false' %>,
+            unique: <%= col.unique || 'false' %>,
+            defaultsTo: '<%= col.default || '' %>',
+            setting: <%- JSON.stringify(col.setting) %>,
+        },
+        <% }) %>
+        
+    },
+
+};

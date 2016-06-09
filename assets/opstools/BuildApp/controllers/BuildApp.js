@@ -17,7 +17,8 @@ steal(
 					AD.Control.OpsTool.extend('BuildApp', {
 						CONST: {
 							APP_SELECTED: 'AB_Application.Selected',
-							GO_TO_APP_PAGE: 'AB_Application.GoToAppPage'
+							GO_TO_APP_PAGE: 'AB_Application.GoToAppPage',
+							SYNCHRONIZE: 'AB_Application.Synchronize'
 						},
 
 						init: function (element, options) {
@@ -79,6 +80,24 @@ steal(
 								self.element.find(".ab-app-list").show();
 								self.controllers.AppList.resetState();
 								self.controllers.AppList.resize(self.data.height);
+							});
+							
+							self.controllers.AppWorkspace.element.on(self.CONST.SYNCHRONIZE, function (event) {
+								// Create overlay with loading icon
+								var $overlay = $('<div style="background: black; opacity: 0.4; position: absolute; left: 0; top: 0; bottom: 0; right: 0; z-index: 5000; padding-top: 20%; text-align: center; vertical-align: middle"><i class="fa fa-refresh fa-spin fa-3x fa-inverse"></i></div>');
+								$('body').append($overlay);
+								// Generate Sails models and reload ORM
+								AD.comm.service.post({
+									url: '/app_builder/fullReload'
+								})
+								.always(function() {
+									$overlay.remove();
+									delete $overlay;
+								})
+								.fail(function(err) {
+									console.log(err);
+									webix.message(err);
+								});
 							});
 						},
 
