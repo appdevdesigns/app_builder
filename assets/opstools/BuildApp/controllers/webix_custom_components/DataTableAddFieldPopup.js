@@ -403,6 +403,20 @@ steal(
                                                                     return; // TODO;
                                                             }
 
+                                                            // Validate field name
+                                                            var existsColumn = $.grep(dataTable.config.columns, function (c) {
+                                                                return c.id == fieldName || c.label == fieldName;
+                                                            });
+
+                                                            if (existsColumn && existsColumn.length > 0) {
+                                                                webix.alert({
+                                                                    title: "Your field name is duplicate",
+                                                                    ok: "Ok",
+                                                                    text: "Please change your field name"
+                                                                });
+                                                                return;
+                                                            }
+
                                                             var newFieldInfo = {
                                                                 name: fieldName,
                                                                 type: fieldType,

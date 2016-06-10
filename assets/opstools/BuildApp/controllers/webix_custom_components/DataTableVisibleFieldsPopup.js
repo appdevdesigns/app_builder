@@ -150,14 +150,18 @@ steal(
 
                                 showField: function (id) {
                                     self.dataTable.showColumn(id);
+
+                                    $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
+
                                     this.getTopParentView().callChangeEvent();
-                                    // $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
                                 },
 
                                 hideField: function (id) {
                                     self.dataTable.hideColumn(id);
+
+                                    $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
+
                                     this.getTopParentView().callChangeEvent();
-                                    // $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
                                 }
 
                             }, webix.ui.popup);
