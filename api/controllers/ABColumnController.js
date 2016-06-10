@@ -13,6 +13,6 @@ module.exports = {
         shortcuts: false,
         rest: true
     }
-	
+
 };
 

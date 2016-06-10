@@ -17,6 +17,15 @@ steal(
 						fieldId: 'id',             // which field is the ID
 						fieldLabel:'label'      // which field is considered the Label
 					*/
+					sortColumns: function (id, data, cb) {
+						return AD.comm.service.put({
+							url: '/app_builder/object/sortColumns/' + id,
+							data: {
+								columns: data
+							}
+						}, cb);
+					}
+
 				}, {
 						/*
 							// Already Defined:

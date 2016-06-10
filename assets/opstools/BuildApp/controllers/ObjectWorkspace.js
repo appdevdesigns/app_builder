@@ -260,6 +260,8 @@ steal(
 																		columns.removeAt(columns.find(selectedField));
 																		$$(self.webixUiId.objectDatatable).refreshColumns(columns, true);
 
+																		self.reorderColumns();
+
 																		$$(self.webixUiId.editHeaderPopup).hide();
 
 																		webix.message({
@@ -648,10 +650,7 @@ steal(
 												}
 											},
 											onAfterColumnDrop: function (sourceId, targetId, event) {
-												// TODO
-												console.log('sourceId: ', sourceId);
-												console.log('targetId: ', targetId);
-												console.log('event: ', event);
+												self.reorderColumns();
 											},
 											onAfterColumnShow: function (id) {
 												$$(self.webixUiId.visibleFieldsPopup).showField(id);
@@ -785,7 +784,8 @@ steal(
 											name: columnInfo.name,
 											label: columnInfo.label,
 											type: columnInfo.type,
-											setting: columnInfo.setting
+											setting: columnInfo.setting,
+											weight: columnInfo.weight
 										};
 
 										if (columnInfo.linkToObject != null)
@@ -849,10 +849,13 @@ steal(
 										if ($$(self.webixUiId.objectDatatable).showProgress)
 											$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-										self.Model.ABObject.update(self.data.objectId,
-											{
-												labelFormat: labelFormat
-											})
+										var currentObject = self.data.objectList.filter(function (o) {
+											return o.id == self.data.objectId;
+										})[0];
+
+										currentObject.attr('labelFormat', labelFormat);
+
+										currentObject.save()
 											.fail(function (err) {
 												if ($$(self.webixUiId.objectDatatable).hideProgress)
 													$$(self.webixUiId.objectDatatable).hideProgress();
@@ -1218,6 +1221,35 @@ steal(
 
 							if ($$(self.webixUiId.objectDatatable).getItem(row).$height != calHeight)
 								$$(self.webixUiId.objectDatatable).setRowHeight(row, calHeight);
+						},
+
+						reorderColumns: function () {
+							var self = this;
+
+							if ($$(self.webixUiId.objectDatatable).showProgress)
+								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+							var columnIndexes = [];
+
+							$$(self.webixUiId.objectDatatable).eachColumn(function (columnName) {
+								var col = self.data.columns.filter(function (c) { return c.name == columnName });
+
+								if (col && col.length > 0) {
+									columnIndexes.push({
+										columnId: col[0].id,
+										index: $$(self.webixUiId.objectDatatable).getColumnIndex(columnName)
+									});
+								}
+							}, true);
+
+							self.Model.ABObject.sortColumns(self.data.objectId, columnIndexes, function (err, result) {
+								if (err) {
+									// TODO : show error message
+								}
+
+								if ($$(self.webixUiId.objectDatatable).hideProgress)
+									$$(self.webixUiId.objectDatatable).hideProgress();
+							});
 						},
 
 						resetState: function () {

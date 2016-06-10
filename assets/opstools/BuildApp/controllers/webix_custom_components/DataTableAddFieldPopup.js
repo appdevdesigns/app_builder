@@ -409,6 +409,8 @@ steal(
                                                                 setting: fieldSettings
                                                             };
 
+                                                            newFieldInfo.weight = dataTable.config.columns.length;
+
                                                             if (linkToObject != null)
                                                                 newFieldInfo.linkToObject = linkToObject;
 

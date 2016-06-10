@@ -50,6 +50,12 @@ module.exports = {
             required: true
         },
 
+        weight: {
+            type: 'integer',
+            required: false,
+            defaultsTo: 0 // Workaround
+        },
+
         required: { type: 'boolean' },
 
         unique: { type: 'boolean' },
@@ -61,6 +67,7 @@ module.exports = {
         linkToObject: {
             type: 'integer',
             required: false,
+            defaultsTo: 0 // Workaround
         },
 
         isMultipleRecords: { type: 'boolean' },
@@ -70,7 +77,6 @@ module.exports = {
     },
 
     beforeCreate: function (values, cb) {
-        console.log('beforeCreate: ', values);
         if (values.name)
             values.name = values.name.replace(' ', '_');
 
@@ -78,7 +84,6 @@ module.exports = {
     },
 
     beforeUpdate: function (values, cb) {
-        console.log('beforeUpdate: ', values);
         if (values.name)
             values.name = values.name.replace(' ', '_');
 

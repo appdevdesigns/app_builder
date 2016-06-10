@@ -20,6 +20,10 @@ module.exports = {
     '/app_builder/prepareApp/:id': 
         'app_builder/ABApplicationController.prepare',
     
+
+    '/app_builder/object/sortColumns/:id': 
+        'app_builder/ABObjectController.sortColumns',
+
   /*
 
   '/': {

@@ -240,7 +240,7 @@ steal(
 														title: self.labels.object.confirmDeleteTitle,
 														ok: self.labels.common.yes,
 														cancel: self.labels.common.no,
-														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedObject.name),
+														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedObject.label),
 														callback: function (result) {
 															if (result) {
 
@@ -253,7 +253,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedObject.name)
+																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedObject.label)
 																		});
 
 																		AD.error.log('Object List : Error delete object data', { error: err });
@@ -270,7 +270,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedObject.name)
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedObject.label)
 																		});
 
 																		$$(self.webixUiId.objectList).hideProgress();
@@ -334,7 +334,7 @@ steal(
 
 															webix.message({
 																type: "error",
-																text: self.labels.common.createErrorMessage.replace("{0}", newModel.name)
+																text: self.labels.common.createErrorMessage.replace("{0}", newModel.label)
 															});
 
 															AD.error.log('Object : Error create object data', { error: err });
@@ -360,7 +360,7 @@ steal(
 															// Show success message
 															webix.message({
 																type: "success",
-																text: self.labels.common.createSuccessMessage.replace('{0}', newObject.name)
+																text: self.labels.common.createSuccessMessage.replace('{0}', newObject.label)
 															});
 														});
 
