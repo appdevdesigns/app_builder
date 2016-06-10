@@ -1094,8 +1094,23 @@ steal(
 
 										addColumnHeader.width = self.calculateColumnWidth(data);
 
+										// Update objectList.columns data
+										var object = self.data.objectList.filter(function (o) { return o.id === self.data.objectId; });
+										if (object && object.length > 0) {
+											var existsColumnData = $.grep(object[0].columns, function (c) { return c.id == data.id; });
+											if (existsColumnData && existsColumnData.length > 0) { // Update
+												for (var i = 0; i < object[0].columns.length; i++) {
+													if (object[0].columns[i].dataId == data.id) {
+														object[0].columns[i] = data;
+													}
+												}
+											} else { // Add 
+												object[0].columns.push(data);
+											}
+										}
+
 										// Update columns data
-										var existsColumnData = $.grep(self.data.columns, function (c) { c.id == data.id; });
+										var existsColumnData = $.grep(self.data.columns, function (c) { return c.id == data.id; });
 										if (existsColumnData && existsColumnData.length > 0) { // Update
 											for (var i = 0; i < self.data.columns.length; i++) {
 												if (self.data.columns[i].dataId == data.id) {

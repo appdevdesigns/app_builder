@@ -173,6 +173,8 @@ steal(
 														.then(function () {
 															_this.hideProgress();
 
+															if (selectedObject.translate) selectedObject.translate();
+
 															// Show success message
 															webix.message({
 																type: "success",
