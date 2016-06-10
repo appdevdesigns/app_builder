@@ -912,6 +912,7 @@ steal(
 									dataId: col.id,
 									label: col.label,
 									header: self.getHeader(col),
+									weight: col.weight
 								});
 
 								if (options && options.length > 0)
@@ -919,6 +920,8 @@ steal(
 
 								return mapCol;
 							});
+
+							columns.sort(function (a, b) { return a.weight - b.weight; });
 
 							$$(self.webixUiId.objectDatatable).refreshColumns(columns, resetColumns || false);
 						},
@@ -1147,11 +1150,14 @@ steal(
 							var self = this;
 
 							if (self.data.columns) {
-								$$(self.webixUiId.visibleFieldsPopup).setFieldList(self.data.columns.attr());
-								$$(self.webixUiId.filterFieldsPopup).setFieldList(self.data.columns.attr());
-								$$(self.webixUiId.sortFieldsPopup).setFieldList(self.data.columns.attr());
-								$$(self.webixUiId.frozenColumnsPopup).setFieldList(self.data.columns.attr());
-								$$(self.webixUiId.defineLabelPopup).setFieldList(self.data.columns.attr());
+								var columns = self.data.columns.attr();
+								columns.sort(function (a, b) { return a.weight - b.weight; });
+
+								$$(self.webixUiId.visibleFieldsPopup).setFieldList(columns);
+								$$(self.webixUiId.filterFieldsPopup).setFieldList(columns);
+								$$(self.webixUiId.sortFieldsPopup).setFieldList(columns);
+								$$(self.webixUiId.frozenColumnsPopup).setFieldList(columns);
+								$$(self.webixUiId.defineLabelPopup).setFieldList(columns);
 							}
 
 							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
@@ -1235,10 +1241,13 @@ steal(
 								var col = self.data.columns.filter(function (c) { return c.name == columnName });
 
 								if (col && col.length > 0) {
+									col[0].attr('weight', $$(self.webixUiId.objectDatatable).getColumnIndex(columnName));
+
 									columnIndexes.push({
 										columnId: col[0].id,
-										index: $$(self.webixUiId.objectDatatable).getColumnIndex(columnName)
+										index: col[0].weight
 									});
+
 								}
 							}, true);
 
@@ -1246,6 +1255,8 @@ steal(
 								if (err) {
 									// TODO : show error message
 								}
+
+								self.refreshPopupData();
 
 								if ($$(self.webixUiId.objectDatatable).hideProgress)
 									$$(self.webixUiId.objectDatatable).hideProgress();

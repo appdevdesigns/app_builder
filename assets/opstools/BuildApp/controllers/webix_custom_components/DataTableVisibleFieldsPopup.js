@@ -122,19 +122,19 @@ steal(
                                 },
 
                                 getFieldList: function () {
-                                    var fieldList = [];
+                                    var result = [];
 
                                     // Get all columns include hidden columns
                                     if (self.data.fieldList) {
                                         self.data.fieldList.forEach(function (f) {
-                                            fieldList.push({
+                                            result.push({
                                                 id: f.name,
                                                 label: f.label
                                             });
                                         });
                                     }
 
-                                    return fieldList;
+                                    return result;
                                 },
 
                                 callChangeEvent: function () {
