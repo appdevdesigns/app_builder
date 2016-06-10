@@ -193,7 +193,7 @@ steal(
 
 											switch (trg.textContent.trim()) {
 												case self.labels.object.hideField:
-													$$(self.webixUiId.objectDatatable).hideColumn(selectedField.id);
+													$$(self.webixUiId.visibleFieldsPopup).hideField(selectedField.id);
 													$$(self.webixUiId.editHeaderPopup).hide();
 													break;
 												case self.labels.object.filterField:

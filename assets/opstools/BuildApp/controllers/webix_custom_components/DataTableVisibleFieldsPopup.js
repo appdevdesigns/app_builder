@@ -86,7 +86,7 @@ steal(
                                                         else
                                                             dataTable.showColumn(id);
 
-                                                        this.getTopParentView().callChangeEvent();;
+                                                        this.getTopParentView().callChangeEvent();
                                                     }
                                                 }
                                             }
@@ -149,11 +149,15 @@ steal(
                                 },
 
                                 showField: function (id) {
-                                    $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
+                                    self.dataTable.showColumn(id);
+                                    this.getTopParentView().callChangeEvent();
+                                    // $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
                                 },
 
                                 hideField: function (id) {
-                                    $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
+                                    self.dataTable.hideColumn(id);
+                                    this.getTopParentView().callChangeEvent();
+                                    // $($$(self.componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
                                 }
 
                             }, webix.ui.popup);
