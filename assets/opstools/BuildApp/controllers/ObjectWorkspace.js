@@ -100,6 +100,9 @@ steal(
 							self.labels.object.couldNotDeleteField = AD.lang.label.getLabel('ab.object.couldNotDeleteField') || "Could not delete";
 							self.labels.object.atLeastOneField = AD.lang.label.getLabel('ab.object.atLeastOneField') || "Object should have at least one field.";
 
+							self.labels.object.couldNotReorderField = AD.lang.label.getLabel('ab.object.couldNotReorderField') || "Could not reorder columns";
+							self.labels.object.couldNotReorderFieldDetail = AD.lang.label.getLabel('ab.object.couldNotReorderFieldDetail') || "There are hidden columns.";
+
 							// Delete
 							self.labels.object.confirmDeleteTitle = AD.lang.label.getLabel('ab.object.delete.title') || "Delete data field";
 							self.labels.object.confirmDeleteMessage = AD.lang.label.getLabel('ab.object.delete.message') || "Do you want to delete <b>{0}</b>?";
@@ -647,6 +650,17 @@ steal(
 												if (columnConfig.editor === 'selectivity') {
 													// For calculate/refresh row height
 													$$(self.webixUiId.objectDatatable).render();
+												}
+											},
+											onBeforeColumnDrop: function (sourceId, targetId, event) {
+												if ($$(self.webixUiId.visibleButton).config.badge > 0) {
+													webix.alert({
+														title: self.labels.object.couldNotReorderField,
+														ok: self.labels.common.ok,
+														text: self.labels.object.couldNotReorderFieldDetail
+													});
+
+													return false;
 												}
 											},
 											onAfterColumnDrop: function (sourceId, targetId, event) {

@@ -277,6 +277,18 @@ msgstr "Object should have at least one field."
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.couldNotReorderField
+msgid "Could not reorder columns"
+msgstr "Could not reorder columns"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.couldNotReorderFieldDetail
+msgid "There are hidden columns."
+msgstr "There are hidden columns."
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.selectConnectedData
 msgid "Select data to connect"
 msgstr "Select data to connect"

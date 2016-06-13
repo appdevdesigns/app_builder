@@ -277,6 +277,18 @@ msgstr "ออบเจ็คควรมีคอลัมน์อย่าง
 
 #. path: app_builder
 #. code: th
+#. key: ab.object.couldNotReorderField
+msgid "Could not reorder columns"
+msgstr "ไม่สามารถเรียงคอลัมน์ได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.couldNotReorderFieldDetail
+msgid "There are hidden columns."
+msgstr "มีคอลัมน์ที่ถูกซ่อนไว้อยู่"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.selectConnectedData
 msgid "Select data to connect"
 msgstr "เลือกข้อมูลที่เชื่อมต่อ"
