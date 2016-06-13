@@ -8,16 +8,16 @@
 
 module.exports = {
 
-    '/app_builder/fullReload': 
+    'post /app_builder/fullReload': 
         'app_builder/ABApplicationController.fullReload',
         
-    '/app_builder/reloadORM': 
+    'post /app_builder/reloadORM': 
         'app_builder/ABApplicationController.reloadORM',
     
-    '/app_builder/prepareObject/:id': 
+    'post /app_builder/prepareObject/:id': 
         'app_builder/ABObjectController.prepare',
     
-    '/app_builder/prepareApp/:id': 
+    'post /app_builder/prepareApp/:id': 
         'app_builder/ABApplicationController.prepare',
     
 
