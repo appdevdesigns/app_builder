@@ -25,7 +25,18 @@ steal(
                                 fieldsList: 'ab-visible-fields-list'
                             };
 
+                            this.initMultilingualLabels();
                             this.initWebixControls();
+                        },
+
+                        initMultilingualLabels: function () {
+                            var self = this;
+                            self.labels = {};
+                            self.labels.common = {};
+                            self.labels.visible_fields = {};
+
+                            self.labels.visible_fields.showAll = AD.lang.label.getLabel('ab.visible_fields.showAll') || "Show all";
+                            self.labels.visible_fields.hideAll = AD.lang.label.getLabel('ab.visible_fields.hideAll') || "Hide all";
                         },
 
                         initWebixControls: function () {
@@ -42,7 +53,7 @@ steal(
                                                 cols: [
                                                     {
                                                         view: 'button',
-                                                        value: 'Show all',
+                                                        value: self.labels.visible_fields.showAll,
                                                         click: function () {
                                                             $$(self.componentIds.fieldsList).data.each(function (d) {
                                                                 self.dataTable.showColumn(d.id);
@@ -53,7 +64,7 @@ steal(
                                                     },
                                                     {
                                                         view: 'button',
-                                                        value: 'Hide all',
+                                                        value: self.labels.visible_fields.hideAll,
                                                         click: function () {
                                                             var columns = [];
 

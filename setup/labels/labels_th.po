@@ -97,6 +97,12 @@ msgstr "อธิบาย"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.headerName
+msgid "Header name"
+msgstr "ชื่อหัวตาราง"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.create.error
 msgid "System could not create <b>{0}</b>."
 msgstr "ระบบไม่สามารถสร้าง <b>{0}</b>"
@@ -359,9 +365,454 @@ msgstr "สิทธิ์การเข้าถึง"
 msgid "Add new column"
 msgstr "เพิ่มคอลัมน์ใหม่"
 
+
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.chooseType
+msgid "Choose field type..."
+msgstr "เลือกชนิดของข้อมูล..."
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.connectField
+msgid "Connect to another record"
+msgstr "เชื่อมต่อกับข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.stringField
+msgid "Single line text"
+msgstr "ข้อความ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.textField
+msgid "Long text"
+msgstr "ข้อความยาว"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.numberField
+msgid "Number"
+msgstr "ตัวเลข"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.dateField
+msgid "Date"
+msgstr "วันที่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.booleanField
+msgid "Checkbox"
+msgstr "เช็คบ็อกซ์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.listField
+msgid "Select list"
+msgstr "ข้อมูลชุด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.attachmentField
+msgid "Attachment"
+msgstr "แนบไฟล์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.defaultText
+msgid "Default text"
+msgstr "ค่าเริ่มต้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.defaultNumber
+msgid "Default number"
+msgstr "ค่าเริ่มต้น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.supportMultilingual
+msgid "Support multilingual"
+msgstr "รองรับหลายภาษา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.connectToObject
+msgid "Connect to Object"
+msgstr "เชื่อมต่อกับอ็อบเจ็คอื่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.connectToNewObject
+msgid "Connect to new Object"
+msgstr "เชื่อต่อกับอ็อบเจ็คใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.allowConnectMultipleValue
+msgid "Allow connecting to multiple records"
+msgstr "สามารถเพิ่มได้หลายข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.requireConnectedObjectTitle
+msgid "Object required"
+msgstr "จำเป็นต้องมีอ็อบเจ็ค"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.requireConnectedObjectDescription
+msgid "Please select object to connect."
+msgstr "กรุณาเลือกอ็อบเจ็คที่จะเชื่อมต่อ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.textDescription
+msgid "A long text field that can span multiple lines."
+msgstr "สามารถระบุข้อความได้หลายบันทัด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.format
+msgid "Format"
+msgstr "รูปแบบ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.numberFormat
+msgid "Number"
+msgstr "ตัวเลข"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.priceFormat
+msgid "Price"
+msgstr "รูปแบบการเงิน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.allowDecimalNumbers
+msgid "Allow decimal numbers"
+msgstr "สามารถเพิ่มทศนิยมได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.pickDate
+msgid "Pick one from a calendar."
+msgstr "เลือกวันที่จากปฏิทิน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.includeTime
+msgid "Include time"
+msgstr "เพิ่มเวลา"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.booleanDescription
+msgid "A single checkbox that can be checked or unchecked."
+msgstr "สามารถเลือกหรือไม่เลือกในเช็คบ็อกซ์ได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.listDescription
+msgid "Single select allows you to select a single predefined options below from a dropdown."
+msgstr "สามารถให้คุณกำหนดตัวเลือกไว้ก่อนได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.listOption
+msgid "Options"
+msgstr "ตัวเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.listAddNewOption
+msgid "Add new option"
+msgstr "เพิ่มตัวเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.requireListOptionTitle
+msgid "Option required"
+msgstr "กรุณากำหนดตัวเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.requireListOptionDescription
+msgid "Enter at least one option."
+msgstr "กรอกตัวเลือกอย่างน้อย 1 อัน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.addNewField
+msgid "Add Column"
+msgstr "เพิ่มคอลัมน์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.registerTableWarning
+msgid "Please register the datatable to add."
+msgstr "กรุณาระบุ datatable ก่อน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.duplicateFieldTitle
+msgid "Your field name is duplicate"
+msgstr "ชื่อคอลัมน์ของคุณซ้ำ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.duplicateFieldDescription
+msgid "Please change your field name"
+msgstr "กรุณาเปลี่ยนชื่อคอลัมน์ของคุณ"
+
+
+
+#. path: app_builder
+#. code: th
+#. key: ab.define_label.labelFormat
+msgid "Label format"
+msgstr "รูปแบบคำแสดง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.define_label.selectFieldToGenerate
+msgid "Select field item to generate format."
+msgstr "เลือกคอลัมน์เพื่อสร้างรูปแบบ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.define_label.labelFields
+msgid "Fields"
+msgstr "คอลัมน์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.define_label.loadError
+msgid "System could not load label format data"
+msgstr "ระบบไม่สามารถโหลดข้อมูลรูปแบบคำแสดงได้"
+
+
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.and
+msgid "And"
+msgstr "และ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.or
+msgid "Or"
+msgstr "หรือ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.addNewFilter
+msgid "Add a filter"
+msgstr "เพิ่มเงื่อนไขสำหรับกรองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.containsCondition
+msgid "contains"
+msgstr "มีอยู่ใน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.notContainCondition
+msgid "doesn't contain"
+msgstr "ไม่มีอยู่ใน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.isCondition
+msgid "is"
+msgstr "เท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.isNotCondition
+msgid "is not"
+msgstr "ไม่เท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.beforeCondition
+msgid "is before"
+msgstr "ก่อน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.afterCondition
+msgid "is after"
+msgstr "หลัง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.onOrBeforeCondition
+msgid "is on or before"
+msgstr "ก่อนหรือเท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.onOrAfterCondition
+msgid "is on or after"
+msgstr "หลังหรือเท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.equalCondition
+msgid "="
+msgstr "="
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.notEqualCondition
+msgid "≠"
+msgstr "≠"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.lessThanCondition
+msgid "<"
+msgstr "<"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.moreThanCondition
+msgid ">"
+msgstr ">"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.lessThanOrEqualCondition
+msgid "≤"
+msgstr "≤"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.moreThanOrEqualCondition
+msgid "≥"
+msgstr "≥"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.equalListCondition
+msgid "equals"
+msgstr "เท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.notEqualListCondition
+msgid "does not equal"
+msgstr "ไม่เท่ากับ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.checkedCondition
+msgid "is checked"
+msgstr "ถูกเลือก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.filter_fields.notCheckedCondition
+msgid "is not checked"
+msgstr "ไม่ถูกเลือก"
+
+
+
+#. path: app_builder
+#. code: th
+#. key: ab.frozen_fields.clearAll
+msgid "Clear all"
+msgstr "เคลียร์ทั้งหมด"
+
+
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.addNewSort
+msgid "Add new sort"
+msgstr "เพิ่มเงื่อนไขการเรียงข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.selectField
+msgid "Please select field"
+msgstr "เลือกคอลัมน์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.textAsc
+msgid "A -> Z"
+msgstr "ก -> ฮ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.textDesc
+msgid "Z -> A"
+msgstr "ฮ -> ก"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.dateAsc
+msgid "Before -> After"
+msgstr "ก่อน -> หลัง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.dateDesc
+msgid "After -> Before"
+msgstr "หลัง -> ก่อน"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.numberAsc
+msgid "1 -> 9"
+msgstr "1 -> 9"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.numberDesc
+msgid "9 -> 1"
+msgstr "9 -> 1"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.booleanAsc
+msgid "Checked -> Unchecked"
+msgstr "เช็ค -> ไม่เช็ค"
+
+#. path: app_builder
+#. code: th
+#. key: ab.sort_fields.booleanDesc
+msgid "Unchecked -> Checked"
+msgstr "ไม่เช็ค -> เช็ค"
+
+
+
+#. path: app_builder
+#. code: th
+#. key: ab.visible_fields.showAll
+msgid "Show all"
+msgstr "โชว์ทั้งหมด"
+
+#. path: app_builder
+#. code: th
+#. key: ab.visible_fields.hideAll
+msgid "Hide all"
+msgstr "ซ่อนทั้งหมด"
+
+
+
 #. path: app_builder
 #. code: th
 #. key: ab.view.interface
 msgid "Interface"
 msgstr "หน้าแสดง"
-

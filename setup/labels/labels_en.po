@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=utf-8"
+"Content-Type: text/plainmsgstr charset=utf-8"
 "Content-Transfer-Encoding: 8bit"
 
 #. #########################################
@@ -94,6 +94,12 @@ msgstr "Name"
 #. key: ab.common.form.description
 msgid "Description"
 msgstr "Description"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.headerName
+msgid "Header name"
+msgstr "Header name"
 
 #. path: app_builder
 #. code: en
@@ -358,6 +364,452 @@ msgstr "Permission"
 #. key: ab.object.toolbar.addFields
 msgid "Add new column"
 msgstr "Add new column"
+
+
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.chooseType
+msgid "Choose field type..."
+msgstr "Choose field type..."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.connectField
+msgid "Connect to another record"
+msgstr "Connect to another record"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.stringField
+msgid "Single line text"
+msgstr "Single line text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.textField
+msgid "Long text"
+msgstr "Long text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.numberField
+msgid "Number"
+msgstr "Number"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.dateField
+msgid "Date"
+msgstr "Date"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.booleanField
+msgid "Checkbox"
+msgstr "Checkbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.listField
+msgid "Select list"
+msgstr "Select list"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.attachmentField
+msgid "Attachment"
+msgstr "Attachment"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.defaultText
+msgid "Default text"
+msgstr "Default text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.defaultNumber
+msgid "Default number"
+msgstr "Default number"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.supportMultilingual
+msgid "Support multilingual"
+msgstr "Support multilingual"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.connectToObject
+msgid "Connect to Object"
+msgstr "Connect to Object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.connectToNewObject
+msgid "Connect to new Object"
+msgstr "Connect to new Object"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.allowConnectMultipleValue
+msgid "Allow connecting to multiple records"
+msgstr "Allow connecting to multiple records"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.requireConnectedObjectTitle
+msgid "Object required"
+msgstr "Object required"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.requireConnectedObjectDescription
+msgid "Please select object to connect."
+msgstr "Please select object to connect."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.textDescription
+msgid "A long text field that can span multiple lines."
+msgstr "A long text field that can span multiple lines."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.format
+msgid "Format"
+msgstr "Format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.numberFormat
+msgid "Number"
+msgstr "Number"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.priceFormat
+msgid "Price"
+msgstr "Price"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.allowDecimalNumbers
+msgid "Allow decimal numbers"
+msgstr "Allow decimal numbers"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.pickDate
+msgid "Pick one from a calendar."
+msgstr "Pick one from a calendar."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.includeTime
+msgid "Include time"
+msgstr "Include time"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.booleanDescription
+msgid "A single checkbox that can be checked or unchecked."
+msgstr "A single checkbox that can be checked or unchecked."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.listDescription
+msgid "Single select allows you to select a single predefined options below from a dropdown."
+msgstr "Single select allows you to select a single predefined options below from a dropdown."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.listOption
+msgid "Options"
+msgstr "Options"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.listAddNewOption
+msgid "Add new option"
+msgstr "Add new option"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.requireListOptionTitle
+msgid "Option required"
+msgstr "Option required"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.requireListOptionDescription
+msgid "Enter at least one option."
+msgstr "Enter at least one option."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.addNewField
+msgid "Add Column"
+msgstr "Add Column"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.registerTableWarning
+msgid "Please register the datatable to add."
+msgstr "Please register the datatable to add."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.duplicateFieldTitle
+msgid "Your field name is duplicate"
+msgstr "Your field name is duplicate"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.duplicateFieldDescription
+msgid "Please change your field name"
+msgstr "Please change your field name"
+
+
+
+#. path: app_builder
+#. code: en
+#. key: ab.define_label.labelFormat
+msgid "Label format"
+msgstr "Label format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.define_label.selectFieldToGenerate
+msgid "Select field item to generate format."
+msgstr "Select field item to generate format."
+
+#. path: app_builder
+#. code: en
+#. key: ab.define_label.labelFields
+msgid "Fields"
+msgstr "Fields"
+
+#. path: app_builder
+#. code: en
+#. key: ab.define_label.loadError
+msgid "System could not load label format data"
+msgstr "System could not load label format data"
+
+
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.and
+msgid "And"
+msgstr "And"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.or
+msgid "Or"
+msgstr "Or"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.addNewFilter
+msgid "Add a filter"
+msgstr "Add a filter"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.containsCondition
+msgid "contains"
+msgstr "contains"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.notContainCondition
+msgid "doesn't contain"
+msgstr "doesn't contain"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.isCondition
+msgid "is"
+msgstr "is"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.isNotCondition
+msgid "is not"
+msgstr "is not"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.beforeCondition
+msgid "is before"
+msgstr "is before"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.afterCondition
+msgid "is after"
+msgstr "is after"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.onOrBeforeCondition
+msgid "is on or before"
+msgstr "is on or before"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.onOrAfterCondition
+msgid "is on or after"
+msgstr "is on or after"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.equalCondition
+msgid "="
+msgstr "="
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.notEqualCondition
+msgid "≠"
+msgstr "≠"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.lessThanCondition
+msgid "<"
+msgstr "<"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.moreThanCondition
+msgid ">"
+msgstr ">"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.lessThanOrEqualCondition
+msgid "≤"
+msgstr "≤"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.moreThanOrEqualCondition
+msgid "≥"
+msgstr "≥"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.equalListCondition
+msgid "equals"
+msgstr "equals"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.notEqualListCondition
+msgid "does not equal"
+msgstr "does not equal"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.checkedCondition
+msgid "is checked"
+msgstr "is checked"
+
+#. path: app_builder
+#. code: en
+#. key: ab.filter_fields.notCheckedCondition
+msgid "is not checked"
+msgstr "is not checked"
+
+
+
+#. path: app_builder
+#. code: en
+#. key: ab.frozen_fields.clearAll
+msgid "Clear all"
+msgstr "Clear all"
+
+
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.addNewSort
+msgid "Add new sort"
+msgstr "Add new sort"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.selectField
+msgid "Please select field"
+msgstr "Please select field"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.textAsc
+msgid "A -> Z"
+msgstr "A -> Z"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.textDesc
+msgid "Z -> A"
+msgstr "Z -> A"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.dateAsc
+msgid "Before -> After"
+msgstr "Before -> After"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.dateDesc
+msgid "After -> Before"
+msgstr "After -> Before"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.numberAsc
+msgid "1 -> 9"
+msgstr "1 -> 9"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.numberDesc
+msgid "9 -> 1"
+msgstr "9 -> 1"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.booleanAsc
+msgid "Checked -> Unchecked"
+msgstr "Checked -> Unchecked"
+
+#. path: app_builder
+#. code: en
+#. key: ab.sort_fields.booleanDesc
+msgid "Unchecked -> Checked"
+msgstr "Unchecked -> Checked"
+
+
+
+#. path: app_builder
+#. code: en
+#. key: ab.visible_fields.showAll
+msgid "Show all"
+msgstr "Show all"
+
+#. path: app_builder
+#. code: en
+#. key: ab.visible_fields.hideAll
+msgid "Hide all"
+msgstr "Hide all"
+
+
 
 #. path: app_builder
 #. code: en

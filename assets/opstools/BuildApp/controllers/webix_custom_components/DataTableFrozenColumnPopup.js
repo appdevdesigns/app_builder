@@ -24,7 +24,17 @@ steal(
 								fieldsList: 'ab-frozen-field-list'
 							};
 
+							this.initMultilingualLabels();
 							this.initWebixControls();
+						},
+
+						initMultilingualLabels: function () {
+							var self = this;
+							self.labels = {};
+							self.labels.common = {};
+							self.labels.frozen_fields = {};
+							
+							self.labels.frozen_fields.clearAll = AD.lang.label.getLabel('ab.frozen_fields.clearAll') || "Clear all";
 						},
 
 						initWebixControls: function () {
@@ -58,7 +68,7 @@ steal(
 												}
 											},
 											{
-												view: 'button', value: 'Clear all', click: function () {
+												view: 'button', value: self.labels.frozen_fields.clearAll, click: function () {
 													self.dataTable.define('leftSplit', 0);
 													self.dataTable.refreshColumns();
 

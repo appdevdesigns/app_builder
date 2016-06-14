@@ -26,7 +26,43 @@ steal(
                                 filterForm: 'ab-filter-form'
                             };
 
+                            this.initMultilingualLabels();
                             this.initWebixControls();
+                        },
+
+                        initMultilingualLabels: function () {
+                            var self = this;
+                            self.labels = {};
+                            self.labels.common = {};
+                            self.labels.filter_fields = {};
+
+                            self.labels.filter_fields.and = AD.lang.label.getLabel('ab.filter_fields.and') || "And";
+                            self.labels.filter_fields.or = AD.lang.label.getLabel('ab.filter_fields.or') || "Or";
+                            self.labels.filter_fields.addNewFilter = AD.lang.label.getLabel('ab.filter_fields.addNewFilter') || "Add a filter";
+
+                            self.labels.filter_fields.containsCondition = AD.lang.label.getLabel('ab.filter_fields.containsCondition') || "contains";
+                            self.labels.filter_fields.notContainCondition = AD.lang.label.getLabel('ab.filter_fields.notContainCondition') || "doesn't contain";
+                            self.labels.filter_fields.isCondition = AD.lang.label.getLabel('ab.filter_fields.isCondition') || "is";
+                            self.labels.filter_fields.isNotCondition = AD.lang.label.getLabel('ab.filter_fields.isNotCondition') || "is not";
+
+                            self.labels.filter_fields.beforeCondition = AD.lang.label.getLabel('ab.filter_fields.beforeCondition') || "is before";
+                            self.labels.filter_fields.afterCondition = AD.lang.label.getLabel('ab.filter_fields.afterCondition') || "is after";
+                            self.labels.filter_fields.onOrBeforeCondition = AD.lang.label.getLabel('ab.filter_fields.onOrBeforeCondition') || "is on or before";
+                            self.labels.filter_fields.onOrAfterCondition = AD.lang.label.getLabel('ab.filter_fields.onOrAfterCondition') || "is on or after";
+
+                            self.labels.filter_fields.equalCondition = AD.lang.label.getLabel('ab.filter_fields.equalCondition') || "=";
+                            self.labels.filter_fields.notEqualCondition = AD.lang.label.getLabel('ab.filter_fields.notEqualCondition') || "≠";
+                            self.labels.filter_fields.lessThanCondition = AD.lang.label.getLabel('ab.filter_fields.lessThanCondition') || "<";
+                            self.labels.filter_fields.moreThanCondition = AD.lang.label.getLabel('ab.filter_fields.moreThanCondition') || ">";
+                            self.labels.filter_fields.lessThanOrEqualCondition = AD.lang.label.getLabel('ab.filter_fields.lessThanOrEqualCondition') || "≤";
+                            self.labels.filter_fields.moreThanOrEqualCondition = AD.lang.label.getLabel('ab.filter_fields.moreThanOrEqualCondition') || "≥";
+
+                            self.labels.filter_fields.equalListCondition = AD.lang.label.getLabel('ab.filter_fields.equalListCondition') || "equals";
+                            self.labels.filter_fields.notEqualListCondition = AD.lang.label.getLabel('ab.filter_fields.notEqualListCondition') || "does not equal";
+
+                            self.labels.filter_fields.checkedCondition = AD.lang.label.getLabel('ab.filter_fields.checkedCondition') || "is checked";
+                            self.labels.filter_fields.notCheckedCondition = AD.lang.label.getLabel('ab.filter_fields.notCheckedCondition') || "is not checked";
+
                         },
 
                         initWebixControls: function () {
@@ -37,7 +73,7 @@ steal(
                                 name: "filter_popup",
                                 $init: function (config) {
                                     //functions executed on component initialization
-                                    self.combineCondition = 'And';
+                                    self.combineCondition = self.labels.filter_fields.and;
                                 },
                                 defaults: {
                                     width: 800,
@@ -46,7 +82,7 @@ steal(
                                         view: "form",
                                         autoheight: true,
                                         elements: [{
-                                            view: "button", value: "Add a filter", click: function () {
+                                            view: "button", value: self.labels.filter_fields.addNewFilter, click: function () {
                                                 this.getTopParentView().addNewFilter();
                                             }
                                         }]
@@ -66,7 +102,7 @@ steal(
                                         cols: [
                                             {
                                                 // Add / Or
-                                                view: "combo", value: self.combineCondition, options: ["And", "Or"], css: 'combine-condition', width: 80, on: {
+                                                view: "combo", value: self.combineCondition, options: [self.labels.filter_fields.and, self.labels.filter_fields.or], css: 'combine-condition', width: 80, on: {
                                                     "onChange": function (newValue, oldValue) {
                                                         self.combineCondition = newValue;
 
@@ -97,20 +133,20 @@ steal(
                                                             case "text":
                                                             case "multiselect":
                                                                 conditionList = [
-                                                                    "contains",
-                                                                    "doesn't contain",
-                                                                    "is",
-                                                                    "is not"
+                                                                    self.labels.filter_fields.containsCondition,
+                                                                    self.labels.filter_fields.notContainCondition,
+                                                                    self.labels.filter_fields.isCondition,
+                                                                    self.labels.filter_fields.isNotCondition
                                                                 ];
 
                                                                 inputView = { view: "text" };
                                                                 break;
                                                             case "date":
                                                                 conditionList = [
-                                                                    "is before",
-                                                                    "is after",
-                                                                    "is on or before",
-                                                                    "is on or after"
+                                                                    self.labels.filter_fields.beforeCondition,
+                                                                    self.labels.filter_fields.afterCondition,
+                                                                    self.labels.filter_fields.onOrBeforeCondition,
+                                                                    self.labels.filter_fields.onOrAfterCondition
                                                                 ];
 
                                                                 inputView = { view: "datepicker" };
@@ -121,20 +157,20 @@ steal(
                                                                 break;
                                                             case "number":
                                                                 conditionList = [
-                                                                    "=",
-                                                                    "≠",
-                                                                    "<",
-                                                                    ">",
-                                                                    "≤",
-                                                                    "≥"
+                                                                    self.labels.filter_fields.equalCondition,
+                                                                    self.labels.filter_fields.notEqualCondition,
+                                                                    self.labels.filter_fields.lessThanCondition,
+                                                                    self.labels.filter_fields.moreThanCondition,
+                                                                    self.labels.filter_fields.lessThanOrEqualCondition,
+                                                                    self.labels.filter_fields.moreThanOrEqualCondition
                                                                 ];
 
                                                                 inputView = { view: "text", validate: webix.rules.isNumber };
                                                                 break;
                                                             case "list":
                                                                 conditionList = [
-                                                                    "equals",
-                                                                    "does not equal"
+                                                                    self.labels.filter_fields.equalListCondition,
+                                                                    self.labels.filter_fields.notEqualListCondition
                                                                 ];
 
                                                                 inputView = {
@@ -144,8 +180,8 @@ steal(
                                                                 break;
                                                             case "boolean":
                                                                 conditionList = [
-                                                                    "is checked",
-                                                                    "is not checked"
+                                                                    self.labels.filter_fields.checkedCondition,
+                                                                    self.labels.filter_fields.notCheckedCondition
                                                                 ];
 
                                                                 break;
@@ -292,8 +328,8 @@ steal(
 
                                     if (self.dataTable) {
                                         self.dataTable.filter(function (obj) {
-                                            var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : 'And');
-                                            var isValid = (combineCond === 'And' ? true : false);
+                                            var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : self.labels.filter_fields.and);
+                                            var isValid = (combineCond === self.labels.filter_fields.and ? true : false);
 
                                             filterCondition.forEach(function (cond) {
                                                 var condResult;
@@ -302,7 +338,7 @@ steal(
                                                 // Empty value
                                                 if (!objValue) {
                                                     if (cond.inputValue) {
-                                                        isValid = (combineCond === 'And' ? false : true);
+                                                        isValid = (combineCond === self.labels.filter_fields.and ? false : true);
                                                     }
 
                                                     return;
@@ -316,74 +352,74 @@ steal(
 
                                                 switch (cond.operator) {
                                                     // Text filter
-                                                    case "contains":
+                                                    case self.labels.filter_fields.containsCondition:
                                                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
                                                         break;
-                                                    case "doesn't contain":
+                                                    case self.labels.filter_fields.notContainCondition:
                                                         condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
                                                         break;
-                                                    case "is":
+                                                    case self.labels.filter_fields.isCondition:
                                                         condResult = objValue == cond.inputValue.trim().toLowerCase();
                                                         break;
-                                                    case "is not":
+                                                    case self.labels.filter_fields.isNotCondition:
                                                         condResult = objValue != cond.inputValue.trim().toLowerCase();
                                                         break;
                                                     // Date filter
-                                                    case "is before":
+                                                    case self.labels.filter_fields.beforeCondition:
                                                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                         condResult = objValue < cond.inputValue;
                                                         break;
-                                                    case "is after":
+                                                    case self.labels.filter_fields.afterCondition:
                                                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                         condResult = objValue > cond.inputValue;
                                                         break;
-                                                    case "is on or before":
+                                                    case self.labels.filter_fields.onOrBeforeCondition:
                                                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                         condResult = objValue <= cond.inputValue;
                                                         break;
-                                                    case "is on or after":
+                                                    case self.labels.filter_fields.onOrAfterCondition:
                                                         if (!(objValue instanceof Date)) objValue = new Date(objValue);
                                                         condResult = objValue >= cond.inputValue;
                                                         break;
                                                     // Number filter
-                                                    case "=":
+                                                    case self.labels.filter_fields.equalCondition:
                                                         condResult = Number(objValue) == Number(cond.inputValue);
                                                         break;
-                                                    case "≠":
+                                                    case self.labels.filter_fields.notEqualCondition:
                                                         condResult = Number(objValue) != Number(cond.inputValue);
                                                         break;
-                                                    case "<":
+                                                    case self.labels.filter_fields.lessThanCondition:
                                                         condResult = Number(objValue) < Number(cond.inputValue);
                                                         break;
-                                                    case ">":
+                                                    case self.labels.filter_fields.moreThanCondition:
                                                         condResult = Number(objValue) > Number(cond.inputValue);
                                                         break;
-                                                    case "≤":
+                                                    case self.labels.filter_fields.lessThanOrEqualCondition:
                                                         condResult = Number(objValue) <= Number(cond.inputValue);
                                                         break;
-                                                    case "≥":
+                                                    case self.labels.filter_fields.moreThanOrEqualCondition:
                                                         condResult = Number(objValue) >= Number(cond.inputValue);
                                                         break;
                                                     // List filter
-                                                    case "equals":
+                                                    case self.labels.filter_fields.equalListCondition:
                                                         if (objValue)
                                                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
                                                         break;
-                                                    case "does not equal":
+                                                    case self.labels.filter_fields.notEqualListCondition:
                                                         if (objValue)
                                                             condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
                                                         else
                                                             condResult = true;
                                                         break;
                                                     // Boolean/Checkbox filter
-                                                    case "is checked":
+                                                    case self.labels.filter_fields.checkedCondition:
                                                         condResult = (objValue === true || objValue === 1);
                                                         break;
-                                                    case "is not checked":
+                                                    case self.labels.filter_fields.notCheckedCondition:
                                                         condResult = !objValue;
                                                         break;
                                                 }
-                                                if (combineCond === 'And') {
+                                                if (combineCond === self.labels.filter_fields.and) {
                                                     isValid = isValid && condResult;
                                                 } else {
                                                     isValid = isValid || condResult;

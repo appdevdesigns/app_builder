@@ -28,7 +28,24 @@ steal(
 								saveButton: 'ab-define-label-save-button'
 							};
 
+							this.initMultilingualLabels();
 							this.initWebixControls();
+						},
+
+						initMultilingualLabels: function () {
+							var self = this;
+							self.labels = {};
+							self.labels.common = {};
+							self.labels.define_label = {};
+
+							self.labels.common.save = AD.lang.label.getLabel('ab.common.save') || "Save";
+							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
+
+							self.labels.define_label.labelFormat = AD.lang.label.getLabel('ab.define_label.labelFormat') || "Label format";
+							self.labels.define_label.selectFieldToGenerate = AD.lang.label.getLabel('ab.define_label.selectFieldToGenerate') || "Select field item to generate format.";
+							self.labels.define_label.labelFields = AD.lang.label.getLabel('ab.define_label.labelFields') || "Fields";
+
+							self.labels.define_label.loadError = AD.lang.label.getLabel('ab.define_label.loadError') || "System could not load label format data";
 						},
 
 						initWebixControls: function () {
@@ -47,31 +64,26 @@ steal(
 										rows: [
 											{
 												view: "label",
-												label: "<b>{0}</b>".replace("{0}", "Label format")
+												label: "<b>{0}</b>".replace("{0}", self.labels.define_label.labelFormat)
 											},
 											{
 												view: "textarea",
 												id: self.componentIds.labelFormat,
-												height: 100,
-												on: {
-													onBeforeRender: function (data) {
-														console.log('onBeforeRender: ', data);
-													}
-												}
+												height: 100
 											},
 											{
 												view: "label",
-												label: "Select field item to generate format."
+												label: self.labels.define_label.selectFieldToGenerate
 											},
 											{
 												view: "label",
-												label: "<b>{0}</b>".replace("{0}", "Fields")
+												label: "<b>{0}</b>".replace("{0}", self.labels.define_label.labelFields)
 											},
 											{
 												view: 'list',
 												id: self.componentIds.fieldsList,
 												width: 500,
-												autoheight: true,
+												maxHeight: 180,
 												select: false,
 												template: '#label#',
 												on: {
@@ -91,7 +103,7 @@ steal(
 											{
 												cols: [
 													{
-														view: "button", id: self.componentIds.saveButton, label: "Save", type: "form", width: 120, click: function () {
+														view: "button", id: self.componentIds.saveButton, label: self.labels.common.save, type: "form", width: 120, click: function () {
 															var labelFormat = $$(self.componentIds.labelFormat).getValue();
 															$$(self.componentIds.fieldsList).data.each(function (d) {
 																labelFormat = labelFormat.replace(new RegExp('{' + d.label + '}', 'g'), '{' + d.id + '}');
@@ -102,7 +114,7 @@ steal(
 														}
 													},
 													{
-														view: "button", value: "Cancel", width: 100, click: function () {
+														view: "button", value: self.labels.common.cancel, width: 100, click: function () {
 															this.getTopParentView().hide();
 														}
 													}
@@ -124,7 +136,7 @@ steal(
 												.fail(function (err) {
 													webix.message({
 														type: "error",
-														text: 'System could not load label format data'
+														text: AD.lang.label.getLabel('ab.define_label.loadError')
 													});
 												})
 												.then(function (labelFormat) {

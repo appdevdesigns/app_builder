@@ -24,7 +24,28 @@ steal(
 								sortForm: 'ab-sort-form'
 							};
 
+							this.initMultilingualLabels();
 							this.initWebixControls();
+						},
+
+						initMultilingualLabels: function () {
+							var self = this;
+							self.labels = {};
+							self.labels.common = {};
+							self.labels.sort_fields = {};
+
+							self.labels.sort_fields.addNewSort = AD.lang.label.getLabel('ab.sort_fields.addNewSort') || "Add new sort";
+							self.labels.sort_fields.selectField = AD.lang.label.getLabel('ab.sort_fields.selectField') || "Please select field";
+
+							self.labels.sort_fields.textAsc = AD.lang.label.getLabel('ab.sort_fields.textAsc') || "A -> Z";
+							self.labels.sort_fields.textDesc = AD.lang.label.getLabel('ab.sort_fields.textDesc') || "Z -> A";
+							self.labels.sort_fields.dateAsc = AD.lang.label.getLabel('ab.sort_fields.dateAsc') || "Before -> After";
+							self.labels.sort_fields.dateDesc = AD.lang.label.getLabel('ab.sort_fields.dateDesc') || "After -> Before";
+							self.labels.sort_fields.numberAsc = AD.lang.label.getLabel('ab.sort_fields.numberAsc') || "1 -> 9";
+							self.labels.sort_fields.numberDesc = AD.lang.label.getLabel('ab.sort_fields.numberDesc') || "9 -> 1";
+							self.labels.sort_fields.booleanAsc = AD.lang.label.getLabel('ab.sort_fields.booleanAsc') || "Checked -> Unchecked";
+							self.labels.sort_fields.booleanDesc = AD.lang.label.getLabel('ab.sort_fields.booleanDesc') || "Unchecked -> Checked";
+							
 						},
 
 						initWebixControls: function () {
@@ -43,7 +64,7 @@ steal(
 										view: "form",
 										autoheight: true,
 										elements: [{
-											view: "button", value: "Add a sort", click: function () {
+											view: "button", value: self.labels.sort_fields.addNewSort, click: function () {
 												this.getTopParentView().addNewSort();
 												this.getTopParentView().callChangeEvent();
 											}
@@ -100,23 +121,23 @@ steal(
 															case "list":
 															case "multiselect":
 																options = [
-																	{ id: 'asc', value: 'A -> Z' },
-																	{ id: 'desc', value: 'Z -> A' }];
+																	{ id: 'asc', value: self.labels.sort_fields.textAsc },
+																	{ id: 'desc', value: self.labels.sort_fields.textDesc }];
 																break;
 															case "date":
 																options = [
-																	{ id: 'asc', value: 'Before -> After' },
-																	{ id: 'desc', value: 'After -> Before' }];
+																	{ id: 'asc', value: self.labels.sort_fields.dateAsc },
+																	{ id: 'desc', value: self.labels.sort_fields.dateDesc }];
 																break;
 															case "number":
 																options = [
-																	{ id: 'asc', value: '1 -> 9' },
-																	{ id: 'desc', value: '9 -> 1' }];
+																	{ id: 'asc', value: self.labels.sort_fields.numberAsc },
+																	{ id: 'desc', value: self.labels.sort_fields.numberDesc }];
 																break;
 															case "boolean":
 																options = [
-																	{ id: 'asc', value: 'Checked -> Unchecked' },
-																	{ id: 'desc', value: 'Unchecked -> Checked' }];
+																	{ id: 'asc', value: self.labels.sort_fields.booleanAsc },
+																	{ id: 'desc', value: self.labels.sort_fields.booleanDesc }];
 																break;
 														}
 
@@ -131,7 +152,7 @@ steal(
 												}
 											},
 											{
-												view: "segmented", width: 200, options: [{ id: '', value: 'Please select field' }],
+												view: "segmented", width: 200, options: [{ id: '', value: self.labels.sort_fields.selectField }],
 												on: {
 													onChange: function (newv, oldv) { // 'asc' or 'desc' values
 														$$(self.componentIds.sortPopup).sort();
