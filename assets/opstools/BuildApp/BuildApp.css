@@ -23,6 +23,14 @@
 	font-weight: bold;
 }
 
+/* Webix datatable */
+/* Last column */
+.ab-main-container .webix_column.webix_last > div,
+.ab-main-container .webix_hs_center td.webix_last,
+.ab-main-container .ab-app-list-descriptionwebix_hs_right td.webix_last {
+	border-right-width: 1px !important;
+}
+
 /* Webix selected item */
 .webix_list_item.webix_selected,
 .webix_column>div.webix_cell_select,
