@@ -87,45 +87,141 @@ module.exports = {
     objectToModel: function(objectID) {
         var dfd = AD.sal.Deferred();
         
-        ABObject.find({ id: objectID })
-            .populate('columns')
-            .populate('application')
-            .then(function(list) {
-                var obj = list[0];
-                var fullName = obj.application.name + '_' + obj.name;
+        var appName, objName, fullName;
+        var columns = [];
+        
+        var modelsPath = sails.config.paths.models; // "/api/models"
+        var fullPath, fullPathTrans;
+        
+        async.series([
+            // Find object info
+            function(next) {
+                ABObject.find({ id: objectID })
+                .populate('columns')
+                .populate('application')
+                .then(function(list) {
+                    var obj = list[0];
+                    if (!obj) throw new Error('invalid object id');
+                    
+                    // Only numbers and alphabets will be used
+                    appName = obj.application.name.replace(/[^a-z0-9]/ig, '');
+                    objName = obj.name.replace(/[^a-z0-9]/ig, '');
+                    columns = obj.columns;
+                    fullName = 'AB_' + appName + '_' + objName;
+                    
+                    fullPath = path.join(modelsPath, fullName) + '.js';
+                    fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
+                    
+                    next();
+                    return null;
+                })
+                .catch(function(err) {
+                    next(err);
+                });
+            },
+            
+            // Delete old model definition
+            function(next) {
+                async.each([fullPath, fullPathTrans], function(target, ok) {
+                    // Delete file if it exists
+                    fs.unlink(target, function(err) {
+                        // Ignore errors. If file does not exist, that's fine.
+                        ok();
+                    });
+                }, function(err) {
+                    next();
+                });
+            },
+            
+            // Generate model definitions with appdev-cli
+            function(next) {
+                var cliCommand = path.join(
+                    'node_modules', 'app_builder',
+                    'node_modules', 'appdev',
+                    'bin', 'appDev.js'
+                );
+                var cliParams = [ 
+                    'resource', // appdev-cli command
+                    appName,
+                    fullName,
+                    'connection:appBuilder', // Sails connection name
+                    'tablename:' + fullName.toLowerCase()
+                ];
+                for (var i=0; i<columns.length; i++) {
+                    var col = columns[i];
+                    var colString = col.name + ':' + col.type;
+                    if (col.supportMultilingual) {
+                        colString += ':multilingual';
+                    }
+                    else if (col.linkToObject) {
+                        colString += ':model:' + col.linkToObject;
+                    }
+                    cliParams.push(colString);
+                }
                 
-                if (!obj) throw new Error('invalid object id');
-                
+                AD.spawn.command({
+                    command: cliCommand,
+                    options: cliParams
+                })
+                .fail(next)
+                .done(function() {
+                    next();
+                });
+            },
+            
+            /*
+            // Render sails model definition
+            function(next) {
                 sails.renderView(path.join('app_builder', 'model'), {
                     layout: false,
-                    modelName: 'AB_' + fullName,
+                    modelName: fullName,
                     tableName: fullName,
                     columns: obj.columns
                 }, function(err, str) {
                     if (err) {
-                        dfd.reject(err);
+                        next(err);
                     } else {
-                        // Normally this is "/api/models"
-                        var modelsPath = sails.config.paths.models;
                         
                         fs.writeFile(
-                            path.join(modelsPath, 'AB_' + fullName + '.js'),
+                            path.join(modelsPath, fullName + '.js'),
                             str,
                             function(err) {
-                                if (err) dfd.reject(err);
+                                if (err) next(err);
                                 else {
-                                    dfd.resolve(str);
+                                    next();
                                 }
                             }
                         );
                     }
                 });
-                
-                return null;
-            })
-            .catch(function(err) {
-                dfd.reject(err);
-            });
+            },
+            */
+            
+            // Patch model definition
+            function(next) {
+                async.each([fullPath, fullPathTrans], function(target, ok) {
+                    fs.readFile(target, 'utf8', function(err, data) {
+                        // Ignore errors. If file does not exist, that's fine.
+                        if (err) {
+                            ok();
+                        } else {
+                            var newData = data.replace(
+                                /module.exports = {/i,
+                                "module.exports = {\n" +
+                                "  migrate: 'alter',"
+                            );
+                            fs.writeFile(target, newData, ok);
+                        }
+                    });
+                }, function(err) {
+                    next();
+                });
+            }
+        
+        ], function(err) {
+            if (err) dfd.reject(err);
+            else dfd.resolve();
+        });
             
         return dfd;
     },
