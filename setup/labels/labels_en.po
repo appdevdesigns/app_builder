@@ -813,7 +813,30 @@ msgstr "Hide all"
 
 #. path: app_builder
 #. code: en
-#. key: ab.view.interface
+#. key: ab.interface.page
 msgid "Interface"
 msgstr "Interface"
 
+#. path: app_builder
+#. code: en
+#. key: ab.interface.addNewPage
+msgid "Add new page"
+msgstr "Add new page"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.placeholderPageName
+msgid "Page name"
+msgstr "Page name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.delete.title
+msgid "Delete page"
+msgstr "Delete page"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.delete.message
+msgid "Do you want to delete <b>{0}</b>?";
+msgstr "Do you want to delete <b>{0}</b>?";

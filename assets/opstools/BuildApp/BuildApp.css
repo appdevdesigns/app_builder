@@ -121,6 +121,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	top: 0px;
 	right: 5px;
 	display: none;
+	cursor: pointer;
 }
 
 /* Object datatable */

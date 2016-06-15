@@ -335,9 +335,6 @@ steal(
 											type: {
 												height: 40, // Defines item height
 											},
-											ready: function () {
-												webix.extend(this, webix.ProgressBar);
-											},
 											on: {
 												onAfterLoad: function () {
 													var curSelectivity = self.getCurSelectivityNode(),
@@ -404,8 +401,7 @@ steal(
 								},
 								on: {
 									onHide: function () {
-										if ($$(self.webixUiId.objectDatatable).showProgress)
-											$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
+										$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
 										// TODO : Call Save change values to server
 
@@ -425,8 +421,7 @@ steal(
 										// Resize row height
 										self.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
 
-										if ($$(self.webixUiId.objectDatatable).hideProgress)
-											$$(self.webixUiId.objectDatatable).hideProgress();
+										$$(self.webixUiId.objectDatatable).hideProgress();
 
 										self.data.selectedCell = null
 										$$(self.webixUiId.connectObjectDataList).unselectAll();
@@ -460,9 +455,6 @@ steal(
 										editaction: "custom",
 										select: "cell",
 										dragColumn: true,
-										ready: function () {
-											webix.extend(this, webix.ProgressBar);
-										},
 										on: {
 											onAfterRender: function (data) {
 												// Initial multi-combo
@@ -578,8 +570,7 @@ steal(
 													// Show connect data windows popup
 													$$(self.webixUiId.addConnectObjectDataPopup).show();
 
-													if ($$(self.webixUiId.connectObjectDataList).showProgress)
-														$$(self.webixUiId.connectObjectDataList).showProgress({ type: 'icon' });
+													$$(self.webixUiId.connectObjectDataList).showProgress({ type: 'icon' });
 
 													$$(self.webixUiId.connectObjectDataList).define('multiselect', columnData.isMultipleRecords);
 
@@ -628,8 +619,7 @@ steal(
 															$$(self.webixUiId.connectObjectDataList).parse(mockData);
 														}
 													], function () {
-														if ($$(self.webixUiId.connectObjectDataList).hideProgress)
-															$$(self.webixUiId.connectObjectDataList).hideProgress();
+														$$(self.webixUiId.connectObjectDataList).hideProgress();
 													});
 
 													return false;
@@ -678,6 +668,13 @@ steal(
 							};
 						},
 
+						webix_ready: function () {
+							var self = this;
+
+							webix.extend($$(self.webixUiId.objectDatatable), webix.ProgressBar);
+							webix.extend($$(self.webixUiId.connectObjectDataList), webix.ProgressBar);
+						},
+
 						getUIDefinition: function () {
 							return this.data.definition;
 						},
@@ -687,8 +684,7 @@ steal(
 
 							self.data.objectId = id;
 
-							if ($$(self.webixUiId.objectDatatable).showProgress)
-								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 							self.resetState();
 
@@ -788,8 +784,7 @@ steal(
 									// Register add new column callback
 									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo, removedListId) {
 
-										if ($$(self.webixUiId.objectDatatable).showProgress)
-											$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 										columnInfo.label = columnInfo.name;
 
@@ -860,8 +855,8 @@ steal(
 
 									// Register save label format
 									$$(self.webixUiId.defineLabelPopup).registerSaveLabelEvent(function (labelFormat) {
-										if ($$(self.webixUiId.objectDatatable).showProgress)
-											$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 										var currentObject = self.data.objectList.filter(function (o) {
 											return o.id == self.data.objectId;
@@ -871,14 +866,12 @@ steal(
 
 										currentObject.save()
 											.fail(function (err) {
-												if ($$(self.webixUiId.objectDatatable).hideProgress)
-													$$(self.webixUiId.objectDatatable).hideProgress();
+												$$(self.webixUiId.objectDatatable).hideProgress();
 											})
 											.then(function () {
 												$$(self.webixUiId.defineLabelPopup).hide();
 
-												if ($$(self.webixUiId.objectDatatable).hideProgress)
-													$$(self.webixUiId.objectDatatable).hideProgress();
+												$$(self.webixUiId.objectDatatable).hideProgress();
 											});
 									});
 
@@ -887,15 +880,12 @@ steal(
 										$$('ab-object-add-new-popup').show(); // Mark : show add new object popup in ObjectList page
 									});
 
-									if ($$(self.webixUiId.objectDatatable).hideProgress)
-										$$(self.webixUiId.objectDatatable).hideProgress();
+									$$(self.webixUiId.objectDatatable).hideProgress();
 
 								});
 							}
 							else {
-								if ($$(self.webixUiId.objectDatatable).hideProgress)
-									$$(self.webixUiId.objectDatatable).hideProgress();
-
+								$$(self.webixUiId.objectDatatable).hideProgress();
 								$$(self.webixUiId.objectDatatable).hide();
 							}
 
@@ -1261,8 +1251,7 @@ steal(
 						reorderColumns: function () {
 							var self = this;
 
-							if ($$(self.webixUiId.objectDatatable).showProgress)
-								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 							var columnIndexes = [];
 
@@ -1283,12 +1272,12 @@ steal(
 							self.Model.ABObject.sortColumns(self.data.objectId, columnIndexes, function (err, result) {
 								if (err) {
 									// TODO : show error message
+									return;
 								}
 
 								self.refreshPopupData();
 
-								if ($$(self.webixUiId.objectDatatable).hideProgress)
-									$$(self.webixUiId.objectDatatable).hideProgress();
+								$$(self.webixUiId.objectDatatable).hideProgress();
 							});
 						},
 

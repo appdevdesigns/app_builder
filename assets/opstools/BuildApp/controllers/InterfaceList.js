@@ -1,6 +1,7 @@
-
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/models/ABPage.js',
+	'opstools/BuildApp/controllers/webix_custom_components/EditTree.js',
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -12,6 +13,15 @@ steal(
 
 						init: function (element, options) {
 							var self = this;
+
+							options = AD.defaults({
+								selectedPageEvent: 'AB_Page.Selected',
+								updatedPageEvent: 'AB_Page.Updated'
+							}, options);
+							this.options = options;
+
+							this.Model = AD.Model.get('opstools.BuildApp.ABPage');
+
 							self.data = {};
 
 							this.webixUiId = {
@@ -25,22 +35,8 @@ steal(
 								addNewParentList: 'ab-interface-add-new-parent-list'
 							};
 
-							this.rules = {};
-							this.rules.preventDuplicateName = function (value) {
-								// TODO: Check duplicate
-								var duplicatePageName = jQuery.grep(self.data.pageList, function (m, index) {
-									return m.name.toLowerCase().trim() == value.toLowerCase();
-								});
-
-								if (duplicatePageName && duplicatePageName.length > 0) {
-									return false;
-								}
-								else {
-									return true;
-								}
-							};
-
 							self.initMultilingualLabels();
+							self.initControllers();
 
 							self.initWebixUI();
 						},
@@ -56,11 +52,26 @@ steal(
 							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
 							self.labels.common.delete = AD.lang.label.getLabel('ab.common.delete') || "Delete";
 							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
+							self.labels.common.renameErrorMessage = AD.lang.label.getLabel('ab.common.rename.error') || "System could not rename <b>{0}</b>.";
+							self.labels.common.renameSuccessMessage = AD.lang.label.getLabel('ab.common.rename.success') || "Rename to <b>{0}</b>.";
+							self.labels.common.deleteErrorMessage = AD.lang.label.getLabel('ab.common.delete.error') || "System could not delete <b>{0}</b>.";
+							self.labels.common.deleteSuccessMessage = AD.lang.label.getLabel('ab.common.delete.success') || "<b>{0}</b> is deleted.";
 							self.labels.common.createErrorMessage = AD.lang.label.getLabel('ab.common.create.error') || "System could not create <b>{0}</b>.";
 							self.labels.common.createSuccessMessage = AD.lang.label.getLabel('ab.common.create.success') || "<b>{0}</b> is created.";
 
 							self.labels.interface.addNewPage = AD.lang.label.getLabel('ab.interface.addNewPage') || 'Add new page';
 							self.labels.interface.placeholderPageName = AD.lang.label.getLabel('ab.interface.placeholderPageName') || 'Page name';
+
+							self.labels.interface.confirmDeleteTitle = AD.lang.label.getLabel('ab.interface.delete.title') || "Delete page";
+							self.labels.interface.confirmDeleteMessage = AD.lang.label.getLabel('ab.interface.delete.message') || "Do you want to delete <b>{0}</b>?";
+						},
+
+						initControllers: function () {
+							this.controllers = {};
+
+							var EditTree = AD.Control.get('opstools.BuildApp.EditTree');
+
+							this.controllers.EditTree = new EditTree();
 						},
 
 						initWebixUI: function () {
@@ -70,10 +81,13 @@ steal(
 								rows: [
 									{
 										id: self.webixUiId.interfaceTree,
-										view: 'tree',
+										view: 'edittree',
 										width: 250,
 										select: true,
-										drag: true,
+										editaction: 'custom',
+										editable: true,
+										editor: "text",
+										editValue: "label",
 										template: "<div class='ab-page-list-item'>" +
 										"{common.icon()} {common.folder()} #label#" +
 										"<div class='ab-page-list-edit'>" +
@@ -83,21 +97,70 @@ steal(
 										type: {
 											iconGear: "<span class='webix_icon fa-cog'></span>"
 										},
-										ready: function () {
-											webix.extend(this, webix.ProgressBar);
-										},
 										on: {
 											onAfterSelect: function (id) {
 												// Fire select page event
-												// self.element.trigger(self.options.selectedPageEvent, id);
+												self.element.trigger(self.options.selectedPageEvent, id);
 
 												// Show gear icon
-												$(this.getItemNode(id)).find('.ab-page-list-edit').show();
+												self.showGear(id);
+											},
+											onAfterOpen: function () {
+												var ids = this.getSelectedId(true);
+
+												// Show gear icon
+												ids.forEach(function (id) {
+													self.showGear(id);
+												});
+											},
+											onAfterClose: function () {
+												var ids = this.getSelectedId(true);
+
+												// Show gear icon
+												ids.forEach(function (id) {
+													self.showGear(id);
+												});
+											},
+											onAfterEditStop: function (state, editor, ignoreUpdate) {
+												if (state.value != state.old) {
+													$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
+
+													var selectedPage = self.data.pages.filter(function (item, index, list) { return item.id == editor.id; })[0];
+													selectedPage.attr('label', state.value);
+
+													// Call server to rename
+													selectedPage.save()
+														.fail(function () {
+															$$(self.webixUiId.interfaceTree).hideProgress();
+
+															webix.message({
+																type: "error",
+																text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
+															});
+
+															AD.error.log('Page List : Error rename page data', { error: err });
+														})
+														.then(function () {
+															if (selectedPage.translate) selectedPage.translate();
+
+															// Show success message
+															webix.message({
+																type: "success",
+																text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
+															});
+
+															// Show gear icon
+															$($$(self.webixUiId.interfaceTree).getItemNode(editor.id)).find('.ab-object-list-edit').show();
+
+															$$(self.webixUiId.interfaceTree).hideProgress();
+
+															self.element.trigger(self.options.updatedPageEvent, { pagesList: self.data.pages });
+														});
+												}
 											}
 										},
 										onClick: {
 											"ab-page-list-edit": function (e, id, trg) {
-												console.log('self.webixUiId.pageListMenuPopup');
 												// Show menu
 												$$(self.webixUiId.pageListMenuPopup).show(trg);
 
@@ -133,66 +196,68 @@ steal(
 									autoheight: true,
 									select: false,
 									on: {
-										// 'onItemClick': function (timestamp, e, trg) {
-										// 	var selectedObject = $$(self.webixUiId.objectList).getSelectedItem();
+										'onItemClick': function (timestamp, e, trg) {
+											var selectedPage = $$(self.webixUiId.interfaceTree).getSelectedItem();
 
-										// 	switch (trg.textContent.trim()) {
-										// 		case self.labels.common.rename:
-										// 			// Show textbox to rename
-										// 			$$(self.webixUiId.objectList).edit(selectedObject.id);
+											switch (trg.textContent.trim()) {
+												case self.labels.common.rename:
+													// Show textbox to rename
+													$$(self.webixUiId.interfaceTree).edit(selectedPage.id);
 
-										// 			break;
-										// 		case self.labels.common.delete:
-										// 			webix.confirm({
-										// 				title: self.labels.object.confirmDeleteTitle,
-										// 				ok: self.labels.common.yes,
-										// 				cancel: self.labels.common.no,
-										// 				text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedObject.name),
-										// 				callback: function (result) {
-										// 					if (result) {
+													break;
+												case self.labels.common.delete:
+													webix.confirm({
+														title: self.labels.interface.confirmDeleteTitle,
+														ok: self.labels.common.yes,
+														cancel: self.labels.common.no,
+														text: self.labels.interface.confirmDeleteMessage.replace('{0}', selectedPage.label),
+														callback: function (result) {
+															if (result) {
+																$$(self.webixUiId.interfaceTree).showProgress({ type: "icon" });
 
-										// 						$$(self.webixUiId.objectList).showProgress({ type: "icon" });
+																var deletedPages = self.data.pages.filter(function (p) { return p.id == selectedPage.id; });
 
-										// 						// Call server to delete object data
-										// 						self.Object.destroy(selectedObject.id)
-										// 							.fail(function (err) {
-										// 								$$(self.webixUiId.objectList).hideProgress();
+																// Call server to delete object data
+																deletedPages[0].destroy()
+																	.fail(function (err) {
+																		$$(self.webixUiId.interfaceTree).hideProgress();
 
-										// 								webix.message({
-										// 									type: "error",
-										// 									text: self.labels.common.deleteErrorMessage.replace("{0}", selectedObject.name)
-										// 								});
+																		webix.message({
+																			type: "error",
+																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedPage.name)
+																		});
 
-										// 								AD.error.log('Object List : Error delete object data', { error: err });
-										// 							})
-										// 							.then(function (result) {
-										// 								self.data.objectList.forEach(function (item, index, list) {
-										// 									if (item && item.id === selectedObject.id)
-										// 										self.data.objectList.splice(index, 1);
-										// 								});
+																		AD.error.log('Pages List : Error delete page data', { error: err });
+																	})
+																	.then(function (result) {
+																		self.data.pages.forEach(function (item, index, list) {
+																			if (item && item.id === result.id)
+																				self.data.pages.splice(index, 1);
+																		});
 
-										// 								$$(self.webixUiId.objectList).remove(selectedObject.id);
+																		$$(self.webixUiId.interfaceTree).remove(result.id);
+																		$$(self.webixUiId.interfaceTree).unselectAll();
 
-										// 								self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList.attr() });
+																		self.element.trigger(self.options.updatedPageEvent, { pagesList: self.data.pages });
 
-										// 								webix.message({
-										// 									type: "success",
-										// 									text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedObject.name)
-										// 								});
+																		webix.message({
+																			type: "success",
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', result.label)
+																		});
 
-										// 								$$(self.webixUiId.objectList).hideProgress();
+																		$$(self.webixUiId.interfaceTree).hideProgress();
 
-										// 							});
-										// 					}
+																	});
+															}
 
-										// 				}
-										// 			});
+														}
+													});
 
-										// 			break;
-										// 	}
+													break;
+											}
 
-										// 	$$(self.webixUiId.objectListMenuPopup).hide();
-										// }
+											$$(self.webixUiId.pageListMenuPopup).hide();
+										}
 									}
 								}
 							}).hide(); // end Edit page menu popup
@@ -212,19 +277,29 @@ steal(
 
 										var options = [{ id: '', value: '[Root page]' }];
 										$$(self.webixUiId.interfaceTree).data.each(function (d) {
-											var val = d.value;
+											if (d.$level == 1) { // Only Root pages
+												var val = d.value;
+												options.push({ id: d.id, value: val });
+											}
 
-											if (d.$level > 1)
-												val = '- '.repeat(d.$level - 1) + val; // Include - to sub page
+											// if (d.$level > 1)
+											// 	val = '- '.repeat(d.$level - 1) + val; // Include - to sub page
 
-											options.push({ id: d.id, value: val });
+											// options.push({ id: d.id, value: val });
 										});
 
 										$$(self.webixUiId.addNewParentList).define('options', options);
 
 										// Default select parent page
-										if ($$(self.webixUiId.interfaceTree).getSelectedId())
-											$$(self.webixUiId.addNewParentList).setValue($$(self.webixUiId.interfaceTree).getSelectedId());
+										var selectedPage = $$(self.webixUiId.interfaceTree).getSelectedItem();
+										if (selectedPage) {
+											var selectValue = selectedPage.id;
+
+											if (selectedPage.$level > 1)
+												selectValue = selectedPage.$parent;
+
+											$$(self.webixUiId.addNewParentList).setValue(selectValue);
+										}
 										else
 											$$(self.webixUiId.addNewParentList).setValue('');
 
@@ -248,97 +323,136 @@ steal(
 														var parentPageId = $$(self.webixUiId.addNewForm).elements['parent'].getValue(),
 															newPageName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
 
-														if ($$(self.webixUiId.interfaceTree).showProgress)
-															$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
+														$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
 														var newPage = {
+															application: self.data.appId,
 															name: newPageName,
-															label: newPageName,
-															parentPageId: parentPageId
+															label: newPageName
 														};
 
-														// // TODO: Add new page to server
-														// self.Model.create(newPage).fail(function () {
-														// 	$$(self.webixUiId.interfaceTree).hideProgress();
+														if (parentPageId)
+															newPage.parent = parentPageId;
 
-														// 	webix.message({
-														// 		type: "error",
-														// 		text: self.labels.common.createErrorMessage.replace("{0}", newPage.name)
-														// 	});
-
-														// 	AD.error.log('Page : Error create page data', { error: err });
-
-														// }).then(function (result) {
-														$$(self.webixUiId.addNewPopup).hide();
-
-														// if (result.translate) result.translate();
-
-														var resultId = webix.uid(); // TODO: result.id
-
-														$$(self.webixUiId.interfaceTree).add({
-															id: resultId,
-															value: newPage.label // TODO
-														}, -1, newPage.parentPageId || null);
-
-														if (newPage.parentPageId)
-															$$(self.webixUiId.interfaceTree).open(newPage.parentPageId, true);
-
-														$$(self.webixUiId.interfaceTree).unselectAll();
-														$$(self.webixUiId.interfaceTree).select(resultId);
-
-														if ($$(self.webixUiId.interfaceTree).hideProgress)
+														// Call create new page to server
+														self.Model.create(newPage).fail(function () {
 															$$(self.webixUiId.interfaceTree).hideProgress();
 
-														// // Show success message
-														webix.message({
-															type: "success",
-															text: self.labels.common.createSuccessMessage.replace('{0}', newPage.name)
+															webix.message({
+																type: "error",
+																text: self.labels.common.createErrorMessage.replace("{0}", newPage.label)
+															});
+
+															AD.error.log('Page : Error create page data', { error: err });
+
+														}).then(function (result) {
+															$$(self.webixUiId.addNewPopup).hide();
+
+															if (result.translate) result.translate();
+
+															$$(self.webixUiId.interfaceTree).add({
+																id: result.id,
+																value: result.name,
+																label: result.label
+															}, -1, result.parent ? result.parent.id : null);
+
+															if (result.parent)
+																$$(self.webixUiId.interfaceTree).open(result.parent.id, true);
+
+															$$(self.webixUiId.interfaceTree).unselectAll();
+															$$(self.webixUiId.interfaceTree).select(result.id);
+
+															$$(self.webixUiId.interfaceTree).hideProgress();
+
+															// Show success message
+															webix.message({
+																type: "success",
+																text: self.labels.common.createSuccessMessage.replace('{0}', newPage.label)
+															});
 														});
-														// });
 
 													}
 												},
 												{ view: "button", value: self.labels.common.cancel, click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
 											]
 										}
-									],
-									// rules: {
-									// 	name: self.rules.preventDuplicateName
-									// }
-
+									]
 								}
 							}).hide();
+						},
+
+						webix_ready: function () {
+							var self = this;
+
+							webix.extend($$(self.webixUiId.interfaceTree), webix.ProgressBar);
 						},
 
 						getUIDefinition: function () {
 							return this.data.definition;
 						},
 
-						open: function () {
+						loadPages: function (appId) {
 							var self = this;
 
-							if ($$(self.webixUiId.interfaceTree).showProgress)
-								$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
+							self.data.appId = appId;
 
-							// TODO: load page data
-							$$(self.webixUiId.interfaceTree).parse([
-								{
-									id: "1", open: true, value: "Page One", label: "Page One", data: [
-										{ id: "11", value: "Part 1.1", label: "Part 1.1" },
-										{ id: "12", value: "Part 1.2", label: "Part 1.2" },
-										{ id: "13", value: "Part 1.3", label: "Part 1.3" }
-									]
-								},
-								{
-									id: "2", value: "Page Two", label: "Page Two", data: [
-										{ id: "21", value: "Part 2.1", label: "Part 2.1" },
-										{ id: "22", value: "Part 2.2", label: "Part 2.2" }
-									]
-								}
-							]);
+							$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
-							if ($$(self.webixUiId.interfaceTree).hideProgress)
-								$$(self.webixUiId.interfaceTree).hideProgress();
+							self.Model.findAll({ application: appId })
+								.fail(function (err) {
+									$$(self.webixUiId.interfaceTree).hideProgress();
+
+									webix.message({
+										type: "error",
+										text: err
+									});
+
+									AD.error.log('Page list : Error loading page list data', { error: err });
+								})
+								.then(function (data) {
+									if (data && data.length > 0) {
+										data.forEach(function (d) {
+											if (d.translate)
+												d.translate();
+										});
+									}
+
+									self.data.pages = data;
+
+									// Show data to tree component
+									var treeData = $.map(data.attr(), function (d) {
+										if (!d.parent) { // Get root page
+											var pageItem = {
+												id: d.id,
+												value: d.name,
+												label: d.label
+											};
+
+											// Get children pages
+											pageItem.data = $.map(data.attr(), function (subD) {
+												if (subD.parent && subD.parent.id == d.id) {
+													return {
+														id: subD.id,
+														value: subD.name,
+														label: subD.label
+													}
+												}
+											});
+
+											return pageItem;
+										}
+									});
+
+									$$(self.webixUiId.interfaceTree).parse(treeData);
+
+									$$(self.webixUiId.interfaceTree).hideProgress();
+								})
+						},
+
+						showGear: function (id) {
+							var self = this;
+
+							$($$(self.webixUiId.interfaceTree).getItemNode(id)).find('.ab-page-list-edit').show();
 						}
 
 

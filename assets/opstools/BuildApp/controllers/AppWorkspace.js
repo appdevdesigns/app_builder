@@ -47,6 +47,9 @@ steal(
 
 							webix.ready(function () {
 								self.initWebixUI();
+
+								self.controllers.ObjectPage.webix_ready();
+								self.controllers.InterfacePage.webix_ready();
 							});
 						},
 
@@ -100,13 +103,13 @@ steal(
 											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
 											{ fillspace: true },
 											{
-												view: "button", 
+												view: "button",
 												type: "iconButton",
 												icon: "refresh",
-												label: self.labels.application.synchronize, 
+												label: self.labels.application.synchronize,
 												width: 250,
 												//autowidth: true,
-												align: "right", 
+												align: "right",
 												click: function () {
 													self.element.trigger(self.options.synchronizeEvent, {});
 												}
@@ -120,7 +123,8 @@ steal(
 									},
 									{ height: 10 },
 									{
-										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.objectView, multiview: true, options: [
+										view: "tabbar", id: self.webixUiId.appWorkspaceMenu, value: self.webixUiId.objectView, multiview: true,
+										options: [
 											{ id: self.webixUiId.objectView, value: self.labels.object.title, width: 120 },
 											{ id: self.webixUiId.interfaceView, value: self.labels.interface.title, width: 120 }
 										],
@@ -128,7 +132,7 @@ steal(
 											onChange: function (newv, oldv) {
 												if (newv != oldv) {
 													if (newv == self.webixUiId.interfaceView) {
-														self.controllers.InterfacePage.open();
+														self.controllers.InterfacePage.loadData(self.data.app.id);
 													}
 												}
 											}
@@ -154,6 +158,9 @@ steal(
 							$$(self.webixUiId.appNameLabel).refresh();
 
 							self.controllers.ObjectPage.setAppId(app.id);
+
+							// FOR TEST
+							$$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 						},
 
 						resize: function (height) {

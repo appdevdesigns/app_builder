@@ -7,7 +7,7 @@ steal(
 
                     // Namespacing conventions:
                     // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-                    AD.Control.extend('opstools.BuildApp.EditList', {
+                    AD.Control.extend('opstools.BuildApp.EditTree', {
 
 
                         init: function (element, options) {
@@ -25,8 +25,8 @@ steal(
                         initWebixControls: function () {
 
                             webix.protoUI({
-                                name: "editlist"
-                            }, webix.EditAbility, webix.ui.list);
+                                name: "edittree"
+                            }, webix.EditAbility, webix.ui.tree);
 
                         }
                     });

@@ -122,9 +122,6 @@ steal(
 										type: {
 											iconGear: "<span class='webix_icon fa-cog'></span>"
 										},
-										ready: function () {
-											webix.extend(this, webix.ProgressBar);
-										},
 										on: {
 											onAfterSelect: function (id) {
 												// Fire select object event
@@ -380,6 +377,12 @@ steal(
 							}).hide();
 						},
 
+						webix_ready: function () {
+							var self = this;
+
+							webix.extend($$(self.webixUiId.objectList), webix.ProgressBar);
+						},
+
 						getUIDefinition: function () {
 							return this.data.definition;
 						},
@@ -389,8 +392,7 @@ steal(
 
 							self.data.appId = appId;
 
-							if ($$(self.webixUiId.objectList).showProgress)
-								$$(self.webixUiId.objectList).showProgress({ type: "icon" });
+							$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
 							// Get object list from server
 							self.Model.findAll({ application: appId })
@@ -419,17 +421,14 @@ steal(
 						refreshObjectList: function () {
 							var self = this;
 
-							if ($$(self.webixUiId.objectList).showProgress)
-								$$(self.webixUiId.objectList).showProgress({ type: "icon" });
+							$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
 							$$(self.webixUiId.objectList).clearAll();
 							$$(self.webixUiId.objectList).parse(self.data.objectList.attr());
 							$$(self.webixUiId.objectList).refresh();
 							$$(self.webixUiId.objectList).unselectAll();
 
-
-							if ($$(self.webixUiId.objectList).hideProgress)
-								$$(self.webixUiId.objectList).hideProgress();
+							$$(self.webixUiId.objectList).hideProgress();
 						},
 
 						resetState: function () {

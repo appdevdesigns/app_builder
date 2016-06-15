@@ -75,6 +75,13 @@ steal(
 							return this.data.definition;
 						},
 
+						webix_ready: function () {
+							var self = this;
+
+							self.controllers.ObjectList.webix_ready();
+							self.controllers.ObjectWorkspace.webix_ready();
+						},
+
 						setAppId: function (appId) {
 							var self = this;
 

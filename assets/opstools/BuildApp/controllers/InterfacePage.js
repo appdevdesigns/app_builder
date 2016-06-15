@@ -14,8 +14,8 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								selectedInterfacePageEvent: 'AB_Interface_Page.Selected',
-								updatedObjectEvent: 'AB_Interface.Updated'
+								selectedPageEvent: 'AB_Page.Selected',
+								updatedPageEvent: 'AB_Page.Updated'
 							}, options);
 							this.options = options;
 
@@ -35,7 +35,7 @@ steal(
 
 							var InterfaceList = AD.Control.get('opstools.BuildApp.InterfaceList');
 
-							self.controllers.InterfaceList = new InterfaceList(self.element, { selectedInterfacePageEvent: self.options.selectedObjectEvent, updatedObjectEvent: self.options.selectedInterfacePageEvent });
+							self.controllers.InterfaceList = new InterfaceList(self.element, { selectedPageEvent: self.options.selectedPageEvent, updatedPageEvent: self.options.updatedPageEvent });
 						},
 
 						initWebixUI: function () {
@@ -54,17 +54,27 @@ steal(
 						},
 
 						initEvents: function () {
+							var self = this;
 
+							self.controllers.InterfaceList.on(self.options.selectedPageEvent, function (event, id) {
+								console.log('selected page: ', id);
+							});
 						},
 
 						getUIDefinition: function () {
 							return this.data.definition;
 						},
 
-						open: function () {
+						webix_ready: function () {
 							var self = this;
 
-							self.controllers.InterfaceList.open();
+							self.controllers.InterfaceList.webix_ready();
+						},
+
+						loadData: function (appId) {
+							var self = this;
+
+							self.controllers.InterfaceList.loadPages(appId);
 						}
 
 					});

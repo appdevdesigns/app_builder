@@ -813,6 +813,30 @@ msgstr "ซ่อนทั้งหมด"
 
 #. path: app_builder
 #. code: th
-#. key: ab.view.interface
+#. key: ab.interface.page
 msgid "Interface"
 msgstr "หน้าแสดง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.addNewPage
+msgid "Add new page"
+msgstr "เพิ่มหน้าใหม่"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.placeholderPageName
+msgid "Page name"
+msgstr "ชื่อหน้า"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.delete.title
+msgid "Delete page"
+msgstr "ลบหน้านี้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.delete.message
+msgid "Do you want to delete <b>{0}</b>?";
+msgstr "คุณต้องการลบ<b>{0}</b>หรือไม่";
