@@ -52,6 +52,14 @@ module.exports = {
     application: { model: 'ABApplication' }
   },
 
+  beforeValidate: function (values, cb) {
+    for (var key in values) {
+      if (!values[key]) delete values[key];
+    }
+
+    cb();
+  },
+
   beforeCreate: function (values, cb) {
     if (values.name)
       values.name = values.name.replace(' ', '_');

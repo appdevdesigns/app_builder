@@ -52,8 +52,7 @@ module.exports = {
 
         weight: {
             type: 'integer',
-            required: false,
-            defaultsTo: 0 // Workaround
+            required: false
         },
 
         required: { type: 'boolean' },
@@ -66,14 +65,21 @@ module.exports = {
 
         linkToObject: {
             type: 'integer',
-            required: false,
-            defaultsTo: 0 // Workaround
+            required: false
         },
 
         isMultipleRecords: { type: 'boolean' },
 
         supportMultilingual: { type: 'boolean' },
 
+    },
+
+    beforeValidate: function (values, cb) {
+        for (var key in values) {
+            if (!values[key]) delete values[key];
+        }
+        
+        cb();
     },
 
     beforeCreate: function (values, cb) {
