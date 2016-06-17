@@ -5,6 +5,9 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
+var async = require('async'),
+  _ = require('lodash');
+
 module.exports = {
 
   tableName: 'appbuilder_page',
@@ -49,12 +52,17 @@ module.exports = {
       via: 'parent'
     },
 
-    application: { model: 'ABApplication' }
+    application: { model: 'ABApplication' },
+
+    components: {
+      collection: 'ABPageComponent',
+      via: 'page'
+    }
   },
 
   beforeValidate: function (values, cb) {
     for (var key in values) {
-      if (!values[key]) delete values[key];
+      if (values[key] == null || typeof values[key] == 'undefined') delete values[key];
     }
 
     cb();
@@ -79,19 +87,43 @@ module.exports = {
     var ids = _.map(destroyedObjects, 'id');
 
     if (ids && ids.length) {
-      ABPageTrans.destroy({ abpage: ids })
-        .fail(function (err) {
-          cb(err)
-        })
-        .then(function () {
-          cb();
-        });
-    }
-    else {
-      cb();
+      if (ids && ids.length) {
+        async.parallel([
+          function (callback) {
+            ABPage.destroy({ parent: ids })
+              .fail(function (err) {
+                callback(err)
+              })
+              .then(function () {
+                callback();
+              });
+          },
+          function (callback) {
+            ABPageComponent.destroy({ page: ids })
+              .fail(function (err) {
+                callback(err)
+              })
+              .then(function () {
+                callback();
+              });
+          },
+          function (callback) {
+            ABPageTrans.destroy({ abpage: ids })
+              .fail(function (err) {
+                callback(err)
+              })
+              .then(function () {
+                callback();
+              });
+          }
+        ], cb);
+      }
+      else {
+        cb();
+      }
+
     }
 
   }
-
 };
 

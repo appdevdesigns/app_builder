@@ -16,7 +16,8 @@ steal(
 
 							options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
-								updatedPageEvent: 'AB_Page.Updated'
+								updatedPageEvent: 'AB_Page.Updated',
+								deletedPageEvent: 'AB_Page.Deleted'
 							}, options);
 							this.options = options;
 
@@ -99,7 +100,6 @@ steal(
 										},
 										on: {
 											onAfterSelect: function (id) {
-												// Fire select page event
 												self.element.trigger(self.options.selectedPageEvent, id);
 
 												// Show gear icon
@@ -157,6 +157,10 @@ steal(
 															self.element.trigger(self.options.updatedPageEvent, { pagesList: self.data.pages });
 														});
 												}
+											},
+											onAfterDelete: function (id) {
+												// Fire unselect page event
+												self.element.trigger(self.options.deletedPageEvent, {});
 											}
 										},
 										onClick: {
@@ -349,6 +353,8 @@ steal(
 															$$(self.webixUiId.addNewPopup).hide();
 
 															if (result.translate) result.translate();
+
+															self.data.pages.push(result);
 
 															$$(self.webixUiId.interfaceTree).add({
 																id: result.id,

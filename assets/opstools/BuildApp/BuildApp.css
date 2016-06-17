@@ -162,3 +162,28 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-main-container .webix_tree_item.webix_selected span {
 	background: #3498db !important;
 }
+
+/* Interface page layout */
+.ab-component-drop-area {
+	margin-right: 2px;
+	border: 1px dashed #000 !important;
+	background-color: #D3E9EF;
+	background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='30px' width='90px'><text x='20' y='20' fill='#95CBEF' font-size='15'>Drop Here</text></svg>");
+}
+
+div[view_id='ab-interface-layout-page'] .webix_list_item,
+.ab-component-in-page {
+	background-color: #fff;
+}
+
+.ab-component-remove {
+	top: 10px;
+	right: 10px;
+}
+
+/* Interface component list */
+.ab-component-item-drag {
+	border: 1px dotted #000 !important;
+	font-size: 35px;
+	background-color: #fff;	
+}

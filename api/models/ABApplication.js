@@ -83,6 +83,15 @@ module.exports = {
                         .then(function () {
                             callback();
                         });
+                },
+                function (callback) {
+                    ABPage.destroy({ application: ids })
+                        .fail(function (err) {
+                            callback(err)
+                        })
+                        .then(function () {
+                            callback();
+                        });
                 }
             ], cb);
         }
