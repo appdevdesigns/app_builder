@@ -5,7 +5,7 @@
 var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
-var reloadTimeLimit = 1000 * 60; // 60 seconds
+var reloadTimeLimit = 2 * 1000 * 60; // 2 minutes
 
 module.exports = {
     
@@ -78,7 +78,7 @@ module.exports = {
     
     
     /**
-     * Generate a Sails model definition file.
+     * Generate the models and controllers for a given AB Object.
      *
      * @param integer objectID
      *      The ABObject primary key ID.
@@ -90,8 +90,18 @@ module.exports = {
         var appName, objName, fullName;
         var columns = [];
         
-        var modelsPath = sails.config.paths.models; // "/api/models"
+        //var modelsPath = sails.config.paths.models;
+        var modelsPath = path.join('api', 'models'); // in the submodule
+        
         var fullPath, fullPathTrans;
+        var cwd = process.cwd();
+        
+        var cliCommand = path.join(
+            cwd,
+            'node_modules', 'app_builder',
+            'node_modules', 'appdev',
+            'bin', 'appDev.js'
+        );
         
         async.series([
             // Find object info
@@ -104,10 +114,10 @@ module.exports = {
                     if (!obj) throw new Error('invalid object id');
                     
                     // Only numbers and alphabets will be used
-                    appName = obj.application.name.replace(/[^a-z0-9]/ig, '');
+                    appName = 'AB_' + obj.application.name.replace(/[^a-z0-9]/ig, '');
                     objName = obj.name.replace(/[^a-z0-9]/ig, '');
                     columns = obj.columns;
-                    fullName = 'AB_' + appName + '_' + objName;
+                    fullName = appName + '_' + objName;
                     
                     fullPath = path.join(modelsPath, fullName) + '.js';
                     fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
@@ -120,9 +130,34 @@ module.exports = {
                 });
             },
             
-            // Delete old model definition
+            // Create opstool plugin with appdev-cli
             function(next) {
-                async.each([fullPath, fullPathTrans], function(target, ok) {
+                process.chdir('node_modules'); // sails/node_modules/
+                AD.spawn.command({
+                    command: cliCommand,
+                    options: [
+                        'plugin',
+                        appName
+                    ],
+                    shouldEcho: false,
+                    responses: {
+                        'unit test capabilities': 'no\n',
+                        'author': 'AppBuilder\n',
+                        'description': '\n',
+                        'version': '\n',
+                        'repository': '\n',
+                    }
+                })
+                .fail(next)
+                .done(function() {
+                    next();
+                });
+            },
+            
+            // Delete old model definition & .adn file
+            function(next) {
+                process.chdir(appName); // sails/node_modules/AB_{appName}/
+                async.each([fullPath, fullPathTrans, '.adn'], function(target, ok) {
                     // Delete file if it exists
                     fs.unlink(target, function(err) {
                         // Ignore errors. If file does not exist, that's fine.
@@ -133,17 +168,17 @@ module.exports = {
                 });
             },
             
+            // Symlink the .adn file
+            function(next) {
+                fs.symlink(path.join(cwd, '.adn'), '.adn', next);
+            },
+            
             // Generate model definitions with appdev-cli
             function(next) {
-                var cliCommand = path.join(
-                    'node_modules', 'app_builder',
-                    'node_modules', 'appdev',
-                    'bin', 'appDev.js'
-                );
                 var cliParams = [ 
                     'resource', // appdev-cli command
-                    appName,
-                    fullName,
+                    path.join('opstools', appName), // client side location
+                    fullName, // server side location
                     'connection:appBuilder', // Sails connection name
                     'tablename:' + fullName.toLowerCase()
                 ];
@@ -197,6 +232,22 @@ module.exports = {
             },
             */
             
+            // Run setup.js
+            function(next) {
+                // Can't just require() it, because it's not guaranteed to 
+                // execute after the first time, due to caching.
+                AD.spawn.command({
+                    command: 'node',
+                    options: [
+                        path.join('setup', 'setup.js')
+                    ]
+                })
+                .fail(next)
+                .done(function() {
+                    next();
+                })
+            },
+            
             // Patch model definition
             function(next) {
                 async.each([fullPath, fullPathTrans], function(target, ok) {
@@ -219,6 +270,7 @@ module.exports = {
             }
         
         ], function(err) {
+            process.chdir(cwd);
             if (err) dfd.reject(err);
             else dfd.resolve();
         });
