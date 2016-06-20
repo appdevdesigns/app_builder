@@ -5,6 +5,9 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var AD = require('ad-utils');
+var reloading = null;
+
 module.exports = {
 
     _config: {
@@ -58,12 +61,23 @@ module.exports = {
      *
      */
     reloadORM: function(req, res) {
+        if (reloading && reloading.state() == 'pending') {
+            reloading.always(function() {
+                // Wait until current reload is finished before starting
+                self.reloadORM(req, res);
+            });
+            return;
+        }
+        reloading = AD.sal.Deferred();
+        
         AppBuilder.reload()
         .fail(function(err) {
             res.AD.error(err);
+            reloading.reject(err);
         })
         .done(function() {
             res.AD.success({});
+            reloading.resolve();
         });
     },
     
@@ -75,6 +89,16 @@ module.exports = {
      * POST /app_builder/fullReload
      */
     fullReload: function(req, res) {
+        var self = this;
+        if (reloading && reloading.state() == 'pending') {
+            reloading.always(function() {
+                // Wait until current reload is finished before starting
+                self.fullReload(req, res);
+            });
+            return;
+        }
+        reloading = AD.sal.Deferred();
+        
         var objIDs = [];
         
         async.series([
@@ -126,8 +150,10 @@ module.exports = {
             if (err) {
                 console.error(err);
                 res.AD.error(err);
+                reloading.reject(err);
             } else {
                 res.AD.success({});
+                reloading.resolve();
             }
         });
     }

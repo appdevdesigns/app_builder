@@ -126,6 +126,7 @@ module.exports = {
             }]
         
         }, function(err) {
+            sails.log('End reload');
             if (err) dfd.reject(err);
             else dfd.resolve();
         });
