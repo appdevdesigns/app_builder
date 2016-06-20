@@ -1,5 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/page_components/Menu.js',
+	'opstools/BuildApp/controllers/page_components/Grid.js',
+	'opstools/BuildApp/controllers/page_components/Form.js',
+
 	'opstools/BuildApp/controllers/InterfaceLayoutView.js',
 	'opstools/BuildApp/controllers/InterfaceComponentList.js',
 	function () {
@@ -17,7 +21,10 @@ steal(
 							self.options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
 								updatedPageEvent: 'AB_Page.Updated',
-								startDragEvent: 'AB_Page.StartDragComponent'
+								startDragEvent: 'AB_Page.StartDragComponent',
+								editComponentEvent: 'AB_Page.EditComponent',
+								savedComponentEvent: 'AB_Page.SavedComponent',
+								cancelComponentEvent: 'AB_Page.CancelComponent'
 							}, options);
 
 							// Call parent init
@@ -33,6 +40,7 @@ steal(
 							self.initControllers();
 							self.initWebixUI();
 							self.initEvents();
+							self.initComponents();
 						},
 
 						initMultilingualLabels: function () {
@@ -46,11 +54,28 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView');
-							var ComponentList = AD.Control.get('opstools.BuildApp.InterfaceComponentList');
+							var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
+								Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
+								Form = AD.Control.get('opstools.BuildApp.Components.Form'),
 
-							self.controllers.LayoutView = new LayoutView(self.element, {});
-							self.controllers.ComponentList = new ComponentList(self.element, { startDragEvent: self.options.startDragEvent });
+								LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView'),
+								ComponentList = AD.Control.get('opstools.BuildApp.InterfaceComponentList');
+
+
+							self.controllers.Menu = new Menu(self.element, {});
+							self.controllers.Grid = new Grid(self.element, {});
+							self.controllers.Form = new Form(self.element, {});
+
+
+							self.controllers.LayoutView = new LayoutView(self.element, {
+								editComponentEvent: self.options.editComponentEvent,
+								savedComponentEvent: self.options.savedComponentEvent,
+								cancelComponentEvent: self.options.cancelComponentEvent
+							});
+
+							self.controllers.ComponentList = new ComponentList(self.element, {
+								startDragEvent: self.options.startDragEvent
+							});
 
 						},
 
@@ -71,9 +96,33 @@ steal(
 						initEvents: function () {
 							var self = this;
 
-							self.controllers.ComponentList.on(self.options.startDragEvent, function () {
+							self.controllers.LayoutView.on(self.options.editComponentEvent, function (event, obj) {
+								self.controllers.ComponentList.openComponentPropertyView(obj.item);
+							});
+
+							self.controllers.LayoutView.on(self.options.savedComponentEvent, function (event) {
+								self.controllers.ComponentList.closeComponentPropertyView();
+							});
+
+							self.controllers.LayoutView.on(self.options.cancelComponentEvent, function (event) {
+								self.controllers.ComponentList.closeComponentPropertyView();
+							});
+
+							self.controllers.ComponentList.on(self.options.startDragEvent, function (event) {
 								self.controllers.LayoutView.startDragComponent();
 							});
+						},
+
+						initComponents: function () {
+							var self = this;
+							self.components = {};
+
+							self.components.Menu = self.controllers.Menu.getInstance();
+							self.components.Grid = self.controllers.Grid.getInstance();
+							self.components.Form = self.controllers.Form.getInstance();
+
+							self.controllers.LayoutView.setComponents(self.components);
+							self.controllers.ComponentList.setComponents(self.components);
 						},
 
 						webix_ready: function () {
@@ -90,6 +139,9 @@ steal(
 						setPageId: function (id) {
 							var self = this;
 
+							self.controllers.LayoutView.resetState();
+							self.controllers.ComponentList.resetState();
+
 							if (id) {
 								self.data.pageId = id;
 
@@ -97,7 +149,6 @@ steal(
 								self.controllers.ComponentList.show();
 							}
 							else {
-								self.controllers.LayoutView.resetState();
 								self.controllers.ComponentList.hide();
 							}
 						}

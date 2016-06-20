@@ -173,12 +173,34 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 
 div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-component-in-page {
+	width: 100%;
+	position: relative;
 	background-color: #fff;
 }
 
+.ab-component-item-name {
+    display: table-cell;
+    font-size: 18px;
+    width: 90px;
+    border-right: 1px solid #ebebeb;
+    vertical-align: top;
+    padding-top: 10px;
+    height: 100%;
+    line-height: 100%;
+}
+
+.ab-component-item-display {
+	display: table-cell;
+	vertical-align: top;
+	padding: 10px;
+	height: 100%;
+	line-height: 100%;
+}
+
 .ab-component-remove {
-	top: 10px;
-	right: 10px;
+	position: absolute;
+	top: 5px;
+	right: 1px;
 }
 
 /* Interface component list */
