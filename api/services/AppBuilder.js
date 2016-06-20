@@ -5,7 +5,11 @@
 var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
-var reloadTimeLimit = 1000 * 60; // 60 seconds
+var reloadTimeLimit = 2 * 1000 * 60; // 2 minutes
+
+function nameFilter(name) {
+    return String(name).replace(/[^a-z0-9]/gi, '');
+}
 
 module.exports = {
     
@@ -24,28 +28,80 @@ module.exports = {
         var env1 = sails.config.environment,
             env2 = process.env.NODE_ENV;
         
+        var appFolders = [];
+        
         async.auto({
-            controllers: function(next) {
+            find: function(next) {
+                ABApplication.find()
+                .then(function(list) {
+                    if (!list || !list[0]) {
+                        throw new Error('no apps found');
+                    }
+                    for (var i=0; i<list.length; i++) {
+                        appFolders.push('AB_' + nameFilter(list[i].name));
+                    }
+                    next();
+                    return null;
+                })
+                .catch(next);
+            },
+            
+            // Run setup.js for every AB application
+            setup: ['find', function(next) {
+                var cwd = process.cwd();
+                async.eachSeries(appFolders, function(folder, ok) {
+                    try {
+                        process.chdir(path.join(cwd, 'node_modules', folder));
+                    } catch (err) {
+                        console.log('Folder not found: ' + folder);
+                        return ok();
+                    }
+                    
+                    // Can't just require() it, because it's not guaranteed to 
+                    // execute after the first time, due to caching.
+                    AD.spawn.command({
+                        command: 'node',
+                        options: [
+                            path.join('setup', 'setup.js')
+                        ]
+                    })
+                    .fail(ok)
+                    .done(function() {
+                        ok();
+                    })
+                    
+                }, function(err) {
+                    process.chdir(cwd);
+                    if (err) next(err);
+                    else next();
+                });
+            }],
+            
+            controllers: ['setup', function(next) {
+                sails.log('Reloading controllers');
                 sails.hooks.controllers.loadAndRegisterControllers(function() {
                     next();
                 });
-            },
+            }],
             
             /*
             i18n: ['controllers', function(next) {
+                sails.log('Reloading i18n');
                 sails.hooks.i18n.initialize(function() {
                     next();
                 });
             }],
             
             services: ['controllers', function(next) {
+                sails.log('Reloading services');
                 sails.hooks.services.loadModules(function() {
                     next();
                 });
             }],
             */
             
-            orm: function(next) {
+            orm: ['setup', function(next) {
+                sails.log('Reloading ORM');
                 // Temporarily set environment to development so Waterline will
                 // respect the migrate:alter setting
                 sails.config.evnironment = 'development';
@@ -58,9 +114,10 @@ module.exports = {
                     process.env.NODE_ENV = env2;
                     next();
                 });
-            },
+            }],
             
             blueprints: ['controllers', 'orm', function(next) {
+                sails.log('Reloading blueprints');
                 clearTimeout(timeout);
                 sails.hooks.blueprints.extendControllerMiddleware();
                 sails.router.flush();
@@ -78,7 +135,7 @@ module.exports = {
     
     
     /**
-     * Generate a Sails model definition file.
+     * Generate the models and controllers for a given AB Object.
      *
      * @param integer objectID
      *      The ABObject primary key ID.
@@ -90,8 +147,18 @@ module.exports = {
         var appName, objName, fullName;
         var columns = [];
         
-        var modelsPath = sails.config.paths.models; // "/api/models"
+        //var modelsPath = sails.config.paths.models;
+        var modelsPath = path.join('api', 'models'); // in the submodule
+        
         var fullPath, fullPathTrans;
+        var cwd = process.cwd();
+        
+        var cliCommand = path.join(
+            cwd,
+            'node_modules', 'app_builder',
+            'node_modules', 'appdev',
+            'bin', 'appDev.js'
+        );
         
         async.series([
             // Find object info
@@ -104,10 +171,10 @@ module.exports = {
                     if (!obj) throw new Error('invalid object id');
                     
                     // Only numbers and alphabets will be used
-                    appName = obj.application.name.replace(/[^a-z0-9]/ig, '');
-                    objName = obj.name.replace(/[^a-z0-9]/ig, '');
+                    appName = 'AB_' + nameFilter(obj.application.name);
+                    objName = nameFilter(obj.name);
                     columns = obj.columns;
-                    fullName = 'AB_' + appName + '_' + objName;
+                    fullName = appName + '_' + objName;
                     
                     fullPath = path.join(modelsPath, fullName) + '.js';
                     fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
@@ -120,9 +187,34 @@ module.exports = {
                 });
             },
             
-            // Delete old model definition
+            // Create opstool plugin with appdev-cli
             function(next) {
-                async.each([fullPath, fullPathTrans], function(target, ok) {
+                process.chdir('node_modules'); // sails/node_modules/
+                AD.spawn.command({
+                    command: cliCommand,
+                    options: [
+                        'plugin',
+                        appName
+                    ],
+                    shouldEcho: false,
+                    responses: {
+                        'unit test capabilities': 'no\n',
+                        'author': 'AppBuilder\n',
+                        'description': '\n',
+                        'version': '\n',
+                        'repository': '\n',
+                    }
+                })
+                .fail(next)
+                .done(function() {
+                    next();
+                });
+            },
+            
+            // Delete old model definition & .adn file
+            function(next) {
+                process.chdir(appName); // sails/node_modules/AB_{appName}/
+                async.each([fullPath, fullPathTrans, '.adn'], function(target, ok) {
                     // Delete file if it exists
                     fs.unlink(target, function(err) {
                         // Ignore errors. If file does not exist, that's fine.
@@ -133,17 +225,17 @@ module.exports = {
                 });
             },
             
+            // Symlink the .adn file
+            function(next) {
+                fs.symlink(path.join(cwd, '.adn'), '.adn', next);
+            },
+            
             // Generate model definitions with appdev-cli
             function(next) {
-                var cliCommand = path.join(
-                    'node_modules', 'app_builder',
-                    'node_modules', 'appdev',
-                    'bin', 'appDev.js'
-                );
                 var cliParams = [ 
                     'resource', // appdev-cli command
-                    appName,
-                    fullName,
+                    path.join('opstools', appName), // client side location
+                    fullName, // server side location
                     'connection:appBuilder', // Sails connection name
                     'tablename:' + fullName.toLowerCase()
                 ];
@@ -217,8 +309,9 @@ module.exports = {
                     next();
                 });
             }
-        
+                        
         ], function(err) {
+            process.chdir(cwd);
             if (err) dfd.reject(err);
             else dfd.resolve();
         });
@@ -235,6 +328,7 @@ module.exports = {
      *      The model name including the "AB_" prefix.
      * @return Deferred
      */
+     /*
     modelToObject: function(modelName) {
         var dfd = AD.sal.Deferred();
         var model = sails.models[modelName.toLowerCase()];
@@ -342,5 +436,6 @@ module.exports = {
         
         return dfd;
     },
+    */
 
 };
