@@ -91,12 +91,23 @@ module.exports = {
       if (ids && ids.length) {
         async.parallel([
           function (callback) {
-            ABPage.destroy({ parent: ids })
+            ABPage.count({ parent: ids })
               .fail(function (err) {
                 callback(err)
               })
-              .then(function () {
-                callback();
+              .then(function (found) {
+                if (found > 0) {
+                  ABPage.destroy({ parent: ids })
+                    .fail(function (err) {
+                      callback(err)
+                    })
+                    .then(function () {
+                      callback();
+                    });
+                }
+                else {
+                  callback();
+                }
               });
           },
           function (callback) {
