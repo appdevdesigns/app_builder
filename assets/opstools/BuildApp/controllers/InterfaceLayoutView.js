@@ -102,6 +102,8 @@ steal(
 
 													$$(editViewId).showProgress({ type: 'icon' });
 
+													component.editStop();
+
 													editedComponent.attr('setting', component.getSettings());
 
 													editedComponent.save()
@@ -117,6 +119,8 @@ steal(
 															$$(self.componentIds.componentList).updateItem(self.data.editedComponentId, updatedItem);
 
 															self.openLayoutViewMode();
+
+															self.generateComponentsInList();
 
 															$$(editViewId).hideProgress();
 														});
@@ -152,15 +156,29 @@ steal(
 														view: 'button',
 														value: 'Edit',
 														width: 50,
+														earlyInit: true,
 														on: {
 															onItemClick: function (id, e) { // Open Component view
 																var item_id = $$(self.componentIds.componentList).locate(e),
-																	item = $$(self.componentIds.componentList).getItem(item_id);
+																	item = $$(self.componentIds.componentList).getItem(item_id),
+																	component = self.data.components[item.name];
 
 																self.data.editedComponentId = item_id;
 
 																if ($$(item.name + '-edit-view')) {
-																	self.data.components[item.name].populateSettings(item.setting);
+																	if (!item.setting) item.setting = {};
+
+																	// Set page list
+																	switch (item.name) {
+																		case "Menu":
+																			item.setting.page = self.data.page;
+																			break;
+																		case "Grid":
+																			item.setting.appId = self.data.appId;
+																			break;
+																	}
+
+																	component.populateSettings(item.setting);
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.name + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -183,23 +201,23 @@ steal(
 														'<div>{common.editButton()}</div>' +
 														'</div>' +
 														'<div class="ab-component-item-display">' +
-														'#view#' +
+														'<div id="ab-layout-component-#id#"></div>' + //#view#
 														'<i class="fa fa-times ab-component-remove"></i>' +
 														'</div>' +
 														'</div>';
 
 													// Replace values to template
 													for (var key in obj) {
-														templateHtml = templateHtml.replace('#' + key + '#', obj[key]);
+														templateHtml = templateHtml.replace(new RegExp('#' + key + '#', 'g'), obj[key]);
 													}
 
 													// Generate Edit button
-													var editButtonView = common['editButton'] ? common['editButton'].apply(obj, arguments) : "";
+													var editButtonView = common['editButton'] ? common['editButton'].apply(this, arguments) : "";
 													templateHtml = templateHtml.replace('{common.editButton()}', editButtonView);
 
-													// Set component view
-													var componentView = common[obj.name] ? common[obj.name].apply(obj, arguments) : "";
-													templateHtml = templateHtml.replace(/#view#/g, componentView);
+													// // Set component view
+													// var componentView = common[obj.name] ? common[obj.name].apply(this, arguments) : "";
+													// templateHtml = templateHtml.replace(/#view#/g, componentView);
 
 													return templateHtml;
 												},
@@ -208,7 +226,7 @@ steal(
 														$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 
 														var addNewComponent = self.Model.newInstance();
-														addNewComponent.attr('page', self.data.pageId);
+														addNewComponent.attr('page', self.data.page.attr('id'));
 														addNewComponent.attr('component', data.name);
 														addNewComponent.attr('weight', $$(self.componentIds.componentList).count());
 
@@ -225,6 +243,17 @@ steal(
 															})
 															.then(function (result) {
 																$$(self.componentIds.componentList).data.changeId(id, result.attr('id'));
+
+																var existsCom = $.grep(self.data.componentsInPage, function (c) { c.id == result.attr('id') });
+																if (existsCom && existsCom.length > 0) {
+																	self.data.componentsInPage.forEach(function (c) {
+																		if (c.id == result.attr('id'))
+																			c = result;
+																	});
+																}
+																else {
+																	self.data.componentsInPage.push(result);
+																}
 
 																webix.message({
 																	type: "success",
@@ -296,8 +325,8 @@ steal(
 														return false;
 													}
 												}
-											}
-										]
+											} // End component list
+										] // End cells
 									}
 								]
 							};
@@ -322,7 +351,13 @@ steal(
 							return this.data.definition;
 						},
 
-						setPageId: function (id) {
+						setAppId: function (id) {
+							var self = this;
+
+							self.data.appId = id;
+						},
+
+						setPage: function (page) {
 							var self = this;
 
 							self.resetState();
@@ -330,9 +365,9 @@ steal(
 							$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 							$$(self.componentIds.layoutToolbar).show();
 
-							self.data.pageId = id;
+							self.data.page = page;
 
-							self.Model.findAll({ page: id })
+							self.Model.findAll({ page: page.attr('id') })
 								.fail(function (err) {
 									$$(self.componentIds.componentList).hideProgress();
 
@@ -368,6 +403,8 @@ steal(
 
 									$$(self.componentIds.componentList).parse(definedComponents);
 
+									self.generateComponentsInList();
+
 									$$(self.componentIds.componentList).hideProgress();
 								});
 						},
@@ -381,17 +418,7 @@ steal(
 							var layoutSpaceDefinition = $.grep(self.data.definition.rows, function (r) { return r.id == self.componentIds.layoutSpace; });
 							layoutSpaceDefinition = (layoutSpaceDefinition && layoutSpaceDefinition.length > 0) ? layoutSpaceDefinition[0] : null;
 
-							// Get component list definition
-							var componentListDefinition = $.grep(layoutSpaceDefinition.cells, function (c) { return c.id == self.componentIds.componentList });
-							componentListDefinition = (componentListDefinition && componentListDefinition.length > 0) ? componentListDefinition[0] : null;
-
-							if (!componentListDefinition.activeContent) componentListDefinition.activeContent = {};
-
 							for (var key in self.data.components) {
-								var view = self.data.components[key].getView();
-								if (view)
-									componentListDefinition.activeContent[key] = view;
-
 								var editView = self.data.components[key].getEditView();
 								if (editView)
 									layoutSpaceDefinition.cells.push(editView);
@@ -400,7 +427,6 @@ steal(
 
 						openLayoutViewMode: function () {
 							var self = this;
-
 
 							self.data.editedComponentId = null;
 
@@ -411,6 +437,32 @@ steal(
 							$$(self.componentIds.cancelComponentInfo).hide();
 
 							$$(self.componentIds.componentList).show();
+						},
+
+						generateComponentsInList: function () {
+							var self = this;
+
+							// Generate component in list
+							self.data.componentsInPage.forEach(function (c) {
+								var view = self.data.components[c.attr('component')].getView();
+
+								if (view) {
+									var setting = c.attr('setting');
+
+									view = $.extend(true, {}, view);
+									view.id = 'ab-layout-component-{0}'.replace('{0}', c.attr('id'));
+									view.container = view.id;
+									// view.disabled = true;
+
+									// Populate data
+									for (var key in setting) {
+										view[key] = setting[key].attr ? setting[key].attr() : setting[key];
+									}
+
+									webix.ui(view);
+								}
+							});
+
 						},
 
 						startDragComponent: function () {

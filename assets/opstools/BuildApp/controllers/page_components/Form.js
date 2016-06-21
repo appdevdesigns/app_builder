@@ -37,6 +37,10 @@ steal(
 							self.populateSettings = function (settings) {
 								return null;
 							};
+
+							self.editStop = function () {
+							};
+
 						},
 
 						getInstance: function () {

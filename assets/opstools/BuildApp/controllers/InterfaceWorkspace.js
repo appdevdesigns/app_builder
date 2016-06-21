@@ -136,16 +136,23 @@ steal(
 							return this.data.definition;
 						},
 
-						setPageId: function (id) {
+						setAppId: function (id) {
+							var self = this;
+
+							self.data.appId = id;
+							self.controllers.LayoutView.setAppId(id);
+						},
+
+						setPage: function (page) {
 							var self = this;
 
 							self.controllers.LayoutView.resetState();
 							self.controllers.ComponentList.resetState();
 
-							if (id) {
-								self.data.pageId = id;
+							if (page) {
+								self.data.page = page;
 
-								self.controllers.LayoutView.setPageId(id);
+								self.controllers.LayoutView.setPage(page);
 								self.controllers.ComponentList.show();
 							}
 							else {

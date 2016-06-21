@@ -100,7 +100,10 @@ steal(
 										},
 										on: {
 											onAfterSelect: function (id) {
-												self.element.trigger(self.options.selectedPageEvent, id);
+												var selectedPage = self.data.pages.filter(function (p) { return p.id == id; });
+
+												if (selectedPage && selectedPage.length > 0)
+													self.element.trigger(self.options.selectedPageEvent, { selectedPage: selectedPage[0] });
 
 												// Show gear icon
 												self.showGear(id);
@@ -282,8 +285,8 @@ steal(
 										var options = [{ id: '', value: '[Root page]' }];
 										$$(self.webixUiId.interfaceTree).data.each(function (d) {
 											if (d.$level == 1) { // Only Root pages
-												var val = d.value;
-												options.push({ id: d.id, value: val });
+												// var val = d.value;
+												options.push({ id: d.id, value: d.label });
 											}
 
 											// if (d.$level > 1)

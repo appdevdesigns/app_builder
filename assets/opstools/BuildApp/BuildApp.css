@@ -209,3 +209,8 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	font-size: 35px;
 	background-color: #fff;	
 }
+
+/* Menu component */
+.ab-page-list-item .webix_tree_checkbox {
+	margin: 0px !important;
+}

@@ -61,12 +61,12 @@ steal(
 						initEvents: function () {
 							var self = this;
 
-							self.controllers.InterfaceList.on(self.options.selectedPageEvent, function (event, id) {
-								self.controllers.InterfaceWorkspace.setPageId(id);
+							self.controllers.InterfaceList.on(self.options.selectedPageEvent, function (event, data) {
+								self.controllers.InterfaceWorkspace.setPage(data.selectedPage);
 							});
 
 							self.controllers.InterfaceList.on(self.options.deletedPageEvent, function (event, id) {
-								self.controllers.InterfaceWorkspace.setPageId(null);
+								self.controllers.InterfaceWorkspace.setPage(null);
 							});
 						},
 
@@ -85,6 +85,7 @@ steal(
 							var self = this;
 
 							self.controllers.InterfaceList.loadPages(appId);
+							self.controllers.InterfaceWorkspace.setAppId(appId);
 						}
 
 					});
