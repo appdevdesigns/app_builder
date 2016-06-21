@@ -941,7 +941,8 @@ steal(
 									return o.id == col.linkToObject;
 								});
 
-								label += self.labels.object.connectToObjectName.replace('{0}', connectObj[0].label);
+								if (connectObj && connectObj.length > 0)
+									label += self.labels.object.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
 							return "<div class='ab-object-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-object-data-header-edit fa fa-angle-down'></i></div>"
