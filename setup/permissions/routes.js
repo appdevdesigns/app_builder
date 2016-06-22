@@ -30,5 +30,20 @@
 module.exports = {
 
     // 'get /route/one' : [ 'action.key.1', ['action.key.2', 'action.key.3']],
+/*
+		/app_builder/ABApplication
+    POST /app_builder/prepareApp/:id
+    POST /app_builder/reloadORM
+    POST /app_builder/fullReload
 
+
+		/app_builder/ABColumn
+ 		/app_builder/ABList
+		/app_builder/ABPageComponent
+		/app_builder/ABPage
+
+		/app_builder/ABObject
+    POST /app_builder/prepareObject/:id
+    PUT: app_builder/object/sortColumns/:id
+*/
 };
