@@ -30,6 +30,9 @@ module.exports = {
         
         var appFolders = [];
         
+        // Notify all clients that the server is reloading
+        sails.sockets.blast('server-reload', { reloading: true });
+        
         async.auto({
             find: function(next) {
                 ABApplication.find()
@@ -126,6 +129,7 @@ module.exports = {
             }]
         
         }, function(err) {
+            sails.sockets.blast('server-reload', { reloading: false });
             sails.log('End reload');
             if (err) dfd.reject(err);
             else dfd.resolve();
