@@ -82,12 +82,14 @@ steal(
 							self.controllers.ObjectWorkspace.webix_ready();
 						},
 
-						setAppId: function (appId) {
+						setAppId: function (app) {
 							var self = this;
 
 							self.controllers.ObjectWorkspace.resetState();
 							self.controllers.ObjectList.resetState();
-							self.controllers.ObjectList.setAppId(appId);
+
+							self.controllers.ObjectWorkspace.setApp(app);
+							self.controllers.ObjectList.setApp(app);
 						},
 
 						resize: function (height) {

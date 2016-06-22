@@ -41,20 +41,22 @@ module.exports = {
         var objectId = req.param('id'),
             updateEvents = [];
 
-        req.body.columns.forEach(function (col) {
-            updateEvents.push(function (next) {
-                ABColumn.update(
-                    {
-                        id: col.columnId,
-                        object: objectId
-                    },
-                    {
-                        weight: col.index
-                    })
-                    .fail(function (err) { next(err); })
-                    .then(function () { next(); });
+        if (req.body && req.body.columns) {
+            req.body.columns.forEach(function (col) {
+                updateEvents.push(function (next) {
+                    ABColumn.update(
+                        {
+                            id: col.columnId,
+                            object: objectId
+                        },
+                        {
+                            weight: col.index
+                        })
+                        .fail(function (err) { next(err); })
+                        .then(function () { next(); });
+                });
             });
-        });
+        }
 
         async.parallel(updateEvents, function (err) {
             if (err)

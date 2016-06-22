@@ -55,9 +55,9 @@ steal(
                                                         view: 'button',
                                                         value: self.labels.visible_fields.showAll,
                                                         click: function () {
-                                                            $$(self.componentIds.fieldsList).data.each(function (d) {
-                                                                self.dataTable.showColumn(d.id);
-                                                            });
+                                                            self.dataTable.eachColumn(function (cId) {
+                                                                self.dataTable.showColumn(cId);
+                                                            }, true);
 
                                                             this.getTopParentView().callChangeEvent();
                                                         }
@@ -69,7 +69,8 @@ steal(
                                                             var columns = [];
 
                                                             self.dataTable.config.columns.forEach(function (c) {
-                                                                columns.push(c.id);
+                                                                if (c.id != 'appbuilder_trash')
+                                                                    columns.push(c.id);
                                                             });
 
                                                             columns.forEach(function (c) {

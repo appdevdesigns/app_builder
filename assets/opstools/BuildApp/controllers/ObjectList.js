@@ -324,7 +324,7 @@ steal(
 														var newObject = {
 															name: newObjectName,
 															label: newObjectName,
-															application: self.data.appId
+															application: self.data.app.id
 														};
 
 														// Add new object to server
@@ -387,15 +387,15 @@ steal(
 							return this.data.definition;
 						},
 
-						setAppId: function (appId) {
+						setApp: function (app) {
 							var self = this;
 
-							self.data.appId = appId;
+							self.data.app = app;
 
 							$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
 							// Get object list from server
-							self.Model.findAll({ application: appId })
+							self.Model.findAll({ application: app.id })
 								.fail(function (err) {
 									$$(self.webixUiId.objectList).hideProgress();
 									webix.message({

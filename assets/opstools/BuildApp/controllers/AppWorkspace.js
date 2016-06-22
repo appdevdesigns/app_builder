@@ -157,10 +157,10 @@ steal(
 							$$(self.webixUiId.appNameLabel).define('label', app.label);
 							$$(self.webixUiId.appNameLabel).refresh();
 
-							self.controllers.ObjectPage.setAppId(app.id);
+							self.controllers.ObjectPage.setAppId(app);
 
 							// FOR TEST
-							$$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 						},
 
 						resize: function (height) {

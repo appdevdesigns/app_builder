@@ -9,6 +9,9 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFrozenColumnPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableDefineLabelPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
+
+	'opstools/BuildApp/controllers/ModelCreator.js',
+
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
@@ -46,6 +49,8 @@ steal(
 								sortButton: 'ab-sort-fields-toolbar',
 								frozenButton: 'ab-frozen-columns-toolbar',
 								defineLabelButton: 'ab-define-label-toolbar',
+
+								addNewRowButton: 'ab-add-new-row-button',
 
 								editHeaderPopup: 'ab-edit-header-popup',
 								editHeaderItems: 'ab-edit-header-items',
@@ -97,6 +102,8 @@ steal(
 							self.labels.object.editField = AD.lang.label.getLabel('ab.object.editField') || "Edit field";
 							self.labels.object.deleteField = AD.lang.label.getLabel('ab.object.deleteField') || "Delete field";
 
+							self.labels.object.addNewRow = AD.lang.label.getLabel('ab.object.addNewRow') || "Add new row";
+
 							self.labels.object.couldNotDeleteField = AD.lang.label.getLabel('ab.object.couldNotDeleteField') || "Could not delete";
 							self.labels.object.atLeastOneField = AD.lang.label.getLabel('ab.object.atLeastOneField') || "Object should have at least one field.";
 
@@ -106,6 +113,10 @@ steal(
 							// Delete
 							self.labels.object.confirmDeleteTitle = AD.lang.label.getLabel('ab.object.delete.title') || "Delete data field";
 							self.labels.object.confirmDeleteMessage = AD.lang.label.getLabel('ab.object.delete.message') || "Do you want to delete <b>{0}</b>?";
+
+							// Delete row
+							self.labels.object.confirmDeleteRowTitle = AD.lang.label.getLabel('ab.object.deleteRow.title') || "Delete data";
+							self.labels.object.confirmDeleteRowMessage = AD.lang.label.getLabel('ab.object.deleteRow.message') || "Do you want to delete this row?";
 
 							// Connected data
 							self.labels.object.selectConnectedData = AD.lang.label.getLabel('ab.object.selectConnectedData') || "Select data to connect";
@@ -123,7 +134,9 @@ steal(
 						},
 
 						initControllers: function () {
-							this.controllers = {};
+							var self = this;
+
+							self.controllers = {};
 
 							var DataTableEditor = AD.Control.get('opstools.BuildApp.DataTableEditor'),
 								VisibleFieldsPopup = AD.Control.get('opstools.BuildApp.DataTableVisibleFieldsPopup'),
@@ -131,15 +144,18 @@ steal(
 								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
 								FrozenPopup = AD.Control.get('opstools.BuildApp.DataTableFrozenColumnPopup'),
 								DefineLabelPopup = AD.Control.get('opstools.BuildApp.DataTableDefineLabelPopup'),
-								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup');
+								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup'),
 
-							this.controllers.DataTableEditor = new DataTableEditor();
-							this.controllers.VisibleFieldsPopup = new VisibleFieldsPopup();
-							this.controllers.FilterPopup = new FilterPopup();
-							this.controllers.SortPopup = new SortPopup();
-							this.controllers.FrozenPopup = new FrozenPopup();
-							this.controllers.DefineLabelPopup = new DefineLabelPopup();
-							this.controllers.AddFieldPopup = new AddFieldPopup();
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+
+							self.controllers.DataTableEditor = new DataTableEditor();
+							self.controllers.VisibleFieldsPopup = new VisibleFieldsPopup();
+							self.controllers.FilterPopup = new FilterPopup();
+							self.controllers.SortPopup = new SortPopup();
+							self.controllers.FrozenPopup = new FrozenPopup();
+							self.controllers.DefineLabelPopup = new DefineLabelPopup();
+							self.controllers.AddFieldPopup = new AddFieldPopup();
+							self.controllers.ModelCreator = new ModelCreator();
 						},
 
 						initWebixUI: function () {
@@ -455,7 +471,86 @@ steal(
 										editaction: "custom",
 										select: "cell",
 										dragColumn: true,
+										onClick: {
+											trash: function (e, id) {
+												webix.confirm({
+													title: self.labels.object.confirmDeleteRowTitle,
+													ok: self.labels.common.yes,
+													cancel: self.labels.common.no,
+													text: self.labels.object.confirmDeleteRowMessage,
+													callback: function (result) {
+														if (result) {
+															$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+															self.Model.ObjectModel.destroy(id)
+																.fail(function (err) {
+																	// TODO message
+																	$$(self.webixUiId.objectDatatable).hideProgress();
+																})
+																.then(function (result) {
+																	$$(self.webixUiId.objectDatatable).remove(result.id);
+
+																	// TODO message
+
+																	$$(self.webixUiId.objectDatatable).hideProgress();
+																});
+														}
+
+														$$(self.webixUiId.objectDatatable).unselectAll();
+													}
+												});
+											}
+										},
 										on: {
+											onAfterEditStop: function (state, editor, ignoreUpdate) {
+												$$(self.webixUiId.objectDatatable).unselectAll();
+
+												if (state.value == state.old || ignoreUpdate) return;
+
+												$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+												if (editor.popupType == '') { // TODO: multi select
+
+												}
+
+												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+												var updateModel = {};
+												updateModel[editor.column] = state.value;
+
+												self.Model.ObjectModel.findOne({ id: item.id })
+													.fail(function (err) {
+														item[editor.column] = state.old;
+														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+														$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+														// TODO : Message
+
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													})
+													.then(function (result) {
+														result.attr(editor.column, state.value);
+
+														result.save()
+															.fail(function (err) {
+																item[editor.column] = state.old;
+																$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+																$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+																// TODO : Message
+
+																$$(self.webixUiId.objectDatatable).hideProgress();
+															})
+															.then(function (result) {
+																item[editor.column] = state.value;
+																$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+
+																// TODO : Message
+
+																$$(self.webixUiId.objectDatatable).hideProgress();
+															});
+													})
+											},
 											onAfterRender: function (data) {
 												// Initial multi-combo
 												$('.connect-data-values').selectivity('destroy');
@@ -663,6 +758,39 @@ steal(
 												$$(self.webixUiId.visibleFieldsPopup).hideField(id);
 											}
 										}
+									},
+									{
+										cols: [
+											{
+												autowidth: true
+											},
+											{
+												view: "button",
+												id: self.webixUiId.addNewRowButton,
+												value: self.labels.object.addNewRow,
+												width: 150,
+												align: 'right',
+												click: function () {
+													$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+													var newModel = self.Model.ObjectModel.newInstance();
+
+													newModel.save()
+														.fail(function (err) {
+															// TODO message
+
+															$$(self.webixUiId.objectDatatable).hideProgress();
+														})
+														.then(function (result) {
+															if (result.translate) result.translate();
+
+															$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
+
+															$$(self.webixUiId.objectDatatable).hideProgress();
+														})
+												}
+											}
+										]
 									}
 								]
 							};
@@ -679,11 +807,16 @@ steal(
 							return this.data.definition;
 						},
 
+						setApp: function (app) {
+							this.data.app = app;
+						},
+
 						setObjectId: function (id) {
 							var self = this;
 
 							self.data.objectId = id;
 
+							$$(self.webixUiId.objectDatatable).show();
 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 							self.resetState();
@@ -697,6 +830,8 @@ steal(
 							if (self.data.objectId) {
 								async.series([
 									function (next) {
+										$$(self.webixUiId.objectDatatable).clearAll();
+
 										// Get columns from server
 										self.Model.ABColumn.findAll({ object: self.data.objectId })
 											.fail(function (err) {
@@ -755,12 +890,37 @@ steal(
 										next();
 									},
 									function (next) {
-										// TODO : Get data from server
-										var data = self.getMockData(self.data.columns);
+										var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
 
-										$$(self.webixUiId.objectDatatable).parse(data);
+										// Set values to model creator
+										self.controllers.ModelCreator.setAppName(self.data.app.name);
+										self.controllers.ModelCreator.setObjectName(curObject[0].attr('name'));
+										var describe = {};
+										self.data.columns.forEach(function (c) {
+											describe[c.name] = c.type;
+										});
+										self.controllers.ModelCreator.setDescribe(describe);
+										var multilingualFields = self.data.columns.filter(function (c) { return c.supportMultilingual; });
+										multilingualFields = $.map(multilingualFields.attr(), function (f) { return f.name; });
+										self.controllers.ModelCreator.setMultilingualFields(multilingualFields);
 
-										next();
+										// Get object model
+										self.Model.ObjectModel = self.controllers.ModelCreator.getModel();
+
+										// Get data from server
+										self.Model.ObjectModel.findAll()
+											.fail(function (err) { next(err); })
+											.then(function (result) {
+												result.forEach(function (r) {
+													if (r.translate)
+														r.translate();
+												});
+
+												$$(self.webixUiId.objectDatatable).parse(result.attr());
+
+												next();
+											});
+
 									}
 								], function () {
 									$$(self.webixUiId.objectToolbar).show();
@@ -780,6 +940,9 @@ steal(
 
 									// Bind columns data
 									self.refreshPopupData();
+
+									// Show 'Add new row' button
+									$$(self.webixUiId.addNewRowButton).show();
 
 									// Register add new column callback
 									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo, removedListId) {
@@ -926,6 +1089,13 @@ steal(
 							});
 
 							columns.sort(function (a, b) { return a.weight - b.weight; });
+							columns.push({
+								id: "appbuilder_trash",
+								header: "",
+								width: 40,
+								template: "<span class='trash'>{common.trashIcon()}</span>",
+								css: { 'text-align': 'center' }
+							});
 
 							$$(self.webixUiId.objectDatatable).refreshColumns(columns, resetColumns || false);
 						},
@@ -1076,8 +1246,6 @@ steal(
 										}
 									], function () {
 
-										var columns = $$(self.webixUiId.objectDatatable).config.columns;
-
 										var addColumnHeader = $.extend(columnInfo.setting, {
 											id: data.name,
 											dataId: data.id,
@@ -1127,6 +1295,7 @@ steal(
 										}
 
 										// Update columns UI
+										var columns = $$(self.webixUiId.objectDatatable).config.columns;
 										var existsColumn = $.grep(columns, function (c) { return c.dataId == data.id; });
 										if (existsColumn && existsColumn.length > 0) { // Update
 											for (var i = 0; i < columns.length; i++) {
@@ -1135,7 +1304,8 @@ steal(
 												}
 											}
 										} else { // Add 
-											columns.push(addColumnHeader);
+											var index = columns.length > 0 ? columns.length - 1 : 0; // Before trash column
+											columns.splice(index, 0, addColumnHeader);
 										}
 
 										$$(self.webixUiId.objectDatatable).refreshColumns(columns);
@@ -1302,6 +1472,9 @@ steal(
 							$$(self.webixUiId.objectDatatable).clearAll();
 							$$(self.webixUiId.objectDatatable).refresh();
 							$$(self.webixUiId.objectDatatable).refreshColumns([], true);
+							// $$(self.webixUiId.objectDatatable).hide();
+
+							$$(self.webixUiId.addNewRowButton).hide();
 
 							self.refreshPopupData();
 						},
@@ -1310,7 +1483,7 @@ steal(
 							var self = this;
 
 							if ($$(self.webixUiId.objectDatatable)) {
-								$$(self.webixUiId.objectDatatable).define("height", height - 150);
+								$$(self.webixUiId.objectDatatable).define("height", height - 185);
 								$$(self.webixUiId.objectDatatable).resize();
 							}
 						},
