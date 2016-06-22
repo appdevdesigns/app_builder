@@ -10,7 +10,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableDefineLabelPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 
-	'opstools/BuildApp/controllers/ModelCreator.js',
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
@@ -482,7 +482,7 @@ steal(
 														if (result) {
 															$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-															self.Model.ObjectModel.destroy(id)
+															self.Model.ObjectModel.destroy(id.row)
 																.fail(function (err) {
 																	// TODO message
 																	$$(self.webixUiId.objectDatatable).hideProgress();
@@ -893,6 +893,7 @@ steal(
 										var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
 
 										// Set values to model creator
+										self.controllers.ModelCreator.setAppId(self.data.app.id);
 										self.controllers.ModelCreator.setAppName(self.data.app.name);
 										self.controllers.ModelCreator.setObjectName(curObject[0].attr('name'));
 										var describe = {};
