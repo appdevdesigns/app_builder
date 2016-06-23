@@ -80,6 +80,7 @@ steal(
 							var self = this;
 							self.labels = {};
 							self.labels.common = {};
+							self.labels.application = {};
 							self.labels.object = {};
 							self.labels.object.toolbar = {};
 
@@ -98,6 +99,9 @@ steal(
 							self.labels.common.createSuccessMessage = AD.lang.label.getLabel('ab.common.create.success') || "<b>{0}</b> is created.";
 							self.labels.common.deleteErrorMessage = AD.lang.label.getLabel('ab.common.delete.error') || "System could not delete <b>{0}</b>.";
 							self.labels.common.deleteSuccessMessage = AD.lang.label.getLabel('ab.common.delete.success') || "<b>{0}</b> is deleted.";
+
+							self.labels.application.unsyncDataMessage = AD.lang.label.getLabel('ab.application.unsyncDataMessage') || "There are {0} out of sync data";
+							self.labels.application.dataOfflineMessage = AD.lang.label.getLabel('ab.application.dataOfflineMessage') || "This data is offline.";
 
 							self.labels.object.hideField = AD.lang.label.getLabel('ab.object.hideField') || "Hide field";
 							self.labels.object.filterField = AD.lang.label.getLabel('ab.object.filterField') || "Filter field";
@@ -286,6 +290,7 @@ steal(
 
 																		// Enable local storage
 																		self.controllers.ModelCreator.enableLocalStorage();
+																		$$(self.webixUiId.offineDataLabel).show();
 
 																		$$(self.webixUiId.editHeaderPopup).hide();
 
@@ -770,7 +775,7 @@ steal(
 											{
 												id: self.webixUiId.offineDataLabel,
 												view: "label",
-												label: "This data is offline.",
+												label: self.labels.application.dataOfflineMessage,
 												hidden: true
 											},
 											{
@@ -813,7 +818,8 @@ steal(
 
 							self.controllers.ModelCreator.on(self.options.updateUnsyncCountEvent, function (event, data) {
 								if (data.count) {
-									var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> There are #count# out of sync data'.replace('#count#', data.count);
+									var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> ' + self.labels.application.unsyncDataMessage.replace('{0}', data.count);
+
 									$$("ab-unsync-data-count").define('label', label);
 									$$("ab-unsync-data-count").refresh();
 									$$("ab-unsync-data-count").show();
@@ -1038,6 +1044,7 @@ steal(
 
 													// Enable local storage
 													self.controllers.ModelCreator.enableLocalStorage();
+													$$(self.webixUiId.offineDataLabel).show();
 
 													saveDeferred.resolve(data);
 												});

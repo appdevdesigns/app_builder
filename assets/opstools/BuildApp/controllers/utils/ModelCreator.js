@@ -34,11 +34,11 @@ steal(
 						},
 
 						setAppName: function (appName) {
-							this.data.appName = appName.replace('_', '').toLowerCase();
+							this.data.appName = appName;
 						},
 
 						setObjectName: function (objectName) {
-							this.data.objectName = objectName.replace('_', '').toLowerCase();
+							this.data.objectName = objectName;
 						},
 
 						setDescribe: function (describe) {
@@ -63,9 +63,19 @@ steal(
 						},
 
 
+						enforceUpdateToDB: function () { // For sync data to real database
+							this.data.forceToDB = true;
+						},
+
+						cancelEnforceUpdateToDB: function () {
+							this.data.forceToDB = false;
+						},
+
 						getModel() {
 							var self = this,
-								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", self.data.appName).replace("#objectName#", self.data.objectName),
+								formatAppName = self.data.appName.replace('_', '').toLowerCase(),
+								formatObjectName = self.data.objectName.replace('_', '').toLowerCase(),
+								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName),
 								model = AD.Model.get(modelName);
 
 							if (model) {
@@ -89,7 +99,7 @@ steal(
 
 								for (var key in modelDefinition) {
 									if (typeof modelDefinition[key] == 'string')
-										modelDefinition[key] = modelDefinition[key].replace(/#appName#/g, self.data.appName).replace(/#objectName#/g, self.data.objectName);
+										modelDefinition[key] = modelDefinition[key].replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 								}
 
 								AD.Model.Base.extend(modelName, modelDefinition, {});
@@ -161,7 +171,7 @@ steal(
 										return q;
 									},
 									create: function (obj) {
-										if (!self.localBucket.isEnable(self.data.objectName))
+										if (!self.localBucket.isEnable(self.data.objectName) || self.data.forceToDB)
 											return base.create(obj);
 
 										var q = $.Deferred();
@@ -172,7 +182,7 @@ steal(
 										return q;
 									},
 									update: function (id, obj) {
-										if (!self.localBucket.isEnable(self.data.objectName))
+										if (!self.localBucket.isEnable(self.data.objectName) || self.data.forceToDB)
 											return base.update(id, obj);
 
 										var q = $.Deferred();
@@ -183,7 +193,7 @@ steal(
 										return q;
 									},
 									destroy: function (id) {
-										if (!self.localBucket.isEnable(self.data.objectName))
+										if (!self.localBucket.isEnable(self.data.objectName) || self.data.forceToDB)
 											return base.destroy(id);
 
 										var q = $.Deferred();

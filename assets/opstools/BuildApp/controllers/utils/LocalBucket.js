@@ -25,10 +25,6 @@ steal(
 								instance.destroyContainer = "app_#appId#_destroy".replace('#appId#', instance.appId);
 								instance.enableListContainer = "app_#appId#_enable".replace('#appId#', instance.appId);
 
-								var formatName = function (name) {
-									return name.replace('_', '').toLowerCase();
-								}
-
 								return {
 
 									// Update container
@@ -48,8 +44,6 @@ steal(
 									},
 
 									get: function (objectName, id) {
-										objectName = formatName(objectName);
-										
 										var dataStore = webix.storage.local.get(instance.saveContainer);
 
 										if (!dataStore) dataStore = {};
@@ -80,15 +74,13 @@ steal(
 									},
 
 									save: function (objectName, data) {
-										objectName = formatName(objectName);
-
 										var dataStore = webix.storage.local.get(instance.saveContainer);
 
 										if (!dataStore) dataStore = {};
 										if (!dataStore[objectName]) dataStore[objectName] = [];
 
 										if (!data.id)
-											data.id = webix.uid();
+											data.id = 'temp' + webix.uid();
 
 										if (data.data) {
 											data = $.extend(data.data, data);
@@ -102,14 +94,11 @@ steal(
 										if (existsData && existsData.length > 0) { // Update
 											dataStore[objectName].forEach(function (d) {
 												if (d.id == data.id)
-													d.data = data;
+													d = data;
 											});
 										}
 										else { // Create
-											dataStore[objectName].push({
-												id: data.id,
-												data: data
-											});
+											dataStore[objectName].push(data);
 										}
 
 										webix.storage.local.put(instance.saveContainer, dataStore);
@@ -122,9 +111,15 @@ steal(
 									// {
 									// 	"objectName": [id, id2, ..., idN]
 									// }
+									getDestroyAll: function () {
+										var dataStore = webix.storage.local.get(instance.destroyContainer);
+
+										if (!dataStore) dataStore = {};
+
+										return dataStore;
+									},
+
 									getDestroyIds: function (objectName) {
-										objectName = formatName(objectName);
-										
 										var dataStore = webix.storage.local.get(instance.destroyContainer);
 
 										if (!dataStore) dataStore = {};
@@ -134,8 +129,6 @@ steal(
 									},
 
 									destroy: function (objectName, id) {
-										objectName = formatName(objectName);
-
 										var dataStore = webix.storage.local.get(instance.destroyContainer);
 
 										if (!dataStore) dataStore = {};
@@ -165,8 +158,6 @@ steal(
 
 									// Enable local storage list
 									enable: function (objectName) {
-										objectName = formatName(objectName);
-
 										var dataStore = webix.storage.local.get(instance.enableListContainer);
 
 										if (!dataStore) dataStore = [];
@@ -178,8 +169,6 @@ steal(
 									},
 
 									disable: function (objectName) {
-										objectName = formatName(objectName);
-
 										var dataStore = webix.storage.local.get(instance.enableListContainer);
 
 										if (!dataStore) dataStore = [];
@@ -191,8 +180,6 @@ steal(
 									},
 
 									isEnable: function (objectName) {
-										objectName = formatName(objectName);
-
 										var dataStore = webix.storage.local.get(instance.enableListContainer);
 
 										if (!dataStore) dataStore = [];
@@ -204,6 +191,8 @@ steal(
 									clear: function () {
 										webix.storage.local.remove(instance.saveContainer);
 										webix.storage.local.remove(instance.destroyContainer);
+
+										webix.storage.local.remove(instance.enableListContainer);
 
 										self.element.trigger(self.options.updateUnsyncCountEvent, { count: 0 });
 									}

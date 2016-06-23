@@ -98,10 +98,28 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	min-height: 100px;
 }
 .ab-unsync-data-warning {
+	cursor: pointer;
     color: #fff;
     background-color: #F5962F;
     border: #fff dotted 1px !important;
     padding-left: 2px;	
+}
+.ab-unsync-data-popup .webix_win_head {
+	background-color: #F5962F;
+}
+.ab-unsync-data-popup .webix_win_head .header {
+	padding-left: 5px;
+	font-weight: bold;
+    color: #fff;
+}
+.ab-unsync-data-status {
+	padding: 3px;
+}
+.ab-unsync-data-in-progress{
+	background-color: #F5AE0F;
+}
+.ab-unsync-data-in-done{
+	background-color: #3AB349;
 }
 
 /* Object list */

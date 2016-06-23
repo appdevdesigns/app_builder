@@ -5,6 +5,7 @@ steal(
 	'opstools/BuildApp/controllers/InterfacePage.js',
 
 	'opstools/BuildApp/controllers/utils/LocalBucket.js',
+	'opstools/BuildApp/controllers/utils/DataUpdater.js',
 
 	function () {
 		System.import('appdev').then(function () {
@@ -20,15 +21,16 @@ steal(
 							var self = this;
 							options = AD.defaults({
 								backToAppPageEvent: 'AB_Application.GoToAppPage',
-								synchronizeEvent: 'AB_Application.Synchronize'
+								synchronizeEvent: 'AB_Application.Synchronize',
+
+								syncSaveDataEvent: 'AB_Object.SyncSaveData',
+								syncDeleteDataEvent: 'AB_Object.SyncDeleteData',
 							}, options);
 							this.options = options;
 
 							// Call parent init
 							this._super(element, options);
 
-
-							this.dataSource = this.options.dataSource; // AD.models.Projects;
 							this.data = {};
 
 							this.webixUiId = {
@@ -40,6 +42,9 @@ steal(
 								appWorkspace: 'ab-workspace',
 
 								unsyncDataLabel: 'ab-unsync-data-count',
+								unsyncDataPopup: 'ab-unsync-data-popup',
+								unsyncDataHeader: 'ab-unsync-data-header',
+								unsyncDataList: 'ab-unsync-data-list',
 
 								objectView: 'ab-app-object-view',
 								interfaceView: 'ab-app-interface-view'
@@ -61,13 +66,20 @@ steal(
 						initMultilingualLabels: function () {
 							var self = this;
 							self.labels = {};
+							self.labels.common = {};
 							self.labels.application = {};
 							self.labels.object = {};
 							self.labels.interface = {};
 
-							self.labels.application.backToApplication = AD.lang.label.getLabel('ab.application.backToApplication') || "Back to Applications page";
+							self.labels.common.close = AD.lang.label.getLabel('ab.common.close') || "Close";
+
+							self.labels.application.unsyncDataMessage = AD.lang.label.getLabel('ab.application.unsyncDataMessage') || "There are {0} out of sync data";
+							self.labels.application.unsyncDataHeader = AD.lang.label.getLabel('ab.application.unsyncDataHeader') || "Unsynchronized data";
 							self.labels.application.synchronize = AD.lang.label.getLabel('ab.application.synchronize') || "Synchronize";
+							self.labels.application.backToApplication = AD.lang.label.getLabel('ab.application.backToApplication') || "Back to Applications page";
+
 							self.labels.object.title = AD.lang.label.getLabel('ab.object.title') || "Objects";
+
 							self.labels.interface.title = AD.lang.label.getLabel('ab.interface.title') || "Interface";
 						},
 
@@ -77,11 +89,13 @@ steal(
 
 							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage'),
 								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage'),
-								LocalBucket = AD.Control.get('opstools.BuildApp.LocalBucket');
+								LocalBucket = AD.Control.get('opstools.BuildApp.LocalBucket'),
+								DataUpdater = AD.Control.get('opstools.BuildApp.DataUpdater');
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
 							self.controllers.LocalBucket = new LocalBucket(self.element);
+							self.controllers.DataUpdater = new DataUpdater(self.element);
 
 						},
 
@@ -115,7 +129,12 @@ steal(
 												view: "label",
 												css: "ab-unsync-data-warning",
 												width: 270,
-												hidden: true
+												hidden: true,
+												on: {
+													onItemClick: function (id, e) {
+														$$(self.webixUiId.unsyncDataPopup).show();
+													}
+												}
 											},
 											{
 												view: "button",
@@ -162,6 +181,134 @@ steal(
 									}
 								]
 							});
+
+							webix.ui({
+								view: 'window',
+								id: self.webixUiId.unsyncDataPopup,
+								width: 650,
+								height: 450,
+								position: "center",
+								modal: true,
+								hidden: true,
+								css: 'ab-unsync-data-popup',
+								head: {
+									cols: [
+										{
+											id: self.webixUiId.unsyncDataHeader,
+											view: 'label',
+											css: 'header',
+											label: self.labels.application.unsyncDataHeader
+										},
+										{
+											autowidth: true
+										},
+										{
+											view: "button",
+											type: "icon",
+											icon: "remove",
+											label: self.labels.common.close,
+											width: 80,
+											click: function () { $$(self.webixUiId.unsyncDataPopup).hide(); }
+										}
+									]
+								},
+								body: {
+									view: "unitlist",
+									id: self.webixUiId.unsyncDataList,
+									select: false,
+									width: 650,
+									height: 300,
+									padding: 40,
+									scheme: {
+										$sort: {
+											by: "objectName",
+											dir: 'asc'
+										}
+									},
+									uniteBy: function (obj) {
+										return obj.objectName;
+									},
+									template: '{common.status()} <span style="display: inline-block; width: 50px;">#type#</span> - #count# Rows',
+									type: {
+										status: function (obj) {
+											var result = "";
+											switch (obj.status) {
+												case "not started":
+													result = '<i class="fa fa-square-o ab-unsync-data-status"></i>';
+													break;
+												case "in progress":
+													result = '<i class="fa fa-refresh ab-unsync-data-status ab-unsync-data-in-progress"></i>';
+													break;
+												case "done":
+													result = '<i class="fa fa-check ab-unsync-data-status ab-unsync-data-in-done"></i>';
+													break;
+											}
+
+											return result;
+										}
+									}
+								},
+								on: {
+									onShow: function () {
+										$$(self.webixUiId.unsyncDataList).clearAll();
+										$$(self.webixUiId.unsyncDataList).showProgress({ type: 'icon' });
+
+										var savedData = self.localBucket.getAll(),
+											destroyedData = self.localBucket.getDestroyAll(),
+											dataList = [];
+
+										for (var objName in savedData) {
+											// TODO find object label
+											var addNum = 0,
+												updateNumber = 0;
+											savedData[objName].forEach(function (d) {
+												if (typeof d.id == 'string' && d.id.startsWith('temp'))
+													addNum++;
+												else
+													updateNumber++;
+											});
+
+											// Add data number
+											if (addNum > 0) {
+												dataList.push({
+													objectName: objName,
+													status: "not started",
+													type: 'Add',
+													count: addNum
+												});
+											}
+
+											// Update data number
+											if (updateNumber > 0) {
+												dataList.push({
+													objectName: objName,
+													status: "not started",
+													type: 'Update',
+													count: addNum
+												});
+											}
+										}
+
+										// Delete data number
+										for (var objName in destroyedData) {
+											if (destroyedData[objName].length > 0) {
+												dataList.push({
+													objectName: objName,
+													status: "not started",
+													type: 'Delete',
+													count: destroyedData[objName].length
+												});
+											}
+										}
+
+										$$(self.webixUiId.unsyncDataList).parse(dataList);
+
+										$$(self.webixUiId.unsyncDataList).hideProgress();
+									}
+								}
+							});
+
+							webix.extend($$(self.webixUiId.unsyncDataList), webix.ProgressBar);
 						},
 
 						setApplication: function (app) {
@@ -172,12 +319,14 @@ steal(
 							$$(self.webixUiId.appNameLabel).define('label', app.label);
 							$$(self.webixUiId.appNameLabel).refresh();
 
-							self.controllers.ObjectPage.setAppId(app);
+							self.controllers.ObjectPage.setApp(app);
 
-							var localBucket = self.controllers.LocalBucket.getBucket(app.id);
-							var localDataCount = localBucket.getCount() + localBucket.getDestroyCount();
+							self.controllers.DataUpdater.setApp(app);
+
+							self.localBucket = self.controllers.LocalBucket.getBucket(app.id);
+							var localDataCount = self.localBucket.getCount() + self.localBucket.getDestroyCount();
 							if (localDataCount) {
-								var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> There are #count# out of sync data'.replace('#count#', localDataCount);
+								var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> ' + self.labels.application.unsyncDataMessage.replace('{0}', localDataCount);
 								$$(self.webixUiId.unsyncDataLabel).define('label', label);
 								$$(self.webixUiId.unsyncDataLabel).refresh();
 								$$(self.webixUiId.unsyncDataLabel).show();
@@ -189,6 +338,10 @@ steal(
 
 							// FOR TEST
 							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+						},
+
+						syncLocalDataToDB: function () {
+							return this.controllers.DataUpdater.syncData();
 						},
 
 						resize: function (height) {

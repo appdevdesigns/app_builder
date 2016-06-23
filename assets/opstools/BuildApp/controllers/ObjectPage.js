@@ -93,7 +93,7 @@ steal(
 							self.controllers.ObjectWorkspace.webix_ready();
 						},
 
-						setAppId: function (app) {
+						setApp: function (app) {
 							var self = this;
 							self.data.app = app;
 

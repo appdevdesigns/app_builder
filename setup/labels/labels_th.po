@@ -169,6 +169,30 @@ msgstr "แอปพลิเคชั่น"
 
 #. path: app_builder
 #. code: th
+#. key: ab.application.unsyncDataMessage
+msgid "There are {0} out of sync data"
+msgstr "มีข้อมูลที่ยังไม่ได้ซิ้งค์ เป็นจำนวน {0}"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.unsyncDataHeader
+msgid "Unsynchronized data"
+msgstr "ข้อมูลที่ยังไม่ได้ซิ้งค์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.synchronize
+msgid "Synchronize"
+msgstr "ซิ้งค์ข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.dataOfflineMessage
+msgid "This data is offline."
+msgstr "ข้อมูลชุดนี้ยังไม่ได้ถูกซิ้งค์ไปยังเซอร์เวอร์"
+
+#. path: app_builder
+#. code: th
 #. key: ab.application.backToApplication
 msgid "Back to Applications page"
 msgstr "กลับไปหน้าแอปพลิเคชั่น"

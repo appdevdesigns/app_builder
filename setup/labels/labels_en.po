@@ -169,6 +169,30 @@ msgstr "Application Menu"
 
 #. path: app_builder
 #. code: en
+#. key: ab.application.unsyncDataMessage
+msgid "There are {0} out of sync data"
+msgstr "There are {0} out of sync data"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.unsyncDataHeader
+msgid "Unsynchronized data"
+msgstr "Unsynchronized data"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.synchronize
+msgid "Synchronize"
+msgstr "Synchronize"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.dataOfflineMessage
+msgid "This data is offline."
+msgstr "This data is offline."
+
+#. path: app_builder
+#. code: en
 #. key: ab.application.backToApplication
 msgid "Back to Applications page"
 msgstr "Back to Applications page"
