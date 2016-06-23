@@ -11,6 +11,11 @@ steal(
 
 						init: function (element, options) {
 							var self = this;
+
+							self.options = AD.defaults({
+								updateUnsyncCountEvent: 'AB_Object.LocalCount',
+							}, options);
+
 							self.data = {};
 
 							self.bucket = function (appId) {
@@ -18,6 +23,11 @@ steal(
 								instance.appId = appId;
 								instance.saveContainer = "app_#appId#_save".replace('#appId#', instance.appId);
 								instance.destroyContainer = "app_#appId#_destroy".replace('#appId#', instance.appId);
+								instance.enableListContainer = "app_#appId#_enable".replace('#appId#', instance.appId);
+
+								var formatName = function (name) {
+									return name.replace('_', '').toLowerCase();
+								}
 
 								return {
 
@@ -38,6 +48,8 @@ steal(
 									},
 
 									get: function (objectName, id) {
+										objectName = formatName(objectName);
+										
 										var dataStore = webix.storage.local.get(instance.saveContainer);
 
 										if (!dataStore) dataStore = {};
@@ -68,6 +80,8 @@ steal(
 									},
 
 									save: function (objectName, data) {
+										objectName = formatName(objectName);
+
 										var dataStore = webix.storage.local.get(instance.saveContainer);
 
 										if (!dataStore) dataStore = {};
@@ -99,6 +113,7 @@ steal(
 										}
 
 										webix.storage.local.put(instance.saveContainer, dataStore);
+										self.element.trigger(self.options.updateUnsyncCountEvent, { count: this.getCount() + this.getDestroyCount() });
 									},
 
 
@@ -108,6 +123,8 @@ steal(
 									// 	"objectName": [id, id2, ..., idN]
 									// }
 									getDestroyIds: function (objectName) {
+										objectName = formatName(objectName);
+										
 										var dataStore = webix.storage.local.get(instance.destroyContainer);
 
 										if (!dataStore) dataStore = {};
@@ -117,6 +134,8 @@ steal(
 									},
 
 									destroy: function (objectName, id) {
+										objectName = formatName(objectName);
+
 										var dataStore = webix.storage.local.get(instance.destroyContainer);
 
 										if (!dataStore) dataStore = {};
@@ -126,6 +145,8 @@ steal(
 											dataStore[objectName].push(id);
 
 										webix.storage.local.put(instance.destroyContainer, dataStore);
+
+										self.element.trigger(self.options.updateUnsyncCountEvent, { count: this.getCount() + this.getDestroyCount() });
 									},
 
 									getDestroyCount: function () {
@@ -142,10 +163,49 @@ steal(
 									},
 
 
+									// Enable local storage list
+									enable: function (objectName) {
+										objectName = formatName(objectName);
+
+										var dataStore = webix.storage.local.get(instance.enableListContainer);
+
+										if (!dataStore) dataStore = [];
+
+										if ($.inArray(objectName, dataStore) < 0)
+											dataStore.push(objectName);
+
+										webix.storage.local.put(instance.enableListContainer, dataStore);
+									},
+
+									disable: function (objectName) {
+										objectName = formatName(objectName);
+
+										var dataStore = webix.storage.local.get(instance.enableListContainer);
+
+										if (!dataStore) dataStore = [];
+
+										var index = $.inArray(objectName, dataStore);
+										dataStore.splice(index, 0);
+
+										webix.storage.local.put(instance.enableListContainer, dataStore);
+									},
+
+									isEnable: function (objectName) {
+										objectName = formatName(objectName);
+
+										var dataStore = webix.storage.local.get(instance.enableListContainer);
+
+										if (!dataStore) dataStore = [];
+
+										return $.inArray(objectName, dataStore) >= 0;
+									},
+
 
 									clear: function () {
 										webix.storage.local.remove(instance.saveContainer);
 										webix.storage.local.remove(instance.destroyContainer);
+
+										self.element.trigger(self.options.updateUnsyncCountEvent, { count: 0 });
 									}
 								};
 							};

@@ -12,8 +12,10 @@ steal(
 
 						init: function (element, options) {
 							this.data = {};
-							this.data.enableLocal = false;
-							// this.data.enableLocal = true;
+
+							this.options = AD.defaults({
+								updateUnsyncCountEvent: 'AB_Object.LocalCount',
+							}, options);
 
 							this.initControllers();
 						},
@@ -24,7 +26,7 @@ steal(
 
 							var LocalBucket = AD.Control.get('opstools.BuildApp.LocalBucket');
 
-							self.controllers.LocalBucket = new LocalBucket();
+							self.controllers.LocalBucket = new LocalBucket(self.element, { updateUnsyncCountEvent: self.options.updateUnsyncCountEvent });
 						},
 
 						setAppId: function (appId) {
@@ -49,11 +51,11 @@ steal(
 
 
 						enableLocalStorage: function () {
-							this.data.enableLocal = true;
+							this.localBucket.enable(this.data.objectName);
 						},
 
 						disableLocalStorage: function () {
-							this.data.enableLocal = false;
+							this.localBucket.disable(this.data.objectName);
 						},
 
 
@@ -91,7 +93,7 @@ steal(
 
 								AD.Model.extend(modelName, {
 									findAll: function (cond) {
-										if (!self.data.enableLocal)
+										if (!self.localBucket.isEnable(self.data.objectName))
 											return base.findAll(cond);
 
 										var q = $.Deferred();
@@ -133,7 +135,7 @@ steal(
 										return q;
 									},
 									findOne: function (cond) {
-										if (!self.data.enableLocal)
+										if (!self.localBucket.isEnable(self.data.objectName))
 											return base.findOne(cond);
 
 										var q = $.Deferred();
@@ -155,7 +157,7 @@ steal(
 										return q;
 									},
 									create: function (obj) {
-										if (!self.data.enableLocal)
+										if (!self.localBucket.isEnable(self.data.objectName))
 											return base.create(obj);
 
 										var q = $.Deferred();
@@ -166,7 +168,7 @@ steal(
 										return q;
 									},
 									update: function (id, obj) {
-										if (!self.data.enableLocal)
+										if (!self.localBucket.isEnable(self.data.objectName))
 											return base.update(id, obj);
 
 										var q = $.Deferred();
@@ -177,7 +179,7 @@ steal(
 										return q;
 									},
 									destroy: function (id) {
-										if (!self.data.enableLocal)
+										if (!self.localBucket.isEnable(self.data.objectName))
 											return base.destroy(id);
 
 										var q = $.Deferred();

@@ -16,6 +16,7 @@ steal(
 							var self = this;
 							options = AD.defaults({
 								selectedObjectEvent: 'AB_Object.Selected',
+								createdObjectEvent: 'AB_Object.Created',
 								updatedObjectEvent: 'AB_Object.Updated'
 							}, options);
 							this.options = options;
@@ -353,6 +354,7 @@ steal(
 															}
 
 															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
+															self.element.trigger(self.options.createdObjectEvent, { newObject: result });
 
 															$$(self.webixUiId.objectList).hideProgress();
 

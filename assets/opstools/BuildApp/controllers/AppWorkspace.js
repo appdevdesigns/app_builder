@@ -3,6 +3,9 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/ObjectPage.js',
 	'opstools/BuildApp/controllers/InterfacePage.js',
+
+	'opstools/BuildApp/controllers/utils/LocalBucket.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -35,6 +38,8 @@ steal(
 								appWorkspaceToolbar: 'ab-workspace-toolbar',
 								appWorkspaceMenu: 'ab-workspace-tabbar',
 								appWorkspace: 'ab-workspace',
+
+								unsyncDataLabel: 'ab-unsync-data-count',
 
 								objectView: 'ab-app-object-view',
 								interfaceView: 'ab-app-interface-view'
@@ -71,10 +76,13 @@ steal(
 							self.controllers = {};
 
 							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage'),
-								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage');
+								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage'),
+								LocalBucket = AD.Control.get('opstools.BuildApp.LocalBucket');
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
+							self.controllers.LocalBucket = new LocalBucket(self.element);
+
 						},
 
 						getUIDefinitions: function () {
@@ -102,6 +110,13 @@ steal(
 										cols: [
 											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
 											{ fillspace: true },
+											{
+												id: "ab-unsync-data-count",
+												view: "label",
+												css: "ab-unsync-data-warning",
+												width: 270,
+												hidden: true
+											},
 											{
 												view: "button",
 												type: "iconButton",
@@ -158,6 +173,19 @@ steal(
 							$$(self.webixUiId.appNameLabel).refresh();
 
 							self.controllers.ObjectPage.setAppId(app);
+
+							var localBucket = self.controllers.LocalBucket.getBucket(app.id);
+							var localDataCount = localBucket.getCount() + localBucket.getDestroyCount();
+							if (localDataCount) {
+								var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> There are #count# out of sync data'.replace('#count#', localDataCount);
+								$$(self.webixUiId.unsyncDataLabel).define('label', label);
+								$$(self.webixUiId.unsyncDataLabel).refresh();
+								$$(self.webixUiId.unsyncDataLabel).show();
+							}
+							else {
+								$$(self.webixUiId.unsyncDataLabel).hide();
+							}
+
 
 							// FOR TEST
 							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);

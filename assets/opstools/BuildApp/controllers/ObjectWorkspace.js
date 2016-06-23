@@ -26,9 +26,10 @@ steal(
 
 						init: function (element, options) {
 							var self = this;
-							options = AD.defaults({
+
+							self.options = AD.defaults({
+								updateUnsyncCountEvent: 'AB_Object.LocalCount',
 							}, options);
-							this.options = options;
 
 							// Call parent init
 							this._super(element, options);
@@ -70,6 +71,7 @@ steal(
 							this.initMultilingualLabels();
 							this.initControllers();
 							this.initWebixUI();
+							this.initEvents();
 
 						},
 
@@ -155,7 +157,7 @@ steal(
 							self.controllers.FrozenPopup = new FrozenPopup();
 							self.controllers.DefineLabelPopup = new DefineLabelPopup();
 							self.controllers.AddFieldPopup = new AddFieldPopup();
-							self.controllers.ModelCreator = new ModelCreator();
+							self.controllers.ModelCreator = new ModelCreator(self.element, { updateUnsyncCountEvent: self.options.updateUnsyncCountEvent });
 						},
 
 						initWebixUI: function () {
@@ -280,6 +282,9 @@ steal(
 																		$$(self.webixUiId.objectDatatable).refreshColumns(columns, true);
 
 																		self.reorderColumns();
+
+																		// Enable local storage
+																		self.controllers.ModelCreator.enableLocalStorage();
 
 																		$$(self.webixUiId.editHeaderPopup).hide();
 
@@ -796,6 +801,23 @@ steal(
 							};
 						},
 
+						initEvents: function () {
+							var self = this;
+
+							self.controllers.ModelCreator.on(self.options.updateUnsyncCountEvent, function (event, data) {
+								if (data.count) {
+									var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> There are #count# out of sync data'.replace('#count#', data.count);
+									$$("ab-unsync-data-count").define('label', label);
+									$$("ab-unsync-data-count").refresh();
+									$$("ab-unsync-data-count").show();
+								}
+								else {
+									$$("ab-unsync-data-count").hide();
+								}
+							});
+
+						},
+
 						webix_ready: function () {
 							var self = this;
 
@@ -1000,6 +1022,9 @@ steal(
 												})
 												.then(function (data) {
 													if (data.translate) data.translate();
+
+													// Enable local storage
+													self.controllers.ModelCreator.enableLocalStorage();
 
 													saveDeferred.resolve(data);
 												});

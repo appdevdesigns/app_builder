@@ -97,6 +97,12 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-app-workspace {
 	min-height: 100px;
 }
+.ab-unsync-data-warning {
+    color: #fff;
+    background-color: #F5962F;
+    border: #fff dotted 1px !important;
+    padding-left: 2px;	
+}
 
 /* Object list */
 .ab-object-list-item {
