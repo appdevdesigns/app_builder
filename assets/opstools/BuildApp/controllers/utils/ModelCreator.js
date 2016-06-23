@@ -58,6 +58,10 @@ steal(
 							this.localBucket.disable(this.data.objectName);
 						},
 
+						isLocalStorage: function () {
+							return this.localBucket.isEnable(this.data.objectName);
+						},
+
 
 						getModel() {
 							var self = this,

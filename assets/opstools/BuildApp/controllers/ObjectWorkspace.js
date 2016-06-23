@@ -51,6 +51,7 @@ steal(
 								frozenButton: 'ab-frozen-columns-toolbar',
 								defineLabelButton: 'ab-define-label-toolbar',
 
+								offineDataLabel: 'ab-office-data-label',
 								addNewRowButton: 'ab-add-new-row-button',
 
 								editHeaderPopup: 'ab-edit-header-popup',
@@ -767,6 +768,12 @@ steal(
 									{
 										cols: [
 											{
+												id: self.webixUiId.offineDataLabel,
+												view: "label",
+												label: "This data is offline.",
+												hidden: true
+											},
+											{
 												autowidth: true
 											},
 											{
@@ -850,6 +857,8 @@ steal(
 							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
 
 							if (self.data.objectId) {
+								var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
+
 								async.series([
 									function (next) {
 										$$(self.webixUiId.objectDatatable).clearAll();
@@ -912,8 +921,6 @@ steal(
 										next();
 									},
 									function (next) {
-										var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
-
 										// Set values to model creator
 										self.controllers.ModelCreator.setAppId(self.data.app.id);
 										self.controllers.ModelCreator.setAppName(self.data.app.name);
@@ -963,6 +970,12 @@ steal(
 
 									// Bind columns data
 									self.refreshPopupData();
+
+									// Show/Hide 'Offline data' label
+									if (self.controllers.ModelCreator.isLocalStorage())
+										$$(self.webixUiId.offineDataLabel).show();
+									else
+										$$(self.webixUiId.offineDataLabel).hide();
 
 									// Show 'Add new row' button
 									$$(self.webixUiId.addNewRowButton).show();
@@ -1500,6 +1513,7 @@ steal(
 							$$(self.webixUiId.objectDatatable).refreshColumns([], true);
 							// $$(self.webixUiId.objectDatatable).hide();
 
+							$$(self.webixUiId.offineDataLabel).hide();
 							$$(self.webixUiId.addNewRowButton).hide();
 
 							self.refreshPopupData();
