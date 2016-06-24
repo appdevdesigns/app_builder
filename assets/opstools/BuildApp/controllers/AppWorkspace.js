@@ -124,6 +124,20 @@ steal(
 										cols: [
 											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
 											{ fillspace: true },
+											// {
+											// 	view: 'button',
+											// 	value: 'TEST',
+											// 	click: function () {
+											// 		self.syncLocalDataToDB()
+											// 			.fail(function (err) {
+											// 				console.log(err);
+											// 				alert('NO OK');
+											// 			})
+											// 			.then(function () {
+											// 				alert('OK')
+											// 			});
+											// 	}
+											// },
 											{
 												id: "ab-unsync-data-count",
 												view: "label",
@@ -284,7 +298,7 @@ steal(
 													objectName: objName,
 													status: "not started",
 													type: 'Update',
-													count: addNum
+													count: updateNumber
 												});
 											}
 										}
@@ -342,6 +356,10 @@ steal(
 
 						syncLocalDataToDB: function () {
 							return this.controllers.DataUpdater.syncData();
+						},
+
+						refresh: function () {
+							this.controllers.ObjectPage.refresh();
 						},
 
 						resize: function (height) {

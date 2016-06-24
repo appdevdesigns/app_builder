@@ -94,6 +94,8 @@ steal(
 										// Sync local data to server
 										self.controllers.AppWorkspace.syncLocalDataToDB()
 											.then(function () {
+												self.controllers.AppWorkspace.refresh();
+
 												$overlay.remove();
 												delete $overlay;
 											});

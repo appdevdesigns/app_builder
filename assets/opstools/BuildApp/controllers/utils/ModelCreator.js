@@ -63,13 +63,6 @@ steal(
 						},
 
 
-						enforceUpdateToDB: function () { // For sync data to real database
-							this.data.forceToDB = true;
-						},
-
-						cancelEnforceUpdateToDB: function () {
-							this.data.forceToDB = false;
-						},
 
 						getModel() {
 							var self = this,
@@ -112,7 +105,7 @@ steal(
 
 										var q = $.Deferred();
 
-										var localResults = $.map(self.localBucket.get(self.data.objectName), function (r) { return r.data; }),
+										var localResults = self.localBucket.get(self.data.objectName),
 											localDestroyIds = self.localBucket.getDestroyIds(self.data.objectName);
 
 										base.findAll(cond)
@@ -171,7 +164,7 @@ steal(
 										return q;
 									},
 									create: function (obj) {
-										if (!self.localBucket.isEnable(self.data.objectName) || self.data.forceToDB)
+										if (!self.localBucket.isEnable(self.data.objectName) || this.forceToDB)
 											return base.create(obj);
 
 										var q = $.Deferred();
@@ -182,7 +175,7 @@ steal(
 										return q;
 									},
 									update: function (id, obj) {
-										if (!self.localBucket.isEnable(self.data.objectName) || self.data.forceToDB)
+										if (!self.localBucket.isEnable(self.data.objectName) || this.forceToDB)
 											return base.update(id, obj);
 
 										var q = $.Deferred();
@@ -193,7 +186,7 @@ steal(
 										return q;
 									},
 									destroy: function (id) {
-										if (!self.localBucket.isEnable(self.data.objectName) || self.data.forceToDB)
+										if (!self.localBucket.isEnable(self.data.objectName) || this.forceToDB)
 											return base.destroy(id);
 
 										var q = $.Deferred();
@@ -202,7 +195,14 @@ steal(
 										q.resolve({ id: id });
 
 										return q;
-									}
+									},
+
+									enforceUpdateToDB: function () { // For sync data to real database
+										this.forceToDB = true;
+									},
+									cancelEnforceUpdateToDB: function () {
+										this.forceToDB = false;
+									},
 								}, {});
 
 								return AD.Model.get(modelName);

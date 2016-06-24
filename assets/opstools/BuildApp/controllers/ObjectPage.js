@@ -69,6 +69,8 @@ steal(
 							var self = this;
 
 							self.controllers.ObjectList.on(self.options.selectedObjectEvent, function (event, id) {
+								self.data.objectId = id;
+
 								self.controllers.ObjectWorkspace.setObjectId(id);
 							});
 
@@ -102,6 +104,10 @@ steal(
 
 							self.controllers.ObjectWorkspace.setApp(app);
 							self.controllers.ObjectList.setApp(app);
+						},
+
+						refresh: function () {
+							this.controllers.ObjectWorkspace.setObjectId(this.data.objectId);
 						},
 
 						resize: function (height) {

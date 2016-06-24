@@ -59,16 +59,18 @@ steal(
 							var savedDataSource = self.localBucket.getAll();
 							var destroyedDataSource = self.localBucket.getDestroyAll();
 
-							self.controllers.ModelCreator.enforceUpdateToDB(); // Sync data to real database
-
 							async.series([
 								function (callback) {
-									var saveDataActions = [];
+									var saveDataActions = [],
+										objectModelList = [];
 
 									Object.keys(savedDataSource).forEach(function (objName) {
 										saveDataActions.push(function (cb) {
 
 											self.getObjectModel(objName).then(function (objectModel) {
+												objectModelList.push(objectModel); // Store in array
+
+												objectModel.enforceUpdateToDB(); // Sync data to real database
 
 												// Sync update & add data
 												savedDataSource[objName].forEach(function (d) {
@@ -92,15 +94,26 @@ steal(
 										});
 									});
 
-									async.series(saveDataActions, callback);
+									async.series(saveDataActions, function (err) {
+										// Cancel enforce update to database
+										objectModelList.forEach(function (objectModel) {
+											objectModel.cancelEnforceUpdateToDB();
+										});
+
+										callback(err);
+									});
 								},
 								function (callback) {
-									var deleteDataActions = [];
+									var deleteDataActions = [],
+										objectModelList = [];
 
 									Object.keys(destroyedDataSource).forEach(function (objName) {
 										deleteDataActions.push(function (cb) {
 
 											self.getObjectModel(objName).then(function (objectModel) {
+												objectModelList.push(objectModel); // Store in array
+
+												objectModel.enforceUpdateToDB(); // Sync data to real database
 
 												// Sync delete data
 												destroyedDataSource[objName].forEach(function (id) {
@@ -113,12 +126,18 @@ steal(
 										});
 									});
 
-									async.series(deleteDataActions, callback);
+									async.series(deleteDataActions, function (err) {
+										// Cancel enforce update to database
+										objectModelList.forEach(function (objectModel) {
+											objectModel.cancelEnforceUpdateToDB();
+										});
+
+										callback(err);
+									});
 								},
 								function (callback) {
-									// Clear state
-									self.controllers.ModelCreator.cancelEnforceUpdateToDB();
-									// self.localBucket.clear();
+									// Clear local data
+									self.localBucket.clear();
 
 									callback();
 

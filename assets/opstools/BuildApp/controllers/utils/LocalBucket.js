@@ -92,9 +92,9 @@ steal(
 										});
 
 										if (existsData && existsData.length > 0) { // Update
-											dataStore[objectName].forEach(function (d) {
+											dataStore[objectName].forEach(function (d, index) {
 												if (d.id == data.id)
-													d = data;
+													dataStore[objectName][index] = data;
 											});
 										}
 										else { // Create
