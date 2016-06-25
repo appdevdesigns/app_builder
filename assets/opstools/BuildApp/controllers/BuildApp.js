@@ -91,14 +91,10 @@ steal(
 									url: '/app_builder/fullReload'
 								})
 									.always(function () {
-										// Sync local data to server
-										self.controllers.AppWorkspace.syncLocalDataToDB()
-											.then(function () {
-												self.controllers.AppWorkspace.refresh();
+										$overlay.remove();
+										delete $overlay;
 
-												$overlay.remove();
-												delete $overlay;
-											});
+										self.controllers.AppWorkspace.syncLocalDataToDB();
 									})
 									.fail(function (err) {
 										console.log(err);

@@ -24,7 +24,10 @@ steal(
 								synchronizeEvent: 'AB_Application.Synchronize',
 
 								syncSaveDataEvent: 'AB_Object.SyncSaveData',
+								errorSaveDataEvent: 'AB_Object.ErrorSaveData',
+
 								syncDeleteDataEvent: 'AB_Object.SyncDeleteData',
+								errorDeleteDataEvent: 'AB_Object.ErrorDeleteData',
 							}, options);
 							this.options = options;
 
@@ -32,6 +35,12 @@ steal(
 							this._super(element, options);
 
 							this.data = {};
+							this.data.completeAddDataCount = 0;
+							this.data.completeUpdateDataCount = 0;
+							this.data.completeDeleteDataCount = 0;
+							this.data.errorAddDataCount = 0;
+							this.data.errorUpdateDataCount = 0;
+							this.data.errorDeleteDataCount = 0;
 
 							this.webixUiId = {
 								appNameLabel: 'ab-name-label',
@@ -53,6 +62,8 @@ steal(
 							this.initMultilingualLabels();
 
 							this.initControllers();
+							this.initEvents();
+
 							this.getUIDefinitions();
 
 							webix.ready(function () {
@@ -99,6 +110,74 @@ steal(
 
 						},
 
+						initEvents: function () {
+							var self = this;
+
+							self.controllers.DataUpdater.on(self.options.syncSaveDataEvent, function (event, data) {
+								// Remove item in local storage
+								self.localBucket.remove(data.objName, data.oldId || data.id);
+
+								var itemId = '#objName#_#type#'.replace('#objName#', data.objName).replace('#type#', data.type);
+								var item = $$(self.webixUiId.unsyncDataList).getItem(itemId);
+
+								// Update item status
+								if (data.type == 'add') {
+									self.data.completeAddDataCount++;
+
+									if (item.status != 'error') {
+										if (self.data.completeAddDataCount >= item.count)
+											item.status = "done";
+										else
+											item.status = "in progress";
+									}
+								}
+								else {
+									self.data.completeUpdateDataCount++;
+
+									if (item.status != 'error') {
+										if (self.data.completeUpdateDataCount >= item.count)
+											item.status = "done";
+										else
+											item.status = "in progress";
+									}
+								}
+
+								$$(self.webixUiId.unsyncDataList).updateItem(itemId, item);
+								$$(self.webixUiId.unsyncDataList).refresh();
+							});
+
+							self.controllers.DataUpdater.on(self.options.syncDeleteDataEvent, function (event, data) {
+								// Remove item in local storage
+								self.localBucket.removeDestroy(data.objName, data.id);
+
+								var itemId = '#objName#_delete'.replace('#objName#', data.objName);
+								var item = $$(self.webixUiId.unsyncDataList).getItem(itemId);
+								item.status = "in progress";
+
+								$$(self.webixUiId.unsyncDataList).updateItem(itemId, item);
+								$$(self.webixUiId.unsyncDataList).refresh();
+
+								self.data.completeDeleteDataCount++;
+							});
+
+							self.controllers.DataUpdater.on(self.options.errorSaveDataEvent, function (event, data) {
+								// objName, id, err, type
+								if (data.type == 'add') {
+									self.data.errorAddDataCount++;
+								}
+								else {
+									self.data.errorUpdateDataCount++;
+								}
+							});
+
+							self.controllers.DataUpdater.on(self.options.errorDeleteDataEvent, function (event, data) {
+								// objName, id, err
+
+								self.data.errorDeleteDataCount++;
+							});
+
+						},
+
 						getUIDefinitions: function () {
 							var self = this;
 							self.UIDefinitions = {};
@@ -124,22 +203,17 @@ steal(
 										cols: [
 											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
 											{ fillspace: true },
-											// {
-											// 	view: 'button',
-											// 	value: 'TEST',
-											// 	click: function () {
-											// 		self.syncLocalDataToDB()
-											// 			.fail(function (err) {
-											// 				console.log(err);
-											// 				alert('NO OK');
-											// 			})
-											// 			.then(function () {
-											// 				alert('OK')
-											// 			});
-											// 	}
-											// },
+
 											{
-												id: "ab-unsync-data-count",
+												view: 'button',
+												value: 'TEST',
+												click: function () {
+													self.syncLocalDataToDB();
+												}
+											},
+
+											{
+												id: self.webixUiId.unsyncDataLabel,
 												view: "label",
 												css: "ab-unsync-data-warning",
 												width: 270,
@@ -254,7 +328,10 @@ steal(
 													result = '<i class="fa fa-refresh ab-unsync-data-status ab-unsync-data-in-progress"></i>';
 													break;
 												case "done":
-													result = '<i class="fa fa-check ab-unsync-data-status ab-unsync-data-in-done"></i>';
+													result = '<i class="fa fa-check ab-unsync-data-status ab-unsync-data-done"></i>';
+													break;
+												case "error":
+													result = '<i class="fa fa-exclamation ab-unsync-data-status ab-unsync-data-error"></i>';
 													break;
 											}
 
@@ -285,6 +362,7 @@ steal(
 											// Add data number
 											if (addNum > 0) {
 												dataList.push({
+													id: '#objName#_add'.replace('#objName#', objName),
 													objectName: objName,
 													status: "not started",
 													type: 'Add',
@@ -295,6 +373,7 @@ steal(
 											// Update data number
 											if (updateNumber > 0) {
 												dataList.push({
+													id: '#objName#_update'.replace('#objName#', objName),
 													objectName: objName,
 													status: "not started",
 													type: 'Update',
@@ -307,6 +386,7 @@ steal(
 										for (var objName in destroyedData) {
 											if (destroyedData[objName].length > 0) {
 												dataList.push({
+													id: '#objName#_delete'.replace('#objName#', objName),
 													objectName: objName,
 													status: "not started",
 													type: 'Delete',
@@ -337,7 +417,16 @@ steal(
 
 							self.controllers.DataUpdater.setApp(app);
 
-							self.localBucket = self.controllers.LocalBucket.getBucket(app.id);
+							self.refreshUnsyncLabel();
+
+							// FOR TEST
+							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+						},
+
+						refreshUnsyncLabel: function () {
+							var self = this;
+
+							self.localBucket = self.controllers.LocalBucket.getBucket(self.data.app.id);
 							var localDataCount = self.localBucket.getCount() + self.localBucket.getDestroyCount();
 							if (localDataCount) {
 								var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> ' + self.labels.application.unsyncDataMessage.replace('{0}', localDataCount);
@@ -348,14 +437,27 @@ steal(
 							else {
 								$$(self.webixUiId.unsyncDataLabel).hide();
 							}
-
-
-							// FOR TEST
-							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 						},
 
 						syncLocalDataToDB: function () {
-							return this.controllers.DataUpdater.syncData();
+							var self = this;
+
+							$$(self.webixUiId.unsyncDataPopup).show();
+
+							self.data.completeAddDataCount = 0;
+							self.data.completeUpdateDataCount = 0;
+							self.data.completeDeleteDataCount = 0;
+							self.data.errorAddDataCount = 0;
+							self.data.errorUpdateDataCount = 0;
+							self.data.errorDeleteDataCount = 0;
+
+							self.controllers.DataUpdater.syncData()
+								.fail(function (err) {
+								})
+								.then(function () {
+									self.refreshUnsyncLabel();
+									self.refresh();
+								});
 						},
 
 						refresh: function () {

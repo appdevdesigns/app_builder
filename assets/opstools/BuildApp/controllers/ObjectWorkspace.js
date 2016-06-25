@@ -289,7 +289,7 @@ steal(
 																		self.reorderColumns();
 
 																		// Enable local storage
-																		self.controllers.ModelCreator.enableLocalStorage();
+																		self.controllers.ModelCreator.enableLocalStorage(self.data.object.attr('name'));
 																		$$(self.webixUiId.offineDataLabel).show();
 
 																		$$(self.webixUiId.editHeaderPopup).hide();
@@ -864,6 +864,7 @@ steal(
 
 							if (self.data.objectId) {
 								var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
+								self.data.object = curObject[0];
 
 								async.series([
 									function (next) {
@@ -930,18 +931,17 @@ steal(
 										// Set values to model creator
 										self.controllers.ModelCreator.setAppId(self.data.app.id);
 										self.controllers.ModelCreator.setAppName(self.data.app.name);
-										self.controllers.ModelCreator.setObjectName(curObject[0].attr('name'));
-										var describe = {};
-										self.data.columns.forEach(function (c) {
-											describe[c.name] = c.type;
-										});
-										self.controllers.ModelCreator.setDescribe(describe);
-										var multilingualFields = self.data.columns.filter(function (c) { return c.supportMultilingual; });
-										multilingualFields = $.map(multilingualFields.attr(), function (f) { return f.name; });
-										self.controllers.ModelCreator.setMultilingualFields(multilingualFields);
 
 										// Get object model
-										self.Model.ObjectModel = self.controllers.ModelCreator.getModel();
+										self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
+											.fail(function (err) { next(err); })
+											.then(function (objectModel) {
+												self.Model.ObjectModel = objectModel;
+
+												next();
+											});
+									},
+									function (next) {
 
 										// Get data from server
 										self.Model.ObjectModel.findAll()
@@ -978,7 +978,7 @@ steal(
 									self.refreshPopupData();
 
 									// Show/Hide 'Offline data' label
-									if (self.controllers.ModelCreator.isLocalStorage())
+									if (self.controllers.ModelCreator.isLocalStorage(self.data.object.attr('name')))
 										$$(self.webixUiId.offineDataLabel).show();
 									else
 										$$(self.webixUiId.offineDataLabel).hide();
@@ -1043,7 +1043,7 @@ steal(
 													if (data.translate) data.translate();
 
 													// Enable local storage
-													self.controllers.ModelCreator.enableLocalStorage();
+													self.controllers.ModelCreator.enableLocalStorage(self.data.object.attr('name'));
 													$$(self.webixUiId.offineDataLabel).show();
 
 													saveDeferred.resolve(data);

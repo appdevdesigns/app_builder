@@ -105,6 +105,22 @@ steal(
 										self.element.trigger(self.options.updateUnsyncCountEvent, { count: this.getCount() + this.getDestroyCount() });
 									},
 
+									remove: function (objectName, id) {
+										var dataStore = webix.storage.local.get(instance.saveContainer);
+
+										if (!dataStore) dataStore = {};
+										if (!dataStore[objectName]) dataStore[objectName] = [];
+
+										var index = dataStore[objectName].findIndex(function (obj) {
+											return obj.id == id;
+										});
+										if (index > -1)
+											dataStore[objectName].splice(index, 1);
+
+										webix.storage.local.put(instance.saveContainer, dataStore);
+									},
+
+
 
 									// Destroy container
 									// Data format
@@ -128,7 +144,7 @@ steal(
 										return dataStore[objectName];
 									},
 
-									destroy: function (objectName, id) {
+									saveDestroy: function (objectName, id) {
 										var dataStore = webix.storage.local.get(instance.destroyContainer);
 
 										if (!dataStore) dataStore = {};
@@ -153,6 +169,32 @@ steal(
 										}
 
 										return count;
+									},
+
+									changeDestroyId: function (objectName, old, id) {
+										var dataStore = webix.storage.local.get(instance.destroyContainer);
+
+										if (!dataStore) dataStore = {};
+										if (!dataStore[objectName]) dataStore[objectName] = [];
+
+										var index = $.inArray(old, dataStore[objectName]);
+										if (index > -1)
+											dataStore[objectName][index] = id;
+
+										webix.storage.local.put(instance.destroyContainer, dataStore);
+									},
+
+									removeDestroy: function (objectName, id) {
+										var dataStore = webix.storage.local.get(instance.destroyContainer);
+
+										if (!dataStore) dataStore = {};
+										if (!dataStore[objectName]) dataStore[objectName] = [];
+
+										var index = $.inArray(id, dataStore[objectName]);
+										if (index > -1)
+											dataStore[objectName].splice(index, 1);
+
+										webix.storage.local.put(instance.destroyContainer, dataStore);
 									},
 
 

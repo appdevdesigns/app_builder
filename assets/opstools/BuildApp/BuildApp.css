@@ -115,11 +115,14 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-unsync-data-status {
 	padding: 3px;
 }
-.ab-unsync-data-in-progress{
+.ab-unsync-data-in-progress {
 	background-color: #F5AE0F;
 }
-.ab-unsync-data-in-done{
+.ab-unsync-data-done {
 	background-color: #3AB349;
+}
+.ab-unsync-data-error {
+	background-color: #EC2F2F;
 }
 
 /* Object list */

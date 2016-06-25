@@ -2,9 +2,6 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/LocalBucket.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-
-	'opstools/BuildApp/models/ABObject.js',
-
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -19,13 +16,11 @@ steal(
 
 							self.data = {};
 
-							self.Model = {
-								ABObject: AD.Model.get('opstools.BuildApp.ABObject')
-							};
-
 							self.options = AD.defaults({
 								syncSaveDataEvent: 'AB_Object.SyncSaveData',
 								syncDeleteDataEvent: 'AB_Object.SyncDeleteData',
+								errorSaveDataEvent: 'AB_Object.ErrorSaveData',
+								errorDeleteDataEvent: 'AB_Object.ErrorDeleteData',
 							}, options);
 
 							self.initControllers();
@@ -59,73 +54,149 @@ steal(
 							var savedDataSource = self.localBucket.getAll();
 							var destroyedDataSource = self.localBucket.getDestroyAll();
 
+							var saveDataActions = [],
+								deleteDataActions = [],
+								objectModelList = [];
+
 							async.series([
 								function (callback) {
-									var saveDataActions = [],
-										objectModelList = [];
+									var prepareSaveDataActions = [];
 
 									Object.keys(savedDataSource).forEach(function (objName) {
-										saveDataActions.push(function (cb) {
 
-											self.getObjectModel(objName).then(function (objectModel) {
-												objectModelList.push(objectModel); // Store in array
+										prepareSaveDataActions.push(function (next) {
 
-												objectModel.enforceUpdateToDB(); // Sync data to real database
+											self.controllers.ModelCreator.updateModel(objName).then(function () {
+												self.controllers.ModelCreator.getModel(objName).then(function (objectModel) {
+													if ($.inArray(objectModel, objectModelList) < 0) {
+														objectModel.enforceUpdateToDB(); // Sync data to real database
 
-												// Sync update & add data
-												savedDataSource[objName].forEach(function (d) {
+														objectModelList.push(objectModel); // Store in array
+													}
 
-													objectModel.findOne({ id: d.id })
-														.fail(function (err) { cb(err); })
-														.then(function (row) {
-															if (typeof row.id == 'string' && row.id.startsWith('temp')) {
-																row.removeAttr('id');
-															}
+													// Sync update & add data
+													savedDataSource[objName].forEach(function (d) {
 
-															row.save() // Save to DB
+														saveDataActions.push(function (cb) {
+
+															objectModel.findOne({ id: d.id })
 																.fail(function (err) { cb(err); })
-																.then(function () { cb(); });
+																.then(function (row) {
+																	var oldId = null,
+																		type = '';
+
+																	if (typeof row.id == 'string' && row.id.startsWith('temp')) {
+																		oldId = row.attr('id');
+																		type = 'add';
+
+																		row.removeAttr('id');
+																	}
+																	else {
+																		type = 'update';
+																	}
+
+																	row.save() // Save to DB
+																		.fail(function (err) {
+																			self.element.trigger(self.options.errorSaveDataEvent, { id: oldId, err: err, objName: objName, type: type });
+
+																			cb();
+																		})
+																		.then(function (result) {
+																			self.element.trigger(self.options.syncSaveDataEvent, { id: result.id, oldId: oldId, objName: objName, type: type });
+
+																			if (oldId) // Change destroy row id
+																				self.localBucket.changeDestroyId(objName, oldId, result.id);
+
+																			cb();
+																		});
+																});
+
 														});
 
-												});
+													});
 
+													next();
+												});
 											});
 
 										});
 									});
 
+									async.series(prepareSaveDataActions, callback);
+								},
+
+								function (callback) {
+									// Clear state after sync create/save data
 									async.series(saveDataActions, function (err) {
+
 										// Cancel enforce update to database
 										objectModelList.forEach(function (objectModel) {
 											objectModel.cancelEnforceUpdateToDB();
 										});
 
+										objectModelList = [];
+
 										callback(err);
 									});
 								},
+
 								function (callback) {
-									var deleteDataActions = [],
-										objectModelList = [];
+									var prepareDeleteDataActions = [];
 
 									Object.keys(destroyedDataSource).forEach(function (objName) {
-										deleteDataActions.push(function (cb) {
 
-											self.getObjectModel(objName).then(function (objectModel) {
-												objectModelList.push(objectModel); // Store in array
+										prepareDeleteDataActions.push(function (next) {
 
-												objectModel.enforceUpdateToDB(); // Sync data to real database
+											self.controllers.ModelCreator.updateModel(objName).then(function () {
 
-												// Sync delete data
-												destroyedDataSource[objName].forEach(function (id) {
-													objectModel.destroy(id)
-														.fail(function (err) { cb(err); })
-														.then(function () { cb(); });
+												self.controllers.ModelCreator.getModel(objName).then(function (objectModel) {
+													if ($.inArray(objectModel, objectModelList) < 0) {
+														objectModelList.push(objectModel); // Store in array
+
+														objectModel.enforceUpdateToDB(); // Sync data to real database
+													}
+
+													// Sync delete data
+													destroyedDataSource[objName].forEach(function (d) {
+
+														deleteDataActions.push(function (cb) {
+
+															destroyedDataSource[objName].forEach(function (id) {
+																if (typeof id == 'string' && id.startsWith('temp')) {
+																	// Delete data from local storage
+																	self.element.trigger(self.options.syncDeleteDataEvent, { id: id, objName: objName });
+																}
+																else {
+																	objectModel.destroy(id) // Delete data to DB
+																		.fail(function (err) {
+																			self.element.trigger(self.options.errorDeleteDataEvent, { id: id, err: err, objName: objName });
+
+																			cb(err);
+																		})
+																		.then(function (result) {
+																			self.element.trigger(self.options.syncDeleteDataEvent, { id: result.id, objName: objName });
+
+																			cb();
+																		});
+																}
+															});
+
+														});
+													});
+
+													next();
 												});
 
 											});
 										});
+
 									});
 
+									async.series(prepareDeleteDataActions, callback);
+								},
+
+								function (callback) {
+									// Clear state after sync delete data
 									async.series(deleteDataActions, function (err) {
 										// Cancel enforce update to database
 										objectModelList.forEach(function (objectModel) {
@@ -135,54 +206,17 @@ steal(
 										callback(err);
 									});
 								},
-								function (callback) {
-									// Clear local data
-									self.localBucket.clear();
 
+								function (callback) {
 									callback();
 
-									// TODO
 									q.resolve();
 								}
 							]);
 
 							return q;
-						},
-
-						getObjectModel: function (objName) {
-							var self = this,
-								q = $.Deferred();
-
-							self.controllers.ModelCreator.setObjectName(objName);
-							self.Model.ABObject.findAll({ application: self.data.app.id, name: objName })
-								.fail(function (err) {
-									q.reject(err);
-								})
-								.then(function (result) {
-									if (result.length < 1) {
-										q.reject();
-										return;
-									}
-
-									result = result[0];
-
-									// Set Describe
-									var describe = {};
-									result.columns.forEach(function (c) {
-										describe[c.name] = c.type;
-									});
-									self.controllers.ModelCreator.setDescribe(describe);
-
-									// Set multilingual fields
-									var multilingualFields = result.columns.filter(function (c) { return c.supportMultilingual; });
-									multilingualFields = $.map(multilingualFields.attr(), function (f) { return f.name; });
-									self.controllers.ModelCreator.setMultilingualFields(multilingualFields);
-
-									q.resolve(self.controllers.ModelCreator.getModel());
-								});
-
-							return q;
 						}
+
 
 					})
 				})
