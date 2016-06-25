@@ -204,13 +204,13 @@ steal(
 											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
 											{ fillspace: true },
 
-											{
-												view: 'button',
-												value: 'TEST',
-												click: function () {
-													self.syncLocalDataToDB();
-												}
-											},
+											// {
+											// 	view: 'button',
+											// 	value: 'TEST',
+											// 	click: function () {
+											// 		self.syncLocalDataToDB();
+											// 	}
+											// },
 
 											{
 												id: self.webixUiId.unsyncDataLabel,
