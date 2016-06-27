@@ -154,7 +154,7 @@ steal(
                                                     {
                                                         value: self.labels.add_fields.chooseType,
                                                         submenu: [
-                                                            { view: 'button', value: self.labels.add_fields.connectField, fieldType: 'link', icon: self.componentIds.connectObjectIcon, type: 'icon' },
+                                                            { view: 'button', value: self.labels.add_fields.connectField, fieldType: 'json', icon: self.componentIds.connectObjectIcon, type: 'icon' },
                                                             { view: 'button', value: self.labels.add_fields.stringField, fieldType: 'string', icon: self.componentIds.singleTextIcon, type: 'icon' },
                                                             { view: 'button', value: self.labels.add_fields.textField, fieldType: 'text', icon: self.componentIds.longTextIcon, type: 'icon' },
                                                             { view: 'button', value: self.labels.add_fields.numberField, fieldType: ['float', 'integer'], icon: self.componentIds.numberIcon, type: 'icon' },
@@ -361,7 +361,7 @@ steal(
                                                                     }
 
                                                                     fieldName = base.getFieldName(self.componentIds.connectObjectView);
-                                                                    fieldType = 'link';
+                                                                    fieldType = 'json';
                                                                     linkToObject = linkObject.id;
                                                                     isMultipleRecords = $$(self.componentIds.connectObjectIsMultipleRecords).getValue();
                                                                     fieldSettings.icon = self.componentIds.connectObjectIcon;
@@ -561,7 +561,7 @@ steal(
 
                                     // Populate data
                                     switch (data.type) {
-                                        case 'link':
+                                        case 'json':
                                             this.selectedType = self.labels.add_fields.connectField;
 
                                             var selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) { return obj.id == data.linkToObject; })[0];
@@ -664,7 +664,7 @@ steal(
                                     var runningNumber = 1;
 
                                     if (this.dataTable)
-                                        runningNumber = this.dataTable.config.columns.length + 1;
+                                        runningNumber = this.dataTable.config.columns.length;
 
                                     return 'Field ' + runningNumber;
                                 },
@@ -684,7 +684,7 @@ steal(
                                     if ($.isArray(fieldType)) fieldType = fieldType[0];
 
                                     switch (fieldType) {
-                                        case 'link':
+                                        case 'json':
                                             return self.componentIds.connectObjectView;
                                         case 'string':
                                             return self.componentIds.singleTextView;

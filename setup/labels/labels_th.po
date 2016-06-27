@@ -85,6 +85,12 @@ msgstr "เปลี่ยนชื่อ"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.processing
+msgid "กำลังประมวลผล..."
+msgstr "กำลังประมวลผล..."
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.form.name
 msgid "Name"
 msgstr "ชื่อ"

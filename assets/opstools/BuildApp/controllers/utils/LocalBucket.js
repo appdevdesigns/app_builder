@@ -117,7 +117,14 @@ steal(
 										if (index > -1)
 											dataStore[objectName].splice(index, 1);
 
+										// Remove object in array
+										if (!dataStore[objectName] || dataStore[objectName].length < 1) {
+											delete dataStore[objectName];
+										}
+
 										webix.storage.local.put(instance.saveContainer, dataStore);
+
+										this.checkDisable(objectName);
 									},
 
 
@@ -194,7 +201,14 @@ steal(
 										if (index > -1)
 											dataStore[objectName].splice(index, 1);
 
+										// Remove object in array
+										if (!dataStore[objectName] || dataStore[objectName].length < 1) {
+											delete dataStore[objectName];
+										}
+
 										webix.storage.local.put(instance.destroyContainer, dataStore);
+
+										this.checkDisable(objectName);
 									},
 
 
@@ -216,9 +230,24 @@ steal(
 										if (!dataStore) dataStore = [];
 
 										var index = $.inArray(objectName, dataStore);
-										dataStore.splice(index, 0);
+										if (index > -1)
+											dataStore.splice(index, 1);
 
 										webix.storage.local.put(instance.enableListContainer, dataStore);
+									},
+
+									checkDisable: function (objectName) {
+										var saveDataStore = webix.storage.local.get(instance.saveContainer),
+											destroyDataStore = webix.storage.local.get(instance.destroyContainer);
+
+										if (!saveDataStore) saveDataStore = {};
+										if (!destroyDataStore) destroyDataStore = {};
+
+										if (!saveDataStore[objectName]) saveDataStore[objectName] = [];
+										if (!destroyDataStore[objectName]) destroyDataStore[objectName] = [];
+
+										if (saveDataStore[objectName].length < 1 && destroyDataStore[objectName].length < 1)
+											this.disable(objectName);
 									},
 
 									isEnable: function (objectName) {

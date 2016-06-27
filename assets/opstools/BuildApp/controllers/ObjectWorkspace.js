@@ -384,7 +384,7 @@ steal(
 
 														var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId();
 
-														if (typeof selectedIds === 'string') {
+														if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
 															if (selectedIds)
 																selectedIds = [selectedIds];
 															else
@@ -430,29 +430,45 @@ steal(
 									onHide: function () {
 										$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
-										// TODO : Call Save change values to server
-
 										var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId(true);
 
-										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
-										rowData[self.data.selectedCell.column] = $.map(selectedIds, function (id) {
-											var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
-											if (!htmlNode) return;
+										if (!selectedIds || selectedIds.length < 1)
+											selectedIds = '';
 
-											var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
+										self.updateRowData(
+											{ value: selectedIds }, // state
+											{ // editor
+												row: self.data.selectedCell.row,
+												column: self.data.selectedCell.column
+											},
+											false)
+											.then(function () {
+												var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
+												if (!rowData.connectedData) rowData.connectedData = {};
 
-											return { id: id, text: connectData };
-										});
-										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
+												rowData[self.data.selectedCell.column] = selectedIds;
+												rowData.connectedData[self.data.selectedCell.column] = $.map(selectedIds, function (id) {
+													var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
+													if (!htmlNode) return;
 
-										// Resize row height
-										self.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
+													var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
 
-										$$(self.webixUiId.objectDatatable).hideProgress();
+													return { id: id, text: connectData };
+												});
+												// connectedData
+												$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
-										self.data.selectedCell = null
-										$$(self.webixUiId.connectObjectDataList).unselectAll();
-										$$(self.webixUiId.connectObjectDataList).clearAll();
+												// Resize row height
+												self.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
+
+												$$(self.webixUiId.objectDatatable).hideProgress();
+
+												self.data.selectedCell = null
+												$$(self.webixUiId.connectObjectDataList).unselectAll();
+												$$(self.webixUiId.connectObjectDataList).clearAll();
+
+											});
+
 									}
 								}
 							}).hide();
@@ -514,22 +530,9 @@ steal(
 										},
 										on: {
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
-												$$(self.webixUiId.objectDatatable).unselectAll();
-
-												if (state.value == state.old || ignoreUpdate) return;
-
-												$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-												if (editor.popupType == '') { // TODO: multi select
-
-												}
-
 												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
 
-												var updateModel = {};
-												updateModel[editor.column] = state.value;
-
-												self.Model.ObjectModel.findOne({ id: item.id })
+												self.updateRowData(state, editor, ignoreUpdate)
 													.fail(function (err) {
 														item[editor.column] = state.old;
 														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
@@ -539,28 +542,14 @@ steal(
 
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													})
-													.then(function (result) {
-														result.attr(editor.column, state.value);
+													.then(function () {
+														item[editor.column] = state.value;
+														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
 
-														result.save()
-															.fail(function (err) {
-																item[editor.column] = state.old;
-																$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-																$$(self.webixUiId.objectDatatable).refresh(editor.row);
+														// TODO : Message
 
-																// TODO : Message
-
-																$$(self.webixUiId.objectDatatable).hideProgress();
-															})
-															.then(function (result) {
-																item[editor.column] = state.value;
-																$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-
-																// TODO : Message
-
-																$$(self.webixUiId.objectDatatable).hideProgress();
-															});
-													})
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													});
 											},
 											onAfterRender: function (data) {
 												// Initial multi-combo
@@ -582,64 +571,54 @@ steal(
 															itemData = item[columnId];
 
 														// Delete removed value
-														itemData.forEach(function (d, index) {
-															if (d.id == ev.removed.id)
+														itemData.forEach(function (id, index) {
+															if (id == ev.removed.id)
 																itemData.splice(index, 1);
 														});
 
-														$$(self.webixUiId.objectDatatable).updateItem(rowId, itemData);
+														// Delete selectivity value
+														if (item.connectedData && item.connectedData[columnId].length > 0) {
+															item.connectedData[columnId].forEach(function (obj, index) {
+																if (obj.id == ev.removed.id)
+																	item.connectedData[columnId].splice(index, 1);
+															});
+														}
 
-														// TODO : Call server to remove value
-														$$(self.webixUiId.objectDatatable).render({ column: columnId });
+														$$(self.webixUiId.objectDatatable).updateItem(rowId, item);
+
+														if (!itemData || itemData.length < 1) itemData = '';
+
+														// Call server to remove value
+														self.updateRowData({ value: itemData }, { column: columnId, row: rowId }, false)
+															.then(function () {
+																$$(self.webixUiId.objectDatatable).hideProgress();
+
+																$$(self.webixUiId.objectDatatable).render({ column: columnId });
+															});
+
 													}
 												});
 
-												// Popuplate multi-combo
-												var linkCols = $.grep(self.data.columns, function (c) {
-													return c.type === 'link';
-												});
+												var maxConnectedDataNum = {};
 
-												var maxDataCell = [];
+												data.each(function (d) {
+													if (d.connectedData) {
+														for (var columnName in d.connectedData) {
+															var connectFieldNode = $($$(self.webixUiId.objectDatatable).getItemNode({ row: d.id, column: columnName }));
+															connectFieldNode.find('.connect-data-values').selectivity('data', d.connectedData[columnName]);
 
-												linkCols.forEach(function (c) {
-													data.each(function (d) {
-														var connectedData = d[c.name];
-														if (connectedData && connectedData.length > 0) {
-
-															if ($$(self.webixUiId.objectDatatable).isColumnVisible(c.name)) {
-																var connectFieldNode = $($$(self.webixUiId.objectDatatable).getItemNode({ row: d.id, column: c.name }));
-																connectFieldNode.find('.connect-data-values').selectivity('data', connectedData);
-
-																var cell = $.grep(maxDataCell, function (cell) { return cell.dataId == d.id; });
-																if (cell && cell.length > 0) {
-
-																	if (cell[0].dataNum < connectedData.length) {
-																		// Replace cell to calculate row height
-																		maxDataCell.forEach(function (cellObj) {
-																			if (cellObj.dataId == d.id) {
-																				cellObj.colName = c.name;
-																				cellObj.dataNum = connectedData.length;
-																			}
-																		})
-																	}
-																}
-																else {
-																	// Add cell to calculate row height
-																	maxDataCell.push({
-																		dataId: d.id,
-																		colName: c.name,
-																		dataNum: connectedData.length
-																	})
-																}
+															if (maxConnectedDataNum.dataNum < d.connectedData[columnName].length || !maxConnectedDataNum.dataNum) {
+																maxConnectedDataNum.dataId = d.id;
+																maxConnectedDataNum.colName = columnName;
+																maxConnectedDataNum.dataNum = d.connectedData[columnName].length;
 															}
 														}
-													});
+													}
 												});
 
 												// Call to calculate row height
-												maxDataCell.forEach(function (cell) {
-													self.calculateRowHeight(cell.dataId, cell.colName, cell.dataNum);
-												});
+												if (maxConnectedDataNum.dataId)
+													self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
 											},
 											onHeaderClick: function (id, e, trg) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id.column);
@@ -711,18 +690,32 @@ steal(
 														function (next) {
 															// Generate template to display
 															var template = "<div class='ab-connect-data'>";
-															template += object[0].labelFormat || '#' + object[0].columns[0].name + '#';
+															if (object[0].labelFormat || object[0].columns.length > 0)
+																template += object[0].labelFormat || '#' + object[0].columns[0].name + '#';
 															template += "</div>";
 															template = template.replace(/[{]/g, '#').replace(/[}]/g, '#');
 
 															$$(self.webixUiId.connectObjectDataList).define('template', template);
 															$$(self.webixUiId.connectObjectDataList).refresh();
 
-															// TODO: Load the connect data
+															self.controllers.ModelCreator.getModel(object[0].name)
+																.fail(function (err) { next(err); })
+																.then(function (objectModel) {
+																	// Load the connect data
+																	objectModel.findAll()
+																		.fail(function (err) { next(err); })
+																		.then(function (data) {
+																			data.forEach(function (d) {
+																				if (d.translate) d.translate();
+																			})
 
-															var mockData = self.getMockData(object[0].columns);
+																			$$(self.webixUiId.connectObjectDataList).parse(data.attr());
 
-															$$(self.webixUiId.connectObjectDataList).parse(mockData);
+																			next();
+																		});
+
+																});
+
 														}
 													], function () {
 														$$(self.webixUiId.connectObjectDataList).hideProgress();
@@ -856,6 +849,10 @@ steal(
 
 							self.resetState();
 
+							// Set values to model creator
+							self.controllers.ModelCreator.setAppId(self.data.app.id);
+							self.controllers.ModelCreator.setAppName(self.data.app.name);
+
 							// Set enable connect object list to the add new column popup
 							var enableConnectObjects = self.data.objectList.filter(function (o) {
 								return o.id != self.data.objectId;
@@ -928,10 +925,6 @@ steal(
 										next();
 									},
 									function (next) {
-										// Set values to model creator
-										self.controllers.ModelCreator.setAppId(self.data.app.id);
-										self.controllers.ModelCreator.setAppName(self.data.app.name);
-
 										// Get object model
 										self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
 											.fail(function (err) { next(err); })
@@ -952,11 +945,82 @@ steal(
 														r.translate();
 												});
 
-												$$(self.webixUiId.objectDatatable).parse(result.attr());
+												// Get connected columns
+												var linkCols = $.grep(self.data.columns, function (c) {
+													return c.linkToObject;
+												});
 
-												next();
+												var prepareConnectedDataEvents = [];
+
+												linkCols.forEach(function (c) {
+													prepareConnectedDataEvents.push(function (callback) {
+														var getConnectedDataEvents = [];
+
+														// Get connected object name
+														var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
+
+														// Get connected object model
+														self.controllers.ModelCreator.getModel(connectedObj.name)
+															.then(function (objectModel) {
+
+																result.each(function (r) {
+																	getConnectedDataEvents.push(function (cb) {
+																		var connectedDataIds = r[c.name];
+
+																		if (!connectedDataIds || connectedDataIds.length < 1) {
+																			cb();
+																			return true;
+																		}
+
+																		if (!$$(self.webixUiId.objectDatatable).isColumnVisible(c.name)) {
+																			cb();
+																			return true;
+																		}
+
+																		connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
+
+																		objectModel.findAll({ or: connectedDataIds })
+																			.then(function (connectedResult) {
+																				connectedResult.forEach(function (d) {
+																					if (d.translate) d.translate();
+
+																					d.attr('labelFormat', connectedObj.getDataLabel(d));
+																				});
+
+																				if (connectedResult && connectedResult.length > 0) {
+																					if (!r.connectedData) r.attr('connectedData', {}, true);
+
+																					var connectedDataValue = $.map(connectedResult.attr(), function (d) {
+																						return {
+																							id: d.id,
+																							text: d.labelFormat
+																						}
+																					});
+
+																					r.connectedData.attr(c.name, connectedDataValue);
+																				}
+
+
+																				cb();
+																			});
+																	});
+																});
+
+																async.parallel(getConnectedDataEvents, callback);
+															});
+
+													});
+												});
+
+												async.parallel(prepareConnectedDataEvents,
+													function (err, results) {
+														$$(self.webixUiId.objectDatatable).parse(result.attr());
+
+														next();
+													}
+												);
+
 											});
-
 									}
 								], function () {
 									$$(self.webixUiId.objectToolbar).show();
@@ -1175,6 +1239,45 @@ steal(
 								return o.id != self.data.objectId;
 							});
 							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
+						},
+
+						updateRowData: function (state, editor, ignoreUpdate) {
+							var self = this,
+								q = $.Deferred();
+
+							$$(self.webixUiId.objectDatatable).unselectAll();
+
+							if (state.value === state.old || ignoreUpdate) {
+								q.reject();
+								return q;
+							}
+
+							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+							var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+							var updateModel = {};
+							updateModel[editor.column] = state.value;
+
+							self.Model.ObjectModel.findOne({ id: item.id })
+								.fail(function (err) {
+									q.reject(err);
+								})
+								.then(function (result) {
+									result.attr(editor.column, state.value, true);
+
+									result.save()
+										.fail(function (err) {
+											q.reject(err);
+										})
+										.then(function (result) {
+
+
+											q.resolve(result);
+										});
+								});
+
+							return q;
 						},
 
 						getSaveColumnDeferred: function (columnInfo, removedListIds) {

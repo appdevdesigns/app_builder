@@ -62,6 +62,8 @@ steal(
 								function (callback) {
 									var prepareSaveDataActions = [];
 
+									if (savedDataSource.length < 1) callback();
+
 									Object.keys(savedDataSource).forEach(function (objName) {
 
 										prepareSaveDataActions.push(function (next) {
@@ -126,9 +128,9 @@ steal(
 								},
 
 								function (callback) {
-									// Clear state after sync create/save data
-									async.series(saveDataActions, function (err) {
+									if (saveDataActions.length < 1) callback();
 
+									saveDataActions.push(function (next) {
 										// Cancel enforce update to database
 										objectModelList.forEach(function (objectModel) {
 											objectModel.cancelEnforceUpdateToDB();
@@ -136,12 +138,17 @@ steal(
 
 										objectModelList = [];
 
-										callback(err);
+										next();
 									});
+
+									// Clear state after sync create/save data
+									async.series(saveDataActions, callback);
 								},
 
 								function (callback) {
 									var prepareDeleteDataActions = [];
+
+									if (destroyedDataSource.length < 1) callback();
 
 									Object.keys(destroyedDataSource).forEach(function (objName) {
 
@@ -171,7 +178,7 @@ steal(
 																		.fail(function (err) {
 																			self.element.trigger(self.options.errorDeleteDataEvent, { id: id, err: err, objName: objName });
 
-																			cb(err);
+																			cb();
 																		})
 																		.then(function (result) {
 																			self.element.trigger(self.options.syncDeleteDataEvent, { id: result.id, objName: objName });
@@ -196,15 +203,19 @@ steal(
 								},
 
 								function (callback) {
-									// Clear state after sync delete data
-									async.series(deleteDataActions, function (err) {
+									if (deleteDataActions.length < 1) callback();
+
+									deleteDataActions.push(function (next) {
 										// Cancel enforce update to database
 										objectModelList.forEach(function (objectModel) {
 											objectModel.cancelEnforceUpdateToDB();
 										});
 
-										callback(err);
+										next(err);
 									});
+
+									// Clear state after sync delete data
+									async.series(deleteDataActions, callback);
 								},
 
 								function (callback) {

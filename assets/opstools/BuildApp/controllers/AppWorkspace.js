@@ -53,6 +53,8 @@ steal(
 								unsyncDataLabel: 'ab-unsync-data-count',
 								unsyncDataPopup: 'ab-unsync-data-popup',
 								unsyncDataHeader: 'ab-unsync-data-header',
+								unsyncDataPopupClose: 'ab-unsync-data-popup-close',
+								unsyncDataPopupProcessing: 'ab-unsync-data-popup-processing',
 								unsyncDataList: 'ab-unsync-data-list',
 
 								objectView: 'ab-app-object-view',
@@ -83,9 +85,10 @@ steal(
 							self.labels.interface = {};
 
 							self.labels.common.close = AD.lang.label.getLabel('ab.common.close') || "Close";
+							self.labels.common.processing = AD.lang.label.getLabel('ab.common.processing') || "Processing...";
 
 							self.labels.application.unsyncDataMessage = AD.lang.label.getLabel('ab.application.unsyncDataMessage') || "There are {0} out of sync data";
-							self.labels.application.unsyncDataHeader = AD.lang.label.getLabel('ab.application.unsyncDataHeader') || "Unsynchronized data";
+							self.labels.application.unsyncDataHeader = AD.lang.label.getLabel('ab.application.unsyncDataHeader') || "Offline data";
 							self.labels.application.synchronize = AD.lang.label.getLabel('ab.application.synchronize') || "Synchronize";
 							self.labels.application.backToApplication = AD.lang.label.getLabel('ab.application.backToApplication') || "Back to Applications page";
 
@@ -154,10 +157,17 @@ steal(
 								var item = $$(self.webixUiId.unsyncDataList).getItem(itemId);
 								item.status = "in progress";
 
+								// Update item status
+								self.data.completeDeleteDataCount++;
+								if (item.status != 'error') {
+									if (self.data.completeDeleteDataCount >= item.count)
+										item.status = "done";
+									else
+										item.status = "in progress";
+								}
+
 								$$(self.webixUiId.unsyncDataList).updateItem(itemId, item);
 								$$(self.webixUiId.unsyncDataList).refresh();
-
-								self.data.completeDeleteDataCount++;
 							});
 
 							self.controllers.DataUpdater.on(self.options.errorSaveDataEvent, function (event, data) {
@@ -291,6 +301,14 @@ steal(
 											autowidth: true
 										},
 										{
+											id: self.webixUiId.unsyncDataPopupProcessing,
+											view: "label",
+											label: self.labels.common.processing,
+											width: 80,
+											hidden: true
+										},
+										{
+											id: self.webixUiId.unsyncDataPopupClose,
 											view: "button",
 											type: "icon",
 											icon: "remove",
@@ -443,6 +461,8 @@ steal(
 							var self = this;
 
 							$$(self.webixUiId.unsyncDataPopup).show();
+							$$(self.webixUiId.unsyncDataPopupClose).hide();
+							$$(self.webixUiId.unsyncDataPopupProcessing).show();
 
 							self.data.completeAddDataCount = 0;
 							self.data.completeUpdateDataCount = 0;
@@ -453,10 +473,15 @@ steal(
 
 							self.controllers.DataUpdater.syncData()
 								.fail(function (err) {
+									$$(self.webixUiId.unsyncDataPopupProcessing).hide();
+									$$(self.webixUiId.unsyncDataPopupClose).show();
 								})
 								.then(function () {
 									self.refreshUnsyncLabel();
 									self.refresh();
+
+									$$(self.webixUiId.unsyncDataPopupProcessing).hide();
+									$$(self.webixUiId.unsyncDataPopupClose).show();
 								});
 						},
 

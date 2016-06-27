@@ -85,6 +85,12 @@ msgstr "Rename"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.processing
+msgid "Processing..."
+msgstr "Processing..."
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.form.name
 msgid "Name"
 msgstr "Name"
