@@ -9,6 +9,7 @@ module.exports = {
 		"opstools/BuildApp": {
 			"deps": [
 				"async",
+				"can/model/cached/cached",
 				"js/selectivity/selectivity-full.min"
 			]
 		},

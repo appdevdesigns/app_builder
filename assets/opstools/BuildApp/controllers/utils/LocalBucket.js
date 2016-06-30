@@ -266,7 +266,16 @@ steal(
 										webix.storage.local.remove(instance.enableListContainer);
 
 										self.element.trigger(self.options.updateUnsyncCountEvent, { count: 0 });
+									},
+
+									isEmpty: function () {
+										var dataStore = webix.storage.local.get(instance.enableListContainer);
+
+										if (!dataStore) dataStore = [];
+
+										return dataStore.length < 1;
 									}
+
 								};
 							};
 

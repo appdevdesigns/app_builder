@@ -7,6 +7,7 @@ function() {
 			// Namespacing conventions:
 			// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 			AD.Model.extend('opstools.BuildApp.ABPageComponent', {
+				useSockets: true
 				/*
 					findAll: 'GET /app_builder/abpagecomponent',
 					findOne: 'GET /app_builder/abpagecomponent/{id}',

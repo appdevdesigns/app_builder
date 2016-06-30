@@ -180,7 +180,7 @@ steal(
 														title: self.labels.application.confirmDeleteTitle,
 														ok: self.labels.common.yes,
 														cancel: self.labels.common.no,
-														text: self.labels.application.confirmDeleteMessage.replace('{0}', selectedApp.name),
+														text: self.labels.application.confirmDeleteMessage.replace('{0}', selectedApp.label),
 														callback: function (result) {
 															if (result) {
 																// Delete application data
@@ -191,7 +191,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedApp.name)
+																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedApp.label)
 																		});
 
 																		AD.error.log('App Builder : Error delete application data', { error: err });
@@ -208,7 +208,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedApp.name)
+																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedApp.label)
 																		});
 																	});
 															}
@@ -264,7 +264,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: self.labels.common.updateErrorMessage.replace('{0}', result.name)
+																			text: self.labels.common.updateErrorMessage.replace('{0}', updateApp.label)
 																		});
 
 																		AD.error.log('App Builder : Error update application data', { error: err });
@@ -288,7 +288,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: self.labels.common.updateSucessMessage.replace('{0}', result.name)
+																			text: self.labels.common.updateSucessMessage.replace('{0}', result.label)
 																		});
 
 																	});
@@ -305,7 +305,7 @@ steal(
 
 																		webix.message({
 																			type: "error",
-																			text: self.labels.common.createErrorMessage.replace('{0}', result.name)
+																			text: self.labels.common.createErrorMessage.replace('{0}', newApp.label)
 																		});
 
 																		AD.error.log('App Builder : Error create application data', { error: err });
@@ -321,7 +321,7 @@ steal(
 
 																		webix.message({
 																			type: "success",
-																			text: self.labels.common.createSuccessMessage.replace('{0}', result.name)
+																			text: self.labels.common.createSuccessMessage.replace('{0}', result.label)
 																		});
 
 																	});

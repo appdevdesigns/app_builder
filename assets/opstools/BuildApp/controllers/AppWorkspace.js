@@ -57,6 +57,8 @@ steal(
 								unsyncDataPopupProcessing: 'ab-unsync-data-popup-processing',
 								unsyncDataList: 'ab-unsync-data-list',
 
+								synchronizeButton: 'ab-sync-button',
+
 								objectView: 'ab-app-object-view',
 								interfaceView: 'ab-app-interface-view'
 							};
@@ -235,6 +237,7 @@ steal(
 												}
 											},
 											{
+												id: self.webixUiId.synchronizeButton,
 												view: "button",
 												type: "iconButton",
 												icon: "refresh",
@@ -459,6 +462,8 @@ steal(
 
 						syncLocalDataToDB: function () {
 							var self = this;
+
+							if (self.controllers.DataUpdater.isEmpty()) return;
 
 							$$(self.webixUiId.unsyncDataPopup).show();
 							$$(self.webixUiId.unsyncDataPopupClose).hide();

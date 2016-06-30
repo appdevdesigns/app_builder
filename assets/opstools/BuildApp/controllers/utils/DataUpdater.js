@@ -211,7 +211,7 @@ steal(
 											objectModel.cancelEnforceUpdateToDB();
 										});
 
-										next(err);
+										next();
 									});
 
 									// Clear state after sync delete data
@@ -226,6 +226,10 @@ steal(
 							]);
 
 							return q;
+						},
+
+						isEmpty: function () {
+							return this.localBucket.isEmpty();
 						}
 
 

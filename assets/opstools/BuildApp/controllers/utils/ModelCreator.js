@@ -67,6 +67,7 @@ steal(
 
 							// /AB_applicationname/AB_applicationname_objectname
 							var modelDefinition = {
+								// useSockets: true,
 								findAll: 'GET /AB_#appName#/AB_#appName#_#objectName#',
 								findOne: 'GET /AB_#appName#/AB_#appName#_#objectName#/{id}',
 								create: 'POST /AB_#appName#/AB_#appName#_#objectName#',
@@ -104,7 +105,7 @@ steal(
 							else {
 								self.updateModel(objectName)
 									.fail(function (err) { q.reject(err); })
-									.then(function () {
+									.then(function (modelResult) {
 										q.resolve(AD.Model.get(modelName));
 									});
 							}
@@ -146,72 +147,10 @@ steal(
 									// Get base model
 									var base = self.getBaseModel(objectName, describe, multilingualFields);
 
-									// Init object model
-									AD.Model.extend(modelName, {
-										findAll: function (cond) {
-											if (!self.localBucket.isEnable(objectName))
-												return base.findAll(cond);
-
-											var q = $.Deferred();
-
-											var localResults = self.localBucket.get(objectName),
-												localDestroyIds = self.localBucket.getDestroyIds(objectName);
-
-											base.findAll(cond)
-												.fail(function (err) {
-													q.resolve(localResults);
-												})
-												.then(function (r) {
-													var dataList = r.attr();
-
-													// Sync update
-													dataList.forEach(function (d, index) {
-														var exists = $.grep(localResults, function (localData) { return localData.id == d.id; });
-
-														if (exists && exists.length > 0) {
-															dataList[index] = exists[0];
-														}
-													});
-
-													// Sync create
-													localResults.forEach(function (localData) {
-														var exists = $.grep(dataList, function (d) { return localData.id == d.id; });
-
-														if (!exists || exists.length < 1) {
-															dataList.push(localData);
-														}
-													});
-
-													// Sync delete
-													dataList = $.grep(dataList, function (d) { return $.inArray(d.id, localDestroyIds) < 0; });
-
-													q.resolve(dataList);
-												});
-
-											return q;
-										},
-										findOne: function (cond) {
-											if (!self.localBucket.isEnable(objectName))
-												return base.findOne(cond);
-
-											var q = $.Deferred();
-
-											var result = self.localBucket.get(objectName, cond.id);
-											if (result && result.length > 0) {
-												q.resolve(result[0]);
-											}
-											else {
-												base.findOne(cond)
-													.fail(function (err) {
-														q.reject(err);
-													})
-													.then(function (r) {
-														q.resolve(r);
-													});
-											}
-
-											return q;
-										},
+									var staticProps = {
+										findAll: function (params) { return base.findAll(params); },
+										findOne: function (params) { return base.findOne(params); },
+										describe: base.describe,
 										create: function (obj) {
 											Object.keys(obj).forEach(function (key) {
 												if (typeof obj[key] == 'undefined' || obj[key] == null)
@@ -264,9 +203,24 @@ steal(
 										cancelEnforceUpdateToDB: function () {
 											this.forceToDB = false;
 										},
-									}, {});
+									};
 
-									q.resolve(AD.Model.get(modelName));
+									var protoProps = {};
+
+									// Init object model
+									AD.Model.extend(modelName, staticProps, protoProps);
+
+									var modelResult = AD.Model.get(modelName);
+
+									// Setup cached model
+									var cachedStaticProps = $.extend(staticProps, {
+										cachedKey: function () {
+											return 'cached' + modelName;
+										}
+									})
+									modelResult.Cached = can.Model.Cached(cachedStaticProps, protoProps);
+
+									q.resolve(modelResult);
 								});
 
 							return q;

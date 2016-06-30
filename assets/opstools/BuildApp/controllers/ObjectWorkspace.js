@@ -455,7 +455,7 @@ steal(
 
 													return { id: id, text: connectData };
 												});
-												// connectedData
+
 												$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
 												// Resize row height
@@ -599,9 +599,10 @@ steal(
 													}
 												});
 
-												var maxConnectedDataNum = {};
 
 												data.each(function (d) {
+													var maxConnectedDataNum = {};
+
 													if (d.connectedData) {
 														for (var columnName in d.connectedData) {
 															var connectFieldNode = $($$(self.webixUiId.objectDatatable).getItemNode({ row: d.id, column: columnName }));
@@ -614,11 +615,12 @@ steal(
 															}
 														}
 													}
+
+													// Call to calculate row height
+													if (maxConnectedDataNum.dataId)
+														self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
 												});
 
-												// Call to calculate row height
-												if (maxConnectedDataNum.dataId)
-													self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
 											},
 											onHeaderClick: function (id, e, trg) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id.column);
@@ -702,7 +704,7 @@ steal(
 																.fail(function (err) { next(err); })
 																.then(function (objectModel) {
 																	// Load the connect data
-																	objectModel.findAll()
+																	objectModel.findAll({})
 																		.fail(function (err) { next(err); })
 																		.then(function (data) {
 																			data.forEach(function (d) {
@@ -793,6 +795,8 @@ steal(
 														})
 														.then(function (result) {
 															if (result.translate) result.translate();
+
+															self.data.objectData.push(result);
 
 															$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
 
@@ -937,7 +941,7 @@ steal(
 									function (next) {
 
 										// Get data from server
-										self.Model.ObjectModel.findAll()
+										self.Model.ObjectModel.Cached.findAll({})
 											.fail(function (err) { next(err); })
 											.then(function (result) {
 												result.forEach(function (r) {
@@ -967,6 +971,8 @@ steal(
 																	getConnectedDataEvents.push(function (cb) {
 																		var connectedDataIds = r[c.name];
 
+																		r.removeAttr('connectedData');
+
 																		if (!connectedDataIds || connectedDataIds.length < 1) {
 																			cb();
 																			return true;
@@ -988,7 +994,7 @@ steal(
 																				});
 
 																				if (connectedResult && connectedResult.length > 0) {
-																					if (!r.connectedData) r.attr('connectedData', {}, true);
+																					r.attr('connectedData', {}, true);
 
 																					var connectedDataValue = $.map(connectedResult.attr(), function (d) {
 																						return {
@@ -1636,82 +1642,6 @@ steal(
 								$$(self.webixUiId.objectDatatable).define("height", height - 185);
 								$$(self.webixUiId.objectDatatable).resize();
 							}
-						},
-
-						// Mock data
-						getMockData: function (columns) {
-							var self = this,
-								data = [];
-
-							for (var i = 0; i < 4; i++) {
-								var mockData = {
-									id: i + 1
-								};
-
-								columns.forEach(function (c) {
-									switch (c.setting.filter_type) {
-										case 'multiselect':
-											var linkedObj = self.data.objectList.filter(function (o) { return o.id == c.linkToObject; })[0];
-
-											if (linkedObj) {
-												var linkedData = [];
-
-												var itemNums = 1;
-												if (c.isMultipleRecords) itemNums = 2;
-
-												for (var j = 0; j < itemNums; j++) {
-													var linkedModel = {
-														id: j + 1
-													};
-
-													linkedObj.columns.forEach(function (linkedCol) {
-														switch (linkedCol.setting.filter_type) {
-															case 'text':
-																linkedModel[linkedCol.name] = 'lorem ipsum ' + (j + 1);
-																break;
-															case 'number':
-																linkedModel[linkedCol.name] = j + 100;
-																break;
-															case 'date':
-																linkedModel[linkedCol.name] = new Date();
-																break;
-															case 'boolean':
-																linkedModel[linkedCol.name] = j % 2;
-																break;
-														}
-													});
-
-													// Get label
-													var label = linkedObj.getDataLabel(linkedModel);
-
-													linkedData.push({
-														id: j + 1,
-														text: label
-													});
-												}
-
-												mockData[c.name] = linkedData;
-											}
-											break;
-										case 'text':
-											mockData[c.name] = 'lorem ipsum ' + (i + 1)
-											break;
-										case 'number':
-											mockData[c.name] = i + 100;
-											break;
-										case 'date':
-											mockData[c.name] = new Date();
-											break;
-										case 'boolean':
-											mockData[c.name] = i % 2;
-											break;
-									}
-								});
-
-								data.push(mockData);
-							}
-
-							return data;
 						}
 
 					});
