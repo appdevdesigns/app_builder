@@ -5,7 +5,7 @@ node_js:
 sudo: false
 
 before_script:
-- npm install -g  balderdashy/sails appdevdesigns/appdev-cli#develop
+- npm install -g  balderdashy/sails appdevdesigns/appdev-cli
 - cd /tmp
 - chmod +x /home/travis/build/appdevdesigns/app_builder/test/setup/install.sh
 - /home/travis/build/appdevdesigns/app_builder/test/setup/install.sh
