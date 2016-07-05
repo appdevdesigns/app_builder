@@ -102,8 +102,6 @@ steal(
 										$$('ab-sync-button').define('label', 'Synchronize');
 										$$('ab-sync-button').refresh();
 										$$('ab-sync-button').enable();
-
-										self.controllers.AppWorkspace.syncLocalDataToDB();
 									})
 									.fail(function (err) {
 										console.log(err);

@@ -4,8 +4,6 @@ steal(
 	'opstools/BuildApp/controllers/ObjectList.js',
 	'opstools/BuildApp/controllers/ObjectWorkspace.js',
 
-	'opstools/BuildApp/controllers/utils/LocalBucket.js',
-
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -40,12 +38,10 @@ steal(
 							self.controllers = {};
 
 							var ObjectList = AD.Control.get('opstools.BuildApp.ObjectList'),
-								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace'),
-								LocalBucket = AD.Control.get('opstools.BuildApp.LocalBucket');
+								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace');
 
 							self.controllers.ObjectList = new ObjectList(self.element, { selectedObjectEvent: self.options.selectedObjectEvent, updatedObjectEvent: self.options.updatedObjectEvent });
 							self.controllers.ObjectWorkspace = new ObjectWorkspace(self.element);
-							self.controllers.LocalBucket = new LocalBucket(self.element);
 						},
 
 						initWebixUI: function () {
@@ -72,11 +68,6 @@ steal(
 								self.data.objectId = id;
 
 								self.controllers.ObjectWorkspace.setObjectId(id);
-							});
-
-							self.controllers.ObjectList.on(self.options.createdObjectEvent, function (event, data) {
-								// Enable local storage
-								self.controllers.LocalBucket.getBucket(self.data.app.id).enable(data.newObject.name);
 							});
 
 							self.controllers.ObjectList.on(self.options.updatedObjectEvent, function (event, data) {

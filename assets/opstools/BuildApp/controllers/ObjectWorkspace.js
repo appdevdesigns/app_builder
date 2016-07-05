@@ -51,7 +51,6 @@ steal(
 								frozenButton: 'ab-frozen-columns-toolbar',
 								defineLabelButton: 'ab-define-label-toolbar',
 
-								offineDataLabel: 'ab-office-data-label',
 								addNewRowButton: 'ab-add-new-row-button',
 
 								editHeaderPopup: 'ab-edit-header-popup',
@@ -288,10 +287,6 @@ steal(
 
 																		self.reorderColumns();
 
-																		// Enable local storage
-																		self.controllers.ModelCreator.enableLocalStorage(self.data.object.attr('name'));
-																		$$(self.webixUiId.offineDataLabel).show();
-
 																		$$(self.webixUiId.editHeaderPopup).hide();
 
 																		webix.message({
@@ -509,7 +504,7 @@ steal(
 														if (result) {
 															$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-															self.Model.ObjectModel.destroy(id.row)
+															self.Model.ObjectModel.Cached.destroy(id.row)
 																.fail(function (err) {
 																	// TODO message
 																	$$(self.webixUiId.objectDatatable).hideProgress();
@@ -704,7 +699,7 @@ steal(
 																.fail(function (err) { next(err); })
 																.then(function (objectModel) {
 																	// Load the connect data
-																	objectModel.findAll({})
+																	objectModel.Cached.findAll({})
 																		.fail(function (err) { next(err); })
 																		.then(function (data) {
 																			data.forEach(function (d) {
@@ -768,12 +763,6 @@ steal(
 									{
 										cols: [
 											{
-												id: self.webixUiId.offineDataLabel,
-												view: "label",
-												label: self.labels.application.dataOfflineMessage,
-												hidden: true
-											},
-											{
 												autowidth: true
 											},
 											{
@@ -785,7 +774,7 @@ steal(
 												click: function () {
 													$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-													var newModel = self.Model.ObjectModel.newInstance();
+													var newModel = self.Model.ObjectModel.Cached.newInstance();
 
 													newModel.save()
 														.fail(function (err) {
@@ -795,8 +784,6 @@ steal(
 														})
 														.then(function (result) {
 															if (result.translate) result.translate();
-
-															self.data.objectData.push(result);
 
 															$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
 
@@ -935,6 +922,11 @@ steal(
 											.then(function (objectModel) {
 												self.Model.ObjectModel = objectModel;
 
+												self.Model.ObjectModel.Cached.bind('refreshData', function (ev, data) {
+													if (this == self.Model.ObjectModel.Cached)
+														self.populateDataToGrid(data.result);
+												});
+
 												next();
 											});
 									},
@@ -944,88 +936,9 @@ steal(
 										self.Model.ObjectModel.Cached.findAll({})
 											.fail(function (err) { next(err); })
 											.then(function (result) {
-												result.forEach(function (r) {
-													if (r.translate)
-														r.translate();
+												self.populateDataToGrid(result).then(function () {
+													next();
 												});
-
-												// Get connected columns
-												var linkCols = $.grep(self.data.columns, function (c) {
-													return c.linkToObject;
-												});
-
-												var prepareConnectedDataEvents = [];
-
-												linkCols.forEach(function (c) {
-													prepareConnectedDataEvents.push(function (callback) {
-														var getConnectedDataEvents = [];
-
-														// Get connected object name
-														var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
-
-														// Get connected object model
-														self.controllers.ModelCreator.getModel(connectedObj.name)
-															.then(function (objectModel) {
-
-																result.each(function (r) {
-																	getConnectedDataEvents.push(function (cb) {
-																		var connectedDataIds = r[c.name];
-
-																		r.removeAttr('connectedData');
-
-																		if (!connectedDataIds || connectedDataIds.length < 1) {
-																			cb();
-																			return true;
-																		}
-
-																		if (!$$(self.webixUiId.objectDatatable).isColumnVisible(c.name)) {
-																			cb();
-																			return true;
-																		}
-
-																		connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
-
-																		objectModel.findAll({ or: connectedDataIds })
-																			.then(function (connectedResult) {
-																				connectedResult.forEach(function (d) {
-																					if (d.translate) d.translate();
-
-																					d.attr('labelFormat', connectedObj.getDataLabel(d));
-																				});
-
-																				if (connectedResult && connectedResult.length > 0) {
-																					r.attr('connectedData', {}, true);
-
-																					var connectedDataValue = $.map(connectedResult.attr(), function (d) {
-																						return {
-																							id: d.id,
-																							text: d.labelFormat
-																						}
-																					});
-
-																					r.connectedData.attr(c.name, connectedDataValue);
-																				}
-
-
-																				cb();
-																			});
-																	});
-																});
-
-																async.parallel(getConnectedDataEvents, callback);
-															});
-
-													});
-												});
-
-												async.parallel(prepareConnectedDataEvents,
-													function (err, results) {
-														$$(self.webixUiId.objectDatatable).parse(result.attr());
-
-														next();
-													}
-												);
-
 											});
 									}
 								], function () {
@@ -1046,12 +959,6 @@ steal(
 
 									// Bind columns data
 									self.refreshPopupData();
-
-									// Show/Hide 'Offline data' label
-									if (self.controllers.ModelCreator.isLocalStorage(self.data.object.attr('name')))
-										$$(self.webixUiId.offineDataLabel).show();
-									else
-										$$(self.webixUiId.offineDataLabel).hide();
 
 									// Show 'Add new row' button
 									$$(self.webixUiId.addNewRowButton).show();
@@ -1111,10 +1018,6 @@ steal(
 												})
 												.then(function (data) {
 													if (data.translate) data.translate();
-
-													// Enable local storage
-													self.controllers.ModelCreator.enableLocalStorage(self.data.object.attr('name'));
-													$$(self.webixUiId.offineDataLabel).show();
 
 													saveDeferred.resolve(data);
 												});
@@ -1216,6 +1119,96 @@ steal(
 							$$(self.webixUiId.objectDatatable).refreshColumns(columns, resetColumns || false);
 						},
 
+						populateDataToGrid: function (result) {
+							var self = this,
+								q = $.Deferred();
+
+							result.forEach(function (r) {
+								if (r.translate)
+									r.translate();
+							});
+
+							// Get connected columns
+							var linkCols = $.grep(self.data.columns, function (c) {
+								return c.linkToObject;
+							});
+
+							var prepareConnectedDataEvents = [];
+
+							linkCols.forEach(function (c) {
+								prepareConnectedDataEvents.push(function (callback) {
+									var getConnectedDataEvents = [];
+
+									// Get connected object name
+									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
+
+									// Get connected object model
+									self.controllers.ModelCreator.getModel(connectedObj.name)
+										.then(function (objectModel) {
+
+											result.each(function (r) {
+												getConnectedDataEvents.push(function (cb) {
+													var connectedDataIds = r[c.name];
+
+													r.removeAttr('connectedData');
+
+													if (!connectedDataIds || connectedDataIds.length < 1) {
+														cb();
+														return true;
+													}
+
+													if (!$$(self.webixUiId.objectDatatable).isColumnVisible(c.name)) {
+														cb();
+														return true;
+													}
+
+													connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
+
+													objectModel.Cached.findAll({ or: connectedDataIds })
+														.then(function (connectedResult) {
+															connectedResult.forEach(function (d) {
+																if (d.translate) d.translate();
+
+																d.attr('labelFormat', connectedObj.getDataLabel(d));
+															});
+
+															if (connectedResult && connectedResult.length > 0) {
+																r.attr('connectedData', {}, true);
+
+																var connectedDataValue = $.map(connectedResult.attr(), function (d) {
+																	return {
+																		id: d.id,
+																		text: d.labelFormat
+																	}
+																});
+
+																r.connectedData.attr(c.name, connectedDataValue);
+															}
+
+
+															cb();
+														});
+												});
+											});
+
+											async.parallel(getConnectedDataEvents, callback);
+										});
+
+								});
+							});
+
+							async.parallel(prepareConnectedDataEvents,
+								function (err, results) {
+									$$(self.webixUiId.objectDatatable).clearAll();
+									$$(self.webixUiId.objectDatatable).parse(result.attr());
+
+									q.resolve();
+								}
+							);
+
+							return q;
+						},
+
 						getHeader: function (col) {
 							var self = this,
 								label = col.label;
@@ -1265,7 +1258,7 @@ steal(
 							var updateModel = {};
 							updateModel[editor.column] = state.value;
 
-							self.Model.ObjectModel.findOne({ id: item.id })
+							self.Model.ObjectModel.Cached.findOne({ id: item.id })
 								.fail(function (err) {
 									q.reject(err);
 								})
@@ -1277,7 +1270,7 @@ steal(
 											q.reject(err);
 										})
 										.then(function (result) {
-
+											if (result.translate) result.translate();
 
 											q.resolve(result);
 										});
@@ -1629,7 +1622,6 @@ steal(
 							$$(self.webixUiId.objectDatatable).refreshColumns([], true);
 							// $$(self.webixUiId.objectDatatable).hide();
 
-							$$(self.webixUiId.offineDataLabel).hide();
 							$$(self.webixUiId.addNewRowButton).hide();
 
 							self.refreshPopupData();

@@ -1,7 +1,6 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/LocalBucket.js',
-
+	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/models/ABObject.js',
 
 	function () {
@@ -23,39 +22,14 @@ steal(
 							this.options = AD.defaults({
 								updateUnsyncCountEvent: 'AB_Object.LocalCount',
 							}, options);
-
-							this.initControllers();
-						},
-
-						initControllers: function () {
-							var self = this;
-							self.controllers = {};
-
-							var LocalBucket = AD.Control.get('opstools.BuildApp.LocalBucket');
-
-							self.controllers.LocalBucket = new LocalBucket(self.element, { updateUnsyncCountEvent: self.options.updateUnsyncCountEvent });
 						},
 
 						setAppId: function (appId) {
 							this.data.appId = appId;
-
-							this.localBucket = this.controllers.LocalBucket.getBucket(this.data.appId);
 						},
 
 						setAppName: function (appName) {
 							this.data.appName = appName;
-						},
-
-						enableLocalStorage: function (objectName) {
-							this.localBucket.enable(objectName);
-						},
-
-						disableLocalStorage: function (objectName) {
-							this.localBucket.disable(objectName);
-						},
-
-						isLocalStorage: function (objectName) {
-							return this.localBucket.isEnable(objectName);
 						},
 
 						getBaseModel: function (objectName, describe, multilingualFields) {
@@ -147,78 +121,42 @@ steal(
 									// Get base model
 									var base = self.getBaseModel(objectName, describe, multilingualFields);
 
-									var staticProps = {
-										findAll: function (params) { return base.findAll(params); },
-										findOne: function (params) { return base.findOne(params); },
-										describe: base.describe,
-										create: function (obj) {
-											Object.keys(obj).forEach(function (key) {
-												if (typeof obj[key] == 'undefined' || obj[key] == null)
-													delete obj[key];
-											});
-
-											if (!self.localBucket.isEnable(objectName) || this.forceToDB)
-												return base.create(obj);
-
-											var q = $.Deferred();
-
-											self.localBucket.save(objectName, obj);
-											q.resolve(obj);
-
-											return q;
-										},
-										update: function (id, obj) {
-											Object.keys(obj).forEach(function (key) {
-												if (typeof obj[key] == 'undefined' || obj[key] == null)
-													delete obj[key];
-											});
-
-											if (!self.localBucket.isEnable(objectName) || this.forceToDB)
-												return base.update(id, obj);
-
-											var q = $.Deferred();
-
-											self.localBucket.save(objectName, obj);
-											q.resolve(obj);
-
-											return q;
-										},
-										destroy: function (id) {
-											if (!self.localBucket.isEnable(objectName) || this.forceToDB)
-												return base.destroy(id);
-
-											var q = $.Deferred();
-
-											self.localBucket.saveDestroy(objectName, id);
-											q.resolve({ id: id });
-
-											return q;
-										},
-
-
-
-										enforceUpdateToDB: function () { // For sync data to real database
-											this.forceToDB = true;
-										},
-										cancelEnforceUpdateToDB: function () {
-											this.forceToDB = false;
-										},
-									};
-
-									var protoProps = {};
-
 									// Init object model
-									AD.Model.extend(modelName, staticProps, protoProps);
-
+									AD.Model.extend(modelName, {}, {});
 									var modelResult = AD.Model.get(modelName);
 
 									// Setup cached model
-									var cachedStaticProps = $.extend(staticProps, {
-										cachedKey: function () {
-											return 'cached' + modelName;
-										}
-									})
-									modelResult.Cached = can.Model.Cached(cachedStaticProps, protoProps);
+									modelResult.Cached = ab.Model.Cached(
+										{
+											cachedKey: function () {
+												return '#appName#_#objectName#_cache'.replace('#appName#', formatAppName).replace('#objectName#', formatObjectName)
+											},
+											fieldId: 'id',
+											describe: modelResult.describe,
+											multilingualFields: modelResult.multilingualFields,
+											findAll: function (params) {
+												var q = $.Deferred();
+
+												modelResult.findAll(params)
+													.fail(function (err) { q.reject(err); })
+													.then(function (result) { q.resolve(result); });
+
+												return q;
+											},
+											findOne: function (params) {
+												var q = $.Deferred();
+
+												modelResult.findOne(params)
+													.fail(function (err) { q.reject(err); })
+													.then(function (result) { q.resolve(result); });
+
+												return q;
+											},
+											create: function (obj) { return modelResult.create.call(modelResult.Cached, obj); },
+											update: function (id, saveObj) { return modelResult.update.call(modelResult.Cached, id, saveObj); },
+											destroy: function (id) { return modelResult.destroy.call(modelResult.Cached, id); }
+
+										}, {});
 
 									q.resolve(modelResult);
 								});
