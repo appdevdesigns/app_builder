@@ -56,7 +56,7 @@ steal(function () {
 
 						for (var id in data) {
 							item = data[id];
-							if (this.filter(item, params) !== false) {
+							if (this.filter(item, params) !== false || Object.keys(params).length < 1) {
 								list.push(item);
 							}
 						}
@@ -127,7 +127,10 @@ steal(function () {
 					},
 					compare: {},
 					_compare: function (prop, itemData, paramData) {
-						return can.Object.same(itemData, paramData, this.compare[prop]);
+						itemData = itemData.id ? itemData.id : itemData; // compare to id of object
+
+						return itemData == paramData;
+						// return can.Object.same(itemData, paramData, this.compare[prop]);
 					},
 					makeFindAll: function (findAll) {
 						return function (params, success, error) {
@@ -138,34 +141,43 @@ steal(function () {
 							def.then(success, error);
 							if (data.length) {
 								var list = this.models(data);
-								findAll(params).then(can.proxy(function (json) {
-									can.each(json, function (d) {
-										if (d.translate) d.translate();
+
+								if (AD.comm.isServerReady()) {
+									findAll(params).then(can.proxy(function (json) {
+										can.each(json, function (d) {
+											if (d.translate) d.translate();
+										});
+
+										this.cacheItems(json);
+										list.attr(json, true); // update cached instances
+
+										can.trigger(self, 'refreshData', { result: json });
+									}, this), function () {
+										can.trigger(list, 'error', arguments);
 									});
+								}
 
-									this.cacheItems(json);
-									list.attr(json, true); // update cached instances
-
-									can.trigger(self, 'refreshData', { result: json });
-								}, this), function () {
-									can.trigger(list, 'error', arguments);
-								});
 								def.resolve(list);
 							} else {
-								findAll(params).then(can.proxy(function (data) {
-									can.each(data, function (d) {
-										if (d.translate) d.translate();
-									});
+								if (AD.comm.isServerReady()) {
+									findAll(params).then(can.proxy(function (data) {
+										can.each(data, function (d) {
+											if (d.translate) d.translate();
+										});
 
-									// Create our model instance
-									var list = this.models(data);
-									// Save the data to local storage
-									this.cacheItems(data);
-									// Resolve the deferred with our instance
-									def.resolve(list);
-								}, this), function (data) {
-									def.reject(data);
-								});
+										// Create our model instance
+										var list = this.models(data);
+										// Save the data to local storage
+										this.cacheItems(data);
+										// Resolve the deferred with our instance
+										def.resolve(list);
+									}, this), function (data) {
+										def.reject(data);
+									});
+								}
+								else {
+									def.resolve([]);
+								}
 							}
 							return def;
 						};

@@ -10,6 +10,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableDefineLabelPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 
+	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
 	'opstools/BuildApp/models/ABObject.js',
@@ -39,6 +40,7 @@ steal(
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
 								ABList: AD.Model.get('opstools.BuildApp.ABList')
 							};
+
 							this.data = {};
 
 							this.webixUiId = {
@@ -70,6 +72,7 @@ steal(
 
 							this.initMultilingualLabels();
 							this.initControllers();
+							this.initModelCache();
 							this.initWebixUI();
 							this.initEvents();
 
@@ -162,6 +165,17 @@ steal(
 							self.controllers.DefineLabelPopup = new DefineLabelPopup();
 							self.controllers.AddFieldPopup = new AddFieldPopup();
 							self.controllers.ModelCreator = new ModelCreator(self.element, { updateUnsyncCountEvent: self.options.updateUnsyncCountEvent });
+						},
+
+						initModelCache: function () {
+							var self = this;
+
+							System.import('can').then(function () {
+								steal.import('can/model/model', 'can/util/object/object').then(function () {
+
+									self.controllers.ModelCreator.initModelCached(self.Model.ABColumn, 'ab_column_info_cache');
+								});
+							});
 						},
 
 						initWebixUI: function () {
@@ -866,7 +880,7 @@ steal(
 										$$(self.webixUiId.objectDatatable).clearAll();
 
 										// Get columns from server
-										self.Model.ABColumn.findAll({ object: self.data.objectId })
+										self.Model.ABColumn.Cached.findAll({ object: self.data.objectId })
 											.fail(function (err) {
 												$$(self.webixUiId.objectDatatable).hideProgress();
 
@@ -1153,7 +1167,7 @@ steal(
 									self.controllers.ModelCreator.getModel(connectedObj.name)
 										.then(function (objectModel) {
 
-											result.each(function (r) {
+											can.each(result, function (r) {
 												getConnectedDataEvents.push(function (cb) {
 													var connectedDataIds = r[c.name];
 
@@ -1207,7 +1221,7 @@ steal(
 							async.parallel(prepareConnectedDataEvents,
 								function (err, results) {
 									$$(self.webixUiId.objectDatatable).clearAll();
-									$$(self.webixUiId.objectDatatable).parse(result.attr());
+									$$(self.webixUiId.objectDatatable).parse(result.attr ? result.attr() : []);
 
 									q.resolve();
 								}
@@ -1495,7 +1509,7 @@ steal(
 							var self = this;
 
 							if (self.data.columns) {
-								var columns = self.data.columns.attr();
+								var columns = self.data.columns.attr ? self.data.columns.attr() : self.data.columns;
 								columns.sort(function (a, b) { return a.weight - b.weight; });
 
 								$$(self.webixUiId.visibleFieldsPopup).setFieldList(columns);

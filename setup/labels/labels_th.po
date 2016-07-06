@@ -619,6 +619,17 @@ msgstr "ชื่อคอลัมน์ของคุณซ้ำ"
 msgid "Please change your field name"
 msgstr "กรุณาเปลี่ยนชื่อคอลัมน์ของคุณ"
 
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.cannotUpdateFields
+msgid "Could not update columns"
+msgstr "ไม่สามารถแก้ไขคอลัมน์ได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.waitRestructureObjects
+msgid "Please wait until restructure objects is complete"
+msgstr "กรุณารอจนกว่าอ็อบเจ็คจะถูกสร้างใหม่เสร็จ"
 
 
 #. path: app_builder

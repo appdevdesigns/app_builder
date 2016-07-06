@@ -128,13 +128,16 @@ steal(
 
                             self.labels.add_fields.duplicateFieldTitle = AD.lang.label.getLabel('ab.add_fields.duplicateFieldTitle') || "Your field name is duplicate";
                             self.labels.add_fields.duplicateFieldDescription = AD.lang.label.getLabel('ab.add_fields.duplicateFieldDescription') || "Please change your field name";
+
+                            self.labels.add_fields.cannotUpdateFields = AD.lang.label.getLabel('ab.add_fields.cannotUpdateFields') || "Could not update columns";
+                            self.labels.add_fields.waitRestructureObjects = AD.lang.label.getLabel('ab.add_fields.waitRestructureObjects') || "Please wait until restructure objects is complete";
                         },
 
                         initWebixControls: function () {
                             var self = this;
 
                             webix.protoUI({
-                                name: "add_fields_popup",
+                                name: 'add_fields_popup',
                                 $init: function (config) {
                                 },
                                 defaults: {
@@ -524,6 +527,17 @@ steal(
                                     on: {
                                         onBeforeShow: function () {
                                             this.resetState();
+                                        },
+                                        onShow: function () {
+                                            if (!AD.comm.isServerReady()) {
+                                                this.getTopParentView().hide();
+
+                                                webix.alert({
+                                                    title: self.labels.add_fields.cannotUpdateFields,
+                                                    text: self.labels.add_fields.waitRestructureObjects,
+                                                    ok: self.labels.common.ok
+                                                });
+                                            }
                                         },
                                         onHide: function () {
                                             this.resetState();

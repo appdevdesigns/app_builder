@@ -126,42 +126,47 @@ steal(
 									var modelResult = AD.Model.get(modelName);
 
 									// Setup cached model
-									modelResult.Cached = ab.Model.Cached(
-										{
-											cachedKey: function () {
-												return '#appName#_#objectName#_cache'.replace('#appName#', formatAppName).replace('#objectName#', formatObjectName)
-											},
-											fieldId: 'id',
-											describe: modelResult.describe,
-											multilingualFields: modelResult.multilingualFields,
-											findAll: function (params) {
-												var q = $.Deferred();
-
-												modelResult.findAll(params)
-													.fail(function (err) { q.reject(err); })
-													.then(function (result) { q.resolve(result); });
-
-												return q;
-											},
-											findOne: function (params) {
-												var q = $.Deferred();
-
-												modelResult.findOne(params)
-													.fail(function (err) { q.reject(err); })
-													.then(function (result) { q.resolve(result); });
-
-												return q;
-											},
-											create: function (obj) { return modelResult.create.call(modelResult.Cached, obj); },
-											update: function (id, saveObj) { return modelResult.update.call(modelResult.Cached, id, saveObj); },
-											destroy: function (id) { return modelResult.destroy.call(modelResult.Cached, id); }
-
-										}, {});
+									var cachedKey = '#appName#_#objectName#_cache'.replace('#appName#', formatAppName).replace('#objectName#', formatObjectName);
+									self.initModelCached(modelResult, cachedKey);
 
 									q.resolve(modelResult);
 								});
 
 							return q;
+						},
+
+						initModelCached: function (model, cachedKey) {
+							model.Cached = ab.Model.Cached(
+								{
+									cachedKey: function () {
+										return cachedKey
+									},
+									fieldId: 'id',
+									describe: model.describe,
+									multilingualFields: model.multilingualFields,
+									findAll: function (params) {
+										var q = $.Deferred();
+
+										model.findAll(params)
+											.fail(function (err) { q.reject(err); })
+											.then(function (result) { q.resolve(result); });
+
+										return q;
+									},
+									findOne: function (params) {
+										var q = $.Deferred();
+
+										model.findOne(params)
+											.fail(function (err) { q.reject(err); })
+											.then(function (result) { q.resolve(result); });
+
+										return q;
+									},
+									create: function (obj) { return model.create.call(model.Cached, obj); },
+									update: function (id, saveObj) { return model.update.call(model.Cached, id, saveObj); },
+									destroy: function (id) { return model.destroy.call(model.Cached, id); }
+
+								}, {});
 						}
 
 					});

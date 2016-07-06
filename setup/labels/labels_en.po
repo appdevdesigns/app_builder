@@ -619,7 +619,17 @@ msgstr "Your field name is duplicate"
 msgid "Please change your field name"
 msgstr "Please change your field name"
 
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.cannotUpdateFields
+msgid "Could not update columns"
+msgstr "Could not update columns"
 
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.waitRestructureObjects
+msgid "Please wait until restructure objects is complete"
+msgstr "Please wait until restructure objects is complete"
 
 #. path: app_builder
 #. code: en
