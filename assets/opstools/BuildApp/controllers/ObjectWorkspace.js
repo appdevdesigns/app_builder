@@ -453,6 +453,13 @@ steal(
 
 												$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
+												// Update connected data to cached item
+												self.Model.ObjectModel.Cached.findOne({ id: self.data.selectedCell.row }, null, null, true)
+													.then(function (item) {
+														item.attr('connectedData', rowData.connectedData);
+														item.updated({ connectedData: rowData.connectedData });
+													});
+
 												// Resize row height
 												self.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
 

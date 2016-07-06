@@ -37,11 +37,12 @@ steal(function () {
 							id = this.id;
 						can.each(items, function (item) {
 							var idVal = item[id],
-								obj = data[idVal];
+								obj = data[idVal],
+								item = item.attr ? item.attr() : item;
 							if (obj) {
-								can.extend(obj, item.attr());
+								can.extend(obj, item);
 							} else {
-								data[idVal] = item.attr();
+								data[idVal] = item;
 							}
 						});
 						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
@@ -52,6 +53,7 @@ steal(function () {
 						var list = [],
 							data = this._cached,
 							item;
+
 						for (var id in data) {
 							item = data[id];
 							if (this.filter(item, params) !== false) {
@@ -116,10 +118,12 @@ steal(function () {
 						for (param in params) {
 							paramValue = params[param];
 							// in fixtures we ignore null, I don't want to now
-							if (paramValue !== undefined && item[param] !== undefined && !this._compare(param, item[param], paramValue)) {
-								return false;
+							if (paramValue !== undefined && item[param] !== undefined && this._compare(param, item[param], paramValue)) {
+								return true;
 							}
 						}
+
+						return false;
 					},
 					compare: {},
 					_compare: function (prop, itemData, paramData) {
@@ -246,7 +250,7 @@ steal(function () {
 								fieldList = Object.keys(this.describe()).concat(['id', 'translations']);
 
 							fieldList.forEach(function (key) {
-								if (typeof obj[key] != 'undefined' || obj[key] != null)
+								if (typeof obj[key] != 'undefined' && obj[key] != null)
 									saveObj[key] = obj[key];
 							});
 
@@ -359,14 +363,23 @@ steal(function () {
 
 				}, {
 						updated: function (attrs) {
-							if (this && attrs) this.attr(attrs);
+							var instance = this;
+							// Update local instance
+							if (instance && attrs) {
+								if (attrs.attr) attrs = attrs.attr();
 
-							if (this.translate) this.translate();
+								for (var key in attrs) {
+									if (!webix.isUndefined(attrs[key]) && attrs[key] != null)
+										instance.attr(key, attrs[key]);
+								}
+							}
+
+							if (instance.translate) instance.translate();
 
 							// Save the model to local storage
-							this.constructor.cacheItems([this.attr()]);
+							instance.constructor.cacheItems([instance.attr()]);
 							// Update our model
-							can.Model.prototype.updated.apply(this, arguments);
+							can.Model.prototype.updated.apply(instance, arguments);
 						},
 						created: function (attrs) {
 							if (attrs.translate) attrs.translate();
