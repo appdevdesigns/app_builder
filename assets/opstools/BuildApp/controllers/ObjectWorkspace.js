@@ -468,7 +468,7 @@ steal(
 												$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
 												// Update connected data to cached item
-												self.Model.ObjectModel.Cached.findOne({ id: self.data.selectedCell.row }, null, null, true)
+												self.Model.ObjectModel.Cached.findOne({ id: self.data.selectedCell.row }, true)
 													.then(function (item) {
 														item.attr('connectedData', rowData.connectedData);
 														item.updated({ connectedData: rowData.connectedData });
@@ -600,6 +600,14 @@ steal(
 															});
 														}
 
+														// Update connected data to cached item
+														self.Model.ObjectModel.Cached.findOne({ id: rowId }, true)
+															.then(function (cacheItem) {
+																cacheItem.attr('connectedData', item.connectedData);
+																cacheItem.updated({ connectedData: item.connectedData });
+															});
+
+
 														$$(self.webixUiId.objectDatatable).updateItem(rowId, item);
 
 														if (!itemData || itemData.length < 1) itemData = '';
@@ -692,7 +700,7 @@ steal(
 
 													async.series([
 														function (next) {
-															self.Model.ABColumn.findAll({ object: object[0].id })
+															self.Model.ABColumn.Cached.findAll({ object: object[0].id })
 																.then(function (data) {
 
 																	data.forEach(function (d) {
@@ -943,6 +951,7 @@ steal(
 											.then(function (objectModel) {
 												self.Model.ObjectModel = objectModel;
 
+												self.Model.ObjectModel.Cached.unbind('refreshData');
 												self.Model.ObjectModel.Cached.bind('refreshData', function (ev, data) {
 													if (this == self.Model.ObjectModel.Cached)
 														self.populateDataToGrid(data.result);
@@ -1185,7 +1194,7 @@ steal(
 
 													connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
 
-													objectModel.Cached.findAll({ or: connectedDataIds })
+													objectModel.Cached.findAll({ or: connectedDataIds }, false, true)
 														.then(function (connectedResult) {
 															connectedResult.forEach(function (d) {
 																if (d.translate) d.translate();

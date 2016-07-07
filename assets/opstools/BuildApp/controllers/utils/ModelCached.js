@@ -165,12 +165,11 @@ steal(function () {
 						// return can.Object.same(itemData, paramData, this.compare[prop]);
 					},
 					makeFindAll: function (findAll) {
-						return function (params, success, error) {
+						return function (params, ignoreCache) {
 							var def = new can.Deferred(),
 								self = this,
 								data = this.findAllCached(params);
 
-							def.then(success, error);
 							if (data.length) {
 								var list = this.models(data);
 
@@ -180,7 +179,7 @@ steal(function () {
 											if (d.translate) d.translate();
 										});
 
-										if (Object.keys(params).length < 1) // Cache only all data
+										if (!ignoreCache)
 											self.cacheItems(json);
 
 										list.attr(json, true); // Update cached instances
@@ -202,7 +201,7 @@ steal(function () {
 										// Create our model instance
 										var list = this.models(data);
 
-										if (Object.keys(params).length < 1) // Cache only all data
+										if (!ignoreCache)
 											self.cacheItems(data); // Save the data to local storage
 
 										// Resolve the deferred with our instance
@@ -219,7 +218,7 @@ steal(function () {
 						};
 					},
 					makeFindOne: function (findOne) {
-						return function (params, success, error, onlyLocal) {
+						return function (params, onlyLocal, ignoreCache) {
 							var def = new can.Deferred();
 
 							// grab instance from cached data
@@ -227,8 +226,6 @@ steal(function () {
 							// or try to load it
 							data = data || this.findAllCached(params)[0];
 
-							// Bind success and error callbacks to the deferred
-							def.then(success, error);
 							// If we had existing local storage data...
 							if (data) {
 								// Create our model instance
@@ -237,7 +234,8 @@ steal(function () {
 								if (AD.comm.isServerReady() && !onlyLocal) {
 									findOne(params).then(function (json) {
 										// Update the instance when the ajax response returns
-										instance.updated(json);
+										if (!ignoreCache)
+											instance.updated(json);
 									}, function (data) {
 										can.trigger(instance, 'error', data);
 									});
@@ -253,7 +251,8 @@ steal(function () {
 										var instance = this.model(data);
 
 										// Save the data to local storage
-										instance.created(data);
+										if (!ignoreCache)
+											instance.created(data);
 
 										// Resolve the deferred with our instance
 										def.resolve(instance);
@@ -355,7 +354,7 @@ steal(function () {
 									}
 								},
 								function (next) {
-									self.findOne({ id: id }, null, null, true)
+									self.findOne({ id: id }, true)
 										.fail(function (err) { next(err); })
 										.then(function (result) {
 											if (result)
@@ -402,7 +401,7 @@ steal(function () {
 
 						self.savedIds.forEach(function (id) {
 							saveEvents.push(function (next) {
-								self.findOne({ id: id }, null, null, true).then(function (result) {
+								self.findOne({ id: id }, true).then(function (result) {
 									if (!result) { // This data was deleted
 										next();
 										return true;
