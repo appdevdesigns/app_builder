@@ -10,7 +10,8 @@ steal(function () {
 
 						can.Model.setup.apply(self, arguments);
 
-						this.tempIds = []; // [tempId]
+						self.savedIds = []; // [tempId, id, ..., idn]
+						self.deletedIds = [] // [id, ..., idn]
 
 						// setup data
 						if (typeof window.localStorage !== 'undefined') {
@@ -21,7 +22,18 @@ steal(function () {
 
 						io.socket.on('server-reload', function (data) {
 							if (!data.reloading) { // Server has finished reloading
-								self.createInList();
+								async.series([
+									function (next) {
+										self.saveInList()
+											.fail(function (err) { next(err); })
+											.then(function () { next(); });
+									},
+									function (next) {
+										self.destroyInList()
+											.fail(function (err) { next(err); })
+											.then(function () { next(); });
+									}
+								]);
 							}
 						});
 					},
@@ -113,17 +125,37 @@ steal(function () {
 					 * @param {Object} params
 					 */
 					filter: function (item, params) {
+						// Apply or condition
+						var self = this,
+							or = [];
+						if (params.or) {
+							// Convert or condition to array
+							params.or.forEach(function (item) {
+								for (var key in item) {
+									or.push({ key: key, value: item[key] });
+								}
+							});
+						}
+
+						// Convert params to array
+						var paramsArray = [];
+						for (var key in params) {
+							if (key !== 'or')
+								paramsArray.push({ key: key, value: params[key] });
+						}
+						paramsArray = paramsArray.concat(or);
+
 						// go through each param in params
-						var param, paramValue;
-						for (param in params) {
-							paramValue = params[param];
-							// in fixtures we ignore null, I don't want to now
-							if (paramValue !== undefined && item[param] !== undefined && this._compare(param, item[param], paramValue)) {
-								return true;
+						var result = false;
+						for (var i = 0; i < paramsArray.length; i++) {
+							var param = paramsArray[i];
+							if (param.value !== undefined && item[param.key] !== undefined && self._compare(param.key, item[param.key], param.value)) {
+								result = true;
+								break;
 							}
 						}
 
-						return false;
+						return result;
 					},
 					compare: {},
 					_compare: function (prop, itemData, paramData) {
@@ -148,8 +180,10 @@ steal(function () {
 											if (d.translate) d.translate();
 										});
 
-										this.cacheItems(json);
-										list.attr(json, true); // update cached instances
+										if (Object.keys(params).length < 1) // Cache only all data
+											self.cacheItems(json);
+
+										list.attr(json, true); // Update cached instances
 
 										can.trigger(self, 'refreshData', { result: json });
 									}, this), function () {
@@ -167,8 +201,10 @@ steal(function () {
 
 										// Create our model instance
 										var list = this.models(data);
-										// Save the data to local storage
-										this.cacheItems(data);
+
+										if (Object.keys(params).length < 1) // Cache only all data
+											self.cacheItems(data); // Save the data to local storage
+
 										// Resolve the deferred with our instance
 										def.resolve(list);
 									}, this), function (data) {
@@ -237,20 +273,20 @@ steal(function () {
 							var q = new can.Deferred(),
 								tempId = null;
 
-							if (!AD.comm.isServerReady()) { // Return local item
+							if (AD.comm.isServerReady()) { // Call service to add new item
+								create(obj)
+									.fail(function (err) { q.reject(err); })
+									.then(function (result) { q.resolve(result); });
+							}
+							else { // Store to local repository
 								var localObj = $.extend({}, obj);
 								tempId = 'temp' + webix.uid();
 								localObj.id = tempId;
-								this.tempIds.push(tempId);
+								this.storeSaveId(tempId);
 
 								q.resolve(localObj);
-
-								return q; // Don't call service to add new item
 							}
 
-							create(obj)
-								.fail(function (err) { q.reject(err); })
-								.then(function (result) { q.resolve(result); });
 
 							return q;
 						};
@@ -266,26 +302,21 @@ steal(function () {
 									saveObj[key] = obj[key];
 							});
 
-							if (!AD.comm.isServerReady()) { // System is syncing
-								if (typeof id === 'string' && id.startsWith('temp')) {
-									this.findOne({ id: id }).then(function (result) {
-										result.updated(saveObj); // Update in local repository
-
-										q.resolve(saveObj);
+							if (AD.comm.isServerReady()) { // Call service to update item
+								update(id, saveObj)
+									.fail(function (err) { q.reject(err); })
+									.then(function (result) {
+										q.resolve(result);
 									});
-
-									return q;  // Don't call service to update new item
-								}
-								else {
-									q.resolve(saveObj);
-								}
 							}
+							else { // System is syncing
+								this.findOne({ id: id }).then(function (result) {
+									result.updated(saveObj); // Update in local repository
 
-							update(id, saveObj)
-								.fail(function (err) { q.reject(err); })
-								.then(function (result) {
-									q.resolve(result);
+									q.resolve(saveObj);
 								});
+								this.storeSaveId(id);
+							}
 
 							return q;
 						}
@@ -298,7 +329,7 @@ steal(function () {
 
 							async.series([
 								function (next) {
-									if (typeof id != 'string' || !id.startsWith('temp')) {
+									if (AD.comm.isServerReady()) {
 										destroy(id) // Call service to destroy
 											.fail(function (err) {
 												q.reject(err);
@@ -310,25 +341,27 @@ steal(function () {
 											});
 									}
 									else {
+										if (self.isTempId(id)) { // Delete in saved ids list
+											var index = $.inArray(id, self.savedIds);
+											if (index > -1)
+												self.savedIds.splice(index, 1);
+										}
+										else {
+											if ($.inArray(id, self.deletedIds) < 0)
+												self.deletedIds.push(id); // Store in deleted id list
+										}
+
 										next();
 									}
-
-									if (!AD.comm.isServerReady())
-										next();
 								},
 								function (next) {
 									self.findOne({ id: id }, null, null, true)
 										.fail(function (err) { next(err); })
 										.then(function (result) {
-											result.destroyed(); // Destroy in local repository
+											if (result)
+												result.destroyed(); // Destroy in local repository
 
-											if (typeof id === 'string' && id.startsWith('temp')) {
-												var index = $.inArray(id, self.tempIds);
-												if (index > -1)
-													self.tempIds.splice(index, 1);
-											}
-
-											q.resolve(result);
+											q.resolve(id);
 											next();
 										});
 								}
@@ -353,31 +386,88 @@ steal(function () {
 						this.cacheItems([]);
 					},
 
-					createInList: function () {
-						var self = this;
+					storeSaveId: function (id) {
+						if ($.inArray(id, this.savedIds) < 0)
+							this.savedIds.push(id);
+					},
 
-						self.tempIds.forEach(function (tempId) {
-							self.findOne({ id: tempId }, null, null, true).then(function (result) {
-								result.removeAttr('id');
+					isTempId: function (id) {
+						return typeof id === 'string' && id.startsWith('temp');
+					},
 
-								result.save().then(function (saveResult) {
-									self.changeId(tempId, saveResult.id);
+					saveInList: function () {
+						var self = this,
+							q = $.Deferred(),
+							saveEvents = [];
 
-									self.cacheItems([saveResult]);
+						self.savedIds.forEach(function (id) {
+							saveEvents.push(function (next) {
+								self.findOne({ id: id }, null, null, true).then(function (result) {
+									if (!result) { // This data was deleted
+										next();
+										return true;
+									}
 
-									var index = $.inArray(tempId, self.tempIds);
-									if (index > -1)
-										self.tempIds.splice(index, 1);
+									if (self.isTempId(result.id))
+										result.removeAttr('id');
+
+									result.save().then(function (saveResult) {
+										self.changeId(id, saveResult.id);
+
+										self.cacheItems([saveResult]);
+
+										var index = $.inArray(id, self.savedIds);
+										if (index > -1)
+											self.savedIds.splice(index, 1);
+
+										next();
+									});
 								});
 							});
-						})
+						});
+
+						async.parallel(saveEvents, function (err) {
+							if (err)
+								q.reject(err)
+							else
+								q.resolve();
+						});
+
+						return q;
+					},
+
+					destroyInList: function () {
+						var self = this,
+							q = $.Deferred(),
+							deleteEvents = [];
+
+						self.deletedIds.forEach(function (id) {
+							deleteEvents.push(function (next) {
+								self.destroy(id).then(function (result) {
+									var index = $.inArray(id, self.deletedIds);
+									if (index > -1)
+										self.deletedIds.splice(index, 1);
+
+									next();
+								});
+							});
+						});
+
+						async.parallel(deleteEvents, function (err) {
+							if (err)
+								q.reject(err)
+							else
+								q.resolve();
+						});
+
+						return q;
 					}
 
 				}, {
 						updated: function (attrs) {
 							var instance = this;
-							// Update local instance
-							if (instance && attrs) {
+
+							if (instance && attrs) { // Update local instance
 								if (attrs.attr) attrs = attrs.attr();
 
 								for (var key in attrs) {
@@ -390,6 +480,7 @@ steal(function () {
 
 							// Save the model to local storage
 							instance.constructor.cacheItems([instance.attr()]);
+
 							// Update our model
 							can.Model.prototype.updated.apply(instance, arguments);
 						},

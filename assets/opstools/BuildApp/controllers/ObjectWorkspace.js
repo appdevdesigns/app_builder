@@ -530,8 +530,8 @@ steal(
 																	// TODO message
 																	$$(self.webixUiId.objectDatatable).hideProgress();
 																})
-																.then(function (result) {
-																	$$(self.webixUiId.objectDatatable).remove(result.id);
+																.then(function (id) {
+																	$$(self.webixUiId.objectDatatable).remove(id);
 
 																	// TODO message
 
