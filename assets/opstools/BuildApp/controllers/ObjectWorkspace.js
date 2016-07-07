@@ -276,7 +276,7 @@ steal(
 																$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
 																// Call server to delete field data
-																self.Model.ABColumn.destroy(selectedField.dataId)
+																self.Model.ABColumn.Cached.destroy(selectedField.dataId)
 																	.fail(function (err) {
 																		$$(self.webixUiId.objectDatatable).hideProgress();
 
@@ -667,7 +667,10 @@ steal(
 											onBeforeSelect: function (data, preserve) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
 
-												if (columnConfig.editor === 'selectivity') {
+												if (!columnConfig.editor && columnConfig.filter_type === 'boolean') { // Ignore edit 'Checkbox' field
+													return false;
+												}
+												else if (columnConfig.editor === 'selectivity') {
 													// Get column data
 													var columnData = self.data.columns.filter(function (f) {
 														return f.name === data.column;
@@ -1042,7 +1045,7 @@ steal(
 												});
 										}
 										else { // Add new
-											self.Model.ABColumn.create(newColumn)
+											self.Model.ABColumn.Cached.create(newColumn)
 												.fail(function (err) {
 													saveDeferred.reject(err);
 												})
