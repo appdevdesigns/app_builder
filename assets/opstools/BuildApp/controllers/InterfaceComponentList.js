@@ -22,6 +22,7 @@ steal(
 							self.data = {};
 
 							self.componentIds = {
+								componentListPanel: 'ab-components-panel',
 								componentToolbar: 'ab-components-toolbar',
 								componentToolbarHeader: 'ab-components-toolbar-header',
 								componentSpace: 'ab-component-space',
@@ -53,6 +54,7 @@ steal(
 							var self = this;
 
 							self.data.definition = {
+								id: self.componentIds.componentListPanel,
 								rows: [
 									{
 										view: 'toolbar',
@@ -155,13 +157,11 @@ steal(
 						},
 
 						show: function () {
-							$$(this.componentIds.componentToolbar).show();
-							$$(this.componentIds.componentList).show();
+							$$(this.componentIds.componentListPanel).show();
 						},
 
 						hide: function () {
-							$$(this.componentIds.componentToolbar).hide();
-							$$(this.componentIds.componentList).hide();
+							$$(this.componentIds.componentListPanel).hide();
 						}
 
 

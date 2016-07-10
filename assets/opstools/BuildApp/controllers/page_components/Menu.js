@@ -22,7 +22,10 @@ steal(
 							self.Model = AD.Model.get('opstools.BuildApp.ABPage');
 
 							self.componentIds = {
+								editView: self.info.name + '-edit-view',
 								editMenu: 'ab-menu-edit-mode',
+
+								propertyView: self.info.name + '-property-view',
 
 								pageTree: 'ab-menu-page-tree'
 							};
@@ -43,7 +46,7 @@ steal(
 								menu.id = self.componentIds.editMenu;
 
 								var editView = {
-									id: self.info.name + '-edit-view',
+									id: self.componentIds.editView,
 									padding: 10,
 									rows: [
 										menu,
@@ -81,39 +84,40 @@ steal(
 							self.getPropertyView = function () {
 								return {
 									view: "property",
-									id: self.info.name + '-property-view',
+									id: self.componentIds.propertyView,
 									elements: [
+										{ label: "Layout", type: "label" },
 										{
-											label: "Orientation",
+											id: 'orientation',
 											type: "select",
-											id: 'layout',
+											label: "Orientation",
 											options: [
 												{ id: 'x', value: "Horizontal" },
 												{ id: 'y', value: "Vertical" }
 											]
-											// ,on: {
-											// 	onChange: function (newv, oldv) {
-											// 		if (newv != oldv) {
-											// 			$$(self.componentIds.editMenu).define('layout', newv);
-											// 			$$(self.componentIds.editMenu).render();
-											// 		}
-											// 	}
-											// }
 										},
 									],
 									on: {
-										onLiveEdit: function (state, editor, ignoreUpdate) {
-											console.log(state, editor, ignoreUpdate);
+										onAfterEditStop: function (state, editor, ignoreUpdate) {
+											if (state.old === state.value) return true;
+
+											switch (editor.id) {
+												case 'orientation':
+													// TODO : Re-render menu by orientation
+													// if ($$(self.componentIds.editMenu))
+													// 	$$(self.componentIds.editMenu).destructor();
+													break;
+											}
 										}
 									}
 								};
 							};
 
 							self.getSettings = function () {
-								var values = $$(self.info.name + '-property-view').getValues();
+								var values = $$(self.componentIds.propertyView).getValues();
 
 								var settings = {
-									layout: values.layout
+									layout: values.orientation
 								};
 
 								settings.data = $$(self.componentIds.editMenu).find(function () { return true; });
@@ -126,6 +130,9 @@ steal(
 								$$(self.componentIds.editMenu).clearAll();
 								if (settings.data)
 									$$(self.componentIds.editMenu).parse(settings.data);
+
+								if (settings.layout)
+									$$(self.componentIds.editMenu).define('layout', settings.layout);
 
 								// Page list
 								$$(self.componentIds.pageTree).clearAll();
@@ -185,15 +192,15 @@ steal(
 
 								// Properties
 								if (settings.layout) {
-									$$(self.info.name + '-property-view').setValues({
-										layout: settings.layout
+									$$(self.componentIds.propertyView).setValues({
+										orientation: settings.layout
 									});
 								}
-								$$(self.info.name + '-property-view').refresh();
+								$$(self.componentIds.propertyView).refresh();
 							};
 
 							self.editStop = function () {
-								$$(self.info.name + '-property-view').editStop();
+								$$(self.componentIds.propertyView).editStop();
 							};
 						},
 

@@ -242,3 +242,17 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-page-list-item .webix_tree_checkbox {
 	margin: 0px !important;
 }
+
+/* Grid component */
+.ab-page-grid-column-item .column-checkbox {
+	display: inline-block;
+	position: relative;
+	top: -5px;
+	width: 30px;
+}
+
+.ab-page-grid-column-item .column-name {
+	display: inline-block;
+    position: relative;
+    top: -18px;
+}

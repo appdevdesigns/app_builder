@@ -7,7 +7,7 @@ steal(
 				// Namespacing conventions:
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 				AD.Model.extend('opstools.BuildApp.ABColumn', {
-					useSockets: true
+					// useSockets: true
 					/*
 						findAll: 'GET /app_builder/abcolumn',
 						findOne: 'GET /app_builder/abcolumn/{id}',

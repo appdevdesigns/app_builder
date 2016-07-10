@@ -184,7 +184,7 @@ steal(function () {
 
 										list.attr(json, true); // Update cached instances
 
-										can.trigger(self, 'refreshData', { result: json });
+										can.trigger(self, 'refreshData', { result: list });
 									}, this), function () {
 										can.trigger(list, 'error', arguments);
 									});

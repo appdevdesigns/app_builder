@@ -342,7 +342,7 @@ steal(
 															newPage.parent = parentPageId;
 
 														// Call create new page to server
-														self.Model.create(newPage).fail(function () {
+														self.Model.create(newPage).fail(function (err) {
 															$$(self.webixUiId.interfaceTree).hideProgress();
 
 															webix.message({

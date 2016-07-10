@@ -454,6 +454,8 @@ steal(
 									view.container = view.id;
 									// view.disabled = true;
 
+									$('#' + view.id).html('');
+
 									// Populate data
 									for (var key in setting) {
 										view[key] = setting[key].attr ? setting[key].attr() : setting[key];
