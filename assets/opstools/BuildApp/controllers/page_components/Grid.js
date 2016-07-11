@@ -278,7 +278,10 @@ steal(
 
 								$$(self.componentIds.columnList).clearAll();
 
-								if (!objectId) return;
+								if (!objectId) {
+									q.resolve();
+									return q;
+								}
 
 								$$(self.componentIds.columnList).showProgress({ type: 'icon' });
 
