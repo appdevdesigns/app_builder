@@ -174,7 +174,7 @@ steal(
 																			item.setting.page = self.data.page;
 																			break;
 																		case "Grid":
-																			item.setting.appId = self.data.appId;
+																			item.setting.app = self.data.app;
 																			break;
 																	}
 
@@ -351,10 +351,10 @@ steal(
 							return this.data.definition;
 						},
 
-						setAppId: function (id) {
+						setApp: function (app) {
 							var self = this;
 
-							self.data.appId = id;
+							self.data.app = app;
 						},
 
 						setPage: function (page) {

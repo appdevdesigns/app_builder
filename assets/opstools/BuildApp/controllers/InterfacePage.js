@@ -81,11 +81,11 @@ steal(
 							self.controllers.InterfaceWorkspace.webix_ready();
 						},
 
-						loadData: function (appId) {
+						loadData: function (app) {
 							var self = this;
 
-							self.controllers.InterfaceList.loadPages(appId);
-							self.controllers.InterfaceWorkspace.setAppId(appId);
+							self.controllers.InterfaceList.loadPages(app.id);
+							self.controllers.InterfaceWorkspace.setApp(app);
 						}
 
 					});
