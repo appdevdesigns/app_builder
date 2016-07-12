@@ -23,10 +23,19 @@ steal(
 						initMultilingualLabels: function () {
 							var self = this;
 							self.labels = {};
+							self.labels.common = {};
+
+							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
+							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
 
 							// Connected data
 							self.labels.connectToObjectName = AD.lang.label.getLabel('ab.object.connectToObjectName') || " (Connect to <b>{0}</b>)";
 							self.labels.noConnectedData = AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected";
+
+							// Delete row
+							self.labels.confirmDeleteRowTitle = AD.lang.label.getLabel('ab.object.deleteRow.title') || "Delete data";
+							self.labels.confirmDeleteRowMessage = AD.lang.label.getLabel('ab.object.deleteRow.message') || "Do you want to delete this row?";
+
 						},
 
 						initControllers: function () {
@@ -42,6 +51,30 @@ steal(
 							var self = this;
 							self.dataTable = dataTable;
 
+							// Trash
+							self.dataTable.attachEvent("onItemClick", function (id, e, node) {
+								if (e.target.className.indexOf('trash') > 0) {
+									webix.confirm({
+										title: self.labels.confirmDeleteRowTitle,
+										ok: self.labels.common.yes,
+										cancel: self.labels.common.no,
+										text: self.labels.confirmDeleteRowMessage,
+										callback: function (result) {
+											if (result) {
+												if (self.deleteRow)
+													self.deleteRow(id);
+											}
+
+											if (self.dataTable.unselectAll)
+												self.dataTable.unselectAll();
+
+											return true;
+										}
+									});
+								}
+							});
+
+							// Selectivity
 							self.dataTable.attachEvent('onAfterRender', function (data) {
 								// Initial multi-combo
 								$('.connect-data-values').selectivity('destroy');
@@ -78,6 +111,8 @@ steal(
 
 									if (d.connectedData) {
 										for (var columnName in d.connectedData) {
+											if ($.grep(self.dataTable.config.columns, function (c) { return c.id == columnName }).length < 1) break;
+
 											var connectFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName }));
 											connectFieldNode.find('.connect-data-values').selectivity('data', d.connectedData[columnName]);
 
@@ -94,6 +129,8 @@ steal(
 										self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
 								});
 							});
+
+							self.dataTable.refresh();
 						},
 
 						setAppId: function (appId) {
@@ -112,8 +149,15 @@ steal(
 							this.changeSelectivityItem = changeSelectivityItem;
 						},
 
+						registerDeleteRowHandler: function (deleteRow) {
+							this.deleteRow = deleteRow;
+						},
+
 						bindColumns: function (columns, resetColumns, addTrashColumn) {
 							var self = this;
+
+							if (resetColumns)
+								self.dataTable.clearAll();
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 

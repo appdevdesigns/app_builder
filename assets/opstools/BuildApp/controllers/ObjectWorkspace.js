@@ -126,10 +126,6 @@ steal(
 							self.labels.object.confirmDeleteTitle = AD.lang.label.getLabel('ab.object.delete.title') || "Delete data field";
 							self.labels.object.confirmDeleteMessage = AD.lang.label.getLabel('ab.object.delete.message') || "Do you want to delete <b>{0}</b>?";
 
-							// Delete row
-							self.labels.object.confirmDeleteRowTitle = AD.lang.label.getLabel('ab.object.deleteRow.title') || "Delete data";
-							self.labels.object.confirmDeleteRowMessage = AD.lang.label.getLabel('ab.object.deleteRow.message') || "Do you want to delete this row?";
-
 							// Connected data
 							self.labels.object.selectConnectedData = AD.lang.label.getLabel('ab.object.selectConnectedData') || "Select data to connect";
 
@@ -410,36 +406,6 @@ steal(
 										editaction: "custom",
 										select: "cell",
 										dragColumn: true,
-										onClick: {
-											trash: function (e, id) {
-												webix.confirm({
-													title: self.labels.object.confirmDeleteRowTitle,
-													ok: self.labels.common.yes,
-													cancel: self.labels.common.no,
-													text: self.labels.object.confirmDeleteRowMessage,
-													callback: function (result) {
-														if (result) {
-															$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-															self.Model.ObjectModel.Cached.destroy(id.row)
-																.fail(function (err) {
-																	// TODO message
-																	$$(self.webixUiId.objectDatatable).hideProgress();
-																})
-																.then(function (id) {
-																	$$(self.webixUiId.objectDatatable).remove(id);
-
-																	// TODO message
-
-																	$$(self.webixUiId.objectDatatable).hideProgress();
-																});
-														}
-
-														$$(self.webixUiId.objectDatatable).unselectAll();
-													}
-												});
-											}
-										},
 										on: {
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
 												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
@@ -691,6 +657,25 @@ steal(
 
 								}
 							});
+
+							// Register delete event handler
+							self.controllers.ObjectDataTable.registerDeleteRowHandler(function (deletedId) {
+								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+								self.Model.ObjectModel.Cached.destroy(deletedId.row)
+									.fail(function (err) {
+										// TODO message
+										$$(self.webixUiId.objectDatatable).hideProgress();
+									})
+									.then(function (data) {
+										$$(self.webixUiId.objectDatatable).remove(data.id);
+
+										// TODO message
+
+										$$(self.webixUiId.objectDatatable).hideProgress();
+									});
+							});
+
 
 							$$(self.webixUiId.editHeaderPopup).registerHeaderClick(function (clickedItem, headerField) {
 								switch (clickedItem) {

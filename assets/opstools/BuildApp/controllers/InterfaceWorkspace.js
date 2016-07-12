@@ -136,11 +136,11 @@ steal(
 							return this.data.definition;
 						},
 
-						setAppId: function (id) {
+						setApp: function (app) {
 							var self = this;
 
-							self.data.appId = id;
-							self.controllers.LayoutView.setAppId(id);
+							self.data.app = app;
+							self.controllers.LayoutView.setApp(app);
 						},
 
 						setPage: function (page) {

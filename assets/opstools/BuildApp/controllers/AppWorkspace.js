@@ -160,7 +160,7 @@ steal(
 											onChange: function (newv, oldv) {
 												if (newv != oldv) {
 													if (newv == self.webixUiId.interfaceView) {
-														self.controllers.InterfacePage.loadData(self.data.app.id);
+														self.controllers.InterfacePage.loadData(self.data.app);
 													}
 												}
 											}
@@ -189,7 +189,7 @@ steal(
 							self.controllers.ObjectPage.setApp(app);
 
 							// FOR TEST
-							$$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 						},
 
 						refresh: function () {
