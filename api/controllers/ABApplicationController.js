@@ -19,39 +19,46 @@ module.exports = {
     
     
     /**
-     * Generate the server side model definitions of all objects
-     * in an application.
+     * GET /app_builder/requirements
+     */
+    requirements: function(req, res) {
+        res.set('content-type', 'application/javascript');
+        
+        var output = '';
+        
+        ABApplication.find()
+        .then(function(list) {
+            for (var i=0; i<list.length; i++) {
+                output += 'System.import("opstools/AB_' + list[i].name + '");\n';
+            }
+            res.send(output);
+            return null;
+        })
+        .catch(function(err) {
+            res.AD.error(err);
+            return null;
+        });
+        
+    },
+    
+    
+    /**
+     * Generate the server side folder structure for an application.
      *
-     * Reloading the ORM is still needed to complete the activation.
+     * Objects and Pages are not generated.
+     * Reloading the ORM is also needed to complete the activation.
      *
      * POST /app_builder/prepareApp/:id
      */
     prepare: function(req, res) {
         var appID = req.param('id');
         
-        ABApplication.find({ id: appID })
-        .populate('object')
-        .then(function(list) {
-            if (!list || !list[0]) {
-                throw new Error('No matches for app id');
-            }
-            async.eachSeries(list[0].object, function(obj, next) {
-                AppBuilder.objectToModel(obj.id)
-                .fail(next)
-                .done(function() {
-                    next();
-                });
-            }, function(err) {
-                if (err) throw err;
-                else {
-                    res.AD.success({});
-                }
-            });
-            return null;
-        })
-        .catch(function(err) {
-            console.log(err);
+        AppBuilder.buildApplication(appID)
+        .fail(function(err) {
             res.AD.error(err);
+        })
+        .done(function() {
+            res.AD.success({});
         });
     },
     
@@ -99,10 +106,12 @@ module.exports = {
         }
         reloading = AD.sal.Deferred();
         
+        var appIDs = [];
         var objIDs = [];
+        var pageIDs = [];
         
         async.series([
-            // Find all AB Objects
+            // Find all AB applications
             function(next) {
                 ABApplication.find()
                 .populate('object')
@@ -110,7 +119,9 @@ module.exports = {
                     if (!list || !list[0]) {
                         throw new Error('No applications found');
                     }
+                    
                     for (var i=0; i<list.length; i++) {
+                        appIDs.push(list[i].id);
                         for (var j=0; j<list[i].object.length; j++) {
                             objIDs.push( list[i].object[j].id );
                         }
@@ -120,13 +131,14 @@ module.exports = {
                 })
                 .catch(function(err) {
                     next(err);
+                    return null;
                 });
             },
             
-            // Create model definitions for each AB Object
+            // Create the application folders
             function(next) {
-                async.eachSeries(objIDs, function(id, ok) {
-                    AppBuilder.objectToModel(id)
+                async.eachSeries(appIDs, function(id, ok) {
+                    AppBuilder.buildApplication(id)
                     .fail(ok)
                     .done(function() {
                         ok();
@@ -137,6 +149,37 @@ module.exports = {
                 });
             },
             
+            // Create model definitions for each AB Object
+            function(next) {
+                async.eachSeries(objIDs, function(id, ok) {
+                    AppBuilder.buildObject(id)
+                    .fail(ok)
+                    .done(function() {
+                        ok();
+                    });
+                }, function(err) {
+                    if (err) next(err);
+                    else next();
+                });
+            },
+            
+            // Find all AB root Pages
+            function(next) {
+                ABPage.find({ parent: null })
+                .then(function(list) {
+                    if (list && list[0]) {
+                        for (var i=0; i<list.length; i++) {
+                            pageIDs.push( list[i].id );
+                        }
+                    }
+                    next();
+                    return null;
+                })
+                .catch(function(err) {
+                    next(err);
+                });
+            },
+            
             // Reload ORM
             function(next) {
                 AppBuilder.reload()
@@ -144,7 +187,22 @@ module.exports = {
                 .done(function() {
                     next();
                 });
-            }
+            },
+            
+            // Generate all Page controllers
+            function(next) {
+                async.eachSeries(pageIDs, function(id, ok) {
+                    AppBuilder.buildPage(id)
+                    .fail(ok)
+                    .done(function() {
+                        ok();
+                    });
+                }, function(err) {
+                    if (err) next(err);
+                    else next();
+                });
+            },
+            
             
         ], function(err) {
             if (err) {
