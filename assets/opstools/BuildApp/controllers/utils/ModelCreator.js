@@ -24,12 +24,9 @@ steal(
 							}, options);
 						},
 
-						setAppId: function (appId) {
-							this.data.appId = appId;
-						},
-
-						setAppName: function (appName) {
-							this.data.appName = appName;
+						setApp: function (app) {
+							this.data.appId = app.id;
+							this.data.appName = app.name;
 						},
 
 						getBaseModel: function (objectName, describe, multilingualFields) {

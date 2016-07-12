@@ -133,12 +133,8 @@ steal(
 							self.dataTable.refresh();
 						},
 
-						setAppId: function (appId) {
-							this.controllers.ModelCreator.setAppId(appId);
-						},
-
-						setAppName: function (appName) {
-							this.controllers.ModelCreator.setAppName(appName);
+						setApp: function (app) {
+							this.controllers.ModelCreator.setApp(app);
 						},
 
 						setObjectList: function (objectList) {

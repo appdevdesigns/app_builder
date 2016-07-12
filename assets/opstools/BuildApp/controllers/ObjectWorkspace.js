@@ -704,7 +704,7 @@ steal(
 										break;
 									case self.labels.object.deleteField:
 										// Validate
-										if (columns.length < 2) {
+										if (self.data.columns.length < 2) {
 											webix.alert({
 												title: self.labels.object.couldNotDeleteField,
 												ok: self.labels.common.ok,
@@ -744,8 +744,7 @@ steal(
 																}
 															});
 
-															columns.removeAt(columns.find(headerField));
-															$$(self.webixUiId.objectDatatable).refreshColumns(columns, true);
+															self.controllers.ObjectDataTable.bindColumns(self.data.columns, false, true);
 
 															self.reorderColumns();
 
@@ -792,12 +791,10 @@ steal(
 							self.resetState();
 
 							// Set values to object datatable utils
-							self.controllers.ObjectDataTable.setAppId(self.data.app.id);
-							self.controllers.ObjectDataTable.setAppName(self.data.app.name);
+							self.controllers.ObjectDataTable.setApp(self.data.app);
 
 							// Set values to model creator
-							self.controllers.ModelCreator.setAppId(self.data.app.id);
-							self.controllers.ModelCreator.setAppName(self.data.app.name);
+							self.controllers.ModelCreator.setApp(self.data.app);
 
 							// Set enable connect object list to the add new column popup
 							var enableConnectObjects = self.data.objectList.filter(function (o) {
@@ -1216,7 +1213,7 @@ steal(
 											});
 										}
 
-										addColumnHeader.width = self.calculateColumnWidth(data);
+										addColumnHeader.width = self.controllers.ObjectDataTable.calculateColumnWidth(data);
 
 										// Update objectList.columns data
 										var object = self.data.objectList.filter(function (o) { return o.id === self.data.objectId; });

@@ -30,12 +30,14 @@ steal(
 								return null;
 							};
 
+							self.render = function (viewId, settings) {
+							};
+
 							self.getSettings = function () {
 								return null;
 							};
 
 							self.populateSettings = function (settings) {
-								return null;
 							};
 
 							self.editStop = function () {

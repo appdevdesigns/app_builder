@@ -89,7 +89,7 @@ steal(
 										{ label: "Layout", type: "label" },
 										{
 											id: 'orientation',
-											type: "select",
+											type: "richselect",
 											label: "Orientation",
 											options: [
 												{ id: 'x', value: "Horizontal" },
@@ -113,26 +113,29 @@ steal(
 								};
 							};
 
+							self.render = function (viewId, settings) {
+								$$(viewId).clearAll();
+								if (settings.data)
+									$$(viewId).parse(settings.data);
+
+								if (settings.layout)
+									$$(viewId).define('layout', settings.layout);
+							};
+
 							self.getSettings = function () {
 								var values = $$(self.componentIds.propertyView).getValues();
 
 								var settings = {
-									layout: values.orientation
+									layout: values.orientation,
+									data: $$(self.componentIds.editMenu).find(function () { return true; })
 								};
-
-								settings.data = $$(self.componentIds.editMenu).find(function () { return true; });
 
 								return settings;
 							};
 
 							self.populateSettings = function (settings) {
 								// Menu
-								$$(self.componentIds.editMenu).clearAll();
-								if (settings.data)
-									$$(self.componentIds.editMenu).parse(settings.data);
-
-								if (settings.layout)
-									$$(self.componentIds.editMenu).define('layout', settings.layout);
+								self.render(self.componentIds.editMenu, settings);
 
 								// Page list
 								$$(self.componentIds.pageTree).clearAll();
