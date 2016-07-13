@@ -102,7 +102,7 @@ steal(
 								self.data.app = app;
 							};
 
-							self.render = function (viewId, settings) {
+							self.render = function (viewId, settings, editable) {
 								self.data.columns = null;
 
 								$$(viewId).clear();
@@ -126,7 +126,17 @@ steal(
 
 										self.data.columns = data;
 
+										// Set default visible field ids
+										if (editable && self.data.columns.filter(function (c) { return settings.visibleFieldIds.indexOf(c.id.toString()) > -1 }).length < 1)
+											settings.visibleFieldIds = $.map(self.data.columns.attr(), function (c) {
+												return [c.id.toString()];
+											});
+
 										self.data.columns.forEach(function (c) {
+											var isVisible = settings.visibleFieldIds.indexOf(c.id.toString()) > -1;
+
+											if (!editable && !isVisible) return; // Hidden
+
 											var element = {
 												labelWidth: 100,
 												minWidth: 500
@@ -161,6 +171,27 @@ steal(
 												element.view = c.setting.editor;
 											}
 
+											if (editable) { // Show/Hide options
+												element = {
+													cols: [
+														{
+															name: c.id, // Column id
+															view: 'segmented',
+															margin: 10,
+															maxWidth: 140,
+															inputWidth: 100,
+															inputHeight: 35,
+															value: isVisible ? "show" : "hide",
+															options: [
+																{ id: "show", value: "Show" },
+																{ id: "hide", value: "Hide" },
+															]
+														},
+														element
+													]
+												};
+											}
+
 											$$(viewId).addView(element);
 										});
 
@@ -170,10 +201,19 @@ steal(
 							};
 
 							self.getSettings = function () {
-								var propertyValues = $$(self.componentIds.propertyView).getValues();
+								var propertyValues = $$(self.componentIds.propertyView).getValues(),
+									visibleFieldIds = [];
+
+								var formValues = $$(self.componentIds.editForm).getValues();
+								for (var key in formValues) {
+									if (formValues[key] === 'show') {
+										visibleFieldIds.push(key);
+									}
+								}
 
 								var settings = {
-									object: propertyValues[self.componentIds.selectObject]
+									object: propertyValues[self.componentIds.selectObject],
+									visibleFieldIds: visibleFieldIds
 								};
 
 								return settings;
@@ -181,7 +221,7 @@ steal(
 
 							self.populateSettings = function (settings) {
 								// Render form component
-								self.render(self.componentIds.editForm, settings);
+								self.render(self.componentIds.editForm, settings, true);
 
 								// Get object list
 								self.data.objects = null;

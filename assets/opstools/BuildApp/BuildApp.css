@@ -49,9 +49,24 @@
   color: #000;
 }
 
-/* Webbix list */
+/* Webix list */
 .ab-main-container .webix_selected {
 	background-color: #3498db !important;
+}
+
+/* Webix segmented */
+.ab-main-container .webix_segment_0.webix_selected,
+.ab-main-container .webix_segment_1.webix_selected,
+.ab-main-container .webix_segment_N.webix_selected {
+	color: #fff !important;
+	background-color: #3498db !important;
+}
+
+.ab-main-container .webix_segment_0,
+.ab-main-container .webix_segment_1,
+.ab-main-container .webix_segment_N {
+	color: #3498db;
+	background: #fff;
 }
 
 /* Application list */
