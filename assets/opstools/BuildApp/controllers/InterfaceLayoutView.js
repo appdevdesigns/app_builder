@@ -2,6 +2,8 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABPageComponent.js',
 
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	function () {
         System.import('appdev').then(function () {
@@ -67,11 +69,14 @@ steal(
 
 						initControllers: function () {
 							var self = this;
-							self.controllers = {};
 
-							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList');
+							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
 
-							this.controllers.ActiveList = new ActiveList();
+							this.controllers = {
+								ActiveList: new ActiveList(),
+								ModelCreator: new ModelCreator()
+							};
 						},
 
 						initWebixUI: function () {
@@ -172,9 +177,6 @@ steal(
 																	switch (item.name) {
 																		case "Menu":
 																			item.setting.page = self.data.page;
-																			break;
-																		case "Grid":
-																			item.setting.app = self.data.app;
 																			break;
 																	}
 
@@ -355,6 +357,8 @@ steal(
 							var self = this;
 
 							self.data.app = app;
+
+							self.controllers.ModelCreator.setApp(app);
 						},
 
 						setPage: function (page) {
@@ -444,24 +448,22 @@ steal(
 
 							// Generate component in list
 							self.data.componentsInPage.forEach(function (c) {
-								var view = self.data.components[c.attr('component')].getView();
+								var component = self.data.components[c.attr('component')],
+									view = component.getView(),
+									settings = c.attr('setting');
 
-								if (view) {
-									var setting = c.attr('setting');
-
+								if (view && component.render && settings) {
 									view = $.extend(true, {}, view);
 									view.id = 'ab-layout-component-{0}'.replace('{0}', c.attr('id'));
 									view.container = view.id;
+									view.autowidth = true;
 									// view.disabled = true;
 
 									$('#' + view.id).html('');
 
-									// Populate data
-									for (var key in setting) {
-										view[key] = setting[key].attr ? setting[key].attr() : setting[key];
-									}
-
 									webix.ui(view);
+
+									component.render(view.id, settings.attr());
 								}
 							});
 

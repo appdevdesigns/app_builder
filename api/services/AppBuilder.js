@@ -153,6 +153,7 @@ module.exports = {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
         
+        var pluginExists = false;
         var appName, moduleName;
         
         async.series([
@@ -175,16 +176,31 @@ module.exports = {
                 });
             },
             
-            // Create opstool plugin with appdev-cli
+            // Check if plugin already exists
             function(next) {
                 process.chdir('node_modules'); // sails/node_modules/
+                fs.stat(moduleName, function(err, stat) {
+                    if (!err) {
+                        pluginExists = true;
+                    }
+                    next();
+                });
+            },
+            
+            // Create opstool plugin with appdev-cli
+            function(next) {
+                if (pluginExists) {
+                    // Skip this step if plugin already exists
+                    return next();
+                }
                 AD.spawn.command({
                     command: cliCommand,
                     options: [
                         'opstoolplugin',
-                        appName
+                        appName,
+                        '1' // isOPView
                     ],
-                    shouldEcho: false,
+                    shouldEcho: true,
                     responses: {
                         'unit test capabilities': 'no\n',
                         'author': 'AppBuilder\n',
@@ -444,6 +460,20 @@ module.exports = {
                 )
                 .fail(next)
                 .done(function() {
+                    next();
+                });
+            },
+            
+            // Register the permission action
+            function(next) {
+                Permissions.action.create({
+                    key: 'opstools.' + appName + '.view',
+                    description: 'Allow the user to view the ' + appName + ' base page',
+                    language_code: 'en'
+                })
+                .always(function() {
+                    // Don't care if there was an error.
+                    // If permission action already exists, that's fine.
                     next();
                 });
             }

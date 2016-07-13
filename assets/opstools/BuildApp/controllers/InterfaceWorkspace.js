@@ -141,6 +141,8 @@ steal(
 
 							self.data.app = app;
 							self.controllers.LayoutView.setApp(app);
+							self.controllers.Grid.setApp(app);
+							self.controllers.Form.setApp(app);
 						},
 
 						setPage: function (page) {

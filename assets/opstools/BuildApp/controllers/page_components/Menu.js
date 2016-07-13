@@ -89,7 +89,7 @@ steal(
 										{ label: "Layout", type: "label" },
 										{
 											id: 'orientation',
-											type: "select",
+											type: "richselect",
 											label: "Orientation",
 											options: [
 												{ id: 'x', value: "Horizontal" },
@@ -103,9 +103,7 @@ steal(
 
 											switch (editor.id) {
 												case 'orientation':
-													// TODO : Re-render menu by orientation
-													// if ($$(self.componentIds.editMenu))
-													// 	$$(self.componentIds.editMenu).destructor();
+													self.render(self.componentIds.editMenu, self.getSettings());
 													break;
 											}
 										}
@@ -113,26 +111,36 @@ steal(
 								};
 							};
 
+							self.render = function (viewId, settings) {
+								if ($$(viewId))
+									$$(viewId).clearAll();
+
+								var view = self.getView();
+								view.id = viewId;
+
+								if (settings.data)
+									view.data = settings.data;
+
+								if (settings.layout)
+									view.layout = settings.layout;
+
+								webix.ui(view, $$(viewId));
+							};
+
 							self.getSettings = function () {
 								var values = $$(self.componentIds.propertyView).getValues();
 
 								var settings = {
-									layout: values.orientation
+									layout: values.orientation,
+									data: $$(self.componentIds.editMenu).find(function () { return true; })
 								};
-
-								settings.data = $$(self.componentIds.editMenu).find(function () { return true; });
 
 								return settings;
 							};
 
 							self.populateSettings = function (settings) {
 								// Menu
-								$$(self.componentIds.editMenu).clearAll();
-								if (settings.data)
-									$$(self.componentIds.editMenu).parse(settings.data);
-
-								if (settings.layout)
-									$$(self.componentIds.editMenu).define('layout', settings.layout);
+								self.render(self.componentIds.editMenu, settings);
 
 								// Page list
 								$$(self.componentIds.pageTree).clearAll();

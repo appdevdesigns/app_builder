@@ -71,6 +71,7 @@ steal(
 								self.element.find(".ab-app-list").hide();
 
 								self.controllers.AppWorkspace.setApplication(app);
+
 								self.element.find(".ab-app-workspace").show();
 								self.controllers.AppWorkspace.resize(self.data.height);
 							});
