@@ -473,7 +473,7 @@ steal(
                                                                 return c.id == fieldName || c.label == fieldName;
                                                             });
 
-                                                            if (existsColumn && existsColumn.length > 0) {
+                                                            if (existsColumn && existsColumn.length > 0 && !self.data.editFieldId) {
                                                                 webix.alert({
                                                                     title: self.labels.add_fields.duplicateFieldTitle,
                                                                     ok: self.labels.common.ok,

@@ -1,10 +1,11 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/models/ABObject.js',
 
+	'opstools/BuildApp/controllers/utils/ModelCached.js',
+
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control',
 				'appdev/model/model').then(function () {

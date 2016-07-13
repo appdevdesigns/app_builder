@@ -1,4 +1,3 @@
-
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/ObjectPage.js',
@@ -189,7 +188,7 @@ steal(
 							self.controllers.ObjectPage.setApp(app);
 
 							// FOR TEST
-							$$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 						},
 
 						refresh: function () {

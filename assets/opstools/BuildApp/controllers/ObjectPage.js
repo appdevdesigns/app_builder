@@ -5,7 +5,7 @@ steal(
 	'opstools/BuildApp/controllers/ObjectWorkspace.js',
 
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 

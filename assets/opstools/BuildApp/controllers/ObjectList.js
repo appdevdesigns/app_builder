@@ -2,9 +2,10 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABObject.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 

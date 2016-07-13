@@ -1,9 +1,8 @@
-
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABApplication.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 

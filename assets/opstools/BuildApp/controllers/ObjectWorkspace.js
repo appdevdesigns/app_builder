@@ -14,14 +14,13 @@ steal(
 
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-
-	'opstools/BuildApp/controllers/ObjectDataTable.js',
+	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
 
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -33,7 +32,8 @@ steal(
 							var self = this;
 
 							self.options = AD.defaults({
-								updateUnsyncCountEvent: 'AB_Object.LocalCount',
+								changedSelectivityEvent: 'AB_Selectivity.Changed',
+								updateUnsyncCountEvent: 'AB_Object.LocalCount'
 							}, options);
 
 							// Call parent init
@@ -166,7 +166,7 @@ steal(
 							self.controllers.DefineLabelPopup = new DefineLabelPopup();
 							self.controllers.AddFieldPopup = new AddFieldPopup();
 							self.controllers.EditHeaderPopup = new EditHeaderPopup();
-							self.controllers.ObjectDataTable = new ObjectDataTable();
+							self.controllers.ObjectDataTable = new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent });
 							self.controllers.ModelCreator = new ModelCreator(self.element, { updateUnsyncCountEvent: self.options.updateUnsyncCountEvent });
 						},
 
@@ -697,10 +697,10 @@ steal(
 										var itemNode = $$(self.webixUiId.objectDatatable).getHeaderNode(headerField.id);
 										$$(self.webixUiId.editHeaderPopup).hide();
 
-										var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == self.data.headerId; })[0];
+										var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == headerField.dataId; })[0];
 
 										$$(self.webixUiId.addFieldsPopup).show(itemNode);
-										$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, headerField.label);
+										$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedColumn.label);
 										break;
 									case self.labels.object.deleteField:
 										// Validate
@@ -714,11 +714,13 @@ steal(
 											return;
 										}
 
+										var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == headerField.dataId; })[0];
+
 										webix.confirm({
 											title: self.labels.object.confirmDeleteTitle,
 											ok: self.labels.common.yes,
 											cancel: self.labels.common.no,
-											text: self.labels.object.confirmDeleteMessage.replace('{0}', headerField.label),
+											text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedColumn.label),
 											callback: function (result) {
 												if (result) {
 													$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
@@ -730,7 +732,7 @@ steal(
 
 															webix.message({
 																type: "error",
-																text: self.labels.common.deleteErrorMessage.replace('{0}', headerField.label)
+																text: self.labels.common.deleteErrorMessage.replace('{0}', selectedColumn.label)
 															});
 
 															AD.error.log('Column list : Error delete column', { error: err });
@@ -752,11 +754,11 @@ steal(
 
 															webix.message({
 																type: "success",
-																text: self.labels.common.deleteSuccessMessage.replace('{0}', headerField.label)
+																text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedColumn.label)
 															});
 
 															// Clear selected field
-															self.data.headerId = null;
+															headerField = null;
 
 															self.refreshPopupData();
 
@@ -1234,7 +1236,7 @@ steal(
 										var existsColumnData = $.grep(self.data.columns, function (c) { return c.id == data.id; });
 										if (existsColumnData && existsColumnData.length > 0) { // Update
 											for (var i = 0; i < self.data.columns.length; i++) {
-												if (self.data.columns[i].dataId == data.id) {
+												if (self.data.columns[i].id == data.id) {
 													self.data.columns[i] = data;
 												}
 											}
