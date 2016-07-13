@@ -423,10 +423,11 @@ module.exports = {
                 })
                 .fail(next)
                 .done(function() {
-                    controllerIncludes.push(
-                        '/opstools/' + appName + '/controllers/'
+                    controllerIncludes.push({
+                        key: 'opstools.' + appName + '.' + pageName,
+                        path: 'opstools/' + appName + '/controllers/'
                             + pageName + '.js'
-                    );
+                    });
                     next();
                 });
             
@@ -438,9 +439,11 @@ module.exports = {
                 .then(function(list) {
                     for (var i=0; i<list.length; i++) {
                         var obj = list[i];
-                        var modelPath = '/opstools/' + appName + '/models/'
-                            + appName + '_' + obj.name + '.js';
-                        objectIncludes.push(modelPath);
+                        objectIncludes.push({ 
+                            key: 'opstools.' + appName + '.' + obj.name, 
+                            path: 'opstools/' + appName + '/models/'
+                                    + appName + '_' + obj.name + '.js' 
+                        });
                     }
                     next();
                     return null;
