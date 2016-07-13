@@ -185,6 +185,8 @@ steal(
 
 								AD.util.async.parallel([
 									function (callback) {
+										self.data.objects = null;
+
 										// Get object list
 										self.Model.ABObject.findAll({ application: self.data.app.id })
 											.fail(function (err) { callback(err); })
@@ -213,6 +215,8 @@ steal(
 											});
 									},
 									function (callback) {
+										self.data.columns = null;
+
 										if (!settings.object) {
 											callback();
 											return;
@@ -303,7 +307,7 @@ steal(
 										};
 									});
 
-									// Data table - Removable
+									// Set property values
 									$$(self.componentIds.propertyView).setValues({
 										object: settings.object,
 										removable: settings.removable || 'disable'
