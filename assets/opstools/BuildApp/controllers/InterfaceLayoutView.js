@@ -173,12 +173,8 @@ steal(
 																if ($$(item.name + '-edit-view')) {
 																	if (!item.setting) item.setting = {};
 
-																	// Set page list
-																	switch (item.name) {
-																		case "Menu":
-																			item.setting.page = self.data.page;
-																			break;
-																	}
+																	// Pass current page
+																	item.setting.page = self.data.page;
 
 																	component.populateSettings(item.setting);
 
@@ -453,6 +449,9 @@ steal(
 									settings = c.attr('setting');
 
 								if (view && component.render && settings) {
+									var settings = settings.attr();
+									settings.page = self.data.page;
+
 									view = $.extend(true, {}, view);
 									view.id = 'ab-layout-component-{0}'.replace('{0}', c.attr('id'));
 									view.container = view.id;
@@ -463,7 +462,7 @@ steal(
 
 									webix.ui(view);
 
-									component.render(view.id, settings.attr());
+									component.render(view.id, settings);
 								}
 							});
 
