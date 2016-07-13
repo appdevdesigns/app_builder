@@ -115,14 +115,13 @@ steal(
 								if ($$(viewId))
 									$$(viewId).clearAll();
 
-								var view = self.getView();
+								var view = $.extend(true, {}, self.getView());
 								view.id = viewId;
 
 								if (settings.data)
 									view.data = settings.data;
 
-								if (settings.layout)
-									view.layout = settings.layout;
+								view.layout = settings.layout || 'x';
 
 								webix.ui(view, $$(viewId));
 							};
@@ -199,11 +198,9 @@ steal(
 								}
 
 								// Properties
-								if (settings.layout) {
-									$$(self.componentIds.propertyView).setValues({
-										orientation: settings.layout
-									});
-								}
+								$$(self.componentIds.propertyView).setValues({
+									orientation: settings.layout || 'x'
+								});
 								$$(self.componentIds.propertyView).refresh();
 							};
 
