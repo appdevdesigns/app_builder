@@ -178,9 +178,6 @@ steal(
 																		case "Menu":
 																			item.setting.page = self.data.page;
 																			break;
-																		case "Grid":
-																			item.setting.app = self.data.app;
-																			break;
 																	}
 
 																	component.populateSettings(item.setting);

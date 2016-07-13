@@ -103,9 +103,7 @@ steal(
 
 											switch (editor.id) {
 												case 'orientation':
-													// TODO : Re-render menu by orientation
-													// if ($$(self.componentIds.editMenu))
-													// 	$$(self.componentIds.editMenu).destructor();
+													self.render(self.componentIds.editMenu, self.getSettings());
 													break;
 											}
 										}
@@ -114,12 +112,19 @@ steal(
 							};
 
 							self.render = function (viewId, settings) {
-								$$(viewId).clearAll();
+								if ($$(viewId))
+									$$(viewId).clearAll();
+
+								var view = self.getView();
+								view.id = viewId;
+
 								if (settings.data)
-									$$(viewId).parse(settings.data);
+									view.data = settings.data;
 
 								if (settings.layout)
-									$$(viewId).define('layout', settings.layout);
+									view.layout = settings.layout;
+
+								webix.ui(view, $$(viewId));
 							};
 
 							self.getSettings = function () {
