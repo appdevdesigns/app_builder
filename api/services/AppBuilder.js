@@ -462,6 +462,20 @@ module.exports = {
                 .done(function() {
                     next();
                 });
+            },
+            
+            // Register the permission action
+            function(next) {
+                Permissions.action.create({
+                    key: 'opstools.' + appName + '.view',
+                    description: 'Allow the user to view the ' + appName + ' base page',
+                    language_code: 'en'
+                })
+                .always(function() {
+                    // Don't care if there was an error.
+                    // If permission action already exists, that's fine.
+                    next();
+                });
             }
             
         ], function(err) {
