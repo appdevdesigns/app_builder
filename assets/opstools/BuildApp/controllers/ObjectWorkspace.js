@@ -835,14 +835,16 @@ steal(
 												self.data.columns = data;
 
 												// Find option list
-												var listCols = $.grep(self.data.columns, function (col) { return col.setting.editor === 'richselect'; });
+												var listColIds = $.map(self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; }), function (c) {
+													return c.id;
+												});
 
-												if (listCols && listCols.length > 0) {
+												if (listColIds && listColIds.length > 0) {
 													var getListEvents = [];
 
-													listCols.forEach(function (c) {
+													listColIds.forEach(function (cId) {
 														getListEvents.push(function (cb) {
-															self.Model.ABList.findAll({ column: c.id })
+															self.Model.ABList.findAll({ column: cId })
 																.fail(function (err) { cb(err); })
 																.then(function (listResult) {
 
@@ -850,7 +852,9 @@ steal(
 																		if (listItem.translate) listItem.translate();
 																	});
 
-																	c.setting.attr('options', listResult.attr().sort(function (a, b) { return a.weight - b.weight; }));
+																	var col = self.data.columns.filter(function (col) { return col.id == cId; })[0];
+
+																	col.setting.attr('options', listResult.attr().sort(function (a, b) { return a.weight - b.weight; }));
 
 																	cb();
 																});
