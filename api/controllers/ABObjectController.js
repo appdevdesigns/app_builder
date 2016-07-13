@@ -26,7 +26,7 @@ module.exports = {
      */
     prepare: function (req, res) {
         var objectID = req.param('id');
-        AppBuilder.objectToModel(objectID)
+        AppBuilder.buildObject(objectID)
             .fail(function (err) {
                 res.AD.error(err);
             })

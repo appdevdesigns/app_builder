@@ -1,11 +1,18 @@
 /**
- * Converts between Sails model definition files and App Builder Object entries.
+ * Generate models and controllers for AppBuilder apps.
  */
 
 var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
 var reloadTimeLimit = 2 * 1000 * 60; // 2 minutes
+
+var cliCommand = path.join(
+    process.cwd(),
+    'node_modules', 'app_builder',
+    'node_modules', 'appdev',
+    'bin', 'appDev.js'
+);
 
 function nameFilter(name) {
     return String(name).replace(/[^a-z0-9]/gi, '');
@@ -41,7 +48,7 @@ module.exports = {
                         throw new Error('no apps found');
                     }
                     for (var i=0; i<list.length; i++) {
-                        appFolders.push('AB_' + nameFilter(list[i].name));
+                        appFolders.push('ab_' + nameFilter(list[i].name).toLowerCase());
                     }
                     next();
                     return null;
@@ -140,16 +147,117 @@ module.exports = {
     
     
     /**
+     * Generate the application directory structure
+     */
+    buildApplication: function(appID) {
+        var dfd = AD.sal.Deferred();
+        var cwd = process.cwd();
+        
+        var pluginExists = false;
+        var appName, moduleName;
+        
+        async.series([
+            function(next) {
+                ABApplication.find({ id: appID })
+                .then(function(list) {
+                    if (!list || !list[0]) {
+                        throw new Error('Application not found');
+                    }
+                    var obj = list[0];
+                    // Only numbers and alphabets will be used
+                    appName = 'AB_' + nameFilter(obj.name);
+                    moduleName = appName.toLowerCase();
+                    next();
+                    return null;
+                })
+                .catch(function(err) {
+                    next(err);
+                    return null;
+                });
+            },
+            
+            // Check if plugin already exists
+            function(next) {
+                process.chdir('node_modules'); // sails/node_modules/
+                fs.stat(moduleName, function(err, stat) {
+                    if (!err) {
+                        pluginExists = true;
+                    }
+                    next();
+                });
+            },
+            
+            // Create opstool plugin with appdev-cli
+            function(next) {
+                if (pluginExists) {
+                    // Skip this step if plugin already exists
+                    return next();
+                }
+                AD.spawn.command({
+                    command: cliCommand,
+                    options: [
+                        'opstoolplugin',
+                        appName,
+                        '1' // isOPView
+                    ],
+                    shouldEcho: true,
+                    responses: {
+                        'unit test capabilities': 'no\n',
+                        'author': 'AppBuilder\n',
+                        'description': '\n',
+                        'version': '\n',
+                        'repository': '\n',
+                    }
+                })
+                .fail(next)
+                .done(function() {
+                    next();
+                });
+            },
+            
+            // Delete old .adn file
+            function(next) {
+                process.chdir(moduleName); // sails/node_modules/ab_{appName}/
+                async.each(['.adn'], function(target, ok) {
+                    // Delete file if it exists
+                    fs.unlink(target, function(err) {
+                        // Ignore errors. If file does not exist, that's fine.
+                        ok();
+                    });
+                }, function(err) {
+                    next();
+                });
+            },
+            
+            // Symlink the .adn file
+            function(next) {
+                fs.symlink(path.join(cwd, '.adn'), '.adn', next);
+            }
+            
+        ], function(err) {
+            process.chdir(cwd);
+            if (err) dfd.reject(err);
+            else dfd.resolve({});
+        });
+        
+        return dfd;
+    },
+    
+    
+    
+    /**
      * Generate the models and controllers for a given AB Object.
      *
      * @param integer objectID
      *      The ABObject primary key ID.
      * @return Deferred
      */
-    objectToModel: function(objectID) {
+    buildObject: function(objectID) {
         var dfd = AD.sal.Deferred();
         
-        var appName, objName, fullName;
+        var appName, moduleName;
+        var objName, fullName;
+        var pages = [];
         var columns = [];
         
         //var modelsPath = sails.config.paths.models;
@@ -157,13 +265,6 @@ module.exports = {
         
         var fullPath, fullPathTrans;
         var cwd = process.cwd();
-        
-        var cliCommand = path.join(
-            cwd,
-            'node_modules', 'app_builder',
-            'node_modules', 'appdev',
-            'bin', 'appDev.js'
-        );
         
         async.series([
             // Find object info
@@ -177,6 +278,8 @@ module.exports = {
                     
                     // Only numbers and alphabets will be used
                     appName = 'AB_' + nameFilter(obj.application.name);
+                    moduleName = appName.toLowerCase();
+                    
                     objName = nameFilter(obj.name);
                     columns = obj.columns;
                     fullName = appName + '_' + objName;
@@ -192,34 +295,10 @@ module.exports = {
                 });
             },
             
-            // Create opstool plugin with appdev-cli
+            // Delete old model definition files
             function(next) {
-                process.chdir('node_modules'); // sails/node_modules/
-                AD.spawn.command({
-                    command: cliCommand,
-                    options: [
-                        'plugin',
-                        appName
-                    ],
-                    shouldEcho: false,
-                    responses: {
-                        'unit test capabilities': 'no\n',
-                        'author': 'AppBuilder\n',
-                        'description': '\n',
-                        'version': '\n',
-                        'repository': '\n',
-                    }
-                })
-                .fail(next)
-                .done(function() {
-                    next();
-                });
-            },
-            
-            // Delete old model definition & .adn file
-            function(next) {
-                process.chdir(appName); // sails/node_modules/AB_{appName}/
-                async.each([fullPath, fullPathTrans, '.adn'], function(target, ok) {
+                process.chdir(path.join('node_modules', moduleName)); // sails/node_modules/ab_{appName}/
+                async.each([fullPath, fullPathTrans], function(target, ok) {
                     // Delete file if it exists
                     fs.unlink(target, function(err) {
                         // Ignore errors. If file does not exist, that's fine.
@@ -228,11 +307,6 @@ module.exports = {
                 }, function(err) {
                     next();
                 });
-            },
-            
-            // Symlink the .adn file
-            function(next) {
-                fs.symlink(path.join(cwd, '.adn'), '.adn', next);
             },
             
             // Generate model definitions with appdev-cli
@@ -266,34 +340,6 @@ module.exports = {
                 });
             },
             
-            /*
-            // Render sails model definition
-            function(next) {
-                sails.renderView(path.join('app_builder', 'model'), {
-                    layout: false,
-                    modelName: fullName,
-                    tableName: fullName,
-                    columns: obj.columns
-                }, function(err, str) {
-                    if (err) {
-                        next(err);
-                    } else {
-                        
-                        fs.writeFile(
-                            path.join(modelsPath, fullName + '.js'),
-                            str,
-                            function(err) {
-                                if (err) next(err);
-                                else {
-                                    next();
-                                }
-                            }
-                        );
-                    }
-                });
-            },
-            */
-            
             // Patch model definition
             function(next) {
                 async.each([fullPath, fullPathTrans], function(target, ok) {
@@ -314,7 +360,7 @@ module.exports = {
                     next();
                 });
             }
-                        
+            
         ], function(err) {
             process.chdir(cwd);
             if (err) dfd.reject(err);
@@ -323,6 +369,109 @@ module.exports = {
             
         return dfd;
     },
+    
+    
+    /**
+     * Generate the client side controller for an application's page
+     *
+     * @param integer pageID
+     * @return Deferred
+     */
+    buildPage: function(pageID) {
+        var dfd = AD.sal.Deferred();
+        var cwd = process.cwd();
+        
+        var appName, pageName;
+        var appID;
+        var objectIncludes = [];
+        var controllerIncludes = [];
+        
+        async.series([
+            // Find page info
+            function(next) {
+                ABPage.find({ id: pageID })
+                .populate('application')
+                .then(function(list) {
+                    var obj = list[0];
+                    if (!obj) throw new Error('invalid page id');
+                    
+                    appID = obj.application.id;
+                    
+                    // Only numbers and alphabets will be used
+                    appName = 'AB_' + nameFilter(obj.application.name);
+                    pageName = nameFilter(obj.name);
+                    
+                    next();
+                    return null;
+                })
+                .catch(function(err) {
+                    next(err);
+                    return null;
+                });
+            },
+            
+            // Generate the client side controller for the app page
+            function(next) {
+                AD.spawn.command({
+                    command: cliCommand,
+                    options: [
+                        'controllerUI',
+                        path.join('opstools', appName),
+                        pageName
+                    ],
+                    shouldEcho: true
+                })
+                .fail(next)
+                .done(function() {
+                    controllerIncludes.push(
+                        '/opstools/' + appName + '/controllers/'
+                            + pageName + '.js'
+                    );
+                    next();
+                });
+            
+            },
+            
+            // Find related objects
+            function(next) {
+                ABObject.find({ application: appID })
+                .then(function(list) {
+                    for (var i=0; i<list.length; i++) {
+                        var obj = list[i];
+                        var modelPath = '/opstools/' + appName + '/models/'
+                            + appName + '_' + obj.name + '.js';
+                        objectIncludes.push(modelPath);
+                    }
+                    next();
+                    return null;
+                })
+                .catch(function(err) {
+                    next(err);
+                    return null;
+                });
+            },
+            
+            // Create OPView entry
+            function(next) {
+                OPSPortal.View.createOrUpdate(
+                    'opstools.' + appName,
+                    objectIncludes,
+                    controllerIncludes
+                )
+                .fail(next)
+                .done(function() {
+                    next();
+                });
+            }
+            
+        ], function(err) {
+            if (err) dfd.reject(err);
+            else dfd.resolve({});
+        });
+            
+        return dfd;
+    },
+    
     
     
     /**
