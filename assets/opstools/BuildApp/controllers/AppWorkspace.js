@@ -189,7 +189,7 @@ steal(
 							self.controllers.ObjectPage.setApp(app);
 
 							// FOR TEST
-							$$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 						},
 
 						refresh: function () {
