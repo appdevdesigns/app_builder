@@ -5,6 +5,8 @@
 var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
+var _ = require('lodash');
+
 var reloadTimeLimit = 2 * 1000 * 60; // 2 minutes
 
 var cliCommand = path.join(
@@ -154,17 +156,21 @@ module.exports = {
         var cwd = process.cwd();
         
         var pluginExists = false;
-        var appName, moduleName;
+        var appName, moduleName, areaName, areaKey;
         
+        var Application = null;
+
         async.series([
             function(next) {
                 ABApplication.find({ id: appID })
+                .populate('translations')
                 .then(function(list) {
                     if (!list || !list[0]) {
                         throw new Error('Application not found');
                     }
                     var obj = list[0];
                     // Only numbers and alphabets will be used
+                    Application = obj;
                     appName = 'AB_' + nameFilter(obj.name);
                     moduleName = appName.toLowerCase();
                     next();
@@ -232,6 +238,41 @@ module.exports = {
             // Symlink the .adn file
             function(next) {
                 fs.symlink(path.join(cwd, '.adn'), '.adn', next);
+            },
+
+
+            // make sure OpsPortal navigation has an area for this application defined:
+            function(next){
+                var areaName = Application.name;
+                var areaKey  = Application.areaKey();
+                var defaultArea = {
+                    key:areaKey,
+                    icon:'fa-cubes',
+                    isDefault:false,
+                    label:areaKey,
+                    context:areaKey
+                }
+
+                // Note: this will only create it if it doesn't already exist.
+                OPSPortal.NavBar.Area.create(defaultArea, function(err, area){
+
+                    // area is null if already existed, 
+                    // not null if just created:
+                    // if just created then update our labels
+                    if (area) {
+                        Application.translations.forEach(function(trans){
+                            var label = {
+                                language_code:trans.language_code,
+                                label_key:areaKey,
+                                label_context:areaKey,
+                                label_needs_translation:1,
+                                label_label:trans.label
+                            }
+                            Multilingual.label.create(label);  // I'm not following up after this.
+                        })
+                    }
+                    next(err);
+                })
             }
             
         ], function(err) {
@@ -381,10 +422,12 @@ module.exports = {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
         
-        var appName, pageName;
+        var appName, pageName, pageKey;
         var appID;
         var objectIncludes = [];
         var controllerIncludes = [];
+
+        var Application = null;
         
         async.series([
             // Find page info
@@ -398,9 +441,13 @@ module.exports = {
                     appID = obj.application.id;
                     
                     // Only numbers and alphabets will be used
+                    Application = obj.application;
+
                     appName = 'AB_' + nameFilter(obj.application.name);
                     pageName = nameFilter(obj.name);
                     
+                    pageKey = [appName, pageName].join('.'); // appName.pageName
+
                     next();
                     return null;
                 })
@@ -410,6 +457,7 @@ module.exports = {
                 });
             },
             
+
             // Generate the client side controller for the app page
             function(next) {
                 AD.spawn.command({
@@ -432,6 +480,7 @@ module.exports = {
             
             },
             
+
             // Find related objects
             function(next) {
                 ABObject.find({ application: appID })
@@ -451,10 +500,11 @@ module.exports = {
                 });
             },
             
+
             // Create OPView entry
             function(next) {
                 OPSPortal.View.createOrUpdate(
-                    'opstools.' + appName,
+                    pageKey,
                     objectIncludes,
                     controllerIncludes
                 )
@@ -464,18 +514,60 @@ module.exports = {
                 });
             },
             
+
             // Register the permission action
             function(next) {
-                Permissions.action.create({
-                    key: 'opstools.' + appName + '.view',
-                    description: 'Allow the user to view the ' + appName + ' base page',
-                    language_code: 'en'
+                var key =  pageKey + '.view';
+                Permissions.actions.exists(key, function(err, isThere){
+                    if (isThere) {
+                        next();
+                    } else {
+                        Permissions.action.create({
+                            key: key,
+                            description: 'Allow the user to view the ' + appName + ' '+pageName+' page',
+                            language_code: 'en'
+                        })
+                        .always(function() {
+                            // Don't care if there was an error.
+                            // If permission action already exists, that's fine.
+                            next();
+                        });
+                    }
                 })
-                .always(function() {
-                    // Don't care if there was an error.
-                    // If permission action already exists, that's fine.
-                    next();
-                });
+
+            },
+
+
+            // create a Tool Definition for the OP Portal Navigation
+            function(next) {
+
+                var areaName = Application.name;
+                var areaKey = Application.areaKey();
+
+                var def = {
+                    key:_.kebabCase(pageKey),
+                    permissions:'adcore.admin,'+pageKey+'.view',
+                    icon:'fa-lock',
+                    label:pageKey,
+                    context: pageKey,
+                    controller: 'OPView',
+                    isController: false,
+                    options: {  url:'/opsportal/view/'+pageKey  },
+                    version:'0'
+                }
+                OPSPortal.NavBar.ToolDefinition.create(def, function(err, toolDef){
+
+                    next(err);
+                })
+
+            },
+
+
+            // make sure our ToolDefinition is linked to our Application Definition.
+            function(next){
+///// TODO:
+
+                next();
             }
             
         ], function(err) {
