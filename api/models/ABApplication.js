@@ -19,6 +19,15 @@ module.exports = {
 
     attributes: {
 
+        object: { collection: 'ABObject', via: 'application' },
+
+        name: {
+            type: 'string',
+            required: true,
+            unique: true
+        },
+
+
         // this will pull in the translations using .populate('translations')
         translations: {
             collection: 'ABApplicationTrans',
@@ -37,12 +46,8 @@ module.exports = {
             return ABApplication;
         },
 
-        object: { collection: 'ABObject', via: 'application' },
-
-        name: {
-            type: 'string',
-            required: true,
-            unique: true
+        areaKey: function() {
+            return _.kebabCase('ab-'+this.name);
         }
     },
 

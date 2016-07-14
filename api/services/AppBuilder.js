@@ -471,6 +471,8 @@ module.exports = {
                 })
                 .fail(next)
                 .done(function() {
+// sails.log('after controllerUI:');
+
                     controllerIncludes.push({
                         key: 'opstools.' + appName + '.' + pageName,
                         path: 'opstools/' + appName + '/controllers/'
@@ -484,6 +486,7 @@ module.exports = {
 
             // Find related objects
             function(next) {
+// sails.log('find objects');
                 ABObject.find({ application: appID })
                 .then(function(list) {
                     for (var i=0; i<list.length; i++) {
@@ -506,6 +509,7 @@ module.exports = {
 
             // Create OPView entry
             function(next) {
+// sails.log('create OPView');
                 OPSPortal.View.createOrUpdate(
                     pageKey,
                     objectIncludes,
@@ -520,8 +524,10 @@ module.exports = {
 
             // Register the permission action
             function(next) {
+// sails.log('register permission Action');
+
                 var key =  pageKey + '.view';
-                Permissions.actions.exists(key, function(err, isThere){
+                Permissions.action.exists(key, function(err, isThere){
                     if (isThere) {
                         next();
                     } else {
@@ -543,14 +549,14 @@ module.exports = {
 
             // create a Tool Definition for the OP Portal Navigation
             function(next) {
-
+// sails.log('create tool definition')
                 var areaName = Application.name;
                 var areaKey = Application.areaKey();
 
                 var def = {
                     key:_.kebabCase(pageKey),
                     permissions:'adcore.admin,'+pageKey+'.view',
-                    icon:'fa-lock',
+                    icon:'fa-lock', // TODO: get this from Page Definition.
                     label:pageKey,
                     context: pageKey,
                     controller: 'OPView',
@@ -568,9 +574,19 @@ module.exports = {
 
             // make sure our ToolDefinition is linked to our Application Definition.
             function(next){
-///// TODO:
+// sails.log('... todo: link tooldef to area');
 
-                next();
+                OPSPortal.NavBar.Area.link({
+                    keyArea: Application.areaKey(),
+                    keyTool: _.kebabCase(pageKey),
+                    instance:{
+                        icon:'fa-cube',
+                        permissions:'adcore.developer'
+                    }
+                }, function(err){
+                    next(err);
+                });
+                
             }
             
         ], function(err) {
