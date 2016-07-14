@@ -440,7 +440,8 @@ module.exports = {
                     for (var i=0; i<list.length; i++) {
                         var obj = list[i];
                         objectIncludes.push({ 
-                            key: 'opstools.' + appName + '.' + obj.name, 
+                            key: 'opstools.' + appName + '.' 
+                                    + appName + '_' + obj.name, 
                             path: 'opstools/' + appName + '/models/'
                                     + appName + '_' + obj.name + '.js' 
                         });
