@@ -6,8 +6,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-
-	'opstools/BuildApp/controllers/ObjectDataTable.js',
+	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
 	function () {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -39,7 +38,7 @@ steal(
 								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
 
 							self.controllers = {
-								ModelCreator: new ModelCreator,
+								ModelCreator: new ModelCreator(),
 								ObjectDataTable: new ObjectDataTable()
 							};
 

@@ -1,8 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -13,11 +14,15 @@ steal(
 						init: function (element, options) {
 							var self = this;
 
+							// Call parent init
+							this._super(element, options);
+
 							self.data = {};
 							self.data.objectList = [];
 
 							self.initMultilingualLabels();
 							self.initControllers();
+							self.initEvents();
 						},
 
 						initMultilingualLabels: function () {
@@ -30,7 +35,6 @@ steal(
 
 							// Connected data
 							self.labels.connectToObjectName = AD.lang.label.getLabel('ab.object.connectToObjectName') || " (Connect to <b>{0}</b>)";
-							self.labels.noConnectedData = AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected";
 
 							// Delete row
 							self.labels.confirmDeleteRowTitle = AD.lang.label.getLabel('ab.object.deleteRow.title') || "Delete data";
@@ -42,9 +46,32 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
+								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
 
-							self.controllers.ModelCreator = new ModelCreator();
+							self.controllers = {
+								ModelCreator: new ModelCreator(),
+								SelectivityHelper: new SelectivityHelper(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
+							};
+						},
+
+						initEvents: function () {
+							var self = this;
+
+							self.controllers.SelectivityHelper.on(self.options.changedSelectivityEvent, function (event, data) {
+								if (self.changeSelectivityItem) {
+									var result = {};
+									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
+									result.columnId = self.dataTable.columnId(result.columnIndex);
+									result.rowIndex = data.itemNode.parent('.webix_cell').index();
+									result.rowId = self.dataTable.getIdByIndex(result.rowIndex);
+									result.item = self.dataTable.getItem(result.rowId);
+									result.itemData = result.item[result.columnId];
+
+									self.changeSelectivityItem(data.event, result);
+								}
+							});
+
 						},
 
 						registerDataTable: function (dataTable) {
@@ -74,37 +101,9 @@ steal(
 								}
 							});
 
-							// Selectivity
 							self.dataTable.attachEvent('onAfterRender', function (data) {
-								// Initial multi-combo
-								$('.connect-data-values').selectivity('destroy');
-								$('.connect-data-values').selectivity({
-									allowClear: true,
-									multiple: true,
-									removeOnly: true,
-									showDropdown: false,
-									showSearchInputInDropdown: false,
-									placeholder: self.labels.noConnectedData
-								}).on('change', function (ev) {
-									if (self.changeSelectivityItem) {
-										var columnIndex = $(this).parents('.webix_column').attr('column'),
-											columnId = self.dataTable.columnId(columnIndex),
-											rowIndex = $(this).parent('.webix_cell').index(),
-											rowId = self.dataTable.getIdByIndex(rowIndex),
-											item = self.dataTable.getItem(rowId),
-											itemData = item[columnId];
-
-										self.changeSelectivityItem(ev, {
-											columnIndex: columnIndex,
-											columnId: columnId,
-											rowIndex: rowIndex,
-											rowId: rowId,
-											item: item,
-											itemData: itemData
-										});
-									}
-								});
-
+								// Render selectivity node
+								self.controllers.SelectivityHelper.renderSelectivity('connect-data-values', self.data.readOnly);
 
 								data.each(function (d) {
 									var maxConnectedDataNum = {};
@@ -113,8 +112,9 @@ steal(
 										for (var columnName in d.connectedData) {
 											if ($.grep(self.dataTable.config.columns, function (c) { return c.id == columnName }).length < 1) break;
 
-											var connectFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName }));
-											connectFieldNode.find('.connect-data-values').selectivity('data', d.connectedData[columnName]);
+											var connectFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName })).find('.connect-data-values');
+											// Set selectivity data
+											self.controllers.SelectivityHelper.setData(connectFieldNode, d.connectedData[columnName]);
 
 											if (maxConnectedDataNum.dataNum < d.connectedData[columnName].length || !maxConnectedDataNum.dataNum) {
 												maxConnectedDataNum.dataId = d.id;
@@ -139,6 +139,10 @@ steal(
 
 						setObjectList: function (objectList) {
 							this.data.objectList = objectList;
+						},
+
+						setReadOnly: function (readOnly) {
+							this.data.readOnly = readOnly;
 						},
 
 						registerChangeSelectivityItem: function (changeSelectivityItem) {
@@ -181,6 +185,12 @@ steal(
 									linkToObject: col.linkToObject
 								});
 
+								// checkbox
+								if (mapCol.filter_type === 'checkbox' && self.data.readOnly) {
+									mapCol.disable = true; // TODO : Checkbox read only
+								}
+
+								// richselect
 								if (options && options.length > 0)
 									mapCol.options = options;
 

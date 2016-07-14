@@ -3,8 +3,10 @@ steal(
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 
+	'opstools/BuildApp/controllers/webix_custom_components/DragForm.js',
+
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -27,6 +29,14 @@ steal(
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
 							};
 
+							// Controllers
+							var DragForm = AD.Control.get('opstools.BuildApp.DragForm');
+
+							self.controllers = {
+								DragForm: new DragForm()
+							};
+
+
 							self.componentIds = {
 								editView: self.info.name + '-edit-view',
 								editForm: 'ab-form-edit-mode',
@@ -38,7 +48,8 @@ steal(
 							self.view = {
 								view: "form",
 								autoheight: true,
-								elements: []
+								elements: [],
+								drag: true
 							};
 
 							self.getView = function () {
@@ -147,6 +158,7 @@ steal(
 												element.view = 'checkbox';
 											}
 											else if (c.setting.editor === 'selectivity') {
+												
 												// TODO
 											}
 											else if (c.setting.editor === 'popup') {
@@ -173,12 +185,13 @@ steal(
 
 											if (editable) { // Show/Hide options
 												element = {
+													css: 'ab-form-component-item',
 													cols: [
 														{
 															name: c.id, // Column id
 															view: 'segmented',
 															margin: 10,
-															maxWidth: 140,
+															maxWidth: 120,
 															inputWidth: 100,
 															inputHeight: 35,
 															value: isVisible ? "show" : "hide",

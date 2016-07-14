@@ -1,9 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABPage.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/EditTree.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
