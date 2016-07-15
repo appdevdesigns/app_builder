@@ -16,13 +16,12 @@ steal(
 						init: function (element, options) {
 							this.data = {};
 
+							this.options = AD.defaults({
+							}, options);
+
 							this.Model = {
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject')
 							};
-
-							this.options = AD.defaults({
-								updateUnsyncCountEvent: 'AB_Object.LocalCount',
-							}, options);
 						},
 
 						setApp: function (app) {

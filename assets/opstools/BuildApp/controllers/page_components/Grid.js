@@ -182,6 +182,9 @@ steal(
 								$$(viewId).clearAll();
 								$$(viewId).showProgress({ type: 'icon' });
 
+								if (settings.columns)
+									self.data.visibleColumns = $.map(settings.columns, function (cId) { return cId.toString(); });
+
 								AD.util.async.parallel([
 									function (callback) {
 										self.data.objects = null;
@@ -285,9 +288,6 @@ steal(
 								webix.extend($$(self.componentIds.columnList), webix.ProgressBar);
 
 								$$(self.componentIds.columnList).showProgress({ type: 'icon' });
-
-								if (settings.columns)
-									self.data.visibleColumns = $.map(settings.columns, function (cId) { return cId.toString(); });
 
 								// Render dataTable component
 								self.render(self.componentIds.editDataTable, settings, selectAll).then(function () {

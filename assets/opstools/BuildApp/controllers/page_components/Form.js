@@ -4,6 +4,9 @@ steal(
 	'opstools/BuildApp/models/ABColumn.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/DragForm.js',
+	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
+
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 
 	function () {
 		System.import('appdev').then(function () {
@@ -30,20 +33,42 @@ steal(
 							};
 
 							// Controllers
-							var DragForm = AD.Control.get('opstools.BuildApp.DragForm');
+							// var DragForm = AD.Control.get('opstools.BuildApp.DragForm');
+							var ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
+								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
 
 							self.controllers = {
-								DragForm: new DragForm()
+								// DragForm: new DragForm()
+								ConnectedDataPopup: new ConnectedDataPopup(),
+								SelectivityHelper: new SelectivityHelper()
 							};
-
 
 							self.componentIds = {
 								editView: self.info.name + '-edit-view',
 								editForm: 'ab-form-edit-mode',
 
 								propertyView: self.info.name + '-property-view',
-								selectObject: self.info.name + '-select-object'
+								selectObject: self.info.name + '-select-object',
+
+								addConnectObjectDataPopup: 'ab-' + self.info.name + '-connected-data-popup'
 							};
+
+							webix.ui({
+								id: self.componentIds.addConnectObjectDataPopup,
+								view: "connected_data_popup",
+							});
+
+							$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
+								if (self.data.updatingItem)
+									self.controllers.SelectivityHelper.setData(self.data.updatingItem, selectedItems);
+							});
+
+							$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
+								if (self.data.updatingItem)
+									self.controllers.SelectivityHelper.setData(self.data.updatingItem, selectedItems);
+
+								self.data.updatingItem = null;
+							});
 
 							self.view = {
 								view: "form",
@@ -111,6 +136,8 @@ steal(
 
 							self.setApp = function (app) {
 								self.data.app = app;
+
+								$$(self.componentIds.addConnectObjectDataPopup).setApp(app);
 							};
 
 							self.render = function (viewId, settings, editable) {
@@ -158,8 +185,16 @@ steal(
 												element.view = 'checkbox';
 											}
 											else if (c.setting.editor === 'selectivity') {
-												
-												// TODO
+												element.minHeight = 45;
+												element.borderless = true;
+												element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
+													"<div class='ab-form-connect-data' data-object='#object#' data-multiple='#multiple#'></div>";
+
+												element.template = element.template
+													.replace('#width#', element.labelWidth - 3)
+													.replace('#label#', element.label)
+													.replace('#object#', c.linkToObject)
+													.replace('#multiple#', c.isMultipleRecords);
 											}
 											else if (c.setting.editor === 'popup') {
 												element.view = 'textarea';
@@ -209,6 +244,25 @@ steal(
 										});
 
 										$$(viewId).refresh();
+
+										self.controllers.SelectivityHelper.renderSelectivity('ab-form-connect-data');
+
+										$('.ab-form-connect-data').click(function () {
+											var item = $(this),
+												objectId = item.data('object'),
+												multiple = item.data('multiple');
+
+											self.data.updatingItem = item;
+
+											var object = self.data.objectList.filter(function (obj) { return obj.id == objectId; });
+
+											if (object && object.length > 0) {
+												var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
+
+												$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, multiple);
+											}
+										});
+
 										$$(viewId).hideProgress();
 									});
 							};
@@ -233,6 +287,8 @@ steal(
 							};
 
 							self.populateSettings = function (settings) {
+								if (!settings.visibleFieldIds) settings.visibleFieldIds = [];
+
 								// Render form component
 								self.render(self.componentIds.editForm, settings, true);
 
@@ -275,6 +331,10 @@ steal(
 
 						getInstance: function () {
 							return this;
+						},
+
+						setObjectList: function (objectList) {
+							this.data.objectList = objectList;
 						}
 
 					});

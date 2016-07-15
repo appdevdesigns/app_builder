@@ -160,6 +160,12 @@ steal(
 							else {
 								self.controllers.ComponentList.hide();
 							}
+						},
+
+						setObjectList: function (objectList) {
+							var self = this;
+
+							self.controllers.Form.setObjectList(objectList);
 						}
 
 

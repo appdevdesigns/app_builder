@@ -53,7 +53,15 @@ steal(
 						},
 
 						setData: function (node, data) {
-							node.selectivity('data', data);
+							if (node.selectivity)
+								node.selectivity('data', data);
+						},
+
+						getData: function (node) {
+							if (node.selectivity)
+								return node.selectivity('data');
+							else
+								return null;
 						}
 
 

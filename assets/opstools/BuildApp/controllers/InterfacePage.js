@@ -85,6 +85,12 @@ steal(
 
 							self.controllers.InterfaceList.loadPages(app.id);
 							self.controllers.InterfaceWorkspace.setApp(app);
+						},
+
+						setObjectList: function (objectList) {
+							var self = this;
+
+							self.controllers.InterfaceWorkspace.setObjectList(objectList);
 						}
 
 					});
