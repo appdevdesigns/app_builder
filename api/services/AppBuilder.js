@@ -243,36 +243,47 @@ module.exports = {
 
             // make sure OpsPortal navigation has an area for this application defined:
             function(next){
-                var areaName = Application.name;
-                var areaKey  = Application.areaKey();
-                var defaultArea = {
-                    key:areaKey,
-                    icon:'fa-cubes',
-                    isDefault:false,
-                    label:areaKey,
-                    context:areaKey
-                }
 
-                // Note: this will only create it if it doesn't already exist.
-                OPSPortal.NavBar.Area.create(defaultArea, function(err, area){
+                // if this was our first time to create the App, 
+                // then create an area.  
+                // Dont keep creating one since they might want to remove it using the
+                // Live Navigation Editor
+                if (!pluginExists) {
 
-                    // area is null if already existed, 
-                    // not null if just created:
-                    // if just created then update our labels
-                    if (area) {
-                        Application.translations.forEach(function(trans){
-                            var label = {
-                                language_code:trans.language_code,
-                                label_key:areaKey,
-                                label_context:areaKey,
-                                label_needs_translation:1,
-                                label_label:trans.label
-                            }
-                            Multilingual.label.create(label);  // I'm not following up after this.
-                        })
+                    var areaName = Application.name;
+                    var areaKey  = Application.areaKey();
+                    var defaultArea = {
+                        key:areaKey,
+                        icon:'fa-cubes',
+                        isDefault:false,
+                        label:areaKey,
+                        context:areaKey
                     }
-                    next(err);
-                })
+
+                    // Note: this will only create it if it doesn't already exist.
+                    OPSPortal.NavBar.Area.create(defaultArea, function(err, area){
+
+                        // area is null if already existed, 
+                        // not null if just created:
+                        // if just created then update our labels
+                        if (area) {
+                            Application.translations.forEach(function(trans){
+                                var label = {
+                                    language_code:trans.language_code,
+                                    label_key:areaKey,
+                                    label_context:areaKey,
+                                    label_needs_translation:1,
+                                    label_label:trans.label
+                                }
+                                Multilingual.label.create(label);  // I'm not following up after this.
+                            })
+                        }
+                        next(err);
+                    })
+
+                } else {
+                    next();
+                }
             }
             
         ], function(err) {
@@ -422,7 +433,7 @@ module.exports = {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
         
-        var appName, pageName, pageKey;
+        var appName, pageName, pageKey, pagePerms;
         var appID;
         var objectIncludes = [];
         var controllerIncludes = [];
@@ -447,7 +458,7 @@ module.exports = {
                     pageName = nameFilter(obj.name);
                     
                     pageKey = [appName, pageName].join('.'); // appName.pageName
-
+                    pagePerms = 'adcore.admin,'+pageKey+'.view';
                     next();
                     return null;
                 })
@@ -491,6 +502,9 @@ module.exports = {
                 .then(function(list) {
                     for (var i=0; i<list.length; i++) {
                         var obj = list[i];
+//// todo: make these instance methods:
+///  obj.uiModelKey() : -> 'opstools.' + appName + '.' + appName + '_' + obj.name
+///  obj.uiModelPath() : -> 'opstools/' + appName + '/models/' + appName + '_' + obj.name + '.js'
                         objectIncludes.push({ 
                             key: 'opstools.' + appName + '.' 
                                     + appName + '_' + obj.name, 
@@ -544,7 +558,6 @@ module.exports = {
                         });
                     }
                 })
-
             },
 
 
@@ -556,7 +569,7 @@ module.exports = {
 
                 var def = {
                     key:_.kebabCase(pageKey),
-                    permissions:'adcore.admin,'+pageKey+'.view',
+                    permissions:pagePerms,
                     icon:'fa-lock', // TODO: get this from Page Definition.
                     label:pageKey,
                     context: pageKey,
@@ -569,11 +582,10 @@ module.exports = {
 
                     next(err);
                 })
-
             },
 
 
-            // make sure our ToolDefinition is linked to our Application Definition.
+            // make sure our ToolDefinition is linked to our Area Definition.
             function(next){
 // sails.log('... todo: link tooldef to area');
 
@@ -582,9 +594,22 @@ module.exports = {
                     keyTool: _.kebabCase(pageKey),
                     instance:{
                         icon:'fa-cube',
-                        permissions:'adcore.developer'
+                        permissions:pagePerms,
+                        options:{
+                            is:'there'
+                        }
                     }
                 }, function(err){
+                    if (err) {
+                        if (err.code == 'E_AREANOTFOUND') {
+console.log('... Area['+ Application.areaKey()+'] not found.  Move along ... ');
+                            // this probably means that they deleted this default area 
+                            // using the Navigation Editor.
+                            // no problem here:
+                            next();
+                            return;
+                        }
+                    }
                     next(err);
                 });
                 

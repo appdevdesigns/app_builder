@@ -12,9 +12,7 @@ module.exports = {
 
     tableName: 'appbuilder_application',
 
-
     connection: 'appdev_default',
-
 
 
     attributes: {
@@ -51,6 +49,7 @@ module.exports = {
         }
     },
 
+
     beforeCreate: function (values, cb) {
         if (values.name)
             values.name = values.name.replace(' ', '_');
@@ -58,12 +57,14 @@ module.exports = {
         cb();
     },
 
+
     beforeUpdate: function (values, cb) {
         if (values.name)
             values.name = values.name.replace(' ', '_');
 
         cb();
     },
+
 
     afterDestroy: function (destroyedApplications, cb) {
 

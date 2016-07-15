@@ -12,12 +12,23 @@ module.exports = {
 
     tableName: 'appbuilder_object',
 
-
     connection: 'appdev_default',
 
 
-
     attributes: {
+
+        name: {
+            type: 'string',
+            required: true,
+            unique: true
+        },
+
+        labelFormat: { type: 'string' },
+
+        columns: { collection: 'ABColumn', via: 'object' },
+
+        application: { model: 'ABApplication' },
+
 
         // this will pull in the translations using .populate('translations')
         translations: {
@@ -35,20 +46,9 @@ module.exports = {
 
         _Klass: function () {
             return ABObject;
-        },
-
-        name: {
-            type: 'string',
-            required: true,
-            unique: true
-        },
-
-        labelFormat: { type: 'string' },
-
-        columns: { collection: 'ABColumn', via: 'object' },
-
-        application: { model: 'ABApplication' }
+        }
     },
+
 
     beforeCreate: function (values, cb) {
         if (values.name)
@@ -57,12 +57,14 @@ module.exports = {
         cb();
     },
 
+
     beforeUpdate: function (values, cb) {
         if (values.name)
             values.name = values.name.replace(' ', '_');
 
         cb();
     },
+
 
     afterDestroy: function (destroyedObjects, cb) {
 
