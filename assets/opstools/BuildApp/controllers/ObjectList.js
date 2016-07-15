@@ -18,7 +18,8 @@ steal(
 							options = AD.defaults({
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
-								updatedObjectEvent: 'AB_Object.Updated'
+								updatedObjectEvent: 'AB_Object.Updated',
+								deletedObjectEvent: 'AB_Object.Deleted'
 							}, options);
 							this.options = options;
 
@@ -260,14 +261,20 @@ steal(
 																		AD.error.log('Object List : Error delete object data', { error: err });
 																	})
 																	.then(function (result) {
+																		var deletedObj = null;
 																		self.data.objectList.forEach(function (item, index, list) {
-																			if (item && item.id === selectedObject.id)
+																			if (item && item.id === selectedObject.id) {
+																				deletedObj = item;
 																				self.data.objectList.splice(index, 1);
+																			}
 																		});
 
 																		$$(self.webixUiId.objectList).remove(selectedObject.id);
 
 																		self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
+
+																		if (deletedObj)
+																			self.element.trigger(self.options.deletedObjectEvent, { object: deletedObj });
 
 																		webix.message({
 																			type: "success",

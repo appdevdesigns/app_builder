@@ -15,28 +15,18 @@ steal(
 
 						init: function (element, options) {
 							var self = this;
-							options = AD.defaults({
+
+							self.options = AD.defaults({
 								backToAppPageEvent: 'AB_Application.GoToAppPage',
 								synchronizeEvent: 'AB_Application.Synchronize',
 
-								syncSaveDataEvent: 'AB_Object.SyncSaveData',
-								errorSaveDataEvent: 'AB_Object.ErrorSaveData',
-
-								syncDeleteDataEvent: 'AB_Object.SyncDeleteData',
-								errorDeleteDataEvent: 'AB_Object.ErrorDeleteData',
+								updatedObjectEvent: 'AB_Object.Updated'
 							}, options);
-							this.options = options;
 
 							// Call parent init
 							this._super(element, options);
 
 							this.data = {};
-							this.data.completeAddDataCount = 0;
-							this.data.completeUpdateDataCount = 0;
-							this.data.completeDeleteDataCount = 0;
-							this.data.errorAddDataCount = 0;
-							this.data.errorUpdateDataCount = 0;
-							this.data.errorDeleteDataCount = 0;
 
 							this.webixUiId = {
 								appNameLabel: 'ab-name-label',
@@ -78,8 +68,6 @@ steal(
 							self.labels.common.close = AD.lang.label.getLabel('ab.common.close') || "Close";
 							self.labels.common.processing = AD.lang.label.getLabel('ab.common.processing') || "Processing...";
 
-							self.labels.application.unsyncDataMessage = AD.lang.label.getLabel('ab.application.unsyncDataMessage') || "There are {0} out of sync data";
-							self.labels.application.unsyncDataHeader = AD.lang.label.getLabel('ab.application.unsyncDataHeader') || "Offline data";
 							self.labels.application.synchronize = AD.lang.label.getLabel('ab.application.synchronize') || "Synchronize";
 							self.labels.application.backToApplication = AD.lang.label.getLabel('ab.application.backToApplication') || "Back to Applications page";
 
@@ -97,10 +85,14 @@ steal(
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
-
 						},
 
 						initEvents: function () {
+							var self = this;
+
+							self.controllers.ObjectPage.element.on(self.options.updatedObjectEvent, function (event, data) {
+								self.controllers.InterfacePage.setObjectList(data.objectList);
+							});
 						},
 
 						getUIDefinitions: function () {
@@ -158,8 +150,13 @@ steal(
 										on: {
 											onChange: function (newv, oldv) {
 												if (newv != oldv) {
-													if (newv == self.webixUiId.interfaceView) {
-														self.controllers.InterfacePage.loadData(self.data.app);
+													switch (newv) {
+														case self.webixUiId.objectView:
+															self.controllers.ObjectPage.setApp(self.data.app);
+															break;
+														case self.webixUiId.interfaceView:
+															self.controllers.InterfacePage.loadData(self.data.app);
+															break;
 													}
 												}
 											}
@@ -185,10 +182,20 @@ steal(
 							$$(self.webixUiId.appNameLabel).define('label', app.label);
 							$$(self.webixUiId.appNameLabel).refresh();
 
-							self.controllers.ObjectPage.setApp(app);
-
 							// FOR TEST
 							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+
+							switch ($$(self.webixUiId.appWorkspaceMenu).getValue()) {
+								case self.webixUiId.objectView:
+									self.controllers.ObjectPage.setApp(app);
+									break;
+								case self.webixUiId.interfaceView:
+									self.controllers.InterfacePage.loadData(app);
+									break;
+							}
+
+
+
 						},
 
 						refresh: function () {

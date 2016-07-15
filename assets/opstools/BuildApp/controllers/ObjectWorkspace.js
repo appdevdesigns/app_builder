@@ -11,10 +11,12 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditHeaderPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
@@ -32,8 +34,7 @@ steal(
 							var self = this;
 
 							self.options = AD.defaults({
-								changedSelectivityEvent: 'AB_Selectivity.Changed',
-								updateUnsyncCountEvent: 'AB_Object.LocalCount'
+								changedSelectivityEvent: 'AB_Selectivity.Changed'
 							}, options);
 
 							// Call parent init
@@ -62,8 +63,6 @@ steal(
 								editHeaderPopup: 'ab-edit-header-popup',
 
 								addConnectObjectDataPopup: 'ab-connect-object-data-popup',
-								connectObjectSearch: 'ab-connect-object-search',
-								connectObjectDataList: 'ab-connect-object-data-list',
 
 								visibleFieldsPopup: 'ab-visible-fields-popup',
 								filterFieldsPopup: 'ab-filter-popup',
@@ -93,8 +92,6 @@ steal(
 							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
 							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
 							self.labels.common.save = AD.lang.label.getLabel('ab.common.save') || "Save";
-							self.labels.common.search = AD.lang.label.getLabel('ab.common.search') || "Search";
-							self.labels.common.close = AD.lang.label.getLabel('ab.common.close') || "Close";
 							self.labels.common.ok = AD.lang.label.getLabel('ab.common.ok') || "Ok";
 							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
 							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
@@ -126,9 +123,6 @@ steal(
 							self.labels.object.confirmDeleteTitle = AD.lang.label.getLabel('ab.object.delete.title') || "Delete data field";
 							self.labels.object.confirmDeleteMessage = AD.lang.label.getLabel('ab.object.delete.message') || "Do you want to delete <b>{0}</b>?";
 
-							// Connected data
-							self.labels.object.selectConnectedData = AD.lang.label.getLabel('ab.object.selectConnectedData') || "Select data to connect";
-
 							// Toolbar
 							self.labels.object.toolbar.hideFields = AD.lang.label.getLabel('ab.object.toolbar.hideFields') || "Hide fields";
 							self.labels.object.toolbar.filterFields = AD.lang.label.getLabel('ab.object.toolbar.filterFields') || "Add filters";
@@ -153,21 +147,27 @@ steal(
 								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup'),
 
 								EditHeaderPopup = AD.Control.get('opstools.BuildApp.DataTableEditHeaderPopup'),
+								ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
 
 								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable'),
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
+								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
 
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+							self.controllers = {
+								DataTableEditor: new DataTableEditor(),
+								VisibleFieldsPopup: new VisibleFieldsPopup(),
+								FilterPopup: new FilterPopup(),
+								SortPopup: new SortPopup(),
+								FrozenPopup: new FrozenPopup(),
+								DefineLabelPopup: new DefineLabelPopup(),
+								AddFieldPopup: new AddFieldPopup(),
+								EditHeaderPopup: new EditHeaderPopup(),
+								ConnectedDataPopup: new ConnectedDataPopup(),
 
-							self.controllers.DataTableEditor = new DataTableEditor();
-							self.controllers.VisibleFieldsPopup = new VisibleFieldsPopup();
-							self.controllers.FilterPopup = new FilterPopup();
-							self.controllers.SortPopup = new SortPopup();
-							self.controllers.FrozenPopup = new FrozenPopup();
-							self.controllers.DefineLabelPopup = new DefineLabelPopup();
-							self.controllers.AddFieldPopup = new AddFieldPopup();
-							self.controllers.EditHeaderPopup = new EditHeaderPopup();
-							self.controllers.ObjectDataTable = new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent });
-							self.controllers.ModelCreator = new ModelCreator(self.element, { updateUnsyncCountEvent: self.options.updateUnsyncCountEvent });
+								ObjectDataTable: new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent }),
+								ModelCreator: new ModelCreator(),
+								SelectivityHelper: new SelectivityHelper()
+							};
 						},
 
 						initModelCache: function () {
@@ -219,167 +219,10 @@ steal(
 								view: "edit_header_popup",
 							});
 
-							// Select connected object data popup
 							webix.ui({
 								id: self.webixUiId.addConnectObjectDataPopup,
-								view: 'window',
-								modal: true,
-								head: self.labels.object.selectConnectedData,
-								position: "center",
-								autowidth: true,
-								autoheight: true,
-								body: {
-									rows: [
-										{
-											view: 'toolbar',
-											cols: [{
-												view: 'search',
-												id: self.webixUiId.connectObjectSearch,
-												label: self.labels.common.search,
-												keyPressTimeout: 140,
-												on: {
-													onTimedKeyPress: function () {
-														var searchText = $$(self.webixUiId.connectObjectSearch).getValue();
-
-														$$(self.webixUiId.connectObjectDataList).filter(function (obj) {
-															var result = false;
-
-															for (var key in obj) {
-																if (key != 'id')
-																	result = obj[key].indexOf(searchText) > -1 || result;
-															}
-
-															return result;
-														});
-													}
-												}
-											}]
-										},
-										{
-											id: self.webixUiId.connectObjectDataList,
-											view: 'list',
-											width: 600,
-											height: 400,
-											type: {
-												height: 40, // Defines item height
-											},
-											on: {
-												onAfterLoad: function () {
-													var curSelectivity = self.getCurSelectivityNode(),
-														selectedData = curSelectivity.selectivity('data'),
-														selectedIds = $.map(selectedData, function (d) { return d.id; });
-
-													if (selectedIds && selectedIds.length > 0)
-														$$(self.webixUiId.connectObjectDataList).select(selectedIds);
-													else
-														$$(self.webixUiId.connectObjectDataList).unselectAll();
-												},
-												onItemClick: function (id, e, node) {
-													if ($$(self.webixUiId.connectObjectDataList).isSelected(id)) {
-														$$(self.webixUiId.connectObjectDataList).unselect(id);
-													}
-													else {
-														// Single select mode
-														if (!$$(self.webixUiId.connectObjectDataList).config.multiselect)
-															$$(self.webixUiId.connectObjectDataList).unselectAll();
-
-														var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId();
-
-														if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
-															if (selectedIds)
-																selectedIds = [selectedIds];
-															else
-																selectedIds = [];
-														}
-
-														selectedIds.push(id);
-
-														$$(self.webixUiId.connectObjectDataList).select(selectedIds);
-													}
-
-												},
-												onSelectChange: function () {
-													var curSelectivity = self.getCurSelectivityNode(),
-														selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId(true),
-														selectedItems = [];
-
-													selectedIds.forEach(function (id) {
-														var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
-														if (!htmlNode) return;
-
-														var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
-
-														selectedItems.push({ id: id, text: connectData });
-													});
-
-													curSelectivity.selectivity('data', selectedItems);
-												}
-											}
-										},
-										{
-											view: "button",
-											value: self.labels.common.close,
-											align: "right",
-											width: 150,
-											click: function () {
-												$$(self.webixUiId.addConnectObjectDataPopup).hide();
-											}
-										}
-									]
-								},
-								on: {
-									onHide: function () {
-										$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
-
-										var selectedIds = $$(self.webixUiId.connectObjectDataList).getSelectedId(true);
-
-										if (!selectedIds || selectedIds.length < 1)
-											selectedIds = '';
-
-										self.updateRowData(
-											{ value: selectedIds }, // state
-											{ // editor
-												row: self.data.selectedCell.row,
-												column: self.data.selectedCell.column
-											},
-											false)
-											.then(function () {
-												var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
-												if (!rowData.connectedData) rowData.connectedData = {};
-
-												rowData[self.data.selectedCell.column] = selectedIds;
-												rowData.connectedData[self.data.selectedCell.column] = $.map(selectedIds, function (id) {
-													var htmlNode = $$(self.webixUiId.connectObjectDataList).getItemNode(id);
-													if (!htmlNode) return;
-
-													var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
-
-													return { id: id, text: connectData };
-												});
-
-												$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
-
-												// Update connected data to cached item
-												self.Model.ObjectModel.Cached.findOne({ id: self.data.selectedCell.row }, true)
-													.then(function (item) {
-														item.attr('connectedData', rowData.connectedData);
-														item.updated({ connectedData: rowData.connectedData });
-													});
-
-												// Resize row height
-												self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
-
-												$$(self.webixUiId.objectDatatable).hideProgress();
-
-												self.data.selectedCell = null
-												$$(self.webixUiId.connectObjectDataList).unselectAll();
-												$$(self.webixUiId.connectObjectDataList).clearAll();
-
-											});
-
-									}
-								}
-							}).hide();
+								view: "connected_data_popup",
+							});
 
 							self.data.definition = {
 								rows: [
@@ -446,74 +289,22 @@ steal(
 
 													columnData = columnData[0];
 
-													// Show connect data windows popup
-													$$(self.webixUiId.addConnectObjectDataPopup).show();
-
-													$$(self.webixUiId.connectObjectDataList).showProgress({ type: 'icon' });
-
-													$$(self.webixUiId.connectObjectDataList).define('multiselect', columnData.isMultipleRecords);
-
 													self.data.selectedCell = { row: data.row, column: data.column };
 
-													var linkToObject = columnData.linkToObject,
-														columns = null;
+													// Show connect data windows popup
+													var curSelectivity = self.getCurSelectivityNode(self.data.selectedCell),
+														selectedData = self.controllers.SelectivityHelper.getData(curSelectivity),
+														selectedIds = $.map(selectedData, function (d) { return d.id; });
 
 													// Get columns of connected object
 													var object = self.data.objectList.filter(function (o) {
-														return o.id === linkToObject;
+														return o.id === columnData.linkToObject;
 													});
 
 													if (!object || object.length < 1)
 														return false;
 
-													async.series([
-														function (next) {
-															self.Model.ABColumn.Cached.findAll({ object: object[0].id })
-																.then(function (data) {
-
-																	data.forEach(function (d) {
-																		if (d.translate) d.translate();
-																	});
-
-																	columns = data;
-
-																	next();
-
-																});
-														},
-														function (next) {
-															// Generate template to display
-															var template = "<div class='ab-connect-data'>";
-															if (object[0].labelFormat || object[0].columns.length > 0)
-																template += object[0].labelFormat || '#' + object[0].columns[0].name + '#';
-															template += "</div>";
-															template = template.replace(/[{]/g, '#').replace(/[}]/g, '#');
-
-															$$(self.webixUiId.connectObjectDataList).define('template', template);
-															$$(self.webixUiId.connectObjectDataList).refresh();
-
-															self.controllers.ModelCreator.getModel(object[0].name)
-																.fail(function (err) { next(err); })
-																.then(function (objectModel) {
-																	// Load the connect data
-																	objectModel.Cached.findAll({})
-																		.fail(function (err) { next(err); })
-																		.then(function (data) {
-																			data.forEach(function (d) {
-																				if (d.translate) d.translate();
-																			})
-
-																			$$(self.webixUiId.connectObjectDataList).parse(data.attr());
-
-																			next();
-																		});
-
-																});
-
-														}
-													], function () {
-														$$(self.webixUiId.connectObjectDataList).hideProgress();
-													});
+													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], selectedIds, columnData.isMultipleRecords);
 
 													return false;
 												}
@@ -595,28 +386,12 @@ steal(
 						},
 
 						initEvents: function () {
-							var self = this;
-
-							self.controllers.ModelCreator.on(self.options.updateUnsyncCountEvent, function (event, data) {
-								if (data.count) {
-									var label = '<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> ' + self.labels.application.unsyncDataMessage.replace('{0}', data.count);
-
-									$$("ab-unsync-data-count").define('label', label);
-									$$("ab-unsync-data-count").refresh();
-									$$("ab-unsync-data-count").show();
-								}
-								else {
-									$$("ab-unsync-data-count").hide();
-								}
-							});
-
 						},
 
 						webix_ready: function () {
 							var self = this;
 
 							webix.extend($$(self.webixUiId.objectDatatable), webix.ProgressBar);
-							webix.extend($$(self.webixUiId.connectObjectDataList), webix.ProgressBar);
 
 							self.controllers.ObjectDataTable.registerDataTable($$(self.webixUiId.objectDatatable));
 							self.controllers.ObjectDataTable.registerChangeSelectivityItem(function (ev, data) {
@@ -676,7 +451,7 @@ steal(
 									});
 							});
 
-
+							// DataTable header
 							$$(self.webixUiId.editHeaderPopup).registerHeaderClick(function (clickedItem, headerField) {
 								switch (clickedItem) {
 									case self.labels.object.hideField:
@@ -772,6 +547,52 @@ steal(
 										break;
 								}
 							});
+
+							// Connect data popup
+							$$(self.webixUiId.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
+								self.controllers.SelectivityHelper.setData(self.getCurSelectivityNode(), selectedItems);
+							});
+							$$(self.webixUiId.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
+								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+								var selectedIds = '';
+
+								if (selectedItems && selectedItems.length > 0)
+									selectedIds = $.map(selectedItems, function (item) { return item.id; });
+
+								self.updateRowData(
+									{ value: selectedIds }, // state
+									{ // editor
+										row: self.data.selectedCell.row,
+										column: self.data.selectedCell.column
+									},
+									false)
+									.then(function () {
+										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
+										if (!rowData.connectedData) rowData.connectedData = {};
+
+										rowData[self.data.selectedCell.column] = selectedIds;
+										rowData.connectedData[self.data.selectedCell.column] = selectedItems;
+
+										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
+
+										// Update connected data to cached item
+										self.Model.ObjectModel.Cached.findOne({ id: self.data.selectedCell.row }, true)
+											.then(function (item) {
+												item.attr('connectedData', rowData.connectedData);
+												item.updated({ connectedData: rowData.connectedData });
+											});
+
+										// Resize row height
+										self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
+
+										$$(self.webixUiId.objectDatatable).hideProgress();
+
+										self.data.selectedCell = null
+									});
+
+								self.controllers.SelectivityHelper.setData(self.getCurSelectivityNode(), selectedItems);
+							});
 						},
 
 						getUIDefinition: function () {
@@ -797,6 +618,9 @@ steal(
 
 							// Set values to model creator
 							self.controllers.ModelCreator.setApp(self.data.app);
+
+							// Set values to connect object popup
+							$$(self.webixUiId.addConnectObjectDataPopup).setApp(self.data.app);
 
 							// Set enable connect object list to the add new column popup
 							var enableConnectObjects = self.data.objectList.filter(function (o) {
@@ -1044,6 +868,15 @@ steal(
 								return o.id != self.data.objectId;
 							});
 							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
+						},
+
+						deleteObject: function (obj) {
+							this.controllers.ModelCreator.getModel(obj.attr('name'))
+								.fail(function (err) { next(err); })
+								.then(function (objectModel) {
+									if (objectModel && objectModel.Cached)
+										objectModel.Cached.cacheClear(); // Clear cache data
+								});
 						},
 
 						updateRowData: function (state, editor, ignoreUpdate) {
