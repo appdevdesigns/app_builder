@@ -88,52 +88,49 @@ module.exports = {
     var ids = _.map(destroyedObjects, 'id');
 
     if (ids && ids.length) {
-      if (ids && ids.length) {
-        async.parallel([
-          function (callback) {
-            ABPage.count({ parent: ids })
-              .fail(function (err) {
-                callback(err)
-              })
-              .then(function (found) {
-                if (found > 0) {
-                  ABPage.destroy({ parent: ids })
-                    .fail(function (err) {
-                      callback(err)
-                    })
-                    .then(function () {
-                      callback();
-                    });
-                }
-                else {
-                  callback();
-                }
-              });
-          },
-          function (callback) {
-            ABPageComponent.destroy({ page: ids })
-              .fail(function (err) {
-                callback(err)
-              })
-              .then(function () {
+      async.parallel([
+        function (callback) {
+          ABPage.count({ parent: ids })
+            .fail(function (err) {
+              callback(err)
+            })
+            .then(function (found) {
+              if (found > 0) {
+                ABPage.destroy({ parent: ids })
+                  .fail(function (err) {
+                    callback(err)
+                  })
+                  .then(function () {
+                    callback();
+                  });
+              }
+              else {
                 callback();
-              });
-          },
-          function (callback) {
-            ABPageTrans.destroy({ abpage: ids })
-              .fail(function (err) {
-                callback(err)
-              })
-              .then(function () {
-                callback();
-              });
-          }
-        ], cb);
-      }
-      else {
-        cb();
-      }
-
+              }
+            });
+        },
+        function (callback) {
+          ABPageComponent.destroy({ page: ids })
+            .fail(function (err) {
+              callback(err)
+            })
+            .then(function () {
+              callback();
+            });
+        },
+        function (callback) {
+          ABPageTrans.destroy({ abpage: ids })
+            .fail(function (err) {
+              callback(err)
+            })
+            .then(function () {
+              callback();
+            });
+        }
+      ], cb);
+    }
+    else {
+      cb();
     }
 
   }

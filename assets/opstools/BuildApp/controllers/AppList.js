@@ -376,6 +376,8 @@ steal(
 									// Popupate translate properties to object
 									data.forEach(function (d) {
 										if (d.translate) d.translate();
+
+										if (!d.description) d.attr('description', '');
 									});
 
 									self.data = data;
