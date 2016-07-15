@@ -870,6 +870,15 @@ steal(
 							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
 						},
 
+						deleteObject: function (obj) {
+							this.controllers.ModelCreator.getModel(obj.attr('name'))
+								.fail(function (err) { next(err); })
+								.then(function (objectModel) {
+									if (objectModel && objectModel.Cached)
+										objectModel.Cached.cacheClear(); // Clear cache data
+								});
+						},
+
 						updateRowData: function (state, editor, ignoreUpdate) {
 							var self = this,
 								q = $.Deferred();

@@ -19,7 +19,8 @@ steal(
 							options = AD.defaults({
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
-								updatedObjectEvent: 'AB_Object.Updated'
+								updatedObjectEvent: 'AB_Object.Updated',
+								deletedObjectEvent: 'AB_Object.Deleted'
 							}, options);
 							this.options = options;
 
@@ -40,7 +41,11 @@ steal(
 							var ObjectList = AD.Control.get('opstools.BuildApp.ObjectList'),
 								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace');
 
-							self.controllers.ObjectList = new ObjectList(self.element, { selectedObjectEvent: self.options.selectedObjectEvent, updatedObjectEvent: self.options.updatedObjectEvent });
+							self.controllers.ObjectList = new ObjectList(self.element, { 
+								selectedObjectEvent: self.options.selectedObjectEvent,
+								updatedObjectEvent: self.options.updatedObjectEvent,
+								deletedObjectEvent: self.options.deletedObjectEvent
+							});
 							self.controllers.ObjectWorkspace = new ObjectWorkspace(self.element);
 						},
 
@@ -72,6 +77,10 @@ steal(
 
 							self.controllers.ObjectList.on(self.options.updatedObjectEvent, function (event, data) {
 								self.controllers.ObjectWorkspace.setObjectList(data.objectList);
+							});
+
+							self.controllers.ObjectList.on(self.options.deletedObjectEvent, function (event, data) {
+								self.controllers.ObjectWorkspace.deleteObject(data.object);
 							});
 						},
 

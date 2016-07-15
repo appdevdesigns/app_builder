@@ -270,18 +270,25 @@ steal(function () {
 					makeCreate: function (create) {
 						return function (obj) {
 							var q = new can.Deferred(),
+								self = this,
 								tempId = null;
 
 							if (AD.comm.isServerReady()) { // Call service to add new item
 								create(obj)
-									.fail(function (err) { q.reject(err); })
+									.fail(function (err) {
+										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
+											var localObj = self.createNewLocalItem(obj);
+
+											q.resolve(localObj);
+										}
+										else {
+											q.reject(err);
+										}
+									})
 									.then(function (result) { q.resolve(result); });
 							}
 							else { // Store to local repository
-								var localObj = $.extend({}, obj);
-								tempId = 'temp' + webix.uid();
-								localObj.id = tempId;
-								this.storeSaveId(tempId);
+								var localObj = self.createNewLocalItem(obj);
 
 								q.resolve(localObj);
 							}
@@ -293,6 +300,7 @@ steal(function () {
 					makeUpdate: function (update) {
 						return function (id, obj) {
 							var q = new can.Deferred(),
+								self = this,
 								saveObj = {},
 								fieldList = Object.keys(this.describe()).concat(['id', 'translations']);
 
@@ -303,18 +311,28 @@ steal(function () {
 
 							if (AD.comm.isServerReady()) { // Call service to update item
 								update(id, saveObj)
-									.fail(function (err) { q.reject(err); })
+									.fail(function (err) {
+										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
+											self.updateLocalItem(id, saveObj)
+												.fail(function (err) { q.reject(err); })
+												.then(function (result) {
+													q.resolve(result);
+												});
+										}
+										else {
+											q.reject(err);
+										}
+									})
 									.then(function (result) {
 										q.resolve(result);
 									});
 							}
 							else { // System is syncing
-								this.findOne({ id: id }).then(function (result) {
-									result.updated(saveObj); // Update in local repository
-
-									q.resolve(saveObj);
-								});
-								this.storeSaveId(id);
+								self.updateLocalItem(id, saveObj)
+									.fail(function (err) { q.reject(err); })
+									.then(function (result) {
+										q.resolve(result);
+									});
 							}
 
 							return q;
@@ -388,6 +406,32 @@ steal(function () {
 					storeSaveId: function (id) {
 						if ($.inArray(id, this.savedIds) < 0)
 							this.savedIds.push(id);
+					},
+
+					createNewLocalItem: function (obj) {
+						var localObj = $.extend({}, obj);
+						tempId = 'temp' + webix.uid();
+						localObj.id = tempId;
+						this.storeSaveId(tempId);
+
+						return localObj;
+					},
+
+					updateLocalItem: function (id, saveObj) {
+						var self = this,
+							q = AD.sal.Deferred();
+
+						self.findOne({ id: id })
+							.fail(function (err) { q.reject(err); })
+							.then(function (result) {
+								result.updated(saveObj); // Update in local repository
+
+								q.resolve(saveObj);
+							});
+
+						self.storeSaveId(id);
+
+						return q;
 					},
 
 					isTempId: function (id) {
