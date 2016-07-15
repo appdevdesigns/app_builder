@@ -406,6 +406,7 @@ steal(
 
 							self.data.appId = appId;
 
+							$$(self.webixUiId.interfaceTree).clearAll();
 							$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
 							self.Model.findAll({ application: appId })

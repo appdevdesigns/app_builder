@@ -150,8 +150,13 @@ steal(
 										on: {
 											onChange: function (newv, oldv) {
 												if (newv != oldv) {
-													if (newv == self.webixUiId.interfaceView) {
-														self.controllers.InterfacePage.loadData(self.data.app);
+													switch (newv) {
+														case self.webixUiId.objectView:
+															self.controllers.ObjectPage.setApp(self.data.app);
+															break;
+														case self.webixUiId.interfaceView:
+															self.controllers.InterfacePage.loadData(self.data.app);
+															break;
 													}
 												}
 											}
@@ -177,10 +182,20 @@ steal(
 							$$(self.webixUiId.appNameLabel).define('label', app.label);
 							$$(self.webixUiId.appNameLabel).refresh();
 
-							self.controllers.ObjectPage.setApp(app);
-
 							// FOR TEST
 							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+
+							switch ($$(self.webixUiId.appWorkspaceMenu).getValue()) {
+								case self.webixUiId.objectView:
+									self.controllers.ObjectPage.setApp(app);
+									break;
+								case self.webixUiId.interfaceView:
+									self.controllers.InterfacePage.loadData(app);
+									break;
+							}
+
+
+
 						},
 
 						refresh: function () {
