@@ -394,6 +394,8 @@ steal(
 						setApp: function (app) {
 							var self = this;
 
+							self.resetState();
+
 							self.data.app = app;
 
 							self.controllers.ModelCreator.setApp(app);
