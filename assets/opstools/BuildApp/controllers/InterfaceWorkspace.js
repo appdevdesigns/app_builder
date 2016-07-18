@@ -151,6 +151,9 @@ steal(
 							self.controllers.LayoutView.resetState();
 							self.controllers.ComponentList.resetState();
 
+							// Reset page components 
+							self.controllers.Grid.resetState();
+
 							if (page) {
 								self.data.page = page;
 

@@ -79,27 +79,29 @@ steal(
 							self.dataTable = dataTable;
 
 							// Trash
-							self.dataTable.attachEvent("onItemClick", function (id, e, node) {
-								if (e.target.className.indexOf('trash') > 0) {
-									webix.confirm({
-										title: self.labels.confirmDeleteRowTitle,
-										ok: self.labels.common.yes,
-										cancel: self.labels.common.no,
-										text: self.labels.confirmDeleteRowMessage,
-										callback: function (result) {
-											if (result) {
-												if (self.deleteRow)
-													self.deleteRow(id);
+							if (!self.dataTable.hasEvent('onItemClick')) {
+								self.dataTable.attachEvent("onItemClick", function (id, e, node) {
+									if (e.target.className.indexOf('trash') > 0) {
+										webix.confirm({
+											title: self.labels.confirmDeleteRowTitle,
+											ok: self.labels.common.yes,
+											cancel: self.labels.common.no,
+											text: self.labels.confirmDeleteRowMessage,
+											callback: function (result) {
+												if (result) {
+													if (self.deleteRow)
+														self.deleteRow(id);
+												}
+
+												if (self.dataTable.unselectAll)
+													self.dataTable.unselectAll();
+
+												return true;
 											}
-
-											if (self.dataTable.unselectAll)
-												self.dataTable.unselectAll();
-
-											return true;
-										}
-									});
-								}
-							});
+										});
+									}
+								});
+							}
 
 							self.dataTable.attachEvent('onAfterRender', function (data) {
 								// Render selectivity node
