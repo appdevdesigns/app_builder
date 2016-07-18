@@ -25,7 +25,10 @@ steal(
 
 							// Call parent init
 							self._super(element, self.options);
-							self.Model = AD.Model.get('opstools.BuildApp.ABPageComponent');
+							self.Model = {
+								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
+								ABPageComponent: AD.Model.get('opstools.BuildApp.ABPageComponent')
+							};
 							self.data = {};
 
 							self.componentIds = {
@@ -151,7 +154,8 @@ steal(
 											{
 												view: 'activelist',
 												id: self.componentIds.componentList,
-												drag: 'target',
+												// drag: 'target',
+												drag: true,
 												select: false,
 												type: {
 													height: 'auto'
@@ -223,7 +227,7 @@ steal(
 													if (id) {
 														$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 
-														var addNewComponent = self.Model.newInstance();
+														var addNewComponent = self.Model.ABPageComponent.newInstance();
 														addNewComponent.attr('page', self.data.page.attr('id'));
 														addNewComponent.attr('component', data.name);
 														addNewComponent.attr('weight', $$(self.componentIds.componentList).count());
@@ -267,13 +271,51 @@ steal(
 												},
 												on: {
 													onBeforeDrop: function (context, ev) {
-														for (var i = 0; i < context.source.length; i++) {
-															context.from.copy(context.source[i], context.start, this, webix.uid());
+														if (context.from.config.id === self.componentIds.componentList) {
+															return true;
+														}
+														else {
+															for (var i = 0; i < context.source.length; i++) {
+																context.from.copy(context.source[i], context.start, this, webix.uid());
+															}
+
+															self.hideDropAreaZone();
 														}
 
-														self.hideDropAreaZone();
-
 														return false;
+													},
+													onAfterDrop: function (context, ev) {
+														if (context.from.config.id === self.componentIds.componentList) {
+															$$(self.componentIds.componentList).showProgress({ type: 'icon' });
+
+															var componentIndexes = [];
+
+															// Sort data
+															for (var index = 0; index < $$(self.componentIds.componentList).count(); index++) {
+																var comId = $$(self.componentIds.componentList).getIdByIndex(index),
+																	com = self.data.componentsInPage.filter(function (c) { return c.id == comId });
+
+																if (com && com.length > 0) {
+																	com[0].attr('weight', index);
+
+																	componentIndexes.push({
+																		id: com[0].id,
+																		index: com[0].weight
+																	});
+
+																}
+															}
+
+															// Call sort components api
+															self.Model.ABPage.sortComponents(self.data.page.id, componentIndexes, function (err, result) {
+																$$(self.componentIds.componentList).hideProgress();
+
+																if (err) {
+																	// TODO : show error message
+																	return false;
+																}
+															});
+														}
 													}
 												},
 												onClick: {
@@ -293,7 +335,7 @@ steal(
 																	$$(self.componentIds.componentList).showProgress({ type: "icon" });
 
 																	// Call server to delete object data
-																	self.Model.destroy(id)
+																	self.Model.ABPageComponent.destroy(id)
 																		.fail(function (err) {
 																			$$(self.componentIds.componentList).hideProgress();
 
@@ -367,7 +409,7 @@ steal(
 
 							self.data.page = page;
 
-							self.Model.findAll({ page: page.attr('id') })
+							self.Model.ABPageComponent.findAll({ page: page.attr('id') })
 								.fail(function (err) {
 									$$(self.componentIds.componentList).hideProgress();
 

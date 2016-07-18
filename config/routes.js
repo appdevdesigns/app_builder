@@ -23,8 +23,11 @@ module.exports = {
     'post /app_builder/preparePage/:id': 
         'app_builder/ABPageController.prepare',
 
-    '/app_builder/object/sortColumns/:id': 
+    'put /app_builder/object/sortColumns/:id': 
         'app_builder/ABObjectController.sortColumns',
+
+    'put /app_builder/page/sortComponents/:id': 
+        'app_builder/ABPageController.sortComponents'
 
   /*
 
