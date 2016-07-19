@@ -535,7 +535,7 @@ steal(function () {
 							// Update our model
 							can.Model.prototype.created.apply(this, arguments);
 						},
-						destroyed: function (attrs) {
+						destroyed: function () {
 							// Save the model to local storage
 							delete this.constructor._cached[this[this.constructor.id]];
 							this.constructor.cacheItems([]);

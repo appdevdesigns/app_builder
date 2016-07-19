@@ -871,9 +871,21 @@ steal(
 						},
 
 						deleteObject: function (obj) {
-							this.controllers.ModelCreator.getModel(obj.attr('name'))
+							var self = this;
+
+							// Clear columns info cache
+							var cachedColumns = self.Model.ABColumn.Cached.findAllCached({ object: obj.attr('id') });
+							if (cachedColumns && cachedColumns.length > 0) {
+								cachedColumns = self.Model.ABColumn.Cached.models(cachedColumns); // Convert to cache model
+								cachedColumns.forEach(function (col) {
+									col.destroyed();
+								});
+							}
+
+							self.controllers.ModelCreator.getModel(obj.attr('name'))
 								.fail(function (err) { next(err); })
 								.then(function (objectModel) {
+
 									if (objectModel && objectModel.Cached)
 										objectModel.Cached.cacheClear(); // Clear cache data
 								});
