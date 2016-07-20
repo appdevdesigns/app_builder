@@ -337,6 +337,18 @@ msgstr "เลือกข้อมูลที่เชื่อมต่อ"
 
 #. path: app_builder
 #. code: th
+#. key: ab.object.cannotConnectedDataTitle
+msgid "System could not link to this data"
+msgstr "ระบบไม่สามารถเชื่อมต่อข้อมูลนี้ได้"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.cannotConnectedDataDescription
+msgid "This data is unsynchronized. You can click Synchronize button to sync data."
+msgstr "ข้อมูลนี้ยังไม่ได้บันทึก คุณสามารถคลิ๊กที่ปุ่ม Synchronize เพื่อบันทึกข้อมูลนี้"
+
+#. path: app_builder
+#. code: th
 #. key: ab.object.noConnectedData
 msgid "No data selected"
 msgstr "ไม่มีข้อมูลที่ถูกเลือก"

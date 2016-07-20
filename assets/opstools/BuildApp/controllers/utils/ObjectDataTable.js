@@ -306,7 +306,8 @@ steal(
 												getConnectedDataEvents.push(function (cb) {
 													var connectedDataIds = r[c.id];
 
-													r.removeAttr('connectedData');
+													if (r.connectedData)
+														r.connectedData.attr(c.id, [], true);
 
 													if (!connectedDataIds || connectedDataIds.length < 1) {
 														cb();
@@ -318,6 +319,7 @@ steal(
 														return true;
 													}
 
+													connectedDataIds = connectedDataIds.filter(function (d) { return typeof d !== 'undefined' && d !== null; });
 													connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
 
 													objectModel.Cached.findAll({ or: connectedDataIds }, false, true)
@@ -329,7 +331,8 @@ steal(
 															});
 
 															if (connectedResult && connectedResult.length > 0) {
-																r.attr('connectedData', {}, true);
+																if (!r.attr('connectedData'))
+																	r.attr('connectedData', {}, true);
 
 																var connectedDataValue = $.map(connectedResult.attr(), function (d) {
 																	return {
@@ -338,7 +341,7 @@ steal(
 																	}
 																});
 
-																r.connectedData.attr(c.id, connectedDataValue);
+																r.connectedData.attr(c.id, connectedDataValue, true);
 															}
 
 
@@ -354,7 +357,12 @@ steal(
 							});
 
 							async.parallel(prepareConnectedDataEvents,
-								function (err, results) {
+								function (err) {
+									if (err) {
+										q.reject(err);
+										return;
+									}
+
 									self.dataTable.clearAll();
 									self.dataTable.parse(result.attr ? result.attr() : []);
 

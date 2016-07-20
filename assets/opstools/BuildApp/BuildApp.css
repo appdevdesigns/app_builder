@@ -189,6 +189,10 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	text-overflow: ellipsis;
 }
 
+.ab-connect-data-disable {
+	background-color: #aaa;
+}
+
 /* Custom selectivity */
 .ab-main-container .selectivity-multiple-input-container {
 	background: none !important;  
