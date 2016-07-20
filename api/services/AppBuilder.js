@@ -372,7 +372,7 @@ module.exports = {
     
     
     /**
-     * Generate the client side controller for an application's page
+     * Generate the client side controller for a root page
      *
      * @param integer pageID
      * @return Deferred
@@ -381,26 +381,35 @@ module.exports = {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
         
-        var appName, pageName;
-        var appID;
+        var appID, appName, pageName;
         var objectIncludes = [];
         var controllerIncludes = [];
         
+        var pages = {};
+        
         async.series([
-            // Find page info
+            // Find basic page info
             function(next) {
                 ABPage.find({ id: pageID })
                 .populate('application')
+                .populate('components')
                 .then(function(list) {
-                    var obj = list[0];
-                    if (!obj) throw new Error('invalid page id');
+                    if (!list || !list[0]) throw new Error('invalid page id');
+                    var page = list[0];
+                    if (page.parent > 0) throw new Error('not a root page');
                     
-                    appID = obj.application.id;
+                    appID = page.application.id;
+                    appName = 'AB_' + nameFilter(page.application.name);
+                    pageName = nameFilter(page.name);
                     
-                    // Only numbers and alphabets will be used
-                    appName = 'AB_' + nameFilter(obj.application.name);
-                    pageName = nameFilter(obj.name);
+                    controllerIncludes.push({
+                        key: 'opstools.' + appName + '.' + pageName,
+                        path: 'opstools/' + appName + '/controllers/'
+                            + pageName + '.js'
+                    });
                     
+                    pages[pageID] = page;
+                        
                     next();
                     return null;
                 })
@@ -410,8 +419,73 @@ module.exports = {
                 });
             },
             
+            // Find all sub-pages
+            function(next) {
+                var pageQueue = [ pageID ];
+                var completed = [];
+                
+                async.whilst(
+                    function() { return (pageQueue.length > 0) },
+                    function(ok) {
+                        var pID = pageQueue.pop();
+                        ABPage.find()
+                        .where({ parent: pID })
+                        .populate('components')
+                        .then(function(list) {
+                            completed.push(pID);
+                            if (list && list[0]) {
+                                list.forEach(function(page) {
+                                    if (completed.indexOf(page.id) < 0) {
+                                        pageQueue.push(page.id);
+                                    }
+                                    pages[page.id] = page;
+                                });
+                            }
+                            ok();
+                            return null;
+                        })
+                        .catch(function(err) {
+                            ok(err);
+                            return null;
+                        });
+                    },
+                    function(err) {
+                        if (err) next(err);
+                        else next();
+                    }
+                );
+            
+            },
+            
             // Generate the client side controller for the app page
             function(next) {
+                sails.renderView(path.join('app_builder', 'page_controller'), {
+                    layout: false,
+                    appName: appName,
+                    pageName: pageName,
+                    pages: pages,
+                    rootPageID: pageID,
+                    domID: function(pid) {
+                        pid = pid || '';
+                        return 'abpage-' + appName + '-' + pageName + '-' + pid;
+                    }
+                }, function(err, output) {
+                    if (err) next(err);
+                    else {
+                        fs.writeFile(
+                            path.join(
+                                'assets', 'opstools', appName,
+                                'controllers', pageName + '.js'
+                            ),
+                            output,
+                            function(err) {
+                                if (err) next(err);
+                                else next();
+                            }
+                        );
+                    }
+                });
+                /*
                 AD.spawn.command({
                     command: cliCommand,
                     options: [
@@ -423,14 +497,9 @@ module.exports = {
                 })
                 .fail(next)
                 .done(function() {
-                    controllerIncludes.push({
-                        key: 'opstools.' + appName + '.' + pageName,
-                        path: 'opstools/' + appName + '/controllers/'
-                            + pageName + '.js'
-                    });
                     next();
                 });
-            
+                */
             },
             
             // Find related objects
