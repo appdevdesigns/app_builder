@@ -19,6 +19,8 @@ module.exports = {
     
     
     /**
+     * Not used
+     *
      * GET /app_builder/requirements
      */
     requirements: function(req, res) {
@@ -177,6 +179,7 @@ module.exports = {
                 })
                 .catch(function(err) {
                     next(err);
+                    return null;
                 });
             },
             
@@ -189,7 +192,7 @@ module.exports = {
                 });
             },
             
-            // Generate all Page controllers
+            // Generate all client side page controllers
             function(next) {
                 async.eachSeries(pageIDs, function(id, ok) {
                     AppBuilder.buildPage(id)
