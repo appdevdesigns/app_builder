@@ -187,9 +187,14 @@ steal(
 									linkToObject: col.linkToObject
 								});
 
-								// checkbox
 								if (mapCol.filter_type === 'checkbox' && self.data.readOnly) {
 									mapCol.disable = true; // TODO : Checkbox read only
+								}
+								else if (mapCol.editor === 'date') {
+									mapCol.format = webix.i18n.dateFormatStr;
+								}
+								else if (mapCol.editor === 'datetime') {
+									mapCol.format = webix.i18n.fullDateFormatStr;
 								}
 
 								// richselect
@@ -279,9 +284,19 @@ steal(
 							var self = this,
 								q = $.Deferred();
 
+							// Get date & datetime columns
+							var dateCols = $.grep(self.dataTable.config.columns, function (c) {
+								return c.editor === 'date' || c.editor === 'datetime';
+							});
+
 							result.forEach(function (r) {
 								if (r.translate)
 									r.translate();
+
+								dateCols.forEach(function (c) {
+									if (r[c.id]) // Convert string to Date object
+										r.attr(c.id, new Date(r[c.id]));
+								});
 							});
 
 							// Get connected columns

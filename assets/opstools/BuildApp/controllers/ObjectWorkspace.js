@@ -720,11 +720,11 @@ steal(
 											.then(function (objectModel) {
 												self.Model.ObjectModel = objectModel;
 
-												// self.Model.ObjectModel.Cached.unbind('refreshData');
-												// self.Model.ObjectModel.Cached.bind('refreshData', function (ev, data) {
-												// 	if (this == self.Model.ObjectModel.Cached)
-												// 		self.controllers.ObjectDataTable.populateDataToDataTable(data.result);
-												// });
+												self.Model.ObjectModel.Cached.unbind('refreshData');
+												self.Model.ObjectModel.Cached.bind('refreshData', function (ev, data) {
+													if (this == self.Model.ObjectModel.Cached)
+														self.controllers.ObjectDataTable.populateDataToDataTable(data.result);
+												});
 
 												next();
 											});

@@ -159,9 +159,12 @@ steal(
 
 										return q;
 									},
-									create: function (obj) { return model.create.call(model.Cached, obj); },
-									update: function (id, saveObj) { return model.update.call(model.Cached, id, saveObj); },
-									destroy: function (id) { return model.destroy.call(model.Cached, id); }
+									create: function (obj) { return model.create(obj); },
+									update: function (id, saveObj) { return model.update(id, saveObj); },
+									destroy: function (id) { return model.destroy(id); }
+									// create: function (obj) { return model.create.call(model.Cached, obj); },
+									// update: function (id, saveObj) { return model.update.call(model.Cached, id, saveObj); },
+									// destroy: function (id) { return model.destroy.call(model.Cached, id); }
 
 								}, {});
 						}

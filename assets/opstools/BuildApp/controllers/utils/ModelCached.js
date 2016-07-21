@@ -341,6 +341,15 @@ steal(function () {
 										}
 									})
 									.then(function (result) {
+										if (!result.translate) {
+											for (var key in saveObj) {
+												if (key === 'id' || key === 'translations' || key === 'createdAt' || key === 'updatedAt')
+													continue;
+
+												result[key] = saveObj[key];
+											}
+										}
+
 										q.resolve(result);
 									});
 							}
