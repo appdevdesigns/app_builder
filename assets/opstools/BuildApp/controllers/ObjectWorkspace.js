@@ -442,8 +442,8 @@ steal(
 										// TODO message
 										$$(self.webixUiId.objectDatatable).hideProgress();
 									})
-									.then(function (data) {
-										$$(self.webixUiId.objectDatatable).remove(data.id);
+									.then(function (resultId) {
+										$$(self.webixUiId.objectDatatable).remove(resultId);
 
 										// TODO message
 

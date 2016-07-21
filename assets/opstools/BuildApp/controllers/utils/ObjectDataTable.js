@@ -79,7 +79,7 @@ steal(
 							self.dataTable = dataTable;
 
 							// Trash
-							if (!self.dataTable.hasEvent('onItemClick')) {
+							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable has select, then it has onItemClick by default
 								self.dataTable.attachEvent("onItemClick", function (id, e, node) {
 									if (e.target.className.indexOf('trash') > 0) {
 										webix.confirm({

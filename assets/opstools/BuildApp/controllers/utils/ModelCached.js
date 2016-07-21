@@ -10,9 +10,6 @@ steal(function () {
 
 						can.Model.setup.apply(self, arguments);
 
-						self.savedIds = []; // [tempId, id, ..., idn]
-						self.deletedIds = [] // [id, ..., idn]
-
 						// setup data
 						if (typeof window.localStorage !== 'undefined') {
 							self._cached = JSON.parse(window.localStorage.getItem(self.cachedKey())) || {};
@@ -40,6 +37,13 @@ steal(function () {
 					cachedKey: function () {
 						return 'cached' + this._shortName;
 					},
+					cacheSavedKey: function () {
+						return this.cachedKey() + '_saved_id';
+					},
+					cacheDeletedKey: function () {
+						return this.cachedKey() + '_deleted_id';
+					},
+
 					cacheClear: function () {
 						window.localStorage.removeItem(this.cachedKey());
 						this._cached = {};
@@ -58,6 +62,19 @@ steal(function () {
 							}
 						});
 						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
+					},
+					cacheSavedIds: function (savedIds) {
+						window.localStorage.setItem(this.cacheSavedKey(), JSON.stringify(savedIds));
+					},
+					cacheDeletedIds: function (deletedIds) {
+						window.localStorage.setItem(this.cacheDeletedKey(), JSON.stringify(deletedIds));
+					},
+
+					getSavedIds: function () {
+						return JSON.parse(window.localStorage.getItem(this.cacheSavedKey())) || []; // [tempId, id, ..., idn]
+					},
+					getDeletedIds: function () {
+						return JSON.parse(window.localStorage.getItem(this.cacheDeletedKey())) || []; // [id, ..., idn]
 					},
 					findAllCached: function (params) {
 						// remove anything not filtering ....
@@ -359,13 +376,19 @@ steal(function () {
 									}
 									else {
 										if (self.isTempId(id)) { // Delete in saved ids list
-											var index = $.inArray(id, self.savedIds);
-											if (index > -1)
-												self.savedIds.splice(index, 1);
+											var savedIds = self.getSavedIds(),
+												index = $.inArray(id, savedIds);
+											if (index > -1) {
+												savedIds.splice(index, 1);
+												self.cacheSavedIds(savedIds);
+											}
 										}
 										else {
-											if ($.inArray(id, self.deletedIds) < 0)
-												self.deletedIds.push(id); // Store in deleted id list
+											var deletedIds = self.getDeletedIds();
+											if ($.inArray(id, deletedIds) < 0) {
+												deletedIds.push(id); // Store in deleted id list
+												self.cacheDeletedIds(deletedIds);
+											}
 										}
 
 										next();
@@ -404,8 +427,11 @@ steal(function () {
 					},
 
 					storeSaveId: function (id) {
-						if ($.inArray(id, this.savedIds) < 0)
-							this.savedIds.push(id);
+						var savedIds = this.getSavedIds();
+						if ($.inArray(id, savedIds) < 0) {
+							savedIds.push(id);
+							this.cacheSavedIds(savedIds);
+						}
 					},
 
 					createNewLocalItem: function (obj) {
@@ -441,9 +467,10 @@ steal(function () {
 					saveInList: function () {
 						var self = this,
 							q = $.Deferred(),
-							saveEvents = [];
+							saveEvents = [],
+							savedIds = self.getSavedIds();
 
-						self.savedIds.forEach(function (id) {
+						savedIds.forEach(function (id) {
 							saveEvents.push(function (next) {
 								self.findOne({ id: id }, true).then(function (result) {
 									if (!result) { // This data was deleted
@@ -459,9 +486,11 @@ steal(function () {
 
 										self.cacheItems([saveResult]);
 
-										var index = $.inArray(id, self.savedIds);
-										if (index > -1)
-											self.savedIds.splice(index, 1);
+										var index = $.inArray(id, savedIds);
+										if (index > -1) {
+											savedIds.splice(index, 1);
+											self.cacheSavedIds(savedIds);
+										}
 
 										next();
 									});
@@ -482,14 +511,17 @@ steal(function () {
 					destroyInList: function () {
 						var self = this,
 							q = $.Deferred(),
-							deleteEvents = [];
+							deleteEvents = [],
+							deletedIds = self.getDeletedIds();
 
-						self.deletedIds.forEach(function (id) {
+						deletedIds.forEach(function (id) {
 							deleteEvents.push(function (next) {
 								self.destroy(id).then(function (result) {
-									var index = $.inArray(id, self.deletedIds);
-									if (index > -1)
-										self.deletedIds.splice(index, 1);
+									var index = $.inArray(id, deletedIds);
+									if (index > -1) {
+										deletedIds.splice(index, 1);
+										self.cacheDeletedIds(deletedIds);
+									}
 
 									next();
 								});
