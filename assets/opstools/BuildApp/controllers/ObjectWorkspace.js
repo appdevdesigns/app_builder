@@ -250,28 +250,6 @@ steal(
 										select: "cell",
 										dragColumn: true,
 										on: {
-											onAfterEditStop: function (state, editor, ignoreUpdate) {
-												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
-
-												self.updateRowData(state, editor, ignoreUpdate)
-													.fail(function (err) {
-														item[editor.column] = state.old;
-														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-														$$(self.webixUiId.objectDatatable).refresh(editor.row);
-
-														// TODO : Message
-
-														$$(self.webixUiId.objectDatatable).hideProgress();
-													})
-													.then(function () {
-														item[editor.column] = state.value;
-														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-
-														// TODO : Message
-
-														$$(self.webixUiId.objectDatatable).hideProgress();
-													});
-											},
 											onBeforeSelect: function (data, preserve) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
 
@@ -318,6 +296,44 @@ steal(
 													return false;
 
 												this.editCell(data.row, data.column);
+											},
+											onCheck: function (row, col, val) { // Update checkbox data
+												var item = $$(self.webixUiId.objectDatatable).getItem(row);
+
+												self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
+													.fail(function (err) {
+														// Rollback
+														item[col] = !val;
+														$$(self.webixUiId.objectDatatable).updateItem(row, item);
+														$$(self.webixUiId.objectDatatable).refresh(row);
+
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													})
+													.then(function () {
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													});
+											},
+											onAfterEditStop: function (state, editor, ignoreUpdate) {
+												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+												self.updateRowData(state, editor, ignoreUpdate)
+													.fail(function (err) {
+														item[editor.column] = state.old;
+														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+														$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+														// TODO : Message
+
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													})
+													.then(function () {
+														item[editor.column] = state.value;
+														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+
+														// TODO : Message
+
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													});
 											},
 											onColumnResize: function (id, newWidth, oldWidth, user_action) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
