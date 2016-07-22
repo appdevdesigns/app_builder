@@ -84,7 +84,7 @@ steal(
 							return q;
 						},
 
-						updateModel(objectName) {
+						updateModel: function(objectName) {
 							if (!objectName) return;
 
 							var self = this,

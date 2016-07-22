@@ -223,25 +223,30 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	width: 100%;
 	position: relative;
 	background-color: #fff;
+	clear: both;
 }
 
 .ab-component-item-name {
-    display: table-cell;
-    font-size: 18px;
-    width: 90px;
-    border-right: 1px solid #ebebeb;
-    vertical-align: top;
-    padding-top: 10px;
-    height: 100%;
-    line-height: 100%;
+	float: left;
+	font-size: 18px;
+	border-right: 1px solid #ebebeb;
+	vertical-align: top;
+	padding-top: 10px;
+	width: 90px;
+	height: 100%;
+	line-height: 100%;
+	margin-bottom: -500em; /* CSS hack: equal height of right float */
+	padding-bottom: 500em;
 }
 
 .ab-component-item-display {
-	display: table-cell;
+	float: right;
 	vertical-align: top;
 	padding: 10px;
+	width: 87%;
 	height: 100%;
 	line-height: 100%;
+	overflow-x: auto;
 }
 
 .ab-component-remove {
