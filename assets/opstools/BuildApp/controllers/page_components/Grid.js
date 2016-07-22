@@ -193,6 +193,7 @@ steal(
 
 									self.controllers.ObjectDataTables[viewId] = new ObjectDataTable();
 									self.controllers.ObjectDataTables[viewId].setApp(self.app);
+									self.controllers.ObjectDataTables[viewId].setReadOnly(true);
 
 									dataTableController = self.controllers.ObjectDataTables[viewId];
 								}

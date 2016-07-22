@@ -187,8 +187,13 @@ steal(
 									linkToObject: col.linkToObject
 								});
 
-								if (mapCol.filter_type === 'checkbox' && self.data.readOnly) {
-									mapCol.disable = true; // TODO : Checkbox read only
+								if (mapCol.filter_type === 'boolean' && self.data.readOnly) { // Checkbox - read only mode
+									mapCol.template = function (obj, common, value) {
+										if (value)
+											return "<div class='webix_icon fa-check-square-o'></div>";
+										else
+											return "<div class='webix_icon fa-square-o'></div>";
+									};
 								}
 								else if (mapCol.editor === 'date') {
 									mapCol.format = webix.i18n.dateFormatStr;
