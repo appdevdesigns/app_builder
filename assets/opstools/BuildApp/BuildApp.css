@@ -202,6 +202,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 .ab-main-container .selectivity-multiple-selected-item {
 	background: #3498db !important;
+	padding-right: 5px;
 	/*max-width: 100px !important;*/
 }
 

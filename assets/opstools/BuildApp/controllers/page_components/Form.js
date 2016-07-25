@@ -205,6 +205,9 @@ steal(
 											else if (c.setting.editor === 'date') {
 												element.view = 'datepicker';
 											}
+											else if (c.setting.editor === 'datetime') {
+												element.view = 'datepicker'; // TODO : include time selector
+											}
 											else if (c.setting.editor === 'richselect') {
 												element.view = 'richselect';
 												element.options = $.map(c.setting.filter_options, function (opt, index) {
@@ -245,7 +248,7 @@ steal(
 
 										$$(viewId).refresh();
 
-										self.controllers.SelectivityHelper.renderSelectivity('ab-form-connect-data');
+										self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
 
 										$('.ab-form-connect-data').click(function () {
 											var item = $(this),

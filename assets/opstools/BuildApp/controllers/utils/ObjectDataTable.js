@@ -103,9 +103,9 @@ steal(
 								});
 							}
 
-							self.dataTable.attachEvent('onAfterRender', function (data) {
+							self.dataTable.attachEvent("onAfterRender", function (data) {
 								// Render selectivity node
-								self.controllers.SelectivityHelper.renderSelectivity('connect-data-values', self.data.readOnly);
+								self.controllers.SelectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
 
 								data.each(function (d) {
 									var maxConnectedDataNum = {};
@@ -182,7 +182,7 @@ steal(
 									id: col.name,
 									dataId: col.id,
 									label: col.label,
-									header: self.getHeader(col),
+									header: self.getHeader(col, self.data.readOnly),
 									weight: col.weight,
 									linkToObject: col.linkToObject
 								});
@@ -224,7 +224,7 @@ steal(
 							self.dataTable.refreshColumns(headers, resetColumns || false);
 						},
 
-						getHeader: function (col) {
+						getHeader: function (col, readOnly) {
 							var self = this,
 								label = col.label;
 
@@ -239,9 +239,16 @@ steal(
 									label += self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
-							return "<div class='ab-object-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-object-data-header-edit fa fa-angle-down'></i></div>"
+							var headerTemplate = "<div class='ab-object-data-header'><span class='webix_icon fa-{0}'></span>{1}{2}</div>"
 								.replace('{0}', col.setting.icon)
 								.replace('{1}', label);
+
+							if (readOnly)
+								headerTemplate = headerTemplate.replace('{2}', '');
+							else
+								headerTemplate = headerTemplate.replace('{2}', "<i class='ab-object-data-header-edit fa fa-angle-down'></i>");
+
+							return headerTemplate;
 						},
 
 						calculateColumnWidth: function (col) {
