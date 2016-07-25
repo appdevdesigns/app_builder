@@ -263,7 +263,7 @@ module.exports = {
         //var modelsPath = sails.config.paths.models;
         var modelsPath = path.join('api', 'models'); // in the submodule
         
-        var fullPath, fullPathTrans;
+        var fullPath, fullPathTrans, clientPath, baseClientPath;
         var cwd = process.cwd();
         
         async.series([
@@ -286,6 +286,8 @@ module.exports = {
                     
                     fullPath = path.join(modelsPath, fullName) + '.js';
                     fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
+                    clientPath = path.join('assets', 'opstools', appName, 'models', fullName + '.js');
+                    baseClientPath = path.join('assets', 'opstools', appName, 'models', 'base', fullName + '.js');
                     
                     next();
                     return null;
@@ -298,7 +300,7 @@ module.exports = {
             // Delete old model definition files
             function(next) {
                 process.chdir(path.join('node_modules', moduleName)); // sails/node_modules/ab_{appName}/
-                async.each([fullPath, fullPathTrans], function(target, ok) {
+                async.each([fullPath, fullPathTrans, clientPath, baseClientPath], function(target, ok) {
                     // Delete file if it exists
                     fs.unlink(target, function(err) {
                         // Ignore errors. If file does not exist, that's fine.
