@@ -459,6 +459,53 @@ module.exports = {
             
             },
             
+            // Prepare additional component metadata
+            function(next) {
+                async.forEachOf(pages, function(page, pageID, pageDone) {
+                    async.each(page.components, function(item, itemDone) {
+                        switch (item.component.toLowerCase()) {
+                            case 'grid':
+                                // Add a `columns` property
+                                item.columns = [];
+                                async.each(item.setting.columns, function(colID, colDone) {
+                                    ABColumn.find({ id: colID })
+                                    .populate('object')
+                                    .populate('translations')
+                                    .then(function(list) {
+                                        if (list && list[0]) {
+                                            item.modelName = appName + '_' + list[0].object.name;
+                                            item.columns.push({
+                                                id: nameFilter(list[0].name),
+                                                header: list[0].translations[0].label
+                                            });
+                                        }
+                                        colDone();
+                                        return null;
+                                    })
+                                    .catch(function(err) {
+                                        colDone(err);
+                                        return null;
+                                    });
+                                }, function(err) {
+                                    if (err) itemDone(err);
+                                    else itemDone();
+                                });
+                                break;
+                            
+                            default:
+                                itemDone();
+                                break;
+                        }
+                    }, function(err) {
+                        if (err) pageDone(err);
+                        else pageDone();
+                    });
+                }, function(err) {
+                    if (err) next(err);
+                    else next();
+                });
+            },
+            
             // Generate the client side controller for the app page
             function(next) {
                 sails.renderView(path.join('app_builder', 'page_controller'), {
