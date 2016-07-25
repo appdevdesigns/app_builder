@@ -5,7 +5,7 @@
 var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
-var reloadTimeLimit = 2 * 1000 * 60; // 2 minutes
+var reloadTimeLimit = 3 * 1000 * 60; // 3 minutes
 
 var cliCommand = path.join(
     process.cwd(),
