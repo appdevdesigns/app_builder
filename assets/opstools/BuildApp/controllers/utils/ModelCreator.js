@@ -61,10 +61,14 @@ steal(
 						},
 
 						getModel: function (objectName) {
-							if (!objectName) return;
+							var q = $.Deferred();
+
+							if (!objectName) {
+								q.reject();
+								return q;
+							}
 
 							var self = this,
-								q = $.Deferred(),
 								formatAppName = self.data.appName.replace('_', '').toLowerCase(),
 								formatObjectName = objectName.replace('_', '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName),
@@ -84,11 +88,15 @@ steal(
 							return q;
 						},
 
-						updateModel: function(objectName) {
-							if (!objectName) return;
+						updateModel: function (objectName) {
+							var q = $.Deferred();
+
+							if (!objectName) {
+								q.reject();
+								return q;
+							}
 
 							var self = this,
-								q = $.Deferred(),
 								formatAppName = self.data.appName.replace('_', '').toLowerCase(),
 								formatObjectName = objectName.replace('_', '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName);
@@ -167,6 +175,47 @@ steal(
 									// destroy: function (id) { return model.destroy.call(model.Cached, id); }
 
 								}, {});
+						},
+
+						addNewColumn: function (objectName, newColumnName) {
+							var self = this,
+								q = $.Deferred();
+
+							self.getModel(objectName)
+								.fail(function (err) { q.reject(err); })
+								.then(function (objectModel) {
+									var newColumnNames = objectModel.Cached.getNewFieldNames();
+
+									if (newColumnNames.indexOf(newColumnName) < 1)
+										newColumnNames.push(newColumnName);
+
+									objectModel.Cached.cacheNewFields(newColumnNames);
+
+									q.resolve();
+								});
+
+							return q;
+						},
+
+						deleteColumn: function (objectName, columnName) {
+							var self = this,
+								q = $.Deferred();
+
+							self.getModel(objectName)
+								.fail(function (err) { q.reject(err); })
+								.then(function (objectModel) {
+									var newColumnNames = objectModel.Cached.getNewFieldNames(),
+										index = newColumnNames.indexOf(columnName);
+
+									if (index > -1) {
+										newColumnNames.splice(index, 1);
+										objectModel.Cached.cacheNewFields(newColumnNames);
+									}
+
+									q.resolve();
+								});
+
+							return q;
 						}
 
 					});

@@ -529,6 +529,11 @@ steal(
 															AD.error.log('Column list : Error delete column', { error: err });
 														})
 														.then(function (data) {
+															var objectName = self.data.object.attr('name');
+
+															// Delete cache
+															self.controllers.ModelCreator.deleteColumn(objectName, data.name);
+
 															// Remove column
 															self.data.columns.forEach(function (c, index) {
 																if (c.name == headerField.id) {
@@ -536,6 +541,13 @@ steal(
 																	return false;
 																}
 															});
+
+															// Remove describe to object model
+															self.controllers.ModelCreator.getModel(objectName)
+																.fail(function (err) { next(err); })
+																.then(function (objectModel) {
+																	delete objectModel.describe()[data.name];
+																});
 
 															self.controllers.ObjectDataTable.bindColumns(self.data.columns, false, true);
 
@@ -792,7 +804,8 @@ steal(
 											newColumn.default = columnInfo.setting.value;
 
 										// Get deferred when save complete
-										var saveDeferred = self.getSaveColumnDeferred(columnInfo, removedListId);
+										var saveDeferred = self.getSaveColumnDeferred(columnInfo, removedListId),
+											objectName = self.data.object.attr('name');
 
 										if (columnInfo.id) { // Update
 											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
@@ -802,26 +815,45 @@ steal(
 											}
 
 											updateColumn.save()
-												.fail(function (err) {
-													saveDeferred.reject(err);
-												})
-												.then(function (data) {
-													if (data.translate) data.translate();
-
-													saveDeferred.resolve(data);
-												});
+												.fail(function (err) { saveDeferred.reject(err); })
+												.then(function (data) { saveDeferred.resolve(data); });
 										}
 										else { // Add new
 											self.Model.ABColumn.Cached.create(newColumn)
-												.fail(function (err) {
-													saveDeferred.reject(err);
-												})
+												.fail(function (err) { saveDeferred.reject(err); })
 												.then(function (data) {
 													if (data.translate) data.translate();
 
-													saveDeferred.resolve(data);
+													// Cache 
+													self.Model.ABColumn.Cached.model(data).created(data);
+
+													async.parallel([
+														function (next) {
+															// Save new columns name to cache
+															self.controllers.ModelCreator.addNewColumn(objectName, data.name)
+																.fail(function (err) { next(err); })
+																.then(function () { next(); });
+														},
+														function (next) {
+															// Add new describe to object model
+															self.controllers.ModelCreator.getModel(objectName)
+																.fail(function (err) { next(err); })
+																.then(function (objectModel) {
+																	objectModel.describe()[data.name] = data.type;
+																	next();
+																});
+														}
+													], function (err) {
+														if (err)
+															saveDeferred.reject(err);
+														else
+															saveDeferred.resolve(data);
+													});
+
 												});
 										}
+
+										return saveDeferred;
 									});
 
 									// Register load label format

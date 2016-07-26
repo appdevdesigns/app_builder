@@ -507,9 +507,11 @@ steal(
 
                                                             // Call callback function
                                                             if (base.saveFieldCallback && base.selectedType) {
-                                                                base.saveFieldCallback(newFieldInfo, self.data.removedListIds);
-                                                                base.resetState();
-                                                                base.hide(); // TODO : if fail, then should not hide
+                                                                base.saveFieldCallback(newFieldInfo, self.data.removedListIds)
+                                                                    .then(function () {
+                                                                        base.resetState();
+                                                                        base.hide();
+                                                                    });
                                                             }
 
                                                         }

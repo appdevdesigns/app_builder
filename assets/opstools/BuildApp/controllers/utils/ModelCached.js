@@ -21,6 +21,10 @@ steal(function () {
 							if (!data.reloading) { // Server has finished reloading
 								async.series([
 									function (next) {
+										self.cacheNewFields([]);
+										next();
+									},
+									function (next) {
 										self.saveInList()
 											.fail(function (err) { next(err); })
 											.then(function () { next(); });
@@ -43,6 +47,9 @@ steal(function () {
 					cacheDeletedKey: function () {
 						return this.cachedKey() + '_deleted_id';
 					},
+					cacheNewFieldKey: function () {
+						return this.cachedKey() + '_new_fields';
+					},
 
 					cacheClear: function () {
 						window.localStorage.removeItem(this.cachedKey());
@@ -64,10 +71,22 @@ steal(function () {
 						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
 					},
 					cacheSavedIds: function (savedIds) {
-						window.localStorage.setItem(this.cacheSavedKey(), JSON.stringify(savedIds));
+						if (savedIds && savedIds.length > 0)
+							window.localStorage.setItem(this.cacheSavedKey(), JSON.stringify(savedIds));
+						else
+							window.localStorage.removeItem(this.cacheSavedKey());
 					},
 					cacheDeletedIds: function (deletedIds) {
-						window.localStorage.setItem(this.cacheDeletedKey(), JSON.stringify(deletedIds));
+						if (deletedIds && deletedIds.length > 0)
+							window.localStorage.setItem(this.cacheDeletedKey(), JSON.stringify(deletedIds));
+						else
+							window.localStorage.removeItem(this.cacheDeletedKey());
+					},
+					cacheNewFields: function (newFieldNames) {
+						if (newFieldNames && newFieldNames.length > 0)
+							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(newFieldNames));
+						else
+							window.localStorage.removeItem(this.cacheNewFieldKey());
 					},
 
 					getSavedIds: function () {
@@ -75,6 +94,9 @@ steal(function () {
 					},
 					getDeletedIds: function () {
 						return JSON.parse(window.localStorage.getItem(this.cacheDeletedKey())) || []; // [id, ..., idn]
+					},
+					getNewFieldNames: function () {
+						return JSON.parse(window.localStorage.getItem(this.cacheNewFieldKey())) || []; // [New_Field_1, ..., New_Field_n]
 					},
 					findAllCached: function (params) {
 						// remove anything not filtering ....
@@ -199,7 +221,25 @@ steal(function () {
 										if (!ignoreCache)
 											self.cacheItems(json);
 
-										list.attr(json, true); // Update cached instances
+										// list.attr(json, true);
+
+										// Update cached instances
+										can.each(json, function (newItem) {
+											var existsItem = list.filter(function (item) { return item[self.fieldId] == newItem[self.fieldId]; });
+
+											if (existsItem && existsItem.length > 0) {
+												existsItem = existsItem[0];
+
+												var propNames = can.Map.keys(newItem);
+
+												propNames.forEach(function (prop) {
+													existsItem.attr(prop, newItem[prop]); // Update value
+												});
+											}
+											else { // Add
+												list.push(newItem);
+											}
+										});
 
 										can.trigger(self, 'refreshData', { result: list });
 									}, this), function () {
@@ -304,7 +344,7 @@ steal(function () {
 									})
 									.then(function (result) { q.resolve(result); });
 							}
-							else { // Store to local repository
+							else { // Save to local repository - update to server when sync
 								var localObj = self.createNewLocalItem(obj);
 
 								q.resolve(localObj);
@@ -319,12 +359,18 @@ steal(function () {
 							var q = new can.Deferred(),
 								self = this,
 								saveObj = {},
-								fieldList = Object.keys(this.describe()).concat(['id', 'translations']);
+								fieldList = Object.keys(self.describe()).concat(['id', 'translations']),
+								hasNewField = false;
 
 							fieldList.forEach(function (key) {
 								if (typeof obj[key] != 'undefined' && obj[key] != null)
 									saveObj[key] = obj[key];
 							});
+
+							// Check has update to new field
+							var isUpdateNew = Object.keys(obj).filter(function (k) { return self.getNewFieldNames().indexOf(k) != -1; });
+							if (isUpdateNew && isUpdateNew.length > 0)
+								hasNewField = true;
 
 							if (AD.comm.isServerReady()) { // Call service to update item
 								update(id, saveObj)
@@ -353,7 +399,8 @@ steal(function () {
 										q.resolve(result);
 									});
 							}
-							else { // System is syncing
+
+							if (hasNewField || !AD.comm.isServerReady()) { // Save to local repository - update to server when sync
 								self.updateLocalItem(id, saveObj)
 									.fail(function (err) { q.reject(err); })
 									.then(function (result) {
