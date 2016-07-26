@@ -54,6 +54,7 @@ steal(
                             for (var id in this.pages) {
                                 var page = this.pages[id];
                                 var rows = [];
+                                
                                 page.components.forEach(function(item) {
                                     switch (item.component.toLowerCase()) {
                                         case 'menu':
@@ -67,6 +68,41 @@ steal(
                                             break;
                                         
                                         case 'grid':
+                                            var gridID = 'abcomponent_' + item.id;
+                                            var model = AD.models.opstools.AB_Protoss[item.modelName];
+                                            rows.push({
+                                                view: 'datatable',
+                                                columns: item.columns,
+                                                id: gridID,
+                                                minHeight: 500,
+                                                on: {
+                                                    onStructureLoad: function() {
+                                                        var grid = this;
+                                                        model.findAll()
+                                                        .then(function(list) {
+                                                            
+                                                            list.forEach(function(l) {
+                                                                l.translate && l.translate();
+                                                            });
+                                                            var data = AD.op.WebixDataCollection(list);
+                                                            grid.sync(data);
+                                                            
+                                                            /*
+                                                            // findAll() produces a Map
+                                                            // Convert to plain array
+                                                            var arr = [];
+                                                            for (var i=0; i<list.length; i++) {
+                                                                var row = list[i];
+                                                                row.translate && row.translate();
+                                                                arr[i] = row;
+                                                            }
+                                                            grid.parse(arr);
+                                                            */
+                                                        });
+                                                        
+                                                    }
+                                                }
+                                            });
                                             break;
                                             
                                         case 'form':

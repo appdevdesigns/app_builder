@@ -5,7 +5,7 @@
 var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
-var reloadTimeLimit = 2 * 1000 * 60; // 2 minutes
+var reloadTimeLimit = 3 * 1000 * 60; // 3 minutes
 
 var cliCommand = path.join(
     process.cwd(),
@@ -263,7 +263,7 @@ module.exports = {
         //var modelsPath = sails.config.paths.models;
         var modelsPath = path.join('api', 'models'); // in the submodule
         
-        var fullPath, fullPathTrans;
+        var fullPath, fullPathTrans, clientPath, baseClientPath;
         var cwd = process.cwd();
         
         async.series([
@@ -286,6 +286,8 @@ module.exports = {
                     
                     fullPath = path.join(modelsPath, fullName) + '.js';
                     fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
+                    clientPath = path.join('assets', 'opstools', appName, 'models', fullName + '.js');
+                    baseClientPath = path.join('assets', 'opstools', appName, 'models', 'base', fullName + '.js');
                     
                     next();
                     return null;
@@ -298,7 +300,7 @@ module.exports = {
             // Delete old model definition files
             function(next) {
                 process.chdir(path.join('node_modules', moduleName)); // sails/node_modules/ab_{appName}/
-                async.each([fullPath, fullPathTrans], function(target, ok) {
+                async.each([fullPath, fullPathTrans, clientPath, baseClientPath], function(target, ok) {
                     // Delete file if it exists
                     fs.unlink(target, function(err) {
                         // Ignore errors. If file does not exist, that's fine.
@@ -455,6 +457,53 @@ module.exports = {
                     }
                 );
             
+            },
+            
+            // Prepare additional component metadata
+            function(next) {
+                async.forEachOf(pages, function(page, pageID, pageDone) {
+                    async.each(page.components, function(item, itemDone) {
+                        switch (item.component.toLowerCase()) {
+                            case 'grid':
+                                // Add a `columns` property
+                                item.columns = [];
+                                async.each(item.setting.columns, function(colID, colDone) {
+                                    ABColumn.find({ id: colID })
+                                    .populate('object')
+                                    .populate('translations')
+                                    .then(function(list) {
+                                        if (list && list[0]) {
+                                            item.modelName = appName + '_' + list[0].object.name;
+                                            item.columns.push({
+                                                id: nameFilter(list[0].name),
+                                                header: list[0].translations[0].label
+                                            });
+                                        }
+                                        colDone();
+                                        return null;
+                                    })
+                                    .catch(function(err) {
+                                        colDone(err);
+                                        return null;
+                                    });
+                                }, function(err) {
+                                    if (err) itemDone(err);
+                                    else itemDone();
+                                });
+                                break;
+                            
+                            default:
+                                itemDone();
+                                break;
+                        }
+                    }, function(err) {
+                        if (err) pageDone(err);
+                        else pageDone();
+                    });
+                }, function(err) {
+                    if (err) next(err);
+                    else next();
+                });
             },
             
             // Generate the client side controller for the app page
