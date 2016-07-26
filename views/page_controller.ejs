@@ -16,6 +16,7 @@ steal(
                         init: function(element, options) {
                             var self = this;
                             options = AD.defaults({
+                                resize_notification: 'opstools.<%- appName %>.<%- pageName %>.resize'
                             }, options);
                             this.options = options;
 
@@ -23,7 +24,7 @@ steal(
                             this._super(element, options);
 
                             this.dataSource = this.options.dataSource;
-                            this.rootPageID = <%- rootPageID %>;
+                            this.rootPageID = this.activePageID = <%- rootPageID %>;
                             this.pages = <%- JSON.stringify(pages) %>;
                             
                             for (var id in this.pages) {
@@ -33,6 +34,18 @@ steal(
                             this.initDOM();
                             webix.ready(function() {
                                 self.initWebix();
+                                self.showPage();
+                            });
+                            
+                            /*
+                            AD.comm.hub.subscribe(this.options.resize_notification, function(message, data) {
+                                console.log(message, data);
+                                self.resize();
+                            });
+                            */
+                            
+                            AD.comm.hub.subscribe('opsportal.resize', function(message, data) {
+                                self.resize();
                             });
                         },
 
@@ -41,11 +54,9 @@ steal(
                         initDOM: function() {
                             var html = '';
                             for (var id in this.pages) {
-                                html += '<div class="abpage" id="' + this.pages[id].domID + '"></div>';
+                                html += '<div class="abpage" id="' + this.pages[id].domID + '" style="display:none"></div>';
                             }
                             this.element.html(html);
-                            
-                            this.showPage();
                         },
                         
                         
@@ -64,6 +75,9 @@ steal(
                                                 click: function(id, ev) {
                                                     self.showPage(id);
                                                 }
+                                            });
+                                            rows.push({
+                                                height: 30
                                             });
                                             break;
                                         
@@ -103,6 +117,9 @@ steal(
                                                     }
                                                 }
                                             });
+                                            rows.push({
+                                                height: 30
+                                            });
                                             break;
                                             
                                         case 'form':
@@ -122,6 +139,15 @@ steal(
                         },
                         
                         
+                        resize: function(data) {
+                            var width = this.element.width();
+                            if (width > 0) {
+                                $('#' + this.pages[this.activePageID].domID).width(width);
+                                this.pages[this.activePageID].webix.adjust();
+                            }
+                        },
+                        
+                        
                         /**
                          * @param integer pageID
                          *      Optional page ID number. Default is to show
@@ -133,7 +159,9 @@ steal(
                             }
                             this.element.find('.abpage').hide();
                             this.element.find('#' + this.pages[pageID].domID).show();
-                            console.log('show page ' + pageID);
+                            this.activePageID = pageID;
+                            this.resize();
+                            
                         },
                         
                         
