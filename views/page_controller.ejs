@@ -36,6 +36,17 @@ steal(
                                 self.initWebix();
                                 self.showPage();
                             });
+                            
+                            /*
+                            AD.comm.hub.subscribe(this.options.resize_notification, function(message, data) {
+                                console.log(message, data);
+                                self.resize();
+                            });
+                            */
+                            
+                            AD.comm.hub.subscribe('opsportal.resize', function(message, data) {
+                                self.resize();
+                            });
                         },
 
 
