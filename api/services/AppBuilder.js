@@ -497,7 +497,7 @@ module.exports = {
                                     .populate('translations')
                                     .then(function(list) {
                                         if (list && list[0]) {
-                                            item.modelName = appName + '_' + list[0].object.name;
+                                            item.modelName = appName + '_' + nameFilter(list[0].object.name);
                                             item.columns.push({
                                                 id: nameFilter(list[0].name),
                                                 header: list[0].translations[0].label
