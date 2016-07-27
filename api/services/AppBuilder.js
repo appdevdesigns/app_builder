@@ -482,6 +482,11 @@ module.exports = {
                                         // New format
                                         colID = col.dataId;
                                     }
+                                    else if (col.id && col.id == 'appbuilder_trash') {
+                                        item.columns.push('trash');
+                                        colDone();
+                                        return;
+                                    }
                                     else {
                                         sails.log('Unexpected column format:', col);
                                         colDone();

@@ -84,6 +84,17 @@ steal(
                                         case 'grid':
                                             var gridID = 'abcomponent_' + item.id;
                                             var model = AD.models.opstools.AB_Protoss[item.modelName];
+                                            // Parse for special columns
+                                            for (var i=0; i<item.columns.length; i++) {
+                                                switch (item.columns[i]) {
+                                                    case 'trash':
+                                                        item.columns[i] = {
+                                                            // TODO: add trash icon here
+                                                        };
+                                                        break;
+                                                }
+                                            }
+                                            // Create datatable definition
                                             rows.push({
                                                 view: 'datatable',
                                                 columns: item.columns,
