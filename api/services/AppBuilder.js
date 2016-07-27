@@ -578,9 +578,9 @@ module.exports = {
                         var obj = list[i];
                         objectIncludes.push({ 
                             key: 'opstools.' + appName + '.' 
-                                    + appName + '_' + obj.name, 
+                                    + appName + '_' + nameFilter(obj.name), 
                             path: 'opstools/' + appName + '/models/'
-                                    + appName + '_' + obj.name + '.js' 
+                                    + appName + '_' + nameFilter(obj.name) + '.js' 
                         });
                     }
                     next();
