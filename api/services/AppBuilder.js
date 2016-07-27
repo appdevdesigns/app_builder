@@ -467,7 +467,26 @@ module.exports = {
                             case 'grid':
                                 // Add a `columns` property
                                 item.columns = [];
-                                async.each(item.setting.columns, function(colID, colDone) {
+                                if (!Array.isArray(item.setting.columns)) {
+                                    sails.log('Unknown `setting` format:', item.setting);
+                                    itemDone();
+                                    return;
+                                }
+                                async.each(item.setting.columns, function(col, colDone) {
+                                    var colID;
+                                    if (typeof col == 'string' || typeof col == 'number') {
+                                        // Old format
+                                        colID = col;
+                                    } 
+                                    else if (col.dataId) {
+                                        // New format
+                                        colID = col.dataId;
+                                    }
+                                    else {
+                                        sails.log('Unexpected column format:', col);
+                                        colDone();
+                                        return;
+                                    }
                                     ABColumn.find({ id: colID })
                                     .populate('object')
                                     .populate('translations')
