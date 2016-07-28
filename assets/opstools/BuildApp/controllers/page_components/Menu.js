@@ -117,11 +117,13 @@ steal(
 
 								var view = $.extend(true, {}, self.getView());
 								view.id = viewId;
+								view.layout = settings.layout || 'x';
 
 								if (settings.data)
 									view.data = settings.data;
 
-								view.layout = settings.layout || 'x';
+								if (settings.click)
+									view.click = settings.click;
 
 								webix.ui(view, $$(viewId));
 							};

@@ -92,6 +92,7 @@ steal(
 
                                     html += '<div class="abpage" id="' + page.domID + '" style="display:none">';
 
+                                    page.components.sort(function (a, b) { return a.weight - b.weight });
                                     page.components.forEach(function(item) {
                                         html += '<div id="' + page.domID + '-component-' + item.id + '"></div>';
                                         html += '<div style="height: 30px;"></div>';
@@ -121,7 +122,6 @@ steal(
                                         minWidth: 300
                                     });
 
-                                    page.components.sort(function (a, b) { return a.weight - b.weight });
                                     page.components.forEach(function (item) {
                                         var component = self.components[item.component],
                                             view = component.getView();
@@ -135,10 +135,11 @@ steal(
                                             view.container = view.id;
                                             view.autowidth = true;
 
-                                            if (item.component === 'Menu')
-                                                view.click = function(id, ev) {
+                                            if (item.component === 'Menu') {
+                                                item.setting.click = function(id, ev) {
                                                     self.showPage(id);
                                                 };
+                                            }
 
                                             $('#' + view.id).html('');
 
