@@ -203,7 +203,7 @@ steal(
 								return dataTableController;
 							};
 
-							self.render = function (viewId, settings, selectAll) {
+							self.render = function (viewId, settings) {
 								var q = $.Deferred(),
 									data = self.getData(viewId);
 

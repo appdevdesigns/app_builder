@@ -6,191 +6,194 @@ steal(
     // List your Controller's dependencies here:
     
     function() {
-        System.import('appdev').then(function() {
-            steal.import('appdev/ad',
-                'appdev/control/control').then(function() {
-                    // Namespacing conventions:
-                    // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-                    AD.Control.extend('opstools.<%- appName %>.<%- pageName %>', {
+        System.import('appdev').then(function () {
+            System.import('opstools/BuildApp').then(function () {
+                steal.import('appdev/ad',
+                    'appdev/control/control',
 
-                        init: function(element, options) {
-                            var self = this;
-                            options = AD.defaults({
-                                resize_notification: 'opstools.<%- appName %>.<%- pageName %>.resize'
-                            }, options);
-                            this.options = options;
+                    'opstools/BuildApp/controllers/page_components/Menu',
+                    'opstools/BuildApp/controllers/page_components/Grid',
+                    'opstools/BuildApp/controllers/page_components/Form'
+                    ).then(function() {
+                        // Namespacing conventions:
+                        // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
+                        AD.Control.extend('opstools.<%- appName %>.<%- pageName %>', {
 
-                            // Call parent init
-                            this._super(element, options);
+                            init: function(element, options) {
+                                var self = this;
+                                options = AD.defaults({
+                                    resize_notification: 'opstools.<%- appName %>.<%- pageName %>.resize'
+                                }, options);
+                                this.options = options;
 
-                            this.dataSource = this.options.dataSource;
-                            this.rootPageID = this.activePageID = <%- rootPageID %>;
-                            this.pages = <%- JSON.stringify(pages) %>;
-                            
-                            for (var id in this.pages) {
-                                this.pages[id].domID = '<%- domID() %>' + id;
-                            }
-                            
-                            this.initDOM();
-                            webix.ready(function() {
-                                self.initWebix();
-                                self.showPage();
-                            });
-                            
-                            /*
-                            AD.comm.hub.subscribe(this.options.resize_notification, function(message, data) {
-                                console.log(message, data);
-                                self.resize();
-                            });
-                            */
-                            
-                            AD.comm.hub.subscribe('opsportal.resize', function(message, data) {
-                                self.resize();
-                            });
-                        },
+                                // Call parent init
+                                this._super(element, options);
 
-
-
-                        initDOM: function() {
-                            var html = '';
-                            for (var id in this.pages) {
-                                html += '<div class="abpage" id="' + this.pages[id].domID + '" style="display:none"></div>';
-                            }
-                            this.element.html(html);
-                        },
-                        
-                        
-                        initWebix: function() {
-                            var self = this;
-                            for (var id in this.pages) {
-                                var page = this.pages[id];
-                                var rows = [];
+                                this.dataSource = this.options.dataSource;
+                                this.rootPageID = this.activePageID = <%- rootPageID %>;
+                                this.pages = <%- JSON.stringify(pages) %>;
                                 
-                                page.components.forEach(function(item) {
-                                    switch (item.component.toLowerCase()) {
-                                        case 'menu':
-                                            rows.push({
-                                                view: 'menu',
-                                                data: item.setting.data,
-                                                click: function(id, ev) {
+                                for (var id in this.pages) {
+                                    this.pages[id].domID = '<%- domID() %>' + id;
+                                }
+
+                                this.initControllers();
+                                this.initComponents();
+
+                                this.initDOM();
+                                webix.ready(function() {
+                                    self.initWebix();
+                                    self.showPage();
+                                });
+                                
+                                /*
+                                AD.comm.hub.subscribe(this.options.resize_notification, function(message, data) {
+                                    console.log(message, data);
+                                    self.resize();
+                                });
+                                */
+                                
+                                AD.comm.hub.subscribe('opsportal.resize', function(message, data) {
+                                    self.resize();
+                                });
+                            },
+
+
+
+                            initControllers: function() {
+                                this.controllers = {};
+
+                                var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
+                                    Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
+                                    Form = AD.Control.get('opstools.BuildApp.Components.Form');
+
+                                this.controllers.Menu = new Menu(self.element, {});
+                                this.controllers.Grid = new Grid(self.element, {});
+                                this.controllers.Form = new Form(self.element, {});
+                            },
+
+
+                            initComponents: function () {
+                                var self = this;
+                                self.components = {};
+
+                                self.components.Menu = self.controllers.Menu.getInstance();
+                                self.components.Grid = self.controllers.Grid.getInstance();
+                                self.components.Form = self.controllers.Form.getInstance();
+                            },
+
+
+                            initDOM: function () {
+                                var self = this,
+                                    html = '';
+
+                                for (var id in this.pages) {
+                                    var page = this.pages[id];
+
+                                    html += '<div class="abpage" id="' + page.domID + '" style="display:none">';
+
+                                    page.components.forEach(function(item) {
+                                        html += '<div id="' + page.domID + '-component-' + item.id + '"></div>';
+                                        html += '<div style="height: 30px;"></div>';
+                                    });
+
+                                    html += '</div>';
+                                }
+                                this.element.html(html);
+                            },
+
+
+                            initWebix: function () {
+                                var self = this,
+                                    app;
+
+                                for (var id in this.pages) {
+                                    var page = this.pages[id];
+                                    var rows = [];
+
+                                    if (page.application && typeof page.application === 'object')
+                                        app = page.application;
+
+                                    page.webix = webix.ui({
+                                        container: page.domID,
+                                        view: 'layout',
+                                        rows: [],
+                                        minWidth: 300
+                                    });
+
+                                    page.components.sort(function (a, b) { return a.weight - b.weight });
+                                    page.components.forEach(function (item) {
+                                        var component = self.components[item.component],
+                                            view = component.getView();
+
+                                        if (component.setApp && app)
+                                            component.setApp(app);
+
+                                        if (view && component.render && item.setting) {
+                                            view = $.extend(true, {}, view);
+                                            view.id = page.domID + '-component-' + item.id;
+                                            view.container = view.id;
+                                            view.autowidth = true;
+
+                                            if (item.component === 'Menu')
+                                                view.click = function(id, ev) {
                                                     self.showPage(id);
-                                                }
-                                            });
-                                            rows.push({
-                                                height: 30
-                                            });
-                                            break;
-                                        
-                                        case 'grid':
-                                            var gridID = 'abcomponent_' + item.id;
-                                            var model = AD.models.opstools.<%- appName %>[item.modelName];
-                                            // Parse for special columns
-                                            for (var i=0; i<item.columns.length; i++) {
-                                                switch (item.columns[i]) {
-                                                    case 'trash':
-                                                        item.columns[i] = {
-                                                            // TODO: add trash icon here
-                                                        };
-                                                        break;
-                                                }
-                                            }
-                                            // Create datatable definition
-                                            rows.push({
-                                                view: 'datatable',
-                                                columns: item.columns,
-                                                id: gridID,
-                                                minHeight: 500,
-                                                on: {
-                                                    onStructureLoad: function() {
-                                                        var grid = this;
-                                                        model.findAll()
-                                                        .then(function(list) {
-                                                            
-                                                            list.forEach(function(l) {
-                                                                l.translate && l.translate();
-                                                            });
-                                                            var data = AD.op.WebixDataCollection(list);
-                                                            grid.sync(data);
-                                                            
-                                                            /*
-                                                            // findAll() produces a Map
-                                                            // Convert to plain array
-                                                            var arr = [];
-                                                            for (var i=0; i<list.length; i++) {
-                                                                var row = list[i];
-                                                                row.translate && row.translate();
-                                                                arr[i] = row;
-                                                            }
-                                                            grid.parse(arr);
-                                                            */
-                                                        });
-                                                        
-                                                    }
-                                                }
-                                            });
-                                            rows.push({
-                                                height: 30
-                                            });
-                                            break;
-                                            
-                                        case 'form':
-                                            break;
-                                    }
-                                });
-                                
-                                page.webix = webix.ui({
-                                    container: page.domID,
-                                    view: 'layout',
-                                    rows: rows,
-                                    minWidth: 300
-                                });
-                                
-                            };
+                                                };
+
+                                            $('#' + view.id).html('');
+
+                                            webix.ui(view);
+
+                                            component.render(view.id, item.setting);
+                                        }
+                                    });
+
+                                };
+
+                            },
                             
-                        },
-                        
-                        
-                        resize: function(data) {
-                            var width = this.element.width();
-                            if (width > 0) {
-                                $('#' + this.pages[this.activePageID].domID).width(width);
-                                this.pages[this.activePageID].webix.adjust();
-                            }
-                        },
-                        
-                        
-                        /**
-                         * @param integer pageID
-                         *      Optional page ID number. Default is to show
-                         *      the root page.
-                         */
-                        showPage: function(pageID) {
-                            if (typeof pageID == 'undefined') {
-                                pageID = this.rootPageID;
-                            }
-                            this.element.find('.abpage').hide();
-                            this.element.find('#' + this.pages[pageID].domID).show();
-                            this.activePageID = pageID;
-                            this.resize();
                             
-                        },
-                        
-                        
-                        /**
-                         * Returns a basic object containing the names of all
-                         * the pages from this controller, indexed by their
-                         * page ID number.
-                         */
-                        getPages: function() {
-                            var result = {};
-                            for (var id in this.pages) {
-                                result[id] = pages[id].name;
+                            resize: function(data) {
+                                var width = this.element.width();
+                                if (width > 0) {
+                                    $('#' + this.pages[this.activePageID].domID).width(width);
+                                    this.pages[this.activePageID].webix.adjust();
+                                }
+                            },
+                            
+                            
+                            /**
+                            * @param integer pageID
+                            *      Optional page ID number. Default is to show
+                            *      the root page.
+                            */
+                            showPage: function(pageID) {
+                                if (typeof pageID == 'undefined') {
+                                    pageID = this.rootPageID;
+                                }
+                                this.element.find('.abpage').hide();
+                                this.element.find('#' + this.pages[pageID].domID).show();
+                                this.activePageID = pageID;
+                                this.resize();
+                                
+                            },
+                            
+                            
+                            /**
+                            * Returns a basic object containing the names of all
+                            * the pages from this controller, indexed by their
+                            * page ID number.
+                            */
+                            getPages: function() {
+                                var result = {};
+                                for (var id in this.pages) {
+                                    result[id] = pages[id].name;
+                                }
                             }
-                        }
+
+                        });
 
                     });
-
-                });
+              });
         });
-
     });
