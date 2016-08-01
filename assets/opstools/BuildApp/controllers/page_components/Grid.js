@@ -442,8 +442,8 @@ steal(
 
 								var columns = data.columns.filter(function (c) {
 									return data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
-								});
-								if (columns.length < 1) columns = data.columns // Show all
+								}).slice(0);
+								if (columns.length < 1) columns = data.columns.slice(0); // Show all
 
 
 								if (editValue.editPage && editValue.editForm) {
