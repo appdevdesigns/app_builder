@@ -292,50 +292,50 @@ steal(
 												value: "Save",
 												width: 90,
 												inputWidth: 80,
-												on: {
-													onItemClick: function (id, e) {
-														var formView = this.getTopParentView();
-														$$(formView).showProgress({ type: "icon" });
+												disabled: true,
+												click: function () {
+													$$(self.componentIds.saveButton).disable();
 
-														var data = self.getData(viewId),
-															modelData;
+													var formView = this.getTopParentView();
+													$$(formView).showProgress({ type: "icon" });
 
-														async.series([
-															function (next) {
-																self.getModelData(data.objectId, data.modelDataId)
-																	.fail(function (err) { next(err) })
-																	.then(function (result) {
-																		modelData = result;
-																		next();
-																	})
-															},
-															function (next) {
-																var editValues = $$(formView).getValues(),
-																	keys = Object.keys(editValues);
+													var data = self.getData(viewId),
+														modelData;
 
-																keys.forEach(function (k) {
-																	modelData.attr(k, editValues[k]);
+													async.series([
+														function (next) {
+															self.getModelData(data.objectId, data.modelDataId)
+																.fail(function (err) { next(err) })
+																.then(function (result) {
+																	modelData = result;
+																	next();
+																})
+														},
+														function (next) {
+															var editValues = $$(formView).getValues(),
+																keys = Object.keys(editValues);
+
+															keys.forEach(function (k) {
+																modelData.attr(k, editValues[k]);
+															});
+
+															modelData.save()
+																.fail(function (err) { next(err); })
+																.then(function (result) {
+																	next();
 																});
+														},
+														function (next) {
+															$$(formView).setValues({});
+															$$(formView).hideProgress();
 
-																modelData.save()
-																	.fail(function (err) { next(err); })
-																	.then(function (result) {
-																		next();
-																	});
-															},
-															function (next) {
-																$$(formView).setValues({});
-																$$(formView).hideProgress();
+															var events = self.getEvent(viewId);
+															if (events.save)
+																events.save(data.modelDataId);
 
-																var events = self.getEvent(viewId);
-																if (events.save)
-																	events.save(id);
-
-																next();
-															}
-														]);
-
-													}
+															next();
+														}
+													]);
 												}
 											});
 										}
@@ -347,18 +347,17 @@ steal(
 												value: "Cancel",
 												width: 90,
 												inputWidth: 80,
-												on: {
-													onItemClick: function (id, e) {
-														$$(this.getTopParentView()).setValues({});
+												click: function () {
+													$$(self.componentIds.saveButton).disable();
+													$$(this.getTopParentView()).setValues({});
 
-														var data = self.getData(viewId),
-															events = self.getEvent(viewId);
+													var data = self.getData(viewId),
+														events = self.getEvent(viewId);
 
-														data.modelDataId = null;
+													data.modelDataId = null;
 
-														if (events.cancel)
-															events.cancel(id);
-													}
+													if (events.cancel)
+														events.cancel();
 												}
 											});
 										}
@@ -418,6 +417,7 @@ steal(
 										$$(viewId).setValues(result.attr());
 
 										$$(viewId).hideProgress();
+										$$(self.componentIds.saveButton).enable();
 									});
 							};
 

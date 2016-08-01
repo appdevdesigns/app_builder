@@ -145,11 +145,11 @@ steal(
 											template: function (data, dataValue) {
 												var selectedEditForm = $.grep(data.options, function (opt) { return opt.id == dataValue; });
 												if (selectedEditForm && selectedEditForm.length > 0) {
-													
+
 													return selectedEditForm[0].value;
 												}
 												else {
-													
+
 													return "[none]";
 												}
 											}
@@ -183,7 +183,7 @@ steal(
 													break;
 												case 'editForm':
 												case 'removable':
-													var editValue = propertyValues.editForm ? propertyValues.editForm.split('|') : null;
+													var editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
 
 													self.renderDataTable(viewId, propertyValues.object, {
 														editPage: editValue ? editValue[0] : null,
