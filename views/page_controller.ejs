@@ -43,6 +43,7 @@ steal(
                                 this.initDOM();
                                 webix.ready(function() {
                                     self.initWebix();
+                                    self.initEvents();
                                     self.showPage();
                                 });
                                 
@@ -83,6 +84,47 @@ steal(
                             },
 
 
+                            initEvents: function(){
+                                var self = this;
+                                
+                                for (var id in this.pages) {
+                                    var page = this.pages[id],
+                                        gridDatas = page.components.filter(function (c) { return c.component === 'Grid'; }),
+                                        formDatas = page.components.filter(function (c) { return c.component === 'Form'; });
+
+                                    gridDatas.forEach(function (grid) {
+                                        var viewId =  self.getComponentId(page.domID, grid.id);
+
+                                        if (grid.setting.object && grid.setting.editPage && grid.setting.editForm) {
+                                            self.components.Grid.registerEditEvent(viewId, function (selectedData) {
+                                                // Go to edit page
+                                                self.showPage(grid.setting.editPage);
+
+                                                // Populate data to edit form
+                                                var formViewId = self.getComponentId('<%- domID() %>' + grid.setting.editPage, grid.setting.editForm);
+                                                self.components.Form.populateData(formViewId, grid.setting.object, selectedData.row);
+
+                                                // Register form's save event
+                                                self.components.Form.registerSaveEvent(formViewId, function () {
+                                                    self.showPage(grid.page);
+
+                                                    // Refresh grids
+                                                    self.renderComponent(self.pages[grid.page], grid); // Refresh grids
+                                                });
+
+                                                
+                                                // Register form's cancel event
+                                                self.components.Form.registerCancelEvent(formViewId, function () {
+                                                    self.showPage(grid.page);
+                                                });
+                                            });
+                                        }
+                                    });
+                                }
+
+                            },
+
+
                             initDOM: function () {
                                 var self = this,
                                     html = '';
@@ -94,7 +136,7 @@ steal(
 
                                     page.components.sort(function (a, b) { return a.weight - b.weight });
                                     page.components.forEach(function(item) {
-                                        html += '<div id="' + page.domID + '-component-' + item.id + '"></div>';
+                                        html += '<div id="' + self.getComponentId(page.domID, item.id) + '"></div>';
                                         html += '<div style="height: 30px;"></div>';
                                     });
 
@@ -112,9 +154,6 @@ steal(
                                     var page = this.pages[id];
                                     var rows = [];
 
-                                    if (page.application && typeof page.application === 'object')
-                                        app = page.application;
-
                                     page.webix = webix.ui({
                                         container: page.domID,
                                         view: 'layout',
@@ -123,37 +162,47 @@ steal(
                                     });
 
                                     page.components.forEach(function (item) {
-                                        var component = self.components[item.component],
-                                            view = component.getView();
-
-                                        if (component.setApp && app)
-                                            component.setApp(app);
-
-                                        if (view && component.render && item.setting) {
-                                            view = $.extend(true, {}, view);
-                                            view.id = page.domID + '-component-' + item.id;
-                                            view.container = view.id;
-                                            view.autowidth = true;
-
-                                            if (item.component === 'Menu') {
-                                                item.setting.click = function(id, ev) {
-                                                    self.showPage(id);
-                                                };
-                                            }
-
-                                            $('#' + view.id).html('');
-
-                                            webix.ui(view);
-
-                                            component.render(view.id, item.setting);
-                                        }
+                                        self.renderComponent(page, item);
                                     });
 
                                 };
 
                             },
-                            
-                            
+
+
+                            renderComponent: function(page, item) {
+                                var self = this,
+                                    component = self.components[item.component],
+                                    view = component.getView(),
+                                    app;
+
+                                if (page.application && typeof page.application === 'object')
+                                    app = page.application;
+
+                                if (component.setApp && app)
+                                    component.setApp(app);
+
+                                if (view && component.render && item.setting) {
+                                    view = $.extend(true, {}, view);
+                                    view.id = self.getComponentId(page.domID, item.id);
+                                    view.container = view.id;
+                                    view.autowidth = true;
+
+                                    if (item.component === 'Menu') {
+                                        item.setting.click = function(id, ev) {
+                                            self.showPage(id);
+                                        };
+                                    }
+
+                                    $('#' + view.id).html('');
+
+                                    webix.ui(view);
+
+                                    component.render(view.id, item.setting);
+                                }
+                            },
+
+
                             resize: function(data) {
                                 var width = this.element.width();
                                 if (width > 0) {
@@ -190,6 +239,10 @@ steal(
                                 for (var id in this.pages) {
                                     result[id] = pages[id].name;
                                 }
+                            },
+
+                            getComponentId: function(pageId, itemId) {
+                                return pageId + '-component-' + itemId;
                             }
 
                         });

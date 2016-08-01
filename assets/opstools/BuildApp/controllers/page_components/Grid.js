@@ -29,6 +29,7 @@ steal(
 							self.Model = {
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
+								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
 								ObjectModels: {}
 							};
 
@@ -90,7 +91,7 @@ steal(
 														'onChange': function (newv, oldv) {
 															var item_id = this.config.$masterId,
 																data = self.getData(viewId),
-																object = $$(self.componentIds.propertyView).getValues().object;
+																propertyValues = $$(self.componentIds.propertyView).getValues();
 
 															if (this.getValue()) // Check
 																data.visibleColumns.push(item_id);
@@ -101,7 +102,10 @@ steal(
 																	data.visibleColumns.splice(index, 1);
 															}
 
-															self.renderDataTable(viewId, object);
+															self.renderDataTable(viewId, propertyValues.object, {
+																editPage: propertyValues.editPage,
+																editForm: propertyValues.editForm
+															});
 														}
 													}
 												}
@@ -133,15 +137,31 @@ steal(
 											}
 										},
 										{ label: "Data table", type: "label" },
-										// { label: "Editable", type: "checkbox" }, // TODO
+										{
+											id: 'editForm',
+											name: 'editForm',
+											label: "Edit form",
+											type: 'richselect',
+											template: function (data, dataValue) {
+												var selectedEditForm = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+												if (selectedEditForm && selectedEditForm.length > 0) {
+													
+													return selectedEditForm[0].value;
+												}
+												else {
+													
+													return "[none]";
+												}
+											}
+										},
 										{
 											id: 'removable',
 											name: 'removable',
 											type: 'richselect',
 											label: 'Removable',
 											options: [
-												{ id: 'enable', value: "True" },
-												{ id: 'disable', value: "False" },
+												{ id: 'enable', value: "Yes" },
+												{ id: 'disable', value: "No" },
 											]
 										},
 										// { label: "Add new row", type: "checkbox" }  // TODO
@@ -161,8 +181,14 @@ steal(
 
 													self.populateSettings(settings, true);
 													break;
+												case 'editForm':
 												case 'removable':
-													self.renderDataTable(viewId, propertyValues.object, propertyValues.removable);
+													var editValue = propertyValues.editForm ? propertyValues.editForm.split('|') : null;
+
+													self.renderDataTable(viewId, propertyValues.object, {
+														editPage: editValue ? editValue[0] : null,
+														editForm: editValue ? editValue[1] : null
+													}, propertyValues.removable);
 													break;
 											}
 										}
@@ -205,7 +231,8 @@ steal(
 
 							self.render = function (viewId, settings) {
 								var q = $.Deferred(),
-									data = self.getData(viewId);
+									data = self.getData(viewId),
+									dataTableController = self.getDataTableController(viewId);
 
 								webix.extend($$(viewId), webix.ProgressBar);
 								$$(viewId).clearAll();
@@ -229,7 +256,7 @@ steal(
 
 												self.objects = result;
 
-												self.getDataTableController(viewId).setObjectList(self.objects);
+												dataTableController.setObjectList(self.objects);
 
 												// Set object data model
 												var object = $.grep(self.objects.attr(), function (obj) { return obj.id == settings.object; })[0];
@@ -272,7 +299,10 @@ steal(
 										return;
 									}
 
-									self.renderDataTable(viewId, settings.object, settings.removable);
+									self.renderDataTable(viewId, settings.object, {
+										editPage: settings.editPage,
+										editForm: settings.editForm
+									}, settings.removable);
 									$$(viewId).hideProgress();
 
 									q.resolve();
@@ -302,10 +332,15 @@ steal(
 
 							self.getSettings = function () {
 								var propertyValues = $$(self.componentIds.propertyView).getValues(),
-									columns = $.map($$(self.componentIds.editDataTable).config.columns, function (c) { return [c.dataId]; });
+									columns = $.map($$(self.componentIds.editDataTable).config.columns, function (c) { return [c.dataId]; }),
+									editForm = propertyValues.editForm.split('|') || null,
+									editPageId = editForm[0],
+									editFormId = editForm[1];
 
 								var settings = {
 									object: propertyValues.object,
+									editPage: editPageId,
+									editForm: editFormId,
 									columns: columns.filter(function (c) { return c; }),
 									removable: propertyValues.removable
 								};
@@ -322,53 +357,116 @@ steal(
 									data = self.getData(viewId);
 
 								// Render dataTable component
-								self.render(viewId, settings, selectAll).then(function () {
+								self.render(viewId, settings).then(function () {
 									// Columns list
 									self.bindColumnList(viewId, settings.object);
 									$$(self.componentIds.columnList).hideProgress();
 
 									// Properties
+									async.series([
+										function (next) {
+											// Data source - Object
+											var item = $$(self.componentIds.propertyView).getItem('object');
+											item.options = $.map(self.objects, function (o) {
+												return {
+													id: o.id,
+													value: o.label
+												};
+											});
 
-									// Data source - Object
-									var item = $$(self.componentIds.propertyView).getItem('object');
-									item.options = $.map(self.objects, function (o) {
-										return {
-											id: o.id,
-											value: o.label
-										};
-									});
+											next();
+										},
+										function (next) {
+											// Data table - Edit form
+											var parentId = settings.page.parent ? settings.page.parent.attr('id') : settings.page.attr('id');
 
-									// Set property values
-									$$(self.componentIds.propertyView).setValues({
-										object: settings.object,
-										removable: settings.removable || 'disable'
-									});
+											self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+												.fail(function (err) { next(err); })
+												.then(function (pages) {
+													var formComponents = [];
 
-									$$(self.componentIds.propertyView).refresh();
+													pages.forEach(function (p) {
+														if (p.translate)
+															p.translate();
+
+														// Filter form components
+														var forms = p.components.filter(function (c) {
+															return c.component === "Form" && c.setting && settings && c.setting.object === settings.object;
+														});
+
+														if (forms && forms.length > 0) {
+															formComponents = formComponents.concat($.map(forms, function (f) {
+																return [{
+																	id: p.id + '|' + f.id,
+																	value: p.label + ' - ' + f.component
+																}];
+															}));
+														}
+													});
+
+													var editFormItem = $$(self.componentIds.propertyView).getItem('editForm');
+													editFormItem.options = formComponents;
+													editFormItem.options.splice(0, 0, {
+														id: null,
+														value: '[none]'
+													});
+
+													next();
+												});
+										},
+										function (next) {
+											// Set property values
+											var editForm;
+											if (settings.editPage && settings.editForm)
+												editForm = settings.editPage + '|' + settings.editForm;
+
+											$$(self.componentIds.propertyView).setValues({
+												object: settings.object,
+												editForm: editForm,
+												removable: settings.removable || 'disable'
+											});
+
+											$$(self.componentIds.propertyView).refresh();
+										}
+									]);
 
 								});
 							};
 
-							self.renderDataTable = function (viewId, objectId, includeTrash) {
+							self.renderDataTable = function (viewId, objectId, editValue, isTrashVisible) {
 								var data = self.getData(viewId);
 
 								if (!data.columns) return;
 
 								var propertyValues = $$(self.componentIds.propertyView).getValues();
 
-								if (typeof includeTrash === 'undefined' || includeTrash === null) {
-									includeTrash = propertyValues.removable;
-								};
-
-								includeTrash = includeTrash === 'enable'; // Convert to boolean
-
 								var columns = data.columns.filter(function (c) {
 									return data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
 								});
-
 								if (columns.length < 1) columns = data.columns // Show all
 
-								self.getDataTableController(viewId).bindColumns(columns, true, includeTrash);
+
+								if (editValue.editPage && editValue.editForm) {
+									columns.push({
+										width: 45,
+										setting: {
+											id: "appbuilder_go_to_edit_form",
+											header: "",
+											label: "",
+											template: "<span class='go-to-edit-form'>{common.editIcon()}</span>",
+											css: { 'text-align': 'center' }
+										}
+									});
+								}
+
+
+								if (typeof isTrashVisible === 'undefined' || isTrashVisible === null)
+									isTrashVisible = propertyValues.removable;
+
+								isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
+
+
+								self.getDataTableController(viewId).bindColumns(columns, true, isTrashVisible);
 								self.populateData(viewId, objectId);
 							};
 
@@ -398,6 +496,14 @@ steal(
 							self.editStop = function () {
 								$$(self.componentIds.propertyView).editStop();
 							};
+
+							self.registerEditEvent = function (viewId, editEvent) {
+								self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
+									if (e.target.className.indexOf('fa-pencil') > -1) {
+										editEvent(id);
+									}
+								});
+							}
 						},
 
 						populateData: function (viewId, objectId) {

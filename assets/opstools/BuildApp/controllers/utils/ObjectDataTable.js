@@ -20,6 +20,8 @@ steal(
 							self.data = {};
 							self.data.objectList = [];
 
+							self.events = {};
+
 							self.initMultilingualLabels();
 							self.initControllers();
 							self.initEvents();
@@ -59,7 +61,7 @@ steal(
 							var self = this;
 
 							self.controllers.SelectivityHelper.on(self.options.changedSelectivityEvent, function (event, data) {
-								if (self.changeSelectivityItem) {
+								if (self.events.changeSelectivityItem) {
 									var result = {};
 									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
 									result.columnId = self.dataTable.columnId(result.columnIndex);
@@ -68,7 +70,7 @@ steal(
 									result.item = self.dataTable.getItem(result.rowId);
 									result.itemData = result.item[result.columnId];
 
-									self.changeSelectivityItem(data.event, result);
+									self.events.changeSelectivityItem(data.event, result);
 								}
 							});
 
@@ -81,7 +83,7 @@ steal(
 							// Trash
 							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable has select, then it has onItemClick by default
 								self.dataTable.attachEvent("onItemClick", function (id, e, node) {
-									if (e.target.className.indexOf('trash') > 0) {
+									if (e.target.className.indexOf('trash') > -1) {
 										webix.confirm({
 											title: self.labels.confirmDeleteRowTitle,
 											ok: self.labels.common.yes,
@@ -89,8 +91,8 @@ steal(
 											text: self.labels.confirmDeleteRowMessage,
 											callback: function (result) {
 												if (result) {
-													if (self.deleteRow)
-														self.deleteRow(id);
+													if (self.events.deleteRow)
+														self.events.deleteRow(id);
 												}
 
 												if (self.dataTable.unselectAll)
@@ -99,6 +101,10 @@ steal(
 												return true;
 											}
 										});
+									}
+									else {
+										if (self.events.itemClick)
+											self.events.itemClick(id, e, node);
 									}
 								});
 							}
@@ -147,12 +153,16 @@ steal(
 							this.data.readOnly = readOnly;
 						},
 
+						registerItemClick: function (itemClick) {
+							this.events.itemClick = itemClick;
+						},
+
 						registerChangeSelectivityItem: function (changeSelectivityItem) {
-							this.changeSelectivityItem = changeSelectivityItem;
+							this.events.changeSelectivityItem = changeSelectivityItem;
 						},
 
 						registerDeleteRowHandler: function (deleteRow) {
-							this.deleteRow = deleteRow;
+							this.events.deleteRow = deleteRow;
 						},
 
 						bindColumns: function (columns, resetColumns, addTrashColumn) {
@@ -252,9 +262,12 @@ steal(
 						},
 
 						calculateColumnWidth: function (col) {
+							if (col.width > 0) return col.width;
+
 							var self = this,
 								charWidth = 7,
-								width = (col.label.length * charWidth) + 80;
+								charLength = col.label ? col.label.length : 0,
+								width = (charLength * charWidth) + 80;
 
 							if (col.linkToObject) {// Connect to... label
 								var object = self.data.objectList.filter(function (o) {

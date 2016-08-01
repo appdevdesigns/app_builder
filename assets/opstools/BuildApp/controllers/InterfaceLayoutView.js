@@ -82,6 +82,40 @@ steal(
 							};
 						},
 
+						initEvents: function () {
+							var self = this,
+								gridDatas = self.data.componentsInPage.filter(function (c) { return c.component === 'Grid'; }),
+								formDatas = self.data.componentsInPage.filter(function (c) { return c.component === 'Form'; });
+
+							gridDatas.forEach(function (grid) {
+								var viewId = self.getComponentId(grid.id);
+
+								if (grid.setting.object && grid.setting.editPage && grid.setting.editForm) {
+									self.data.components.Grid.registerEditEvent(viewId, function (dataId) {
+										if (self.data.page.attr('id') != grid.setting.editPage) return;
+
+										var formViewId = self.getComponentId(grid.setting.editForm);
+
+										self.data.components.Form.populateData(formViewId, grid.setting.object, dataId);
+									});
+								}
+							});
+
+							formDatas.forEach(function (form) {
+								var viewId = self.getComponentId(form.id);
+
+								if (form.setting.object) {
+									self.data.components.Form.registerSaveEvent(viewId, function () {
+										var objectGridDatas = gridDatas.filter(function (grid) { return grid.setting.object === form.setting.object; });
+
+										objectGridDatas.forEach(function (grid) {
+											self.renderComponent(grid); // Refresh grids
+										});
+									});
+								}
+							});
+						},
+
 						initWebixUI: function () {
 							var self = this;
 
@@ -334,6 +368,13 @@ steal(
 
 																	$$(self.componentIds.componentList).showProgress({ type: "icon" });
 
+																	var coms = self.data.page.components.filter(function (c) { return c.id === id; });
+
+																	if (!coms || coms.length < 1) {
+																		$$(self.componentIds.componentList).hideProgress();
+																		return;
+																	}
+
 																	// Call server to delete object data
 																	self.Model.ABPageComponent.destroy(id)
 																		.fail(function (err) {
@@ -389,6 +430,10 @@ steal(
 
 						getUIDefinition: function () {
 							return this.data.definition;
+						},
+
+						getComponentId: function (id) {
+							return 'ab-layout-component-{0}'.replace('{0}', id);
 						},
 
 						setApp: function (app) {
@@ -449,6 +494,8 @@ steal(
 
 									self.generateComponentsInList();
 
+									self.initEvents();
+
 									$$(self.componentIds.componentList).hideProgress();
 								});
 						},
@@ -488,28 +535,33 @@ steal(
 
 							// Generate component in list
 							self.data.componentsInPage.forEach(function (c) {
-								var component = self.data.components[c.attr('component')],
-									view = component.getView(),
-									settings = c.attr('setting');
-
-								if (view && component.render && settings) {
-									var settings = settings.attr();
-									settings.page = self.data.page;
-
-									view = $.extend(true, {}, view);
-									view.id = 'ab-layout-component-{0}'.replace('{0}', c.attr('id'));
-									view.container = view.id;
-									view.autowidth = true;
-									// view.disabled = true;
-
-									$('#' + view.id).html('');
-
-									webix.ui(view);
-
-									component.render(view.id, settings);
-								}
+								self.renderComponent(c);
 							});
 
+						},
+
+						renderComponent: function (com) {
+							var self = this,
+								component = self.data.components[com.attr('component')],
+								view = component.getView(),
+								settings = com.attr('setting');
+
+							if (view && component.render && settings) {
+								var settings = settings.attr();
+								settings.page = self.data.page;
+
+								view = $.extend(true, {}, view);
+								view.id = self.getComponentId(com.attr('id'));
+								view.container = view.id;
+								view.autowidth = true;
+								// view.disabled = true;
+
+								$('#' + view.id).html('');
+
+								webix.ui(view);
+
+								component.render(view.id, settings);
+							}
 						},
 
 						startDragComponent: function () {
