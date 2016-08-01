@@ -294,7 +294,8 @@ steal(
 												inputWidth: 80,
 												disabled: true,
 												click: function () {
-													$$(self.componentIds.saveButton).disable();
+													if ($$(self.componentIds.saveButton))
+														$$(self.componentIds.saveButton).disable();
 
 													var formView = this.getTopParentView();
 													$$(formView).showProgress({ type: "icon" });
@@ -348,7 +349,8 @@ steal(
 												width: 90,
 												inputWidth: 80,
 												click: function () {
-													$$(self.componentIds.saveButton).disable();
+													if ($$(self.componentIds.saveButton))
+														$$(self.componentIds.saveButton).disable();
 													$$(this.getTopParentView()).setValues({});
 
 													var data = self.getData(viewId),
@@ -417,7 +419,8 @@ steal(
 										$$(viewId).setValues(result.attr());
 
 										$$(viewId).hideProgress();
-										$$(self.componentIds.saveButton).enable();
+										if ($$(self.componentIds.saveButton))
+											$$(self.componentIds.saveButton).enable();
 									});
 							};
 
