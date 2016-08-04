@@ -458,8 +458,8 @@ steal(
 										// TODO message
 										$$(self.webixUiId.objectDatatable).hideProgress();
 									})
-									.then(function (resultId) {
-										$$(self.webixUiId.objectDatatable).remove(resultId);
+									.then(function (result) {
+										$$(self.webixUiId.objectDatatable).remove(result.id ? result.id : result);
 
 										// TODO message
 
@@ -931,9 +931,10 @@ steal(
 							}
 
 							self.controllers.ModelCreator.getModel(obj.attr('name'))
-								.fail(function (err) { next(err); })
+								.fail(function (err) {
+									// TODO : Error message
+								})
 								.then(function (objectModel) {
-
 									if (objectModel && objectModel.Cached)
 										objectModel.Cached.cacheClear(); // Clear cache data
 								});
