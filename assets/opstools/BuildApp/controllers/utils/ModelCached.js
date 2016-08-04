@@ -328,10 +328,11 @@ steal(function () {
 						return function (obj) {
 							var q = new can.Deferred(),
 								self = this,
-								tempId = null;
+								tempId = null,
+								createObj = $.extend({}, obj);
 
 							if (AD.comm.isServerReady()) { // Call service to add new item
-								create(obj)
+								create(createObj)
 									.fail(function (err) {
 										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
 											var localObj = self.createNewLocalItem(obj);
