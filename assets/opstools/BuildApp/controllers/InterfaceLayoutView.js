@@ -90,7 +90,7 @@ steal(
 							gridDatas.forEach(function (grid) {
 								var viewId = self.getComponentId(grid.id);
 
-								if (grid.setting.object && grid.setting.editPage && grid.setting.editForm) {
+								if (grid.setting && grid.setting.object && grid.setting.editPage && grid.setting.editForm) {
 									self.data.components.Grid.registerEditEvent(viewId, function (dataId) {
 										if (self.data.page.attr('id') != grid.setting.editPage) return;
 
@@ -368,7 +368,7 @@ steal(
 
 																	$$(self.componentIds.componentList).showProgress({ type: "icon" });
 
-																	var coms = self.data.page.components.filter(function (c) { return c.id === id; });
+																	var coms = self.data.page.components.filter(function (c) { return c.id == id; });
 
 																	if (!coms || coms.length < 1) {
 																		$$(self.componentIds.componentList).hideProgress();
