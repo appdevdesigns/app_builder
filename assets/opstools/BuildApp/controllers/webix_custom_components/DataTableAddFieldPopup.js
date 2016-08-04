@@ -126,6 +126,9 @@ steal(
 
                             self.labels.add_fields.registerTableWarning = AD.lang.label.getLabel('ab.add_fields.registerTableWarning') || "Please register the datatable to add.";
 
+                            self.labels.add_fields.invalidFieldTitle = AD.lang.label.getLabel('ab.add_fields.invalidFieldTitle') || "Your field name is invalid format";
+                            self.labels.add_fields.invalidFieldDescription = AD.lang.label.getLabel('ab.add_fields.invalidFieldDescription') || "System disallow enter special character to field name.";
+
                             self.labels.add_fields.duplicateFieldTitle = AD.lang.label.getLabel('ab.add_fields.duplicateFieldTitle') || "Your field name is duplicate";
                             self.labels.add_fields.duplicateFieldDescription = AD.lang.label.getLabel('ab.add_fields.duplicateFieldDescription') || "Please change your field name";
 
@@ -468,7 +471,17 @@ steal(
                                                                     return; // TODO;
                                                             }
 
-                                                            // Validate field name
+                                                            // Validate format field name
+                                                            if (!/^[a-zA-Z0-9\s]+$/.test(fieldName)) {
+                                                                webix.alert({
+                                                                    title: self.labels.add_fields.invalidFieldTitle,
+                                                                    text: self.labels.add_fields.invalidFieldDescription,
+                                                                    ok: self.labels.common.ok
+                                                                });
+                                                                return;
+                                                            }
+
+                                                            // Validate duplicate field name
                                                             var existsColumn = $.grep(dataTable.config.columns, function (c) {
                                                                 return c.id == fieldName || c.label == fieldName;
                                                             });
@@ -476,8 +489,8 @@ steal(
                                                             if (existsColumn && existsColumn.length > 0 && !self.data.editFieldId) {
                                                                 webix.alert({
                                                                     title: self.labels.add_fields.duplicateFieldTitle,
-                                                                    ok: self.labels.common.ok,
-                                                                    text: self.labels.add_fields.duplicateFieldDescription
+                                                                    text: self.labels.add_fields.duplicateFieldDescription,
+                                                                    ok: self.labels.common.ok
                                                                 });
                                                                 return;
                                                             }

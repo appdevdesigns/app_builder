@@ -621,6 +621,18 @@ msgstr "Please register the datatable to add."
 
 #. path: app_builder
 #. code: en
+#. key: ab.add_fields.invalidFieldTitle
+msgid "Your field name is invalid format"
+msgstr "Your field name is invalid format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.invalidFieldDescription
+msgid "System disallow enter special character to field name."
+msgstr "System disallow enter special character to field name."
+
+#. path: app_builder
+#. code: en
 #. key: ab.add_fields.duplicateFieldTitle
 msgid "Your field name is duplicate"
 msgstr "Your field name is duplicate"
