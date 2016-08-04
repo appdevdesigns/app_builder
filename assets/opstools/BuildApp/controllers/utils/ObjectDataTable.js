@@ -338,6 +338,11 @@ steal(
 									// Get connected object name
 									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
 
+									if (!connectedObj) {
+										callback();
+										return;
+									}
+
 									// Get connected object model
 									self.controllers.ModelCreator.getModel(connectedObj.name)
 										.then(function (objectModel) {
