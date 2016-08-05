@@ -140,10 +140,13 @@ steal(
                                         view: "template",
                                         id: page.domID,
                                         template: comTemplate,
-                                        minWidth: 400,
-                                        minHeight: 600
+                                        minWidth: 700,
+                                        minHeight: 500
                                     });
                                 }
+
+                                if ($$("<%- domID() %>"))
+                                    webix.ui({}, $$("<%- domID() %>")); // Clear UI content
 
                                 webix.ui({
                                     container: this.element.attr('id'),
