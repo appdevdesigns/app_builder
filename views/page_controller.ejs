@@ -40,13 +40,11 @@ steal(
                                 this.initControllers();
                                 this.initComponents();
 
-                                this.initDOM();
                                 webix.ready(function() {
-                                    self.initWebix();
-                                    self.initEvents();
+                                    self.initDOM();
                                     self.showPage();
                                 });
-                                
+
                                 /*
                                 AD.comm.hub.subscribe(this.options.resize_notification, function(message, data) {
                                     console.log(message, data);
@@ -84,16 +82,14 @@ steal(
                             },
 
 
-                            initEvents: function(){
-                                var self = this;
-                                
-                                for (var id in this.pages) {
-                                    var page = this.pages[id],
-                                        gridDatas = page.components.filter(function (c) { return c.component === 'Grid'; }),
-                                        formDatas = page.components.filter(function (c) { return c.component === 'Form'; });
+                            initEvents: function (pageId) {
+                                var self = this,
+                                    page = self.pages[pageId],
+                                    gridDatas = page.components.filter(function (c) { return c.component === 'Grid'; }),
+                                    formDatas = page.components.filter(function (c) { return c.component === 'Form'; });
 
                                     gridDatas.forEach(function (grid) {
-                                        var viewId =  self.getComponentId(page.domID, grid.id);
+                                        var viewId = self.getComponentId(page.domID, grid.id);
 
                                         if (grid.setting.object && grid.setting.editPage && grid.setting.editForm) {
                                             self.components.Grid.registerEditEvent(viewId, function (selectedData) {
@@ -112,7 +108,7 @@ steal(
                                                     self.renderComponent(self.pages[grid.page], grid); // Refresh grids
                                                 });
 
-                                                
+
                                                 // Register form's cancel event
                                                 self.components.Form.registerCancelEvent(formViewId, function () {
                                                     self.showPage(grid.page);
@@ -120,57 +116,57 @@ steal(
                                             });
                                         }
                                     });
-                                }
 
                             },
 
 
                             initDOM: function () {
                                 var self = this,
-                                    html = '';
+                                    html = '',
+                                    pageTemplates = [];
 
                                 for (var id in this.pages) {
                                     var page = this.pages[id];
 
-                                    html += '<div class="abpage" id="' + page.domID + '" style="display:none">';
+                                    var comTemplate = '';
 
                                     page.components.sort(function (a, b) { return a.weight - b.weight });
-                                    page.components.forEach(function(item) {
-                                        html += '<div id="' + self.getComponentId(page.domID, item.id) + '"></div>';
-                                        html += '<div style="height: 30px;"></div>';
+                                    page.components.forEach(function (item) {
+                                        comTemplate += '<div id="' + self.getComponentId(page.domID, item.id) + '"></div>';
+                                        comTemplate += '<div style="height: 30px;"></div>';
                                     });
 
-                                    html += '</div>';
+                                    pageTemplates.push({
+                                        view: "template",
+                                        id: page.domID,
+                                        template: comTemplate,
+                                        minWidth: 400,
+                                        minHeight: 600
+                                    });
                                 }
-                                this.element.html(html);
+
+                                webix.ui({
+                                    container: this.element.attr('id'),
+                                    id: "<%- domID() %>",
+                                    cells: pageTemplates
+                                });
+
                             },
 
 
-                            initWebix: function () {
+                            initWebix: function (pageId) {
                                 var self = this,
-                                    app;
-
-                                for (var id in this.pages) {
-                                    var page = this.pages[id];
-                                    var rows = [];
-
-                                    page.webix = webix.ui({
-                                        container: page.domID,
-                                        view: 'layout',
-                                        rows: [],
-                                        minWidth: 300
-                                    });
+                                    app,
+                                    page = self.pages[pageId],
+                                    rows = [];
 
                                     page.components.forEach(function (item) {
                                         self.renderComponent(page, item);
                                     });
 
-                                };
+                                },
 
-                            },
-
-
-                            renderComponent: function(page, item) {
+                                renderComponent: function (page, item) {
                                 var self = this,
                                     component = self.components[item.component],
                                     view = component.getView(),
@@ -189,7 +185,7 @@ steal(
                                     view.autowidth = true;
 
                                     if (item.component === 'Menu') {
-                                        item.setting.click = function(id, ev) {
+                                        item.setting.click = function (id, ev) {
                                             self.showPage(id);
                                         };
                                     }
@@ -203,11 +199,11 @@ steal(
                             },
 
 
-                            resize: function(data) {
+                            resize: function (data) {
                                 var width = this.element.width();
                                 if (width > 0) {
-                                    $('#' + this.pages[this.activePageID].domID).width(width);
-                                    this.pages[this.activePageID].webix.adjust();
+                                    $$(this.pages[this.activePageID].domID).define('width', width);
+                                    $$(this.pages[this.activePageID].domID).adjust();
                                 }
                             },
                             
@@ -217,15 +213,18 @@ steal(
                             *      Optional page ID number. Default is to show
                             *      the root page.
                             */
-                            showPage: function(pageID) {
+                            showPage: function (pageID) {
                                 if (typeof pageID == 'undefined') {
                                     pageID = this.rootPageID;
                                 }
-                                this.element.find('.abpage').hide();
-                                this.element.find('#' + this.pages[pageID].domID).show();
+                                $$(this.pages[pageID].domID).show();
                                 this.activePageID = pageID;
+
+                                this.initWebix(this.activePageID);
+                                this.initEvents(this.activePageID);
+
                                 this.resize();
-                                
+
                             },
                             
                             
