@@ -374,10 +374,11 @@ steal(function () {
 								hasNewField = true;
 
 							if (AD.comm.isServerReady()) { // Call service to update item
+								var saveObj2 = $.extend({}, saveObj); // Copy for save to local
 								update(id, saveObj)
 									.fail(function (err) {
 										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
-											self.updateLocalItem(id, saveObj)
+											self.updateLocalItem(id, saveObj2)
 												.fail(function (err) { q.reject(err); })
 												.then(function (result) {
 													q.resolve(result);
