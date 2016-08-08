@@ -184,7 +184,7 @@ steal(
 								$$(viewId).clearValidation();
 
 								// Clear views - redraw
-								webix.ui([], $$(viewId));
+								webix.ui([{}], $$(viewId));
 
 								if (!settings.object) return;
 
@@ -310,14 +310,17 @@ steal(
 																.then(function (result) {
 																	modelData = result;
 																	next();
-																})
+																});
 														},
 														function (next) {
 															var editValues = $$(formView).getValues(),
 																keys = Object.keys(editValues);
 
 															keys.forEach(function (k) {
-																modelData.attr(k, editValues[k]);
+																if (typeof editValues[k] !== 'undefined' && editValues[k] !== null)
+																	modelData.attr(k, editValues[k]);
+																else
+																	modelData.removeAttr(k);
 															});
 
 															modelData.save()
@@ -518,6 +521,17 @@ steal(
 													next();
 													q.reject();
 													return;
+												}
+
+												// Convert string to Date
+												var dateFields = [];
+												for (var key in objectModel.describe()) {
+													var value = objectModel.describe()[key];
+													if (value === 'date' || value === 'datetime') {
+														var dateVal = result.attr(key);
+														if (dateVal)
+															result.attr(key, new Date(dateVal));
+													}
 												}
 
 												// Populate data to form
