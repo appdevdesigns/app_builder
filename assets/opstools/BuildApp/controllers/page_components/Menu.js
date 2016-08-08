@@ -14,6 +14,7 @@ steal(
 							var self = this;
 
 							self.data = {};
+							self.events = {};
 							self.info = {
 								name: 'Menu',
 								icon: 'fa-th-list'
@@ -111,6 +112,12 @@ steal(
 								};
 							};
 
+							self.getEvent = function (viewId) {
+								if (!self.events[viewId]) self.events[viewId] = {};
+
+								return self.events[viewId];
+							};
+
 							self.render = function (viewId, settings) {
 								if ($$(viewId))
 									$$(viewId).clearAll();
@@ -126,6 +133,10 @@ steal(
 									view.click = settings.click;
 
 								webix.ui(view, $$(viewId));
+
+								var events = self.getEvent(viewId);
+								if (events.renderComplete)
+									events.renderComplete();
 							};
 
 							self.getSettings = function () {
@@ -204,6 +215,13 @@ steal(
 									orientation: settings.layout || 'x'
 								});
 								$$(self.componentIds.propertyView).refresh();
+							};
+
+							self.registerRenderCompleteEvent = function (viewId, renderCompleteEvent) {
+								var events = self.getEvent(viewId);
+
+								if (renderCompleteEvent)
+									events.renderComplete = renderCompleteEvent;
 							};
 
 							self.editStop = function () {

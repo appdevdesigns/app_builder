@@ -84,36 +84,43 @@ steal(
 
                             initEvents: function (pageId) {
                                 var self = this,
-                                    page = self.pages[pageId],
-                                    gridDatas = page.components.filter(function (c) { return c.component === 'Grid'; }),
-                                    formDatas = page.components.filter(function (c) { return c.component === 'Form'; });
+                                    page = self.pages[pageId];
 
-                                    gridDatas.forEach(function (grid) {
-                                        var viewId = self.getComponentId(page.domID, grid.id);
+                                    page.components.forEach(function (com) {
+                                        var viewId = self.getComponentId(page.domID, com.id);
 
-                                        if (grid.setting.object && grid.setting.editPage && grid.setting.editForm) {
-                                            self.components.Grid.registerEditEvent(viewId, function (selectedData) {
-                                                // Go to edit page
-                                                self.showPage(grid.setting.editPage);
-
-                                                // Populate data to edit form
-                                                var formViewId = self.getComponentId('<%- domID() %>' + grid.setting.editPage, grid.setting.editForm);
-                                                self.components.Form.populateData(formViewId, grid.setting.object, selectedData.row);
-
-                                                // Register form's save event
-                                                self.components.Form.registerSaveEvent(formViewId, function () {
-                                                    self.showPage(grid.page);
-
-                                                    // Refresh grids
-                                                    self.renderComponent(self.pages[grid.page], grid); // Refresh grids
-                                                });
-
-
-                                                // Register form's cancel event
-                                                self.components.Form.registerCancelEvent(formViewId, function () {
-                                                    self.showPage(grid.page);
-                                                });
+                                        if (self.components[com.component].registerRenderCompleteEvent) {
+                                            self.components[com.component].registerRenderCompleteEvent(function() {
+                                                $$("<%- domID() %>").adjust();
                                             });
+                                        }
+
+                                        if (com.component === 'Grid') {
+                                            if (com.setting.object && com.setting.editPage && com.setting.editForm) {
+                                                self.components.Grid.registerEditEvent(viewId, function (selectedData) {
+                                                    // Go to edit page
+                                                    if (com.setting.editPage != self.activePageID)
+                                                        self.showPage(com.setting.editPage);
+
+                                                    // Populate data to edit form
+                                                    var formViewId = self.getComponentId('abpage-AB_test-test-' + com.setting.editPage, com.setting.editForm);
+                                                    self.components.Form.populateData(formViewId, com.setting.object, selectedData.row);
+
+                                                    // Register form's save event
+                                                    self.components.Form.registerSaveEvent(formViewId, function () {
+                                                        self.showPage(com.page);
+
+                                                        // Refresh grids
+                                                        self.renderComponent(self.pages[com.page], com); // Refresh grids
+                                                    });
+
+
+                                                    // Register form's cancel event
+                                                    self.components.Form.registerCancelEvent(formViewId, function () {
+                                                        self.showPage(com.page);
+                                                    });
+                                                });
+                                            }
                                         }
                                     });
 

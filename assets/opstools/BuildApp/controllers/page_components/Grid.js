@@ -20,6 +20,7 @@ steal(
 							var self = this;
 
 							self.data = {}; // { viewId: { }, viewId2: { }, ..., viewIdn: { }}
+							self.events = {};
 							self.info = {
 								name: 'Grid',
 								icon: 'fa-table'
@@ -211,6 +212,12 @@ steal(
 								return self.data[viewId];
 							};
 
+							self.getEvent = function (viewId) {
+								if (!self.events[viewId]) self.events[viewId] = {};
+
+								return self.events[viewId];
+							};
+
 							self.getDataTableController = function (viewId) {
 								var dataTableController = self.controllers.ObjectDataTables[viewId];
 
@@ -304,6 +311,10 @@ steal(
 										editForm: settings.editForm
 									}, settings.removable);
 									$$(viewId).hideProgress();
+
+									var events = self.getEvent(viewId);
+									if (events.renderComplete)
+										events.renderComplete();
 
 									q.resolve();
 								});
@@ -491,6 +502,13 @@ steal(
 								});
 
 								$$(self.componentIds.columnList).parse(columns);
+							};
+
+							self.registerRenderCompleteEvent = function (viewId, renderCompleteEvent) {
+								var events = self.getEvent(viewId);
+
+								if (renderCompleteEvent)
+									events.renderComplete = renderCompleteEvent;
 							};
 
 							self.editStop = function () {

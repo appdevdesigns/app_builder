@@ -404,6 +404,10 @@ steal(
 										});
 
 										$$(viewId).hideProgress();
+
+										var events = self.getEvent(viewId);
+										if (events.renderComplete)
+											events.renderComplete();
 									});
 							};
 
@@ -562,7 +566,15 @@ steal(
 									events.cancel = cancelEvent;
 							};
 
+							self.registerRenderCompleteEvent = function (viewId, renderCompleteEvent) {
+								var events = self.getEvent(viewId);
+
+								if (renderCompleteEvent)
+									events.renderComplete = renderCompleteEvent;
+							};
+
 							self.editStop = function () {
+								$$(self.componentIds.propertyView).editStop();
 							};
 
 						},
