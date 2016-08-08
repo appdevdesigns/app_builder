@@ -313,7 +313,7 @@ steal(
 								dataTableController.registerDeleteRowHandler(function (deletedId) {
 									$$(viewId).showProgress({ type: 'icon' });
 
-									self.Model.ObjectModels[settings.object].destroy(deletedId.row)
+									self.Model.ObjectModels[settings.object].Cached.destroy(deletedId.row)
 										.fail(function (err) {
 											// TODO message
 											$$(viewId).hideProgress();
