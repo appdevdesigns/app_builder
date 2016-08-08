@@ -53,7 +53,7 @@ steal(
                                 */
                                 
                                 AD.comm.hub.subscribe('opsportal.resize', function(message, data) {
-                                    self.resize();
+                                    self.resize(data.height);
                                 });
                             },
 
@@ -141,7 +141,8 @@ steal(
                                         id: page.domID,
                                         template: comTemplate,
                                         minWidth: 700,
-                                        minHeight: 500
+                                        autoheight: true,
+                                        scroll: false
                                     });
                                 }
 
@@ -149,7 +150,9 @@ steal(
                                     webix.ui({}, $$("<%- domID() %>")); // Clear UI content
 
                                 webix.ui({
+                                    view: "multiview",
                                     container: this.element.attr('id'),
+                                    css: "ab-main-container",
                                     id: "<%- domID() %>",
                                     cells: pageTemplates
                                 });
@@ -202,12 +205,13 @@ steal(
                             },
 
 
-                            resize: function (data) {
+                            resize: function (height) {
                                 var width = this.element.width();
-                                if (width > 0) {
-                                    $$(this.pages[this.activePageID].domID).define('width', width);
-                                    $$(this.pages[this.activePageID].domID).adjust();
-                                }
+
+                                if (width > 0)
+                                    $$("<%- domID() %>").define('width', width);
+
+                                $$("<%- domID() %>").adjust();
                             },
                             
                             

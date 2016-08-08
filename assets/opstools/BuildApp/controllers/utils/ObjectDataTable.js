@@ -236,7 +236,7 @@ steal(
 
 						getHeader: function (col, readOnly) {
 							var self = this,
-								label = col.label;
+								label = col.label || '';
 
 							// Show connect object name in header
 							if (col.setting.editor === 'selectivity') {
@@ -249,8 +249,8 @@ steal(
 									label += self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
-							var headerTemplate = "<div class='ab-object-data-header'><span class='webix_icon fa-{0}'></span>{1}{2}</div>"
-								.replace('{0}', col.setting.icon)
+							var headerTemplate = "<div class='ab-object-data-header'><span class='webix_icon {0}'></span>{1}{2}</div>"
+								.replace('{0}', col.setting.icon ? 'fa-' + col.setting.icon : '')
 								.replace('{1}', label);
 
 							if (readOnly)

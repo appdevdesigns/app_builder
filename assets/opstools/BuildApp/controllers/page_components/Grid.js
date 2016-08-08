@@ -333,9 +333,9 @@ steal(
 							self.getSettings = function () {
 								var propertyValues = $$(self.componentIds.propertyView).getValues(),
 									columns = $.map($$(self.componentIds.editDataTable).config.columns, function (c) { return [c.dataId]; }),
-									editForm = propertyValues.editForm.split('|') || null,
-									editPageId = editForm[0],
-									editFormId = editForm[1];
+									editForm = propertyValues.editForm && propertyValues.editForm.split('|') || null,
+									editPageId = editForm && editForm[0] || null,
+									editFormId = editForm && editForm[1] || null;
 
 								var settings = {
 									object: propertyValues.object,
@@ -378,7 +378,7 @@ steal(
 										},
 										function (next) {
 											// Data table - Edit form
-											var parentId = settings.page.parent ? settings.page.parent.attr('id') : settings.page.attr('id');
+											var parentId = settings.page && settings.page.parent ? settings.page.parent.attr('id') : settings.page.attr('id');
 
 											self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
 												.fail(function (err) { next(err); })
