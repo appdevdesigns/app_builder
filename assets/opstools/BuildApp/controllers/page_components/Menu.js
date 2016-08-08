@@ -112,6 +112,10 @@ steal(
 								};
 							};
 
+							self.setPage = function (page) {
+								self.data.page = page;
+							};
+
 							self.getEvent = function (viewId) {
 								if (!self.events[viewId]) self.events[viewId] = {};
 
@@ -157,12 +161,12 @@ steal(
 								// Page list
 								$$(self.componentIds.pageTree).clearAll();
 								var pageItems = [];
-								if (settings.page) {
+								if (self.data.page) {
 									webix.extend($$(self.componentIds.pageTree), webix.ProgressBar);
 
 									$$(self.componentIds.pageTree).showProgress({ type: 'icon' });
 
-									var parentId = settings.page.parent ? settings.page.parent.attr('id') : settings.page.attr('id');
+									var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 									self.Model.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
 										.fail(function (err) {
 											$$(self.componentIds.pageTree).hideProgress();

@@ -204,6 +204,10 @@ steal(
 								self.controllers.ModelCreator.setApp(app);
 							};
 
+							self.setPage = function (page) {
+								self.data.page = page;
+							};
+
 							self.getData = function (viewId) {
 								if (!self.data[viewId]) self.data[viewId] = {};
 
@@ -389,7 +393,7 @@ steal(
 										},
 										function (next) {
 											// Data table - Edit form
-											var parentId = settings.page && settings.page.parent ? settings.page.parent.attr('id') : settings.page.attr('id');
+											var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 
 											self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
 												.fail(function (err) { next(err); })

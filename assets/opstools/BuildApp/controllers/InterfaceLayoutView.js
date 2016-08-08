@@ -212,7 +212,8 @@ steal(
 																	if (!item.setting) item.setting = {};
 
 																	// Pass current page
-																	item.setting.page = self.data.page;
+																	if (component.setPage)
+																		component.setPage(self.data.page);
 
 																	component.populateSettings(item.setting);
 
