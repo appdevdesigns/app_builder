@@ -183,7 +183,7 @@ steal(
 							$$(self.webixUiId.appNameLabel).refresh();
 
 							// FOR TEST
-							$$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
+							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 
 							switch ($$(self.webixUiId.appWorkspaceMenu).getValue()) {
 								case self.webixUiId.objectView:
