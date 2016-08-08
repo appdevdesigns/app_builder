@@ -174,7 +174,8 @@ steal(
 							};
 
 							self.render = function (viewId, settings, editable, defaultShowAll) {
-								var data = self.getData(viewId);
+								var data = self.getData(viewId),
+									elementViews = [];
 
 								data.columns = null;
 
@@ -182,9 +183,6 @@ steal(
 
 								$$(viewId).clear();
 								$$(viewId).clearValidation();
-
-								// Clear views - redraw
-								webix.ui([{}], $$(viewId));
 
 								if (!settings.object) return;
 
@@ -277,8 +275,12 @@ steal(
 												};
 											}
 
-											$$(viewId).addView(element);
+											// $$(viewId).addView(element);
+											elementViews.push(element);
 										});
+
+										// Redraw
+										webix.ui(elementViews, $$(viewId));
 
 										var actionButtons = {
 											cols: [{}]
