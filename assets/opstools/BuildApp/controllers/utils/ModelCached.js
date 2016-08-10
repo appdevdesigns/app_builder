@@ -631,6 +631,15 @@ steal(function () {
 							this.constructor.cacheItems([]);
 							// Update our model
 							can.Model.prototype.destroyed.apply(this, arguments);
+						},
+						checkSync: function () {
+							var unsyncIds = this.constructor.getSavedIds();
+
+							if (unsyncIds.indexOf(this.attr('id')) > -1)
+								return true;
+							else
+								return false;
+
 						}
 					});
 				return can.Model.Cached;

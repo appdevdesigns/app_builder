@@ -108,7 +108,8 @@ steal(
 
                                                     // Register form's save event
                                                     self.components.Form.registerSaveEvent(formViewId, function () {
-                                                        self.showPage(com.page);
+                                                        if (com.page != self.activePageID)
+                                                            self.showPage(com.page);
 
                                                         // Refresh grids
                                                         self.renderComponent(self.pages[com.page], com); // Refresh grids
@@ -117,7 +118,8 @@ steal(
 
                                                     // Register form's cancel event
                                                     self.components.Form.registerCancelEvent(formViewId, function () {
-                                                        self.showPage(com.page);
+                                                        if (com.page != self.activePageID)
+                                                            self.showPage(com.page);
                                                     });
                                                 });
                                             }

@@ -179,6 +179,9 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-object-data-header:hover .ab-object-data-header-edit {
 	display: block;
 }
+.ab-object-unsync-data {
+	background-color: #EBFBDA;
+}
 
 /* Connect object data */
 .ab-connect-data-info {

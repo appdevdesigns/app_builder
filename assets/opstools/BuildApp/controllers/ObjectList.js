@@ -391,6 +391,8 @@ steal(
 							var self = this;
 
 							webix.extend($$(self.webixUiId.objectList), webix.ProgressBar);
+							
+							$$(self.webixUiId.objectList).define('badge', 100);
 						},
 
 						getUIDefinition: function () {

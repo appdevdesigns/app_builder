@@ -542,7 +542,13 @@ steal(
 							if ($$(viewId).showProgress)
 								$$(viewId).showProgress({ type: 'icon' });
 
-							self.Model.ObjectModels[objectId].findAll({})
+							self.Model.ObjectModels[objectId].Cached.unbind('refreshData');
+							self.Model.ObjectModels[objectId].Cached.bind('refreshData', function (ev, data) {
+								if (this == self.Model.ObjectModels[objectId].Cached)
+									self.getDataTableController(viewId).populateDataToDataTable(data.result);
+							});
+
+							self.Model.ObjectModels[objectId].Cached.findAll({})
 								.fail(function (err) {
 									q.reject(err);
 

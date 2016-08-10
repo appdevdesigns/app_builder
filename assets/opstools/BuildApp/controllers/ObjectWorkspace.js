@@ -309,7 +309,7 @@ steal(
 
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													})
-													.then(function () {
+													.then(function (result) {
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													});
 											},
@@ -326,7 +326,7 @@ steal(
 
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													})
-													.then(function () {
+													.then(function (result) {
 														item[editor.column] = state.value;
 														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
 
@@ -440,7 +440,7 @@ steal(
 
 									// Call server to remove value
 									self.updateRowData({ value: data.itemData }, { column: data.columnId, row: data.rowId }, false)
-										.then(function () {
+										.then(function (result) {
 											$$(self.webixUiId.objectDatatable).hideProgress();
 
 											$$(self.webixUiId.objectDatatable).render({ column: data.columnId });
@@ -595,7 +595,7 @@ steal(
 										column: self.data.selectedCell.column
 									},
 									false)
-									.then(function () {
+									.then(function (result) {
 										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
 										if (!rowData.connectedData) rowData.connectedData = {};
 

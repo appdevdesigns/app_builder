@@ -132,6 +132,13 @@ steal(
 										}
 									}
 
+									if (d.isUnsync) { // TODO: Highlight unsync data
+										self.dataTable.config.columns.forEach(function (col) {
+											var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
+											rowNode.classList.add('ab-object-unsync-data');
+										});
+									}
+
 									// Call to calculate row height
 									if (maxConnectedDataNum.dataId)
 										self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
@@ -388,7 +395,6 @@ steal(
 
 																r.connectedData.attr(c.id, connectedDataValue, true);
 															}
-
 
 															cb();
 														});
