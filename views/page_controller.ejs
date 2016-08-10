@@ -90,7 +90,7 @@ steal(
                                         var viewId = self.getComponentId(page.domID, com.id);
 
                                         if (self.components[com.component].registerRenderCompleteEvent) {
-                                            self.components[com.component].registerRenderCompleteEvent(function() {
+                                            self.components[com.component].registerRenderCompleteEvent(viewId, function() {
                                                 $$("<%- domID() %>").adjust();
                                             });
                                         }

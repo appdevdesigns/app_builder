@@ -316,9 +316,11 @@ steal(
 									}, settings.removable);
 									$$(viewId).hideProgress();
 
-									var events = self.getEvent(viewId);
-									if (events.renderComplete)
-										events.renderComplete();
+									$$(viewId).attachEvent('onAfterRender', function (data) {
+										var events = self.getEvent(viewId);
+										if (events.renderComplete)
+											events.renderComplete();
+									});
 
 									q.resolve();
 								});
