@@ -50,7 +50,9 @@
 }
 
 /* Webix list */
-.ab-main-container .webix_selected {
+.ab-main-container .webix_selected,
+.ab-app-form-permission .webix_selected {
+	color: #fff !important;
 	background-color: #3498db !important;
 }
 
@@ -74,8 +76,8 @@
 	min-height: 300px;
 	padding: 40px 100px;
 }
-.ab-app-list .webix_selected {
-	color: #000;
+.ab-app-select-list .webix_selected {
+	color: #000 !important;
 	background-color: transparent !important;
 }
 .ab-app-list-item {
@@ -292,4 +294,8 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	padding: 0px 5px;
 	min-width: 70%;
 	border-radius: 6px;
+}
+
+.ab-main-container .webix_layout_form {
+	background-color: #fff;
 }

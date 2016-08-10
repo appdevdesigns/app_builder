@@ -39,6 +39,8 @@ module.exports = {
 
         object: { collection: 'ABObject', via: 'application' },
 
+        permissions: { collection: 'PermissionRole', dominant: true },
+
         name: {
             type: 'string',
             required: true,

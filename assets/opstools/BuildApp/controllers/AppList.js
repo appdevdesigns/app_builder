@@ -80,7 +80,9 @@ steal(
 								appListMenu: 'ab-app-list-menu',
 								appListFormView: 'ab-app-list-form-view',
 								appListForm: 'ab-app-list-form',
-								appListLoading: 'ab-app-list-loading'
+								appListLoading: 'ab-app-list-loading',
+
+								appFormPermissionList: 'ab-app-form-permission'
 							};
 
 							// Application list
@@ -107,6 +109,7 @@ steal(
 										view: "list",
 										minHeight: 227,
 										autowidth: true,
+										css: 'ab-app-select-list',
 										template: "<div class='ab-app-list-item'>" +
 										"<div class='ab-app-list-info'>" +
 										"<div class='ab-app-list-name'>#label#</div>" +
@@ -173,6 +176,36 @@ steal(
 														if ($$(self.webixUiId.appListForm).elements[key])
 															$$(self.webixUiId.appListForm).elements[key].setValue(selectedApp[key]);
 													}
+
+													// Get user's roles
+													$$(self.webixUiId.appFormPermissionList).showProgress({ type: 'icon' });
+													AD.comm.service.get({ url: '/site/permission/role' }) // TODO : How to get roles
+														.fail(function (err) {
+															// TODO : Mock up
+															$$(self.webixUiId.appFormPermissionList).parse([
+																{
+																	id: 1,
+																	name: "Role 1"
+																},
+																{
+																	id: 2,
+																	name: "Role 2"
+																},
+																{
+																	id: 3,
+																	name: "Role 3"
+																}
+
+															]);
+
+															webix.message(err.message);
+															$$(self.webixUiId.appFormPermissionList).hideProgress();
+														})
+														.done(function (data) {
+															$$(self.webixUiId.appFormPermissionList).parse(data);
+															$$(self.webixUiId.appFormPermissionList).hideProgress();
+														});
+
 													break;
 												case self.labels.common.delete:
 													webix.confirm({
@@ -237,9 +270,58 @@ steal(
 									{
 										view: "form",
 										id: self.webixUiId.appListForm,
+										autoheight: true,
+										margin: 0,
 										elements: [
-											{ view: "text", label: self.labels.common.formName, name: "label", required: true, placeholder: self.labels.application.placeholderName, labelWidth: 100 },
-											{ view: "textarea", label: self.labels.common.formDescription, name: "description", placeholder: self.labels.application.placeholderDescription, labelWidth: 100, height: 150 },
+											{ type: "section", template: "Information", margin: 0 },
+											{ name: "label", view: "text", label: self.labels.common.formName, required: true, placeholder: self.labels.application.placeholderName, labelWidth: 100 },
+											{ name: "description", view: "textarea", label: self.labels.common.formDescription, placeholder: self.labels.application.placeholderDescription, labelWidth: 100, height: 100 },
+											{ type: "section", template: "Permission" },
+											{
+												view: "toolbar",
+												cols: [
+													{
+														template: "Assign one or more roles to set permissions for user to view this app",
+														type: 'header',
+														borderless: true
+													},
+													{ view: "button", value: "Create a new role to view this app", width: 300, align: "right" }
+												]
+											},
+											{
+												name: "permissions",
+												id: self.webixUiId.appFormPermissionList,
+												view: "list",
+												height: 130,
+												autowidth: true,
+												borderless: true,
+												margin: 0,
+												css: "ab-app-form-permission",
+												scroll: "y",
+												template: "#name#",
+												on: {
+													onItemClick: function (id, e, node) {
+														if (this.isSelected(id)) {
+															this.unselect(id);
+														}
+														else {
+															var selectedIds = this.getSelectedId();
+
+															if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
+																if (selectedIds)
+																	selectedIds = [selectedIds];
+																else
+																	selectedIds = [];
+															}
+
+															selectedIds.push(id);
+
+															this.select(selectedIds);
+														}
+													}
+												}
+											},
+											{ height: 5 },
 											{
 												margin: 5, cols: [
 													{ fillspace: true },
@@ -256,6 +338,7 @@ steal(
 															if (updateApp) { // Update application data
 																updateApp.attr('label', $$(self.webixUiId.appListForm).elements['label'].getValue());
 																updateApp.attr('description', $$(self.webixUiId.appListForm).elements['description'].getValue());
+																// $$(self.webixUiId.appFormPermissionList).getSelectedId();
 
 																updateApp.save()
 																	.fail(function (err) {
@@ -333,7 +416,6 @@ steal(
 															$$(self.webixUiId.appListRow).show();
 														}
 													}
-
 												]
 											}
 										]
@@ -356,6 +438,7 @@ steal(
 							webix.extend($$(self.webixUiId.appList), webix.ProgressBar);
 							webix.extend($$(self.webixUiId.appList), webix.OverlayBox);
 							webix.extend($$(self.webixUiId.appListForm), webix.ProgressBar);
+							webix.extend($$(self.webixUiId.appFormPermissionList), webix.ProgressBar);
 						},
 
 						loadData: function () {
@@ -430,8 +513,7 @@ steal(
 								else
 									appListDom.height(appListDom.css('min-height'));
 
-								if (self.webixUiId && self.webixUiId.appView)
-									$$(self.webixUiId.appView).adjust();
+								$$(self.webixUiId.appView).adjust();
 							}
 						}
 
