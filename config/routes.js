@@ -27,7 +27,10 @@ module.exports = {
         'app_builder/ABObjectController.sortColumns',
 
     'put /app_builder/page/sortComponents/:id': 
-        'app_builder/ABPageController.sortComponents'
+        'app_builder/ABPageController.sortComponents',
+
+    'get /app_builder/user/roles':
+        'app_builder/ABUserController.getRoles'
 
   /*
 

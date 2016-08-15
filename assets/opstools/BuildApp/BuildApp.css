@@ -50,10 +50,13 @@
 }
 
 /* Webix list */
-.ab-main-container .webix_selected,
-.ab-app-form-permission .webix_selected {
+.ab-main-container .webix_selected {
 	color: #fff !important;
 	background-color: #3498db !important;
+}
+.ab-app-form-permission .webix_selected {
+	color: #fff !important;
+	background-color: #3AB9CE !important;
 }
 
 /* Webix segmented */

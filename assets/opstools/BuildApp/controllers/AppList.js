@@ -82,7 +82,8 @@ steal(
 								appListForm: 'ab-app-list-form',
 								appListLoading: 'ab-app-list-loading',
 
-								appFormPermissionList: 'ab-app-form-permission'
+								appFormPermissionList: 'ab-app-form-permission',
+								appFormCreateRoleButton: 'ab-app-form-create-role'
 							};
 
 							// Application list
@@ -179,30 +180,32 @@ steal(
 
 													// Get user's roles
 													$$(self.webixUiId.appFormPermissionList).showProgress({ type: 'icon' });
-													AD.comm.service.get({ url: '/site/permission/role' }) // TODO : How to get roles
+													AD.comm.service.get({ url: '/app_builder/user/roles' })
 														.fail(function (err) {
-															// TODO : Mock up
-															$$(self.webixUiId.appFormPermissionList).parse([
-																{
-																	id: 1,
-																	name: "Role 1"
-																},
-																{
-																	id: 2,
-																	name: "Role 2"
-																},
-																{
-																	id: 3,
-																	name: "Role 3"
-																}
-
-															]);
-
 															webix.message(err.message);
 															$$(self.webixUiId.appFormPermissionList).hideProgress();
 														})
 														.done(function (data) {
+															// Sort permission list
+															data.forEach(function (d) {
+																var perm = selectedApp.permissions.filter(function (p) { return d.id == p.permission });
+																if (perm && perm.length > 0)
+																	d.isApplicationRole = perm[0].isApplicationRole || false;
+															});
+															data.sort(function (a, b) {
+																return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+															});
+
 															$$(self.webixUiId.appFormPermissionList).parse(data);
+
+															// Select permissions
+															var selectedPermIds = $.map(selectedApp.permissions, function (perm) { return perm.permission; }) || [];
+															$$(self.webixUiId.appFormPermissionList).select(selectedPermIds);
+
+															// Select create role application button
+															var markCreateButton = selectedApp.permissions.filter(function (p) { return p.isApplicationRole; }).length > 0 ? 1 : 0;
+															$$(self.webixUiId.appFormCreateRoleButton).setValue(markCreateButton);
+
 															$$(self.webixUiId.appFormPermissionList).hideProgress();
 														});
 
@@ -273,10 +276,29 @@ steal(
 										autoheight: true,
 										margin: 0,
 										elements: [
-											{ type: "section", template: "Information", margin: 0 },
-											{ name: "label", view: "text", label: self.labels.common.formName, required: true, placeholder: self.labels.application.placeholderName, labelWidth: 100 },
+											{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
+											{
+												name: "label",
+												view: "text",
+												label: self.labels.common.formName,
+												required: true,
+												placeholder: self.labels.application.placeholderName,
+												labelWidth: 100,
+												on: {
+													onChange: function (newValue, oldValue) {
+														var editRole = $$(self.webixUiId.appFormPermissionList).find(function (d) { return d.name === oldValue + ' Application Role'; });
+
+														editRole.forEach(function (r) {
+															var editItem = $$(self.webixUiId.appFormPermissionList).getItem(r.id);
+															editItem.name = newValue + ' Application Role';
+
+															$$(self.webixUiId.appFormPermissionList).updateItem(editItem.id, editItem);
+														});
+													}
+												}
+											},
 											{ name: "description", view: "textarea", label: self.labels.common.formDescription, placeholder: self.labels.application.placeholderDescription, labelWidth: 100, height: 100 },
-											{ type: "section", template: "Permission" },
+											{ type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>Permission' },
 											{
 												view: "toolbar",
 												cols: [
@@ -285,7 +307,39 @@ steal(
 														type: 'header',
 														borderless: true
 													},
-													{ view: "button", value: "Create a new role to view this app", width: 300, align: "right" }
+													{
+														view: "toggle",
+														id: self.webixUiId.appFormCreateRoleButton,
+														type: "iconButton",
+														width: 300,
+														align: "right",
+														offIcon: "square-o",
+														onIcon: "check-square-o",
+														label: "Create a new role to view this app",
+														on: {
+															onItemClick: function (id, e) {
+																if (this.getValue()) {// Add new app role
+																	var newRoleName = $$(self.webixUiId.appListForm).elements["label"].getValue() + ' Application Role';
+																	$$(self.webixUiId.appFormPermissionList).add({
+																		id: 'newRole',
+																		name: newRoleName,
+																		isApplicationRole: true
+																	}, 0);
+
+																	// Select new role
+																	var selectedIds = $$(self.webixUiId.appFormPermissionList).getSelectedId() || [];
+																	selectedIds.push('newRole');
+																	$$(self.webixUiId.appFormPermissionList).select(selectedIds);
+																}
+																else { // Remove app role
+																	var appRoles = $$(self.webixUiId.appFormPermissionList).find(function (perm) { return perm.isApplicationRole; });
+																	appRoles.forEach(function (r) {
+																		$$(self.webixUiId.appFormPermissionList).remove(r.id);
+																	});
+																}
+															}
+														}
+													}
 												]
 											},
 											{
@@ -301,6 +355,10 @@ steal(
 												template: "#name#",
 												on: {
 													onItemClick: function (id, e, node) {
+														if (this.getItem(id).isApplicationRole) {
+															return;
+														}
+
 														if (this.isSelected(id)) {
 															this.unselect(id);
 														}
@@ -338,7 +396,23 @@ steal(
 															if (updateApp) { // Update application data
 																updateApp.attr('label', $$(self.webixUiId.appListForm).elements['label'].getValue());
 																updateApp.attr('description', $$(self.webixUiId.appListForm).elements['description'].getValue());
-																// $$(self.webixUiId.appFormPermissionList).getSelectedId();
+
+																// Role Permissions
+																var permIds = $$(self.webixUiId.appFormPermissionList).getSelectedId();
+																if (!(permIds instanceof Array)) permIds = [permIds];
+																permIds = $.grep(permIds, function (permId) { return permId !== 'newRole'; }); // Remove new role item
+																updateApp.attr('permissions', $.map(permIds, function (permId) {
+																	return {
+																		permission: permId,
+																		application: updateApp.attr('id')
+																	}
+																}));
+
+																// Create new role for application
+																if ($$(self.webixUiId.appFormCreateRoleButton).getValue())
+																	updateApp.attr('addNewRole', true);
+																else
+																	updateApp.removeAttr();
 
 																updateApp.save()
 																	.fail(function (err) {
@@ -476,6 +550,9 @@ steal(
 							$$(self.webixUiId.appList).unselectAll();
 							$$(self.webixUiId.appListForm).clear();
 							$$(self.webixUiId.appListForm).clearValidation();
+							$$(self.webixUiId.appFormPermissionList).clearValidation();
+							$$(self.webixUiId.appFormPermissionList).clearAll();
+							$$(self.webixUiId.appFormCreateRoleButton).setValue(0);
 						},
 
 						refreshList: function () {

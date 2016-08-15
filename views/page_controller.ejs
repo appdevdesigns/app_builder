@@ -103,7 +103,7 @@ steal(
                                                         self.showPage(com.setting.editPage);
 
                                                     // Populate data to edit form
-                                                    var formViewId = self.getComponentId('abpage-AB_test-test-' + com.setting.editPage, com.setting.editForm);
+                                                    var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
                                                     self.components.Form.populateData(formViewId, com.setting.object, selectedData.row);
 
                                                     // Register form's save event
@@ -187,8 +187,16 @@ steal(
                                     view = component.getView(),
                                     app;
 
-                                if (page.application && typeof page.application === 'object')
+                               if (page.application && typeof page.application === 'object')
                                     app = page.application;
+                                else if (!isNaN(page.application)) {
+                                    for(var key in self.pages) {
+                                        var p = self.pages[key];
+
+                                        if (typeof p.application === 'object' && p.application.id == page.application)
+                                            app = p.application;
+                                    }
+                                }
 
                                 if (component.setApp && app)
                                     component.setApp(app);
