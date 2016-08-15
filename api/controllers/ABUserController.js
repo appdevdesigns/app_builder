@@ -7,7 +7,7 @@
 
 module.exports = {
 
-	// GET: app_builder/user/roles
+	// GET: /app_builder/user/roles
 	getRoles: function (req, res) {
 		Permissions.getUserRoles(req, true)
 			.fail(function (err) { res.AD.error(err); })
