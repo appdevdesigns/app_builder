@@ -125,6 +125,7 @@ module.exports = {
 		}
 
 		appId = parseInt(appId);
+		roleIds = roleIds.filter(function (r) { return r && r.id !== null && typeof r.id !== 'undefined' });
 
 		async.series([
 			function (cb) {
