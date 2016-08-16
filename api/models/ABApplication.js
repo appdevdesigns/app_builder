@@ -40,15 +40,14 @@ module.exports = {
 
         object: { collection: 'ABObject', via: 'application' },
 
-        permissions: {
-            collection: 'ABApplicationPermission',
-            via: 'application',
-        },
-
         name: {
             type: 'string',
             required: true,
             unique: true
+        },
+
+        role: {
+            model: 'PermissionRole'
         }
     },
 

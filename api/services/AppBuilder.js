@@ -20,6 +20,10 @@ function nameFilter(name) {
 
 module.exports = {
     
+    getApplicationName: function(name) {
+        return 'AB_' + nameFilter(name);
+    },
+    
     /**
      * Reload Sails controllers, routes, and models.
      *
@@ -165,7 +169,7 @@ module.exports = {
                     }
                     var obj = list[0];
                     // Only numbers and alphabets will be used
-                    appName = 'AB_' + nameFilter(obj.name);
+                    appName = AppBuilder.getApplicationName(obj.name);
                     moduleName = appName.toLowerCase();
                     next();
                     return null;
@@ -277,7 +281,7 @@ module.exports = {
                     if (!obj) throw new Error('invalid object id');
                     
                     // Only numbers and alphabets will be used
-                    appName = 'AB_' + nameFilter(obj.application.name);
+                    appName = AppBuilder.getApplicationName(obj.application.name);
                     moduleName = appName.toLowerCase();
                     
                     objName = nameFilter(obj.name);
@@ -401,7 +405,7 @@ module.exports = {
                     if (page.parent > 0) throw new Error('not a root page');
                     
                     appID = page.application.id;
-                    appName = 'AB_' + nameFilter(page.application.name);
+                    appName = AppBuilder.getApplicationName(page.application.name);
                     pageName = nameFilter(page.name);
                     
                     controllerIncludes.push({

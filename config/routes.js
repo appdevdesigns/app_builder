@@ -32,13 +32,16 @@ module.exports = {
     'get /app_builder/user/roles':
         'app_builder/ABUserController.getRoles',
 
-    'POST /app_builder/:id/role':
+    'get /app_builder/:id/role':
+        'app_builder/ABRoleController.getRoles',
+
+    'post /app_builder/:id/role':
         'app_builder/ABRoleController.createRole',
 
-    'DELETE /app_builder/:id/role':
+    'delete /app_builder/:id/role':
         'app_builder/ABRoleController.deleteRole',
 
-    'PUT /app_builder/:id/role/assign':
+    'put /app_builder/:id/role/assign':
         'app_builder/ABRoleController.assignRole'
 
   /*

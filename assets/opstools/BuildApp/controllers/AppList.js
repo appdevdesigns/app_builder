@@ -638,39 +638,55 @@ steal(
 
 							// Get user's roles
 							$$(self.webixUiId.appFormPermissionList).showProgress({ type: 'icon' });
-							AD.comm.service.get({ url: '/app_builder/user/roles' })
-								.fail(function (err) {
+							async.waterfall([
+								function (next) {
+									AD.comm.service.get({ url: '/app_builder/user/roles' })
+										.fail(function (err) { next(err); })
+										.done(function (roles) {
+											next(null, roles);
+										});
+								},
+								function (available_roles, next) {
+									AD.comm.service.get({ url: '/app_builder/' + selectedApp.id + '/role' })
+										.fail(function (err) { next(err); })
+										.done(function (selected_role_ids) {
+											// Sort permission list
+											available_roles.forEach(function (r) {
+												var perm = [];
+
+												if (selectedApp) perm = selected_role_ids.filter(function (rId) { return r.id == rId; });
+
+												if (perm && perm.length > 0)
+													r.isApplicationRole = perm[0].isApplicationRole || false;
+											});
+											available_roles.sort(function (a, b) {
+												return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+											});
+
+											$$(self.webixUiId.appFormPermissionList).parse(available_roles);
+
+											if (selected_role_ids && selected_role_ids.length > 0) {
+												// Select permissions
+												$$(self.webixUiId.appFormPermissionList).select(selected_role_ids);
+
+												// Select create role application button
+												var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
+												$$(self.webixUiId.appFormCreateRoleButton).setValue(markCreateButton);
+											}
+
+											$$(self.webixUiId.appFormPermissionList).hideProgress();
+											next();
+										});
+								}
+							], function (err) {
+								if (err) {
 									webix.message(err.message);
 									$$(self.webixUiId.appFormPermissionList).hideProgress();
-								})
-								.done(function (data) {
-									// Sort permission list
-									data.forEach(function (d) {
-										var perm = [];
+									return;
+								}
 
-										if (selectedApp) perm = selectedApp.permissions.filter(function (p) { return d.id == p.permission });
+							});
 
-										if (perm && perm.length > 0)
-											d.isApplicationRole = perm[0].isApplicationRole || false;
-									});
-									data.sort(function (a, b) {
-										return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
-									});
-
-									$$(self.webixUiId.appFormPermissionList).parse(data);
-
-									if (selectedApp) {
-										// Select permissions
-										var selectedPermIds = $.map(selectedApp.permissions, function (perm) { return perm.permission; }) || [];
-										$$(self.webixUiId.appFormPermissionList).select(selectedPermIds);
-
-										// Select create role application button
-										var markCreateButton = selectedApp.permissions.filter(function (p) { return p.isApplicationRole; }).length > 0 ? 1 : 0;
-										$$(self.webixUiId.appFormCreateRoleButton).setValue(markCreateButton);
-									}
-
-									$$(self.webixUiId.appFormPermissionList).hideProgress();
-								});
 						},
 
 						resize: function (height) {
