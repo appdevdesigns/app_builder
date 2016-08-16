@@ -7,6 +7,14 @@
 
 var async = require('async');
 
+function nameFilter(name) {
+    return String(name).replace(/[^a-z0-9]/gi, '');
+}
+
+function getValidAppName(name){
+	return 'AB_' + nameFilter(name);
+}
+
 module.exports = {
 
 	// POST: /app_builder/:id/role
@@ -190,8 +198,8 @@ module.exports = {
 			function (cb) {
 				// Register the permission action
 				Permissions.action.create({
-					key: 'opstools.' + appModel.name + '.view',
-					description: 'Allow the user to view the ' + appModel.name + ' base page',
+					key: 'opstools.' + getValidAppName(appModel.name) + '.view',
+					description: 'Allow the user to view the ' + getValidAppName(appModel.name) + ' base page',
 					language_code: 'en'
 				})
 					.always(function () {
@@ -202,7 +210,7 @@ module.exports = {
 			},
 			function (cb) {
 				// Clear permission action to roles
-				Permissions.clearPermissionRole('opstools.' + appModel.name + '.view')
+				Permissions.clearPermissionRole('opstools.' + getValidAppName(appModel.name) + '.view')
 					.fail(function (err) { cb(err); })
 					.then(function () { cb(); });
 			},
@@ -212,7 +220,7 @@ module.exports = {
 
 				roleIds.forEach(function (r) {
 					assignActionTasks.push(function (callback) {
-						Permissions.assignAction(r.id, 'opstools.' + appModel.name + '.view')
+						Permissions.assignAction(r.id, 'opstools.' + getValidAppName(appModel.name) + '.view')
 							.fail(function (err) { callback(err); })
 							.then(function () { callback(); });
 					});
