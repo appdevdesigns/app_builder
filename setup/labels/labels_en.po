@@ -337,6 +337,18 @@ msgstr "Select data to connect"
 
 #. path: app_builder
 #. code: en
+#. key: ab.object.cannotConnectedDataTitle
+msgid "System could not link to this data"
+msgstr "System could not link to this data"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.cannotConnectedDataDescription
+msgid "This data is unsynchronized. You can click Synchronize button to sync data."
+msgstr "This data is unsynchronized. You can click Synchronize button to sync data."
+
+#. path: app_builder
+#. code: en
 #. key: ab.object.noConnectedData
 msgid "No data selected"
 msgstr "No data selected"
@@ -606,6 +618,18 @@ msgstr "Add Column"
 #. key: ab.add_fields.registerTableWarning
 msgid "Please register the datatable to add."
 msgstr "Please register the datatable to add."
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.invalidFieldTitle
+msgid "Your field name is invalid format"
+msgstr "Your field name is invalid format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.invalidFieldDescription
+msgid "System disallow enter special character to field name."
+msgstr "System disallow enter special character to field name."
 
 #. path: app_builder
 #. code: en

@@ -14,6 +14,7 @@ steal(
 							var self = this;
 
 							self.data = {};
+							self.events = {};
 							self.info = {
 								name: 'Menu',
 								icon: 'fa-th-list'
@@ -111,19 +112,35 @@ steal(
 								};
 							};
 
+							self.setPage = function (page) {
+								self.data.page = page;
+							};
+
+							self.getEvent = function (viewId) {
+								if (!self.events[viewId]) self.events[viewId] = {};
+
+								return self.events[viewId];
+							};
+
 							self.render = function (viewId, settings) {
 								if ($$(viewId))
 									$$(viewId).clearAll();
 
 								var view = $.extend(true, {}, self.getView());
 								view.id = viewId;
+								view.layout = settings.layout || 'x';
 
 								if (settings.data)
 									view.data = settings.data;
 
-								view.layout = settings.layout || 'x';
+								if (settings.click)
+									view.click = settings.click;
 
 								webix.ui(view, $$(viewId));
+
+								var events = self.getEvent(viewId);
+								if (events.renderComplete)
+									events.renderComplete();
 							};
 
 							self.getSettings = function () {
@@ -144,12 +161,12 @@ steal(
 								// Page list
 								$$(self.componentIds.pageTree).clearAll();
 								var pageItems = [];
-								if (settings.page) {
+								if (self.data.page) {
 									webix.extend($$(self.componentIds.pageTree), webix.ProgressBar);
 
 									$$(self.componentIds.pageTree).showProgress({ type: 'icon' });
 
-									var parentId = settings.page.parent ? settings.page.parent.attr('id') : settings.page.attr('id');
+									var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 									self.Model.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
 										.fail(function (err) {
 											$$(self.componentIds.pageTree).hideProgress();
@@ -202,6 +219,13 @@ steal(
 									orientation: settings.layout || 'x'
 								});
 								$$(self.componentIds.propertyView).refresh();
+							};
+
+							self.registerRenderCompleteEvent = function (viewId, renderCompleteEvent) {
+								var events = self.getEvent(viewId);
+
+								if (renderCompleteEvent)
+									events.renderComplete = renderCompleteEvent;
 							};
 
 							self.editStop = function () {

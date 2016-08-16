@@ -23,8 +23,23 @@ module.exports = {
     'post /app_builder/preparePage/:id': 
         'app_builder/ABPageController.prepare',
 
-    '/app_builder/object/sortColumns/:id': 
+    'put /app_builder/object/sortColumns/:id': 
         'app_builder/ABObjectController.sortColumns',
+
+    'put /app_builder/page/sortComponents/:id': 
+        'app_builder/ABPageController.sortComponents',
+
+    'get /app_builder/user/roles':
+        'app_builder/ABUserController.getRoles',
+
+    'POST /app_builder/:id/role':
+        'app_builder/ABRoleController.createRole',
+
+    'DELETE /app_builder/:id/role':
+        'app_builder/ABRoleController.deleteRole',
+
+    'PUT /app_builder/:id/role/assign':
+        'app_builder/ABRoleController.assignRole'
 
   /*
 

@@ -25,7 +25,10 @@ steal(
 
 							// Call parent init
 							self._super(element, self.options);
-							self.Model = AD.Model.get('opstools.BuildApp.ABPageComponent');
+							self.Model = {
+								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
+								ABPageComponent: AD.Model.get('opstools.BuildApp.ABPageComponent')
+							};
 							self.data = {};
 
 							self.componentIds = {
@@ -77,6 +80,40 @@ steal(
 								ActiveList: new ActiveList(),
 								ModelCreator: new ModelCreator()
 							};
+						},
+
+						initEvents: function () {
+							var self = this,
+								gridDatas = self.data.componentsInPage.filter(function (c) { return c.component === 'Grid'; }),
+								formDatas = self.data.componentsInPage.filter(function (c) { return c.component === 'Form'; });
+
+							gridDatas.forEach(function (grid) {
+								var viewId = self.getComponentId(grid.id);
+
+								if (grid.setting && grid.setting.object && grid.setting.editPage && grid.setting.editForm) {
+									self.data.components.Grid.registerEditEvent(viewId, function (dataId) {
+										if (self.data.page.attr('id') != grid.setting.editPage) return;
+
+										var formViewId = self.getComponentId(grid.setting.editForm);
+
+										self.data.components.Form.populateData(formViewId, grid.setting.object, dataId);
+									});
+								}
+							});
+
+							formDatas.forEach(function (form) {
+								var viewId = self.getComponentId(form.id);
+
+								if (form.setting.object) {
+									self.data.components.Form.registerSaveEvent(viewId, function () {
+										var objectGridDatas = gridDatas.filter(function (grid) { return grid.setting.object === form.setting.object; });
+
+										objectGridDatas.forEach(function (grid) {
+											self.renderComponent(grid); // Refresh grids
+										});
+									});
+								}
+							});
 						},
 
 						initWebixUI: function () {
@@ -151,7 +188,8 @@ steal(
 											{
 												view: 'activelist',
 												id: self.componentIds.componentList,
-												drag: 'target',
+												// drag: 'target',
+												drag: true,
 												select: false,
 												type: {
 													height: 'auto'
@@ -174,7 +212,8 @@ steal(
 																	if (!item.setting) item.setting = {};
 
 																	// Pass current page
-																	item.setting.page = self.data.page;
+																	if (component.setPage)
+																		component.setPage(self.data.page);
 
 																	component.populateSettings(item.setting);
 
@@ -223,7 +262,7 @@ steal(
 													if (id) {
 														$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 
-														var addNewComponent = self.Model.newInstance();
+														var addNewComponent = self.Model.ABPageComponent.newInstance();
 														addNewComponent.attr('page', self.data.page.attr('id'));
 														addNewComponent.attr('component', data.name);
 														addNewComponent.attr('weight', $$(self.componentIds.componentList).count());
@@ -267,13 +306,51 @@ steal(
 												},
 												on: {
 													onBeforeDrop: function (context, ev) {
-														for (var i = 0; i < context.source.length; i++) {
-															context.from.copy(context.source[i], context.start, this, webix.uid());
+														if (context.from.config.id === self.componentIds.componentList) {
+															return true;
+														}
+														else {
+															for (var i = 0; i < context.source.length; i++) {
+																context.from.copy(context.source[i], context.start, this, webix.uid());
+															}
+
+															self.hideDropAreaZone();
 														}
 
-														self.hideDropAreaZone();
-
 														return false;
+													},
+													onAfterDrop: function (context, ev) {
+														if (context.from.config.id === self.componentIds.componentList) {
+															$$(self.componentIds.componentList).showProgress({ type: 'icon' });
+
+															var componentIndexes = [];
+
+															// Sort data
+															for (var index = 0; index < $$(self.componentIds.componentList).count(); index++) {
+																var comId = $$(self.componentIds.componentList).getIdByIndex(index),
+																	com = self.data.componentsInPage.filter(function (c) { return c.id == comId });
+
+																if (com && com.length > 0) {
+																	com[0].attr('weight', index);
+
+																	componentIndexes.push({
+																		id: com[0].id,
+																		index: com[0].weight
+																	});
+
+																}
+															}
+
+															// Call sort components api
+															self.Model.ABPage.sortComponents(self.data.page.id, componentIndexes, function (err, result) {
+																$$(self.componentIds.componentList).hideProgress();
+
+																if (err) {
+																	// TODO : show error message
+																	return false;
+																}
+															});
+														}
 													}
 												},
 												onClick: {
@@ -292,8 +369,15 @@ steal(
 
 																	$$(self.componentIds.componentList).showProgress({ type: "icon" });
 
+																	var coms = self.data.page.components.filter(function (c) { return c.id == id; });
+
+																	if (!coms || coms.length < 1) {
+																		$$(self.componentIds.componentList).hideProgress();
+																		return;
+																	}
+
 																	// Call server to delete object data
-																	self.Model.destroy(id)
+																	self.Model.ABPageComponent.destroy(id)
 																		.fail(function (err) {
 																			$$(self.componentIds.componentList).hideProgress();
 
@@ -349,8 +433,14 @@ steal(
 							return this.data.definition;
 						},
 
+						getComponentId: function (id) {
+							return 'ab-layout-component-{0}'.replace('{0}', id);
+						},
+
 						setApp: function (app) {
 							var self = this;
+
+							self.resetState();
 
 							self.data.app = app;
 
@@ -367,7 +457,7 @@ steal(
 
 							self.data.page = page;
 
-							self.Model.findAll({ page: page.attr('id') })
+							self.Model.ABPageComponent.findAll({ page: page.attr('id') })
 								.fail(function (err) {
 									$$(self.componentIds.componentList).hideProgress();
 
@@ -404,6 +494,8 @@ steal(
 									$$(self.componentIds.componentList).parse(definedComponents);
 
 									self.generateComponentsInList();
+
+									self.initEvents();
 
 									$$(self.componentIds.componentList).hideProgress();
 								});
@@ -444,28 +536,33 @@ steal(
 
 							// Generate component in list
 							self.data.componentsInPage.forEach(function (c) {
-								var component = self.data.components[c.attr('component')],
-									view = component.getView(),
-									settings = c.attr('setting');
-
-								if (view && component.render && settings) {
-									var settings = settings.attr();
-									settings.page = self.data.page;
-
-									view = $.extend(true, {}, view);
-									view.id = 'ab-layout-component-{0}'.replace('{0}', c.attr('id'));
-									view.container = view.id;
-									view.autowidth = true;
-									// view.disabled = true;
-
-									$('#' + view.id).html('');
-
-									webix.ui(view);
-
-									component.render(view.id, settings);
-								}
+								self.renderComponent(c);
 							});
 
+						},
+
+						renderComponent: function (com) {
+							var self = this,
+								component = self.data.components[com.attr('component')],
+								view = component.getView(),
+								settings = com.attr('setting');
+
+							if (view && component.render && settings) {
+								var settings = settings.attr();
+								settings.page = self.data.page;
+
+								view = $.extend(true, {}, view);
+								view.id = self.getComponentId(com.attr('id'));
+								view.container = view.id;
+								view.autowidth = true;
+								// view.disabled = true;
+
+								$('#' + view.id).html('');
+
+								webix.ui(view);
+
+								component.render(view.id, settings);
+							}
 						},
 
 						startDragComponent: function () {

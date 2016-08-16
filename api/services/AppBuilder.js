@@ -7,7 +7,8 @@ var path = require('path');
 var AD = require('ad-utils');
 var _ = require('lodash');
 
-var reloadTimeLimit = 2 * 1000 * 60; // 2 minutes
+var reloadTimeLimit = 3 * 1000 * 60; // 3 minutes
+
 
 var cliCommand = path.join(
     process.cwd(),
@@ -315,7 +316,7 @@ module.exports = {
         //var modelsPath = sails.config.paths.models;
         var modelsPath = path.join('api', 'models'); // in the submodule
         
-        var fullPath, fullPathTrans;
+        var fullPath, fullPathTrans, clientPath, baseClientPath;
         var cwd = process.cwd();
         
         async.series([
@@ -338,6 +339,8 @@ module.exports = {
                     
                     fullPath = path.join(modelsPath, fullName) + '.js';
                     fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
+                    clientPath = path.join('assets', 'opstools', appName, 'models', fullName + '.js');
+                    baseClientPath = path.join('assets', 'opstools', appName, 'models', 'base', fullName + '.js');
                     
                     next();
                     return null;
@@ -350,7 +353,7 @@ module.exports = {
             // Delete old model definition files
             function(next) {
                 process.chdir(path.join('node_modules', moduleName)); // sails/node_modules/ab_{appName}/
-                async.each([fullPath, fullPathTrans], function(target, ok) {
+                async.each([fullPath, fullPathTrans, clientPath, baseClientPath], function(target, ok) {
                     // Delete file if it exists
                     fs.unlink(target, function(err) {
                         // Ignore errors. If file does not exist, that's fine.
@@ -424,7 +427,7 @@ module.exports = {
     
     
     /**
-     * Generate the client side controller for an application's page
+     * Generate the client side controller for a root page
      *
      * @param integer pageID
      * @return Deferred
@@ -433,32 +436,49 @@ module.exports = {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
         
-        var appName, pageName, pageKey, pagePerms;
-        var appID;
+
+        var appID, appName, pageName, pageKey, pagePerms;
+
         var objectIncludes = [];
         var controllerIncludes = [];
 
         var Application = null;
         
+        var pages = {};
+        
         async.series([
-            // Find page info
+            // Find basic page info
             function(next) {
                 ABPage.find({ id: pageID })
                 .populate('application')
+                .populate('components')
                 .then(function(list) {
-                    var obj = list[0];
-                    if (!obj) throw new Error('invalid page id');
+                    if (!list || !list[0]) {
+                        var err = new Error('invalid page id');
+                        next(err);
+                        return;
+                    }
+                    var page = list[0];
+                    if (page.parent > 0) throw new Error('not a root page');
                     
-                    appID = obj.application.id;
-                    
-                    // Only numbers and alphabets will be used
-                    Application = obj.application;
+                    appID = page.application.id;
+                    appName = 'AB_' + nameFilter(page.application.name);
+                    pageName = nameFilter(page.name);
 
-                    appName = 'AB_' + nameFilter(obj.application.name);
-                    pageName = nameFilter(obj.name);
-                    
+                    // Only numbers and alphabets will be used
+                    Application = page.application;
+
                     pageKey = [appName, pageName].join('.'); // appName.pageName
                     pagePerms = 'adcore.admin,'+pageKey+'.view';
+                    
+                    controllerIncludes.push({
+                        key: 'opstools.' + appName + '.' + pageName,
+                        path: 'opstools/' + appName + '/controllers/'
+                            + pageName + '.js'
+                    });
+                    
+                    pages[pageID] = page;
+                        
                     next();
                     return null;
                 })
@@ -469,8 +489,145 @@ module.exports = {
             },
             
 
+            // Find all sub-pages
+            function(next) {
+                var pageQueue = [ pageID ];
+                var completed = [];
+                
+                async.whilst(
+                    function() { return (pageQueue.length > 0) },
+                    function(ok) {
+                        var pID = pageQueue.pop();
+                        ABPage.find()
+                        .where({ parent: pID })
+                        .populate('components')
+                        .then(function(list) {
+                            completed.push(pID);
+                            if (list && list[0]) {
+                                list.forEach(function(page) {
+                                    if (completed.indexOf(page.id) < 0) {
+                                        pageQueue.push(page.id);
+                                    }
+                                    pages[page.id] = page;
+                                });
+                            }
+                            ok();
+                            return null;
+                        })
+                        .catch(function(err) {
+                            ok(err);
+                            return null;
+                        });
+                    },
+                    function(err) {
+                        if (err) next(err);
+                        else next();
+                    }
+                );
+            
+            },
+            
+            // Prepare additional component metadata
+            function(next) {
+                async.forEachOf(pages, function(page, pageID, pageDone) {
+                    async.each(page.components, function(item, itemDone) {
+                        switch (item.component.toLowerCase()) {
+                            case 'grid':
+                                // Add a `columns` property
+                                item.columns = [];
+                                if (!Array.isArray(item.setting.columns)) {
+                                    sails.log('Unknown `setting` format:', item.setting);
+                                    itemDone();
+                                    return;
+                                }
+                                async.each(item.setting.columns, function(col, colDone) {
+                                    var colID;
+                                    if (typeof col == 'string' || typeof col == 'number') {
+                                        // Old format
+                                        colID = col;
+                                    } 
+                                    else if (col.dataId) {
+                                        // New format
+                                        colID = col.dataId;
+                                    }
+                                    else if (col.id && col.id == 'appbuilder_trash') {
+                                        item.columns.push('trash');
+                                        colDone();
+                                        return;
+                                    }
+                                    else {
+                                        sails.log('Unexpected column format:', col);
+                                        colDone();
+                                        return;
+                                    }
+                                    ABColumn.find({ id: colID })
+                                    .populate('object')
+                                    .populate('translations')
+                                    .then(function(list) {
+                                        if (list && list[0]) {
+                                            item.modelName = appName + '_' + nameFilter(list[0].object.name);
+                                            item.columns.push({
+                                                id: nameFilter(list[0].name),
+                                                header: list[0].translations[0].label
+                                            });
+                                        }
+                                        colDone();
+                                        return null;
+                                    })
+                                    .catch(function(err) {
+                                        colDone(err);
+                                        return null;
+                                    });
+                                }, function(err) {
+                                    if (err) itemDone(err);
+                                    else itemDone();
+                                });
+                                break;
+                            
+                            default:
+                                itemDone();
+                                break;
+                        }
+                    }, function(err) {
+                        if (err) pageDone(err);
+                        else pageDone();
+                    });
+                }, function(err) {
+                    if (err) next(err);
+                    else next();
+                });
+            },
+            
+
             // Generate the client side controller for the app page
             function(next) {
+                sails.renderView(path.join('app_builder', 'page_controller'), {
+                    layout: false,
+                    appName: appName,
+                    pageName: pageName,
+                    pages: pages,
+                    rootPageID: pageID,
+                    domID: function(pid) {
+                        pid = pid || '';
+                        return 'abpage-' + appName + '-' + pageName + '-' + pid;
+                    }
+                }, function(err, output) {
+                    if (err) next(err);
+                    else {
+                        fs.writeFile(
+                            path.join(
+                                'assets', 'opstools', appName,
+                                'controllers', pageName + '.js'
+                            ),
+                            output,
+                            function(err) {
+                                if (err) next(err);
+                                else next();
+                            }
+                        );
+                    }
+                });
+                /*
                 AD.spawn.command({
                     command: cliCommand,
                     options: [
@@ -482,6 +639,7 @@ module.exports = {
                 })
                 .fail(next)
                 .done(function() {
+
 // sails.log('after controllerUI:');
 
                     controllerIncludes.push({
@@ -489,9 +647,10 @@ module.exports = {
                         path: 'opstools/' + appName + '/controllers/'
                             + pageName + '.js'
                     });
+
                     next();
                 });
-            
+                */
             },
             
 
@@ -507,9 +666,9 @@ module.exports = {
 ///  obj.uiModelPath() : -> 'opstools/' + appName + '/models/' + appName + '_' + obj.name + '.js'
                         objectIncludes.push({ 
                             key: 'opstools.' + appName + '.' 
-                                    + appName + '_' + obj.name, 
+                                    + appName + '_' + nameFilter(obj.name), 
                             path: 'opstools/' + appName + '/models/'
-                                    + appName + '_' + obj.name + '.js' 
+                                    + appName + '_' + nameFilter(obj.name) + '.js' 
                         });
                     }
                     next();
@@ -614,6 +773,7 @@ console.log('... Area['+ Application.areaKey()+'] not found.  Move along ... ');
                 });
                 
             }
+
             
         ], function(err) {
             if (err) dfd.reject(err);

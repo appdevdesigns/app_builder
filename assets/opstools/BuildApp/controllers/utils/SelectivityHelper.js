@@ -30,12 +30,12 @@ steal(
 							self.labels.noConnectedData = AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected";
 						},
 
-						renderSelectivity: function (cssClass, readOnly) {
+						renderSelectivity: function (parentView, cssClass, readOnly) {
 							var self = this;
 
 							// Initial multi-combo
-							$('.' + cssClass).selectivity('destroy');
-							$('.' + cssClass).selectivity({
+							$(parentView.$view).find('.' + cssClass).selectivity('destroy');
+							$(parentView.$view).find('.' + cssClass).selectivity({
 								allowClear: true,
 								multiple: true,
 								removeOnly: true,

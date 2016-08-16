@@ -20,6 +20,8 @@ steal(
 							self.data = {};
 							self.data.objectList = [];
 
+							self.events = {};
+
 							self.initMultilingualLabels();
 							self.initControllers();
 							self.initEvents();
@@ -59,7 +61,7 @@ steal(
 							var self = this;
 
 							self.controllers.SelectivityHelper.on(self.options.changedSelectivityEvent, function (event, data) {
-								if (self.changeSelectivityItem) {
+								if (self.events.changeSelectivityItem) {
 									var result = {};
 									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
 									result.columnId = self.dataTable.columnId(result.columnIndex);
@@ -68,7 +70,7 @@ steal(
 									result.item = self.dataTable.getItem(result.rowId);
 									result.itemData = result.item[result.columnId];
 
-									self.changeSelectivityItem(data.event, result);
+									self.events.changeSelectivityItem(data.event, result);
 								}
 							});
 
@@ -79,31 +81,37 @@ steal(
 							self.dataTable = dataTable;
 
 							// Trash
-							self.dataTable.attachEvent("onItemClick", function (id, e, node) {
-								if (e.target.className.indexOf('trash') > 0) {
-									webix.confirm({
-										title: self.labels.confirmDeleteRowTitle,
-										ok: self.labels.common.yes,
-										cancel: self.labels.common.no,
-										text: self.labels.confirmDeleteRowMessage,
-										callback: function (result) {
-											if (result) {
-												if (self.deleteRow)
-													self.deleteRow(id);
+							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable has select, then it has onItemClick by default
+								self.dataTable.attachEvent("onItemClick", function (id, e, node) {
+									if (e.target.className.indexOf('trash') > -1) {
+										webix.confirm({
+											title: self.labels.confirmDeleteRowTitle,
+											ok: self.labels.common.yes,
+											cancel: self.labels.common.no,
+											text: self.labels.confirmDeleteRowMessage,
+											callback: function (result) {
+												if (result) {
+													if (self.events.deleteRow)
+														self.events.deleteRow(id);
+												}
+
+												if (self.dataTable.unselectAll)
+													self.dataTable.unselectAll();
+
+												return true;
 											}
+										});
+									}
+									else {
+										if (self.events.itemClick)
+											self.events.itemClick(id, e, node);
+									}
+								});
+							}
 
-											if (self.dataTable.unselectAll)
-												self.dataTable.unselectAll();
-
-											return true;
-										}
-									});
-								}
-							});
-
-							self.dataTable.attachEvent('onAfterRender', function (data) {
+							self.dataTable.attachEvent("onAfterRender", function (data) {
 								// Render selectivity node
-								self.controllers.SelectivityHelper.renderSelectivity('connect-data-values', self.data.readOnly);
+								self.controllers.SelectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
 
 								data.each(function (d) {
 									var maxConnectedDataNum = {};
@@ -122,6 +130,13 @@ steal(
 												maxConnectedDataNum.dataNum = d.connectedData[columnName].length;
 											}
 										}
+									}
+
+									if (d.isUnsync) { // TODO: Highlight unsync data
+										self.dataTable.config.columns.forEach(function (col) {
+											var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
+											rowNode.classList.add('ab-object-unsync-data');
+										});
 									}
 
 									// Call to calculate row height
@@ -145,12 +160,16 @@ steal(
 							this.data.readOnly = readOnly;
 						},
 
+						registerItemClick: function (itemClick) {
+							this.events.itemClick = itemClick;
+						},
+
 						registerChangeSelectivityItem: function (changeSelectivityItem) {
-							this.changeSelectivityItem = changeSelectivityItem;
+							this.events.changeSelectivityItem = changeSelectivityItem;
 						},
 
 						registerDeleteRowHandler: function (deleteRow) {
-							this.deleteRow = deleteRow;
+							this.events.deleteRow = deleteRow;
 						},
 
 						bindColumns: function (columns, resetColumns, addTrashColumn) {
@@ -180,14 +199,24 @@ steal(
 									id: col.name,
 									dataId: col.id,
 									label: col.label,
-									header: self.getHeader(col),
+									header: self.getHeader(col, self.data.readOnly),
 									weight: col.weight,
 									linkToObject: col.linkToObject
 								});
 
-								// checkbox
-								if (mapCol.filter_type === 'checkbox' && self.data.readOnly) {
-									mapCol.disable = true; // TODO : Checkbox read only
+								if (mapCol.filter_type === 'boolean' && self.data.readOnly) { // Checkbox - read only mode
+									mapCol.template = function (obj, common, value) {
+										if (value)
+											return "<div class='webix_icon fa-check-square-o'></div>";
+										else
+											return "<div class='webix_icon fa-square-o'></div>";
+									};
+								}
+								else if (mapCol.editor === 'date') {
+									mapCol.format = webix.i18n.dateFormatStr;
+								}
+								else if (mapCol.editor === 'datetime') {
+									mapCol.format = webix.i18n.fullDateFormatStr;
 								}
 
 								// richselect
@@ -212,9 +241,9 @@ steal(
 							self.dataTable.refreshColumns(headers, resetColumns || false);
 						},
 
-						getHeader: function (col) {
+						getHeader: function (col, readOnly) {
 							var self = this,
-								label = col.label;
+								label = col.label || '';
 
 							// Show connect object name in header
 							if (col.setting.editor === 'selectivity') {
@@ -227,15 +256,25 @@ steal(
 									label += self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
-							return "<div class='ab-object-data-header'><span class='webix_icon fa-{0}'></span>{1}<i class='ab-object-data-header-edit fa fa-angle-down'></i></div>"
-								.replace('{0}', col.setting.icon)
+							var headerTemplate = "<div class='ab-object-data-header'><span class='webix_icon {0}'></span>{1}{2}</div>"
+								.replace('{0}', col.setting.icon ? 'fa-' + col.setting.icon : '')
 								.replace('{1}', label);
+
+							if (readOnly)
+								headerTemplate = headerTemplate.replace('{2}', '');
+							else
+								headerTemplate = headerTemplate.replace('{2}', "<i class='ab-object-data-header-edit fa fa-angle-down'></i>");
+
+							return headerTemplate;
 						},
 
 						calculateColumnWidth: function (col) {
+							if (col.width > 0) return col.width;
+
 							var self = this,
 								charWidth = 7,
-								width = (col.label.length * charWidth) + 80;
+								charLength = col.label ? col.label.length : 0,
+								width = (charLength * charWidth) + 80;
 
 							if (col.linkToObject) {// Connect to... label
 								var object = self.data.objectList.filter(function (o) {
@@ -277,9 +316,19 @@ steal(
 							var self = this,
 								q = $.Deferred();
 
+							// Get date & datetime columns
+							var dateCols = $.grep(self.dataTable.config.columns, function (c) {
+								return c.editor === 'date' || c.editor === 'datetime';
+							});
+
 							result.forEach(function (r) {
 								if (r.translate)
 									r.translate();
+
+								dateCols.forEach(function (c) {
+									if (r[c.id]) // Convert string to Date object
+										r.attr(c.id, new Date(r[c.id]));
+								});
 							});
 
 							// Get connected columns
@@ -296,6 +345,11 @@ steal(
 									// Get connected object name
 									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
 
+									if (!connectedObj) {
+										callback();
+										return;
+									}
+
 									// Get connected object model
 									self.controllers.ModelCreator.getModel(connectedObj.name)
 										.then(function (objectModel) {
@@ -304,7 +358,8 @@ steal(
 												getConnectedDataEvents.push(function (cb) {
 													var connectedDataIds = r[c.id];
 
-													r.removeAttr('connectedData');
+													if (r.connectedData)
+														r.connectedData.attr(c.id, [], true);
 
 													if (!connectedDataIds || connectedDataIds.length < 1) {
 														cb();
@@ -316,6 +371,7 @@ steal(
 														return true;
 													}
 
+													connectedDataIds = connectedDataIds.filter(function (d) { return typeof d !== 'undefined' && d !== null; });
 													connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
 
 													objectModel.Cached.findAll({ or: connectedDataIds }, false, true)
@@ -327,7 +383,8 @@ steal(
 															});
 
 															if (connectedResult && connectedResult.length > 0) {
-																r.attr('connectedData', {}, true);
+																if (!r.attr('connectedData'))
+																	r.attr('connectedData', {}, true);
 
 																var connectedDataValue = $.map(connectedResult.attr(), function (d) {
 																	return {
@@ -336,9 +393,8 @@ steal(
 																	}
 																});
 
-																r.connectedData.attr(c.id, connectedDataValue);
+																r.connectedData.attr(c.id, connectedDataValue, true);
 															}
-
 
 															cb();
 														});
@@ -352,7 +408,12 @@ steal(
 							});
 
 							async.parallel(prepareConnectedDataEvents,
-								function (err, results) {
+								function (err) {
+									if (err) {
+										q.reject(err);
+										return;
+									}
+
 									self.dataTable.clearAll();
 									self.dataTable.parse(result.attr ? result.attr() : []);
 

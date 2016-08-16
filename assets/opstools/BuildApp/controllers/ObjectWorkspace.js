@@ -250,28 +250,6 @@ steal(
 										select: "cell",
 										dragColumn: true,
 										on: {
-											onAfterEditStop: function (state, editor, ignoreUpdate) {
-												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
-
-												self.updateRowData(state, editor, ignoreUpdate)
-													.fail(function (err) {
-														item[editor.column] = state.old;
-														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-														$$(self.webixUiId.objectDatatable).refresh(editor.row);
-
-														// TODO : Message
-
-														$$(self.webixUiId.objectDatatable).hideProgress();
-													})
-													.then(function () {
-														item[editor.column] = state.value;
-														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-
-														// TODO : Message
-
-														$$(self.webixUiId.objectDatatable).hideProgress();
-													});
-											},
 											onBeforeSelect: function (data, preserve) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
 
@@ -318,6 +296,44 @@ steal(
 													return false;
 
 												this.editCell(data.row, data.column);
+											},
+											onCheck: function (row, col, val) { // Update checkbox data
+												var item = $$(self.webixUiId.objectDatatable).getItem(row);
+
+												self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
+													.fail(function (err) {
+														// Rollback
+														item[col] = !val;
+														$$(self.webixUiId.objectDatatable).updateItem(row, item);
+														$$(self.webixUiId.objectDatatable).refresh(row);
+
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													})
+													.then(function (result) {
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													});
+											},
+											onAfterEditStop: function (state, editor, ignoreUpdate) {
+												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+												self.updateRowData(state, editor, ignoreUpdate)
+													.fail(function (err) {
+														item[editor.column] = state.old;
+														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+														$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+														// TODO : Message
+
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													})
+													.then(function (result) {
+														item[editor.column] = state.value;
+														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+
+														// TODO : Message
+
+														$$(self.webixUiId.objectDatatable).hideProgress();
+													});
 											},
 											onColumnResize: function (id, newWidth, oldWidth, user_action) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
@@ -424,7 +440,7 @@ steal(
 
 									// Call server to remove value
 									self.updateRowData({ value: data.itemData }, { column: data.columnId, row: data.rowId }, false)
-										.then(function () {
+										.then(function (result) {
 											$$(self.webixUiId.objectDatatable).hideProgress();
 
 											$$(self.webixUiId.objectDatatable).render({ column: data.columnId });
@@ -442,8 +458,8 @@ steal(
 										// TODO message
 										$$(self.webixUiId.objectDatatable).hideProgress();
 									})
-									.then(function (data) {
-										$$(self.webixUiId.objectDatatable).remove(data.id);
+									.then(function (result) {
+										$$(self.webixUiId.objectDatatable).remove(result.id ? result.id : result);
 
 										// TODO message
 
@@ -513,6 +529,11 @@ steal(
 															AD.error.log('Column list : Error delete column', { error: err });
 														})
 														.then(function (data) {
+															var objectName = self.data.object.attr('name');
+
+															// Delete cache
+															self.controllers.ModelCreator.deleteColumn(objectName, data.name);
+
 															// Remove column
 															self.data.columns.forEach(function (c, index) {
 																if (c.name == headerField.id) {
@@ -520,6 +541,13 @@ steal(
 																	return false;
 																}
 															});
+
+															// Remove describe to object model
+															self.controllers.ModelCreator.getModel(objectName)
+																.fail(function (err) { next(err); })
+																.then(function (objectModel) {
+																	delete objectModel.describe()[data.name];
+																});
 
 															self.controllers.ObjectDataTable.bindColumns(self.data.columns, false, true);
 
@@ -567,7 +595,7 @@ steal(
 										column: self.data.selectedCell.column
 									},
 									false)
-									.then(function () {
+									.then(function (result) {
 										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
 										if (!rowData.connectedData) rowData.connectedData = {};
 
@@ -776,7 +804,8 @@ steal(
 											newColumn.default = columnInfo.setting.value;
 
 										// Get deferred when save complete
-										var saveDeferred = self.getSaveColumnDeferred(columnInfo, removedListId);
+										var saveDeferred = self.getSaveColumnDeferred(columnInfo, removedListId),
+											objectName = self.data.object.attr('name');
 
 										if (columnInfo.id) { // Update
 											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
@@ -786,26 +815,45 @@ steal(
 											}
 
 											updateColumn.save()
-												.fail(function (err) {
-													saveDeferred.reject(err);
-												})
-												.then(function (data) {
-													if (data.translate) data.translate();
-
-													saveDeferred.resolve(data);
-												});
+												.fail(function (err) { saveDeferred.reject(err); })
+												.then(function (data) { saveDeferred.resolve(data); });
 										}
 										else { // Add new
 											self.Model.ABColumn.Cached.create(newColumn)
-												.fail(function (err) {
-													saveDeferred.reject(err);
-												})
+												.fail(function (err) { saveDeferred.reject(err); })
 												.then(function (data) {
 													if (data.translate) data.translate();
 
-													saveDeferred.resolve(data);
+													// Cache 
+													self.Model.ABColumn.Cached.model(data).created(data);
+
+													async.parallel([
+														function (next) {
+															// Save new columns name to cache
+															self.controllers.ModelCreator.addNewColumn(objectName, data.name)
+																.fail(function (err) { next(err); })
+																.then(function () { next(); });
+														},
+														function (next) {
+															// Add new describe to object model
+															self.controllers.ModelCreator.getModel(objectName)
+																.fail(function (err) { next(err); })
+																.then(function (objectModel) {
+																	objectModel.describe()[data.name] = data.type;
+																	next();
+																});
+														}
+													], function (err) {
+														if (err)
+															saveDeferred.reject(err);
+														else
+															saveDeferred.resolve(data);
+													});
+
 												});
 										}
+
+										return saveDeferred;
 									});
 
 									// Register load label format
@@ -871,8 +919,21 @@ steal(
 						},
 
 						deleteObject: function (obj) {
-							this.controllers.ModelCreator.getModel(obj.attr('name'))
-								.fail(function (err) { next(err); })
+							var self = this;
+
+							// Clear columns info cache
+							var cachedColumns = self.Model.ABColumn.Cached.findAllCached({ object: obj.attr('id') });
+							if (cachedColumns && cachedColumns.length > 0) {
+								cachedColumns = self.Model.ABColumn.Cached.models(cachedColumns); // Convert to cache model
+								cachedColumns.forEach(function (col) {
+									col.destroyed();
+								});
+							}
+
+							self.controllers.ModelCreator.getModel(obj.attr('name'))
+								.fail(function (err) {
+									// TODO : Error message
+								})
 								.then(function (objectModel) {
 									if (objectModel && objectModel.Cached)
 										objectModel.Cached.cacheClear(); // Clear cache data

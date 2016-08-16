@@ -10,7 +10,7 @@ steal(function() {
 				create: 'POST /app_builder/abapplication',
 				update: 'PUT /app_builder/abapplication/{id}',
 				destroy: 'DELETE /app_builder/abapplication/{id}',
-				describe: function() { return { 'name':'string', 'description':'text' };  },
+				describe: function() { return { 'name':'string', 'description':'text', 'permissions':'PermissionRole' };  },
 				// associations:['field1', 'field2', ..., 'fieldN'],
 				multilingualFields:['label', 'description'], 
 				// validations: {

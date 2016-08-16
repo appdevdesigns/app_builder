@@ -10,9 +10,6 @@ steal(function () {
 
 						can.Model.setup.apply(self, arguments);
 
-						self.savedIds = []; // [tempId, id, ..., idn]
-						self.deletedIds = [] // [id, ..., idn]
-
 						// setup data
 						if (typeof window.localStorage !== 'undefined') {
 							self._cached = JSON.parse(window.localStorage.getItem(self.cachedKey())) || {};
@@ -23,6 +20,10 @@ steal(function () {
 						io.socket.on('server-reload', function (data) {
 							if (!data.reloading) { // Server has finished reloading
 								async.series([
+									function (next) {
+										self.cacheNewFields([]);
+										next();
+									},
 									function (next) {
 										self.saveInList()
 											.fail(function (err) { next(err); })
@@ -40,6 +41,16 @@ steal(function () {
 					cachedKey: function () {
 						return 'cached' + this._shortName;
 					},
+					cacheSavedKey: function () {
+						return this.cachedKey() + '_saved_id';
+					},
+					cacheDeletedKey: function () {
+						return this.cachedKey() + '_deleted_id';
+					},
+					cacheNewFieldKey: function () {
+						return this.cachedKey() + '_new_fields';
+					},
+
 					cacheClear: function () {
 						window.localStorage.removeItem(this.cachedKey());
 						this._cached = {};
@@ -58,6 +69,34 @@ steal(function () {
 							}
 						});
 						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
+					},
+					cacheSavedIds: function (savedIds) {
+						if (savedIds && savedIds.length > 0)
+							window.localStorage.setItem(this.cacheSavedKey(), JSON.stringify(savedIds));
+						else
+							window.localStorage.removeItem(this.cacheSavedKey());
+					},
+					cacheDeletedIds: function (deletedIds) {
+						if (deletedIds && deletedIds.length > 0)
+							window.localStorage.setItem(this.cacheDeletedKey(), JSON.stringify(deletedIds));
+						else
+							window.localStorage.removeItem(this.cacheDeletedKey());
+					},
+					cacheNewFields: function (newFieldNames) {
+						if (newFieldNames && newFieldNames.length > 0)
+							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(newFieldNames));
+						else
+							window.localStorage.removeItem(this.cacheNewFieldKey());
+					},
+
+					getSavedIds: function () {
+						return JSON.parse(window.localStorage.getItem(this.cacheSavedKey())) || []; // [tempId, id, ..., idn]
+					},
+					getDeletedIds: function () {
+						return JSON.parse(window.localStorage.getItem(this.cacheDeletedKey())) || []; // [id, ..., idn]
+					},
+					getNewFieldNames: function () {
+						return JSON.parse(window.localStorage.getItem(this.cacheNewFieldKey())) || []; // [New_Field_1, ..., New_Field_n]
 					},
 					findAllCached: function (params) {
 						// remove anything not filtering ....
@@ -182,7 +221,25 @@ steal(function () {
 										if (!ignoreCache)
 											self.cacheItems(json);
 
-										list.attr(json, true); // Update cached instances
+										// list.attr(json, true);
+
+										// Update cached instances
+										can.each(json, function (newItem) {
+											var existsItem = list.filter(function (item) { return item[self.fieldId] == newItem[self.fieldId]; });
+
+											if (existsItem && existsItem.length > 0) {
+												existsItem = existsItem[0];
+
+												var propNames = can.Map.keys(newItem);
+
+												propNames.forEach(function (prop) {
+													existsItem.attr(prop, newItem[prop]); // Update value
+												});
+											}
+											else { // Add
+												list.push(newItem);
+											}
+										});
 
 										can.trigger(self, 'refreshData', { result: list });
 									}, this), function () {
@@ -271,10 +328,11 @@ steal(function () {
 						return function (obj) {
 							var q = new can.Deferred(),
 								self = this,
-								tempId = null;
+								tempId = null,
+								createObj = $.extend({}, obj);
 
 							if (AD.comm.isServerReady()) { // Call service to add new item
-								create(obj)
+								create(createObj)
 									.fail(function (err) {
 										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
 											var localObj = self.createNewLocalItem(obj);
@@ -287,7 +345,7 @@ steal(function () {
 									})
 									.then(function (result) { q.resolve(result); });
 							}
-							else { // Store to local repository
+							else { // Save to local repository - update to server when sync
 								var localObj = self.createNewLocalItem(obj);
 
 								q.resolve(localObj);
@@ -302,18 +360,25 @@ steal(function () {
 							var q = new can.Deferred(),
 								self = this,
 								saveObj = {},
-								fieldList = Object.keys(this.describe()).concat(['id', 'translations']);
+								fieldList = Object.keys(self.describe()).concat(['id', 'translations']),
+								hasNewField = false;
 
 							fieldList.forEach(function (key) {
 								if (typeof obj[key] != 'undefined' && obj[key] != null)
 									saveObj[key] = obj[key];
 							});
 
+							// Check has update to new field
+							var isUpdateNew = Object.keys(obj).filter(function (k) { return self.getNewFieldNames().indexOf(k) != -1; });
+							if (isUpdateNew && isUpdateNew.length > 0)
+								hasNewField = true;
+
 							if (AD.comm.isServerReady()) { // Call service to update item
+								var saveObj2 = $.extend({}, saveObj); // Copy for save to local
 								update(id, saveObj)
 									.fail(function (err) {
 										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
-											self.updateLocalItem(id, saveObj)
+											self.updateLocalItem(id, saveObj2)
 												.fail(function (err) { q.reject(err); })
 												.then(function (result) {
 													q.resolve(result);
@@ -324,10 +389,20 @@ steal(function () {
 										}
 									})
 									.then(function (result) {
+										if (!result.translate) {
+											for (var key in saveObj) {
+												if (key === 'id' || key === 'translations' || key === 'createdAt' || key === 'updatedAt')
+													continue;
+
+												result[key] = saveObj[key];
+											}
+										}
+
 										q.resolve(result);
 									});
 							}
-							else { // System is syncing
+
+							if (hasNewField || !AD.comm.isServerReady()) { // Save to local repository - update to server when sync
 								self.updateLocalItem(id, saveObj)
 									.fail(function (err) { q.reject(err); })
 									.then(function (result) {
@@ -359,13 +434,19 @@ steal(function () {
 									}
 									else {
 										if (self.isTempId(id)) { // Delete in saved ids list
-											var index = $.inArray(id, self.savedIds);
-											if (index > -1)
-												self.savedIds.splice(index, 1);
+											var savedIds = self.getSavedIds(),
+												index = $.inArray(id, savedIds);
+											if (index > -1) {
+												savedIds.splice(index, 1);
+												self.cacheSavedIds(savedIds);
+											}
 										}
 										else {
-											if ($.inArray(id, self.deletedIds) < 0)
-												self.deletedIds.push(id); // Store in deleted id list
+											var deletedIds = self.getDeletedIds();
+											if ($.inArray(id, deletedIds) < 0) {
+												deletedIds.push(id); // Store in deleted id list
+												self.cacheDeletedIds(deletedIds);
+											}
 										}
 
 										next();
@@ -404,8 +485,11 @@ steal(function () {
 					},
 
 					storeSaveId: function (id) {
-						if ($.inArray(id, this.savedIds) < 0)
-							this.savedIds.push(id);
+						var savedIds = this.getSavedIds();
+						if ($.inArray(id, savedIds) < 0) {
+							savedIds.push(id);
+							this.cacheSavedIds(savedIds);
+						}
 					},
 
 					createNewLocalItem: function (obj) {
@@ -441,9 +525,10 @@ steal(function () {
 					saveInList: function () {
 						var self = this,
 							q = $.Deferred(),
-							saveEvents = [];
+							saveEvents = [],
+							savedIds = self.getSavedIds();
 
-						self.savedIds.forEach(function (id) {
+						savedIds.forEach(function (id) {
 							saveEvents.push(function (next) {
 								self.findOne({ id: id }, true).then(function (result) {
 									if (!result) { // This data was deleted
@@ -459,9 +544,11 @@ steal(function () {
 
 										self.cacheItems([saveResult]);
 
-										var index = $.inArray(id, self.savedIds);
-										if (index > -1)
-											self.savedIds.splice(index, 1);
+										var index = $.inArray(id, savedIds);
+										if (index > -1) {
+											savedIds.splice(index, 1);
+											self.cacheSavedIds(savedIds);
+										}
 
 										next();
 									});
@@ -482,14 +569,17 @@ steal(function () {
 					destroyInList: function () {
 						var self = this,
 							q = $.Deferred(),
-							deleteEvents = [];
+							deleteEvents = [],
+							deletedIds = self.getDeletedIds();
 
-						self.deletedIds.forEach(function (id) {
+						deletedIds.forEach(function (id) {
 							deleteEvents.push(function (next) {
 								self.destroy(id).then(function (result) {
-									var index = $.inArray(id, self.deletedIds);
-									if (index > -1)
-										self.deletedIds.splice(index, 1);
+									var index = $.inArray(id, deletedIds);
+									if (index > -1) {
+										deletedIds.splice(index, 1);
+										self.cacheDeletedIds(deletedIds);
+									}
 
 									next();
 								});
@@ -535,12 +625,21 @@ steal(function () {
 							// Update our model
 							can.Model.prototype.created.apply(this, arguments);
 						},
-						destroyed: function (attrs) {
+						destroyed: function () {
 							// Save the model to local storage
 							delete this.constructor._cached[this[this.constructor.id]];
 							this.constructor.cacheItems([]);
 							// Update our model
 							can.Model.prototype.destroyed.apply(this, arguments);
+						},
+						checkSync: function () {
+							var unsyncIds = this.constructor.getSavedIds();
+
+							if (unsyncIds.indexOf(this.attr('id')) > -1)
+								return true;
+							else
+								return false;
+
 						}
 					});
 				return can.Model.Cached;

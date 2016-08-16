@@ -73,7 +73,7 @@ steal(
 									}
 								},
 
-								registerDataTable(dataTable) {
+								registerDataTable: function (dataTable) {
 									var base = this;
 
 									self.dataTable = dataTable;
@@ -87,13 +87,13 @@ steal(
 									}
 								},
 
-								registerHeaderClick(headerClickHandler) {
+								registerHeaderClick: function(headerClickHandler) {
 									self.data.headerClickHandler = headerClickHandler;
 								}
 							}, webix.ui.popup);
 						},
 
-						setHeaderId(headerId) {
+						setHeaderId: function(headerId) {
 							this.data.headerId = headerId;
 						}
 

@@ -51,7 +51,12 @@
 
 /* Webix list */
 .ab-main-container .webix_selected {
+	color: #fff !important;
 	background-color: #3498db !important;
+}
+.ab-app-form-permission .webix_selected {
+	color: #fff !important;
+	background-color: #3AB9CE !important;
 }
 
 /* Webix segmented */
@@ -74,8 +79,8 @@
 	min-height: 300px;
 	padding: 40px 100px;
 }
-.ab-app-list .webix_selected {
-	color: #000;
+.ab-app-select-list .webix_selected {
+	color: #000 !important;
 	background-color: transparent !important;
 }
 .ab-app-list-item {
@@ -179,6 +184,9 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-object-data-header:hover .ab-object-data-header-edit {
 	display: block;
 }
+.ab-object-unsync-data {
+	background-color: #EBFBDA;
+}
 
 /* Connect object data */
 .ab-connect-data-info {
@@ -187,6 +195,10 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.ab-connect-data-disable {
+	background-color: #aaa;
 }
 
 /* Custom selectivity */
@@ -198,6 +210,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 .ab-main-container .selectivity-multiple-selected-item {
 	background: #3498db !important;
+	padding-right: 5px;
 	/*max-width: 100px !important;*/
 }
 
@@ -219,25 +232,30 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	width: 100%;
 	position: relative;
 	background-color: #fff;
+	clear: both;
 }
 
 .ab-component-item-name {
-    display: table-cell;
-    font-size: 18px;
-    width: 90px;
-    border-right: 1px solid #ebebeb;
-    vertical-align: top;
-    padding-top: 10px;
-    height: 100%;
-    line-height: 100%;
+	float: left;
+	font-size: 18px;
+	border-right: 1px solid #ebebeb;
+	vertical-align: top;
+	padding-top: 10px;
+	width: 90px;
+	height: 100%;
+	line-height: 100%;
+	margin-bottom: -500em; /* CSS hack: equal height of right float */
+	padding-bottom: 500em;
 }
 
 .ab-component-item-display {
-	display: table-cell;
+	float: right;
 	vertical-align: top;
 	padding: 10px;
+	width: 87%;
 	height: 100%;
 	line-height: 100%;
+	overflow-x: auto;
 }
 
 .ab-component-remove {
@@ -279,4 +297,8 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	padding: 0px 5px;
 	min-width: 70%;
 	border-radius: 6px;
+}
+
+.ab-main-container .webix_layout_form {
+	background-color: #fff;
 }

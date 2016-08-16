@@ -1,6 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABColumn.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -22,9 +23,10 @@ steal(
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
 							};
 
+							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
 							self.controllers = {
-								ModelCreator: new AD.Control.get('opstools.BuildApp.ModelCreator')()
-							}
+								ModelCreator: new ModelCreator()
+							};
 
 							self.data = {};
 							self.events = {};
@@ -41,12 +43,15 @@ steal(
 							self.labels = {};
 
 							self.labels.common = {};
+							self.labels.common.ok = AD.lang.label.getLabel('ab.common.ok') || "Ok";
 							self.labels.common.search = AD.lang.label.getLabel('ab.common.search') || "Search";
 							self.labels.common.close = AD.lang.label.getLabel('ab.common.close') || "Close";
 
 							// Connected data
 							self.labels.object = {};
 							self.labels.object.selectConnectedData = AD.lang.label.getLabel('ab.object.selectConnectedData') || "Select data to connect";
+							self.labels.object.cannotConnectedDataTitle = AD.lang.label.getLabel('ab.object.cannotConnectedDataTitle') || "System could not link to this data";
+							self.labels.object.cannotConnectedDataDescription = AD.lang.label.getLabel('ab.object.cannotConnectedDataDescription') || "This data is unsynchronized. You can click Synchronize button to sync data.";
 						},
 
 						initWebixControls: function () {
@@ -105,6 +110,16 @@ steal(
 															this.unselectAll();
 													},
 													onItemClick: function (id, e, node) {
+														if (isNaN(id)) {
+															webix.alert({
+																title: self.labels.object.cannotConnectedDataTitle,
+																text: self.labels.object.cannotConnectedDataDescription,
+																ok: self.labels.common.ok
+															});
+
+															return false;
+														}
+
 														if (this.isSelected(id)) {
 															this.unselect(id);
 														}
@@ -170,7 +185,7 @@ steal(
 
 												var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
 
-												return [{ id: parseInt(id), text: connectData }];
+												return [{ id: id, text: connectData }];
 											});
 
 											if (!selectedItems || selectedItems.length < 1)
@@ -198,63 +213,60 @@ steal(
 									dataList.showProgress({ type: 'icon' });
 									dataList.define('multiselect', isMultipleRecords);
 
-									AD.util.async.series([
-										function (next) {
-											self.Model.ABColumn.Cached.findAll({ object: object.id })
-												.then(function (data) {
+									// Generate template to display
+									var template = function (item, common) {
+										var templateText = "<div class='ab-connect-data'>";
 
+										if (object.labelFormat || object.columns.length > 0)
+											templateText += object.labelFormat || '#' + object.columns[0].name + '#';
+
+										templateText += isNaN(item.id) ? " (Unsynchronized)" : "";
+										templateText += "</div>";
+										templateText = templateText.replace(/[{]/g, '#').replace(/[}]/g, '#'); // Replace label format
+
+										for (var key in item) {
+											templateText = templateText.replace(new RegExp('#' + key + '#', 'g'), item[key]);
+										}
+
+										templateText = templateText.replace(/#(.+?)#/g, '');
+
+										return templateText;
+									};
+
+									dataList.define('template', template);
+									dataList.refresh();
+
+									self.controllers.ModelCreator.getModel(object.name)
+										.fail(function (err) { next(err); })
+										.then(function (objectModel) {
+
+											objectModel.Cached.unbind('refreshData');
+											objectModel.Cached.bind('refreshData', function (ev, data) {
+												if (this == objectModel.Cached) {
+													data.result.forEach(function (d) {
+														if (d.translate) d.translate();
+													})
+
+													dataList.clearAll();
+													dataList.parse(data.result.attr());
+												}
+											});
+
+											// Load the connect data
+											objectModel.Cached.findAll({})
+												.fail(function (err) { next(err); })
+												.then(function (data) {
 													data.forEach(function (d) {
 														if (d.translate) d.translate();
-													});
+													})
 
-													columns = data;
+													dataList.parse(data.attr());
 
-													next();
-
-												});
-										},
-										function (next) {
-											// Generate template to display
-											var template = "<div class='ab-connect-data'>";
-											if (object.labelFormat || object.columns.length > 0)
-												template += object.labelFormat || '#' + object.columns.name + '#';
-											template += "</div>";
-											template = template.replace(/[{]/g, '#').replace(/[}]/g, '#');
-
-											dataList.define('template', template);
-											dataList.refresh();
-
-											self.controllers.ModelCreator.getModel(object.name)
-												.fail(function (err) { next(err); })
-												.then(function (objectModel) {
-
-													objectModel.Cached.unbind('refreshData');
-													objectModel.Cached.bind('refreshData', function (ev, data) {
-														if (this == objectModel.Cached) {
-															dataList.clearAll();
-															dataList.parse(data.result.attr());
-														}
-													});
-
-													// Load the connect data
-													objectModel.Cached.findAll({})
-														.fail(function (err) { next(err); })
-														.then(function (data) {
-															data.forEach(function (d) {
-																if (d.translate) d.translate();
-															})
-
-															dataList.parse(data.attr());
-
-															next();
-														});
-
+													dataList.hideProgress();
 												});
 
-										}
-									], function () {
-										dataList.hideProgress();
-									});
+										});
+
 								},
 
 								registerSelectChangeEvent: function (selectChange) {

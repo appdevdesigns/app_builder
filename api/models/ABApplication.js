@@ -6,7 +6,8 @@
  */
 
 var async = require('async'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    AD = require('ad-utils');
 
 module.exports = {
 
@@ -18,6 +19,11 @@ module.exports = {
     attributes: {
 
         object: { collection: 'ABObject', via: 'application' },
+
+        permissions: {
+            collection: 'ABApplicationPermission',
+            via: 'application',
+        },
 
         name: {
             type: 'string',
@@ -44,9 +50,11 @@ module.exports = {
             return ABApplication;
         },
 
+
         areaKey: function() {
             return _.kebabCase('ab-'+this.name);
         }
+
     },
 
 
@@ -92,6 +100,15 @@ module.exports = {
                 },
                 function (callback) {
                     ABPage.destroy({ application: ids })
+                        .fail(function (err) {
+                            callback(err)
+                        })
+                        .then(function () {
+                            callback();
+                        });
+                },
+                function (callback) {
+                    ABApplicationPermission.destroy({ application: ids })
                         .fail(function (err) {
                             callback(err)
                         })
