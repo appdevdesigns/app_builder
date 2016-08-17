@@ -294,7 +294,6 @@ steal(
 												value: "Save",
 												width: 90,
 												inputWidth: 80,
-												disabled: true,
 												click: function () {
 													if ($$(self.componentIds.saveButton))
 														$$(self.componentIds.saveButton).disable();
@@ -307,12 +306,22 @@ steal(
 
 													async.series([
 														function (next) {
-															self.getModelData(data.objectId, data.modelDataId)
-																.fail(function (err) { next(err) })
-																.then(function (result) {
-																	modelData = result;
-																	next();
-																});
+															if (data.modelDataId) { // Update
+																self.getModelData(data.objectId, data.modelDataId)
+																	.fail(function (err) { next(err) })
+																	.then(function (result) {
+																		modelData = result;
+																		next();
+																	});
+															}
+															else { // Create
+																self.getObjectModel(data.objectId)
+																	.fail(function (err) { next(err) })
+																	.then(function (objectModel) {
+																		modelData = objectModel.newInstance();
+																		next();
+																	});
+															}
 														},
 														function (next) {
 															var editValues = $$(formView).getValues(),
@@ -354,6 +363,11 @@ steal(
 															if (events.save)
 																events.save(data.modelDataId);
 
+															if ($$(self.componentIds.saveButton))
+																$$(self.componentIds.saveButton).enable();
+
+															data.modelDataId = null;
+
 															next();
 														}
 													]);
@@ -369,8 +383,6 @@ steal(
 												width: 90,
 												inputWidth: 80,
 												click: function () {
-													if ($$(self.componentIds.saveButton))
-														$$(self.componentIds.saveButton).disable();
 													$$(this.getTopParentView()).setValues({});
 
 													var data = self.getData(viewId),
@@ -510,21 +522,41 @@ steal(
 									});
 							};
 
-							self.getModelData = function (objectId, dataId) {
-								var q = $.Deferred(),
-									object, objectModel;
+							self.getObjectModel = function (objectId) {
+								var q = $.Deferred();
 
-								async.series([
+								async.waterfall([
 									function (next) {
 										self.Model.ABObject.findOne({ id: objectId })
 											.fail(function (err) { next(err); })
-											.then(function (result) {
-												object = result;
-												next();
+											.then(function (object) {
+												next(null, object);
 											})
 									},
-									function (next) {
+									function (object, next) {
 										self.controllers.ModelCreator.getModel(object.name)
+											.fail(function (err) { next(err); })
+											.then(function (objectModel) {
+												q.resolve(objectModel);
+												next(null);
+											});
+									}
+								], function (err) {
+									if (err) {
+										q.reject(err);
+									}
+								});
+
+								return q;
+							};
+
+							self.getModelData = function (objectId, dataId) {
+								var q = $.Deferred(),
+									objectModel;
+
+								async.series([
+									function (next) {
+										self.getObjectModel(objectId)
 											.fail(function (err) { next(err); })
 											.then(function (result) {
 												objectModel = result;
