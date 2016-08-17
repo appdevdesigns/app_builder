@@ -289,7 +289,7 @@ steal(
 																	}, 0);
 
 																	// Select new role
-																	var selectedIds = $$(self.webixUiId.appFormPermissionList).getSelectedId() || [];
+																	var selectedIds = $$(self.webixUiId.appFormPermissionList).getSelectedId(true);
 																	selectedIds.push('newRole');
 																	$$(self.webixUiId.appFormPermissionList).select(selectedIds);
 																}
@@ -357,13 +357,23 @@ steal(
 
 															if (updateApp) {
 																async.waterfall([
-																	function (cb) {
+																	function (next) {
+																		self.savePermissions(selectedId)
+																			.fail(function (err) { next(err); })
+																			.then(function (result) { next(null, result); });
+																	},
+																	function (app_role, next) {
 																		// Update application data
 																		updateApp.attr('label', $$(self.webixUiId.appListForm).elements['label'].getValue());
 																		updateApp.attr('description', $$(self.webixUiId.appListForm).elements['description'].getValue());
 
+																		if (app_role && app_role.id)
+																			updateApp.attr('role', app_role.id);
+																		else
+																			updateApp.removeAttr('role');
+
 																		updateApp.save()
-																			.fail(function (err) { cb(err); })
+																			.fail(function (err) { next(err); })
 																			.then(function (result) {
 																				var existApp = self.data.filter(function (item, index, list) {
 																					return item.id === result.id;
@@ -375,13 +385,8 @@ steal(
 																				existApp.attr('label', result.label);
 																				existApp.attr('description', result.description);
 
-																				cb(null, result.id);
+																				next(null, result.id);
 																			});
-																	},
-																	function (appId, cb) {
-																		self.savePermissions(appId)
-																			.fail(function (err) { cb(err); })
-																			.then(function (result) { cb(); });
 																	}
 																], function (err) {
 																	if (err) {
@@ -578,8 +583,8 @@ steal(
 							// Final task
 							saveRoleTasks.push(function (cb) {
 								// Update store app data
-								var selectedApp = self.data.filter(function (d) { return d.id == appId; });
-								selectedApp.forEach(function (app) {
+								var applicationData = self.data.filter(function (d) { return d.id == appId; });
+								applicationData.forEach(function (app) {
 									app.attr('permissions', $.map(permItems, function (item) {
 										return {
 											application: app.id,
@@ -589,7 +594,7 @@ steal(
 									}));
 								});
 
-								q.resolve();
+								q.resolve(appRole);
 								cb();
 							})
 
@@ -651,18 +656,19 @@ steal(
 										.fail(function (err) { next(err); })
 										.done(function (selected_role_ids) {
 											// Sort permission list
-											available_roles.forEach(function (r) {
-												var perm = [];
+											if (selectedApp.role && selectedApp.role.id) {
+												available_roles.forEach(function (r) {
+													var perm = [];
 
-												if (selectedApp) perm = selected_role_ids.filter(function (rId) { return r.id == rId; });
-
-												if (perm && perm.length > 0)
-													r.isApplicationRole = perm[0].isApplicationRole || false;
-											});
+													if (r.id == selectedApp.role.id)
+														r.isApplicationRole = true;
+												});
+											}
 											available_roles.sort(function (a, b) {
 												return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
 											});
 
+											$$(self.webixUiId.appFormPermissionList).clearAll();
 											$$(self.webixUiId.appFormPermissionList).parse(available_roles);
 
 											if (selected_role_ids && selected_role_ids.length > 0) {
