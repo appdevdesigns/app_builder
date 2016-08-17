@@ -319,10 +319,25 @@ steal(
 																keys = Object.keys(editValues);
 
 															keys.forEach(function (k) {
-																if (typeof editValues[k] !== 'undefined' && editValues[k] !== null)
-																	modelData.attr(k, editValues[k]);
+																if (typeof editValues[k] !== 'undefined' && editValues[k] !== null) {
+																	var colInfo = data.columns.filter(function (col) { return col.name === k; })[0];
+
+																	if (colInfo) {
+																		switch (colInfo.type) {
+																			case "boolean":
+																				modelData.attr(k, editValues[k] === 1 ? true : false);
+																				break;
+																			default:
+																				modelData.attr(k, editValues[k]);
+																				break;
+																		}
+																	}
+																	else {
+																		modelData.attr(k, editValues[k]);
+																	}
+																}
 																else
-																	modelData.removeAttr(k);
+																	modelData.attr(k, null);
 															});
 
 															modelData.save()
