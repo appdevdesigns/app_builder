@@ -212,6 +212,21 @@ steal(
 											return "<div class='webix_icon fa-square-o'></div>";
 									};
 								}
+								else if (col.type === 'integer') {
+									mapCol.format = webix.Number.numToStr({
+										groupDelimiter: ",",
+										groupSize: 3,
+										decimalSize: 0
+									});
+								}
+								else if (col.type === 'float') {
+									mapCol.format = webix.Number.numToStr({
+										groupDelimiter: ",",
+										groupSize: 3,
+										decimalDelimiter: ".",
+										decimalSize: 1
+									});
+								}
 								else if (mapCol.editor === 'date') {
 									mapCol.format = webix.i18n.dateFormatStr;
 								}
