@@ -193,6 +193,9 @@ steal(
                                                                 });
                                                             }
 
+                                                            // Highlight name in text box
+                                                            $(headerNameClass + ' input[type="text"]').select();
+
                                                             this.getTopParentView().selectedType = selectedMenuItem.value;
                                                         }
                                                     }
@@ -210,7 +213,13 @@ steal(
                                                     {
                                                         id: self.componentIds.connectObjectView,
                                                         rows: [
-                                                            { view: "text", label: self.labels.common.name, placeholder: self.labels.common.headerName, css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            {
+                                                                view: "text",
+                                                                label: self.labels.common.name,
+                                                                placeholder: self.labels.common.headerName,
+                                                                css: self.componentIds.headerNameText,
+                                                                labelWidth: 50
+                                                            },
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.connectObjectIcon).replace('{1}', self.labels.add_fields.connectToObject) },
                                                             {
                                                                 view: "list",
@@ -653,6 +662,9 @@ steal(
                                     $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
                                         $(txtName).webix_text().setValue(fieldName);
                                     });
+
+                                    // Highlight name in text box
+                                    $('.' + self.componentIds.headerNameText + ' input[type="text"]').select();
                                 },
 
                                 setObjectList: function (objectList) {
