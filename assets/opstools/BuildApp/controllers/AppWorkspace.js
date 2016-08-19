@@ -130,7 +130,9 @@ steal(
 												//autowidth: true,
 												align: "right",
 												click: function () {
-													self.element.trigger(self.options.synchronizeEvent, {});
+													self.element.trigger(self.options.synchronizeEvent, {
+														appID: self.data.app.id
+													});
 												}
 											},
 											{

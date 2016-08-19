@@ -82,7 +82,7 @@ steal(
 								self.controllers.AppList.resize(self.data.height);
 							});
 
-							self.controllers.AppWorkspace.element.on(self.CONST.SYNCHRONIZE, function (event) {
+							self.controllers.AppWorkspace.element.on(self.CONST.SYNCHRONIZE, function (event, data) {
 								// Create overlay with loading icon
 								// var $overlay = $('<div style="background: black; opacity: 0.4; position: absolute; left: 0; top: 0; bottom: 0; right: 0; z-index: 5000; padding-top: 20%; text-align: center; vertical-align: middle"><i class="fa fa-refresh fa-spin fa-3x fa-inverse"></i></div>');
 								// $('body').append($overlay);
@@ -93,7 +93,7 @@ steal(
 
 								// Generate Sails models and reload ORM
 								AD.comm.service.post({
-									url: '/app_builder/fullReload'
+									url: '/app_builder/fullReload/' + data.appID
 								})
 									.always(function () {
 										// $overlay.remove();

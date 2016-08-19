@@ -29,7 +29,7 @@ module.exports = {
      *
      * @return Deferred
      */
-    reload: function() {
+    reload: function(appID) {
         var dfd = AD.sal.Deferred();
         
         var timeout = setTimeout(function() {
@@ -46,7 +46,7 @@ module.exports = {
         
         async.auto({
             find: function(next) {
-                ABApplication.find()
+                ABApplication.find({ id: appID })
                 .then(function(list) {
                     if (!list || !list[0]) {
                         throw new Error('no apps found');
