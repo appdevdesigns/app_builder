@@ -322,7 +322,8 @@ module.exports = {
                     path.join('opstools', appName), // client side location
                     fullName, // server side location
                     'connection:appBuilder', // Sails connection name
-                    'tablename:' + fullName.toLowerCase()
+                    'tablename:' + fullName.toLowerCase(),
+                    'preventNull:true'
                 ];
                 for (var i=0; i<columns.length; i++) {
                     var col = columns[i];
