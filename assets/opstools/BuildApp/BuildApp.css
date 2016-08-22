@@ -306,7 +306,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 /* Loading Screen */
 .ab-loading-screen {
 	background: #000;
-	opacity: 0.4;
+	opacity: 0.7;
 	position: absolute !important;
 }
 .ab-loading-body {
