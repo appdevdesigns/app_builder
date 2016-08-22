@@ -20,7 +20,7 @@ function nameFilter(name) {
 
 function notifyToClients(reloading, step, action) {
     var data = {
-        reloading: reloading || true
+        reloading: reloading
     };
 
     if (step)

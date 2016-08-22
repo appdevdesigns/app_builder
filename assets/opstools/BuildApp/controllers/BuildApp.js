@@ -35,7 +35,8 @@ steal(
 							self.data = {};
 
 							self.webixUiId = {
-								loadingScreen: 'ab-loading-screen'
+								loadingScreen: 'ab-loading-screen',
+								syncButton: 'ab-sync-button'
 							};
 
 							self.initDOM();
@@ -101,53 +102,33 @@ steal(
 							self.controllers.AppWorkspace.element.on(self.CONST.SYNCHRONIZE, function (event, data) {
 								$$(self.webixUiId.loadingScreen).start();
 								$$(self.webixUiId.loadingScreen).setMessage("Requesting...");
+								$$(self.webixUiId.syncButton).disable();
 
-								// setTimeout(function () {
-								// 	$$(self.webixUiId.loadingScreen).setPercentage(0.5);
-								// 	$$(self.webixUiId.loadingScreen).setMessage("One ...");
-								// }, 4000);
+								self.callReload(data);
 
-								// setTimeout(function () {
-								// 	$$(self.webixUiId.loadingScreen).setPercentage(1);
-								// 	$$(self.webixUiId.loadingScreen).setMessage("Two ...");
-								// }, 7000);
-
-								// setTimeout(function () {
-								// 	$$(self.webixUiId.loadingScreen).stop();
-								// }, 10000);
-
-								// Create overlay with loading icon
-								// var $overlay = $('<div style="background: black; opacity: 0.4; position: absolute; left: 0; top: 0; bottom: 0; right: 0; z-index: 5000; padding-top: 20%; text-align: center; vertical-align: middle"><i class="fa fa-refresh fa-spin fa-3x fa-inverse"></i></div>');
-								// $('body').append($overlay);
-
-								// $$('ab-sync-button').define('icon', 'refresh fa-spin fa fa-inverse');
-								// $$('ab-sync-button').define('label', 'Restructuring objects...');
-								// $$('ab-sync-button').refresh();
-								$$('ab-sync-button').disable();
-
-								// Generate Sails models and reload ORM
-								AD.comm.service.post({
-									url: '/app_builder/fullReload/' + data.appID
-								})
-									.always(function () {
-										$$(self.webixUiId.loadingScreen).stop(); // TODO
-										$$('ab-sync-button').enable();
-
-										// $overlay.remove();
-										// delete $overlay;
-
-										// $$('ab-sync-button').define('icon', 'refresh');
-										// $$('ab-sync-button').define('label', 'Synchronize');
-										// $$('ab-sync-button').refresh();
-										// $$('ab-sync-button').enable();
-									})
-									.fail(function (err) {
-										console.log(err);
-										webix.message(err);
-
-										$$('ab-sync-button').enable();
-									});
 							});
+						},
+
+						callReload: function (data) {
+							var self = this;
+
+							AD.comm.service.post({
+								url: '/app_builder/fullReload/' + data.appID
+							})
+								.always(function () {
+								})
+								.fail(function (err) {
+									console.log(err);
+									webix.message(err);
+
+									$$(self.webixUiId.loadingScreen).showErrorScreen("There are errors", "Reload", function () { // TODO
+										$$(self.webixUiId.loadingScreen).start();
+										$$(self.webixUiId.loadingScreen).setMessage("Requesting...");
+
+										self.callReload(data);
+									});
+									$$(self.webixUiId.syncButton).enable();
+								});
 						},
 
 						updateSyncStatus: function (data) {
@@ -155,7 +136,7 @@ steal(
 
 							if (data.reloading) {
 								switch (data.action) {
-									case 'start':
+									case 'start': // Update loading message
 										var message = '';
 										switch (data.step) {
 											case 'findApplication':
@@ -176,11 +157,11 @@ steal(
 										}
 										$$(self.webixUiId.loadingScreen).setMessage(message);
 										break;
-									case 'done':
+									case 'done': // Update progress bar
 										if (!self.data.curLoadProgress) self.data.curLoadProgress = 0;
 										switch (data.step) {
 											case 'findApplication':
-												self.data.curLoadProgress += 0.4;
+												self.data.curLoadProgress += 0.3;
 												break;
 											case 'prepareFolder':
 												self.data.curLoadProgress += 0.2;
@@ -200,8 +181,18 @@ steal(
 								}
 							}
 							else { // Reloaded - Reset values
-								$$(self.webixUiId.loadingScreen).setMessage('');
-								self.data.curLoadProgress = 0;
+								// Sync object data
+								$$(self.webixUiId.loadingScreen).setMessage('Syncing objects data...');
+								self.controllers.AppWorkspace.syncObjectsData()
+									.always(function () {
+										self.data.curLoadProgress += 0.1;
+										$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
+
+										$$(self.webixUiId.loadingScreen).showFinishScreen("Synchronized", "OK");
+										$$(self.webixUiId.syncButton).enable();
+
+										self.data.curLoadProgress = 0;
+									});
 							}
 						},
 

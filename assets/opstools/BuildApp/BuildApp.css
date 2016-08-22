@@ -305,21 +305,30 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 
 /* Loading Screen */
 .ab-loading-screen {
-	background: black;
+	background: #000;
 	opacity: 0.4;
 	position: absolute !important;
-	font-size: 30px;
 }
 .ab-loading-body {
-	background: black;
-	padding-top: 40%;
+	background: #000;
+	border-width: 0px !important;
+}
+.ab-loading-message {
+	color: #fff;
+	background: #000;
+	font-size: 30px;
 	text-align: center;
 	vertical-align: middle;
 	border-width: 0px !important;
+	padding-top: 20% !important;
+	height: 100px !important;
 }
-.ab-loading-screen .webix_overlay {
-	color: #E2D5D5;
-	padding-top: 25% !important;
+.ab-loading-button {
+	text-align: center;
+}
+.ab-loading-button button {
+	background-color: #003B7E;
+	width: 200px;
 }
 .ab-loading-screen .webix_progress_bottom {
 	height: 40px !important;

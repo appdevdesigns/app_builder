@@ -16,27 +16,6 @@ steal(function () {
 						} else {
 							self._cached = {};
 						}
-
-						io.socket.on('server-reload', function (data) {
-							if (!data.reloading) { // Server has finished reloading
-								async.series([
-									function (next) {
-										self.cacheNewFields([]);
-										next();
-									},
-									function (next) {
-										self.saveInList()
-											.fail(function (err) { next(err); })
-											.then(function () { next(); });
-									},
-									function (next) {
-										self.destroyInList()
-											.fail(function (err) { next(err); })
-											.then(function () { next(); });
-									}
-								]);
-							}
-						});
 					},
 					cachedKey: function () {
 						return 'cached' + this._shortName;
@@ -592,6 +571,39 @@ steal(function () {
 							else
 								q.resolve();
 						});
+
+						return q;
+					},
+
+					syncDataToServer: function () {
+						var self = this,
+							q = $.Deferred();
+
+						async.series([
+							function (next) {
+								self.cacheNewFields([]);
+								next();
+							},
+							function (next) {
+								self.saveInList()
+									.fail(function (err) {
+										next(err);
+										q.reject(err);
+									})
+									.then(function () { next(); });
+							},
+							function (next) {
+								self.destroyInList()
+									.fail(function (err) {
+										next(err);
+										q.reject(err);
+									})
+									.then(function () {
+										next();
+										q.resolve();
+									});
+							}
+						]);
 
 						return q;
 					}

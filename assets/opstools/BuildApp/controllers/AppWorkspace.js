@@ -88,7 +88,7 @@ steal(
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
-							self.controllers.LoadingScreen = new LoadingScreen(self.element); 
+							self.controllers.LoadingScreen = new LoadingScreen(self.element);
 						},
 
 						initEvents: function () {
@@ -206,6 +206,10 @@ steal(
 
 						refresh: function () {
 							this.controllers.ObjectPage.refresh();
+						},
+
+						syncObjectsData: function () {
+							return this.controllers.ObjectPage.syncData();
 						},
 
 						resize: function (height) {
