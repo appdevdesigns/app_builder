@@ -302,3 +302,29 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-main-container .webix_layout_form {
 	background-color: #fff;
 }
+
+/* Loading Screen */
+.ab-loading-screen {
+	background: black;
+	opacity: 0.4;
+	position: absolute !important;
+	font-size: 30px;
+}
+.ab-loading-body {
+	background: black;
+	padding-top: 40%;
+	text-align: center;
+	vertical-align: middle;
+	border-width: 0px !important;
+}
+.ab-loading-screen .webix_overlay {
+	color: #E2D5D5;
+	padding-top: 25% !important;
+}
+.ab-loading-screen .webix_progress_bottom {
+	height: 40px !important;
+	opacity: 1;
+}
+.ab-loading-screen .webix_progress_bottom .webix_progress_state {
+	height: 40px !important;
+}

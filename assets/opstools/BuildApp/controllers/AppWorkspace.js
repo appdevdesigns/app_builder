@@ -3,6 +3,8 @@ steal(
 	'opstools/BuildApp/controllers/ObjectPage.js',
 	'opstools/BuildApp/controllers/InterfacePage.js',
 
+	'opstools/BuildApp/controllers/webix_custom_components/LoadingScreen.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -81,10 +83,12 @@ steal(
 							self.controllers = {};
 
 							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage'),
-								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage');
+								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage'),
+								LoadingScreen = AD.Control.get('opstools.BuildApp.LoadingScreen');
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
+							self.controllers.LoadingScreen = new LoadingScreen(self.element); 
 						},
 
 						initEvents: function () {
