@@ -20,16 +20,9 @@ steal(function () {
 					cachedKey: function () {
 						return 'cached' + this._shortName;
 					},
-					cacheSavedKey: function () {
-						return this.cachedKey() + '_saved_id';
-					},
-					cacheDeletedKey: function () {
-						return this.cachedKey() + '_deleted_id';
-					},
 					cacheNewFieldKey: function () {
 						return this.cachedKey() + '_new_fields';
 					},
-
 					cacheClear: function () {
 						window.localStorage.removeItem(this.cachedKey());
 						this._cached = {};
@@ -49,17 +42,17 @@ steal(function () {
 						});
 						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
 					},
-					cacheSavedIds: function (savedIds) {
-						if (savedIds && savedIds.length > 0)
-							window.localStorage.setItem(this.cacheSavedKey(), JSON.stringify(savedIds));
-						else
-							window.localStorage.removeItem(this.cacheSavedKey());
-					},
-					cacheDeletedIds: function (deletedIds) {
-						if (deletedIds && deletedIds.length > 0)
-							window.localStorage.setItem(this.cacheDeletedKey(), JSON.stringify(deletedIds));
-						else
-							window.localStorage.removeItem(this.cacheDeletedKey());
+					removeCachedItems: function (itemIds) {
+						var data = this._cached;
+
+						if (!(itemIds instanceof Array))
+							itemIds = [itemIds];
+
+						itemIds.forEach(function (itemId) {
+							delete data[itemId];
+						});
+
+						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
 					},
 					cacheNewFields: function (newFieldNames) {
 						if (newFieldNames && newFieldNames.length > 0)
@@ -68,12 +61,6 @@ steal(function () {
 							window.localStorage.removeItem(this.cacheNewFieldKey());
 					},
 
-					getSavedIds: function () {
-						return JSON.parse(window.localStorage.getItem(this.cacheSavedKey())) || []; // [tempId, id, ..., idn]
-					},
-					getDeletedIds: function () {
-						return JSON.parse(window.localStorage.getItem(this.cacheDeletedKey())) || []; // [id, ..., idn]
-					},
 					getNewFieldNames: function () {
 						return JSON.parse(window.localStorage.getItem(this.cacheNewFieldKey())) || []; // [New_Field_1, ..., New_Field_n]
 					},
@@ -83,6 +70,8 @@ steal(function () {
 						var list = [],
 							data = this._cached,
 							item;
+
+						if (!params) params = {};
 
 						for (var id in data) {
 							item = data[id];
@@ -186,70 +175,44 @@ steal(function () {
 						return function (params, ignoreCache) {
 							var def = new can.Deferred(),
 								self = this,
-								data = this.findAllCached(params);
+								cachedData = this.findAllCached(params),
+								list = this.models(cachedData || []);
 
-							if (data.length) {
-								var list = this.models(data);
+							findAll(params).then(can.proxy(function (data) {
+								can.each(data, function (d) {
+									if (d.translate) d.translate();
+								});
 
-								if (AD.comm.isServerReady()) {
-									findAll(params).then(can.proxy(function (json) {
-										can.each(json, function (d) {
-											if (d.translate) d.translate();
+								// if (!ignoreCache)
+								// 	self.cacheItems(json);
+
+								// Merge cached and actual data
+								can.each(list, function (cachedItem) {
+									var existsItem = data.filter(function (item) { return item[self.fieldId] == cachedItem[self.fieldId]; });
+
+									if (existsItem && existsItem.length > 0) {
+										existsItem = existsItem[0];
+
+										var propNames = can.Map.keys(cachedItem);
+
+										propNames.forEach(function (prop) {
+											if (prop !== "id" && prop !== "createdAt" && prop != "updatedAt")
+												existsItem.attr(prop, cachedItem[prop]); // Update value
 										});
+									}
+									else { // Add
+										data.push(cachedItem);
+									}
+								});
 
-										if (!ignoreCache)
-											self.cacheItems(json);
+								def.resolve(data);
+							}, this), function (err) {
+								if (cachedData) // 404 not found - new object data
+									def.resolve(list);
+								else
+									def.reject(err);
+							});
 
-										// list.attr(json, true);
-
-										// Update cached instances
-										can.each(json, function (newItem) {
-											var existsItem = list.filter(function (item) { return item[self.fieldId] == newItem[self.fieldId]; });
-
-											if (existsItem && existsItem.length > 0) {
-												existsItem = existsItem[0];
-
-												var propNames = can.Map.keys(newItem);
-
-												propNames.forEach(function (prop) {
-													existsItem.attr(prop, newItem[prop]); // Update value
-												});
-											}
-											else { // Add
-												list.push(newItem);
-											}
-										});
-
-										can.trigger(self, 'refreshData', { result: list });
-									}, this), function () {
-										can.trigger(list, 'error', arguments);
-									});
-								}
-
-								def.resolve(list);
-							} else {
-								if (AD.comm.isServerReady()) {
-									findAll(params).then(can.proxy(function (data) {
-										can.each(data, function (d) {
-											if (d.translate) d.translate();
-										});
-
-										// Create our model instance
-										var list = this.models(data);
-
-										if (!ignoreCache)
-											self.cacheItems(data); // Save the data to local storage
-
-										// Resolve the deferred with our instance
-										def.resolve(list);
-									}, this), function (data) {
-										def.reject(data);
-									});
-								}
-								else {
-									def.resolve([]);
-								}
-							}
 							return def;
 						};
 					},
@@ -258,48 +221,49 @@ steal(function () {
 							var def = new can.Deferred();
 
 							// grab instance from cached data
-							var data = this._cached[params[this.id]];
+							var cachedData = this._cached[params[this.id]];
 							// or try to load it
-							data = data || this.findAllCached(params)[0];
+							cachedData = cachedData || this.findAllCached(params)[0];
+							// Create our model instance
+							var cachedInstance = (cachedData ? this.model(cachedData._data ? cachedData._data : cachedData) : null);
 
-							// If we had existing local storage data...
-							if (data) {
-								// Create our model instance
-								var instance = this.model(data._data ? data._data : data);
+							if (!onlyLocal) {
+								findOne(params).then(can.proxy(function (data) {
+									if (data.translate) data.translate();
 
-								if (AD.comm.isServerReady() && !onlyLocal) {
-									findOne(params).then(function (json) {
-										// Update the instance when the ajax response returns
-										if (!ignoreCache)
-											instance.updated(json);
-									}, function (data) {
-										can.trigger(instance, 'error', data);
-									});
-								}
+									// Create our model instance
+									var instance = this.model(data);
 
-								// Resolve the deferred with our instance
-								def.resolve(instance); // Otherwise hand off the deferred to the ajax request
-							} else {
-								if (AD.comm.isServerReady() && !onlyLocal) {
-									findOne(params).then(can.proxy(function (data) {
-										if (data.translate) data.translate();
-										// Create our model instance
-										var instance = this.model(data);
+									// if (!ignoreCache) // Save the data to local storage
+									// 	instance.created(data);
 
-										// Save the data to local storage
-										if (!ignoreCache)
-											instance.created(data);
+									if (cachedInstance && instance) { // If we had existing local storage data...
 
-										// Resolve the deferred with our instance
-										def.resolve(instance);
-									}, this), function (data) {
-										def.reject(data);
-									});
+										var propNames = can.Map.keys(cachedInstance);
+										propNames.forEach(function (prop) {
+											if (prop !== "id" && prop !== "createdAt" && prop != "updatedAt")
+												instance.attr(prop, cachedInstance[prop]); // Update value
+										});
+									}
+
+									// Resolve the deferred with our instance
+									def.resolve(instance);
+								}, this), function (err) {
+									if (cachedInstance) // 404 not found - new object data
+										def.resolve(cachedInstance);
+									else
+										def.reject(err);
+								});
+							}
+							else {
+								if (cachedInstance) { // If we had existing local storage data...
+									def.resolve(cachedInstance);
 								}
 								else {
 									def.resolve(null);
 								}
 							}
+
 							return def;
 						};
 					},
@@ -307,29 +271,20 @@ steal(function () {
 						return function (obj) {
 							var q = new can.Deferred(),
 								self = this,
-								tempId = null,
 								createObj = $.extend({}, obj);
 
-							if (AD.comm.isServerReady()) { // Call service to add new item
-								create(createObj)
-									.fail(function (err) {
-										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
-											var localObj = self.createNewLocalItem(obj);
+							create(createObj)
+								.fail(function (err) {
+									if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
+										var localObj = self.createLocalItem(obj); // Cache data
 
-											q.resolve(localObj);
-										}
-										else {
-											q.reject(err);
-										}
-									})
-									.then(function (result) { q.resolve(result); });
-							}
-							else { // Save to local repository - update to server when sync
-								var localObj = self.createNewLocalItem(obj);
-
-								q.resolve(localObj);
-							}
-
+										q.resolve(localObj);
+									}
+									else {
+										q.reject(err);
+									}
+								})
+								.then(function (result) { q.resolve(result); });
 
 							return q;
 						};
@@ -347,47 +302,59 @@ steal(function () {
 									saveObj[key] = obj[key];
 							});
 
-							// Check has update to new field
+							// Check has update to new column
 							var isUpdateNew = Object.keys(obj).filter(function (k) { return self.getNewFieldNames().indexOf(k) != -1; });
 							if (isUpdateNew && isUpdateNew.length > 0)
 								hasNewField = true;
 
-							if (AD.comm.isServerReady()) { // Call service to update item
-								var saveObj2 = $.extend({}, saveObj); // Copy for save to local
-								update(id, saveObj)
-									.fail(function (err) {
-										if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
-											self.updateLocalItem(id, saveObj2)
-												.fail(function (err) { q.reject(err); })
-												.then(function (result) {
-													q.resolve(result);
-												});
-										}
-										else {
-											q.reject(err);
-										}
-									})
-									.then(function (result) {
-										if (!result.translate) {
-											for (var key in saveObj) {
-												if (key === 'id' || key === 'translations' || key === 'createdAt' || key === 'updatedAt')
-													continue;
+							var saveObj2 = $.extend({}, saveObj); // Copy for save to local
 
-												result[key] = saveObj[key];
+							async.waterfall([
+								function (next) {
+									update(id, saveObj)
+										.fail(function (err) {
+											if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
+												self.updateLocalItem(id, saveObj2)
+													.fail(function (err) { next(err); })
+													.then(function (result) {
+														next(null, result);
+													});
 											}
-										}
+											else {
+												next(err);
+											}
+										})
+										.then(function (result) {
+											if (!result.translate) {
+												for (var key in saveObj) {
+													if (key === 'id' || key === 'translations' || key === 'createdAt' || key === 'updatedAt')
+														continue;
 
-										q.resolve(result);
-									});
-							}
+													result[key] = saveObj[key];
+												}
+											}
 
-							if (hasNewField || !AD.comm.isServerReady()) { // Save to local repository - update to server when sync
-								self.updateLocalItem(id, saveObj)
-									.fail(function (err) { q.reject(err); })
-									.then(function (result) {
-										q.resolve(result);
-									});
-							}
+											next(null, result);
+										});
+								},
+								function (updatedResult, next) {
+									if (hasNewField) { // Save to local repository - new column is created
+										self.updateLocalItem(id, saveObj)
+											.fail(function (err) {
+												q.reject(err);
+												next(err);
+											})
+											.then(function (result) {
+												q.resolve(result);
+												next();
+											});
+									}
+									else {
+										q.resolve(updatedResult);
+										next();
+									}
+								}
+							]);
 
 							return q;
 						}
@@ -400,39 +367,12 @@ steal(function () {
 
 							async.series([
 								function (next) {
-									if (AD.comm.isServerReady()) {
-										destroy(id) // Call service to destroy
-											.fail(function (err) {
-												q.reject(err);
-												next(err);
-											})
-											.then(function (result) {
-												q.resolve(result);
-												next();
-											});
-									}
-									else {
-										if (self.isTempId(id)) { // Delete in saved ids list
-											var savedIds = self.getSavedIds(),
-												index = $.inArray(id, savedIds);
-											if (index > -1) {
-												savedIds.splice(index, 1);
-												self.cacheSavedIds(savedIds);
-											}
-										}
-										else {
-											var deletedIds = self.getDeletedIds();
-											if ($.inArray(id, deletedIds) < 0) {
-												deletedIds.push(id); // Store in deleted id list
-												self.cacheDeletedIds(deletedIds);
-											}
-										}
-
-										next();
-									}
+									destroy(id) // Call service to destroy
+										.fail(function (err) { next(err); })
+										.then(function (result) { next(); });
 								},
 								function (next) {
-									self.findOne({ id: id }, true)
+									self.findOne({ id: id }, true) // Find in local
 										.fail(function (err) { next(err); })
 										.then(function (result) {
 											if (result)
@@ -448,36 +388,15 @@ steal(function () {
 						};
 					},
 
-					changeId: function (oldId, newId) {
-						var data = this._cached;
-
-						if (data.hasOwnProperty(oldId)) {
-							if (!data.hasOwnProperty(newId)) {
-								data[oldId].id = newId;
-								data[newId] = data[oldId];
-							}
-
-							delete data[oldId];
-						}
-
-						this.cacheItems([]);
-					},
-
-					storeSaveId: function (id) {
-						var savedIds = this.getSavedIds();
-						if ($.inArray(id, savedIds) < 0) {
-							savedIds.push(id);
-							this.cacheSavedIds(savedIds);
-						}
-					},
-
-					createNewLocalItem: function (obj) {
-						var localObj = $.extend({}, obj);
+					createLocalItem: function (obj) {
+						var self = this,
+							cachedObj = $.extend({}, obj);
 						tempId = 'temp' + webix.uid();
-						localObj.id = tempId;
-						this.storeSaveId(tempId);
+						cachedObj.id = tempId;
 
-						return localObj;
+						self.cacheItems([cachedObj]); // Cache new
+
+						return cachedObj;
 					},
 
 					updateLocalItem: function (id, saveObj) {
@@ -492,8 +411,6 @@ steal(function () {
 								q.resolve(saveObj);
 							});
 
-						self.storeSaveId(id);
-
 						return q;
 					},
 
@@ -501,36 +418,28 @@ steal(function () {
 						return typeof id === 'string' && id.startsWith('temp');
 					},
 
-					saveInList: function () {
+					syncDataToServer: function () {
 						var self = this,
 							q = $.Deferred(),
 							saveEvents = [],
-							savedIds = self.getSavedIds();
+							cachedItems = self.findAllCached();
 
-						savedIds.forEach(function (id) {
+						if (cachedItems && cachedItems.length > 0) cachedItems = self.models(cachedItems);
+
+						cachedItems.forEach(function (item) {
 							saveEvents.push(function (next) {
-								self.findOne({ id: id }, true).then(function (result) {
-									if (!result) { // This data was deleted
-										next();
-										return true;
-									}
+								if (!item) { // This data was deleted
+									return next();
+								}
 
-									if (self.isTempId(result.id))
-										result.removeAttr('id');
+								var itemId = item.id;
+								if (self.isTempId(itemId))
+									item.removeAttr('id');
 
-									result.save().then(function (saveResult) {
-										self.changeId(id, saveResult.id);
+								item.save().then(function (saveResult) {
+									self.removeCachedItems(itemId);
 
-										self.cacheItems([saveResult]);
-
-										var index = $.inArray(id, savedIds);
-										if (index > -1) {
-											savedIds.splice(index, 1);
-											self.cacheSavedIds(savedIds);
-										}
-
-										next();
-									});
+									next();
 								});
 							});
 						});
@@ -541,69 +450,6 @@ steal(function () {
 							else
 								q.resolve();
 						});
-
-						return q;
-					},
-
-					destroyInList: function () {
-						var self = this,
-							q = $.Deferred(),
-							deleteEvents = [],
-							deletedIds = self.getDeletedIds();
-
-						deletedIds.forEach(function (id) {
-							deleteEvents.push(function (next) {
-								self.destroy(id).then(function (result) {
-									var index = $.inArray(id, deletedIds);
-									if (index > -1) {
-										deletedIds.splice(index, 1);
-										self.cacheDeletedIds(deletedIds);
-									}
-
-									next();
-								});
-							});
-						});
-
-						async.parallel(deleteEvents, function (err) {
-							if (err)
-								q.reject(err)
-							else
-								q.resolve();
-						});
-
-						return q;
-					},
-
-					syncDataToServer: function () {
-						var self = this,
-							q = $.Deferred();
-
-						async.series([
-							function (next) {
-								self.cacheNewFields([]);
-								next();
-							},
-							function (next) {
-								self.saveInList()
-									.fail(function (err) {
-										next(err);
-										q.reject(err);
-									})
-									.then(function () { next(); });
-							},
-							function (next) {
-								self.destroyInList()
-									.fail(function (err) {
-										next(err);
-										q.reject(err);
-									})
-									.then(function () {
-										next();
-										q.resolve();
-									});
-							}
-						]);
 
 						return q;
 					}
@@ -624,7 +470,9 @@ steal(function () {
 							if (instance.translate) instance.translate();
 
 							// Save the model to local storage
-							instance.constructor.cacheItems([instance.attr()]);
+							var existsCached = this.constructor.findAllCached({ id: instance.attr('id') });
+							if (existsCached && existsCached.length > 0)
+								instance.constructor.cacheItems([instance.attr()]);
 
 							// Update our model
 							can.Model.prototype.updated.apply(instance, arguments);
@@ -645,15 +493,16 @@ steal(function () {
 							can.Model.prototype.destroyed.apply(this, arguments);
 						},
 						checkSync: function () {
-							var unsyncIds = this.constructor.getSavedIds();
+							var unsyncItems = this.constructor.findAllCached({ id: this.constructor.id });
 
-							if (unsyncIds.indexOf(this.attr('id')) > -1)
+							if (unsyncItems.indexOf(this.attr('id')) > -1)
 								return true;
 							else
 								return false;
 
 						}
 					});
+
 				return can.Model.Cached;
 			});
 	});
