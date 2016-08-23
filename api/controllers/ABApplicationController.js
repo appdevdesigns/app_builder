@@ -66,10 +66,17 @@ module.exports = {
     
     
     /**
-     * POST /app_builder/reloadORM
+     * POST /app_builder/reloadORM/:id
      *
      */
     reloadORM: function(req, res) {
+        var appID = req.param('id');
+
+        if (!appID) {
+            res.AD.error('Application ID is not defined.');
+            return;
+        }
+
         if (reloading && reloading.state() == 'pending') {
             reloading.always(function() {
                 // Wait until current reload is finished before starting
@@ -79,7 +86,7 @@ module.exports = {
         }
         reloading = AD.sal.Deferred();
         
-        AppBuilder.reload()
+        AppBuilder.reload(appID)
         .fail(function(err) {
             res.AD.error(err);
             reloading.reject(err);
@@ -95,10 +102,17 @@ module.exports = {
      * Generate the server side model definitions of all AB applications
      * and then reload the ORM.
      *
-     * POST /app_builder/fullReload
+     * POST /app_builder/fullReload/:id
      */
     fullReload: function(req, res) {
-        var self = this;
+        var self = this,
+            appID = req.param('id');
+
+        if (!appID) {
+            res.AD.error('Application ID is not defined.');
+            return;
+        }
+
         if (reloading && reloading.state() == 'pending') {
             reloading.always(function() {
                 // Wait until current reload is finished before starting
@@ -108,14 +122,14 @@ module.exports = {
         }
         reloading = AD.sal.Deferred();
         
-        var appIDs = [];
-        var objIDs = [];
-        var pageIDs = [];
-        
+        var appIDs = [],
+            objIDs = [],
+            pageIDs = [];
+
         async.series([
             // Find all AB applications
             function(next) {
-                ABApplication.find()
+                ABApplication.find({ id : appID })
                 .populate('object')
                 .then(function(list) {
                     if (!list || !list[0]) {
@@ -167,7 +181,7 @@ module.exports = {
             
             // Find all AB root Pages
             function(next) {
-                ABPage.find({ parent: null })
+                ABPage.find({ parent: null, application: appID })
                 .then(function(list) {
                     if (list && list[0]) {
                         for (var i=0; i<list.length; i++) {
@@ -185,7 +199,7 @@ module.exports = {
             
             // Reload ORM
             function(next) {
-                AppBuilder.reload()
+                AppBuilder.reload(appID)
                 .fail(next)
                 .done(function() {
                     next();

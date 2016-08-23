@@ -4,6 +4,8 @@ steal(
 	'opstools/BuildApp/controllers/ObjectList.js',
 	'opstools/BuildApp/controllers/ObjectWorkspace.js',
 
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -39,14 +41,16 @@ steal(
 							self.controllers = {};
 
 							var ObjectList = AD.Control.get('opstools.BuildApp.ObjectList'),
-								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace');
+								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace'),
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
 
-							self.controllers.ObjectList = new ObjectList(self.element, { 
+							self.controllers.ObjectList = new ObjectList(self.element, {
 								selectedObjectEvent: self.options.selectedObjectEvent,
 								updatedObjectEvent: self.options.updatedObjectEvent,
 								deletedObjectEvent: self.options.deletedObjectEvent
 							});
 							self.controllers.ObjectWorkspace = new ObjectWorkspace(self.element);
+							self.controllers.ModelCreator = new ModelCreator();
 						},
 
 						initWebixUI: function () {
@@ -76,6 +80,8 @@ steal(
 							});
 
 							self.controllers.ObjectList.on(self.options.updatedObjectEvent, function (event, data) {
+								self.data.objectList = data.objectList;
+
 								self.controllers.ObjectWorkspace.setObjectList(data.objectList);
 							});
 
@@ -104,10 +110,59 @@ steal(
 
 							self.controllers.ObjectWorkspace.setApp(app);
 							self.controllers.ObjectList.setApp(app);
+
+							self.controllers.ModelCreator.setApp(app);
 						},
 
 						refresh: function () {
 							this.controllers.ObjectWorkspace.setObjectId(this.data.objectId);
+						},
+
+						syncData: function () {
+							var q = $.Deferred(),
+								self = this;
+
+							if (self.data.objectList) {
+								var syncDataTasks = [];
+
+								self.data.objectList.forEach(function (object) {
+									syncDataTasks.push(function (next) {
+
+										async.waterfall([
+											function (cb) {
+												self.controllers.ModelCreator.getModel(object.name)
+													.fail(function (err) { cb(err); })
+													.then(function (objectModel) {
+														cb(null, objectModel);
+													});
+											},
+											function (objectModel, cb) {
+												objectModel.Cached.syncDataToServer()
+													.fail(function (err) { cb(err); })
+													.then(function () {
+														cb(null);
+														next();
+													});
+											}
+										]);
+
+									});
+								});
+
+								async.parallel(syncDataTasks, function (err) {
+									if (err) {
+										q.reject(err);
+										return;
+									}
+
+									q.resolve();
+								});
+							}
+							else {
+								q.resolve();
+							}
+
+							return q;
 						},
 
 						resize: function (height) {

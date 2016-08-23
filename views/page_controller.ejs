@@ -84,47 +84,67 @@ steal(
 
                             initEvents: function (pageId) {
                                 var self = this,
+                                    event_aggregator = $(self),
                                     page = self.pages[pageId];
 
-                                    page.components.forEach(function (com) {
-                                        var viewId = self.getComponentId(page.domID, com.id);
+                                for (var key in self.components) {
+                                    var comInstance = self.components[key];
+                                    if (comInstance.registerEventAggregator)
+                                        comInstance.registerEventAggregator(event_aggregator);
+                                }
 
-                                        if (self.components[com.component].registerRenderCompleteEvent) {
-                                            self.components[com.component].registerRenderCompleteEvent(viewId, function() {
-                                                $$("<%- domID() %>").adjust();
+                                event_aggregator.on('renderComplete', function (sender, data) {
+                                    $$("<%- domID() %>").adjust();
+                                });
+
+                                event_aggregator.on('edit', function (sender, data) {
+                                    switch (data.component_name) {
+                                        case 'Grid':
+                                            var com = self.getComponent(pageId, data.viewId);
+                                            if (!com) break;
+
+                                            // Go to edit page
+                                            if (com.setting.editPage != self.activePageID)
+                                                self.showPage(com.setting.editPage);
+
+                                            // Populate data to edit form
+                                            var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
+                                            self.components.Form.populateData(formViewId, com.setting.object, data.selected_data.row, com.page);
+
+                                            break;
+                                    }
+                                });
+
+                                event_aggregator.on('save', function (sender, data) {
+                                    switch (data.component_name) {
+                                        case 'Form':
+                                            var com = self.getComponent(pageId, data.viewId);
+                                            if (!com) break;
+
+                                            // Redirect to return page
+                                            if (data.returnPage && data.returnPage != self.activePageID)
+                                                self.showPage(data.returnPage);
+
+                                            // Refresh grids
+                                            self.pages[self.activePageID].components.forEach(function (c) {
+                                                if (c.component === 'Grid' && com.setting.object == c.setting.object)
+                                                    self.renderComponent(self.pages[self.activePageID], c);
                                             });
-                                        }
+                                            break;
+                                    }
+                                });
 
-                                        if (com.component === 'Grid') {
-                                            if (com.setting.object && com.setting.editPage && com.setting.editForm) {
-                                                self.components.Grid.registerEditEvent(viewId, function (selectedData) {
-                                                    // Go to edit page
-                                                    if (com.setting.editPage != self.activePageID)
-                                                        self.showPage(com.setting.editPage);
+                                event_aggregator.on('cancel', function (sender, data) {
+                                    switch (data.component_name) {
+                                        case 'Form':
+                                            var com = self.getComponent(pageId, data.viewId);
+                                            if (!com) break;
 
-                                                    // Populate data to edit form
-                                                    var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
-                                                    self.components.Form.populateData(formViewId, com.setting.object, selectedData.row);
-
-                                                    // Register form's save event
-                                                    self.components.Form.registerSaveEvent(formViewId, function () {
-                                                        if (com.page != self.activePageID)
-                                                            self.showPage(com.page);
-
-                                                        // Refresh grids
-                                                        self.renderComponent(self.pages[com.page], com); // Refresh grids
-                                                    });
-
-
-                                                    // Register form's cancel event
-                                                    self.components.Form.registerCancelEvent(formViewId, function () {
-                                                        if (com.page != self.activePageID)
-                                                            self.showPage(com.page);
-                                                    });
-                                                });
-                                            }
-                                        }
-                                    });
+                                            if (com.page != self.activePageID)
+                                                self.showPage(com.page);
+                                            break;
+                                    }
+                                });
 
                             },
 
@@ -266,7 +286,22 @@ steal(
 
                             getComponentId: function(pageId, itemId) {
                                 return pageId + '-component-' + itemId;
+                            },
+
+                            getComponent: function (pageId, viewId) {
+                                var self = this,
+                                    page = self.pages[pageId];
+
+                                var coms = page.components.filter(function (com) {
+                                    return viewId == self.getComponentId(page.domID, com.id);
+                                });
+
+                                if (coms && coms.length > 0)
+                                    return coms[0];
+                                else
+                                    return null;
                             }
+
 
                         });
 

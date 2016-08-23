@@ -31,6 +31,11 @@ module.exports = {
             unique: true
         },
 
+//// TODO: This should change.  Can be in multiple roles.
+        role: {
+            model: 'PermissionRole'
+        },
+
 
         // this will pull in the translations using .populate('translations')
         translations: {

@@ -20,7 +20,6 @@ steal(
 							var self = this;
 
 							self.data = {}; // { viewId: { }, viewId2: { }, ..., viewIdn: { }}
-							self.events = {};
 							self.info = {
 								name: 'Grid',
 								icon: 'fa-table'
@@ -216,12 +215,6 @@ steal(
 								return self.data[viewId];
 							};
 
-							self.getEvent = function (viewId) {
-								if (!self.events[viewId]) self.events[viewId] = {};
-
-								return self.events[viewId];
-							};
-
 							self.getDataTableController = function (viewId) {
 								var dataTableController = self.controllers.ObjectDataTables[viewId];
 
@@ -317,9 +310,13 @@ steal(
 									$$(viewId).hideProgress();
 
 									$$(viewId).attachEvent('onAfterRender', function (data) {
-										var events = self.getEvent(viewId);
-										if (events.renderComplete)
-											events.renderComplete();
+										self.callEvent('renderComplete', viewId);
+									});
+
+									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
+										if (e.target.className.indexOf('fa-pencil') > -1) {
+											self.callEvent('edit', viewId, { selected_data: id });
+										}
 									});
 
 									q.resolve();
@@ -510,24 +507,23 @@ steal(
 								$$(self.componentIds.columnList).parse(columns);
 							};
 
-							self.registerRenderCompleteEvent = function (viewId, renderCompleteEvent) {
-								var events = self.getEvent(viewId);
+							self.registerEventAggregator = function (event_aggregator) {
+								self.event_aggregator = event_aggregator;
+							};
 
-								if (renderCompleteEvent)
-									events.renderComplete = renderCompleteEvent;
+							self.callEvent = function (eventName, viewId, data) {
+								if (self.event_aggregator) {
+									data = data || {};
+									data.component_name = self.info.name;
+									data.viewId = viewId;
+
+									self.event_aggregator.trigger(eventName, data);
+								}
 							};
 
 							self.editStop = function () {
 								$$(self.componentIds.propertyView).editStop();
 							};
-
-							self.registerEditEvent = function (viewId, editEvent) {
-								self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
-									if (e.target.className.indexOf('fa-pencil') > -1) {
-										editEvent(id);
-									}
-								});
-							}
 						},
 
 						populateData: function (viewId, objectId) {

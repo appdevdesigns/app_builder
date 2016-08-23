@@ -22,7 +22,6 @@ steal(
 							var self = this;
 
 							self.data = {};
-							self.events = {};
 							self.info = {
 								name: 'Form',
 								icon: 'fa-list-alt'
@@ -167,12 +166,6 @@ steal(
 								return self.data[viewId];
 							};
 
-							self.getEvent = function (viewId) {
-								if (!self.events[viewId]) self.events[viewId] = {};
-
-								return self.events[viewId];
-							};
-
 							self.render = function (viewId, settings, editable, defaultShowAll) {
 								var data = self.getData(viewId),
 									elementViews = [];
@@ -294,7 +287,6 @@ steal(
 												value: "Save",
 												width: 90,
 												inputWidth: 80,
-												disabled: true,
 												click: function () {
 													if ($$(self.componentIds.saveButton))
 														$$(self.componentIds.saveButton).disable();
@@ -307,22 +299,48 @@ steal(
 
 													async.series([
 														function (next) {
-															self.getModelData(data.objectId, data.modelDataId)
-																.fail(function (err) { next(err) })
-																.then(function (result) {
-																	modelData = result;
-																	next();
-																});
+															if (data.modelDataId) { // Update
+																self.getModelData(data.objectId, data.modelDataId)
+																	.fail(function (err) { next(err) })
+																	.then(function (result) {
+																		modelData = result;
+																		next();
+																	});
+															}
+															else { // Create
+																self.getObjectModel(data.objectId)
+																	.fail(function (err) { next(err) })
+																	.then(function (objectModel) {
+																		modelData = objectModel.newInstance();
+																		next();
+																	});
+															}
 														},
 														function (next) {
 															var editValues = $$(formView).getValues(),
 																keys = Object.keys(editValues);
 
 															keys.forEach(function (k) {
-																if (typeof editValues[k] !== 'undefined' && editValues[k] !== null)
-																	modelData.attr(k, editValues[k]);
+																if (typeof editValues[k] !== 'undefined' && editValues[k] !== null) {
+																	var colInfo = data.columns.filter(function (col) { return col.name === k; })[0];
+
+																	if (colInfo) {
+																		switch (colInfo.type) {
+																			case "boolean":
+																				modelData.attr(k, editValues[k] === 1 ? true : false);
+																				break;
+																			default:
+																				modelData.attr(k, editValues[k]);
+																				break;
+																		}
+																	}
+																	else {
+																		modelData.attr(k, editValues[k]);
+																	}
+																}
 																else
 																	modelData.removeAttr(k);
+																// modelData.attr(k, null);
 															});
 
 															modelData.save()
@@ -335,9 +353,16 @@ steal(
 															$$(formView).setValues({});
 															$$(formView).hideProgress();
 
-															var events = self.getEvent(viewId);
-															if (events.save)
-																events.save(data.modelDataId);
+															self.callEvent('save', viewId, {
+																modelDataId: data.modelDataId,
+																returnPage: data.returnPage
+															});
+
+															if ($$(self.componentIds.saveButton))
+																$$(self.componentIds.saveButton).enable();
+
+															data.modelDataId = null;
+															data.returnPage = null;
 
 															next();
 														}
@@ -354,17 +379,12 @@ steal(
 												width: 90,
 												inputWidth: 80,
 												click: function () {
-													if ($$(self.componentIds.saveButton))
-														$$(self.componentIds.saveButton).disable();
 													$$(this.getTopParentView()).setValues({});
 
-													var data = self.getData(viewId),
-														events = self.getEvent(viewId);
-
+													var data = self.getData(viewId);
 													data.modelDataId = null;
 
-													if (events.cancel)
-														events.cancel();
+													self.callEvent('cancel', viewId);
 												}
 											});
 										}
@@ -405,13 +425,11 @@ steal(
 
 										$$(viewId).hideProgress();
 
-										var events = self.getEvent(viewId);
-										if (events.renderComplete)
-											events.renderComplete();
+										self.callEvent('renderComplete', viewId);
 									});
 							};
 
-							self.populateData = function (viewId, objectId, dataId) {
+							self.populateData = function (viewId, objectId, dataId, returnPage) {
 								var data = self.getData(viewId);
 
 								if (data.objectId != objectId) return; // Validate object
@@ -419,6 +437,7 @@ steal(
 								$$(viewId).showProgress({ type: "icon" });
 
 								data.modelDataId = dataId;
+								data.returnPage = returnPage;
 
 								self.getModelData(objectId, dataId)
 									.fail(function (err) {
@@ -495,21 +514,41 @@ steal(
 									});
 							};
 
-							self.getModelData = function (objectId, dataId) {
-								var q = $.Deferred(),
-									object, objectModel;
+							self.getObjectModel = function (objectId) {
+								var q = $.Deferred();
 
-								async.series([
+								async.waterfall([
 									function (next) {
 										self.Model.ABObject.findOne({ id: objectId })
 											.fail(function (err) { next(err); })
-											.then(function (result) {
-												object = result;
-												next();
+											.then(function (object) {
+												next(null, object);
 											})
 									},
-									function (next) {
+									function (object, next) {
 										self.controllers.ModelCreator.getModel(object.name)
+											.fail(function (err) { next(err); })
+											.then(function (objectModel) {
+												q.resolve(objectModel);
+												next(null);
+											});
+									}
+								], function (err) {
+									if (err) {
+										q.reject(err);
+									}
+								});
+
+								return q;
+							};
+
+							self.getModelData = function (objectId, dataId) {
+								var q = $.Deferred(),
+									objectModel;
+
+								async.series([
+									function (next) {
+										self.getObjectModel(objectId)
 											.fail(function (err) { next(err); })
 											.then(function (result) {
 												objectModel = result;
@@ -552,25 +591,18 @@ steal(
 								return q;
 							};
 
-							self.registerSaveEvent = function (viewId, saveEvent) {
-								var events = self.getEvent(viewId);
-
-								if (saveEvent)
-									events.save = saveEvent;
+							self.registerEventAggregator = function (event_aggregator) {
+								self.event_aggregator = event_aggregator;
 							};
 
-							self.registerCancelEvent = function (viewId, cancelEvent) {
-								var events = self.getEvent(viewId);
+							self.callEvent = function (eventName, viewId, data) {
+								if (self.event_aggregator) {
+									data = data || {};
+									data.component_name = self.info.name;
+									data.viewId = viewId;
 
-								if (cancelEvent)
-									events.cancel = cancelEvent;
-							};
-
-							self.registerRenderCompleteEvent = function (viewId, renderCompleteEvent) {
-								var events = self.getEvent(viewId);
-
-								if (renderCompleteEvent)
-									events.renderComplete = renderCompleteEvent;
+									self.event_aggregator.trigger(eventName, data);
+								}
 							};
 
 							self.editStop = function () {

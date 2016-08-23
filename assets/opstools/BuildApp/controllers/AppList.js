@@ -289,7 +289,7 @@ steal(
 																	}, 0);
 
 																	// Select new role
-																	var selectedIds = $$(self.webixUiId.appFormPermissionList).getSelectedId() || [];
+																	var selectedIds = $$(self.webixUiId.appFormPermissionList).getSelectedId(true);
 																	selectedIds.push('newRole');
 																	$$(self.webixUiId.appFormPermissionList).select(selectedIds);
 																}
@@ -357,13 +357,23 @@ steal(
 
 															if (updateApp) {
 																async.waterfall([
-																	function (cb) {
+																	function (next) {
+																		self.savePermissions(selectedId)
+																			.fail(function (err) { next(err); })
+																			.then(function (result) { next(null, result); });
+																	},
+																	function (app_role, next) {
 																		// Update application data
 																		updateApp.attr('label', $$(self.webixUiId.appListForm).elements['label'].getValue());
 																		updateApp.attr('description', $$(self.webixUiId.appListForm).elements['description'].getValue());
 
+																		if (app_role && app_role.id)
+																			updateApp.attr('role', app_role.id);
+																		else
+																			updateApp.removeAttr('role');
+
 																		updateApp.save()
-																			.fail(function (err) { cb(err); })
+																			.fail(function (err) { next(err); })
 																			.then(function (result) {
 																				var existApp = self.data.filter(function (item, index, list) {
 																					return item.id === result.id;
@@ -375,13 +385,8 @@ steal(
 																				existApp.attr('label', result.label);
 																				existApp.attr('description', result.description);
 
-																				cb(null, result.id);
+																				next(null, result.id);
 																			});
-																	},
-																	function (appId, cb) {
-																		self.savePermissions(appId)
-																			.fail(function (err) { cb(err); })
-																			.then(function (result) { cb(); });
 																	}
 																], function (err) {
 																	if (err) {
@@ -578,8 +583,8 @@ steal(
 							// Final task
 							saveRoleTasks.push(function (cb) {
 								// Update store app data
-								var selectedApp = self.data.filter(function (d) { return d.id == appId; });
-								selectedApp.forEach(function (app) {
+								var applicationData = self.data.filter(function (d) { return d.id == appId; });
+								applicationData.forEach(function (app) {
 									app.attr('permissions', $.map(permItems, function (item) {
 										return {
 											application: app.id,
@@ -589,7 +594,7 @@ steal(
 									}));
 								});
 
-								q.resolve();
+								q.resolve(appRole);
 								cb();
 							})
 
@@ -638,39 +643,56 @@ steal(
 
 							// Get user's roles
 							$$(self.webixUiId.appFormPermissionList).showProgress({ type: 'icon' });
-							AD.comm.service.get({ url: '/app_builder/user/roles' })
-								.fail(function (err) {
+							async.waterfall([
+								function (next) {
+									AD.comm.service.get({ url: '/app_builder/user/roles' })
+										.fail(function (err) { next(err); })
+										.done(function (roles) {
+											next(null, roles);
+										});
+								},
+								function (available_roles, next) {
+									AD.comm.service.get({ url: '/app_builder/' + selectedApp.id + '/role' })
+										.fail(function (err) { next(err); })
+										.done(function (selected_role_ids) {
+											// Sort permission list
+											if (selectedApp.role && selectedApp.role.id) {
+												available_roles.forEach(function (r) {
+													var perm = [];
+
+													if (r.id == selectedApp.role.id)
+														r.isApplicationRole = true;
+												});
+											}
+											available_roles.sort(function (a, b) {
+												return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+											});
+
+											$$(self.webixUiId.appFormPermissionList).clearAll();
+											$$(self.webixUiId.appFormPermissionList).parse(available_roles);
+
+											if (selected_role_ids && selected_role_ids.length > 0) {
+												// Select permissions
+												$$(self.webixUiId.appFormPermissionList).select(selected_role_ids);
+
+												// Select create role application button
+												var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
+												$$(self.webixUiId.appFormCreateRoleButton).setValue(markCreateButton);
+											}
+
+											$$(self.webixUiId.appFormPermissionList).hideProgress();
+											next();
+										});
+								}
+							], function (err) {
+								if (err) {
 									webix.message(err.message);
 									$$(self.webixUiId.appFormPermissionList).hideProgress();
-								})
-								.done(function (data) {
-									// Sort permission list
-									data.forEach(function (d) {
-										var perm = [];
+									return;
+								}
 
-										if (selectedApp) perm = selectedApp.permissions.filter(function (p) { return d.id == p.permission });
+							});
 
-										if (perm && perm.length > 0)
-											d.isApplicationRole = perm[0].isApplicationRole || false;
-									});
-									data.sort(function (a, b) {
-										return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
-									});
-
-									$$(self.webixUiId.appFormPermissionList).parse(data);
-
-									if (selectedApp) {
-										// Select permissions
-										var selectedPermIds = $.map(selectedApp.permissions, function (perm) { return perm.permission; }) || [];
-										$$(self.webixUiId.appFormPermissionList).select(selectedPermIds);
-
-										// Select create role application button
-										var markCreateButton = selectedApp.permissions.filter(function (p) { return p.isApplicationRole; }).length > 0 ? 1 : 0;
-										$$(self.webixUiId.appFormCreateRoleButton).setValue(markCreateButton);
-									}
-
-									$$(self.webixUiId.appFormPermissionList).hideProgress();
-								});
 						},
 
 						resize: function (height) {

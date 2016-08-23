@@ -11,11 +11,72 @@ function nameFilter(name) {
     return String(name).replace(/[^a-z0-9]/gi, '');
 }
 
-function getValidAppName(name){
-	return 'AB_' + nameFilter(name);
+function getValidAppName(appName) {
+	return 'AB_' + nameFilter(appName);
+}
+
+function getActionKeyName(appName) {
+	return 'opstools.' + getValidAppName(appName) + '.view';
 }
 
 module.exports = {
+
+	// GET: /app_builder/:id/role
+	getRoles: function (req, res) {
+		var appId = req.param('id');
+
+		if (!appId) {
+			res.AD.error('Application id is invalid.');
+			return;
+		}
+
+		appId = parseInt(appId);
+
+		async.waterfall([
+			function (next) {
+				// Find application
+				ABApplication.findOne({ id: appId })
+					.exec(function (err, app) {
+						if (err) {
+							res.AD.error(err);
+							next(err);
+							return;
+						}
+
+						next(null, app);
+					});
+			},
+			function (app, next) {
+				// Get roles from action key
+				var action_key = getActionKeyName(app.name);
+				Permissions.getRolesByActionKey(action_key)
+					.fail(function (err) {
+						res.AD.error(err);
+						next(err);
+					})
+					.then(function (roles) {
+						next(null, roles);
+					});
+			},
+			function (roles, next) {
+				// Return role ids 
+				async.map(roles,
+					function (item, callback) {
+						callback(null, item.id);
+					},
+					function (err, roleIds) {
+						if (err) {
+							res.AD.error(err);
+							next(err);
+							return;
+						}
+
+						res.AD.success(roleIds);
+						next();
+					});
+			}
+		]);
+	},
 
 	// POST: /app_builder/:id/role
 	createRole: function (req, res) {
@@ -29,25 +90,24 @@ module.exports = {
 		appId = parseInt(appId);
 
 		async.waterfall([
-			function (cb) {
+			function (next) {
+				// Find application
 				ABApplication.findOne({ id: appId })
-					.populate('permissions')
+					.populate('role')
 					.exec(function (err, record) {
 						if (err) {
 							res.AD.error(err);
-							cb(err);
+							next(err);
 							return;
 						}
 
-						cb(null, record);
+						next(null, record);
 					});
 			},
-			function (app, cb) {
-				var appRole = app.permissions.filter(function (p) { return p.isApplicationRole; });
-
-				if (appRole && appRole.length > 0) {
-					res.AD.success(appRole);
-					cb();
+			function (app, next) {
+				if (app.role) { // Exists
+					res.AD.success(app.role);
+					next();
 				}
 				else { // Create new application role
 					var appName = app.name.replace(/_/g, ' '),
@@ -57,11 +117,20 @@ module.exports = {
 					Permissions.createRole(roleName, roleDesc)
 						.fail(function (err) {
 							res.AD.error(err);
-							cb(err);
+							next(err);
 						})
-						.then(function (result) {
-							res.AD.success(result);
-							cb();
+						.then(function (role) {
+							app.role = role.id;
+							app.save(function (err) {
+								if (err) {
+									res.AD.error(err);
+									next(err);
+									return;
+								}
+
+								res.AD.success(role);
+								next();
+							});
 						});
 				}
 			},
@@ -80,36 +149,31 @@ module.exports = {
 		appId = parseInt(appId);
 
 		async.waterfall([
-			function (cb) {
-				// Find application roles
-				ABApplicationPermission.find({
-					application: appId,
-					isApplicationRole: true
-				})
-					.exec(function (err, result) {
+			function (next) {
+				// Find application
+				ABApplication.findOne({ id: appId })
+					.populate('role')
+					.exec(function (err, app) {
 						if (err) {
-							cb(err);
+							res.AD.error(err);
+							next(err);
 							return;
 						}
 
-						cb(null, result);
+						next(null, app);
 					});
+
 			},
-			function (perms, cb) {
-				var delRoleTasks = [];
-
-				// Delete application roles
-				perms.forEach(function (p) {
-					delRoleTasks.push(function (callback) {
-						Permissions.deleteRole(p.permission)
-							.fail(function (err) { callback(err) })
-							.then(function () { callback(); });
-					});
-				});
-
-				async.parallel(delRoleTasks, function (err) {
-					cb(err);
-				});
+			function (app, next) {
+				if (app.role && app.role.id) {
+					// Delete role
+					Permissions.deleteRole(app.role.id)
+						.fail(function (err) { next(err) })
+						.then(function () { next(); });
+				}
+				else {
+					next();
+				}
 			}
 		], function (err) {
 			if (err) {
@@ -124,8 +188,7 @@ module.exports = {
 	// PUT: /app_builder/:id/role/assign
 	assignRole: function (req, res) {
 		var appId = req.param('id'),
-			roleIds = req.body.roles || [],
-			appModel;
+			roleIds = req.body.roles || [];
 
 		if (!appId) {
 			res.AD.error('Bad request.');
@@ -135,92 +198,46 @@ module.exports = {
 		appId = parseInt(appId);
 		roleIds = roleIds.filter(function (r) { return r && r.id !== null && typeof r.id !== 'undefined' });
 
-		async.series([
-			function (cb) {
+		async.waterfall([
+			function (next) {
 				// Get application object
 				ABApplication.findOne({ id: appId })
-					.exec(function (err, result) {
+					.exec(function (err, app) {
 						if (err) {
 							res.AD.error(err);
-							cb(err);
+							next(err);
 							return;
 						}
 
-						appModel = result;
-						cb();
+						next(null, app);
 					});
 			},
-			function (cb) {
-				// Clear application permission roles
-				ABApplicationPermission.destroy({ application: appId })
-					.exec(function (err) {
-						if (err) {
-							res.AD.error(err);
-							cb(err);
-							return;
-						}
-
-						cb();
-					});
-			},
-			function (cb) {
-				// Assigns roles
-				var assignTask = [];
-
-				roleIds.forEach(function (r) {
-					assignTask.push(function (callback) {
-						ABApplicationPermission.create({
-							application: appId,
-							permission: r.id,
-							isApplicationRole: r.isApplicationRole || false
-						})
-							.exec(function (err) {
-								if (err) {
-									callback(err);
-									return;
-								}
-
-								callback();
-							});
-					});
-				});
-
-				async.parallel(assignTask, function (err) {
-					if (err) {
-						res.AD.error(err);
-						cb(err);
-						return;
-					}
-
-					cb();
-				});
-			},
-			function (cb) {
+			function (app, next) {
 				// Register the permission action
 				Permissions.action.create({
-					key: 'opstools.' + getValidAppName(appModel.name) + '.view',
-					description: 'Allow the user to view the ' + getValidAppName(appModel.name) + ' base page',
+					key: getActionKeyName(app.name),
+					description: 'Allow the user to view the ' + getValidAppName(app.name) + ' base page',
 					language_code: 'en'
 				})
 					.always(function () {
 						// Don't care if there was an error.
 						// If permission action already exists, that's fine.
-						cb();
+						next(null, app);
 					});
 			},
-			function (cb) {
+			function (app, next) {
 				// Clear permission action to roles
-				Permissions.clearPermissionRole('opstools.' + getValidAppName(appModel.name) + '.view')
-					.fail(function (err) { cb(err); })
-					.then(function () { cb(); });
+				Permissions.clearPermissionRole(getActionKeyName(app.name))
+					.fail(function (err) { next(err); })
+					.then(function () { next(null, app); });
 			},
-			function (cb) {
+			function (app, next) {
 				// Assign permission action to roles
 				var assignActionTasks = [];
 
 				roleIds.forEach(function (r) {
 					assignActionTasks.push(function (callback) {
-						Permissions.assignAction(r.id, 'opstools.' + getValidAppName(appModel.name) + '.view')
+						Permissions.assignAction(r.id, getActionKeyName(app.name))
 							.fail(function (err) { callback(err); })
 							.then(function () { callback(); });
 					});
@@ -229,12 +246,12 @@ module.exports = {
 				async.parallel(assignActionTasks, function (err) {
 					if (err) {
 						res.AD.error(err);
-						cb(err);
+						next(err);
 						return;
 					}
 
 					res.AD.success();
-					cb();
+					next();
 				});
 			}
 		]);

@@ -8,10 +8,11 @@
 
 module.exports = {
 
-    'post /app_builder/fullReload': 
+    /* Synchronize application */
+    'post /app_builder/fullReload/:id': 
         'app_builder/ABApplicationController.fullReload',
         
-    'post /app_builder/reloadORM': 
+    'post /app_builder/reloadORM/:id': 
         'app_builder/ABApplicationController.reloadORM',
     
     'post /app_builder/prepareObject/:id': 
@@ -23,22 +24,27 @@ module.exports = {
     'post /app_builder/preparePage/:id': 
         'app_builder/ABPageController.prepare',
 
+    /*  */
     'put /app_builder/object/sortColumns/:id': 
         'app_builder/ABObjectController.sortColumns',
 
     'put /app_builder/page/sortComponents/:id': 
         'app_builder/ABPageController.sortComponents',
 
+    /* Application permissions */
     'get /app_builder/user/roles':
         'app_builder/ABUserController.getRoles',
 
-    'POST /app_builder/:id/role':
+    'get /app_builder/:id/role':
+        'app_builder/ABRoleController.getRoles',
+
+    'post /app_builder/:id/role':
         'app_builder/ABRoleController.createRole',
 
-    'DELETE /app_builder/:id/role':
+    'delete /app_builder/:id/role':
         'app_builder/ABRoleController.deleteRole',
 
-    'PUT /app_builder/:id/role/assign':
+    'put /app_builder/:id/role/assign':
         'app_builder/ABRoleController.assignRole'
 
   /*
