@@ -181,7 +181,7 @@ module.exports = {
             
             // Find all AB root Pages
             function(next) {
-                ABPage.find({ parent: null })
+                ABPage.find({ parent: null, application: appID })
                 .then(function(list) {
                     if (list && list[0]) {
                         for (var i=0; i<list.length; i++) {

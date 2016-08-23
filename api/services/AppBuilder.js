@@ -7,12 +7,13 @@ var path = require('path');
 var AD = require('ad-utils');
 var reloadTimeLimit = 3 * 1000 * 60; // 3 minutes
 
-var cliCommand = path.join(
-    process.cwd(),
-    'node_modules', 'app_builder',
-    'node_modules', 'appdev',
-    'bin', 'appDev.js'
-);
+// var cliCommand = path.join(
+//     process.cwd(),
+//     'node_modules', 'app_builder',
+//     'node_modules', 'appdev',
+//     'bin', 'appDev.js'
+// );
+var cliCommand = 'appdev';
 
 function nameFilter(name) {
     return String(name).replace(/[^a-z0-9]/gi, '');
