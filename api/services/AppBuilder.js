@@ -500,7 +500,6 @@ module.exports = {
             // Find basic page info
             function (next) {
                 ABPage.find({ id: pageID })
-<<<<<<< HEAD
                 .populate('application')
                 .populate('components')
                 .then(function(list) {
