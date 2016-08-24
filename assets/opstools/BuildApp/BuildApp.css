@@ -175,6 +175,10 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-object-data-header {
 	position: relative;
 }
+.ab-object-data-new-header {
+	background-color: #cfd9e0;
+}
+
 .ab-object-data-header-edit {
 	display: none;
 	position: absolute;

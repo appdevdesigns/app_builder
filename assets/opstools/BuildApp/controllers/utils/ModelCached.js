@@ -179,31 +179,32 @@ steal(function () {
 								list = this.models(cachedData || []);
 
 							findAll(params).then(can.proxy(function (data) {
-								can.each(data, function (d) {
+								can.each(data, function (d, index) {
 									if (d.translate) d.translate();
+
+									// Merge cached and actual data
+									can.each(list, function (cachedItem) {
+										if (d[self.fieldId] == cachedItem[self.fieldId]) {
+											var propNames = can.Map.keys(cachedItem);
+
+											d = self.model(d.attr()); // Convert Map to Cached object
+
+											propNames.forEach(function (prop) {
+												if (prop !== "id" && prop !== "createdAt" && prop != "updatedAt")
+													d.attr(prop, cachedItem[prop]); // Update value
+											});
+
+											data[index] = d;
+										}
+									});
 								});
+
+								// else { // Add
+								// 	data.push(cachedItem);
+								// }
 
 								// if (!ignoreCache)
 								// 	self.cacheItems(json);
-
-								// Merge cached and actual data
-								can.each(list, function (cachedItem) {
-									var existsItem = data.filter(function (item) { return item[self.fieldId] == cachedItem[self.fieldId]; });
-
-									if (existsItem && existsItem.length > 0) {
-										existsItem = existsItem[0];
-
-										var propNames = can.Map.keys(cachedItem);
-
-										propNames.forEach(function (prop) {
-											if (prop !== "id" && prop !== "createdAt" && prop != "updatedAt")
-												existsItem.attr(prop, cachedItem[prop]); // Update value
-										});
-									}
-									else { // Add
-										data.push(cachedItem);
-									}
-								});
 
 								def.resolve(data);
 							}, this), function (err) {
@@ -276,7 +277,7 @@ steal(function () {
 							create(createObj)
 								.fail(function (err) {
 									if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
-										var localObj = self.createLocalItem(obj); // Cache data
+										var localObj = self.saveLocalItem(obj); // Cache data
 
 										q.resolve(localObj);
 									}
@@ -303,7 +304,9 @@ steal(function () {
 							});
 
 							// Check has update to new column
-							var isUpdateNew = Object.keys(obj).filter(function (k) { return self.getNewFieldNames().indexOf(k) != -1; });
+							var isUpdateNew = Object.keys(obj).filter(function (k) {
+								return self.getNewFieldNames().indexOf(k) > -1 && typeof obj[k] !== 'undefined' && obj[k] !== null;
+							});
 							if (isUpdateNew && isUpdateNew.length > 0)
 								hasNewField = true;
 
@@ -314,7 +317,7 @@ steal(function () {
 									update(id, saveObj)
 										.fail(function (err) {
 											if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
-												self.updateLocalItem(id, saveObj2)
+												self.saveLocalItem(saveObj2, id)
 													.fail(function (err) { next(err); })
 													.then(function (result) {
 														next(null, result);
@@ -339,7 +342,7 @@ steal(function () {
 								},
 								function (updatedResult, next) {
 									if (hasNewField) { // Save to local repository - new column is created
-										self.updateLocalItem(id, saveObj)
+										self.saveLocalItem(saveObj, id)
 											.fail(function (err) {
 												q.reject(err);
 												next(err);
@@ -388,28 +391,28 @@ steal(function () {
 						};
 					},
 
-					createLocalItem: function (obj) {
-						var self = this,
-							cachedObj = $.extend({}, obj);
-						tempId = 'temp' + webix.uid();
-						cachedObj.id = tempId;
-
-						self.cacheItems([cachedObj]); // Cache new
-
-						return cachedObj;
-					},
-
-					updateLocalItem: function (id, saveObj) {
+					saveLocalItem: function (attr, id) {
 						var self = this,
 							q = AD.sal.Deferred();
 
-						self.findOne({ id: id })
-							.fail(function (err) { q.reject(err); })
-							.then(function (result) {
-								result.updated(saveObj); // Update in local repository
+						if (id) { // Update cache item
+							self.findOne({ id: id })
+								.fail(function (err) { q.reject(err); })
+								.then(function (result) {
+									result.updated(attr, true); // Update in local repository
 
-								q.resolve(saveObj);
-							});
+									q.resolve(attr);
+								});
+						}
+						else { // Create cache item
+							var cachedObj = $.extend({}, attr);
+							tempId = 'temp' + webix.uid();
+							cachedObj.id = tempId;
+
+							self.cacheItems([cachedObj]); // Cache new
+
+							q.resolve(cachedObj);
+						}
 
 						return q;
 					},
@@ -455,7 +458,7 @@ steal(function () {
 					}
 
 				}, {
-						updated: function (attrs) {
+						updated: function (attrs, forceCache) {
 							var instance = this;
 
 							if (instance && attrs) { // Update local instance
@@ -471,17 +474,18 @@ steal(function () {
 
 							// Save the model to local storage
 							var existsCached = this.constructor.findAllCached({ id: instance.attr('id') });
-							if (existsCached && existsCached.length > 0)
+							if (existsCached && existsCached.length > 0 || forceCache === true)
 								instance.constructor.cacheItems([instance.attr()]);
 
 							// Update our model
 							can.Model.prototype.updated.apply(instance, arguments);
 						},
 						created: function (attrs) {
-							if (attrs.translate) attrs.translate();
+							// if (attrs.translate) attrs.translate();
 
-							// Save the model to local storage
-							this.constructor.cacheItems([attrs]);
+							// // Save the model to local storage
+							// this.constructor.cacheItems([attrs]);
+
 							// Update our model
 							can.Model.prototype.created.apply(this, arguments);
 						},
@@ -492,10 +496,10 @@ steal(function () {
 							// Update our model
 							can.Model.prototype.destroyed.apply(this, arguments);
 						},
-						checkSync: function () {
-							var unsyncItems = this.constructor.findAllCached({ id: this.constructor.id });
+						isUnsync: function () {
+							var unsyncItems = this.constructor.findAllCached({ id: this.id });
 
-							if (unsyncItems.indexOf(this.attr('id')) > -1)
+							if (unsyncItems && unsyncItems.length > 0)
 								return true;
 							else
 								return false;

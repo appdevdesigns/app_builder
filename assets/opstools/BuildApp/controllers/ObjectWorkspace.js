@@ -549,7 +549,7 @@ steal(
 																	delete objectModel.describe()[data.name];
 																});
 
-															self.controllers.ObjectDataTable.bindColumns(self.data.columns, false, true);
+															self.bindColumns(false, true);
 
 															self.reorderColumns();
 
@@ -721,9 +721,9 @@ steal(
 											});
 									},
 									function (next) {
-										self.controllers.ObjectDataTable.bindColumns(self.data.columns, true, true);
-
-										next();
+										self.bindColumns(true, true)
+											.fail(function (err) { next(err); })
+											.then(function () { next(); });
 									},
 									function (next) {
 										// Get object model
@@ -731,12 +731,6 @@ steal(
 											.fail(function (err) { next(err); })
 											.then(function (objectModel) {
 												self.Model.ObjectModel = objectModel;
-
-												self.Model.ObjectModel.Cached.unbind('refreshData');
-												self.Model.ObjectModel.Cached.bind('refreshData', function (ev, data) {
-													if (this == self.Model.ObjectModel.Cached)
-														self.controllers.ObjectDataTable.populateDataToDataTable(data.result);
-												});
 
 												next();
 											});
@@ -974,6 +968,27 @@ steal(
 
 											q.resolve(result);
 										});
+								});
+
+							return q;
+						},
+
+						bindColumns: function (resetColumns, addTrashColumn) {
+							var self = this,
+								q = $.Deferred(),
+								objectName = self.data.object.attr('name');
+
+							self.controllers.ModelCreator.getNewColumns(objectName)
+								.fail(function (err) { q.reject(err); })
+								.then(function (newColNames) {
+									self.data.columns.forEach(function (c) {
+										if (newColNames.indexOf(c.attr('name')) > -1)
+											c.attr('isNew', true);
+									});
+
+									self.controllers.ObjectDataTable.bindColumns(self.data.columns, resetColumns, addTrashColumn);
+
+									q.resolve();
 								});
 
 							return q;

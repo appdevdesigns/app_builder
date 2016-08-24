@@ -197,6 +197,21 @@ steal(
 							return q;
 						},
 
+						getNewColumns: function (objectName) {
+							var self = this,
+								q = $.Deferred();
+
+							self.getModel(objectName)
+								.fail(function (err) { q.reject(err); })
+								.then(function (objectModel) {
+									var newColumnNames = objectModel.Cached.getNewFieldNames();
+
+									q.resolve(newColumnNames);
+								});
+
+							return q;
+						},
+
 						deleteColumn: function (objectName, columnName) {
 							var self = this,
 								q = $.Deferred();

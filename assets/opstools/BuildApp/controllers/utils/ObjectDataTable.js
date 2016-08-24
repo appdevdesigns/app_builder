@@ -273,14 +273,13 @@ steal(
 
 							var headerTemplate = "<div class='ab-object-data-header'><span class='webix_icon {0}'></span>{1}{2}</div>"
 								.replace('{0}', col.setting.icon ? 'fa-' + col.setting.icon : '')
-								.replace('{1}', label);
+								.replace('{1}', label)
+								.replace('{2}', readOnly ? '' : "<i class='ab-object-data-header-edit fa fa-angle-down'></i>");
 
-							if (readOnly)
-								headerTemplate = headerTemplate.replace('{2}', '');
-							else
-								headerTemplate = headerTemplate.replace('{2}', "<i class='ab-object-data-header-edit fa fa-angle-down'></i>");
-
-							return headerTemplate;
+							return {
+								text: headerTemplate,
+								css: col.isNew ? 'ab-object-data-new-header' : ''
+							};
 						},
 
 						calculateColumnWidth: function (col) {
@@ -429,8 +428,19 @@ steal(
 										return;
 									}
 
+									var objData = [];
+									result.forEach(function (r) {
+										if (r.constructor.name === 'Cached') {
+											var data = r.attr();
+											data.isUnsync = r.isUnsync();
+											objData.push(data);
+										}
+										else
+											objData.push(r.attr());
+									});
+
 									self.dataTable.clearAll();
-									self.dataTable.parse(result.attr ? result.attr() : []);
+									self.dataTable.parse(objData);
 
 									q.resolve();
 								}
