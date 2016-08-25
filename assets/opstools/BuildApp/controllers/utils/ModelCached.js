@@ -450,8 +450,11 @@ steal(function () {
 						async.parallel(saveEvents, function (err) {
 							if (err)
 								q.reject(err)
-							else
+							else {
+								self.cacheNewFields([]); // Clear new fields name
+
 								q.resolve();
+							}
 						});
 
 						return q;

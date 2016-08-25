@@ -430,14 +430,6 @@ steal(
 										});
 									}
 
-									// Update connected data to cached item
-									self.Model.ObjectModel.Cached.findOne({ id: data.rowId }, true)
-										.then(function (cacheItem) {
-											cacheItem.attr('connectedData', data.item.connectedData);
-											cacheItem.updated({ connectedData: data.item.connectedData });
-										});
-
-
 									$$(self.webixUiId.objectDatatable).updateItem(data.rowId, data.item);
 
 									if (!data.itemData || data.itemData.length < 1) data.itemData = '';
@@ -607,13 +599,6 @@ steal(
 										rowData.connectedData[self.data.selectedCell.column] = selectedItems;
 
 										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
-
-										// Update connected data to cached item
-										self.Model.ObjectModel.Cached.findOne({ id: self.data.selectedCell.row }, true)
-											.then(function (item) {
-												item.attr('connectedData', rowData.connectedData);
-												item.updated({ connectedData: rowData.connectedData });
-											});
 
 										// Resize row height
 										self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
