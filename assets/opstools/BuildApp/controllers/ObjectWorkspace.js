@@ -543,6 +543,9 @@ steal(
 																.fail(function (err) { next(err); })
 																.then(function (objectModel) {
 																	delete objectModel.describe()[data.name];
+
+																	if (objectModel.multilingualFields) // Remove field
+																		objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != data.name; });
 																});
 
 															self.bindColumns(false, true);
@@ -823,6 +826,10 @@ steal(
 																.fail(function (err) { next(err); })
 																.then(function (objectModel) {
 																	objectModel.describe()[data.name] = data.type;
+
+																	if (data.supportMultilingual)
+																		objectModel.multilingualFields.push(data.name);
+
 																	next();
 																});
 														}
@@ -973,6 +980,8 @@ steal(
 									self.data.columns.forEach(function (c) {
 										if (newColNames.indexOf(c.attr('name')) > -1)
 											c.attr('isNew', true);
+										else
+											c.removeAttr('isNew');
 									});
 
 									self.controllers.ObjectDataTable.bindColumns(self.data.columns, resetColumns, addTrashColumn);

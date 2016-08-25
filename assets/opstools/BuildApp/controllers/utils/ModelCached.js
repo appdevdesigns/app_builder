@@ -368,20 +368,22 @@ steal(function () {
 							var q = new can.Deferred(),
 								self = this;
 
-							async.series([
+							async.waterfall([
 								function (next) {
 									destroy(id) // Call service to destroy
 										.fail(function (err) { next(err); })
-										.then(function (result) { next(); });
+										.then(function (result) {
+											next(null, result);
+										});
 								},
-								function (next) {
+								function (removedObj, next) {
 									self.findOne({ id: id }, true) // Find in local
 										.fail(function (err) { next(err); })
 										.then(function (result) {
 											if (result)
 												result.destroyed(); // Destroy in local repository
 
-											q.resolve(id);
+											q.resolve(removedObj);
 											next();
 										});
 								}
