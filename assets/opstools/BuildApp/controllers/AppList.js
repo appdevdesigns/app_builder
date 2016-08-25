@@ -707,16 +707,18 @@ steal(
 								}
 								appListDom.width(width - 410);
 
-								$$(self.webixUiId.appList).define('height', height - 140);
-								$$(self.webixUiId.appList).adjust();
-
 								var computedHeight = height - 140;
 								if (appListDom.css('min-height') < computedHeight)
 									appListDom.height(computedHeight);
 								else
 									appListDom.height(appListDom.css('min-height'));
 
-								$$(self.webixUiId.appView).adjust();
+								if (self.webixUiId) {
+									$$(self.webixUiId.appList).define('height', height - 140);
+									$$(self.webixUiId.appList).adjust();
+
+									$$(self.webixUiId.appView).adjust();
+								}
 							}
 						}
 

@@ -156,7 +156,19 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	right: 5px;
 	display: none;
 }
-
+.ab-object-unsync {
+	background-color: #d2e3ef;
+	color: #4a4a4a;
+	position: absolute;
+	top: 4px;
+	right: 30px;
+	font-size: 12px;
+	border-radius: 6px;
+	padding: 0px 4px;
+	height: 20px;
+	line-height: 20px;
+	display: none;
+}
 
 /* Interface list */
 .ab-page-list-item {

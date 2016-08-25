@@ -22,7 +22,7 @@ steal(
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
 								updatedObjectEvent: 'AB_Object.Updated',
-								deletedObjectEvent: 'AB_Object.Deleted'
+								deletedObjectEvent: 'AB_Object.Deleted' 
 							}, options);
 							this.options = options;
 
@@ -50,7 +50,7 @@ steal(
 								deletedObjectEvent: self.options.deletedObjectEvent
 							});
 							self.controllers.ObjectWorkspace = new ObjectWorkspace(self.element);
-							self.controllers.ModelCreator = new ModelCreator();
+							self.controllers.ModelCreator = new ModelCreator(self.element);
 						},
 
 						initWebixUI: function () {
@@ -115,6 +115,7 @@ steal(
 						},
 
 						refresh: function () {
+							this.controllers.ObjectList.refreshUnsyncNumber();
 							this.controllers.ObjectWorkspace.setObjectId(this.data.objectId);
 						},
 

@@ -176,7 +176,7 @@ steal(
 							System.import('can').then(function () {
 								steal.import('can/model/model', 'can/util/object/object').then(function () {
 
-									self.controllers.ModelCreator.initModelCached(self.Model.ABColumn, 'ab_column_info_cache');
+									self.controllers.ModelCreator.initModelCached('ABColumn', self.Model.ABColumn, 'ab_column_info_cache');
 								});
 							});
 						},

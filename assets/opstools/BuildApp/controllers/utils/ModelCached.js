@@ -26,6 +26,14 @@ steal(function () {
 					cacheClear: function () {
 						window.localStorage.removeItem(this.cachedKey());
 						this._cached = {};
+
+						// Raise event
+						if (this.actionEvent) {
+							this.actionEvent({
+								action: 'count',
+								count: 0
+							});
+						}
 					},
 					cacheItems: function (items) {
 						var data = this._cached,
@@ -41,6 +49,14 @@ steal(function () {
 							}
 						});
 						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
+
+						// Raise event
+						if (this.actionEvent) {
+							this.actionEvent({
+								action: 'count',
+								count: Object.keys(data).length
+							});
+						}
 					},
 					removeCachedItems: function (itemIds) {
 						var data = this._cached;
@@ -53,6 +69,14 @@ steal(function () {
 						});
 
 						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
+
+						// Raise event
+						if (this.actionEvent) {
+							this.actionEvent({
+								action: 'count',
+								count: Object.keys(data).length
+							});
+						}
 					},
 					cacheNewFields: function (newFieldNames) {
 						if (newFieldNames && newFieldNames.length > 0)
@@ -83,6 +107,11 @@ steal(function () {
 						list = this.pagination(this.sort(list, params), params);
 						// take limit and offset ...
 						return list;
+					},
+					count: function () {
+						if (!this._cached) return 0;
+
+						return Object.keys(this._cached).length;
 					},
 					pagination: function (items, params) {
 						var offset = parseInt(params.offset, 10) || 0,
@@ -460,6 +489,10 @@ steal(function () {
 						});
 
 						return q;
+					},
+
+					registerActionEvent: function (actionEvent) {
+						this.actionEvent = actionEvent;
 					}
 
 				}, {

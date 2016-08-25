@@ -17,7 +17,10 @@ steal(
 							this.data = {};
 
 							this.options = AD.defaults({
+								countCachedItemEvent: 'AB_Cached.Count'
 							}, options);
+
+							this._super(element, options);
 
 							this.Model = {
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject')
@@ -132,7 +135,7 @@ steal(
 
 									// Setup cached model
 									var cachedKey = '#appName#_#objectName#_cache'.replace('#appName#', formatAppName).replace('#objectName#', formatObjectName);
-									self.initModelCached(modelResult, cachedKey);
+									self.initModelCached(objectName, modelResult, cachedKey);
 
 									q.resolve(modelResult);
 								});
@@ -140,7 +143,10 @@ steal(
 							return q;
 						},
 
-						initModelCached: function (model, cachedKey) {
+						initModelCached: function (objectName, model, cachedKey) {
+							var self = this;
+
+							// Initial cache object
 							model.Cached = ab.Model.Cached(
 								{
 									cachedKey: function () {
@@ -175,6 +181,15 @@ steal(
 									// destroy: function (id) { return model.destroy.call(model.Cached, id); }
 
 								}, {});
+
+							// Initial cache event
+							model.Cached.registerActionEvent(function (data) {
+								switch (data.action) {
+									case 'count':
+										self.element.trigger(self.options.countCachedItemEvent, { objectName: objectName, count: data.count });
+										break;
+								}
+							});
 						},
 
 						addNewColumn: function (objectName, newColumnName) {
