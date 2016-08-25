@@ -430,9 +430,9 @@ steal(
 
 									var objData = [];
 									result.forEach(function (r) {
-										if (r.constructor.name === 'Cached') {
+										if (r.constructor.name === 'Cached' && r.isUnsync()) {
 											var data = r.attr();
-											data.isUnsync = r.isUnsync();
+											data.isUnsync = true;
 											objData.push(data);
 										}
 										else

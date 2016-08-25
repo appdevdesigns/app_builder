@@ -78,6 +78,8 @@ module.exports = {
         for (var key in values) {
             if (values[key] == null || typeof values[key] == 'undefined' || values[key] != values[key] /* NaN */)
                 delete values[key];
+            else if (values[key] === '')
+                values[key] = null;
         }
 
         cb();

@@ -317,7 +317,7 @@ steal(
 												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
 
 												self.updateRowData(state, editor, ignoreUpdate)
-													.fail(function (err) {
+													.fail(function (err) { // Cached
 														item[editor.column] = state.old;
 														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
 														$$(self.webixUiId.objectDatatable).refresh(editor.row);
@@ -328,6 +328,10 @@ steal(
 													})
 													.then(function (result) {
 														item[editor.column] = state.value;
+
+														if (result.constructor.name === 'Cached' && result.isUnsync())
+															item.isUnsync = true;
+
 														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
 
 														// TODO : Message
@@ -996,19 +1000,18 @@ steal(
 
 						getSaveColumnDeferred: function (columnInfo, removedListIds) {
 							var self = this,
-								saveDeferred = $.Deferred();
+								q = $.Deferred();
 
-							saveDeferred
-								.fail(function (err) {
-									$$(self.webixUiId.objectDatatable).hideProgress();
+							q.fail(function (err) {
+								$$(self.webixUiId.objectDatatable).hideProgress();
 
-									webix.message({
-										type: "error",
-										text: self.labels.common.createErrorMessage.replace('{0}', columnInfo.name)
-									});
+								webix.message({
+									type: "error",
+									text: self.labels.common.createErrorMessage.replace('{0}', columnInfo.name)
+								});
 
-									AD.error.log('Add Column : Error add new field data', { error: err });
-								})
+								AD.error.log('Add Column : Error add new field data', { error: err });
+							})
 								.then(function (data) {
 									if (data.translate) data.translate();
 
@@ -1108,6 +1111,7 @@ steal(
 											}
 										}
 									], function () {
+										columnInfo.isNew = columnInfo.id === null || typeof columnInfo.id === 'undefined';
 
 										var addColumnHeader = $.extend(columnInfo.setting, {
 											id: data.name,
@@ -1184,7 +1188,7 @@ steal(
 									});
 								});
 
-							return saveDeferred;
+							return q;
 						},
 
 						getCurSelectivityNode: function (selectedCell) {
