@@ -510,7 +510,8 @@ steal(
                                                                 setting: fieldSettings
                                                             };
 
-                                                            newFieldInfo.weight = dataTable.config.columns.length;
+                                                            if (!self.data.editFieldId) // for New column
+                                                                newFieldInfo.weight = dataTable.config.columns.length;
 
                                                             if (linkToObject != null)
                                                                 newFieldInfo.linkToObject = linkToObject;
@@ -636,7 +637,7 @@ steal(
                                             $$(self.componentIds.numberDefault).setValue(data.default);
                                             break;
                                         case 'datetime': // Date
-                                        case 'data':
+                                        case 'date':
                                             this.selectedType = self.labels.add_fields.dateField;
 
                                             $$(self.componentIds.dateIncludeTime).setValue(data.type == 'datetime');
