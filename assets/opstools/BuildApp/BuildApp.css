@@ -300,6 +300,12 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	width: 30px;
 }
 
+.ab-page-grid-column-item .column-empty-checkbox {
+	position: relative;
+	width: 50px;
+	height: 38px;
+}
+
 .ab-page-grid-column-item .column-name {
 	display: inline-block;
 	position: relative;

@@ -79,14 +79,19 @@ steal(
 										{
 											id: self.componentIds.columnList,
 											view: 'activelist',
-											template: "<div class='ab-page-grid-column-item'>" +
-											"<div class='column-checkbox'>{common.markCheckbox()}</div>" +
-											"<div class='column-name'>#label#</div>" +
-											"</div>",
+											template: function (obj, common) {
+												return "<div class='ab-page-grid-column-item'>" +
+													"<div class='column-checkbox'>" +
+													(obj.isUnsync ? "<div class='column-empty-checkbox'></div>" : common.markCheckbox(obj, common)) +
+													"</div>" +
+													"<div class='column-name'>" + obj.label + (obj.isUnsync ? " (Unsync)" : "") + "</div>" +
+													"</div>";
+											},
 											activeContent: {
 												markCheckbox: {
 													view: "checkbox",
 													width: 50,
+													disabled: true,
 													on: { /*checkbox onChange handler*/
 														'onChange': function (newv, oldv) {
 															var item_id = this.config.$masterId,
@@ -373,7 +378,7 @@ steal(
 								// Render dataTable component
 								self.render(viewId, settings).then(function () {
 									// Columns list
-									self.bindColumnList(viewId, settings.object);
+									self.bindColumnList(viewId, settings.object, selectAll);
 									$$(self.componentIds.columnList).hideProgress();
 
 									// Properties
@@ -484,7 +489,7 @@ steal(
 								self.populateData(viewId, objectId);
 							};
 
-							self.bindColumnList = function (viewId, selectAll) {
+							self.bindColumnList = function (viewId, objectId, selectAll) {
 								var data = self.getData(viewId);
 
 								$$(self.componentIds.columnList).clearAll();
@@ -499,9 +504,15 @@ steal(
 									visibleColumns = visibleColumns.concat($.map(columns, function (d) { return d.id.toString(); }));
 								}
 
+								var newFieldNames = self.Model.ObjectModels[objectId].Cached.getNewFieldNames();
+
 								// Initial checkbox
 								columns.forEach(function (d) {
-									d.markCheckbox = visibleColumns.filter(function (c) { return c == d.id; }).length > 0;
+									d.isUnsync = newFieldNames.indexOf(d.name) > -1;
+									if (d.isUnsync)
+										d.markCheckbox = false;
+									else
+										d.markCheckbox = visibleColumns.filter(function (c) { return c == d.id; }).length > 0;
 								});
 
 								$$(self.componentIds.columnList).parse(columns);
