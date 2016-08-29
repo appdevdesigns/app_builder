@@ -20,9 +20,6 @@ steal(function () {
 					cachedKey: function () {
 						return 'cached' + this._shortName;
 					},
-					cacheNewFieldKey: function () {
-						return this.cachedKey() + '_new_fields';
-					},
 					cacheClear: function () {
 						window.localStorage.removeItem(this.cachedKey());
 						this._cached = {};
@@ -78,16 +75,7 @@ steal(function () {
 							});
 						}
 					},
-					cacheNewFields: function (newFieldNames) {
-						if (newFieldNames && newFieldNames.length > 0)
-							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(newFieldNames));
-						else
-							window.localStorage.removeItem(this.cacheNewFieldKey());
-					},
 
-					getNewFieldNames: function () {
-						return JSON.parse(window.localStorage.getItem(this.cacheNewFieldKey())) || []; // [New_Field_1, ..., New_Field_n]
-					},
 					findAllCached: function (params) {
 						// remove anything not filtering ....
 						//   - sorting, grouping, limit, and offset
@@ -334,7 +322,13 @@ steal(function () {
 
 							// Check has update to new column
 							var isUpdateNew = Object.keys(obj).filter(function (k) {
-								return self.getNewFieldNames().indexOf(k) > -1 && typeof obj[k] !== 'undefined' && obj[k] !== null;
+								if (typeof obj[k] !== 'undefined' && obj[k] !== null) {
+									var newFields = self.getNewFields().filter(function (f) { return k == f.name; });
+									return newFields && newFields.length > 0;
+								}
+								else {
+									return false;
+								}
 							});
 							if (isUpdateNew && isUpdateNew.length > 0)
 								hasNewField = true;
@@ -452,6 +446,58 @@ steal(function () {
 						return typeof id === 'string' && id.startsWith('temp');
 					},
 
+
+
+					// Cache new fields
+					cacheNewFieldKey: function () {
+						return this.cachedKey() + '_new_fields';
+					},
+
+					cacheNewFields: function (newField) {
+						if (newField) {
+							var cacheFields = this.getNewFields();
+
+							newField.name = newField.name.replace(' ', '_');
+
+							if (!newField.id) { // Add
+								newField.id = 'temp' + webix.uid();
+								cacheFields.push(newField);
+							}
+							else { // Update
+								cacheFields.forEach(function (f, index) {
+									if (f.id == newField.id)
+										cacheFields[index] = newField;
+								});
+							}
+
+							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(cacheFields));
+						}
+					},
+
+					getNewFields: function () {
+						return JSON.parse(window.localStorage.getItem(this.cacheNewFieldKey())) || [];
+					},
+
+					deleteCachedField: function (fieldId) {
+						var cacheFields = this.getNewFields();
+
+						cacheFields.forEach(function (f, index) {
+							if (f.id == fieldId)
+								cacheFields.splice(index, 1)
+						});
+
+						if (cacheFields && cacheFields.length > 0)
+							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(cacheFields));
+						else
+							this.clearCacheFields();
+					},
+
+					clearCacheFields: function () {
+						window.localStorage.removeItem(this.cacheNewFieldKey());
+					},
+
+
+					// Sync to database
 					syncDataToServer: function () {
 						var self = this,
 							q = $.Deferred(),
@@ -481,11 +527,8 @@ steal(function () {
 						async.parallel(saveEvents, function (err) {
 							if (err)
 								q.reject(err)
-							else {
-								self.cacheNewFields([]); // Clear new fields name
-
+							else
 								q.resolve();
-							}
 						});
 
 						return q;

@@ -126,16 +126,33 @@ steal(
 
 							self.controllers.AppWorkspace.element.on(self.CONST.SYNCHRONIZE, function (event, data) {
 								$$(self.webixUiId.loadingScreen).start();
-								$$(self.webixUiId.loadingScreen).setMessage("Requesting...");
 								$$(self.webixUiId.syncButton).disable();
 
-								self.callReload(data);
+								self.updateSyncStatus({
+									action: 'start',
+									step: 'syncObjectFields'
+								});
+
+								self.controllers.AppWorkspace.syncObjectFields()
+									.then(function () {
+										self.updateSyncStatus({
+											action: 'done',
+											step: 'syncObjectFields'
+										});
+
+										self.callReload(data);
+									});
 
 							});
 						},
 
 						callReload: function (data) {
 							var self = this;
+
+							self.updateSyncStatus({
+								action: 'start',
+								step: 'request'
+							});
 
 							AD.comm.service.post({
 								url: '/app_builder/fullReload/' + data.appID
@@ -146,9 +163,9 @@ steal(
 									console.log(err);
 									webix.message(err);
 
-									$$(self.webixUiId.loadingScreen).showErrorScreen("There are errors", "Reload", function () { // TODO
+									// Show retry screen
+									$$(self.webixUiId.loadingScreen).showErrorScreen("There are errors", "Reload", function () {
 										$$(self.webixUiId.loadingScreen).start();
-										$$(self.webixUiId.loadingScreen).setMessage("Requesting...");
 
 										self.callReload(data);
 									});
@@ -163,6 +180,12 @@ steal(
 								case 'start': // Update loading message
 									var message = '';
 									switch (data.step) {
+										case 'syncObjectFields':
+											message = 'Updating object fields...';
+											break;
+										case 'request':
+											message = 'Requesting...';
+											break;
 										case 'findApplication':
 											message = 'Preparing Application info...';
 											break;
@@ -187,8 +210,11 @@ steal(
 								case 'done': // Update progress bar
 									if (!self.data.curLoadProgress) self.data.curLoadProgress = 0;
 									switch (data.step) {
+										case 'syncObjectFields':
+											self.data.curLoadProgress += 0.1;
+											break;
 										case 'findApplication':
-											self.data.curLoadProgress += 0.3;
+											self.data.curLoadProgress += 0.2;
 											break;
 										case 'prepareFolder':
 											self.data.curLoadProgress += 0.2;

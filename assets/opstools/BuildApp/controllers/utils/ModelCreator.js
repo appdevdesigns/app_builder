@@ -190,62 +190,6 @@ steal(
 										break;
 								}
 							});
-						},
-
-						addNewColumn: function (objectName, newColumnName) {
-							var self = this,
-								q = $.Deferred();
-
-							self.getModel(objectName)
-								.fail(function (err) { q.reject(err); })
-								.then(function (objectModel) {
-									var newColumnNames = objectModel.Cached.getNewFieldNames();
-
-									if (newColumnNames.indexOf(newColumnName) < 1)
-										newColumnNames.push(newColumnName);
-
-									objectModel.Cached.cacheNewFields(newColumnNames);
-
-									q.resolve();
-								});
-
-							return q;
-						},
-
-						getNewColumns: function (objectName) {
-							var self = this,
-								q = $.Deferred();
-
-							self.getModel(objectName)
-								.fail(function (err) { q.reject(err); })
-								.then(function (objectModel) {
-									var newColumnNames = objectModel.Cached.getNewFieldNames();
-
-									q.resolve(newColumnNames);
-								});
-
-							return q;
-						},
-
-						deleteColumn: function (objectName, columnName) {
-							var self = this,
-								q = $.Deferred();
-
-							self.getModel(objectName)
-								.fail(function (err) { q.reject(err); })
-								.then(function (objectModel) {
-									var newColumnNames = objectModel.Cached.getNewFieldNames(),
-										index = newColumnNames.indexOf(columnName);
-
-									if (index > -1) {
-										newColumnNames.splice(index, 1);
-										objectModel.Cached.cacheNewFields(newColumnNames);
-									}
-
-									q.resolve();
-								});
-
-							return q;
 						}
 
 					});

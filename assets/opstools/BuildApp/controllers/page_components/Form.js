@@ -207,10 +207,6 @@ steal(
 													if (d.translate) d.translate();
 												});
 
-												var newFieldName = [];
-												if (objectModel)
-													newFieldName = objectModel.Cached.getNewFieldNames();
-
 												data.columns = result;
 												data.columns.forEach(function (c) {
 													var isVisible = settings.visibleFieldIds.indexOf(c.id.toString()) > -1 || defaultShowAll;
@@ -267,7 +263,6 @@ steal(
 													}
 
 													if (editable) { // Show/Hide options
-														c.isUnsync = newFieldName.indexOf(c.name) > -1;
 														element = {
 															css: 'ab-form-component-item',
 															cols: [
@@ -278,8 +273,7 @@ steal(
 																	maxWidth: 120,
 																	inputWidth: 100,
 																	inputHeight: 35,
-																	value: isVisible && !c.isUnsync ? "show" : "hide",
-																	disabled: c.isUnsync ? true : false,
+																	value: isVisible ? "show" : "hide",
 																	options: [
 																		{ id: "show", value: "Show" },
 																		{ id: "hide", value: "Hide" },
@@ -313,7 +307,7 @@ steal(
 															if ($$(self.componentIds.saveButton))
 																$$(self.componentIds.saveButton).disable();
 
-															var formView = this.getTopParentView();
+															var formView = this.getFormView();
 															$$(formView).showProgress({ type: "icon" });
 
 															var data = self.getData(viewId),
@@ -401,7 +395,7 @@ steal(
 														width: 90,
 														inputWidth: 80,
 														click: function () {
-															$$(this.getTopParentView()).setValues({});
+															$$(this.getFormView()).setValues({});
 
 															var data = self.getData(viewId);
 															data.modelDataId = null;

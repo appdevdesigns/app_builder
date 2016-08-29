@@ -82,16 +82,15 @@ steal(
 											template: function (obj, common) {
 												return "<div class='ab-page-grid-column-item'>" +
 													"<div class='column-checkbox'>" +
-													(obj.isUnsync ? "<div class='column-empty-checkbox'></div>" : common.markCheckbox(obj, common)) +
+													common.markCheckbox(obj, common) +
 													"</div>" +
-													"<div class='column-name'>" + obj.label + (obj.isUnsync ? " (Unsync)" : "") + "</div>" +
+													"<div class='column-name'>" + obj.label + "</div>" +
 													"</div>";
 											},
 											activeContent: {
 												markCheckbox: {
 													view: "checkbox",
 													width: 50,
-													disabled: true,
 													on: { /*checkbox onChange handler*/
 														'onChange': function (newv, oldv) {
 															var item_id = this.config.$masterId,
@@ -504,15 +503,9 @@ steal(
 									visibleColumns = visibleColumns.concat($.map(columns, function (d) { return d.id.toString(); }));
 								}
 
-								var newFieldNames = self.Model.ObjectModels[objectId].Cached.getNewFieldNames();
-
 								// Initial checkbox
 								columns.forEach(function (d) {
-									d.isUnsync = newFieldNames.indexOf(d.name) > -1;
-									if (d.isUnsync)
-										d.markCheckbox = false;
-									else
-										d.markCheckbox = visibleColumns.filter(function (c) { return c == d.id; }).length > 0;
+									d.markCheckbox = visibleColumns.filter(function (c) { return c == d.id; }).length > 0;
 								});
 
 								$$(self.componentIds.columnList).parse(columns);
@@ -549,13 +542,7 @@ steal(
 							if ($$(viewId).showProgress)
 								$$(viewId).showProgress({ type: 'icon' });
 
-							self.Model.ObjectModels[objectId].Cached.unbind('refreshData');
-							self.Model.ObjectModels[objectId].Cached.bind('refreshData', function (ev, data) {
-								if (this == self.Model.ObjectModels[objectId].Cached)
-									self.getDataTableController(viewId).populateDataToDataTable(data.result);
-							});
-
-							self.Model.ObjectModels[objectId].Cached.findAll({})
+							self.Model.ObjectModels[objectId].findAll({})
 								.fail(function (err) {
 									q.reject(err);
 

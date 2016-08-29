@@ -74,7 +74,6 @@ steal(
 
 							this.initMultilingualLabels();
 							this.initControllers();
-							this.initModelCache();
 							this.initWebixUI();
 							this.initEvents();
 
@@ -168,17 +167,6 @@ steal(
 								ModelCreator: new ModelCreator(),
 								SelectivityHelper: new SelectivityHelper()
 							};
-						},
-
-						initModelCache: function () {
-							var self = this;
-
-							System.import('can').then(function () {
-								steal.import('can/model/model', 'can/util/object/object').then(function () {
-
-									self.controllers.ModelCreator.initModelCached('ABColumn', self.Model.ABColumn, 'ab_column_info_cache');
-								});
-							});
 						},
 
 						initWebixUI: function () {
@@ -486,8 +474,22 @@ steal(
 
 										var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == headerField.dataId; })[0];
 
-										$$(self.webixUiId.addFieldsPopup).show(itemNode);
-										$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedColumn.label);
+										if (selectedColumn) {
+											$$(self.webixUiId.addFieldsPopup).show(itemNode);
+											$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedColumn.label);
+										}
+										else {
+											// Get cached field
+											self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
+												.then(function (objectModel) {
+													var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
+
+													if (newFields && newFields.length > 0) {
+														$$(self.webixUiId.addFieldsPopup).show(itemNode);
+														$$(self.webixUiId.addFieldsPopup).editMode(newFields[0], newFields[0].label);
+													}
+												});
+										}
 										break;
 									case self.labels.object.deleteField:
 										// Validate
@@ -501,75 +503,112 @@ steal(
 											return;
 										}
 
-										var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == headerField.dataId; })[0];
+										async.waterfall([
+											function (next) {
+												var selectedColumn = $.grep(self.data.columns.attr(), function (c) { return c.id == headerField.dataId; })[0];
 
-										webix.confirm({
-											title: self.labels.object.confirmDeleteTitle,
-											ok: self.labels.common.yes,
-											cancel: self.labels.common.no,
-											text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedColumn.label),
-											callback: function (result) {
-												if (result) {
-													$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
+												if (!selectedColumn || selectedColumn.length < 1) {
+													// Get cached field
+													self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
+														.then(function (objectModel) {
+															var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
 
-													// Call server to delete field data
-													self.Model.ABColumn.Cached.destroy(headerField.dataId)
-														.fail(function (err) {
-															$$(self.webixUiId.objectDatatable).hideProgress();
+															if (newFields && newFields.length > 0) {
+																selectedColumn = newFields[0];
+																next(null, selectedColumn);
+															}
 
-															webix.message({
-																type: "error",
-																text: self.labels.common.deleteErrorMessage.replace('{0}', selectedColumn.label)
-															});
-
-															AD.error.log('Column list : Error delete column', { error: err });
-														})
-														.then(function (data) {
-															var objectName = self.data.object.attr('name');
-
-															// Delete cache
-															self.controllers.ModelCreator.deleteColumn(objectName, data.name);
-
-															// Remove column
-															self.data.columns.forEach(function (c, index) {
-																if (c.name == headerField.id) {
-																	self.data.columns.splice(index, 1);
-																	return false;
-																}
-															});
-
-															// Remove describe to object model
-															self.controllers.ModelCreator.getModel(objectName)
-																.fail(function (err) { next(err); })
-																.then(function (objectModel) {
-																	delete objectModel.describe()[data.name];
-
-																	if (objectModel.multilingualFields) // Remove field
-																		objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != data.name; });
-																});
-
-															self.bindColumns(false, true);
-
-															self.reorderColumns();
-
-															$$(self.webixUiId.editHeaderPopup).hide();
-
-															webix.message({
-																type: "success",
-																text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedColumn.label)
-															});
-
-															// Clear selected field
-															headerField = null;
-
-															self.refreshPopupData();
-
-															$$(self.webixUiId.objectDatatable).hideProgress();
 														});
 												}
+												else {
+													next(null, selectedColumn);
+												}
+											},
+											function (selectedColumn, next) {
+												webix.confirm({
+													title: self.labels.object.confirmDeleteTitle,
+													ok: self.labels.common.yes,
+													cancel: self.labels.common.no,
+													text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedColumn.label),
+													callback: function (result) {
+														if (result) {
+															$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
+															var objectName = self.data.object.attr('name');
+
+															async.parallel([
+																function (next) {
+																	// Remove describe to object model
+																	self.controllers.ModelCreator.getModel(objectName)
+																		.fail(function (err) { next(err); })
+																		.then(function (objectModel) {
+																			delete objectModel.describe()[headerField.id];
+
+																			if (objectModel.multilingualFields) // Remove field
+																				objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != headerField.id; });
+
+																			// Delete cache
+																			objectModel.Cached.deleteCachedField(headerField.dataId);
+
+																			next();
+																		});
+																},
+																function (next) {
+																	if (typeof headerField.dataId === 'string' && headerField.dataId.startsWith('temp')) {
+																		next();
+																	}
+																	else {
+																		// Call server to delete field data
+																		self.Model.ABColumn.destroy(headerField.dataId)
+																			.fail(function (err) { next(err); })
+																			.then(function (data) { next(); });
+																	}
+																}
+															], function (err) {
+																if (err) {
+																	$$(self.webixUiId.objectDatatable).hideProgress();
+
+																	webix.message({
+																		type: "error",
+																		text: self.labels.common.deleteErrorMessage.replace('{0}', selectedColumn.label)
+																	});
+
+																	AD.error.log('Column list : Error delete column', { error: err });
+																	return;
+																}
+
+																// Remove column
+																self.data.columns.forEach(function (c, index) {
+																	if (c.name == headerField.id) {
+																		self.data.columns.splice(index, 1);
+																		return false;
+																	}
+																});
+
+																self.bindColumns(false, true);
+
+																self.reorderColumns();
+
+																$$(self.webixUiId.editHeaderPopup).hide();
+
+																webix.message({
+																	type: "success",
+																	text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedColumn.label)
+																});
+
+																// Clear selected field
+																headerField = null;
+
+																self.refreshPopupData();
+
+																$$(self.webixUiId.objectDatatable).hideProgress();
+															});
+														}
+
+													}
+												});
 											}
-										});
+										]);
 
 										break;
 								}
@@ -657,7 +696,7 @@ steal(
 										$$(self.webixUiId.objectDatatable).clearAll();
 
 										// Get columns from server
-										self.Model.ABColumn.Cached.findAll({ object: self.data.objectId })
+										self.Model.ABColumn.findAll({ object: self.data.objectId })
 											.fail(function (err) {
 												$$(self.webixUiId.objectDatatable).hideProgress();
 
@@ -790,10 +829,10 @@ steal(
 											newColumn.default = columnInfo.setting.value;
 
 										// Get deferred when save complete
-										var saveDeferred = self.getSaveColumnDeferred(columnInfo, removedListId),
+										var refreshDeferred = self.refreshColumnsDeferred(columnInfo, removedListId),
 											objectName = self.data.object.attr('name');
 
-										if (columnInfo.id) { // Update
+										if (columnInfo.id && !columnInfo.id.toString().startsWith('temp')) { // Update
 											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
 
 											for (var key in newColumn) {
@@ -801,49 +840,31 @@ steal(
 											}
 
 											updateColumn.save()
-												.fail(function (err) { saveDeferred.reject(err); })
-												.then(function (data) { saveDeferred.resolve(data); });
+												.fail(function (err) { refreshDeferred.reject(err); })
+												.then(function (data) { refreshDeferred.resolve(data); });
 										}
-										else { // Add new
-											self.Model.ABColumn.Cached.create(newColumn)
-												.fail(function (err) { saveDeferred.reject(err); })
-												.then(function (data) {
-													if (data.translate) data.translate();
+										else { // Cache new field
+											// Add new describe to object model
+											self.controllers.ModelCreator.getModel(objectName)
+												.fail(function (err) { refreshDeferred.reject(err); })
+												.then(function (objectModel) {
+													if (columnInfo.id) newColumn.id = columnInfo.id;
 
-													// Cache 
-													self.Model.ABColumn.Cached.model(data).created(data);
+													// Cache new field
+													objectModel.Cached.cacheNewFields(newColumn);
 
-													async.parallel([
-														function (next) {
-															// Save new columns name to cache
-															self.controllers.ModelCreator.addNewColumn(objectName, data.name)
-																.fail(function (err) { next(err); })
-																.then(function () { next(); });
-														},
-														function (next) {
-															// Add new describe to object model
-															self.controllers.ModelCreator.getModel(objectName)
-																.fail(function (err) { next(err); })
-																.then(function (objectModel) {
-																	objectModel.describe()[data.name] = data.type;
+													// Add new describe to object model
+													objectModel.describe()[newColumn.name] = newColumn.type;
 
-																	if (data.supportMultilingual)
-																		objectModel.multilingualFields.push(data.name);
+													// Add multilingual field to object model
+													if (newColumn.supportMultilingual)
+														objectModel.multilingualFields.push(newColumn.name);
 
-																	next();
-																});
-														}
-													], function (err) {
-														if (err)
-															saveDeferred.reject(err);
-														else
-															saveDeferred.resolve(data);
-													});
-
+													refreshDeferred.resolve(newColumn);
 												});
 										}
 
-										return saveDeferred;
+										return refreshDeferred;
 									});
 
 									// Register load label format
@@ -911,22 +932,18 @@ steal(
 						deleteObject: function (obj) {
 							var self = this;
 
-							// Clear columns info cache
-							var cachedColumns = self.Model.ABColumn.Cached.findAllCached({ object: obj.attr('id') });
-							if (cachedColumns && cachedColumns.length > 0) {
-								cachedColumns = self.Model.ABColumn.Cached.models(cachedColumns); // Convert to cache model
-								cachedColumns.forEach(function (col) {
-									col.destroyed();
-								});
-							}
-
 							self.controllers.ModelCreator.getModel(obj.attr('name'))
 								.fail(function (err) {
 									// TODO : Error message
 								})
 								.then(function (objectModel) {
-									if (objectModel && objectModel.Cached)
-										objectModel.Cached.cacheClear(); // Clear cache data
+									if (objectModel && objectModel.Cached) {
+										// Clear columns info cache
+										objectModel.Cached.clearCacheFields();
+
+										// Clear cache data
+										objectModel.Cached.cacheClear();
+									}
 								});
 						},
 
@@ -974,17 +991,27 @@ steal(
 								q = $.Deferred(),
 								objectName = self.data.object.attr('name');
 
-							self.controllers.ModelCreator.getNewColumns(objectName)
+							self.controllers.ModelCreator.getModel(objectName)
 								.fail(function (err) { q.reject(err); })
-								.then(function (newColNames) {
-									self.data.columns.forEach(function (c) {
-										if (newColNames.indexOf(c.attr('name')) > -1)
-											c.attr('isNew', true);
-										else
-											c.removeAttr('isNew');
+								.then(function (objectModel) {
+									var columns = self.data.columns.attr().slice(), // Copy
+										newFields = objectModel.Cached.getNewFields();
+
+									newFields.forEach(function (f) {
+										f.isNew = true;
+
+										// Add new describe to object model
+										objectModel.describe()[f.name] = f.type;
+
+										// Add multilingual field to object model
+										if (f.supportMultilingual)
+											objectModel.multilingualFields.push(f.name);
 									});
 
-									self.controllers.ObjectDataTable.bindColumns(self.data.columns, resetColumns, addTrashColumn);
+									// Merge exists columns with cache fields
+									columns = columns.concat(newFields);
+
+									self.controllers.ObjectDataTable.bindColumns(columns, resetColumns, addTrashColumn);
 
 									q.resolve();
 								});
@@ -992,7 +1019,7 @@ steal(
 							return q;
 						},
 
-						getSaveColumnDeferred: function (columnInfo, removedListIds) {
+						refreshColumnsDeferred: function (columnInfo, removedListIds) {
 							var self = this,
 								q = $.Deferred();
 
@@ -1105,7 +1132,7 @@ steal(
 											}
 										}
 									], function () {
-										columnInfo.isNew = columnInfo.id === null || typeof columnInfo.id === 'undefined';
+										columnInfo.isNew = (columnInfo.id === null || typeof columnInfo.id === 'undefined' || (typeof columnInfo.id === 'string' && columnInfo.id.startsWith('temp')));
 
 										var addColumnHeader = $.extend(columnInfo.setting, {
 											id: data.name,
