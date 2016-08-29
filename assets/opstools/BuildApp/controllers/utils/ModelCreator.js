@@ -35,8 +35,8 @@ steal(
 						getBaseModel: function (objectName, describe, multilingualFields) {
 							if (!objectName || !describe || !multilingualFields) return;
 
-							var formatAppName = this.data.appName.replace('_', '').toLowerCase(),
-								formatObjectName = objectName.replace('_', '').toLowerCase(),
+							var formatAppName = this.data.appName.replace(/_/g, '').toLowerCase(),
+								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName);
 
 							// /AB_applicationname/AB_applicationname_objectname
@@ -72,8 +72,8 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace('_', '').toLowerCase(),
-								formatObjectName = objectName.replace('_', '').toLowerCase(),
+								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
+								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName),
 								model = AD.Model.get(modelName);
 
@@ -100,8 +100,8 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace('_', '').toLowerCase(),
-								formatObjectName = objectName.replace('_', '').toLowerCase(),
+								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
+								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName);
 
 							// Get object definition
@@ -134,7 +134,7 @@ steal(
 									var modelResult = AD.Model.get(modelName);
 
 									// Setup cached model
-									var cachedKey = '#appName#_#objectName#_cache'.replace('#appName#', formatAppName).replace('#objectName#', formatObjectName);
+									var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 									self.initModelCached(objectName, modelResult, cachedKey);
 
 									q.resolve(modelResult);

@@ -476,7 +476,7 @@ steal(
 
 										if (selectedColumn) {
 											$$(self.webixUiId.addFieldsPopup).show(itemNode);
-											$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn, selectedColumn.label);
+											$$(self.webixUiId.addFieldsPopup).editMode(selectedColumn);
 										}
 										else {
 											// Get cached field
@@ -486,7 +486,7 @@ steal(
 
 													if (newFields && newFields.length > 0) {
 														$$(self.webixUiId.addFieldsPopup).show(itemNode);
-														$$(self.webixUiId.addFieldsPopup).editMode(newFields[0], newFields[0].label);
+														$$(self.webixUiId.addFieldsPopup).editMode(newFields[0]);
 													}
 												});
 										}
@@ -804,8 +804,6 @@ steal(
 									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo, removedListId) {
 
 										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-										columnInfo.label = columnInfo.name;
 
 										var newColumn = {
 											object: self.data.objectId,

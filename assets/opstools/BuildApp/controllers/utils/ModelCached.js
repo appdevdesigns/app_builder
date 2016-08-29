@@ -457,7 +457,7 @@ steal(function () {
 						if (newField) {
 							var cacheFields = this.getNewFields();
 
-							newField.name = newField.name.replace(' ', '_');
+							newField.name = newField.name.replace(/ /g, '_');
 
 							if (!newField.id) { // Add
 								newField.id = 'temp' + webix.uid();

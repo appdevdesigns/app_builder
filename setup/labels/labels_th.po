@@ -435,6 +435,18 @@ msgstr "เลือกชนิดของข้อมูล..."
 
 #. path: app_builder
 #. code: th
+#. key: ab.add_fields.fieldName
+msgid "Field name"
+msgstr "ชื่อฟิลด์"
+
+#. path: app_builder
+#. code: th
+#. key: ab.add_fields.label
+msgid "Label"
+msgstr "ชื่อแสดง"
+
+#. path: app_builder
+#. code: th
 #. key: ab.add_fields.connectField
 msgid "Connect to another record"
 msgstr "เชื่อมต่อกับข้อมูล"

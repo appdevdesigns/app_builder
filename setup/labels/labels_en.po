@@ -435,6 +435,18 @@ msgstr "Choose field type..."
 
 #. path: app_builder
 #. code: en
+#. key: ab.add_fields.fieldName
+msgid "Field name"
+msgstr "Field name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.label
+msgid "Label"
+msgstr "Label"
+
+#. path: app_builder
+#. code: en
 #. key: ab.add_fields.connectField
 msgid "Connect to another record"
 msgstr "Connect to another record"
