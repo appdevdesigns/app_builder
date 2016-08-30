@@ -408,8 +408,10 @@ steal(
 																		})
 																		.then(function (result) {
 																			self.data.componentsInPage.forEach(function (c, index) {
-																				if (c.id == id)
+																				if (c.id == id) {
+																					self.data.componentsInPage.removeAttr(index);
 																					c.destroyed();
+																				}
 																			});
 
 																			$$(self.componentIds.componentList).remove(id);
