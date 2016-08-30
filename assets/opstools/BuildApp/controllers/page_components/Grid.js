@@ -1,5 +1,6 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/models/ABPage.js',
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 
@@ -27,9 +28,9 @@ steal(
 
 							// Model
 							self.Model = {
+								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
-								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
 								ObjectModels: {}
 							};
 
@@ -398,15 +399,14 @@ steal(
 											// Data table - Edit form
 											var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 
-											self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+											AD.comm.service.get({
+												url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId
+											})
 												.fail(function (err) { next(err); })
 												.then(function (pages) {
 													var formComponents = [];
 
 													pages.forEach(function (p) {
-														if (p.translate)
-															p.translate();
-
 														// Filter form components
 														var forms = p.components.filter(function (c) {
 															return c.component === "Form" && c.setting && settings && c.setting.object === settings.object;
@@ -416,7 +416,7 @@ steal(
 															formComponents = formComponents.concat($.map(forms, function (f) {
 																return [{
 																	id: p.id + '|' + f.id,
-																	value: p.label + ' - ' + f.component
+																	value: p.name + ' - ' + f.component
 																}];
 															}));
 														}
