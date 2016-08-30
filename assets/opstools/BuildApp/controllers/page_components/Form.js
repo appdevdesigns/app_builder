@@ -400,7 +400,9 @@ steal(
 															var data = self.getData(viewId);
 															data.modelDataId = null;
 
-															self.callEvent('cancel', viewId);
+															self.callEvent('cancel', viewId, {
+																returnPage: data.returnPage
+															});
 														}
 													});
 												}
