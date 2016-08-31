@@ -65,7 +65,10 @@ steal(function () {
 							delete data[itemId];
 						});
 
-						window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
+						if (!data || Object.keys(data).length < 1)
+							window.localStorage.removeItem(this.cachedKey());
+						else
+							window.localStorage.setItem(this.cachedKey(), JSON.stringify(data));
 
 						// Raise event
 						if (this.actionEvent) {
@@ -200,7 +203,7 @@ steal(function () {
 									if (d.translate) d.translate();
 
 									// Merge cached and actual data
-									can.each(list, function (cachedItem) {
+									list.forEach(function (cachedItem) {
 										if (d[self.fieldId] == cachedItem[self.fieldId]) {
 											var propNames = can.Map.keys(cachedItem);
 

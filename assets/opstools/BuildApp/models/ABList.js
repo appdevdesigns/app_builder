@@ -7,7 +7,7 @@ function() {
 			// Namespacing conventions:
 			// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 			AD.Model.extend('opstools.BuildApp.ABList', {
-				useSockets: true
+				useSockets: true,
 				/*
 					findAll: 'GET /app_builder/ablist',
 					findOne: 'GET /app_builder/ablist/{id}',
@@ -18,6 +18,12 @@ function() {
 					fieldId: 'id',             // which field is the ID
 					fieldLabel:'key'      // which field is considered the Label
 				*/
+				getKey: function (app_name, obj_name, col_name) {
+					return '{0}.{1}.{2}'
+							.replace('{0}', app_name)
+							.replace('{1}', obj_name)
+							.replace('{2}', col_name);
+				}
 			}, {
 				/*
 					// Already Defined:

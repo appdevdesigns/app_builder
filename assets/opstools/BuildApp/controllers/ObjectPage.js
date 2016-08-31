@@ -7,6 +7,7 @@ steal(
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
 	'opstools/BuildApp/models/ABColumn.js',
+	'opstools/BuildApp/models/ABList.js',
 
 	function () {
 		System.import('appdev').then(function () {
@@ -32,7 +33,8 @@ steal(
 							this._super(element, options);
 
 							this.Model = {
-								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
+								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
+								ABList: AD.Model.get('opstools.BuildApp.ABList')
 							};
 
 							this.data = {};
@@ -156,12 +158,45 @@ steal(
 
 														f.weight = object.columns.length + (index + 1);
 
-														self.Model.ABColumn.create(f)
-															.fail(callback)
-															.then(function () {
-																objectModel.Cached.deleteCachedField(tempId);
-																callback();
-															});
+														async.waterfall([
+															// Create object column
+															function (ok) {
+																self.Model.ABColumn.create(f)
+																	.fail(ok)
+																	.then(function (result) {
+																		objectModel.Cached.deleteCachedField(tempId);
+
+																		ok(null, result);
+																	});
+															},
+															// Create list option of select column
+															function (column, ok) {
+																if (f.setting.editor === 'richselect' && f.setting.filter_options) {
+																	var createOptionEvents = [];
+
+																	f.setting.filter_options.forEach(function (opt, index) {
+																		createOptionEvents.push(function (createOk) {
+																			var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
+
+																			self.Model.ABList.create({
+																				key: list_key,
+																				weight: index + 1,
+																				column: column.id,
+																				label: opt,
+																				value: opt
+																			})
+																				.fail(createOk)
+																				.then(function () { createOk(); });
+																		});
+																	});
+
+																	async.parallel(createOptionEvents, ok);
+																}
+																else {
+																	ok();
+																}
+															}
+														], callback);
 													});
 												});
 

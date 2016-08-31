@@ -72,14 +72,14 @@ module.exports = {
 
   beforeCreate: function (values, cb) {
     if (values.name)
-      values.name = values.name.replace(' ', '_');
+      values.name = values.name.replace(/ /g, '_');
 
     cb();
   },
 
   beforeUpdate: function (values, cb) {
     if (values.name)
-      values.name = values.name.replace(' ', '_');
+      values.name = values.name.replace(/ /g, '_');
 
     cb();
   },

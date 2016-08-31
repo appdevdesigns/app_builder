@@ -331,7 +331,7 @@ steal(
                                                                 onClick: {
                                                                     "ab-new-field-remove": function (e, id, trg) {
                                                                         // Store removed id to array
-                                                                        if (!id.startsWith('temp_id')) {
+                                                                        if (!id.startsWith('temp_')) {
                                                                             if (!self.data.removedListIds) self.data.removedListIds = [];
 
                                                                             self.data.removedListIds.push(id);
@@ -343,7 +343,8 @@ steal(
                                                             },
                                                             {
                                                                 view: "button", value: self.labels.add_fields.listAddNewOption, click: function () {
-                                                                    var itemId = $$(self.componentIds.selectListOptions).add({ id: 'temp_id_' + webix.uid(), label: '' }, $$(self.componentIds.selectListOptions).count());
+                                                                    var temp_id = 'temp_' + webix.uid();
+                                                                    var itemId = $$(self.componentIds.selectListOptions).add({ id: temp_id, dataId: temp_id, label: '' }, $$(self.componentIds.selectListOptions).count());
                                                                     $$(self.componentIds.selectListOptions).edit(itemId);
                                                                 }
                                                             }
@@ -478,8 +479,8 @@ steal(
 
                                                                     $$(self.componentIds.selectListOptions).data.each(function (opt) {
                                                                         fieldSettings.filter_options.push(opt.label);
-                                                                        var optId = typeof opt.id == 'string' && opt.id.startsWith('temp_id') ? null : opt.id;
-                                                                        options.push({ id: optId, value: opt.label });
+                                                                        var optId = typeof opt.dataId == 'string' && opt.dataId.startsWith('temp') ? null : opt.dataId;
+                                                                        options.push({ dataId: optId, id: opt.label.replace(/ /g, '_'), value: opt.label });
                                                                     });
 
                                                                     // Filter value is not empty
@@ -676,7 +677,11 @@ steal(
                                             this.selectedType = self.labels.add_fields.listField;
                                             var options = [];
                                             data.setting.options.forEach(function (opt) {
-                                                options.push({ id: opt.id, label: opt.label });
+                                                options.push({
+                                                    dataId: opt.dataId,
+                                                    id: opt.id,
+                                                    label: opt.label
+                                                });
                                             });
                                             $$(self.componentIds.selectListOptions).parse(options);
                                             $$(self.componentIds.selectListOptions).refresh();

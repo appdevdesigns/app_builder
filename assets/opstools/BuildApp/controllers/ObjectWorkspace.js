@@ -727,6 +727,8 @@ steal(
 
 													listColIds.forEach(function (cId) {
 														getListEvents.push(function (cb) {
+															var column = self.data.columns.filter(function (col) { return col.id == cId; })[0];
+
 															self.Model.ABList.findAll({ column: cId })
 																.fail(function (err) { cb(err); })
 																.then(function (listResult) {
@@ -735,9 +737,14 @@ steal(
 																		if (listItem.translate) listItem.translate();
 																	});
 
-																	var col = self.data.columns.filter(function (col) { return col.id == cId; })[0];
-
-																	col.setting.attr('options', listResult.attr().sort(function (a, b) { return a.weight - b.weight; }));
+																	var sortedList = listResult.attr().sort(function (a, b) { return a.weight - b.weight; });
+																	column.setting.attr('options', $.map(sortedList, function (list) {
+																		return {
+																			dataId: list.id,
+																			id: list.value,
+																			label: list.label
+																		}
+																	}));
 
 																	cb();
 																});
@@ -1015,6 +1022,16 @@ steal(
 										// Add multilingual field to object model
 										if (f.supportMultilingual)
 											objectModel.multilingualFields.push(f.name);
+
+										if (f.setting.editor === 'richselect') {
+											f.setting.options = $.map(f.setting.filter_options, function (opt) {
+												return {
+													dataId: 'temp' + webix.uid(),
+													id: opt.replace(/ /g, '_'),
+													label: opt
+												};
+											});
+										}
 									});
 
 									// Merge exists columns with cache fields
@@ -1055,10 +1072,7 @@ steal(
 												self.Model.ABObject.findOne({ id: self.data.objectId })
 													.fail(function (err) { cb(err); })
 													.then(function (obj) {
-														list_key = '{0}.{1}.{2}'
-															.replace('{0}', obj.application.name)
-															.replace('{1}', obj.name)
-															.replace('{2}', data.name);
+														list_key = self.Model.ABList.getKey(obj.application.name, obj.name, data.name);
 
 														cb();
 													});
@@ -1094,11 +1108,10 @@ steal(
 												columnInfo.options.forEach(function (opt, index) {
 													createListEvents.push(function (next) {
 
-														if (opt.id) { // Update
-															self.Model.ABList.findOne({ id: opt.id })
+														if (opt.dataId && typeof opt.dataId !== 'string') { // Update
+															self.Model.ABList.findOne({ id: opt.dataId })
 																.fail(function (err) { next(err) })
 																.then(function (li) {
-																	li.attr('key', list_key);
 																	li.attr('weight', index + 1);
 																	li.attr('column', data.id);
 																	li.attr('label', opt.value);
@@ -1113,22 +1126,19 @@ steal(
 																			next();
 																		});
 																});
-														} else {// Add new
-															self.Model.ABList.create({
-																key: list_key,
-																weight: index + 1,
-																column: data.id,
-																label: opt.value,
-																value: opt.value
-															}).fail(function (err) {
-																next(err);
-															}).then(function (result) {
-																if (result.translate) result.translate();
+														}
+														else {
+															if (columnInfo.options && columnInfo.options.length > 0) {
+																list_options = $.map(columnInfo.options, function (opt) {
+																	return {
+																		id: opt.dataId,
+																		value: opt.id,
+																		label: opt.value
+																	};
+																});
+															}
 
-																list_options.push(result);
-
-																next();
-															});
+															next();
 														}
 
 													});
@@ -1152,11 +1162,15 @@ steal(
 										if (list_options && list_options.length > 0) {
 											list_options.sort(function (a, b) { return a.weight - b.weight; });
 
-											data.setting.attr('options', list_options);
+											if (data.setting.attr)
+												data.setting.attr('options', list_options);
+											else
+												data.setting.options = list_options;
 
 											addColumnHeader.options = $.map(list_options, function (opt) {
 												return {
-													id: opt.id,
+													dataId: opt.id,
+													id: opt.value,
 													value: opt.label
 												};
 											});
@@ -1165,7 +1179,7 @@ steal(
 										addColumnHeader.width = self.controllers.ObjectDataTable.calculateColumnWidth(data);
 
 										// Update objectList.columns data
-										var object = self.data.objectList.filter(function (o) { return o.id === self.data.objectId; });
+										var object = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
 										if (object && object.length > 0) {
 											var existsColumnData = $.grep(object[0].columns, function (c) { return c.id == data.id; });
 											if (existsColumnData && existsColumnData.length > 0) { // Update
