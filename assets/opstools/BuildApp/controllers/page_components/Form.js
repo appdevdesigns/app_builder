@@ -3,7 +3,6 @@ steal(
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 
-	'opstools/BuildApp/controllers/webix_custom_components/DragForm.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
@@ -35,7 +34,6 @@ steal(
 							};
 
 							// Controllers
-							// var DragForm = AD.Control.get('opstools.BuildApp.DragForm');
 							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
 								ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
 								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
@@ -184,249 +182,273 @@ steal(
 
 								// Get object list
 								data.objectId = settings.object;
-								self.Model.ABColumn.findAll({ object: settings.object })
-									.fail(function (err) { $$(viewId).hideProgress(); }) // TODO message
-									.then(function (result) {
-										result.forEach(function (d) {
-											if (d.translate) d.translate();
-										});
 
-										data.columns = result;
-										data.columns.forEach(function (c) {
-											var isVisible = settings.visibleFieldIds.indexOf(c.id.toString()) > -1 || defaultShowAll;
-
-											if (!editable && !isVisible) return; // Hidden
-
-											var element = {
-												name: c.name, // Field name
-												labelWidth: 100,
-												minWidth: 500
-											};
-											element.label = c.label;
-
-											if (!c.setting.editor) { // Checkbox
-												element.view = 'checkbox';
-											}
-											else if (c.setting.editor === 'selectivity') {
-												element.minHeight = 45;
-												element.borderless = true;
-												element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
-													"<div class='ab-form-connect-data' data-object='#object#' data-multiple='#multiple#'></div>";
-
-												element.template = element.template
-													.replace('#width#', element.labelWidth - 3)
-													.replace('#label#', element.label)
-													.replace('#object#', c.linkToObject)
-													.replace('#multiple#', c.isMultipleRecords);
-											}
-											else if (c.setting.editor === 'popup') {
-												element.view = 'textarea';
-											}
-											else if (c.setting.editor === 'number') {
-												element.view = 'counter';
-											}
-											else if (c.setting.editor === 'date') {
-												element.view = 'datepicker';
-												element.timepicker = false;
-											}
-											else if (c.setting.editor === 'datetime') {
-												element.view = 'datepicker';
-												element.timepicker = true;
-											}
-											else if (c.setting.editor === 'richselect') {
-												element.view = 'richselect';
-												element.options = $.map(c.setting.filter_options, function (opt, index) {
-													return {
-														id: index,
-														value: opt
-													}
+								async.waterfall([
+									function (next) {
+										if (editable) {
+											self.getObjectModel(data.objectId)
+												.fail(function (err) { next(err) })
+												.then(function (objectModel) {
+													next(null, objectModel);
 												});
-											}
-											else {
-												element.view = c.setting.editor;
-											}
+										} else {
+											next(null, null);
+										}
+									},
+									function (objectModel, next) {
+										self.Model.ABColumn.findAll({ object: settings.object })
+											.fail(function (err) {
+												// TODO message
+												$$(viewId).hideProgress();
+												next(err);
+											})
+											.then(function (result) {
+												result.forEach(function (d) {
+													if (d.translate) d.translate();
+												});
 
-											if (editable) { // Show/Hide options
-												element = {
-													css: 'ab-form-component-item',
-													cols: [
-														{
-															name: c.id, // Column id
-															view: 'segmented',
-															margin: 10,
-															maxWidth: 120,
-															inputWidth: 100,
-															inputHeight: 35,
-															value: isVisible ? "show" : "hide",
-															options: [
-																{ id: "show", value: "Show" },
-																{ id: "hide", value: "Hide" },
+												data.columns = result;
+												data.columns.forEach(function (c) {
+													var isVisible = settings.visibleFieldIds.indexOf(c.id.toString()) > -1 || defaultShowAll;
+
+													if (!editable && !isVisible) return; // Hidden
+
+													var element = {
+														name: c.name, // Field name
+														labelWidth: 100,
+														minWidth: 500
+													};
+													element.label = c.label;
+
+													if (!c.setting.editor) { // Checkbox
+														element.view = 'checkbox';
+													}
+													else if (c.setting.editor === 'selectivity') {
+														element.minHeight = 45;
+														element.borderless = true;
+														element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
+															"<div class='ab-form-connect-data' data-object='#object#' data-multiple='#multiple#'></div>";
+
+														element.template = element.template
+															.replace('#width#', element.labelWidth - 3)
+															.replace('#label#', element.label)
+															.replace('#object#', c.linkToObject)
+															.replace('#multiple#', c.isMultipleRecords);
+													}
+													else if (c.setting.editor === 'popup') {
+														element.view = 'textarea';
+													}
+													else if (c.setting.editor === 'number') {
+														element.view = 'counter';
+													}
+													else if (c.setting.editor === 'date') {
+														element.view = 'datepicker';
+														element.timepicker = false;
+													}
+													else if (c.setting.editor === 'datetime') {
+														element.view = 'datepicker';
+														element.timepicker = true;
+													}
+													else if (c.setting.editor === 'richselect') {
+														element.view = 'richselect';
+														element.options = $.map(c.setting.filter_options, function (opt, index) {
+															return {
+																id: index,
+																value: opt
+															}
+														});
+													}
+													else {
+														element.view = c.setting.editor;
+													}
+
+													if (editable) { // Show/Hide options
+														element = {
+															css: 'ab-form-component-item',
+															cols: [
+																{
+																	name: c.id, // Column id
+																	view: 'segmented',
+																	margin: 10,
+																	maxWidth: 120,
+																	inputWidth: 100,
+																	inputHeight: 35,
+																	value: isVisible ? "show" : "hide",
+																	options: [
+																		{ id: "show", value: "Show" },
+																		{ id: "hide", value: "Hide" },
+																	]
+																},
+																element
 															]
-														},
-														element
-													]
+														};
+													}
+
+													// $$(viewId).addView(element);
+													elementViews.push(element);
+												});
+
+												// Redraw
+												webix.ui(elementViews, $$(viewId));
+
+												var actionButtons = {
+													cols: [{}]
 												};
-											}
 
-											// $$(viewId).addView(element);
-											elementViews.push(element);
-										});
+												if (settings.saveVisible === 'show') {
+													actionButtons.cols.push({
+														id: self.componentIds.saveButton,
+														view: "button",
+														type: "form",
+														value: "Save",
+														width: 90,
+														inputWidth: 80,
+														click: function () {
+															if ($$(self.componentIds.saveButton))
+																$$(self.componentIds.saveButton).disable();
 
-										// Redraw
-										webix.ui(elementViews, $$(viewId));
+															var formView = this.getFormView();
+															$$(formView).showProgress({ type: "icon" });
 
-										var actionButtons = {
-											cols: [{}]
-										};
+															var data = self.getData(viewId),
+																modelData;
 
-										if (settings.saveVisible === 'show') {
-											actionButtons.cols.push({
-												id: self.componentIds.saveButton,
-												view: "button",
-												type: "form",
-												value: "Save",
-												width: 90,
-												inputWidth: 80,
-												click: function () {
-													if ($$(self.componentIds.saveButton))
-														$$(self.componentIds.saveButton).disable();
+															async.series([
+																function (next) {
+																	if (data.modelDataId) { // Update
+																		self.getModelData(data.objectId, data.modelDataId)
+																			.fail(function (err) { next(err) })
+																			.then(function (result) {
+																				modelData = result;
+																				next();
+																			});
+																	}
+																	else { // Create
+																		self.getObjectModel(data.objectId)
+																			.fail(function (err) { next(err) })
+																			.then(function (objectModel) {
+																				modelData = objectModel.newInstance();
+																				next();
+																			});
+																	}
+																},
+																function (next) {
+																	var editValues = $$(formView).getValues(),
+																		keys = Object.keys(editValues);
 
-													var formView = this.getTopParentView();
-													$$(formView).showProgress({ type: "icon" });
+																	keys.forEach(function (k) {
+																		if (typeof editValues[k] !== 'undefined' && editValues[k] !== null) {
+																			var colInfo = data.columns.filter(function (col) { return col.name === k; })[0];
 
-													var data = self.getData(viewId),
-														modelData;
-
-													async.series([
-														function (next) {
-															if (data.modelDataId) { // Update
-																self.getModelData(data.objectId, data.modelDataId)
-																	.fail(function (err) { next(err) })
-																	.then(function (result) {
-																		modelData = result;
-																		next();
-																	});
-															}
-															else { // Create
-																self.getObjectModel(data.objectId)
-																	.fail(function (err) { next(err) })
-																	.then(function (objectModel) {
-																		modelData = objectModel.newInstance();
-																		next();
-																	});
-															}
-														},
-														function (next) {
-															var editValues = $$(formView).getValues(),
-																keys = Object.keys(editValues);
-
-															keys.forEach(function (k) {
-																if (typeof editValues[k] !== 'undefined' && editValues[k] !== null) {
-																	var colInfo = data.columns.filter(function (col) { return col.name === k; })[0];
-
-																	if (colInfo) {
-																		switch (colInfo.type) {
-																			case "boolean":
-																				modelData.attr(k, editValues[k] === 1 ? true : false);
-																				break;
-																			default:
+																			if (colInfo) {
+																				switch (colInfo.type) {
+																					case "boolean":
+																						modelData.attr(k, editValues[k] === 1 ? true : false);
+																						break;
+																					default:
+																						modelData.attr(k, editValues[k]);
+																						break;
+																				}
+																			}
+																			else {
 																				modelData.attr(k, editValues[k]);
-																				break;
+																			}
 																		}
-																	}
-																	else {
-																		modelData.attr(k, editValues[k]);
-																	}
-																}
-																else
-																	modelData.removeAttr(k);
-																// modelData.attr(k, null);
-															});
+																		else
+																			modelData.removeAttr(k);
+																		// modelData.attr(k, null);
+																	});
 
-															modelData.save()
-																.fail(function (err) { next(err); })
-																.then(function (result) {
+																	modelData.save()
+																		.fail(function (err) { next(err); })
+																		.then(function (result) {
+																			next();
+																		});
+																},
+																function (next) {
+																	$$(formView).setValues({});
+																	$$(formView).hideProgress();
+
+																	self.callEvent('save', viewId, {
+																		modelDataId: data.modelDataId,
+																		returnPage: data.returnPage
+																	});
+
+																	if ($$(self.componentIds.saveButton))
+																		$$(self.componentIds.saveButton).enable();
+
+																	data.modelDataId = null;
+																	data.returnPage = null;
+
 																	next();
-																});
-														},
-														function (next) {
-															$$(formView).setValues({});
-															$$(formView).hideProgress();
+																}
+															]);
+														}
+													});
+												}
 
-															self.callEvent('save', viewId, {
-																modelDataId: data.modelDataId,
+												if (settings.cancelVisible === 'show') {
+													actionButtons.cols.push({
+														id: self.componentIds.cancelButton,
+														view: "button",
+														value: "Cancel",
+														width: 90,
+														inputWidth: 80,
+														click: function () {
+															$$(this.getFormView()).setValues({});
+
+															var data = self.getData(viewId);
+															data.modelDataId = null;
+
+															self.callEvent('cancel', viewId, {
 																returnPage: data.returnPage
 															});
-
-															if ($$(self.componentIds.saveButton))
-																$$(self.componentIds.saveButton).enable();
-
-															data.modelDataId = null;
-															data.returnPage = null;
-
-															next();
 														}
-													]);
+													});
 												}
-											});
-										}
 
-										if (settings.cancelVisible === 'show') {
-											actionButtons.cols.push({
-												id: self.componentIds.cancelButton,
-												view: "button",
-												value: "Cancel",
-												width: 90,
-												inputWidth: 80,
-												click: function () {
-													$$(this.getTopParentView()).setValues({});
+												$$(viewId).addView(actionButtons);
 
-													var data = self.getData(viewId);
-													data.modelDataId = null;
+												$$(viewId).refresh();
 
-													self.callEvent('cancel', viewId);
-												}
-											});
-										}
+												self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
 
-										$$(viewId).addView(actionButtons);
+												$('.ab-form-connect-data').click(function () { // TODO: add viewId filter to selector
+													var item = $(this),
+														objectId = item.data('object'),
+														multiple = item.data('multiple');
 
-										$$(viewId).refresh();
+													data.updatingItem = item;
 
-										self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
+													var object = data.objectList.filter(function (obj) { return obj.id == objectId; });
 
-										$('.ab-form-connect-data').click(function () { // TODO: add viewId filter to selector
-											var item = $(this),
-												objectId = item.data('object'),
-												multiple = item.data('multiple');
+													if (object && object.length > 0) {
+														var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
 
-											data.updatingItem = item;
+														$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
+															if (data.updatingItem)
+																self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+														});
 
-											var object = data.objectList.filter(function (obj) { return obj.id == objectId; });
+														$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
+															if (data.updatingItem)
+																self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
 
-											if (object && object.length > 0) {
-												var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
+															data.updatingItem = null;
+														});
 
-												$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
-													if (data.updatingItem)
-														self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+														$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, multiple);
+													}
 												});
 
-												$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
-													if (data.updatingItem)
-														self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+												$$(viewId).hideProgress();
 
-													data.updatingItem = null;
-												});
+												self.callEvent('renderComplete', viewId);
 
-												$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, multiple);
-											}
-										});
-
-										$$(viewId).hideProgress();
-
-										self.callEvent('renderComplete', viewId);
-									});
+												next();
+											});
+									}
+								]);
 							};
 
 							self.populateData = function (viewId, objectId, dataId, returnPage) {

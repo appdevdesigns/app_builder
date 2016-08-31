@@ -208,6 +208,10 @@ steal(
 							this.controllers.ObjectPage.refresh();
 						},
 
+						syncObjectFields: function () {
+							return this.controllers.ObjectPage.syncObjectFields();
+						},
+
 						syncObjectsData: function () {
 							return this.controllers.ObjectPage.syncData();
 						},

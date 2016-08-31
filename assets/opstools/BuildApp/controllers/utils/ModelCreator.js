@@ -17,7 +17,10 @@ steal(
 							this.data = {};
 
 							this.options = AD.defaults({
+								countCachedItemEvent: 'AB_Cached.Count'
 							}, options);
+
+							this._super(element, options);
 
 							this.Model = {
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject')
@@ -32,8 +35,8 @@ steal(
 						getBaseModel: function (objectName, describe, multilingualFields) {
 							if (!objectName || !describe || !multilingualFields) return;
 
-							var formatAppName = this.data.appName.replace('_', '').toLowerCase(),
-								formatObjectName = objectName.replace('_', '').toLowerCase(),
+							var formatAppName = this.data.appName.replace(/_/g, '').toLowerCase(),
+								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName);
 
 							// /AB_applicationname/AB_applicationname_objectname
@@ -69,8 +72,8 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace('_', '').toLowerCase(),
-								formatObjectName = objectName.replace('_', '').toLowerCase(),
+								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
+								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName),
 								model = AD.Model.get(modelName);
 
@@ -97,8 +100,8 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace('_', '').toLowerCase(),
-								formatObjectName = objectName.replace('_', '').toLowerCase(),
+								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
+								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
 								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName);
 
 							// Get object definition
@@ -131,8 +134,8 @@ steal(
 									var modelResult = AD.Model.get(modelName);
 
 									// Setup cached model
-									var cachedKey = '#appName#_#objectName#_cache'.replace('#appName#', formatAppName).replace('#objectName#', formatObjectName);
-									self.initModelCached(modelResult, cachedKey);
+									var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
+									self.initModelCached(objectName, modelResult, cachedKey);
 
 									q.resolve(modelResult);
 								});
@@ -140,7 +143,10 @@ steal(
 							return q;
 						},
 
-						initModelCached: function (model, cachedKey) {
+						initModelCached: function (objectName, model, cachedKey) {
+							var self = this;
+
+							// Initial cache object
 							model.Cached = ab.Model.Cached(
 								{
 									cachedKey: function () {
@@ -175,47 +181,15 @@ steal(
 									// destroy: function (id) { return model.destroy.call(model.Cached, id); }
 
 								}, {});
-						},
 
-						addNewColumn: function (objectName, newColumnName) {
-							var self = this,
-								q = $.Deferred();
-
-							self.getModel(objectName)
-								.fail(function (err) { q.reject(err); })
-								.then(function (objectModel) {
-									var newColumnNames = objectModel.Cached.getNewFieldNames();
-
-									if (newColumnNames.indexOf(newColumnName) < 1)
-										newColumnNames.push(newColumnName);
-
-									objectModel.Cached.cacheNewFields(newColumnNames);
-
-									q.resolve();
-								});
-
-							return q;
-						},
-
-						deleteColumn: function (objectName, columnName) {
-							var self = this,
-								q = $.Deferred();
-
-							self.getModel(objectName)
-								.fail(function (err) { q.reject(err); })
-								.then(function (objectModel) {
-									var newColumnNames = objectModel.Cached.getNewFieldNames(),
-										index = newColumnNames.indexOf(columnName);
-
-									if (index > -1) {
-										newColumnNames.splice(index, 1);
-										objectModel.Cached.cacheNewFields(newColumnNames);
-									}
-
-									q.resolve();
-								});
-
-							return q;
+							// Initial cache event
+							model.Cached.registerActionEvent(function (data) {
+								switch (data.action) {
+									case 'count':
+										self.element.trigger(self.options.countCachedItemEvent, { objectName: objectName, count: data.count });
+										break;
+								}
+							});
 						}
 
 					});

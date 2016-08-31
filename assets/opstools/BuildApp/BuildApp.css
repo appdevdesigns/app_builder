@@ -156,7 +156,19 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	right: 5px;
 	display: none;
 }
-
+.ab-object-unsync {
+	background-color: #d2e3ef;
+	color: #4a4a4a;
+	position: absolute;
+	top: 4px;
+	right: 30px;
+	font-size: 12px;
+	border-radius: 6px;
+	padding: 0px 4px;
+	height: 20px;
+	line-height: 20px;
+	display: none;
+}
 
 /* Interface list */
 .ab-page-list-item {
@@ -175,6 +187,10 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-object-data-header {
 	position: relative;
 }
+.ab-object-data-new-header {
+	background-color: #cfd9e0;
+}
+
 .ab-object-data-header-edit {
 	display: none;
 	position: absolute;
@@ -282,6 +298,12 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	position: relative;
 	top: -5px;
 	width: 30px;
+}
+
+.ab-page-grid-column-item .column-empty-checkbox {
+	position: relative;
+	width: 50px;
+	height: 38px;
 }
 
 .ab-page-grid-column-item .column-name {

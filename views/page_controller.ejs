@@ -137,11 +137,8 @@ steal(
                                 event_aggregator.on('cancel', function (sender, data) {
                                     switch (data.component_name) {
                                         case 'Form':
-                                            var com = self.getComponent(pageId, data.viewId);
-                                            if (!com) break;
-
-                                            if (com.page != self.activePageID)
-                                                self.showPage(com.page);
+                                            if (data.returnPage != self.activePageID)
+                                                self.showPage(data.returnPage);
                                             break;
                                     }
                                 });

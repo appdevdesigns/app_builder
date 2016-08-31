@@ -6,6 +6,8 @@ steal(
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
+	'opstools/BuildApp/models/ABColumn.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -29,6 +31,10 @@ steal(
 							// Call parent init
 							this._super(element, options);
 
+							this.Model = {
+								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
+							};
+
 							this.data = {};
 
 							this.initControllers();
@@ -50,7 +56,7 @@ steal(
 								deletedObjectEvent: self.options.deletedObjectEvent
 							});
 							self.controllers.ObjectWorkspace = new ObjectWorkspace(self.element);
-							self.controllers.ModelCreator = new ModelCreator();
+							self.controllers.ModelCreator = new ModelCreator(self.element);
 						},
 
 						initWebixUI: function () {
@@ -115,7 +121,73 @@ steal(
 						},
 
 						refresh: function () {
+							this.controllers.ObjectList.refreshUnsyncNumber();
 							this.controllers.ObjectWorkspace.setObjectId(this.data.objectId);
+						},
+
+						syncObjectFields: function () {
+							var self = this,
+								q = $.Deferred();
+
+							if (self.data.objectList) {
+								var syncFieldsTasks = [];
+
+								self.data.objectList.forEach(function (object) {
+									syncFieldsTasks.push(function (next) {
+
+										async.waterfall([
+											function (cb) {
+												// Get object model
+												self.controllers.ModelCreator.getModel(object.name)
+													.fail(function (err) { cb(err); })
+													.then(function (objectModel) {
+														cb(null, objectModel);
+													});
+											},
+											function (objectModel, cb) {
+												// Get cached fields
+												var saveFieldsTasks = [],
+													newFields = objectModel.Cached.getNewFields();
+
+												newFields.forEach(function (f, index) {
+													saveFieldsTasks.push(function (callback) {
+														var tempId = f.id;
+														delete f.id;
+
+														f.weight = object.columns.length + (index + 1);
+
+														self.Model.ABColumn.create(f)
+															.fail(callback)
+															.then(function () {
+																objectModel.Cached.deleteCachedField(tempId);
+																callback();
+															});
+													});
+												});
+
+												// Save fields to server
+												async.parallel(saveFieldsTasks, cb);
+
+											}
+										], next);
+
+									});
+								});
+
+								async.parallel(syncFieldsTasks, function (err) {
+									if (err) {
+										q.reject(err);
+										return;
+									}
+
+									q.resolve();
+								});
+							}
+							else {
+								q.resolve();
+							}
+
+							return q;
 						},
 
 						syncData: function () {

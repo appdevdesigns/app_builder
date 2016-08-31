@@ -3,6 +3,8 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABObject.js',
 
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
 	function () {
 		System.import('appdev').then(function () {
@@ -19,14 +21,16 @@ steal(
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
 								updatedObjectEvent: 'AB_Object.Updated',
-								deletedObjectEvent: 'AB_Object.Deleted'
+								deletedObjectEvent: 'AB_Object.Deleted',
+
+								countCachedItemEvent: 'AB_Cached.Count'
 							}, options);
 							this.options = options;
 
 							// Call parent init
 							this._super(element, options);
 
-                            this.Model = AD.Model.get('opstools.BuildApp.ABObject');
+							this.Model = AD.Model.get('opstools.BuildApp.ABObject');
 							this.data = {};
 
 							this.webixUiId = {
@@ -54,6 +58,7 @@ steal(
 
 							this.initMultilingualLabels();
 							this.initControllers();
+							this.initEvents();
 
 							webix.ready(function () {
 								self.initWebixUI();
@@ -95,11 +100,21 @@ steal(
 						},
 
 						initControllers: function () {
-							this.controllers = {};
+							var EditList = AD.Control.get('opstools.BuildApp.EditList'),
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
 
-							var EditList = AD.Control.get('opstools.BuildApp.EditList');
+							this.controllers = {
+								EditList: new EditList(),
+								ModelCreator: new ModelCreator(this.element)
+							};
+						},
 
-							this.controllers.EditList = new EditList();
+						initEvents: function () {
+							var self = this;
+
+							self.controllers.ModelCreator.on(self.options.countCachedItemEvent, function (event, data) {
+								self.refreshUnsyncNumber(data.objectName);
+							});
 						},
 
 						initWebixUI: function () {
@@ -118,17 +133,27 @@ steal(
 										editValue: "label",
 										template: "<div class='ab-object-list-item'>" +
 										"#label#" +
-										"<div class='ab-object-list-edit'>" +
+										"{common.unsyncNumber}" +
 										"{common.iconGear}" +
-										"</div>" +
 										"</div>",
 										type: {
-											iconGear: "<span class='webix_icon fa-cog'></span>"
+											unsyncNumber: "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+											iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 										},
 										on: {
+											onAfterRender: function () {
+												webix.once(function () {
+													$$(self.webixUiId.objectList).data.each(function (d) {
+														$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
+													});
+												});
+											},
 											onAfterSelect: function (id) {
 												// Fire select object event
 												self.element.trigger(self.options.selectedObjectEvent, id);
+
+												// Refresh unsync number
+												self.refreshUnsyncNumber();
 
 												// Show gear icon
 												$(this.getItemNode(id)).find('.ab-object-list-edit').show();
@@ -228,7 +253,7 @@ steal(
 									autoheight: true,
 									select: false,
 									on: {
-										'onItemClick': function (timestamp, e, trg) {
+										onItemClick: function (timestamp, e, trg) {
 											var selectedObject = $$(self.webixUiId.objectList).getSelectedItem();
 
 											switch (trg.textContent.trim()) {
@@ -391,8 +416,6 @@ steal(
 							var self = this;
 
 							webix.extend($$(self.webixUiId.objectList), webix.ProgressBar);
-							
-							$$(self.webixUiId.objectList).define('badge', 100);
 						},
 
 						getUIDefinition: function () {
@@ -405,6 +428,8 @@ steal(
 							self.data.app = app;
 
 							$$(self.webixUiId.objectList).showProgress({ type: "icon" });
+
+							self.controllers.ModelCreator.setApp(app);
 
 							// Get object list from server
 							self.Model.findAll({ application: app.id })
@@ -440,7 +465,34 @@ steal(
 							$$(self.webixUiId.objectList).refresh();
 							$$(self.webixUiId.objectList).unselectAll();
 
+							self.refreshUnsyncNumber();
+
 							$$(self.webixUiId.objectList).hideProgress();
+						},
+
+						refreshUnsyncNumber: function (objectName) {
+							var self = this,
+								objects = [];
+
+							objects = $$(self.webixUiId.objectList).data.find(function (d) {
+								return objectName ? d.name == objectName : true;
+							}, false, true);
+
+							objects.forEach(function (obj) {
+								self.controllers.ModelCreator.getModel(obj.name)
+									.then(function (objectModel) {
+										var unsyncNumber = objectModel.Cached.count(),
+											htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
+
+										if (unsyncNumber > 0) {
+											htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
+											htmlItem.find('.ab-object-unsync').show();
+										}
+										else {
+											htmlItem.find('.ab-object-unsync').hide();
+										}
+									});
+							});
 						},
 
 						resetState: function () {

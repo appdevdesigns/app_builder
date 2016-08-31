@@ -1,5 +1,6 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/models/ABPage.js',
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 
@@ -27,9 +28,9 @@ steal(
 
 							// Model
 							self.Model = {
+								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
-								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
 								ObjectModels: {}
 							};
 
@@ -79,10 +80,14 @@ steal(
 										{
 											id: self.componentIds.columnList,
 											view: 'activelist',
-											template: "<div class='ab-page-grid-column-item'>" +
-											"<div class='column-checkbox'>{common.markCheckbox()}</div>" +
-											"<div class='column-name'>#label#</div>" +
-											"</div>",
+											template: function (obj, common) {
+												return "<div class='ab-page-grid-column-item'>" +
+													"<div class='column-checkbox'>" +
+													common.markCheckbox(obj, common) +
+													"</div>" +
+													"<div class='column-name'>" + obj.label + "</div>" +
+													"</div>";
+											},
 											activeContent: {
 												markCheckbox: {
 													view: "checkbox",
@@ -373,7 +378,7 @@ steal(
 								// Render dataTable component
 								self.render(viewId, settings).then(function () {
 									// Columns list
-									self.bindColumnList(viewId, settings.object);
+									self.bindColumnList(viewId, settings.object, selectAll);
 									$$(self.componentIds.columnList).hideProgress();
 
 									// Properties
@@ -394,15 +399,14 @@ steal(
 											// Data table - Edit form
 											var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 
-											self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+											AD.comm.service.get({
+												url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId
+											})
 												.fail(function (err) { next(err); })
 												.then(function (pages) {
 													var formComponents = [];
 
 													pages.forEach(function (p) {
-														if (p.translate)
-															p.translate();
-
 														// Filter form components
 														var forms = p.components.filter(function (c) {
 															return c.component === "Form" && c.setting && settings && c.setting.object === settings.object;
@@ -412,7 +416,7 @@ steal(
 															formComponents = formComponents.concat($.map(forms, function (f) {
 																return [{
 																	id: p.id + '|' + f.id,
-																	value: p.label + ' - ' + f.component
+																	value: p.name + ' - ' + f.component
 																}];
 															}));
 														}
@@ -484,7 +488,7 @@ steal(
 								self.populateData(viewId, objectId);
 							};
 
-							self.bindColumnList = function (viewId, selectAll) {
+							self.bindColumnList = function (viewId, objectId, selectAll) {
 								var data = self.getData(viewId);
 
 								$$(self.componentIds.columnList).clearAll();
@@ -538,13 +542,7 @@ steal(
 							if ($$(viewId).showProgress)
 								$$(viewId).showProgress({ type: 'icon' });
 
-							self.Model.ObjectModels[objectId].Cached.unbind('refreshData');
-							self.Model.ObjectModels[objectId].Cached.bind('refreshData', function (ev, data) {
-								if (this == self.Model.ObjectModels[objectId].Cached)
-									self.getDataTableController(viewId).populateDataToDataTable(data.result);
-							});
-
-							self.Model.ObjectModels[objectId].Cached.findAll({})
+							self.Model.ObjectModels[objectId].findAll({})
 								.fail(function (err) {
 									q.reject(err);
 

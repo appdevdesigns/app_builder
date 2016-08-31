@@ -61,6 +61,7 @@ steal(
                                 attachmentView: 'ab-new-attachment',
 
                                 headerNameText: 'ab-new-field-name',
+                                labelNameText: 'ab-new-label-name',
 
                                 saveButton: 'ab-new-save-button'
                             };
@@ -75,7 +76,7 @@ steal(
                             self.labels.common = {};
                             self.labels.add_fields = {};
 
-                            self.labels.common.name = AD.lang.label.getLabel('ab.common.form.name') || 'Name';
+                            self.labels.common.name = AD.lang.label.getLabel('ab.common.name') || 'Name';
                             self.labels.common.headerName = AD.lang.label.getLabel('ab.common.headerName') || 'Header name';
                             self.labels.common.ok = AD.lang.label.getLabel('ab.common.ok') || "Ok";
                             self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
@@ -83,6 +84,8 @@ steal(
 
 
                             self.labels.add_fields.chooseType = AD.lang.label.getLabel('ab.add_fields.chooseType') || "Choose field type...";
+
+                            self.labels.add_fields.label = AD.lang.label.getLabel('ab.add_fields.label') || 'Label';
 
                             self.labels.add_fields.connectField = AD.lang.label.getLabel('ab.add_fields.connectField') || "Connect to another record";
                             self.labels.add_fields.stringField = AD.lang.label.getLabel('ab.add_fields.stringField') || "Single line text";
@@ -180,15 +183,27 @@ steal(
                                                         if (viewName) {
                                                             $$(viewName).show();
 
-                                                            var headerNameClass = '.' + self.componentIds.headerNameText;
+                                                            var headerNameClass = '.' + self.componentIds.headerNameText,
+                                                                labelNameClass = '.' + self.componentIds.labelNameText;
 
-                                                            // Set default header name
+                                                            // Set default field name
                                                             if ($(headerNameClass) && $(headerNameClass).length > 0) {
                                                                 $(headerNameClass).each(function (index, txtName) {
                                                                     var headerName = $(txtName).webix_text().getValue();
                                                                     if (!headerName || headerName.indexOf('Field ') > -1) {
                                                                         var defaultName = base.getDefaultFieldName();
                                                                         $(txtName).webix_text().setValue(defaultName);
+
+                                                                        // Set default label name
+                                                                        var labelTexts = $(labelNameClass).webix_text();
+
+                                                                        if (labelTexts && !(labelTexts instanceof Array))
+                                                                            labelTexts = [labelTexts];
+
+                                                                        can.each(labelTexts, function (lblText) {
+                                                                            lblText.setValue(defaultName);
+                                                                        });
+
                                                                     }
                                                                 });
                                                             }
@@ -213,13 +228,8 @@ steal(
                                                     {
                                                         id: self.componentIds.connectObjectView,
                                                         rows: [
-                                                            {
-                                                                view: "text",
-                                                                label: self.labels.common.name,
-                                                                placeholder: self.labels.common.headerName,
-                                                                css: self.componentIds.headerNameText,
-                                                                labelWidth: 50
-                                                            },
+                                                            self.getFieldNameDefinition(),
+                                                            self.getLabelDefinition(),
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.connectObjectIcon).replace('{1}', self.labels.add_fields.connectToObject) },
                                                             {
                                                                 view: "list",
@@ -250,7 +260,8 @@ steal(
                                                         id: self.componentIds.singleTextView,
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.singleTextIcon).replace('{1}', self.labels.add_fields.stringField) },
-                                                            { view: "text", label: self.labels.common.name, placeholder: self.labels.common.headerName, css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            self.getFieldNameDefinition(),
+                                                            self.getLabelDefinition(),
                                                             { view: "text", id: self.componentIds.singleTextDefault, placeholder: self.labels.add_fields.defaultText },
                                                             { view: "checkbox", id: self.componentIds.singleSupportMultilingual, labelRight: self.labels.add_fields.supportMultilingual, labelWidth: 0, value: true }
                                                         ]
@@ -259,7 +270,8 @@ steal(
                                                         id: self.componentIds.longTextView,
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.longTextIcon).replace('{1}', self.labels.add_fields.textField) },
-                                                            { view: "text", label: self.labels.common.name, placeholder: self.labels.common.headerName, css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            self.getFieldNameDefinition(),
+                                                            self.getLabelDefinition(),
                                                             { view: "label", label: self.labels.add_fields.textDescription },
                                                             { view: "checkbox", id: self.componentIds.longSupportMultilingual, labelRight: self.labels.add_fields.supportMultilingual, labelWidth: 0, value: true }
                                                         ]
@@ -268,7 +280,8 @@ steal(
                                                         id: self.componentIds.numberView,
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.numberIcon).replace('{1}', self.labels.add_fields.numberField) },
-                                                            { view: "text", label: self.labels.common.name, placeholder: self.labels.common.headerName, css: self.componentIds.headerNameText, labelWidth: 60 },
+                                                            self.getFieldNameDefinition(),
+                                                            self.getLabelDefinition(),
                                                             {
                                                                 view: "combo", id: self.componentIds.numberFormat, value: self.labels.add_fields.numberFormat, label: self.labels.add_fields.format, labelWidth: 60, options: [
                                                                     { format: 'numberFormat', value: self.labels.add_fields.numberFormat },
@@ -283,7 +296,8 @@ steal(
                                                         id: self.componentIds.dateView,
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.dateIcon).replace('{1}', self.labels.add_fields.dateField) },
-                                                            { view: "text", label: self.labels.common.name, placeholder: self.labels.common.headerName, css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            self.getFieldNameDefinition(),
+                                                            self.getLabelDefinition(),
                                                             { view: "label", label: self.labels.add_fields.pickDate },
                                                             { view: "checkbox", id: self.componentIds.dateIncludeTime, labelRight: self.labels.add_fields.includeTime, labelWidth: 0 },
                                                         ]
@@ -292,7 +306,8 @@ steal(
                                                         id: self.componentIds.booleanView,
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.booleanIcon).replace('{1}', self.labels.add_fields.booleanField) },
-                                                            { view: "text", label: self.labels.common.name, placeholder: self.labels.common.headerName, css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            self.getFieldNameDefinition(),
+                                                            self.getLabelDefinition(),
                                                             { view: "label", label: self.labels.add_fields.booleanDescription }
                                                         ]
                                                     },
@@ -300,7 +315,8 @@ steal(
                                                         id: self.componentIds.selectListView,
                                                         rows: [
                                                             { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.selectListIcon).replace('{1}', self.labels.add_fields.listField) },
-                                                            { view: "text", label: self.labels.common.name, placeholder: self.labels.common.headerName, css: self.componentIds.headerNameText, labelWidth: 50 },
+                                                            self.getFieldNameDefinition(),
+                                                            self.getLabelDefinition(),
                                                             { view: "template", template: self.labels.add_fields.listDescription, autoheight: true, borderless: true },
                                                             { view: "label", label: "<b>{0}</b>".replace('{0}', self.labels.add_fields.listOption) },
                                                             {
@@ -356,6 +372,7 @@ steal(
                                                             }
 
                                                             var fieldName = '',
+                                                                fieldLabel = '',
                                                                 fieldType = '',
                                                                 linkToObject = null,
                                                                 isMultipleRecords = null,
@@ -376,6 +393,7 @@ steal(
                                                                     }
 
                                                                     fieldName = base.getFieldName(self.componentIds.connectObjectView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.connectObjectView);
                                                                     fieldType = 'json';
                                                                     linkToObject = linkObject.id;
                                                                     isMultipleRecords = $$(self.componentIds.connectObjectIsMultipleRecords).getValue();
@@ -386,6 +404,7 @@ steal(
                                                                     break;
                                                                 case self.labels.add_fields.stringField:
                                                                     fieldName = base.getFieldName(self.componentIds.singleTextView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.singleTextView);
                                                                     fieldType = 'string';
                                                                     supportMultilingual = $$(self.componentIds.singleSupportMultilingual).getValue();
                                                                     fieldSettings.icon = self.componentIds.singleTextIcon;
@@ -395,6 +414,7 @@ steal(
                                                                     break;
                                                                 case self.labels.add_fields.textField:
                                                                     fieldName = base.getFieldName(self.componentIds.longTextView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.longTextView);
                                                                     fieldType = 'text';
                                                                     supportMultilingual = $$(self.componentIds.longSupportMultilingual).getValue();
                                                                     fieldSettings.icon = self.componentIds.longTextIcon;
@@ -403,6 +423,7 @@ steal(
                                                                     break;
                                                                 case self.labels.add_fields.numberField:
                                                                     fieldName = base.getFieldName(self.componentIds.numberView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.numberView);
 
                                                                     if ($$(self.componentIds.numberAllowDecimal).getValue())
                                                                         fieldType = 'float';
@@ -421,6 +442,7 @@ steal(
                                                                     break;
                                                                 case self.labels.add_fields.dateField:
                                                                     fieldName = base.getFieldName(self.componentIds.dateView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.dateView);
                                                                     fieldSettings.icon = self.componentIds.dateIcon;
 
                                                                     fieldSettings.filter_type = 'date';
@@ -435,6 +457,7 @@ steal(
                                                                     break;
                                                                 case self.labels.add_fields.booleanField:
                                                                     fieldName = base.getFieldName(self.componentIds.booleanView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.booleanView);
                                                                     fieldType = 'boolean';
                                                                     fieldSettings.icon = self.componentIds.booleanIcon;
                                                                     // editor = 'checkbox';
@@ -445,6 +468,7 @@ steal(
                                                                     $$(self.componentIds.selectListOptions).editStop(); // Close edit mode
 
                                                                     fieldName = base.getFieldName(self.componentIds.selectListView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.selectListView);
                                                                     fieldType = 'string';
                                                                     fieldSettings.icon = self.componentIds.selectListIcon;
 
@@ -475,6 +499,7 @@ steal(
                                                                     break;
                                                                 case self.labels.add_fields.attachmentField:
                                                                     fieldName = base.getFieldName(self.componentIds.attachmentView);
+                                                                    fieldLabel = base.getFieldLabel(self.componentIds.attachmentView);
                                                                     fieldSettings.icon = self.componentIds.attachmentIcon;
                                                                     alert('Under construction !!');
                                                                     return; // TODO;
@@ -492,7 +517,7 @@ steal(
 
                                                             // Validate duplicate field name
                                                             var existsColumn = $.grep(dataTable.config.columns, function (c) {
-                                                                return c.id == fieldName || c.label == fieldName;
+                                                                return c.id == fieldName;
                                                             });
 
                                                             if (existsColumn && existsColumn.length > 0 && !self.data.editFieldId) {
@@ -506,11 +531,13 @@ steal(
 
                                                             var newFieldInfo = {
                                                                 name: fieldName,
+                                                                label: fieldLabel,
                                                                 type: fieldType,
                                                                 setting: fieldSettings
                                                             };
 
-                                                            newFieldInfo.weight = dataTable.config.columns.length;
+                                                            if (!self.data.editFieldId) // for New column
+                                                                newFieldInfo.weight = dataTable.config.columns.length;
 
                                                             if (linkToObject != null)
                                                                 newFieldInfo.linkToObject = linkToObject;
@@ -581,7 +608,7 @@ steal(
                                     this.createNewObjectEvent = createNewObjectEvent;
                                 },
 
-                                editMode: function (data, fieldName) {
+                                editMode: function (data) {
                                     $$(self.componentIds.chooseTypeMenu).hide();
 
                                     $$(self.componentIds.saveButton).define('label', self.labels.common.save);
@@ -636,7 +663,7 @@ steal(
                                             $$(self.componentIds.numberDefault).setValue(data.default);
                                             break;
                                         case 'datetime': // Date
-                                        case 'data':
+                                        case 'date':
                                             this.selectedType = self.labels.add_fields.dateField;
 
                                             $$(self.componentIds.dateIncludeTime).setValue(data.type == 'datetime');
@@ -658,9 +685,14 @@ steal(
 
                                     $$(viewName).show();
 
-                                    // Set header name
+                                    // Set field name
                                     $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
-                                        $(txtName).webix_text().setValue(fieldName);
+                                        $(txtName).webix_text().setValue(data.name.replace(/_/g, ' '));
+                                    });
+
+                                    // Set field label
+                                    $('.' + self.componentIds.labelNameText).each(function (index, lblName) {
+                                        $(lblName).webix_text().setValue(data.label);
                                     });
 
                                     // Highlight name in text box
@@ -711,12 +743,25 @@ steal(
                                 },
 
                                 getFieldName: function (viewName) {
-                                    var fieldName = $.grep($$(viewName).getChildViews(), function (element, i) {
-                                        return $(element.$view).hasClass('ab-new-field-name');
-                                    });
+                                    var self = this,
+                                        fieldName = $.grep($$(viewName).getChildViews(), function (element, i) {
+                                            return $(element.$view).hasClass('ab-new-field-name');
+                                        });
 
                                     if (fieldName && fieldName.length > 0)
                                         return fieldName[0].getValue();
+                                    else
+                                        return '';
+                                },
+
+                                getFieldLabel: function (viewName) {
+                                    var self = this,
+                                        fieldLabel = $.grep($$(viewName).getChildViews(), function (element, i) {
+                                            return $(element.$view).hasClass('ab-new-label-name');
+                                        });
+
+                                    if (fieldLabel && fieldLabel.length > 0)
+                                        return fieldLabel[0].getValue();
                                     else
                                         return '';
                                 },
@@ -747,7 +792,37 @@ steal(
                                 }
 
                             }, webix.ui.popup);
+                        },
+
+                        getFieldNameDefinition: function () {
+                            var self = this;
+
+                            return {
+                                view: "text", label: self.labels.common.name, placeholder: self.labels.common.name, css: self.componentIds.headerNameText, labelWidth: 50, on: {
+                                    onChange: function (newValue, oldValue) {
+                                        var labelNames = this.getParentView().getChildViews().filter(function (view) {
+                                            return view.config.css === self.componentIds.labelNameText;
+                                        });
+
+                                        labelNames.forEach(function (labelName) {
+                                            if (oldValue == labelName.getValue())
+                                                labelName.setValue(newValue);
+                                        });
+                                    }
+                                }
+                            };
+                        },
+
+                        getLabelDefinition: function () {
+                            return {
+                                view: "text",
+                                label: this.labels.add_fields.label,
+                                placeholder: this.labels.common.headerName,
+                                css: this.componentIds.labelNameText,
+                                labelWidth: 50
+                            };
                         }
+
                     });
                 });
         });

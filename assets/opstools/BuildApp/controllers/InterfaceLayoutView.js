@@ -384,15 +384,18 @@ steal(
 
 																	$$(self.componentIds.componentList).showProgress({ type: "icon" });
 
-																	var coms = self.data.page.components.filter(function (c) { return c.id == id; });
+																	var deletedCom = self.data.componentsInPage.filter(function (c) { return c.id == id; });
 
-																	if (!coms || coms.length < 1) {
+																	if (!deletedCom || deletedCom.length < 1) {
 																		$$(self.componentIds.componentList).hideProgress();
 																		return;
 																	}
 
+																	deletedCom = deletedCom[0];
+
 																	// Call server to delete object data
-																	self.Model.ABPageComponent.destroy(id)
+																	// self.Model.ABPageComponent.destroy(id)
+																	deletedCom.destroy()
 																		.fail(function (err) {
 																			$$(self.componentIds.componentList).hideProgress();
 
@@ -404,6 +407,13 @@ steal(
 																			AD.error.log('Component : Error delete component', { error: err });
 																		})
 																		.then(function (result) {
+																			self.data.componentsInPage.forEach(function (c, index) {
+																				if (c.id == id) {
+																					self.data.componentsInPage.removeAttr(index);
+																					c.destroyed();
+																				}
+																			});
+
 																			$$(self.componentIds.componentList).remove(id);
 
 																			webix.message({

@@ -652,37 +652,46 @@ steal(
 										});
 								},
 								function (available_roles, next) {
-									AD.comm.service.get({ url: '/app_builder/' + selectedApp.id + '/role' })
-										.fail(function (err) { next(err); })
-										.done(function (selected_role_ids) {
-											// Sort permission list
-											if (selectedApp.role && selectedApp.role.id) {
-												available_roles.forEach(function (r) {
-													var perm = [];
-
-													if (r.id == selectedApp.role.id)
-														r.isApplicationRole = true;
-												});
-											}
-											available_roles.sort(function (a, b) {
-												return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+									if (selectedApp && selectedApp.id) {
+										AD.comm.service.get({ url: '/app_builder/' + selectedApp.id + '/role' })
+											.fail(function (err) { next(err); })
+											.done(function (selected_role_ids) {
+												next(null, available_roles, selected_role_ids);
 											});
+									}
+									else {
+										next(null, available_roles, []);
+									}
 
-											$$(self.webixUiId.appFormPermissionList).clearAll();
-											$$(self.webixUiId.appFormPermissionList).parse(available_roles);
+								},
+								function (available_roles, selected_role_ids, next) {
+									// Sort permission list
+									if (selectedApp && selectedApp.role && selectedApp.role.id) {
+										available_roles.forEach(function (r) {
+											var perm = [];
 
-											if (selected_role_ids && selected_role_ids.length > 0) {
-												// Select permissions
-												$$(self.webixUiId.appFormPermissionList).select(selected_role_ids);
-
-												// Select create role application button
-												var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
-												$$(self.webixUiId.appFormCreateRoleButton).setValue(markCreateButton);
-											}
-
-											$$(self.webixUiId.appFormPermissionList).hideProgress();
-											next();
+											if (r.id == selectedApp.role.id)
+												r.isApplicationRole = true;
 										});
+									}
+									available_roles.sort(function (a, b) {
+										return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+									});
+
+									$$(self.webixUiId.appFormPermissionList).clearAll();
+									$$(self.webixUiId.appFormPermissionList).parse(available_roles);
+
+									if (selected_role_ids && selected_role_ids.length > 0) {
+										// Select permissions
+										$$(self.webixUiId.appFormPermissionList).select(selected_role_ids);
+
+										// Select create role application button
+										var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
+										$$(self.webixUiId.appFormCreateRoleButton).setValue(markCreateButton);
+									}
+
+									$$(self.webixUiId.appFormPermissionList).hideProgress();
+									next();
 								}
 							], function (err) {
 								if (err) {
@@ -707,16 +716,18 @@ steal(
 								}
 								appListDom.width(width - 410);
 
-								$$(self.webixUiId.appList).define('height', height - 140);
-								$$(self.webixUiId.appList).adjust();
-
 								var computedHeight = height - 140;
 								if (appListDom.css('min-height') < computedHeight)
 									appListDom.height(computedHeight);
 								else
 									appListDom.height(appListDom.css('min-height'));
 
-								$$(self.webixUiId.appView).adjust();
+								if (self.webixUiId) {
+									$$(self.webixUiId.appList).define('height', height - 140);
+									$$(self.webixUiId.appList).adjust();
+
+									$$(self.webixUiId.appView).adjust();
+								}
 							}
 						}
 

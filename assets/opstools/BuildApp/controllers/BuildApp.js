@@ -80,7 +80,32 @@ steal(
 							var self = this;
 
 							io.socket.on('server-reload', function (data) {
-								self.updateSyncStatus(data);
+								if (!data.reloading) { // Reload is done
+									self.updateSyncStatus({
+										action: 'start',
+										step: 'syncObjectData'
+									});
+
+									// Sync object data
+									self.controllers.AppWorkspace.syncObjectsData()
+										.always(function () {
+											self.data.curLoadProgress += 0.1;
+											$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
+
+											// Reloaded - Reset values
+											$$(self.webixUiId.loadingScreen).showFinishScreen("Synchronized", "OK");
+											self.data.curLoadProgress = 0;
+
+											$$(self.webixUiId.syncButton).enable();
+
+											// Refresh
+											self.controllers.AppWorkspace.refresh();
+										});
+								}
+								else {
+									self.updateSyncStatus(data);
+								}
+
 							});
 
 							self.controllers.AppList.element.on(self.CONST.APP_SELECTED, function (event, app) {
@@ -101,16 +126,33 @@ steal(
 
 							self.controllers.AppWorkspace.element.on(self.CONST.SYNCHRONIZE, function (event, data) {
 								$$(self.webixUiId.loadingScreen).start();
-								$$(self.webixUiId.loadingScreen).setMessage("Requesting...");
 								$$(self.webixUiId.syncButton).disable();
 
-								self.callReload(data);
+								self.updateSyncStatus({
+									action: 'start',
+									step: 'syncObjectFields'
+								});
+
+								self.controllers.AppWorkspace.syncObjectFields()
+									.then(function () {
+										self.updateSyncStatus({
+											action: 'done',
+											step: 'syncObjectFields'
+										});
+
+										self.callReload(data);
+									});
 
 							});
 						},
 
 						callReload: function (data) {
 							var self = this;
+
+							self.updateSyncStatus({
+								action: 'start',
+								step: 'request'
+							});
 
 							AD.comm.service.post({
 								url: '/app_builder/fullReload/' + data.appID
@@ -121,9 +163,9 @@ steal(
 									console.log(err);
 									webix.message(err);
 
-									$$(self.webixUiId.loadingScreen).showErrorScreen("There are errors", "Reload", function () { // TODO
+									// Show retry screen
+									$$(self.webixUiId.loadingScreen).showErrorScreen("There are errors", "Reload", function () {
 										$$(self.webixUiId.loadingScreen).start();
-										$$(self.webixUiId.loadingScreen).setMessage("Requesting...");
 
 										self.callReload(data);
 									});
@@ -134,65 +176,64 @@ steal(
 						updateSyncStatus: function (data) {
 							var self = this;
 
-							if (data.reloading) {
-								switch (data.action) {
-									case 'start': // Update loading message
-										var message = '';
-										switch (data.step) {
-											case 'findApplication':
-												message = 'Preparing Application info...';
-												break;
-											case 'prepareFolder':
-												message = 'Preparing Application folders...';
-												break;
-											case 'reloadControllers':
-												message = 'Reloading Controllers...';
-												break;
-											case 'reloadORM':
-												message = 'Reloading Databases...';
-												break;
-											case 'reloadBlueprints':
-												message = 'Reloading Blueprints...';
-												break;
-										}
-										$$(self.webixUiId.loadingScreen).setMessage(message);
-										break;
-									case 'done': // Update progress bar
-										if (!self.data.curLoadProgress) self.data.curLoadProgress = 0;
-										switch (data.step) {
-											case 'findApplication':
-												self.data.curLoadProgress += 0.3;
-												break;
-											case 'prepareFolder':
-												self.data.curLoadProgress += 0.2;
-												break;
-											case 'reloadControllers':
-												self.data.curLoadProgress += 0.1;
-												break;
-											case 'reloadORM':
-												self.data.curLoadProgress += 0.2;
-												break;
-											case 'reloadBlueprints':
-												self.data.curLoadProgress += 0.1;
-												break;
-										}
-										$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
-										break;
-								}
-							}
-							else { // Reloaded - Reset values
-								// Sync object data
-								$$(self.webixUiId.loadingScreen).setMessage('Syncing objects data...');
-								self.controllers.AppWorkspace.syncObjectsData()
-									.always(function () {
-										self.data.curLoadProgress += 0.1;
-										$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
-
-										$$(self.webixUiId.loadingScreen).showFinishScreen("Synchronized", "OK");
-										$$(self.webixUiId.syncButton).enable();
-
-										self.data.curLoadProgress = 0;
-									});
+							switch (data.action) {
+								case 'start': // Update loading message
+									var message = '';
+									switch (data.step) {
+										case 'syncObjectFields':
+											message = 'Updating object fields...';
+											break;
+										case 'request':
+											message = 'Requesting...';
+											break;
+										case 'findApplication':
+											message = 'Preparing Application info...';
+											break;
+										case 'prepareFolder':
+											message = 'Preparing Application folders...';
+											break;
+										case 'reloadControllers':
+											message = 'Reloading Controllers...';
+											break;
+										case 'reloadORM':
+											message = 'Reloading Databases...';
+											break;
+										case 'reloadBlueprints':
+											message = 'Reloading Blueprints...';
+											break;
+										case 'syncObjectData':
+											message = 'Syncing objects data...';
+											break;
+									}
+									$$(self.webixUiId.loadingScreen).setMessage(message);
+									break;
+								case 'done': // Update progress bar
+									if (!self.data.curLoadProgress) self.data.curLoadProgress = 0;
+									switch (data.step) {
+										case 'syncObjectFields':
+											self.data.curLoadProgress += 0.1;
+											break;
+										case 'findApplication':
+											self.data.curLoadProgress += 0.2;
+											break;
+										case 'prepareFolder':
+											self.data.curLoadProgress += 0.2;
+											break;
+										case 'reloadControllers':
+											self.data.curLoadProgress += 0.1;
+											break;
+										case 'reloadORM':
+											self.data.curLoadProgress += 0.2;
+											break;
+										case 'reloadBlueprints':
+											self.data.curLoadProgress += 0.1;
+											break;
+										case 'syncObjectData':
+											self.data.curLoadProgress += 0.1;
+											break;
+									}
+									$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
+									break;
 							}
 						},
 
