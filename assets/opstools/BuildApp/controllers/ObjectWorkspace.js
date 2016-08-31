@@ -757,6 +757,11 @@ steal(
 											.then(function () { next(); });
 									},
 									function (next) {
+										if (!self.data.object) {
+											next();
+											return;
+										}
+
 										// Get object model
 										self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
 											.fail(function (err) { next(err); })
@@ -986,8 +991,14 @@ steal(
 
 						bindColumns: function (resetColumns, addTrashColumn) {
 							var self = this,
-								q = $.Deferred(),
-								objectName = self.data.object.attr('name');
+								q = $.Deferred();
+
+							if (!self.data.object) {
+								q.resolve();
+								return;
+							}
+
+							var objectName = self.data.object.attr('name');
 
 							self.controllers.ModelCreator.getModel(objectName)
 								.fail(function (err) { q.reject(err); })
