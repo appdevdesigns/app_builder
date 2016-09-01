@@ -104,12 +104,13 @@ steal(
                                             if (!com) break;
 
                                             // Go to edit page
-                                            if (com.setting.editPage != self.activePageID)
+                                            if (com.setting.editPage && com.setting.editPage != self.activePageID) {
                                                 self.showPage(com.setting.editPage);
 
-                                            // Populate data to edit form
-                                            var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
-                                            self.components.Form.populateData(formViewId, com.setting.object, data.selected_data.row, com.page);
+                                                // Populate data to edit form
+                                                var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
+                                                self.components.Form.populateData(formViewId, com.setting.editForm, com.setting.object, data.selected_data.row, com.page);
+                                            }
 
                                             break;
                                     }
@@ -122,14 +123,27 @@ steal(
                                             if (!com) break;
 
                                             // Redirect to return page
-                                            if (data.returnPage && data.returnPage != self.activePageID)
+                                            if (data.returnPage && data.returnPage != self.activePageID) {
                                                 self.showPage(data.returnPage);
 
-                                            // Refresh grids
-                                            self.pages[self.activePageID].components.forEach(function (c) {
-                                                if (c.component === 'Grid' && com.setting.object == c.setting.object)
-                                                    self.renderComponent(self.pages[self.activePageID], c);
-                                            });
+                                                // Refresh grids
+                                                self.pages[self.activePageID].components.forEach(function (c) {
+                                                    if (c.component === 'Grid' && com.setting.object == c.setting.object)
+                                                        self.renderComponent(self.pages[self.activePageID], c);
+                                                });
+                                            }
+                                            else {
+                                                var curPage = self.pages[self.activePageID],
+                                                    bindGrids = self.getBindGrids(curPage, data.formId);
+
+                                                bindGrids.forEach(function(grid) {
+                                                    var gridId = self.getComponentId(curPage.domID, grid.id);
+                                                    if ($$(gridId)) $$(gridId).unselectAll();
+                                                });
+
+                                                $$(data.viewId).setValues({});
+                                            }
+
                                             break;
                                     }
                                 });
@@ -137,8 +151,20 @@ steal(
                                 event_aggregator.on('cancel', function (sender, data) {
                                     switch (data.component_name) {
                                         case 'Form':
-                                            if (data.returnPage != self.activePageID)
+                                            if (data.returnPage && data.returnPage != self.activePageID)
                                                 self.showPage(data.returnPage);
+                                            else {
+                                                var curPage = self.pages[self.activePageID],
+                                                    bindGrids = self.getBindGrids(curPage, data.formId);
+
+                                                bindGrids.forEach(function(grid) {
+                                                    var gridId = self.getComponentId(curPage.domID, grid.id);
+                                                    if ($$(gridId)) $$(gridId).unselectAll();
+                                                });
+
+                                                $$(data.viewId).setValues({});
+                                            }
+
                                             break;
                                     }
                                 });
@@ -196,108 +222,123 @@ steal(
                                         self.renderComponent(page, item);
                                     });
 
-                                },
+                            },
 
-                                renderComponent: function (page, item) {
+                            renderComponent: function (page, item) {
                                 var self = this,
                                     component = self.components[item.component],
                                     view = component.getView(),
                                     app;
 
-                               if (page.application && typeof page.application === 'object')
-                                    app = page.application;
-                                else if (!isNaN(page.application)) {
-                                    for(var key in self.pages) {
-                                        var p = self.pages[key];
+                                if (page.application && typeof page.application === 'object')
+                                        app = page.application;
+                                    else if (!isNaN(page.application)) {
+                                        for(var key in self.pages) {
+                                            var p = self.pages[key];
 
-                                        if (typeof p.application === 'object' && p.application.id == page.application)
-                                            app = p.application;
-                                    }
-                                }
-
-                                if (component.setApp && app)
-                                    component.setApp(app);
-
-                                if (view && component.render && item.setting) {
-                                    view = $.extend(true, {}, view);
-                                    view.id = self.getComponentId(page.domID, item.id);
-                                    view.container = view.id;
-                                    view.autowidth = true;
-
-                                    if (item.component === 'Menu') {
-                                        item.setting.click = function (id, ev) {
-                                            self.showPage(id);
-                                        };
+                                            if (typeof p.application === 'object' && p.application.id == page.application)
+                                                app = p.application;
+                                        }
                                     }
 
-                                    $('#' + view.id).html('');
+                                    if (component.setApp && app)
+                                        component.setApp(app);
 
-                                    webix.ui(view);
+                                    if (view && component.render && item.setting) {
+                                        view = $.extend(true, {}, view);
+                                        view.id = self.getComponentId(page.domID, item.id);
+                                        view.container = view.id;
+                                        view.autowidth = true;
 
-                                    component.render(view.id, item.setting);
+                                        if (item.component === 'Menu') {
+                                            item.setting.click = function (id, ev) {
+                                                self.showPage(id);
+                                            };
+                                        }
+
+                                        $('#' + view.id).html('');
+
+                                        webix.ui(view);
+
+                                        component.render(view.id, item.setting);
+
+                                        if (item.component === 'Form') {
+                                            var bindGrids = self.getBindGrids(page, item.id); 
+                                            
+                                            bindGrids.forEach(function(grid) {
+                                                var gridComId = self.getComponentId(page.domID, grid.id);
+                                                $$(view.id).bind(gridComId);
+                                            });
+                                        }
+
+                                    }
+                                },
+
+                                getBindGrids: function (page, formId) {
+                                    return page.components.filter(function(c) {
+                                        return c.component === 'Grid' && c.setting && c.setting.editForm == formId;
+                                    }) || [];
+                                },
+
+                                resize: function (height) {
+                                    var width = this.element.width();
+
+                                    if (width > 0)
+                                        $$("<%- domID() %>").define('width', width);
+
+                                    $$("<%- domID() %>").adjust();
+                                },
+                                
+                                
+                                /**
+                                * @param integer pageID
+                                *      Optional page ID number. Default is to show
+                                *      the root page.
+                                */
+                                showPage: function (pageID) {
+                                    if (typeof pageID == 'undefined') {
+                                        pageID = this.rootPageID;
+                                    }
+                                    $$(this.pages[pageID].domID).show();
+                                    this.activePageID = pageID;
+
+                                    this.initWebix(this.activePageID);
+                                    this.initEvents(this.activePageID);
+
+                                    this.resize();
+
+                                },
+                                
+                                
+                                /**
+                                * Returns a basic object containing the names of all
+                                * the pages from this controller, indexed by their
+                                * page ID number.
+                                */
+                                getPages: function() {
+                                    var result = {};
+                                    for (var id in this.pages) {
+                                        result[id] = pages[id].name;
+                                    }
+                                },
+
+                                getComponentId: function(pageId, itemId) {
+                                    return pageId + '-component-' + itemId;
+                                },
+
+                                getComponent: function (pageId, viewId) {
+                                    var self = this,
+                                        page = self.pages[pageId];
+
+                                    var coms = page.components.filter(function (com) {
+                                        return viewId == self.getComponentId(page.domID, com.id);
+                                    });
+
+                                    if (coms && coms.length > 0)
+                                        return coms[0];
+                                    else
+                                        return null;
                                 }
-                            },
-
-
-                            resize: function (height) {
-                                var width = this.element.width();
-
-                                if (width > 0)
-                                    $$("<%- domID() %>").define('width', width);
-
-                                $$("<%- domID() %>").adjust();
-                            },
-                            
-                            
-                            /**
-                            * @param integer pageID
-                            *      Optional page ID number. Default is to show
-                            *      the root page.
-                            */
-                            showPage: function (pageID) {
-                                if (typeof pageID == 'undefined') {
-                                    pageID = this.rootPageID;
-                                }
-                                $$(this.pages[pageID].domID).show();
-                                this.activePageID = pageID;
-
-                                this.initWebix(this.activePageID);
-                                this.initEvents(this.activePageID);
-
-                                this.resize();
-
-                            },
-                            
-                            
-                            /**
-                            * Returns a basic object containing the names of all
-                            * the pages from this controller, indexed by their
-                            * page ID number.
-                            */
-                            getPages: function() {
-                                var result = {};
-                                for (var id in this.pages) {
-                                    result[id] = pages[id].name;
-                                }
-                            },
-
-                            getComponentId: function(pageId, itemId) {
-                                return pageId + '-component-' + itemId;
-                            },
-
-                            getComponent: function (pageId, viewId) {
-                                var self = this,
-                                    page = self.pages[pageId];
-
-                                var coms = page.components.filter(function (com) {
-                                    return viewId == self.getComponentId(page.domID, com.id);
-                                });
-
-                                if (coms && coms.length > 0)
-                                    return coms[0];
-                                else
-                                    return null;
-                            }
 
 
                         });

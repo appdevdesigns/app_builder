@@ -251,6 +251,7 @@ steal(
 													}
 													else if (c.setting.editor === 'richselect') {
 														element.view = 'richselect';
+														// TODO : Get list from database
 														element.options = $.map(c.setting.filter_options, function (opt, index) {
 															return {
 																id: index,
@@ -366,12 +367,13 @@ steal(
 																		});
 																},
 																function (next) {
-																	$$(formView).setValues({});
 																	$$(formView).hideProgress();
+																	$$(formView).save();
 
 																	self.callEvent('save', viewId, {
 																		modelDataId: data.modelDataId,
-																		returnPage: data.returnPage
+																		returnPage: data.returnPage,
+																		formId: data.formId
 																	});
 
 																	if ($$(self.componentIds.saveButton))
@@ -395,13 +397,12 @@ steal(
 														width: 90,
 														inputWidth: 80,
 														click: function () {
-															$$(this.getFormView()).setValues({});
-
 															var data = self.getData(viewId);
 															data.modelDataId = null;
 
 															self.callEvent('cancel', viewId, {
-																returnPage: data.returnPage
+																returnPage: data.returnPage,
+																formId: data.formId
 															});
 														}
 													});
@@ -451,7 +452,7 @@ steal(
 								]);
 							};
 
-							self.populateData = function (viewId, objectId, dataId, returnPage) {
+							self.populateData = function (viewId, formId, objectId, dataId, returnPage) {
 								var data = self.getData(viewId);
 
 								if (data.objectId != objectId) return; // Validate object
@@ -460,6 +461,7 @@ steal(
 
 								data.modelDataId = dataId;
 								data.returnPage = returnPage;
+								data.formId = formId;
 
 								self.getModelData(objectId, dataId)
 									.fail(function (err) {
@@ -617,13 +619,15 @@ steal(
 								self.event_aggregator = event_aggregator;
 							};
 
-							self.callEvent = function (eventName, viewId, data) {
+							self.callEvent = function (eventName, viewId, eventData) {
 								if (self.event_aggregator) {
-									data = data || {};
-									data.component_name = self.info.name;
-									data.viewId = viewId;
+									var data = self.getData(viewId);
+									eventData = eventData || {};
+									eventData.component_name = self.info.name;
+									eventData.viewId = viewId;
+									eventData.returnPage = data.returnPage;
 
-									self.event_aggregator.trigger(eventName, data);
+									self.event_aggregator.trigger(eventName, eventData);
 								}
 							};
 

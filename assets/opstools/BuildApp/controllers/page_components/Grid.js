@@ -321,6 +321,9 @@ steal(
 									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
 										if (e.target.className.indexOf('fa-pencil') > -1) {
 											self.callEvent('edit', viewId, { selected_data: id });
+
+											$$(viewId).define('select', true);
+											$$(viewId).select(id);
 										}
 									});
 
