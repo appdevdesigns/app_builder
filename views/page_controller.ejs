@@ -109,7 +109,7 @@ steal(
 
                                                 // Populate data to edit form
                                                 var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
-                                                self.components.Form.populateData(formViewId, com.setting.editForm, com.setting.object, data.selected_data.row, com.page);
+                                                self.components.Form.populateData(formViewId, com.setting.object, data.selected_data.row, com.page);
                                             }
 
                                             break;
@@ -134,7 +134,7 @@ steal(
                                             }
                                             else {
                                                 var curPage = self.pages[self.activePageID],
-                                                    bindGrids = self.getBindGrids(curPage, data.formId);
+                                                    bindGrids = self.getBindGrids(curPage, data.id);
 
                                                 bindGrids.forEach(function(grid) {
                                                     var gridId = self.getComponentId(curPage.domID, grid.id);
@@ -155,7 +155,7 @@ steal(
                                                 self.showPage(data.returnPage);
                                             else {
                                                 var curPage = self.pages[self.activePageID],
-                                                    bindGrids = self.getBindGrids(curPage, data.formId);
+                                                    bindGrids = self.getBindGrids(curPage, data.id);
 
                                                 bindGrids.forEach(function(grid) {
                                                     var gridId = self.getComponentId(curPage.domID, grid.id);
@@ -260,7 +260,7 @@ steal(
 
                                         webix.ui(view);
 
-                                        component.render(view.id, item.setting);
+                                        component.render(view.id, item.id, item.setting);
 
                                         if (item.component === 'Form') {
                                             var bindGrids = self.getBindGrids(page, item.id); 

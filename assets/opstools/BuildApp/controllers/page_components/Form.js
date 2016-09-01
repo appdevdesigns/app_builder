@@ -141,8 +141,8 @@ steal(
 												case self.componentIds.selectObject:
 												case self.componentIds.isSaveVisible:
 												case self.componentIds.isCancelVisible:
-													var settings = self.getSettings();
-													self.populateSettings(settings, true);
+													var setting = self.getSettings();
+													self.populateSettings({ setting: setting }, true);
 													break;
 											}
 										}
@@ -164,11 +164,12 @@ steal(
 								return self.data[viewId];
 							};
 
-							self.render = function (viewId, settings, editable, defaultShowAll) {
+							self.render = function (viewId, comId, settings, editable, defaultShowAll) {
 								var data = self.getData(viewId),
 									elementViews = [];
 
 								data.columns = null;
+								data.id = comId;
 
 								settings.visibleFieldIds = settings.visibleFieldIds || [];
 
@@ -368,12 +369,13 @@ steal(
 																},
 																function (next) {
 																	$$(formView).hideProgress();
-																	$$(formView).save();
+																	if ($$(formView).save)
+																		$$(formView).save();
 
 																	self.callEvent('save', viewId, {
 																		modelDataId: data.modelDataId,
 																		returnPage: data.returnPage,
-																		formId: data.formId
+																		id: data.id
 																	});
 
 																	if ($$(self.componentIds.saveButton))
@@ -402,7 +404,7 @@ steal(
 
 															self.callEvent('cancel', viewId, {
 																returnPage: data.returnPage,
-																formId: data.formId
+																id: data.id
 															});
 														}
 													});
@@ -452,7 +454,7 @@ steal(
 								]);
 							};
 
-							self.populateData = function (viewId, formId, objectId, dataId, returnPage) {
+							self.populateData = function (viewId, objectId, dataId, returnPage) {
 								var data = self.getData(viewId);
 
 								if (data.objectId != objectId) return; // Validate object
@@ -461,7 +463,6 @@ steal(
 
 								data.modelDataId = dataId;
 								data.returnPage = returnPage;
-								data.formId = formId;
 
 								self.getModelData(objectId, dataId)
 									.fail(function (err) {
@@ -497,9 +498,9 @@ steal(
 								return settings;
 							};
 
-							self.populateSettings = function (settings, defaultShowAll) {
+							self.populateSettings = function (item, defaultShowAll) {
 								// Render form component
-								self.render(self.componentIds.editForm, settings, true, defaultShowAll);
+								self.render(self.componentIds.editForm, item.id, item.setting, true, defaultShowAll);
 
 								var viewId = self.componentIds.editDataTable,
 									data = self.getData(viewId);
@@ -519,8 +520,8 @@ steal(
 										// Properties
 
 										// Data source - Object
-										var item = $$(self.componentIds.propertyView).getItem(self.componentIds.selectObject);
-										item.options = $.map(data.objects, function (o) {
+										var objSource = $$(self.componentIds.propertyView).getItem(self.componentIds.selectObject);
+										objSource.options = $.map(data.objects, function (o) {
 											return {
 												id: o.id,
 												value: o.label
@@ -529,9 +530,9 @@ steal(
 
 										// Set property values
 										var propValues = {};
-										propValues[self.componentIds.selectObject] = settings.object;
-										propValues[self.componentIds.isSaveVisible] = settings.saveVisible || 'hide';
-										propValues[self.componentIds.isCancelVisible] = settings.cancelVisible || 'hide';
+										propValues[self.componentIds.selectObject] = item.setting.object;
+										propValues[self.componentIds.isSaveVisible] = item.setting.saveVisible || 'hide';
+										propValues[self.componentIds.isCancelVisible] = item.setting.cancelVisible || 'hide';
 										$$(self.componentIds.propertyView).setValues(propValues);
 
 										$$(self.componentIds.propertyView).refresh();

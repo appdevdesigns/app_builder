@@ -181,10 +181,10 @@ steal(
 
 											switch (editor.id) {
 												case 'object':
-													var settings = self.getSettings();
-													settings.columns = data.visibleColumns;
+													var setting = self.getSettings();
+													setting.columns = data.visibleColumns;
 
-													self.populateSettings(settings, true);
+													self.populateSettings({ setting: setting }, true);
 													break;
 												case 'editForm':
 												case 'removable':
@@ -238,7 +238,7 @@ steal(
 								return dataTableController;
 							};
 
-							self.render = function (viewId, settings) {
+							self.render = function (viewId, comId, settings) {
 								var q = $.Deferred(),
 									data = self.getData(viewId),
 									dataTableController = self.getDataTableController(viewId);
@@ -246,6 +246,8 @@ steal(
 								webix.extend($$(viewId), webix.ProgressBar);
 								$$(viewId).clearAll();
 								$$(viewId).showProgress({ type: 'icon' });
+
+								data.id = comId;
 
 								if (settings.columns)
 									data.visibleColumns = $.map(settings.columns, function (cId) { return cId.toString(); });
@@ -320,7 +322,10 @@ steal(
 
 									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
 										if (e.target.className.indexOf('fa-pencil') > -1) {
-											self.callEvent('edit', viewId, { selected_data: id });
+											self.callEvent('edit', viewId, {
+												id: data.id, 
+												selected_data: id
+											});
 
 											$$(viewId).define('select', true);
 											$$(viewId).select(id);
@@ -370,7 +375,7 @@ steal(
 								return settings;
 							}
 
-							self.populateSettings = function (settings, selectAll) {
+							self.populateSettings = function (item, selectAll) {
 								webix.extend($$(self.componentIds.columnList), webix.ProgressBar);
 
 								$$(self.componentIds.columnList).showProgress({ type: 'icon' });
@@ -379,9 +384,9 @@ steal(
 									data = self.getData(viewId);
 
 								// Render dataTable component
-								self.render(viewId, settings).then(function () {
+								self.render(viewId, item.id, item.setting).then(function () {
 									// Columns list
-									self.bindColumnList(viewId, settings.object, selectAll);
+									self.bindColumnList(viewId, item.setting.object, selectAll);
 									$$(self.componentIds.columnList).hideProgress();
 
 									// Properties
@@ -412,7 +417,7 @@ steal(
 													pages.forEach(function (p) {
 														// Filter form components
 														var forms = p.components.filter(function (c) {
-															return c.component === "Form" && c.setting && settings && c.setting.object === settings.object;
+															return c.component === "Form" && c.setting && item.setting && c.setting.object === item.setting.object;
 														});
 
 														if (forms && forms.length > 0) {
@@ -438,13 +443,13 @@ steal(
 										function (next) {
 											// Set property values
 											var editForm;
-											if (settings.editPage && settings.editForm)
-												editForm = settings.editPage + '|' + settings.editForm;
+											if (item.setting.editPage && item.setting.editForm)
+												editForm = item.setting.editPage + '|' + item.setting.editForm;
 
 											$$(self.componentIds.propertyView).setValues({
-												object: settings.object,
+												object: item.setting.object,
 												editForm: editForm,
-												removable: settings.removable || 'disable'
+												removable: item.setting.removable || 'disable'
 											});
 
 											$$(self.componentIds.propertyView).refresh();

@@ -104,7 +104,7 @@ steal(
 
 											switch (editor.id) {
 												case 'orientation':
-													self.render(self.componentIds.editMenu, self.getSettings());
+													self.render(self.componentIds.editMenu, null, self.getSettings());
 													break;
 											}
 										}
@@ -122,19 +122,19 @@ steal(
 								return self.events[viewId];
 							};
 
-							self.render = function (viewId, settings) {
+							self.render = function (viewId, comId, setting) {
 								if ($$(viewId))
 									$$(viewId).clearAll();
 
 								var view = $.extend(true, {}, self.getView());
 								view.id = viewId;
-								view.layout = settings.layout || 'x';
+								view.layout = setting.layout || 'x';
 
-								if (settings.data)
-									view.data = settings.data;
+								if (setting.data)
+									view.data = setting.data;
 
-								if (settings.click)
-									view.click = settings.click;
+								if (setting.click)
+									view.click = setting.click;
 
 								webix.ui(view, $$(viewId));
 
@@ -146,17 +146,17 @@ steal(
 							self.getSettings = function () {
 								var values = $$(self.componentIds.propertyView).getValues();
 
-								var settings = {
+								var setting = {
 									layout: values.orientation,
 									data: $$(self.componentIds.editMenu).find(function () { return true; })
 								};
 
-								return settings;
+								return setting;
 							};
 
-							self.populateSettings = function (settings) {
+							self.populateSettings = function (item) {
 								// Menu
-								self.render(self.componentIds.editMenu, settings);
+								self.render(self.componentIds.editMenu, item.id, item.setting);
 
 								// Page list
 								$$(self.componentIds.pageTree).clearAll();
@@ -204,8 +204,8 @@ steal(
 											$$(self.componentIds.pageTree).openAll();
 
 											// Set checked items
-											if (settings.data) {
-												settings.data.forEach(function (d) {
+											if (item.setting.data) {
+												item.setting.data.forEach(function (d) {
 													$$(self.componentIds.pageTree).checkItem(d.id);
 												});
 											}
@@ -216,7 +216,7 @@ steal(
 
 								// Properties
 								$$(self.componentIds.propertyView).setValues({
-									orientation: settings.layout || 'x'
+									orientation: item.setting.layout || 'x'
 								});
 								$$(self.componentIds.propertyView).refresh();
 							};

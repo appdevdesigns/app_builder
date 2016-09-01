@@ -92,39 +92,36 @@ steal(
 									comInstance.registerEventAggregator(event_aggregator);
 							}
 
-							event_aggregator.on('edit', function (sender, data) {
+							event_aggregator.on('save', function (sender, data) {
 								switch (data.component_name) {
-									case 'Grid':
-										var com = self.data.componentsInPage.filter(function (c) {
-											return c.id == data.viewId.replace('ab-layout-component-', '');
-										})[0] || null;
-										if (self.data.page.attr('id') != com.setting.editPage) break;
+									case 'Form':
+										var objectGridDatas = self.data.componentsInPage.filter(function (c) {
+											return c.component === 'Grid' && c.setting.editForm == data.id;
+										});
 
-										var formViewId = self.getComponentId(com.setting.editForm);
+										objectGridDatas.forEach(function (grid) {
+											var gridId = self.getComponentId(grid.id);
+											if ($$(gridId)) $$(gridId).unselectAll();
+										});
 
-										self.data.components.Form.populateData(formViewId, com.setting.object, data.selected_data.row);
+										$$(data.viewId).setValues({});
 										break;
 								}
 							});
 
-							event_aggregator.on('save', function (sender, data) {
+							event_aggregator.on('cancel', function (sender, data) {
 								switch (data.component_name) {
 									case 'Form':
-										var com = self.data.componentsInPage.filter(function (c) {
-											return c.id == data.viewId.replace('ab-layout-component-', '');
-										})[0] || null;
+										var objectGridDatas = self.data.componentsInPage.filter(function (c) {
+											return c.component === 'Grid' && c.setting.editForm == data.id;
+										});
 
-										if (!com) break;
+										objectGridDatas.forEach(function (grid) {
+											var gridId = self.getComponentId(grid.id);
+											if ($$(gridId)) $$(gridId).unselectAll();
+										});
 
-										if (com.setting.object) {
-											var objectGridDatas = self.data.componentsInPage.filter(function (c) {
-												return c.component === 'Grid' && c.setting.object === com.setting.object;
-											});
-
-											objectGridDatas.forEach(function (grid) {
-												self.renderComponent(grid); // Refresh grids
-											});
-										}
+										$$(data.viewId).setValues({});
 										break;
 								}
 							});
@@ -230,7 +227,7 @@ steal(
 																	if (component.setPage)
 																		component.setPage(self.data.page);
 
-																	component.populateSettings(item.setting);
+																	component.populateSettings(item);
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.name + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -586,7 +583,19 @@ steal(
 
 								webix.ui(view);
 
-								component.render(view.id, settings);
+								component.render(view.id, com.id, settings);
+
+								if (com.component === 'Form') {
+									var objectGridDatas = self.data.componentsInPage.filter(function (c) {
+										return c.component === 'Grid' && c.setting.editForm == com.attr('id');
+									});
+
+									objectGridDatas.forEach(function (grid) {
+										var gridId = self.getComponentId(grid.id);
+										$$(view.id).bind(gridId);
+									});
+								}
+
 							}
 						},
 
