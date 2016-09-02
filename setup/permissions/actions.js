@@ -29,13 +29,9 @@ module.exports = {
 
     actions:[
         { 
-            action_key:'[moduleName].view', 
-            action_description:'Allows the user to access the [moduleName] tool.' 
-        },
-        // { 
-        //     action_key:'[moduleName].action.create', 
-        //     action_description:'Allow user to create actions in [moduleName]' 
-        // }
+            action_key:'appbuilder.designer.view', 
+            action_description:'Allows the user to access the AppBuilder Designer tool.' 
+        }
     ]
 
 };

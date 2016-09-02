@@ -13,12 +13,25 @@ module.exports = {
 
     tableName: 'appbuilder_application',
 
-
     connection: 'appdev_default',
 
 
-
     attributes: {
+
+        object: { collection: 'ABObject', via: 'application' },
+
+
+        name: {
+            type: 'string',
+            required: true,
+            unique: true
+        },
+
+//// TODO: This should change.  Can be in multiple roles.
+        role: {
+            model: 'PermissionRole'
+        },
+
 
         // this will pull in the translations using .populate('translations')
         translations: {
@@ -38,18 +51,13 @@ module.exports = {
             return ABApplication;
         },
 
-        object: { collection: 'ABObject', via: 'application' },
 
-        name: {
-            type: 'string',
-            required: true,
-            unique: true
-        },
-
-        role: {
-            model: 'PermissionRole'
+        areaKey: function() {
+            return _.kebabCase('ab-'+this.name);
         }
+
     },
+
 
     beforeCreate: function (values, cb) {
         if (values.name)
@@ -58,12 +66,14 @@ module.exports = {
         cb();
     },
 
+
     beforeUpdate: function (values, cb) {
         if (values.name)
             values.name = values.name.replace(/ /g, '_');
 
         cb();
     },
+
 
     afterDestroy: function (destroyedApplications, cb) {
 
