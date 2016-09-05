@@ -7,10 +7,10 @@ module.exports = [
 
     { 
         key:'appbuilder.designer', 
-        permissions:'appbuilder.designer.view, adcore.developer', 
+        permissions:'appbuilder.designer.view', 
         icon:'fa-object-group', 
         controller:'BuildApp',
-        label:'tool.appBuilder',
+        label:'App Builder',
         context:'opsportal',
         isController:true, 
         options:{}, 
