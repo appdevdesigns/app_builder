@@ -169,6 +169,10 @@ steal(
 							var self = this;
 
 							self.controllers.Form.setObjectList(objectList);
+						},
+
+						refreshMenuComponent: function (pageId) {
+							this.controllers.LayoutView.refreshMenuComponent(pageId);
 						}
 
 

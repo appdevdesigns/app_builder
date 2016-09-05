@@ -138,7 +138,8 @@ steal(
 
                                                 bindGrids.forEach(function(grid) {
                                                     var gridId = self.getComponentId(curPage.domID, grid.id);
-                                                    if ($$(gridId)) $$(gridId).unselectAll();
+                                                    if ($$(gridId) && $$(gridId).unselectAll)
+                                                        $$(gridId).unselectAll();
                                                 });
 
                                                 $$(data.viewId).setValues({});
@@ -159,7 +160,8 @@ steal(
 
                                                 bindGrids.forEach(function(grid) {
                                                     var gridId = self.getComponentId(curPage.domID, grid.id);
-                                                    if ($$(gridId)) $$(gridId).unselectAll();
+                                                    if ($$(gridId) && $$(gridId).unselectAll)
+                                                        $$(gridId).unselectAll();
                                                 });
 
                                                 $$(data.viewId).setValues({});

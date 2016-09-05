@@ -249,6 +249,7 @@ steal(
 							}
 
 							self.controllers.ObjectPage.resize(height);
+							self.controllers.InterfacePage.resize(height);
 						}
 
 					});

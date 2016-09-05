@@ -59,6 +59,14 @@ module.exports = {
     },
 
 
+
+    beforeValidate: function (values, cb) {
+        if (!values['role']) values['role'] = null;
+
+        cb();
+    },
+
+
     beforeCreate: function (values, cb) {
         if (values.name)
             values.name = values.name.replace(/ /g, '_');
