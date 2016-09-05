@@ -599,6 +599,16 @@ steal(
 							}
 						},
 
+						refreshMenuComponent: function (pageId) {
+							var self = this;
+
+							// Generate component in list
+							self.data.componentsInPage.forEach(function (c) {
+								if (c.component === 'Menu' && c.setting.data && c.setting.data.filter(function (d) { return d == pageId; }).length > 0)
+									self.renderComponent(c);
+							});
+						},
+
 						startDragComponent: function () {
 							var self = this;
 

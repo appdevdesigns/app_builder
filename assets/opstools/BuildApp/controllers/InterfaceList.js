@@ -137,6 +137,9 @@ steal(
 														.fail(function () {
 															$$(self.webixUiId.interfaceTree).hideProgress();
 
+															// Show gear icon
+															self.showGear(result.id);
+
 															webix.message({
 																type: "error",
 																text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
@@ -144,7 +147,7 @@ steal(
 
 															AD.error.log('Page List : Error rename page data', { error: err });
 														})
-														.then(function () {
+														.then(function (result) {
 															if (selectedPage.translate) selectedPage.translate();
 
 															// Show success message
@@ -158,7 +161,10 @@ steal(
 
 															$$(self.webixUiId.interfaceTree).hideProgress();
 
-															self.element.trigger(self.options.updatedPageEvent, { pagesList: self.data.pages });
+															// Show gear icon
+															self.showGear(result.id);
+
+															self.element.trigger(self.options.updatedPageEvent, { updatedPageId: result.id });
 														});
 												}
 											},
@@ -464,6 +470,14 @@ steal(
 							var self = this;
 
 							$($$(self.webixUiId.interfaceTree).getItemNode(id)).find('.ab-page-list-edit').show();
+						},
+
+						resize: function (height) {
+							var self = this,
+								selectedPages = $$(self.webixUiId.interfaceTree).getSelectedId(true);
+
+							if (selectedPages && selectedPages.length > 0)
+								self.showGear(selectedPages[0]);
 						}
 
 

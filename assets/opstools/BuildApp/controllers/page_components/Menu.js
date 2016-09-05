@@ -2,7 +2,7 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABPage.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -130,25 +130,59 @@ steal(
 								view.id = viewId;
 								view.layout = setting.layout || 'x';
 
-								if (setting.data)
-									view.data = setting.data;
-
 								if (setting.click)
 									view.click = setting.click;
 
 								webix.ui(view, $$(viewId));
+								webix.extend($$(viewId), webix.ProgressBar);
+
+								$$(viewId).showProgress({ type: 'icon' });
 
 								var events = self.getEvent(viewId);
-								if (events.renderComplete)
-									events.renderComplete();
+
+								if (setting.data && setting.data.length > 0) {
+									var pageIds = $.map(setting.data, function (id) {
+										return { id: id };
+									});
+
+									// Get selected pages
+									self.Model.findAll({ or: pageIds })
+										.then(function (pages) {
+
+											pages.forEach(function (p) {
+												if (p.translate) p.translate();
+											});
+
+											// Show page menu
+											$$(viewId).parse($.map(pages, function (p) {
+												return {
+													id: p.id,
+													value: p.label
+												};
+											}), 'json');
+
+											if (events.renderComplete)
+												events.renderComplete();
+
+											$$(viewId).hideProgress();
+										});
+								}
+								else {
+									if (events.renderComplete)
+										events.renderComplete();
+								}
 							};
 
 							self.getSettings = function () {
-								var values = $$(self.componentIds.propertyView).getValues();
+								var values = $$(self.componentIds.propertyView).getValues(),
+									selectedPages = $$(self.componentIds.editMenu).find(function () { return true; }),
+									selectedPageIds = $.map(selectedPages || [], function (page) {
+										return page.id;
+									});
 
 								var setting = {
 									layout: values.orientation,
-									data: $$(self.componentIds.editMenu).find(function () { return true; })
+									data: selectedPageIds
 								};
 
 								return setting;
@@ -205,8 +239,8 @@ steal(
 
 											// Set checked items
 											if (item.setting.data) {
-												item.setting.data.forEach(function (d) {
-													$$(self.componentIds.pageTree).checkItem(d.id);
+												item.setting.data.forEach(function (pageId) {
+													$$(self.componentIds.pageTree).checkItem(pageId);
 												});
 											}
 

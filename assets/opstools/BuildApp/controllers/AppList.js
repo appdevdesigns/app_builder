@@ -370,7 +370,7 @@ steal(
 																		if (app_role && app_role.id)
 																			updateApp.attr('role', app_role.id);
 																		else
-																			updateApp.removeAttr('role');
+																			updateApp.attr('role', null);
 
 																		updateApp.save()
 																			.fail(function (err) { next(err); })

@@ -64,6 +64,10 @@ steal(
 								self.controllers.InterfaceWorkspace.setPage(data.selectedPage);
 							});
 
+							self.controllers.InterfaceList.on(self.options.updatedPageEvent, function (event, data) {
+								self.controllers.InterfaceWorkspace.refreshMenuComponent(data.updatedPageId);
+							});
+
 							self.controllers.InterfaceList.on(self.options.deletedPageEvent, function (event, id) {
 								self.controllers.InterfaceWorkspace.setPage(null);
 							});
@@ -91,6 +95,10 @@ steal(
 							var self = this;
 
 							self.controllers.InterfaceWorkspace.setObjectList(objectList);
+						},
+
+						resize: function (height) {
+							this.controllers.InterfaceList.resize(height);
 						}
 
 					});
