@@ -133,6 +133,7 @@ steal(
 							var self = this;
 
 							self.data.definition = {
+								view: 'layout',
 								rows: [
 									{
 										view: 'toolbar',

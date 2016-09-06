@@ -22,6 +22,9 @@
 .ab-main-container .bold {
 	font-weight: bold;
 }
+.ab-scroll-y {
+	overflow-y: auto !important;
+}
 
 /* Webix datatable */
 /* Last column */

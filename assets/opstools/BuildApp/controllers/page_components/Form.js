@@ -86,7 +86,9 @@ steal(
 
 								var editView = {
 									id: self.componentIds.editView,
+									view: 'layout',
 									padding: 10,
+									css: 'ab-scroll-y',
 									rows: [
 										form
 									]
@@ -732,6 +734,11 @@ steal(
 
 						setObjectList: function (objectList) {
 							this.data.objectList = objectList;
+						},
+
+						resize: function (height) {
+							$$(this.componentIds.editView).define('height', height - 150);
+							$$(this.componentIds.editView).resize();
 						}
 
 					});
