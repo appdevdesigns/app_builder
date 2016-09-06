@@ -170,6 +170,8 @@ steal(
 								else {
 									if (events.renderComplete)
 										events.renderComplete();
+
+									$$(viewId).hideProgress();
 								}
 							};
 
