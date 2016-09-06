@@ -11,6 +11,6 @@ var path = require('path');
 var AD = require('ad-utils');
 module.exports = function (cb) {
 
-	AD.module.permissions(path.join(__dirname, '..', 'setup', 'permissions'), cb);
+    AD.module.bootstrap(__dirname, cb);
 
 };
