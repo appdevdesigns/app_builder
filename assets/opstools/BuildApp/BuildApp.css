@@ -287,6 +287,18 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	background-color: #fff;	
 }
 
+/* Header component */
+.ab-component-header {
+	font-size: 25px;
+	font-weight: bold;
+	margin: 0px;
+	padding: 0px;
+}
+.ab-component-description {
+	font-size: 14px;
+	padding: 0px;
+}
+
 /* Menu component */
 .ab-page-list-item .webix_tree_checkbox {
 	margin: 0px !important;

@@ -45,6 +45,8 @@ steal(
 
 							self.componentIds = {
 								editView: self.info.name + '-edit-view',
+								editTitle: self.info.name + '-edit-title',
+								editDescription: self.info.name + '-edit-description',
 								editDataTable: 'ab-datatable-edit-mode',
 
 								columnList: 'ab-datatable-columns-list',
@@ -127,6 +129,19 @@ steal(
 									view: "property",
 									id: self.componentIds.propertyView,
 									elements: [
+										{ label: "Header", type: "label" },
+										{
+											id: 'title',
+											name: 'title',
+											type: 'text',
+											label: 'Title'
+										},
+										{
+											id: 'description',
+											name: 'description',
+											type: 'text',
+											label: 'Description'
+										},
 										{ label: "Data source", type: "label" },
 										{
 											id: 'object',
@@ -180,6 +195,12 @@ steal(
 												propertyValues = $$(self.componentIds.propertyView).getValues();
 
 											switch (editor.id) {
+												case 'title':
+													$$(self.componentIds.editTitle).setValue(propertyValues.title);
+													break;
+												case 'description':
+													$$(self.componentIds.editDescription).setValue(propertyValues.description);
+													break;
 												case 'object':
 													var setting = self.getSettings();
 													setting.columns = data.visibleColumns;
@@ -238,7 +259,7 @@ steal(
 								return dataTableController;
 							};
 
-							self.render = function (viewId, comId, settings) {
+							self.render = function (viewId, comId, settings, editable) {
 								var q = $.Deferred(),
 									data = self.getData(viewId),
 									dataTableController = self.getDataTableController(viewId);
@@ -251,6 +272,25 @@ steal(
 
 								if (settings.columns)
 									data.visibleColumns = $.map(settings.columns, function (cId) { return cId.toString(); });
+
+								var dataTableController = self.getDataTableController(viewId);
+								dataTableController.bindColumns([], true, settings.removable);
+								dataTableController.registerDeleteRowHandler(function (deletedId) {
+									$$(viewId).showProgress({ type: 'icon' });
+
+									self.Model.ObjectModels[settings.object].Cached.destroy(deletedId.row)
+										.fail(function (err) {
+											// TODO message
+											$$(viewId).hideProgress();
+										})
+										.then(function (data) {
+											$$(viewId).remove(data.id);
+
+											// TODO message
+
+											$$(viewId).hideProgress();
+										});
+								});
 
 								AD.util.async.parallel([
 									function (callback) {
@@ -314,7 +354,72 @@ steal(
 										editPage: settings.editPage,
 										editForm: settings.editForm
 									}, settings.removable);
+
 									$$(viewId).hideProgress();
+
+									var editHeader = { rows: [] },
+										header = '';
+
+									// Title
+									if (editable && $$(viewId).getParentView() && $$(viewId).getParentView().addView) {
+										if (!$$(self.componentIds.editTitle)) {
+											editHeader.rows.push({
+												id: self.componentIds.editTitle,
+												view: 'text',
+												placeholder: 'Title',
+												css: 'ab-component-header',
+												value: settings.title || '',
+												on: {
+													onChange: function (newv, oldv) {
+														if (newv != oldv) {
+															var propValues = $$(self.componentIds.propertyView).getValues();
+															propValues.title = newv;
+															$$(self.componentIds.propertyView).setValues(propValues);
+														}
+													}
+												}
+											});
+										}
+										else {
+											$$(self.componentIds.editTitle).setValue(settings.title || '');
+										}
+									}
+									else if (settings.title && !editable)
+										header += '<div class="webix_control webix_el_label ab-component-header" style="min-height: 38px;"><div>' + settings.title + '</div></div>';
+
+									// Description
+									if (editable && $$(viewId).getParentView() && $$(viewId).getParentView().addView) {
+										if (!$$(self.componentIds.editDescription)) {
+											editHeader.rows.push({
+												id: self.componentIds.editDescription,
+												view: 'textarea',
+												placeholder: 'Description',
+												css: 'ab-component-description',
+												value: settings.description || '',
+												inputHeight: 60,
+												on: {
+													onChange: function (newv, oldv) {
+														if (newv != oldv) {
+															var propValues = $$(self.componentIds.propertyView).getValues();
+															propValues.description = newv;
+															$$(self.componentIds.propertyView).setValues(propValues);
+														}
+													}
+												}
+											});
+										}
+										else {
+											$$(self.componentIds.editDescription).setValue(settings.description || '');
+										}
+									}
+									else if (settings.description && !editable)
+										header += '<div class="webix_control webix_el_label ab-component-description" style="min-height: 38px;"><div>' + settings.description + '</div></div>';
+
+									if (editHeader.rows.length > 0)
+										$$(viewId).getParentView().addView(editHeader, 0);
+
+									if (header)
+										$($$(viewId).getNode().parentNode).prepend(header);
 
 									$$(viewId).attachEvent('onAfterRender', function (data) {
 										self.callEvent('renderComplete', viewId);
@@ -323,7 +428,7 @@ steal(
 									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
 										if (e.target.className.indexOf('fa-pencil') > -1) {
 											self.callEvent('edit', viewId, {
-												id: data.id, 
+												id: data.id,
 												selected_data: id
 											});
 
@@ -333,25 +438,6 @@ steal(
 									});
 
 									q.resolve();
-								});
-
-								var dataTableController = self.getDataTableController(viewId);
-								dataTableController.bindColumns([], true, settings.removable);
-								dataTableController.registerDeleteRowHandler(function (deletedId) {
-									$$(viewId).showProgress({ type: 'icon' });
-
-									self.Model.ObjectModels[settings.object].Cached.destroy(deletedId.row)
-										.fail(function (err) {
-											// TODO message
-											$$(viewId).hideProgress();
-										})
-										.then(function (data) {
-											$$(viewId).remove(data.id);
-
-											// TODO message
-
-											$$(viewId).hideProgress();
-										});
 								});
 
 								return q;
@@ -365,6 +451,8 @@ steal(
 									editFormId = editForm && editForm[1] || null;
 
 								var settings = {
+									title: propertyValues.title || '',
+									description: propertyValues.description || '',
 									object: propertyValues.object,
 									editPage: editPageId,
 									editForm: editFormId,
@@ -384,7 +472,7 @@ steal(
 									data = self.getData(viewId);
 
 								// Render dataTable component
-								self.render(viewId, item.id, item.setting).then(function () {
+								self.render(viewId, item.id, item.setting, true).then(function () {
 									// Columns list
 									self.bindColumnList(viewId, item.setting.object, selectAll);
 									$$(self.componentIds.columnList).hideProgress();
@@ -447,6 +535,8 @@ steal(
 												editForm = item.setting.editPage + '|' + item.setting.editForm;
 
 											$$(self.componentIds.propertyView).setValues({
+												title: item.setting.title || '',
+												description: item.setting.description || '',
 												object: item.setting.object,
 												editForm: editForm,
 												removable: item.setting.removable || 'disable'
@@ -573,6 +663,9 @@ steal(
 							this.data = {};
 							this.Model.ObjectModels = {};
 							this.controllers.ObjectDataTables = {};
+
+							if ($$(this.componentIds.editTitle)) $$(this.componentIds.editTitle).setValue('');
+							if ($$(this.componentIds.editDescription)) $$(this.componentIds.editDescription).setValue('');
 						},
 
 						getInstance: function () {

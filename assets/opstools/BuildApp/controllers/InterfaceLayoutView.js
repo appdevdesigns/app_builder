@@ -118,7 +118,8 @@ steal(
 
 										objectGridDatas.forEach(function (grid) {
 											var gridId = self.getComponentId(grid.id);
-											if ($$(gridId)) $$(gridId).unselectAll();
+											if ($$(gridId) && $$(gridId).unselectAll)
+												$$(gridId).unselectAll();
 										});
 
 										$$(data.viewId).setValues({});

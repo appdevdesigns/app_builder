@@ -48,7 +48,12 @@ steal(
 								editView: self.info.name + '-edit-view',
 								editForm: 'ab-form-edit-mode',
 
+								title: self.info.name + '-title',
+								description: self.info.name + '-description',
+
 								propertyView: self.info.name + '-property-view',
+								editTitle: self.info.name + '-edit-title',
+								editDescription: self.info.name + '-edit-description',
 								selectObject: self.info.name + '-select-object',
 								isSaveVisible: self.info.name + '-save-visible',
 								isCancelVisible: self.info.name + '-cancel-visible',
@@ -95,6 +100,19 @@ steal(
 									view: "property",
 									id: self.componentIds.propertyView,
 									elements: [
+										{ label: "Header", type: "label" },
+										{
+											id: self.componentIds.editTitle,
+											name: 'title',
+											type: 'text',
+											label: 'Title'
+										},
+										{
+											id: self.componentIds.editDescription,
+											name: 'description',
+											type: 'text',
+											label: 'Description'
+										},
 										{ label: "Data source", type: "label" },
 										{
 											id: self.componentIds.selectObject,
@@ -138,6 +156,12 @@ steal(
 											var propertyValues = $$(self.componentIds.propertyView).getValues();
 
 											switch (editor.id) {
+												case self.componentIds.editTitle:
+													$$(self.componentIds.title).setValue(propertyValues[self.componentIds.editTitle]);
+													break;
+												case self.componentIds.editDescription:
+													$$(self.componentIds.description).setValue(propertyValues[self.componentIds.editDescription]);
+													break;
 												case self.componentIds.selectObject:
 												case self.componentIds.isSaveVisible:
 												case self.componentIds.isCancelVisible:
@@ -166,7 +190,8 @@ steal(
 
 							self.render = function (viewId, comId, settings, editable, defaultShowAll) {
 								var data = self.getData(viewId),
-									elementViews = [];
+									elementViews = [],
+									header = { rows: [] };
 
 								data.columns = null;
 								data.id = comId;
@@ -293,6 +318,65 @@ steal(
 												// Redraw
 												webix.ui(elementViews, $$(viewId));
 
+												// Title
+												if (editable) {
+													header.rows.push({
+														id: self.componentIds.title,
+														view: 'text',
+														placeholder: 'Title',
+														css: 'ab-component-header',
+														value: settings.title || '',
+														on: {
+															onChange: function (newv, oldv) {
+																if (newv != oldv) {
+																	var propValues = $$(self.componentIds.propertyView).getValues();
+																	propValues[self.componentIds.editTitle] = newv;
+																	$$(self.componentIds.propertyView).setValues(propValues);
+																}
+															}
+														}
+													});
+												}
+												else if (settings.title) {
+													header.rows.push({
+														view: 'label',
+														css: 'ab-component-header',
+														label: settings.title || ''
+													});
+												}
+
+												// Description
+												if (editable) {
+													header.rows.push({
+														id: self.componentIds.description,
+														view: 'textarea',
+														placeholder: 'Description',
+														css: 'ab-component-description',
+														value: settings.description || '',
+														inputHeight: 60,
+														on: {
+															onChange: function (newv, oldv) {
+																if (newv != oldv) {
+																	var propValues = $$(self.componentIds.propertyView).getValues();
+																	propValues[self.componentIds.editDescription] = newv;
+																	$$(self.componentIds.propertyView).setValues(propValues);
+																}
+															}
+														}
+
+													});
+												}
+												else if (settings.description) {
+													header.rows.push({
+														view: 'label',
+														css: 'ab-component-description',
+														label: settings.description || ''
+													});
+												}
+
+												$$(viewId).addView(header, 0);
+
+												// Save/Cancel buttons
 												var actionButtons = {
 													cols: [{}]
 												};
@@ -489,7 +573,9 @@ steal(
 								}
 
 								var settings = {
-									object: propertyValues[self.componentIds.selectObject],
+									title: propertyValues[self.componentIds.editTitle],
+									description: propertyValues[self.componentIds.editDescription] || '',
+									object: propertyValues[self.componentIds.selectObject] || '',
 									visibleFieldIds: visibleFieldIds,
 									saveVisible: propertyValues[self.componentIds.isSaveVisible],
 									cancelVisible: propertyValues[self.componentIds.isCancelVisible]
@@ -530,6 +616,8 @@ steal(
 
 										// Set property values
 										var propValues = {};
+										propValues[self.componentIds.editTitle] = item.setting.title || '';
+										propValues[self.componentIds.editDescription] = item.setting.description || '';
 										propValues[self.componentIds.selectObject] = item.setting.object;
 										propValues[self.componentIds.isSaveVisible] = item.setting.saveVisible || 'hide';
 										propValues[self.componentIds.isCancelVisible] = item.setting.cancelVisible || 'hide';
