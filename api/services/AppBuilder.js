@@ -431,6 +431,7 @@ module.exports = {
         var cwd = process.cwd();
 
         var appID, appName, pageName;
+        var roles = [];
         var objectIncludes = [];
         var controllerIncludes = [];
 
@@ -465,6 +466,22 @@ module.exports = {
                     .catch(function (err) {
                         next(err);
                         return null;
+                    });
+            },
+
+            // Find assign roles
+            function (next) {
+                var action_key = 'opstools.' + appName + '.view';
+
+                Permissions.getRolesByActionKey(action_key)
+                    .fail(function (err) {
+                        next(err);
+                        return null;
+                    })
+                    .then(function (result) {
+                        roles = result;
+
+                        next();
                     });
             },
 
@@ -644,10 +661,45 @@ module.exports = {
                     });
             },
 
+            // Create View's permission action
+            function (next) {
+                Permissions.action.create({
+                    key: 'opstools.' + appName + '.' + pageName + '.view',
+                    description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
+                    language_code: 'en'
+                })
+                    .always(function () {
+                        // If permission action already exists, that's fine.
+                        next();
+                    });
+            },
+
+            // Assign permission actions to assign roles
+            function (next) {
+                var assignActionTasks = [];
+
+                roles.forEach(function (r) {
+                    assignActionTasks.push(function (callback) {
+                        Permissions.assignAction(r.id, 'opstools.' + appName + '.' + pageName + '.view')
+                            .fail(function (err) { callback(err); })
+                            .then(function () { callback(); });
+                    });
+                });
+
+                async.parallel(assignActionTasks, function (err) {
+                    if (err) {
+                        next(err);
+                        return null;
+                    }
+
+                    next();
+                });
+            },
+
             // Create OPView entry
             function (next) {
                 OPSPortal.View.createOrUpdate(
-                    'opstools.' + appName,
+                    'opstools.' + appName + '.' + pageName,
                     objectIncludes,
                     controllerIncludes
                 )
