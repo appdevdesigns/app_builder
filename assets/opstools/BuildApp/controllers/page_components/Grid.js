@@ -4,7 +4,10 @@ steal(
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 
+	'opstools/BuildApp/controllers/webix_custom_components/DynamicDataTable.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
@@ -35,10 +38,16 @@ steal(
 							};
 
 							// Controllers
-							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator')
+							var DynamicDataTable = AD.Control.get('opstools.BuildApp.DynamicDataTable'),
+								ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
+								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
+								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
 
 							self.controllers = {
+								DynamicDataTable: new DynamicDataTable(),
+								FilterPopup: new FilterPopup(),
+								SortPopup: new SortPopup(),
 								ModelCreator: new ModelCreator(),
 								ObjectDataTables: {}
 							};
@@ -48,17 +57,25 @@ steal(
 								editTitle: self.info.name + '-edit-title',
 								editDescription: self.info.name + '-edit-description',
 								editDataTable: 'ab-datatable-edit-mode',
+								editHeader: 'ab-datatable-edit-header',
+
+								header: 'ab-datatable-header',
 
 								columnList: 'ab-datatable-columns-list',
 
-								propertyView: self.info.name + '-property-view'
+								propertyView: self.info.name + '-property-view',
+
+								filterFieldsPopup: 'ab-datatable-filter-popup',
+								sortFieldsPopup: 'ab-datatable-sort-popup'
 							};
 
 							self.view = {
-								view: "datatable",
+								view: "dynamicdatatable",
 								autoheight: true,
 								datatype: "json"
 							};
+
+							self.initWebixUI();
 
 							self.getView = function () {
 								return self.view;
@@ -69,6 +86,8 @@ steal(
 									dataTable = $.extend(true, {}, self.getView());
 
 								dataTable.id = viewId;
+								dataTable.autoheight = false;
+								dataTable.height = 220;
 
 								var editView = {
 									id: self.componentIds.editView,
@@ -184,7 +203,27 @@ steal(
 												{ id: 'disable', value: "No" },
 											]
 										},
-										// { label: "Add new row", type: "checkbox" }  // TODO
+										{ label: "Options", type: "label" },
+										{
+											id: 'filter',
+											name: 'filter',
+											type: 'richselect',
+											label: 'Filter',
+											options: [
+												{ id: 'enable', value: "Yes" },
+												{ id: 'disable', value: "No" },
+											]
+										},
+										{
+											id: 'sort',
+											name: 'sort',
+											type: 'richselect',
+											label: 'Sort',
+											options: [
+												{ id: 'enable', value: "Yes" },
+												{ id: 'disable', value: "No" },
+											]
+										}
 									],
 									on: {
 										onAfterEditStop: function (state, editor, ignoreUpdate) {
@@ -202,6 +241,8 @@ steal(
 													$$(self.componentIds.editDescription).setValue(propertyValues.description);
 													break;
 												case 'object':
+												case 'filter':
+												case 'sort':
 													var setting = self.getSettings();
 													setting.columns = data.visibleColumns;
 
@@ -357,73 +398,120 @@ steal(
 
 									$$(viewId).hideProgress();
 
-									var editHeader = { rows: [] },
-										header = '';
+									var header = {
+										view: 'layout',
+										autoheight: true,
+										rows: []
+									};
 
-									// Title
-									if (editable && $$(viewId).getParentView() && $$(viewId).getParentView().addView) {
-										if (!$$(self.componentIds.editTitle)) {
-											editHeader.rows.push({
-												id: self.componentIds.editTitle,
-												view: 'text',
-												placeholder: 'Title',
+									if (editable) {
+										header.id = self.componentIds.editHeader;
+
+										$$(self.componentIds.editView).removeView(self.componentIds.editHeader);
+
+										// Title
+										header.rows.push({
+											id: self.componentIds.editTitle,
+											view: 'text',
+											placeholder: 'Title',
+											css: 'ab-component-header',
+											value: settings.title || '',
+											on: {
+												onChange: function (newv, oldv) {
+													if (newv != oldv) {
+														var propValues = $$(self.componentIds.propertyView).getValues();
+														propValues.title = newv;
+														$$(self.componentIds.propertyView).setValues(propValues);
+													}
+												}
+											}
+										});
+
+										// Description
+										header.rows.push({
+											id: self.componentIds.editDescription,
+											view: 'textarea',
+											placeholder: 'Description',
+											css: 'ab-component-description',
+											value: settings.description || '',
+											inputHeight: 60,
+											height: 60,
+											on: {
+												onChange: function (newv, oldv) {
+													if (newv != oldv) {
+														var propValues = $$(self.componentIds.propertyView).getValues();
+														propValues.description = newv;
+														$$(self.componentIds.propertyView).setValues(propValues);
+													}
+												}
+											}
+										});
+
+									}
+									else { // Label
+										header.id = self.componentIds.header;
+
+										if (settings.title) {
+											header.rows.push({
+												view: 'label',
 												css: 'ab-component-header',
-												value: settings.title || '',
-												on: {
-													onChange: function (newv, oldv) {
-														if (newv != oldv) {
-															var propValues = $$(self.componentIds.propertyView).getValues();
-															propValues.title = newv;
-															$$(self.componentIds.propertyView).setValues(propValues);
-														}
-													}
-												}
+												label: settings.title || ''
 											});
 										}
-										else {
-											$$(self.componentIds.editTitle).setValue(settings.title || '');
-										}
-									}
-									else if (settings.title && !editable)
-										header += '<div class="webix_control webix_el_label ab-component-header" style="min-height: 38px;"><div>' + settings.title + '</div></div>';
 
-									// Description
-									if (editable && $$(viewId).getParentView() && $$(viewId).getParentView().addView) {
-										if (!$$(self.componentIds.editDescription)) {
-											editHeader.rows.push({
-												id: self.componentIds.editDescription,
-												view: 'textarea',
-												placeholder: 'Description',
+										if (settings.description) {
+											header.rows.push({
+												view: 'label',
 												css: 'ab-component-description',
-												value: settings.description || '',
-												inputHeight: 60,
-												on: {
-													onChange: function (newv, oldv) {
-														if (newv != oldv) {
-															var propValues = $$(self.componentIds.propertyView).getValues();
-															propValues.description = newv;
-															$$(self.componentIds.propertyView).setValues(propValues);
-														}
-													}
-												}
+												label: settings.description || ''
 											});
 										}
-										else {
-											$$(self.componentIds.editDescription).setValue(settings.description || '');
-										}
 									}
-									else if (settings.description && !editable)
-										header += '<div class="webix_control webix_el_label ab-component-description" style="min-height: 38px;"><div>' + settings.description + '</div></div>';
 
-									if (editHeader.rows.length > 0)
-										$$(viewId).getParentView().addView(editHeader, 0);
+									var action_buttons = [];
 
-									if (header)
-										$($$(viewId).getNode().parentNode).prepend(header);
+									if (settings.filter === 'enable')
+										action_buttons.push({ view: 'button', label: 'Add filters', popup: self.componentIds.filterFieldsPopup, icon: "filter", type: "icon", width: 120, badge: 0 });
 
-									$$(viewId).attachEvent('onAfterRender', function (data) {
-										self.callEvent('renderComplete', viewId);
-									});
+									if (settings.sort === 'enable')
+										action_buttons.push({ view: 'button', label: 'Apply sort', popup: self.componentIds.sortFieldsPopup, icon: "sort", type: "icon", width: 120, badge: 0 });
+
+									if (action_buttons.length > 0) {
+										header.rows.push({
+											view: 'toolbar',
+											autoheight: true,
+											autowidth: true,
+											cols: action_buttons
+										});
+									}
+
+									if (editable) {
+										if (header.rows.length > 0)
+											$$(self.componentIds.editView).addView(header, 0);
+									}
+									else {
+										// $$(viewId).clearAdditionalView();
+										if (header.rows.length > 0)
+											$$(viewId).prependView(header);
+									}
+
+									var columns = [];
+									if (data.columns) {
+										columns = data.columns.filter(function (c) {
+											return data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
+										}).slice(0);
+									}
+
+									if (settings.filter === 'enable') {
+										$$(self.componentIds.filterFieldsPopup).registerDataTable($$(viewId));
+										$$(self.componentIds.filterFieldsPopup).setFieldList(columns);
+									}
+
+									if (settings.sort === 'enable') {
+										$$(self.componentIds.sortFieldsPopup).registerDataTable($$(viewId));
+										$$(self.componentIds.sortFieldsPopup).setFieldList(columns);
+									}
+
 
 									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
 										if (e.target.className.indexOf('fa-pencil') > -1) {
@@ -435,6 +523,10 @@ steal(
 											$$(viewId).define('select', true);
 											$$(viewId).select(id);
 										}
+									});
+
+									$$(viewId).attachEvent('onAfterRender', function (data) {
+										self.callEvent('renderComplete', viewId);
 									});
 
 									q.resolve();
@@ -457,7 +549,9 @@ steal(
 									editPage: editPageId,
 									editForm: editFormId,
 									columns: columns.filter(function (c) { return c; }),
-									removable: propertyValues.removable
+									removable: propertyValues.removable,
+									filter: propertyValues.filter,
+									sort: propertyValues.sort
 								};
 
 								return settings;
@@ -539,7 +633,9 @@ steal(
 												description: item.setting.description || '',
 												object: item.setting.object,
 												editForm: editForm,
-												removable: item.setting.removable || 'disable'
+												removable: item.setting.removable || 'disable',
+												filter: item.setting.filter || 'disable',
+												sort: item.setting.sort || 'disable'
 											});
 
 											$$(self.componentIds.propertyView).refresh();
@@ -628,6 +724,18 @@ steal(
 							};
 						},
 
+						initWebixUI: function () {
+							webix.ui({
+								id: this.componentIds.filterFieldsPopup,
+								view: "filter_popup",
+							}).hide();
+
+							webix.ui({
+								id: this.componentIds.sortFieldsPopup,
+								view: "sort_popup",
+							}).hide();
+						},
+
 						populateData: function (viewId, objectId) {
 							var self = this,
 								q = $.Deferred();
@@ -663,9 +771,6 @@ steal(
 							this.data = {};
 							this.Model.ObjectModels = {};
 							this.controllers.ObjectDataTables = {};
-
-							if ($$(this.componentIds.editTitle)) $$(this.componentIds.editTitle).setValue('');
-							if ($$(this.componentIds.editDescription)) $$(this.componentIds.editDescription).setValue('');
 						},
 
 						getInstance: function () {

@@ -21,11 +21,6 @@ steal(
 
                             this.data = {};
 
-                            this.componentIds = {
-                                filterPopup: 'ab-filter-popup',
-                                filterForm: 'ab-filter-form'
-                            };
-
                             this.initMultilingualLabels();
                             this.initWebixControls();
                         },
@@ -69,7 +64,6 @@ steal(
                             var self = this;
 
                             webix.protoUI({
-                                id: self.componentIds.filterPopup,
                                 name: "filter_popup",
                                 $init: function (config) {
                                     //functions executed on component initialization
@@ -78,7 +72,6 @@ steal(
                                 defaults: {
                                     width: 800,
                                     body: {
-                                        id: self.componentIds.filterForm,
                                         view: "form",
                                         autoheight: true,
                                         elements: [{
@@ -89,15 +82,19 @@ steal(
                                     },
                                     on: {
                                         onShow: function () {
-                                            if ($$(self.componentIds.filterForm).getChildViews().length < 2)
-                                                $$(self.componentIds.filterForm).getTopParentView().addNewFilter();
+                                            var filter_popup = this,
+                                                filter_form = filter_popup.getChildViews()[0];
+                                            if (filter_form.getChildViews().length < 2)
+                                                filter_popup.addNewFilter();
                                         }
                                     }
                                 },
                                 addNewFilter: function (fieldId) {
-                                    var viewIndex = $$(self.componentIds.filterForm).getChildViews().length - 1;
+                                    var filter_popup = this,
+                                        filter_form = filter_popup.getChildViews()[0],
+                                        viewIndex = filter_form.getChildViews().length - 1;
 
-                                    $$(self.componentIds.filterForm).addView({
+                                    filter_form.addView({
                                         id: 'f' + webix.uid(),
                                         cols: [
                                             {
@@ -117,17 +114,19 @@ steal(
                                                             filterList.setValue(newValue);
                                                         }
 
-                                                        $$(self.componentIds.filterPopup).filter();
+                                                        filter_popup.filter();
                                                     }
                                                 }
                                             },
                                             {
                                                 // Field list
-                                                view: "combo", options: $$(self.componentIds.filterPopup).getFieldList(), on: {
+                                                view: "combo", options: filter_popup.getFieldList(), on: {
                                                     "onChange": function (columnId) {
                                                         var columnConfig = self.dataTable.getColumnConfig(columnId);
                                                         var conditionList = [];
                                                         var inputView = {};
+
+                                                        if (!columnConfig) return;
 
                                                         switch (columnConfig.filter_type) {
                                                             case "text":
@@ -190,6 +189,7 @@ steal(
                                                         var conditionCombo = this.getParentView().getChildViews()[2];
                                                         conditionCombo.define("options", conditionList);
                                                         conditionCombo.refresh();
+                                                        conditionCombo.setValue()
 
                                                         this.getParentView().removeView(this.getParentView().getChildViews()[3]);
                                                         this.getParentView().addView(inputView, 3);
@@ -197,11 +197,11 @@ steal(
                                                             // There is not any condition values 
                                                         }
                                                         else if (columnConfig.filter_type === 'text' || columnConfig.filter_type === 'multiselect')
-                                                            this.getParentView().getChildViews()[3].attachEvent("onTimedKeyPress", function () { $$(self.componentIds.filterPopup).filter(); });
+                                                            this.getParentView().getChildViews()[3].attachEvent("onTimedKeyPress", function () { filter_popup.filter(); });
                                                         else
-                                                            this.getParentView().getChildViews()[3].attachEvent("onChange", function () { $$(self.componentIds.filterPopup).filter(); });
+                                                            this.getParentView().getChildViews()[3].attachEvent("onChange", function () { filter_popup.filter(); });
 
-                                                        $$(self.componentIds.filterPopup).filter();
+                                                        filter_popup.filter();
                                                     }
                                                 }
                                             },
@@ -209,8 +209,8 @@ steal(
                                             {
                                                 view: "combo", options: [], width: 155, on: {
                                                     "onChange": function () {
-                                                        $$(self.componentIds.filterPopup).filter();
-                                                        $$(self.componentIds.filterPopup).callChangeEvent();
+                                                        filter_popup.filter();
+                                                        filter_popup.callChangeEvent();
                                                     }
                                                 }
                                             },
@@ -218,8 +218,8 @@ steal(
                                             {},
                                             {
                                                 view: "button", value: "X", width: 30, click: function () {
-                                                    $$(self.componentIds.filterForm).removeView(this.getParentView());
-                                                    $$(self.componentIds.filterPopup).filter();
+                                                    filter_form.removeView(this.getParentView());
+                                                    filter_popup.filter();
 
                                                     this.getTopParentView().callChangeEvent();
                                                 }
@@ -228,22 +228,25 @@ steal(
                                     }, viewIndex);
 
                                     if (fieldId) {
-                                        var fieldsCombo = $$(self.componentIds.filterForm).getChildViews()[viewIndex].getChildViews()[1];
+                                        var fieldsCombo = filter_form.getChildViews()[viewIndex].getChildViews()[1];
                                         fieldsCombo.setValue(fieldId);
                                     }
 
                                     this.getTopParentView().callChangeEvent();
                                 },
                                 registerDataTable: function (dataTable) {
+                                    var filter_popup = this,
+                                        filter_form = filter_popup.getChildViews()[0];
+
                                     self.dataTable = dataTable;
 
                                     // Reset form
-                                    $$(self.componentIds.filterForm).clear();
-                                    $$(self.componentIds.filterForm).clearValidation();
+                                    filter_form.clear();
+                                    filter_form.clearValidation();
 
                                     // Get all filter conditions to remove
                                     var cViews = [];
-                                    var childViews = $$(self.componentIds.filterForm).getChildViews();
+                                    var childViews = filter_form.getChildViews();
                                     for (var i = 0; i < childViews.length; i++) {
                                         if (i >= childViews.length - 1) // Ignore 'Add a filter' button
                                             break;
@@ -253,7 +256,7 @@ steal(
 
                                     // Remove all filter conditions
                                     cViews.forEach(function (v) {
-                                        $$(self.componentIds.filterForm).removeView(v);
+                                        filter_form.removeView(v);
                                     });
                                 },
                                 setFieldList: function (fieldList) {
@@ -280,7 +283,9 @@ steal(
                                     return fieldList;
                                 },
                                 refreshFieldList: function () {
-                                    var childViews = $$(self.componentIds.filterForm).getChildViews(),
+                                    var filter_popup = this,
+                                        filter_form = filter_popup.getChildViews()[0],
+                                        childViews = filter_form.getChildViews(),
                                         fieldList = this.getFieldList(),
                                         removeChildViews = [];
 
@@ -302,16 +307,18 @@ steal(
 
                                     // Remove filter conditions
                                     removeChildViews.forEach(function (cView, index) {
-                                        $$(self.componentIds.filterForm).removeView(cView);
+                                        filter_form.removeView(cView);
                                     });
 
                                     this.filter();
                                 },
                                 filter: function () {
 
-                                    var filterCondition = [];
+                                    var filter_popup = this,
+                                        filter_form = filter_popup.getChildViews()[0],
+                                        filterCondition = [];
 
-                                    $$(self.componentIds.filterForm).getChildViews().forEach(function (view, index, viewList) {
+                                    filter_form.getChildViews().forEach(function (view, index, viewList) {
 
                                         if (index < viewList.length - 1) { // Ignore 'Add a filter' button
                                             var condValue = view.getChildViews()[3] && view.getChildViews()[3].getValue ? view.getChildViews()[3].getValue() : ''; // Support none conditon control
@@ -432,9 +439,12 @@ steal(
                                 },
 
                                 callChangeEvent: function () {
-                                    var conditionNumber = 0;
-                                    $$(self.componentIds.filterForm).getChildViews().forEach(function (v, index) {
-                                        if (index >= $$(self.componentIds.filterForm).getChildViews().length - 1)
+                                    var filter_popup = this,
+                                        filter_form = filter_popup.getChildViews()[0],
+                                        conditionNumber = 0;
+
+                                    filter_form.getChildViews().forEach(function (v, index) {
+                                        if (index >= filter_form.getChildViews().length - 1)
                                             return;
 
                                         if (v.getChildViews()[1].getValue() && v.getChildViews()[2].getValue())

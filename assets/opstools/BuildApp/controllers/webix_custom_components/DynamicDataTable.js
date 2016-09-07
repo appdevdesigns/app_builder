@@ -1,0 +1,65 @@
+steal(
+	// List your Controller's dependencies here:
+	function () {
+		System.import('appdev').then(function () {
+			steal.import('appdev/ad',
+				'appdev/control/control').then(function () {
+
+					// Namespacing conventions:
+					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
+					AD.Control.extend('opstools.BuildApp.DynamicDataTable', {
+
+
+						init: function (element, options) {
+							var self = this;
+							options = AD.defaults({
+							}, options);
+							this.options = options;
+
+							// Call parent init
+							this._super(element, options);
+
+							this.additionalClassName = 'dynamic-datatable-view';
+
+							this.initWebixControls();
+						},
+
+						initWebixControls: function () {
+							var self = this;
+							self.additionViews = [];
+
+							webix.protoUI({
+								name: "dynamicdatatable",
+
+								prependView: function (view) {
+									var generatedView = webix.ui(view);
+									self.additionViews.push(generatedView);
+
+									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
+
+									$(this.getNode().parentNode).prepend(generatedView.$view);
+								},
+
+								appendView: function (view) {
+									var generatedView = webix.ui(view);
+									self.additionViews.push(generatedView);
+
+									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
+
+									$(this.getNode().parentNode).append(generatedView.$view);
+								},
+
+								clearAdditionalView: function () {
+									self.additionViews.forEach(function (view) {
+										view.destructor();
+									});
+								}
+
+							}, webix.ui.datatable);
+
+						}
+					});
+				});
+		});
+	}
+);

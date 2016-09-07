@@ -192,6 +192,7 @@ steal(
 
 							self.render = function (viewId, comId, settings, editable, defaultShowAll) {
 								var data = self.getData(viewId),
+									q = $.Deferred(),
 									elementViews = [],
 									header = { rows: [] };
 
@@ -537,7 +538,14 @@ steal(
 												next();
 											});
 									}
-								]);
+								], function (err) {
+									if (err)
+										q.reject();
+									else
+										q.resolve();
+								});
+
+								return q;
 							};
 
 							self.populateData = function (viewId, objectId, dataId, returnPage) {
