@@ -4,7 +4,10 @@ steal(
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 
+	'opstools/BuildApp/controllers/webix_custom_components/DynamicDataTable.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
@@ -35,28 +38,44 @@ steal(
 							};
 
 							// Controllers
-							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator')
+							var DynamicDataTable = AD.Control.get('opstools.BuildApp.DynamicDataTable'),
+								ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
+								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
+								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
 
 							self.controllers = {
+								DynamicDataTable: new DynamicDataTable(),
+								FilterPopup: new FilterPopup(),
+								SortPopup: new SortPopup(),
 								ModelCreator: new ModelCreator(),
 								ObjectDataTables: {}
 							};
 
 							self.componentIds = {
 								editView: self.info.name + '-edit-view',
+								editTitle: self.info.name + '-edit-title',
+								editDescription: self.info.name + '-edit-description',
 								editDataTable: 'ab-datatable-edit-mode',
+								editHeader: 'ab-datatable-edit-header',
+
+								header: 'ab-datatable-header',
 
 								columnList: 'ab-datatable-columns-list',
 
-								propertyView: self.info.name + '-property-view'
+								propertyView: self.info.name + '-property-view',
+
+								filterFieldsPopup: 'ab-datatable-filter-popup',
+								sortFieldsPopup: 'ab-datatable-sort-popup'
 							};
 
 							self.view = {
-								view: "datatable",
+								view: "dynamicdatatable",
 								autoheight: true,
 								datatype: "json"
 							};
+
+							self.initWebixUI();
 
 							self.getView = function () {
 								return self.view;
@@ -67,6 +86,8 @@ steal(
 									dataTable = $.extend(true, {}, self.getView());
 
 								dataTable.id = viewId;
+								dataTable.autoheight = false;
+								dataTable.height = 220;
 
 								var editView = {
 									id: self.componentIds.editView,
@@ -127,6 +148,19 @@ steal(
 									view: "property",
 									id: self.componentIds.propertyView,
 									elements: [
+										{ label: "Header", type: "label" },
+										{
+											id: 'title',
+											name: 'title',
+											type: 'text',
+											label: 'Title'
+										},
+										{
+											id: 'description',
+											name: 'description',
+											type: 'text',
+											label: 'Description'
+										},
 										{ label: "Data source", type: "label" },
 										{
 											id: 'object',
@@ -169,7 +203,27 @@ steal(
 												{ id: 'disable', value: "No" },
 											]
 										},
-										// { label: "Add new row", type: "checkbox" }  // TODO
+										{ label: "Options", type: "label" },
+										{
+											id: 'filter',
+											name: 'filter',
+											type: 'richselect',
+											label: 'Filter',
+											options: [
+												{ id: 'enable', value: "Yes" },
+												{ id: 'disable', value: "No" },
+											]
+										},
+										{
+											id: 'sort',
+											name: 'sort',
+											type: 'richselect',
+											label: 'Sort',
+											options: [
+												{ id: 'enable', value: "Yes" },
+												{ id: 'disable', value: "No" },
+											]
+										}
 									],
 									on: {
 										onAfterEditStop: function (state, editor, ignoreUpdate) {
@@ -180,7 +234,15 @@ steal(
 												propertyValues = $$(self.componentIds.propertyView).getValues();
 
 											switch (editor.id) {
+												case 'title':
+													$$(self.componentIds.editTitle).setValue(propertyValues.title);
+													break;
+												case 'description':
+													$$(self.componentIds.editDescription).setValue(propertyValues.description);
+													break;
 												case 'object':
+												case 'filter':
+												case 'sort':
 													var setting = self.getSettings();
 													setting.columns = data.visibleColumns;
 
@@ -238,7 +300,7 @@ steal(
 								return dataTableController;
 							};
 
-							self.render = function (viewId, comId, settings) {
+							self.render = function (viewId, comId, settings, editable) {
 								var q = $.Deferred(),
 									data = self.getData(viewId),
 									dataTableController = self.getDataTableController(viewId);
@@ -251,6 +313,25 @@ steal(
 
 								if (settings.columns)
 									data.visibleColumns = $.map(settings.columns, function (cId) { return cId.toString(); });
+
+								var dataTableController = self.getDataTableController(viewId);
+								dataTableController.bindColumns([], true, settings.removable);
+								dataTableController.registerDeleteRowHandler(function (deletedId) {
+									$$(viewId).showProgress({ type: 'icon' });
+
+									self.Model.ObjectModels[settings.object].Cached.destroy(deletedId.row)
+										.fail(function (err) {
+											// TODO message
+											$$(viewId).hideProgress();
+										})
+										.then(function (data) {
+											$$(viewId).remove(data.id);
+
+											// TODO message
+
+											$$(viewId).hideProgress();
+										});
+								});
 
 								AD.util.async.parallel([
 									function (callback) {
@@ -314,16 +395,128 @@ steal(
 										editPage: settings.editPage,
 										editForm: settings.editForm
 									}, settings.removable);
+
 									$$(viewId).hideProgress();
 
-									$$(viewId).attachEvent('onAfterRender', function (data) {
-										self.callEvent('renderComplete', viewId);
-									});
+									var header = {
+										view: 'layout',
+										autoheight: true,
+										rows: []
+									};
+
+									if (editable) {
+										header.id = self.componentIds.editHeader;
+
+										$$(self.componentIds.editView).removeView(self.componentIds.editHeader);
+
+										// Title
+										header.rows.push({
+											id: self.componentIds.editTitle,
+											view: 'text',
+											placeholder: 'Title',
+											css: 'ab-component-header',
+											value: settings.title || '',
+											on: {
+												onChange: function (newv, oldv) {
+													if (newv != oldv) {
+														var propValues = $$(self.componentIds.propertyView).getValues();
+														propValues.title = newv;
+														$$(self.componentIds.propertyView).setValues(propValues);
+													}
+												}
+											}
+										});
+
+										// Description
+										header.rows.push({
+											id: self.componentIds.editDescription,
+											view: 'textarea',
+											placeholder: 'Description',
+											css: 'ab-component-description',
+											value: settings.description || '',
+											inputHeight: 60,
+											height: 60,
+											on: {
+												onChange: function (newv, oldv) {
+													if (newv != oldv) {
+														var propValues = $$(self.componentIds.propertyView).getValues();
+														propValues.description = newv;
+														$$(self.componentIds.propertyView).setValues(propValues);
+													}
+												}
+											}
+										});
+
+									}
+									else { // Label
+										header.id = self.componentIds.header;
+
+										if (settings.title) {
+											header.rows.push({
+												view: 'label',
+												css: 'ab-component-header',
+												label: settings.title || ''
+											});
+										}
+
+										if (settings.description) {
+											header.rows.push({
+												view: 'label',
+												css: 'ab-component-description',
+												label: settings.description || ''
+											});
+										}
+									}
+
+									var action_buttons = [];
+
+									if (settings.filter === 'enable')
+										action_buttons.push({ view: 'button', label: 'Add filters', popup: self.componentIds.filterFieldsPopup, icon: "filter", type: "icon", width: 120, badge: 0 });
+
+									if (settings.sort === 'enable')
+										action_buttons.push({ view: 'button', label: 'Apply sort', popup: self.componentIds.sortFieldsPopup, icon: "sort", type: "icon", width: 120, badge: 0 });
+
+									if (action_buttons.length > 0) {
+										header.rows.push({
+											view: 'toolbar',
+											autoheight: true,
+											autowidth: true,
+											cols: action_buttons
+										});
+									}
+
+									if (editable) {
+										if (header.rows.length > 0)
+											$$(self.componentIds.editView).addView(header, 0);
+									}
+									else {
+										// $$(viewId).clearAdditionalView();
+										if (header.rows.length > 0)
+											$$(viewId).prependView(header);
+									}
+
+									var columns = [];
+									if (data.columns) {
+										columns = data.columns.filter(function (c) {
+											return data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
+										}).slice(0);
+									}
+
+									if (settings.filter === 'enable') {
+										$$(self.componentIds.filterFieldsPopup).registerDataTable($$(viewId));
+										$$(self.componentIds.filterFieldsPopup).setFieldList(columns);
+									}
+
+									if (settings.sort === 'enable') {
+										$$(self.componentIds.sortFieldsPopup).registerDataTable($$(viewId));
+										$$(self.componentIds.sortFieldsPopup).setFieldList(columns);
+									}
+
 
 									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
 										if (e.target.className.indexOf('fa-pencil') > -1) {
 											self.callEvent('edit', viewId, {
-												id: data.id, 
+												id: data.id,
 												selected_data: id
 											});
 
@@ -332,26 +525,11 @@ steal(
 										}
 									});
 
+									$$(viewId).attachEvent('onAfterRender', function (data) {
+										self.callEvent('renderComplete', viewId);
+									});
+
 									q.resolve();
-								});
-
-								var dataTableController = self.getDataTableController(viewId);
-								dataTableController.bindColumns([], true, settings.removable);
-								dataTableController.registerDeleteRowHandler(function (deletedId) {
-									$$(viewId).showProgress({ type: 'icon' });
-
-									self.Model.ObjectModels[settings.object].Cached.destroy(deletedId.row)
-										.fail(function (err) {
-											// TODO message
-											$$(viewId).hideProgress();
-										})
-										.then(function (data) {
-											$$(viewId).remove(data.id);
-
-											// TODO message
-
-											$$(viewId).hideProgress();
-										});
 								});
 
 								return q;
@@ -365,11 +543,15 @@ steal(
 									editFormId = editForm && editForm[1] || null;
 
 								var settings = {
+									title: propertyValues.title || '',
+									description: propertyValues.description || '',
 									object: propertyValues.object,
 									editPage: editPageId,
 									editForm: editFormId,
 									columns: columns.filter(function (c) { return c; }),
-									removable: propertyValues.removable
+									removable: propertyValues.removable,
+									filter: propertyValues.filter,
+									sort: propertyValues.sort
 								};
 
 								return settings;
@@ -384,7 +566,7 @@ steal(
 									data = self.getData(viewId);
 
 								// Render dataTable component
-								self.render(viewId, item.id, item.setting).then(function () {
+								self.render(viewId, item.id, item.setting, true).then(function () {
 									// Columns list
 									self.bindColumnList(viewId, item.setting.object, selectAll);
 									$$(self.componentIds.columnList).hideProgress();
@@ -447,9 +629,13 @@ steal(
 												editForm = item.setting.editPage + '|' + item.setting.editForm;
 
 											$$(self.componentIds.propertyView).setValues({
+												title: item.setting.title || '',
+												description: item.setting.description || '',
 												object: item.setting.object,
 												editForm: editForm,
-												removable: item.setting.removable || 'disable'
+												removable: item.setting.removable || 'disable',
+												filter: item.setting.filter || 'disable',
+												sort: item.setting.sort || 'disable'
 											});
 
 											$$(self.componentIds.propertyView).refresh();
@@ -536,6 +722,18 @@ steal(
 							self.editStop = function () {
 								$$(self.componentIds.propertyView).editStop();
 							};
+						},
+
+						initWebixUI: function () {
+							webix.ui({
+								id: this.componentIds.filterFieldsPopup,
+								view: "filter_popup",
+							}).hide();
+
+							webix.ui({
+								id: this.componentIds.sortFieldsPopup,
+								view: "sort_popup",
+							}).hide();
 						},
 
 						populateData: function (viewId, objectId) {

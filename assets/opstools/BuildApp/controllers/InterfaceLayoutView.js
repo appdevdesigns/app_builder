@@ -118,7 +118,8 @@ steal(
 
 										objectGridDatas.forEach(function (grid) {
 											var gridId = self.getComponentId(grid.id);
-											if ($$(gridId)) $$(gridId).unselectAll();
+											if ($$(gridId) && $$(gridId).unselectAll)
+												$$(gridId).unselectAll();
 										});
 
 										$$(data.viewId).setValues({});
@@ -132,6 +133,7 @@ steal(
 							var self = this;
 
 							self.data.definition = {
+								view: 'layout',
 								rows: [
 									{
 										view: 'toolbar',
@@ -165,8 +167,6 @@ steal(
 															$$(editViewId).hideProgress();
 														})
 														.then(function (result) {
-															self.element.trigger(self.options.savedComponentEvent, {});
-
 															// Update item in list
 															var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
 															updatedItem.setting = result.attr('setting');
@@ -174,9 +174,12 @@ steal(
 
 															self.openLayoutViewMode();
 
-															self.generateComponentsInList();
+															self.generateComponentsInList()
+																.always(function () {
+																	self.element.trigger(self.options.savedComponentEvent, {});
 
-															$$(editViewId).hideProgress();
+																	$$(editViewId).hideProgress();
+																});
 														});
 												}
 											},
@@ -554,17 +557,26 @@ steal(
 						},
 
 						generateComponentsInList: function () {
-							var self = this;
+							var self = this,
+								q = $.Deferred(),
+								renderTasks = [];
 
 							// Generate component in list
 							self.data.componentsInPage.forEach(function (c) {
-								self.renderComponent(c);
+								renderTasks.push(function (next) {
+									self.renderComponent(c)
+										.always(next);
+								});
 							});
 
+							async.parallel(renderTasks, function () { q.resolve(); });
+
+							return q;
 						},
 
 						renderComponent: function (com) {
 							var self = this,
+								q = $.Deferred(),
 								component = self.data.components[com.attr('component')],
 								view = component.getView(),
 								settings = com.attr('setting');
@@ -583,29 +595,35 @@ steal(
 
 								webix.ui(view);
 
-								component.render(view.id, com.id, settings);
+								component.render(view.id, com.id, settings)
+									.then(function () {
+										if (com.component === 'Form') {
+											var objectGridDatas = self.data.componentsInPage.filter(function (c) {
+												return c.component === 'Grid' && c.setting && c.setting.editForm == com.attr('id');
+											});
 
-								if (com.component === 'Form') {
-									var objectGridDatas = self.data.componentsInPage.filter(function (c) {
-										return c.component === 'Grid' && c.setting.editForm == com.attr('id');
+											objectGridDatas.forEach(function (grid) {
+												var gridId = self.getComponentId(grid.id);
+												$$(view.id).bind(gridId);
+											});
+										}
+
+										q.resolve();
 									});
-
-									objectGridDatas.forEach(function (grid) {
-										var gridId = self.getComponentId(grid.id);
-										$$(view.id).bind(gridId);
-									});
-								}
-
 							}
+
+							return q;
 						},
 
 						refreshMenuComponent: function (pageId) {
 							var self = this;
 
-							// Generate component in list
-							self.data.componentsInPage.forEach(function (c) {
-								if (c.component === 'Menu' && c.setting.data && c.setting.data.filter(function (d) { return d == pageId; }).length > 0)
-									self.renderComponent(c);
+							var updateMenus = self.data.componentsInPage.filter(function (c) {
+								return c.component === 'Menu' && c.setting.data && c.setting.data.filter(function (d) { return d == pageId; }).length > 0;
+							})
+
+							updateMenus.forEach(function (c) {
+								self.renderComponent(c);
 							});
 						},
 

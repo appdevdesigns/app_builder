@@ -173,6 +173,10 @@ steal(
 
 						refreshMenuComponent: function (pageId) {
 							this.controllers.LayoutView.refreshMenuComponent(pageId);
+						},
+
+						resize: function (height) {
+							this.controllers.Form.resize(height);
 						}
 
 

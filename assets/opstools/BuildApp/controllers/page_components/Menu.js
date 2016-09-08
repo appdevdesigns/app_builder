@@ -123,6 +123,8 @@ steal(
 							};
 
 							self.render = function (viewId, comId, setting) {
+								var q = $.Deferred();
+
 								if ($$(viewId))
 									$$(viewId).clearAll();
 
@@ -165,12 +167,20 @@ steal(
 												events.renderComplete();
 
 											$$(viewId).hideProgress();
+
+											q.resolve();
 										});
 								}
 								else {
 									if (events.renderComplete)
 										events.renderComplete();
+
+									$$(viewId).hideProgress();
+
+									q.resolve();
 								}
+
+								return q;
 							};
 
 							self.getSettings = function () {

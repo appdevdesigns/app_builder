@@ -189,7 +189,7 @@ module.exports = {
 
 		async.waterfall([
 			function (next) {
-				// Get application object
+				// Get application
 				ABApplication.findOne({ id: appId })
 					.exec(function (err, app) {
 						if (err) {

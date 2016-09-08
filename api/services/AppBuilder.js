@@ -329,6 +329,7 @@ module.exports = {
                 } else {
                     next();
                 }
+
             }
 
         ], function (err) {
@@ -480,15 +481,15 @@ module.exports = {
     buildPage: function (pageID) {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
+
         
-
         var appID, appName, pageName, pageKey, pagePerms, toolLabel;
-
+        var roles = [];
         var objectIncludes = [];
         var controllerIncludes = [];
 
         var Application = null;
-        
+
         var pages = {};
 
         async.series([
@@ -521,7 +522,7 @@ module.exports = {
                     // Only numbers and alphabets will be used
                     Application = page.application;
 
-                    pageKey = [appName, pageName].join('.'); // appName.pageName
+                    pageKey = ['opstools', appName, pageName].join('.'); // appName.pageName
                     pagePerms = 'adcore.admin,'+pageKey+'.view';
                     
                     controllerIncludes.push({
@@ -539,6 +540,22 @@ module.exports = {
                     next(err);
                     return null;
                 });
+            },
+
+            // Find assign roles
+            function (next) {
+                var action_key = Application.actionKeyName(); // 'opstools.' + appName + '.view';
+
+                Permissions.getRolesByActionKey(action_key)
+                    .fail(function (err) {
+                        next(err);
+                        return null;
+                    })
+                    .then(function (result) {
+                        roles = result;
+
+                        next();
+                    });
             },
 
             // Find all sub-pages
@@ -650,7 +667,6 @@ module.exports = {
                 });
             },
 
-
             // Generate the client side controller for the app page
             function (next) {
                 sails.renderView(path.join('app_builder', 'page_controller'), {
@@ -691,52 +707,70 @@ module.exports = {
                 })
                 .fail(next)
                 .done(function() {
-
-// sails.log('after controllerUI:');
-
-                    controllerIncludes.push({
-                        key: 'opstools.' + appName + '.' + pageName,
-                        path: 'opstools/' + appName + '/controllers/'
-                            + pageName + '.js'
-                    });
-
                     next();
                 });
                 */
             },
-            
 
             // Find related objects
-            function(next) {
-// sails.log('find objects');
+            function (next) {
                 ABObject.find({ application: appID })
-                .then(function (list) {
-                    for (var i=0; i<list.length; i++) {
-                        var obj = list[i];
-//// todo: make these instance methods:
-///  obj.uiModelKey() : -> 'opstools.' + appName + '.' + appName + '_' + obj.name
-///  obj.uiModelPath() : -> 'opstools/' + appName + '/models/' + appName + '_' + obj.name + '.js'
-                        objectIncludes.push({ 
-                            key: 'opstools.' + appName + '.' 
-                                    + appName + '_' + nameFilter(obj.name), 
-                            path: 'opstools/' + appName + '/models/'
-                                    + appName + '_' + nameFilter(obj.name) + '.js' 
-                        });
-                    }
-                    next();
-                    return null;
+                    .then(function (list) {
+                        for (var i = 0; i < list.length; i++) {
+                            var obj = list[i];
+                            objectIncludes.push({
+                                key: 'opstools.' + appName + '.'
+                                + appName + '_' + nameFilter(obj.name),
+                                path: 'opstools/' + appName + '/models/'
+                                + appName + '_' + nameFilter(obj.name) + '.js'
+                            });
+                        }
+                        next();
+                        return null;
+                    })
+                    .catch(function (err) {
+                        next(err);
+                        return null;
+                    });
+            },
+
+            // Create Page's permission action
+            function (next) {
+                Permissions.action.create({
+                    key: pageKey + '.view',
+                    description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
+                    language_code: 'en'
                 })
-                .catch(function(err) {
-                    next(err);
-                    return null;
+                .always(function () {
+                    // If permission action already exists, that's fine.
+                    next();
                 });
             },
-            
+
+            // Assign permission actions to assign roles
+            function (next) {
+                var assignActionTasks = [];
+
+                roles.forEach(function (r) {
+                    assignActionTasks.push(function (callback) {
+                        Permissions.assignAction(r.id, pageKey + '.view')
+                            .fail(function (err) { callback(err); })
+                            .then(function () { callback(); });
+                    });
+                });
+
+                async.parallel(assignActionTasks, function (err) {
+                    if (err) {
+                        next(err);
+                        return null;
+                    }
+
+                    next();
+                });
+            },
 
             // Create OPView entry
-            function(next) {
-// sails.log('create OPView');
-
+            function (next) {
                 OPSPortal.View.createOrUpdate(
                     pageKey,
                     objectIncludes,
@@ -747,77 +781,6 @@ module.exports = {
                     next();
                 });
             },
-            
-
-            // Register the permission action
-            function(next) {
-// sails.log('register permission Action');
-
-                var key =  pageKey + '.view';
-                Permissions.action.exists(key, function(err, isThere){
-                    if (isThere) {
-                        next();
-                    } else {
-                        Permissions.action.create({
-                            key: key,
-                            description: 'Allow the user to view the ' + appName + ' '+pageName+' page',
-                            language_code: 'en'
-                        })
-                        .always(function() {
-                            // Don't care if there was an error.
-                            // If permission action already exists, that's fine.
-
-
-                            // since we just created it, let's make sure this permission 
-                            // is currently included in all the roles that this page's 
-                            // application is.
-
-                            // get the Application's action key:
-                            var actionKey = Application.actionKeyName();
-
-                            Permissions.getRolesByActionKey(actionKey)
-                            .fail(function(err){
-                                AD.error.log('Error finding roles by Action Key:', { error:err, actionKey:actionKey });
-                                next(err);
-                            })
-                            .then(function(roles){
-
-                                // for each role, add our page action
-                                var numDone = 0;
-                                function onDone (err) {
-                                    if (err) {
-                                        next(err);
-                                    } else {
-                                        numDone++;
-                                        if (numDone >= roles.length) {
-                                            next();
-                                        }
-                                    }
-                                }
-
-                                roles.forEach(function(role){
-
-                                    // Note: successful .assignActions() don't return anything.
-                                    // so this will work.
-                                    Permissions.assignAction(role.id, key) 
-                                    .fail(onDone)
-                                    .then(onDone);
-                                })
-
-                                // if there were no roles, just continue
-                                if (roles.length == 0) {
-                                    next();
-                                }
-                                
-
-                            })
-
-                            // next();
-                        });
-                    }
-                })
-            },
-
 
             // create a Tool Definition for the OP Portal Navigation
             function(next) {

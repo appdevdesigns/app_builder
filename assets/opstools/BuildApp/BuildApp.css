@@ -22,6 +22,9 @@
 .ab-main-container .bold {
 	font-weight: bold;
 }
+.ab-scroll-y {
+	overflow-y: auto !important;
+}
 
 /* Webix datatable */
 /* Last column */
@@ -285,6 +288,18 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	border: 1px dotted #000 !important;
 	font-size: 35px;
 	background-color: #fff;	
+}
+
+/* Header component */
+.ab-component-header {
+	font-size: 25px;
+	font-weight: bold;
+	margin: 0px;
+	padding: 0px;
+}
+.ab-component-description {
+	font-size: 14px;
+	padding: 0px;
 }
 
 /* Menu component */

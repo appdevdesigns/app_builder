@@ -20,7 +20,6 @@ steal(
 							this.data = {};
 
 							this.componentIds = {
-								sortPopup: 'ab-sort-popup',
 								sortForm: 'ab-sort-form'
 							};
 
@@ -45,14 +44,13 @@ steal(
 							self.labels.sort_fields.numberDesc = AD.lang.label.getLabel('ab.sort_fields.numberDesc') || "9 -> 1";
 							self.labels.sort_fields.booleanAsc = AD.lang.label.getLabel('ab.sort_fields.booleanAsc') || "Checked -> Unchecked";
 							self.labels.sort_fields.booleanDesc = AD.lang.label.getLabel('ab.sort_fields.booleanDesc') || "Unchecked -> Checked";
-							
+
 						},
 
 						initWebixControls: function () {
 							var self = this;
 
 							webix.protoUI({
-								id: self.componentIds.sortPopup,
 								name: 'sort_popup',
 								$init: function (config) {
 									//functions executed on component initialization
@@ -60,7 +58,6 @@ steal(
 								defaults: {
 									width: 500,
 									body: {
-										id: self.componentIds.sortForm,
 										view: "form",
 										autoheight: true,
 										elements: [{
@@ -72,19 +69,25 @@ steal(
 									},
 									on: {
 										onShow: function () {
-											if ($$(self.componentIds.sortForm).getChildViews().length < 2) {
-												$$(self.componentIds.sortForm).getTopParentView().addNewSort();
-												this.getTopParentView().callChangeEvent();
+											var sort_popup = this,
+												sort_form = sort_popup.getChildViews()[0];
+
+											if (sort_form.getChildViews().length < 2) {
+												sort_form.getTopParentView().addNewSort();
+												sort_popup.callChangeEvent();
 											}
 										}
 									}
 								},
 								addNewSort: function (fieldId) {
 									// Prevent duplicate fields
-									var isExists = false;
+									var sort_popup = this,
+										sort_form = sort_popup.getChildViews()[0],
+										isExists = false;
+
 									if (fieldId) {
-										$$(self.componentIds.sortForm).getChildViews().forEach(function (v, index) {
-											if (index >= $$(self.componentIds.sortForm).getChildViews().length - 1)
+										sort_form.getChildViews().forEach(function (v, index) {
+											if (index >= sort_form.getChildViews().length - 1)
 												return;
 
 											if (fieldId == v.getChildViews()[0].getValue()) {
@@ -98,9 +101,9 @@ steal(
 											return;
 									}
 
-									var viewIndex = $$(self.componentIds.sortForm).getChildViews().length - 1;
-									var fieldList = $$(self.componentIds.sortPopup).getFieldList(true);
-									$$(self.componentIds.sortForm).addView({
+									var viewIndex = sort_form.getChildViews().length - 1;
+									var fieldList = sort_popup.getFieldList(true);
+									sort_form.addView({
 										id: 'sort' + webix.uid(),
 										cols: [
 											{
@@ -144,8 +147,8 @@ steal(
 														sortInput.define('options', options);
 														sortInput.refresh();
 
-														$$(self.componentIds.sortPopup).refreshFieldList();
-														$$(self.componentIds.sortPopup).sort();
+														sort_popup.refreshFieldList();
+														sort_popup.sort();
 
 														this.getTopParentView().callChangeEvent();
 													}
@@ -155,15 +158,15 @@ steal(
 												view: "segmented", width: 200, options: [{ id: '', value: self.labels.sort_fields.selectField }],
 												on: {
 													onChange: function (newv, oldv) { // 'asc' or 'desc' values
-														$$(self.componentIds.sortPopup).sort();
+														sort_popup.sort();
 													}
 												}
 											},
 											{
 												view: "button", value: "X", width: 30, click: function () {
-													$$(self.componentIds.sortForm).removeView(this.getParentView());
-													$$(self.componentIds.sortPopup).refreshFieldList(true);
-													$$(self.componentIds.sortPopup).sort();
+													sort_form.removeView(this.getParentView());
+													sort_popup.refreshFieldList(true);
+													sort_popup.sort();
 
 													this.getTopParentView().callChangeEvent();
 												}
@@ -173,28 +176,31 @@ steal(
 
 									// Select field
 									if (fieldId) {
-										var fieldsCombo = $$(self.componentIds.sortForm).getChildViews()[viewIndex].getChildViews()[0];
+										var fieldsCombo = sort_form.getChildViews()[viewIndex].getChildViews()[0];
 										fieldsCombo.setValue(fieldId);
 										this.getTopParentView().callChangeEvent();
 									}
 								},
 
 								registerDataTable: function (dataTable) {
+									var sort_popup = this,
+										sort_form = this.getChildViews()[0];
+
 									self.dataTable = dataTable;
 
 									// Reset form
-									$$(self.componentIds.sortForm).clear();
-									$$(self.componentIds.sortForm).clearValidation();
+									sort_form.clear();
+									sort_form.clearValidation();
 
 									var cViews = [];
-									var childViews = $$(self.componentIds.sortForm).getChildViews();
+									var childViews = sort_form.getChildViews();
 									for (var i = 0; i < childViews.length; i++) {
 										if (i < childViews.length - 1)
 											cViews.push(childViews[i]);
 									}
 
 									cViews.forEach(function (v) {
-										$$(self.componentIds.sortForm).removeView(v);
+										sort_form.removeView(v);
 									});
 								},
 								setFieldList: function (fieldList) {
@@ -204,7 +210,9 @@ steal(
 									this.refreshFieldList();
 								},
 								getFieldList: function (excludeSelected) {
-									var fieldList = [];
+									var sort_popup = this,
+										sort_form = this.getChildViews()[0],
+										fieldList = [];
 
 									if (!self.dataTable)
 										return fieldList;
@@ -223,7 +231,7 @@ steal(
 
 									// Remove selected field
 									if (excludeSelected) {
-										var childViews = $$(self.componentIds.sortForm).getChildViews();
+										var childViews = sort_form.getChildViews();
 										if (childViews.length > 1) { // Ignore 'Add new sort' button
 											childViews.forEach(function (cView, index) {
 												if (childViews.length - 1 <= index)
@@ -251,11 +259,13 @@ steal(
 								},
 
 								refreshFieldList: function (ignoreRemoveViews) {
-									var fieldList = this.getFieldList(false),
+									var sort_popup = this,
+										sort_form = sort_popup.getChildViews()[0],
+										fieldList = sort_popup.getFieldList(false),
 										selectedFields = [],
 										removeChildViews = [];
 
-									var childViews = $$(self.componentIds.sortForm).getChildViews();
+									var childViews = sort_form.getChildViews();
 									if (childViews.length > 1) { // Ignore 'Add new sort' button
 										childViews.forEach(function (cView, index) {
 											if (childViews.length - 1 <= index)
@@ -278,12 +288,12 @@ steal(
 									// Remove filter conditions when column is deleted
 									if (!ignoreRemoveViews) {
 										removeChildViews.forEach(function (cView, index) {
-											$$(self.componentIds.sortForm).removeView(cView);
+											sort_form.removeView(cView);
 										});
 									}
 
 									// Field list should not duplicate field items
-									childViews = $$(self.componentIds.sortForm).getChildViews();
+									childViews = sort_form.getChildViews();
 									if (childViews.length > 1) { // Ignore 'Add new sort' button
 										childViews.forEach(function (cView, index) {
 											if (childViews.length - 1 <= index)
@@ -304,10 +314,12 @@ steal(
 								},
 
 								sort: function () {
-									var columnOrders = [];
+									var sort_popup = this,
+										sort_form = sort_popup.getChildViews()[0],
+										columnOrders = [];
 
-									$$(self.componentIds.sortForm).getChildViews().forEach(function (cView, index) {
-										if ($$(self.componentIds.sortForm).getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
+									sort_form.getChildViews().forEach(function (cView, index) {
+										if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
 											return;
 
 										var columnId = cView.getChildViews()[0].getValue();
@@ -357,9 +369,12 @@ steal(
 								},
 
 								callChangeEvent: function () {
-									var conditionNumber = 0;
-									$$(self.componentIds.sortForm).getChildViews().forEach(function (v, index) {
-										if (index >= $$(self.componentIds.sortForm).getChildViews().length - 1)
+									var sort_popup = this,
+										sort_form = sort_popup.getChildViews()[0],
+										conditionNumber = 0;
+
+									sort_form.getChildViews().forEach(function (v, index) {
+										if (index >= sort_form.getChildViews().length - 1)
 											return;
 
 										if (v.getChildViews()[0].getValue())

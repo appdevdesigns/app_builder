@@ -99,6 +99,7 @@ steal(
 
 						resize: function (height) {
 							this.controllers.InterfaceList.resize(height);
+							this.controllers.InterfaceWorkspace.resize(height);
 						}
 
 					});
