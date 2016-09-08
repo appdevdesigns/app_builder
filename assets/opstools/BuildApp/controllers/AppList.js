@@ -633,7 +633,7 @@ steal(
 
 							$$(self.webixUiId.appListFormView).show();
 
-							// Popuplate data to form
+							// Populate data to form
 							if (selectedApp) {
 								for (var key in selectedApp) {
 									if ($$(self.webixUiId.appListForm).elements[key])

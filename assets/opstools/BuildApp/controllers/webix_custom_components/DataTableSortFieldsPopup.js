@@ -17,8 +17,6 @@ steal(
 							// Call parent init
 							this._super(element, options);
 
-							this.data = {};
-
 							this.componentIds = {
 								sortForm: 'ab-sort-form'
 							};
@@ -112,7 +110,7 @@ steal(
 												options: fieldList,
 												on: {
 													"onChange": function (columnId) {
-														var columnConfig = self.dataTable.getColumnConfig(columnId),
+														var columnConfig = sort_popup.dataTable.getColumnConfig(columnId),
 															sortInput = this.getParentView().getChildViews()[1],
 															options = null;
 
@@ -186,7 +184,7 @@ steal(
 									var sort_popup = this,
 										sort_form = this.getChildViews()[0];
 
-									self.dataTable = dataTable;
+									sort_popup.dataTable = dataTable;
 
 									// Reset form
 									sort_form.clear();
@@ -204,22 +202,24 @@ steal(
 									});
 								},
 								setFieldList: function (fieldList) {
-									// We can remove it when we can get all column from webix datatable (include hidden fields)
-									self.data.fieldList = fieldList;
+									var sort_popup = this;
 
-									this.refreshFieldList();
+									// We can remove it when we can get all column from webix datatable (include hidden fields)
+									sort_popup.fieldList = fieldList;
+
+									sort_popup.refreshFieldList();
 								},
 								getFieldList: function (excludeSelected) {
 									var sort_popup = this,
 										sort_form = this.getChildViews()[0],
 										fieldList = [];
 
-									if (!self.dataTable)
+									if (!sort_popup.dataTable)
 										return fieldList;
 
 									// Get all columns include hidden fields
-									if (self.data.fieldList) {
-										self.data.fieldList.forEach(function (f) {
+									if (sort_popup.fieldList) {
+										sort_popup.fieldList.forEach(function (f) {
 											if (f.setting.filter_type) {
 												fieldList.push({
 													id: f.name,
@@ -326,7 +326,7 @@ steal(
 										var order = cView.getChildViews()[1].getValue();
 
 										if (columnId) {
-											var columnConfig = self.dataTable.getColumnConfig(columnId);
+											var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
 
 											if (columnConfig) {
 												columnOrders.push({
@@ -337,7 +337,7 @@ steal(
 										}
 									});
 
-									self.dataTable.sort(function (a, b) {
+									sort_popup.dataTable.sort(function (a, b) {
 										var result = false;
 
 										for (var i = 0; i < columnOrders.length; i++) {

@@ -19,8 +19,6 @@ steal(
                             // Call parent init
                             this._super(element, options);
 
-                            this.data = {};
-
                             this.initMultilingualLabels();
                             this.initWebixControls();
                         },
@@ -67,7 +65,7 @@ steal(
                                 name: "filter_popup",
                                 $init: function (config) {
                                     //functions executed on component initialization
-                                    self.combineCondition = self.labels.filter_fields.and;
+                                    this.combineCondition = self.labels.filter_fields.and;
                                 },
                                 defaults: {
                                     width: 800,
@@ -75,7 +73,7 @@ steal(
                                         view: "form",
                                         autoheight: true,
                                         elements: [{
-                                            view: "button", value: self.labels.filter_fields.addNewFilter, click: function () {
+                                            view: "button", id: webix.uid() + '-new-filter-button', value: self.labels.filter_fields.addNewFilter, click: function () {
                                                 this.getTopParentView().addNewFilter();
                                             }
                                         }]
@@ -99,9 +97,9 @@ steal(
                                         cols: [
                                             {
                                                 // Add / Or
-                                                view: "combo", value: self.combineCondition, options: [self.labels.filter_fields.and, self.labels.filter_fields.or], css: 'combine-condition', width: 80, on: {
+                                                view: "combo", value: filter_popup.combineCondition, options: [self.labels.filter_fields.and, self.labels.filter_fields.or], css: 'combine-condition', width: 80, on: {
                                                     "onChange": function (newValue, oldValue) {
-                                                        self.combineCondition = newValue;
+                                                        filter_popup.combineCondition = newValue;
 
                                                         var filterList = $('.combine-condition').webix_combo();
 
@@ -122,7 +120,7 @@ steal(
                                                 // Field list
                                                 view: "combo", options: filter_popup.getFieldList(), on: {
                                                     "onChange": function (columnId) {
-                                                        var columnConfig = self.dataTable.getColumnConfig(columnId);
+                                                        var columnConfig = filter_popup.dataTable.getColumnConfig(columnId);
                                                         var conditionList = [];
                                                         var inputView = {};
 
@@ -186,20 +184,21 @@ steal(
                                                                 break;
                                                         }
 
-                                                        var conditionCombo = this.getParentView().getChildViews()[2];
+                                                        var filter_item = this.getParentView();
+                                                        var conditionCombo = filter_item.getChildViews()[2];
                                                         conditionCombo.define("options", conditionList);
                                                         conditionCombo.refresh();
                                                         conditionCombo.setValue()
 
-                                                        this.getParentView().removeView(this.getParentView().getChildViews()[3]);
-                                                        this.getParentView().addView(inputView, 3);
+                                                        filter_item.removeView(filter_item.getChildViews()[3]);
+                                                        filter_item.addView(inputView, 3);
                                                         if (columnConfig.filter_type === 'boolean') {
                                                             // There is not any condition values 
                                                         }
                                                         else if (columnConfig.filter_type === 'text' || columnConfig.filter_type === 'multiselect')
-                                                            this.getParentView().getChildViews()[3].attachEvent("onTimedKeyPress", function () { filter_popup.filter(); });
+                                                            filter_item.getChildViews()[3].attachEvent("onTimedKeyPress", function () { filter_popup.filter(); });
                                                         else
-                                                            this.getParentView().getChildViews()[3].attachEvent("onChange", function () { filter_popup.filter(); });
+                                                            filter_item.getChildViews()[3].attachEvent("onChange", function () { filter_popup.filter(); });
 
                                                         filter_popup.filter();
                                                     }
@@ -218,7 +217,8 @@ steal(
                                             {},
                                             {
                                                 view: "button", value: "X", width: 30, click: function () {
-                                                    filter_form.removeView(this.getParentView());
+                                                    var filter_item = this.getParentView();
+                                                    filter_form.removeView(filter_item);
                                                     filter_popup.filter();
 
                                                     this.getTopParentView().callChangeEvent();
@@ -238,7 +238,7 @@ steal(
                                     var filter_popup = this,
                                         filter_form = filter_popup.getChildViews()[0];
 
-                                    self.dataTable = dataTable;
+                                    filter_popup.dataTable = dataTable;
 
                                     // Reset form
                                     filter_form.clear();
@@ -260,17 +260,20 @@ steal(
                                     });
                                 },
                                 setFieldList: function (fieldList) {
-                                    // We can remove it when we can get all column from webix datatable (include hidden fields)
-                                    self.data.fieldList = fieldList;
+                                    var filter_popup = this;
 
-                                    this.refreshFieldList();
+                                    // We can remove it when we can get all column from webix datatable (include hidden fields)
+                                    filter_popup.fieldList = fieldList;
+
+                                    filter_popup.refreshFieldList();
                                 },
                                 getFieldList: function () {
-                                    var fieldList = [];
+                                    var filter_popup = this,
+                                        fieldList = [];
 
                                     // Get all columns include hidden fields
-                                    if (self.data.fieldList) {
-                                        self.data.fieldList.forEach(function (f) {
+                                    if (filter_popup.fieldList) {
+                                        filter_popup.fieldList.forEach(function (f) {
                                             if (f.setting.filter_type) {
                                                 fieldList.push({
                                                     id: f.name,
@@ -333,14 +336,14 @@ steal(
                                         }
                                     });
 
-                                    if (self.dataTable) {
-                                        self.dataTable.filter(function (obj) {
+                                    if (filter_popup.dataTable) {
+                                        filter_popup.dataTable.filter(function (obj) {
                                             var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : self.labels.filter_fields.and);
                                             var isValid = (combineCond === self.labels.filter_fields.and ? true : false);
 
                                             filterCondition.forEach(function (cond) {
                                                 var condResult;
-                                                var objValue = self.dataTable.getColumnConfig(cond.fieldName).filter_value ? self.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
+                                                var objValue = filter_popup.dataTable.getColumnConfig(cond.fieldName).filter_value ? filter_popup.dataTable.getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
 
                                                 // Empty value
                                                 if (!objValue) {
