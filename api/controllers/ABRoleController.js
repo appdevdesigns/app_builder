@@ -7,17 +7,6 @@
 
 var async = require('async');
 
-function nameFilter(name) {
-    return String(name).replace(/[^a-z0-9]/gi, '');
-}
-
-function getValidAppName(appName) {
-	return 'AB_' + nameFilter(appName);
-}
-
-function getActionKeyName(appName) {
-	return 'opstools.' + getValidAppName(appName) + '.view';
-}
 
 module.exports = {
 
@@ -48,7 +37,7 @@ module.exports = {
 			},
 			function (app, next) {
 				// Get roles from action key
-				var action_key = getActionKeyName(app.name);
+				var action_key = app.actionKeyName(); 
 				Permissions.getRolesByActionKey(action_key)
 					.fail(function (err) {
 						res.AD.error(err);
@@ -215,8 +204,8 @@ module.exports = {
 			function (app, next) {
 				// Register the permission action
 				Permissions.action.create({
-					key: getActionKeyName(app.name),
-					description: 'Allow the user to view the ' + getValidAppName(app.name) + ' base page',
+					key: app.actionKeyName(),  
+					description: 'Allow the user to view the ' + app.validAppName() + ' base page',
 					language_code: 'en'
 				})
 					.always(function () {
@@ -227,7 +216,7 @@ module.exports = {
 			},
 			function (app, next) {
 				// Clear permission action to roles
-				Permissions.clearPermissionRole(getActionKeyName(app.name))
+				Permissions.clearPermissionRole(app.actionKeyName())  
 					.fail(function (err) { next(err); })
 					.then(function () { next(null, app); });
 			},
@@ -237,7 +226,7 @@ module.exports = {
 
 				roleIds.forEach(function (r) {
 					assignActionTasks.push(function (callback) {
-						Permissions.assignAction(r.id, getActionKeyName(app.name))
+						Permissions.assignAction(r.id, app.actionKeyName())  
 							.fail(function (err) { callback(err); })
 							.then(function () { callback(); });
 					});

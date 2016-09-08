@@ -302,11 +302,18 @@ module.exports = {
 
                     var areaName = Application.name;
                     var areaKey  = Application.areaKey();
+                    var label = areaName;  // default if no translations provided
+                    Application.translations.some(function(trans){
+                        if (label == areaName) {
+                            label = trans.label;
+                            return true;  // stops the looping.
+                        }
+                    })
                     var defaultArea = {
                         key:areaKey,
                         icon:'fa-cubes',
                         isDefault:false,
-                        label:areaKey,
+                        label:label,
                         context:areaKey
                     }
 
@@ -315,19 +322,7 @@ module.exports = {
 
                         // area is null if already existed, 
                         // not null if just created:
-                        // if just created then update our labels
-                        if (area) {
-                            Application.translations.forEach(function(trans){
-                                var label = {
-                                    language_code:trans.language_code,
-                                    label_key:areaKey,
-                                    label_context:areaKey,
-                                    label_needs_translation:1,
-                                    label_label:trans.label
-                                }
-                                Multilingual.label.create(label);  // I'm not following up after this.
-                            })
-                        }
+
                         next(err);
                     })
 
@@ -487,7 +482,7 @@ module.exports = {
         var cwd = process.cwd();
         
 
-        var appID, appName, pageName, pageKey, pagePerms;
+        var appID, appName, pageName, pageKey, pagePerms, toolLabel;
 
         var objectIncludes = [];
         var controllerIncludes = [];
@@ -502,6 +497,7 @@ module.exports = {
                 ABPage.find({ id: pageID })
                 .populate('application')
                 .populate('components')
+                .populate('translations')
                 .then(function(list) {
                     if (!list || !list[0]) {
                         var err = new Error('invalid page id');
@@ -514,6 +510,13 @@ module.exports = {
                     appID = page.application.id;
                     appName = AppBuilder.getApplicationName(page.application.name);
                     pageName = nameFilter(page.name);
+                    toolLabel = pageName;
+                    page.translations.some(function(trans){
+                        if (toolLabel == pageName){
+                            toolLabel = trans.label;
+                            return true;
+                        }
+                    })
 
                     // Only numbers and alphabets will be used
                     Application = page.application;
@@ -525,17 +528,17 @@ module.exports = {
                         key: 'opstools.' + appName + '.' + pageName,
                         path: 'opstools/' + appName + '/controllers/'
                             + pageName + '.js'
-                        });
-
-                        pages[pageID] = page;
-
-                        next();
-                        return null;
-                    })
-                    .catch(function (err) {
-                        next(err);
-                        return null;
                     });
+
+                    pages[pageID] = page;
+
+                    next();
+                    return null;
+                })
+                .catch(function (err) {
+                    next(err);
+                    return null;
+                });
             },
 
             // Find all sub-pages
@@ -739,10 +742,10 @@ module.exports = {
                     objectIncludes,
                     controllerIncludes
                 )
-                    .fail(next)
-                    .done(function () {
-                        next();
-                    });
+                .fail(next)
+                .done(function () {
+                    next();
+                });
             },
             
 
@@ -763,7 +766,53 @@ module.exports = {
                         .always(function() {
                             // Don't care if there was an error.
                             // If permission action already exists, that's fine.
-                            next();
+
+
+                            // since we just created it, let's make sure this permission 
+                            // is currently included in all the roles that this page's 
+                            // application is.
+
+                            // get the Application's action key:
+                            var actionKey = Application.actionKeyName();
+
+                            Permissions.getRolesByActionKey(actionKey)
+                            .fail(function(err){
+                                AD.error.log('Error finding roles by Action Key:', { error:err, actionKey:actionKey });
+                                next(err);
+                            })
+                            .then(function(roles){
+
+                                // for each role, add our page action
+                                var numDone = 0;
+                                function onDone (err) {
+                                    if (err) {
+                                        next(err);
+                                    } else {
+                                        numDone++;
+                                        if (numDone >= roles.length) {
+                                            next();
+                                        }
+                                    }
+                                }
+
+                                roles.forEach(function(role){
+
+                                    // Note: successful .assignActions() don't return anything.
+                                    // so this will work.
+                                    Permissions.assignAction(role.id, key) 
+                                    .fail(onDone)
+                                    .then(onDone);
+                                })
+
+                                // if there were no roles, just continue
+                                if (roles.length == 0) {
+                                    next();
+                                }
+                                
+
+                            })
+
+                            // next();
                         });
                     }
                 })
@@ -780,8 +829,8 @@ module.exports = {
                     key:_.kebabCase(pageKey),
                     permissions:pagePerms,
                     icon:'fa-lock', // TODO: get this from Page Definition.
-                    label:pageKey,
-                    context: pageKey,
+                    label:toolLabel,
+                    // context: pageKey,
                     controller: 'OPView',
                     isController: false,
                     options: {  url:'/opsportal/view/'+pageKey  },

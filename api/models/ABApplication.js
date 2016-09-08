@@ -54,6 +54,14 @@ module.exports = {
 
         areaKey: function() {
             return _.kebabCase('ab-'+this.name);
+        },
+
+        actionKeyName:function(){
+            return 'opstools.' + this.validAppName() + '.view'; 
+        },
+
+        validAppName:function() {
+            return 'AB_' + nameFilter(this.name);
         }
 
     },
@@ -115,15 +123,6 @@ module.exports = {
                         .then(function () {
                             callback();
                         });
-                },
-                function (callback) {
-                    ABApplicationPermission.destroy({ application: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
-                        .then(function () {
-                            callback();
-                        });
                 }
             ], cb);
         }
@@ -135,3 +134,7 @@ module.exports = {
 
 };
 
+
+function nameFilter(name) {
+    return String(name).replace(/[^a-z0-9]/gi, '');
+}
