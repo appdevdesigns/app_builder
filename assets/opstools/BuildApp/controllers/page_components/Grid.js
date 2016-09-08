@@ -75,8 +75,6 @@ steal(
 								datatype: "json"
 							};
 
-							self.initWebixUI();
-
 							self.getView = function () {
 								return self.view;
 							};
@@ -470,11 +468,13 @@ steal(
 
 									var action_buttons = [];
 
-									if (settings.filter === 'enable')
-										action_buttons.push({ view: 'button', label: 'Add filters', popup: self.componentIds.filterFieldsPopup, icon: "filter", type: "icon", width: 120, badge: 0 });
+									if (settings.filter === 'enable') {
+										action_buttons.push({ view: 'button', id: viewId + '-filter-button', label: 'Add filters', popup: viewId + '-filter-popup', icon: "filter", type: "icon", width: 120, badge: 0 });
+									}
 
-									if (settings.sort === 'enable')
-										action_buttons.push({ view: 'button', label: 'Apply sort', popup: self.componentIds.sortFieldsPopup, icon: "sort", type: "icon", width: 120, badge: 0 });
+									if (settings.sort === 'enable') {
+										action_buttons.push({ view: 'button', id: viewId + '-sort-button', label: 'Apply sort', popup: viewId + '-sort-popup', icon: "sort", type: "icon", width: 120, badge: 0 });
+									}
 
 									if (action_buttons.length > 0) {
 										header.rows.push({
@@ -502,14 +502,34 @@ steal(
 										}).slice(0);
 									}
 
+									// Create filter popup
 									if (settings.filter === 'enable') {
-										$$(self.componentIds.filterFieldsPopup).registerDataTable($$(viewId));
-										$$(self.componentIds.filterFieldsPopup).setFieldList(columns);
+										webix.ui({
+											id: viewId + '-filter-popup',
+											view: "filter_popup",
+										}).hide();
+
+										$$(viewId + '-filter-popup').registerDataTable($$(viewId));
+										$$(viewId + '-filter-popup').setFieldList(columns);
+										$$(viewId + '-filter-popup').attachEvent('onChange', function (number) {
+											$$(viewId + '-filter-button').define('badge', number);
+											$$(viewId + '-filter-button').refresh();
+										});
 									}
 
+									// Create sort popup
 									if (settings.sort === 'enable') {
-										$$(self.componentIds.sortFieldsPopup).registerDataTable($$(viewId));
-										$$(self.componentIds.sortFieldsPopup).setFieldList(columns);
+										webix.ui({
+											id: viewId + '-sort-popup',
+											view: "sort_popup",
+										}).hide();
+
+										$$(viewId + '-sort-popup').registerDataTable($$(viewId));
+										$$(viewId + '-sort-popup').setFieldList(columns);
+										$$(viewId + '-sort-popup').attachEvent('onChange', function (number) {
+											$$(viewId + '-sort-button').define('badge', number);
+											$$(viewId + '-sort-button').refresh();
+										});
 									}
 
 
@@ -722,18 +742,6 @@ steal(
 							self.editStop = function () {
 								$$(self.componentIds.propertyView).editStop();
 							};
-						},
-
-						initWebixUI: function () {
-							webix.ui({
-								id: this.componentIds.filterFieldsPopup,
-								view: "filter_popup",
-							}).hide();
-
-							webix.ui({
-								id: this.componentIds.sortFieldsPopup,
-								view: "sort_popup",
-							}).hide();
 						},
 
 						populateData: function (viewId, objectId) {

@@ -374,3 +374,8 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-loading-screen .webix_progress_bottom .webix_progress_state {
 	height: 40px !important;
 }
+
+/* Dynamic DataTable */
+.dynamic-datatable-view .webix_badge {
+	margin: 0 !important;
+}

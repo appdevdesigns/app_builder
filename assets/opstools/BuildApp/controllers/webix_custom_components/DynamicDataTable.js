@@ -33,6 +33,9 @@ steal(
 
 								prependView: function (view) {
 									var generatedView = webix.ui(view);
+									generatedView.define('width', this.config.width + 2);
+									generatedView.resize();
+
 									self.additionViews.push(generatedView);
 
 									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
@@ -42,6 +45,9 @@ steal(
 
 								appendView: function (view) {
 									var generatedView = webix.ui(view);
+									generatedView.define('width', this.config.width + 2);
+									generatedView.resize();
+
 									self.additionViews.push(generatedView);
 
 									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
