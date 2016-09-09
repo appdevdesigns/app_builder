@@ -26,7 +26,6 @@ steal(
 
 						initWebixControls: function () {
 							var self = this;
-							self.additionViews = [];
 
 							webix.protoUI({
 								name: "dynamicdatatable",
@@ -36,7 +35,8 @@ steal(
 									generatedView.define('width', this.config.width + 2);
 									generatedView.resize();
 
-									self.additionViews.push(generatedView);
+									if (!this.additionViews) this.additionViews = [];
+									this.additionViews.push(generatedView);
 
 									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
 
@@ -48,7 +48,8 @@ steal(
 									generatedView.define('width', this.config.width + 2);
 									generatedView.resize();
 
-									self.additionViews.push(generatedView);
+									if (!this.additionViews) this.additionViews = [];
+									this.additionViews.push(generatedView);
 
 									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
 
@@ -56,7 +57,7 @@ steal(
 								},
 
 								clearAdditionalView: function () {
-									self.additionViews.forEach(function (view) {
+									this.additionViews.forEach(function (view) {
 										view.destructor();
 									});
 								}
