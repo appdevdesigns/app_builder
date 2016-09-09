@@ -85,7 +85,7 @@ steal(
 
 								dataTable.id = viewId;
 								dataTable.autoheight = false;
-								dataTable.height = 220;
+								dataTable.height = 180;
 
 								var editView = {
 									id: self.componentIds.editView,
