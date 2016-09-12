@@ -2,6 +2,8 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABPage.js',
 
+	'opstools/BuildApp/controllers/InterfaceAddNewPage.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/EditTree.js',
 	function () {
 		System.import('appdev').then(function () {
@@ -17,6 +19,7 @@ steal(
 
 							options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
+								createdPageEvent: 'AB_Page.Created',
 								updatedPageEvent: 'AB_Page.Updated',
 								deletedPageEvent: 'AB_Page.Deleted'
 							}, options);
@@ -30,15 +33,12 @@ steal(
 								interfaceTree: 'ab-interface-tree',
 
 								pageListMenuPopup: 'ab-page-menu-popup',
-								pageListMenu: 'ab-page-menu',
-
-								addNewPopup: 'ab-interface-add-new-popup',
-								addNewForm: 'ab-interface-add-new-form',
-								addNewParentList: 'ab-interface-add-new-parent-list'
+								pageListMenu: 'ab-page-menu'
 							};
 
 							self.initMultilingualLabels();
 							self.initControllers();
+							self.initEvents();
 
 							self.initWebixUI();
 						},
@@ -49,20 +49,16 @@ steal(
 							self.labels.common = {};
 							self.labels.interface = {};
 
-							self.labels.common.formName = AD.lang.label.getLabel('ab.common.form.name') || "Name";
-							self.labels.common.add = AD.lang.label.getLabel('ab.common.add') || "Add";
 							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
 							self.labels.common.delete = AD.lang.label.getLabel('ab.common.delete') || "Delete";
-							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
 							self.labels.common.renameErrorMessage = AD.lang.label.getLabel('ab.common.rename.error') || "System could not rename <b>{0}</b>.";
 							self.labels.common.renameSuccessMessage = AD.lang.label.getLabel('ab.common.rename.success') || "Rename to <b>{0}</b>.";
 							self.labels.common.deleteErrorMessage = AD.lang.label.getLabel('ab.common.delete.error') || "System could not delete <b>{0}</b>.";
 							self.labels.common.deleteSuccessMessage = AD.lang.label.getLabel('ab.common.delete.success') || "<b>{0}</b> is deleted.";
-							self.labels.common.createErrorMessage = AD.lang.label.getLabel('ab.common.create.error') || "System could not create <b>{0}</b>.";
 							self.labels.common.createSuccessMessage = AD.lang.label.getLabel('ab.common.create.success') || "<b>{0}</b> is created.";
+							self.labels.common.createErrorMessage = AD.lang.label.getLabel('ab.common.create.error') || "System could not create <b>{0}</b>.";
 
 							self.labels.interface.addNewPage = AD.lang.label.getLabel('ab.interface.addNewPage') || 'Add new page';
-							self.labels.interface.placeholderPageName = AD.lang.label.getLabel('ab.interface.placeholderPageName') || 'Page name';
 
 							self.labels.interface.confirmDeleteTitle = AD.lang.label.getLabel('ab.interface.delete.title') || "Delete page";
 							self.labels.interface.confirmDeleteMessage = AD.lang.label.getLabel('ab.interface.delete.message') || "Do you want to delete <b>{0}</b>?";
@@ -71,9 +67,41 @@ steal(
 						initControllers: function () {
 							this.controllers = {};
 
-							var EditTree = AD.Control.get('opstools.BuildApp.EditTree');
+							var EditTree = AD.Control.get('opstools.BuildApp.EditTree'),
+								AddNewPage = AD.Control.get('opstools.BuildApp.InterfaceAddNewPage');
 
 							this.controllers.EditTree = new EditTree();
+							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
+						},
+
+						initEvents: function () {
+							var self = this;
+
+							// Create new page handler
+							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
+								self.data.pages.push(data.newPage);
+
+								$$(self.webixUiId.interfaceTree).add({
+									id: data.newPage.id,
+									value: data.newPage.name,
+									label: data.newPage.label
+								}, -1, data.newPage.parent ? data.newPage.parent.id : null);
+
+								if (data.newPage.parent)
+									$$(self.webixUiId.interfaceTree).open(data.newPage.parent.id, true);
+
+								$$(self.webixUiId.interfaceTree).unselectAll();
+								$$(self.webixUiId.interfaceTree).select(data.newPage.id);
+
+								$$(self.webixUiId.interfaceTree).hideProgress();
+
+								// Show success message
+								webix.message({
+									type: "success",
+									text: self.labels.common.createSuccessMessage.replace('{0}', data.newPage.label)
+								});
+
+							});
 						},
 
 						initWebixUI: function () {
@@ -103,8 +131,13 @@ steal(
 											onAfterSelect: function (id) {
 												var selectedPage = self.data.pages.filter(function (p) { return p.id == id; });
 
-												if (selectedPage && selectedPage.length > 0)
+												if (selectedPage && selectedPage.length > 0) {
 													self.element.trigger(self.options.selectedPageEvent, { selectedPage: selectedPage[0] });
+													self.data.selectedPage = selectedPage[0];
+												}
+												else {
+													self.data.selectedPage = null;
+												}
 
 												// Show gear icon
 												self.showGear(id);
@@ -186,7 +219,7 @@ steal(
 										view: 'button',
 										value: self.labels.interface.addNewPage,
 										click: function () {
-											$$(self.webixUiId.addNewPopup).show();
+											self.controllers.AddNewPage.show();
 										}
 									}
 								]
@@ -276,131 +309,14 @@ steal(
 								}
 							}).hide(); // end Edit page menu popup
 
-							// Add new page popup
-							webix.ui({
-								view: "window",
-								id: self.webixUiId.addNewPopup,
-								width: 400,
-								position: "center",
-								modal: true,
-								head: self.labels.interface.addNewPage,
-								on: {
-									"onBeforeShow": function () {
-										$$(self.webixUiId.addNewForm).clearValidation();
-										$$(self.webixUiId.addNewForm).clear();
-
-										var options = [{ id: '', value: '[Root page]' }];
-										$$(self.webixUiId.interfaceTree).data.each(function (d) {
-											if (d.$level == 1) { // Only Root pages
-												// var val = d.value;
-												options.push({ id: d.id, value: d.label });
-											}
-
-											// if (d.$level > 1)
-											// 	val = '- '.repeat(d.$level - 1) + val; // Include - to sub page
-
-											// options.push({ id: d.id, value: val });
-										});
-
-										$$(self.webixUiId.addNewParentList).define('options', options);
-
-										// Default select parent page
-										var selectedPage = $$(self.webixUiId.interfaceTree).getSelectedItem();
-										if (selectedPage) {
-											var selectValue = selectedPage.id;
-
-											if (selectedPage.$level > 1)
-												selectValue = selectedPage.$parent;
-
-											$$(self.webixUiId.addNewParentList).setValue(selectValue);
-										}
-										else
-											$$(self.webixUiId.addNewParentList).setValue('');
-
-										$$(self.webixUiId.addNewParentList).render();
-									}
-								},
-								body: {
-									view: "form",
-									id: self.webixUiId.addNewForm,
-									width: 400,
-									elements: [
-										{ view: "select", id: self.webixUiId.addNewParentList, label: "Parent page", name: "parent", labelWidth: 110 },
-										{ view: "text", label: self.labels.common.formName, name: "name", required: true, placeholder: self.labels.interface.placeholderPageName, labelWidth: 110 },
-										{
-											margin: 5, cols: [
-												{
-													view: "button", value: self.labels.common.add, type: "form", click: function () {
-														if (!$$(self.webixUiId.addNewForm).validate())
-															return false;
-
-														var parentPageId = $$(self.webixUiId.addNewForm).elements['parent'].getValue(),
-															newPageName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
-
-														$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
-
-														var newPage = {
-															application: self.data.appId,
-															name: newPageName,
-															label: newPageName
-														};
-
-														if (parentPageId)
-															newPage.parent = parentPageId;
-
-														// Call create new page to server
-														self.Model.create(newPage).fail(function (err) {
-															$$(self.webixUiId.interfaceTree).hideProgress();
-
-															webix.message({
-																type: "error",
-																text: self.labels.common.createErrorMessage.replace("{0}", newPage.label)
-															});
-
-															AD.error.log('Page : Error create page data', { error: err });
-
-														}).then(function (result) {
-															$$(self.webixUiId.addNewPopup).hide();
-
-															if (result.translate) result.translate();
-
-															self.data.pages.push(result);
-
-															$$(self.webixUiId.interfaceTree).add({
-																id: result.id,
-																value: result.name,
-																label: result.label
-															}, -1, result.parent ? result.parent.id : null);
-
-															if (result.parent)
-																$$(self.webixUiId.interfaceTree).open(result.parent.id, true);
-
-															$$(self.webixUiId.interfaceTree).unselectAll();
-															$$(self.webixUiId.interfaceTree).select(result.id);
-
-															$$(self.webixUiId.interfaceTree).hideProgress();
-
-															// Show success message
-															webix.message({
-																type: "success",
-																text: self.labels.common.createSuccessMessage.replace('{0}', newPage.label)
-															});
-														});
-
-													}
-												},
-												{ view: "button", value: self.labels.common.cancel, click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
-											]
-										}
-									]
-								}
-							}).hide();
 						},
 
 						webix_ready: function () {
 							var self = this;
 
 							webix.extend($$(self.webixUiId.interfaceTree), webix.ProgressBar);
+
+							self.controllers.AddNewPage.webix_ready();
 						},
 
 						getUIDefinition: function () {

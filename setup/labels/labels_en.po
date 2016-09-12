@@ -914,8 +914,8 @@ msgstr "Interface"
 #. path: app_builder
 #. code: en
 #. key: ab.interface.addNewPage
-msgid "Add new page"
-msgstr "Add new page"
+msgid "Add a new page"
+msgstr "Add a new page"
 
 #. path: app_builder
 #. code: en

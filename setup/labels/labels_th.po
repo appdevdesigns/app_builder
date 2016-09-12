@@ -903,7 +903,7 @@ msgstr "หน้าแสดง"
 #. path: app_builder
 #. code: th
 #. key: ab.interface.addNewPage
-msgid "Add new page"
+msgid "Add a new page"
 msgstr "เพิ่มหน้าใหม่"
 
 #. path: app_builder
