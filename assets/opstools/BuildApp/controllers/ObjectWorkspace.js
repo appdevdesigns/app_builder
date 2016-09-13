@@ -784,7 +784,7 @@ steal(
 										self.Model.ObjectModel.Cached.findAll({})
 											.fail(function (err) { next(err); })
 											.then(function (result) {
-												self.controllers.ObjectDataTable.populateDataToDataTable(result).then(function () {
+												self.controllers.ObjectDataTable.populateData(result).then(function () {
 													next();
 												});
 											});

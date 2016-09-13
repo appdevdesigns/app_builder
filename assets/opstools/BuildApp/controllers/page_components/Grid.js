@@ -9,10 +9,9 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -33,22 +32,19 @@ steal(
 							self.Model = {
 								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
-								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
-								ObjectModels: {}
+								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
 							};
 
 							// Controllers
 							var DynamicDataTable = AD.Control.get('opstools.BuildApp.DynamicDataTable'),
 								ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
 								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
-								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup');
 
 							self.controllers = {
 								DynamicDataTable: new DynamicDataTable(),
 								FilterPopup: new FilterPopup(),
 								SortPopup: new SortPopup(),
-								ModelCreator: new ModelCreator(),
 								ObjectDataTables: {}
 							};
 
@@ -126,7 +122,7 @@ steal(
 																	data.visibleColumns.splice(index, 1);
 															}
 
-															self.renderDataTable(viewId, propertyValues.object, {
+															self.renderDataTable(viewId, data.dataCollection, {
 																editPage: propertyValues.editPage,
 																editForm: propertyValues.editForm
 															});
@@ -244,13 +240,13 @@ steal(
 													var setting = self.getSettings();
 													setting.columns = data.visibleColumns;
 
-													self.populateSettings({ setting: setting }, true);
+													self.populateSettings({ setting: setting }, data.getDataCollection, true);
 													break;
 												case 'editForm':
 												case 'removable':
 													var editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
 
-													self.renderDataTable(viewId, propertyValues.object, {
+													self.renderDataTable(viewId, data.dataCollection, {
 														editPage: editValue ? editValue[0] : null,
 														editForm: editValue ? editValue[1] : null
 													}, propertyValues.removable);
@@ -263,9 +259,6 @@ steal(
 
 							self.setApp = function (app) {
 								self.app = app;
-
-								// Set app info to model creator
-								self.controllers.ModelCreator.setApp(app);
 							};
 
 							self.setPage = function (page) {
@@ -298,7 +291,7 @@ steal(
 								return dataTableController;
 							};
 
-							self.render = function (viewId, comId, settings, editable) {
+							self.render = function (viewId, comDataId, settings, editable, dataCollection) {
 								var q = $.Deferred(),
 									data = self.getData(viewId),
 									dataTableController = self.getDataTableController(viewId);
@@ -307,7 +300,9 @@ steal(
 								$$(viewId).clearAll();
 								$$(viewId).showProgress({ type: 'icon' });
 
-								data.id = comId;
+								data.id = comDataId;
+								data.dataCollection = dataCollection;
+								data.isRendered = true;
 
 								if (settings.columns)
 									data.visibleColumns = $.map(settings.columns, function (cId) { return cId.toString(); });
@@ -317,27 +312,25 @@ steal(
 								dataTableController.registerDeleteRowHandler(function (deletedId) {
 									$$(viewId).showProgress({ type: 'icon' });
 
-									self.Model.ObjectModels[settings.object].Cached.destroy(deletedId.row)
+									// Delete data
+									dataCollection.AD.destroyModel(deletedId.row)
 										.fail(function (err) {
-											// TODO message
+											AD.error.log('Error destroying entry.', { error: err, id: deletedId.row });
+
 											$$(viewId).hideProgress();
 										})
-										.then(function (data) {
-											$$(viewId).remove(data.id);
-
-											// TODO message
-
+										.then(function (oldData) {
 											$$(viewId).hideProgress();
 										});
 								});
 
 								AD.util.async.parallel([
-									function (callback) {
+									function (next) {
 										self.objects = null;
 
 										// Get object list
 										self.Model.ABObject.findAll({ application: self.app.id })
-											.fail(function (err) { callback(err); })
+											.fail(function (err) { next(err); })
 											.then(function (result) {
 												result.forEach(function (o) {
 													if (o.translate)
@@ -348,31 +341,20 @@ steal(
 
 												dataTableController.setObjectList(self.objects);
 
-												// Set object data model
-												var object = $.grep(self.objects.attr(), function (obj) { return obj.id == settings.object; })[0];
-												if (object) {
-													self.controllers.ModelCreator.getModel(object.name)
-														.fail(function (err) { callback(err); })
-														.then(function (objectModel) {
-															self.Model.ObjectModels[settings.object] = objectModel;
-
-															callback();
-														});
-												}
-												else { callback(); }
+												next();
 											});
 									},
-									function (callback) {
+									function (next) {
 										data.columns = null;
 
 										if (!settings.object) {
-											callback();
+											next();
 											return;
 										}
 
 										// Get object list
 										self.Model.ABColumn.findAll({ object: settings.object })
-											.fail(function (err) { callback(err); })
+											.fail(function (err) { next(err); })
 											.then(function (result) {
 												result.forEach(function (d) {
 													if (d.translate) d.translate();
@@ -380,7 +362,7 @@ steal(
 
 												data.columns = result;
 
-												callback();
+												next();
 											});
 									}
 								], function (err, results) {
@@ -389,7 +371,7 @@ steal(
 										return;
 									}
 
-									self.renderDataTable(viewId, settings.object, {
+									self.renderDataTable(viewId, dataCollection, {
 										editPage: settings.editPage,
 										editForm: settings.editForm
 									}, settings.removable);
@@ -532,7 +514,7 @@ steal(
 										});
 									}
 
-
+									// Select edit item
 									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
 										if (e.target.className.indexOf('fa-pencil') > -1) {
 											self.callEvent('edit', viewId, {
@@ -548,6 +530,21 @@ steal(
 									$$(viewId).attachEvent('onAfterRender', function (data) {
 										self.callEvent('renderComplete', viewId);
 									});
+
+									$$(viewId).attachEvent('onAfterSelect', function (data, perserve) {
+										dataCollection.setCursor(data.id);
+									});
+
+									if (dataCollection) {
+										dataCollection.attachEvent("onAfterCursorChange", function (id) {
+											var selectedItem = $$(viewId).getSelectedId(false);
+
+											if (!id && $$(viewId).unselectAll)
+												$$(viewId).unselectAll();
+											else if (selectedItem && selectedItem.id != id && $$(viewId).select)
+												$$(viewId).select(id);
+										});
+									}
 
 									q.resolve();
 								});
@@ -577,95 +574,108 @@ steal(
 								return settings;
 							}
 
-							self.populateSettings = function (item, selectAll) {
+							self.populateSettings = function (item, getDataCollectionFn, selectAll) {
 								webix.extend($$(self.componentIds.columnList), webix.ProgressBar);
 
 								$$(self.componentIds.columnList).showProgress({ type: 'icon' });
 
 								var viewId = self.componentIds.editDataTable,
-									data = self.getData(viewId);
+									data = self.getData(viewId),
+									dataCollection;
 
-								// Render dataTable component
-								self.render(viewId, item.id, item.setting, true).then(function () {
-									// Columns list
-									self.bindColumnList(viewId, item.setting.object, selectAll);
-									$$(self.componentIds.columnList).hideProgress();
+								data.getDataCollection = getDataCollectionFn;
 
-									// Properties
-									async.series([
-										function (next) {
-											// Data source - Object
-											var item = $$(self.componentIds.propertyView).getItem('object');
-											item.options = $.map(self.objects, function (o) {
-												return {
-													id: o.id,
-													value: o.label
-												};
-											});
+								async.series([
+									// Get data collection
+									function (next) {
+										data.getDataCollection(item.setting.object).then(function (result) {
+											dataCollection = result;
+											next();
+										});
+									},
+									// Render dataTable component
+									function (next) {
+										self.render(viewId, item.id, item.setting, true, dataCollection).then(function () {
+											// Columns list
+											self.bindColumnList(viewId, item.setting.object, selectAll);
+											$$(self.componentIds.columnList).hideProgress();
 
 											next();
-										},
-										function (next) {
-											// Data table - Edit form
-											var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
+										});
+									},
+									// Properties
+									// Data source - Object
+									function (next) {
+										var item = $$(self.componentIds.propertyView).getItem('object');
+										item.options = $.map(self.objects, function (o) {
+											return {
+												id: o.id,
+												value: o.label
+											};
+										});
 
-											AD.comm.service.get({
-												url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId
-											})
-												.fail(function (err) { next(err); })
-												.then(function (pages) {
-													var formComponents = [];
+										next();
+									},
+									// Data table - Edit form
+									function (next) {
+										var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 
-													pages.forEach(function (p) {
-														// Filter form components
-														var forms = p.components.filter(function (c) {
-															return c.component === "Form" && c.setting && item.setting && c.setting.object === item.setting.object;
-														});
+										AD.comm.service.get({
+											url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId
+										})
+											.fail(function (err) { next(err); })
+											.then(function (pages) {
+												var formComponents = [];
 
-														if (forms && forms.length > 0) {
-															formComponents = formComponents.concat($.map(forms, function (f) {
-																return [{
-																	id: p.id + '|' + f.id,
-																	value: p.name + ' - ' + f.component
-																}];
-															}));
-														}
+												pages.forEach(function (p) {
+													// Filter form components
+													var forms = p.components.filter(function (c) {
+														return c.component === "Form" && c.setting && item.setting && c.setting.object === item.setting.object;
 													});
 
-													var editFormItem = $$(self.componentIds.propertyView).getItem('editForm');
-													editFormItem.options = formComponents;
-													editFormItem.options.splice(0, 0, {
-														id: null,
-														value: '[none]'
-													});
-
-													next();
+													if (forms && forms.length > 0) {
+														formComponents = formComponents.concat($.map(forms, function (f) {
+															return [{
+																id: p.id + '|' + f.id,
+																value: p.name + ' - ' + f.component
+															}];
+														}));
+													}
 												});
-										},
-										function (next) {
-											// Set property values
-											var editForm;
-											if (item.setting.editPage && item.setting.editForm)
-												editForm = item.setting.editPage + '|' + item.setting.editForm;
 
-											$$(self.componentIds.propertyView).setValues({
-												title: item.setting.title || '',
-												description: item.setting.description || '',
-												object: item.setting.object,
-												editForm: editForm,
-												removable: item.setting.removable || 'disable',
-												filter: item.setting.filter || 'disable',
-												sort: item.setting.sort || 'disable'
+												var editFormItem = $$(self.componentIds.propertyView).getItem('editForm');
+												editFormItem.options = formComponents;
+												editFormItem.options.splice(0, 0, {
+													id: null,
+													value: '[none]'
+												});
+
+												next();
 											});
+									},
+									// Set property values
+									function (next) {
+										var editForm;
+										if (item.setting.editPage && item.setting.editForm)
+											editForm = item.setting.editPage + '|' + item.setting.editForm;
 
-											$$(self.componentIds.propertyView).refresh();
-										}
-									]);
+										$$(self.componentIds.propertyView).setValues({
+											title: item.setting.title || '',
+											description: item.setting.description || '',
+											object: item.setting.object,
+											editForm: editForm,
+											removable: item.setting.removable || 'disable',
+											filter: item.setting.filter || 'disable',
+											sort: item.setting.sort || 'disable'
+										});
 
-								});
+										$$(self.componentIds.propertyView).refresh();
+									}
+
+								]);
 							};
 
-							self.renderDataTable = function (viewId, objectId, editValue, isTrashVisible) {
+							self.renderDataTable = function (viewId, dataCollection, editFormInfo, isTrashVisible) {
 								var data = self.getData(viewId);
 
 								if (!data.columns) return;
@@ -678,7 +688,7 @@ steal(
 								if (columns.length < 1) columns = data.columns.slice(0); // Show all
 
 
-								if (editValue.editPage && editValue.editForm) {
+								if (editFormInfo.editPage && editFormInfo.editForm) {
 									columns.push({
 										width: 45,
 										setting: {
@@ -699,7 +709,7 @@ steal(
 
 
 								self.getDataTableController(viewId).bindColumns(columns, true, isTrashVisible);
-								self.populateData(viewId, objectId);
+								self.populateData(viewId, dataCollection);
 							};
 
 							self.bindColumnList = function (viewId, objectId, selectAll) {
@@ -739,38 +749,29 @@ steal(
 								}
 							};
 
+							self.isRendered = function (viewId) {
+								// TODO
+								return self.getData(viewId).isRendered === true;
+							};
+
 							self.editStop = function () {
 								$$(self.componentIds.propertyView).editStop();
 							};
 						},
 
-						populateData: function (viewId, objectId) {
+						populateData: function (viewId, dataCollection) {
 							var self = this,
 								q = $.Deferred();
-
-							if (!self.Model.ObjectModels[objectId]) {
-								q.resolve();
-								return q;
-							}
 
 							if ($$(viewId).showProgress)
 								$$(viewId).showProgress({ type: 'icon' });
 
-							self.Model.ObjectModels[objectId].findAll({})
-								.fail(function (err) {
-									q.reject(err);
+							self.getDataTableController(viewId).populateData(dataCollection).then(function () {
+								q.resolve();
 
-									if ($$(viewId).hideProgress)
-										$$(viewId).hideProgress();
-								})
-								.then(function (result) {
-									self.getDataTableController(viewId).populateDataToDataTable(result).then(function () {
-										q.resolve();
-
-										if ($$(viewId).hideProgress)
-											$$(viewId).hideProgress();
-									});
-								});
+								if ($$(viewId).hideProgress)
+									$$(viewId).hideProgress();
+							});
 
 							return q;
 						},

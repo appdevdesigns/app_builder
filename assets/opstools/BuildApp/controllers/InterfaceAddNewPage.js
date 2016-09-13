@@ -48,7 +48,7 @@ steal(
 									BlankPage = AD.Control.get('opstools.BuildApp.Templates.BlankPage');
 
 								this.controllers = {
-									QuickPage: new QuickPage(this.element),
+									QuickPage: new QuickPage(this.element, { data: this.options.data }),
 									BlankPage: new BlankPage(this.element, { data: this.options.data })
 								};
 							},
@@ -70,6 +70,7 @@ steal(
 									position: "center",
 									modal: true,
 									head: self.labels.interface.addNewPage,
+									css: 'ab-main-container',
 									body: {
 										rows: [
 											{
@@ -117,13 +118,15 @@ steal(
 								var self = this;
 
 								$$(self.componentId.addNewPopup).show();
+
+								self.changeTab($$(self.componentId.selectTab).getValue());
 							},
 
 							changeTab: function (newv, oldv) {
 								if (newv != oldv) {
 									switch (newv) {
 										case 'QuickPage':
-											// TODO
+											this.controllers.QuickPage.show();
 											break;
 										case 'BlankPage':
 											this.controllers.BlankPage.show();
@@ -137,7 +140,12 @@ steal(
 
 								switch ($$(self.componentId.selectTab).getValue()) {
 									case 'QuickPage':
-										// TODO
+										self.controllers.QuickPage.save()
+											.then(function (newPage) {
+												self.callAddNewPageEvent(newPage);
+
+												$$(self.componentId.addNewPopup).hide();
+											});
 										break;
 									case 'BlankPage':
 										self.controllers.BlankPage.save()

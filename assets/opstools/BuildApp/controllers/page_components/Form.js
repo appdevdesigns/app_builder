@@ -5,7 +5,6 @@ steal(
 
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 
 	function () {
@@ -34,12 +33,10 @@ steal(
 							};
 
 							// Controllers
-							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-								ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
+							var ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
 								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
 
 							self.controllers = {
-								ModelCreator: new ModelCreator(),
 								ConnectedDataPopup: new ConnectedDataPopup(),
 								SelectivityHelper: new SelectivityHelper()
 							};
@@ -58,10 +55,7 @@ steal(
 								isSaveVisible: self.info.name + '-save-visible',
 								isCancelVisible: self.info.name + '-cancel-visible',
 
-								addConnectObjectDataPopup: 'ab-' + self.info.name + '-connected-data-popup',
-
-								saveButton: self.info.name + '-save-button',
-								cancelButton: self.info.name + '-cancel-button'
+								addConnectObjectDataPopup: 'ab-' + self.info.name + '-connected-data-popup'
 							};
 
 							webix.ui({
@@ -155,7 +149,9 @@ steal(
 										onAfterEditStop: function (state, editor, ignoreUpdate) {
 											if (ignoreUpdate || state.old == state.value) return false;
 
-											var propertyValues = $$(self.componentIds.propertyView).getValues();
+											var viewId = self.componentIds.editForm,
+												data = self.getData(viewId),
+												propertyValues = $$(self.componentIds.propertyView).getValues();
 
 											switch (editor.id) {
 												case self.componentIds.editTitle:
@@ -168,7 +164,7 @@ steal(
 												case self.componentIds.isSaveVisible:
 												case self.componentIds.isCancelVisible:
 													var setting = self.getSettings();
-													self.populateSettings({ setting: setting }, true);
+													self.populateSettings({ setting: setting }, data.getDataCollection, true);
 													break;
 											}
 										}
@@ -179,8 +175,6 @@ steal(
 							self.setApp = function (app) {
 								self.data.app = app;
 
-								self.controllers.ModelCreator.setApp(app);
-
 								$$(self.componentIds.addConnectObjectDataPopup).setApp(app);
 							};
 
@@ -190,7 +184,7 @@ steal(
 								return self.data[viewId];
 							};
 
-							self.render = function (viewId, comId, settings, editable, defaultShowAll) {
+							self.render = function (viewId, comId, settings, editable, dataCollection, showAll) {
 								var data = self.getData(viewId),
 									q = $.Deferred(),
 									elementViews = [],
@@ -198,6 +192,8 @@ steal(
 
 								data.columns = null;
 								data.id = comId;
+								data.dataCollection = dataCollection;
+								data.isRendered = true;
 
 								settings.visibleFieldIds = settings.visibleFieldIds || [];
 
@@ -212,363 +208,317 @@ steal(
 								// Get object list
 								data.objectId = settings.object;
 
-								async.waterfall([
-									function (next) {
-										if (editable) {
-											self.getObjectModel(data.objectId)
-												.fail(function (err) { next(err) })
-												.then(function (objectModel) {
-													next(null, objectModel);
+
+								self.Model.ABColumn.findAll({ object: settings.object })
+									.fail(function (err) {
+										// TODO message
+										$$(viewId).hideProgress();
+										next(err);
+									})
+									.then(function (result) {
+										result.forEach(function (d) {
+											if (d.translate) d.translate();
+										});
+
+										data.columns = result;
+										data.columns.forEach(function (c) {
+											var isVisible = settings.visibleFieldIds.indexOf(c.id.toString()) > -1 || showAll;
+
+											if (!editable && !isVisible) return; // Hidden
+
+											var element = {
+												name: c.name, // Field name
+												labelWidth: 100,
+												minWidth: 500
+											};
+											element.label = c.label;
+
+											if (!c.setting.editor) { // Checkbox
+												element.view = 'checkbox';
+											}
+											else if (c.setting.editor === 'selectivity') {
+												element.minHeight = 45;
+												element.borderless = true;
+												element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
+													"<div class='ab-form-connect-data' data-object='#object#' data-multiple='#multiple#'></div>";
+
+												element.template = element.template
+													.replace('#width#', element.labelWidth - 3)
+													.replace('#label#', element.label)
+													.replace('#object#', c.linkToObject)
+													.replace('#multiple#', c.isMultipleRecords);
+											}
+											else if (c.setting.editor === 'popup') {
+												element.view = 'textarea';
+											}
+											else if (c.setting.editor === 'number') {
+												element.view = 'counter';
+											}
+											else if (c.setting.editor === 'date') {
+												element.view = 'datepicker';
+												element.timepicker = false;
+											}
+											else if (c.setting.editor === 'datetime') {
+												element.view = 'datepicker';
+												element.timepicker = true;
+											}
+											else if (c.setting.editor === 'richselect') {
+												element.view = 'richselect';
+												// TODO : Get list from database
+												element.options = $.map(c.setting.filter_options, function (opt, index) {
+													return {
+														id: index,
+														value: opt
+													}
 												});
-										} else {
-											next(null, null);
-										}
-									},
-									function (objectModel, next) {
-										self.Model.ABColumn.findAll({ object: settings.object })
-											.fail(function (err) {
-												// TODO message
-												$$(viewId).hideProgress();
-												next(err);
-											})
-											.then(function (result) {
-												result.forEach(function (d) {
-													if (d.translate) d.translate();
-												});
+											}
+											else {
+												element.view = c.setting.editor;
+											}
 
-												data.columns = result;
-												data.columns.forEach(function (c) {
-													var isVisible = settings.visibleFieldIds.indexOf(c.id.toString()) > -1 || defaultShowAll;
-
-													if (!editable && !isVisible) return; // Hidden
-
-													var element = {
-														name: c.name, // Field name
-														labelWidth: 100,
-														minWidth: 500
-													};
-													element.label = c.label;
-
-													if (!c.setting.editor) { // Checkbox
-														element.view = 'checkbox';
-													}
-													else if (c.setting.editor === 'selectivity') {
-														element.minHeight = 45;
-														element.borderless = true;
-														element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
-															"<div class='ab-form-connect-data' data-object='#object#' data-multiple='#multiple#'></div>";
-
-														element.template = element.template
-															.replace('#width#', element.labelWidth - 3)
-															.replace('#label#', element.label)
-															.replace('#object#', c.linkToObject)
-															.replace('#multiple#', c.isMultipleRecords);
-													}
-													else if (c.setting.editor === 'popup') {
-														element.view = 'textarea';
-													}
-													else if (c.setting.editor === 'number') {
-														element.view = 'counter';
-													}
-													else if (c.setting.editor === 'date') {
-														element.view = 'datepicker';
-														element.timepicker = false;
-													}
-													else if (c.setting.editor === 'datetime') {
-														element.view = 'datepicker';
-														element.timepicker = true;
-													}
-													else if (c.setting.editor === 'richselect') {
-														element.view = 'richselect';
-														// TODO : Get list from database
-														element.options = $.map(c.setting.filter_options, function (opt, index) {
-															return {
-																id: index,
-																value: opt
-															}
-														});
-													}
-													else {
-														element.view = c.setting.editor;
-													}
-
-													if (editable) { // Show/Hide options
-														element = {
-															css: 'ab-form-component-item',
-															cols: [
-																{
-																	name: c.id, // Column id
-																	view: 'segmented',
-																	margin: 10,
-																	maxWidth: 120,
-																	inputWidth: 100,
-																	inputHeight: 35,
-																	value: isVisible ? "show" : "hide",
-																	options: [
-																		{ id: "show", value: "Show" },
-																		{ id: "hide", value: "Hide" },
-																	]
-																},
-																element
+											if (editable) { // Show/Hide options
+												element = {
+													css: 'ab-form-component-item',
+													cols: [
+														{
+															name: c.id, // Column id
+															view: 'segmented',
+															margin: 10,
+															maxWidth: 120,
+															inputWidth: 100,
+															inputHeight: 35,
+															value: isVisible ? "show" : "hide",
+															options: [
+																{ id: "show", value: "Show" },
+																{ id: "hide", value: "Hide" },
 															]
-														};
+														},
+														element
+													]
+												};
+											}
+
+											// $$(viewId).addView(element);
+											elementViews.push(element);
+										});
+
+										// Redraw
+										webix.ui(elementViews, $$(viewId));
+
+										// Bind data
+										$$(viewId).bind(dataCollection);
+
+										// Title
+										if (editable) {
+											header.rows.push({
+												id: self.componentIds.title,
+												view: 'text',
+												placeholder: 'Title',
+												css: 'ab-component-header',
+												value: settings.title || '',
+												on: {
+													onChange: function (newv, oldv) {
+														if (newv != oldv) {
+															var propValues = $$(self.componentIds.propertyView).getValues();
+															propValues[self.componentIds.editTitle] = newv;
+															$$(self.componentIds.propertyView).setValues(propValues);
+														}
+													}
+												}
+											});
+										}
+										else if (settings.title) {
+											header.rows.push({
+												view: 'label',
+												css: 'ab-component-header',
+												label: settings.title || ''
+											});
+										}
+
+										// Description
+										if (editable) {
+											header.rows.push({
+												id: self.componentIds.description,
+												view: 'textarea',
+												placeholder: 'Description',
+												css: 'ab-component-description',
+												value: settings.description || '',
+												inputHeight: 60,
+												on: {
+													onChange: function (newv, oldv) {
+														if (newv != oldv) {
+															var propValues = $$(self.componentIds.propertyView).getValues();
+															propValues[self.componentIds.editDescription] = newv;
+															$$(self.componentIds.propertyView).setValues(propValues);
+														}
+													}
+												}
+
+											});
+										}
+										else if (settings.description) {
+											header.rows.push({
+												view: 'label',
+												css: 'ab-component-description',
+												label: settings.description || ''
+											});
+										}
+
+										$$(viewId).addView(header, 0);
+
+										// Save/Cancel buttons
+										var actionButtons = {
+											cols: [{}]
+										};
+
+										if (settings.saveVisible === 'show') {
+											var saveButtonId = viewId + '-form-save-button';
+
+											actionButtons.cols.push({
+												id: saveButtonId,
+												view: "button",
+												type: "form",
+												value: "Save",
+												width: 90,
+												inputWidth: 80,
+												click: function () {
+													if ($$(saveButtonId))
+														$$(saveButtonId).disable();
+
+													$$(viewId).showProgress({ type: "icon" });
+
+													var data = self.getData(viewId),
+														modelData = dataCollection.AD.currModel(),
+														isAdd;
+
+													if (modelData === null) { // Create
+														modelData = new dataCollection.AD.getModelObject()();
+														isAdd = true;
 													}
 
-													// $$(viewId).addView(element);
-													elementViews.push(element);
-												});
+													var editValues = $$(viewId).getValues(),
+														keys = Object.keys(editValues);
 
-												// Redraw
-												webix.ui(elementViews, $$(viewId));
+													keys.forEach(function (k) {
+														if (typeof editValues[k] !== 'undefined' && editValues[k] !== null) {
+															var colInfo = data.columns.filter(function (col) { return col.name === k; })[0];
 
-												// Title
-												if (editable) {
-													header.rows.push({
-														id: self.componentIds.title,
-														view: 'text',
-														placeholder: 'Title',
-														css: 'ab-component-header',
-														value: settings.title || '',
-														on: {
-															onChange: function (newv, oldv) {
-																if (newv != oldv) {
-																	var propValues = $$(self.componentIds.propertyView).getValues();
-																	propValues[self.componentIds.editTitle] = newv;
-																	$$(self.componentIds.propertyView).setValues(propValues);
+															if (colInfo) {
+																switch (colInfo.type) {
+																	case "boolean":
+																		modelData.attr(k, editValues[k] === 1 ? true : false);
+																		break;
+																	default:
+																		modelData.attr(k, editValues[k]);
+																		break;
 																}
 															}
-														}
-													});
-												}
-												else if (settings.title) {
-													header.rows.push({
-														view: 'label',
-														css: 'ab-component-header',
-														label: settings.title || ''
-													});
-												}
-
-												// Description
-												if (editable) {
-													header.rows.push({
-														id: self.componentIds.description,
-														view: 'textarea',
-														placeholder: 'Description',
-														css: 'ab-component-description',
-														value: settings.description || '',
-														inputHeight: 60,
-														on: {
-															onChange: function (newv, oldv) {
-																if (newv != oldv) {
-																	var propValues = $$(self.componentIds.propertyView).getValues();
-																	propValues[self.componentIds.editDescription] = newv;
-																	$$(self.componentIds.propertyView).setValues(propValues);
-																}
+															else {
+																modelData.attr(k, editValues[k]);
 															}
 														}
-
+														else
+															modelData.removeAttr(k);
+														// modelData.attr(k, null);
 													});
-												}
-												else if (settings.description) {
-													header.rows.push({
-														view: 'label',
-														css: 'ab-component-description',
-														label: settings.description || ''
-													});
-												}
 
-												$$(viewId).addView(header, 0);
+													modelData.save()
+														.then(function (result) {
+															$$(viewId).hideProgress();
 
-												// Save/Cancel buttons
-												var actionButtons = {
-													cols: [{}]
-												};
+															if (result.translate) result.translate();
 
-												if (settings.saveVisible === 'show') {
-													actionButtons.cols.push({
-														id: self.componentIds.saveButton,
-														view: "button",
-														type: "form",
-														value: "Save",
-														width: 90,
-														inputWidth: 80,
-														click: function () {
-															if ($$(self.componentIds.saveButton))
-																$$(self.componentIds.saveButton).disable();
+															// Add to data collection
+															if (isAdd)
+																data.dataCollection.AD.__list.push(result);
 
-															var formView = this.getFormView();
-															$$(formView).showProgress({ type: "icon" });
-
-															var data = self.getData(viewId),
-																modelData;
-
-															async.series([
-																function (next) {
-																	if (data.modelDataId) { // Update
-																		self.getModelData(data.objectId, data.modelDataId)
-																			.fail(function (err) { next(err) })
-																			.then(function (result) {
-																				modelData = result;
-																				next();
-																			});
-																	}
-																	else { // Create
-																		self.getObjectModel(data.objectId)
-																			.fail(function (err) { next(err) })
-																			.then(function (objectModel) {
-																				modelData = objectModel.newInstance();
-																				next();
-																			});
-																	}
-																},
-																function (next) {
-																	var editValues = $$(formView).getValues(),
-																		keys = Object.keys(editValues);
-
-																	keys.forEach(function (k) {
-																		if (typeof editValues[k] !== 'undefined' && editValues[k] !== null) {
-																			var colInfo = data.columns.filter(function (col) { return col.name === k; })[0];
-
-																			if (colInfo) {
-																				switch (colInfo.type) {
-																					case "boolean":
-																						modelData.attr(k, editValues[k] === 1 ? true : false);
-																						break;
-																					default:
-																						modelData.attr(k, editValues[k]);
-																						break;
-																				}
-																			}
-																			else {
-																				modelData.attr(k, editValues[k]);
-																			}
-																		}
-																		else
-																			modelData.removeAttr(k);
-																		// modelData.attr(k, null);
-																	});
-
-																	modelData.save()
-																		.fail(function (err) { next(err); })
-																		.then(function (result) {
-																			next();
-																		});
-																},
-																function (next) {
-																	$$(formView).hideProgress();
-																	if ($$(formView).save)
-																		$$(formView).save();
-
-																	self.callEvent('save', viewId, {
-																		modelDataId: data.modelDataId,
-																		returnPage: data.returnPage,
-																		id: data.id
-																	});
-
-																	if ($$(self.componentIds.saveButton))
-																		$$(self.componentIds.saveButton).enable();
-
-																	data.modelDataId = null;
-																	data.returnPage = null;
-
-																	next();
-																}
-															]);
-														}
-													});
-												}
-
-												if (settings.cancelVisible === 'show') {
-													actionButtons.cols.push({
-														id: self.componentIds.cancelButton,
-														view: "button",
-														value: "Cancel",
-														width: 90,
-														inputWidth: 80,
-														click: function () {
-															var data = self.getData(viewId);
-															data.modelDataId = null;
-
-															self.callEvent('cancel', viewId, {
+															self.callEvent('save', viewId, {
 																returnPage: data.returnPage,
 																id: data.id
 															});
-														}
-													});
+
+															if ($$(saveButtonId))
+																$$(saveButtonId).enable();
+
+															data.dataCollection.setCursor(null);
+															data.returnPage = null;
+
+															// Clear form
+															$$(viewId).setValues({});
+														});
 												}
+											});
+										}
 
-												$$(viewId).addView(actionButtons);
+										if (settings.cancelVisible === 'show') {
+											var cancelButtonId = viewId + '-form-cancel-button';
 
-												$$(viewId).refresh();
+											actionButtons.cols.push({
+												id: cancelButtonId,
+												view: "button",
+												value: "Cancel",
+												width: 90,
+												inputWidth: 80,
+												click: function () {
+													var data = self.getData(viewId);
 
-												self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
+													data.dataCollection.setCursor(null);
 
-												$('.ab-form-connect-data').click(function () { // TODO: add viewId filter to selector
-													var item = $(this),
-														objectId = item.data('object'),
-														multiple = item.data('multiple');
+													self.callEvent('cancel', viewId, {
+														returnPage: data.returnPage,
+														id: data.id
+													});
 
-													data.updatingItem = item;
+													data.returnPage = null;
 
-													var object = data.objectList.filter(function (obj) { return obj.id == objectId; });
+													// Clear form
+													$$(viewId).setValues({});
+												}
+											});
+										}
 
-													if (object && object.length > 0) {
-														var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
+										$$(viewId).addView(actionButtons);
 
-														$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
-															if (data.updatingItem)
-																self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
-														});
+										$$(viewId).refresh();
 
-														$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
-															if (data.updatingItem)
-																self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+										self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
 
-															data.updatingItem = null;
-														});
+										$('.ab-form-connect-data').click(function () { // TODO: add viewId filter to selector
+											var item = $(this),
+												objectId = item.data('object'),
+												multiple = item.data('multiple');
 
-														$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, multiple);
-													}
+											data.updatingItem = item;
+
+											var object = data.objectList.filter(function (obj) { return obj.id == objectId; });
+
+											if (object && object.length > 0) {
+												var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
+
+												$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
+													if (data.updatingItem)
+														self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
 												});
 
-												$$(viewId).hideProgress();
+												$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
+													if (data.updatingItem)
+														self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
 
-												self.callEvent('renderComplete', viewId);
+													data.updatingItem = null;
+												});
 
-												next();
-											});
-									}
-								], function (err) {
-									if (err)
-										q.reject();
-									else
-										q.resolve();
-								});
-
-								return q;
-							};
-
-							self.populateData = function (viewId, objectId, dataId, returnPage) {
-								var data = self.getData(viewId);
-
-								if (data.objectId != objectId) return; // Validate object
-
-								$$(viewId).showProgress({ type: "icon" });
-
-								data.modelDataId = dataId;
-								data.returnPage = returnPage;
-
-								self.getModelData(objectId, dataId)
-									.fail(function (err) {
-										// TODO : Error message
-									})
-									.then(function (result) {
-										$$(viewId).setValues(result.attr());
+												$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, multiple);
+											}
+										});
 
 										$$(viewId).hideProgress();
-										if ($$(self.componentIds.saveButton))
-											$$(self.componentIds.saveButton).enable();
+
+										self.callEvent('renderComplete', viewId);
+
+										q.resolve();
 									});
+
+								return q;
 							};
 
 							self.getSettings = function () {
@@ -594,12 +544,25 @@ steal(
 								return settings;
 							};
 
-							self.populateSettings = function (item, defaultShowAll) {
-								// Render form component
-								self.render(self.componentIds.editForm, item.id, item.setting, true, defaultShowAll);
-
-								var viewId = self.componentIds.editDataTable,
+							self.populateSettings = function (item, getDataCollectionFn, showAll) {
+								var viewId = self.componentIds.editForm,
 									data = self.getData(viewId);
+
+								data.getDataCollection = getDataCollectionFn;
+
+								async.waterfall([
+									// Get data collection
+									function (next) {
+										data.getDataCollection(item.setting.object).then(function (dataCollection) {
+											next(null, dataCollection);
+										});
+									},
+									// Render form component
+									function (dataCollection, next) {
+										self.render(self.componentIds.editForm, item.id, item.setting, true, dataCollection, showAll);
+									}
+								]);
+
 
 								// Get object list
 								data.objects = null;
@@ -637,81 +600,10 @@ steal(
 									});
 							};
 
-							self.getObjectModel = function (objectId) {
-								var q = $.Deferred();
+							self.setReturnPage = function (viewId, pageId) {
+								var data = self.getData(viewId);
 
-								async.waterfall([
-									function (next) {
-										self.Model.ABObject.findOne({ id: objectId })
-											.fail(function (err) { next(err); })
-											.then(function (object) {
-												next(null, object);
-											})
-									},
-									function (object, next) {
-										self.controllers.ModelCreator.getModel(object.name)
-											.fail(function (err) { next(err); })
-											.then(function (objectModel) {
-												q.resolve(objectModel);
-												next(null);
-											});
-									}
-								], function (err) {
-									if (err) {
-										q.reject(err);
-									}
-								});
-
-								return q;
-							};
-
-							self.getModelData = function (objectId, dataId) {
-								var q = $.Deferred(),
-									objectModel;
-
-								async.series([
-									function (next) {
-										self.getObjectModel(objectId)
-											.fail(function (err) { next(err); })
-											.then(function (result) {
-												objectModel = result;
-												next();
-											});
-									},
-									function (next) {
-										objectModel.findOne({ id: dataId })
-											.fail(function (err) {
-												next(err);
-												q.reject(err);
-											})
-											.then(function (result) {
-												if (!result) {
-													next();
-													q.reject();
-													return;
-												}
-
-												// Convert string to Date
-												var dateFields = [];
-												for (var key in objectModel.describe()) {
-													var value = objectModel.describe()[key];
-													if (value === 'date' || value === 'datetime') {
-														var dateVal = result.attr(key);
-														if (dateVal)
-															result.attr(key, new Date(dateVal));
-													}
-												}
-
-												// Populate data to form
-												if (result.translate) result.translate();
-
-												next();
-												q.resolve(result);
-											});
-									}
-								]);
-
-								return q;
+								data.returnPage = pageId;
 							};
 
 							self.registerEventAggregator = function (event_aggregator) {
@@ -728,6 +620,11 @@ steal(
 
 									self.event_aggregator.trigger(eventName, eventData);
 								}
+							};
+
+							self.isRendered = function (viewId) {
+								// TODO
+								return self.getData(viewId).isRendered === true;
 							};
 
 							self.editStop = function () {

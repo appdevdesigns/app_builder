@@ -4,7 +4,6 @@
 
 steal(
     // List your Controller's dependencies here:
-    
     function() {
         System.import('appdev').then(function () {
             System.import('opstools/BuildApp').then(function () {
@@ -13,7 +12,12 @@ steal(
 
                     'opstools/BuildApp/controllers/page_components/Menu',
                     'opstools/BuildApp/controllers/page_components/Grid',
-                    'opstools/BuildApp/controllers/page_components/Form'
+                    'opstools/BuildApp/controllers/page_components/Form',
+
+                    'opstools/BuildApp/models/ABObject',
+
+                    'opstools/BuildApp/controllers/utils/ModelCreator'
+
                     ).then(function() {
                         // Namespacing conventions:
                         // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
@@ -29,6 +33,11 @@ steal(
                                 // Call parent init
                                 this._super(element, options);
 
+                                this.Model = {
+                                    ABObject: AD.Model.get('opstools.BuildApp.ABObject')
+                                };
+
+                                this.data = {};
                                 this.dataSource = this.options.dataSource;
                                 this.rootPageID = this.activePageID = <%- rootPageID %>;
                                 this.pages = <%- JSON.stringify(pages) %>;
@@ -62,10 +71,13 @@ steal(
                             initControllers: function() {
                                 this.controllers = {};
 
-                                var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
+                                var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
+                                    
+                                    Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
                                     Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
                                     Form = AD.Control.get('opstools.BuildApp.Components.Form');
 
+                                this.controllers.ModelCreator = new ModelCreator(self.element);
                                 this.controllers.Menu = new Menu(self.element, {});
                                 this.controllers.Grid = new Grid(self.element, {});
                                 this.controllers.Form = new Form(self.element, {});
@@ -109,7 +121,7 @@ steal(
 
                                                 // Populate data to edit form
                                                 var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
-                                                self.components.Form.populateData(formViewId, com.setting.object, data.selected_data.row, com.page);
+                                                self.components.Form.setReturnPage(formViewId, com.page);
                                             }
 
                                             break;
@@ -125,24 +137,6 @@ steal(
                                             // Redirect to return page
                                             if (data.returnPage && data.returnPage != self.activePageID) {
                                                 self.showPage(data.returnPage);
-
-                                                // Refresh grids
-                                                self.pages[self.activePageID].components.forEach(function (c) {
-                                                    if (c.component === 'Grid' && com.setting.object == c.setting.object)
-                                                        self.renderComponent(self.pages[self.activePageID], c);
-                                                });
-                                            }
-                                            else {
-                                                var curPage = self.pages[self.activePageID],
-                                                    bindGrids = self.getBindGrids(curPage, data.id);
-
-                                                bindGrids.forEach(function(grid) {
-                                                    var gridId = self.getComponentId(curPage.domID, grid.id);
-                                                    if ($$(gridId) && $$(gridId).unselectAll)
-                                                        $$(gridId).unselectAll();
-                                                });
-
-                                                $$(data.viewId).setValues({});
                                             }
 
                                             break;
@@ -155,14 +149,7 @@ steal(
                                             if (data.returnPage && data.returnPage != self.activePageID)
                                                 self.showPage(data.returnPage);
                                             else {
-                                                var curPage = self.pages[self.activePageID],
-                                                    bindGrids = self.getBindGrids(curPage, data.id);
-
-                                                bindGrids.forEach(function(grid) {
-                                                    var gridId = self.getComponentId(curPage.domID, grid.id);
-                                                    if ($$(gridId) && $$(gridId).unselectAll)
-                                                        $$(gridId).unselectAll();
-                                                });
+                                                var curPage = self.pages[self.activePageID];
 
                                                 $$(data.viewId).setValues({});
                                             }
@@ -220,6 +207,8 @@ steal(
                                     page = self.pages[pageId],
                                     rows = [];
 
+                                self.controllers.ModelCreator.setApp(page.application);
+
                                     page.components.forEach(function (item) {
                                         self.renderComponent(page, item);
                                     });
@@ -230,7 +219,10 @@ steal(
                                 var self = this,
                                     component = self.components[item.component],
                                     view = component.getView(),
+                                    viewId = self.getComponentId(page.domID, item.id),
                                     app;
+
+                                if(component.isRendered(viewId)) return;
 
                                 if (page.application && typeof page.application === 'object')
                                         app = page.application;
@@ -248,7 +240,7 @@ steal(
 
                                     if (view && component.render && item.setting) {
                                         view = $.extend(true, {}, view);
-                                        view.id = self.getComponentId(page.domID, item.id);
+                                        view.id = viewId;
                                         view.container = view.id;
                                         view.autowidth = true;
 
@@ -262,24 +254,79 @@ steal(
 
                                         webix.ui(view);
 
-                                        component.render(view.id, item.id, item.setting);
-
-                                        if (item.component === 'Form') {
-                                            var bindGrids = self.getBindGrids(page, item.id); 
-                                            
-                                            bindGrids.forEach(function(grid) {
-                                                var gridComId = self.getComponentId(page.domID, grid.id);
-                                                $$(view.id).bind(gridComId);
-                                            });
-                                        }
+                                        async.waterfall([
+                                            function(next){
+                                                if (item.setting.object) {
+                                                    self.getDataCollection(item.setting.object)
+                                                        .then(function(dataCollection) {
+                                                            next(null, dataCollection);
+                                                        });
+                                                }
+                                                else {
+                                                    next(null, null);
+                                                }
+                                            },
+                                            function (dataCollection, next) {
+                                                component.render(view.id, item.id, item.setting, false, dataCollection);
+                                                next();
+                                            }
+                                        ]);
 
                                     }
                                 },
 
-                                getBindGrids: function (page, formId) {
-                                    return page.components.filter(function(c) {
-                                        return c.component === 'Grid' && c.setting && c.setting.editForm == formId;
-                                    }) || [];
+                                getDataCollection: function (objectId) {
+                                    var self = this,
+                                        q = $.Deferred();
+
+                                    if (!self.data.dataCollections) self.data.dataCollections = {};
+
+                                    if (!self.data.dataCollections[objectId]) {
+                                        async.waterfall([
+                                            // Get object info
+                                            function (next) {
+                                                self.Model.ABObject.findOne({ id: objectId })
+                                                    .fail(function (err) { next(err); })
+                                                    .then(function (objInfo) {
+                                                        next(null, objInfo);
+                                                    });
+                                            },
+                                            // Get object model
+                                            function (objInfo, next) {
+                                                self.controllers.ModelCreator.getModel(objInfo.attr('name'))
+                                                    .fail(function (err) { next(err); })
+                                                    .then(function (objectModel) {
+
+                                                        next(null, objectModel);
+                                                    });
+                                            },
+                                            // Find data
+                                            function (objModel, next) {
+                                                objModel.findAll({})
+                                                    .fail(function (err) { next(err); })
+                                                    .then(function (result) {
+                                                        result.forEach(function (r) { if (r.translate) r.translate(); });
+
+                                                        if (!self.data.dataCollections[objectId])
+                                                            self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
+
+                                                        next();
+                                                    });
+                                            }
+                                        ], function (err) {
+                                            if (err) {
+                                                q.reject(err);
+                                                return;
+                                            }
+
+                                            q.resolve(self.data.dataCollections[objectId]);
+                                        });
+                                    }
+                                    else {
+                                        q.resolve(self.data.dataCollections[objectId]);
+                                    }
+
+                                    return q;
                                 },
 
                                 resize: function (height) {

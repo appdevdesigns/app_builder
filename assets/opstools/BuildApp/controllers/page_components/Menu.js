@@ -116,6 +116,12 @@ steal(
 								self.data.page = page;
 							};
 
+							self.getData = function (viewId) {
+								if (!self.data[viewId]) self.data[viewId] = {};
+
+								return self.data[viewId];
+							};
+
 							self.getEvent = function (viewId) {
 								if (!self.events[viewId]) self.events[viewId] = {};
 
@@ -123,7 +129,8 @@ steal(
 							};
 
 							self.render = function (viewId, comId, setting) {
-								var q = $.Deferred();
+								var q = $.Deferred(),
+									data = self.getData(viewId);
 
 								if ($$(viewId))
 									$$(viewId).clearAll();
@@ -131,6 +138,8 @@ steal(
 								var view = $.extend(true, {}, self.getView());
 								view.id = viewId;
 								view.layout = setting.layout || 'x';
+
+								data.isRendered = true;
 
 								if (setting.click)
 									view.click = setting.click;
@@ -270,6 +279,11 @@ steal(
 
 								if (renderCompleteEvent)
 									events.renderComplete = renderCompleteEvent;
+							};
+
+							self.isRendered = function (viewId) {
+								// TODO
+								return self.getData(viewId).isRendered === true;
 							};
 
 							self.editStop = function () {

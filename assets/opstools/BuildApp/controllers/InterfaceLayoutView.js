@@ -1,5 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/models/ABObject.js',
+	'opstools/BuildApp/models/ABPage.js',
 	'opstools/BuildApp/models/ABPageComponent.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
@@ -26,6 +28,7 @@ steal(
 							// Call parent init
 							self._super(element, self.options);
 							self.Model = {
+								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
 								ABPageComponent: AD.Model.get('opstools.BuildApp.ABPageComponent')
 							};
@@ -223,6 +226,7 @@ steal(
 
 																self.data.editedComponentId = item_id;
 
+
 																if ($$(item.name + '-edit-view')) {
 																	if (!item.setting) item.setting = {};
 
@@ -230,7 +234,7 @@ steal(
 																	if (component.setPage)
 																		component.setPage(self.data.page);
 
-																	component.populateSettings(item);
+																	component.populateSettings(item, self.getDataCollection.bind(self));
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.name + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -582,34 +586,100 @@ steal(
 								settings = com.attr('setting');
 
 							if (view && component.render && settings) {
-								var settings = settings.attr();
+								var settings = settings.attr(),
+									editable = false;
 								settings.page = self.data.page;
 
 								view = $.extend(true, {}, view);
 								view.id = self.getComponentId(com.attr('id'));
 								view.container = view.id;
 								view.autowidth = true;
-								// view.disabled = true;
 
 								$('#' + view.id).html('');
 
 								webix.ui(view);
 
-								component.render(view.id, com.id, settings)
-									.then(function () {
-										if (com.component === 'Form') {
-											var objectGridDatas = self.data.componentsInPage.filter(function (c) {
-												return c.component === 'Grid' && c.setting && c.setting.editForm == com.attr('id');
-											});
-
-											objectGridDatas.forEach(function (grid) {
-												var gridId = self.getComponentId(grid.id);
-												$$(view.id).bind(gridId);
-											});
+								async.waterfall([
+									// Get data collection
+									function (next) {
+										if (settings.object) {
+											self.getDataCollection(settings.object)
+												.fail(next)
+												.then(function (dataCollection) {
+													next(null, dataCollection);
+												});
 										}
+										else
+											next(null, null);
+									},
+									// Render component
+									function (dataCollection, next) {
+										component.render(view.id, com.id, settings, editable, dataCollection)
+											.then(function () {
+												next();
+											});
 
+									}
+								], function (err) {
+									if (err)
+										q.reject(err);
+									else
 										q.resolve();
-									});
+								});
+
+							}
+
+							return q;
+						},
+
+						getDataCollection: function (objectId) {
+							var self = this,
+								q = $.Deferred();
+
+							if (!self.data.dataCollections) self.data.dataCollections = {};
+
+							if (!self.data.dataCollections[objectId]) {
+								async.waterfall([
+									// Get object info
+									function (next) {
+										self.Model.ABObject.findOne({ id: objectId })
+											.fail(function (err) { next(err); })
+											.then(function (objInfo) {
+												next(null, objInfo);
+											});
+									},
+									// Get object model
+									function (objInfo, next) {
+										self.controllers.ModelCreator.getModel(objInfo.attr('name'))
+											.fail(function (err) { next(err); })
+											.then(function (objectModel) {
+												next(null, objectModel);
+											});
+									},
+									// Find data
+									function (objModel, next) {
+										objModel.findAll({})
+											.fail(function (err) { next(err); })
+											.then(function (result) {
+												result.forEach(function (r) { if (r.translate) r.translate(); });
+
+												if (!self.data.dataCollections[objectId])
+													self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
+
+												next();
+											});
+									}
+								], function (err) {
+									if (err) {
+										q.reject(err);
+										return;
+									}
+
+									q.resolve(self.data.dataCollections[objectId]);
+								});
+							}
+							else {
+								q.resolve(self.data.dataCollections[objectId]);
 							}
 
 							return q;

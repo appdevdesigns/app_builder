@@ -304,29 +304,14 @@ steal(
 
 						calculateRowHeight: function (row, column, dataNumber) {
 							var self = this,
-								rowHeight = 35;
-							// maxItemWidth = 100, // Max item width
-							// columnInfo = $$(self.webixUiId.objectDatatable).getColumnConfig(column),
-							// curSpace = columnInfo.width * rowHeight,
-							// expectedSpace = (dataNumber * rowHeight * maxItemWidth),
-							// calHeight = 0;
-
-							var calHeight = dataNumber * rowHeight;
-
-							// if (expectedSpace > curSpace) {
-							// 	while (expectedSpace > (calHeight * columnInfo.width)) {
-							// 		calHeight += rowHeight;
-							// 	}
-							// }
-							// else {
-							// 	calHeight = rowHeight;
-							// }
+								rowHeight = 35,
+								calHeight = dataNumber * rowHeight;
 
 							if (self.dataTable.getItem(row).$height != calHeight)
 								self.dataTable.setRowHeight(row, calHeight);
 						},
 
-						populateDataToDataTable: function (result) {
+						populateData: function (result) {
 							var self = this,
 								q = $.Deferred();
 
@@ -335,116 +320,133 @@ steal(
 								return c.editor === 'date' || c.editor === 'datetime';
 							});
 
-							result.forEach(function (r) {
-								if (r.translate)
-									r.translate();
+							// Convert string to Date object
+							// if (dateCols && dateCols.length > 0) {
+							// 	result.forEach(function (r) {
+							// 		if (r.translate)
+							// 			r.translate();
 
-								dateCols.forEach(function (c) {
-									if (r[c.id]) // Convert string to Date object
-										r.attr(c.id, new Date(r[c.id]));
-								});
-							});
+							// 		dateCols.forEach(function (c) {
+							// 			if (r[c.id])
+							// 				r.attr(c.id, new Date(r[c.id]));
+							// 		});
+							// 	});
+							// }
 
-							// Get connected columns
-							var linkCols = $.grep(self.dataTable.config.columns, function (c) {
-								return c.linkToObject;
-							});
+							self.dataTable.clearAll();
 
-							var prepareConnectedDataEvents = [];
+							// Populate data
+							if (result) {
+								if (result instanceof webix.DataCollection)
+									self.dataTable.data.sync(result);
+								else
+									self.dataTable.parse(result.attr ? result.attr() : result);
+							}
 
-							linkCols.forEach(function (c) {
-								prepareConnectedDataEvents.push(function (callback) {
-									var getConnectedDataEvents = [];
+							q.resolve();
 
-									// Get connected object name
-									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
+							// // Get connected columns
+							// var linkCols = $.grep(self.dataTable.config.columns, function (c) {
+							// 	return c.linkToObject;
+							// });
 
-									if (!connectedObj) {
-										callback();
-										return;
-									}
+							// var prepareConnectedDataEvents = [];
 
-									// Get connected object model
-									self.controllers.ModelCreator.getModel(connectedObj.name)
-										.then(function (objectModel) {
+							// linkCols.forEach(function (c) {
+							// 	prepareConnectedDataEvents.push(function (callback) {
+							// 		var getConnectedDataEvents = [];
 
-											can.each(result, function (r) {
-												getConnectedDataEvents.push(function (cb) {
-													var connectedDataIds = r[c.id];
+							// 		// Get connected object name
+							// 		var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
 
-													if (r.connectedData)
-														r.connectedData.attr(c.id, [], true);
+							// 		if (!connectedObj) {
+							// 			callback();
+							// 			return;
+							// 		}
 
-													if (!connectedDataIds || connectedDataIds.length < 1) {
-														cb();
-														return true;
-													}
+							// 		// Get connected object model
+							// 		self.controllers.ModelCreator.getModel(connectedObj.name)
+							// 			.then(function (objectModel) {
 
-													if (!self.dataTable.isColumnVisible(c.id)) {
-														cb();
-														return true;
-													}
+							// 				can.each(result, function (r) {
+							// 					getConnectedDataEvents.push(function (cb) {
+							// 						var connectedDataIds = r[c.id];
 
-													connectedDataIds = connectedDataIds.filter(function (d) { return typeof d !== 'undefined' && d !== null; });
-													connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
+							// 						if (r.connectedData)
+							// 							r.connectedData.attr(c.id, [], true);
 
-													objectModel.Cached.findAll({ or: connectedDataIds }, false, true)
-														.then(function (connectedResult) {
-															connectedResult.forEach(function (d) {
-																if (d.translate) d.translate();
+							// 						if (!connectedDataIds || connectedDataIds.length < 1) {
+							// 							cb();
+							// 							return true;
+							// 						}
 
-																d.attr('labelFormat', connectedObj.getDataLabel(d));
-															});
+							// 						if (!self.dataTable.isColumnVisible(c.id)) {
+							// 							cb();
+							// 							return true;
+							// 						}
 
-															if (connectedResult && connectedResult.length > 0) {
-																if (!r.attr('connectedData'))
-																	r.attr('connectedData', {}, true);
+							// 						connectedDataIds = connectedDataIds.filter(function (d) { return typeof d !== 'undefined' && d !== null; });
+							// 						connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
 
-																var connectedDataValue = $.map(connectedResult.attr(), function (d) {
-																	return {
-																		id: d.id,
-																		text: d.labelFormat
-																	}
-																});
+							// 						objectModel.findAll({ or: connectedDataIds }, false, true)
+							// 							.then(function (connectedResult) {
+							// 								connectedResult.forEach(function (d) {
+							// 									if (d.translate) d.translate();
 
-																r.connectedData.attr(c.id, connectedDataValue, true);
-															}
+							// 									d.attr('labelFormat', connectedObj.getDataLabel(d));
+							// 								});
 
-															cb();
-														});
-												});
-											});
+							// 								if (connectedResult && connectedResult.length > 0) {
+							// 									if (!r.attr('connectedData'))
+							// 										r.attr('connectedData', {}, true);
 
-											async.parallel(getConnectedDataEvents, callback);
-										});
+							// 									var connectedDataValue = $.map(connectedResult.attr(), function (d) {
+							// 										return {
+							// 											id: d.id,
+							// 											text: d.labelFormat
+							// 										}
+							// 									});
 
-								});
-							});
+							// 									r.connectedData.attr(c.id, connectedDataValue, true);
+							// 								}
 
-							async.parallel(prepareConnectedDataEvents,
-								function (err) {
-									if (err) {
-										q.reject(err);
-										return;
-									}
+							// 								cb();
+							// 							});
+							// 					});
+							// 				});
 
-									var objData = [];
-									result.forEach(function (r) {
-										if (r.constructor.name === 'Cached' && r.isUnsync()) {
-											var data = r.attr();
-											data.isUnsync = true;
-											objData.push(data);
-										}
-										else
-											objData.push(r.attr());
-									});
+							// 				async.parallel(getConnectedDataEvents, callback);
+							// 			});
 
-									self.dataTable.clearAll();
-									self.dataTable.parse(objData);
+							// 	});
+							// });
 
-									q.resolve();
-								}
-							);
+							// async.parallel(prepareConnectedDataEvents,
+							// 	function (err) {
+							// 		if (err) {
+							// 			q.reject(err);
+							// 			return;
+							// 		}
+
+							// 		// TODO: highligth unsync row
+							// 		// var objData = [];
+							// 		// result.forEach(function (r) {
+							// 		// 	if (r.constructor.name === 'Cached' && r.isUnsync()) {
+							// 		// 		var data = r.attr();
+							// 		// 		data.isUnsync = true;
+							// 		// 		objData.push(data);
+							// 		// 	}
+							// 		// 	else
+							// 		// 		objData.push(r.attr());
+							// 		// });
+							// 		// self.dataTable.parse(objData);
+
+							// 		self.dataTable.clearAll();
+							// 		self.dataTable.data.sync(result);
+
+							// 		q.resolve();
+							// 	}
+							// );
 
 							return q;
 						}

@@ -20,7 +20,7 @@
 	text-align: right;
 }
 .ab-main-container .bold {
-	font-weight: bold;
+	font-weight: bold !important;
 }
 .ab-scroll-y {
 	overflow-y: auto !important;
@@ -236,6 +236,11 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 /* Interface tree view */
 .ab-main-container .webix_tree_item.webix_selected span {
 	background: #3498db !important;
+}
+
+/* Interface new page popup */
+.ab-interface-new-quick-page label {
+	font-weight: normal; /* Override bootstrap*/
 }
 
 /* Interface page layout */
