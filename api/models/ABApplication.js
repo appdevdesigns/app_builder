@@ -57,11 +57,11 @@ module.exports = {
         },
 
         actionKeyName:function(){
-            return 'opstools.' + this.validAppName() + '.view'; 
+            return actionKeyName(this.validAppName()); // 'opstools.' + this.validAppName() + '.view'; 
         },
 
         validAppName:function() {
-            return 'AB_' + nameFilter(this.name);
+            return validAppName(this.name); 
         }
 
     },
@@ -123,6 +123,23 @@ module.exports = {
                         .then(function () {
                             callback();
                         });
+                },
+
+                function  ABApplication_AfterDelete_RemovePermissions (callback) {
+
+                    var actionKeys = [];
+                    destroyedApplications.forEach(function(deletedApp){
+                        actionKeys.push( actionKeyName( validAppName(deletedApp.name)));
+                    })
+
+                    Permissions.action.destroyKeys(actionKeys)
+                    .fail(function(err){
+                        callback(err);
+                    })
+                    .then(function(data){
+                        callback();
+                    })
+                    
                 }
             ], cb);
         }
@@ -134,7 +151,10 @@ module.exports = {
 
 };
 
+function actionKeyName(name) {
+    return 'opstools.' + name + '.view';
+}
 
-function nameFilter(name) {
-    return String(name).replace(/[^a-z0-9]/gi, '');
+function validAppName(name){
+    return AppBuilder.rules.toApplicationNameFormat(name); 
 }
