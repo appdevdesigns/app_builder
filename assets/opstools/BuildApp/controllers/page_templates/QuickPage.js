@@ -152,6 +152,27 @@ steal(
 									}
 								},
 
+								// Create the view & connected data page
+								function (next) {
+									if ($$(self.componentIds.viewData).getValue) { // TODO :check select of connected data
+										// Create the view page
+										self.Model.ABPage.create({
+											application: self.options.data.appId,
+											parent: mainPageId,
+											name: 'View ' + selectedObj.name,
+											label: 'View ' + selectedObj.label
+										})
+											.fail(function (err) { next(err); })
+											.then(function (result) {
+												viewPageId = result.id;
+												next();
+											});
+									}
+									else {
+										next();
+									}
+								},
+
 								// Insert 'Add new object' to the main page
 								function (next) {
 									if ($$(self.componentIds.addNewButton).getValue()) {
@@ -237,6 +258,27 @@ steal(
 												removable: "disable"
 
 												// TODO: Add 'view button'
+											}
+										})
+											.fail(function (err) { next(err); })
+											.then(function () { next(); });
+									}
+									else {
+										next();
+									}
+								},
+
+								// Add View component to the view page
+								function (next) {
+									if ($$(self.componentIds.viewData).getValue) {
+										self.Model.ABPageComponent.create({
+											page: viewPageId,
+											component: 'View',
+											weight: 0,
+											setting: {
+												title: selectedObj.label,
+												object: $$(self.componentIds.selectObjects).getValue(),
+												visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; })
 											}
 										})
 											.fail(function (err) { next(err); })

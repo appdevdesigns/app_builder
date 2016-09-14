@@ -3,6 +3,7 @@ steal(
 	'opstools/BuildApp/controllers/page_components/Menu.js',
 	'opstools/BuildApp/controllers/page_components/Grid.js',
 	'opstools/BuildApp/controllers/page_components/Form.js',
+	'opstools/BuildApp/controllers/page_components/View.js',
 
 	'opstools/BuildApp/controllers/InterfaceLayoutView.js',
 	'opstools/BuildApp/controllers/InterfaceComponentList.js',
@@ -57,6 +58,7 @@ steal(
 							var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
 								Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
 								Form = AD.Control.get('opstools.BuildApp.Components.Form'),
+								View = AD.Control.get('opstools.BuildApp.Components.View'),
 
 								LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView'),
 								ComponentList = AD.Control.get('opstools.BuildApp.InterfaceComponentList');
@@ -65,6 +67,7 @@ steal(
 							self.controllers.Menu = new Menu(self.element, {});
 							self.controllers.Grid = new Grid(self.element, {});
 							self.controllers.Form = new Form(self.element, {});
+							self.controllers.View = new View(self.element, {});
 
 
 							self.controllers.LayoutView = new LayoutView(self.element, {
@@ -120,6 +123,7 @@ steal(
 							self.components.Menu = self.controllers.Menu.getInstance();
 							self.components.Grid = self.controllers.Grid.getInstance();
 							self.components.Form = self.controllers.Form.getInstance();
+							self.components.View = self.controllers.View.getInstance();
 
 							self.controllers.LayoutView.setComponents(self.components);
 							self.controllers.ComponentList.setComponents(self.components);
@@ -143,6 +147,7 @@ steal(
 							self.controllers.LayoutView.setApp(app);
 							self.controllers.Grid.setApp(app);
 							self.controllers.Form.setApp(app);
+							self.controllers.View.setApp(app);
 						},
 
 						setPage: function (page) {
@@ -169,6 +174,7 @@ steal(
 							var self = this;
 
 							self.controllers.Form.setObjectList(objectList);
+							self.controllers.View.setObjectList(objectList);
 						},
 
 						refreshMenuComponent: function (pageId) {
@@ -177,6 +183,7 @@ steal(
 
 						resize: function (height) {
 							this.controllers.Form.resize(height);
+							this.controllers.View.resize(height);
 						}
 
 

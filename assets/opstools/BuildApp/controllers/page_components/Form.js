@@ -344,6 +344,7 @@ steal(
 												css: 'ab-component-description',
 												value: settings.description || '',
 												inputHeight: 60,
+												height: 70,
 												on: {
 													onChange: function (newv, oldv) {
 														if (newv != oldv) {

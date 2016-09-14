@@ -123,6 +123,8 @@ steal(
 															}
 
 															self.renderDataTable(viewId, data.dataCollection, {
+																viewPage: propertyValues.viewPage,
+																viewId: propertyValues.viewId,
 																editPage: propertyValues.editPage,
 																editForm: propertyValues.editForm
 															});
@@ -170,6 +172,21 @@ steal(
 											}
 										},
 										{ label: "Data table", type: "label" },
+										{
+											id: 'detailView',
+											name: 'detailView',
+											label: 'Detail view',
+											type: 'richselect',
+											template: function (data, dataValue) {
+												var selectedDetailView = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+												if (selectedDetailView && selectedDetailView.length > 0) {
+													return selectedDetailView[0].value;
+												}
+												else {
+													return "[none]";
+												}
+											}
+										},
 										{
 											id: 'editForm',
 											name: 'editForm',
@@ -242,11 +259,15 @@ steal(
 
 													self.populateSettings({ setting: setting }, data.getDataCollection, true);
 													break;
+												case 'detailView':
 												case 'editForm':
 												case 'removable':
-													var editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
+													var detailView = propertyValues.detailView && propertyValues.detailView.indexOf('|') > -1 ? propertyValues.detailView.split('|') : null,
+														editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
 
 													self.renderDataTable(viewId, data.dataCollection, {
+														viewPage: detailView ? detailView[0] : null,
+														viewId: detailView ? detailView[1] : null,
 														editPage: editValue ? editValue[0] : null,
 														editForm: editValue ? editValue[1] : null
 													}, propertyValues.removable);
@@ -372,6 +393,8 @@ steal(
 									}
 
 									self.renderDataTable(viewId, dataCollection, {
+										viewPage: settings.viewPage,
+										viewId: settings.viewId,
 										editPage: settings.editPage,
 										editForm: settings.editForm
 									}, settings.removable);
@@ -516,7 +539,16 @@ steal(
 
 									// Select edit item
 									self.getDataTableController(viewId).registerItemClick(function (id, e, node) {
-										if (e.target.className.indexOf('fa-pencil') > -1) {
+										if (id.column === 'view_detail') {
+											self.callEvent('view', viewId, {
+												id: data.id,
+												selected_data: id
+											});
+
+											$$(viewId).define('select', true);
+											$$(viewId).select(id);
+										}
+										else if (id.column === 'edit_form') {
 											self.callEvent('edit', viewId, {
 												id: data.id,
 												selected_data: id
@@ -555,6 +587,9 @@ steal(
 							self.getSettings = function () {
 								var propertyValues = $$(self.componentIds.propertyView).getValues(),
 									columns = $.map($$(self.componentIds.editDataTable).config.columns, function (c) { return [c.dataId]; }),
+									detailView = propertyValues.detailView && propertyValues.detailView.split('|') || null,
+									viewPageId = detailView && detailView[0] || null,
+									viewId = detailView && detailView[1] || null,
 									editForm = propertyValues.editForm && propertyValues.editForm.split('|') || null,
 									editPageId = editForm && editForm[0] || null,
 									editFormId = editForm && editForm[1] || null;
@@ -563,6 +598,8 @@ steal(
 									title: propertyValues.title || '',
 									description: propertyValues.description || '',
 									object: propertyValues.object,
+									viewPage: viewPageId,
+									viewId: viewId,
 									editPage: editPageId,
 									editForm: editFormId,
 									columns: columns.filter(function (c) { return c; }),
@@ -616,18 +653,34 @@ steal(
 
 										next();
 									},
-									// Data table - Edit form
+									// Data table - Detail view & Edit form
 									function (next) {
 										var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 
-										AD.comm.service.get({
-											url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId
-										})
+										self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] })
+											// AD.comm.service.get({
+											// 	url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId
+											// })
 											.fail(function (err) { next(err); })
 											.then(function (pages) {
-												var formComponents = [];
+												var viewComponents = [],
+													formComponents = [];
 
 												pages.forEach(function (p) {
+													// Details view components
+													var detailsViews = p.components.filter(function (c) {
+														return c.component === "View" && c.setting && item.setting && c.setting.object === item.setting.object;
+													});
+
+													if (detailsViews && detailsViews.length > 0) {
+														viewComponents = viewComponents.concat($.map(detailsViews, function (v) {
+															return [{
+																id: p.id + '|' + v.id,
+																value: p.name + ' - ' + v.component
+															}];
+														}));
+													}
+
 													// Filter form components
 													var forms = p.components.filter(function (c) {
 														return c.component === "Form" && c.setting && item.setting && c.setting.object === item.setting.object;
@@ -643,10 +696,19 @@ steal(
 													}
 												});
 
+												var detailViewItem = $$(self.componentIds.propertyView).getItem('detailView');
+												detailViewItem.options = viewComponents;
+												detailViewItem.options.splice(0, 0, {
+													id: null,
+													pageId: null,
+													value: '[none]'
+												});
+
 												var editFormItem = $$(self.componentIds.propertyView).getItem('editForm');
 												editFormItem.options = formComponents;
 												editFormItem.options.splice(0, 0, {
 													id: null,
+													pageId: null,
 													value: '[none]'
 												});
 
@@ -655,7 +717,11 @@ steal(
 									},
 									// Set property values
 									function (next) {
-										var editForm;
+										var detailView, editForm;
+
+										if (item.setting.viewPage && item.setting.viewId)
+											detailView = item.setting.viewPage + '|' + item.setting.viewId;
+
 										if (item.setting.editPage && item.setting.editForm)
 											editForm = item.setting.editPage + '|' + item.setting.editForm;
 
@@ -663,6 +729,7 @@ steal(
 											title: item.setting.title || '',
 											description: item.setting.description || '',
 											object: item.setting.object,
+											detailView: detailView,
 											editForm: editForm,
 											removable: item.setting.removable || 'disable',
 											filter: item.setting.filter || 'disable',
@@ -675,7 +742,7 @@ steal(
 								]);
 							};
 
-							self.renderDataTable = function (viewId, dataCollection, editFormInfo, isTrashVisible) {
+							self.renderDataTable = function (viewId, dataCollection, extraColumns, isTrashVisible) {
 								var data = self.getData(viewId);
 
 								if (!data.columns) return;
@@ -687,12 +754,26 @@ steal(
 								}).slice(0);
 								if (columns.length < 1) columns = data.columns.slice(0); // Show all
 
+								// View column
+								if (extraColumns.editPage && extraColumns.editForm) {
+									columns.push({
+										width: 60,
+										setting: {
+											id: "view_detail",
+											header: "",
+											label: "",
+											template: "<span class='go-to-view-detail'>View</span>",
+											css: 'ab-object-view-column'
+										}
+									});
+								}
 
-								if (editFormInfo.editPage && editFormInfo.editForm) {
+								// Edit column
+								if (extraColumns.editPage && extraColumns.editForm) {
 									columns.push({
 										width: 45,
 										setting: {
-											id: "appbuilder_go_to_edit_form",
+											id: "edit_form",
 											header: "",
 											label: "",
 											template: "<span class='go-to-edit-form'>{common.editIcon()}</span>",

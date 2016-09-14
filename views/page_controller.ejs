@@ -13,6 +13,7 @@ steal(
                     'opstools/BuildApp/controllers/page_components/Menu',
                     'opstools/BuildApp/controllers/page_components/Grid',
                     'opstools/BuildApp/controllers/page_components/Form',
+                    'opstools/BuildApp/controllers/page_components/View',
 
                     'opstools/BuildApp/models/ABObject',
 
@@ -75,12 +76,14 @@ steal(
                                     
                                     Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
                                     Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
-                                    Form = AD.Control.get('opstools.BuildApp.Components.Form');
+                                    Form = AD.Control.get('opstools.BuildApp.Components.Form'),
+                                    View = AD.Control.get('opstools.BuildApp.Components.View');
 
                                 this.controllers.ModelCreator = new ModelCreator(self.element);
                                 this.controllers.Menu = new Menu(self.element, {});
                                 this.controllers.Grid = new Grid(self.element, {});
                                 this.controllers.Form = new Form(self.element, {});
+                                this.controllers.View = new View(self.element, {});
                             },
 
 
@@ -91,6 +94,7 @@ steal(
                                 self.components.Menu = self.controllers.Menu.getInstance();
                                 self.components.Grid = self.controllers.Grid.getInstance();
                                 self.components.Form = self.controllers.Form.getInstance();
+                                self.components.View = self.controllers.View.getInstance();
                             },
 
 
@@ -107,6 +111,21 @@ steal(
 
                                 event_aggregator.on('renderComplete', function (sender, data) {
                                     $$("<%- domID() %>").adjust();
+                                });
+
+                                event_aggregator.on('view', function (sender, data) {
+                                    switch (data.component_name) {
+                                        case 'Grid':
+                                            var com = self.getComponent(pageId, data.viewId);
+                                            if (!com) break;
+
+                                            // Go to view page
+                                            if (com.setting.viewPage && com.setting.viewPage != self.activePageID) {
+                                                self.showPage(com.setting.viewPage);
+                                            }
+
+                                            break;
+                                    }
                                 });
 
                                 event_aggregator.on('edit', function (sender, data) {

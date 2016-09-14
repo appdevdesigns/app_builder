@@ -206,6 +206,12 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-object-unsync-data {
 	background-color: #EBFBDA;
 }
+.ab-object-view-column {
+	color: #3498db;
+	font-weight: bold;
+	text-align: center;
+	cursor: pointer;
+}
 
 /* Connect object data */
 .ab-connect-data-info {
