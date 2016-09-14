@@ -18,9 +18,6 @@ var reloadTimeLimit = 3 * 1000 * 60; // 3 minutes
 var cliCommand = 'appdev';  // use the global appdev command
 
 
-function nameFilter(name) {
-    return String(name).replace(/[^a-z0-9]/gi, '');
-}
 
 function notifyToClients(reloading, step, action) {
     var data = {
@@ -38,9 +35,44 @@ function notifyToClients(reloading, step, action) {
 
 module.exports = {
 
-    getApplicationName: function (name) {
-        return 'AB_' + nameFilter(name);
+    /**
+     * AppBuilder.util
+     *
+     * A set of rules for AppBuilder objects.
+     */
+    rules: {
+
+        /** 
+         * AppBuilder.rules.nameFilter
+         * 
+         * return a properly formatted name for an AppBuilder object.
+         *
+         * @param {string} name  The name of the object we are conditioning.
+         * @return {string}
+         */
+        nameFilter: function (name) {
+            return String(name).replace(/[^a-z0-9]/gi, '');
+        },
+
+
+        /** 
+         * AppBuilder.rules.toApplicationNameFormat
+         * 
+         * return a properly formatted Application Name
+         *
+         * @param {string} name  The name of the Application we are conditioning.
+         * @return {string}
+         */
+        toApplicationNameFormat: function (name) {
+            return 'AB_' + AppBuilder.rules.nameFilter(name);
+        }
+
     },
+
+
+    // getApplicationName: function (name) {
+    //     return 'AB_' + AppBuilder.rules.nameFilter(name);
+    // },
 
     /**
      * Reload Sails controllers, routes, and models.
@@ -72,7 +104,7 @@ module.exports = {
                             throw new Error('no apps found');
                         }
                         for (var i = 0; i < list.length; i++) {
-                            appFolders.push('ab_' + nameFilter(list[i].name).toLowerCase());
+                            appFolders.push('ab_' + AppBuilder.rules.nameFilter(list[i].name).toLowerCase());
                         }
                         next();
 
@@ -220,7 +252,7 @@ module.exports = {
                     var obj = list[0];
                     // Only numbers and alphabets will be used
                     Application = obj;
-                    appName = AppBuilder.getApplicationName(obj.name);
+                    appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
                     moduleName = appName.toLowerCase();
                     next();
                     return null;
@@ -375,10 +407,10 @@ module.exports = {
                         if (!obj) throw new Error('invalid object id');
 
                         // Only numbers and alphabets will be used
-                        appName = AppBuilder.getApplicationName(obj.application.name);
+                        appName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
                         moduleName = appName.toLowerCase();
 
-                        objName = nameFilter(obj.name);
+                        objName = AppBuilder.rules.nameFilter(obj.name);
                         columns = obj.columns;
                         fullName = appName + '_' + objName;
 
@@ -509,8 +541,8 @@ module.exports = {
                     if (page.parent > 0) throw new Error('not a root page');
                     
                     appID = page.application.id;
-                    appName = AppBuilder.getApplicationName(page.application.name);
-                    pageName = nameFilter(page.name);
+                    appName = AppBuilder.rules.toApplicationNameFormat(page.application.name);
+                    pageName = AppBuilder.rules.nameFilter(page.name);
                     toolLabel = pageName;
                     page.translations.some(function(trans){
                         if (toolLabel == pageName){
@@ -634,9 +666,9 @@ module.exports = {
                                         .populate('translations')
                                         .then(function (list) {
                                             if (list && list[0]) {
-                                                item.modelName = appName + '_' + nameFilter(list[0].object.name);
+                                                item.modelName = appName + '_' + AppBuilder.rules.nameFilter(list[0].object.name);
                                                 item.columns.push({
-                                                    id: nameFilter(list[0].name),
+                                                    id: AppBuilder.rules.nameFilter(list[0].name),
                                                     header: list[0].translations[0].label
                                                 });
                                             }
@@ -720,9 +752,9 @@ module.exports = {
                             var obj = list[i];
                             objectIncludes.push({
                                 key: 'opstools.' + appName + '.'
-                                + appName + '_' + nameFilter(obj.name),
+                                + appName + '_' + AppBuilder.rules.nameFilter(obj.name),
                                 path: 'opstools/' + appName + '/models/'
-                                + appName + '_' + nameFilter(obj.name) + '.js'
+                                + appName + '_' + AppBuilder.rules.nameFilter(obj.name) + '.js'
                             });
                         }
                         next();
@@ -736,8 +768,10 @@ module.exports = {
 
             // Create Page's permission action
             function (next) {
+                var page = pages[pageID];
+                page.permissionActionKey = pageKey+'.view';
                 Permissions.action.create({
-                    key: pageKey + '.view',
+                    key: page.permissionActionKey,
                     description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
                     language_code: 'en'
                 })
@@ -839,7 +873,17 @@ console.log('... Area['+ Application.areaKey()+'] not found.  Move along ... ');
             
         ], function(err) {
             if (err) dfd.reject(err);
-            else dfd.resolve({});
+            else {
+                var page = pages[pageID];
+
+                // save any updates to our page instance.
+                page.save(function(err) {
+                    // should we pay attention to this error?
+                    
+                    dfd.resolve({});
+                })
+                
+            }
         });
 
         return dfd;

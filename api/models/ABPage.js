@@ -53,10 +53,18 @@ module.exports = {
 
     application: { model: 'ABApplication' },
 
+
+    /**
+     * The key used in the creation of our Permission.action
+     */
+    permissionActionKey: { type: 'string' },
+
+
     components: {
       collection: 'ABPageComponent',
       via: 'page'
     }
+
   },
 
   beforeValidate: function (values, cb) {
@@ -89,46 +97,59 @@ module.exports = {
     var ids = _.map(destroyedObjects, 'id');
 
     if (ids && ids.length) {
-      async.parallel([
-        function (callback) {
-          ABPage.count({ parent: ids })
-            .fail(function (err) {
-              callback(err)
-            })
-            .then(function (found) {
-              if (found > 0) {
-                ABPage.destroy({ parent: ids })
-                  .fail(function (err) {
+        async.parallel([
+            function (callback) {
+                ABPage.count({ parent: ids })
+                .fail(function (err) {
                     callback(err)
-                  })
-                  .then(function () {
+                })
+                .then(function (found) {
+                    if (found > 0) {
+                        ABPage.destroy({ parent: ids })
+                        .fail(function (err) {
+                            callback(err)
+                        })
+                        .then(function () {
+                            callback();
+                        });
+                    } else {
+                        callback();
+                    }
+                });
+            },
+            function (callback) {
+              ABPageComponent.destroy({ page: ids })
+                .fail(function (err) {
+                  callback(err)
+                })
+                .then(function () {
+                  callback();
+                });
+            },
+            function (callback) {
+              ABPageTrans.destroy({ abpage: ids })
+                .fail(function (err) {
+                  callback(err)
+                })
+                .then(function () {
+                  callback();
+                });
+            },
+            function ABPage_AfterDelete_RemovePermissions (callback) {
+                var actionKeys = [];
+                destroyedObjects.forEach(function(deletedPage){
+                    actionKeys.push( deletedPage.permissionActionKey );
+                })
+
+                Permissions.action.destroyKeys(actionKeys)
+                .fail(function(err){
+                    callback(err);
+                })
+                .then(function(data){
                     callback();
-                  });
-              }
-              else {
-                callback();
-              }
-            });
-        },
-        function (callback) {
-          ABPageComponent.destroy({ page: ids })
-            .fail(function (err) {
-              callback(err)
-            })
-            .then(function () {
-              callback();
-            });
-        },
-        function (callback) {
-          ABPageTrans.destroy({ abpage: ids })
-            .fail(function (err) {
-              callback(err)
-            })
-            .then(function () {
-              callback();
-            });
-        }
-      ], cb);
+                })
+            }
+        ], cb);
     }
     else {
       cb();
