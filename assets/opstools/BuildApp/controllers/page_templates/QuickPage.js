@@ -38,6 +38,7 @@ steal(
 						},
 
 						webix_ready: function () {
+							webix.extend($$('QuickPage'), webix.ProgressBar);
 						},
 
 						getUIDefinition: function () {
@@ -47,6 +48,7 @@ steal(
 								id: 'QuickPage',
 								view: 'layout',
 								css: 'ab-interface-new-quick-page',
+								autoheight: true,
 								rows: [
 									{
 										id: self.componentIds.selectObjects,
@@ -106,6 +108,8 @@ steal(
 							var q = $.Deferred(),
 								self = this,
 								mainPageId, formPageId, editFormId, viewPageId, connectFormPageId;
+
+							$$('QuickPage').showProgress({ type: 'icon' });
 
 							var selectedObj = self.data.objects.filter(function (obj) {
 								return obj.id == $$(self.componentIds.selectObjects).getValue();
@@ -247,14 +251,20 @@ steal(
 								// TODO Connected data page
 								// $$(self.componentIds.connectedData).getValues() -- get connect properties data
 
-								// Finish
+								// Finish - Get pages to return
 								function (next) {
-									self.Model.ABPage.findOne({ id: mainPageId })
+									self.Model.ABPage.findAll({ or: [{ id: mainPageId }, { parent: mainPageId }] })
 										.then(function (result) {
-											if (result.translate) result.translate();
+											result.forEach(function (r) {
+												if (r.translate) r.translate();
+											});
 
 											q.resolve(result.attr());
+
 											next();
+
+											$$('QuickPage').hideProgress();
+
 										})
 								}
 							]);

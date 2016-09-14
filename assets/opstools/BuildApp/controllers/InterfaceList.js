@@ -79,28 +79,15 @@ steal(
 
 							// Create new page handler
 							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
-								self.data.pages.push(data.newPage);
-
-								$$(self.webixUiId.interfaceTree).add({
-									id: data.newPage.id,
-									value: data.newPage.name,
-									label: data.newPage.label
-								}, -1, data.newPage.parent ? data.newPage.parent.id : null);
-
-								if (data.newPage.parent)
-									$$(self.webixUiId.interfaceTree).open(data.newPage.parent.id, true);
-
-								$$(self.webixUiId.interfaceTree).unselectAll();
-								$$(self.webixUiId.interfaceTree).select(data.newPage.id);
-
-								$$(self.webixUiId.interfaceTree).hideProgress();
-
-								// Show success message
-								webix.message({
-									type: "success",
-									text: self.labels.common.createSuccessMessage.replace('{0}', data.newPage.label)
-								});
-
+								if (data.newPage instanceof Array) {
+									data.newPage.forEach(function (p) {
+										var noSelect = p.parent !== null;
+										self.addPageToTree(p, noSelect);
+									});
+								}
+								else {
+									self.addPageToTree(p);
+								}
 							});
 						},
 
@@ -386,6 +373,32 @@ steal(
 							var self = this;
 
 							$($$(self.webixUiId.interfaceTree).getItemNode(id)).find('.ab-page-list-edit').show();
+						},
+
+						addPageToTree: function (page, noSelect) {
+							var self = this;
+
+							self.data.pages.push(page);
+
+							$$(self.webixUiId.interfaceTree).add({
+								id: page.id,
+								value: page.name,
+								label: page.label
+							}, -1, page.parent ? page.parent.id : null);
+
+							if (page.parent)
+								$$(self.webixUiId.interfaceTree).open(page.parent.id, true);
+
+							if (!noSelect) {
+								$$(self.webixUiId.interfaceTree).unselectAll();
+								$$(self.webixUiId.interfaceTree).select(page.id);
+							}
+
+							// Show success message
+							webix.message({
+								type: "success",
+								text: self.labels.common.createSuccessMessage.replace('{0}', page.label)
+							});
 						},
 
 						resize: function (height) {
