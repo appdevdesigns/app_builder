@@ -831,7 +831,6 @@ steal(
 							};
 
 							self.isRendered = function (viewId) {
-								// TODO
 								return self.getData(viewId).isRendered === true;
 							};
 

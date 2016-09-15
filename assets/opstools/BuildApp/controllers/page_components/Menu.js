@@ -164,13 +164,17 @@ steal(
 												if (p.translate) p.translate();
 											});
 
+											// Convert object format (same arrange)
+											var pageMenu = [];
+											pageIds.forEach(function (page) {
+												pageMenu.push({
+													id: page.id,
+													value: pages.filter(function (p) { return p.id == page.id })[0].label
+												});
+											});
+
 											// Show page menu
-											$$(viewId).parse($.map(pages, function (p) {
-												return {
-													id: p.id,
-													value: p.label
-												};
-											}), 'json');
+											$$(viewId).parse(pageMenu, 'json');
 
 											if (events.renderComplete)
 												events.renderComplete();
@@ -282,7 +286,6 @@ steal(
 							};
 
 							self.isRendered = function (viewId) {
-								// TODO
 								return self.getData(viewId).isRendered === true;
 							};
 

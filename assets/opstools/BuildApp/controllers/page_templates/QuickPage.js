@@ -107,7 +107,9 @@ steal(
 						save: function () {
 							var q = $.Deferred(),
 								self = this,
-								mainPageId, formPageId, editFormId, viewPageId, connectFormPageId;
+								columns,
+								mainPageId, formPageId, editFormId, viewDetailId,
+								connectPageIds = {}; // { fieldId: pageId, ... , fieldIdn: pageIdn }
 
 							$$('QuickPage').showProgress({ type: 'icon' });
 
@@ -154,7 +156,7 @@ steal(
 
 								// Create the view & connected data page
 								function (next) {
-									if ($$(self.componentIds.viewData).getValue) { // TODO :check select of connected data
+									if ($$(self.componentIds.viewData).getValue() || self.hasAddConnectPage()) {
 										// Create the view page
 										self.Model.ABPage.create({
 											application: self.options.data.appId,
@@ -242,35 +244,9 @@ steal(
 									}
 								},
 
-								// Insert 'Object grid' to the main page
+								// Insert 'View' component to the view page
 								function (next) {
-									if ($$(self.componentIds.displayGrid).getValue()) {
-										self.Model.ABPageComponent.create({
-											page: mainPageId,
-											component: 'Grid',
-											weight: 1,
-											setting: {
-												title: selectedObj.label,
-												object: $$(self.componentIds.selectObjects).getValue(),
-												editPage: formPageId || null,
-												editForm: editFormId || null,
-												columns: $.map(selectedObj.columns, function (col) { return col.id; }),
-												removable: "disable"
-
-												// TODO: Add 'view button'
-											}
-										})
-											.fail(function (err) { next(err); })
-											.then(function () { next(); });
-									}
-									else {
-										next();
-									}
-								},
-
-								// Add View component to the view page
-								function (next) {
-									if ($$(self.componentIds.viewData).getValue) {
+									if ($$(self.componentIds.viewData).getValue()) {
 										self.Model.ABPageComponent.create({
 											page: viewPageId,
 											component: 'View',
@@ -282,6 +258,35 @@ steal(
 											}
 										})
 											.fail(function (err) { next(err); })
+											.then(function (result) {
+												viewDetailId = result.id;
+												next();
+											});
+									}
+									else {
+										next();
+									}
+								},
+
+								// Insert 'Object grid' to the main page
+								function (next) {
+									if ($$(self.componentIds.displayGrid).getValue()) {
+										self.Model.ABPageComponent.create({
+											page: mainPageId,
+											component: 'Grid',
+											weight: 1,
+											setting: {
+												title: selectedObj.label,
+												object: $$(self.componentIds.selectObjects).getValue(),
+												viewPage: viewPageId || null,
+												viewId: viewDetailId || null,
+												editPage: formPageId || null,
+												editForm: editFormId || null,
+												columns: $.map(selectedObj.columns, function (col) { return col.id; }),
+												removable: "disable"
+											}
+										})
+											.fail(function (err) { next(err); })
 											.then(function () { next(); });
 									}
 									else {
@@ -289,9 +294,180 @@ steal(
 									}
 								},
 
+								// Create 'Add connect data' page
+								function (next) {
+									var connectFields = $$(self.componentIds.connectedData).getValues(),
+										createPageTask = [];
+									for (var key in connectFields) {
+										if (key.indexOf('|add') > -1 && connectFields[key]) {
+											function addIt(keyValue) {
+												createPageTask.push(function (ok) {
+													var columnId = parseInt(keyValue.split('|')[0]),
+														column = selectedObj.columns.filter(function (c) { return c.id == columnId })[0];
 
-								// TODO Connected data page
-								// $$(self.componentIds.connectedData).getValues() -- get connect properties data
+													async.waterfall([
+														// Get object info
+														function (callback) {
+															self.getObjectData(column.linkToObject)
+																.fail(function (err) { callback(err); })
+																.then(function (objectModel) {
+																	callback(null, objectModel);
+																});
+														},
+														// Create the connected form page
+														function (objectModel, callback) {
+															self.Model.ABPage.create({
+																application: self.options.data.appId,
+																parent: mainPageId,
+																name: 'Add ' + objectModel.name,
+																label: 'Add ' + objectModel.label
+															})
+																.fail(function (err) { ok(err); })
+																.then(function (result) {
+																	connectPageIds[columnId] = result.id;
+																	ok();
+																});
+														}
+													], ok);
+												});
+											}
+											addIt(key);
+										}
+									}
+
+									async.parallel(createPageTask, next);
+								},
+
+								// Add 'Form' to the connect page
+								function (next) {
+									var addFormTasks = [];
+									for (var key in connectPageIds) {
+										function addForm(keyValue) {
+											addFormTasks.push(function (ok) {
+												var columnId = parseInt(keyValue),
+													pageId = connectPageIds[columnId],
+													column = selectedObj.columns.filter(function (c) { return c.id == columnId && c.linkToObject; })[0];
+
+												async.waterfall([
+													// Get object info
+													function (callback) {
+														self.getObjectData(column.linkToObject)
+															.fail(function (err) { callback(err); })
+															.then(function (objectModel) {
+																callback(null, objectModel);
+															});
+													},
+													// Create form
+													function (objData, callback) {
+														var visibleFieldIds = $.map(objData.columns, function (c) { return c.id });
+
+														self.Model.ABPageComponent.create({
+															page: pageId,
+															component: 'Form',
+															weight: 0,
+															setting: {
+																title: 'Add ' + objData.label,
+																object: column.linkToObject,
+																visibleFieldIds: visibleFieldIds,
+																saveVisible: 'show',
+																cancelVisible: 'show'
+															}
+														})
+															.fail(callback)
+															.then(function () { callback(); });
+													}
+												], ok);
+											});
+										};
+										addForm(key);
+									}
+
+									async.parallel(addFormTasks, next);
+								},
+
+								// Insert 'Menu' to the view page
+								function (next) {
+
+									if ($$(self.componentIds.viewData).getValue() || self.hasAddConnectPage()) {
+										var menuData = [],
+											connectFields = $$(self.componentIds.connectedData).getValues();
+
+										if ($$(self.componentIds.viewData).getValue())
+											menuData.push(formPageId);
+
+										for (var key in connectFields) {
+											if (key.indexOf('|add') > -1 && connectFields[key]) { // Select add connect data
+												var columnId = parseInt(key.replace('|add', ''));
+												menuData.push(connectPageIds[columnId]);
+											}
+										}
+
+										self.Model.ABPageComponent.create({
+											page: viewPageId,
+											component: 'Menu',
+											weight: 1,
+											setting: {
+												layout: 'x',
+												data: menuData
+											}
+										})
+											.fail(function (err) { next(err); })
+											.then(function () { next(); });
+									}
+									else {
+										next();
+									}
+								},
+
+								// Add 'Grid' to the view page
+								function (next) {
+									var connectFields = $$(self.componentIds.connectedData).getValues(),
+										createGridTasks = [],
+										index = 0;
+
+									for (var key in connectFields) {
+										if (key.indexOf('|list') > -1 && connectFields[key]) {
+											function addGrid(keyValue, i) {
+												createGridTasks.push(function (ok) {
+													var columnId = parseInt(keyValue.replace('|list', '')),
+														column = selectedObj.columns.filter(function (c) { return c.id == columnId && c.linkToObject; })[0];
+
+													async.waterfall([
+														// Get object
+														function (callback) {
+															self.getObjectData(column.linkToObject).fail(callback)
+																.then(function (objData) {
+																	callback(null, objData);
+																});
+														},
+														// Create connect data Grid
+														function (objData, callback) {
+															var visibleFieldIds = $.map(objData.columns, function (c) { return c.id });
+
+															self.Model.ABPageComponent.create({
+																page: viewPageId,
+																component: 'Grid',
+																weight: i + 2,
+																setting: {
+																	title: objData.label, // TODO : of owner
+																	object: column.linkToObject,
+																	columns: visibleFieldIds
+																}
+															})
+																.fail(function (err) { callback(err); })
+																.then(function () { callback(); });
+														}
+													], ok);
+												});
+											}
+
+											addGrid(key, index);
+											index++
+										}
+									}
+
+									async.parallel(createGridTasks, next);
+								},
 
 								// Finish - Get pages to return
 								function (next) {
@@ -335,6 +511,37 @@ steal(
 
 									self.selectObject($$(self.componentIds.selectObjects).getValue());
 								});
+						},
+
+						getObjectData: function (objectId) {
+							var self = this,
+								q = $.Deferred();
+
+							if (!self.objects) self.objects = {};
+
+							if (self.objects[objectId]) {
+								q.resolve(self.objects[objectId]);
+							}
+							else {
+								self.Model.ABObject.findOne({ id: objectId })
+									.fail(function (err) { q.reject(err); })
+									.then(function (result) {
+										if (result.translate) result.translate();
+										self.objects[objectId] = result.attr();
+
+										q.resolve(self.objects[objectId]);
+									});
+							}
+
+							return q;
+						},
+
+						hasAddConnectPage: function () {
+							var self = this,
+								connectFields = $$(self.componentIds.connectedData).getValues(),
+								connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
+
+							return connectValues.indexOf(1) > -1;
 						},
 
 						selectObject: function (newv, oldv) {
@@ -395,16 +602,14 @@ steal(
 									function (columns, next) {
 										columns.forEach(function (col) {
 											connectedLayout.elements.push({
-												id: webix.uid(),
-												name: col.name + '-display-list',
+												name: col.id + '|list',
 												view: 'checkbox',
 												labelRight: 'List connected <b>#col.name#</b> with a Grid'.replace('#col.name#', col.label),
 												labelWidth: 2
 											});
 
 											connectedLayout.elements.push({
-												id: webix.uid(),
-												name: col.name + '-add-connect-data',
+												name: col.id + '|add',
 												view: 'checkbox',
 												labelRight: 'Add a connected <b>#col.name#</b> with a Form'.replace('#col.name#', col.label),
 												labelWidth: 2

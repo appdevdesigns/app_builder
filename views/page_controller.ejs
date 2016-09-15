@@ -47,8 +47,15 @@ steal(
                                     this.pages[id].domID = '<%- domID() %>' + id;
                                 }
 
+                                // Find application object
+                                for (var key in this.pages) {
+                                    if (typeof this.pages[key].application === 'object')
+                                        this.data.app = this.pages[key].application;
+                                }
+
                                 this.initControllers();
                                 this.initComponents();
+                                this.setObjectList();
 
                                 webix.ready(function() {
                                     self.initDOM();
@@ -79,11 +86,13 @@ steal(
                                     Form = AD.Control.get('opstools.BuildApp.Components.Form'),
                                     View = AD.Control.get('opstools.BuildApp.Components.View');
 
-                                this.controllers.ModelCreator = new ModelCreator(self.element);
-                                this.controllers.Menu = new Menu(self.element, {});
-                                this.controllers.Grid = new Grid(self.element, {});
-                                this.controllers.Form = new Form(self.element, {});
-                                this.controllers.View = new View(self.element, {});
+                                this.controllers.ModelCreator = new ModelCreator(this.element);
+                                this.controllers.ModelCreator.setApp(this.data.app);
+
+                                this.controllers.Menu = new Menu(this.element, {});
+                                this.controllers.Grid = new Grid(this.element, {});
+                                this.controllers.Form = new Form(this.element, {});
+                                this.controllers.View = new View(this.element, {});
                             },
 
 
@@ -97,6 +106,14 @@ steal(
                                 self.components.View = self.controllers.View.getInstance();
                             },
 
+                            setObjectList: function() {
+                                var self = this;
+
+                                self.Model.ABObject.findAll({ application: self.data.app.id })
+                                    .then(function(result) {
+                                        self.components.Form.setObjectList(result.attr());
+                                    });
+                            },
 
                             initEvents: function (pageId) {
                                 var self = this,
@@ -202,7 +219,7 @@ steal(
                                         template: comTemplate,
                                         minWidth: 700,
                                         autoheight: true,
-                                        scroll: false
+                                        scroll: true
                                     });
                                 }
 
@@ -214,7 +231,12 @@ steal(
                                     container: this.element.attr('id'),
                                     css: "ab-main-container",
                                     id: "<%- domID() %>",
-                                    cells: pageTemplates
+                                    cells: pageTemplates,
+                                    on: {
+                                        onViewChange: function(prevId, nextId) {
+                                            self.resize();
+                                        }
+                                    }
                                 });
 
                             },
@@ -225,8 +247,6 @@ steal(
                                     app,
                                     page = self.pages[pageId],
                                     rows = [];
-
-                                self.controllers.ModelCreator.setApp(page.application);
 
                                     page.components.forEach(function (item) {
                                         self.renderComponent(page, item);
@@ -265,6 +285,14 @@ steal(
 
                                         if (item.component === 'Menu') {
                                             item.setting.click = function (id, ev) {
+                                                // Find form to set return page
+                                                self.pages[id].components.forEach(function(c) {
+                                                    if (c.component === 'Form' && c.setting.cancelVisible && c.setting.cancelVisible === 'show') {
+                                                        var formViewId = self.getComponentId(self.pages[id].domID, c.id);
+                                                        self.components.Form.setReturnPage(formViewId, self.activePageID);
+                                                    }
+                                                });
+                                                
                                                 self.showPage(id);
                                             };
                                         }
@@ -353,6 +381,9 @@ steal(
 
                                     if (width > 0)
                                         $$("<%- domID() %>").define('width', width);
+
+                                    if (height > 0)
+                                        $$("<%- domID() %>").define('height', height);
 
                                     $$("<%- domID() %>").adjust();
                                 },

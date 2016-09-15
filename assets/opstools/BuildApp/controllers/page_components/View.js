@@ -150,6 +150,12 @@ steal(
 								data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 									self.updateData(viewId);
 								});
+								data.dataCollection.attachEvent('onDataUpdate', function (id, newData) {
+									if (data.currDataId == id)
+										self.updateData(viewId, newData);
+
+									return true;
+								});
 
 								settings.visibleFieldIds = settings.visibleFieldIds || [];
 
@@ -208,7 +214,8 @@ steal(
 													},
 													{
 														view: 'label',
-														dataId: c.id
+														dataId: c.id,
+														label: '[data]'
 													}
 												]
 											};
@@ -415,19 +422,24 @@ steal(
 								return self.getData(viewId).isRendered === true;
 							};
 
-							self.updateData = function (viewId) {
+							self.updateData = function (viewId, newData) {
 								var data = self.getData(viewId),
-									currModel = data.dataCollection.AD.currModel();
+									currModel = newData ? newData : data.dataCollection.AD.currModel();
 
-								$$(viewId).getChildViews().forEach(function (child) {
-									if (child.config.css === 'ab-component-view-display-field') {
-										var labelValue = currModel ? currModel.attr(child.config.fieldName) : '',
-											displayField = child.getChildViews()[1];
+								if (currModel) {
+									currModel = currModel.attr ? currModel.attr() : currModel;
 
-										displayField.setValue(labelValue);
-									}
-								});
+									data.currDataId = currModel.id;
 
+									$$(viewId).getChildViews().forEach(function (child) {
+										if (child.config.css === 'ab-component-view-display-field') {
+											var labelValue = currModel ? currModel[child.config.fieldName] : '',
+												displayField = child.getChildViews()[1];
+
+											displayField.setValue(labelValue);
+										}
+									});
+								}
 							};
 
 							self.editStop = function () {

@@ -491,7 +491,7 @@ steal(
 
 											data.updatingItem = item;
 
-											var object = data.objectList.filter(function (obj) { return obj.id == objectId; });
+											var object = self.data.objectList.filter(function (obj) { return obj.id == objectId; });
 
 											if (object && object.length > 0) {
 												var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
@@ -624,7 +624,6 @@ steal(
 							};
 
 							self.isRendered = function (viewId) {
-								// TODO
 								return self.getData(viewId).isRendered === true;
 							};
 

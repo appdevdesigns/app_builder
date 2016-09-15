@@ -362,13 +362,8 @@ steal(
 														};
 
 														// Add new object to server
-														self.Model.create(newObject).fail(function () {
+														self.Model.create(newObject).fail(function (err) {
 															$$(self.webixUiId.objectList).hideProgress();
-
-															webix.message({
-																type: "error",
-																text: self.labels.common.createErrorMessage.replace("{0}", newModel.label)
-															});
 
 															AD.error.log('Object : Error create object data', { error: err });
 

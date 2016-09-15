@@ -307,7 +307,7 @@ steal(
 								rowHeight = 35,
 								calHeight = dataNumber * rowHeight;
 
-							if (self.dataTable.getItem(row).$height != calHeight)
+							if (self.dataTable.getItem(row) && self.dataTable.getItem(row).$height != calHeight)
 								self.dataTable.setRowHeight(row, calHeight);
 						},
 
@@ -321,132 +321,128 @@ steal(
 							});
 
 							// Convert string to Date object
-							// if (dateCols && dateCols.length > 0) {
-							// 	result.forEach(function (r) {
-							// 		if (r.translate)
-							// 			r.translate();
+							if (dateCols && dateCols.length > 0) {
+								var resultList = result instanceof webix.DataCollection ? result.AD.__list : result;
 
-							// 		dateCols.forEach(function (c) {
-							// 			if (r[c.id])
-							// 				r.attr(c.id, new Date(r[c.id]));
-							// 		});
-							// 	});
-							// }
-
-							self.dataTable.clearAll();
-
-							// Populate data
-							if (result) {
-								if (result instanceof webix.DataCollection)
-									self.dataTable.data.sync(result);
-								else
-									self.dataTable.parse(result.attr ? result.attr() : result);
+								resultList.forEach(function (r) {
+									dateCols.forEach(function (c) {
+										if (r[c.id])
+											r.attr(c.id, new Date(r[c.id]));
+									});
+								});
 							}
 
-							q.resolve();
+							// Get connected columns
+							var linkCols = $.grep(self.dataTable.config.columns, function (c) {
+								return c.linkToObject;
+							});
 
-							// // Get connected columns
-							// var linkCols = $.grep(self.dataTable.config.columns, function (c) {
-							// 	return c.linkToObject;
-							// });
+							var prepareConnectedDataEvents = [];
 
-							// var prepareConnectedDataEvents = [];
+							linkCols.forEach(function (c) {
+								prepareConnectedDataEvents.push(function (callback) {
+									var getConnectedDataEvents = [];
 
-							// linkCols.forEach(function (c) {
-							// 	prepareConnectedDataEvents.push(function (callback) {
-							// 		var getConnectedDataEvents = [];
+									// Get connected object name
+									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
 
-							// 		// Get connected object name
-							// 		var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
+									if (!connectedObj) {
+										callback();
+										return;
+									}
 
-							// 		if (!connectedObj) {
-							// 			callback();
-							// 			return;
-							// 		}
+									// Get connected object model
+									self.controllers.ModelCreator.getModel(connectedObj.name)
+										.then(function (objectModel) {
 
-							// 		// Get connected object model
-							// 		self.controllers.ModelCreator.getModel(connectedObj.name)
-							// 			.then(function (objectModel) {
+											var resultList = result instanceof webix.DataCollection ? result.AD.__list : result;
 
-							// 				can.each(result, function (r) {
-							// 					getConnectedDataEvents.push(function (cb) {
-							// 						var connectedDataIds = r[c.id];
+											can.each(resultList, function (r) {
+												getConnectedDataEvents.push(function (cb) {
+													var connectedDataIds = r[c.id];
 
-							// 						if (r.connectedData)
-							// 							r.connectedData.attr(c.id, [], true);
+													if (r.connectedData)
+														r.connectedData.attr(c.id, [], true);
 
-							// 						if (!connectedDataIds || connectedDataIds.length < 1) {
-							// 							cb();
-							// 							return true;
-							// 						}
+													if (!connectedDataIds || connectedDataIds.length < 1) {
+														cb();
+														return true;
+													}
 
-							// 						if (!self.dataTable.isColumnVisible(c.id)) {
-							// 							cb();
-							// 							return true;
-							// 						}
+													if (!self.dataTable.isColumnVisible(c.id)) {
+														cb();
+														return true;
+													}
 
-							// 						connectedDataIds = connectedDataIds.filter(function (d) { return typeof d !== 'undefined' && d !== null; });
-							// 						connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
+													connectedDataIds = connectedDataIds.filter(function (d) { return typeof d !== 'undefined' && d !== null; });
+													connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
 
-							// 						objectModel.findAll({ or: connectedDataIds }, false, true)
-							// 							.then(function (connectedResult) {
-							// 								connectedResult.forEach(function (d) {
-							// 									if (d.translate) d.translate();
+													objectModel.findAll({ or: connectedDataIds }, false, true)
+														.then(function (connectedResult) {
+															connectedResult.forEach(function (d) {
+																if (d.translate) d.translate();
 
-							// 									d.attr('labelFormat', connectedObj.getDataLabel(d));
-							// 								});
+																d.attr('labelFormat', connectedObj.getDataLabel(d));
+															});
 
-							// 								if (connectedResult && connectedResult.length > 0) {
-							// 									if (!r.attr('connectedData'))
-							// 										r.attr('connectedData', {}, true);
+															if (connectedResult && connectedResult.length > 0) {
+																if (!r.attr('connectedData'))
+																	r.attr('connectedData', {}, true);
 
-							// 									var connectedDataValue = $.map(connectedResult.attr(), function (d) {
-							// 										return {
-							// 											id: d.id,
-							// 											text: d.labelFormat
-							// 										}
-							// 									});
+																var connectedDataValue = $.map(connectedResult.attr(), function (d) {
+																	return {
+																		id: d.id,
+																		text: d.labelFormat
+																	}
+																});
 
-							// 									r.connectedData.attr(c.id, connectedDataValue, true);
-							// 								}
+																r.connectedData.attr(c.id, connectedDataValue, true);
+															}
 
-							// 								cb();
-							// 							});
-							// 					});
-							// 				});
+															cb();
+														});
+												});
+											});
 
-							// 				async.parallel(getConnectedDataEvents, callback);
-							// 			});
+											async.parallel(getConnectedDataEvents, callback);
+										});
 
-							// 	});
-							// });
+								});
+							});
 
-							// async.parallel(prepareConnectedDataEvents,
-							// 	function (err) {
-							// 		if (err) {
-							// 			q.reject(err);
-							// 			return;
-							// 		}
+							async.parallel(prepareConnectedDataEvents,
+								function (err) {
+									if (err) {
+										q.reject(err);
+										return;
+									}
 
-							// 		// TODO: highligth unsync row
-							// 		// var objData = [];
-							// 		// result.forEach(function (r) {
-							// 		// 	if (r.constructor.name === 'Cached' && r.isUnsync()) {
-							// 		// 		var data = r.attr();
-							// 		// 		data.isUnsync = true;
-							// 		// 		objData.push(data);
-							// 		// 	}
-							// 		// 	else
-							// 		// 		objData.push(r.attr());
-							// 		// });
-							// 		// self.dataTable.parse(objData);
+									// TODO: highligth unsync row
+									// var objData = [];
+									// result.forEach(function (r) {
+									// 	if (r.constructor.name === 'Cached' && r.isUnsync()) {
+									// 		var data = r.attr();
+									// 		data.isUnsync = true;
+									// 		objData.push(data);
+									// 	}
+									// 	else
+									// 		objData.push(r.attr());
+									// });
+									// self.dataTable.parse(objData);
 
-							// 		self.dataTable.clearAll();
-							// 		self.dataTable.data.sync(result);
+									self.dataTable.clearAll();
 
-							// 		q.resolve();
-							// 	}
-							// );
+									// Populate data
+									if (result) {
+										if (result instanceof webix.DataCollection)
+											self.dataTable.data.sync(result);
+										else
+											self.dataTable.parse(result.attr ? result.attr() : result);
+									}
+
+									q.resolve();
+								}
+							);
 
 							return q;
 						}

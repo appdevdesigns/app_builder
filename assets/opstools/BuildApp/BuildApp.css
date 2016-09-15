@@ -1,7 +1,9 @@
 .op-stage {
 /*     overflow-y: hidden; */
 }
-
+.ab-generated-page {
+	overflow-y: auto;
+}
 .ab-main-container {
 	position: relative;
 	display: block;
