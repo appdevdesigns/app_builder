@@ -456,24 +456,37 @@ steal(function () {
 						return this.cachedKey() + '_new_fields';
 					},
 
-					cacheNewFields: function (newField) {
+					cacheNewField: function (newField) {
 						if (newField) {
-							var cacheFields = this.getNewFields();
+							var cacheFields = this.getNewFields(),
+								result;
 
 							newField.name = newField.name.replace(/ /g, '_');
 
 							if (!newField.id) { // Add
 								newField.id = 'temp' + webix.uid();
 								cacheFields.push(newField);
+
+								result = newField;
 							}
 							else { // Update
 								cacheFields.forEach(function (f, index) {
-									if (f.id == newField.id)
-										cacheFields[index] = newField;
+									if (f.id == newField.id) {
+										for (var key in newField) {
+											cacheFields[index][key] = newField[key];
+										}
+
+										result = cacheFields[index];
+									}
 								});
 							}
 
 							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(cacheFields));
+
+							return result;
+						}
+						else {
+							return null;
 						}
 					},
 

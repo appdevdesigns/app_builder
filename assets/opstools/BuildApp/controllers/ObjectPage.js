@@ -132,36 +132,37 @@ steal(
 								q = $.Deferred();
 
 							if (self.data.objectList) {
-								var syncFieldsTasks = [];
+								async.eachSeries(self.data.objectList, function (object, next) {
+									async.waterfall([
+										function (cb) {
+											// Get object model
+											self.controllers.ModelCreator.getModel(object.name)
+												.fail(function (err) { cb(err); })
+												.then(function (objectModel) {
+													cb(null, objectModel);
+												});
+										},
+										function (objectModel, cb) {
+											// Get cached fields
+											var newFields = objectModel.Cached.getNewFields();
 
-								self.data.objectList.forEach(function (object) {
-									syncFieldsTasks.push(function (next) {
+											if (!newFields || newFields.length < 1) {
+												cb();
+											}
+											else {
+												var saveFieldsTasks = [];
 
-										async.waterfall([
-											function (cb) {
-												// Get object model
-												self.controllers.ModelCreator.getModel(object.name)
-													.fail(function (err) { cb(err); })
-													.then(function (objectModel) {
-														cb(null, objectModel);
-													});
-											},
-											function (objectModel, cb) {
-												// Get cached fields
-												var saveFieldsTasks = [],
-													newFields = objectModel.Cached.getNewFields();
-
-												newFields.forEach(function (f, index) {
+												newFields.forEach(function (field, index) {
 													saveFieldsTasks.push(function (callback) {
-														var tempId = f.id;
-														delete f.id;
+														var tempId = field.id;
+														delete field.id;
 
-														f.weight = object.columns.length + (index + 1);
+														field.weight = object.columns.length + (index + 1);
 
 														async.waterfall([
 															// Create object column
 															function (ok) {
-																self.Model.ABColumn.create(f)
+																self.Model.ABColumn.create(field)
 																	.fail(ok)
 																	.then(function (result) {
 																		objectModel.Cached.deleteCachedField(tempId);
@@ -169,12 +170,31 @@ steal(
 																		ok(null, result);
 																	});
 															},
+															// Create link column
+															function (column, ok) {
+																if (field.linkObject && field.linkVia) {
+																	self.createLinkColumn(field.linkObject, field.linkVia, column.id)
+																		.fail(ok)
+																		.then(function (linkCol) {
+																			// set linkVia
+																			column.attr('linkVia', linkCol.id);
+																			column.save()
+																				.fail(function (err) { ok(err) })
+																				.then(function (result) {
+																					ok(null, result);
+																				});
+																		});
+																}
+																else {
+																	ok(null, column);
+																}
+															},
 															// Create list option of select column
 															function (column, ok) {
-																if (f.setting.editor === 'richselect' && f.setting.filter_options) {
+																if (field.setting.editor === 'richselect' && field.setting.filter_options) {
 																	var createOptionEvents = [];
 
-																	f.setting.filter_options.forEach(function (opt, index) {
+																	field.setting.filter_options.forEach(function (opt, index) {
 																		createOptionEvents.push(function (createOk) {
 																			var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
 
@@ -200,16 +220,11 @@ steal(
 													});
 												});
 
-												// Save fields to server
 												async.parallel(saveFieldsTasks, cb);
-
 											}
-										], next);
-
-									});
-								});
-
-								async.parallel(syncFieldsTasks, function (err) {
+										}
+									], next);
+								}, function (err) {
 									if (err) {
 										q.reject(err);
 										return;
@@ -268,6 +283,43 @@ steal(
 							else {
 								q.resolve();
 							}
+
+							return q;
+						},
+
+						createLinkColumn: function (linkObject, linkVia, linkColumnId) {
+							var q = $.Deferred(),
+								self = this;
+
+							// Find link object
+							var linkObj = self.data.objectList.filter(function (obj) { return obj.id == linkObject })[0];
+
+							// Get object model
+							self.controllers.ModelCreator.getModel(linkObj.name)
+								.fail(function (err) { ok(err); })
+								.then(function (objModel) {
+									// Get cache
+									var cachedFields = objModel.Cached.getNewFields(),
+										linkCol = cachedFields.filter(function (f) { return f.id == linkVia; })[0],
+										tempId = linkCol.id;
+
+									linkCol.linkVia = linkColumnId;
+									linkCol.weight = linkObj.columns.length + Object.keys(cachedFields).indexOf(linkVia) + 1;
+
+									delete linkCol.id;
+
+									// Create
+									self.Model.ABColumn.create(linkCol)
+										.fail(function (err) { q.reject(err) })
+										.then(function (result) {
+											objModel.Cached.deleteCachedField(tempId);
+
+											if (result.translate) result.translate();
+
+											q.resolve(result);
+										});
+
+								});
 
 							return q;
 						},

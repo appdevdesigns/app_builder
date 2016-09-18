@@ -28,7 +28,12 @@ steal(
                                 connectObjectView: 'ab-new-connectObject',
                                 connectObjectList: 'ab-new-connectObject-list-item',
                                 connectObjectCreateNew: 'ab-new-connectObject-create-new',
-                                connectObjectIsMultipleRecords: 'ab-new-connectObject-multiple-records',
+                                connectObjectLinkFrom: 'ab-add-field-link-from',
+                                connectObjectLinkFrom2: 'ab-add-field-link-from-2',
+                                connectObjectLinkTypeTo: 'ab-add-field-link-type-to',
+                                connectObjectLinkTypeFrom: 'ab-add-field-link-type-from',
+                                connectObjectLinkTo: 'ab-add-field-link-to',
+                                connectObjectLinkTo2: 'ab-add-field-link-to-2',
 
                                 singleTextIcon: 'font',
                                 singleTextView: 'ab-new-singleText',
@@ -163,7 +168,7 @@ steal(
                                                     {
                                                         value: self.labels.add_fields.chooseType,
                                                         submenu: [
-                                                            { view: 'button', value: self.labels.add_fields.connectField, fieldType: 'json', icon: self.componentIds.connectObjectIcon, type: 'icon' },
+                                                            { view: 'button', value: self.labels.add_fields.connectField, fieldType: 'connectedField', icon: self.componentIds.connectObjectIcon, type: 'icon' },
                                                             { view: 'button', value: self.labels.add_fields.stringField, fieldType: 'string', icon: self.componentIds.singleTextIcon, type: 'icon' },
                                                             { view: 'button', value: self.labels.add_fields.textField, fieldType: 'text', icon: self.componentIds.longTextIcon, type: 'icon' },
                                                             { view: 'button', value: self.labels.add_fields.numberField, fieldType: ['float', 'integer'], icon: self.componentIds.numberIcon, type: 'icon' },
@@ -212,6 +217,16 @@ steal(
                                                             $(headerNameClass + ' input[type="text"]').select();
 
                                                             this.getTopParentView().selectedType = selectedMenuItem.value;
+
+                                                            // Set object name to labels
+                                                            if (viewName == self.componentIds.connectObjectView) {
+                                                                var currObject = self.data.objectList.filter(function (obj) {
+                                                                    return obj.id == self.data.currObjectId;
+                                                                })[0];
+
+                                                                $$(self.componentIds.connectObjectLinkFrom).setValue(currObject.label);
+                                                                $$(self.componentIds.connectObjectLinkFrom2).setValue(currObject.label);
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -235,8 +250,15 @@ steal(
                                                                 view: "list",
                                                                 id: self.componentIds.connectObjectList,
                                                                 select: true,
-                                                                height: 180,
-                                                                template: "<div class='ab-new-connectObject-list-item'>#label#</div>"
+                                                                height: 140,
+                                                                template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
+                                                                on: {
+                                                                    onAfterSelect: function () {
+                                                                        var selectedObjLabel = this.getSelectedItem(false).label;
+                                                                        $$(self.componentIds.connectObjectLinkTo).setValue(selectedObjLabel);
+                                                                        $$(self.componentIds.connectObjectLinkTo2).setValue(selectedObjLabel);
+                                                                    }
+                                                                }
                                                             },
                                                             {
                                                                 view: 'button',
@@ -248,11 +270,58 @@ steal(
                                                                 }
                                                             },
                                                             {
-                                                                view: "checkbox",
-                                                                id: self.componentIds.connectObjectIsMultipleRecords,
-                                                                labelWidth: 0,
-                                                                labelRight: self.labels.add_fields.allowConnectMultipleValue,
-                                                                value: false
+                                                                view: 'layout',
+                                                                cols: [
+                                                                    {
+                                                                        id: self.componentIds.connectObjectLinkFrom,
+                                                                        view: 'label',
+                                                                        width: 110
+                                                                    },
+                                                                    {
+                                                                        id: self.componentIds.connectObjectLinkTypeTo,
+                                                                        view: "segmented",
+                                                                        value: "collection",
+                                                                        width: 165,
+                                                                        inputWidth: 160,
+                                                                        options: [
+                                                                            { id: "collection", value: "Has many" },
+                                                                            { id: "model", value: "Belong to" }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        id: self.componentIds.connectObjectLinkTo,
+                                                                        view: 'label',
+                                                                        label: '[Select object]',
+                                                                        width: 110
+                                                                    },
+                                                                ]
+                                                            },
+                                                            {
+                                                                view: 'layout',
+                                                                cols: [
+                                                                    {
+                                                                        id: self.componentIds.connectObjectLinkTo2,
+                                                                        view: 'label',
+                                                                        label: '[Select object]',
+                                                                        width: 110
+                                                                    },
+                                                                    {
+                                                                        id: self.componentIds.connectObjectLinkTypeFrom,
+                                                                        view: "segmented",
+                                                                        value: "model",
+                                                                        width: 165,
+                                                                        inputWidth: 160,
+                                                                        options: [
+                                                                            { id: "collection", value: "Has many" },
+                                                                            { id: "model", value: "Belong to" }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        id: self.componentIds.connectObjectLinkFrom2,
+                                                                        view: 'label',
+                                                                        width: 110
+                                                                    },
+                                                                ]
                                                             }
                                                         ]
                                                     },
@@ -375,8 +444,9 @@ steal(
                                                             var fieldName = '',
                                                                 fieldLabel = '',
                                                                 fieldType = '',
-                                                                linkToObject = null,
-                                                                isMultipleRecords = null,
+                                                                linkTypeTo = null,
+                                                                linkTypeFrom = null,
+                                                                linkObject = null,
                                                                 options = [],
                                                                 supportMultilingual = null,
                                                                 fieldSettings = {};
@@ -395,13 +465,15 @@ steal(
 
                                                                     fieldName = base.getFieldName(self.componentIds.connectObjectView);
                                                                     fieldLabel = base.getFieldLabel(self.componentIds.connectObjectView);
-                                                                    fieldType = 'json';
-                                                                    linkToObject = linkObject.id;
-                                                                    isMultipleRecords = $$(self.componentIds.connectObjectIsMultipleRecords).getValue();
+                                                                    fieldType = 'connectedField';
                                                                     fieldSettings.icon = self.componentIds.connectObjectIcon;
                                                                     fieldSettings.editor = 'selectivity';
                                                                     fieldSettings.template = '<div class="connect-data-values"></div>';
                                                                     fieldSettings.filter_type = 'multiselect';
+
+                                                                    linkTypeTo = $$(self.componentIds.connectObjectLinkTypeTo).getValue();
+                                                                    linkTypeFrom = $$(self.componentIds.connectObjectLinkTypeFrom).getValue();
+                                                                    linkObject = $$(self.componentIds.connectObjectList).getSelectedId(false);
                                                                     break;
                                                                 case self.labels.add_fields.stringField:
                                                                     fieldName = base.getFieldName(self.componentIds.singleTextView);
@@ -537,14 +609,10 @@ steal(
                                                                 setting: fieldSettings
                                                             };
 
-                                                            if (!self.data.editFieldId) // for New column
+                                                            if (self.data.editFieldId) // Update
+                                                                newFieldInfo.id = self.data.editFieldId;
+                                                            else // Insert
                                                                 newFieldInfo.weight = dataTable.config.columns.length;
-
-                                                            if (linkToObject != null)
-                                                                newFieldInfo.linkToObject = linkToObject;
-
-                                                            if (isMultipleRecords != null)
-                                                                newFieldInfo.isMultipleRecords = isMultipleRecords;
 
                                                             if (options != null && options.length > 0)
                                                                 newFieldInfo.options = options;
@@ -552,8 +620,14 @@ steal(
                                                             if (supportMultilingual != null)
                                                                 newFieldInfo.supportMultilingual = supportMultilingual;
 
-                                                            if (self.data.editFieldId)
-                                                                newFieldInfo.id = self.data.editFieldId;
+                                                            if (linkTypeTo)
+                                                                newFieldInfo.linkTypeTo = linkTypeTo
+
+                                                            if (linkTypeFrom)
+                                                                newFieldInfo.linkTypeFrom = linkTypeFrom
+
+                                                            if (linkObject)
+                                                                newFieldInfo.linkObject = linkObject
 
                                                             // Call callback function
                                                             if (base.saveFieldCallback && base.selectedType) {
@@ -627,16 +701,25 @@ steal(
 
                                     // Populate data
                                     switch (data.type) {
-                                        case 'json':
+                                        case 'connectedField':
                                             this.selectedType = self.labels.add_fields.connectField;
-
-                                            var selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) { return obj.id == data.linkToObject; })[0];
+                                            var currObject = self.data.objectList.filter(function (obj) {
+                                                return obj.id == self.data.currObjectId;
+                                            })[0],
+                                                selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) {
+                                                    var linkObjId = data.linkObject.id ? data.linkObject.id: data.linkObject;
+                                                    return obj.id == linkObjId;
+                                                })[0];
 
                                             $$(self.componentIds.connectObjectList).disable();
                                             $$(self.componentIds.connectObjectList).select(selectedObject.id);
                                             $$(self.componentIds.connectObjectCreateNew).disable();
-                                            $$(self.componentIds.connectObjectIsMultipleRecords).disable();
-                                            $$(self.componentIds.connectObjectIsMultipleRecords).setValue(data.isMultipleRecords);
+
+                                            $$(self.componentIds.connectObjectLinkFrom).setValue(currObject.label);
+                                            $$(self.componentIds.connectObjectLinkFrom2).setValue(currObject.label);
+
+                                            $$(self.componentIds.connectObjectLinkTypeTo).setValue(data.linkType);
+                                            $$(self.componentIds.connectObjectLinkTypeFrom).setValue(data.setting.linkViaType);
                                             break;
                                         case 'string':
                                             this.selectedType = self.labels.add_fields.stringField;
@@ -705,9 +788,20 @@ steal(
                                 },
 
                                 setObjectList: function (objectList) {
+                                    self.data.objectList = objectList;
+
+                                    // Set enable connect object list to the add new column popup
+                                    var enableConnectObjects = objectList.filter(function (o) {
+                                        return o.id != self.data.currObjectId;
+                                    });
+
                                     $$(self.componentIds.connectObjectList).clearAll();
-                                    $$(self.componentIds.connectObjectList).parse(objectList.attr ? objectList.attr() : objectList);
+                                    $$(self.componentIds.connectObjectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
                                     $$(self.componentIds.connectObjectList).refresh();
+                                },
+
+                                setCurrObjectId: function (objectId) {
+                                    self.data.currObjectId = objectId
                                 },
 
                                 resetState: function () {
@@ -719,15 +813,18 @@ steal(
                                     $$(self.componentIds.saveButton).refresh();
                                     $$(self.componentIds.chooseTypeView).show();
                                     $$(self.componentIds.chooseTypeMenu).show();
+                                    $$(self.componentIds.connectObjectList).unselectAll();
                                     $$(self.componentIds.connectObjectList).enable();
+                                    $$(self.componentIds.connectObjectLinkFrom).setValue('');
+                                    $$(self.componentIds.connectObjectLinkFrom2).setValue('');
+                                    $$(self.componentIds.connectObjectLinkTypeTo).setValue('collection');
+                                    $$(self.componentIds.connectObjectLinkTypeFrom).setValue('model');
+                                    $$(self.componentIds.connectObjectLinkTo).setValue('[Select object]');
+                                    $$(self.componentIds.connectObjectLinkTo2).setValue('[Select object]');
                                     $$(self.componentIds.connectObjectCreateNew).enable();
-                                    $$(self.componentIds.connectObjectIsMultipleRecords).enable();
                                     $$(self.componentIds.selectListOptions).editCancel();
                                     $$(self.componentIds.selectListOptions).unselectAll();
                                     $$(self.componentIds.selectListOptions).clearAll();
-                                    $$(self.componentIds.connectObjectList).unselectAll();
-                                    $$(self.componentIds.connectObjectIsMultipleRecords).setValue(false);
-                                    $$(self.componentIds.connectObjectIsMultipleRecords).refresh();
                                     $$(self.componentIds.numberFormat).setValue(self.labels.add_fields.numberFormat);
                                     $$(self.componentIds.numberAllowDecimal).setValue(false);
                                     $$(self.componentIds.numberAllowDecimal).enable();
@@ -775,7 +872,7 @@ steal(
                                     if ($.isArray(fieldType)) fieldType = fieldType[0];
 
                                     switch (fieldType) {
-                                        case 'json':
+                                        case 'connectedField':
                                             return self.componentIds.connectObjectView;
                                         case 'string':
                                             return self.componentIds.singleTextView;

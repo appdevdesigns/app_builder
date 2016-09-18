@@ -33,6 +33,15 @@ function notifyToClients(reloading, step, action) {
     sails.sockets.blast('server-reload', data);
 }
 
+function getObjectModel(objectId) {
+    var dfd = AD.sal.Deferred();
+    ABObject.findOne({ id: objectId })
+        .fail(function (err) { dfd.reject(err); })
+        .then(function (result) { dfd.resolve(result); });
+
+    return dfd;
+}
+
 module.exports = {
 
     /**
@@ -65,6 +74,10 @@ module.exports = {
          */
         toApplicationNameFormat: function (name) {
             return 'AB_' + AppBuilder.rules.nameFilter(name);
+        },
+
+        toObjectNameFormat: function (appName, objectName) {
+            return (appName + '_' + AppBuilder.rules.nameFilter(objectName).toLowerCase());
         }
 
     },
@@ -237,30 +250,30 @@ module.exports = {
         var pluginExists = false;
 
         var appName, moduleName, areaName, areaKey;
-        
+
         var Application = null;
 
 
         async.series([
             function (next) {
                 ABApplication.find({ id: appID })
-                .populate('translations')
-                .then(function(list) {
-                    if (!list || !list[0]) {
-                        throw new Error('Application not found');
-                    }
-                    var obj = list[0];
-                    // Only numbers and alphabets will be used
-                    Application = obj;
-                    appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
-                    moduleName = appName.toLowerCase();
-                    next();
-                    return null;
-                })
-                .catch(function(err) {
-                    next(err);
-                    return null;
-                });
+                    .populate('translations')
+                    .then(function (list) {
+                        if (!list || !list[0]) {
+                            throw new Error('Application not found');
+                        }
+                        var obj = list[0];
+                        // Only numbers and alphabets will be used
+                        Application = obj;
+                        appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
+                        moduleName = appName.toLowerCase();
+                        next();
+                        return null;
+                    })
+                    .catch(function (err) {
+                        next(err);
+                        return null;
+                    });
 
             },
 
@@ -324,7 +337,7 @@ module.exports = {
 
 
             // make sure OpsPortal navigation has an area for this application defined:
-            function(next){
+            function (next) {
 
                 // if this was our first time to create the App, 
                 // then create an area.  
@@ -333,24 +346,24 @@ module.exports = {
                 if (!pluginExists) {
 
                     var areaName = Application.name;
-                    var areaKey  = Application.areaKey();
+                    var areaKey = Application.areaKey();
                     var label = areaName;  // default if no translations provided
-                    Application.translations.some(function(trans){
+                    Application.translations.some(function (trans) {
                         if (label == areaName) {
                             label = trans.label;
                             return true;  // stops the looping.
                         }
                     })
                     var defaultArea = {
-                        key:areaKey,
-                        icon:'fa-cubes',
-                        isDefault:false,
-                        label:label,
-                        context:areaKey
+                        key: areaKey,
+                        icon: 'fa-cubes',
+                        isDefault: false,
+                        label: label,
+                        context: areaKey
                     }
 
                     // Note: this will only create it if it doesn't already exist.
-                    OPSPortal.NavBar.Area.create(defaultArea, function(err, area){
+                    OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
 
                         // area is null if already existed, 
                         // not null if just created:
@@ -412,7 +425,7 @@ module.exports = {
 
                         objName = AppBuilder.rules.nameFilter(obj.name);
                         columns = obj.columns;
-                        fullName = appName + '_' + objName;
+                        fullName = AppBuilder.rules.toObjectNameFormat(appName, objName);
 
                         fullPath = path.join(modelsPath, fullName) + '.js';
                         fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
@@ -451,26 +464,64 @@ module.exports = {
                     'tablename:' + fullName.toLowerCase(),
                     'preventNull:true'
                 ];
-                for (var i = 0; i < columns.length; i++) {
-                    var col = columns[i];
-                    var colString = col.name + ':' + col.type;
-                    if (col.supportMultilingual) {
-                        colString += ':multilingual';
-                    }
-                    else if (col.linkToObject) {
-                        colString += ':model:' + col.linkToObject;
-                    }
-                    cliParams.push(colString);
-                }
 
-                AD.spawn.command({
-                    command: cliCommand,
-                    options: cliParams
-                })
-                    .fail(next)
-                    .done(function () {
-                        next();
-                    });
+                async.series([
+                    // Define columns
+                    function (callback) {
+                        async.eachSeries(columns, function (col, ok) {
+                            var colString = '',
+                                isDefinedLabel = false;
+
+                            if (col.linkObject && col.linkVia) {
+                                ABColumn.findOne({ id: col.id })
+                                .populate('linkObject')
+                                .populate('linkVia')
+                                    .fail(ok)
+                                    .then(function (linkedCol) {
+                                        colString += linkedCol.name;
+                                        colString += ':' + linkedCol.linkType; // model, collection
+                                        colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name) // model name
+
+                                        if (linkedCol.linkVia)
+                                            colString += ':' + linkedCol.linkVia.name; // viaReference
+
+                                        cliParams.push(colString);
+
+                                        ok();
+                                    });
+                            }
+                            else {
+                                colString += col.name + ':' + col.type;
+
+                                if (col.supportMultilingual) {
+                                    colString += ':multilingual';
+                                }
+                                // if this field is the Label, then:
+                                if (!isDefinedLabel && (col.type === 'string' || col.type === 'text')) {
+                                    colString += ':label';
+                                    isDefinedLabel = true;
+                                }
+                                cliParams.push(colString);
+
+                                ok();
+                            }
+                        }, callback);
+                    }
+                ], function (err) {
+                    if (err) {
+                        next(err);
+                        return;
+                    }
+
+                    AD.spawn.command({
+                        command: cliCommand,
+                        options: cliParams
+                    })
+                        .fail(next)
+                        .done(function () {
+                            next();
+                        });
+                });
             },
 
             // Patch model definition
@@ -514,7 +565,7 @@ module.exports = {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
 
-        
+
         var appID, appName, pageName, pageKey, pagePerms, toolLabel;
         var roles = [];
         var objectIncludes = [];
@@ -528,50 +579,50 @@ module.exports = {
             // Find basic page info
             function (next) {
                 ABPage.find({ id: pageID })
-                .populate('application')
-                .populate('components')
-                .populate('translations')
-                .then(function(list) {
-                    if (!list || !list[0]) {
-                        var err = new Error('invalid page id');
-                        next(err);
-                        return;
-                    }
-                    var page = list[0];
-                    if (page.parent > 0) throw new Error('not a root page');
-                    
-                    appID = page.application.id;
-                    appName = AppBuilder.rules.toApplicationNameFormat(page.application.name);
-                    pageName = AppBuilder.rules.nameFilter(page.name);
-                    toolLabel = pageName;
-                    page.translations.some(function(trans){
-                        if (toolLabel == pageName){
-                            toolLabel = trans.label;
-                            return true;
+                    .populate('application')
+                    .populate('components')
+                    .populate('translations')
+                    .then(function (list) {
+                        if (!list || !list[0]) {
+                            var err = new Error('invalid page id');
+                            next(err);
+                            return;
                         }
-                    })
+                        var page = list[0];
+                        if (page.parent > 0) throw new Error('not a root page');
 
-                    // Only numbers and alphabets will be used
-                    Application = page.application;
+                        appID = page.application.id;
+                        appName = AppBuilder.rules.toApplicationNameFormat(page.application.name);
+                        pageName = AppBuilder.rules.nameFilter(page.name);
+                        toolLabel = pageName;
+                        page.translations.some(function (trans) {
+                            if (toolLabel == pageName) {
+                                toolLabel = trans.label;
+                                return true;
+                            }
+                        })
 
-                    pageKey = ['opstools', appName, pageName].join('.'); // appName.pageName
-                    pagePerms = 'adcore.admin,'+pageKey+'.view';
-                    
-                    controllerIncludes.push({
-                        key: 'opstools.' + appName + '.' + pageName,
-                        path: 'opstools/' + appName + '/controllers/'
+                        // Only numbers and alphabets will be used
+                        Application = page.application;
+
+                        pageKey = ['opstools', appName, pageName].join('.'); // appName.pageName
+                        pagePerms = 'adcore.admin,' + pageKey + '.view';
+
+                        controllerIncludes.push({
+                            key: 'opstools.' + appName + '.' + pageName,
+                            path: 'opstools/' + appName + '/controllers/'
                             + pageName + '.js'
+                        });
+
+                        pages[pageID] = page;
+
+                        next();
+                        return null;
+                    })
+                    .catch(function (err) {
+                        next(err);
+                        return null;
                     });
-
-                    pages[pageID] = page;
-
-                    next();
-                    return null;
-                })
-                .catch(function (err) {
-                    next(err);
-                    return null;
-                });
             },
 
             // Find assign roles
@@ -769,16 +820,16 @@ module.exports = {
             // Create Page's permission action
             function (next) {
                 var page = pages[pageID];
-                page.permissionActionKey = pageKey+'.view';
+                page.permissionActionKey = pageKey + '.view';
                 Permissions.action.create({
                     key: page.permissionActionKey,
                     description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
                     language_code: 'en'
                 })
-                .always(function () {
-                    // If permission action already exists, that's fine.
-                    next();
-                });
+                    .always(function () {
+                        // If permission action already exists, that's fine.
+                        next();
+                    });
             },
 
             // Assign permission actions to assign roles
@@ -810,30 +861,30 @@ module.exports = {
                     objectIncludes,
                     controllerIncludes
                 )
-                .fail(next)
-                .done(function () {
-                    next();
-                });
+                    .fail(next)
+                    .done(function () {
+                        next();
+                    });
             },
 
             // create a Tool Definition for the OP Portal Navigation
-            function(next) {
-// sails.log('create tool definition')
+            function (next) {
+                // sails.log('create tool definition')
                 var areaName = Application.name;
                 var areaKey = Application.areaKey();
 
                 var def = {
-                    key:_.kebabCase(pageKey),
-                    permissions:pagePerms,
-                    icon:'fa-lock', // TODO: get this from Page Definition.
-                    label:toolLabel,
+                    key: _.kebabCase(pageKey),
+                    permissions: pagePerms,
+                    icon: 'fa-lock', // TODO: get this from Page Definition.
+                    label: toolLabel,
                     // context: pageKey,
                     controller: 'OPView',
                     isController: false,
-                    options: {  url:'/opsportal/view/'+pageKey  },
-                    version:'0'
+                    options: { url: '/opsportal/view/' + pageKey },
+                    version: '0'
                 }
-                OPSPortal.NavBar.ToolDefinition.create(def, function(err, toolDef){
+                OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
 
                     next(err);
                 })
@@ -841,23 +892,23 @@ module.exports = {
 
 
             // make sure our ToolDefinition is linked to our Area Definition.
-            function(next){
-// sails.log('... todo: link tooldef to area');
+            function (next) {
+                // sails.log('... todo: link tooldef to area');
 
                 OPSPortal.NavBar.Area.link({
                     keyArea: Application.areaKey(),
                     keyTool: _.kebabCase(pageKey),
-                    instance:{
-                        icon:'fa-cube',
-                        permissions:pagePerms,
-                        options:{
-                            is:'there'
+                    instance: {
+                        icon: 'fa-cube',
+                        permissions: pagePerms,
+                        options: {
+                            is: 'there'
                         }
                     }
-                }, function(err){
+                }, function (err) {
                     if (err) {
                         if (err.code == 'E_AREANOTFOUND') {
-console.log('... Area['+ Application.areaKey()+'] not found.  Move along ... ');
+                            console.log('... Area[' + Application.areaKey() + '] not found.  Move along ... ');
                             // this probably means that they deleted this default area 
                             // using the Navigation Editor.
                             // no problem here:
@@ -867,22 +918,22 @@ console.log('... Area['+ Application.areaKey()+'] not found.  Move along ... ');
                     }
                     next(err);
                 });
-                
+
             }
 
-            
-        ], function(err) {
+
+        ], function (err) {
             if (err) dfd.reject(err);
             else {
                 var page = pages[pageID];
 
                 // save any updates to our page instance.
-                page.save(function(err) {
+                page.save(function (err) {
                     // should we pay attention to this error?
-                    
+
                     dfd.resolve({});
                 })
-                
+
             }
         });
 

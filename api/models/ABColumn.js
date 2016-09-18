@@ -63,12 +63,26 @@ module.exports = {
 
         setting: { type: 'json' },
 
-        linkToObject: {
-            type: 'integer',
+        linkType: {
+            type: 'string',
+            enum: ['collection', 'model'],
             required: false
         },
 
-        isMultipleRecords: { type: 'boolean' },
+        linkObject: {
+            model: 'ABObject',
+            required: false
+        },
+
+        linkVia: {
+            model: 'ABColumn',
+            required: false
+        },
+
+        linkDefault: {
+            type: 'boolean',
+            required: false
+        },
 
         supportMultilingual: { type: 'boolean' },
 
@@ -89,7 +103,17 @@ module.exports = {
         if (values.name)
             values.name = values.name.replace(/ /g, '_');
 
-        cb();
+        if (values.weight == null) {
+            // Set weight
+            ABColumn.count({ object: values.object }).exec(function (err, found) {
+                values.weight = found + 1;
+                cb();
+            });
+        }
+        else {
+            cb();
+        }
+
     },
 
     beforeUpdate: function (values, cb) {

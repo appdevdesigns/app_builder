@@ -469,6 +469,21 @@ steal(
 									async.parallel(createGridTasks, next);
 								},
 
+								// Add 'Menu' to the view page
+								function (next) {
+									self.Model.ABPageComponent.create({
+										page: viewPageId,
+										component: 'Menu',
+										weight: 1000,
+										setting: {
+											layout: "y",
+											data: [mainPageId]
+										}
+									})
+										.fail(next)
+										.then(function () { next(); });
+								},
+
 								// Finish - Get pages to return
 								function (next) {
 									self.Model.ABPage.findAll({ or: [{ id: mainPageId }, { parent: mainPageId }] })

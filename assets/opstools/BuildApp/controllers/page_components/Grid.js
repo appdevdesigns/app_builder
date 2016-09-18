@@ -171,6 +171,20 @@ steal(
 													return "[Select]";
 											}
 										},
+										{ label: "Filter condition", type: "label" },
+										{
+											id: 'fieldCondition',
+											name: 'fieldCondition',
+											type: 'richselect',
+											label: 'Field',
+											template: function (data, dataValue) {
+												var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+												if (selectedData && selectedData.length > 0)
+													return selectedData[0].value;
+												else
+													return "[Select]";
+											}
+										},
 										{ label: "Data table", type: "label" },
 										{
 											id: 'detailView',

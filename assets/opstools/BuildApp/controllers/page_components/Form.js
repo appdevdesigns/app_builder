@@ -2,6 +2,7 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
+	'opstools/BuildApp/models/ABList.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 
@@ -29,6 +30,7 @@ steal(
 							self.Model = {
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
+								ABList: AD.Model.get('opstools.BuildApp.ABList'),
 								ObjectModels: {}
 							};
 
@@ -264,12 +266,11 @@ steal(
 											}
 											else if (c.setting.editor === 'richselect') {
 												element.view = 'richselect';
-												// TODO : Get list from database
-												element.options = $.map(c.setting.filter_options, function (opt, index) {
+												element.options = $.map(result, function (opt, index) {
 													return {
 														id: index,
 														value: opt
-													}
+													};
 												});
 											}
 											else {
@@ -301,6 +302,19 @@ steal(
 											// $$(viewId).addView(element);
 											elementViews.push(element);
 										});
+
+										// // Get list from database
+										// self.Model.ABList.findAll({ column: c.id })
+										// 	.then(function (result) {
+										// 		result.forEach(function (r) { if (r.translate) r.translate(); });
+
+										// 		element.options = $.map(result, function (opt, index) {
+										// 			return {
+										// 				id: r.id,
+										// 				value: r.label
+										// 			}
+										// 		});
+										// 	});
 
 										// Redraw
 										webix.ui(elementViews, $$(viewId));

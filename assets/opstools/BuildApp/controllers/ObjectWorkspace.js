@@ -493,7 +493,7 @@ steal(
 										break;
 									case self.labels.object.deleteField:
 										// Validate
-										if (self.data.columns.length < 2) {
+										if (self.data.columns.length < 2 && typeof headerField.dataId !== 'string') {
 											webix.alert({
 												title: self.labels.object.couldNotDeleteField,
 												ok: self.labels.common.ok,
@@ -537,10 +537,10 @@ steal(
 															var objectName = self.data.object.attr('name');
 
 															async.parallel([
-																function (next) {
-																	// Remove describe to object model
+																// Remove describe & multi-fields of object model
+																function (ok) {
 																	self.controllers.ModelCreator.getModel(objectName)
-																		.fail(function (err) { next(err); })
+																		.fail(function (err) { ok(err); })
 																		.then(function (objectModel) {
 																			delete objectModel.describe()[headerField.id];
 
@@ -550,18 +550,55 @@ steal(
 																			// Delete cache
 																			objectModel.Cached.deleteCachedField(headerField.dataId);
 
-																			next();
+																			ok();
 																		});
 																},
-																function (next) {
-																	if (typeof headerField.dataId === 'string' && headerField.dataId.startsWith('temp')) {
-																		next();
+																// Remove describe & multi-fields of link object model
+																function (ok) {
+																	if (selectedColumn.linkObject && selectedColumn.linkVia) {
+																		var linkObject = self.data.objectList.filter(function (obj) {
+																			var linkObjId = selectedColumn.linkObject.id ? selectedColumn.linkObject.id : selectedColumn.linkObject;
+																			return obj.id == linkObjId;
+																		})[0];
+
+																		self.controllers.ModelCreator.getModel(linkObject.name)
+																			.fail(function (err) { ok(err); })
+																			.then(function (objectModel) {
+																				delete objectModel.describe()[selectedColumn.linkVia];
+
+																				if (objectModel.multilingualFields) // Remove link field
+																					objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != selectedColumn.linkVia; });
+
+																				// Delete cache
+																				objectModel.Cached.deleteCachedField(selectedColumn.linkVia);
+
+																				ok();
+																			});
 																	}
 																	else {
-																		// Call server to delete field data
+																		ok();
+																	}
+																},
+																// Call server to delete field data
+																function (ok) {
+																	if (typeof headerField.dataId === 'string' && headerField.dataId.startsWith('temp')) {
+																		ok();
+																	}
+																	else {
 																		self.Model.ABColumn.destroy(headerField.dataId)
-																			.fail(function (err) { next(err); })
-																			.then(function (data) { next(); });
+																			.fail(function (err) { ok(err); })
+																			.then(function (data) { ok(); });
+																	}
+																},
+																// Call server to delete link field data
+																function (ok) {
+																	if (selectedColumn.linkObject && selectedColumn.linkVia && typeof selectedColumn.linkVia !== 'string') {
+																		self.Model.ABColumn.destroy(selectedColumn.linkVia.id)
+																			.fail(function (err) { ok(err); })
+																			.then(function (data) { ok(); });
+																	}
+																	else {
+																		ok();
 																	}
 																}
 															], function (err) {
@@ -574,6 +611,7 @@ steal(
 																	});
 
 																	AD.error.log('Column list : Error delete column', { error: err });
+																	next(err);
 																	return;
 																}
 
@@ -602,6 +640,8 @@ steal(
 																self.refreshPopupData();
 
 																$$(self.webixUiId.objectDatatable).hideProgress();
+
+																next();
 															});
 														}
 
@@ -681,11 +721,8 @@ steal(
 							// Set values to connect object popup
 							$$(self.webixUiId.addConnectObjectDataPopup).setApp(self.data.app);
 
-							// Set enable connect object list to the add new column popup
-							var enableConnectObjects = self.data.objectList.filter(function (o) {
-								return o.id != self.data.objectId;
-							});
-							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
+							$$(self.webixUiId.addFieldsPopup).setCurrObjectId(self.data.objectId);
+							$$(self.webixUiId.addFieldsPopup).setObjectList(self.data.objectList);
 
 							if (self.data.objectId) {
 								var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
@@ -826,17 +863,19 @@ steal(
 											weight: columnInfo.weight
 										};
 
-										if (columnInfo.linkToObject != null)
-											newColumn.linkToObject = columnInfo.linkToObject;
-
-										if (columnInfo.isMultipleRecords != null)
-											newColumn.isMultipleRecords = columnInfo.isMultipleRecords ? true : false;
-
 										if (columnInfo.supportMultilingual != null)
 											newColumn.supportMultilingual = columnInfo.supportMultilingual ? true : false;
 
 										if (columnInfo.setting.value)
 											newColumn.default = columnInfo.setting.value;
+
+										// Link column
+										if (columnInfo.linkTypeTo && columnInfo.linkTypeFrom && columnInfo.linkObject) {
+											newColumn.linkType = columnInfo.linkTypeTo;
+											newColumn.linkObject = columnInfo.linkObject;
+											newColumn.linkDefault = true;
+											newColumn.setting.linkViaType = columnInfo.linkTypeFrom;
+										}
 
 										// Get deferred when save complete
 										var refreshDeferred = self.refreshColumnsDeferred(columnInfo, removedListId),
@@ -854,24 +893,60 @@ steal(
 												.then(function (data) { refreshDeferred.resolve(data); });
 										}
 										else { // Cache new field
-											// Add new describe to object model
-											self.controllers.ModelCreator.getModel(objectName)
-												.fail(function (err) { refreshDeferred.reject(err); })
-												.then(function (objectModel) {
-													if (columnInfo.id) newColumn.id = columnInfo.id;
+											async.waterfall([
+												function (ok) {
+													if (columnInfo.id)
+														newColumn.id = columnInfo.id;
+													self.cacheNewField(objectName, newColumn)
+														.fail(ok)
+														.then(function (firstColumn) { ok(null, firstColumn) });
+												},
+												function (firstColumn, ok) {
+													if (firstColumn.linkType && firstColumn.linkObject && firstColumn.linkDefault) {
+														// Find object
+														var linkObj = self.data.objectList.filter(function (obj) { return obj.id == firstColumn.linkObject; })[0];
 
-													// Cache new field
-													objectModel.Cached.cacheNewFields(newColumn);
+														// Create linked column
+														var secondColumn = {
+															object: firstColumn.linkObject,
+															name: self.data.object.label + " " + firstColumn.label,
+															label: self.data.object.label + "(" + firstColumn.label + ")",
+															type: firstColumn.type,
+															setting: $.extend(true, {}, firstColumn.setting),
+															linkType: columnInfo.linkTypeFrom,
+															linkObject: self.data.object.id,
+															linkVia: firstColumn.id,
+															linkDefault: false
+														};
 
-													// Add new describe to object model
-													objectModel.describe()[newColumn.name] = newColumn.type;
+														if (firstColumn.linkVia)
+															secondColumn.id = firstColumn.linkVia;
+														secondColumn.setting.linkViaType = columnInfo.linkTypeTo;
 
-													// Add multilingual field to object model
-													if (newColumn.supportMultilingual)
-														objectModel.multilingualFields.push(newColumn.name);
+														// Cache
+														self.cacheNewField(linkObj.name, secondColumn)
+															.fail(ok)
+															.then(function (result) {
+																// Set linkVia to first column
+																firstColumn.linkVia = result.id;
 
-													refreshDeferred.resolve(newColumn);
-												});
+																// Update firstColumn cache
+																self.cacheNewField(objectName, firstColumn)
+																	.fail(ok)
+																	.then(function () { ok(); });
+															});
+													}
+													else {
+														ok();
+													}
+												}
+											], function (err) {
+												if (err) {
+													refreshDeferred.reject(err);
+													return;
+												}
+												refreshDeferred.resolve(newColumn);
+											});
 										}
 
 										return refreshDeferred;
@@ -924,6 +999,29 @@ steal(
 								$$(self.webixUiId.objectDatatable).hide();
 							}
 
+						},
+
+						cacheNewField: function (objectName, newColumn) {
+							var q = AD.sal.Deferred(),
+								self = this;
+
+							self.controllers.ModelCreator.getModel(objectName)
+								.fail(function (err) { q.reject(err); })
+								.then(function (objectModel) {
+									// Cache new field
+									var cacheCol = objectModel.Cached.cacheNewField(newColumn);
+
+									// Add new describe to object model
+									objectModel.describe()[cacheCol.name] = cacheCol.type;
+
+									// Add multilingual field to object model
+									if (cacheCol.supportMultilingual)
+										objectModel.multilingualFields.push(cacheCol.name);
+
+									q.resolve(cacheCol);
+								});
+
+							return q;
 						},
 
 						setObjectList: function (objectList) {
