@@ -80,7 +80,7 @@ module.exports = {
         },
 
         toObjectNameFormat: function (appName, objectName) {
-            return (appName + '_' + AppBuilder.rules.nameFilter(objectName).toLowerCase());
+            return (appName + '_' + AppBuilder.rules.nameFilter(objectName));
         }
 
     },
@@ -497,7 +497,7 @@ module.exports = {
                                     .then(function (linkedCol) {
                                         colString += linkedCol.name;
                                         colString += ':' + linkedCol.linkType; // model, collection
-                                        colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name) // model name
+                                        colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name.toLowerCase()) // model name
 
                                         if (linkedCol.linkVia)
                                             colString += ':' + linkedCol.linkVia.name; // viaReference
