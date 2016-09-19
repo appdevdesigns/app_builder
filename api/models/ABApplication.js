@@ -91,6 +91,24 @@ module.exports = {
     },
 
 
+    afterCreate: function(newRecord, cb) {
+
+        // if we have a proper ABApplication.id given:
+        if ((newRecord)
+            && (newRecord.id)) {
+
+// console.log('... ABApplication.afterCreate():  id: '+newRecord.id);
+
+            // Start building the physical module on the FileSystem:
+            setTimeout(function(){
+                AppBuilder.buildApplication(newRecord.id);
+            }, 500);
+        }
+
+        // don't wait around:
+        cb();
+    },
+
     afterDestroy: function (destroyedApplications, cb) {
 
         var ids = _.map(destroyedApplications, 'id');

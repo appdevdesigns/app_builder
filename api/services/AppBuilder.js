@@ -18,6 +18,9 @@ var reloadTimeLimit = 3 * 1000 * 60; // 3 minutes
 var cliCommand = 'appdev';  // use the global appdev command
 
 
+var appsBuildInProgress = {};  // a hash of deferreds for apps currently being built.
+                                // {  ABApplication.id : dfd }
+
 
 function notifyToClients(reloading, step, action) {
     var data = {
@@ -253,6 +256,16 @@ module.exports = {
 
         var Application = null;
 
+        // if we are currently building it:
+        if (appsBuildInProgress[appID]) {
+// console.log('... App Build in progress : waiting!');
+            return appsBuildInProgress[appID];
+        }
+
+
+        // if we get here, we start building this app:
+        // So mark that it is in progress:
+        appsBuildInProgress[appID] = dfd;
 
         async.series([
             function (next) {
@@ -381,6 +394,10 @@ module.exports = {
             process.chdir(cwd);
             if (err) dfd.reject(err);
             else dfd.resolve({});
+
+            // now remove our flag:
+// console.log('... App Build finished!');
+            delete appsBuildInProgress[appID];
         });
 
         return dfd;
