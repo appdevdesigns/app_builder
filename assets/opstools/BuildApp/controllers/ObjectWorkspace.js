@@ -264,13 +264,13 @@ steal(
 
 													// Get columns of connected object
 													var object = self.data.objectList.filter(function (o) {
-														return o.id === columnData.linkToObject;
+														return o.id == (columnData.linkObject.id ? columnData.linkObject.id : columnData.linkObject);
 													});
 
 													if (!object || object.length < 1)
 														return false;
 
-													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], selectedIds, columnData.isMultipleRecords);
+													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], selectedIds, columnData.linkType);
 
 													return false;
 												}
@@ -729,10 +729,10 @@ steal(
 								self.data.object = curObject[0];
 
 								async.series([
+									// Get columns data from server
 									function (next) {
 										$$(self.webixUiId.objectDatatable).clearAll();
 
-										// Get columns from server
 										self.Model.ABColumn.findAll({ object: self.data.objectId })
 											.fail(function (err) {
 												$$(self.webixUiId.objectDatatable).hideProgress();
@@ -795,18 +795,19 @@ steal(
 												}
 											});
 									},
+									// Bind columns to DataTable
 									function (next) {
 										self.bindColumns(true, true)
 											.fail(function (err) { next(err); })
 											.then(function () { next(); });
 									},
+									// Get object model
 									function (next) {
 										if (!self.data.object) {
 											next();
 											return;
 										}
 
-										// Get object model
 										self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
 											.fail(function (err) { next(err); })
 											.then(function (objectModel) {
@@ -815,9 +816,8 @@ steal(
 												next();
 											});
 									},
+									// Get data from server
 									function (next) {
-
-										// Get data from server
 										self.Model.ObjectModel.Cached.findAll({})
 											.fail(function (err) { next(err); })
 											.then(function (result) {

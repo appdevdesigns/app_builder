@@ -203,7 +203,7 @@ steal(
 									self.controllers.ModelCreator.setApp(app);
 								},
 
-								open: function (object, selectedIds, isMultipleRecords) {
+								open: function (object, selectedIds, linkType) {
 									self.data.selectedIds = selectedIds;
 
 									var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
@@ -211,7 +211,7 @@ steal(
 									this.getTopParentView().show();
 									webix.extend(dataList, webix.ProgressBar);
 									dataList.showProgress({ type: 'icon' });
-									dataList.define('multiselect', isMultipleRecords);
+									dataList.define('multiselect', linkType === 'collection');
 
 									// Generate template to display
 									var template = function (item, common) {

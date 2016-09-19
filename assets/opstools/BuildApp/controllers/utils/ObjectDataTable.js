@@ -132,12 +132,12 @@ steal(
 										}
 									}
 
-									if (d.isUnsync) { // TODO: Highlight unsync data
-										self.dataTable.config.columns.forEach(function (col) {
-											var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
-											rowNode.classList.add('ab-object-unsync-data');
-										});
-									}
+									// 	if (d.isUnsync) { // TODO: Highlight unsync data
+									// 		self.dataTable.config.columns.forEach(function (col) {
+									// 			var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
+									// 			rowNode.classList.add('ab-object-unsync-data');
+									// 		});
+									// 	}
 
 									// Call to calculate row height
 									if (maxConnectedDataNum.dataId)
@@ -201,7 +201,7 @@ steal(
 									label: col.label,
 									header: self.getHeader(col, self.data.readOnly),
 									weight: col.weight,
-									linkToObject: col.linkToObject
+									linkObject: col.linkObject
 								});
 
 								if (mapCol.filter_type === 'boolean' && self.data.readOnly) { // Checkbox - read only mode
@@ -264,7 +264,7 @@ steal(
 							if (col.setting.editor === 'selectivity') {
 								// Find label of connect object
 								var connectObj = self.data.objectList.filter(function (o) {
-									return o.id == col.linkToObject;
+									return o.id == col.linkObject.id ? col.linkObject.id : col.linkObject;
 								});
 
 								if (connectObj && connectObj.length > 0)
@@ -290,9 +290,9 @@ steal(
 								charLength = col.label ? col.label.length : 0,
 								width = (charLength * charWidth) + 80;
 
-							if (col.linkToObject) {// Connect to... label
+							if (col.linkObject) {// Connect to... label
 								var object = self.data.objectList.filter(function (o) {
-									return o.id === col.linkToObject;
+									return o.id === col.linkObject.id ? col.linkObject.id : col.linkObject;
 								});
 
 								if (object && object.length > 0)
@@ -334,17 +334,17 @@ steal(
 
 							// Get connected columns
 							var linkCols = $.grep(self.dataTable.config.columns, function (c) {
-								return c.linkToObject;
+								return c.linkObject;
 							});
 
 							var prepareConnectedDataEvents = [];
 
-							linkCols.forEach(function (c) {
+							linkCols.forEach(function (col) {
 								prepareConnectedDataEvents.push(function (callback) {
 									var getConnectedDataEvents = [];
 
 									// Get connected object name
-									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == c.linkToObject; })[0];
+									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == (col.linkObject.id ? col.linkObject.id : col.linkObject); })[0];
 
 									if (!connectedObj) {
 										callback();
@@ -359,17 +359,19 @@ steal(
 
 											can.each(resultList, function (r) {
 												getConnectedDataEvents.push(function (cb) {
-													var connectedDataIds = r[c.id];
+													var connectedDataIds = r[col.id];
 
 													if (r.connectedData)
-														r.connectedData.attr(c.id, [], true);
+														r.connectedData.attr(col.id, [], true);
 
 													if (!connectedDataIds || connectedDataIds.length < 1) {
 														cb();
 														return true;
+													} else if (!connectedDataIds.filter) { // Convert to Array
+														connectedDataIds = [connectedDataIds];
 													}
 
-													if (!self.dataTable.isColumnVisible(c.id)) {
+													if (!self.dataTable.isColumnVisible(col.id)) {
 														cb();
 														return true;
 													}
@@ -396,7 +398,7 @@ steal(
 																	}
 																});
 
-																r.connectedData.attr(c.id, connectedDataValue, true);
+																r.connectedData.attr(col.id, connectedDataValue, true);
 															}
 
 															cb();
