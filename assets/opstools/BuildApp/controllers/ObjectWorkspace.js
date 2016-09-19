@@ -404,8 +404,12 @@ steal(
 							self.controllers.ObjectDataTable.registerDataTable($$(self.webixUiId.objectDatatable));
 							self.controllers.ObjectDataTable.registerChangeSelectivityItem(function (ev, data) {
 								if (ev.removed) {
+									// Convert to array
+									if (!data.itemData.forEach) data.itemData = [data.itemData];
+
 									// Delete removed value
-									data.itemData.forEach(function (id, index) {
+									data.itemData.forEach(function (item, index) {
+										var id = item.id ? item.id : item;
 										if (id == ev.removed.id)
 											data.itemData.splice(index, 1);
 									});
@@ -664,7 +668,7 @@ steal(
 								var selectedIds = '';
 
 								if (selectedItems && selectedItems.length > 0)
-									selectedIds = $.map(selectedItems, function (item) { return item.id; });
+									selectedIds = $.map(selectedItems, function (item) { return { id: item.id }; });
 
 								self.updateRowData(
 									{ value: selectedIds }, // state
@@ -674,6 +678,7 @@ steal(
 									},
 									false)
 									.then(function (result) {
+										// Update row
 										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
 										if (!rowData.connectedData) rowData.connectedData = {};
 
@@ -681,6 +686,22 @@ steal(
 										rowData.connectedData[self.data.selectedCell.column] = selectedItems;
 
 										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
+
+										// Remove duplicate selected item when the link column supports one value
+										var colData = self.data.columns.filter(function (col) { return col.name == self.data.selectedCell.column; })[0];
+										if (colData.setting.linkViaType === 'model') {
+											$$(self.webixUiId.objectDatatable).eachRow(function (row) {
+												if (row != self.data.selectedCell.row) {
+													var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
+													// Filter difference values
+													otherRow.connectedData[self.data.selectedCell.column] = otherRow.connectedData[self.data.selectedCell.column].filter(function (i) {
+														return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
+													});
+
+													$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
+												}
+											});
+										}
 
 										// Resize row height
 										self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
@@ -818,6 +839,7 @@ steal(
 									},
 									// Get data from server
 									function (next) {
+										self.Model.ObjectModel.store = {}; // Clear CanJS local repository
 										self.Model.ObjectModel.Cached.findAll({})
 											.fail(function (err) { next(err); })
 											.then(function (result) {
@@ -888,9 +910,44 @@ steal(
 												updateColumn.attr(key, newColumn[key]);
 											}
 
-											updateColumn.save()
-												.fail(function (err) { refreshDeferred.reject(err); })
-												.then(function (data) { refreshDeferred.resolve(data); });
+											updateColumn.setting.attr('linkViaType', columnInfo.linkTypeFrom);
+
+											async.series([
+												// Update the column
+												function (next) {
+													updateColumn.save()
+														.fail(function (err) { next(err); })
+														.then(function (result) {
+															updateColumn = result;
+															next();
+														});
+												},
+												// Update the link column
+												function (next) {
+													if (updateColumn.linkVia) {
+														self.Model.ABColumn.findOne({ id: updateColumn.linkVia.id })
+															.fail(next)
+															.then(function (result) {
+																result.attr('linkType', columnInfo.linkTypeFrom);
+																result.setting.attr('linkViaType', columnInfo.linkTypeTo);
+
+																result.save().fail(next).then(function () {
+																	next();
+																});
+															});
+													}
+													else {
+														next();
+													}
+												}
+											], function (err) {
+												if (err) {
+													refreshDeferred.reject(err);
+													return;
+												}
+
+												refreshDeferred.resolve(updateColumn);
+											});
 										}
 										else { // Cache new field
 											async.waterfall([
@@ -1086,6 +1143,10 @@ steal(
 										})
 										.then(function (result) {
 											if (result.translate) result.translate();
+
+											// // Force update CanJS store
+											// if (self.Model.ObjectModel.store[result.id])
+											// 	self.Model.ObjectModel.store[result.id] = result;
 
 											q.resolve(result);
 										});

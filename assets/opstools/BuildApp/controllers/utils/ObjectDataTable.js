@@ -264,7 +264,7 @@ steal(
 							if (col.setting.editor === 'selectivity') {
 								// Find label of connect object
 								var connectObj = self.data.objectList.filter(function (o) {
-									return o.id == col.linkObject.id ? col.linkObject.id : col.linkObject;
+									return col.linkObject && o.id == (col.linkObject.id ? col.linkObject.id : col.linkObject);
 								});
 
 								if (connectObj && connectObj.length > 0)
@@ -292,7 +292,7 @@ steal(
 
 							if (col.linkObject) {// Connect to... label
 								var object = self.data.objectList.filter(function (o) {
-									return o.id === col.linkObject.id ? col.linkObject.id : col.linkObject;
+									return o.id === (col.linkObject.id ? col.linkObject.id : col.linkObject);
 								});
 
 								if (object && object.length > 0)
