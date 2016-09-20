@@ -171,20 +171,20 @@ steal(
 													return "[Select]";
 											}
 										},
-										{ label: "Filter condition", type: "label" },
-										{
-											id: 'fieldCondition',
-											name: 'fieldCondition',
-											type: 'richselect',
-											label: 'Field',
-											template: function (data, dataValue) {
-												var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
-												if (selectedData && selectedData.length > 0)
-													return selectedData[0].value;
-												else
-													return "[Select]";
-											}
-										},
+										// { label: "Filter condition", type: "label" },
+										// {
+										// 	id: 'fieldCondition',
+										// 	name: 'fieldCondition',
+										// 	type: 'richselect',
+										// 	label: 'Field',
+										// 	template: function (data, dataValue) {
+										// 		var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+										// 		if (selectedData && selectedData.length > 0)
+										// 			return selectedData[0].value;
+										// 		else
+										// 			return "[Select]";
+										// 	}
+										// },
 										{ label: "Data table", type: "label" },
 										{
 											id: 'detailView',
@@ -639,10 +639,15 @@ steal(
 								async.series([
 									// Get data collection
 									function (next) {
-										data.getDataCollection(item.setting.object).then(function (result) {
-											dataCollection = result;
+										if (item.setting.object) {
+											data.getDataCollection(item.setting.object).then(function (result) {
+												dataCollection = result;
+												next();
+											});
+										}
+										else {
 											next();
-										});
+										}
 									},
 									// Render dataTable component
 									function (next) {
@@ -657,6 +662,11 @@ steal(
 									// Properties
 									// Data source - Object
 									function (next) {
+										if (!self.objects) {
+											next();
+											return;
+										}
+
 										var item = $$(self.componentIds.propertyView).getItem('object');
 										item.options = $.map(self.objects, function (o) {
 											return {
@@ -671,6 +681,7 @@ steal(
 									function (next) {
 										var parentId = self.data.page.parent ? self.data.page.parent.attr('id') : self.data.page.attr('id');
 
+										self.Model.ABPage.store = {}; // Clear local repository
 										self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] })
 											// AD.comm.service.get({
 											// 	url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId

@@ -636,6 +636,11 @@ steal(
 							var self = this,
 								q = $.Deferred();
 
+							if (!objectId) {
+								q.reject("Object id is required.");
+								return;
+							}
+
 							if (!self.data.dataCollections) self.data.dataCollections = {};
 
 							if (!self.data.dataCollections[objectId]) {
