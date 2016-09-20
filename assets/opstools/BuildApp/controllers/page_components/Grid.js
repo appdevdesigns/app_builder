@@ -780,7 +780,7 @@ steal(
 								if (columns.length < 1) columns = data.columns.slice(0); // Show all
 
 								// View column
-								if (extraColumns.editPage && extraColumns.editForm) {
+								if (extraColumns.viewPage && extraColumns.viewId) {
 									columns.push({
 										width: 60,
 										setting: {
