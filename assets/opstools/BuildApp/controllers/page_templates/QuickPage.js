@@ -308,7 +308,7 @@ steal(
 													async.waterfall([
 														// Get object info
 														function (callback) {
-															self.getObjectData(column.linkToObject)
+															self.getObjectData(column.linkObject.id ? column.linkObject.id : column.linkObject)
 																.fail(function (err) { callback(err); })
 																.then(function (objectModel) {
 																	callback(null, objectModel);
@@ -346,12 +346,12 @@ steal(
 											addFormTasks.push(function (ok) {
 												var columnId = parseInt(keyValue),
 													pageId = connectPageIds[columnId],
-													column = selectedObj.columns.filter(function (c) { return c.id == columnId && c.linkToObject; })[0];
+													column = selectedObj.columns.filter(function (c) { return c.id == columnId && c.linkObject; })[0];
 
 												async.waterfall([
 													// Get object info
 													function (callback) {
-														self.getObjectData(column.linkToObject)
+														self.getObjectData(column.linkObject.id ? column.linkObject.id : column.linkObject)
 															.fail(function (err) { callback(err); })
 															.then(function (objectModel) {
 																callback(null, objectModel);
@@ -367,7 +367,7 @@ steal(
 															weight: 0,
 															setting: {
 																title: 'Add ' + objData.label,
-																object: column.linkToObject,
+																object: (column.linkObject.id ? column.linkObject.id : column.linkObject),
 																visibleFieldIds: visibleFieldIds,
 																saveVisible: 'show',
 																cancelVisible: 'show'
@@ -430,12 +430,12 @@ steal(
 											function addGrid(keyValue, i) {
 												createGridTasks.push(function (ok) {
 													var columnId = parseInt(keyValue.replace('|list', '')),
-														column = selectedObj.columns.filter(function (c) { return c.id == columnId && c.linkToObject; })[0];
+														column = selectedObj.columns.filter(function (c) { return c.id == columnId && c.linkObject; })[0];
 
 													async.waterfall([
 														// Get object
 														function (callback) {
-															self.getObjectData(column.linkToObject).fail(callback)
+															self.getObjectData(column.linkObject.id ? column.linkObject.id : column.linkObject).fail(callback)
 																.then(function (objData) {
 																	callback(null, objData);
 																});
@@ -449,8 +449,8 @@ steal(
 																component: 'Grid',
 																weight: i + 2,
 																setting: {
-																	title: objData.label, // TODO : of owner
-																	object: column.linkToObject,
+																	title: objData.label,
+																	object: (column.linkObject.id ? column.linkObject.id : column.linkObject),
 																	columns: visibleFieldIds
 																}
 															})
@@ -578,7 +578,7 @@ steal(
 							});
 
 							// Connected data
-							var connectedCols = selectedObj.columns.filter(function (col) { return col.linkToObject; });
+							var connectedCols = selectedObj.columns.filter(function (col) { return col.linkObject; });
 
 							$$('QuickPage').removeView(self.componentIds.connectedData);
 
@@ -601,7 +601,7 @@ steal(
 
 								async.waterfall([
 									function (next) {
-										self.Model.ABColumn.findAll({ object: selectedObj.id, linkToObject: { '!': null } })
+										self.Model.ABColumn.findAll({ object: selectedObj.id, linkObject: { '!': null } })
 											.fail(function (err) {
 												AD.error.log('Error finding an objects columns.', { error: err, objectID: selectedObj.id });
 												next(err);

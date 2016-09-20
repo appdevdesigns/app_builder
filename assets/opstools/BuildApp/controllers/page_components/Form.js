@@ -247,7 +247,7 @@ steal(
 												element.template = element.template
 													.replace('#width#', element.labelWidth - 3)
 													.replace('#label#', element.label)
-													.replace('#object#', c.linkToObject)
+													.replace('#object#', c.linkObject)
 													.replace('#multiple#', c.isMultipleRecords);
 											}
 											else if (c.setting.editor === 'popup') {
