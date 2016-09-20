@@ -86,7 +86,7 @@ steal(
 									});
 								}
 								else {
-									self.addPageToTree(p);
+									self.addPageToTree(data.newPage);
 								}
 							});
 						},
