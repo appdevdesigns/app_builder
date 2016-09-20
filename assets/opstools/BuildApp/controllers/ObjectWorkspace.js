@@ -264,7 +264,7 @@ steal(
 
 													// Get columns of connected object
 													var object = self.data.objectList.filter(function (o) {
-														return o.id == (columnData.linkObject.id ? columnData.linkObject.id : columnData.linkObject);
+														return o.id == (columnData.linkObject.id || columnData.linkObject);
 													});
 
 													if (!object || object.length < 1)
@@ -561,7 +561,7 @@ steal(
 																function (ok) {
 																	if (selectedColumn.linkObject && selectedColumn.linkVia) {
 																		var linkObject = self.data.objectList.filter(function (obj) {
-																			var linkObjId = selectedColumn.linkObject.id ? selectedColumn.linkObject.id : selectedColumn.linkObject;
+																			var linkObjId = selectedColumn.linkObject.id || selectedColumn.linkObject;
 																			return obj.id == linkObjId;
 																		})[0];
 
@@ -689,16 +689,18 @@ steal(
 
 										// Remove duplicate selected item when the link column supports one value
 										var colData = self.data.columns.filter(function (col) { return col.name == self.data.selectedCell.column; })[0];
-										if (colData.setting.linkViaType === 'model') {
+										if (selectedIds && colData.setting.linkViaType === 'model') {
 											$$(self.webixUiId.objectDatatable).eachRow(function (row) {
 												if (row != self.data.selectedCell.row) {
 													var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
-													// Filter difference values
-													otherRow.connectedData[self.data.selectedCell.column] = otherRow.connectedData[self.data.selectedCell.column].filter(function (i) {
-														return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
-													});
+													if (otherRow.connectedData) {
+														// Filter difference values
+														otherRow.connectedData[self.data.selectedCell.column] = otherRow.connectedData[self.data.selectedCell.column].filter(function (i) {
+															return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
+														});
 
-													$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
+														$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
+													}
 												}
 											});
 										}

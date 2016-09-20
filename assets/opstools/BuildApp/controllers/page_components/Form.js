@@ -194,8 +194,11 @@ steal(
 
 								data.columns = null;
 								data.id = comId;
-								data.dataCollection = dataCollection;
 								data.isRendered = true;
+								data.dataCollection = dataCollection;
+								data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+									self.populateSelectivityValues(viewId);
+								});
 
 								settings.visibleFieldIds = settings.visibleFieldIds || [];
 
@@ -239,16 +242,17 @@ steal(
 												element.view = 'checkbox';
 											}
 											else if (c.setting.editor === 'selectivity') {
+												element.editor = 'selectivity';
 												element.minHeight = 45;
 												element.borderless = true;
 												element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
-													"<div class='ab-form-connect-data' data-object='#object#' data-multiple='#multiple#'></div>";
+													"<div class='ab-form-connect-data' data-object='#object#' data-link-type='#linkType#'></div>";
 
 												element.template = element.template
 													.replace('#width#', element.labelWidth - 3)
 													.replace('#label#', element.label)
-													.replace('#object#', c.linkObject)
-													.replace('#multiple#', c.isMultipleRecords);
+													.replace('#object#', (c.linkObject.id ? c.linkObject.id : c.linkObject))
+													.replace('#linkType#', c.linkType);
 											}
 											else if (c.setting.editor === 'popup') {
 												element.view = 'textarea';
@@ -501,7 +505,7 @@ steal(
 										$('.ab-form-connect-data').click(function () { // TODO: add viewId filter to selector
 											var item = $(this),
 												objectId = item.data('object'),
-												multiple = item.data('multiple');
+												linkType = item.data('link-type');
 
 											data.updatingItem = item;
 
@@ -522,7 +526,7 @@ steal(
 													data.updatingItem = null;
 												});
 
-												$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, multiple);
+												$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, linkType);
 											}
 										});
 
@@ -639,6 +643,21 @@ steal(
 
 							self.isRendered = function (viewId) {
 								return self.getData(viewId).isRendered === true;
+							};
+
+							self.populateSelectivityValues = function (viewId) {
+								// var data = self.getData(viewId),
+								// 	modelData = data.dataCollection.AD.currModel();
+
+								// $$(viewId).getChildViews().forEach(function (cView) {
+								// 	// Find selectivity field
+								// 	if (cView.config.editor === 'selectivity') {
+								// 		var nodeItem = $(cView.$view).find('.ab-form-connect-data'),
+								// 			selectedValues = modelData[cView.config.name];
+
+								// 		self.controllers.SelectivityHelper.setData($('.ab-form-connect-data'), selectedValues);
+								// 	}
+								// });
 							};
 
 							self.editStop = function () {

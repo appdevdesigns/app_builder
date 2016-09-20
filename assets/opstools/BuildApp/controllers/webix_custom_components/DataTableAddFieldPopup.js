@@ -707,7 +707,7 @@ steal(
                                                 return obj.id == self.data.currObjectId;
                                             })[0],
                                                 selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) {
-                                                    var linkObjId = data.linkObject.id ? data.linkObject.id: data.linkObject;
+                                                    var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
                                                     return obj.id == linkObjId;
                                                 })[0];
 
@@ -776,6 +776,7 @@ steal(
                                     // Set field name
                                     $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
                                         $(txtName).webix_text().setValue(data.name.replace(/_/g, ' '));
+                                        $(txtName).webix_text().disable();
                                     });
 
                                     // Set field label
