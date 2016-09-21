@@ -186,7 +186,7 @@ steal(
 								return self.data[viewId];
 							};
 
-							self.render = function (viewId, comId, settings, editable, dataCollection, showAll) {
+							self.render = function (viewId, comId, settings, editable, showAll, dataCollection) {
 								var data = self.getData(viewId),
 									q = $.Deferred(),
 									elementViews = [],
@@ -196,9 +196,11 @@ steal(
 								data.id = comId;
 								data.isRendered = true;
 								data.dataCollection = dataCollection;
-								data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
-									self.populateSelectivityValues(viewId);
-								});
+								if (data.dataCollection) {
+									data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+										self.populateSelectivityValues(viewId);
+									});
+								}
 
 								settings.visibleFieldIds = settings.visibleFieldIds || [];
 
@@ -324,7 +326,8 @@ steal(
 										webix.ui(elementViews, $$(viewId));
 
 										// Bind data
-										$$(viewId).bind(dataCollection);
+										if (dataCollection)
+											$$(viewId).bind(dataCollection);
 
 										// Title
 										if (editable) {

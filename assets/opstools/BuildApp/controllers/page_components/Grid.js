@@ -127,7 +127,7 @@ steal(
 																viewId: propertyValues.viewId,
 																editPage: propertyValues.editPage,
 																editForm: propertyValues.editForm
-															});
+															}, false, propertyValues.linkedField);
 														}
 													}
 												}
@@ -171,20 +171,32 @@ steal(
 													return "[Select]";
 											}
 										},
-										// { label: "Filter condition", type: "label" },
-										// {
-										// 	id: 'fieldCondition',
-										// 	name: 'fieldCondition',
-										// 	type: 'richselect',
-										// 	label: 'Field',
-										// 	template: function (data, dataValue) {
-										// 		var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
-										// 		if (selectedData && selectedData.length > 0)
-										// 			return selectedData[0].value;
-										// 		else
-										// 			return "[Select]";
-										// 	}
-										// },
+										{
+											id: 'linkedTo',
+											name: 'linkedTo',
+											type: 'richselect',
+											label: 'Linked to',
+											template: function (data, dataValue) {
+												var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+												if (selectedData && selectedData.length > 0)
+													return selectedData[0].value;
+												else
+													return "[none]";
+											}
+										},
+										{
+											id: 'linkedField',
+											name: 'linkedField',
+											type: 'richselect',
+											label: 'Linked field',
+											template: function (data, dataValue) {
+												var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+												if (selectedData && selectedData.length > 0)
+													return selectedData[0].value;
+												else
+													return "";
+											}
+										},
 										{ label: "Data table", type: "label" },
 										{
 											id: 'detailView',
@@ -265,6 +277,27 @@ steal(
 												case 'description':
 													$$(self.componentIds.editDescription).setValue(propertyValues.description);
 													break;
+												case 'linkedTo':
+													var linkedTo = propertyValues.linkedTo,
+														linkedField = $$(self.componentIds.propertyView).getItem('linkedField');
+
+													if (linkedTo != 'none') {
+														linkedField.options = data.columns
+															.filter(function (col) { return col.linkObject && col.linkObject.id == linkedTo; })
+															.map(function (col) {
+																return {
+																	id: col.id,
+																	value: col.label
+																}
+															}).attr();
+
+														propertyValues['linkedField'] = linkedField.options[0].id; // Default selection
+													} else {
+														linkedField.options = [];
+														linkedField.hidden = true;
+														propertyValues['linkedField'] = null;
+													}
+													$$(self.componentIds.propertyView).setValues(propertyValues);
 												case 'object':
 												case 'filter':
 												case 'sort':
@@ -284,7 +317,7 @@ steal(
 														viewId: detailView ? detailView[1] : null,
 														editPage: editValue ? editValue[0] : null,
 														editForm: editValue ? editValue[1] : null
-													}, propertyValues.removable);
+													}, propertyValues.removable, propertyValues.linkedField);
 													break;
 											}
 										}
@@ -326,7 +359,7 @@ steal(
 								return dataTableController;
 							};
 
-							self.render = function (viewId, comDataId, settings, editable, dataCollection) {
+							self.render = function (viewId, comDataId, settings, editable, showAll, dataCollection, linkedToDataCollection) {
 								var q = $.Deferred(),
 									data = self.getData(viewId),
 									dataTableController = self.getDataTableController(viewId);
@@ -336,8 +369,15 @@ steal(
 								$$(viewId).showProgress({ type: 'icon' });
 
 								data.id = comDataId;
-								data.dataCollection = dataCollection;
 								data.isRendered = true;
+								data.dataCollection = dataCollection;
+
+								if (linkedToDataCollection) {
+									data.linkedToDataCollection = linkedToDataCollection;
+									data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
+										self.filterLinkedData(viewId, settings.linkedField);
+									});
+								}
 
 								if (settings.columns)
 									data.visibleColumns = $.map(settings.columns, function (cId) { return cId.toString(); });
@@ -411,7 +451,7 @@ steal(
 										viewId: settings.viewId,
 										editPage: settings.editPage,
 										editForm: settings.editForm
-									}, settings.removable);
+									}, settings.removable, settings.linkedField);
 
 									$$(viewId).hideProgress();
 
@@ -612,6 +652,8 @@ steal(
 									title: propertyValues.title || '',
 									description: propertyValues.description || '',
 									object: propertyValues.object,
+									linkedTo: propertyValues.linkedTo,
+									linkedField: propertyValues.linkedField,
 									viewPage: viewPageId,
 									viewId: viewId,
 									editPage: editPageId,
@@ -632,7 +674,8 @@ steal(
 
 								var viewId = self.componentIds.editDataTable,
 									data = self.getData(viewId),
-									dataCollection;
+									dataCollection,
+									linkedToDataCollection;
 
 								data.getDataCollection = getDataCollectionFn;
 
@@ -649,9 +692,21 @@ steal(
 											next();
 										}
 									},
+									// Get linked data colllection
+									function (next) {
+										if (item.setting.linkedTo) {
+											data.getDataCollection(item.setting.linkedTo).then(function (result) {
+												linkedToDataCollection = result;
+												next();
+											});
+										}
+										else {
+											next();
+										}
+									},
 									// Render dataTable component
 									function (next) {
-										self.render(viewId, item.id, item.setting, true, dataCollection).then(function () {
+										self.render(viewId, item.id, item.setting, true, false, dataCollection, linkedToDataCollection).then(function () {
 											// Columns list
 											self.bindColumnList(viewId, item.setting.object, selectAll);
 											$$(self.componentIds.columnList).hideProgress();
@@ -667,13 +722,45 @@ steal(
 											return;
 										}
 
-										var item = $$(self.componentIds.propertyView).getItem('object');
-										item.options = $.map(self.objects, function (o) {
+										// Data source - Object
+										var objectList = $$(self.componentIds.propertyView).getItem('object');
+										objectList.options = $.map(self.objects, function (o) {
 											return {
 												id: o.id,
 												value: o.label
 											};
 										});
+
+										// Data source - Linked to
+										var linkedObjIds = data.columns.filter(function (col) { return col.linkObject != null; }).map(function (col) { return col.linkObject.id || col.linkObject }),
+											linkedObjs = self.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id) > -1; }),
+											linkedToItem = $$(self.componentIds.propertyView).getItem('linkedTo');
+										linkedToItem.options = $.map(linkedObjs, function (o) {
+											return {
+												id: o.id,
+												value: o.label
+											};
+										});
+										linkedToItem.options.splice(0, 0, {
+											id: 'none',
+											value: '[none]'
+										});
+
+										// Data source - Linked field
+										var linkedFieldItem = $$(self.componentIds.propertyView).getItem('linkedField');
+										if (item.setting.linkedTo) {
+											linkedFieldItem.options = data.columns
+												.filter(function (col) { return col.linkObject && col.linkObject.id == item.setting.linkedTo; })
+												.map(function (col) {
+													return {
+														id: col.id,
+														value: col.label
+													};
+												}).attr();
+										}
+										else {
+											linkedFieldItem.options = [];
+										}
 
 										next();
 									},
@@ -683,9 +770,6 @@ steal(
 
 										self.Model.ABPage.store = {}; // Clear local repository
 										self.Model.ABPage.findAll({ or: [{ id: parentId }, { parent: parentId }] })
-											// AD.comm.service.get({
-											// 	url: '/app_builder/abpage?or[0][id]=' + parentId + '&or[1][parent]=' + parentId
-											// })
 											.fail(function (err) { next(err); })
 											.then(function (pages) {
 												var viewComponents = [],
@@ -754,6 +838,8 @@ steal(
 											title: item.setting.title || '',
 											description: item.setting.description || '',
 											object: item.setting.object,
+											linkedTo: item.setting.linkedTo,
+											linkedField: item.setting.linkedField,
 											detailView: detailView,
 											editForm: editForm,
 											removable: item.setting.removable || 'disable',
@@ -767,7 +853,7 @@ steal(
 								]);
 							};
 
-							self.renderDataTable = function (viewId, dataCollection, extraColumns, isTrashVisible) {
+							self.renderDataTable = function (viewId, dataCollection, extraColumns, isTrashVisible, linkedField) {
 								var data = self.getData(viewId);
 
 								if (!data.columns) return;
@@ -813,9 +899,12 @@ steal(
 
 								isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-
 								self.getDataTableController(viewId).bindColumns(columns, true, isTrashVisible);
-								self.populateData(viewId, dataCollection);
+								self.populateData(viewId, dataCollection).
+									then(function () {
+										if (linkedField)
+											self.filterLinkedData(viewId, linkedField);
+									});
 							};
 
 							self.bindColumnList = function (viewId, objectId, selectAll) {
@@ -839,6 +928,33 @@ steal(
 								});
 
 								$$(self.componentIds.columnList).parse(columns);
+							};
+
+							self.filterLinkedData = function (viewId, linkedField) {
+								var data = self.getData(viewId);
+
+								if (!data.columns) return;
+
+								var field = data.columns.filter(function (col) { return col.id == linkedField; })[0];
+
+								if (data.linkedToDataCollection && field) {
+									var currModel = data.linkedToDataCollection.AD.currModel();
+
+									if (currModel) {
+										$$(viewId).filter(function (item) {
+											var itemValues = item[field.name];
+
+											if (!itemValues) {
+												return false;
+											}
+											else if (itemValues && !itemValues.filter) {
+												itemValues = [itemValues]; // Convert to array
+											}
+
+											return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
+										});
+									}
+								}
 							};
 
 							self.registerEventAggregator = function (event_aggregator) {

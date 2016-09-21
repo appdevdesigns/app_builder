@@ -583,7 +583,8 @@ steal(
 								q = $.Deferred(),
 								component = self.data.components[com.attr('component')],
 								view = component.getView(),
-								settings = com.attr('setting');
+								settings = com.attr('setting'),
+								dataCollection, linkedDataCollection;
 
 							if (view && component.render && settings) {
 								var settings = settings.attr(),
@@ -599,22 +600,36 @@ steal(
 
 								webix.ui(view);
 
-								async.waterfall([
+								async.series([
 									// Get data collection
 									function (next) {
 										if (settings.object) {
 											self.getDataCollection(settings.object)
 												.fail(next)
-												.then(function (dataCollection) {
-													next(null, dataCollection);
+												.then(function (result) {
+													dataCollection = result;
+													next();
 												});
 										}
 										else
-											next(null, null);
+											next();
+									},
+									// Get data collection
+									function (next) {
+										if (settings.linkedTo) {
+											self.getDataCollection(settings.linkedTo)
+												.fail(next)
+												.then(function (result) {
+													linkedDataCollection = result;
+													next();
+												});
+										}
+										else
+											next();
 									},
 									// Render component
-									function (dataCollection, next) {
-										component.render(view.id, com.id, settings, editable, dataCollection)
+									function (next) {
+										component.render(view.id, com.id, settings, editable, false, dataCollection, linkedDataCollection)
 											.then(function () {
 												next();
 											});

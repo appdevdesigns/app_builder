@@ -841,8 +841,13 @@ steal(
 									},
 									// Get data from server
 									function (next) {
+										// Find the link columns
+										var linkCols = self.data.columns.filter(function (col) { return col.linkObject != null });
+										var linkColNames = $.map(linkCols, function (col) { return col.name; });
+
 										self.Model.ObjectModel.store = {}; // Clear CanJS local repository
 										self.Model.ObjectModel.Cached.findAll({})
+											// self.Model.ObjectModel.findAll({}).populate(linkColNames)
 											.fail(function (err) { next(err); })
 											.then(function (result) {
 												self.controllers.ObjectDataTable.populateData(result).then(function () {

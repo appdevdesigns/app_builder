@@ -3,6 +3,8 @@ steal(
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -26,6 +28,11 @@ steal(
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
 								ObjectModels: {}
+							};
+
+							// Controllers
+							self.controllers = {
+								SelectivityHelper: new AD.Control.get('opstools.BuildApp.SelectivityHelper')()
 							};
 
 							self.componentIds = {
@@ -136,7 +143,7 @@ steal(
 								return self.data[viewId];
 							};
 
-							self.render = function (viewId, comId, settings, editable, dataCollection, showAll) {
+							self.render = function (viewId, comId, settings, editable, showAll, dataCollection) {
 								var data = self.getData(viewId),
 									q = $.Deferred(),
 									fields = [],
@@ -201,9 +208,27 @@ steal(
 
 											if (!editable && !isVisible) return; // Hidden
 
+											var displayDataView = null;
+
+											if (c.setting.editor === 'selectivity') {
+												displayDataView = {
+													view: 'template',
+													dataId: c.id,
+													borderless: true,
+													template: '<div class="">TODO Selectivity here</div>'
+												};
+											}
+											else {
+												displayDataView = {
+													view: 'label',
+													dataId: c.id,
+													label: '[data]'
+												};
+											}
+
 											var field = {
 												view: 'layout',
-												css: 'ab-component-view-display-field',
+												css: (c.setting.editor === 'selectivity' ? 'ab-component-view-selectivity-field' : 'ab-component-view-display-field'),
 												fieldName: c.name,
 												cols: [
 													{
@@ -212,11 +237,7 @@ steal(
 														width: 120,
 														label: c.label
 													},
-													{
-														view: 'label',
-														dataId: c.id,
-														label: '[data]'
-													}
+													displayDataView
 												]
 											};
 
@@ -437,6 +458,9 @@ steal(
 												displayField = child.getChildViews()[1];
 
 											displayField.setValue(labelValue);
+										}
+										else if (child.config.css === 'ab-component-view-selectivity-field') {
+
 										}
 									});
 								}

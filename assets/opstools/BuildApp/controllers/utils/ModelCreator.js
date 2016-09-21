@@ -133,6 +133,7 @@ steal(
 									AD.Model.extend(modelName, {}, {});
 									var modelResult = AD.Model.get(modelName);
 
+
 									// Setup cached model
 									var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 									self.initModelCached(objectName, modelResult, cachedKey);

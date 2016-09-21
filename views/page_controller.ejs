@@ -301,20 +301,36 @@ steal(
 
                                         webix.ui(view);
 
-                                        async.waterfall([
+                                        var dataCollection, linkedDataCollection;
+                                        async.series([
+                                            // Get data collection
                                             function(next){
                                                 if (item.setting.object) {
                                                     self.getDataCollection(item.setting.object)
-                                                        .then(function(dataCollection) {
-                                                            next(null, dataCollection);
+                                                        .then(function(result) {
+                                                            dataCollection = result;
+                                                            next();
                                                         });
                                                 }
                                                 else {
-                                                    next(null, null);
+                                                    next();
                                                 }
                                             },
-                                            function (dataCollection, next) {
-                                                component.render(view.id, item.id, item.setting, false, dataCollection);
+                                            // Get linked data collection
+                                            function(next){
+                                                if (item.setting.linkedTo) {
+                                                    self.getDataCollection(item.setting.linkedTo)
+                                                        .then(function(result) {
+                                                            linkedDataCollection = result;
+                                                            next();
+                                                        });
+                                                }
+                                                else {
+                                                    next();
+                                                }
+                                            },
+                                            function (next) {
+                                                component.render(view.id, item.id, item.setting, false, false, dataCollection, linkedDataCollection);
                                                 next();
                                             }
                                         ]);
