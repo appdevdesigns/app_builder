@@ -165,6 +165,7 @@ steal(
 																self.Model.ABColumn.create(field)
 																	.fail(ok)
 																	.then(function (result) {
+																		// Delete field cache
 																		objectModel.Cached.deleteCachedField(tempId);
 
 																		ok(null, result);

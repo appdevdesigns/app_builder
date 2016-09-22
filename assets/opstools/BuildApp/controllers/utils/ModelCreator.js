@@ -1,6 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABObject.js',
+	'opstools/BuildApp/models/ABColumn.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 
@@ -23,7 +24,8 @@ steal(
 							this._super(element, options);
 
 							this.Model = {
-								ABObject: AD.Model.get('opstools.BuildApp.ABObject')
+								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
+								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
 							};
 						},
 
@@ -32,12 +34,12 @@ steal(
 							this.data.appName = app.name;
 						},
 
-						getBaseModel: function (objectName, describe, multilingualFields) {
+						getBaseModel: function (objectName, describe, multilingualFields, associations) {
 							if (!objectName || !describe || !multilingualFields) return;
 
 							var formatAppName = this.data.appName.replace(/_/g, '').toLowerCase(),
-								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
-								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName);
+								formatObjectName = objectName.replace(/_/g, ''),
+								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 
 							// /AB_applicationname/AB_applicationname_objectname
 							var modelDefinition = {
@@ -49,6 +51,7 @@ steal(
 								destroy: 'DELETE /AB_#appName#/AB_#appName#_#objectName#/{id}',
 								describe: function () { return describe; },
 								multilingualFields: multilingualFields,
+								associations: associations,
 								fieldId: 'id',
 								// fieldLabel: 'label'
 							};
@@ -73,11 +76,11 @@ steal(
 
 							var self = this,
 								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
-								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
-								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName),
+								formatObjectName = objectName.replace(/_/g, ''),
+								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName),
 								model = AD.Model.get(modelName);
 
-							if (model) {
+							if (model && model.Cached) {
 								q.resolve(model);
 							}
 							else {
@@ -101,8 +104,8 @@ steal(
 
 							var self = this,
 								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
-								formatObjectName = objectName.replace(/_/g, '').toLowerCase(),
-								modelName = "opstools.BuildApp.#appName#_#objectName#".replace("#appName#", formatAppName).replace("#objectName#", formatObjectName);
+								formatObjectName = objectName.replace(/_/g, ''),
+								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/, formatObjectName);
 
 							// Get object definition
 							self.Model.ABObject.findAll({ application: self.data.appId, name: objectName })
@@ -126,19 +129,48 @@ steal(
 									var multilingualFields = objectData.columns.filter(function (c) { return c.supportMultilingual; });
 									multilingualFields = $.map(multilingualFields.attr(), function (f) { return f.name; });
 
-									// Get base model
-									var base = self.getBaseModel(objectName, describe, multilingualFields);
+									var associations = {};
 
-									// Init object model
-									AD.Model.extend(modelName, {}, {});
-									var modelResult = AD.Model.get(modelName);
+									async.series([
+										// Set associations
+										function (next) {
+											self.Model.ABColumn.findAll({ object: objectData.id, linkObject: { '!': null } })
+												.fail(next)
+												.then(function (columns) {
+													columns.forEach(function (col) {
+														// opstools.BuildApp.#appName#_#objectName#
+														// opstools.#appName#.#appName#_#objectName#
+														associations[col.name] = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, col.linkObject.name);
+													});
+
+													next();
+												});
+										}
+									], function (err) {
+										if (err) {
+											q.reject(err);
+											return;
+										}
+
+										// Get base model
+										var base = self.getBaseModel(objectName, describe, multilingualFields, associations);
+
+										// Init object model
+										AD.Model.extend(modelName, {}, {
+											getLabel: function () {
+												return 'Yes';
+											}
+										});
+										var modelResult = AD.Model.get(modelName);
 
 
-									// Setup cached model
-									var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
-									self.initModelCached(objectName, modelResult, cachedKey);
+										// Setup cached model
+										var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
+										self.initModelCached(objectName, modelResult, cachedKey);
 
-									q.resolve(modelResult);
+										q.resolve(modelResult);
+									})
+
 								});
 
 							return q;
@@ -173,6 +205,11 @@ steal(
 											.then(function (result) { q.resolve(result); });
 
 										return q;
+									},
+									findAllPopulate: function (params, fields) {
+										var findAllPopulateFn = model.findAllPopulate.bind(model);
+
+										return model.Cached.makeFindAllPopulate(findAllPopulateFn).call(model.Cached, params, fields);
 									},
 									create: function (obj) { return model.create(obj); },
 									update: function (id, saveObj) { return model.update(id, saveObj); },

@@ -1,6 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	function () {
 		System.import('appdev').then(function () {
@@ -49,10 +50,12 @@ steal(
 							self.controllers = {};
 
 							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
+								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
 								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
 
 							self.controllers = {
 								ModelCreator: new ModelCreator(),
+								DataHelper: new DataHelper(),
 								SelectivityHelper: new SelectivityHelper(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
 							};
 						},
@@ -116,19 +119,26 @@ steal(
 								data.each(function (d) {
 									var maxConnectedDataNum = {};
 
-									if (d.connectedData) {
-										for (var columnName in d.connectedData) {
+									for (var columnName in d) {
+										if (d[columnName] instanceof Array && columnName !== 'id' && columnName !== 'translations' && columnName !== 'createdAt' && columnName !== 'updatedAt') {
 											if ($.grep(self.dataTable.config.columns, function (c) { return c.id == columnName }).length < 1) break;
 
-											var connectFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName })).find('.connect-data-values');
-											// Set selectivity data
-											self.controllers.SelectivityHelper.setData(connectFieldNode, d.connectedData[columnName]);
+											var linkFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName })).find('.connect-data-values');
 
-											if (maxConnectedDataNum.dataNum < d.connectedData[columnName].length || !maxConnectedDataNum.dataNum) {
+											// Set selectivity data
+											self.controllers.SelectivityHelper.setData(linkFieldNode, d[columnName].map(function (cVal) {
+												return {
+													id: cVal.id,
+													text: cVal.dataLabel
+												};
+											}));
+
+											if (maxConnectedDataNum.dataNum < d[columnName].length || !maxConnectedDataNum.dataNum) {
 												maxConnectedDataNum.dataId = d.id;
 												maxConnectedDataNum.colName = columnName;
-												maxConnectedDataNum.dataNum = d.connectedData[columnName].length;
+												maxConnectedDataNum.dataNum = d[columnName].length;
 											}
+
 										}
 									}
 
@@ -154,6 +164,8 @@ steal(
 
 						setObjectList: function (objectList) {
 							this.data.objectList = objectList;
+
+							this.controllers.DataHelper.setObjectList(objectList);
 						},
 
 						setReadOnly: function (readOnly) {
@@ -190,7 +202,7 @@ steal(
 									col.setting.options.forEach(function (opt) {
 										options.push({
 											id: opt.id,
-											value: opt.label
+											value: opt.dataLabel
 										});
 									});
 								}
@@ -311,140 +323,29 @@ steal(
 								self.dataTable.setRowHeight(row, calHeight);
 						},
 
-						populateData: function (result) {
+						populateData: function (data) {
 							var self = this,
-								q = $.Deferred();
+								q = $.Deferred(),
+								result;
+
+							self.dataTable.clearAll();
+
+							// Get link columns
+							var linkCols = self.dataTable.config.columns.filter(function (col) { return col.linkObject != null });
 
 							// Get date & datetime columns
-							var dateCols = $.grep(self.dataTable.config.columns, function (c) {
-								return c.editor === 'date' || c.editor === 'datetime';
-							});
+							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
 
-							// Convert string to Date object
-							if (dateCols && dateCols.length > 0) {
-								var resultList = result instanceof webix.DataCollection ? result.AD.__list : result;
+							// Populate labels & Convert string to Date object
+							self.controllers.DataHelper.populateData(data, linkCols, dateCols);
 
-								resultList.forEach(function (r) {
-									dateCols.forEach(function (c) {
-										if (r[c.id])
-											r.attr(c.id, new Date(r[c.id]));
-									});
-								});
-							}
+							// Populate data
+							if (data instanceof webix.DataCollection)
+								self.dataTable.data.sync(data);
+							else
+								self.dataTable.parse(data.attr());
 
-							// Get connected columns
-							var linkCols = $.grep(self.dataTable.config.columns, function (c) {
-								return c.linkObject;
-							});
-
-							var prepareConnectedDataEvents = [];
-
-							linkCols.forEach(function (col) {
-								prepareConnectedDataEvents.push(function (callback) {
-									var getConnectedDataEvents = [];
-
-									// Get connected object name
-									var connectedObj = self.data.objectList.filter(function (obj) { return obj.id == (col.linkObject.id || col.linkObject); })[0];
-
-									if (!connectedObj) {
-										callback();
-										return;
-									}
-
-									// Get connected object model
-									self.controllers.ModelCreator.getModel(connectedObj.name)
-										.then(function (objectModel) {
-
-											var resultList = result instanceof webix.DataCollection ? result.AD.__list : result;
-
-											can.each(resultList, function (r) {
-												getConnectedDataEvents.push(function (cb) {
-													var connectedDataIds = r[col.id];
-
-													if (r.connectedData)
-														r.connectedData.attr(col.id, [], true);
-
-													if (!connectedDataIds || connectedDataIds.length < 1) {
-														cb();
-														return true;
-													} else if (!connectedDataIds.filter) { // Convert to Array
-														connectedDataIds = [connectedDataIds];
-													}
-
-													if (!self.dataTable.isColumnVisible(col.id)) {
-														cb();
-														return true;
-													}
-
-													connectedDataIds = connectedDataIds.filter(function (d) { return typeof d !== 'undefined' && d !== null; });
-													connectedDataIds = $.map(connectedDataIds, function (d) { return { id: d.id || d }; });
-
-													objectModel.findAll({ or: connectedDataIds }, false, true)
-														.then(function (connectedResult) {
-															connectedResult.forEach(function (d) {
-																if (d.translate) d.translate();
-
-																d.attr('labelFormat', connectedObj.getDataLabel(d));
-															});
-
-															if (connectedResult && connectedResult.length > 0) {
-																if (!r.attr('connectedData'))
-																	r.attr('connectedData', {}, true);
-
-																var connectedDataValue = $.map(connectedResult.attr(), function (d) {
-																	return {
-																		id: d.id,
-																		text: d.labelFormat
-																	}
-																});
-
-																r.connectedData.attr(col.id, connectedDataValue, true);
-															}
-
-															cb();
-														});
-												});
-											});
-
-											async.parallel(getConnectedDataEvents, callback);
-										});
-
-								});
-							});
-
-							async.parallel(prepareConnectedDataEvents,
-								function (err) {
-									if (err) {
-										q.reject(err);
-										return;
-									}
-
-									// TODO: highligth unsync row
-									// var objData = [];
-									// result.forEach(function (r) {
-									// 	if (r.constructor.name === 'Cached' && r.isUnsync()) {
-									// 		var data = r.attr();
-									// 		data.isUnsync = true;
-									// 		objData.push(data);
-									// 	}
-									// 	else
-									// 		objData.push(r.attr());
-									// });
-									// self.dataTable.parse(objData);
-
-									self.dataTable.clearAll();
-
-									// Populate data
-									if (result) {
-										if (result instanceof webix.DataCollection)
-											self.dataTable.data.sync(result);
-										else
-											self.dataTable.parse(result.attr ? result.attr() : result);
-									}
-
-									q.resolve();
-								}
-							);
+							q.resolve();
 
 							return q;
 						}

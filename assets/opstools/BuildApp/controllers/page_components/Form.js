@@ -421,26 +421,32 @@ steal(
 													var editValues = $$(viewId).getValues(),
 														keys = Object.keys(editValues);
 
-													keys.forEach(function (k) {
-														if (typeof editValues[k] !== 'undefined' && editValues[k] !== null) {
-															var colInfo = data.columns.filter(function (col) { return col.name === k; })[0];
+													keys.forEach(function (fieldName) {
+														if (typeof editValues[fieldName] !== 'undefined' && editValues[fieldName] !== null) {
+															var colInfo = data.columns.filter(function (col) { return col.name === fieldName; })[0];
 
 															if (colInfo) {
 																switch (colInfo.type) {
+																	case "connectedField":
+																		var view = $$(viewId).getChildViews().filter(function (cView) { return cView.config.name === fieldName; })[0],
+																			nodeItem = $(view.$view).find('.ab-form-connect-data'),
+																			value = self.controllers.SelectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
+																		modelData.attr(fieldName, value);
+																		break;
 																	case "boolean":
-																		modelData.attr(k, editValues[k] === 1 ? true : false);
+																		modelData.attr(fieldName, editValues[fieldName] === 1 ? true : false);
 																		break;
 																	default:
-																		modelData.attr(k, editValues[k]);
+																		modelData.attr(fieldName, editValues[fieldName]);
 																		break;
 																}
 															}
 															else {
-																modelData.attr(k, editValues[k]);
+																modelData.attr(fieldName, editValues[fieldName]);
 															}
 														}
 														else
-															modelData.removeAttr(k);
+															modelData.removeAttr(fieldName);
 														// modelData.attr(k, null);
 													});
 
@@ -649,18 +655,30 @@ steal(
 							};
 
 							self.populateSelectivityValues = function (viewId) {
-								// var data = self.getData(viewId),
-								// 	modelData = data.dataCollection.AD.currModel();
+								var data = self.getData(viewId),
+									modelData = data.dataCollection.AD.currModel();
 
-								// $$(viewId).getChildViews().forEach(function (cView) {
-								// 	// Find selectivity field
-								// 	if (cView.config.editor === 'selectivity') {
-								// 		var nodeItem = $(cView.$view).find('.ab-form-connect-data'),
-								// 			selectedValues = modelData[cView.config.name];
+								$$(viewId).getChildViews().forEach(function (cView) {
+									// Find selectivity field
+									if (cView.config.editor === 'selectivity') {
+										var nodeItem = $(cView.$view).find('.ab-form-connect-data');
 
-								// 		self.controllers.SelectivityHelper.setData($('.ab-form-connect-data'), selectedValues);
-								// 	}
-								// });
+										if (modelData) {
+											selectedValues = modelData[cView.config.name].attr ? modelData[cView.config.name].attr() : modelData[cView.config.name];
+
+											self.controllers.SelectivityHelper.setData(nodeItem, selectedValues.map(function (d) {
+												return {
+													id: d.id,
+													text: d.dataLabel
+												};
+											}));
+										}
+										else {
+											// Clear selectivity
+											self.controllers.SelectivityHelper.setData(nodeItem, []);
+										}
+									}
+								});
 							};
 
 							self.editStop = function () {

@@ -442,7 +442,8 @@ steal(
 														},
 														// Create connect data Grid
 														function (objData, callback) {
-															var visibleFieldIds = $.map(objData.columns, function (c) { return c.id });
+															var visibleFieldIds = $.map(objData.columns, function (c) { return c.id }),
+																linkedField = objData.columns.filter(function (col) { return col.linkObject == selectedObj.id; });
 
 															self.Model.ABPageComponent.create({
 																page: viewPageId,
@@ -451,6 +452,8 @@ steal(
 																setting: {
 																	title: objData.label,
 																	object: (column.linkObject.id ? column.linkObject.id : column.linkObject),
+																	linkedTo: selectedObj.id,
+																	linkedField: linkedField[0].id || '',
 																	columns: visibleFieldIds
 																}
 															})

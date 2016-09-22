@@ -191,50 +191,59 @@ steal(function () {
 						return itemData == paramData;
 						// return can.Object.same(itemData, paramData, this.compare[prop]);
 					},
-					makeFindAll: function (findAll) {
-						return function (params, ignoreCache) {
-							var def = new can.Deferred(),
-								self = this,
-								cachedData = this.findAllCached(params),
-								list = this.models(cachedData || []);
+					cacheFindAll: function (findAllFn, params, ignoreCache) {
+						var def = new can.Deferred(),
+							self = this,
+							cachedData = this.findAllCached(params),
+							cachedDataModel = this.models(cachedData || []);
 
-							findAll(params).then(can.proxy(function (data) {
-								can.each(data, function (d, index) {
-									if (d.translate) d.translate();
+						findAllFn.then(can.proxy(function (data) {
 
-									// Merge cached and actual data
-									list.forEach(function (cachedItem) {
-										if (d[self.fieldId] == cachedItem[self.fieldId]) {
-											var propNames = can.Map.keys(cachedItem);
+							can.each(data, function (d, index) {
+								if (d.translate) d.translate();
 
-											d = self.model(d.attr()); // Convert Map to Cached object
+								// Merge cached and actual data
+								cachedDataModel.forEach(function (cachedItem) {
+									if (d[self.fieldId] == cachedItem[self.fieldId]) {
+										var propNames = can.Map.keys(cachedItem);
 
-											propNames.forEach(function (prop) {
-												if (prop !== "id" && prop !== "createdAt" && prop != "updatedAt")
-													d.attr(prop, cachedItem[prop]); // Update value
-											});
+										d = self.model(d.attr()); // Convert Map to Cached object
 
-											data[index] = d;
-										}
-									});
+										propNames.forEach(function (prop) {
+											if (prop !== "id" && prop !== "createdAt" && prop != "updatedAt")
+												d.attr(prop, cachedItem[prop]); // Update value
+										});
+
+										data[index] = d;
+									}
 								});
-
-								// else { // Add
-								// 	data.push(cachedItem);
-								// }
-
-								// if (!ignoreCache)
-								// 	self.cacheItems(json);
-
-								def.resolve(data);
-							}, this), function (err) {
-								if (cachedData) // 404 not found - new object data
-									def.resolve(list);
-								else
-									def.reject(err);
 							});
 
-							return def;
+							// else { // Add
+							// 	data.push(cachedItem);
+							// }
+
+							// if (!ignoreCache)
+							// 	self.cacheItems(json);
+
+							def.resolve(data);
+						}, this), function (err) {
+							if (cachedData) // 404 not found - new object data
+								def.resolve(cachedDataModel);
+							else
+								def.reject(err);
+						});
+
+						return def;
+					},
+					makeFindAllPopulate: function (findAllPopulate) {
+						return function (params, fields, ignoreCache) {
+							return this.cacheFindAll(findAllPopulate(params, fields), params, ignoreCache);
+						};
+					},
+					makeFindAll: function (findAll) {
+						return function (params, ignoreCache) {
+							return this.cacheFindAll(findAll(params), params, ignoreCache);
 						};
 					},
 					makeFindOne: function (findOne) {

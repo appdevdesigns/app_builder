@@ -17,7 +17,8 @@ steal(
 
                     'opstools/BuildApp/models/ABObject',
 
-                    'opstools/BuildApp/controllers/utils/ModelCreator'
+                    'opstools/BuildApp/controllers/utils/ModelCreator',
+                    'opstools/BuildApp/controllers/utils/DataHelper'
 
                     ).then(function() {
                         // Namespacing conventions:
@@ -80,7 +81,8 @@ steal(
                                 this.controllers = {};
 
                                 var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-                                    
+                                    DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
+
                                     Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
                                     Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
                                     Form = AD.Control.get('opstools.BuildApp.Components.Form'),
@@ -88,6 +90,7 @@ steal(
 
                                 this.controllers.ModelCreator = new ModelCreator(this.element);
                                 this.controllers.ModelCreator.setApp(this.data.app);
+                                this.controllers.DataHelper = new DataHelper(this.element);
 
                                 this.controllers.Menu = new Menu(this.element, {});
                                 this.controllers.Grid = new Grid(this.element, {});
@@ -111,6 +114,7 @@ steal(
 
                                 self.Model.ABObject.findAll({ application: self.data.app.id })
                                     .then(function(result) {
+                                        self.controllers.DataHelper.setObjectList(result.attr());
                                         self.components.Form.setObjectList(result.attr());
                                     });
                             },
@@ -360,18 +364,27 @@ steal(
                                                     .fail(function (err) { next(err); })
                                                     .then(function (objectModel) {
 
-                                                        next(null, objectModel);
+                                                        next(null, objInfo, objectModel);
                                                     });
                                             },
                                             // Find data
-                                            function (objModel, next) {
-                                                objModel.findAll({})
+                                            function (objInfo, objModel, next) {
+                                                // Get link columns
+                                                var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
+                                                    linkColNames = linkCols.map(function (col) { return col.name; }).attr();
+
+                                                // Get date & datetime columns
+                                                var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
+
+                                                objModel.findAllPopulate({}, linkColNames)
                                                     .fail(function (err) { next(err); })
-                                                    .then(function (result) {
-                                                        result.forEach(function (r) { if (r.translate) r.translate(); });
+                                                    .then(function (data) {
+
+                                                        // Populate labels & Convert string to Date object
+                                                        self.controllers.DataHelper.populateData(data, linkCols, dateCols);
 
                                                         if (!self.data.dataCollections[objectId])
-                                                            self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
+                                                            self.data.dataCollections[objectId] = AD.op.WebixDataCollection(data);
 
                                                         next();
                                                     });

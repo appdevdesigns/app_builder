@@ -5,10 +5,11 @@ steal(
 	'opstools/BuildApp/models/ABPageComponent.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/controllers/utils/DataHelper.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -77,11 +78,13 @@ steal(
 							var self = this;
 
 							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
+								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper');
 
 							this.controllers = {
 								ActiveList: new ActiveList(),
-								ModelCreator: new ModelCreator()
+								ModelCreator: new ModelCreator(),
+								DataHelper: new DataHelper()
 							};
 						},
 
@@ -530,6 +533,10 @@ steal(
 								});
 						},
 
+						setObjectList: function (objectList) {
+							this.controllers.DataHelper.setObjectList(objectList);
+						},
+
 						setComponents: function (components) {
 							var self = this;
 
@@ -673,18 +680,27 @@ steal(
 										self.controllers.ModelCreator.getModel(objInfo.attr('name'))
 											.fail(function (err) { next(err); })
 											.then(function (objectModel) {
-												next(null, objectModel);
+												next(null, objInfo, objectModel);
 											});
 									},
 									// Find data
-									function (objModel, next) {
-										objModel.findAll({})
+									function (objInfo, objModel, next) {
+										// Get link columns
+										var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
+											linkColNames = linkCols.map(function (col) { return col.name; }).attr();
+
+										// Get date & datetime columns
+										var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
+
+										objModel.findAllPopulate({}, linkColNames)
 											.fail(function (err) { next(err); })
-											.then(function (result) {
-												result.forEach(function (r) { if (r.translate) r.translate(); });
+											.then(function (data) {
+
+												// Populate labels & Convert string to Date object
+												self.controllers.DataHelper.populateData(data, linkCols, dateCols);
 
 												if (!self.data.dataCollections[objectId])
-													self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
+													self.data.dataCollections[objectId] = AD.op.WebixDataCollection(data);
 
 												next();
 											});

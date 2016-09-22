@@ -148,8 +148,8 @@ steal(
 								EditHeaderPopup = AD.Control.get('opstools.BuildApp.DataTableEditHeaderPopup'),
 								ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
 
-								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable'),
 								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
+								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable'),
 								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
 
 							self.controllers = {
@@ -163,8 +163,8 @@ steal(
 								EditHeaderPopup: new EditHeaderPopup(),
 								ConnectedDataPopup: new ConnectedDataPopup(),
 
-								ObjectDataTable: new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent }),
 								ModelCreator: new ModelCreator(),
+								ObjectDataTable: new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent }),
 								SelectivityHelper: new SelectivityHelper()
 							};
 						},
@@ -403,6 +403,7 @@ steal(
 
 							self.controllers.ObjectDataTable.registerDataTable($$(self.webixUiId.objectDatatable));
 							self.controllers.ObjectDataTable.registerChangeSelectivityItem(function (ev, data) {
+								// Remove selected items
 								if (ev.removed) {
 									// Convert to array
 									if (!data.itemData.forEach) data.itemData = [data.itemData];
@@ -682,8 +683,12 @@ steal(
 										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
 										if (!rowData.connectedData) rowData.connectedData = {};
 
-										rowData[self.data.selectedCell.column] = selectedIds;
-										rowData.connectedData[self.data.selectedCell.column] = selectedItems;
+										rowData[self.data.selectedCell.column] = selectedItems.map(function (item) {
+											return {
+												id: item.id,
+												dataLabel: item.text
+											}
+										});
 
 										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
@@ -693,9 +698,9 @@ steal(
 											$$(self.webixUiId.objectDatatable).eachRow(function (row) {
 												if (row != self.data.selectedCell.row) {
 													var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
-													if (otherRow.connectedData) {
+													if (otherRow[self.data.selectedCell.column]) {
 														// Filter difference values
-														otherRow.connectedData[self.data.selectedCell.column] = otherRow.connectedData[self.data.selectedCell.column].filter(function (i) {
+														otherRow[self.data.selectedCell.column] = otherRow[self.data.selectedCell.column].filter(function (i) {
 															return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
 														});
 
@@ -842,15 +847,14 @@ steal(
 									// Get data from server
 									function (next) {
 										// Find the link columns
-										var linkCols = self.data.columns.filter(function (col) { return col.linkObject != null });
-										var linkColNames = $.map(linkCols, function (col) { return col.name; });
+										var linkCols = self.data.columns.filter(function (col) { return col.linkObject != null }),
+											linkColNames = $.map(linkCols, function (col) { return col.name; });
 
 										self.Model.ObjectModel.store = {}; // Clear CanJS local repository
-										self.Model.ObjectModel.Cached.findAll({})
-											// self.Model.ObjectModel.findAll({}).populate(linkColNames)
+										self.Model.ObjectModel.Cached.findAllPopulate({}, linkColNames)
 											.fail(function (err) { next(err); })
-											.then(function (result) {
-												self.controllers.ObjectDataTable.populateData(result).then(function () {
+											.then(function (data) {
+												self.controllers.ObjectDataTable.populateData(data).then(function () {
 													next();
 												});
 											});
@@ -1150,10 +1154,6 @@ steal(
 										})
 										.then(function (result) {
 											if (result.translate) result.translate();
-
-											// // Force update CanJS store
-											// if (self.Model.ObjectModel.store[result.id])
-											// 	self.Model.ObjectModel.store[result.id] = result;
 
 											q.resolve(result);
 										});

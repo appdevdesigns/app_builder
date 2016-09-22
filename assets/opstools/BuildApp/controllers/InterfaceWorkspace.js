@@ -173,6 +173,8 @@ steal(
 						setObjectList: function (objectList) {
 							var self = this;
 
+							self.controllers.LayoutView.setObjectList(objectList);
+
 							self.controllers.Form.setObjectList(objectList);
 							self.controllers.View.setObjectList(objectList);
 						},
