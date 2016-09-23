@@ -154,15 +154,17 @@ steal(
 								data.isRendered = true;
 
 								data.dataCollection = dataCollection;
-								data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
-									self.updateData(viewId);
-								});
-								data.dataCollection.attachEvent('onDataUpdate', function (id, newData) {
-									if (data.currDataId == id)
-										self.updateData(viewId, newData);
+								if (data.dataCollection) {
+									data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+										self.updateData(viewId);
+									});
+									data.dataCollection.attachEvent('onDataUpdate', function (id, newData) {
+										if (data.currDataId == id)
+											self.updateData(viewId, newData);
 
-									return true;
-								});
+										return true;
+									});
+								}
 
 								settings.visibleFieldIds = settings.visibleFieldIds || [];
 
@@ -382,7 +384,7 @@ steal(
 									},
 									// Render form component
 									function (dataCollection, next) {
-										self.render(self.componentIds.editViewLayout, item.id, item.setting, true, dataCollection, showAll).fail(next).then(function () {
+										self.render(self.componentIds.editViewLayout, item.id, item.setting, true, showAll, dataCollection).fail(next).then(function () {
 											next(null);
 										});
 									}
