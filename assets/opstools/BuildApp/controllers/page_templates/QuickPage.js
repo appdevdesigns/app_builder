@@ -296,6 +296,10 @@ steal(
 
 								// Create 'Add connect data' page
 								function (next) {
+									if (!$$(self.componentIds.connectedData)) {
+										next();
+										return;
+									}
 									var connectFields = $$(self.componentIds.connectedData).getValues(),
 										createPageTask = [];
 									for (var key in connectFields) {
@@ -387,6 +391,10 @@ steal(
 
 								// Insert 'Menu' to the view page
 								function (next) {
+									if (!$$(self.componentIds.connectedData)) {
+										next();
+										return;
+									}
 
 									if ($$(self.componentIds.viewData).getValue() || self.hasAddConnectPage()) {
 										var menuData = [],
@@ -421,6 +429,11 @@ steal(
 
 								// Add 'Grid' to the view page
 								function (next) {
+									if (!$$(self.componentIds.connectedData)) {
+										next();
+										return;
+									}
+
 									var connectFields = $$(self.componentIds.connectedData).getValues(),
 										createGridTasks = [],
 										index = 0;
@@ -555,6 +568,9 @@ steal(
 						},
 
 						hasAddConnectPage: function () {
+							if (!$$(self.componentIds.connectedData))
+								return false;
+
 							var self = this,
 								connectFields = $$(self.componentIds.connectedData).getValues(),
 								connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
