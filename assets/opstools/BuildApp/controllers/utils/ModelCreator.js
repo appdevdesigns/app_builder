@@ -156,11 +156,9 @@ steal(
 										var base = self.getBaseModel(objectName, describe, multilingualFields, associations);
 
 										// Init object model
-										AD.Model.extend(modelName, {}, {
-											getLabel: function () {
-												return 'Yes';
-											}
-										});
+										AD.Model.extend(modelName, {
+											useSockets: true
+										}, {});
 										var modelResult = AD.Model.get(modelName);
 
 
