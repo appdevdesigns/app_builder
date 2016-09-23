@@ -37,7 +37,7 @@ steal(
 						getBaseModel: function (objectName, describe, multilingualFields, associations) {
 							if (!objectName || !describe || !multilingualFields) return;
 
-							var formatAppName = this.data.appName.replace(/_/g, '').toLowerCase(),
+							var formatAppName = this.data.appName.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 
@@ -75,7 +75,7 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
+								formatAppName = self.data.appName.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName),
 								model = AD.Model.get(modelName);
@@ -103,7 +103,7 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace(/_/g, '').toLowerCase(),
+								formatAppName = self.data.appName.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/, formatObjectName);
 
