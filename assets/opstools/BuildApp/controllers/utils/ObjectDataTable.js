@@ -330,6 +330,11 @@ steal(
 
 							self.dataTable.clearAll();
 
+							if (!data) {
+								q.resolve();
+								return q;
+							}
+
 							// Get link columns
 							var linkCols = self.dataTable.config.columns.filter(function (col) { return col.linkObject != null });
 

@@ -10,12 +10,15 @@ steal(
                 steal.import('appdev/ad',
                     'appdev/control/control',
 
+<% for(var i = 0; i < models.length; i++) {%>                    'opstools/<%= appName %>/models/<%= appName %>_<%= models[i] %>',
+<% } %>
+
+                    'opstools/BuildApp/models/ABObject',
+
                     'opstools/BuildApp/controllers/page_components/Menu',
                     'opstools/BuildApp/controllers/page_components/Grid',
                     'opstools/BuildApp/controllers/page_components/Form',
                     'opstools/BuildApp/controllers/page_components/View',
-
-                    'opstools/BuildApp/models/ABObject',
 
                     'opstools/BuildApp/controllers/utils/ModelCreator',
                     'opstools/BuildApp/controllers/utils/DataHelper'
@@ -35,10 +38,6 @@ steal(
                                 // Call parent init
                                 this._super(element, options);
 
-                                this.Model = {
-                                    ABObject: AD.Model.get('opstools.BuildApp.ABObject')
-                                };
-
                                 this.data = {};
                                 this.dataSource = this.options.dataSource;
                                 this.rootPageID = this.activePageID = <%- rootPageID %>;
@@ -54,6 +53,7 @@ steal(
                                         this.data.app = this.pages[key].application;
                                 }
 
+                                this.initModels();
                                 this.initControllers();
                                 this.initComponents();
                                 this.setObjectList();
@@ -75,7 +75,13 @@ steal(
                                 });
                             },
 
+                            initModels: function() {
+                                this.Model = {};
+                                this.Model.ABObject = AD.Model.get('opstools.BuildApp.ABObject');
 
+<% for(var i = 0; i < models.length; i++) {%>                                this.Model.<%= appName %>_<%= models[i] %> = AD.Model.get('opstools.<%= appName %>.<%= appName %>_<%= models[i] %>');
+<% } %>
+                            },
 
                             initControllers: function() {
                                 this.controllers = {};

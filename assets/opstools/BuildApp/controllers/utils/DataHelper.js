@@ -23,6 +23,8 @@ steal(
 						},
 
 						populateData: function (data, linkFields, dateFields) {
+							if (!data) return;
+
 							var self = this,
 								result = data instanceof webix.DataCollection ? data.AD.__list : data;
 

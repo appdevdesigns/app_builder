@@ -19,7 +19,7 @@ var cliCommand = 'appdev';  // use the global appdev command
 
 
 var appsBuildInProgress = {};  // a hash of deferreds for apps currently being built.
-                                // {  ABApplication.id : dfd }
+// {  ABApplication.id : dfd }
 
 
 function notifyToClients(reloading, step, action) {
@@ -258,7 +258,7 @@ module.exports = {
 
         // if we are currently building it:
         if (appsBuildInProgress[appID]) {
-// console.log('... App Build in progress : waiting!');
+            // console.log('... App Build in progress : waiting!');
             return appsBuildInProgress[appID];
         }
 
@@ -396,7 +396,7 @@ module.exports = {
             else dfd.resolve({});
 
             // now remove our flag:
-// console.log('... App Build finished!');
+            // console.log('... App Build finished!');
             delete appsBuildInProgress[appID];
         });
 
@@ -491,8 +491,8 @@ module.exports = {
 
                             if (col.linkObject && col.linkVia) {
                                 ABColumn.findOne({ id: col.id })
-                                .populate('linkObject')
-                                .populate('linkVia')
+                                    .populate('linkObject')
+                                    .populate('linkVia')
                                     .fail(ok)
                                     .then(function (linkedCol) {
                                         colString += linkedCol.name;
@@ -591,6 +591,7 @@ module.exports = {
         var Application = null;
 
         var pages = {};
+        var modelNames = [];
 
         async.series([
             // Find basic page info
@@ -767,6 +768,30 @@ module.exports = {
                 });
             },
 
+            // Find related objects
+            function (next) {
+                ABObject.find({ application: appID })
+                    .then(function (list) {
+                        for (var i = 0; i < list.length; i++) {
+                            var obj = list[i];
+                            objectIncludes.push({
+                                key: 'opstools.' + appName + '.'
+                                + appName + '_' + AppBuilder.rules.nameFilter(obj.name),
+                                path: 'opstools/' + appName + '/models/'
+                                + appName + '_' + AppBuilder.rules.nameFilter(obj.name) + '.js'
+                            });
+
+                            modelNames.push(AppBuilder.rules.nameFilter(obj.name));
+                        }
+                        next();
+                        return null;
+                    })
+                    .catch(function (err) {
+                        next(err);
+                        return null;
+                    });
+            },
+
             // Generate the client side controller for the app page
             function (next) {
                 sails.renderView(path.join('app_builder', 'page_controller'), {
@@ -774,6 +799,7 @@ module.exports = {
                     appName: appName,
                     pageName: pageName,
                     pages: pages,
+                    models: modelNames,
                     rootPageID: pageID,
                     domID: function (pid) {
                         pid = pid || '';
@@ -810,28 +836,6 @@ module.exports = {
                     next();
                 });
                 */
-            },
-
-            // Find related objects
-            function (next) {
-                ABObject.find({ application: appID })
-                    .then(function (list) {
-                        for (var i = 0; i < list.length; i++) {
-                            var obj = list[i];
-                            objectIncludes.push({
-                                key: 'opstools.' + appName + '.'
-                                + appName + '_' + AppBuilder.rules.nameFilter(obj.name),
-                                path: 'opstools/' + appName + '/models/'
-                                + appName + '_' + AppBuilder.rules.nameFilter(obj.name) + '.js'
-                            });
-                        }
-                        next();
-                        return null;
-                    })
-                    .catch(function (err) {
-                        next(err);
-                        return null;
-                    });
             },
 
             // Create Page's permission action
