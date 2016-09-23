@@ -202,7 +202,7 @@ steal(
 									col.setting.options.forEach(function (opt) {
 										options.push({
 											id: opt.id,
-											value: opt.dataLabel
+											value: opt.label
 										});
 									});
 								}
