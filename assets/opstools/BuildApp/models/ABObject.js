@@ -37,7 +37,16 @@ steal(
 						getDataLabel: function (data) {
 							if (!this.columns || this.columns.length < 1) return '';
 
-							var labelFormat = this.labelFormat || '{' + this.columns[0].name + '}';
+							var labelFormat;
+
+							if (this.labelFormat) {
+								labelFormat = this.labelFormat;
+							} else { // Default label format
+								var textCols = this.columns.filter(function (col) { return col.type === 'string' || col.type === 'text' }),
+									defaultCol = textCols.length > 0 ? textCols[0] : this.columns[0];
+
+								labelFormat = '{' + defaultCol.name + '}';
+							}
 
 							for (var c in data) {
 								labelFormat = labelFormat.replace(new RegExp('{' + c + '}', 'g'), data[c]);
