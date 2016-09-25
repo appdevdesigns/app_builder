@@ -190,7 +190,8 @@ steal(
 								var data = self.getData(viewId),
 									q = $.Deferred(),
 									elementViews = [],
-									header = { rows: [] };
+									header = { rows: [] },
+									listOptions = {}; // { columnId: [{}, ..., {}] }
 
 								data.columns = null;
 								data.id = comId;
@@ -215,35 +216,69 @@ steal(
 								// Get object list
 								data.objectId = settings.object;
 
+								async.series([
+									// Get columns data
+									function (next) {
+										self.Model.ABColumn.findAll({ object: settings.object })
+											.fail(next)
+											.then(function (result) {
+												result.forEach(function (d) {
+													if (d.translate) d.translate();
+												});
 
-								self.Model.ABColumn.findAll({ object: settings.object })
-									.fail(function (err) {
-										// TODO message
-										$$(viewId).hideProgress();
-										next(err);
-									})
-									.then(function (result) {
-										result.forEach(function (d) {
-											if (d.translate) d.translate();
-										});
+												data.columns = result;
+												next();
+											});
+									},
+									// Get list options from database
+									function (next) {
+										var getOptionsTasks = [];
 
-										data.columns = result;
-										data.columns.forEach(function (c) {
-											var isVisible = settings.visibleFieldIds.indexOf(c.id.toString()) > -1 || showAll;
+										data.columns
+											.filter(function (col) { return col.setting.editor === 'richselect'; })
+											.forEach(function (col) {
+												getOptionsTasks.push(function (callback) {
+													self.Model.ABList.findAll({ column: col.id })
+														.fail(callback)
+														.then(function (result) {
+															result.forEach(function (r) { if (r.translate) r.translate(); });
 
-											if (!editable && !isVisible) return; // Hidden
+															listOptions[col.id] = $.map(result, function (opt, index) {
+																return {
+																	dataId: opt.id,
+																	id: opt.value,
+																	value: opt.label
+																}
+															});
+
+															callback();
+														});
+												});
+											});
+
+										async.parallel(getOptionsTasks, next);
+									},
+									// Add form elements
+									function (next) {
+										async.eachSeries(data.columns, function (col, callback) {
+											var isVisible = settings.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
+
+											if (!editable && !isVisible) { // Hidden
+												callback();
+												return;
+											}
 
 											var element = {
-												name: c.name, // Field name
+												name: col.name, // Field name
 												labelWidth: 100,
 												minWidth: 500
 											};
-											element.label = c.label;
+											element.label = col.label;
 
-											if (!c.setting.editor) { // Checkbox
+											if (!col.setting.editor) { // Checkbox
 												element.view = 'checkbox';
 											}
-											else if (c.setting.editor === 'selectivity') {
+											else if (col.setting.editor === 'selectivity') {
 												element.editor = 'selectivity';
 												element.minHeight = 45;
 												element.borderless = true;
@@ -253,34 +288,29 @@ steal(
 												element.template = element.template
 													.replace('#width#', element.labelWidth - 3)
 													.replace('#label#', element.label)
-													.replace('#object#', (c.linkObject.id ? c.linkObject.id : c.linkObject))
-													.replace('#linkType#', c.linkType);
+													.replace('#object#', (col.linkObject.id ? col.linkObject.id : col.linkObject))
+													.replace('#linkType#', col.linkType);
 											}
-											else if (c.setting.editor === 'popup') {
+											else if (col.setting.editor === 'popup') {
 												element.view = 'textarea';
 											}
-											else if (c.setting.editor === 'number') {
+											else if (col.setting.editor === 'number') {
 												element.view = 'counter';
 											}
-											else if (c.setting.editor === 'date') {
+											else if (col.setting.editor === 'date') {
 												element.view = 'datepicker';
 												element.timepicker = false;
 											}
-											else if (c.setting.editor === 'datetime') {
+											else if (col.setting.editor === 'datetime') {
 												element.view = 'datepicker';
 												element.timepicker = true;
 											}
-											else if (c.setting.editor === 'richselect') {
+											else if (col.setting.editor === 'richselect') {
 												element.view = 'richselect';
-												element.options = $.map(result, function (opt, index) {
-													return {
-														id: index,
-														value: opt
-													};
-												});
+												element.options = listOptions[col.id];
 											}
 											else {
-												element.view = c.setting.editor;
+												element.view = col.setting.editor;
 											}
 
 											if (editable) { // Show/Hide options
@@ -288,7 +318,7 @@ steal(
 													css: 'ab-form-component-item',
 													cols: [
 														{
-															name: c.id, // Column id
+															name: col.id, // Column id
 															view: 'segmented',
 															margin: 10,
 															maxWidth: 120,
@@ -305,23 +335,11 @@ steal(
 												};
 											}
 
-											// $$(viewId).addView(element);
 											elementViews.push(element);
-										});
-
-										// // Get list from database
-										// self.Model.ABList.findAll({ column: c.id })
-										// 	.then(function (result) {
-										// 		result.forEach(function (r) { if (r.translate) r.translate(); });
-
-										// 		element.options = $.map(result, function (opt, index) {
-										// 			return {
-										// 				id: r.id,
-										// 				value: r.label
-										// 			}
-										// 		});
-										// 	});
-
+											callback();
+										}, next);
+									},
+									function (next) {
 										// Redraw
 										webix.ui(elementViews, $$(viewId));
 
@@ -403,78 +421,7 @@ steal(
 												value: "Save",
 												width: 90,
 												inputWidth: 80,
-												click: function () {
-													if ($$(saveButtonId))
-														$$(saveButtonId).disable();
-
-													$$(viewId).showProgress({ type: "icon" });
-
-													var data = self.getData(viewId),
-														modelData = dataCollection.AD.currModel(),
-														isAdd;
-
-													if (modelData === null) { // Create
-														modelData = new dataCollection.AD.getModelObject()();
-														isAdd = true;
-													}
-
-													var editValues = $$(viewId).getValues(),
-														keys = Object.keys(editValues);
-
-													keys.forEach(function (fieldName) {
-														if (typeof editValues[fieldName] !== 'undefined' && editValues[fieldName] !== null) {
-															var colInfo = data.columns.filter(function (col) { return col.name === fieldName; })[0];
-
-															if (colInfo) {
-																switch (colInfo.type) {
-																	case "connectedField":
-																		var view = $$(viewId).getChildViews().filter(function (cView) { return cView.config.name === fieldName; })[0],
-																			nodeItem = $(view.$view).find('.ab-form-connect-data'),
-																			value = self.controllers.SelectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
-																		modelData.attr(fieldName, value);
-																		break;
-																	case "boolean":
-																		modelData.attr(fieldName, editValues[fieldName] === 1 ? true : false);
-																		break;
-																	default:
-																		modelData.attr(fieldName, editValues[fieldName]);
-																		break;
-																}
-															}
-															else {
-																modelData.attr(fieldName, editValues[fieldName]);
-															}
-														}
-														else
-															modelData.removeAttr(fieldName);
-														// modelData.attr(k, null);
-													});
-
-													modelData.save()
-														.then(function (result) {
-															$$(viewId).hideProgress();
-
-															if (result.translate) result.translate();
-
-															// Add to data collection
-															if (isAdd)
-																data.dataCollection.AD.__list.push(result);
-
-															self.callEvent('save', viewId, {
-																returnPage: data.returnPage,
-																id: data.id
-															});
-
-															if ($$(saveButtonId))
-																$$(saveButtonId).enable();
-
-															data.dataCollection.setCursor(null);
-															data.returnPage = null;
-
-															// Clear form
-															$$(viewId).setValues({});
-														});
-												}
+												click: function () { _saveModelData.call(this, viewId); }
 											});
 										}
 
@@ -511,40 +458,22 @@ steal(
 
 										self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
 
-										$('.ab-form-connect-data').click(function () { // TODO: add viewId filter to selector
-											var item = $(this),
-												objectId = item.data('object'),
-												linkType = item.data('link-type');
+										$($$(viewId).$view).find('.ab-form-connect-data').click(function () { _clickSelectivityItems.call(this, viewId) });
 
-											data.updatingItem = item;
+										next();
+									}
+								], function (err) {
+									if (err) {
+										q.reject();
+										return;
+									}
 
-											var object = self.data.objectList.filter(function (obj) { return obj.id == objectId; });
+									$$(viewId).hideProgress();
 
-											if (object && object.length > 0) {
-												var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
+									self.callEvent('renderComplete', viewId);
 
-												$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
-													if (data.updatingItem)
-														self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
-												});
-
-												$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
-													if (data.updatingItem)
-														self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
-
-													data.updatingItem = null;
-												});
-
-												$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, linkType);
-											}
-										});
-
-										$$(viewId).hideProgress();
-
-										self.callEvent('renderComplete', viewId);
-
-										q.resolve();
-									});
+									q.resolve();
+								});
 
 								return q;
 							};
@@ -684,6 +613,110 @@ steal(
 							self.editStop = function () {
 								$$(self.componentIds.propertyView).editStop();
 							};
+
+
+							function _saveModelData(viewId) {
+								var saveButton = this,
+									data = self.getData(viewId),
+									modelData = data.dataCollection.AD.currModel(),
+									isAdd;
+
+								if ($$(saveButton))
+									$$(saveButton).disable();
+
+								$$(viewId).showProgress({ type: "icon" });
+
+								if (modelData === null) { // Create
+									modelData = new data.dataCollection.AD.getModelObject()();
+									isAdd = true;
+								}
+
+								var editValues = $$(viewId).getValues(),
+									keys = Object.keys(editValues);
+
+								keys.forEach(function (fieldName) {
+									if (typeof editValues[fieldName] !== 'undefined' && editValues[fieldName] !== null) {
+										var colInfo = data.columns.filter(function (col) { return col.name === fieldName; })[0];
+
+										if (colInfo) {
+											switch (colInfo.type) {
+												case "connectedField":
+													var view = $$(viewId).getChildViews().filter(function (cView) { return cView.config.name === fieldName; })[0],
+														nodeItem = $(view.$view).find('.ab-form-connect-data'),
+														value = self.controllers.SelectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
+													modelData.attr(fieldName, value);
+													break;
+												case "boolean":
+													modelData.attr(fieldName, editValues[fieldName] === 1 ? true : false);
+													break;
+												default:
+													modelData.attr(fieldName, editValues[fieldName]);
+													break;
+											}
+										}
+										else {
+											modelData.attr(fieldName, editValues[fieldName]);
+										}
+									}
+									else
+										modelData.removeAttr(fieldName);
+									// modelData.attr(k, null);
+								});
+
+								modelData.save()
+									.then(function (result) {
+										$$(viewId).hideProgress();
+
+										if (result.translate) result.translate();
+
+										// Add to data collection
+										if (isAdd)
+											data.dataCollection.AD.__list.push(result);
+
+										self.callEvent('save', viewId, {
+											returnPage: data.returnPage,
+											id: data.id
+										});
+
+										if ($$(saveButton))
+											$$(saveButton).enable();
+
+										data.dataCollection.setCursor(null);
+										data.returnPage = null;
+
+										// Clear form
+										$$(viewId).setValues({});
+									});
+							}
+
+							function _clickSelectivityItems(viewId) {
+								var item = $(this),
+									data = self.getData(viewId),
+									objectId = item.data('object'),
+									linkType = item.data('link-type');
+
+								data.updatingItem = item;
+
+								var object = self.data.objectList.filter(function (obj) { return obj.id == objectId; });
+
+								if (object && object.length > 0) {
+									var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
+
+									$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
+										if (data.updatingItem)
+											self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+									});
+
+									$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
+										if (data.updatingItem)
+											self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+
+										data.updatingItem = null;
+									});
+
+									$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, linkType);
+								}
+							}
 
 						},
 
