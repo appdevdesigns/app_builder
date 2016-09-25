@@ -492,7 +492,10 @@ steal(
 											}
 										}
 										else if (child.config.editor) {
-											displayField.setValue(labelValue);
+											if (labelValue)
+												displayField.setValue(labelValue);
+											else
+												displayField.setValue('');
 										}
 									});
 								}
