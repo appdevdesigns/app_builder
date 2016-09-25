@@ -372,6 +372,13 @@ steal(
 								data.isRendered = true;
 								data.dataCollection = dataCollection;
 
+								// if (data.dataCollection) {
+								// 	data.dataCollection.attachEvent('onDataUpdate', function (id, data) {
+								// 		// alert('Grid Update: ' + id);
+								// 	});
+								// }
+
+								// Init linked dataCollection events
 								if (linkedToDataCollection) {
 									data.linkedToDataCollection = linkedToDataCollection;
 									data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
@@ -869,6 +876,7 @@ steal(
 								if (extraColumns.viewPage && extraColumns.viewId) {
 									columns.push({
 										width: 60,
+										weight: _getMaxWeight(columns) + 1,
 										setting: {
 											id: "view_detail",
 											header: "",
@@ -883,6 +891,7 @@ steal(
 								if (extraColumns.editPage && extraColumns.editForm) {
 									columns.push({
 										width: 45,
+										weight: _getMaxWeight(columns) + 1,
 										setting: {
 											id: "edit_form",
 											header: "",
@@ -978,6 +987,13 @@ steal(
 							self.editStop = function () {
 								$$(self.componentIds.propertyView).editStop();
 							};
+
+							function _getMaxWeight(columns) {
+								if (!columns) return 0;
+
+								var weightList = columns.map(function (col) { return col.weight; });
+								return Math.max.apply(null, weightList);
+							}
 						},
 
 						populateData: function (viewId, dataCollection) {
