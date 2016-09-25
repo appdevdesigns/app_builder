@@ -207,7 +207,8 @@ steal(
 												object: $$(self.componentIds.selectObjects).getValue(),
 												title: 'Add ' + selectedObj.label,
 												visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
-												saveVisible: "show"
+												saveVisible: "show",
+												cancelVisible: "show",
 											}
 										})
 											.fail(function (err) { next(err); })
