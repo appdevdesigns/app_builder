@@ -217,7 +217,14 @@ steal(
 													view: 'template',
 													dataId: c.id,
 													borderless: true,
-													template: '<div class="">TODO Selectivity here</div>'
+													template: '<div class="ab-component-view-selectivity"></div>'
+												};
+											}
+											else if (c.setting.editor === 'date' || c.setting.editor === 'datetime') {
+												displayDataView = {
+													view: 'label',
+													dataId: c.id,
+													label: '[data]'
 												};
 											}
 											else {
@@ -230,7 +237,7 @@ steal(
 
 											var field = {
 												view: 'layout',
-												css: (c.setting.editor === 'selectivity' ? 'ab-component-view-selectivity-field' : 'ab-component-view-display-field'),
+												editor: c.setting.editor,
 												fieldName: c.name,
 												cols: [
 													{
@@ -455,14 +462,37 @@ steal(
 									data.currDataId = currModel.id;
 
 									$$(viewId).getChildViews().forEach(function (child) {
-										if (child.config.css === 'ab-component-view-display-field') {
-											var labelValue = currModel ? currModel[child.config.fieldName] : '',
-												displayField = child.getChildViews()[1];
+										var displayField = child.getChildViews()[1],
+											labelValue = currModel ? currModel[child.config.fieldName] : '';
 
-											displayField.setValue(labelValue);
+										if (child.config.editor === 'selectivity') {
+											self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-component-view-selectivity', true);
+
+											var selectivityItem = $(child.$view).find('.ab-component-view-selectivity');
+											if (labelValue) {
+												self.controllers.SelectivityHelper.setData(selectivityItem, labelValue.map(function (d) {
+													return {
+														id: d.id,
+														text: d.dataLabel
+													};
+												}));
+											}
+											else {
+												self.controllers.SelectivityHelper.setData(selectivityItem, []);
+											}
 										}
-										else if (child.config.css === 'ab-component-view-selectivity-field') {
-
+										else if (child.config.editor === 'date' || child.config.editor === 'datetime') {
+											if (labelValue) {
+												var dateValue = (labelValue instanceof Date) ? labelValue : new Date(labelValue),
+													dateFormat = webix.i18n.dateFormatStr(dateValue);
+												displayField.setValue(dateFormat);
+											}
+											else {
+												displayField.setValue(labelValue);
+											}
+										}
+										else if (child.config.editor) {
+											displayField.setValue(labelValue);
 										}
 									});
 								}
