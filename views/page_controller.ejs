@@ -414,6 +414,13 @@ steal(
                                 resize: function (height) {
                                     var width = this.element.width();
 
+                                    if (!width) {
+                                        this.element.parents().each(function(index, elm) {
+                                            if ($(elm).width() > width)
+                                                width = $(elm).width();
+                                        });
+                                    }
+
                                     if (width > 0)
                                         $$("<%- domID() %>").define('width', width);
 
