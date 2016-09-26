@@ -146,6 +146,8 @@ steal(
 											// Get cached fields
 											var newFields = objectModel.Cached.getNewFields();
 
+											newFields.sort(function (a, b) { return a.weight - b.weight; });
+
 											if (!newFields || newFields.length < 1) {
 												cb();
 											}

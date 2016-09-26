@@ -1477,10 +1477,12 @@ steal(
 										if (col && col.length > 0) {
 											col[0].attr('weight', colIndex);
 
-											columns.push({
-												columnId: col[0].id,
-												index: colIndex
-											});
+											if (typeof col[0].id !== 'string') {
+												columns.push({
+													columnId: col[0].id,
+													index: colIndex
+												});
+											}
 										}
 
 										// Add cached columns to list
