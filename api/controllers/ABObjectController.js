@@ -43,27 +43,37 @@ module.exports = {
 
         if (req.body && req.body.columns) {
             req.body.columns.forEach(function (col) {
-                updateEvents.push(function (next) {
-                    ABColumn.update(
-                        {
-                            id: col.columnId,
-                            object: objectId
-                        },
-                        {
-                            weight: col.index
-                        })
-                        .fail(function (err) { next(err); })
-                        .then(function () { next(); });
-                });
+                if (!isNaN(col.columnId)) {
+                    updateEvents.push(function (next) {
+                        ABColumn.update(
+                            {
+                                id: col.columnId,
+                                object: objectId
+                            },
+                            {
+                                weight: col.index
+                            })
+                            .fail(function (err) { next(err); })
+                            .then(function () { next(); });
+                    });
+                }
             });
         }
 
-        async.parallel(updateEvents, function (err) {
-            if (err)
-                res.AD.error(err);
-            else
-                res.AD.success(true);
-        });
+        if (updateEvents && updateEvents.length > 0) {
+            async.parallel(updateEvents, function (err) {
+                if (err) {
+                    res.AD.error(err);
+                }
+                else {
+                    res.AD.success(true);
+                }
+            });
+        }
+        else {
+            
+        }
+
     }
 
 };

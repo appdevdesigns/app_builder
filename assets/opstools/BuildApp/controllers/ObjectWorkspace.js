@@ -335,6 +335,9 @@ steal(
 												}
 											},
 											onBeforeColumnDrop: function (sourceId, targetId, event) {
+												if (targetId === 'appbuilder_trash') // Remove column
+													return false;
+
 												if ($$(self.webixUiId.visibleButton).config.badge > 0) {
 													webix.alert({
 														title: self.labels.object.couldNotReorderField,
@@ -1447,34 +1450,89 @@ steal(
 						},
 
 						reorderColumns: function () {
-							var self = this;
+							var self = this,
+								columns = [], // [{ columnId: , index: }, ..., {}]
+								cachedFields = [];
 
 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-							var columnIndexes = [];
+							async.series([
+								// Find cached columns
+								function (callback) {
+									self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
+										.fail(callback)
+										.then(function (result) {
+											cachedFields = result.Cached.getNewFields();
 
-							$$(self.webixUiId.objectDatatable).eachColumn(function (columnName) {
-								var col = self.data.columns.filter(function (c) { return c.name == columnName });
+											callback();
+										});
+								},
+								// Set columns data to list
+								function (callback) {
+									$$(self.webixUiId.objectDatatable).eachColumn(function (columnName) {
+										var col = self.data.columns.filter(function (c) { return c.name == columnName }),
+											colIndex = $$(self.webixUiId.objectDatatable).getColumnIndex(columnName);
 
-								if (col && col.length > 0) {
-									col[0].attr('weight', $$(self.webixUiId.objectDatatable).getColumnIndex(columnName));
+										// Add columns to list
+										if (col && col.length > 0) {
+											col[0].attr('weight', colIndex);
 
-									columnIndexes.push({
-										columnId: col[0].id,
-										index: col[0].weight
-									});
+											columns.push({
+												columnId: col[0].id,
+												index: colIndex
+											});
+										}
 
+										// Add cached columns to list
+										var cachedCol = cachedFields.filter(function (col) { return col.name == columnName; });
+										if (cachedCol && cachedCol.length > 0)
+											cachedCol[0].weight = colIndex;
+									}, true);
+
+									callback();
+								},
+								// Update columns data
+								function (callback) {
+									async.parallel([
+										// Update cached columns
+										function (next) {
+											if (cachedFields && cachedFields.length > 0) {
+												var updateCachedColTasks = [];
+
+												cachedFields.forEach(function (col) {
+													updateCachedColTasks.push(function (ok) {
+														self.cacheNewField(self.data.object.attr('name'), col)
+															.fail(ok).then(function () { ok(); });
+													});
+												});
+
+												async.parallel(updateCachedColTasks, next);
+											}
+											else {
+												next();
+											}
+										},
+										// Update data to server
+										function (next) {
+											if (columns && columns.length > 0) {
+												self.Model.ABObject.sortColumns(self.data.objectId, columns, function (err, result) {
+													if (err) {
+														next(err);
+														return;
+													}
+
+													self.refreshPopupData();
+
+													next();
+												});
+											}
+											else {
+												next();
+											}
+										}
+									], callback);
 								}
-							}, true);
-
-							self.Model.ABObject.sortColumns(self.data.objectId, columnIndexes, function (err, result) {
-								if (err) {
-									// TODO : show error message
-									return;
-								}
-
-								self.refreshPopupData();
-
+							], function (err) {
 								$$(self.webixUiId.objectDatatable).hideProgress();
 							});
 						},
