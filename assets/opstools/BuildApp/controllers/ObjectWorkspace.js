@@ -977,8 +977,8 @@ steal(
 														// Create linked column
 														var secondColumn = {
 															object: firstColumn.linkObject,
-															name: self.data.object.label + " " + firstColumn.label,
-															label: self.data.object.label + "(" + firstColumn.label + ")",
+															name: self.data.object.label,
+															label: self.data.object.label,
 															type: firstColumn.type,
 															setting: $.extend(true, {}, firstColumn.setting),
 															linkType: columnInfo.linkTypeFrom,
