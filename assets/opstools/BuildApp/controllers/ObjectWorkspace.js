@@ -415,17 +415,9 @@ steal(
 											data.itemData.splice(index, 1);
 									});
 
-									// Delete selectivity value
-									if (data.item.connectedData && data.item.connectedData[data.columnId].length > 0) {
-										data.item.connectedData[data.columnId].forEach(function (obj, index) {
-											if (obj.id == ev.removed.id)
-												data.item.connectedData[data.columnId].splice(index, 1);
-										});
-									}
-
 									$$(self.webixUiId.objectDatatable).updateItem(data.rowId, data.item);
 
-									if (!data.itemData || data.itemData.length < 1) data.itemData = '';
+									if (!data.itemData || data.itemData.length < 1) data.itemData = [];
 
 									// Call server to remove value
 									self.updateRowData({ value: data.itemData }, { column: data.columnId, row: data.rowId }, false)
@@ -666,7 +658,7 @@ steal(
 							$$(self.webixUiId.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
 								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-								var selectedIds = '';
+								var selectedIds = [];
 
 								if (selectedItems && selectedItems.length > 0)
 									selectedIds = $.map(selectedItems, function (item) { return { id: item.id }; });
@@ -681,14 +673,13 @@ steal(
 									.then(function (result) {
 										// Update row
 										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
-										if (!rowData.connectedData) rowData.connectedData = {};
 
 										rowData[self.data.selectedCell.column] = selectedItems.map(function (item) {
 											return {
 												id: item.id,
 												dataLabel: item.text
 											}
-										});
+										}) || [];
 
 										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
