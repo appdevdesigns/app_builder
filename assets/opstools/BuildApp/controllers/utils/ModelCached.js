@@ -401,24 +401,30 @@ steal(function () {
 					makeDestroy: function (destroy) {
 						return function (id) {
 							var q = new can.Deferred(),
-								self = this;
+								self = this,
+								removedObj;
 
-							async.waterfall([
+							async.series([
 								function (next) {
 									destroy(id) // Call service to destroy
-										.fail(function (err) { next(err); })
+										.fail(next)
 										.then(function (result) {
-											next(null, result);
+											removedObj = result;
+											next();
 										});
 								},
-								function (removedObj, next) {
+								function (next) {
 									self.findOne({ id: id }, true) // Find in local
 										.fail(function (err) { next(err); })
 										.then(function (result) {
 											if (result)
 												result.destroyed(); // Destroy in local repository
 
-											q.resolve(removedObj);
+											if (removedObj)
+												q.resolve(removedObj);
+											else
+												q.resolve(result);
+
 											next();
 										});
 								}
