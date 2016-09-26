@@ -28,6 +28,11 @@
 	overflow-y: auto !important;
 }
 
+/* Fix overflow-x */
+.ab-generated-page .webix_scroll_cont {
+	overflow: auto !important;
+}
+
 /* Webix datatable */
 /* Last column */
 .ab-main-container .webix_column.webix_last > div,
