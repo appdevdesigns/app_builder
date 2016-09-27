@@ -448,6 +448,7 @@ steal(
 
 													// Clear form
 													$$(viewId).setValues({});
+													_clearSelectivity(viewId);
 												}
 											});
 										}
@@ -686,6 +687,7 @@ steal(
 
 										// Clear form
 										$$(viewId).setValues({});
+										_clearSelectivity(viewId);
 									});
 							}
 
@@ -716,6 +718,12 @@ steal(
 
 									$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, linkType);
 								}
+							}
+
+							function _clearSelectivity(viewId) {
+								$($$(viewId).$view).find('.ab-form-connect-data').each(function (index) {
+									self.controllers.SelectivityHelper.setData($(this), []);
+								});
 							}
 
 						},

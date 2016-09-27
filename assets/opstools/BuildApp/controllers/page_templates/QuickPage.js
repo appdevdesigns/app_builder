@@ -108,7 +108,7 @@ steal(
 							var q = $.Deferred(),
 								self = this,
 								columns,
-								mainPageId, formPageId, editFormId, viewDetailId,
+								mainPageId, formPageId, editFormId, viewPageId, viewDetailId,
 								connectPageIds = {}; // { fieldId: pageId, ... , fieldIdn: pageIdn }
 
 							$$('QuickPage').showProgress({ type: 'icon' });
@@ -569,11 +569,12 @@ steal(
 						},
 
 						hasAddConnectPage: function () {
+							var self = this;
+
 							if (!$$(self.componentIds.connectedData))
 								return false;
 
-							var self = this,
-								connectFields = $$(self.componentIds.connectedData).getValues(),
+							var connectFields = $$(self.componentIds.connectedData).getValues(),
 								connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
 
 							return connectValues.indexOf(1) > -1;
