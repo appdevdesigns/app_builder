@@ -30,9 +30,6 @@ steal(
 
 							self.data = {};
 							self.events = {};
-							self.componentIds = {
-								connectObjectDataList: 'ab-connect-object-data-list'
-							};
 
 							self.initMultilingualLabels();
 							self.initWebixControls();
@@ -203,10 +200,12 @@ steal(
 									self.controllers.ModelCreator.setApp(app);
 								},
 
-								open: function (object, selectedIds, linkType) {
-									self.data.selectedIds = selectedIds;
-
+								open: function (object, selectedIds, linkType, linkViaColName, linkViaType) {
 									var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
+
+									if (dataList.hideOverlay) dataList.hideOverlay();
+
+									self.data.selectedIds = selectedIds;
 
 									this.getTopParentView().show();
 									webix.extend(dataList, webix.ProgressBar);
@@ -239,28 +238,50 @@ steal(
 									self.controllers.ModelCreator.getModel(object.name)
 										.fail(function (err) { next(err); })
 										.then(function (objectModel) {
+											var cond = {};
 
-											objectModel.Cached.unbind('refreshData');
-											objectModel.Cached.bind('refreshData', function (ev, data) {
-												if (this == objectModel.Cached) {
-													data.result.forEach(function (d) {
-														if (d.translate) d.translate();
-													})
+											// // Filter selected data
+											// if (linkViaType === 'model' && linkViaColName) {
+											// 	cond[linkViaColName] = { '!': null };
 
-													dataList.clearAll();
-													dataList.parse(data.result.attr());
-												}
-											});
+											// 	// Get own selected data
+											// 	if (selectedIds && selectedIds.length > 0) {
+
+											// 		var origCond = cond;
+											// 		cond = { or: [] };
+											// 		cond.or.push(origCond);
+
+											// 		cond.or.push({
+											// 			id: selectedIds
+											// 		})
+											// 	}
+											// }
+
+
+											objectModel.store = {};
 
 											// Load the connect data
-											objectModel.Cached.findAll({})
+											// objectModel.findAll({ where:cond})
+											objectModel.Cached.findAll(cond)
 												.fail(function (err) { next(err); })
 												.then(function (data) {
+													// Filter selected data
+													if (linkViaType === 'model') {
+														data = data.filter(function (d) {
+															return !d[linkViaColName] || selectedIds.indexOf(d.id) > -1;
+														});
+													}
+
 													data.forEach(function (d) {
 														if (d.translate) d.translate();
-													})
+													});
 
-													dataList.parse(data.attr());
+													if (data && data.length > 0)
+														dataList.parse(data.attr());
+													else {
+														webix.extend(dataList, webix.OverlayBox);
+														dataList.showOverlay("No #objectName# available.".replace('#objectName#', object.name));
+													}
 
 													dataList.hideProgress();
 												});

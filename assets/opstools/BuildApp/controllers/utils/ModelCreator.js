@@ -157,7 +157,7 @@ steal(
 
 										// Init object model
 										AD.Model.extend(modelName, {
-											useSockets: true
+											// useSockets: true
 										}, {});
 										var modelResult = AD.Model.get(modelName);
 

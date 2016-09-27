@@ -283,13 +283,15 @@ steal(
 												element.minHeight = 45;
 												element.borderless = true;
 												element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
-													"<div class='ab-form-connect-data' data-object='#object#' data-link-type='#linkType#'></div>";
+													"<div class='ab-form-connect-data' data-object='#object#' data-link-type='#linkType#' data-link-via='#linkVia#' data-link-via-type='#linkViaType#'></div>";
 
 												element.template = element.template
 													.replace('#width#', element.labelWidth - 3)
 													.replace('#label#', element.label)
 													.replace('#object#', (col.linkObject.id ? col.linkObject.id : col.linkObject))
-													.replace('#linkType#', col.linkType);
+													.replace('#linkType#', col.linkType)
+													.replace('#linkVia#', col.linkVia.name)
+													.replace('#linkViaType#', col.linkVia.linkType);
 											}
 											else if (col.setting.editor === 'popup') {
 												element.view = 'textarea';
@@ -688,6 +690,9 @@ steal(
 										// Clear form
 										$$(viewId).setValues({});
 										_clearSelectivity(viewId);
+
+
+
 									});
 							}
 
@@ -695,7 +700,9 @@ steal(
 								var item = $(this),
 									data = self.getData(viewId),
 									objectId = item.data('object'),
-									linkType = item.data('link-type');
+									linkType = item.data('link-type'),
+									linkVia = item.data('link-via'),
+									linkViaType = item.data('link-via-type');
 
 								data.updatingItem = item;
 
@@ -716,7 +723,7 @@ steal(
 										data.updatingItem = null;
 									});
 
-									$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, linkType);
+									$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, linkType, linkVia, linkViaType);
 								}
 							}
 

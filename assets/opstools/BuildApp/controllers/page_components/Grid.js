@@ -372,12 +372,6 @@ steal(
 								data.isRendered = true;
 								data.dataCollection = dataCollection;
 
-								// if (data.dataCollection) {
-								// 	data.dataCollection.attachEvent('onDataUpdate', function (id, data) {
-								// 		// alert('Grid Update: ' + id);
-								// 	});
-								// }
-
 								// Init linked dataCollection events
 								if (linkedToDataCollection) {
 									data.linkedToDataCollection = linkedToDataCollection;

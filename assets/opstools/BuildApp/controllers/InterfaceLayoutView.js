@@ -692,17 +692,18 @@ steal(
 										// Get date & datetime columns
 										var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
 
-										objModel.findAllPopulate({}, linkColNames)
+										objModel.findAll({})
 											.fail(function (err) { next(err); })
 											.then(function (data) {
 
 												// Populate labels & Convert string to Date object
-												self.controllers.DataHelper.populateData(data, linkCols, dateCols);
+												self.controllers.DataHelper.populateData(data, linkCols, dateCols)
+													.then(function () {
+														if (!self.data.dataCollections[objectId])
+															self.data.dataCollections[objectId] = AD.op.WebixDataCollection(data);
 
-												if (!self.data.dataCollections[objectId])
-													self.data.dataCollections[objectId] = AD.op.WebixDataCollection(data);
-
-												next();
+														next();
+													});
 											});
 									}
 								], function (err) {

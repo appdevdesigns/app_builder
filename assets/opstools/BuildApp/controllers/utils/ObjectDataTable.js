@@ -160,6 +160,7 @@ steal(
 
 						setApp: function (app) {
 							this.controllers.ModelCreator.setApp(app);
+							this.controllers.DataHelper.setApp(app);
 						},
 
 						setObjectList: function (objectList) {
@@ -342,15 +343,17 @@ steal(
 							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
 
 							// Populate labels & Convert string to Date object
-							self.controllers.DataHelper.populateData(data, linkCols, dateCols);
+							self.controllers.DataHelper.populateData(data, linkCols, dateCols)
+								.fail(q.reject)
+								.then(function () {
+									// Populate data
+									if (data instanceof webix.DataCollection)
+										self.dataTable.data.sync(data);
+									else
+										self.dataTable.parse(data.attr());
 
-							// Populate data
-							if (data instanceof webix.DataCollection)
-								self.dataTable.data.sync(data);
-							else
-								self.dataTable.parse(data.attr());
-
-							q.resolve();
+									q.resolve();
+								});
 
 							return q;
 						}

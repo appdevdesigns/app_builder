@@ -270,7 +270,7 @@ steal(
 													if (!object || object.length < 1)
 														return false;
 
-													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], selectedIds, columnData.linkType);
+													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], selectedIds, columnData.linkType, columnData.linkVia.name, columnData.linkVia.linkType);
 
 													return false;
 												}
@@ -845,7 +845,7 @@ steal(
 											linkColNames = $.map(linkCols, function (col) { return col.name; });
 
 										self.Model.ObjectModel.store = {}; // Clear CanJS local repository
-										self.Model.ObjectModel.Cached.findAllPopulate({}, linkColNames)
+										self.Model.ObjectModel.Cached.findAll({})
 											.fail(function (err) { next(err); })
 											.then(function (data) {
 												self.controllers.ObjectDataTable.populateData(data).then(function () {
