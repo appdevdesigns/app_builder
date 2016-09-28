@@ -369,9 +369,9 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	border-width: 0px !important;
 }
 .ab-loading-message {
-	color: #fff;
-	background: #000;
-	font-size: 30px;
+	color: #fff !important;
+	background: #000 !important;
+	font-size: 30px !important;
 	text-align: center;
 	vertical-align: middle;
 	border-width: 0px !important;
