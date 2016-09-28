@@ -116,22 +116,35 @@ steal(
 								// Render selectivity node
 								self.controllers.SelectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
 
+								var linkColumns = self.dataTable.config.columns.filter(function (c) { return c.editor === 'selectivity'; });
+
 								data.each(function (d) {
 									var maxConnectedDataNum = {};
 
-									for (var columnName in d) {
-										if (d[columnName] instanceof Array && columnName !== 'id' && columnName !== 'translations' && columnName !== 'createdAt' && columnName !== 'updatedAt') {
-											if ($.grep(self.dataTable.config.columns, function (c) { return c.id == columnName }).length < 1) break;
+									linkColumns.forEach(function (col) {
+										columnName = col.id;
 
+										if (d[columnName]) {
 											var linkFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName })).find('.connect-data-values');
 
+											var selectedItems = [];
+
+											if (d[columnName].map) {
+												selectedItems = d[columnName].map(function (cVal) {
+													return {
+														id: cVal.id,
+														text: cVal.dataLabel
+													};
+												});
+											} else if (d[columnName]) {
+												selectedItems.push({
+													id: d[columnName].id,
+													text: d[columnName].dataLabel
+												});
+											}
+
 											// Set selectivity data
-											self.controllers.SelectivityHelper.setData(linkFieldNode, d[columnName].map(function (cVal) {
-												return {
-													id: cVal.id,
-													text: cVal.dataLabel
-												};
-											}));
+											self.controllers.SelectivityHelper.setData(linkFieldNode, selectedItems);
 
 											if (maxConnectedDataNum.dataNum < d[columnName].length || !maxConnectedDataNum.dataNum) {
 												maxConnectedDataNum.dataId = d.id;
@@ -140,7 +153,7 @@ steal(
 											}
 
 										}
-									}
+									});
 
 									// 	if (d.isUnsync) { // TODO: Highlight unsync data
 									// 		self.dataTable.config.columns.forEach(function (col) {

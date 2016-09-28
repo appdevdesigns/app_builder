@@ -211,13 +211,19 @@ steal(
 									webix.extend(dataList, webix.ProgressBar);
 									dataList.showProgress({ type: 'icon' });
 									dataList.define('multiselect', linkType === 'collection');
-
-									// Generate template to display
-									var template = function (item, common) {
+									dataList.define('template', function (item, common) {
 										var templateText = "<div class='ab-connect-data'>";
 
-										if (object.labelFormat || object.columns.length > 0)
-											templateText += object.labelFormat || '#' + object.columns[0].name + '#';
+										if (object.labelFormat || object.columns.length > 0) {
+											if (object.labelFormat)
+												templateText += object.labelFormat;
+											else { // Get default column
+												var defaultColName = object.columns.filter(function (col) {
+													return col.type === 'string' || col.type === 'text';
+												});
+												templateText += '#' + (defaultColName[0] ? defaultColName[0].name : object.columns[0].name) + '#';
+											}
+										}
 
 										templateText += isNaN(item.id) ? " (Unsynchronized)" : "";
 										templateText += "</div>";
@@ -230,9 +236,7 @@ steal(
 										templateText = templateText.replace(/#(.+?)#/g, '');
 
 										return templateText;
-									};
-
-									dataList.define('template', template);
+									});
 									dataList.refresh();
 
 									self.controllers.ModelCreator.getModel(object.name)

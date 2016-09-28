@@ -408,19 +408,26 @@ steal(
 							self.controllers.ObjectDataTable.registerChangeSelectivityItem(function (ev, data) {
 								// Remove selected items
 								if (ev.removed) {
-									// Convert to array
-									if (!data.itemData.forEach) data.itemData = [data.itemData];
+									// Delete removed value - Array
+									if (data.itemData.forEach) {
+										data.itemData.forEach(function (item, index) {
+											var id = item.id ? item.id : item;
+											if (id == ev.removed.id)
+												data.itemData.splice(index, 1);
+										});
 
-									// Delete removed value
-									data.itemData.forEach(function (item, index) {
-										var id = item.id ? item.id : item;
-										if (id == ev.removed.id)
-											data.itemData.splice(index, 1);
-									});
+										if (data.itemData.length < 1) {
+											data.itemData = '';
+											data.item[data.columnId] = [];
+										}
+									}
+									// Delete removed value - Object
+									else if (data.itemData.id == ev.removed.id) {
+										data.itemData = '';
+										data.item[data.columnId] = [];
+									}
 
 									$$(self.webixUiId.objectDatatable).updateItem(data.rowId, data.item);
-
-									if (!data.itemData || data.itemData.length < 1) data.itemData = [];
 
 									// Call server to remove value
 									self.updateRowData({ value: data.itemData }, { column: data.columnId, row: data.rowId }, false)

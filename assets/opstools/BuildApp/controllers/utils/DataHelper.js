@@ -53,7 +53,7 @@ steal(
 										if (r.translate) r.translate();
 
 										linkFields.forEach(function (linkCol) {
-											var colName = linkCol.id;// CHECK
+											var colName = linkCol.id;
 
 											if (r[colName]) {
 												var linkObj = self.data.objectList.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
@@ -72,13 +72,15 @@ steal(
 													// Set label to linked fields
 													function (next) {
 														var connectIds = [];
-														if (!r[colName].forEach) {
-															r.attr(colName, new can.List([r[colName].attr()]));
-														}
 
-														r[colName].forEach(function (val) {
-															connectIds.push({ id: val.id });
-														});
+														if (r[colName].forEach) {
+															r[colName].forEach(function (val) {
+																connectIds.push({ id: val.id });
+															});
+														}
+														else if (r[colName].id) {
+															connectIds.push({ id: r[colName].id });
+														}
 
 														if (connectIds && connectIds.length > 0) {
 															linkObjModel.findAll({ or: connectIds })
@@ -91,8 +93,13 @@ steal(
 																			// Set data label
 																			linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
 
-																			// FIX : CANjs attr to set nested value
-																			r.attr(colName + '.' + index, linkVal.attr());
+																			if (r[colName].forEach) {
+																				// FIX : CANjs attr to set nested value
+																				r.attr(colName + '.' + index, linkVal.attr());
+																			}
+																			else {
+																				r.attr(colName, linkVal.attr());
+																			}
 																		});
 																	}
 
