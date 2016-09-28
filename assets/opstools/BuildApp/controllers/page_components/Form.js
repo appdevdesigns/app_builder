@@ -279,6 +279,7 @@ steal(
 												element.view = 'checkbox';
 											}
 											else if (col.setting.editor === 'selectivity') {
+												element.view = 'template';
 												element.editor = 'selectivity';
 												element.minHeight = 45;
 												element.borderless = true;
@@ -461,6 +462,9 @@ steal(
 
 										self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
 
+										// Set selectivity values
+										self.populateSelectivityValues(viewId);
+
 										$($$(viewId).$view).find('.ab-form-connect-data').click(function () { _clickSelectivityItems.call(this, viewId) });
 
 										next();
@@ -637,18 +641,13 @@ steal(
 								var editValues = $$(viewId).getValues(),
 									keys = Object.keys(editValues);
 
+								// Populate values to model
 								keys.forEach(function (fieldName) {
 									if (typeof editValues[fieldName] !== 'undefined' && editValues[fieldName] !== null) {
 										var colInfo = data.columns.filter(function (col) { return col.name === fieldName; })[0];
 
 										if (colInfo) {
 											switch (colInfo.type) {
-												case "connectedField":
-													var view = $$(viewId).getChildViews().filter(function (cView) { return cView.config.name === fieldName; })[0],
-														nodeItem = $(view.$view).find('.ab-form-connect-data'),
-														value = self.controllers.SelectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
-													modelData.attr(fieldName, value);
-													break;
 												case "boolean":
 													modelData.attr(fieldName, editValues[fieldName] === 1 ? true : false);
 													break;
@@ -663,8 +662,19 @@ steal(
 									}
 									else
 										modelData.removeAttr(fieldName);
-									// modelData.attr(k, null);
 								});
+
+								// Populate selectivity values to model
+								$$(viewId).getChildViews()
+									.filter(function (cView) { return cView.config.editor === 'selectivity'; })
+									.forEach(function (cView) {
+										var nodeItem = $(cView.$view).find('.ab-form-connect-data'),
+											fieldName = cView.config.name,
+											value = self.controllers.SelectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
+
+										modelData.attr(fieldName, value);
+									});
+
 
 								modelData.save()
 									.then(function (result) {
