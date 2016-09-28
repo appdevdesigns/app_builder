@@ -709,6 +709,7 @@ steal(
 							function _clickSelectivityItems(viewId) {
 								var item = $(this),
 									data = self.getData(viewId),
+									currModel = data.dataCollection.AD.currModel(),
 									objectId = item.data('object'),
 									linkType = item.data('link-type'),
 									linkVia = item.data('link-via'),
@@ -733,7 +734,7 @@ steal(
 										data.updatingItem = null;
 									});
 
-									$$(self.componentIds.addConnectObjectDataPopup).open(object[0], selectedIds, linkType, linkVia, linkViaType);
+									$$(self.componentIds.addConnectObjectDataPopup).open(object[0], (currModel ? currModel.id : null), selectedIds, linkType, linkVia, linkViaType);
 								}
 							}
 

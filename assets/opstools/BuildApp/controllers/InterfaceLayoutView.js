@@ -697,10 +697,10 @@ steal(
 											.then(function (data) {
 
 												// Populate labels & Convert string to Date object
-												self.controllers.DataHelper.populateData(data, linkCols, dateCols)
-													.then(function () {
+												self.controllers.DataHelper.normalizeData(data, linkCols, dateCols)
+													.then(function (result) {
 														if (!self.data.dataCollections[objectId])
-															self.data.dataCollections[objectId] = AD.op.WebixDataCollection(data);
+															self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
 
 														next();
 													});

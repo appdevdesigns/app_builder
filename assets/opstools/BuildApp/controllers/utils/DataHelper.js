@@ -38,11 +38,15 @@ steal(
 							this.data.objectList = objectList;
 						},
 
-						populateData: function (data, linkFields, dateFields) {
-							if (!data) return;
+						normalizeData: function (data, linkFields, dateFields) {
+							var q = new AD.sal.Deferred();
+
+							if (!data) {
+								q.resolve();
+								return q;
+							}
 
 							var self = this,
-								q = new AD.sal.Deferred(),
 								result = data instanceof webix.DataCollection ? data.AD.__list : data,
 								normalizeDataTasks = [];
 
@@ -52,81 +56,86 @@ steal(
 										// Translate
 										if (r.translate) r.translate();
 
+										var Tasks = [];
+
 										linkFields.forEach(function (linkCol) {
 											var colName = linkCol.id;
 
 											if (r[colName]) {
-												var linkObj = self.data.objectList.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
-													linkObjModel;
+												Tasks.push(function (ok) {
+													var linkObj = self.data.objectList.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
+														linkObjModel;
 
-												async.series([
-													// Get linked object model
-													function (next) {
-														self.controllers.ModelCreator.getModel(linkObj.name)
-															.fail(next)
-															.then(function (result) {
-																linkObjModel = result;
-																next();
-															});
-													},
-													// Set label to linked fields
-													function (next) {
-														var connectIds = [];
-
-														if (r[colName].forEach) {
-															r[colName].forEach(function (val) {
-																connectIds.push({ id: val.id });
-															});
-														}
-														else if (r[colName].id) {
-															connectIds.push({ id: r[colName].id });
-														}
-
-														if (connectIds && connectIds.length > 0) {
-															linkObjModel.findAll({ or: connectIds })
+													async.series([
+														// Get linked object model
+														function (next) {
+															self.controllers.ModelCreator.getModel(linkObj.name)
 																.fail(next)
 																.then(function (result) {
-																	if (result) {
-																		result.forEach(function (linkVal, index) {
-																			if (linkVal.translate) linkVal.translate();
-
-																			// Set data label
-																			linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
-
-																			if (r[colName].forEach) {
-																				// FIX : CANjs attr to set nested value
-																				r.attr(colName + '.' + index, linkVal.attr());
-																			}
-																			else {
-																				r.attr(colName, linkVal.attr());
-																			}
-																		});
-																	}
-
+																	linkObjModel = result;
 																	next();
 																});
-														}
-														else {
+														},
+														// Set label to linked fields
+														function (next) {
+															var connectIds = [];
+
+															if (r[colName].forEach) {
+																r[colName].forEach(function (val) {
+																	if (!val.dataLabel)
+																		connectIds.push({ id: val.id || val });
+																});
+															}
+															else {
+																if (!r[colName].dataLabel)
+																	connectIds.push({ id: r[colName].id || r[colName] });
+															}
+
+															if (connectIds && connectIds.length > 0) {
+																linkObjModel.findAll({ or: connectIds })
+																	.fail(next)
+																	.then(function (result) {
+																		if (result) {
+																			result.forEach(function (linkVal, index) {
+																				if (linkVal.translate) linkVal.translate();
+
+																				// Set data label
+																				linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
+
+																				if (r[colName].forEach) {
+																					// FIX : CANjs attr to set nested value
+																					r.attr(colName + '.' + index, linkVal.attr());
+																				}
+																				else {
+																					r.attr(colName, linkVal.attr());
+																				}
+																			});
+																		}
+
+																		next();
+																	});
+															}
+															else {
+																next();
+															}
+														},
+														// Convert string to Date object
+														function (next) {
+															if (dateFields && dateFields.length > 0) {
+																dateFields.forEach(function (dateCol) {
+																	if (r[dateCol.id])
+																		r.attr(dateCol.id, new Date(r[dateCol.id]));
+																});
+															}
+
 															next();
 														}
-													},
-													// Convert string to Date object
-													function (next) {
-														if (dateFields && dateFields.length > 0) {
-															dateFields.forEach(function (dateCol) {
-																if (r[dateCol.id])
-																	r.attr(dateCol.id, new Date(r[dateCol.id]));
-															});
-														}
-
-														next();
-													}
-												], callback);
-											}
-											else {
-												callback();
+													], ok);
+												});
 											}
 										});
+
+										async.parallel(Tasks, callback);
 									});
 								});
 							}
@@ -136,7 +145,7 @@ steal(
 									q.reject(err);
 								}
 								else {
-									q.resolve();
+									q.resolve(data);
 								}
 							});
 

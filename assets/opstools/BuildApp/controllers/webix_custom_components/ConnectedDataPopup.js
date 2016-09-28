@@ -200,7 +200,7 @@ steal(
 									self.controllers.ModelCreator.setApp(app);
 								},
 
-								open: function (object, selectedIds, linkType, linkViaColName, linkViaType) {
+								open: function (object, rowId, selectedIds, linkType, linkViaColName, linkViaType) {
 									var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
 									if (dataList.hideOverlay) dataList.hideOverlay();
@@ -262,7 +262,7 @@ steal(
 											// }
 
 
-											objectModel.store = {};
+											// objectModel.store = {};
 
 											// Load the connect data
 											// objectModel.findAll({ where:cond})
@@ -272,7 +272,7 @@ steal(
 													// Filter selected data
 													if (linkViaType === 'model') {
 														data = data.filter(function (d) {
-															return !d[linkViaColName] || selectedIds.indexOf(d.id) > -1;
+															return !d[linkViaColName] || d[linkViaColName].id == rowId || selectedIds.indexOf(d.id) > -1;
 														});
 													}
 

@@ -957,6 +957,9 @@ steal(
 											return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
 										});
 									}
+									else {
+										$$(viewId).filter(function (item) { return true; });
+									}
 								}
 							};
 

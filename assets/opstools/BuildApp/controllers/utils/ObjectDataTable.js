@@ -342,8 +342,6 @@ steal(
 								q = $.Deferred(),
 								result;
 
-							self.dataTable.clearAll();
-
 							if (!data) {
 								q.resolve();
 								return q;
@@ -355,15 +353,17 @@ steal(
 							// Get date & datetime columns
 							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
 
+							self.dataTable.clearAll();
+
 							// Populate labels & Convert string to Date object
-							self.controllers.DataHelper.populateData(data, linkCols, dateCols)
+							self.controllers.DataHelper.normalizeData(data, linkCols, dateCols)
 								.fail(q.reject)
-								.then(function () {
+								.then(function (result) {
 									// Populate data
-									if (data instanceof webix.DataCollection)
-										self.dataTable.data.sync(data);
+									if (result instanceof webix.DataCollection)
+										self.dataTable.data.sync(result);
 									else
-										self.dataTable.parse(data.attr());
+										self.dataTable.parse(result.attr());
 
 									q.resolve();
 								});

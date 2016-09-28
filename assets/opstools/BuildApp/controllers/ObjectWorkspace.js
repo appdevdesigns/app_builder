@@ -270,7 +270,7 @@ steal(
 													if (!object || object.length < 1)
 														return false;
 
-													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], selectedIds, columnData.linkType, columnData.linkVia.name, columnData.linkVia.linkType);
+													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], data.row, selectedIds, columnData.linkType, columnData.linkVia.name, columnData.linkVia.linkType);
 
 													return false;
 												}
