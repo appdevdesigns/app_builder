@@ -39,29 +39,39 @@ steal(
 						},
 
 						normalizeData: function (data, linkFields, dateFields) {
-							var q = new AD.sal.Deferred();
+							var q = new AD.sal.Deferred(),
+								list;
 
 							if (!data) {
 								q.resolve();
 								return q;
 							}
+							else if (data instanceof webix.DataCollection) {
+								list = data.AD.__list;  // Get Can.Map
+							}
+							else if (!data.forEach) {
+								list = [data]; // Convert to array
+							}
+							else {
+								list = data; // It is Can.Map
+							}
 
 							var self = this,
-								result = data instanceof webix.DataCollection ? data.AD.__list : data,
 								normalizeDataTasks = [];
 
-							if (result.forEach) {
-								result.forEach(function (r) {
+							if (list.forEach) {
+								list.forEach(function (r) {
 									normalizeDataTasks.push(function (callback) {
 										// Translate
 										if (r.translate) r.translate();
 
 										var Tasks = [];
 
+console.log('--- linkFields', linkFields);
 										linkFields.forEach(function (linkCol) {
-											var colName = linkCol.id;
-
-											if (r[colName]) {
+console.log('--- fieldName', linkCol);
+											if (r[linkCol.name]) {
+console.log('--- add task ', r[linkCol.name]);
 												Tasks.push(function (ok) {
 													var linkObj = self.data.objectList.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
 														linkObjModel;
@@ -80,17 +90,17 @@ steal(
 														function (next) {
 															var connectIds = [];
 
-															if (r[colName].forEach) {
-																r[colName].forEach(function (val) {
+															if (r[linkCol.name].forEach) {
+																r[linkCol.name].forEach(function (val) {
 																	if (!val.dataLabel)
 																		connectIds.push({ id: val.id || val });
 																});
 															}
 															else {
-																if (!r[colName].dataLabel)
-																	connectIds.push({ id: r[colName].id || r[colName] });
+																if (!r[linkCol.name].dataLabel)
+																	connectIds.push({ id: r[linkCol.name].id || r[linkCol.name] });
 															}
-
+console.log('--- connectIds ', connectIds);
 															if (connectIds && connectIds.length > 0) {
 																linkObjModel.findAll({ or: connectIds })
 																	.fail(next)
@@ -101,13 +111,14 @@ steal(
 
 																				// Set data label
 																				linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
+console.log('--- dataLabel ', linkObj.getDataLabel(linkVal.attr()));
 
-																				if (r[colName].forEach) {
+																				if (r[linkCol.name].forEach) {
 																					// FIX : CANjs attr to set nested value
-																					r.attr(colName + '.' + index, linkVal.attr());
+																					r.attr(linkCol.name + '.' + index, linkVal.attr());
 																				}
 																				else {
-																					r.attr(colName, linkVal.attr());
+																					r.attr(linkCol.name, linkVal.attr());
 																				}
 																			});
 																		}

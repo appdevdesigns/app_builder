@@ -477,6 +477,7 @@ steal(
 							self.data.app = app;
 
 							self.controllers.ModelCreator.setApp(app);
+							self.controllers.DataHelper.setApp(app);
 						},
 
 						setPage: function (page) {
@@ -687,7 +688,12 @@ steal(
 									function (objInfo, objModel, next) {
 										// Get link columns
 										var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
-											linkColNames = linkCols.map(function (col) { return col.name; }).attr();
+											linkColObjs = linkCols.map(function (col) {
+												return {
+													name: col.name,
+													linkObject: col.linkObject
+												};
+											});
 
 										// Get date & datetime columns
 										var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
@@ -697,14 +703,28 @@ steal(
 											.then(function (data) {
 
 												// Populate labels & Convert string to Date object
-												self.controllers.DataHelper.normalizeData(data, linkCols, dateCols)
+												self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
 													.then(function (result) {
 														if (!self.data.dataCollections[objectId])
 															self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
 
-														next();
+														next(null, self.data.dataCollections[objectId], linkColObjs, dateCols);
 													});
 											});
+									},
+									// Listen change data event
+									function (dataCollection, linkColObjs, dateCols, next) {
+										dataCollection.attachEvent("onDataUpdate", function (id, data) {
+
+											self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
+												.then(function (result) {
+													console.log('DATA update: ', id, result);
+												});
+
+											return true;
+										});
+
+										next();
 									}
 								], function (err) {
 									if (err) {

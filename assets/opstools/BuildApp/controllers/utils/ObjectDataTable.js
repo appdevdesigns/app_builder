@@ -348,7 +348,13 @@ steal(
 							}
 
 							// Get link columns
-							var linkCols = self.dataTable.config.columns.filter(function (col) { return col.linkObject != null });
+							var linkCols = self.dataTable.config.columns.filter(function (col) { return col.linkObject != null }),
+								linkColObjs = linkCols.map(function (col) {
+									return {
+										name: col.name,
+										linkObject: col.linkObject
+									};
+								});
 
 							// Get date & datetime columns
 							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
@@ -356,7 +362,7 @@ steal(
 							self.dataTable.clearAll();
 
 							// Populate labels & Convert string to Date object
-							self.controllers.DataHelper.normalizeData(data, linkCols, dateCols)
+							self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
 								.fail(q.reject)
 								.then(function (result) {
 									// Populate data

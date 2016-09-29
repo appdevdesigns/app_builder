@@ -96,7 +96,9 @@ steal(
 
                                 this.controllers.ModelCreator = new ModelCreator(this.element);
                                 this.controllers.ModelCreator.setApp(this.data.app);
+
                                 this.controllers.DataHelper = new DataHelper(this.element);
+                                self.controllers.DataHelper.setApp(this.data.app);
 
                                 this.controllers.Menu = new Menu(this.element, {});
                                 this.controllers.Grid = new Grid(this.element, {});
@@ -352,6 +354,11 @@ steal(
                                     var self = this,
                                         q = $.Deferred();
 
+                                    if (!objectId) {
+                                        q.reject("Object id is required.");
+                                        return;
+                                    }
+
                                     if (!self.data.dataCollections) self.data.dataCollections = {};
 
                                     if (!self.data.dataCollections[objectId]) {
@@ -369,7 +376,6 @@ steal(
                                                 self.controllers.ModelCreator.getModel(objInfo.attr('name'))
                                                     .fail(function (err) { next(err); })
                                                     .then(function (objectModel) {
-
                                                         next(null, objInfo, objectModel);
                                                     });
                                             },
@@ -377,7 +383,12 @@ steal(
                                             function (objInfo, objModel, next) {
                                                 // Get link columns
                                                 var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
-                                                    linkColNames = linkCols.map(function (col) { return col.name; }).attr();
+                                                    linkColObjs = linkCols.map(function (col) {
+                                                        return {
+                                                            name: col.name,
+                                                            linkObject: col.linkObject
+                                                        };
+                                                    });
 
                                                 // Get date & datetime columns
                                                 var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
@@ -387,15 +398,28 @@ steal(
                                                     .then(function (data) {
 
                                                         // Populate labels & Convert string to Date object
-                                                        self.controllers.DataHelper.normalizeData(data, linkCols, dateCols)
-                                                        .then(function() {
-                                                            if (!self.data.dataCollections[objectId])
-                                                                self.data.dataCollections[objectId] = AD.op.WebixDataCollection(data);
+                                                        self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
+                                                            .then(function (result) {
+                                                                if (!self.data.dataCollections[objectId])
+                                                                    self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
 
-                                                            next();
+                                                                next(null, self.data.dataCollections[objectId], linkColObjs, dateCols);
+                                                            });
+                                                    });
+                                            },
+                                            // Listen change data event
+                                            function (dataCollection, linkColObjs, dateCols, next) {
+                                                dataCollection.attachEvent("onDataUpdate", function (id, data) {
+
+                                                    self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
+                                                        .then(function (result) {
+                                                            console.log('DATA update: ', id, result);
                                                         });
 
-                                                    });
+                                                    return true;
+                                                });
+
+                                                next();
                                             }
                                         ], function (err) {
                                             if (err) {
