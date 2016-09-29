@@ -98,7 +98,7 @@ steal(
                                 this.controllers.ModelCreator.setApp(this.data.app);
 
                                 this.controllers.DataHelper = new DataHelper(this.element);
-                                self.controllers.DataHelper.setApp(this.data.app);
+                                this.controllers.DataHelper.setApp(this.data.app);
 
                                 this.controllers.Menu = new Menu(this.element, {});
                                 this.controllers.Grid = new Grid(this.element, {});
@@ -122,7 +122,7 @@ steal(
 
                                 self.Model.ABObject.findAll({ application: self.data.app.id })
                                     .then(function(result) {
-                                        self.controllers.DataHelper.setObjectList(result.attr());
+                                        self.controllers.DataHelper.setObjectList(result);
                                         self.components.Form.setObjectList(result.attr());
                                     });
                             },
