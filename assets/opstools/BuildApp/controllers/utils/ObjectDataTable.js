@@ -359,15 +359,17 @@ steal(
 							// Get date & datetime columns
 							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
 
-							self.dataTable.clearAll();
-
 							// Populate labels & Convert string to Date object
 							self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
 								.fail(q.reject)
 								.then(function (result) {
+									self.dataTable.clearAll();
+
 									// Populate data
-									if (result instanceof webix.DataCollection)
+									if (result instanceof webix.DataCollection) {
+										self.dataTable.data.clearAll();
 										self.dataTable.data.sync(result);
+									}
 									else
 										self.dataTable.parse(result.attr());
 

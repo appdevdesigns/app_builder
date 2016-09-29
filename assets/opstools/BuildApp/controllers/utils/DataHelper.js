@@ -67,14 +67,12 @@ steal(
 
 										var Tasks = [];
 
-console.log('--- linkFields', linkFields);
 										linkFields.forEach(function (linkCol) {
-console.log('--- fieldName', linkCol);
-											if (r[linkCol.name]) {
-console.log('--- add task ', r[linkCol.name]);
+											if (r[linkCol.name] && !r[linkCol.name].dataLabel) {
 												Tasks.push(function (ok) {
 													var linkObj = self.data.objectList.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
-														linkObjModel;
+														linkObjModel,
+														linkedLabels = [];
 
 													async.series([
 														// Get linked object model
@@ -86,7 +84,7 @@ console.log('--- add task ', r[linkCol.name]);
 																	next();
 																});
 														},
-														// Set label to linked fields
+														// Find labels of linked fields
 														function (next) {
 															var connectIds = [];
 
@@ -96,35 +94,50 @@ console.log('--- add task ', r[linkCol.name]);
 																		connectIds.push({ id: val.id || val });
 																});
 															}
-															else {
-																if (!r[linkCol.name].dataLabel)
-																	connectIds.push({ id: r[linkCol.name].id || r[linkCol.name] });
+															else if (!r[linkCol.name].dataLabel) {
+																connectIds.push({ id: r[linkCol.name].id || r[linkCol.name] });
 															}
-console.log('--- connectIds ', connectIds);
+
+
 															if (connectIds && connectIds.length > 0) {
 																linkObjModel.findAll({ or: connectIds })
 																	.fail(next)
 																	.then(function (result) {
-																		if (result) {
-																			result.forEach(function (linkVal, index) {
-																				if (linkVal.translate) linkVal.translate();
-
-																				// Set data label
-																				linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
-console.log('--- dataLabel ', linkObj.getDataLabel(linkVal.attr()));
-
-																				if (r[linkCol.name].forEach) {
-																					// FIX : CANjs attr to set nested value
-																					r.attr(linkCol.name + '.' + index, linkVal.attr());
-																				}
-																				else {
-																					r.attr(linkCol.name, linkVal.attr());
-																				}
-																			});
-																		}
-
+																		linkedLabels = result;
 																		next();
 																	});
+															}
+															else {
+																next();
+															}
+														},
+														// Set label to linked fields
+														function (next) {
+															if (linkedLabels) {
+																linkedLabels.forEach(function (linkVal, index) {
+																	if (linkVal.translate) linkVal.translate();
+
+																	// Set data label
+																	linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
+
+																	if (r[linkCol.name].forEach) {
+																		// FIX : CANjs attr to set nested value
+																		if (r.attr)
+																			r.attr(linkCol.name + '.' + index, linkVal.attr());
+																		else
+																			r[linkCol.name + '.' + index] = linkVal.attr();
+																	}
+																	else {
+																		if (r.attr)
+																			r.attr(linkCol.name, linkVal.attr());
+																		else
+																			r[linkCol.name] = linkVal.attr();
+																	}
+
+console.log('--- dataLabel ', linkObj.getDataLabel(linkVal.attr()));
+																});
+
+																next();
 															}
 															else {
 																next();
