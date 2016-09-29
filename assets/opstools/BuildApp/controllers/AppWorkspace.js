@@ -122,8 +122,11 @@ steal(
 										id: self.webixUiId.appWorkspaceToolbar,
 										autowidth: true,
 										cols: [
-											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "left" },
-											{ fillspace: true },
+											{
+												view: "button", value: self.labels.application.backToApplication, width: 250, align: "right", click: function () {
+													self.element.trigger(self.options.backToAppPageEvent, {});
+												}
+											},
 											{
 												id: self.webixUiId.synchronizeButton,
 												view: "button",
@@ -139,11 +142,8 @@ steal(
 													});
 												}
 											},
-											{
-												view: "button", value: self.labels.application.backToApplication, width: 250, align: "right", click: function () {
-													self.element.trigger(self.options.backToAppPageEvent, {});
-												}
-											}
+											{ fillspace: true },
+											{ view: "label", id: self.webixUiId.appNameLabel, width: 400, align: "right" }
 										]
 									},
 									{ height: 10 },
