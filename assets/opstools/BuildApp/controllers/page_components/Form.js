@@ -286,10 +286,14 @@ steal(
 												element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
 													"<div class='ab-form-connect-data' data-object='#object#' data-link-type='#linkType#' data-link-via='#linkVia#' data-link-via-type='#linkViaType#'></div>";
 
+												var linkObjectId = '';
+												if (col.linkObject)
+													linkObjectId = col.linkObject.id ? col.linkObject.id : col.linkObject;
+
 												element.template = element.template
 													.replace('#width#', element.labelWidth - 3)
 													.replace('#label#', element.label)
-													.replace('#object#', (col.linkObject.id ? col.linkObject.id : col.linkObject))
+													.replace('#object#', linkObjectId)
 													.replace('#linkType#', col.linkType)
 													.replace('#linkVia#', col.linkVia.name)
 													.replace('#linkViaType#', col.linkVia.linkType);
