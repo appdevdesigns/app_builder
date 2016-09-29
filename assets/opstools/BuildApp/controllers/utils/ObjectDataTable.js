@@ -351,7 +351,7 @@ steal(
 							var linkCols = self.dataTable.config.columns.filter(function (col) { return col.linkObject != null }),
 								linkColObjs = linkCols.map(function (col) {
 									return {
-										name: col.name,
+										name: col.id,
 										linkObject: col.linkObject
 									};
 								});
