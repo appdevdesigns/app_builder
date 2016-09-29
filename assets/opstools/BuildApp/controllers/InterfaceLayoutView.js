@@ -721,9 +721,7 @@ steal(
 
 												if (hasUpdateLink && newVal) {
 													self.controllers.DataHelper.normalizeData(ev.target, linkColObjs, dateCols)
-														.then(function (result) {
-															console.log('DATA update: ', result);
-														});
+														.then(function (result) { });
 												}
 											});
 										});

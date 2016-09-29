@@ -134,7 +134,6 @@ steal(
 																			r[linkCol.name] = linkVal.attr();
 																	}
 
-console.log('--- dataLabel ', linkObj.getDataLabel(linkVal.attr()));
 																});
 
 																next();
