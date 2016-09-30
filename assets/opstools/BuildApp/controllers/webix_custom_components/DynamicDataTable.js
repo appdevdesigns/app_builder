@@ -33,8 +33,6 @@ steal(
 								prependView: function (view) {
 									var generatedView = webix.ui(view);
 									generatedView.define('width', this.config.width + 2);
-									// generatedView.resize();
-									generatedView.$setSize(generatedView.$width, 0);
 
 									if (!this.additionViews) this.additionViews = [];
 									this.additionViews.push(generatedView);
@@ -42,13 +40,13 @@ steal(
 									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
 
 									$(this.getNode().parentNode).prepend(generatedView.$view);
+
+									generatedView.resize();
 								},
 
 								appendView: function (view) {
 									var generatedView = webix.ui(view);
 									generatedView.define('width', this.config.width + 2);
-									// generatedView.resize();
-									generatedView.$setSize(generatedView.$width, 0);
 
 									if (!this.additionViews) this.additionViews = [];
 									this.additionViews.push(generatedView);
@@ -56,6 +54,8 @@ steal(
 									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
 
 									$(this.getNode().parentNode).append(generatedView.$view);
+
+									generatedView.resize();
 								},
 
 								clearAdditionalView: function () {
