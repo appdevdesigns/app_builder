@@ -1563,9 +1563,9 @@ steal(
 							$$(self.webixUiId.objectDatatable).define('leftSplit', 0);
 							$$(self.webixUiId.objectDatatable).clearValidation();
 							$$(self.webixUiId.objectDatatable).clearSelection();
+							$$(self.webixUiId.objectDatatable).refreshColumns([], true);
 							$$(self.webixUiId.objectDatatable).clearAll();
 							$$(self.webixUiId.objectDatatable).refresh();
-							$$(self.webixUiId.objectDatatable).refreshColumns([], true);
 							// $$(self.webixUiId.objectDatatable).hide();
 
 							$$(self.webixUiId.addNewRowButton).hide();
