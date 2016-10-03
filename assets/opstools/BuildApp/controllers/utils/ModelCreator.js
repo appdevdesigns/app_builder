@@ -34,7 +34,7 @@ steal(
 							this.data.appName = app.name;
 						},
 
-						getBaseModel: function (objectName, describe, multilingualFields, associations) {
+						defineBaseModel: function (objectName, describe, multilingualFields, associations) {
 							if (!objectName || !describe || !multilingualFields) return;
 
 							var formatAppName = this.data.appName.replace(/_/g, ''),
@@ -152,8 +152,8 @@ steal(
 											return;
 										}
 
-										// Get base model
-										var base = self.getBaseModel(objectName, describe, multilingualFields, associations);
+										// Define base model
+										var base = self.defineBaseModel(objectName, describe, multilingualFields, associations);
 
 										// Init object model
 										AD.Model.extend(modelName, {
