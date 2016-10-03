@@ -13,9 +13,13 @@ System.import('can').then(function () {
                 expect = chai.expect;
                 assert = chai.assert;
 
-                System.import('opstools/BuildApp/tests/js/sinon/lib/sinon').then(function () {
-                    next();
-                });
+
+                // System.import('opstools/BuildApp/tests/js/sinon/lib/sinon').then(function (sinon) {
+                // this.sinon = sinon; // Define sinon globally
+
+                // next();
+                // });
+                next();
             },
 
             // Load tests

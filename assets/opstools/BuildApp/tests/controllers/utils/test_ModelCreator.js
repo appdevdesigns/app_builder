@@ -2,7 +2,6 @@ steal(
 	// Dependencies
 	"opstools/BuildApp/controllers/utils/ModelCreator.js",
 	function () {
-
 		// the div to attach the controller to
 		var divID = 'test_ModelCreator';
 
@@ -33,20 +32,23 @@ steal(
 				// Initialize the controller
 				modelCreator = new AD.controllers.opstools.BuildApp.ModelCreator($('#' + divID), {});
 				modelCreator.setApp(appInfo);
+			});
 
-				// Use Sinon to replace jQuery's ajax method with a spy.
-				sinon.spy($, 'ajax');
+			afterEach(function () {
+				// Restore jQuery's ajax method to its original state
+				if ($.ajax.restore)
+					$.ajax.restore();
 			});
 
 			after(function () {
 				// remove the div to the window
 				$('body').find('#' + divID).remove();
-
-				// Restore jQuery's ajax method to its original state
-				$.ajax.restore();
 			});
 
 			it('test get model', function (done) {
+				// Use Sinon to replace jQuery's ajax method with a stub.
+				sinon.stub($, 'ajax').yieldsTo('success', [1, 2, 3]);
+
 				modelCreator.getModel(objectName)
 					.fail(function (err) {
 						assert.fail(err, undefined, 'should not return any error.');
@@ -62,7 +64,5 @@ steal(
 
 
 		});
-
-
 	}
 );
