@@ -70,7 +70,7 @@ steal(
 							var q = $.Deferred();
 
 							if (!objectName) {
-								q.reject();
+								q.reject(new Error('The object name is required.'));
 								return q;
 							}
 
@@ -98,7 +98,7 @@ steal(
 							var q = $.Deferred();
 
 							if (!objectName) {
-								q.reject();
+								q.reject(new Error('The object name is required.'));
 								return q;
 							}
 
@@ -114,7 +114,7 @@ steal(
 								})
 								.then(function (objectData) {
 									if (objectData.length < 1) {
-										q.reject();
+										q.reject(new Error('System could not found this object name.'));
 										return;
 									}
 									objectData = objectData[0];
