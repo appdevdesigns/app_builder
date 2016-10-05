@@ -145,7 +145,16 @@ steal(
                         },
 
                         initWebixControls: function () {
-                            var self = this;
+                            var self = this,
+                                editDefinitions = AD.classes.AppBuilder.DataFields.getEditDefinitions();
+
+                            // Insert please select data type view
+                            editDefinitions.splice(0, 0, {
+                                id: self.componentIds.chooseTypeView,
+                                rows: [
+                                    { view: "label", label: self.labels.add_fields.chooseType }
+                                ]
+                            });
 
                             webix.protoUI({
                                 name: 'add_fields_popup',
@@ -164,21 +173,25 @@ steal(
                                                 id: self.componentIds.chooseTypeMenu,
                                                 minWidth: 500,
                                                 autowidth: true,
-                                                data: [
-                                                    {
-                                                        value: self.labels.add_fields.chooseType,
-                                                        submenu: [
-                                                            { view: 'button', value: self.labels.add_fields.connectField, fieldType: 'connectedField', icon: self.componentIds.connectObjectIcon, type: 'icon' },
-                                                            { view: 'button', value: self.labels.add_fields.stringField, fieldType: 'string', icon: self.componentIds.singleTextIcon, type: 'icon' },
-                                                            { view: 'button', value: self.labels.add_fields.textField, fieldType: 'text', icon: self.componentIds.longTextIcon, type: 'icon' },
-                                                            { view: 'button', value: self.labels.add_fields.numberField, fieldType: ['float', 'integer'], icon: self.componentIds.numberIcon, type: 'icon' },
-                                                            { view: 'button', value: self.labels.add_fields.dateField, fieldType: ['datetime', 'date'], icon: self.componentIds.dateIcon, type: 'icon' },
-                                                            { view: 'button', value: self.labels.add_fields.booleanField, fieldType: 'boolean', icon: self.componentIds.booleanIcon, type: 'icon' },
-                                                            { view: 'button', value: self.labels.add_fields.listField, fieldType: 'list', icon: self.componentIds.selectListIcon, type: 'icon' },
-                                                            { view: 'button', value: self.labels.add_fields.attachmentField, fieldType: 'attachment', icon: self.componentIds.attachmentIcon, type: 'icon' },
-                                                        ]
-                                                    }
-                                                ],
+                                                data: [{
+                                                    value: self.labels.add_fields.chooseType,
+                                                    submenu: AD.classes.AppBuilder.DataFields.getFieldMenuList()
+                                                }],
+                                                // data: [
+                                                //     {
+                                                //         value: self.labels.add_fields.chooseType,
+                                                //         submenu: [
+                                                //             { view: 'button', value: self.labels.add_fields.connectField, fieldType: 'connectedField', icon: self.componentIds.connectObjectIcon, type: 'icon' },
+                                                //             { view: 'button', value: self.labels.add_fields.stringField, fieldType: 'string', icon: self.componentIds.singleTextIcon, type: 'icon' },
+                                                //             { view: 'button', value: self.labels.add_fields.textField, fieldType: 'text', icon: self.componentIds.longTextIcon, type: 'icon' },
+                                                //             { view: 'button', value: self.labels.add_fields.numberField, fieldType: ['float', 'integer'], icon: self.componentIds.numberIcon, type: 'icon' },
+                                                //             { view: 'button', value: self.labels.add_fields.dateField, fieldType: ['datetime', 'date'], icon: self.componentIds.dateIcon, type: 'icon' },
+                                                //             { view: 'button', value: self.labels.add_fields.booleanField, fieldType: 'boolean', icon: self.componentIds.booleanIcon, type: 'icon' },
+                                                //             { view: 'button', value: self.labels.add_fields.listField, fieldType: 'list', icon: self.componentIds.selectListIcon, type: 'icon' },
+                                                //             { view: 'button', value: self.labels.add_fields.attachmentField, fieldType: 'attachment', icon: self.componentIds.attachmentIcon, type: 'icon' },
+                                                //         ]
+                                                //     }
+                                                // ],
                                                 on: {
                                                     onMenuItemClick: function (id) {
                                                         var base = this.getTopParentView(),
@@ -218,6 +231,7 @@ steal(
 
                                                             this.getTopParentView().selectedType = selectedMenuItem.value;
 
+                                                            // TODO : Move to the data field file
                                                             // Set object name to labels
                                                             if (viewName == self.componentIds.connectObjectView) {
                                                                 var currObject = self.data.objectList.filter(function (obj) {
@@ -232,202 +246,7 @@ steal(
                                                 }
                                             },
                                             { height: 10 },
-                                            {
-                                                cells: [
-                                                    {
-                                                        id: self.componentIds.chooseTypeView,
-                                                        rows: [
-                                                            { view: "label", label: self.labels.add_fields.chooseType }
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.connectObjectView,
-                                                        rows: [
-                                                            self.getFieldNameDefinition(),
-                                                            self.getLabelDefinition(),
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.connectObjectIcon).replace('{1}', self.labels.add_fields.connectToObject) },
-                                                            {
-                                                                view: "list",
-                                                                id: self.componentIds.connectObjectList,
-                                                                select: true,
-                                                                height: 140,
-                                                                template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
-                                                                on: {
-                                                                    onAfterSelect: function () {
-                                                                        var selectedObjLabel = this.getSelectedItem(false).label;
-                                                                        $$(self.componentIds.connectObjectLinkTo).setValue(selectedObjLabel);
-                                                                        $$(self.componentIds.connectObjectLinkTo2).setValue(selectedObjLabel);
-                                                                    }
-                                                                }
-                                                            },
-                                                            {
-                                                                view: 'button',
-                                                                id: self.componentIds.connectObjectCreateNew,
-                                                                value: self.labels.add_fields.connectToNewObject,
-                                                                click: function () {
-                                                                    if (this.getTopParentView().createNewObjectEvent)
-                                                                        this.getTopParentView().createNewObjectEvent();
-                                                                }
-                                                            },
-                                                            {
-                                                                view: 'layout',
-                                                                cols: [
-                                                                    {
-                                                                        id: self.componentIds.connectObjectLinkFrom,
-                                                                        view: 'label',
-                                                                        width: 110
-                                                                    },
-                                                                    {
-                                                                        id: self.componentIds.connectObjectLinkTypeTo,
-                                                                        view: "segmented",
-                                                                        value: "collection",
-                                                                        width: 165,
-                                                                        inputWidth: 160,
-                                                                        options: [
-                                                                            { id: "collection", value: "Has many" },
-                                                                            { id: "model", value: "Belong to" }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        id: self.componentIds.connectObjectLinkTo,
-                                                                        view: 'label',
-                                                                        label: '[Select object]',
-                                                                        width: 110
-                                                                    },
-                                                                ]
-                                                            },
-                                                            {
-                                                                view: 'layout',
-                                                                cols: [
-                                                                    {
-                                                                        id: self.componentIds.connectObjectLinkTo2,
-                                                                        view: 'label',
-                                                                        label: '[Select object]',
-                                                                        width: 110
-                                                                    },
-                                                                    {
-                                                                        id: self.componentIds.connectObjectLinkTypeFrom,
-                                                                        view: "segmented",
-                                                                        value: "model",
-                                                                        width: 165,
-                                                                        inputWidth: 160,
-                                                                        options: [
-                                                                            { id: "collection", value: "Has many" },
-                                                                            { id: "model", value: "Belong to" }
-                                                                        ]
-                                                                    },
-                                                                    {
-                                                                        id: self.componentIds.connectObjectLinkFrom2,
-                                                                        view: 'label',
-                                                                        width: 110
-                                                                    },
-                                                                ]
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.singleTextView,
-                                                        rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.singleTextIcon).replace('{1}', self.labels.add_fields.stringField) },
-                                                            self.getFieldNameDefinition(),
-                                                            self.getLabelDefinition(),
-                                                            { view: "text", id: self.componentIds.singleTextDefault, placeholder: self.labels.add_fields.defaultText },
-                                                            { view: "checkbox", id: self.componentIds.singleSupportMultilingual, labelRight: self.labels.add_fields.supportMultilingual, labelWidth: 0, value: true }
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.longTextView,
-                                                        rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.longTextIcon).replace('{1}', self.labels.add_fields.textField) },
-                                                            self.getFieldNameDefinition(),
-                                                            self.getLabelDefinition(),
-                                                            { view: "label", label: self.labels.add_fields.textDescription },
-                                                            { view: "checkbox", id: self.componentIds.longSupportMultilingual, labelRight: self.labels.add_fields.supportMultilingual, labelWidth: 0, value: true }
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.numberView,
-                                                        rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.numberIcon).replace('{1}', self.labels.add_fields.numberField) },
-                                                            self.getFieldNameDefinition(),
-                                                            self.getLabelDefinition(),
-                                                            {
-                                                                view: "combo", id: self.componentIds.numberFormat, value: self.labels.add_fields.numberFormat, label: self.labels.add_fields.format, labelWidth: 60, options: [
-                                                                    { format: 'numberFormat', value: self.labels.add_fields.numberFormat },
-                                                                    { format: 'priceFormat', value: self.labels.add_fields.priceFormat },
-                                                                ]
-                                                            },
-                                                            { view: "checkbox", id: self.componentIds.numberAllowDecimal, labelRight: self.labels.add_fields.allowDecimalNumbers, labelWidth: 0 },
-                                                            { view: "text", id: self.componentIds.numberDefault, placeholder: self.labels.add_fields.defaultNumber }
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.dateView,
-                                                        rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.dateIcon).replace('{1}', self.labels.add_fields.dateField) },
-                                                            self.getFieldNameDefinition(),
-                                                            self.getLabelDefinition(),
-                                                            { view: "label", label: self.labels.add_fields.pickDate },
-                                                            { view: "checkbox", id: self.componentIds.dateIncludeTime, labelRight: self.labels.add_fields.includeTime, labelWidth: 0 },
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.booleanView,
-                                                        rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.booleanIcon).replace('{1}', self.labels.add_fields.booleanField) },
-                                                            self.getFieldNameDefinition(),
-                                                            self.getLabelDefinition(),
-                                                            { view: "label", label: self.labels.add_fields.booleanDescription }
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.selectListView,
-                                                        rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.selectListIcon).replace('{1}', self.labels.add_fields.listField) },
-                                                            self.getFieldNameDefinition(),
-                                                            self.getLabelDefinition(),
-                                                            { view: "template", template: self.labels.add_fields.listDescription, autoheight: true, borderless: true },
-                                                            { view: "label", label: "<b>{0}</b>".replace('{0}', self.labels.add_fields.listOption) },
-                                                            {
-                                                                view: "editlist",
-                                                                id: self.componentIds.selectListOptions,
-                                                                template: "<div style='position: relative;'>#label#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
-                                                                autoheight: true,
-                                                                drag: true,
-                                                                editable: true,
-                                                                editor: "text",
-                                                                editValue: "label",
-                                                                onClick: {
-                                                                    "ab-new-field-remove": function (e, id, trg) {
-                                                                        // Store removed id to array
-                                                                        if (!id.startsWith('temp_')) {
-                                                                            if (!self.data.removedListIds) self.data.removedListIds = [];
-
-                                                                            self.data.removedListIds.push(id);
-                                                                        }
-
-                                                                        $$(self.componentIds.selectListOptions).remove(id);
-                                                                    }
-                                                                }
-                                                            },
-                                                            {
-                                                                view: "button", value: self.labels.add_fields.listAddNewOption, click: function () {
-                                                                    var temp_id = 'temp_' + webix.uid();
-                                                                    var itemId = $$(self.componentIds.selectListOptions).add({ id: temp_id, dataId: temp_id, label: '' }, $$(self.componentIds.selectListOptions).count());
-                                                                    $$(self.componentIds.selectListOptions).edit(itemId);
-                                                                }
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        id: self.componentIds.attachmentView,
-                                                        rows: [
-                                                            { view: "label", label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', self.componentIds.attachmentIcon).replace('{1}', self.labels.add_fields.attachmentField) },
-                                                            { view: "label", label: "Under construction..." }
-                                                        ]
-                                                    }
-                                                ]
-                                            },
+                                            { cells: editDefinitions },
                                             { height: 10 },
                                             {
                                                 cols: [
@@ -700,76 +519,77 @@ steal(
                                     var viewName = this.getViewName(data.type);
 
                                     // Populate data
-                                    switch (data.type) {
-                                        case 'connectedField':
-                                            this.selectedType = self.labels.add_fields.connectField;
-                                            var currObject = self.data.objectList.filter(function (obj) {
-                                                return obj.id == self.data.currObjectId;
-                                            })[0],
-                                                selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) {
-                                                    var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
-                                                    return obj.id == linkObjId;
-                                                })[0];
+                                    AD.classes.AppBuilder.DataFields.populateSettings(data);
+                                    // switch (data.type) {
+                                    //     case 'connectedField':
+                                    //         this.selectedType = self.labels.add_fields.connectField;
+                                    //         var currObject = self.data.objectList.filter(function (obj) {
+                                    //             return obj.id == self.data.currObjectId;
+                                    //         })[0],
+                                    //             selectedObject = $$(self.componentIds.connectObjectList).data.find(function (obj) {
+                                    //                 var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
+                                    //                 return obj.id == linkObjId;
+                                    //             })[0];
 
-                                            $$(self.componentIds.connectObjectList).disable();
-                                            $$(self.componentIds.connectObjectList).select(selectedObject.id);
-                                            $$(self.componentIds.connectObjectCreateNew).disable();
+                                    //         $$(self.componentIds.connectObjectList).disable();
+                                    //         $$(self.componentIds.connectObjectList).select(selectedObject.id);
+                                    //         $$(self.componentIds.connectObjectCreateNew).disable();
 
-                                            $$(self.componentIds.connectObjectLinkFrom).setValue(currObject.label);
-                                            $$(self.componentIds.connectObjectLinkFrom2).setValue(currObject.label);
+                                    //         $$(self.componentIds.connectObjectLinkFrom).setValue(currObject.label);
+                                    //         $$(self.componentIds.connectObjectLinkFrom2).setValue(currObject.label);
 
-                                            $$(self.componentIds.connectObjectLinkTypeTo).setValue(data.linkType);
-                                            $$(self.componentIds.connectObjectLinkTypeFrom).setValue(data.setting.linkViaType);
-                                            break;
-                                        case 'string':
-                                            this.selectedType = self.labels.add_fields.stringField;
-                                            $$(self.componentIds.singleTextDefault).setValue(data.default);
-                                            $$(self.componentIds.singleSupportMultilingual).setValue(data.supportMultilingual);
-                                            break;
-                                        case 'text':
-                                            this.selectedType = self.labels.add_fields.textField;
-                                            $$(self.componentIds.longSupportMultilingual).setValue(data.supportMultilingual);
-                                            break;
-                                        case 'float': // Number
-                                        case 'integer':
-                                            this.selectedType = self.labels.add_fields.numberField;
+                                    //         $$(self.componentIds.connectObjectLinkTypeTo).setValue(data.linkType);
+                                    //         $$(self.componentIds.connectObjectLinkTypeFrom).setValue(data.setting.linkViaType);
+                                    //         break;
+                                    //     case 'string':
+                                    //         this.selectedType = self.labels.add_fields.stringField;
+                                    //         $$(self.componentIds.singleTextDefault).setValue(data.default);
+                                    //         $$(self.componentIds.singleSupportMultilingual).setValue(data.supportMultilingual);
+                                    //         break;
+                                    //     case 'text':
+                                    //         this.selectedType = self.labels.add_fields.textField;
+                                    //         $$(self.componentIds.longSupportMultilingual).setValue(data.supportMultilingual);
+                                    //         break;
+                                    //     case 'float': // Number
+                                    //     case 'integer':
+                                    //         this.selectedType = self.labels.add_fields.numberField;
 
-                                            $$(self.componentIds.numberAllowDecimal).setValue(data.type == 'float');
-                                            $$(self.componentIds.numberAllowDecimal).disable();
+                                    //         $$(self.componentIds.numberAllowDecimal).setValue(data.type == 'float');
+                                    //         $$(self.componentIds.numberAllowDecimal).disable();
 
-                                            var selectedFormat = $$(self.componentIds.numberFormat).getList().find(function (format) {
-                                                return format.format == data.setting.format;
-                                            });
+                                    //         var selectedFormat = $$(self.componentIds.numberFormat).getList().find(function (format) {
+                                    //             return format.format == data.setting.format;
+                                    //         });
 
-                                            if (selectedFormat && selectedFormat.length > 0)
-                                                $$(self.componentIds.numberFormat).setValue(selectedFormat[0].value);
+                                    //         if (selectedFormat && selectedFormat.length > 0)
+                                    //             $$(self.componentIds.numberFormat).setValue(selectedFormat[0].value);
 
-                                            $$(self.componentIds.numberDefault).setValue(data.default);
-                                            break;
-                                        case 'datetime': // Date
-                                        case 'date':
-                                            this.selectedType = self.labels.add_fields.dateField;
+                                    //         $$(self.componentIds.numberDefault).setValue(data.default);
+                                    //         break;
+                                    //     case 'datetime': // Date
+                                    //     case 'date':
+                                    //         this.selectedType = self.labels.add_fields.dateField;
 
-                                            $$(self.componentIds.dateIncludeTime).setValue(data.type == 'datetime');
-                                            $$(self.componentIds.dateIncludeTime).disable();
-                                            break;
-                                        case 'boolean':
-                                            this.selectedType = self.labels.add_fields.booleanField;
-                                            break;
-                                        case 'list':
-                                            this.selectedType = self.labels.add_fields.listField;
-                                            var options = [];
-                                            data.setting.options.forEach(function (opt) {
-                                                options.push({
-                                                    dataId: opt.dataId,
-                                                    id: opt.id,
-                                                    label: opt.label
-                                                });
-                                            });
-                                            $$(self.componentIds.selectListOptions).parse(options);
-                                            $$(self.componentIds.selectListOptions).refresh();
-                                            break;
-                                    }
+                                    //         $$(self.componentIds.dateIncludeTime).setValue(data.type == 'datetime');
+                                    //         $$(self.componentIds.dateIncludeTime).disable();
+                                    //         break;
+                                    //     case 'boolean':
+                                    //         this.selectedType = self.labels.add_fields.booleanField;
+                                    //         break;
+                                    //     case 'list':
+                                    //         this.selectedType = self.labels.add_fields.listField;
+                                    //         var options = [];
+                                    //         data.setting.options.forEach(function (opt) {
+                                    //             options.push({
+                                    //                 dataId: opt.dataId,
+                                    //                 id: opt.id,
+                                    //                 label: opt.label
+                                    //             });
+                                    //         });
+                                    //         $$(self.componentIds.selectListOptions).parse(options);
+                                    //         $$(self.componentIds.selectListOptions).refresh();
+                                    //         break;
+                                    // }
 
                                     $$(viewName).show();
 
@@ -796,9 +616,10 @@ steal(
                                         return o.id != self.data.currObjectId;
                                     });
 
-                                    $$(self.componentIds.connectObjectList).clearAll();
-                                    $$(self.componentIds.connectObjectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
-                                    $$(self.componentIds.connectObjectList).refresh();
+                                    // TODO : Move to the data field file
+                                    // $$(self.componentIds.connectObjectList).clearAll();
+                                    // $$(self.componentIds.connectObjectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
+                                    // $$(self.componentIds.connectObjectList).refresh();
                                 },
 
                                 setCurrObjectId: function (objectId) {
@@ -814,23 +635,24 @@ steal(
                                     $$(self.componentIds.saveButton).refresh();
                                     $$(self.componentIds.chooseTypeView).show();
                                     $$(self.componentIds.chooseTypeMenu).show();
-                                    $$(self.componentIds.connectObjectList).unselectAll();
-                                    $$(self.componentIds.connectObjectList).enable();
-                                    $$(self.componentIds.connectObjectLinkFrom).setValue('');
-                                    $$(self.componentIds.connectObjectLinkFrom2).setValue('');
-                                    $$(self.componentIds.connectObjectLinkTypeTo).setValue('collection');
-                                    $$(self.componentIds.connectObjectLinkTypeFrom).setValue('model');
-                                    $$(self.componentIds.connectObjectLinkTo).setValue('[Select object]');
-                                    $$(self.componentIds.connectObjectLinkTo2).setValue('[Select object]');
-                                    $$(self.componentIds.connectObjectCreateNew).enable();
-                                    $$(self.componentIds.selectListOptions).editCancel();
-                                    $$(self.componentIds.selectListOptions).unselectAll();
-                                    $$(self.componentIds.selectListOptions).clearAll();
-                                    $$(self.componentIds.numberFormat).setValue(self.labels.add_fields.numberFormat);
-                                    $$(self.componentIds.numberAllowDecimal).setValue(false);
-                                    $$(self.componentIds.numberAllowDecimal).enable();
-                                    $$(self.componentIds.dateIncludeTime).setValue(false);
-                                    $$(self.componentIds.dateIncludeTime).enable();
+                                    // TODO : Move to the data field file
+                                    // $$(self.componentIds.connectObjectList).unselectAll();
+                                    // $$(self.componentIds.connectObjectList).enable();
+                                    // $$(self.componentIds.connectObjectLinkFrom).setValue('');
+                                    // $$(self.componentIds.connectObjectLinkFrom2).setValue('');
+                                    // $$(self.componentIds.connectObjectLinkTypeTo).setValue('collection');
+                                    // $$(self.componentIds.connectObjectLinkTypeFrom).setValue('model');
+                                    // $$(self.componentIds.connectObjectLinkTo).setValue('[Select object]');
+                                    // $$(self.componentIds.connectObjectLinkTo2).setValue('[Select object]');
+                                    // $$(self.componentIds.connectObjectCreateNew).enable();
+                                    // $$(self.componentIds.selectListOptions).editCancel();
+                                    // $$(self.componentIds.selectListOptions).unselectAll();
+                                    // $$(self.componentIds.selectListOptions).clearAll();
+                                    // $$(self.componentIds.numberFormat).setValue(self.labels.add_fields.numberFormat);
+                                    // $$(self.componentIds.numberAllowDecimal).setValue(false);
+                                    // $$(self.componentIds.numberAllowDecimal).enable();
+                                    // $$(self.componentIds.dateIncludeTime).setValue(false);
+                                    // $$(self.componentIds.dateIncludeTime).enable();
                                     $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
                                         $(txtName).webix_text().setValue('');
                                     });

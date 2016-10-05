@@ -5,6 +5,8 @@ steal(
 
 	'opstools/BuildApp/controllers/webix_custom_components/LoadingScreen.js',
 
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
