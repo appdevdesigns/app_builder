@@ -606,7 +606,7 @@ steal(
 										if (modelData) {
 											selectedValues = modelData[cView.config.name].attr ? modelData[cView.config.name].attr() : modelData[cView.config.name];
 
-											self.controllers.SelectivityHelper.setData(nodeItem, selectedValues.map(function (d) {
+											self.controllers.SelectivityHelper.setData(nodeItem, $.map(selectedValues, function (d) {
 												return {
 													id: d.id,
 													text: d.dataLabel

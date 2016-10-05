@@ -35,7 +35,7 @@ steal(
 						},
 
 						defineBaseModel: function (objectName, describe, multilingualFields, associations) {
-							if (!objectName || !describe || !multilingualFields) return;
+							if (!objectName || !describe || !multilingualFields) throw new Error('Invalid parameters');
 
 							var formatAppName = this.data.appName.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
@@ -153,7 +153,13 @@ steal(
 										}
 
 										// Define base model
-										var base = self.defineBaseModel(objectName, describe, multilingualFields, associations);
+										try {
+											self.defineBaseModel(objectName, describe, multilingualFields, associations);
+										}
+										catch (err) {
+											q.reject(err);
+											return;
+										}
 
 										// Init object model
 										AD.Model.extend(modelName, {

@@ -118,11 +118,9 @@ steal(
 						multilingualFields = null,
 						associations = null;
 
-					// Action
 					try {
+						// Action
 						result = modelCreator.defineBaseModel('New Object', describe, multilingualFields, associations);
-						// Assert
-						assert.fail(result, undefined, 'should not return');
 					}
 					catch (err) {
 						// Assert

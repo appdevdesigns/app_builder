@@ -6,6 +6,7 @@ steal(
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
+	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	function () {
@@ -79,12 +80,14 @@ steal(
 
 							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
 								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper');
+								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
+								DataCollectionHelper = AD.Control.get('opstools.BuildApp.DataCollectionHelper');
 
 							this.controllers = {
 								ActiveList: new ActiveList(),
 								ModelCreator: new ModelCreator(),
-								DataHelper: new DataHelper()
+								DataHelper: new DataHelper(),
+								DataCollectionHelper: new DataCollectionHelper(),
 							};
 						},
 
@@ -237,7 +240,7 @@ steal(
 																	if (component.setPage)
 																		component.setPage(self.data.page);
 
-																	component.populateSettings(item, self.getDataCollection.bind(self));
+																	component.populateSettings(item, self.controllers.DataCollectionHelper.getDataCollection.bind(self.controllers.DataCollectionHelper));
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.name + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -478,6 +481,7 @@ steal(
 
 							self.controllers.ModelCreator.setApp(app);
 							self.controllers.DataHelper.setApp(app);
+							self.controllers.DataCollectionHelper.setApp(app);
 						},
 
 						setPage: function (page) {
@@ -536,6 +540,7 @@ steal(
 
 						setObjectList: function (objectList) {
 							this.controllers.DataHelper.setObjectList(objectList);
+							this.controllers.DataCollectionHelper.setObjectList(objectList);
 						},
 
 						setComponents: function (components) {
@@ -612,7 +617,7 @@ steal(
 									// Get data collection
 									function (next) {
 										if (settings.object) {
-											self.getDataCollection(settings.object)
+											self.controllers.DataCollectionHelper.getDataCollection(settings.object)
 												.fail(next)
 												.then(function (result) {
 													dataCollection = result;
@@ -622,10 +627,10 @@ steal(
 										else
 											next();
 									},
-									// Get data collection
+									// Get data collection of connected data
 									function (next) {
 										if (settings.linkedTo) {
-											self.getDataCollection(settings.linkedTo)
+											self.controllers.DataCollectionHelper.getDataCollection(settings.linkedTo)
 												.fail(next)
 												.then(function (result) {
 													linkedDataCollection = result;
@@ -650,95 +655,6 @@ steal(
 										q.resolve();
 								});
 
-							}
-
-							return q;
-						},
-
-						getDataCollection: function (objectId) {
-							var self = this,
-								q = $.Deferred();
-
-							if (!objectId) {
-								q.reject("Object id is required.");
-								return;
-							}
-
-							if (!self.data.dataCollections) self.data.dataCollections = {};
-
-							if (!self.data.dataCollections[objectId]) {
-								async.waterfall([
-									// Get object info
-									function (next) {
-										self.Model.ABObject.findOne({ id: objectId })
-											.fail(function (err) { next(err); })
-											.then(function (objInfo) {
-												next(null, objInfo);
-											});
-									},
-									// Get object model
-									function (objInfo, next) {
-										self.controllers.ModelCreator.getModel(objInfo.attr('name'))
-											.fail(function (err) { next(err); })
-											.then(function (objectModel) {
-												next(null, objInfo, objectModel);
-											});
-									},
-									// Find data
-									function (objInfo, objModel, next) {
-										// Get link columns
-										var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
-											linkColObjs = linkCols.map(function (col) {
-												return {
-													name: col.name,
-													linkObject: col.linkObject
-												};
-											});
-
-										// Get date & datetime columns
-										var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
-
-										objModel.findAll({})
-											.fail(function (err) { next(err); })
-											.then(function (data) {
-
-												// Populate labels & Convert string to Date object
-												self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
-													.then(function (result) {
-														if (!self.data.dataCollections[objectId])
-															self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
-
-														next(null, self.data.dataCollections[objectId], linkColObjs, dateCols);
-													});
-											});
-									},
-									// Listen change data event to update data label
-									function (dataCollection, linkColObjs, dateCols, next) {
-										linkColObjs.forEach(function (linkCol) {
-											dataCollection.AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-												var attName = attr.indexOf('.') > -1 ? attr.split('.')[1] : attr, // 0.attrName
-													hasUpdateLink = linkColObjs.filter(function (col) { return col.name == attName; }).length > 0;
-
-												if (hasUpdateLink && newVal) {
-													self.controllers.DataHelper.normalizeData(ev.target, linkColObjs, dateCols)
-														.then(function (result) { });
-												}
-											});
-										});
-
-										next();
-									}
-								], function (err) {
-									if (err) {
-										q.reject(err);
-										return;
-									}
-
-									q.resolve(self.data.dataCollections[objectId]);
-								});
-							}
-							else {
-								q.resolve(self.data.dataCollections[objectId]);
 							}
 
 							return q;

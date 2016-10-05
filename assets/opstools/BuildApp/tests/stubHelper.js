@@ -21,6 +21,9 @@ var abStubHelper = (function ($) {
 							next();
 						});
 				}
+				else {
+					next();
+				}
 			},
 			// Filter data
 			function (next) {
@@ -145,13 +148,49 @@ var abStubHelper = (function ($) {
 	return {
 		convertToStub: function (model, objectName) {
 			sinon.stub(model, 'findAll', function (cond) { return getFixtureData(objectName, cond); });
-			sinon.stub(model, 'findOne', function (cond) { return getFixtureData(objectName, cond)[0] || null; });
+			sinon.stub(model, 'findOne', function (cond) {
+				var q = $.Deferred();
+
+				getFixtureData(objectName, cond).fail(q.reject)
+					.then(function (result) {
+						if (result && result.length > 0)
+							q.resolve(result[0]);
+						else
+							q.resolve(null);
+					});
+
+				return q;
+			});
 			sinon.stub(model, 'create', function (obj) { return saveData(objectName, obj); });
 			sinon.stub(model, 'update', function (id, obj) {
 				obj.id = id;
 				return saveData(objectName, obj);
 			});
 			sinon.stub(model, 'destroy', function (id) { return removeData(objectName, id); });
+
+			if (model.getDataLabel) {
+				sinon.stub(model, 'getDataLabel', function (data) {
+					return '';
+					// 	if (!this.columns || this.columns.length < 1) return '';
+
+					// 	var labelFormat;
+
+					// 	if (this.labelFormat) {
+					// 		labelFormat = this.labelFormat;
+					// 	} else { // Default label format
+					// 		var textCols = this.columns.filter(function (col) { return col.type === 'string' || col.type === 'text' }),
+					// 			defaultCol = textCols.length > 0 ? textCols[0] : this.columns[0];
+
+					// 		labelFormat = '{' + defaultCol.name + '}';
+					// 	}
+
+					// 	for (var c in data) {
+					// 		labelFormat = labelFormat.replace(new RegExp('{' + c + '}', 'g'), data[c]);
+					// 	}
+
+					// 	return labelFormat;
+				});
+			}
 		},
 
 		restore: function (model) {
@@ -169,6 +208,9 @@ var abStubHelper = (function ($) {
 
 			if (model.destroy.restore)
 				model.destroy.restore();
+
+			if (model.getDataLabel && model.getDataLabel.restore)
+				model.getDataLabel.restore();
 		},
 
 		clearLocalData: function (objectName) {

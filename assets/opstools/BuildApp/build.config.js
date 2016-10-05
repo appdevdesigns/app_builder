@@ -9,7 +9,9 @@ module.exports = {
 		"opstools/BuildApp": {
 			"deps": [
 				"async",
-				"js/selectivity/selectivity-full.min"
+				"can",
+				"js/selectivity/selectivity-full.min",
+				'OpsPortal/classes/OpsWebixDataCollection'
 			]
 		},
 		"js/selectivity/selectivity-full.min": {

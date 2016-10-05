@@ -25,7 +25,8 @@ System.import('can').then(function () {
             // Load tests
             function (next) {
                 steal.import(
-                    "opstools/BuildApp/tests/controllers/utils/test_ModelCreator"
+                    "opstools/BuildApp/tests/controllers/utils/test_ModelCreator",
+                    "opstools/BuildApp/tests/controllers/utils/test_DataCollectionHelper"
                 ).then(function () { next(); });
             },
 
