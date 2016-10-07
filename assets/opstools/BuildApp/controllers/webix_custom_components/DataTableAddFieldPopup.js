@@ -24,9 +24,6 @@ steal(
                                 chooseTypeMenu: 'ab-new-type-menu',
                                 chooseTypeView: 'ab-new-none',
 
-                                attachmentIcon: 'file',
-                                attachmentView: 'ab-new-attachment',
-
                                 headerNameText: 'ab-new-field-name',
                                 labelNameText: 'ab-new-label-name',
 
@@ -54,25 +51,11 @@ steal(
 
                             self.labels.add_fields.label = AD.lang.label.getLabel('ab.add_fields.label') || 'Label';
 
-                            self.labels.add_fields.listField = AD.lang.label.getLabel('ab.add_fields.listField') || "Select list";
-                            self.labels.add_fields.attachmentField = AD.lang.label.getLabel('ab.add_fields.attachmentField') || "Attachment";
-
-                            self.labels.add_fields.defaultText = AD.lang.label.getLabel('ab.add_fields.defaultText') || 'Default text';
-                            self.labels.add_fields.defaultNumber = AD.lang.label.getLabel('ab.add_fields.defaultNumber') || 'Default number';
-
-                            self.labels.add_fields.supportMultilingual = AD.lang.label.getLabel('ab.add_fields.supportMultilingual') || "Support multilingual";
-
                             self.labels.add_fields.connectToObject = AD.lang.label.getLabel('ab.add_fields.connectToObject') || "Connect to Object";
                             self.labels.add_fields.connectToNewObject = AD.lang.label.getLabel('ab.add_fields.connectToNewObject') || "Connect to new Object";
                             self.labels.add_fields.allowConnectMultipleValue = AD.lang.label.getLabel('ab.add_fields.allowConnectMultipleValue') || "Allow connecting to multiple records";
                             self.labels.add_fields.requireConnectedObjectTitle = AD.lang.label.getLabel('ab.add_fields.requireConnectedObjectTitle') || "Object required";
                             self.labels.add_fields.requireConnectedObjectDescription = AD.lang.label.getLabel('ab.add_fields.requireConnectedObjectDescription') || "Please select object to connect.";
-
-                            self.labels.add_fields.listDescription = AD.lang.label.getLabel('ab.add_fields.listDescription') || "Single select allows you to select a single predefined options below from a dropdown.";
-                            self.labels.add_fields.listOption = AD.lang.label.getLabel('ab.add_fields.listOption') || "Options";
-                            self.labels.add_fields.listAddNewOption = AD.lang.label.getLabel('ab.add_fields.listAddNewOption') || "Add new option";
-                            self.labels.add_fields.requireListOptionTitle = AD.lang.label.getLabel('ab.add_fields.requireListOptionTitle') || "Option required";
-                            self.labels.add_fields.requireListOptionDescription = AD.lang.label.getLabel('ab.add_fields.requireListOptionDescription') || "Enter at least one option.";
 
                             self.labels.add_fields.addNewField = AD.lang.label.getLabel('ab.add_fields.addNewField') || "Add Column";
 
@@ -121,14 +104,6 @@ steal(
                                                     value: self.labels.add_fields.chooseType,
                                                     submenu: AD.classes.AppBuilder.DataFields.getFieldMenuList()
                                                 }],
-                                                // data: [
-                                                //     {
-                                                //         value: self.labels.add_fields.chooseType,
-                                                //         submenu: [
-                                                //             { view: 'button', value: self.labels.add_fields.attachmentField, fieldType: 'attachment', icon: self.componentIds.attachmentIcon, type: 'icon' },
-                                                //         ]
-                                                //     }
-                                                // ],
                                                 on: {
                                                     onMenuItemClick: function (id) {
                                                         var base = this.getTopParentView(),
@@ -170,14 +145,14 @@ steal(
 
                                                             // TODO : Move to the data field file
                                                             // Set object name to labels
-                                                            if (viewName == self.componentIds.connectObjectView) {
-                                                                var currObject = self.data.objectList.filter(function (obj) {
-                                                                    return obj.id == self.data.currObjectId;
-                                                                })[0];
+                                                            // if (viewName == self.componentIds.connectObjectView) {
+                                                            //     var currObject = self.data.objectList.filter(function (obj) {
+                                                            //         return obj.id == self.data.currObjectId;
+                                                            //     })[0];
 
-                                                                // $$(self.componentIds.connectObjectLinkFrom).setValue(currObject.label);
-                                                                // $$(self.componentIds.connectObjectLinkFrom2).setValue(currObject.label);
-                                                            }
+                                                            // $$(self.componentIds.connectObjectLinkFrom).setValue(currObject.label);
+                                                            // $$(self.componentIds.connectObjectLinkFrom2).setValue(currObject.label);
+                                                            // }
                                                         }
                                                     }
                                                 }
@@ -231,15 +206,18 @@ steal(
                                                             //         linkTypeFrom = $$(self.componentIds.connectObjectLinkTypeFrom).getValue();
                                                             //         linkObject = $$(self.componentIds.connectObjectList).getSelectedId(false);
                                                             //         break;
-                                                            //     case self.labels.add_fields.attachmentField:
-                                                            //         fieldName = base.getFieldName(self.componentIds.attachmentView);
-                                                            //         fieldLabel = base.getFieldLabel(self.componentIds.attachmentView);
-                                                            //         fieldSettings.icon = self.componentIds.attachmentIcon;
-                                                            //         alert('Under construction !!');
-                                                            //         return; // TODO;
                                                             // }
 
                                                             var fieldInfo = AD.classes.AppBuilder.DataFields.getSettings(base.fieldName);
+
+                                                            if (!fieldInfo) {
+                                                                webix.alert({
+                                                                    title: 'Field info error',
+                                                                    text: 'System could not get this field information ',
+                                                                    ok: self.labels.common.ok
+                                                                });
+                                                                return;
+                                                            }
 
                                                             // Validate format field name
                                                             if (!/^[a-zA-Z0-9\s]+$/.test(fieldInfo.name)) {
@@ -281,7 +259,7 @@ steal(
 
                                                             // Call callback function
                                                             if (base.saveFieldCallback && base.fieldName) {
-                                                                base.saveFieldCallback(fieldInfo, self.data.removedListIds)
+                                                                base.saveFieldCallback(fieldInfo)
                                                                     .then(function () {
                                                                         base.resetState();
                                                                         base.hide();
@@ -334,6 +312,8 @@ steal(
                                 },
 
                                 editMode: function (data) {
+                                    this.fieldName = data.fieldName;
+
                                     $$(self.componentIds.chooseTypeMenu).hide();
 
                                     $$(self.componentIds.saveButton).define('label', self.labels.common.save);
@@ -343,8 +323,6 @@ steal(
 
                                     // Get view name
                                     var viewName = AD.classes.AppBuilder.DataFields.getEditViewId(data.fieldName);
-
-                                    this.selectedType = data.type;
 
                                     // Populate data
                                     AD.classes.AppBuilder.DataFields.populateSettings(data);
@@ -369,12 +347,11 @@ steal(
                                 setObjectList: function (objectList) {
                                     self.data.objectList = objectList;
 
-                                    // Set enable connect object list to the add new column popup
-                                    var enableConnectObjects = objectList.filter(function (o) {
-                                        return o.id != self.data.currObjectId;
-                                    });
-
                                     // TODO : Move to the data field file
+                                    // // Set enable connect object list to the add new column popup
+                                    // var enableConnectObjects = objectList.filter(function (o) {
+                                    //     return o.id != self.data.currObjectId;
+                                    // });
                                     // $$(self.componentIds.connectObjectList).clearAll();
                                     // $$(self.componentIds.connectObjectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
                                     // $$(self.componentIds.connectObjectList).refresh();
@@ -386,8 +363,6 @@ steal(
 
                                 resetState: function () {
                                     self.data.editFieldId = null;
-
-                                    self.data.removedListIds = [];
 
                                     $$(self.componentIds.saveButton).define('label', self.labels.add_fields.addNewField);
                                     $$(self.componentIds.saveButton).refresh();

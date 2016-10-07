@@ -65,9 +65,11 @@ steal(function () {
 				editValue: "label",
 				onClick: {
 					"ab-new-field-remove": function (e, id, trg) {
+						var dataId = $$(componentIds.listOptions).getItem(id).dataId;
+
 						// Store removed id to array
-						if (!id.startsWith('temp_'))
-							removedOptionIds.push(id);
+						if (typeof dataId === 'number')
+							removedOptionIds.push(dataId);
 
 						$$(componentIds.listOptions).remove(id);
 					}
@@ -105,14 +107,20 @@ steal(function () {
 	// For save field
 	listDataField.getSettings = function () {
 		var fieldInfo = {
+			name: $$(componentIds.headerName).getValue(),
+			label: $$(componentIds.labelName).getValue(),
 			options: [],
+			fieldName: listDataField.name,
+			type: 'string',
 			setting: {
+				icon: listDataField.icon,
+				filter_type: 'list',
+				editor: 'richselect',
 				filter_options: []
 			}
 		};
 
 		$$(componentIds.listOptions).editStop(); // Close edit mode
-
 		$$(componentIds.listOptions).data.each(function (opt) {
 			var optId = typeof opt.dataId == 'string' && opt.dataId.startsWith('temp') ? null : opt.dataId;
 
@@ -127,21 +135,16 @@ steal(function () {
 
 		if (fieldInfo.options.length < 1) {
 			webix.alert({
-				title: self.labels.add_fields.requireListOptionTitle,
-				ok: self.labels.common.ok,
-				text: self.labels.add_fields.requireListOptionDescription
+				title: "Option required",
+				text: "Enter at least one option.",
+				ok: "Ok"
 			})
 
 			return null;
 		}
 
-		fieldInfo.name = $$(componentIds.headerName).getValue();
-		fieldInfo.label = $$(componentIds.labelName).getValue();
-		fieldInfo.fieldName = listDataField.name;
-		fieldInfo.type = 'string';
-		fieldInfo.setting.icon = listDataField.icon;
-		fieldInfo.setting.filter_type = 'list';
-		fieldInfo.setting.editor = 'richselect';
+		if (removedOptionIds && removedOptionIds.length > 0)
+			fieldInfo.removedOptionIds = removedOptionIds;
 
 		return fieldInfo;
 	};

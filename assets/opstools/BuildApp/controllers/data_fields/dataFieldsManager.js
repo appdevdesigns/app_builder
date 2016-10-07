@@ -6,6 +6,7 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/date.js',
 	'opstools/BuildApp/controllers/data_fields/boolean.js',
 	'opstools/BuildApp/controllers/data_fields/list.js',
+	'opstools/BuildApp/controllers/data_fields/attachment.js',
 	function () {
 		// Convert import data fields to array
 		var fields = $.map(arguments, function (dataField, index) {
@@ -53,7 +54,7 @@ steal(
 			},
 
 			populateSettings: function (data) {
-				var field = getField(data.name);
+				var field = getField(data.fieldName);
 
 				if (field != null) {
 					field.populateSettings(data);

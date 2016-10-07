@@ -15,7 +15,7 @@ steal(function () {
 
 	// General settings
 	var connectObjectField = {
-		name: 'connect object',
+		name: 'connectObject',
 		type: 'connectObject',
 		icon: 'external-link',
 		menuName: 'Connect to another record'

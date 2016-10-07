@@ -884,7 +884,7 @@ steal(
 									$$(self.webixUiId.addNewRowButton).show();
 
 									// Register add new column callback
-									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo, removedListId) {
+									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo) {
 
 										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
@@ -915,7 +915,7 @@ steal(
 										}
 
 										// Get deferred when save complete
-										var refreshDeferred = self.refreshColumnsDeferred(columnInfo, removedListId),
+										var refreshDeferred = self.refreshColumnsDeferred(columnInfo),
 											objectName = self.data.object.attr('name');
 
 										if (columnInfo.id && !columnInfo.id.toString().startsWith('temp')) { // Update
@@ -1215,7 +1215,7 @@ steal(
 							return q;
 						},
 
-						refreshColumnsDeferred: function (columnInfo, removedListIds) {
+						refreshColumnsDeferred: function (columnInfo) {
 							var self = this,
 								q = $.Deferred();
 
@@ -1253,10 +1253,10 @@ steal(
 										},
 										// Delete options list data
 										function (cb) {
-											if (removedListIds && removedListIds.length > 0) {
+											if (columnInfo.removedOptionIds && columnInfo.removedOptionIds.length > 0) {
 												var deleteListEvents = [];
 
-												removedListIds.forEach(function (id) {
+												columnInfo.removedOptionIds.forEach(function (id) {
 													deleteListEvents.push(function (next) {
 														self.Model.ABList.destroy(id)
 															.fail(function (err) { next(err); })
@@ -1264,7 +1264,15 @@ steal(
 													});
 												});
 
-												AD.util.async.parallel(deleteListEvents, cb);
+												AD.util.async.parallel(deleteListEvents, function (err) {
+													if (err) {
+														cb(err);
+													}
+													else {
+														delete columnInfo.removedOptionIds;
+														cb();
+													}
+												});
 											}
 											else {
 												cb();
