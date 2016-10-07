@@ -1,4 +1,3 @@
-
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
@@ -233,6 +232,7 @@ steal(
 										id: self.webixUiId.objectDatatable,
 										resizeColumn: true,
 										resizeRow: true,
+										prerender: false,
 										editable: true,
 										editaction: "custom",
 										select: "cell",
@@ -892,6 +892,7 @@ steal(
 											object: self.data.objectId,
 											name: columnInfo.name,
 											label: columnInfo.label,
+											fieldName: columnInfo.fieldName,
 											type: columnInfo.type,
 											setting: columnInfo.setting,
 											weight: columnInfo.weight
@@ -900,8 +901,10 @@ steal(
 										if (columnInfo.supportMultilingual != null)
 											newColumn.supportMultilingual = columnInfo.supportMultilingual ? true : false;
 
-										if (columnInfo.setting.value)
-											newColumn.default = columnInfo.setting.value;
+										if (columnInfo.default)
+											newColumn.default = columnInfo.default;
+										else
+											delete newColumn.default;
 
 										// Link column
 										if (columnInfo.linkTypeTo && columnInfo.linkTypeFrom && columnInfo.linkObject) {
@@ -1233,8 +1236,8 @@ steal(
 										list_options = [];
 
 									AD.util.async.series([
+										// Find key of option list
 										function (cb) {
-											// Find key of option list
 											if (columnInfo.options && columnInfo.options.length > 0) {
 												self.Model.ABObject.findOne({ id: self.data.objectId })
 													.fail(function (err) { cb(err); })
@@ -1248,8 +1251,8 @@ steal(
 												cb();
 											}
 										},
+										// Delete options list data
 										function (cb) {
-											// Delete options list data
 											if (removedListIds && removedListIds.length > 0) {
 												var deleteListEvents = [];
 
@@ -1267,8 +1270,8 @@ steal(
 												cb();
 											}
 										},
+										// Popuplate options list data
 										function (cb) {
-											// Popuplate options list data
 											if (columnInfo.options && columnInfo.options.length > 0) {
 												var createListEvents = [];
 
@@ -1438,20 +1441,20 @@ steal(
 						attachPopupEvents: function () {
 							var self = this;
 
-							$$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (number) {
-								$$(self.webixUiId.visibleButton).define('badge', number);
+							$$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (num) {
+								$$(self.webixUiId.visibleButton).define('badge', num);
 								$$(self.webixUiId.visibleButton).refresh();
 							});
-							$$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (number) {
-								$$(self.webixUiId.filterButton).define('badge', number);
+							$$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (num) {
+								$$(self.webixUiId.filterButton).define('badge', num);
 								$$(self.webixUiId.filterButton).refresh();
 							});
-							$$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (number) {
-								$$(self.webixUiId.sortButton).define('badge', number);
+							$$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (num) {
+								$$(self.webixUiId.sortButton).define('badge', num);
 								$$(self.webixUiId.sortButton).refresh();
 							});
-							$$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (number) {
-								$$(self.webixUiId.frozenButton).define('badge', number);
+							$$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
+								$$(self.webixUiId.frozenButton).define('badge', num);
 								$$(self.webixUiId.frozenButton).refresh();
 							});
 						},

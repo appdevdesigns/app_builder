@@ -45,6 +45,11 @@ module.exports = {
             required: true
         },
 
+        fieldName: {
+            type: 'string',
+            required: true
+        },
+
         type: {
             type: 'string',
             required: true

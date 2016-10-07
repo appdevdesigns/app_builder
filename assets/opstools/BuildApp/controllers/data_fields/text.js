@@ -1,27 +1,26 @@
 steal(function () {
 	var componentIds = {
-		editView: 'ab-new-singleText',
-		headerName: 'ab-new-singleText-header',
-		labelName: 'ab-new-singleText-label',
-		textDefault: 'ab-new-singleText-default',
-		supportMultilingual: 'ab-new-singleText-support-multilingual',
+		editView: 'ab-new-longText',
+		headerName: 'ab-new-longText-header',
+		labelName: 'ab-new-longText-label',
+		supportMultilingual: 'ab-new-longText-support-multilingual',
 	};
 
 	// General settings
-	var stringDataField = {
-		name: 'string',
-		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-		icon: 'font',
-		menuName: 'Single line text'
+	var textDataField = {
+		name: 'text',
+		type: 'text', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+		icon: 'align-right',
+		menuName: 'Long text'
 	};
 
 	// Edit definition
-	stringDataField.editDefinition = {
+	textDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
 			{
 				view: "label",
-				label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', stringDataField.icon).replace('{1}', stringDataField.menuName)
+				label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', textDataField.icon).replace('{1}', textDataField.menuName)
 			},
 			{
 				view: "text",
@@ -46,9 +45,8 @@ steal(function () {
 				css: 'ab-new-label-name'
 			},
 			{
-				view: "text",
-				id: componentIds.textDefault,
-				placeholder: 'Default text'
+				view: "label",
+				label: 'A long text field that can span multiple lines.'
 			},
 			{
 				view: "checkbox",
@@ -61,38 +59,35 @@ steal(function () {
 	};
 
 	// Populate settings (when Edit field)
-	stringDataField.populateSettings = function (data) {
+	textDataField.populateSettings = function (data) {
 		$$(componentIds.headerName).setValue(data.name.replace(/_/g, ' '));
 		$$(componentIds.labelName).setValue(data.label);
-		$$(componentIds.textDefault).setValue(data.default);
 		$$(componentIds.supportMultilingual).setValue(data.supportMultilingual);
 	};
 
 	// For save field
-	stringDataField.getSettings = function () {
+	textDataField.getSettings = function () {
 		return {
 			name: $$(componentIds.headerName).getValue(),
 			label: $$(componentIds.labelName).getValue(),
-			default: $$(componentIds.textDefault).getValue(), // Default value
 			supportMultilingual: $$(componentIds.supportMultilingual).getValue(),
-			fieldName: stringDataField.name,
-			type: stringDataField.type,
+			fieldName: textDataField.name,
+			type: textDataField.type,
 			setting: {
-				icon: stringDataField.icon,
-				editor: 'text', // http://docs.webix.com/desktop__editing.html
+				icon: textDataField.icon,
+				editor: 'popup', // http://docs.webix.com/desktop__editing.html
 				filter_type: 'text' // DataTableFilterPopup - filter type
 			}
 		};
 	};
 
 	// Reset state
-	stringDataField.resetState = function () {
+	textDataField.resetState = function () {
 		$$(componentIds.headerName).setValue('');
 		$$(componentIds.headerName).enable();
 		$$(componentIds.labelName).setValue('');
-		$$(componentIds.textDefault).setValue('');
 		$$(componentIds.supportMultilingual).setValue(1);
-	};
+	}
 
-	return stringDataField;
+	return textDataField;
 });

@@ -87,13 +87,13 @@ steal(
 									}
 								},
 
-								registerHeaderClick: function(headerClickHandler) {
+								registerHeaderClick: function (headerClickHandler) {
 									self.data.headerClickHandler = headerClickHandler;
 								}
 							}, webix.ui.popup);
 						},
 
-						setHeaderId: function(headerId) {
+						setHeaderId: function (headerId) {
 							this.data.headerId = headerId;
 						}
 
