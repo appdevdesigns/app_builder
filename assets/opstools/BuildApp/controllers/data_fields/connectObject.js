@@ -160,11 +160,11 @@ steal(function () {
 		var linkObject = $$(componentIds.objectList).getSelectedItem();
 		if (!linkObject) {
 			webix.alert({
-				title: self.labels.add_fields.requireConnectedObjectTitle,
-				ok: self.labels.common.ok,
-				text: self.labels.add_fields.requireConnectedObjectDescription
+				title:  "Object required",
+				text: "Please select object to connect.",
+				ok: "Ok"
 			})
-			return false;
+			return null;
 		}
 
 		return {

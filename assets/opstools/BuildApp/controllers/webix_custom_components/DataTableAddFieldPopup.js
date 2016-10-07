@@ -9,7 +9,6 @@ steal(
                     // AD.Control.extend('[application].[controller]', [{ static },] {instance} );
                     AD.Control.extend('opstools.BuildApp.DataTableAddFieldPopup', {
 
-
                         init: function (element, options) {
                             var self = this;
                             options = AD.defaults({
@@ -50,12 +49,6 @@ steal(
                             self.labels.add_fields.chooseType = AD.lang.label.getLabel('ab.add_fields.chooseType') || "Choose field type...";
 
                             self.labels.add_fields.label = AD.lang.label.getLabel('ab.add_fields.label') || 'Label';
-
-                            self.labels.add_fields.connectToObject = AD.lang.label.getLabel('ab.add_fields.connectToObject') || "Connect to Object";
-                            self.labels.add_fields.connectToNewObject = AD.lang.label.getLabel('ab.add_fields.connectToNewObject') || "Connect to new Object";
-                            self.labels.add_fields.allowConnectMultipleValue = AD.lang.label.getLabel('ab.add_fields.allowConnectMultipleValue') || "Allow connecting to multiple records";
-                            self.labels.add_fields.requireConnectedObjectTitle = AD.lang.label.getLabel('ab.add_fields.requireConnectedObjectTitle') || "Object required";
-                            self.labels.add_fields.requireConnectedObjectDescription = AD.lang.label.getLabel('ab.add_fields.requireConnectedObjectDescription') || "Please select object to connect.";
 
                             self.labels.add_fields.addNewField = AD.lang.label.getLabel('ab.add_fields.addNewField') || "Add Column";
 
@@ -165,50 +158,13 @@ steal(
                                                     {
                                                         view: "button", id: self.componentIds.saveButton, label: self.labels.add_fields.addNewField, type: "form", width: 120, click: function () {
                                                             var base = this.getTopParentView(),
-                                                                dataTable = base.dataTable;
+                                                                dataTable = base.dataTable,
+                                                                fieldInfo = AD.classes.AppBuilder.DataFields.getSettings(base.fieldName);
 
                                                             if (!dataTable) {
                                                                 webix.message({ type: "error", text: self.labels.add_fields.registerTableWarning });
                                                                 return;
                                                             }
-
-                                                            // var fieldName = '',
-                                                            //     fieldLabel = '',
-                                                            //     fieldType = '',
-                                                            //     linkTypeTo = null,
-                                                            //     linkTypeFrom = null,
-                                                            //     linkObject = null,
-                                                            //     options = [],
-                                                            //     supportMultilingual = null,
-                                                            //     fieldSettings = {};
-
-                                                            // switch (base.selectedType) {
-                                                            //     case self.labels.add_fields.connectField:
-                                                            //         var linkObject = $$(self.componentIds.connectObjectList).getSelectedItem();
-                                                            //         if (!linkObject) {
-                                                            //             webix.alert({
-                                                            //                 title: self.labels.add_fields.requireConnectedObjectTitle,
-                                                            //                 ok: self.labels.common.ok,
-                                                            //                 text: self.labels.add_fields.requireConnectedObjectDescription
-                                                            //             })
-                                                            //             return false;
-                                                            //         }
-
-                                                            //         fieldName = base.getFieldName(self.componentIds.connectObjectView);
-                                                            //         fieldLabel = base.getFieldLabel(self.componentIds.connectObjectView);
-                                                            //         fieldType = 'connectObject';
-                                                            //         fieldSettings.icon = self.componentIds.connectObjectIcon;
-                                                            //         fieldSettings.editor = 'selectivity';
-                                                            //         fieldSettings.template = '<div class="connect-data-values"></div>';
-                                                            //         fieldSettings.filter_type = 'multiselect';
-
-                                                            //         linkTypeTo = $$(self.componentIds.connectObjectLinkTypeTo).getValue();
-                                                            //         linkTypeFrom = $$(self.componentIds.connectObjectLinkTypeFrom).getValue();
-                                                            //         linkObject = $$(self.componentIds.connectObjectList).getSelectedId(false);
-                                                            //         break;
-                                                            // }
-
-                                                            var fieldInfo = AD.classes.AppBuilder.DataFields.getSettings(base.fieldName);
 
                                                             if (!fieldInfo) {
                                                                 webix.alert({
@@ -230,10 +186,7 @@ steal(
                                                             }
 
                                                             // Validate duplicate field name
-                                                            var existsColumn = $.grep(dataTable.config.columns, function (c) {
-                                                                return c.id == fieldInfo.name;
-                                                            });
-
+                                                            var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name; });
                                                             if (existsColumn && existsColumn.length > 0 && !self.data.editFieldId) {
                                                                 webix.alert({
                                                                     title: self.labels.add_fields.duplicateFieldTitle,
@@ -247,15 +200,6 @@ steal(
                                                                 fieldInfo.id = self.data.editFieldId;
                                                             else // Insert
                                                                 fieldInfo.weight = dataTable.config.columns.length;
-
-                                                            // if (linkTypeTo)
-                                                            //     newFieldInfo.linkTypeTo = linkTypeTo
-
-                                                            // if (linkTypeFrom)
-                                                            //     newFieldInfo.linkTypeFrom = linkTypeFrom
-
-                                                            // if (linkObject)
-                                                            //     newFieldInfo.linkObject = linkObject
 
                                                             // Call callback function
                                                             if (base.saveFieldCallback && base.fieldName) {
