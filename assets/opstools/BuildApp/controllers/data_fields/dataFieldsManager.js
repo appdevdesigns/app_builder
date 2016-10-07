@@ -8,19 +8,31 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/list.js',
 	'opstools/BuildApp/controllers/data_fields/attachment.js',
 	function () {
+		// steal() will pass in each of the above loaded objects
+		// as parameters to this function().
+
 		var componentIds = {
 			headerName: 'ab-new-{0}-header',
 			labelName: 'ab-new-{0}-label'
 		};
 
-		// Convert import data fields to array
-		var fields = $.map(arguments, function (field, index) {
+		// convert the provided objects into a [fields]
+		var fields = $.map(arguments, function (dataField, index) {
 
-			includeHeaderDefinition(field);
+			includeHeaderDefinition(dataField);
 
-			return [field];
+			return [dataField];
 		});
 
+
+		/**
+		 * getField()
+		 *
+		 * return the DataField object by it's name.
+		 *
+		 * @param {string} name  The unique key to lookup the DataField
+		 * @return {DataField}  or null.
+		 */
 		function getField(name) {
 			var field = fields.filter(function (f) { return f.name == name });
 
@@ -85,23 +97,32 @@ steal(
 		AD.classes.AppBuilder = AD.classes.AppBuilder || {};
 		AD.classes.AppBuilder.DataFields = {
 
-			getFieldMenuList: function () {
-				return fields.map(function (f) {
-					return {
-						view: 'button',
-						value: f.menuName,
-						fieldName: f.name,
-						fieldType: f.type,
-						icon: f.icon,
-						type: 'icon'
-					};
-				});
-			},
 
+			/**
+			 * getEditDefinition
+			 *
+			 * return an array of all the Webix layout definitions for each of
+			 * the DataFields. These definitions will be used to create the
+			 * editor display when defining an instance of this DataField.
+			 *
+			 * @return {array} 
+			 */
 			getEditDefinitions: function () {
 				return fields.map(function (f) { return f.editDefinition; });
 			},
 
+
+			/**
+			 * getEditViewId
+			 *
+			 * return the Webix id for the edit form of the DataField specified
+			 * by name.
+			 *
+			 * @param {string} name  The name of the DataField to return it's
+			 *						 edit view id for.
+			 *
+			 * @return {integer}  The $$(webix.id) to find the proper edit view.
+			 */
 			getEditViewId: function (name) {
 				var field = getField(name);
 
@@ -113,17 +134,44 @@ steal(
 				}
 			},
 
-			populateSettings: function (data) {
-				var field = getField(data.fieldName);
 
-				$$(componentIds.headerName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
-				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
-
-				if (field != null) {
-					field.populateSettings(data);
-				}
+			/**
+			 * getFieldMenuList()
+			 *
+			 * return a list of available fields that can be added to an Object
+			 * 
+			 * @return {array}  array of webix button definitions for the 
+			 *					AppBuilder.choose field entry.
+			 *					.view: 'button'
+			 *					.value:  the multilingual text that should display
+			 *							for this entry
+			 *					.fieldName: the reference key for this field
+			 *					.fieldType: the data type for this field
+			 *					.icon:  the font-awesome icon reference
+			 */
+			getFieldMenuList: function () {
+				return fields.map(function (f) {
+					return {
+						view: 'button',
+						value: AD.lang.label.getLabel(f.menuName) || f.menuName,
+						fieldName: f.name,
+						fieldType: f.type,
+						icon: f.icon,
+						type: 'icon'
+					};
+				});
 			},
 
+
+			/**
+			 * getSettings
+			 *
+			 * Have the DataField scan it's Webix Entry form and return the 
+			 * values collected.
+			 * 
+			 * @param {string} name  Which DataField to return data from.
+			 * @return {json}        the settings values, or null.				
+			 */
 			getSettings: function (name) {
 				var field = getField(name);
 
@@ -141,6 +189,38 @@ steal(
 				}
 			},
 
+			/**
+			 * populateSettings
+			 *
+			 * Have the DataField prepare it's display with the provided data.
+			 *
+			 * If no DataField matches data.name, then silently move on.
+			 * 
+			 * @param {ABColumn} data  An instance of ABColumn that contains 
+			 *						the settings for a DataField.
+			 *						NOTE: data.name  contains the DataField key					
+			 */
+			populateSettings: function (application, data) {
+				if (!data) return;
+
+				var field = getField(data.fieldName);
+
+				if ($$(componentIds.headerName.replace('{0}', data.fieldName)))
+					$$(componentIds.headerName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
+				if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
+					$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
+
+				if (field != null) {
+					field.populateSettings(application, data);
+				}
+			},
+
+			/**
+			 * resetState
+			 *
+			 * Tell all DataFields to clear their Webix entry forms.
+			 * 				
+			 */
 			resetState: function () {
 				fields.forEach(function (f) {
 					if ($$(componentIds.headerName.replace('{0}', f.name))) {
