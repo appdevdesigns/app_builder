@@ -22,6 +22,13 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 // {  ABApplication.id : dfd }
 
 
+
+var DataFields = {
+    'string' : require(path.join(__dirname, 'data_fields', 'string.js'))
+}
+
+
+
 function notifyToClients(reloading, step, action) {
     var data = {
         reloading: reloading
@@ -486,42 +493,63 @@ module.exports = {
                     // Define columns
                     function (callback) {
                         async.eachSeries(columns, function (col, ok) {
+
                             var colString = '',
                                 isDefinedLabel = false;
 
-                            if (col.linkObject && col.linkVia) {
-                                ABColumn.findOne({ id: col.id })
-                                    .populate('linkObject')
-                                    .populate('linkVia')
-                                    .fail(ok)
-                                    .then(function (linkedCol) {
-                                        colString += linkedCol.name;
-                                        colString += ':' + linkedCol.linkType; // model, collection
-                                        colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name) // model name
 
-                                        if (linkedCol.linkVia)
-                                            colString += ':' + linkedCol.linkVia.name; // viaReference
+                            var field = DataFields[col.type];
+                            field.getFieldString(col)
+                            .fail(function(err){
+                                ok(err);
+                            })
+                            .then(function(colStr){
+                                colString = colStr;
 
-                                        cliParams.push(colString);
+                                if ((!isDefinedLabel) &&
+                                    (((colString.indexOf(':string:')> -1)
+                                    || (colString.indexOf(':text:') > -1)))) {
 
-                                        ok();
-                                    });
-                            }
-                            else {
-                                colString += col.name + ':' + col.type;
-
-                                if (col.supportMultilingual) {
-                                    colString += ':multilingual';
-                                }
-                                // if this field is the Label, then:
-                                if (!isDefinedLabel && (col.type === 'string' || col.type === 'text')) {
                                     colString += ':label';
                                     isDefinedLabel = true;
                                 }
-                                cliParams.push(colString);
 
                                 ok();
-                            }
+                            })
+
+                            // if (col.linkObject && col.linkVia) {
+                            //     ABColumn.findOne({ id: col.id })
+                            //         .populate('linkObject')
+                            //         .populate('linkVia')
+                            //         .fail(ok)
+                            //         .then(function (linkedCol) {
+                            //             colString += linkedCol.name;
+                            //             colString += ':' + linkedCol.linkType; // model, collection
+                            //             colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name) // model name
+
+                            //             if (linkedCol.linkVia)
+                            //                 colString += ':' + linkedCol.linkVia.name; // viaReference
+
+                            //             cliParams.push(colString);
+
+                            //             ok();
+                            //         });
+                            // }
+                            // else {
+                            //     colString += col.name + ':' + col.type;
+
+                            //     if (col.supportMultilingual) {
+                            //         colString += ':multilingual';
+                            //     }
+                            //     // if this field is the Label, then:
+                            //     if (!isDefinedLabel && (col.type === 'string' || col.type === 'text')) {
+                            //         colString += ':label';
+                            //         isDefinedLabel = true;
+                            //     }
+                            //     cliParams.push(colString);
+
+                            //     ok();
+                            // }
                         }, callback);
                     }
                 ], function (err) {

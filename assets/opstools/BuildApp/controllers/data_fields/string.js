@@ -42,7 +42,9 @@ steal(function () {
 		name: 'string', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
-		menuName: 'Single line text',  // TODO: this needs to be a multilingual Key
+
+// TODO: .menuName needs to be a multilingual Key		
+		menuName: 'Single line text',  
 		includeHeader: true,
 		description: ''
 	};
@@ -93,6 +95,11 @@ steal(function () {
 	 *
 	 * initialize this DataFields Editor with the provided data.
 	 *
+	 * @param {ABApplication} application the ABApplication object that defines 
+	 *							this App.  From this we can access any additional
+	 *							info required for this DataField to work.
+	 *							ex: attempting to access other objects ..
+	 *
 	 * @param {ABColumn} data  the ABColumn info saved for this DataField.
 	 */
 	stringDataField.populateSettings = function (application, data) {
@@ -123,14 +130,13 @@ steal(function () {
 	 *						.editor: Webix UI editor type for this entry
 	 *						.filter_type: Webix UI filter type 
 	 *
-	 * Unique String settings:
-	 *		.default
-	 *		.supportMultilingual
+	 * 					Unique String settings:
+	 *						.default 	:  the default value for this text field
+	 *						.supportMultilingual : track multiple language entries for this field?
 	 *
 	 *
 	 * @return {json}  data formatted to be saved in ABColumn instance.
 	 */
-	//// TODO: reformat this so String specific info is saved in .setting
 	stringDataField.getSettings = function () {
 		return {
 			fieldName: stringDataField.name,

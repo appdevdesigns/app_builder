@@ -19,6 +19,7 @@ steal(
 		// convert the provided objects into a [fields]
 		var fields = $.map(arguments, function (dataField, index) {
 
+			// if the dataField.includeHeader value is set, then update the 
 			includeHeaderDefinition(dataField);
 
 			return [dataField];
@@ -42,6 +43,28 @@ steal(
 				return null;
 		}
 
+
+		/**
+		 * @function includeHeaderDefinition
+		 *
+		 * Many DataFields share some base information for their usage 
+		 * in the AppBuilder.  The UI Editors have a common header 
+		 * and footer format, and this function allows child DataFields
+		 * to not have to define those over and over.
+		 *
+		 * The common layout header contains:
+		 *		[Menu Label]
+		 *		[textBox: headerName]
+		 *		[textBox: labelName]
+		 *		[text:    description]
+		 *
+		 * The defined DataField UI will be added at the end of this.
+		 *
+		 * This routine actually updated the live DataField definition
+		 * with the common header info.
+		 *
+		 * @param {DataField} field  The DataField object to work with.
+		 */
 		function includeHeaderDefinition(field) {
 			if (field.includeHeader) {
 				if (!field.editDefinition.rows) field.editDefinition.rows = [];
@@ -189,6 +212,7 @@ steal(
 				}
 			},
 
+
 			/**
 			 * populateSettings
 			 *
@@ -196,6 +220,11 @@ steal(
 			 *
 			 * If no DataField matches data.name, then silently move on.
 			 * 
+			 * @param {ABApplication} application the ABApplication object that defines 
+			 *							this App.  From this we can access any additional
+			 *							info required for this DataField to work.
+			 *							ex: attempting to access other objects ..
+			 *
 			 * @param {ABColumn} data  An instance of ABColumn that contains 
 			 *						the settings for a DataField.
 			 *						NOTE: data.name  contains the DataField key					
@@ -215,6 +244,7 @@ steal(
 				}
 			},
 
+
 			/**
 			 * resetState
 			 *
@@ -223,12 +253,14 @@ steal(
 			 */
 			resetState: function () {
 				fields.forEach(function (f) {
-					if ($$(componentIds.headerName.replace('{0}', f.name))) {
-						$$(componentIds.headerName.replace('{0}', f.name)).setValue('');
-						$$(componentIds.headerName.replace('{0}', f.name)).enable();
+					var elHeader = $$(componentIds.headerName.replace('{0}', f.name));
+					if (elHeader) {
+						elHeader.setValue('');
+						elHeader.enable();
 					}
-					if ($$(componentIds.labelName.replace('{0}', f.name)))
-						$$(componentIds.labelName.replace('{0}', f.name)).setValue('');
+					var elLabel =$$(componentIds.labelName.replace('{0}', f.name));
+					if (elLabel)
+						elLabel.setValue('');
 
 					if (f.resetState)
 						f.resetState();
