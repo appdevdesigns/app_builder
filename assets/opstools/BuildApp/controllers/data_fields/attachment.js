@@ -1,8 +1,6 @@
 steal(function () {
 	var componentIds = {
-		editView: 'ab-new-attachment',
-		headerName: 'ab-new-attachment-header',
-		labelName: 'ab-new-attachment-label'
+		editView: 'ab-new-attachment'
 	};
 
 	// General settings
@@ -10,23 +8,23 @@ steal(function () {
 		name: 'attachment',
 		type: 'file', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'file',
-		menuName: 'Attachment'
+		menuName: 'Attachment',
+		includeHeader: true,
+		description: ''
 	};
 
 	// Edit definition
 	attachmentDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
-			{
-				view: "label",
-				label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', attachmentDataField.icon).replace('{1}', attachmentDataField.menuName)
-			},
 			{ view: "label", label: "Under construction..." }
 		]
 	};
 
 	// Populate settings (when Edit field)
-	attachmentDataField.populateSettings = function (data) {
+	attachmentDataField.populateSettings = function (application, data) {
+		if (!data) return;
+
 		// TODO:
 	};
 

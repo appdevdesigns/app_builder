@@ -1,8 +1,6 @@
 steal(function () {
 	var componentIds = {
 		editView: 'ab-new-number',
-		headerName: 'ab-new-number-header',
-		labelName: 'ab-new-number-label',
 		allowDecimal: 'ab-new-number-allow-decimal',
 		numberFormat: 'ab-new-number-format',
 		numberDefault: 'ab-new-number-default',
@@ -13,39 +11,15 @@ steal(function () {
 		name: 'number',
 		type: ['float', 'integer'], // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'slack',
-		menuName: 'Number'
+		menuName: 'Number',
+		includeHeader: true,
+		description: ''
 	};
 
 	// Edit definition
 	numberDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
-			{
-				view: "label",
-				label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', numberDataField.icon).replace('{1}', numberDataField.menuName)
-			},
-			{
-				view: "text",
-				id: componentIds.headerName,
-				label: "Name",
-				placeholder: "Name",
-				labelWidth: 50,
-				css: 'ab-new-field-name', // Highlight this when open
-				on: {
-					onChange: function (newValue, oldValue) {
-						if (oldValue == $$(componentIds.labelName).getValue())
-							$$(componentIds.labelName).setValue(newValue);
-					}
-				}
-			},
-			{
-				view: "text",
-				id: componentIds.labelName,
-				label: 'Label',
-				placeholder: 'Header name',
-				labelWidth: 50,
-				css: 'ab-new-label-name'
-			},
 			{
 				view: "combo",
 				id: componentIds.numberFormat,
@@ -71,7 +45,9 @@ steal(function () {
 		]
 	};
 
-	numberDataField.populateSettings = function (data) {
+	numberDataField.populateSettings = function (application, data) {
+		if (!data) return;
+
 		$$(componentIds.allowDecimal).setValue(data.type == 'float');
 		$$(componentIds.allowDecimal).disable();
 
@@ -93,8 +69,6 @@ steal(function () {
 		})[0];
 
 		return {
-			name: $$(componentIds.headerName).getValue(),
-			label: $$(componentIds.labelName).getValue(),
 			default: $$(componentIds.numberDefault).getValue(),
 			fieldName: numberDataField.name,
 			type: type,
@@ -108,9 +82,6 @@ steal(function () {
 	}
 
 	numberDataField.resetState = function () {
-		$$(componentIds.headerName).setValue('');
-		$$(componentIds.headerName).enable();
-		$$(componentIds.labelName).setValue('');
 		$$(componentIds.numberFormat).setValue('Number');
 		$$(componentIds.allowDecimal).setValue(false);
 		$$(componentIds.allowDecimal).enable();

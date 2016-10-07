@@ -1,8 +1,6 @@
 steal(function () {
 	var componentIds = {
 		editView: 'ab-new-select-list',
-		headerName: 'ab-new-select-header',
-		labelName: 'ab-new-select-label',
 		listOptions: 'ab-new-select-option',
 		newOption: 'ab-new-select-new',
 	};
@@ -12,7 +10,9 @@ steal(function () {
 		name: 'list',
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'th-list',
-		menuName: 'Select list'
+		menuName: 'Select list',
+		includeHeader: true,
+		description: 'Single select allows you to select a single predefined options below from a dropdown.'
 	};
 
 	var removedOptionIds = [];
@@ -21,38 +21,6 @@ steal(function () {
 	listDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
-			{
-				view: "label",
-				label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', listDataField.icon).replace('{1}', listDataField.menuName)
-			},
-			{
-				view: "text",
-				id: componentIds.headerName,
-				label: "Name",
-				placeholder: "Name",
-				labelWidth: 50,
-				css: 'ab-new-field-name', // Highlight this when open
-				on: {
-					onChange: function (newValue, oldValue) {
-						if (oldValue == $$(componentIds.labelName).getValue())
-							$$(componentIds.labelName).setValue(newValue);
-					}
-				}
-			},
-			{
-				view: "text",
-				id: componentIds.labelName,
-				label: 'Label',
-				placeholder: 'Header name',
-				labelWidth: 50,
-				css: 'ab-new-label-name'
-			},
-			{
-				view: "template",
-				template: "Single select allows you to select a single predefined options below from a dropdown.",
-				autoheight: true,
-				borderless: true
-			},
 			{ view: "label", label: "<b>{0}</b>".replace('{0}', "Options") },
 			{
 				view: "editlist",
@@ -88,9 +56,8 @@ steal(function () {
 	};
 
 	// Populate settings (when Edit field)
-	listDataField.populateSettings = function (data) {
-		$$(componentIds.headerName).setValue(data.name.replace(/_/g, ' '));
-		$$(componentIds.labelName).setValue(data.label);
+	listDataField.populateSettings = function (application, data) {
+		if (!data) return;
 
 		var options = [];
 		data.setting.options.forEach(function (opt) {
@@ -107,8 +74,6 @@ steal(function () {
 	// For save field
 	listDataField.getSettings = function () {
 		var fieldInfo = {
-			name: $$(componentIds.headerName).getValue(),
-			label: $$(componentIds.labelName).getValue(),
 			options: [],
 			fieldName: listDataField.name,
 			type: 'string',
@@ -151,10 +116,6 @@ steal(function () {
 
 	// Reset state
 	listDataField.resetState = function () {
-		$$(componentIds.headerName).setValue('');
-		$$(componentIds.headerName).enable();
-		$$(componentIds.labelName).setValue('');
-
 		$$(componentIds.listOptions).editCancel();
 		$$(componentIds.listOptions).unselectAll();
 		$$(componentIds.listOptions).clearAll();

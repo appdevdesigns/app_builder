@@ -104,6 +104,8 @@ steal(
                                                             viewName = AD.classes.AppBuilder.DataFields.getEditViewId(selectedMenuItem.fieldName);
 
                                                         if (viewName) {
+                                                            AD.classes.AppBuilder.DataFields.populateSettings({}, null);
+
                                                             $$(viewName).show();
 
                                                             var headerNameClass = '.' + self.componentIds.headerNameText,
@@ -269,7 +271,7 @@ steal(
                                     var viewName = AD.classes.AppBuilder.DataFields.getEditViewId(data.fieldName);
 
                                     // Populate data
-                                    AD.classes.AppBuilder.DataFields.populateSettings(data);
+                                    AD.classes.AppBuilder.DataFields.populateSettings({}, data);
 
                                     $$(viewName).show();
 

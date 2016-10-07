@@ -1,8 +1,6 @@
 steal(function () {
 	var componentIds = {
 		editView: 'ab-new-longText',
-		headerName: 'ab-new-longText-header',
-		labelName: 'ab-new-longText-label',
 		supportMultilingual: 'ab-new-longText-support-multilingual',
 	};
 
@@ -11,43 +9,15 @@ steal(function () {
 		name: 'text',
 		type: 'text', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'align-right',
-		menuName: 'Long text'
+		menuName: 'Long text',
+		includeHeader: true,
+		description: 'A long text field that can span multiple lines.'
 	};
 
 	// Edit definition
 	textDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
-			{
-				view: "label",
-				label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', textDataField.icon).replace('{1}', textDataField.menuName)
-			},
-			{
-				view: "text",
-				id: componentIds.headerName,
-				label: "Name",
-				placeholder: "Name",
-				labelWidth: 50,
-				css: 'ab-new-field-name', // Highlight this when open
-				on: {
-					onChange: function (newValue, oldValue) {
-						if (oldValue == $$(componentIds.labelName).getValue())
-							$$(componentIds.labelName).setValue(newValue);
-					}
-				}
-			},
-			{
-				view: "text",
-				id: componentIds.labelName,
-				label: 'Label',
-				placeholder: 'Header name',
-				labelWidth: 50,
-				css: 'ab-new-label-name'
-			},
-			{
-				view: "label",
-				label: 'A long text field that can span multiple lines.'
-			},
 			{
 				view: "checkbox",
 				id: componentIds.supportMultilingual,
@@ -59,17 +29,15 @@ steal(function () {
 	};
 
 	// Populate settings (when Edit field)
-	textDataField.populateSettings = function (data) {
-		$$(componentIds.headerName).setValue(data.name.replace(/_/g, ' '));
-		$$(componentIds.labelName).setValue(data.label);
+	textDataField.populateSettings = function (application, data) {
+		if (!data) return;
+
 		$$(componentIds.supportMultilingual).setValue(data.supportMultilingual);
 	};
 
 	// For save field
 	textDataField.getSettings = function () {
 		return {
-			name: $$(componentIds.headerName).getValue(),
-			label: $$(componentIds.labelName).getValue(),
 			supportMultilingual: $$(componentIds.supportMultilingual).getValue(),
 			fieldName: textDataField.name,
 			type: textDataField.type,
@@ -83,9 +51,6 @@ steal(function () {
 
 	// Reset state
 	textDataField.resetState = function () {
-		$$(componentIds.headerName).setValue('');
-		$$(componentIds.headerName).enable();
-		$$(componentIds.labelName).setValue('');
 		$$(componentIds.supportMultilingual).setValue(1);
 	}
 

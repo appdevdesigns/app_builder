@@ -38,8 +38,6 @@ module.exports = {
 
         object: { model: 'ABObject' },
 
-        list: { collection: 'ABList', via: 'column' },
-
         name: {
             type: 'string',
             required: true
@@ -64,9 +62,11 @@ module.exports = {
 
         unique: { type: 'boolean' },
 
+        setting: { type: 'json' },
+
         default: { type: 'string' },
 
-        setting: { type: 'json' },
+        list: { collection: 'ABList', via: 'column' },
 
         linkType: {
             type: 'string',
@@ -90,7 +90,6 @@ module.exports = {
         },
 
         supportMultilingual: { type: 'boolean' },
-
     },
 
     beforeValidate: function (values, cb) {

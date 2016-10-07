@@ -1,8 +1,6 @@
 steal(function () {
 	var componentIds = {
 		editView: 'ab-new-connectObject',
-		headerName: 'ab-new-connectObject-header',
-		labelName: 'ab-new-connectObject-label',
 		objectList: 'ab-new-connectObject-list-item',
 		objectCreateNew: 'ab-new-connectObject-create-new',
 		objectLinkFrom: 'ab-add-field-link-from',
@@ -18,7 +16,9 @@ steal(function () {
 		name: 'connectObject',
 		type: 'connectObject',
 		icon: 'external-link',
-		menuName: 'Connect to another record'
+		menuName: 'Connect to another record',
+		includeHeader: true,
+		description: ''
 	};
 
 	// Edit definition
@@ -26,32 +26,8 @@ steal(function () {
 		id: componentIds.editView,
 		rows: [
 			{
-				view: "text",
-				id: componentIds.headerName,
-				label: "Name",
-				placeholder: "Name",
-				labelWidth: 50,
-				css: 'ab-new-field-name', // Highlight this when open
-				on: {
-					onChange: function (newValue, oldValue) {
-						if (oldValue == $$(componentIds.labelName).getValue())
-							$$(componentIds.labelName).setValue(newValue);
-					}
-				}
-			},
-			{
-				view: "text",
-				id: componentIds.labelName,
-				label: 'Label',
-				placeholder: 'Header name',
-				labelWidth: 50,
-				css: 'ab-new-label-name'
-			},
-			{
 				view: "label",
-				label: "<span class='webix_icon fa-{0}'></span>{1}"
-					.replace('{0}', connectObjectField.icon)
-					.replace('{1}', 'Connect to Object')
+				label: "Connect to Object"
 			},
 			{
 				view: "list",
@@ -134,15 +110,14 @@ steal(function () {
 	};
 
 	// Populate settings (when Edit field)
-	connectObjectField.populateSettings = function (data) {
+	connectObjectField.populateSettings = function (application, data) {
 		var currObject = self.data.objectList.filter(function (obj) { return obj.id == self.data.currObjectId; })[0],
 			selectedObject = $$(componentIds.connectObjectList).data.find(function (obj) {
 				var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
 				return obj.id == linkObjId;
 			})[0];
 
-		$$(componentIds.headerName).setValue(data.name.replace(/_/g, ' '));
-		$$(componentIds.labelName).setValue(data.label);
+		if (!data) return;
 
 		$$(componentIds.objectList).disable();
 		$$(componentIds.objectList).select(selectedObject.id);
@@ -160,7 +135,7 @@ steal(function () {
 		var linkObject = $$(componentIds.objectList).getSelectedItem();
 		if (!linkObject) {
 			webix.alert({
-				title:  "Object required",
+				title: "Object required",
 				text: "Please select object to connect.",
 				ok: "Ok"
 			})
@@ -168,8 +143,6 @@ steal(function () {
 		}
 
 		return {
-			name: $$(componentIds.headerName).getValue(),
-			label: $$(componentIds.labelName).getValue(),
 			linkTypeTo: $$(componentIds.objectLinkTypeTo).getValue(),
 			linkTypeFrom: $$(componentIds.objectLinkTypeFrom).getValue(),
 			linkObject: $$(componentIds.objectList).getSelectedId(false),
@@ -186,9 +159,6 @@ steal(function () {
 
 	// Reset state
 	connectObjectField.resetState = function () {
-		$$(componentIds.headerName).setValue('');
-		$$(componentIds.headerName).enable();
-		$$(componentIds.labelName).setValue('');
 		$$(componentIds.objectList).unselectAll();
 		$$(componentIds.objectList).enable();
 		$$(componentIds.objectLinkFrom).setValue('');
