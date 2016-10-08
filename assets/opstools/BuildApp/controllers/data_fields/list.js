@@ -74,13 +74,13 @@ steal(function () {
 	// For save field
 	listDataField.getSettings = function () {
 		var fieldInfo = {
-			options: [],
 			fieldName: listDataField.name,
 			type: 'string',
 			setting: {
 				icon: listDataField.icon,
 				filter_type: 'list',
 				editor: 'richselect',
+				options: [],
 				filter_options: []
 			}
 		};
@@ -89,16 +89,16 @@ steal(function () {
 		$$(componentIds.listOptions).data.each(function (opt) {
 			var optId = typeof opt.dataId == 'string' && opt.dataId.startsWith('temp') ? null : opt.dataId;
 
-			fieldInfo.options.push({ dataId: optId, id: opt.label.replace(/ /g, '_'), value: opt.label });
+			fieldInfo.setting.options.push({ dataId: optId, id: opt.label.replace(/ /g, '_'), value: opt.label });
 
 			fieldInfo.setting.filter_options.push(opt.label);
 		});
 
 		// Filter value is not empty
 		fieldInfo.setting.filter_options = $.grep(fieldInfo.setting.filter_options, function (name) { return name && name.length > 0; });
-		fieldInfo.options = $.grep(fieldInfo.options, function (opt) { return opt && opt.value && opt.value.length > 0; });
+		fieldInfo.setting.options = $.grep(fieldInfo.setting.options, function (opt) { return opt && opt.value && opt.value.length > 0; });
 
-		if (fieldInfo.options.length < 1) {
+		if (fieldInfo.setting.options.length < 1) {
 			webix.alert({
 				title: "Option required",
 				text: "Enter at least one option.",

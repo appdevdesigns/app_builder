@@ -104,7 +104,7 @@ steal(
                                                             viewName = AD.classes.AppBuilder.DataFields.getEditViewId(selectedMenuItem.fieldName);
 
                                                         if (viewName) {
-                                                            AD.classes.AppBuilder.DataFields.populateSettings({}, null);
+                                                            AD.classes.AppBuilder.DataFields.populateSettings(self.data.app, null);
 
                                                             $$(viewName).show();
 
@@ -271,7 +271,7 @@ steal(
                                     var viewName = AD.classes.AppBuilder.DataFields.getEditViewId(data.fieldName);
 
                                     // Populate data
-                                    AD.classes.AppBuilder.DataFields.populateSettings({}, data);
+                                    AD.classes.AppBuilder.DataFields.populateSettings(self.data.app, data);
 
                                     $$(viewName).show();
 
@@ -288,6 +288,10 @@ steal(
 
                                     // Highlight name in text box
                                     $('.' + self.componentIds.headerNameText + ' input[type="text"]').select();
+                                },
+
+                                setApp: function (app) {
+                                    self.data.app = app;
                                 },
 
                                 setObjectList: function (objectList) {

@@ -750,8 +750,9 @@ steal(
 							// Set values to connect object popup
 							$$(self.webixUiId.addConnectObjectDataPopup).setApp(self.data.app);
 
-							$$(self.webixUiId.addFieldsPopup).setCurrObjectId(self.data.objectId);
+							$$(self.webixUiId.addFieldsPopup).setApp(self.data.app);
 							$$(self.webixUiId.addFieldsPopup).setObjectList(self.data.objectList);
+							$$(self.webixUiId.addFieldsPopup).setCurrObjectId(self.data.objectId);
 
 							if (self.data.objectId) {
 								var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });

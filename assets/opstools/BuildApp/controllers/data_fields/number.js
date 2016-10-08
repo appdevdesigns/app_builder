@@ -55,12 +55,13 @@ steal(function () {
 		if (selectedFormat && selectedFormat.length > 0)
 			$$(componentIds.numberFormat).setValue(selectedFormat[0].value);
 
-		if (data.default)
-			$$(componentIds.numberDefault).setValue(data.default);
+		if (data.setting.default)
+			$$(componentIds.numberDefault).setValue(data.setting.default);
 	};
 
 	numberDataField.getSettings = function () {
 		var type = 'integer';
+
 		if ($$(componentIds.allowDecimal).getValue())
 			type = 'float';
 
@@ -69,14 +70,14 @@ steal(function () {
 		})[0];
 
 		return {
-			default: $$(componentIds.numberDefault).getValue(),
 			fieldName: numberDataField.name,
 			type: type,
 			setting: {
 				icon: numberDataField.icon,
 				editor: 'number',
 				filter_type: 'number',
-				format: selectedFormat.format
+				format: selectedFormat.format,
+				default: $$(componentIds.numberDefault).getValue()
 			}
 		};
 	}

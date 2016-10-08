@@ -32,19 +32,19 @@ steal(function () {
 	textDataField.populateSettings = function (application, data) {
 		if (!data) return;
 
-		$$(componentIds.supportMultilingual).setValue(data.supportMultilingual);
+		$$(componentIds.supportMultilingual).setValue(data.setting.supportMultilingual);
 	};
 
 	// For save field
 	textDataField.getSettings = function () {
 		return {
-			supportMultilingual: $$(componentIds.supportMultilingual).getValue(),
 			fieldName: textDataField.name,
 			type: textDataField.type,
 			setting: {
 				icon: textDataField.icon,
 				editor: 'popup', // http://docs.webix.com/desktop__editing.html
-				filter_type: 'text' // DataTableFilterPopup - filter type
+				filter_type: 'text', // DataTableFilterPopup - filter type
+				supportMultilingual: $$(componentIds.supportMultilingual).getValue()
 			}
 		};
 	};

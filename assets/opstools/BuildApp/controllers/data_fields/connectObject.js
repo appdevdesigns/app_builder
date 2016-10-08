@@ -111,7 +111,7 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	connectObjectField.populateSettings = function (application, data) {
-		var currObject = self.data.objectList.filter(function (obj) { return obj.id == self.data.currObjectId; })[0],
+		var currObject = application.objects.filter(function (obj) { return obj.id == application.currObjectId; })[0],
 			selectedObject = $$(componentIds.connectObjectList).data.find(function (obj) {
 				var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
 				return obj.id == linkObjId;
