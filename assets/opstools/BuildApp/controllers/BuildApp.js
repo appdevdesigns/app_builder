@@ -22,6 +22,9 @@ steal(
 
 						init: function (element, options) {
 							var self = this;
+
+							AD.classes.AppBuilder = AD.classes.AppBuilder || {};
+
 							options = AD.defaults({
 								templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',
 								resize_notification: 'BuildApp.resize',
@@ -111,7 +114,9 @@ steal(
 							self.controllers.AppList.element.on(self.CONST.APP_SELECTED, function (event, app) {
 								self.element.find(".ab-app-list").hide();
 
-								self.controllers.AppWorkspace.setApplication(app);
+								AD.classes.AppBuilder.currApp = app;
+
+								self.controllers.AppWorkspace.refresh();
 
 								self.element.find(".ab-app-workspace").show();
 								self.controllers.AppWorkspace.resize(self.data.height);

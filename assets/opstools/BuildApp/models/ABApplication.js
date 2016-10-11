@@ -28,9 +28,43 @@ steal(
 							return AD.Model.get('opstools.BuildApp.ABObject').findAll({ application: this.id });
 						},
 
+						getObject: function (objId) {
+							return AD.Model.get('opstools.BuildApp.ABObject').findOne({ application: this.id, id: objId });
+						},
+
 						getPages: function () {
 							return AD.Model.get('opstools.BuildApp.ABPage').findAll({ application: this.id });
+						},
+
+						getPage: function (pageId) {
+							return AD.Model.get('opstools.BuildApp.ABPage').findOne({ application: this.id, id: pageId });
+						},
+
+						getPermissions: function () {
+							return AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' });
+						},
+
+						createPermission: function () {
+							return AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' });
+						},
+
+						deletePermission: function () {
+							return AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' });
+						},
+
+						// id: appId,
+						// isApplicationRole: true
+						assignPermissions: function (permItems) {
+							return AD.comm.service.put({
+								url: '/app_builder/' + this.id + '/role/assign',
+								data: {
+									roles: permItems
+								}
+							})
 						}
+
+
+
 					}
 				);
 			});

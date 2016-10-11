@@ -18,7 +18,9 @@ module.exports = {
 
     attributes: {
 
-        object: { collection: 'ABObject', via: 'application' },
+        objects: { collection: 'ABObject', via: 'application' },
+
+        pages: { collection: 'ABPage', via: 'application' },
 
 
         name: {
@@ -27,7 +29,7 @@ module.exports = {
             unique: true
         },
 
-//// TODO: This should change.  Can be in multiple roles.
+        //// TODO: This should change.  Can be in multiple roles.
         role: {
             model: 'PermissionRole'
         },
@@ -52,16 +54,16 @@ module.exports = {
         },
 
 
-        areaKey: function() {
-            return _.kebabCase('ab-'+this.name);
+        areaKey: function () {
+            return _.kebabCase('ab-' + this.name);
         },
 
-        actionKeyName:function(){
+        actionKeyName: function () {
             return actionKeyName(this.validAppName()); // 'opstools.' + this.validAppName() + '.view'; 
         },
 
-        validAppName:function() {
-            return validAppName(this.name); 
+        validAppName: function () {
+            return validAppName(this.name);
         }
 
     },
@@ -91,16 +93,16 @@ module.exports = {
     },
 
 
-    afterCreate: function(newRecord, cb) {
+    afterCreate: function (newRecord, cb) {
 
         // if we have a proper ABApplication.id given:
         if ((newRecord)
             && (newRecord.id)) {
 
-// console.log('... ABApplication.afterCreate():  id: '+newRecord.id);
+            // console.log('... ABApplication.afterCreate():  id: '+newRecord.id);
 
             // Start building the physical module on the FileSystem:
-            setTimeout(function(){
+            setTimeout(function () {
                 AppBuilder.buildApplication(newRecord.id);
             }, 500);
         }
@@ -143,21 +145,21 @@ module.exports = {
                         });
                 },
 
-                function  ABApplication_AfterDelete_RemovePermissions (callback) {
+                function ABApplication_AfterDelete_RemovePermissions(callback) {
 
                     var actionKeys = [];
-                    destroyedApplications.forEach(function(deletedApp){
-                        actionKeys.push( actionKeyName( validAppName(deletedApp.name)));
+                    destroyedApplications.forEach(function (deletedApp) {
+                        actionKeys.push(actionKeyName(validAppName(deletedApp.name)));
                     })
 
                     Permissions.action.destroyKeys(actionKeys)
-                    .fail(function(err){
-                        callback(err);
-                    })
-                    .then(function(data){
-                        callback();
-                    })
-                    
+                        .fail(function (err) {
+                            callback(err);
+                        })
+                        .then(function (data) {
+                            callback();
+                        })
+
                 }
             ], cb);
         }
@@ -173,6 +175,6 @@ function actionKeyName(name) {
     return 'opstools.' + name + '.view';
 }
 
-function validAppName(name){
-    return AppBuilder.rules.toApplicationNameFormat(name); 
+function validAppName(name) {
+    return AppBuilder.rules.toApplicationNameFormat(name);
 }

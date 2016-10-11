@@ -111,20 +111,26 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	connectObjectField.populateSettings = function (application, data) {
-		var currObject = application.objects.filter(function (obj) { return obj.id == application.currObjectId; })[0],
-			selectedObject = $$(componentIds.connectObjectList).data.find(function (obj) {
-				var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
-				return obj.id == linkObjId;
-			})[0];
+		// Set enable connect object list to the add new column popup
+		var enableConnectObjects = application.objects.filter(function (o) { return o.id != application.currObj.id; });
+
+		$$(componentIds.objectList).clearAll();
+		$$(componentIds.objectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
+		$$(componentIds.objectList).refresh();
+
+		$$(componentIds.objectLinkFrom).setValue(application.currObj.label);
+		$$(componentIds.objectLinkFrom2).setValue(application.currObj.label);
 
 		if (!data) return;
+
+		var selectedObject = $$(componentIds.connectObjectList).data.find(function (obj) {
+			var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
+			return obj.id == linkObjId;
+		})[0];
 
 		$$(componentIds.objectList).disable();
 		$$(componentIds.objectList).select(selectedObject.id);
 		$$(componentIds.objectCreateNew).disable();
-
-		$$(componentIds.objectLinkFrom).setValue(currObject.label);
-		$$(componentIds.objectLinkFrom2).setValue(currObject.label);
 
 		$$(componentIds.objectLinkTypeTo).setValue(data.linkType);
 		$$(componentIds.objectLinkTypeFrom).setValue(data.setting.linkViaType);

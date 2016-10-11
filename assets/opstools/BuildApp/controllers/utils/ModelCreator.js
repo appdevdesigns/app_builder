@@ -29,15 +29,10 @@ steal(
 							};
 						},
 
-						setApp: function (app) {
-							this.data.appId = app.id;
-							this.data.appName = app.name;
-						},
-
 						defineBaseModel: function (objectName, describe, multilingualFields, associations) {
 							if (!objectName || !describe || !multilingualFields) throw new Error('Invalid parameters');
 
-							var formatAppName = this.data.appName.replace(/_/g, ''),
+							var formatAppName = AD.classes.AppBuilder.currApp.name.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 
@@ -75,7 +70,7 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace(/_/g, ''),
+								formatAppName = AD.classes.AppBuilder.currApp.name.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName),
 								model = AD.Model.get(modelName);
@@ -103,12 +98,12 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = self.data.appName.replace(/_/g, ''),
+								formatAppName = AD.classes.AppBuilder.currApp.name.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/, formatObjectName);
 
 							// Get object definition
-							self.Model.ABObject.findAll({ application: self.data.appId, name: objectName })
+							self.Model.ABObject.findAll({ application: AD.classes.AppBuilder.currApp.id, name: objectName })
 								.fail(function (err) {
 									q.reject(err);
 								})
@@ -131,49 +126,38 @@ steal(
 
 									var associations = {};
 
-									async.series([
-										// Set associations
-										function (next) {
-											self.Model.ABColumn.findAll({ object: objectData.id, linkObject: { '!': null } })
-												.fail(next)
-												.then(function (columns) {
-													columns.forEach(function (col) {
-														// opstools.BuildApp.#appName#_#objectName#
-														// opstools.#appName#.#appName#_#objectName#
-														associations[col.name] = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, col.linkObject.name);
-													});
+									// Set associations
+									self.Model.ABColumn.findAll({ object: objectData.id, linkObject: { '!': null } })
+										.fail(q.reject)
+										.then(function (columns) {
+											columns.forEach(function (col) {
+												// opstools.BuildApp.#appName#_#objectName#
+												// opstools.#appName#.#appName#_#objectName#
+												associations[col.name] = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, col.linkObject.name);
+											});
 
-													next();
-												});
-										}
-									], function (err) {
-										if (err) {
-											q.reject(err);
-											return;
-										}
+											// Define base model
+											try {
+												self.defineBaseModel(objectName, describe, multilingualFields, associations);
+											}
+											catch (err) {
+												q.reject(err);
+												return;
+											}
 
-										// Define base model
-										try {
-											self.defineBaseModel(objectName, describe, multilingualFields, associations);
-										}
-										catch (err) {
-											q.reject(err);
-											return;
-										}
-
-										// Init object model
-										AD.Model.extend(modelName, {
-											// useSockets: true
-										}, {});
-										var modelResult = AD.Model.get(modelName);
+											// Init object model
+											AD.Model.extend(modelName, {
+												// useSockets: true
+											}, {});
+											var modelResult = AD.Model.get(modelName);
 
 
-										// Setup cached model
-										var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
-										self.initModelCached(objectName, modelResult, cachedKey);
+											// Setup cached model
+											var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
+											self.initModelCached(objectName, modelResult, cachedKey);
 
-										q.resolve(modelResult);
-									})
+											q.resolve(modelResult);
+										});
 
 								});
 

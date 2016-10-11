@@ -130,7 +130,7 @@ module.exports = {
             // Find all AB applications
             function(next) {
                 ABApplication.find({ id : appID })
-                .populate('object')
+                .populate('objects')
                 .then(function(list) {
                     if (!list || !list[0]) {
                         throw new Error('No applications found');
@@ -138,8 +138,8 @@ module.exports = {
                     
                     for (var i=0; i<list.length; i++) {
                         appIDs.push(list[i].id);
-                        for (var j=0; j<list[i].object.length; j++) {
-                            objIDs.push( list[i].object[j].id );
+                        for (var j=0; j<list[i].objects.length; j++) {
+                            objIDs.push( list[i].objects[j].id );
                         }
                     }
                     next();

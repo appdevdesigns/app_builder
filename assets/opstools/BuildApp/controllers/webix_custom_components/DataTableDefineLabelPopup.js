@@ -104,13 +104,22 @@ steal(
 												cols: [
 													{
 														view: "button", id: self.componentIds.saveButton, label: self.labels.common.save, type: "form", width: 120, click: function () {
-															var labelFormat = $$(self.componentIds.labelFormat).getValue();
+															var base = this,
+																labelFormat = $$(self.componentIds.labelFormat).getValue();
+
 															$$(self.componentIds.fieldsList).data.each(function (d) {
 																labelFormat = labelFormat.replace(new RegExp('{' + d.label + '}', 'g'), '{' + d.id + '}');
 															});
 
-															if (self.saveLabelEvent)
-																self.saveLabelEvent(labelFormat);
+															AD.classes.AppBuilder.currApp.currObj.attr('labelFormat', labelFormat);
+															AD.classes.AppBuilder.currApp.currObj.save()
+																.fail(function (err) {
+																	// TODO : Error message
+																})
+																.then(function () {
+																	base.getTopParentView().hide();
+																});
+
 														}
 													},
 													{
@@ -124,40 +133,27 @@ steal(
 									},
 									on: {
 										onShow: function () {
+											var labelFormat = AD.classes.AppBuilder.currApp.currObj.labelFormat;
+
 											$$(self.componentIds.labelFormat).setValue('');
 
-											if (!self.loadLabelEvent) return;
+											$$(self.componentIds.labelFormat).enable();
+											$$(self.componentIds.fieldsList).enable();
+											$$(self.componentIds.saveButton).enable();
 
-											$$(self.componentIds.labelFormat).disable();
-											$$(self.componentIds.fieldsList).disable();
-											$$(self.componentIds.saveButton).disable();
-
-											self.loadLabelEvent()
-												.fail(function (err) {
-													webix.message({
-														type: "error",
-														text: AD.lang.label.getLabel('ab.define_label.loadError')
+											if (labelFormat) {
+												if ($$(self.componentIds.fieldsList).data && $$(self.componentIds.fieldsList).data.count() > 0) {
+													$$(self.componentIds.fieldsList).data.each(function (d) {
+														labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
 													});
-												})
-												.then(function (labelFormat) {
-													$$(self.componentIds.labelFormat).enable();
-													$$(self.componentIds.fieldsList).enable();
-													$$(self.componentIds.saveButton).enable();
+												}
+											}
+											else { // Default label format
+												if (self.data.fieldList && self.data.fieldList.length > 0)
+													labelFormat = '{' + self.data.fieldList[0].label + '}';
+											}
 
-													if (labelFormat) {
-														if ($$(self.componentIds.fieldsList).data && $$(self.componentIds.fieldsList).data.count() > 0) {
-															$$(self.componentIds.fieldsList).data.each(function (d) {
-																labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
-															});
-														}
-													}
-													else { // Default label format
-														if (self.data.fieldList && self.data.fieldList.length > 0)
-															labelFormat = '{' + self.data.fieldList[0].label + '}';
-													}
-
-													$$(self.componentIds.labelFormat).setValue(labelFormat || '');
-												});
+											$$(self.componentIds.labelFormat).setValue(labelFormat || '');
 
 										}
 									}
@@ -165,14 +161,6 @@ steal(
 
 								registerDataTable: function (dataTable) {
 									self.dataTable = dataTable;
-								},
-
-								registerLoadLabelEvent: function (loadLabelEvent) {
-									self.loadLabelEvent = loadLabelEvent;
-								},
-
-								registerSaveLabelEvent: function (saveLabelEvent) {
-									self.saveLabelEvent = saveLabelEvent;
 								},
 
 								setFieldList: function (fieldList) {

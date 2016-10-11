@@ -17,7 +17,6 @@ steal(
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 
-	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
 	function () {
@@ -40,7 +39,6 @@ steal(
 							this._super(element, options);
 
 							this.Model = {
-								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
 								ABList: AD.Model.get('opstools.BuildApp.ABList')
 							};
@@ -263,7 +261,7 @@ steal(
 														selectedIds = $.map(selectedData, function (d) { return d.id; });
 
 													// Get columns of connected object
-													var object = self.data.objectList.filter(function (o) {
+													var object = AD.classes.AppBuilder.currApp.objects.filter(function (o) {
 														return o.id == (columnData.linkObject.id || columnData.linkObject);
 													});
 
@@ -487,7 +485,7 @@ steal(
 										}
 										else {
 											// Get cached field
-											self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
+											self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
 												.then(function (objectModel) {
 													var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
 
@@ -516,7 +514,7 @@ steal(
 
 												if (!selectedColumn || selectedColumn.length < 1) {
 													// Get cached field
-													self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
+													self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
 														.then(function (objectModel) {
 															var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
 
@@ -541,7 +539,7 @@ steal(
 														if (result) {
 															$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
-															var objectName = self.data.object.attr('name');
+															var objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
 
 															async.parallel([
 																// Remove describe & multi-fields of object model
@@ -563,7 +561,7 @@ steal(
 																// Remove describe & multi-fields of link object model
 																function (ok) {
 																	if (selectedColumn.linkObject && selectedColumn.linkVia) {
-																		var linkObject = self.data.objectList.filter(function (obj) {
+																		var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
 																			var linkObjId = selectedColumn.linkObject.id || selectedColumn.linkObject;
 																			return obj.id == linkObjId;
 																		})[0];
@@ -727,350 +725,295 @@ steal(
 							return this.data.definition;
 						},
 
-						setApp: function (app) {
-							this.data.app = app;
-						},
-
-						setObjectId: function (id) {
+						showTable: function () {
 							var self = this;
-
-							self.data.objectId = id;
 
 							$$(self.webixUiId.objectDatatable).show();
 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 							self.resetState();
 
-							// Set values to object datatable utils
-							self.controllers.ObjectDataTable.setApp(self.data.app);
+							if (!AD.classes.AppBuilder.currApp.currObj) {
+								$$(self.webixUiId.objectDatatable).hideProgress();
+								$$(self.webixUiId.objectDatatable).hide();
+								return;
+							}
 
-							// Set values to model creator
-							self.controllers.ModelCreator.setApp(self.data.app);
+							async.series([
+								// Get columns data from server
+								function (next) {
+									$$(self.webixUiId.objectDatatable).clearAll();
 
-							// Set values to connect object popup
-							$$(self.webixUiId.addConnectObjectDataPopup).setApp(self.data.app);
+									AD.classes.AppBuilder.currApp.currObj.getColumns()
+										.fail(function (err) {
+											$$(self.webixUiId.objectDatatable).hideProgress();
 
-							$$(self.webixUiId.addFieldsPopup).setApp(self.data.app);
-							$$(self.webixUiId.addFieldsPopup).setObjectList(self.data.objectList);
-							$$(self.webixUiId.addFieldsPopup).setCurrObjectId(self.data.objectId);
+											webix.message({
+												type: "error",
+												text: err
+											});
 
-							if (self.data.objectId) {
-								var curObject = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
-								self.data.object = curObject[0];
+											AD.error.log('Column List : Error get fields data', { error: err });
 
-								async.series([
-									// Get columns data from server
-									function (next) {
-										$$(self.webixUiId.objectDatatable).clearAll();
+											next(err);
+										})
+										.then(function (data) {
 
-										self.Model.ABColumn.findAll({ object: self.data.objectId })
-											.fail(function (err) {
-												$$(self.webixUiId.objectDatatable).hideProgress();
+											data.forEach(function (d) {
+												if (d.translate) d.translate();
+											});
 
-												webix.message({
-													type: "error",
-													text: err
-												});
+											self.data.columns = data;
 
-												AD.error.log('Column List : Error get fields data', { error: err });
+											// Find option list
+											var listColIds = $.map(self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; }), function (c) {
+												return c.id;
+											});
 
-												next(err);
-											})
-											.then(function (data) {
+											if (listColIds && listColIds.length > 0) {
+												var getListEvents = [];
 
-												data.forEach(function (d) {
-													if (d.translate) d.translate();
-												});
+												listColIds.forEach(function (cId) {
+													getListEvents.push(function (cb) {
+														var column = self.data.columns.filter(function (col) { return col.id == cId; })[0];
 
-												self.data.columns = data;
+														self.Model.ABList.findAll({ column: cId })
+															.fail(function (err) { cb(err); })
+															.then(function (listResult) {
 
-												// Find option list
-												var listColIds = $.map(self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; }), function (c) {
-													return c.id;
-												});
-
-												if (listColIds && listColIds.length > 0) {
-													var getListEvents = [];
-
-													listColIds.forEach(function (cId) {
-														getListEvents.push(function (cb) {
-															var column = self.data.columns.filter(function (col) { return col.id == cId; })[0];
-
-															self.Model.ABList.findAll({ column: cId })
-																.fail(function (err) { cb(err); })
-																.then(function (listResult) {
-
-																	listResult.forEach(function (listItem) {
-																		if (listItem.translate) listItem.translate();
-																	});
-
-																	var sortedList = listResult.attr().sort(function (a, b) { return a.weight - b.weight; });
-																	column.setting.attr('options', $.map(sortedList, function (list) {
-																		return {
-																			dataId: list.id,
-																			id: list.value,
-																			label: list.label
-																		}
-																	}));
-
-																	cb();
+																listResult.forEach(function (listItem) {
+																	if (listItem.translate) listItem.translate();
 																});
-														});
-													});
 
-													AD.util.async.parallel(getListEvents, next);
+																var sortedList = listResult.attr().sort(function (a, b) { return a.weight - b.weight; });
+																column.setting.attr('options', $.map(sortedList, function (list) {
+																	return {
+																		dataId: list.id,
+																		id: list.value,
+																		label: list.label
+																	}
+																}));
+
+																cb();
+															});
+													});
+												});
+
+												AD.util.async.parallel(getListEvents, next);
+											}
+											else {
+												next();
+											}
+										});
+								},
+								// Bind columns to DataTable
+								function (next) {
+									self.bindColumns(true, true)
+										.fail(function (err) { next(err); })
+										.then(function () { next(); });
+								},
+								// Get object model
+								function (next) {
+									if (!AD.classes.AppBuilder.currApp.currObj) {
+										next();
+										return;
+									}
+
+									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
+										.fail(function (err) { next(err); })
+										.then(function (objectModel) {
+											self.Model.ObjectModel = objectModel;
+
+											next();
+										});
+								},
+								// Get data from server
+								function (next) {
+									// Find the link columns
+									var linkCols = self.data.columns.filter(function (col) { return col.linkObject != null }),
+										linkColNames = $.map(linkCols, function (col) { return col.name; });
+
+									self.Model.ObjectModel.store = {}; // Clear CanJS local repository
+									self.Model.ObjectModel.Cached.findAll({})
+										.fail(function (err) { next(err); })
+										.then(function (data) {
+											self.controllers.ObjectDataTable.populateData(data).then(function () {
+												next();
+											});
+										});
+								}
+							], function () {
+								$$(self.webixUiId.objectToolbar).show();
+								$$(self.webixUiId.objectDatatable).show();
+								$$(self.webixUiId.objectDatatable).refresh();
+
+								// Register table to popups
+								$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.defineLabelPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.editHeaderPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+
+								// Listen popup events
+								self.attachPopupEvents();
+
+								// Bind columns data
+								self.refreshPopupData();
+
+								// Show 'Add new row' button
+								$$(self.webixUiId.addNewRowButton).show();
+
+								// Register add new column callback
+								$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo) {
+
+									$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+									var newColumn = {
+										object: AD.classes.AppBuilder.currApp.currObj.id,
+										name: columnInfo.name,
+										label: columnInfo.label,
+										fieldName: columnInfo.fieldName,
+										type: columnInfo.type,
+										setting: columnInfo.setting,
+										weight: columnInfo.weight
+									};
+
+									if (columnInfo.supportMultilingual != null)
+										newColumn.supportMultilingual = columnInfo.supportMultilingual ? true : false;
+
+									if (columnInfo.default)
+										newColumn.default = columnInfo.default;
+									else
+										delete newColumn.default;
+
+									// Link column
+									if (columnInfo.linkTypeTo && columnInfo.linkTypeFrom && columnInfo.linkObject) {
+										newColumn.linkType = columnInfo.linkTypeTo;
+										newColumn.linkObject = columnInfo.linkObject;
+										newColumn.linkDefault = true;
+										newColumn.setting.linkViaType = columnInfo.linkTypeFrom;
+									}
+
+									// Get deferred when save complete
+									var refreshDeferred = self.refreshColumnsDeferred(columnInfo),
+										objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
+
+									if (columnInfo.id && !columnInfo.id.toString().startsWith('temp')) { // Update
+										var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
+
+										for (var key in newColumn) {
+											updateColumn.attr(key, newColumn[key]);
+										}
+
+										updateColumn.setting.attr('linkViaType', columnInfo.linkTypeFrom);
+
+										async.series([
+											// Update the column
+											function (next) {
+												updateColumn.save()
+													.fail(function (err) { next(err); })
+													.then(function (result) {
+														updateColumn = result;
+														next();
+													});
+											},
+											// Update the link column
+											function (next) {
+												if (updateColumn.linkVia) {
+													AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.linkVia.id)
+														.fail(next)
+														.then(function (result) {
+															result.attr('linkType', columnInfo.linkTypeFrom);
+															result.setting.attr('linkViaType', columnInfo.linkTypeTo);
+
+															result.save().fail(next).then(function () {
+																next();
+															});
+														});
 												}
 												else {
 													next();
 												}
-											});
-									},
-									// Bind columns to DataTable
-									function (next) {
-										self.bindColumns(true, true)
-											.fail(function (err) { next(err); })
-											.then(function () { next(); });
-									},
-									// Get object model
-									function (next) {
-										if (!self.data.object) {
-											next();
-											return;
-										}
-
-										self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
-											.fail(function (err) { next(err); })
-											.then(function (objectModel) {
-												self.Model.ObjectModel = objectModel;
-
-												next();
-											});
-									},
-									// Get data from server
-									function (next) {
-										// Find the link columns
-										var linkCols = self.data.columns.filter(function (col) { return col.linkObject != null }),
-											linkColNames = $.map(linkCols, function (col) { return col.name; });
-
-										self.Model.ObjectModel.store = {}; // Clear CanJS local repository
-										self.Model.ObjectModel.Cached.findAll({})
-											.fail(function (err) { next(err); })
-											.then(function (data) {
-												self.controllers.ObjectDataTable.populateData(data).then(function () {
-													next();
-												});
-											});
-									}
-								], function () {
-									$$(self.webixUiId.objectToolbar).show();
-									$$(self.webixUiId.objectDatatable).show();
-									$$(self.webixUiId.objectDatatable).refresh();
-
-									// Register table to popups
-									$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-									$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-									$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-									$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-									$$(self.webixUiId.defineLabelPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-									$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-									$$(self.webixUiId.editHeaderPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-
-									// Listen popup events
-									self.attachPopupEvents();
-
-									// Bind columns data
-									self.refreshPopupData();
-
-									// Show 'Add new row' button
-									$$(self.webixUiId.addNewRowButton).show();
-
-									// Register add new column callback
-									$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo) {
-
-										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-										var newColumn = {
-											object: self.data.objectId,
-											name: columnInfo.name,
-											label: columnInfo.label,
-											fieldName: columnInfo.fieldName,
-											type: columnInfo.type,
-											setting: columnInfo.setting,
-											weight: columnInfo.weight
-										};
-
-										if (columnInfo.supportMultilingual != null)
-											newColumn.supportMultilingual = columnInfo.supportMultilingual ? true : false;
-
-										if (columnInfo.default)
-											newColumn.default = columnInfo.default;
-										else
-											delete newColumn.default;
-
-										// Link column
-										if (columnInfo.linkTypeTo && columnInfo.linkTypeFrom && columnInfo.linkObject) {
-											newColumn.linkType = columnInfo.linkTypeTo;
-											newColumn.linkObject = columnInfo.linkObject;
-											newColumn.linkDefault = true;
-											newColumn.setting.linkViaType = columnInfo.linkTypeFrom;
-										}
-
-										// Get deferred when save complete
-										var refreshDeferred = self.refreshColumnsDeferred(columnInfo),
-											objectName = self.data.object.attr('name');
-
-										if (columnInfo.id && !columnInfo.id.toString().startsWith('temp')) { // Update
-											var updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
-
-											for (var key in newColumn) {
-												updateColumn.attr(key, newColumn[key]);
+											}
+										], function (err) {
+											if (err) {
+												refreshDeferred.reject(err);
+												return;
 											}
 
-											updateColumn.setting.attr('linkViaType', columnInfo.linkTypeFrom);
+											refreshDeferred.resolve(updateColumn);
+										});
+									}
+									else { // Cache new field
+										async.waterfall([
+											function (ok) {
+												if (columnInfo.id)
+													newColumn.id = columnInfo.id;
+												self.cacheNewField(objectName, newColumn)
+													.fail(ok)
+													.then(function (firstColumn) { ok(null, firstColumn) });
+											},
+											function (firstColumn, ok) {
+												if (firstColumn.linkType && firstColumn.linkObject && firstColumn.linkDefault) {
+													// Find object
+													var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == firstColumn.linkObject; })[0];
 
-											async.series([
-												// Update the column
-												function (next) {
-													updateColumn.save()
-														.fail(function (err) { next(err); })
-														.then(function (result) {
-															updateColumn = result;
-															next();
-														});
-												},
-												// Update the link column
-												function (next) {
-													if (updateColumn.linkVia) {
-														self.Model.ABColumn.findOne({ id: updateColumn.linkVia.id })
-															.fail(next)
-															.then(function (result) {
-																result.attr('linkType', columnInfo.linkTypeFrom);
-																result.setting.attr('linkViaType', columnInfo.linkTypeTo);
+													// Create linked column
+													var secondColumn = {
+														object: firstColumn.linkObject,
+														name: AD.classes.AppBuilder.currApp.currObj.label,
+														label: AD.classes.AppBuilder.currApp.currObj.label,
+														type: firstColumn.type,
+														setting: $.extend(true, {}, firstColumn.setting),
+														linkType: columnInfo.linkTypeFrom,
+														linkObject: AD.classes.AppBuilder.currApp.currObj.id,
+														linkVia: firstColumn.id,
+														linkDefault: false
+													};
 
-																result.save().fail(next).then(function () {
-																	next();
-																});
-															});
-													}
-													else {
-														next();
-													}
-												}
-											], function (err) {
-												if (err) {
-													refreshDeferred.reject(err);
-													return;
-												}
+													if (firstColumn.linkVia)
+														secondColumn.id = firstColumn.linkVia;
+													secondColumn.setting.linkViaType = columnInfo.linkTypeTo;
 
-												refreshDeferred.resolve(updateColumn);
-											});
-										}
-										else { // Cache new field
-											async.waterfall([
-												function (ok) {
-													if (columnInfo.id)
-														newColumn.id = columnInfo.id;
-													self.cacheNewField(objectName, newColumn)
+													// Cache
+													self.cacheNewField(linkObj.name, secondColumn)
 														.fail(ok)
-														.then(function (firstColumn) { ok(null, firstColumn) });
-												},
-												function (firstColumn, ok) {
-													if (firstColumn.linkType && firstColumn.linkObject && firstColumn.linkDefault) {
-														// Find object
-														var linkObj = self.data.objectList.filter(function (obj) { return obj.id == firstColumn.linkObject; })[0];
+														.then(function (result) {
+															// Set linkVia to first column
+															firstColumn.linkVia = result.id;
 
-														// Create linked column
-														var secondColumn = {
-															object: firstColumn.linkObject,
-															name: self.data.object.label,
-															label: self.data.object.label,
-															type: firstColumn.type,
-															setting: $.extend(true, {}, firstColumn.setting),
-															linkType: columnInfo.linkTypeFrom,
-															linkObject: self.data.object.id,
-															linkVia: firstColumn.id,
-															linkDefault: false
-														};
-
-														if (firstColumn.linkVia)
-															secondColumn.id = firstColumn.linkVia;
-														secondColumn.setting.linkViaType = columnInfo.linkTypeTo;
-
-														// Cache
-														self.cacheNewField(linkObj.name, secondColumn)
-															.fail(ok)
-															.then(function (result) {
-																// Set linkVia to first column
-																firstColumn.linkVia = result.id;
-
-																// Update firstColumn cache
-																self.cacheNewField(objectName, firstColumn)
-																	.fail(ok)
-																	.then(function () { ok(); });
-															});
-													}
-													else {
-														ok();
-													}
+															// Update firstColumn cache
+															self.cacheNewField(objectName, firstColumn)
+																.fail(ok)
+																.then(function () { ok(); });
+														});
 												}
-											], function (err) {
-												if (err) {
-													refreshDeferred.reject(err);
-													return;
+												else {
+													ok();
 												}
-												refreshDeferred.resolve(newColumn);
-											});
-										}
+											}
+										], function (err) {
+											if (err) {
+												refreshDeferred.reject(err);
+												return;
+											}
+											refreshDeferred.resolve(newColumn);
+										});
+									}
 
-										return refreshDeferred;
-									});
-
-									// Register load label format
-									$$(self.webixUiId.defineLabelPopup).registerLoadLabelEvent(function () {
-										var q = $.Deferred();
-
-										self.Model.ABObject.findOne({ id: self.data.objectId })
-											.fail(function (err) { q.reject(err); })
-											.then(function (objResult) { q.resolve(objResult.labelFormat); });
-
-										return q;
-									});
-
-									// Register save label format
-									$$(self.webixUiId.defineLabelPopup).registerSaveLabelEvent(function (labelFormat) {
-
-										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-										var currentObject = self.data.objectList.filter(function (o) {
-											return o.id == self.data.objectId;
-										})[0];
-
-										currentObject.attr('labelFormat', labelFormat);
-
-										currentObject.save()
-											.fail(function (err) {
-												$$(self.webixUiId.objectDatatable).hideProgress();
-											})
-											.then(function () {
-												$$(self.webixUiId.defineLabelPopup).hide();
-
-												$$(self.webixUiId.objectDatatable).hideProgress();
-											});
-									});
-
-									$$(self.webixUiId.addFieldsPopup).registerCreateNewObjectEvent(function () {
-										$$('ab-object-add-new-popup').define('selectNewObject', false);
-										$$('ab-object-add-new-popup').show(); // Mark : show add new object popup in ObjectList page
-									});
-
-									$$(self.webixUiId.objectDatatable).hideProgress();
-
+									return refreshDeferred;
 								});
-							}
-							else {
+
+								$$(self.webixUiId.addFieldsPopup).registerCreateNewObjectEvent(function () {
+									$$('ab-object-add-new-popup').define('selectNewObject', false);
+									$$('ab-object-add-new-popup').show(); // Mark : show add new object popup in ObjectList page
+								});
+
 								$$(self.webixUiId.objectDatatable).hideProgress();
-								$$(self.webixUiId.objectDatatable).hide();
-							}
+
+							});
 
 						},
 
@@ -1097,23 +1040,10 @@ steal(
 							return q;
 						},
 
-						setObjectList: function (objectList) {
-							var self = this;
-
-							self.data.objectList = objectList;
-
-							self.controllers.ObjectDataTable.setObjectList(objectList);
-
-							var enableConnectObjects = self.data.objectList.filter(function (o) {
-								return o.id != self.data.objectId;
-							});
-							$$(self.webixUiId.addFieldsPopup).setObjectList(enableConnectObjects);
-						},
-
 						deleteObject: function (obj) {
 							var self = this;
 
-							self.controllers.ModelCreator.getModel(obj.attr('name'))
+							self.controllers.ModelCreator.getModel(obj.name)
 								.fail(function (err) {
 									// TODO : Error message
 								})
@@ -1171,12 +1101,12 @@ steal(
 							var self = this,
 								q = $.Deferred();
 
-							if (!self.data.object) {
+							if (!AD.classes.AppBuilder.currApp.currObj) {
 								q.resolve();
 								return;
 							}
 
-							var objectName = self.data.object.attr('name');
+							var objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
 
 							self.controllers.ModelCreator.getModel(objectName)
 								.fail(function (err) { q.reject(err); })
@@ -1240,13 +1170,8 @@ steal(
 										// Find key of option list
 										function (cb) {
 											if (columnInfo.options && columnInfo.options.length > 0) {
-												self.Model.ABObject.findOne({ id: self.data.objectId })
-													.fail(function (err) { cb(err); })
-													.then(function (obj) {
-														list_key = self.Model.ABList.getKey(obj.application.name, obj.name, data.name);
-
-														cb();
-													});
+												list_key = self.Model.ABList.getKey(AD.classes.AppBuilder.currApp.name, AD.classes.AppBuilder.currApp.currObj.name, data.name);
+												cb();
 											}
 											else {
 												cb();
@@ -1358,17 +1283,16 @@ steal(
 										addColumnHeader.width = self.controllers.ObjectDataTable.calculateColumnWidth(data);
 
 										// Update objectList.columns data
-										var object = self.data.objectList.filter(function (o) { return o.id == self.data.objectId; });
-										if (object && object.length > 0) {
-											var existsColumnData = $.grep(object[0].columns, function (c) { return c.id == data.id; });
+										if (AD.classes.AppBuilder.currApp.currObj) {
+											var existsColumnData = $.grep(AD.classes.AppBuilder.currApp.currObj.columns, function (c) { return c.id == data.id; });
 											if (existsColumnData && existsColumnData.length > 0) { // Update
-												for (var i = 0; i < object[0].columns.length; i++) {
-													if (object[0].columns[i].dataId == data.id) {
-														object[0].columns[i] = data;
+												for (var i = 0; i < AD.classes.AppBuilder.currApp.currObj.columns.length; i++) {
+													if (AD.classes.AppBuilder.currApp.currObj.columns[i].dataId == data.id) {
+														AD.classes.AppBuilder.currApp.currObj.columns[i] = data;
 													}
 												}
 											} else { // Add 
-												object[0].columns.push(data);
+												AD.classes.AppBuilder.currApp.currObj.columns.push(data);
 											}
 										}
 
@@ -1478,7 +1402,7 @@ steal(
 							async.series([
 								// Find cached columns
 								function (callback) {
-									self.controllers.ModelCreator.getModel(self.data.object.attr('name'))
+									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
 										.fail(callback)
 										.then(function (result) {
 											cachedFields = result.Cached.getNewFields();
@@ -1522,7 +1446,7 @@ steal(
 
 												cachedFields.forEach(function (col) {
 													updateCachedColTasks.push(function (ok) {
-														self.cacheNewField(self.data.object.attr('name'), col)
+														self.cacheNewField(AD.classes.AppBuilder.currApp.currObj.attr('name'), col)
 															.fail(ok).then(function () { ok(); });
 													});
 												});
@@ -1536,16 +1460,13 @@ steal(
 										// Update data to server
 										function (next) {
 											if (columns && columns.length > 0) {
-												self.Model.ABObject.sortColumns(self.data.objectId, columns, function (err, result) {
-													if (err) {
-														next(err);
-														return;
-													}
+												AD.classes.AppBuilder.currApp.currObj.sortColumns(columns)
+													.fail(next)
+													.then(function (result) {
+														self.refreshPopupData();
 
-													self.refreshPopupData();
-
-													next();
-												});
+														next();
+													})
 											}
 											else {
 												next();

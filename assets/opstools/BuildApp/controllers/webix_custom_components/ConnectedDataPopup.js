@@ -1,6 +1,5 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/models/ABColumn.js',
 
 	function () {
 		System.import('appdev').then(function () {
@@ -18,10 +17,6 @@ steal(
 
 							// Call parent init
 							self._super(element, options);
-
-							self.Model = {
-								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
-							};
 
 							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
 							self.controllers = {
@@ -194,10 +189,6 @@ steal(
 											dataList.clearAll();
 										}
 									}
-								},
-
-								setApp: function (app) {
-									self.controllers.ModelCreator.setApp(app);
 								},
 
 								open: function (object, rowId, selectedIds, linkType, linkViaColName, linkViaType) {

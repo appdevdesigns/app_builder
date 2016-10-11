@@ -10,15 +10,7 @@ steal(
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 				AD.Model.extend('opstools.BuildApp.ABObject',
 					{
-						useSockets: true,
-						sortColumns: function (id, data, cb) {
-							return AD.comm.service.put({
-								url: '/app_builder/object/sortColumns/' + id,
-								data: {
-									columns: data
-								}
-							}, cb);
-						}
+						useSockets: true
 						/*
 							findAll: 'GET /app_builder/abobject',
 							findOne: 'GET /app_builder/abobject/{id}',
@@ -54,6 +46,19 @@ steal(
 
 						getColumns: function () {
 							return AD.Model.get('opstools.BuildApp.ABColumn').findAll({ object: this.id });
+						},
+
+						getColumn: function (colId) {
+							return AD.Model.get('opstools.BuildApp.ABColumn').findOne({ object: this.id, id: colId });
+						},
+
+						sortColumns: function (id, cols) {
+							return AD.comm.service.put({
+								url: '/app_builder/object/sortColumns/' + this.id,
+								data: {
+									columns: cols
+								}
+							});
 						}
 
 					});

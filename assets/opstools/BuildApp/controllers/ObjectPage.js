@@ -82,18 +82,15 @@ steal(
 							var self = this;
 
 							self.controllers.ObjectList.on(self.options.selectedObjectEvent, function (event, id) {
-								self.data.objectId = id;
+								var curObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == id });
+								if (curObj && curObj.length > 0)
+									AD.classes.AppBuilder.currApp.currObj = curObj[0];
 
-								self.controllers.ObjectWorkspace.setObjectId(id);
-							});
-
-							self.controllers.ObjectList.on(self.options.updatedObjectEvent, function (event, data) {
-								self.data.objectList = data.objectList;
-
-								self.controllers.ObjectWorkspace.setObjectList(data.objectList);
+								self.controllers.ObjectWorkspace.showTable();
 							});
 
 							self.controllers.ObjectList.on(self.options.deletedObjectEvent, function (event, data) {
+								// Clear cache
 								self.controllers.ObjectWorkspace.deleteObject(data.object);
 							});
 						},
@@ -109,30 +106,23 @@ steal(
 							self.controllers.ObjectWorkspace.webix_ready();
 						},
 
-						setApp: function (app) {
+						refresh: function () {
 							var self = this;
-							self.data.app = app;
+
+							self.controllers.ObjectList.resetState();
+							self.controllers.ObjectList.refreshObjectList();
+							self.controllers.ObjectList.refreshUnsyncNumber();
 
 							self.controllers.ObjectWorkspace.resetState();
-							self.controllers.ObjectList.resetState();
-
-							self.controllers.ObjectWorkspace.setApp(app);
-							self.controllers.ObjectList.setApp(app);
-
-							self.controllers.ModelCreator.setApp(app);
-						},
-
-						refresh: function () {
-							this.controllers.ObjectList.refreshUnsyncNumber();
-							this.controllers.ObjectWorkspace.setObjectId(this.data.objectId);
+							self.controllers.ObjectWorkspace.showTable();
 						},
 
 						syncObjectFields: function () {
 							var self = this,
 								q = $.Deferred();
 
-							if (self.data.objectList) {
-								async.eachSeries(self.data.objectList, function (object, next) {
+							if (AD.classes.AppBuilder.currApp.objects.length > 0) {
+								async.eachSeries(AD.classes.AppBuilder.currApp.objects.attr(), function (object, next) {
 									async.waterfall([
 										function (cb) {
 											// Get object model
@@ -247,45 +237,45 @@ steal(
 							var q = $.Deferred(),
 								self = this;
 
-							if (self.data.objectList) {
-								var syncDataTasks = [];
-
-								self.data.objectList.forEach(function (object) {
-									syncDataTasks.push(function (next) {
-
-										async.waterfall([
-											function (cb) {
-												self.controllers.ModelCreator.getModel(object.name)
-													.fail(function (err) { cb(err); })
-													.then(function (objectModel) {
-														cb(null, objectModel);
-													});
-											},
-											function (objectModel, cb) {
-												objectModel.Cached.syncDataToServer()
-													.fail(function (err) { cb(err); })
-													.then(function () {
-														cb(null);
-														next();
-													});
-											}
-										]);
-
-									});
-								});
-
-								async.parallel(syncDataTasks, function (err) {
-									if (err) {
-										q.reject(err);
-										return;
-									}
-
-									q.resolve();
-								});
-							}
-							else {
+							if (!AD.classes.AppBuilder.currApp.objects || AD.classes.AppBuilder.currApp.objects.length < 1) {
 								q.resolve();
+								return q;
 							}
+
+							var syncDataTasks = [];
+
+							AD.classes.AppBuilder.currApp.objects.forEach(function (object) {
+								syncDataTasks.push(function (next) {
+
+									async.waterfall([
+										function (cb) {
+											self.controllers.ModelCreator.getModel(object.name)
+												.fail(function (err) { cb(err); })
+												.then(function (objectModel) {
+													cb(null, objectModel);
+												});
+										},
+										function (objectModel, cb) {
+											objectModel.Cached.syncDataToServer()
+												.fail(function (err) { cb(err); })
+												.then(function () {
+													cb(null);
+													next();
+												});
+										}
+									]);
+
+								});
+							});
+
+							async.parallel(syncDataTasks, function (err) {
+								if (err) {
+									q.reject(err);
+									return;
+								}
+
+								q.resolve();
+							});
 
 							return q;
 						},
@@ -295,7 +285,7 @@ steal(
 								self = this;
 
 							// Find link object
-							var linkObj = self.data.objectList.filter(function (obj) { return obj.id == linkObject })[0];
+							var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == linkObject })[0];
 
 							// Get object model
 							self.controllers.ModelCreator.getModel(linkObj.name)

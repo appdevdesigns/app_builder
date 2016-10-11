@@ -104,7 +104,7 @@ steal(
                                                             viewName = AD.classes.AppBuilder.DataFields.getEditViewId(selectedMenuItem.fieldName);
 
                                                         if (viewName) {
-                                                            AD.classes.AppBuilder.DataFields.populateSettings(self.data.app, null);
+                                                            AD.classes.AppBuilder.DataFields.populateSettings(AD.classes.AppBuilder.currApp, null);
 
                                                             $$(viewName).show();
 
@@ -137,17 +137,6 @@ steal(
                                                             $(headerNameClass + ' input[type="text"]').select();
 
                                                             this.getTopParentView().fieldName = selectedMenuItem.fieldName;
-
-                                                            // TODO : Move to the data field file
-                                                            // Set object name to labels
-                                                            // if (viewName == self.componentIds.connectObjectView) {
-                                                            //     var currObject = self.data.objectList.filter(function (obj) {
-                                                            //         return obj.id == self.data.currObjectId;
-                                                            //     })[0];
-
-                                                            // $$(self.componentIds.connectObjectLinkFrom).setValue(currObject.label);
-                                                            // $$(self.componentIds.connectObjectLinkFrom2).setValue(currObject.label);
-                                                            // }
                                                         }
                                                     }
                                                 }
@@ -271,7 +260,7 @@ steal(
                                     var viewName = AD.classes.AppBuilder.DataFields.getEditViewId(data.fieldName);
 
                                     // Populate data
-                                    AD.classes.AppBuilder.DataFields.populateSettings(self.data.app, data);
+                                    AD.classes.AppBuilder.DataFields.populateSettings(AD.classes.AppBuilder.currApp, data);
 
                                     $$(viewName).show();
 
@@ -288,27 +277,6 @@ steal(
 
                                     // Highlight name in text box
                                     $('.' + self.componentIds.headerNameText + ' input[type="text"]').select();
-                                },
-
-                                setApp: function (app) {
-                                    self.data.app = app;
-                                },
-
-                                setObjectList: function (objectList) {
-                                    self.data.objectList = objectList;
-
-                                    // TODO : Move to the data field file
-                                    // // Set enable connect object list to the add new column popup
-                                    // var enableConnectObjects = objectList.filter(function (o) {
-                                    //     return o.id != self.data.currObjectId;
-                                    // });
-                                    // $$(self.componentIds.connectObjectList).clearAll();
-                                    // $$(self.componentIds.connectObjectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
-                                    // $$(self.componentIds.connectObjectList).refresh();
-                                },
-
-                                setCurrObjectId: function (objectId) {
-                                    self.data.currObjectId = objectId
                                 },
 
                                 resetState: function () {
