@@ -992,7 +992,7 @@ steal(
 
 								$$(self.webixUiId.addFieldsPopup).registerCreateNewObjectEvent(function () {
 									$$('ab-object-add-new-popup').define('selectNewObject', false);
-									$$('ab-object-add-new-popup').show(); // Mark : show add new object popup in ObjectList page
+									$$('ab-object-add-new-popup').show();
 								});
 
 								$$(self.webixUiId.objectDatatable).hideProgress();

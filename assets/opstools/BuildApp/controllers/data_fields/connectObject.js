@@ -113,20 +113,26 @@ steal(function () {
 	connectObjectField.populateSettings = function (application, data) {
 		$$(componentIds.editView).appName = application.name;
 
-		// Set enable connect object list to the add new column popup
-		var enableConnectObjects = application.objects.filter(function (o) { return o.id != application.currObj.id; });
+		var objectList = AD.op.WebixDataCollection(application.objects);
+		objectList.attachEvent('onAfterAdd', function (id, index) {
+			$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
+		});
+		objectList.attachEvent('onAfterDelete', function () {
+			$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
+		});
 
 		$$(componentIds.objectList).clearAll();
-		$$(componentIds.objectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
+		$$(componentIds.objectList).data.sync(objectList);
 		$$(componentIds.objectList).refresh();
+		$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
 
 		$$(componentIds.fieldLink).setValue(application.currObj.label);
 		$$(componentIds.fieldLink2).setValue(application.currObj.label);
 
-		if (!data.linkObject || !data.linkType || !data.setting) return;
+		if (!data.setting || !data.setting.linkObject || !data.setting.linkType) return;
 
 		var selectedObject = $$(componentIds.objectList).data.find(function (obj) {
-			var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
+			var linkObjId = data.setting.linkObject;
 			return obj.id == linkObjId;
 		});
 
@@ -135,7 +141,7 @@ steal(function () {
 			$$(componentIds.objectList).select(selectedObject[0].id);
 		$$(componentIds.objectCreateNew).disable();
 
-		$$(componentIds.fieldLinkType).setValue(data.linkType);
+		$$(componentIds.fieldLinkType).setValue(data.setting.linkType);
 		$$(componentIds.fieldLinkViaType).setValue(data.setting.linkViaType);
 	};
 
