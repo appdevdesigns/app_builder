@@ -112,33 +112,8 @@ steal(
 
                                                             $$(viewName).show();
 
-                                                            var headerNameClass = '.' + self.componentIds.headerNameText,
-                                                                labelNameClass = '.' + self.componentIds.labelNameText;
-
-                                                            // // Set default field name
-                                                            // if ($(headerNameClass) && $(headerNameClass).length > 0) {
-                                                            //     $(headerNameClass).each(function (index, txtName) {
-                                                            //         var headerName = $(txtName).webix_text().getValue();
-                                                            //         if (!headerName || headerName.indexOf('Field ') > -1) {
-                                                            //             var defaultName = base.getDefaultFieldName();
-                                                            //             $(txtName).webix_text().setValue(defaultName);
-
-                                                            //             // Set default label name
-                                                            //             var labelTexts = $(labelNameClass).webix_text();
-
-                                                            //             if (labelTexts && !(labelTexts instanceof Array))
-                                                            //                 labelTexts = [labelTexts];
-
-                                                            //             can.each(labelTexts, function (lblText) {
-                                                            //                 lblText.setValue(defaultName);
-                                                            //             });
-
-                                                            //         }
-                                                            //     });
-                                                            // }
-
                                                             // Highlight name in text box
-                                                            $(headerNameClass + ' input[type="text"]').select();
+                                                            $('.' + self.componentIds.headerNameText + ' input[type="text"]').select();
 
                                                             this.getTopParentView().fieldName = selectedMenuItem.fieldName;
                                                         }
@@ -268,16 +243,16 @@ steal(
 
                                     $$(viewName).show();
 
-                                    // Set field name
-                                    $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
-                                        $(txtName).webix_text().setValue(data.name.replace(/_/g, ' '));
-                                        $(txtName).webix_text().disable();
-                                    });
+                                    // // Set field name
+                                    // $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
+                                    //     $(txtName).webix_text().setValue(data.name.replace(/_/g, ' '));
+                                    //     $(txtName).webix_text().disable();
+                                    // });
 
-                                    // Set field label
-                                    $('.' + self.componentIds.labelNameText).each(function (index, lblName) {
-                                        $(lblName).webix_text().setValue(data.label);
-                                    });
+                                    // // Set field label
+                                    // $('.' + self.componentIds.labelNameText).each(function (index, lblName) {
+                                    //     $(lblName).webix_text().setValue(data.label);
+                                    // });
 
                                     // Highlight name in text box
                                     $('.' + self.componentIds.headerNameText + ' input[type="text"]').select();

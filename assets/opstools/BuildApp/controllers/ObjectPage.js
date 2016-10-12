@@ -165,12 +165,12 @@ steal(
 															},
 															// Create link column
 															function (column, ok) {
-																if (field.linkObject && field.linkVia) {
-																	self.createLinkColumn(field.linkObject, field.linkVia, column.id)
+																if (field.setting.linkObject && field.setting.linkVia) {
+																	self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
 																		.fail(ok)
 																		.then(function (linkCol) {
 																			// set linkVia
-																			column.attr('linkVia', linkCol.id);
+																			column.setting.attr('linkVia', linkCol.id);
 																			column.save()
 																				.fail(function (err) { ok(err) })
 																				.then(function (result) {
@@ -296,7 +296,7 @@ steal(
 										linkCol = cachedFields.filter(function (f) { return f.id == linkVia; })[0],
 										tempId = linkCol.id;
 
-									linkCol.linkVia = linkColumnId;
+									linkCol.setting.linkVia = linkColumnId;
 									linkCol.weight = linkObj.columns.length + Object.keys(cachedFields).indexOf(linkVia) + 1;
 
 									delete linkCol.id;

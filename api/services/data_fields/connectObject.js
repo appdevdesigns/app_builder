@@ -17,6 +17,8 @@ module.exports = {
 			return dfd;
 		}
 
+		var formatAppName = AppBuilder.rules.toApplicationNameFormat(column.setting.appName);
+
 		// fieldName:[model|collection]:linkObjectName:[viaReference]
 		var colString = '';
 		colString += column.name;
@@ -27,7 +29,7 @@ module.exports = {
 				ABObject.findOne({ id: column.setting.linkObject })
 					.fail(next)
 					.then(function (object) {
-						colString += ':' + AppBuilder.rules.toObjectNameFormat(column.setting.appName, object.name) // model name
+						colString += ':' + AppBuilder.rules.toObjectNameFormat(formatAppName, object.name) // model name
 
 						next();
 					});
@@ -46,8 +48,11 @@ module.exports = {
 						next();
 					});
 			}
-		], function () {
-			dfd.resolve(colString);
+		], function (err) {
+			if (err)
+				dfd.reject(err);
+			else
+				dfd.resolve(colString);
 		});
 
 		return dfd;

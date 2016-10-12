@@ -516,7 +516,6 @@ module.exports = {
                             field.getFieldString(col)
                                 .fail(ok)
                                 .then(function (colStr) {
-console.log('output: ', colStr);
                                     colString = colStr;
 
                                     if (!isDefinedLabel &&

@@ -262,7 +262,7 @@ steal(
 
 													// Get columns of connected object
 													var object = AD.classes.AppBuilder.currApp.objects.filter(function (o) {
-														return o.id == (columnData.linkObject.id || columnData.linkObject);
+														return o.id == columnData.setting.linkObject;
 													});
 
 													if (!object || object.length < 1)
@@ -560,10 +560,9 @@ steal(
 																},
 																// Remove describe & multi-fields of link object model
 																function (ok) {
-																	if (selectedColumn.linkObject && selectedColumn.linkVia) {
+																	if (selectedColumn.setting.linkObject && selectedColumn.setting.linkVia) {
 																		var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
-																			var linkObjId = selectedColumn.linkObject.id || selectedColumn.linkObject;
-																			return obj.id == linkObjId;
+																			return obj.id == selectedColumn.setting.linkObject;
 																		})[0];
 
 																		self.controllers.ModelCreator.getModel(linkObject.name)
@@ -597,8 +596,8 @@ steal(
 																},
 																// Call server to delete link field data
 																function (ok) {
-																	if (selectedColumn.linkObject && selectedColumn.linkVia && typeof selectedColumn.linkVia !== 'string') {
-																		self.Model.ABColumn.destroy(selectedColumn.linkVia.id)
+																	if (selectedColumn.setting.linkObject && selectedColumn.setting.linkVia && typeof selectedColumn.setting.linkVia !== 'string') {
+																		self.Model.ABColumn.destroy(selectedColumn.setting.linkVia)
 																			.fail(function (err) { ok(err); })
 																			.then(function (data) { ok(); });
 																	}
@@ -830,7 +829,7 @@ steal(
 								// Get data from server
 								function (next) {
 									// Find the link columns
-									var linkCols = self.data.columns.filter(function (col) { return col.linkObject != null }),
+									var linkCols = self.data.columns.filter(function (col) { return col.setting && col.setting.linkObject != null }),
 										linkColNames = $.map(linkCols, function (col) { return col.name; });
 
 									self.Model.ObjectModel.store = {}; // Clear CanJS local repository
@@ -880,22 +879,6 @@ steal(
 										weight: columnInfo.weight
 									};
 
-									if (columnInfo.supportMultilingual != null)
-										newColumn.supportMultilingual = columnInfo.supportMultilingual ? true : false;
-
-									if (columnInfo.default)
-										newColumn.default = columnInfo.default;
-									else
-										delete newColumn.default;
-
-									// Link column
-									if (columnInfo.linkTypeTo && columnInfo.linkTypeFrom && columnInfo.linkObject) {
-										newColumn.linkType = columnInfo.linkTypeTo;
-										newColumn.linkObject = columnInfo.linkObject;
-										newColumn.linkDefault = true;
-										newColumn.setting.linkViaType = columnInfo.linkTypeFrom;
-									}
-
 									// Get deferred when save complete
 									var refreshDeferred = self.refreshColumnsDeferred(columnInfo),
 										objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
@@ -906,8 +889,6 @@ steal(
 										for (var key in newColumn) {
 											updateColumn.attr(key, newColumn[key]);
 										}
-
-										updateColumn.setting.attr('linkViaType', columnInfo.linkTypeFrom);
 
 										async.series([
 											// Update the column
@@ -921,12 +902,12 @@ steal(
 											},
 											// Update the link column
 											function (next) {
-												if (updateColumn.linkVia) {
-													AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.linkVia.id)
+												if (updateColumn.setting.linkVia) {
+													AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.setting.linkVia)
 														.fail(next)
 														.then(function (result) {
-															result.attr('linkType', columnInfo.linkTypeFrom);
-															result.setting.attr('linkViaType', columnInfo.linkTypeTo);
+															result.setting.attr('linkType', columnInfo.setting.linkViaType);
+															result.setting.attr('linkViaType', columnInfo.setting.linkType);
 
 															result.save().fail(next).then(function () {
 																next();
@@ -956,33 +937,35 @@ steal(
 													.then(function (firstColumn) { ok(null, firstColumn) });
 											},
 											function (firstColumn, ok) {
-												if (firstColumn.linkType && firstColumn.linkObject && firstColumn.linkDefault) {
+												if (firstColumn.setting.linkType && firstColumn.setting.linkObject) {
 													// Find object
-													var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == firstColumn.linkObject; })[0];
+													var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == firstColumn.setting.linkObject; })[0];
 
 													// Create linked column
 													var secondColumn = {
-														object: firstColumn.linkObject,
+														object: firstColumn.setting.linkObject,
 														name: AD.classes.AppBuilder.currApp.currObj.label,
 														label: AD.classes.AppBuilder.currApp.currObj.label,
+														fieldName: firstColumn.fieldName,
 														type: firstColumn.type,
-														setting: $.extend(true, {}, firstColumn.setting),
-														linkType: columnInfo.linkTypeFrom,
-														linkObject: AD.classes.AppBuilder.currApp.currObj.id,
-														linkVia: firstColumn.id,
-														linkDefault: false
+														setting: $.extend(true, {}, firstColumn.setting)
 													};
 
-													if (firstColumn.linkVia)
-														secondColumn.id = firstColumn.linkVia;
-													secondColumn.setting.linkViaType = columnInfo.linkTypeTo;
+													secondColumn.setting.linkType = columnInfo.setting.linkViaType;
+													secondColumn.setting.linkObject = AD.classes.AppBuilder.currApp.currObj.id;
+													secondColumn.setting.linkVia = firstColumn.id;
+													secondColumn.setting.linkViaType = columnInfo.setting.linkType;
+													secondColumn.setting.linkDefault = false;
+
+													if (firstColumn.setting.linkVia)
+														secondColumn.id = firstColumn.setting.linkVia;
 
 													// Cache
 													self.cacheNewField(linkObj.name, secondColumn)
 														.fail(ok)
 														.then(function (result) {
 															// Set linkVia to first column
-															firstColumn.linkVia = result.id;
+															firstColumn.setting.linkVia = result.id;
 
 															// Update firstColumn cache
 															self.cacheNewField(objectName, firstColumn)

@@ -1,7 +1,6 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/models/ABObject.js',
-	'opstools/BuildApp/models/ABColumn.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 
@@ -24,8 +23,7 @@ steal(
 							this._super(element, options);
 
 							this.Model = {
-								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
-								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn')
+								ABObject: AD.Model.get('opstools.BuildApp.ABObject')
 							};
 						},
 
@@ -116,25 +114,29 @@ steal(
 
 									// Set Describe
 									var describe = {};
-									objectData.columns.forEach(function (c) {
-										describe[c.name] = c.type;
+									objectData.columns.forEach(function (col) {
+										describe[col.name] = col.type;
 									});
 
 									// Set multilingual fields
-									var multilingualFields = objectData.columns.filter(function (c) { return c.supportMultilingual; });
+									var multilingualFields = objectData.columns.filter(function (col) { return col.setting && col.setting.supportMultilingual; });
 									multilingualFields = $.map(multilingualFields.attr(), function (f) { return f.name; });
 
-									var associations = {};
-
 									// Set associations
-									self.Model.ABColumn.findAll({ object: objectData.id, linkObject: { '!': null } })
-										.fail(q.reject)
-										.then(function (columns) {
-											columns.forEach(function (col) {
-												// opstools.BuildApp.#appName#_#objectName#
-												// opstools.#appName#.#appName#_#objectName#
-												associations[col.name] = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, col.linkObject.name);
-											});
+									var associations = {};
+									var linkFields = objectData.columns.filter(function (col) { return col.setting && col.setting.linkObject; });
+									async.eachSeries(linkFields,
+										function (col, ok) {
+											self.Model.ABObject.findOne({ id: col.setting.linkObject })
+												.fail(ok)
+												.then(function (linkObject) {
+													// opstools.BuildApp.#appName#_#objectName#
+													// opstools.#appName#.#appName#_#objectName#
+													associations[col.name] = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, linkObject.name);
+
+													ok();
+												})
+										}, function () {
 
 											// Define base model
 											try {
@@ -158,7 +160,6 @@ steal(
 
 											q.resolve(modelResult);
 										});
-
 								});
 
 							return q;

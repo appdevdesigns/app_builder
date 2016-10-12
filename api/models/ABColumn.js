@@ -62,34 +62,8 @@ module.exports = {
 
         unique: { type: 'boolean' },
 
-        setting: { type: 'json' },
+        setting: { type: 'json' }
 
-        default: { type: 'string' },
-
-        list: { collection: 'ABList', via: 'column' },
-
-        linkType: {
-            type: 'string',
-            enum: ['collection', 'model'],
-            required: false
-        },
-
-        linkObject: {
-            model: 'ABObject',
-            required: false
-        },
-
-        linkVia: {
-            model: 'ABColumn',
-            required: false
-        },
-
-        linkDefault: {
-            type: 'boolean',
-            required: false
-        },
-
-        supportMultilingual: { type: 'boolean' },
     },
 
     beforeValidate: function (values, cb) {
