@@ -52,13 +52,22 @@ steal(
 							return AD.Model.get('opstools.BuildApp.ABColumn').findOne({ object: this.id, id: colId });
 						},
 
-						sortColumns: function (id, cols) {
-							return AD.comm.service.put({
+						sortColumns: function (cols) {
+							var q = AD.sal.Deferred();
+
+							AD.comm.service.put({
 								url: '/app_builder/object/sortColumns/' + this.id,
 								data: {
 									columns: cols
 								}
+							}, function (err, result) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve(result);
 							});
+
+							return q;
 						}
 
 					});

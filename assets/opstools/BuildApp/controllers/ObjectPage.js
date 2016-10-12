@@ -153,7 +153,7 @@ steal(
 												delete field.id;
 
 												if (!field.weight)
-													field.weight = object.columns.length + (index + 1);
+													field.weight = object.columns.length + index;
 
 												async.waterfall([
 													// Create object column
