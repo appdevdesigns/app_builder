@@ -269,7 +269,7 @@ steal(
 													if (!object || object.length < 1)
 														return false;
 
-													// $$(self.webixUiId.addConnectObjectDataPopup).open(object[0], data.row, selectedIds, columnData.linkType, columnData.linkVia.name, columnData.linkVia.linkType);
+													// $$(self.webixUiId.addConnectObjectDataPopup).open(object[0], data.row, selectedIds, columnData.setting.linkType, columnData.setting.linkVia.name, columnData.setting.linkVia.linkType);
 
 													return false;
 												}
@@ -499,7 +499,7 @@ steal(
 										break;
 									case self.labels.object.deleteField:
 										// Validate
-										if (self.data.columns.length < 2 && typeof headerField.dataId !== 'string') {
+										if (self.data.columns.length < 2 && !headerField.dataId.toString().startsWith('temp')) {
 											webix.alert({
 												title: self.labels.object.couldNotDeleteField,
 												ok: self.labels.common.ok,
@@ -537,118 +537,118 @@ steal(
 													cancel: self.labels.common.no,
 													text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedColumn.label),
 													callback: function (result) {
-														if (result) {
-															$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
+														if (!result) return;
 
-															var objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
+														$$(self.webixUiId.objectDatatable).showProgress({ type: "icon" });
 
-															async.parallel([
-																// Remove describe & multi-fields of object model
-																function (ok) {
-																	self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
-																		.fail(function (err) { ok(err); })
+														var objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
+
+														async.parallel([
+															// Remove describe & multi-fields of object model
+															function (ok) {
+																self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
+																	.fail(ok)
+																	.then(function (objectModel) {
+																		delete objectModel.describe()[headerField.id];
+
+																		if (objectModel.multilingualFields) // Remove field
+																			objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != headerField.id; });
+
+																		// Delete cache
+																		objectModel.Cached.deleteCachedField(headerField.dataId);
+
+																		ok();
+																	});
+															},
+															// Remove describe & multi-fields of link object model
+															function (ok) {
+																if (selectedColumn.setting.linkObject && selectedColumn.setting.linkVia) {
+																	var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
+																		return obj.id == selectedColumn.setting.linkObject;
+																	})[0];
+
+																	self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, linkObject.name)
+																		.fail(ok)
 																		.then(function (objectModel) {
-																			delete objectModel.describe()[headerField.id];
+																			delete objectModel.describe()[selectedColumn.setting.linkVia];
 
-																			if (objectModel.multilingualFields) // Remove field
-																				objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != headerField.id; });
+																			if (objectModel.multilingualFields) // Remove link field
+																				objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != selectedColumn.setting.linkVia; });
 
 																			// Delete cache
-																			objectModel.Cached.deleteCachedField(headerField.dataId);
+																			objectModel.Cached.deleteCachedField(selectedColumn.setting.linkVia);
 
 																			ok();
 																		});
-																},
-																// Remove describe & multi-fields of link object model
-																function (ok) {
-																	if (selectedColumn.setting.linkObject && selectedColumn.setting.linkVia) {
-																		var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
-																			return obj.id == selectedColumn.setting.linkObject;
-																		})[0];
-
-																		self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, linkObject.name)
-																			.fail(function (err) { ok(err); })
-																			.then(function (objectModel) {
-																				delete objectModel.describe()[selectedColumn.linkVia];
-
-																				if (objectModel.multilingualFields) // Remove link field
-																					objectModel.multilingualFields = objectModel.multilingualFields.filter(function (f) { return f != selectedColumn.linkVia; });
-
-																				// Delete cache
-																				objectModel.Cached.deleteCachedField(selectedColumn.linkVia);
-
-																				ok();
-																			});
-																	}
-																	else {
-																		ok();
-																	}
-																},
-																// Call server to delete field data
-																function (ok) {
-																	if (typeof headerField.dataId === 'string' && headerField.dataId.startsWith('temp')) {
-																		ok();
-																	}
-																	else {
-																		self.Model.ABColumn.destroy(headerField.dataId)
-																			.fail(function (err) { ok(err); })
-																			.then(function (data) { ok(); });
-																	}
-																},
-																// Call server to delete link field data
-																function (ok) {
-																	if (selectedColumn.setting.linkObject && selectedColumn.setting.linkVia && typeof selectedColumn.setting.linkVia !== 'string') {
-																		self.Model.ABColumn.destroy(selectedColumn.setting.linkVia)
-																			.fail(function (err) { ok(err); })
-																			.then(function (data) { ok(); });
-																	}
-																	else {
-																		ok();
-																	}
 																}
-															], function (err) {
-																if (err) {
-																	$$(self.webixUiId.objectDatatable).hideProgress();
-
-																	webix.message({
-																		type: "error",
-																		text: self.labels.common.deleteErrorMessage.replace('{0}', selectedColumn.label)
-																	});
-
-																	AD.error.log('Column list : Error delete column', { error: err });
-																	next(err);
-																	return;
+																else {
+																	ok();
 																}
-
-																// Remove column
-																self.data.columns.forEach(function (c, index) {
-																	if (c.name == headerField.id) {
-																		self.data.columns.splice(index, 1);
-																		return false;
-																	}
-																});
-
-																self.bindColumns(false, true);
-
-																self.reorderColumns();
-
-																$$(self.webixUiId.editHeaderPopup).hide();
-
-																webix.message({
-																	type: "success",
-																	text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedColumn.label)
-																});
-
-																// Clear selected field
-																headerField = null;
-
-																self.refreshPopupData();
-
+															},
+															// Call server to delete field data
+															function (ok) {
+																if (headerField.dataId.toString().startsWith('temp')) {
+																	ok();
+																}
+																else {
+																	self.Model.ABColumn.destroy(headerField.dataId)
+																		.fail(ok)
+																		.then(function (data) { ok(); });
+																}
+															},
+															// Call server to delete link field data
+															function (ok) {
+																if (selectedColumn.setting.linkObject && selectedColumn.setting.linkVia && !selectedColumn.setting.linkVia.toString().startsWith('temp')) {
+																	self.Model.ABColumn.destroy(selectedColumn.setting.linkVia)
+																		.fail(ok)
+																		.then(function (data) { ok(); });
+																}
+																else {
+																	ok();
+																}
+															}
+														], function (err) {
+															if (err) {
 																$$(self.webixUiId.objectDatatable).hideProgress();
 
-																next();
+																webix.message({
+																	type: "error",
+																	text: self.labels.common.deleteErrorMessage.replace('{0}', selectedColumn.label)
+																});
+
+																AD.error.log('Column list : Error delete column', { error: err });
+																next(err);
+																return;
+															}
+
+															// Remove column
+															self.data.columns.forEach(function (c, index) {
+																if (c.name == headerField.id) {
+																	self.data.columns.splice(index, 1);
+																	return false;
+																}
 															});
-														}
+
+															self.bindColumns(false, true);
+
+															self.reorderColumns();
+
+															$$(self.webixUiId.editHeaderPopup).hide();
+
+															webix.message({
+																type: "success",
+																text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedColumn.label)
+															});
+
+															// Clear selected field
+															headerField = null;
+
+															self.refreshPopupData();
+
+															$$(self.webixUiId.objectDatatable).hideProgress();
+
+															next();
+														});
 
 													}
 												});
@@ -1196,7 +1196,7 @@ steal(
 												columnInfo.options.forEach(function (opt, index) {
 													createListEvents.push(function (next) {
 
-														if (opt.dataId && typeof opt.dataId !== 'string') { // Update
+														if (opt.dataId && !opt.dataId.toString().startsWith('temp')) { // Update
 															self.Model.ABList.findOne({ id: opt.dataId })
 																.fail(function (err) { next(err) })
 																.then(function (li) {
@@ -1239,7 +1239,7 @@ steal(
 											}
 										}
 									], function () {
-										columnInfo.isNew = (columnInfo.id === null || typeof columnInfo.id === 'undefined' || (typeof columnInfo.id === 'string' && columnInfo.id.startsWith('temp')));
+										columnInfo.isNew = (columnInfo.id === null || typeof columnInfo.id === 'undefined' || columnInfo.id.toString().startsWith('temp'));
 
 										var addColumnHeader = $.extend(columnInfo.setting, {
 											id: data.name,
@@ -1404,7 +1404,7 @@ steal(
 										if (col && col.length > 0) {
 											col[0].attr('weight', colIndex);
 
-											if (typeof col[0].id !== 'string') {
+											if (!col[0].id.toString().startsWith('temp')) {
 												columns.push({
 													columnId: col[0].id,
 													index: colIndex
