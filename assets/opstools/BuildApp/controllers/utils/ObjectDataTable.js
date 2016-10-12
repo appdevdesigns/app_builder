@@ -1,6 +1,5 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	function () {
@@ -49,12 +48,10 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
+							var DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
 								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
 
 							self.controllers = {
-								ModelCreator: new ModelCreator(),
 								DataHelper: new DataHelper(),
 								SelectivityHelper: new SelectivityHelper(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
 							};
@@ -171,15 +168,8 @@ steal(
 							self.dataTable.refresh();
 						},
 
-						setApp: function (app) {
-							this.controllers.ModelCreator.setApp(app);
-							this.controllers.DataHelper.setApp(app);
-						},
-
 						setObjectList: function (objectList) {
 							this.data.objectList = objectList;
-
-							this.controllers.DataHelper.setObjectList(objectList);
 						},
 
 						setReadOnly: function (readOnly) {
@@ -337,7 +327,7 @@ steal(
 								self.dataTable.setRowHeight(row, calHeight);
 						},
 
-						populateData: function (data) {
+						populateData: function (application, data) {
 							var self = this,
 								q = $.Deferred(),
 								result;
@@ -360,7 +350,7 @@ steal(
 							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
 
 							// Populate labels & Convert string to Date object
-							self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
+							self.controllers.DataHelper.normalizeData(application, data, linkColObjs, dateCols)
 								.fail(q.reject)
 								.then(function (result) {
 									self.dataTable.clearAll();

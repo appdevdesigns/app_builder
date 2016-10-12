@@ -27,10 +27,10 @@ steal(
 							};
 						},
 
-						defineBaseModel: function (objectName, describe, multilingualFields, associations) {
+						defineBaseModel: function (application, objectName, describe, multilingualFields, associations) {
 							if (!objectName || !describe || !multilingualFields) throw new Error('Invalid parameters');
 
-							var formatAppName = AD.classes.AppBuilder.currApp.name.replace(/_/g, ''),
+							var formatAppName = application.name.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 
@@ -59,7 +59,7 @@ steal(
 							return AD.Model.Base.get(modelName);
 						},
 
-						getModel: function (objectName) {
+						getModel: function (application, objectName) {
 							var q = $.Deferred();
 
 							if (!objectName) {
@@ -68,7 +68,7 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = AD.classes.AppBuilder.currApp.name.replace(/_/g, ''),
+								formatAppName = application.name.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName),
 								model = AD.Model.get(modelName);
@@ -77,7 +77,7 @@ steal(
 								q.resolve(model);
 							}
 							else {
-								self.updateModel(objectName)
+								self.updateModel(application, objectName)
 									.fail(function (err) { q.reject(err); })
 									.then(function (modelResult) {
 										q.resolve(AD.Model.get(modelName));
@@ -87,7 +87,7 @@ steal(
 							return q;
 						},
 
-						updateModel: function (objectName) {
+						updateModel: function (application, objectName) {
 							var q = $.Deferred();
 
 							if (!objectName) {
@@ -96,12 +96,12 @@ steal(
 							}
 
 							var self = this,
-								formatAppName = AD.classes.AppBuilder.currApp.name.replace(/_/g, ''),
+								formatAppName = application.name.replace(/_/g, ''),
 								formatObjectName = objectName.replace(/_/g, ''),
 								modelName = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/, formatObjectName);
 
 							// Get object definition
-							self.Model.ABObject.findAll({ application: AD.classes.AppBuilder.currApp.id, name: objectName })
+							self.Model.ABObject.findAll({ application: application.id, name: objectName })
 								.fail(function (err) {
 									q.reject(err);
 								})
@@ -140,7 +140,7 @@ steal(
 
 											// Define base model
 											try {
-												self.defineBaseModel(objectName, describe, multilingualFields, associations);
+												self.defineBaseModel(application, objectName, describe, multilingualFields, associations);
 											}
 											catch (err) {
 												q.reject(err);

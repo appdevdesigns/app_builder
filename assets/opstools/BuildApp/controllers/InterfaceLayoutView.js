@@ -4,8 +4,6 @@ steal(
 	'opstools/BuildApp/models/ABPage.js',
 	'opstools/BuildApp/models/ABPageComponent.js',
 
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
@@ -79,14 +77,10 @@ steal(
 							var self = this;
 
 							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
 								DataCollectionHelper = AD.Control.get('opstools.BuildApp.DataCollectionHelper');
 
 							this.controllers = {
 								ActiveList: new ActiveList(),
-								ModelCreator: new ModelCreator(),
-								DataHelper: new DataHelper(),
 								DataCollectionHelper: new DataCollectionHelper(),
 							};
 						},
@@ -478,10 +472,6 @@ steal(
 							self.resetState();
 
 							self.data.app = app;
-
-							self.controllers.ModelCreator.setApp(app);
-							self.controllers.DataHelper.setApp(app);
-							self.controllers.DataCollectionHelper.setApp(app);
 						},
 
 						setPage: function (page) {
@@ -536,11 +526,6 @@ steal(
 
 									$$(self.componentIds.componentList).hideProgress();
 								});
-						},
-
-						setObjectList: function (objectList) {
-							this.controllers.DataHelper.setObjectList(objectList);
-							this.controllers.DataCollectionHelper.setObjectList(objectList);
 						},
 
 						setComponents: function (components) {
@@ -617,7 +602,7 @@ steal(
 									// Get data collection
 									function (next) {
 										if (settings.object) {
-											self.controllers.DataCollectionHelper.getDataCollection(settings.object)
+											self.controllers.DataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, settings.object)
 												.fail(next)
 												.then(function (result) {
 													dataCollection = result;
@@ -630,7 +615,7 @@ steal(
 									// Get data collection of connected data
 									function (next) {
 										if (settings.linkedTo) {
-											self.controllers.DataCollectionHelper.getDataCollection(settings.linkedTo)
+											self.controllers.DataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, settings.linkedTo)
 												.fail(next)
 												.then(function (result) {
 													linkedDataCollection = result;

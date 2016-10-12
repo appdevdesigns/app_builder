@@ -28,17 +28,7 @@ steal(
 							this.controllers.ModelCreator = new ModelCreator();
 						},
 
-						setApp: function (app) {
-							this.data.app = app;
-
-							this.controllers.ModelCreator.setApp(app);
-						},
-
-						setObjectList: function (objectList) {
-							this.data.objectList = objectList;
-						},
-
-						normalizeData: function (data, linkFields, dateFields) {
+						normalizeData: function (application, data, linkFields, dateFields) {
 							var q = new AD.sal.Deferred(),
 								list;
 
@@ -70,14 +60,14 @@ steal(
 										linkFields.forEach(function (linkCol) {
 											if (r[linkCol.name] && !r[linkCol.name].dataLabel) {
 												Tasks.push(function (ok) {
-													var linkObj = self.data.objectList.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
+													var linkObj = application.objects.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
 														linkObjModel,
 														linkedLabels = [];
 
 													async.series([
 														// Get linked object model
 														function (next) {
-															self.controllers.ModelCreator.getModel(linkObj.name)
+															self.controllers.ModelCreator.getModel(application, linkObj.name)
 																.fail(next)
 																.then(function (result) {
 																	linkObjModel = result;

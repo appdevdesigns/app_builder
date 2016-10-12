@@ -91,7 +91,15 @@ steal(
 
 									// Sync object data
 									self.controllers.AppWorkspace.syncObjectsData()
-										.always(function () {
+										.fail(function (err) {
+											console.error(err);
+											$$(self.webixUiId.loadingScreen).showErrorScreen('There is a error when is syncing object data', "Reload", function () {
+												$$(self.webixUiId.loadingScreen).start();
+
+												self.controllers.AppWorkspace.syncObjectsData();
+											});
+										})
+										.then(function () {
 											self.data.curLoadProgress += 0.1;
 											$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
 
@@ -139,6 +147,14 @@ steal(
 								});
 
 								self.controllers.AppWorkspace.syncObjectFields()
+									.fail(function (err) {
+										console.error(err);
+										$$(self.webixUiId.loadingScreen).showErrorScreen('There is a error when updates object fields', "Reload", function () {
+											$$(self.webixUiId.loadingScreen).start();
+
+											self.controllers.AppWorkspace.syncObjectFields();
+										});
+									})
 									.then(function () {
 										self.updateSyncStatus({
 											action: 'done',

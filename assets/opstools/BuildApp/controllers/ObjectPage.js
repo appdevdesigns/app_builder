@@ -121,114 +121,120 @@ steal(
 							var self = this,
 								q = $.Deferred();
 
-							if (AD.classes.AppBuilder.currApp.objects.length > 0) {
-								async.eachSeries(AD.classes.AppBuilder.currApp.objects.attr(), function (object, next) {
-									async.waterfall([
-										function (cb) {
-											// Get object model
-											self.controllers.ModelCreator.getModel(object.name)
-												.fail(function (err) { cb(err); })
-												.then(function (objectModel) {
-													cb(null, objectModel);
-												});
-										},
-										function (objectModel, cb) {
-											// Get cached fields
-											var newFields = objectModel.Cached.getNewFields();
-
-											newFields.sort(function (a, b) { return a.weight - b.weight; });
-
-											if (!newFields || newFields.length < 1) {
-												cb();
-											}
-											else {
-												var saveFieldsTasks = [];
-
-												newFields.forEach(function (field, index) {
-													saveFieldsTasks.push(function (callback) {
-														var tempId = field.id;
-														delete field.id;
-
-														field.weight = object.columns.length + (index + 1);
-
-														async.waterfall([
-															// Create object column
-															function (ok) {
-																self.Model.ABColumn.create(field)
-																	.fail(ok)
-																	.then(function (result) {
-																		// Delete field cache
-																		objectModel.Cached.deleteCachedField(tempId);
-
-																		ok(null, result);
-																	});
-															},
-															// Create link column
-															function (column, ok) {
-																if (field.setting.linkObject && field.setting.linkVia) {
-																	self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
-																		.fail(ok)
-																		.then(function (linkCol) {
-																			// set linkVia
-																			column.setting.attr('linkVia', linkCol.id);
-																			column.save()
-																				.fail(function (err) { ok(err) })
-																				.then(function (result) {
-																					ok(null, result);
-																				});
-																		});
-																}
-																else {
-																	ok(null, column);
-																}
-															},
-															// Create list option of select column
-															function (column, ok) {
-																if (field.setting.editor === 'richselect' && field.setting.filter_options) {
-																	var createOptionEvents = [];
-
-																	field.setting.filter_options.forEach(function (opt, index) {
-																		createOptionEvents.push(function (createOk) {
-																			var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
-
-																			self.Model.ABList.create({
-																				key: list_key,
-																				weight: index + 1,
-																				column: column.id,
-																				label: opt,
-																				value: opt
-																			})
-																				.fail(createOk)
-																				.then(function () { createOk(); });
-																		});
-																	});
-
-																	async.parallel(createOptionEvents, ok);
-																}
-																else {
-																	ok();
-																}
-															}
-														], callback);
-													});
-												});
-
-												async.parallel(saveFieldsTasks, cb);
-											}
-										}
-									], next);
-								}, function (err) {
-									if (err) {
-										q.reject(err);
-										return;
-									}
-
-									q.resolve();
-								});
-							}
-							else {
+							if (AD.classes.AppBuilder.currApp.objects.length < 1) {
 								q.resolve();
+								return q;
 							}
+
+							async.eachSeries(AD.classes.AppBuilder.currApp.objects.attr(), function (object, next) {
+								async.waterfall([
+									function (cb) {
+										// Get object model
+										self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
+											.fail(function (err) { cb(err); })
+											.then(function (objectModel) {
+												cb(null, objectModel);
+											});
+									},
+									function (objectModel, cb) {
+										// Get cached fields
+										var newFields = objectModel.Cached.getNewFields();
+
+										newFields.sort(function (a, b) { return a.weight - b.weight; });
+
+										if (!newFields || newFields.length < 1)
+											return cb(null, objectModel);
+
+										var saveFieldsTasks = [];
+
+										newFields.forEach(function (field, index) {
+											saveFieldsTasks.push(function (callback) {
+												var tempId = field.id;
+												delete field.id;
+
+												if (!field.weight)
+													field.weight = object.columns.length + (index + 1);
+
+												async.waterfall([
+													// Create object column
+													function (ok) {
+														self.Model.ABColumn.create(field)
+															.fail(ok)
+															.then(function (result) {
+																// Delete field cache
+																objectModel.Cached.deleteCachedField(tempId);
+
+																ok(null, result);
+															});
+													},
+													// Create link column
+													function (column, ok) {
+														if (field.setting.linkObject && field.setting.linkVia) {
+															self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
+																.fail(ok)
+																.then(function (linkCol) {
+																	// set linkVia
+																	column.setting.attr('linkVia', linkCol.id);
+																	column.save()
+																		.fail(function (err) { ok(err) })
+																		.then(function (result) {
+																			ok(null, result);
+																		});
+																});
+														}
+														else {
+															ok(null, column);
+														}
+													},
+													// Create list option of select column
+													function (column, ok) {
+														if (field.setting.editor === 'richselect' && field.setting.filter_options) {
+															var createOptionEvents = [];
+
+															field.setting.filter_options.forEach(function (opt, index) {
+																createOptionEvents.push(function (createOk) {
+																	var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
+
+																	self.Model.ABList.create({
+																		key: list_key,
+																		weight: index + 1,
+																		column: column.id,
+																		label: opt,
+																		value: opt
+																	})
+																		.fail(createOk)
+																		.then(function () { createOk(); });
+																});
+															});
+
+															async.parallel(createOptionEvents, ok);
+														}
+														else {
+															ok();
+														}
+													}
+												], callback);
+											});
+										});
+
+										async.parallel(saveFieldsTasks, function (err) {
+											cb(err, objectModel);
+										});
+
+									},
+									// Update object model
+									function (objectModel, cb) {
+										self.controllers.ModelCreator.updateModel(AD.classes.AppBuilder.currApp, object.name)
+											.fail(cb)
+											.then(function () { cb(); });
+									}
+								], next);
+							}, function (err) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve();
+							});
 
 							return q;
 						},
@@ -249,32 +255,29 @@ steal(
 
 									async.waterfall([
 										function (cb) {
-											self.controllers.ModelCreator.getModel(object.name)
-												.fail(function (err) { cb(err); })
+											self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
+												.fail(cb)
 												.then(function (objectModel) {
 													cb(null, objectModel);
 												});
 										},
 										function (objectModel, cb) {
 											objectModel.Cached.syncDataToServer()
-												.fail(function (err) { cb(err); })
+												.fail(cb)
 												.then(function () {
 													cb(null);
-													next();
 												});
 										}
-									]);
+									], next);
 
 								});
 							});
 
 							async.parallel(syncDataTasks, function (err) {
-								if (err) {
+								if (err)
 									q.reject(err);
-									return;
-								}
-
-								q.resolve();
+								else
+									q.resolve();
 							});
 
 							return q;
@@ -288,7 +291,7 @@ steal(
 							var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == linkObject })[0];
 
 							// Get object model
-							self.controllers.ModelCreator.getModel(linkObj.name)
+							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, linkObj.name)
 								.fail(function (err) { ok(err); })
 								.then(function (objModel) {
 									// Get cache

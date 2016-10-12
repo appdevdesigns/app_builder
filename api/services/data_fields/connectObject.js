@@ -43,7 +43,8 @@ module.exports = {
 				ABColumn.findOne({ id: column.setting.linkVia })
 					.fail(next)
 					.then(function (linkVia) {
-						colString += ':' + linkVia.name; // viaReference
+						if (linkVia)
+							colString += ':' + linkVia.name; // viaReference
 
 						next();
 					});

@@ -237,6 +237,7 @@ steal(
 										dragColumn: true,
 										on: {
 											onBeforeSelect: function (data, preserve) {
+												// TODO : Move to data field file
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
 
 												if (!columnConfig.editor && columnConfig.filter_type === 'boolean') { // Ignore edit 'Checkbox' field
@@ -268,7 +269,7 @@ steal(
 													if (!object || object.length < 1)
 														return false;
 
-													$$(self.webixUiId.addConnectObjectDataPopup).open(object[0], data.row, selectedIds, columnData.linkType, columnData.linkVia.name, columnData.linkVia.linkType);
+													// $$(self.webixUiId.addConnectObjectDataPopup).open(object[0], data.row, selectedIds, columnData.linkType, columnData.linkVia.name, columnData.linkVia.linkType);
 
 													return false;
 												}
@@ -485,7 +486,7 @@ steal(
 										}
 										else {
 											// Get cached field
-											self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
+											self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 												.then(function (objectModel) {
 													var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
 
@@ -514,7 +515,7 @@ steal(
 
 												if (!selectedColumn || selectedColumn.length < 1) {
 													// Get cached field
-													self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
+													self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 														.then(function (objectModel) {
 															var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
 
@@ -544,7 +545,7 @@ steal(
 															async.parallel([
 																// Remove describe & multi-fields of object model
 																function (ok) {
-																	self.controllers.ModelCreator.getModel(objectName)
+																	self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
 																		.fail(function (err) { ok(err); })
 																		.then(function (objectModel) {
 																			delete objectModel.describe()[headerField.id];
@@ -565,7 +566,7 @@ steal(
 																			return obj.id == selectedColumn.setting.linkObject;
 																		})[0];
 
-																		self.controllers.ModelCreator.getModel(linkObject.name)
+																		self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, linkObject.name)
 																			.fail(function (err) { ok(err); })
 																			.then(function (objectModel) {
 																				delete objectModel.describe()[selectedColumn.linkVia];
@@ -818,7 +819,7 @@ steal(
 										return;
 									}
 
-									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
+									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 										.fail(function (err) { next(err); })
 										.then(function (objectModel) {
 											self.Model.ObjectModel = objectModel;
@@ -836,7 +837,7 @@ steal(
 									self.Model.ObjectModel.Cached.findAll({})
 										.fail(function (err) { next(err); })
 										.then(function (data) {
-											self.controllers.ObjectDataTable.populateData(data).then(function () {
+											self.controllers.ObjectDataTable.populateData(AD.classes.AppBuilder.currApp, data).then(function () {
 												next();
 											});
 										});
@@ -1004,7 +1005,7 @@ steal(
 							var q = AD.sal.Deferred(),
 								self = this;
 
-							self.controllers.ModelCreator.getModel(objectName)
+							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
 								.fail(function (err) { q.reject(err); })
 								.then(function (objectModel) {
 									// Cache new field
@@ -1026,7 +1027,7 @@ steal(
 						deleteObject: function (obj) {
 							var self = this;
 
-							self.controllers.ModelCreator.getModel(obj.name)
+							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name)
 								.fail(function (err) {
 									// TODO : Error message
 								})
@@ -1091,7 +1092,7 @@ steal(
 
 							var objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
 
-							self.controllers.ModelCreator.getModel(objectName)
+							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
 								.fail(function (err) { q.reject(err); })
 								.then(function (objectModel) {
 									var columns = self.data.columns.attr().slice(), // Copy
@@ -1385,7 +1386,7 @@ steal(
 							async.series([
 								// Find cached columns
 								function (callback) {
-									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp.currObj.attr('name'))
+									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 										.fail(callback)
 										.then(function (result) {
 											cachedFields = result.Cached.getNewFields();

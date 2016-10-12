@@ -423,7 +423,7 @@ steal(
 							}, false, true);
 
 							objects.forEach(function (obj) {
-								self.controllers.ModelCreator.getModel(obj.name)
+								self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name)
 									.then(function (objectModel) {
 										var unsyncNumber = objectModel.Cached.count(),
 											htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
