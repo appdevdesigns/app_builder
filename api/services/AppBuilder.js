@@ -23,10 +23,18 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 
 
 
-var DataFields = {
-    'string' : require(path.join(__dirname, 'data_fields', 'string.js'))
-}
+var DataFields = {};
 
+
+function importDataFields() {
+    var dataFieldPath = path.join(__dirname, 'data_fields');
+
+    DataFields = {};
+
+    fs.readdirSync(dataFieldPath).forEach(function (file) {
+        DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+    });
+}
 
 
 function notifyToClients(reloading, step, action) {
@@ -433,6 +441,8 @@ module.exports = {
         var fullPath, fullPathTrans, clientPath, baseClientPath;
         var cwd = process.cwd();
 
+        importDataFields();
+
         async.series([
             // Find object info
             function (next) {
@@ -495,27 +505,32 @@ module.exports = {
                         async.eachSeries(columns, function (col, ok) {
 
                             var colString = '',
-                                isDefinedLabel = false;
+                                isDefinedLabel = false,
+                                field = DataFields[col.fieldName];
 
+                            if (!field) {
+                                ok('System could not found this field type: ' + col.fieldName);
+                                return;
+                            }
 
-                            var field = DataFields[col.type];
                             field.getFieldString(col)
-                            .fail(function(err){
-                                ok(err);
-                            })
-                            .then(function(colStr){
-                                colString = colStr;
+                                .fail(ok)
+                                .then(function (colStr) {
+console.log('output: ', colStr);
+                                    colString = colStr;
 
-                                if ((!isDefinedLabel) &&
-                                    (((colString.indexOf(':string:')> -1)
-                                    || (colString.indexOf(':text:') > -1)))) {
+                                    if (!isDefinedLabel &&
+                                        ((colString.indexOf(':string:') > -1)
+                                            || (colString.indexOf(':text:') > -1))) {
 
-                                    colString += ':label';
-                                    isDefinedLabel = true;
-                                }
+                                        colString += ':label';
+                                        isDefinedLabel = true;
+                                    }
 
-                                ok();
-                            })
+                                    cliParams.push(colString);
+
+                                    ok();
+                                })
 
                             // if (col.linkObject && col.linkVia) {
                             //     ABColumn.findOne({ id: col.id })

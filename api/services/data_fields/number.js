@@ -11,10 +11,6 @@ module.exports = {
 
 		var colString = column.name + ':' + column.type;
 
-		if (column.setting.supportMultilingual) {
-			colString += ':multilingual';
-		}
-
 		if (column.setting.default) {
 			// TODO: Default value
 		}

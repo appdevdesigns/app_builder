@@ -3,12 +3,12 @@ steal(function () {
 		editView: 'ab-new-connectObject',
 		objectList: 'ab-new-connectObject-list-item',
 		objectCreateNew: 'ab-new-connectObject-create-new',
-		objectLinkFrom: 'ab-add-field-link-from',
-		objectLinkFrom2: 'ab-add-field-link-from-2',
-		objectLinkTypeTo: 'ab-add-field-link-type-to',
-		objectLinkTypeFrom: 'ab-add-field-link-type-from',
-		objectLinkTo: 'ab-add-field-link-to',
-		objectLinkTo2: 'ab-add-field-link-to-2',
+		fieldLink: 'ab-add-field-link-from',
+		fieldLink2: 'ab-add-field-link-from-2',
+		fieldLinkType: 'ab-add-field-link-type-to',
+		fieldLinkViaType: 'ab-add-field-link-type-from',
+		fieldLinkVia: 'ab-add-field-link-to',
+		fieldLinkVia2: 'ab-add-field-link-to-2',
 	};
 
 	// General settings
@@ -38,8 +38,8 @@ steal(function () {
 				on: {
 					onAfterSelect: function () {
 						var selectedObjLabel = this.getSelectedItem(false).label;
-						$$(componentIds.objectLinkTo).setValue(selectedObjLabel);
-						$$(componentIds.objectLinkTo2).setValue(selectedObjLabel);
+						$$(componentIds.fieldLinkVia).setValue(selectedObjLabel);
+						$$(componentIds.fieldLinkVia2).setValue(selectedObjLabel);
 					}
 				}
 			},
@@ -56,12 +56,12 @@ steal(function () {
 				view: 'layout',
 				cols: [
 					{
-						id: componentIds.objectLinkFrom,
+						id: componentIds.fieldLink,
 						view: 'label',
 						width: 110
 					},
 					{
-						id: componentIds.objectLinkTypeTo,
+						id: componentIds.fieldLinkType,
 						view: "segmented",
 						value: "collection",
 						width: 165,
@@ -72,7 +72,7 @@ steal(function () {
 						]
 					},
 					{
-						id: componentIds.objectLinkTo,
+						id: componentIds.fieldLinkVia,
 						view: 'label',
 						label: '[Select object]',
 						width: 110
@@ -83,13 +83,13 @@ steal(function () {
 				view: 'layout',
 				cols: [
 					{
-						id: componentIds.objectLinkTo2,
+						id: componentIds.fieldLinkVia2,
 						view: 'label',
 						label: '[Select object]',
 						width: 110
 					},
 					{
-						id: componentIds.objectLinkTypeFrom,
+						id: componentIds.fieldLinkViaType,
 						view: "segmented",
 						value: "model",
 						width: 165,
@@ -100,7 +100,7 @@ steal(function () {
 						]
 					},
 					{
-						id: componentIds.objectLinkFrom2,
+						id: componentIds.fieldLink2,
 						view: 'label',
 						width: 110
 					},
@@ -111,6 +111,8 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	connectObjectField.populateSettings = function (application, data) {
+		$$(componentIds.editView).appName = application.name;
+
 		// Set enable connect object list to the add new column popup
 		var enableConnectObjects = application.objects.filter(function (o) { return o.id != application.currObj.id; });
 
@@ -118,22 +120,23 @@ steal(function () {
 		$$(componentIds.objectList).parse(enableConnectObjects.attr ? enableConnectObjects.attr() : enableConnectObjects);
 		$$(componentIds.objectList).refresh();
 
-		$$(componentIds.objectLinkFrom).setValue(application.currObj.label);
-		$$(componentIds.objectLinkFrom2).setValue(application.currObj.label);
+		$$(componentIds.fieldLink).setValue(application.currObj.label);
+		$$(componentIds.fieldLink2).setValue(application.currObj.label);
 
-		if (!data) return;
+		if (!data.linkObject || !data.linkType || !data.setting) return;
 
-		var selectedObject = $$(componentIds.connectObjectList).data.find(function (obj) {
+		var selectedObject = $$(componentIds.objectList).data.find(function (obj) {
 			var linkObjId = data.linkObject.id ? data.linkObject.id : data.linkObject;
 			return obj.id == linkObjId;
-		})[0];
+		});
 
 		$$(componentIds.objectList).disable();
-		$$(componentIds.objectList).select(selectedObject.id);
+		if (selectedObject && selectedObject.length > 0)
+			$$(componentIds.objectList).select(selectedObject[0].id);
 		$$(componentIds.objectCreateNew).disable();
 
-		$$(componentIds.objectLinkTypeTo).setValue(data.linkType);
-		$$(componentIds.objectLinkTypeFrom).setValue(data.setting.linkViaType);
+		$$(componentIds.fieldLinkType).setValue(data.linkType);
+		$$(componentIds.fieldLinkViaType).setValue(data.setting.linkViaType);
 	};
 
 	// For save field
@@ -149,12 +152,13 @@ steal(function () {
 		}
 
 		return {
-			linkTypeTo: $$(componentIds.objectLinkTypeTo).getValue(),
-			linkTypeFrom: $$(componentIds.objectLinkTypeFrom).getValue(),
-			linkObject: $$(componentIds.objectList).getSelectedId(false),
 			fieldName: connectObjectField.name,
 			type: connectObjectField.type,
 			setting: {
+				appName: $$(componentIds.editView).appName,
+				linkType: $$(componentIds.fieldLinkType).getValue(),
+				linkObject: $$(componentIds.objectList).getSelectedId(false),
+				linkViaType: $$(componentIds.fieldLinkViaType).getValue(),
 				icon: connectObjectField.icon,
 				editor: 'selectivity',
 				template: '<div class="connect-data-values"></div>',
@@ -165,14 +169,15 @@ steal(function () {
 
 	// Reset state
 	connectObjectField.resetState = function () {
+		$$(componentIds.editView).appName = null;
 		$$(componentIds.objectList).unselectAll();
 		$$(componentIds.objectList).enable();
-		$$(componentIds.objectLinkFrom).setValue('');
-		$$(componentIds.objectLinkFrom2).setValue('');
-		$$(componentIds.objectLinkTypeTo).setValue('collection');
-		$$(componentIds.objectLinkTypeFrom).setValue('model');
-		$$(componentIds.objectLinkTo).setValue('[Select object]');
-		$$(componentIds.objectLinkTo2).setValue('[Select object]');
+		$$(componentIds.fieldLink).setValue('');
+		$$(componentIds.fieldLink2).setValue('');
+		$$(componentIds.fieldLinkType).setValue('collection');
+		$$(componentIds.fieldLinkViaType).setValue('model');
+		$$(componentIds.fieldLinkVia).setValue('[Select object]');
+		$$(componentIds.fieldLinkVia2).setValue('[Select object]');
 		$$(componentIds.objectCreateNew).enable();
 	};
 

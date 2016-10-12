@@ -30,7 +30,7 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	textDataField.populateSettings = function (application, data) {
-		if (!data) return;
+		if (!data.setting) return;
 
 		$$(componentIds.supportMultilingual).setValue(data.setting.supportMultilingual);
 	};

@@ -230,8 +230,6 @@ steal(
 			 *						NOTE: data.name  contains the DataField key					
 			 */
 			populateSettings: function (application, data) {
-				if (!data) return;
-
 				var field = getField(data.fieldName);
 
 				if ($$(componentIds.headerName.replace('{0}', data.fieldName)))
@@ -239,9 +237,7 @@ steal(
 				if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
 					$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
 
-				if (field != null) {
-					field.populateSettings(application, data);
-				}
+				field.populateSettings(application, data);
 			},
 
 
@@ -258,7 +254,7 @@ steal(
 						elHeader.setValue('');
 						elHeader.enable();
 					}
-					var elLabel =$$(componentIds.labelName.replace('{0}', f.name));
+					var elLabel = $$(componentIds.labelName.replace('{0}', f.name));
 					if (elLabel)
 						elLabel.setValue('');
 

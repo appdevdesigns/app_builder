@@ -46,7 +46,7 @@ steal(function () {
 	};
 
 	numberDataField.populateSettings = function (application, data) {
-		if (!data) return;
+		if (!data.type || !data.setting) return;
 
 		$$(componentIds.allowDecimal).setValue(data.type == 'float');
 		$$(componentIds.allowDecimal).disable();

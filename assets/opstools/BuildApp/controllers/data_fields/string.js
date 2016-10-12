@@ -103,7 +103,7 @@ steal(function () {
 	 * @param {ABColumn} data  the ABColumn info saved for this DataField.
 	 */
 	stringDataField.populateSettings = function (application, data) {
-		if (!data) return;
+		if (!data.setting) return;
 
 		$$(componentIds.textDefault).setValue(data.setting.default);
 		$$(componentIds.supportMultilingual).setValue(data.setting.supportMultilingual);

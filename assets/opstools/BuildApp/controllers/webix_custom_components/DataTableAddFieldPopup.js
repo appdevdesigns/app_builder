@@ -104,34 +104,38 @@ steal(
                                                             viewName = AD.classes.AppBuilder.DataFields.getEditViewId(selectedMenuItem.fieldName);
 
                                                         if (viewName) {
-                                                            AD.classes.AppBuilder.DataFields.populateSettings(AD.classes.AppBuilder.currApp, null);
+                                                            AD.classes.AppBuilder.DataFields.populateSettings(AD.classes.AppBuilder.currApp, {
+                                                                fieldName: selectedMenuItem.fieldName,
+                                                                name: base.getDefaultFieldName(), // Set default field name
+                                                                label: base.getDefaultFieldName()
+                                                            });
 
                                                             $$(viewName).show();
 
                                                             var headerNameClass = '.' + self.componentIds.headerNameText,
                                                                 labelNameClass = '.' + self.componentIds.labelNameText;
 
-                                                            // Set default field name
-                                                            if ($(headerNameClass) && $(headerNameClass).length > 0) {
-                                                                $(headerNameClass).each(function (index, txtName) {
-                                                                    var headerName = $(txtName).webix_text().getValue();
-                                                                    if (!headerName || headerName.indexOf('Field ') > -1) {
-                                                                        var defaultName = base.getDefaultFieldName();
-                                                                        $(txtName).webix_text().setValue(defaultName);
+                                                            // // Set default field name
+                                                            // if ($(headerNameClass) && $(headerNameClass).length > 0) {
+                                                            //     $(headerNameClass).each(function (index, txtName) {
+                                                            //         var headerName = $(txtName).webix_text().getValue();
+                                                            //         if (!headerName || headerName.indexOf('Field ') > -1) {
+                                                            //             var defaultName = base.getDefaultFieldName();
+                                                            //             $(txtName).webix_text().setValue(defaultName);
 
-                                                                        // Set default label name
-                                                                        var labelTexts = $(labelNameClass).webix_text();
+                                                            //             // Set default label name
+                                                            //             var labelTexts = $(labelNameClass).webix_text();
 
-                                                                        if (labelTexts && !(labelTexts instanceof Array))
-                                                                            labelTexts = [labelTexts];
+                                                            //             if (labelTexts && !(labelTexts instanceof Array))
+                                                            //                 labelTexts = [labelTexts];
 
-                                                                        can.each(labelTexts, function (lblText) {
-                                                                            lblText.setValue(defaultName);
-                                                                        });
+                                                            //             can.each(labelTexts, function (lblText) {
+                                                            //                 lblText.setValue(defaultName);
+                                                            //             });
 
-                                                                    }
-                                                                });
-                                                            }
+                                                            //         }
+                                                            //     });
+                                                            // }
 
                                                             // Highlight name in text box
                                                             $(headerNameClass + ' input[type="text"]').select();

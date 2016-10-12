@@ -33,7 +33,7 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	dateDataField.populateSettings = function (application, data) {
-		if (!data) return;
+		if (!data.type) return;
 
 		$$(componentIds.includeTime).setValue(data.type == 'datetime');
 		$$(componentIds.includeTime).disable();

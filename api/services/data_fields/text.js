@@ -15,10 +15,6 @@ module.exports = {
 			colString += ':multilingual';
 		}
 
-		if (column.setting.default) {
-			// TODO: Default value
-		}
-
 		dfd.resolve(colString);
 
 		return dfd;

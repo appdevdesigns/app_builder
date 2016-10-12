@@ -57,7 +57,7 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	listDataField.populateSettings = function (application, data) {
-		if (!data) return;
+		if (!data.setting) return;
 
 		var options = [];
 		data.setting.options.forEach(function (opt) {
