@@ -10,12 +10,10 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditHeaderPopup.js',
-	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
-	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
@@ -58,8 +56,6 @@ steal(
 								addNewRowButton: 'ab-add-new-row-button',
 
 								editHeaderPopup: 'ab-edit-header-popup',
-
-								addConnectObjectDataPopup: 'ab-connect-object-data-popup',
 
 								visibleFieldsPopup: 'ab-visible-fields-popup',
 								filterFieldsPopup: 'ab-filter-popup',
@@ -143,11 +139,9 @@ steal(
 								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup'),
 
 								EditHeaderPopup = AD.Control.get('opstools.BuildApp.DataTableEditHeaderPopup'),
-								ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
 
 								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable'),
-								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
+								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
 
 							self.controllers = {
 								DataTableEditor: new DataTableEditor(),
@@ -158,11 +152,9 @@ steal(
 								DefineLabelPopup: new DefineLabelPopup(),
 								AddFieldPopup: new AddFieldPopup(),
 								EditHeaderPopup: new EditHeaderPopup(),
-								ConnectedDataPopup: new ConnectedDataPopup(),
 
 								ModelCreator: new ModelCreator(),
-								ObjectDataTable: new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent }),
-								SelectivityHelper: new SelectivityHelper()
+								ObjectDataTable: new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
 							};
 						},
 
@@ -204,11 +196,6 @@ steal(
 								view: "edit_header_popup",
 							});
 
-							webix.ui({
-								id: self.webixUiId.addConnectObjectDataPopup,
-								view: "connected_data_popup",
-							});
-
 							self.data.definition = {
 								rows: [
 									{
@@ -237,45 +224,16 @@ steal(
 										dragColumn: true,
 										on: {
 											onBeforeSelect: function (data, preserve) {
-												// TODO : Move to data field file
-												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
+												self.data.selectedCell = { row: data.row, column: data.column };
+												var itemNode = this.getItemNode(self.data.selectedCell);
 
-												if (!columnConfig.editor && columnConfig.filter_type === 'boolean') { // Ignore edit 'Checkbox' field
+												var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+												if (!column || column.length < 1)
 													return false;
-												}
-												else if (columnConfig.editor === 'selectivity') {
-													// Get column data
-													var columnData = self.data.columns.filter(function (f) {
-														return f.name === data.column;
-													});
+												else
+													column = column[0];
 
-													if (!columnData || columnData.length < 1)
-														return false;
-
-													columnData = columnData[0];
-
-													self.data.selectedCell = { row: data.row, column: data.column };
-
-													// Show connect data windows popup
-													var curSelectivity = self.getCurSelectivityNode(self.data.selectedCell),
-														selectedData = self.controllers.SelectivityHelper.getData(curSelectivity),
-														selectedIds = $.map(selectedData, function (d) { return d.id; });
-
-													// Get columns of connected object
-													var object = AD.classes.AppBuilder.currApp.objects.filter(function (o) {
-														return o.id == columnData.setting.linkObject;
-													});
-
-													if (!object || object.length < 1)
-														return false;
-
-													// $$(self.webixUiId.addConnectObjectDataPopup).open(object[0], data.row, selectedIds, columnData.setting.linkType, columnData.setting.linkVia.name, columnData.setting.linkVia.linkType);
-
-													return false;
-												}
-												else {
-													return true;
-												}
+												return AD.classes.AppBuilder.DataFields.customEdit(AD.classes.AppBuilder.currApp, column, itemNode);
 											},
 											onAfterSelect: function (data, prevent) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
@@ -657,67 +615,6 @@ steal(
 
 										break;
 								}
-							});
-
-							// Connect data popup
-							$$(self.webixUiId.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
-								self.controllers.SelectivityHelper.setData(self.getCurSelectivityNode(), selectedItems);
-							});
-							$$(self.webixUiId.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
-								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-								var selectedIds = [];
-
-								if (selectedItems && selectedItems.length > 0)
-									selectedIds = $.map(selectedItems, function (item) { return { id: item.id }; });
-
-								self.updateRowData(
-									{ value: selectedIds }, // state
-									{ // editor
-										row: self.data.selectedCell.row,
-										column: self.data.selectedCell.column
-									},
-									false)
-									.then(function (result) {
-										// Update row
-										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
-
-										rowData[self.data.selectedCell.column] = selectedItems.map(function (item) {
-											return {
-												id: item.id,
-												dataLabel: item.text
-											}
-										}) || [];
-
-										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
-
-										// Remove duplicate selected item when the link column supports one value
-										var colData = self.data.columns.filter(function (col) { return col.name == self.data.selectedCell.column; })[0];
-										if (selectedIds && colData.setting.linkViaType === 'model') {
-											$$(self.webixUiId.objectDatatable).eachRow(function (row) {
-												if (row != self.data.selectedCell.row) {
-													var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
-													if (otherRow[self.data.selectedCell.column]) {
-														// Filter difference values
-														otherRow[self.data.selectedCell.column] = otherRow[self.data.selectedCell.column].filter(function (i) {
-															return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
-														});
-
-														$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
-													}
-												}
-											});
-										}
-
-										// Resize row height
-										self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
-
-										$$(self.webixUiId.objectDatatable).hideProgress();
-
-										self.data.selectedCell = null
-									});
-
-								self.controllers.SelectivityHelper.setData(self.getCurSelectivityNode(), selectedItems);
 							});
 						},
 

@@ -166,9 +166,7 @@ steal(
                                                                 return;
                                                             }
 
-                                                            if (self.data.editFieldId) // Update
-                                                                fieldInfo.id = self.data.editFieldId;
-                                                            else // Insert
+                                                            if (!fieldInfo.weight)
                                                                 fieldInfo.weight = dataTable.config.columns.length;
 
                                                             // Call callback function

@@ -1,11 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/models/ABObject.js',
-	'opstools/BuildApp/models/ABColumn.js',
-
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 
-	function () {
+	'opstools/BuildApp/models/ABObject.js',
+	'opstools/BuildApp/models/ABColumn.js',
+	function (selectivityHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -28,11 +27,6 @@ steal(
 								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
 								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
 								ObjectModels: {}
-							};
-
-							// Controllers
-							self.controllers = {
-								SelectivityHelper: new AD.Control.get('opstools.BuildApp.SelectivityHelper')()
 							};
 
 							self.componentIds = {
@@ -466,11 +460,11 @@ steal(
 											labelValue = currModel ? currModel[child.config.fieldName] : '';
 
 										if (child.config.editor === 'selectivity') {
-											self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-component-view-selectivity', true);
+											selectivityHelper.renderSelectivity($$(viewId), 'ab-component-view-selectivity', true);
 
 											var selectivityItem = $(child.$view).find('.ab-component-view-selectivity');
 											if (labelValue) {
-												self.controllers.SelectivityHelper.setData(selectivityItem, labelValue.map(function (d) {
+												selectivityHelper.setData(selectivityItem, labelValue.map(function (d) {
 													return {
 														id: d.id,
 														text: d.dataLabel
@@ -478,7 +472,7 @@ steal(
 												}));
 											}
 											else {
-												self.controllers.SelectivityHelper.setData(selectivityItem, []);
+												selectivityHelper.setData(selectivityItem, []);
 											}
 										}
 										else if (child.config.editor === 'date' || child.config.editor === 'datetime') {

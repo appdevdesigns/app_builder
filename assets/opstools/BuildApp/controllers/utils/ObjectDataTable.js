@@ -1,8 +1,8 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
-	function () {
+	'opstools/BuildApp/controllers/utils/DataHelper.js',
+	function (selectivityHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -48,19 +48,17 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
-								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
+							var DataHelper = AD.Control.get('opstools.BuildApp.DataHelper');
 
 							self.controllers = {
 								DataHelper: new DataHelper(),
-								SelectivityHelper: new SelectivityHelper(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
 							};
 						},
 
 						initEvents: function () {
 							var self = this;
 
-							self.controllers.SelectivityHelper.on(self.options.changedSelectivityEvent, function (event, data) {
+							selectivityHelper.onSelectItem(function (data) {
 								if (self.events.changeSelectivityItem) {
 									var result = {};
 									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
@@ -111,7 +109,7 @@ steal(
 
 							self.dataTable.attachEvent("onAfterRender", function (data) {
 								// Render selectivity node
-								self.controllers.SelectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
+								selectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
 
 								var linkColumns = self.dataTable.config.columns.slice(0);
 								linkColumns = linkColumns.filter(function (c) { return c.editor === 'selectivity'; });
@@ -142,7 +140,7 @@ steal(
 											}
 
 											// Set selectivity data
-											self.controllers.SelectivityHelper.setData(linkFieldNode, selectedItems);
+											selectivityHelper.setData(linkFieldNode, selectedItems);
 
 											if (maxConnectedDataNum.dataNum < d[columnName].length || !maxConnectedDataNum.dataNum) {
 												maxConnectedDataNum.dataId = d.id;

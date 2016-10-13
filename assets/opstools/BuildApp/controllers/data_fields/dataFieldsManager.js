@@ -203,6 +203,8 @@ steal(
 					if (fieldInfo) {
 						fieldInfo.name = $$(componentIds.headerName.replace('{0}', name)).getValue();
 						fieldInfo.label = $$(componentIds.labelName.replace('{0}', name)).getValue();
+						fieldInfo.id = $$(componentIds.headerName.replace('{0}', name)).columnId;
+						fieldInfo.weight = $$(componentIds.headerName.replace('{0}', name)).weight;
 					}
 
 					return fieldInfo;
@@ -234,12 +236,29 @@ steal(
 
 				if ($$(componentIds.headerName.replace('{0}', data.fieldName)))
 					$$(componentIds.headerName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
+				else
+					$$(componentIds.headerName.replace('{0}', data.fieldName)).setValue('');
+
 				if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
 					$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
+				else
+					$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue('');
+
+				$$(componentIds.headerName.replace('{0}', data.fieldName)).columnId = data.id;
+				$$(componentIds.headerName.replace('{0}', data.fieldName)).weight = data.weight;
 
 				field.populateSettings(application, data);
 			},
 
+
+			customEdit: function (application, data, itemNode) {
+				var field = getField(data.fieldName);
+
+				if (field.customEdit)
+					return field.customEdit(application, data, itemNode);
+				else
+					return true;
+			},
 
 			/**
 			 * resetState

@@ -1,14 +1,14 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
+
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 
-	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
-
-	function () {
+	function (selectivityHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -35,12 +35,10 @@ steal(
 							};
 
 							// Controllers
-							var ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup'),
-								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
+							var ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup');
 
 							self.controllers = {
-								ConnectedDataPopup: new ConnectedDataPopup(),
-								SelectivityHelper: new SelectivityHelper()
+								ConnectedDataPopup: new ConnectedDataPopup()
 							};
 
 							self.componentIds = {
@@ -464,7 +462,7 @@ steal(
 
 										$$(viewId).refresh();
 
-										self.controllers.SelectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
+										selectivityHelper.renderSelectivity($$(viewId), 'ab-form-connect-data');
 
 										// Set selectivity values
 										self.populateSelectivityValues(viewId);
@@ -606,7 +604,7 @@ steal(
 										if (modelData) {
 											selectedValues = modelData[cView.config.name].attr ? modelData[cView.config.name].attr() : modelData[cView.config.name];
 
-											self.controllers.SelectivityHelper.setData(nodeItem, $.map(selectedValues, function (d) {
+											selectivityHelper.setData(nodeItem, $.map(selectedValues, function (d) {
 												return {
 													id: d.id,
 													text: d.dataLabel
@@ -615,7 +613,7 @@ steal(
 										}
 										else {
 											// Clear selectivity
-											self.controllers.SelectivityHelper.setData(nodeItem, []);
+											selectivityHelper.setData(nodeItem, []);
 										}
 									}
 								});
@@ -674,7 +672,7 @@ steal(
 									.forEach(function (cView) {
 										var nodeItem = $(cView.$view).find('.ab-form-connect-data'),
 											fieldName = cView.config.name,
-											value = self.controllers.SelectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
+											value = selectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
 
 										modelData.attr(fieldName, value);
 									});
@@ -724,16 +722,16 @@ steal(
 								var object = self.data.objectList.filter(function (obj) { return obj.id == objectId; });
 
 								if (object && object.length > 0) {
-									var selectedIds = $.map(self.controllers.SelectivityHelper.getData(item), function (d) { return d.id; });
+									var selectedIds = $.map(selectivityHelper.getData(item), function (d) { return d.id; });
 
 									$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
 										if (data.updatingItem)
-											self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+											selectivityHelper.setData(data.updatingItem, selectedItems);
 									});
 
 									$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
 										if (data.updatingItem)
-											self.controllers.SelectivityHelper.setData(data.updatingItem, selectedItems);
+											selectivityHelper.setData(data.updatingItem, selectedItems);
 
 										data.updatingItem = null;
 									});
@@ -744,7 +742,7 @@ steal(
 
 							function _clearSelectivity(viewId) {
 								$($$(viewId).$view).find('.ab-form-connect-data').each(function (index) {
-									self.controllers.SelectivityHelper.setData($(this), []);
+									selectivityHelper.setData($(this), []);
 								});
 							}
 

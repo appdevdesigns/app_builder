@@ -37,6 +37,10 @@ steal(function () {
 		};
 	};
 
+	boolDataField.customEdit = function (application) {
+		return false;
+	};
+
 	// Reset state
 	boolDataField.resetState = function () {
 	};

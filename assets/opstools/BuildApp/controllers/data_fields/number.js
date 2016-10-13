@@ -80,7 +80,7 @@ steal(function () {
 				default: $$(componentIds.numberDefault).getValue()
 			}
 		};
-	}
+	};
 
 	numberDataField.resetState = function () {
 		$$(componentIds.numberFormat).setValue('Number');
