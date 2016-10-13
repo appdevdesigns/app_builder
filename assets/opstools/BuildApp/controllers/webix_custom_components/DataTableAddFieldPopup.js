@@ -243,16 +243,7 @@ steal(
 
                                     $$(viewName).show();
 
-                                    // // Set field name
-                                    // $('.' + self.componentIds.headerNameText).each(function (index, txtName) {
-                                    //     $(txtName).webix_text().setValue(data.name.replace(/_/g, ' '));
-                                    //     $(txtName).webix_text().disable();
-                                    // });
-
-                                    // // Set field label
-                                    // $('.' + self.componentIds.labelNameText).each(function (index, lblName) {
-                                    //     $(lblName).webix_text().setValue(data.label);
-                                    // });
+                                    $('.' + self.componentIds.headerNameText).webix_text().disable();
 
                                     // Highlight name in text box
                                     $('.' + self.componentIds.headerNameText + ' input[type="text"]').select();
