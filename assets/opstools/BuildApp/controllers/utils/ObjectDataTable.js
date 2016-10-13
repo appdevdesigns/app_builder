@@ -113,7 +113,8 @@ steal(
 								// Render selectivity node
 								self.controllers.SelectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
 
-								var linkColumns = self.dataTable.config.columns.filter(function (c) { return c.editor === 'selectivity'; });
+								var linkColumns = self.dataTable.config.columns.slice(0);
+								linkColumns = linkColumns.filter(function (c) { return c.editor === 'selectivity'; });
 
 								data.each(function (d) {
 									var maxConnectedDataNum = {};
@@ -160,8 +161,9 @@ steal(
 									// 	}
 
 									// Call to calculate row height
-									if (maxConnectedDataNum.dataId)
+									if (maxConnectedDataNum.dataId) {
 										self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
+									}
 								});
 							});
 
