@@ -120,7 +120,6 @@ steal(function () {
 		objectList.attachEvent('onAfterDelete', function () {
 			$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
 		});
-
 		$$(componentIds.objectList).clearAll();
 		$$(componentIds.objectList).data.sync(objectList);
 		$$(componentIds.objectList).refresh();
@@ -128,6 +127,8 @@ steal(function () {
 
 		$$(componentIds.fieldLink).setValue(application.currObj.label);
 		$$(componentIds.fieldLink2).setValue(application.currObj.label);
+
+		$$(componentIds.fieldLinkViaType).linkVia = null;
 
 		if (!data.setting || !data.setting.linkObject || !data.setting.linkType) return;
 
@@ -143,6 +144,7 @@ steal(function () {
 
 		$$(componentIds.fieldLinkType).setValue(data.setting.linkType);
 		$$(componentIds.fieldLinkViaType).setValue(data.setting.linkViaType);
+		$$(componentIds.fieldLinkViaType).linkVia = data.setting.linkVia;
 	};
 
 	// For save field
@@ -165,6 +167,7 @@ steal(function () {
 				linkType: $$(componentIds.fieldLinkType).getValue(),
 				linkObject: $$(componentIds.objectList).getSelectedId(false),
 				linkViaType: $$(componentIds.fieldLinkViaType).getValue(),
+				linkVia: $$(componentIds.fieldLinkViaType).linkVia,
 				icon: connectObjectField.icon,
 				editor: 'selectivity',
 				template: '<div class="connect-data-values"></div>',
