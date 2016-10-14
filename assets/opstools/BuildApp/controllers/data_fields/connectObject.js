@@ -2,21 +2,22 @@ steal(
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 	function (selectivityHelper) {
-		var componentIds = {
-			editView: 'ab-new-connectObject',
+		var events = {},
+			componentIds = {
+				editView: 'ab-new-connectObject',
 
-			objectList: 'ab-new-connectObject-list-item',
-			objectCreateNew: 'ab-new-connectObject-create-new',
+				objectList: 'ab-new-connectObject-list-item',
+				objectCreateNew: 'ab-new-connectObject-create-new',
 
-			fieldLink: 'ab-add-field-link-from',
-			fieldLink2: 'ab-add-field-link-from-2',
-			fieldLinkType: 'ab-add-field-link-type-to',
-			fieldLinkViaType: 'ab-add-field-link-type-from',
-			fieldLinkVia: 'ab-add-field-link-to',
-			fieldLinkVia2: 'ab-add-field-link-to-2',
+				fieldLink: 'ab-add-field-link-from',
+				fieldLink2: 'ab-add-field-link-from-2',
+				fieldLinkType: 'ab-add-field-link-type-to',
+				fieldLinkViaType: 'ab-add-field-link-type-from',
+				fieldLinkVia: 'ab-add-field-link-to',
+				fieldLinkVia2: 'ab-add-field-link-to-2',
 
-			connectDataPopup: 'ab-connect-object-data-popup'
-		};
+				connectDataPopup: 'ab-connect-object-data-popup'
+			};
 
 		// General settings
 		var connectObjectField = {
@@ -27,6 +28,29 @@ steal(
 			includeHeader: true,
 			description: ''
 		};
+
+		function initConnectDataPopup(selectivityNode) {
+			if (!$$(componentIds.connectDataPopup)) {
+				webix.ui({
+					id: componentIds.connectDataPopup,
+					view: "connected_data_popup",
+				});
+			}
+
+			// Connect data popup
+			$$(componentIds.connectDataPopup).onSelect(function (selectedItems) {
+				selectivityHelper.setData(selectivityNode, selectedItems);
+			});
+
+			$$(componentIds.connectDataPopup).onClose(function (selectedItems) {
+				selectivityHelper.setData(selectivityNode, selectedItems);
+
+				$(connectObjectField).trigger('save', {
+					data: selectedItems
+				});
+
+			});
+		}
 
 		// Edit definition
 		connectObjectField.editDefinition = {
@@ -183,81 +207,19 @@ steal(
 			};
 		};
 
-		// // Connect data popup
-		// $$(self.webixUiId.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
-		// 							self.controllers.SelectivityHelper.setData(self.getCurSelectivityNode(), selectedItems);
-		// });
-		// $$(self.webixUiId.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
-		// 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+		connectObjectField.customDisplay = function (itemNode) {
 
-		// 							var selectedIds = [];
-
-		// 							if (selectedItems && selectedItems.length > 0)
-		// 		selectedIds = $.map(selectedItems, function (item) { return { id: item.id }; });
-
-		// 							self.updateRowData(
-		// 		{ value: selectedIds }, // state
-		// 		{ // editor
-		// 			row: self.data.selectedCell.row,
-		// 			column: self.data.selectedCell.column
-		// 		},
-		// 		false)
-		// 		.then(function (result) {
-		// 			// Update row
-		// 			var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
-
-		// 			rowData[self.data.selectedCell.column] = selectedItems.map(function (item) {
-		// 				return {
-		// 					id: item.id,
-		// 					dataLabel: item.text
-		// 				}
-		// 			}) || [];
-
-		// 			$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
-
-		// 			// Remove duplicate selected item when the link column supports one value
-		// 			var colData = self.data.columns.filter(function (col) { return col.name == self.data.selectedCell.column; })[0];
-		// 			if (selectedIds && colData.setting.linkViaType === 'model') {
-		// 				$$(self.webixUiId.objectDatatable).eachRow(function (row) {
-		// 					if (row != self.data.selectedCell.row) {
-		// 						var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
-		// 						if (otherRow[self.data.selectedCell.column]) {
-		// 							// Filter difference values
-		// 							otherRow[self.data.selectedCell.column] = otherRow[self.data.selectedCell.column].filter(function (i) {
-		// 								return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
-		// 							});
-
-		// 							$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
-		// 						}
-		// 					}
-		// 				});
-		// 			}
-
-		// 			// Resize row height
-		// 			self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
-
-		// 			$$(self.webixUiId.objectDatatable).hideProgress();
-
-		// 			self.data.selectedCell = null
-		// 		});
-
-		// 							self.controllers.SelectivityHelper.setData(self.getCurSelectivityNode(), selectedItems);
-		// });
+		};
 
 		connectObjectField.customEdit = function (application, data, itemNode) {
 			if (!application || !data || !data.setting.linkObject || !data.setting.linkVia) return false;
 
-			// Create connect data popup
-			if (!$$(componentIds.connectDataPopup)) {
-				webix.ui({
-					id: componentIds.connectDataPopup,
-					view: "connected_data_popup",
-				});
-			}
-
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
 				selectedData = selectivityHelper.getData(selectivityNode),
 				selectedIds = $.map(selectedData, function (d) { return d.id; });
+
+			// Init connect data popup
+			initConnectDataPopup(selectivityNode);
 
 			// Get the link object
 			var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (o) { return o.id == data.setting.linkObject; });
@@ -273,6 +235,7 @@ steal(
 			else
 				linkVia = linkVia[0];
 
+			// Open popup
 			$$(componentIds.connectDataPopup).open(linkObject, itemNode.row, selectedIds, data.setting.linkType, linkVia.name, linkVia.setting.linkType);
 
 			return false;
@@ -293,4 +256,5 @@ steal(
 		};
 
 		return connectObjectField;
-	});
+	}
+);

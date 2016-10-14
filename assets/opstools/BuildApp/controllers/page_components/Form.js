@@ -724,12 +724,12 @@ steal(
 								if (object && object.length > 0) {
 									var selectedIds = $.map(selectivityHelper.getData(item), function (d) { return d.id; });
 
-									$$(self.componentIds.addConnectObjectDataPopup).registerSelectChangeEvent(function (selectedItems) {
+									$$(self.componentIds.addConnectObjectDataPopup).onSelect(function (selectedItems) {
 										if (data.updatingItem)
 											selectivityHelper.setData(data.updatingItem, selectedItems);
 									});
 
-									$$(self.componentIds.addConnectObjectDataPopup).registerCloseEvent(function (selectedItems) {
+									$$(self.componentIds.addConnectObjectDataPopup).onClose(function (selectedItems) {
 										if (data.updatingItem)
 											selectivityHelper.setData(data.updatingItem, selectedItems);
 

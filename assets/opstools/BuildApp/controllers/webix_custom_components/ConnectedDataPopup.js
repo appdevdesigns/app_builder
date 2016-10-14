@@ -185,7 +185,6 @@ steal(
 
 											self.events.close(selectedItems);
 
-											dataList.unselectAll();
 											dataList.clearAll();
 										}
 									}
@@ -194,6 +193,7 @@ steal(
 								open: function (object, rowId, selectedIds, linkType, linkViaColName, linkViaType) {
 									var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
+									dataList.clearAll();
 									if (dataList.hideOverlay) dataList.hideOverlay();
 
 									self.data.selectedIds = selectedIds;
@@ -230,8 +230,10 @@ steal(
 									});
 									dataList.refresh();
 
-									self.controllers.ModelCreator.getModel(object.name)
-										.fail(function (err) { next(err); })
+									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
+										.fail(function (err) {
+											console.error('System could not found the object: ', err);
+										})
 										.then(function (objectModel) {
 											var cond = {};
 
@@ -285,11 +287,11 @@ steal(
 
 								},
 
-								registerSelectChangeEvent: function (selectChange) {
+								onSelect: function (selectChange) {
 									self.events.selectChange = selectChange;
 								},
 
-								registerCloseEvent: function (close) {
+								onClose: function (close) {
 									self.events.close = close;
 								}
 							}, webix.ui.window);

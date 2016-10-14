@@ -8,6 +8,8 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/list.js',
 	'opstools/BuildApp/controllers/data_fields/attachment.js',
 	function () {
+		var self = this;
+
 		// steal() will pass in each of the above loaded objects
 		// as parameters to this function().
 
@@ -25,6 +27,15 @@ steal(
 			return [dataField];
 		});
 
+		// Listen save events
+		fields.forEach(function (field) {
+			$(field).on('save', function (event, data) {
+				$(AD.classes.AppBuilder.DataFields).trigger('save', {
+					name: field.name,
+					data: data.data
+				});
+			});
+		});
 
 		/**
 		 * getField()

@@ -354,6 +354,66 @@ steal(
 						},
 
 						initEvents: function () {
+							var self = this;
+
+							$(AD.classes.AppBuilder.DataFields).on('save', function (event, result) {
+								switch (result.name) {
+									case 'connectObject':
+										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+										var selectedIds = [];
+
+										if (result.data && result.data.length > 0)
+											selectedIds = $.map(result.data, function (item) { return { id: item.id }; });
+
+										self.updateRowData(
+											{ value: selectedIds }, // state
+											{ // editor
+												row: self.data.selectedCell.row,
+												column: self.data.selectedCell.column
+											},
+											false)
+											.then(function () {
+												// Update row
+												var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
+
+												rowData[self.data.selectedCell.column] = $.map(result.data, function (item) {
+													return {
+														id: item.id,
+														dataLabel: item.text
+													};
+												}) || [];
+
+												$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
+
+												// Remove duplicate selected item when the link column supports one value
+												var colData = self.data.columns.filter(function (col) { return col.name == self.data.selectedCell.column; })[0];
+												if (selectedIds && colData.setting.linkViaType === 'model') {
+													$$(self.webixUiId.objectDatatable).eachRow(function (row) {
+														if (row != self.data.selectedCell.row) {
+															var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
+															if (otherRow[self.data.selectedCell.column]) {
+																// Filter difference values
+																otherRow[self.data.selectedCell.column] = otherRow[self.data.selectedCell.column].filter(function (i) {
+																	return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
+																});
+
+																$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
+															}
+														}
+													});
+												}
+
+												// Resize row height
+												self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
+
+												$$(self.webixUiId.objectDatatable).hideProgress();
+
+												self.data.selectedCell = null
+											});
+										break;
+								}
+							});
 						},
 
 						webix_ready: function () {
@@ -617,6 +677,8 @@ steal(
 								}
 							});
 						},
+
+
 
 						getUIDefinition: function () {
 							return this.data.definition;
@@ -1217,18 +1279,6 @@ steal(
 								});
 
 							return q;
-						},
-
-						getCurSelectivityNode: function (selectedCell) {
-							var self = this;
-
-							if (selectedCell || self.data.selectedCell) {
-								var rowNode = $($$(self.webixUiId.objectDatatable).getItemNode(selectedCell || self.data.selectedCell));
-								return rowNode.find('.connect-data-values');
-							}
-							else {
-								return $('');
-							}
 						},
 
 						refreshPopupData: function () {

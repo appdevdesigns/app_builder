@@ -373,7 +373,7 @@ steal(
                                             },
                                             // Get object model
                                             function (objInfo, next) {
-                                                self.controllers.ModelCreator.getModel(objInfo.attr('name'))
+                                                self.controllers.ModelCreator.getModel(app, objInfo.attr('name'))
                                                     .fail(function (err) { next(err); })
                                                     .then(function (objectModel) {
                                                         next(null, objInfo, objectModel);
