@@ -190,7 +190,7 @@ steal(
 									}
 								},
 
-								open: function (object, rowId, selectedIds, linkType, linkViaColName, linkViaType) {
+								open: function (object, rowId, selectedIds, colName, linkType, linkViaType) {
 									var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
 									dataList.clearAll();
@@ -265,7 +265,7 @@ steal(
 													// Filter selected data
 													if (linkViaType === 'model') {
 														data = data.filter(function (d) {
-															return !d[linkViaColName] || d[linkViaColName].id == rowId || selectedIds.indexOf(d.id) > -1;
+															return !d[colName] || d[colName].id == rowId || selectedIds.indexOf(d.id) > -1;
 														});
 													}
 
@@ -277,7 +277,7 @@ steal(
 														dataList.parse(data.attr());
 													else {
 														webix.extend(dataList, webix.OverlayBox);
-														dataList.showOverlay("No #objectName# available.".replace('#objectName#', object.name));
+														dataList.showOverlay("No #objectName# available.".replace('#objectName#', object.label));
 													}
 
 													dataList.hideProgress();

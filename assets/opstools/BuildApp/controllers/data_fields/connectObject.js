@@ -260,7 +260,7 @@ steal(
 				linkVia = linkVia[0];
 
 			// Open popup
-			$$(componentIds.connectDataPopup).open(linkObject, itemNode.row, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
+			$$(componentIds.connectDataPopup).open(linkObject, itemNode.row, selectedIds, fieldData.name, fieldData.setting.linkType, linkVia.setting.linkType);
 
 			return false;
 		};
