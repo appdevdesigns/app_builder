@@ -408,7 +408,7 @@ steal(
 												}
 
 												// Resize row height
-												// self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
+												self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, selectedIds.length);
 
 												$$(self.webixUiId.objectDatatable).hideProgress();
 

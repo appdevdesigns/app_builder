@@ -117,15 +117,6 @@ steal(
 										AD.classes.AppBuilder.DataFields.customDisplay(AD.classes.AppBuilder.currApp, col.fieldName, d[col.name], itemNode, {
 											readOnly: self.data.readOnly
 										});
-
-										// if (d[col.name] && d[col.name].length > 1) {
-										// self.calculateRowHeight(d.id, col.name, d[col.name].length);
-										// if (maxConnectedDataNum.dataNum < d[columnName].length || !maxConnectedDataNum.dataNum) {
-										// 	maxConnectedDataNum.dataId = d.id;
-										// 	maxConnectedDataNum.colName = columnName;
-										// 	maxConnectedDataNum.dataNum = d[columnName].length;
-										// }
-										// }
 									});
 
 									// if (d.isUnsync) { // TODO: Highlight unsync data
@@ -134,15 +125,8 @@ steal(
 									// 		rowNode.classList.add('ab-object-unsync-data');
 									// 	});
 									// }
-
-									// Call to calculate row height
-									// if (maxConnectedDataNum.dataId) {
-									// self.calculateRowHeight(d.id, maxConnectedDataNum.colName, d[col.name].length);
-									// }
 								});
 							});
-
-							// self.dataTable.refresh();
 						},
 
 						setObjectList: function (objectList) {
@@ -295,15 +279,18 @@ steal(
 							return width;
 						},
 
-						calculateRowHeight: function (dataNumber) {
-							// var self = this,
+						getRowHeight: function (dataNumber) {
 							var rowHeight = 35,
 								calHeight = dataNumber * rowHeight;
 
 							return calHeight;
+						},
 
-							// if (self.dataTable.getItem(row) && self.dataTable.getItem(row).$height < calHeight)
-							// 	self.dataTable.setRowHeight(row, calHeight);
+						calculateRowHeight: function (row, dataNumber) {
+							var rowHeight = this.getRowHeight(dataNumber);
+
+							if (this.dataTable.getItem(row) && this.dataTable.getItem(row).$height < rowHeight)
+								this.dataTable.setRowHeight(row, rowHeight);
 						},
 
 						populateData: function (application, data) {
@@ -338,9 +325,11 @@ steal(
 										var rowHeight = r.attr ? r.attr('$height') : r.$height;
 
 										linkCols.forEach(function (linkCol) {
-											var calHeight = self.calculateRowHeight(r[linkCol.id].length || 0);
-											if (calHeight > rowHeight || !rowHeight)
-												rowHeight = calHeight;
+											if (r[linkCol.id]) {
+												var calHeight = self.getRowHeight(r[linkCol.id].length || 0);
+												if (calHeight > rowHeight || !rowHeight)
+													rowHeight = calHeight;
+											}
 										});
 
 										if (r.attr)
