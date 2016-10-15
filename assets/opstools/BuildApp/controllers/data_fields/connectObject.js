@@ -29,7 +29,7 @@ steal(
 			description: ''
 		};
 
-		function initConnectDataPopup(selectivityNode) {
+		function initConnectDataPopup(objectId, selectivityNode) {
 			if (!$$(componentIds.connectDataPopup)) {
 				webix.ui({
 					id: componentIds.connectDataPopup,
@@ -46,6 +46,7 @@ steal(
 				selectivityHelper.setData(selectivityNode, selectedItems);
 
 				$(connectObjectField).trigger('save', {
+					objectId: objectId,
 					data: selectedItems
 				});
 
@@ -141,7 +142,7 @@ steal(
 		};
 
 		// Populate settings (when Edit field)
-		connectObjectField.populateSettings = function (application, data) {
+		connectObjectField.populateSettings = function (application, fieldData) {
 			$$(componentIds.editView).appName = application.name;
 
 			var objectList = AD.op.WebixDataCollection(application.objects);
@@ -161,10 +162,10 @@ steal(
 
 			$$(componentIds.fieldLinkViaType).linkVia = null;
 
-			if (!data.setting || !data.setting.linkObject || !data.setting.linkType) return;
+			if (!fieldData.setting || !fieldData.setting.linkObject || !fieldData.setting.linkType) return;
 
 			var selectedObject = $$(componentIds.objectList).data.find(function (obj) {
-				var linkObjId = data.setting.linkObject;
+				var linkObjId = fieldData.setting.linkObject;
 				return obj.id == linkObjId;
 			});
 
@@ -173,9 +174,9 @@ steal(
 				$$(componentIds.objectList).select(selectedObject[0].id);
 			$$(componentIds.objectCreateNew).disable();
 
-			$$(componentIds.fieldLinkType).setValue(data.setting.linkType);
-			$$(componentIds.fieldLinkViaType).setValue(data.setting.linkViaType);
-			$$(componentIds.fieldLinkViaType).linkVia = data.setting.linkVia;
+			$$(componentIds.fieldLinkType).setValue(fieldData.setting.linkType);
+			$$(componentIds.fieldLinkViaType).setValue(fieldData.setting.linkViaType);
+			$$(componentIds.fieldLinkViaType).linkVia = fieldData.setting.linkVia;
 		};
 
 		// For save field
@@ -207,36 +208,59 @@ steal(
 			};
 		};
 
-		connectObjectField.customDisplay = function (itemNode) {
+		connectObjectField.customDisplay = function (application, data, itemNode, options) {
+			// Initial selectivity
+			selectivityHelper.renderSelectivity(itemNode, 'connect-data-values', options.readOnly);
 
+			var selectedItems = [];
+			if (data) {
+				if (data.map) {
+					selectedItems = data.map(function (cVal) {
+						return {
+							id: cVal.id,
+							text: cVal.dataLabel
+						};
+					});
+				}
+				else {
+					selectedItems.push({
+						id: data.id,
+						text: data.dataLabel
+					});
+				}
+			}
+
+			// Set selectivity data
+			var fieldNode = $(itemNode).find('.connect-data-values');
+			selectivityHelper.setData(fieldNode, selectedItems);
 		};
 
-		connectObjectField.customEdit = function (application, data, itemNode) {
-			if (!application || !data || !data.setting.linkObject || !data.setting.linkVia) return false;
+		connectObjectField.customEdit = function (application, fieldData, itemNode) {
+			if (!application || !fieldData || !fieldData.setting.linkObject || !fieldData.setting.linkVia) return false;
 
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
 				selectedData = selectivityHelper.getData(selectivityNode),
 				selectedIds = $.map(selectedData, function (d) { return d.id; });
 
 			// Init connect data popup
-			initConnectDataPopup(selectivityNode);
+			initConnectDataPopup(application.currObj.id, selectivityNode);
 
 			// Get the link object
-			var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (o) { return o.id == data.setting.linkObject; });
+			var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (o) { return o.id == fieldData.setting.linkObject; });
 			if (!linkObject || linkObject.length < 1)
 				return false;
 			else
 				linkObject = linkObject[0];
 
 			// Get the via column
-			var linkVia = linkObject.columns.filter(function (col) { return col.id == data.setting.linkVia; });
+			var linkVia = linkObject.columns.filter(function (col) { return col.id == fieldData.setting.linkVia; });
 			if (!linkVia || linkVia.length < 1)
 				return false;
 			else
 				linkVia = linkVia[0];
 
 			// Open popup
-			$$(componentIds.connectDataPopup).open(linkObject, itemNode.row, selectedIds, data.setting.linkType, linkVia.name, linkVia.setting.linkType);
+			$$(componentIds.connectDataPopup).open(linkObject, itemNode.row, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
 
 			return false;
 		};

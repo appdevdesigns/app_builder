@@ -58,7 +58,7 @@ steal(
                             self.labels.add_fields.invalidFieldDescription = AD.lang.label.getLabel('ab.add_fields.invalidFieldDescription') || "System disallow enter special character to field name.";
 
                             self.labels.add_fields.duplicateFieldTitle = AD.lang.label.getLabel('ab.add_fields.duplicateFieldTitle') || "Your field name is duplicate";
-                            self.labels.add_fields.duplicateFieldDescription = AD.lang.label.getLabel('ab.add_fields.duplicateFieldDescription') || "Please change your field name";
+                            self.labels.add_fields.duplicateFieldDescription = AD.lang.label.getLabel('ab.add_fields.duplicateFieldDescription') || "Please change your column name";
 
                             self.labels.add_fields.cannotUpdateFields = AD.lang.label.getLabel('ab.add_fields.cannotUpdateFields') || "Could not update columns";
                             self.labels.add_fields.waitRestructureObjects = AD.lang.label.getLabel('ab.add_fields.waitRestructureObjects') || "Please wait until restructure objects is complete";
@@ -156,7 +156,7 @@ steal(
                                                             }
 
                                                             // Validate duplicate field name
-                                                            var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name; });
+                                                            var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
                                                             if (existsColumn && existsColumn.length > 0 && !self.data.editFieldId) {
                                                                 webix.alert({
                                                                     title: self.labels.add_fields.duplicateFieldTitle,

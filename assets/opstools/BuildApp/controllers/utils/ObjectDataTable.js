@@ -51,7 +51,7 @@ steal(
 							var DataHelper = AD.Control.get('opstools.BuildApp.DataHelper');
 
 							self.controllers = {
-								DataHelper: new DataHelper(),
+								DataHelper: new DataHelper()
 							};
 						},
 
@@ -108,64 +108,41 @@ steal(
 							}
 
 							self.dataTable.attachEvent("onAfterRender", function (data) {
-								// Render selectivity node
-								selectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
-
-								var linkColumns = self.dataTable.config.columns.slice(0);
-								linkColumns = linkColumns.filter(function (c) { return c.editor === 'selectivity'; });
-
 								data.each(function (d) {
 									var maxConnectedDataNum = {};
 
-									linkColumns.forEach(function (col) {
-										columnName = col.id;
+									AD.classes.AppBuilder.currApp.currObj.columns.forEach(function (col) {
+										var itemNode = self.dataTable.getItemNode({ row: d.id, column: col.name });
 
-										if (d[columnName]) {
-											var linkFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName })).find('.connect-data-values');
+										AD.classes.AppBuilder.DataFields.customDisplay(AD.classes.AppBuilder.currApp, col.fieldName, d[col.name], itemNode, {
+											readOnly: self.data.readOnly
+										});
 
-											var selectedItems = [];
-
-											if (d[columnName].map) {
-												selectedItems = d[columnName].map(function (cVal) {
-													return {
-														id: cVal.id,
-														text: cVal.dataLabel
-													};
-												});
-											} else if (d[columnName]) {
-												selectedItems.push({
-													id: d[columnName].id,
-													text: d[columnName].dataLabel
-												});
-											}
-
-											// Set selectivity data
-											selectivityHelper.setData(linkFieldNode, selectedItems);
-
-											if (maxConnectedDataNum.dataNum < d[columnName].length || !maxConnectedDataNum.dataNum) {
-												maxConnectedDataNum.dataId = d.id;
-												maxConnectedDataNum.colName = columnName;
-												maxConnectedDataNum.dataNum = d[columnName].length;
-											}
-
-										}
+										// if (d[col.name] && d[col.name].length > 1) {
+										// self.calculateRowHeight(d.id, col.name, d[col.name].length);
+										// if (maxConnectedDataNum.dataNum < d[columnName].length || !maxConnectedDataNum.dataNum) {
+										// 	maxConnectedDataNum.dataId = d.id;
+										// 	maxConnectedDataNum.colName = columnName;
+										// 	maxConnectedDataNum.dataNum = d[columnName].length;
+										// }
+										// }
 									});
 
-									// 	if (d.isUnsync) { // TODO: Highlight unsync data
-									// 		self.dataTable.config.columns.forEach(function (col) {
-									// 			var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
-									// 			rowNode.classList.add('ab-object-unsync-data');
-									// 		});
-									// 	}
+									// if (d.isUnsync) { // TODO: Highlight unsync data
+									// 	self.dataTable.config.columns.forEach(function (col) {
+									// 		var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
+									// 		rowNode.classList.add('ab-object-unsync-data');
+									// 	});
+									// }
 
 									// Call to calculate row height
-									if (maxConnectedDataNum.dataId) {
-										self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
-									}
+									// if (maxConnectedDataNum.dataId) {
+									// self.calculateRowHeight(d.id, maxConnectedDataNum.colName, d[col.name].length);
+									// }
 								});
 							});
 
-							self.dataTable.refresh();
+							// self.dataTable.refresh();
 						},
 
 						setObjectList: function (objectList) {
@@ -318,13 +295,15 @@ steal(
 							return width;
 						},
 
-						calculateRowHeight: function (row, column, dataNumber) {
-							var self = this,
-								rowHeight = 35,
+						calculateRowHeight: function (dataNumber) {
+							// var self = this,
+							var rowHeight = 35,
 								calHeight = dataNumber * rowHeight;
 
-							if (self.dataTable.getItem(row) && self.dataTable.getItem(row).$height != calHeight)
-								self.dataTable.setRowHeight(row, calHeight);
+							return calHeight;
+
+							// if (self.dataTable.getItem(row) && self.dataTable.getItem(row).$height < calHeight)
+							// 	self.dataTable.setRowHeight(row, calHeight);
 						},
 
 						populateData: function (application, data) {
@@ -354,6 +333,21 @@ steal(
 								.fail(q.reject)
 								.then(function (result) {
 									self.dataTable.clearAll();
+
+									result.forEach(function (r) {
+										var rowHeight = r.attr ? r.attr('$height') : r.$height;
+
+										linkCols.forEach(function (linkCol) {
+											var calHeight = self.calculateRowHeight(r[linkCol.id].length || 0);
+											if (calHeight > rowHeight || !rowHeight)
+												rowHeight = calHeight;
+										});
+
+										if (r.attr)
+											r.attr('$height', rowHeight);
+										else
+											r.$height = rowHeight;
+									});
 
 									// Populate data
 									if (result instanceof webix.DataCollection) {

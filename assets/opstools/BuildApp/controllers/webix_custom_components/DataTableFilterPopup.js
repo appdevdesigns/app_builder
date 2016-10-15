@@ -336,6 +336,8 @@ steal(
                                         }
                                     });
 
+                                    if (filterCondition.length < 1) return;
+
                                     if (filter_popup.dataTable) {
                                         filter_popup.dataTable.filter(function (obj) {
                                             var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : self.labels.filter_fields.and);

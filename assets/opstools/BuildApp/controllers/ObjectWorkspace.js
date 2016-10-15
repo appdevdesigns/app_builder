@@ -219,6 +219,7 @@ steal(
 										resizeRow: true,
 										prerender: false,
 										editable: true,
+										fixedRowHeight: false,
 										editaction: "custom",
 										select: "cell",
 										dragColumn: true,
@@ -357,6 +358,8 @@ steal(
 							var self = this;
 
 							$(AD.classes.AppBuilder.DataFields).on('save', function (event, result) {
+								if (result.objectId != AD.classes.AppBuilder.currApp.currObj.id) return;
+
 								switch (result.name) {
 									case 'connectObject':
 										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
@@ -405,7 +408,7 @@ steal(
 												}
 
 												// Resize row height
-												self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
+												// self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, self.data.selectedCell.column, selectedIds.length);
 
 												$$(self.webixUiId.objectDatatable).hideProgress();
 
@@ -804,7 +807,7 @@ steal(
 							], function () {
 								$$(self.webixUiId.objectToolbar).show();
 								$$(self.webixUiId.objectDatatable).show();
-								$$(self.webixUiId.objectDatatable).refresh();
+								// $$(self.webixUiId.objectDatatable).refresh();
 
 								// Register table to popups
 								$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));

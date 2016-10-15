@@ -32,6 +32,7 @@ steal(
 			$(field).on('save', function (event, data) {
 				$(AD.classes.AppBuilder.DataFields).trigger('save', {
 					name: field.name,
+					objectId: data.objectId,
 					data: data.data
 				});
 			});
@@ -262,11 +263,21 @@ steal(
 			},
 
 
-			customEdit: function (application, data, itemNode) {
-				var field = getField(data.fieldName);
+			customDisplay: function (application, fieldName, data, itemNode, options) {
+				var field = getField(fieldName);
+
+				if (field.customDisplay)
+					return field.customDisplay(application, data, itemNode, options);
+				else
+					return true;
+			},
+
+
+			customEdit: function (application, fieldData, itemNode) {
+				var field = getField(fieldData.fieldName);
 
 				if (field.customEdit)
-					return field.customEdit(application, data, itemNode);
+					return field.customEdit(application, fieldData, itemNode);
 				else
 					return true;
 			},
