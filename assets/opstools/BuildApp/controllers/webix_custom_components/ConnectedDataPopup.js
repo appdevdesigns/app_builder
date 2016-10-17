@@ -185,7 +185,7 @@ steal(
 									}
 								},
 
-								open: function (object, rowId, selectedIds, colName, linkType, linkViaType) {
+								open: function (object, rowId, selectedIds, linkType, linkColName, linkViaType) {
 									var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
 									dataList.clearAll();
@@ -260,7 +260,7 @@ steal(
 													// Filter selected data
 													if (linkViaType === 'model') {
 														data = data.filter(function (d) {
-															return !d[colName] || d[colName].id == rowId || selectedIds.indexOf(d.id) > -1;
+															return !d[linkColName] || d[linkColName].id == rowId || selectedIds.indexOf(d.id) > -1;
 														});
 													}
 

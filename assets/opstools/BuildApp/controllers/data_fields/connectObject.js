@@ -235,7 +235,7 @@ steal(
 			selectivityHelper.setData(fieldNode, selectedItems);
 		};
 
-		connectObjectField.customEdit = function (application, fieldData, itemNode) {
+		connectObjectField.customEdit = function (application, fieldData, dataId, itemNode) {
 			if (!application || !fieldData || !fieldData.setting.linkObject || !fieldData.setting.linkVia) return false;
 
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
@@ -260,7 +260,7 @@ steal(
 				linkVia = linkVia[0];
 
 			// Open popup
-			$$(componentIds.connectDataPopup).open(linkObject, itemNode.row, selectedIds, fieldData.name, fieldData.setting.linkType, linkVia.setting.linkType);
+			$$(componentIds.connectDataPopup).open(linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
 
 			return false;
 		};

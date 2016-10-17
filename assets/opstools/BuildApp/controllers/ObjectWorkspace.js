@@ -232,7 +232,7 @@ steal(
 												else
 													column = column[0];
 
-												return AD.classes.AppBuilder.DataFields.customEdit(AD.classes.AppBuilder.currApp, column, itemNode);
+												return AD.classes.AppBuilder.DataFields.customEdit(AD.classes.AppBuilder.currApp, column, data.row, itemNode);
 											},
 											onAfterSelect: function (data, prevent) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);

@@ -275,11 +275,11 @@ steal(
 			},
 
 
-			customEdit: function (application, fieldData, itemNode) {
+			customEdit: function (application, fieldData, dataId, itemNode) {
 				var field = getField(fieldData.fieldName);
 
 				if (field && field.customEdit)
-					return field.customEdit(application, fieldData, itemNode);
+					return field.customEdit(application, fieldData, dataId, itemNode);
 				else
 					return true;
 			},
