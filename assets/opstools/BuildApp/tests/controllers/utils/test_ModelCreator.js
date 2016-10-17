@@ -57,33 +57,27 @@ steal(
 
 			describe('Object model', function () {
 
-				it('should return object model', function (done) {
-					modelCreator.getModel('One')
-						.fail(function (err) {
-							assert.fail(err, undefined, 'should not return any error');
+				it('should return object model', function () {
+					var objModel = modelCreator.getModel('One');
 
-							done(err);
-						})
-						.then(function (objModel) {
-							assert.isOk(objModel);
-
-							done();
-						});
+					if (objModel) {
+						assert.isOk(objModel);
+					}
+					else {
+						assert.fail(err, undefined, 'should not return any error');
+					}
 				});
 
 
-				it('should not return object model', function (done) {
-					modelCreator.getModel('NotExistsModel')
-						.fail(function (err) {
-							assert.isOk(true);
+				it('should not return object model', function () {
+					var objModel = modelCreator.getModel('NotExistsModel');
 
-							done();
-						})
-						.then(function (objModel) {
-							assert.fail(objModel, undefined, 'should not return');
-
-							done();
-						});
+					if (objModel) {
+						assert.fail(objModel, undefined, 'should not return');
+					}
+					else {
+						assert.isOk(true);
+					}
 				});
 
 			});

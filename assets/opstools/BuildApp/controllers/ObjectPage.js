@@ -125,108 +125,95 @@ steal(
 							}
 
 							async.eachSeries(AD.classes.AppBuilder.currApp.objects.attr(), function (object, next) {
-								async.waterfall([
-									function (cb) {
-										// Get object model
-										modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
-											.fail(function (err) { cb(err); })
-											.then(function (objectModel) {
-												cb(null, objectModel);
-											});
-									},
-									function (objectModel, cb) {
-										// Get cached fields
-										var newFields = objectModel.Cached.getNewFields();
+								// Get object model
+								var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name);
 
-										newFields.sort(function (a, b) { return a.weight - b.weight; });
+								// Get cached fields
+								var newFields = objectModel.Cached.getNewFields();
 
-										if (!newFields || newFields.length < 1)
-											return cb(null, objectModel);
+								newFields.sort(function (a, b) { return a.weight - b.weight; });
 
-										var saveFieldsTasks = [];
+								if (!newFields || newFields.length < 1)
+									return next();
 
-										newFields.forEach(function (field, index) {
-											saveFieldsTasks.push(function (callback) {
-												var tempId = field.id;
-												delete field.id;
+								var saveFieldsTasks = [];
 
-												if (!field.weight)
-													field.weight = object.columns.length + index;
+								newFields.forEach(function (field, index) {
+									saveFieldsTasks.push(function (callback) {
+										var tempId = field.id;
+										delete field.id;
 
-												async.waterfall([
-													// Create object column
-													function (ok) {
-														self.Model.ABColumn.create(field)
-															.fail(ok)
-															.then(function (result) {
-																// Delete field cache
-																objectModel.Cached.deleteCachedField(tempId);
+										if (!field.weight)
+											field.weight = object.columns.length + index;
 
-																ok(null, result);
-															});
-													},
-													// Create link column
-													function (column, ok) {
-														if (field.setting.linkObject && field.setting.linkVia) {
-															self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
-																.fail(ok)
-																.then(function (linkCol) {
-																	// set linkVia
-																	column.setting.attr('linkVia', linkCol.id);
-																	column.save()
-																		.fail(function (err) { ok(err) })
-																		.then(function (result) {
-																			ok(null, result);
-																		});
+										async.waterfall([
+											// Create object column
+											function (ok) {
+												self.Model.ABColumn.create(field)
+													.fail(ok)
+													.then(function (result) {
+														// Delete field cache
+														objectModel.Cached.deleteCachedField(tempId);
+
+														ok(null, result);
+													});
+											},
+											// Create link column
+											function (column, ok) {
+												if (field.setting.linkObject && field.setting.linkVia) {
+													self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
+														.fail(ok)
+														.then(function (linkCol) {
+															// set linkVia
+															column.setting.attr('linkVia', linkCol.id);
+															column.save()
+																.fail(function (err) { ok(err) })
+																.then(function (result) {
+																	ok(null, result);
 																});
-														}
-														else {
-															ok(null, column);
-														}
-													},
-													// Create list option of select column
-													function (column, ok) {
-														if (field.setting.editor === 'richselect' && field.setting.filter_options) {
-															var createOptionEvents = [];
+														});
+												}
+												else {
+													ok(null, column);
+												}
+											},
+											// Create list option of select column
+											function (column, ok) {
+												if (field.setting.editor === 'richselect' && field.setting.filter_options) {
+													var createOptionEvents = [];
 
-															field.setting.filter_options.forEach(function (opt, index) {
-																createOptionEvents.push(function (createOk) {
-																	var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
+													field.setting.filter_options.forEach(function (opt, index) {
+														createOptionEvents.push(function (createOk) {
+															var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
 
-																	self.Model.ABList.create({
-																		key: list_key,
-																		weight: index + 1,
-																		column: column.id,
-																		label: opt,
-																		value: opt
-																	})
-																		.fail(createOk)
-																		.then(function () { createOk(); });
-																});
-															});
+															self.Model.ABList.create({
+																key: list_key,
+																weight: index + 1,
+																column: column.id,
+																label: opt,
+																value: opt
+															})
+																.fail(createOk)
+																.then(function () { createOk(); });
+														});
+													});
 
-															async.parallel(createOptionEvents, ok);
-														}
-														else {
-															ok();
-														}
-													}
-												], callback);
-											});
-										});
+													async.parallel(createOptionEvents, ok);
+												}
+												else {
+													ok();
+												}
+											}
+										], callback);
+									});
+								});
 
-										async.parallel(saveFieldsTasks, function (err) {
-											cb(err, objectModel);
-										});
-
-									},
+								async.parallel(saveFieldsTasks, function (err) {
 									// Update object model
-									function (objectModel, cb) {
-										modelCreator.updateModel(AD.classes.AppBuilder.currApp, object.name)
-											.fail(cb)
-											.then(function () { cb(); });
-									}
-								], next);
+									modelCreator.updateModel(AD.classes.AppBuilder.currApp, object.name);
+
+									next(err);
+								});
 							}, function (err) {
 								if (err)
 									q.reject(err);
@@ -250,23 +237,13 @@ steal(
 
 							AD.classes.AppBuilder.currApp.objects.forEach(function (object) {
 								syncDataTasks.push(function (next) {
+									var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name);
 
-									async.waterfall([
-										function (cb) {
-											modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
-												.fail(cb)
-												.then(function (objectModel) {
-													cb(null, objectModel);
-												});
-										},
-										function (objectModel, cb) {
-											objectModel.Cached.syncDataToServer()
-												.fail(cb)
-												.then(function () {
-													cb(null);
-												});
-										}
-									], next);
+									objectModel.Cached.syncDataToServer()
+										.fail(next)
+										.then(function () {
+											next();
+										});
 
 								});
 							});
@@ -289,30 +266,27 @@ steal(
 							var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == linkObject })[0];
 
 							// Get object model
-							modelCreator.getModel(AD.classes.AppBuilder.currApp, linkObj.name)
-								.fail(function (err) { ok(err); })
-								.then(function (objModel) {
-									// Get cache
-									var cachedFields = objModel.Cached.getNewFields(),
-										linkCol = cachedFields.filter(function (f) { return f.id == linkVia; })[0],
-										tempId = linkCol.id;
+							var objModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, linkObj.name);
 
-									linkCol.setting.linkVia = linkColumnId;
-									linkCol.weight = linkObj.columns.length + Object.keys(cachedFields).indexOf(linkVia) + 1;
+							// Get cache
+							var cachedFields = objModel.Cached.getNewFields(),
+								linkCol = cachedFields.filter(function (f) { return f.id == linkVia; })[0],
+								tempId = linkCol.id;
 
-									delete linkCol.id;
+							linkCol.setting.linkVia = linkColumnId;
+							linkCol.weight = linkObj.columns.length + Object.keys(cachedFields).indexOf(linkVia) + 1;
 
-									// Create
-									self.Model.ABColumn.create(linkCol)
-										.fail(function (err) { q.reject(err) })
-										.then(function (result) {
-											objModel.Cached.deleteCachedField(tempId);
+							delete linkCol.id;
 
-											if (result.translate) result.translate();
+							// Create
+							self.Model.ABColumn.create(linkCol)
+								.fail(function (err) { q.reject(err) })
+								.then(function (result) {
+									objModel.Cached.deleteCachedField(tempId);
 
-											q.resolve(result);
-										});
+									if (result.translate) result.translate();
 
+									q.resolve(result);
 								});
 
 							return q;

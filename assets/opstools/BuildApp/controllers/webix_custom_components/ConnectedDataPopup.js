@@ -225,61 +225,54 @@ steal(
 									});
 									dataList.refresh();
 
-									modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
-										.fail(function (err) {
-											console.error('System could not found the object: ', err);
-										})
-										.then(function (objectModel) {
-											var cond = {};
+									var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name),
+										cond = {};
 
-											// // Filter selected data
-											// if (linkViaType === 'model' && linkViaColName) {
-											// 	cond[linkViaColName] = { '!': null };
+									// // Filter selected data
+									// if (linkViaType === 'model' && linkViaColName) {
+									// 	cond[linkViaColName] = { '!': null };
 
-											// 	// Get own selected data
-											// 	if (selectedIds && selectedIds.length > 0) {
+									// 	// Get own selected data
+									// 	if (selectedIds && selectedIds.length > 0) {
 
-											// 		var origCond = cond;
-											// 		cond = { or: [] };
-											// 		cond.or.push(origCond);
+									// 		var origCond = cond;
+									// 		cond = { or: [] };
+									// 		cond.or.push(origCond);
 
-											// 		cond.or.push({
-											// 			id: selectedIds
-											// 		})
-											// 	}
-											// }
+									// 		cond.or.push({
+									// 			id: selectedIds
+									// 		})
+									// 	}
+									// }
 
 
-											// objectModel.store = {};
+									// objectModel.store = {};
 
-											// Load the connect data
-											// objectModel.findAll({ where:cond})
-											objectModel.Cached.findAll(cond)
-												.fail(function (err) { next(err); })
-												.then(function (data) {
-													// Filter selected data
-													if (linkViaType === 'model') {
-														data = data.filter(function (d) {
-															return !d[linkColName] || d[linkColName].id == rowId || selectedIds.indexOf(d.id) > -1;
-														});
-													}
-
-													data.forEach(function (d) {
-														if (d.translate) d.translate();
-													});
-
-													if (data && data.length > 0)
-														dataList.parse(data.attr());
-													else {
-														webix.extend(dataList, webix.OverlayBox);
-														dataList.showOverlay("No #objectName# available.".replace('#objectName#', object.label));
-													}
-
-													dataList.hideProgress();
+									// Load the connect data
+									// objectModel.findAll({ where:cond})
+									objectModel.Cached.findAll(cond)
+										.fail(function (err) { next(err); })
+										.then(function (data) {
+											// Filter selected data
+											if (linkViaType === 'model') {
+												data = data.filter(function (d) {
+													return !d[linkColName] || d[linkColName].id == rowId || selectedIds.indexOf(d.id) > -1;
 												});
+											}
 
+											data.forEach(function (d) {
+												if (d.translate) d.translate();
+											});
+
+											if (data && data.length > 0)
+												dataList.parse(data.attr());
+											else {
+												webix.extend(dataList, webix.OverlayBox);
+												dataList.showOverlay("No #objectName# available.".replace('#objectName#', object.label));
+											}
+
+											dataList.hideProgress();
 										});
-
 								},
 
 								onSelect: function (selectChange) {

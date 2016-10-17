@@ -29,17 +29,13 @@ steal(
 
 					objInfo = objInfo[0];
 
+
+					// Get object model
+					var objectModel = modelCreator.getModel(application, objInfo.attr('name'));
+
 					async.waterfall([
-						// Get object model
-						function (next) {
-							modelCreator.getModel(application, objInfo.attr('name'))
-								.fail(function (err) { next(err); })
-								.then(function (objectModel) {
-									next(null, objectModel);
-								});
-						},
 						// Find data
-						function (objModel, next) {
+						function (next) {
 							// Get link columns
 							var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
 								linkColObjs = linkCols.map(function (col) {
@@ -52,7 +48,7 @@ steal(
 							// Get date & datetime columns
 							var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
 
-							objModel.findAll({})
+							objectModel.findAll({})
 								.fail(next)
 								.then(function (data) {
 

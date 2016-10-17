@@ -421,19 +421,17 @@ steal(
 							}, false, true);
 
 							objects.forEach(function (obj) {
-								modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name)
-									.then(function (objectModel) {
-										var unsyncNumber = objectModel.Cached.count(),
-											htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
+								var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
+									unsyncNumber = objectModel.Cached.count(),
+									htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
 
-										if (unsyncNumber > 0) {
-											htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
-											htmlItem.find('.ab-object-unsync').show();
-										}
-										else {
-											htmlItem.find('.ab-object-unsync').hide();
-										}
-									});
+								if (unsyncNumber > 0) {
+									htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
+									htmlItem.find('.ab-object-unsync').show();
+								}
+								else {
+									htmlItem.find('.ab-object-unsync').hide();
+								}
 							});
 						},
 

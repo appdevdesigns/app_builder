@@ -37,11 +37,9 @@ steal(
 
 		return {
 			getModel: function (application, objectName) {
-				var q = $.Deferred();
-
 				if (!objectName) {
-					q.reject(new Error('The object name is required.'));
-					return q;
+					console.log('The object name is required.');
+					return null;
 				}
 
 				var formatAppName = application.name.replace(/_/g, ''),
@@ -50,25 +48,19 @@ steal(
 					model = AD.Model.get(modelName);
 
 				if (model && model.Cached) {
-					q.resolve(model);
+					return model;
 				}
 				else {
-					this.updateModel(application, objectName)
-						.fail(function (err) { q.reject(err); })
-						.then(function (modelResult) {
-							q.resolve(AD.Model.get(modelName));
-						});
-				}
+					this.updateModel(application, objectName);
 
-				return q;
+					return AD.Model.get(modelName);
+				}
 			},
 
 			updateModel: function (application, objectName) {
-				var q = $.Deferred();
-
 				if (!objectName) {
-					q.reject(new Error('The object name is required.'));
-					return q;
+					console.error('The object name is required.');
+					return null;
 				}
 
 				var self = this,
@@ -80,7 +72,8 @@ steal(
 				var objectData = application.objects.filter(function (obj) { return obj.name == objectName; });
 
 				if (!objectData || objectData.length < 1) {
-					throw new Error('System could not found this object.');
+					console.error('System could not found this object.');
+					return null;
 				}
 
 				objectData = objectData[0];
@@ -101,7 +94,7 @@ steal(
 				linkFields.forEach(function (linkCol) {
 					var linkObject = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject });
 
-					if (!linkObject || linkObject.length < 1) return;
+					if (!linkObject || linkObject.length < 1) return null;
 
 					linkObject = linkObject[0];
 
@@ -110,43 +103,27 @@ steal(
 					associations[linkCol.name] = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, linkObject.name);
 				});
 
-				// async.eachSeries(linkFields,
-				// 	function (col, ok) {
-				// 		models.ABObject.findOne({ id: col.setting.linkObject })
-				// 			.fail(ok)
-				// 			.then(function (linkObject) {
-				// 				// opstools.BuildApp.#appName#_#objectName#
-				// 				// opstools.#appName#.#appName#_#objectName#
-				// 				associations[col.name] = "opstools.AB_#appName#.AB_#appName#_#objectName#".replace(/#appName#/g, formatAppName).replace(/#objectName#/g, linkObject.name);
-
-				// 				ok();
-				// 			})
-				// 	}, function () {
-
 				// Define base model
 				try {
 					defineBaseModel(application, objectName, describe, multilingualFields, associations);
 				}
 				catch (err) {
-					q.reject(err);
-					return;
+					console.error(err);
+					return null;
 				}
 
 				// Init object model
 				AD.Model.extend(modelName, {
 					useSockets: true
 				}, {});
-				var modelResult = AD.Model.get(modelName);
 
+				var modelResult = AD.Model.get(modelName);
 
 				// Setup cached model
 				var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
 				self.initModelCached(objectName, modelResult, cachedKey);
 
-				q.resolve(modelResult);
-				// });
-
-				return q;
+				return modelResult;
 			},
 
 			initModelCached: function (objectName, model, cachedKey) {

@@ -350,6 +350,9 @@ steal(
 
                                     if (!self.data.dataCollections) self.data.dataCollections = {};
 
+                                    // Get object model
+                                    var objectModel = modelCreator.getModel(app, objInfo.attr('name'));
+
                                     if (!self.data.dataCollections[objectId]) {
                                         async.waterfall([
                                             // Get object info
@@ -360,16 +363,8 @@ steal(
                                                         next(null, objInfo);
                                                     });
                                             },
-                                            // Get object model
-                                            function (objInfo, next) {
-                                                modelCreator.getModel(app, objInfo.attr('name'))
-                                                    .fail(function (err) { next(err); })
-                                                    .then(function (objectModel) {
-                                                        next(null, objInfo, objectModel);
-                                                    });
-                                            },
                                             // Find data
-                                            function (objInfo, objModel, next) {
+                                            function (objInfo, next) {
                                                 // Get link columns
                                                 var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
                                                     linkColObjs = linkCols.map(function (col) {
@@ -382,7 +377,7 @@ steal(
                                                 // Get date & datetime columns
                                                 var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
 
-                                                objModel.findAll({})
+                                                objectModel.findAll({})
                                                     .fail(function (err) { next(err); })
                                                     .then(function (data) {
 

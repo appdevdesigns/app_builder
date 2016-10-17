@@ -36,19 +36,12 @@ steal(
 								if (r[linkCol.name] && !r[linkCol.name].dataLabel) {
 									Tasks.push(function (ok) {
 										var linkObj = application.objects.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
-											linkObjModel,
 											linkedLabels = [];
 
+										// Get linked object model
+										var linkObjModel = modelCreator.getModel(application, linkObj.name);
+
 										async.series([
-											// Get linked object model
-											function (next) {
-												modelCreator.getModel(application, linkObj.name)
-													.fail(next)
-													.then(function (result) {
-														linkObjModel = result;
-														next();
-													});
-											},
 											// Find labels of linked fields
 											function (next) {
 												var connectIds = [];
