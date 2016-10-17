@@ -112,7 +112,11 @@ steal(
 									var maxConnectedDataNum = {};
 
 									AD.classes.AppBuilder.currApp.currObj.columns.forEach(function (col) {
+										if (self.dataTable.config.columns.filter(function (c) { return c.id == col.name; }).length < 1) return;
+
 										var itemNode = self.dataTable.getItemNode({ row: d.id, column: col.name });
+
+										if (!itemNode) return;
 
 										AD.classes.AppBuilder.DataFields.customDisplay(AD.classes.AppBuilder.currApp, col.fieldName, d[col.name], itemNode, {
 											readOnly: self.data.readOnly

@@ -89,8 +89,8 @@ steal(
 							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
 							self.labels.common.renameErrorMessage = AD.lang.label.getLabel('ab.common.rename.error') || "System could not rename <b>{0}</b>.";
 							self.labels.common.renameSuccessMessage = AD.lang.label.getLabel('ab.common.rename.success') || "Rename to <b>{0}</b>.";
-							self.labels.common.createErrorMessage = AD.lang.label.getLabel('ab.common.create.error') || "System could not create <b>{0}</b>.";
-							self.labels.common.createSuccessMessage = AD.lang.label.getLabel('ab.common.create.success') || "<b>{0}</b> is created.";
+							self.labels.common.saveErrorMessage = AD.lang.label.getLabel('ab.common.save.error') || "System could not save <b>{0}</b>.";
+							self.labels.common.saveSuccessMessage = AD.lang.label.getLabel('ab.common.save.success') || "<b>{0}</b> is saved.";
 							self.labels.common.deleteErrorMessage = AD.lang.label.getLabel('ab.common.delete.error') || "System could not delete <b>{0}</b>.";
 							self.labels.common.deleteSuccessMessage = AD.lang.label.getLabel('ab.common.delete.success') || "<b>{0}</b> is deleted.";
 
@@ -1101,7 +1101,7 @@ steal(
 
 								webix.message({
 									type: "error",
-									text: self.labels.common.createErrorMessage.replace('{0}', columnInfo.name)
+									text: self.labels.common.saveErrorMessage.replace('{0}', columnInfo.name)
 								});
 
 								AD.error.log('Add Column : Error add new field data', { error: err });
@@ -1276,7 +1276,7 @@ steal(
 
 										webix.message({
 											type: "success",
-											text: self.labels.common.createSuccessMessage.replace("{0}", columnInfo.name)
+											text: self.labels.common.saveSuccessMessage.replace("{0}", columnInfo.name)
 										});
 									});
 								});
