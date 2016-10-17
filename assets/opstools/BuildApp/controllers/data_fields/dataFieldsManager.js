@@ -161,7 +161,7 @@ steal(
 			getEditViewId: function (name) {
 				var field = getField(name);
 
-				if (field != null) {
+				if (field && field.editDefinition) {
 					return field.editDefinition.id;
 				}
 				else {
@@ -246,6 +246,8 @@ steal(
 			populateSettings: function (application, data) {
 				var field = getField(data.fieldName);
 
+				if (!field) return;
+
 				if ($$(componentIds.headerName.replace('{0}', data.fieldName)))
 					$$(componentIds.headerName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
 				else
@@ -266,7 +268,7 @@ steal(
 			customDisplay: function (application, fieldName, data, itemNode, options) {
 				var field = getField(fieldName);
 
-				if (field.customDisplay)
+				if (field && field.customDisplay)
 					return field.customDisplay(application, data, itemNode, options);
 				else
 					return true;
@@ -276,7 +278,7 @@ steal(
 			customEdit: function (application, fieldData, itemNode) {
 				var field = getField(fieldData.fieldName);
 
-				if (field.customEdit)
+				if (field && field.customEdit)
 					return field.customEdit(application, fieldData, itemNode);
 				else
 					return true;
