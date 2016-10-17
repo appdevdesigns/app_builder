@@ -127,8 +127,8 @@ steal(
 										select: false,
 										onClick: {
 											"ab-app-list-item": function (e, id, trg) {
-												if (self.webixUiId.appList.showProgress)
-													self.webixUiId.appList.showProgress({ icon: 'cursor' });
+												if ($$(self.webixUiId.appList).showProgress)
+													$$(self.webixUiId.appList).showProgress({ icon: 'cursor' });
 
 												this.select(id);
 
@@ -165,8 +165,8 @@ steal(
 																});
 														}
 													], function (err) {
-														if (self.webixUiId.appList.hideProgress)
-															self.webixUiId.appList.hideProgress();
+														if ($$(self.webixUiId.appList).hideProgress)
+															$$(self.webixUiId.appList).hideProgress();
 
 														if (err) return;
 
