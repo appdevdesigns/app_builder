@@ -1,8 +1,8 @@
 steal(
 	// Dependencies
-	"opstools/BuildApp/tests/stubHelper.js",
 	"opstools/BuildApp/controllers/utils/ModelCreator.js",
-	function () {
+	"opstools/BuildApp/tests/stubHelper.js",
+	function (modelCreator) {
 		// the div to attach the controller to
 		var divID = 'test_ModelCreator';
 
@@ -19,20 +19,16 @@ steal(
 		//Define the unit tests
 		describe('testing ModelCreator utility ', function () {
 
-			var modelCreator = null,
-				appInfo = {
-					id: 1,
-					name: 'TEST_application'
-				};
+			var appInfo = {
+				id: 1,
+				name: 'TEST_application'
+			};
 
 			before(function () {
 
 				buildHTML();
 
 				// Initialize the controller
-				modelCreator = new AD.controllers.opstools.BuildApp.ModelCreator($('#' + divID), {});
-				modelCreator.setApp(appInfo);
-
 				abStubHelper.convertToStub(modelCreator.Model.ABObject, 'ABObject');
 				abStubHelper.convertToStub(modelCreator.Model.ABColumn, 'ABColumn');
 			});

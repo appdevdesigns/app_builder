@@ -1,15 +1,15 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+
 	'opstools/BuildApp/controllers/ObjectList.js',
 	'opstools/BuildApp/controllers/ObjectWorkspace.js',
-
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
 
-	function () {
+	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -49,8 +49,7 @@ steal(
 							self.controllers = {};
 
 							var ObjectList = AD.Control.get('opstools.BuildApp.ObjectList'),
-								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace');
 
 							self.controllers.ObjectList = new ObjectList(self.element, {
 								selectedObjectEvent: self.options.selectedObjectEvent,
@@ -58,7 +57,6 @@ steal(
 								deletedObjectEvent: self.options.deletedObjectEvent
 							});
 							self.controllers.ObjectWorkspace = new ObjectWorkspace(self.element);
-							self.controllers.ModelCreator = new ModelCreator(self.element);
 						},
 
 						initWebixUI: function () {
@@ -130,7 +128,7 @@ steal(
 								async.waterfall([
 									function (cb) {
 										// Get object model
-										self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
+										modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
 											.fail(function (err) { cb(err); })
 											.then(function (objectModel) {
 												cb(null, objectModel);
@@ -224,7 +222,7 @@ steal(
 									},
 									// Update object model
 									function (objectModel, cb) {
-										self.controllers.ModelCreator.updateModel(AD.classes.AppBuilder.currApp, object.name)
+										modelCreator.updateModel(AD.classes.AppBuilder.currApp, object.name)
 											.fail(cb)
 											.then(function () { cb(); });
 									}
@@ -255,7 +253,7 @@ steal(
 
 									async.waterfall([
 										function (cb) {
-											self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
+											modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
 												.fail(cb)
 												.then(function (objectModel) {
 													cb(null, objectModel);
@@ -291,7 +289,7 @@ steal(
 							var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == linkObject })[0];
 
 							// Get object model
-							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, linkObj.name)
+							modelCreator.getModel(AD.classes.AppBuilder.currApp, linkObj.name)
 								.fail(function (err) { ok(err); })
 								.then(function (objModel) {
 									// Get cache

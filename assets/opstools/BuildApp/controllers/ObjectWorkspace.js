@@ -1,5 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/controllers/utils/ModelCached.js',
+	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditor.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableVisibleFieldsPopup.js',
@@ -11,13 +15,9 @@ steal(
 
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditHeaderPopup.js',
 
-	'opstools/BuildApp/controllers/utils/ModelCached.js',
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
-
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
-	function () {
+	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -140,7 +140,6 @@ steal(
 
 								EditHeaderPopup = AD.Control.get('opstools.BuildApp.DataTableEditHeaderPopup'),
 
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
 								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
 
 							self.controllers = {
@@ -153,7 +152,6 @@ steal(
 								AddFieldPopup: new AddFieldPopup(),
 								EditHeaderPopup: new EditHeaderPopup(),
 
-								ModelCreator: new ModelCreator(),
 								ObjectDataTable: new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
 							};
 						},
@@ -507,7 +505,7 @@ steal(
 										}
 										else {
 											// Get cached field
-											self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
+											modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 												.then(function (objectModel) {
 													var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
 
@@ -536,7 +534,7 @@ steal(
 
 												if (!selectedColumn || selectedColumn.length < 1) {
 													// Get cached field
-													self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
+													modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 														.then(function (objectModel) {
 															var newFields = objectModel.Cached.getNewFields().filter(function (c) { return c.id == headerField.dataId });
 
@@ -567,7 +565,7 @@ steal(
 														async.parallel([
 															// Remove describe & multi-fields of object model
 															function (ok) {
-																self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
+																modelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
 																	.fail(ok)
 																	.then(function (objectModel) {
 																		delete objectModel.describe()[headerField.id];
@@ -588,7 +586,7 @@ steal(
 																		return obj.id == selectedColumn.setting.linkObject;
 																	})[0];
 
-																	self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, linkObject.name)
+																	modelCreator.getModel(AD.classes.AppBuilder.currApp, linkObject.name)
 																		.fail(ok)
 																		.then(function (objectModel) {
 																			delete objectModel.describe()[selectedColumn.setting.linkVia];
@@ -781,7 +779,7 @@ steal(
 										return;
 									}
 
-									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
+									modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 										.fail(function (err) { next(err); })
 										.then(function (objectModel) {
 											self.Model.ObjectModel = objectModel;
@@ -967,7 +965,7 @@ steal(
 							var q = AD.sal.Deferred(),
 								self = this;
 
-							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
+							modelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
 								.fail(function (err) { q.reject(err); })
 								.then(function (objectModel) {
 									// Cache new field
@@ -989,7 +987,7 @@ steal(
 						deleteObject: function (obj) {
 							var self = this;
 
-							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name)
+							modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name)
 								.fail(function (err) {
 									// TODO : Error message
 								})
@@ -1054,7 +1052,7 @@ steal(
 
 							var objectName = AD.classes.AppBuilder.currApp.currObj.attr('name');
 
-							self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
+							modelCreator.getModel(AD.classes.AppBuilder.currApp, objectName)
 								.fail(function (err) { q.reject(err); })
 								.then(function (objectModel) {
 									var columns = self.data.columns.attr().slice(), // Copy
@@ -1336,7 +1334,7 @@ steal(
 							async.series([
 								// Find cached columns
 								function (callback) {
-									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
+									modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'))
 										.fail(callback)
 										.then(function (result) {
 											cachedFields = result.Cached.getNewFields();

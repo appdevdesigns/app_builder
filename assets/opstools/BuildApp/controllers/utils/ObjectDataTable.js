@@ -2,7 +2,7 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
-	function (selectivityHelper) {
+	function (selectivityHelper, dataHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -23,7 +23,6 @@ steal(
 							self.events = {};
 
 							self.initMultilingualLabels();
-							self.initControllers();
 							self.initEvents();
 						},
 
@@ -42,17 +41,6 @@ steal(
 							self.labels.confirmDeleteRowTitle = AD.lang.label.getLabel('ab.object.deleteRow.title') || "Delete data";
 							self.labels.confirmDeleteRowMessage = AD.lang.label.getLabel('ab.object.deleteRow.message') || "Do you want to delete this row?";
 
-						},
-
-						initControllers: function () {
-							var self = this;
-							self.controllers = {};
-
-							var DataHelper = AD.Control.get('opstools.BuildApp.DataHelper');
-
-							self.controllers = {
-								DataHelper: new DataHelper()
-							};
 						},
 
 						initEvents: function () {
@@ -320,7 +308,7 @@ steal(
 							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
 
 							// Populate labels & Convert string to Date object
-							self.controllers.DataHelper.normalizeData(application, data, linkColObjs, dateCols)
+							dataHelper.normalizeData(application, data, linkColObjs, dateCols)
 								.fail(q.reject)
 								.then(function (result) {
 									self.dataTable.clearAll();

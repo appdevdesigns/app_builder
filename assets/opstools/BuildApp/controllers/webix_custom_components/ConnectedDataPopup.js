@@ -1,7 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
-
-	function () {
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -17,11 +17,6 @@ steal(
 
 							// Call parent init
 							self._super(element, options);
-
-							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
-							self.controllers = {
-								ModelCreator: new ModelCreator()
-							};
 
 							self.data = {};
 							self.events = {};
@@ -230,7 +225,7 @@ steal(
 									});
 									dataList.refresh();
 
-									self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
+									modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name)
 										.fail(function (err) {
 											console.error('System could not found the object: ', err);
 										})

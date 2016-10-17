@@ -1,13 +1,13 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
+
 	'opstools/BuildApp/models/ABObject.js',
 	'opstools/BuildApp/models/ABPage.js',
 	'opstools/BuildApp/models/ABPageComponent.js',
 
-	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
-
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
-	function () {
+	function (dataCollectionHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -76,12 +76,10 @@ steal(
 						initControllers: function () {
 							var self = this;
 
-							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
-								DataCollectionHelper = AD.Control.get('opstools.BuildApp.DataCollectionHelper');
+							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList');
 
 							this.controllers = {
 								ActiveList: new ActiveList(),
-								DataCollectionHelper: new DataCollectionHelper(),
 							};
 						},
 
@@ -234,7 +232,7 @@ steal(
 																	if (component.setPage)
 																		component.setPage(self.data.page);
 
-																	component.populateSettings(item, self.controllers.DataCollectionHelper.getDataCollection.bind(self.controllers.DataCollectionHelper));
+																	component.populateSettings(item, dataCollectionHelper.getDataCollection.bind(dataCollectionHelper));
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.name + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -602,7 +600,7 @@ steal(
 									// Get data collection
 									function (next) {
 										if (settings.object) {
-											self.controllers.DataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, settings.object)
+											dataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, settings.object)
 												.fail(next)
 												.then(function (result) {
 													dataCollection = result;
@@ -615,7 +613,7 @@ steal(
 									// Get data collection of connected data
 									function (next) {
 										if (settings.linkedTo) {
-											self.controllers.DataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, settings.linkedTo)
+											dataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, settings.linkedTo)
 												.fail(next)
 												.then(function (result) {
 													linkedDataCollection = result;

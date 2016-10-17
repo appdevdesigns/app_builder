@@ -1,8 +1,8 @@
 steal(
 	// Dependencies
-	"opstools/BuildApp/tests/stubHelper.js",
 	"opstools/BuildApp/controllers/utils/DataCollectionHelper.js",
-	function () {
+	"opstools/BuildApp/tests/stubHelper.js",
+	function (dataCollectionHelper) {
 		// the div to attach the controller to
 		var divID = 'test_DataCollectionHelper';
 
@@ -19,20 +19,15 @@ steal(
 		//Define the unit tests
 		describe('testing DataCollectionHelper utility ', function () {
 
-			var dataCollectionHelper = null,
-				appInfo = {
-					id: 1,
-					name: 'TEST_application'
-				},
+			var appInfo = {
+				id: 1,
+				name: 'TEST_application'
+			},
 				objectList;
 
 			before(function (done) {
 
 				buildHTML();
-
-				// Initialize the controller
-				dataCollectionHelper = new AD.controllers.opstools.BuildApp.DataCollectionHelper($('#' + divID), {});
-				dataCollectionHelper.setApp(appInfo);
 
 				abStubHelper.convertToStub(dataCollectionHelper.Model.ABObject, 'ABObject');
 
@@ -90,7 +85,7 @@ steal(
 				// Set object list to data collection helper
 				dataCollectionHelper.Model.ABObject.findAll().then(function (objects) {
 					objectList = objects;
-					dataCollectionHelper.setObjectList(objects);
+					appInfo.objects = objects;
 
 					done();
 				});
@@ -103,7 +98,7 @@ steal(
 			it('should return data collection of object data', function (done) {
 				var objectId = objectList[0].id;
 
-				dataCollectionHelper.getDataCollection(objectId)
+				dataCollectionHelper.getDataCollection(appInfo, objectId)
 					.fail(function (err) {
 						assert.fail(err, undefined, 'should not return any error');
 

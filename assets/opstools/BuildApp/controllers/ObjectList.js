@@ -1,12 +1,12 @@
 
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/models/ABObject.js',
-
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
+	'opstools/BuildApp/models/ABObject.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
-	function () {
+	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -99,19 +99,17 @@ steal(
 						},
 
 						initControllers: function () {
-							var EditList = AD.Control.get('opstools.BuildApp.EditList'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+							var EditList = AD.Control.get('opstools.BuildApp.EditList');
 
 							this.controllers = {
-								EditList: new EditList(),
-								ModelCreator: new ModelCreator(this.element)
+								EditList: new EditList()
 							};
 						},
 
 						initEvents: function () {
 							var self = this;
 
-							self.controllers.ModelCreator.on(self.options.countCachedItemEvent, function (event, data) {
+							$(modelCreator).on(self.options.countCachedItemEvent, function (event, data) {
 								self.refreshUnsyncNumber(data.objectName);
 							});
 						},
@@ -423,7 +421,7 @@ steal(
 							}, false, true);
 
 							objects.forEach(function (obj) {
-								self.controllers.ModelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name)
+								modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name)
 									.then(function (objectModel) {
 										var unsyncNumber = objectModel.Cached.count(),
 											htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
