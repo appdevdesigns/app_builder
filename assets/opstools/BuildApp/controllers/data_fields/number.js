@@ -2,7 +2,6 @@ steal(function () {
 	var componentIds = {
 		editView: 'ab-new-number',
 		allowDecimal: 'ab-new-number-allow-decimal',
-		numberFormat: 'ab-new-number-format',
 		numberDefault: 'ab-new-number-default',
 	};
 
@@ -31,17 +30,6 @@ steal(function () {
 		id: componentIds.editView,
 		rows: [
 			{
-				view: "combo",
-				id: componentIds.numberFormat,
-				value: 'Number',
-				label: 'Format',
-				labelWidth: 60,
-				options: [
-					{ format: 'numberFormat', value: 'Number' },
-					{ format: 'priceFormat', value: 'Price' },
-				]
-			},
-			{
 				view: "checkbox",
 				id: componentIds.allowDecimal,
 				labelRight: "Allow decimal numbers",
@@ -61,23 +49,18 @@ steal(function () {
 		$$(componentIds.allowDecimal).setValue(data.type == 'float');
 		$$(componentIds.allowDecimal).disable();
 
-		var selectedFormat = $$(componentIds.numberFormat).getList().find(function (format) { return format.format == data.setting.format; });
-		if (selectedFormat && selectedFormat.length > 0)
-			$$(componentIds.numberFormat).setValue(selectedFormat[0].value);
-
 		if (data.setting.default)
 			$$(componentIds.numberDefault).setValue(data.setting.default);
 	};
 
 	numberDataField.getSettings = function () {
-		var type = 'integer';
+		var type = 'integer',
+			format = 'intFormat';
 
-		if ($$(componentIds.allowDecimal).getValue())
+		if ($$(componentIds.allowDecimal).getValue()) {
 			type = 'float';
-
-		var selectedFormat = $$(componentIds.numberFormat).getList().find(function (format) {
-			return format.value == $$(componentIds.numberFormat).getValue();
-		})[0];
+			format = 'numberFormat';
+		}
 
 		return {
 			fieldName: numberDataField.name,
@@ -86,7 +69,7 @@ steal(function () {
 				icon: numberDataField.icon,
 				editor: 'number',
 				filter_type: 'number',
-				format: selectedFormat.format,
+				format: format,
 				default: $$(componentIds.numberDefault).getValue()
 			}
 		};
@@ -119,7 +102,6 @@ steal(function () {
 	};
 
 	numberDataField.resetState = function () {
-		$$(componentIds.numberFormat).setValue('Number');
 		$$(componentIds.allowDecimal).setValue(false);
 		$$(componentIds.allowDecimal).enable();
 		$$(componentIds.numberDefault).setValue('');

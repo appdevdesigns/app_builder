@@ -80,9 +80,9 @@ steal(
 							var self = this;
 
 							self.controllers.ObjectList.on(self.options.selectedObjectEvent, function (event, id) {
-								var curObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == id });
-								if (curObj && curObj.length > 0)
-									AD.classes.AppBuilder.currApp.currObj = curObj[0];
+								var currObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == id });
+								if (currObj && currObj.length > 0)
+									AD.classes.AppBuilder.currApp.currObj = currObj[0];
 
 								self.controllers.ObjectWorkspace.showTable();
 							});
@@ -107,12 +107,14 @@ steal(
 						refresh: function () {
 							var self = this;
 
+							self.controllers.ObjectWorkspace.resetState();
+
 							self.controllers.ObjectList.resetState();
 							self.controllers.ObjectList.refreshObjectList();
 							self.controllers.ObjectList.refreshUnsyncNumber();
 
-							self.controllers.ObjectWorkspace.resetState();
-							self.controllers.ObjectWorkspace.showTable();
+							if (AD.classes.AppBuilder.currApp.currObj)
+								self.controllers.objectList.selectObjectItem(AD.classes.AppBuilder.currApp.currObj.id);
 						},
 
 						syncObjectFields: function () {
@@ -131,10 +133,10 @@ steal(
 								// Get cached fields
 								var newFields = objectModel.Cached.getNewFields();
 
-								newFields.sort(function (a, b) { return a.weight - b.weight; });
-
 								if (!newFields || newFields.length < 1)
 									return next();
+
+								newFields.sort(function (a, b) { return a.weight - b.weight; });
 
 								var saveFieldsTasks = [];
 

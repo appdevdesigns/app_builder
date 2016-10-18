@@ -227,9 +227,10 @@ steal(
 												var itemNode = this.getItemNode(self.data.selectedCell);
 
 												var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-												if (!column || column.length < 1)
+												if (!column || column.length < 1) {
+													console.log('System could not found this column data');
 													return false;
-												else
+												} else
 													column = column[0];
 
 												return AD.classes.AppBuilder.DataFields.customEdit(AD.classes.AppBuilder.currApp, column, data.row, itemNode);
@@ -716,11 +717,10 @@ steal(
 										})
 										.then(function (data) {
 
-											data.forEach(function (d) {
-												if (d.translate) d.translate();
-											});
+											data.forEach(function (d) { if (d.translate) d.translate(); });
 
 											self.data.columns = data;
+											AD.classes.AppBuilder.currApp.currObj.attr('columns', data);
 
 											// Find option list
 											var listColIds = $.map(self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; }), function (c) {

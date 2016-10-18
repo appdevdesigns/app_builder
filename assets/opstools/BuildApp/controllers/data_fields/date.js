@@ -42,11 +42,13 @@ steal(function () {
 	// For save field
 	dateDataField.getSettings = function () {
 		var type = 'date',
-			editor = 'date';
+			editor = 'date',
+			format = 'dateFormatStr';
 
 		if ($$(componentIds.includeTime).getValue()) {
 			type = 'datetime';
 			editor = 'datetime';
+			format = 'fullDateFormatStr';
 		}
 
 		return {
@@ -55,7 +57,8 @@ steal(function () {
 			setting: {
 				icon: dateDataField.icon,
 				editor: editor, // http://docs.webix.com/desktop__editing.html
-				filter_type: 'date' // DataTableFilterPopup - filter type
+				filter_type: 'date', // DataTableFilterPopup - filter type
+				format: format
 			}
 		};
 	};

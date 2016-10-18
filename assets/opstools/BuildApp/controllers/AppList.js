@@ -14,7 +14,7 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								selectedAppEvent: 'AB_Application.Selected'
+								APP_SELECTED: 'AB_Application.Selected'
 							}, options);
 							this.options = options;
 
@@ -171,7 +171,7 @@ steal(
 														if (err) return;
 
 														// Trigger select app event
-														self.element.trigger(self.options.selectedAppEvent, selectedApp[0]);
+														self.element.trigger(self.options.APP_SELECTED, selectedApp[0]);
 													});
 												}
 

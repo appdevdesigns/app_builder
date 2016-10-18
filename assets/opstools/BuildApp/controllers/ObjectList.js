@@ -396,6 +396,10 @@ steal(
 							return this.data.definition;
 						},
 
+						selectObjectItem: function (objId) {
+							$$(self.webixUiId.objectList).select(objId);
+						},
+
 						refreshObjectList: function () {
 							var self = this,
 								objectList = AD.op.WebixDataCollection(AD.classes.AppBuilder.currApp.objects);

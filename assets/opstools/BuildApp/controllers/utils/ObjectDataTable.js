@@ -150,26 +150,15 @@ steal(
 
 								col.setting.width = self.calculateColumnWidth(col);
 
-								if (col.setting.format)
+								if (col.setting.format && webix.i18n[col.setting.format])
 									col.setting.format = webix.i18n[col.setting.format];
-
-								var options = [];
-								if (col.setting.options && col.setting.options.length > 0) {
-									col.setting.options.forEach(function (opt) {
-										options.push({
-											id: opt.id,
-											value: opt.label
-										});
-									});
-								}
 
 								var mapCol = $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
 									label: col.label,
 									header: self.getHeader(col, self.data.readOnly),
-									weight: col.weight,
-									linkObject: col.linkObject
+									weight: col.weight
 								});
 
 								if (mapCol.filter_type === 'boolean' && self.data.readOnly) { // Checkbox - read only mode
@@ -180,29 +169,17 @@ steal(
 											return "<div class='webix_icon fa-square-o'></div>";
 									};
 								}
-								else if (col.type === 'integer') {
-									mapCol.format = webix.Number.numToStr({
-										groupDelimiter: ",",
-										groupSize: 3,
-										decimalSize: 0
-									});
-								}
-								else if (col.type === 'float') {
-									mapCol.format = webix.Number.numToStr({
-										groupDelimiter: ",",
-										groupSize: 3,
-										decimalDelimiter: ".",
-										decimalSize: 1
-									});
-								}
-								else if (mapCol.editor === 'date') {
-									mapCol.format = webix.i18n.dateFormatStr;
-								}
-								else if (mapCol.editor === 'datetime') {
-									mapCol.format = webix.i18n.fullDateFormatStr;
-								}
 
 								// richselect
+								var options = [];
+								if (col.setting.options && col.setting.options.length > 0) {
+									col.setting.options.forEach(function (opt) {
+										options.push({
+											id: opt.id,
+											value: opt.label
+										});
+									});
+								}
 								if (options && options.length > 0)
 									mapCol.options = options;
 
