@@ -16,6 +16,16 @@ steal(function () {
 		description: ''
 	};
 
+	function isInt(n) {
+		n = parseFloat(n);
+		return Number(n) === n && n % 1 === 0;
+	}
+
+	function isFloat(n) {
+		n = parseFloat(n);
+		return Number(n) === n && n % 1 !== 0;
+	}
+
 	// Edit definition
 	numberDataField.editDefinition = {
 		id: componentIds.editView,
@@ -83,9 +93,19 @@ steal(function () {
 	};
 
 	numberDataField.validate = function (fieldData, value) {
-		value = fieldData.type == 'float' ? parseFloat(value) : parseInt(value);
-		if (!isNaN(value) && isFinite(value)) {
-			return true;
+		if (!isNaN(parseFloat(value)) && isFinite(value)) {
+
+			if (fieldData.type == 'integer' && isFloat(value)) {
+				webix.alert({
+					title: "This value is invalid",
+					text: "This column disallows decimal number",
+					ok: "OK"
+				});
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
 		else {
 			webix.alert({
