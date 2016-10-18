@@ -1,10 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
 
-	'opstools/BuildApp/controllers/page_templates/QuickPage.js',
 	'opstools/BuildApp/controllers/page_templates/BlankPage.js',
+	'opstools/BuildApp/controllers/page_templates/QuickPage.js',
 
-	function () {
+	function (blankPage) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -44,12 +44,10 @@ steal(
 							},
 
 							initControllers: function () {
-								var QuickPage = AD.Control.get('opstools.BuildApp.Templates.QuickPage'),
-									BlankPage = AD.Control.get('opstools.BuildApp.Templates.BlankPage');
+								var QuickPage = AD.Control.get('opstools.BuildApp.Templates.QuickPage');
 
 								this.controllers = {
-									QuickPage: new QuickPage(this.element, { data: this.options.data }),
-									BlankPage: new BlankPage(this.element, { data: this.options.data })
+									QuickPage: new QuickPage(this.element, { data: this.options.data })
 								};
 							},
 
@@ -59,7 +57,7 @@ steal(
 								// Get UI definitions
 								var tabContents = [
 									self.controllers.QuickPage.getUIDefinition(),
-									self.controllers.BlankPage.getUIDefinition()
+									blankPage.getUIDefinition()
 								];
 
 								// Initial popup
@@ -111,7 +109,7 @@ steal(
 
 							webix_ready: function () {
 								this.controllers.QuickPage.webix_ready();
-								this.controllers.BlankPage.webix_ready();
+								blankPage.webix_ready();
 							},
 
 							show: function () {
@@ -129,7 +127,7 @@ steal(
 											this.controllers.QuickPage.show();
 											break;
 										case 'BlankPage':
-											this.controllers.BlankPage.show();
+											blankPage.show(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currPage);
 											break;
 									}
 								}
@@ -148,7 +146,7 @@ steal(
 											});
 										break;
 									case 'BlankPage':
-										self.controllers.BlankPage.save()
+										blankPage.save(AD.classes.AppBuilder.currApp)
 											.then(function (newPage) {
 												self.callAddNewPageEvent(newPage);
 

@@ -3,8 +3,6 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
-	'opstools/BuildApp/models/ABObject.js',
-
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
 	function (modelCreator) {
 		System.import('appdev').then(function () {
@@ -29,7 +27,6 @@ steal(
 							// Call parent init
 							this._super(element, options);
 
-							this.Model = AD.Model.get('opstools.BuildApp.ABObject');
 							this.data = {};
 
 							this.webixUiId = {
@@ -341,12 +338,11 @@ steal(
 
 														var newObject = {
 															name: newObjectName,
-															label: newObjectName,
-															application: AD.classes.AppBuilder.currApp.id
+															label: newObjectName
 														};
 
 														// Add new object to server
-														self.Model.create(newObject).fail(function (err) {
+														AD.classes.AppBuilder.currApp.createObject(newObject).fail(function (err) {
 															$$(self.webixUiId.objectList).hideProgress();
 
 															AD.error.log('Object : Error create object data', { error: err });

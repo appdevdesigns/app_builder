@@ -464,14 +464,6 @@ steal(
 							return 'ab-layout-component-{0}'.replace('{0}', id);
 						},
 
-						setApp: function (app) {
-							var self = this;
-
-							self.resetState();
-
-							self.data.app = app;
-						},
-
 						setPage: function (page) {
 							var self = this;
 

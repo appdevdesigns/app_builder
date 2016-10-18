@@ -114,7 +114,7 @@ steal(
 							self.controllers.ObjectList.refreshUnsyncNumber();
 
 							if (AD.classes.AppBuilder.currApp.currObj)
-								self.controllers.objectList.selectObjectItem(AD.classes.AppBuilder.currApp.currObj.id);
+								self.controllers.ObjectList.selectObjectItem(AD.classes.AppBuilder.currApp.currObj.id);
 						},
 
 						syncObjectFields: function () {

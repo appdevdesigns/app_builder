@@ -150,37 +150,28 @@ steal(
 							self.controllers.View.setApp(app);
 						},
 
-						setPage: function (page) {
-							var self = this;
+						showPage: function () {
+							this.resetState();
 
-							self.controllers.LayoutView.resetState();
-							self.controllers.ComponentList.resetState();
-
-							// Reset page components 
-							self.controllers.Grid.resetState();
-
-							if (page) {
-								self.data.page = page;
-
-								self.controllers.LayoutView.setPage(page);
-								self.controllers.ComponentList.show();
+							if (AD.classes.AppBuilder.currApp.currPage) {
+								this.controllers.LayoutView.setPage(page);
+								this.controllers.ComponentList.show();
 							}
 							else {
-								self.controllers.ComponentList.hide();
+								this.controllers.ComponentList.hide();
 							}
-						},
-
-						setObjectList: function (objectList) {
-							var self = this;
-
-							self.controllers.LayoutView.setObjectList(objectList);
-
-							self.controllers.Form.setObjectList(objectList);
-							self.controllers.View.setObjectList(objectList);
 						},
 
 						refreshMenuComponent: function (pageId) {
 							this.controllers.LayoutView.refreshMenuComponent(pageId);
+						},
+
+						resetState: function () {
+							this.controllers.LayoutView.resetState();
+							this.controllers.ComponentList.resetState();
+
+							// Reset page components 
+							this.controllers.Grid.resetState();
 						},
 
 						resize: function (height) {

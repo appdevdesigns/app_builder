@@ -24,6 +24,7 @@ steal(
 						*/
 					},
 					{
+						// Object
 						getObjects: function () {
 							return AD.Model.get('opstools.BuildApp.ABObject').findAll({ application: this.id });
 						},
@@ -32,6 +33,12 @@ steal(
 							return AD.Model.get('opstools.BuildApp.ABObject').findOne({ application: this.id, id: objId });
 						},
 
+						createObject: function (obj) {
+							obj.application = this.id;
+							return AD.Model.get('opstools.BuildApp.ABObject').create(obj);
+						},
+
+						// Page
 						getPages: function () {
 							return AD.Model.get('opstools.BuildApp.ABPage').findAll({ application: this.id });
 						},
@@ -40,6 +47,12 @@ steal(
 							return AD.Model.get('opstools.BuildApp.ABPage').findOne({ application: this.id, id: pageId });
 						},
 
+						createPage: function (page) {
+							page.application = this.id;
+							return AD.Model.get('opstools.BuildApp.ABPage').create(page);
+						},
+
+						// Permission
 						getPermissions: function () {
 							return AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' });
 						},

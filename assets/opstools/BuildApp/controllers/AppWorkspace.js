@@ -187,7 +187,6 @@ steal(
 									break;
 								case self.webixUiId.interfaceView:
 									self.controllers.InterfacePage.refresh();
-									// self.controllers.InterfacePage.loadData(app);
 									break;
 							}
 						},

@@ -80,13 +80,13 @@ steal(
 							// Create new page handler
 							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
 								if (data.newPage instanceof Array) {
-									data.newPage.forEach(function (p) {
-										var noSelect = p.parent !== null;
-										self.addPageToTree(p, noSelect);
+									data.newPage.forEach(function (page) {
+										var noSelect = page.parent !== null;
+										self.addPage(page, noSelect);
 									});
 								}
 								else {
-									self.addPageToTree(data.newPage);
+									self.addPage(data.newPage);
 								}
 							});
 						},
@@ -116,14 +116,10 @@ steal(
 										},
 										on: {
 											onAfterSelect: function (id) {
-												var selectedPage = self.data.pages.filter(function (p) { return p.id == id; });
+												var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == id; });
 
 												if (selectedPage && selectedPage.length > 0) {
 													self.element.trigger(self.options.selectedPageEvent, { selectedPage: selectedPage[0] });
-													self.data.selectedPage = selectedPage[0];
-												}
-												else {
-													self.data.selectedPage = null;
 												}
 
 												// Show gear icon
@@ -149,7 +145,14 @@ steal(
 												if (state.value != state.old) {
 													$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
-													var selectedPage = self.data.pages.filter(function (item, index, list) { return item.id == editor.id; })[0];
+													var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (item, index, list) { return item.id == editor.id; })[0];
+
+													if (!selectedPage || selectedPage.length < 1) {
+														console.error('Could not found the page');
+														return;
+													}
+
+													selectedPage = selectedPage[0];
 													selectedPage.attr('label', state.value);
 
 													// Call server to rename
@@ -249,7 +252,11 @@ steal(
 															if (result) {
 																$$(self.webixUiId.interfaceTree).showProgress({ type: "icon" });
 
-																var deletedPages = self.data.pages.filter(function (p) { return p.id == selectedPage.id; });
+																var deletedPages = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == selectedPage.id; });
+																if (!deletedPages || deletedPages.length < 1) {
+																	console.error('Could not found the page.');
+																	return;
+																}
 
 																// Call server to delete object data
 																deletedPages[0].destroy()
@@ -264,15 +271,10 @@ steal(
 																		AD.error.log('Pages List : Error delete page data', { error: err });
 																	})
 																	.then(function (result) {
-																		self.data.pages.forEach(function (item, index, list) {
-																			if (item && item.id === result.id)
-																				self.data.pages.splice(index, 1);
-																		});
-
 																		$$(self.webixUiId.interfaceTree).remove(result.id);
 																		$$(self.webixUiId.interfaceTree).unselectAll();
 
-																		self.element.trigger(self.options.updatedPageEvent, { pagesList: self.data.pages });
+																		self.element.trigger(self.options.updatedPageEvent, {});
 
 																		webix.message({
 																			type: "success",
@@ -310,63 +312,36 @@ steal(
 							return this.data.definition;
 						},
 
-						loadPages: function (appId) {
-							var self = this;
+						loadPages: function () {
+							$$(this.webixUiId.interfaceTree).clearAll();
+							$$(this.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
-							self.data.appId = appId;
+							// Convert data to tree
+							var treeData = $.map(AD.classes.AppBuilder.currApp.pages.attr(), function (d) {
+								if (!d.parent) { // Get root page
+									var pageItem = {
+										id: d.id,
+										value: d.name,
+										label: d.label
+									};
 
-							$$(self.webixUiId.interfaceTree).clearAll();
-							$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
-
-							self.Model.findAll({ application: appId })
-								.fail(function (err) {
-									$$(self.webixUiId.interfaceTree).hideProgress();
-
-									webix.message({
-										type: "error",
-										text: err
-									});
-
-									AD.error.log('Page list : Error loading page list data', { error: err });
-								})
-								.then(function (data) {
-									if (data && data.length > 0) {
-										data.forEach(function (d) {
-											if (d.translate)
-												d.translate();
-										});
-									}
-
-									self.data.pages = data;
-
-									// Show data to tree component
-									var treeData = $.map(data.attr(), function (d) {
-										if (!d.parent) { // Get root page
-											var pageItem = {
-												id: d.id,
-												value: d.name,
-												label: d.label
-											};
-
-											// Get children pages
-											pageItem.data = $.map(data.attr(), function (subD) {
-												if (subD.parent && subD.parent.id == d.id) {
-													return {
-														id: subD.id,
-														value: subD.name,
-														label: subD.label
-													}
-												}
-											});
-
-											return pageItem;
+									// Get children pages
+									pageItem.data = $.map(AD.classes.AppBuilder.currApp.pages.attr(), function (subD) {
+										if (subD.parent && subD.parent.id == d.id) {
+											return {
+												id: subD.id,
+												value: subD.name,
+												label: subD.label
+											}
 										}
 									});
 
-									$$(self.webixUiId.interfaceTree).parse(treeData);
+									return pageItem;
+								}
+							});
 
-									$$(self.webixUiId.interfaceTree).hideProgress();
-								})
+							$$(this.webixUiId.interfaceTree).parse(treeData);
+							$$(this.webixUiId.interfaceTree).hideProgress();
 						},
 
 						showGear: function (id) {
@@ -375,10 +350,10 @@ steal(
 							$($$(self.webixUiId.interfaceTree).getItemNode(id)).find('.ab-page-list-edit').show();
 						},
 
-						addPageToTree: function (page, noSelect) {
+						addPage: function (page, noSelect) {
 							var self = this;
 
-							self.data.pages.push(page);
+							AD.classes.AppBuilder.currApp.pages.push(page);
 
 							$$(self.webixUiId.interfaceTree).add({
 								id: page.id,
