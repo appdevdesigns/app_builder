@@ -257,6 +257,14 @@ steal(
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													});
 											},
+											onBeforeEditStop: function (state, editor) {
+												var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
+
+												if (!column || column.length < 1) return true;
+												column = column[0];
+
+												return AD.classes.AppBuilder.DataFields.validate(column, state.value);
+											},
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
 												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
 

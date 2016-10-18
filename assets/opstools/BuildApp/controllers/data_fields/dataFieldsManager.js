@@ -284,6 +284,15 @@ steal(
 					return true;
 			},
 
+			validate: function (fieldData, value) {
+				var field = getField(fieldData.fieldName);
+
+				if (field && field.validate)
+					return field.validate(value);
+				else
+					return true;
+			},
+
 			/**
 			 * resetState
 			 *

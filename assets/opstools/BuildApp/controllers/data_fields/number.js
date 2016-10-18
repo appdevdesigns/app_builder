@@ -82,6 +82,21 @@ steal(function () {
 		};
 	};
 
+	numberDataField.validate = function (value) {
+		if (!isNaN(parseFloat(value)) && isFinite(value)) {
+			return true;
+		}
+		else {
+			webix.alert({
+				title: "This value is invalid",
+				text: "Please enter number value",
+				ok: "OK"
+			});
+
+			return false;
+		}
+	};
+
 	numberDataField.resetState = function () {
 		$$(componentIds.numberFormat).setValue('Number');
 		$$(componentIds.allowDecimal).setValue(false);
