@@ -82,8 +82,9 @@ steal(function () {
 		};
 	};
 
-	numberDataField.validate = function (value) {
-		if (!isNaN(parseFloat(value)) && isFinite(value)) {
+	numberDataField.validate = function (fieldData, value) {
+		value = fieldData.type == 'float' ? parseFloat(value) : parseInt(value);
+		if (!isNaN(value) && isFinite(value)) {
 			return true;
 		}
 		else {

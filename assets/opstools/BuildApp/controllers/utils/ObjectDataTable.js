@@ -96,17 +96,16 @@ steal(
 							}
 
 							self.dataTable.attachEvent("onAfterRender", function (data) {
-								data.each(function (d) {
-									var maxConnectedDataNum = {};
+								self.dataTable.eachRow(function (rowId) {
+									self.dataTable.eachColumn(function (columnId) {
+										var columnData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == columnId });
+										if (!columnData || columnData.length < 1) return;
+										columnData = columnData[0];
 
-									AD.classes.AppBuilder.currApp.currObj.columns.forEach(function (col) {
-										if (self.dataTable.config.columns.filter(function (c) { return c.id == col.name; }).length < 1) return;
-
-										var itemNode = self.dataTable.getItemNode({ row: d.id, column: col.name });
-
+										var itemNode = self.dataTable.getItemNode({ row: rowId, column: columnId });
 										if (!itemNode) return;
 
-										AD.classes.AppBuilder.DataFields.customDisplay(AD.classes.AppBuilder.currApp, col.fieldName, d[col.name], itemNode, {
+										AD.classes.AppBuilder.DataFields.customDisplay(AD.classes.AppBuilder.currApp, columnData.fieldName, self.dataTable.getItem(rowId)[columnData.name], itemNode, {
 											readOnly: self.data.readOnly
 										});
 									});

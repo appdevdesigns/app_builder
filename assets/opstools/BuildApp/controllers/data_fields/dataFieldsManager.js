@@ -288,7 +288,7 @@ steal(
 				var field = getField(fieldData.fieldName);
 
 				if (field && field.validate)
-					return field.validate(value);
+					return field.validate(fieldData, value);
 				else
 					return true;
 			},
