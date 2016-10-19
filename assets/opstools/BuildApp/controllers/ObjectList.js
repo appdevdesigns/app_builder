@@ -141,6 +141,10 @@ steal(
 														$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
 													});
 												});
+
+												// Show gear icon
+												if (this.getSelectedId(true).length > 0)
+													$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
 											},
 											onAfterSelect: function (id) {
 												// Fire select object event
@@ -383,9 +387,7 @@ steal(
 						},
 
 						webix_ready: function () {
-							var self = this;
-
-							webix.extend($$(self.webixUiId.objectList), webix.ProgressBar);
+							webix.extend($$(this.webixUiId.objectList), webix.ProgressBar);
 						},
 
 						getUIDefinition: function () {
@@ -393,23 +395,22 @@ steal(
 						},
 
 						selectObjectItem: function (objId) {
-							$$(self.webixUiId.objectList).select(objId);
+							$$(this.webixUiId.objectList).select(objId);
 						},
 
 						refreshObjectList: function () {
-							var self = this,
-								objectList = AD.op.WebixDataCollection(AD.classes.AppBuilder.currApp.objects);
+							var objectList = AD.op.WebixDataCollection(AD.classes.AppBuilder.currApp.objects);
 
-							$$(self.webixUiId.objectList).showProgress({ type: "icon" });
+							$$(this.webixUiId.objectList).showProgress({ type: "icon" });
 
-							$$(self.webixUiId.objectList).clearAll();
-							$$(self.webixUiId.objectList).data.sync(objectList);
-							$$(self.webixUiId.objectList).refresh();
-							$$(self.webixUiId.objectList).unselectAll();
+							$$(this.webixUiId.objectList).clearAll();
+							$$(this.webixUiId.objectList).data.sync(objectList);
+							$$(this.webixUiId.objectList).refresh();
+							$$(this.webixUiId.objectList).unselectAll();
 
-							self.refreshUnsyncNumber();
+							this.refreshUnsyncNumber();
 
-							$$(self.webixUiId.objectList).hideProgress();
+							$$(this.webixUiId.objectList).hideProgress();
 						},
 
 						refreshUnsyncNumber: function (objectName) {
@@ -436,11 +437,9 @@ steal(
 						},
 
 						resetState: function () {
-							var self = this;
-
-							$$(self.webixUiId.objectList).unselectAll();
-							$$(self.webixUiId.objectList).clearAll();
-							$$(self.webixUiId.objectList).refresh();
+							$$(this.webixUiId.objectList).unselectAll();
+							$$(this.webixUiId.objectList).clearAll();
+							$$(this.webixUiId.objectList).refresh();
 						}
 
 					}); // end AD.Control.extend
