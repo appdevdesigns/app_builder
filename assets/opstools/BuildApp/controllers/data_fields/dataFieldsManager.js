@@ -27,7 +27,7 @@ steal(
 			return [dataField];
 		});
 
-		// Listen save events
+		// Listen save event
 		fields.forEach(function (field) {
 			$(field).on('save', function (event, data) {
 				$(AD.classes.AppBuilder.DataFields).trigger('save', {

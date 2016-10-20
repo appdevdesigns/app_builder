@@ -109,15 +109,19 @@ steal(
 											iconGear: "<span class='webix_icon fa-cog'></span>"
 										},
 										on: {
+											onAfterRender: function () {
+												// Show gear icon
+												if (this.getSelectedId(true).length > 0)
+													self.showGear(this.getSelectedId(false));
+											},
 											onAfterSelect: function (id) {
-												var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == id; });
+												// Show gear icon
+												self.showGear(id);
 
+												var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == id; });
 												if (selectedPage && selectedPage.length > 0) {
 													self.element.trigger(self.options.selectedPageEvent, { selectedPage: selectedPage[0] });
 												}
-
-												// Show gear icon
-												self.showGear(id);
 											},
 											onAfterOpen: function () {
 												var ids = this.getSelectedId(true);

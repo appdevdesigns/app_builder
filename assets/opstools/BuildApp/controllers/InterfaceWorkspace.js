@@ -1,14 +1,11 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/page_components/Menu.js',
-	'opstools/BuildApp/controllers/page_components/Grid.js',
-	'opstools/BuildApp/controllers/page_components/Form.js',
-	'opstools/BuildApp/controllers/page_components/View.js',
+	'opstools/BuildApp/controllers/page_components/componentManager.js',
 
 	'opstools/BuildApp/controllers/InterfaceLayoutView.js',
 	'opstools/BuildApp/controllers/InterfaceComponentList.js',
-	function () {
-        System.import('appdev').then(function () {
+	function (componentManager) {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 

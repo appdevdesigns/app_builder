@@ -273,6 +273,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	position: relative;
 	background-color: #fff;
 	clear: both;
+	height: 80px;
 }
 
 .ab-component-item-name {
