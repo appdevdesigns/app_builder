@@ -1,7 +1,5 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/models/ABPage.js',
-
 	'opstools/BuildApp/controllers/InterfaceAddNewPage.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/EditTree.js',
@@ -24,8 +22,6 @@ steal(
 								deletedPageEvent: 'AB_Page.Deleted'
 							}, options);
 							this.options = options;
-
-							this.Model = AD.Model.get('opstools.BuildApp.ABPage');
 
 							self.data = {};
 
@@ -67,10 +63,8 @@ steal(
 						initControllers: function () {
 							this.controllers = {};
 
-							var EditTree = AD.Control.get('opstools.BuildApp.EditTree'),
-								AddNewPage = AD.Control.get('opstools.BuildApp.InterfaceAddNewPage');
+							var AddNewPage = AD.Control.get('opstools.BuildApp.InterfaceAddNewPage');
 
-							this.controllers.EditTree = new EditTree();
 							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
 						},
 
@@ -145,7 +139,7 @@ steal(
 												if (state.value != state.old) {
 													$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
-													var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (item, index, list) { return item.id == editor.id; })[0];
+													var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (item, index, list) { return item.id == editor.id; });
 
 													if (!selectedPage || selectedPage.length < 1) {
 														console.error('Could not found the page');
@@ -327,7 +321,7 @@ steal(
 
 									// Get children pages
 									pageItem.data = $.map(AD.classes.AppBuilder.currApp.pages.attr(), function (subD) {
-										if (subD.parent && subD.parent.id == d.id) {
+										if (subD.parent && (subD.parent == d.id || subD.parent.id == d.id)) {
 											return {
 												id: subD.id,
 												value: subD.name,

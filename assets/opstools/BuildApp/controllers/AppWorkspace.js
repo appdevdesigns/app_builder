@@ -85,12 +85,10 @@ steal(
 							self.controllers = {};
 
 							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage'),
-								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage'),
-								LoadingScreen = AD.Control.get('opstools.BuildApp.LoadingScreen');
+								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage');
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
-							self.controllers.LoadingScreen = new LoadingScreen(self.element);
 						},
 
 						initEvents: function () {

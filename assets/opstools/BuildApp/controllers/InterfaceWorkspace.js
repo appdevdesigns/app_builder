@@ -154,10 +154,11 @@ steal(
 							this.resetState();
 
 							if (AD.classes.AppBuilder.currApp.currPage) {
-								this.controllers.LayoutView.setPage(page);
+								this.controllers.LayoutView.showComponents();
 								this.controllers.ComponentList.show();
 							}
 							else {
+								this.controllers.LayoutView.showComponents();
 								this.controllers.ComponentList.hide();
 							}
 						},

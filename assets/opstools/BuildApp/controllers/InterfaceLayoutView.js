@@ -2,10 +2,6 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 
-	'opstools/BuildApp/models/ABObject.js',
-	'opstools/BuildApp/models/ABPage.js',
-	'opstools/BuildApp/models/ABPageComponent.js',
-
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	function (dataCollectionHelper) {
 		System.import('appdev').then(function () {
@@ -27,11 +23,6 @@ steal(
 
 							// Call parent init
 							self._super(element, self.options);
-							self.Model = {
-								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
-								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
-								ABPageComponent: AD.Model.get('opstools.BuildApp.ABPageComponent')
-							};
 							self.data = {};
 
 							self.componentIds = {
@@ -47,7 +38,6 @@ steal(
 							};
 
 							self.initMultilingualLabels();
-							self.initControllers();
 							self.initWebixUI();
 						},
 
@@ -73,16 +63,6 @@ steal(
 							self.labels.interface.component.confirmDeleteMessage = AD.lang.label.getLabel('ab.interface.component.confirmDeleteMessage') || "Do you want to delete <b>{0}</b>?";
 						},
 
-						initControllers: function () {
-							var self = this;
-
-							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList');
-
-							this.controllers = {
-								ActiveList: new ActiveList(),
-							};
-						},
-
 						initEvents: function () {
 							var self = this,
 								event_aggregator = $(self);
@@ -94,9 +74,11 @@ steal(
 							}
 
 							event_aggregator.on('save', function (sender, data) {
+								if (!AD.classes.AppBuilder.currApp.currPage) return;
+
 								switch (data.component_name) {
 									case 'Form':
-										var objectGridDatas = self.data.componentsInPage.filter(function (c) {
+										var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
 											return c.component === 'Grid' && c.setting.editForm == data.id;
 										});
 
@@ -111,9 +93,11 @@ steal(
 							});
 
 							event_aggregator.on('cancel', function (sender, data) {
+								if (!AD.classes.AppBuilder.currApp.currPage) return;
+
 								switch (data.component_name) {
 									case 'Form':
-										var objectGridDatas = self.data.componentsInPage.filter(function (c) {
+										var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
 											return c.component === 'Grid' && c.setting.editForm == data.id;
 										});
 
@@ -151,9 +135,9 @@ steal(
 												label: self.labels.common.save,
 												width: 100,
 												click: function () {
-													if (!self.data.editedComponentId) return;
+													if (!self.data.editedComponentId || !AD.classes.AppBuilder.currApp.currPage) return;
 
-													var editedComponent = $.grep(self.data.componentsInPage, function (c) { return c.id == self.data.editedComponentId; })[0],
+													var editedComponent = $.grep(AD.classes.AppBuilder.currApp.currPage.components.attr(), function (c) { return c.id == self.data.editedComponentId; })[0],
 														component = self.data.components[editedComponent.attr('component')],
 														editViewId = component.getEditView().id;
 
@@ -279,12 +263,10 @@ steal(
 													if (id) {
 														$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 
-														var addNewComponent = self.Model.ABPageComponent.newInstance();
-														addNewComponent.attr('page', self.data.page.attr('id'));
-														addNewComponent.attr('component', data.name);
-														addNewComponent.attr('weight', $$(self.componentIds.componentList).count());
-
-														addNewComponent.save()
+														AD.classes.AppBuilder.currApp.currPage.createComponent({
+															component: data.name,
+															weight: $$(self.componentIds.componentList).count()
+														})
 															.fail(function (err) {
 																$$(self.componentIds.componentList).hideProgress();
 
@@ -296,17 +278,19 @@ steal(
 																AD.error.log('Add Component : Error add component', { error: err });
 															})
 															.then(function (result) {
-																$$(self.componentIds.componentList).data.changeId(id, result.attr('id'));
+																$$(self.componentIds.componentList).data.changeId(id, result.id);
 
-																var existsCom = $.grep(self.data.componentsInPage, function (c) { c.id == result.attr('id') });
+																if (!AD.classes.AppBuilder.currApp.currPage) return;
+
+																var existsCom = $.grep(AD.classes.AppBuilder.currApp.currPage.components.attr(), function (c) { c.id == result.id });
 																if (existsCom && existsCom.length > 0) {
-																	self.data.componentsInPage.forEach(function (c) {
+																	AD.classes.AppBuilder.currApp.currPage.components.forEach(function (c) {
 																		if (c.id == result.attr('id'))
 																			c = result;
 																	});
 																}
 																else {
-																	self.data.componentsInPage.push(result);
+																	AD.classes.AppBuilder.currApp.currPage.components.push(result);
 																}
 
 																webix.message({
@@ -345,7 +329,7 @@ steal(
 															// Sort data
 															for (var index = 0; index < $$(self.componentIds.componentList).count(); index++) {
 																var comId = $$(self.componentIds.componentList).getIdByIndex(index),
-																	com = self.data.componentsInPage.filter(function (c) { return c.id == comId });
+																	com = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == comId });
 
 																if (com && com.length > 0) {
 																	com[0].attr('weight', index);
@@ -359,7 +343,7 @@ steal(
 															}
 
 															// Call sort components api
-															self.Model.ABPage.sortComponents(self.data.page.id, componentIndexes, function (err, result) {
+															AD.classes.AppBuilder.currApp.currPage.sortComponents(componentIndexes, function (err, result) {
 																$$(self.componentIds.componentList).hideProgress();
 
 																if (err) {
@@ -386,18 +370,15 @@ steal(
 
 																	$$(self.componentIds.componentList).showProgress({ type: "icon" });
 
-																	var deletedCom = self.data.componentsInPage.filter(function (c) { return c.id == id; });
+																	var deletedCom = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == id; });
 
 																	if (!deletedCom || deletedCom.length < 1) {
 																		$$(self.componentIds.componentList).hideProgress();
 																		return;
 																	}
 
-																	deletedCom = deletedCom[0];
-
 																	// Call server to delete object data
-																	// self.Model.ABPageComponent.destroy(id)
-																	deletedCom.destroy()
+																	deletedCom[0].destroy()
 																		.fail(function (err) {
 																			$$(self.componentIds.componentList).hideProgress();
 
@@ -409,13 +390,6 @@ steal(
 																			AD.error.log('Component : Error delete component', { error: err });
 																		})
 																		.then(function (result) {
-																			self.data.componentsInPage.forEach(function (c, index) {
-																				if (c.id == id) {
-																					self.data.componentsInPage.removeAttr(index);
-																					c.destroyed();
-																				}
-																			});
-
 																			$$(self.componentIds.componentList).remove(id);
 
 																			webix.message({
@@ -464,17 +438,17 @@ steal(
 							return 'ab-layout-component-{0}'.replace('{0}', id);
 						},
 
-						setPage: function (page) {
+						showComponents: function () {
 							var self = this;
 
 							self.resetState();
 
+							if (!AD.classes.AppBuilder.currApp.currPage) return;
+
 							$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 							$$(self.componentIds.layoutToolbar).show();
 
-							self.data.page = page;
-
-							self.Model.ABPageComponent.findAll({ page: page.attr('id') })
+							AD.classes.AppBuilder.currApp.currPage.getComponents()
 								.fail(function (err) {
 									$$(self.componentIds.componentList).hideProgress();
 
@@ -486,7 +460,7 @@ steal(
 									AD.error.log('Get components in page : Error get components', { error: err });
 								})
 								.then(function (result) {
-									self.data.componentsInPage = result;
+									AD.classes.AppBuilder.currApp.currPage.attr('components', result);
 
 									var definedComponents = $.map(result.attr(), function (r) {
 										var com = {
@@ -554,7 +528,7 @@ steal(
 								renderTasks = [];
 
 							// Generate component in list
-							self.data.componentsInPage.forEach(function (c) {
+							AD.classes.AppBuilder.currApp.currPage.components.forEach(function (c) {
 								renderTasks.push(function (next) {
 									self.renderComponent(c)
 										.always(next);
@@ -636,11 +610,12 @@ steal(
 						},
 
 						refreshMenuComponent: function (pageId) {
-							var self = this;
+							if (!AD.classes.AppBuilder.currApp.currPage) return;
 
-							var updateMenus = self.data.componentsInPage.filter(function (c) {
-								return c.component === 'Menu' && c.setting.data && c.setting.data.filter(function (d) { return d == pageId; }).length > 0;
-							})
+							var self = this,
+								updateMenus = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
+									return c.component === 'Menu' && c.setting.data && c.setting.data.filter(function (d) { return d == pageId; }).length > 0;
+								})
 
 							updateMenus.forEach(function (c) {
 								self.renderComponent(c);

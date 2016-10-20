@@ -1,202 +1,174 @@
 steal(
 	// List your Controller's dependencies here:
 	function () {
-		System.import('appdev').then(function () {
-			steal.import('appdev/ad',
-				'appdev/control/control').then(function () {
+		var data = {},
+			componentIds = {
+				defineLabelPopup: 'ab-define-label-popup',
 
-					// Namespacing conventions:
-					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-					AD.Control.extend('opstools.BuildApp.DataTableDefineLabelPopup', {
-						init: function (element, options) {
-							var self = this;
-							options = AD.defaults({
-							}, options);
-							this.options = options;
+				labelFormat: 'ab-define-label-format',
+				fieldsList: 'ab-define-label-field-list',
 
-							// Call parent init
-							this._super(element, options);
+				saveButton: 'ab-define-label-save-button'
+			},
+			labels = {
+				common: {
+					save: AD.lang.label.getLabel('ab.common.save') || "Save",
+					cancel: AD.lang.label.getLabel('ab.common.cancel') || "Cancel"
+				},
+				define_label: {
+					labelFormat: AD.lang.label.getLabel('ab.define_label.labelFormat') || "Label format",
+					selectFieldToGenerate: AD.lang.label.getLabel('ab.define_label.selectFieldToGenerate') || "Select field item to generate format.",
+					labelFields: AD.lang.label.getLabel('ab.define_label.labelFields') || "Fields",
 
-							this.data = {};
+					loadError: AD.lang.label.getLabel('ab.define_label.loadError') || "System could not load label format data"
+				}
+			};
 
-							this.componentIds = {
-								defineLabelPopup: 'ab-define-label-popup',
-
-								labelFormat: 'ab-define-label-format',
-								fieldsList: 'ab-define-label-field-list',
-
-								saveButton: 'ab-define-label-save-button'
-							};
-
-							this.initMultilingualLabels();
-							this.initWebixControls();
+		webix.protoUI({
+			id: componentIds.defineLabelPopup,
+			name: 'define_label_popup',
+			$init: function (config) {
+				//functions executed on component initialization
+			},
+			defaults: {
+				modal: true,
+				width: 500,
+				body: {
+					rows: [
+						{
+							view: "label",
+							label: "<b>{0}</b>".replace("{0}", labels.define_label.labelFormat)
 						},
-
-						initMultilingualLabels: function () {
-							var self = this;
-							self.labels = {};
-							self.labels.common = {};
-							self.labels.define_label = {};
-
-							self.labels.common.save = AD.lang.label.getLabel('ab.common.save') || "Save";
-							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
-
-							self.labels.define_label.labelFormat = AD.lang.label.getLabel('ab.define_label.labelFormat') || "Label format";
-							self.labels.define_label.selectFieldToGenerate = AD.lang.label.getLabel('ab.define_label.selectFieldToGenerate') || "Select field item to generate format.";
-							self.labels.define_label.labelFields = AD.lang.label.getLabel('ab.define_label.labelFields') || "Fields";
-
-							self.labels.define_label.loadError = AD.lang.label.getLabel('ab.define_label.loadError') || "System could not load label format data";
+						{
+							view: "textarea",
+							id: componentIds.labelFormat,
+							height: 100
 						},
+						{
+							view: "label",
+							label: labels.define_label.selectFieldToGenerate
+						},
+						{
+							view: "label",
+							label: "<b>{0}</b>".replace("{0}", labels.define_label.labelFields)
+						},
+						{
+							view: 'list',
+							id: componentIds.fieldsList,
+							width: 500,
+							maxHeight: 180,
+							select: false,
+							template: '#label#',
+							on: {
+								onItemClick: function (id, e, node) {
+									var selectedItem = $$(componentIds.fieldsList).getItem(id);
 
-						initWebixControls: function () {
-							var self = this;
+									var labelFormat = $$(componentIds.labelFormat).getValue();
+									labelFormat += '{{0}}'.replace('{0}', selectedItem.label);
 
-							webix.protoUI({
-								id: self.componentIds.defineLabelPopup,
-								name: 'define_label_popup',
-								$init: function (config) {
-									//functions executed on component initialization
-								},
-								defaults: {
-									modal: true,
-									width: 500,
-									body: {
-										rows: [
-											{
-												view: "label",
-												label: "<b>{0}</b>".replace("{0}", self.labels.define_label.labelFormat)
-											},
-											{
-												view: "textarea",
-												id: self.componentIds.labelFormat,
-												height: 100
-											},
-											{
-												view: "label",
-												label: self.labels.define_label.selectFieldToGenerate
-											},
-											{
-												view: "label",
-												label: "<b>{0}</b>".replace("{0}", self.labels.define_label.labelFields)
-											},
-											{
-												view: 'list',
-												id: self.componentIds.fieldsList,
-												width: 500,
-												maxHeight: 180,
-												select: false,
-												template: '#label#',
-												on: {
-													onItemClick: function (id, e, node) {
-														var selectedItem = $$(self.componentIds.fieldsList).getItem(id);
+									$$(componentIds.labelFormat).setValue(labelFormat);
+								}
+							}
+						},
+						{
+							height: 10
+						},
+						{
+							cols: [
+								{
+									view: "button", id: componentIds.saveButton, label: labels.common.save, type: "form", width: 120, click: function () {
+										var base = this,
+											labelFormat = $$(componentIds.labelFormat).getValue();
 
-														var labelFormat = $$(self.componentIds.labelFormat).getValue();
-														labelFormat += '{{0}}'.replace('{0}', selectedItem.label);
+										if (!$$(componentIds.fieldsList).showProgress)
+											webix.extend($$(componentIds.fieldsList), webix.ProgressBar);
 
-														$$(self.componentIds.labelFormat).setValue(labelFormat);
-													}
-												}
-											},
-											{
-												height: 10
-											},
-											{
-												cols: [
-													{
-														view: "button", id: self.componentIds.saveButton, label: self.labels.common.save, type: "form", width: 120, click: function () {
-															var base = this,
-																labelFormat = $$(self.componentIds.labelFormat).getValue();
+										$$(componentIds.fieldsList).showProgress({ type: 'icon' });
 
-															$$(self.componentIds.fieldsList).data.each(function (d) {
-																labelFormat = labelFormat.replace(new RegExp('{' + d.label + '}', 'g'), '{' + d.id + '}');
-															});
-
-															AD.classes.AppBuilder.currApp.currObj.attr('labelFormat', labelFormat);
-															AD.classes.AppBuilder.currApp.currObj.save()
-																.fail(function (err) {
-																	// TODO : Error message
-																})
-																.then(function () {
-																	base.getTopParentView().hide();
-																});
-
-														}
-													},
-													{
-														view: "button", value: self.labels.common.cancel, width: 100, click: function () {
-															this.getTopParentView().hide();
-														}
-													}
-												]
-											}
-										]
-									},
-									on: {
-										onShow: function () {
-											var labelFormat = AD.classes.AppBuilder.currApp.currObj.labelFormat;
-
-											$$(self.componentIds.labelFormat).setValue('');
-
-											$$(self.componentIds.labelFormat).enable();
-											$$(self.componentIds.fieldsList).enable();
-											$$(self.componentIds.saveButton).enable();
-
-											if (labelFormat) {
-												if ($$(self.componentIds.fieldsList).data && $$(self.componentIds.fieldsList).data.count() > 0) {
-													$$(self.componentIds.fieldsList).data.each(function (d) {
-														labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
-													});
-												}
-											}
-											else { // Default label format
-												if (self.data.fieldList && self.data.fieldList.length > 0)
-													labelFormat = '{' + self.data.fieldList[0].label + '}';
-											}
-
-											$$(self.componentIds.labelFormat).setValue(labelFormat || '');
-
-										}
-									}
-								},
-
-								registerDataTable: function (dataTable) {
-									self.dataTable = dataTable;
-								},
-
-								setFieldList: function (fieldList) {
-									// We can remove it when we can get all column from webix datatable (include hidden fields)
-									self.data.fieldList = fieldList;
-
-									this.bindFieldList();
-								},
-
-								bindFieldList: function () {
-									$$(self.componentIds.fieldsList).clearAll();
-									$$(self.componentIds.fieldsList).parse(this.getFieldList());
-								},
-
-								getFieldList: function () {
-									var fieldList = [];
-
-									// Get all columns include hidden columns
-									if (self.data.fieldList) {
-										self.data.fieldList.forEach(function (f) {
-											fieldList.push({
-												id: f.name,
-												label: f.label
-											});
+										$$(componentIds.fieldsList).data.each(function (d) {
+											labelFormat = labelFormat.replace(new RegExp('{' + d.label + '}', 'g'), '{' + d.id + '}');
 										});
+
+										AD.classes.AppBuilder.currApp.currObj.attr('labelFormat', labelFormat);
+										AD.classes.AppBuilder.currApp.currObj.save()
+											.fail(function (err) {
+												$$(componentIds.fieldsList).hideProgress();
+												// TODO : Error message
+											})
+											.then(function () {
+												$$(componentIds.fieldsList).hideProgress();
+
+												base.getTopParentView().hide();
+											});
+
 									}
-
-									return fieldList;
 								},
+								{
+									view: "button", value: labels.common.cancel, width: 100, click: function () {
+										this.getTopParentView().hide();
+									}
+								}
+							]
+						}
+					]
+				},
+				on: {
+					onShow: function () {
+						var labelFormat = AD.classes.AppBuilder.currApp.currObj.labelFormat;
 
-							}, webix.ui.popup);
+						$$(componentIds.labelFormat).setValue('');
+
+						$$(componentIds.labelFormat).enable();
+						$$(componentIds.fieldsList).enable();
+						$$(componentIds.saveButton).enable();
+
+						if (labelFormat) {
+							if ($$(componentIds.fieldsList).data && $$(componentIds.fieldsList).data.count() > 0) {
+								$$(componentIds.fieldsList).data.each(function (d) {
+									labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
+								});
+							}
+						}
+						else { // Default label format
+							if (data.fieldList && data.fieldList.length > 0)
+								labelFormat = '{' + data.fieldList[0].label + '}';
 						}
 
+						$$(componentIds.labelFormat).setValue(labelFormat || '');
 
+					}
+				}
+			},
+
+			setFieldList: function (fieldList) {
+				// We can remove it when we can get all column from webix datatable (include hidden fields)
+				data.fieldList = fieldList;
+
+				this.bindFieldList();
+			},
+
+			bindFieldList: function () {
+				$$(componentIds.fieldsList).clearAll();
+				$$(componentIds.fieldsList).parse(this.getFieldList());
+			},
+
+			getFieldList: function () {
+				var fieldList = [];
+
+				// Get all columns include hidden columns
+				if (data.fieldList) {
+					data.fieldList.forEach(function (f) {
+						fieldList.push({
+							id: f.name,
+							label: f.label
+						});
 					});
-				})
-		});
+				}
+
+				return fieldList;
+			},
+
+		}, webix.ui.popup);
+
 	}
 );

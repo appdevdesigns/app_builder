@@ -36,15 +36,7 @@ steal(
 							};
 
 							// Controllers
-							var DynamicDataTable = AD.Control.get('opstools.BuildApp.DynamicDataTable'),
-								ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
-								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
-								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup');
-
 							self.controllers = {
-								DynamicDataTable: new DynamicDataTable(),
-								FilterPopup: new FilterPopup(),
-								SortPopup: new SortPopup(),
 								ObjectDataTables: {}
 							};
 

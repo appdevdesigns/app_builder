@@ -10,15 +10,7 @@ steal(
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 				AD.Model.extend('opstools.BuildApp.ABPage',
 					{
-						useSockets: true,
-						sortComponents: function (id, data, cb) {
-							return AD.comm.service.put({
-								url: '/app_builder/page/sortComponents/' + id,
-								data: {
-									components: data
-								}
-							}, cb);
-						}
+						useSockets: true
 						/*
 							findAll: 'GET /app_builder/abpage',
 							findOne: 'GET /app_builder/abpage/{id}',
@@ -33,7 +25,20 @@ steal(
 					{
 						getComponents: function () {
 							return AD.Model.get('opstools.BuildApp.ABPageComponent').findAll({ page: this.id });
+						},
+						createComponent: function (component) {
+							component.page = this.id;
+							return AD.Model.get('opstools.BuildApp.ABPageComponent').create(component);
+						},
+						sortComponents: function (data, cb) {
+							return AD.comm.service.put({
+								url: '/app_builder/page/sortComponents/' + this.id,
+								data: {
+									components: data
+								}
+							}, cb);
 						}
+
 					});
 			});
 		});

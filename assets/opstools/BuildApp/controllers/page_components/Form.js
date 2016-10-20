@@ -34,13 +34,6 @@ steal(
 								ObjectModels: {}
 							};
 
-							// Controllers
-							var ConnectedDataPopup = AD.Control.get('opstools.BuildApp.ConnectedDataPopup');
-
-							self.controllers = {
-								ConnectedDataPopup: new ConnectedDataPopup()
-							};
-
 							self.componentIds = {
 								editView: self.info.name + '-edit-view',
 								editForm: 'ab-form-edit-mode',

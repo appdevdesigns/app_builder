@@ -130,28 +130,9 @@ steal(
 
 							self.controllers = {};
 
-							var DataTableEditor = AD.Control.get('opstools.BuildApp.DataTableEditor'),
-								VisibleFieldsPopup = AD.Control.get('opstools.BuildApp.DataTableVisibleFieldsPopup'),
-								FilterPopup = AD.Control.get('opstools.BuildApp.DataTableFilterPopup'),
-								SortPopup = AD.Control.get('opstools.BuildApp.DataTableSortFieldsPopup'),
-								FrozenPopup = AD.Control.get('opstools.BuildApp.DataTableFrozenColumnPopup'),
-								DefineLabelPopup = AD.Control.get('opstools.BuildApp.DataTableDefineLabelPopup'),
-								AddFieldPopup = AD.Control.get('opstools.BuildApp.DataTableAddFieldPopup'),
-
-								EditHeaderPopup = AD.Control.get('opstools.BuildApp.DataTableEditHeaderPopup'),
-
-								ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
+							var ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
 
 							self.controllers = {
-								DataTableEditor: new DataTableEditor(),
-								VisibleFieldsPopup: new VisibleFieldsPopup(),
-								FilterPopup: new FilterPopup(),
-								SortPopup: new SortPopup(),
-								FrozenPopup: new FrozenPopup(),
-								DefineLabelPopup: new DefineLabelPopup(),
-								AddFieldPopup: new AddFieldPopup(),
-								EditHeaderPopup: new EditHeaderPopup(),
-
 								ObjectDataTable: new ObjectDataTable(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
 							};
 						},
@@ -801,7 +782,6 @@ steal(
 								$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-								$$(self.webixUiId.defineLabelPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.editHeaderPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 
@@ -931,7 +911,6 @@ steal(
 								});
 
 								$$(self.webixUiId.objectDatatable).hideProgress();
-
 							});
 
 						},

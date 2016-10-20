@@ -53,7 +53,6 @@ steal(
 							};
 
 							this.initMultilingualLabels();
-							this.initControllers();
 							this.initEvents();
 
 							webix.ready(function () {
@@ -93,14 +92,6 @@ steal(
 
 							// Form
 							self.labels.object.placeholderName = AD.lang.label.getLabel('ab.object.form.placeholderName') || "Object name";
-						},
-
-						initControllers: function () {
-							var EditList = AD.Control.get('opstools.BuildApp.EditList');
-
-							this.controllers = {
-								EditList: new EditList()
-							};
 						},
 
 						initEvents: function () {
