@@ -1,6 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
-	function () {
+	'opstools/BuildApp/controllers/page_components/componentManager.js',
+	function (componentManager) {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -107,7 +108,10 @@ steal(
 							componentSpaceDefinition = componentSpaceDefinition && componentSpaceDefinition.length > 0 ? componentSpaceDefinition[0] : null;
 
 							for (var key in components) {
-								var propertyView = components[key].getPropertyView();
+								var propertyView = components[key].getPropertyView(
+									AD.classes.AppBuilder.currApp,
+									AD.classes.AppBuilder.currApp.currPage
+								);
 
 								if (propertyView)
 									componentSpaceDefinition.cells.push(propertyView);

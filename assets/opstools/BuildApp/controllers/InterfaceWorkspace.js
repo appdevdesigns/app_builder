@@ -1,10 +1,8 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/page_components/componentManager.js',
-
 	'opstools/BuildApp/controllers/InterfaceLayoutView.js',
 	'opstools/BuildApp/controllers/InterfaceComponentList.js',
-	function (componentManager) {
+	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -52,19 +50,18 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
-								Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
-								Form = AD.Control.get('opstools.BuildApp.Components.Form'),
-								View = AD.Control.get('opstools.BuildApp.Components.View'),
+							var 
+							// Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
+							// 	Form = AD.Control.get('opstools.BuildApp.Components.Form'),
+							// 	View = AD.Control.get('opstools.BuildApp.Components.View'),
 
 								LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView'),
 								ComponentList = AD.Control.get('opstools.BuildApp.InterfaceComponentList');
 
 
-							self.controllers.Menu = new Menu(self.element, {});
-							self.controllers.Grid = new Grid(self.element, {});
-							self.controllers.Form = new Form(self.element, {});
-							self.controllers.View = new View(self.element, {});
+							// self.controllers.Grid = new Grid(self.element, {});
+							// self.controllers.Form = new Form(self.element, {});
+							// self.controllers.View = new View(self.element, {});
 
 
 							self.controllers.LayoutView = new LayoutView(self.element, {
@@ -117,12 +114,11 @@ steal(
 							var self = this;
 							self.components = {};
 
-							self.components.Menu = self.controllers.Menu.getInstance();
-							self.components.Grid = self.controllers.Grid.getInstance();
-							self.components.Form = self.controllers.Form.getInstance();
-							self.components.View = self.controllers.View.getInstance();
+							// self.components.Grid = self.controllers.Grid.getInstance();
+							// self.components.Form = self.controllers.Form.getInstance();
+							// self.components.View = self.controllers.View.getInstance();
 
-							self.controllers.LayoutView.setComponents(self.components);
+							self.controllers.LayoutView.initComponents();
 							self.controllers.ComponentList.setComponents(self.components);
 						},
 
@@ -135,16 +131,6 @@ steal(
 
 						getUIDefinition: function () {
 							return this.data.definition;
-						},
-
-						setApp: function (app) {
-							var self = this;
-
-							self.data.app = app;
-							self.controllers.LayoutView.setApp(app);
-							self.controllers.Grid.setApp(app);
-							self.controllers.Form.setApp(app);
-							self.controllers.View.setApp(app);
 						},
 
 						showPage: function () {
@@ -169,12 +155,12 @@ steal(
 							this.controllers.ComponentList.resetState();
 
 							// Reset page components 
-							this.controllers.Grid.resetState();
+							// this.controllers.Grid.resetState();
 						},
 
 						resize: function (height) {
-							this.controllers.Form.resize(height);
-							this.controllers.View.resize(height);
+							// this.controllers.Form.resize(height);
+							// this.controllers.View.resize(height);
 						}
 
 

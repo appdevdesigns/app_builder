@@ -25,8 +25,11 @@ steal(
 					},
 					{
 						// Object
-						getObjects: function () {
-							return AD.Model.get('opstools.BuildApp.ABObject').findAll({ application: this.id });
+						getObjects: function (cond) {
+							if (!cond) cond = {};
+							cond.application = this.id;
+
+							return AD.Model.get('opstools.BuildApp.ABObject').findAll(cond);
 						},
 
 						getObject: function (objId) {
@@ -39,8 +42,11 @@ steal(
 						},
 
 						// Page
-						getPages: function () {
-							return AD.Model.get('opstools.BuildApp.ABPage').findAll({ application: this.id });
+						getPages: function (cond) {
+							if (!cond) cond = {};
+							cond.application = this.id;
+
+							return AD.Model.get('opstools.BuildApp.ABPage').findAll(cond);
 						},
 
 						getPage: function (pageId) {

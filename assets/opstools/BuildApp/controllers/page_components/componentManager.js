@@ -27,7 +27,7 @@ steal(
 		 * @return {Component} or null.
 		 */
 		function getComponent(name) {
-			var component = components.filter(function (f) { return f.name == name });
+			var component = components.filter(function (comp) { return comp.getInfo && comp.getInfo().name.trim().toLowerCase() == name.trim().toLowerCase() });
 
 			if (component && component.length > 0)
 				return component[0];
@@ -36,6 +36,90 @@ steal(
 		}
 
 		return {
+			getAllComponents: function () {
+				return components;
+			},
+
+			getInfo: function (name) {
+				var component = getComponent(name);
+				if (!component) return null;
+
+				return component.getInfo();
+			},
+
+			getView: function (name) {
+				var component = getComponent(name);
+				if (!component) return null;
+
+				return component.getView();
+			},
+
+			getEditView: function (name) {
+				var component = getComponent(name);
+				if (!component) return null;
+
+				return component.getEditView();
+			},
+
+			getPropertyView: function (name, application, page) {
+				var component = getComponent(name);
+				if (!component) return null;
+
+				return component.getPropertyView(application, page);
+			},
+
+			render: function (application, page, name, viewId, componentId, setting, editable, showAll, dataCollection, linkedDataCollection, forceRender) {
+				if ($$(viewId).isRendered && !forceRender) return;
+
+				var component = getComponent(name);
+				if (!component) return;
+
+				component.render(application, page, viewId, componentId, setting, editable, showAll, dataCollection, linkedDataCollection);
+
+				$$(viewId).isRendered = true;
+			},
+
+			getSettings: function (name) {
+				var component = getComponent(name);
+				if (!component) return null;
+
+				return component.getSettings();
+			},
+
+			populateSettings: function (name, application, page, item, getDataCollectionFn, selectAll) {
+				var component = getComponent(name);
+				if (!component) return;
+
+				component.populateSettings(application, page, item, getDataCollectionFn, selectAll);
+			},
+
+			editStop: function (name) {
+				var component = getComponent(name);
+				if (!component) return;
+
+				if (component.editStop)
+					component.editStop();
+			},
+
+			resetState: function () {
+				var component = getComponent(name);
+				if (!component) return;
+
+				if (component.resetState)
+					component.resetState();
+			},
+
+			resize: function (height) {
+				var component = getComponent(name);
+				if (!component) return;
+
+				if (component.resize)
+					component.resize(height);
+			},
+
+			isRendered: function (viewId) {
+				return $$(viewId).isRendered === true;
+			}
 
 		};
 	}

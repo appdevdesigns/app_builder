@@ -1,21 +1,22 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/models/ABPage.js',
 	function () {
-		var Model = AD.Model.get('opstools.BuildApp.ABPage');
 		var data = {},
-			info = {
-				name: 'Menu',
-				icon: 'fa-th-list'
-			},
 			componentIds = {
-				editView: info.name + '-edit-view',
+				editView: 'ab-menu-edit-view',
 				editMenu: 'ab-menu-edit-mode',
-				propertyView: info.name + '-property-view',
+				propertyView: 'ab-menu-property-view',
 				pageTree: 'ab-menu-page-tree'
 			};
 
 		return {
+			getInfo: function () {
+				return {
+					name: 'menu',
+					icon: 'fa-th-list'
+				};
+			},
+
 			getView: function () {
 				return {
 					view: "menu",
@@ -25,7 +26,7 @@ steal(
 				};
 			},
 
-			getEditView = function () {
+			getEditView: function () {
 				var menu = $.extend(true, {}, this.getView());
 				menu.id = componentIds.editMenu;
 
@@ -63,7 +64,7 @@ steal(
 				};
 			},
 
-			getPropertyView: function () {
+			getPropertyView: function (application, page) {
 				return {
 					view: "property",
 					id: componentIds.propertyView,
@@ -85,7 +86,7 @@ steal(
 
 							switch (editor.id) {
 								case 'orientation':
-									this.render(componentIds.editMenu, null, this.getSettings());
+									this.render(application, page, componentIds.editMenu, null, this.getSettings());
 									break;
 							}
 						}
@@ -93,7 +94,7 @@ steal(
 				};
 			},
 
-			render: function (viewId, componentId, setting) {
+			render: function (application, page, viewId, componentId, setting) {
 				var q = $.Deferred(),
 					self = this;
 
@@ -110,11 +111,7 @@ steal(
 				webix.ui(view, $$(viewId));
 				webix.extend($$(viewId), webix.ProgressBar);
 
-				$$(viewId).isRendered = true;
-
 				$$(viewId).showProgress({ type: 'icon' });
-
-				var events = this.getEvent(viewId);
 
 				if (setting.pageIds && setting.pageIds.length > 0) {
 					// Convert array to object
@@ -123,7 +120,7 @@ steal(
 					});
 
 					// Get selected pages
-					Model.findAll({ or: pageIds })
+					application.getPages({ or: pageIds })
 						.then(function (pages) {
 
 							pages.forEach(function (p) {
@@ -181,7 +178,7 @@ steal(
 
 			populateSettings: function (application, page, item) {
 				// Menu
-				this.render(componentIds.editMenu, item.id, item.setting);
+				this.render(application, page, componentIds.editMenu, item.id, item.setting);
 
 				// Page list
 				$$(componentIds.pageTree).clearAll();
@@ -192,7 +189,7 @@ steal(
 					$$(componentIds.pageTree).showProgress({ type: 'icon' });
 
 					var parentId = page.parent ? page.parent.attr('id') : page.attr('id');
-					Model.findAll({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
 						.fail(function (err) {
 							$$(componentIds.pageTree).hideProgress();
 						})
@@ -229,7 +226,7 @@ steal(
 							$$(componentIds.pageTree).openAll();
 
 							// Set checked items
-							if (item.setting.pageIds) {
+							if (item.setting && item.setting.pageIds) {
 								item.setting.pageIds.forEach(function (pageId) {
 									$$(componentIds.pageTree).checkItem(pageId);
 								});
@@ -240,18 +237,17 @@ steal(
 				}
 
 				// Properties
+				if (!$$(componentIds.propertyView)) return;
+
 				$$(componentIds.propertyView).setValues({
 					orientation: item.setting.layout || 'x'
 				});
 				$$(componentIds.propertyView).refresh();
 			},
 
-			isRendered: function (viewId) {
-				return $$(viewId).isRendered === true;
-			},
-
 			editStop: function () {
-				$$(componentIds.propertyView).editStop();
+				if ($$(componentIds.propertyView))
+					$$(componentIds.propertyView).editStop();
 			}
 		};
 
