@@ -10,7 +10,8 @@ steal(
 
 		//Constructor
 		var menuComponent = function (application, viewId, componentId) {
-			var events = {};
+			var events = {},
+				data = {};
 
 			this.viewId = viewId;
 			this.editViewId = componentIds.editMenu;
@@ -66,6 +67,7 @@ steal(
 
 							$$(self.viewId).hideProgress();
 
+							data.isRendered = true;
 							q.resolve();
 						});
 				}
@@ -75,6 +77,7 @@ steal(
 
 					$$(self.viewId).hideProgress();
 
+					data.isRendered = true;
 					q.resolve();
 				}
 
@@ -163,6 +166,10 @@ steal(
 				$$(componentIds.propertyView).refresh();
 			};
 
+			this.isRendered = function () {
+				return data.isRendered === true;
+			};
+
 			this.onRender = function (renderFn) {
 				events.render = renderFn;
 			}
@@ -187,7 +194,7 @@ steal(
 		};
 
 		menuComponent.getEditView = function () {
-			var menu = $.extend(true, {}, this.getView());
+			var menu = $.extend(true, {}, menuComponent.getView());
 			menu.id = componentIds.editMenu;
 
 			return {

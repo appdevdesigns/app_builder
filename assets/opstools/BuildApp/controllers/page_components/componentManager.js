@@ -1,6 +1,4 @@
 steal(
-	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
-
 	'opstools/BuildApp/controllers/page_components/menu.js',
 	'opstools/BuildApp/controllers/page_components/grid.js',
 	'opstools/BuildApp/controllers/page_components/form.js',
@@ -10,12 +8,13 @@ steal(
 
 		// convert the provided objects into a [components]
 		var components = $.map(arguments, function (component, index) {
-			if (component == dataCollectionHelper) return null; // Ignore dataCollectionHelper
+			// Override getEditView function to pass the componentManager parameter. 
+			if (component.getEditView)
+				component.getEditView = component.getEditView.bind(component.getEditView, componentManager);
 
 			// Override getPropertyView function to pass the componentManager parameter. 
-			if (component.getPropertyView) {
-				component.getPropertyView = component.getPropertyView.bind(component.getPropertyView, componentManager, dataCollectionHelper.getDataCollection.bind(dataCollectionHelper));
-			}
+			if (component.getPropertyView)
+				component.getPropertyView = component.getPropertyView.bind(component.getPropertyView, componentManager);
 
 			return [component];
 		});

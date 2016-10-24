@@ -35,9 +35,11 @@ steal(
 			},
 
 			clearAdditionalView: function () {
-				this.additionViews.forEach(function (view) {
-					view.destructor();
-				});
+				if (this.additionViews) {
+					this.additionViews.forEach(function (view) {
+						view.destructor();
+					});
+				}
 			}
 
 		}, webix.ui.datatable);

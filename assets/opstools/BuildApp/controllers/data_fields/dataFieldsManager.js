@@ -265,11 +265,11 @@ steal(
 			},
 
 
-			customDisplay: function (application, fieldName, data, itemNode, options) {
+			customDisplay: function (fieldName, data, itemNode, options) {
 				var field = getField(fieldName);
 
 				if (field && field.customDisplay)
-					return field.customDisplay(application, data, itemNode, options);
+					return field.customDisplay(data, itemNode, options);
 				else
 					return true;
 			},

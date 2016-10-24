@@ -209,7 +209,7 @@ steal(
 			};
 		};
 
-		connectObjectField.customDisplay = function (application, data, itemNode, options) {
+		connectObjectField.customDisplay = function (data, itemNode, options) {
 			// Initial selectivity
 			selectivityHelper.renderSelectivity(itemNode, 'connect-data-values', options.readOnly);
 

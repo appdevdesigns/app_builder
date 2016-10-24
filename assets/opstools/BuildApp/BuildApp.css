@@ -273,7 +273,6 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	position: relative;
 	background-color: #fff;
 	clear: both;
-	/*height: 80px;*/
 }
 
 .ab-component-item-name {
@@ -283,8 +282,6 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	vertical-align: top;
 	padding-top: 10px;
 	width: 90px;
-	height: 100%;
-	line-height: 100%;
 	margin-bottom: -500em; /* CSS hack: equal height of right float */
 	padding-bottom: 500em;
 }
@@ -294,7 +291,6 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	vertical-align: top;
 	padding: 10px;
 	width: 87%;
-	height: 100%;
 	line-height: 100%;
 	overflow-x: auto;
 }

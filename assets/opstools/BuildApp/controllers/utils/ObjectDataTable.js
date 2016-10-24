@@ -62,7 +62,7 @@ steal(
 
 						},
 
-						registerDataTable: function (dataTable) {
+						registerDataTable: function (dataTable, application) {
 							var self = this;
 							self.dataTable = dataTable;
 
@@ -98,14 +98,14 @@ steal(
 							self.dataTable.attachEvent("onAfterRender", function (data) {
 								self.dataTable.eachRow(function (rowId) {
 									self.dataTable.eachColumn(function (columnId) {
-										var columnData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == columnId });
-										if (!columnData || columnData.length < 1) return;
-										columnData = columnData[0];
+										var col = self.dataTable.config.columns.filter(function (col) { return col.id == columnId });
+										if (!col || col.length < 1) return;
+										col = col[0];
 
 										var itemNode = self.dataTable.getItemNode({ row: rowId, column: columnId });
 										if (!itemNode) return;
 
-										AD.classes.AppBuilder.DataFields.customDisplay(AD.classes.AppBuilder.currApp, columnData.fieldName, self.dataTable.getItem(rowId)[columnData.name], itemNode, {
+										AD.classes.AppBuilder.DataFields.customDisplay(col.fieldName, self.dataTable.getItem(rowId)[columnId], itemNode, {
 											readOnly: self.data.readOnly
 										});
 									});
@@ -158,7 +158,8 @@ steal(
 									dataId: col.id,
 									label: col.label,
 									header: self.getHeader(col, self.data.readOnly),
-									weight: col.weight
+									weight: col.weight,
+									fieldName: col.fieldName
 								});
 
 								if (mapCol.filter_type === 'boolean' && self.data.readOnly) { // Checkbox - read only mode
@@ -263,8 +264,7 @@ steal(
 
 						populateData: function (application, data) {
 							var self = this,
-								q = $.Deferred(),
-								result;
+								q = $.Deferred();
 
 							if (!data) {
 								q.resolve();
@@ -289,7 +289,13 @@ steal(
 								.then(function (result) {
 									self.dataTable.clearAll();
 
-									result.forEach(function (r) {
+									// Get Map.List in DataCollection
+									var list = result;
+									if (result instanceof webix.DataCollection)
+										list = result.AD.__list;
+
+									// Update row height
+									list.forEach(function (r) {
 										var rowHeight = r.attr ? r.attr('$height') : r.$height;
 
 										linkCols.forEach(function (linkCol) {

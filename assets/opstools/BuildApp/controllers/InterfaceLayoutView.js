@@ -220,8 +220,7 @@ steal(
 																	if (!item.setting) item.setting = {};
 
 																	componentManager.setEditInstance(self.data.components[item_id]);
-
-																	self.data.components[item_id].populateSettings(item.setting, dataCollectionHelper.getDataCollection.bind(dataCollectionHelper));
+																	componentManager.editInstance.populateSettings(item.setting, dataCollectionHelper.getDataCollection.bind(dataCollectionHelper));
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -380,7 +379,7 @@ steal(
 															title: self.labels.interface.component.confirmDeleteTitle,
 															ok: self.labels.common.yes,
 															cancel: self.labels.common.no,
-															text: self.labels.interface.component.confirmDeleteMessage.replace('{0}', deletedComponent.component),
+															text: self.labels.interface.component.confirmDeleteMessage.replace('{0}', deletedComponent.component.capitalize()),
 															callback: function (result) {
 																if (result) {
 
@@ -601,6 +600,7 @@ steal(
 									// Render component
 									function (next) {
 										self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection)
+											.fail(next)
 											.then(function () {
 												next();
 											});

@@ -1,7 +1,8 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
-	function (selectivityHelper) {
+	function (dataCollectionHelper, selectivityHelper) {
 		var componentIds = {
 			editViewLayout: 'ab-view-edit-view',
 			editView: 'ab-view-edit-view-detail',
@@ -18,7 +19,20 @@ steal(
 		// Instance functions
 		var viewComponent = function (application, viewId, componentId) {
 			var data = {},
+				events = {},
 				objectModels = {};
+
+			// Private functions
+			function clearViews() {
+				if (!this.viewId) return;
+
+				var self = this,
+					childViews = $$(this.viewId).getChildViews().slice();
+
+				childViews.forEach(function (child) {
+					$$(self.viewId).removeView(child.config.id);
+				});
+			};
 
 			this.viewId = viewId;
 			this.editViewId = componentIds.editView;
@@ -29,7 +43,6 @@ steal(
 					fields = [],
 					header = { rows: [] };
 
-				data.columns = null;
 				data.isRendered = true;
 				data.dataCollection = dataCollection;
 
@@ -48,11 +61,7 @@ steal(
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
 
-				// Clear rows
-				var childViews = $$(self.viewId).getChildViews().slice();
-				childViews.forEach(function (child) {
-					$$(self.viewId).removeView(child.config.id);
-				});
+				clearViews.call(self);
 
 				if (!setting.object) {
 					if (editable && $$(self.viewId).addView) {
@@ -83,52 +92,44 @@ steal(
 						$$(self.viewId).hideProgress();
 						next(err);
 					})
-					.then(function (result) {
-						result.forEach(function (d) {
-							if (d.translate) d.translate();
-						});
+					.then(function (columns) {
+						clearViews.call(self);
+						columns.forEach(function (col) {
+							if (col.translate) col.translate();
 
-						data.columns = result;
-						data.columns.forEach(function (c) {
-							var isVisible = setting.visibleFieldIds.indexOf(c.id.toString()) > -1 || showAll;
-
+							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 							if (!editable && !isVisible) return; // Hidden
 
 							var displayDataView = null;
 
-							if (c.setting.editor === 'selectivity') {
+							// TODO: display data field template
+							if (col.setting.editor === 'selectivity') {
 								displayDataView = {
 									view: 'template',
-									dataId: c.id,
+									dataId: col.id,
 									borderless: true,
 									template: '<div class="ab-component-view-selectivity"></div>'
-								};
-							}
-							else if (c.setting.editor === 'date' || c.setting.editor === 'datetime') {
-								displayDataView = {
-									view: 'label',
-									dataId: c.id,
-									label: '[data]'
 								};
 							}
 							else {
 								displayDataView = {
 									view: 'label',
-									dataId: c.id,
+									dataId: col.id,
 									label: '[data]'
 								};
 							}
 
+							// Display label
 							var field = {
 								view: 'layout',
-								editor: c.setting.editor,
-								fieldName: c.name,
+								editor: col.setting.editor,
+								fieldName: col.name,
 								cols: [
 									{
 										view: 'label',
 										css: 'bold',
 										width: 120,
-										label: c.label
+										label: col.label
 									},
 									displayDataView
 								]
@@ -139,7 +140,7 @@ steal(
 									css: 'ab-component-view-edit-field',
 									cols: [
 										{
-											dataId: c.id, // Column id
+											dataId: col.id, // Column id
 											view: 'segmented',
 											margin: 10,
 											maxWidth: 120,
@@ -223,8 +224,9 @@ steal(
 
 						$$(self.viewId).hideProgress();
 
-						// TODO: trigger render
-						// self.callEvent('renderComplete', viewId);
+						// Trigger render event
+						if (events.render)
+							events.render();
 
 						q.resolve();
 					});
@@ -237,7 +239,7 @@ steal(
 					visibleFieldIds = [];
 
 				// Find visibleFieldIds
-				$$(componentIds.editViewLayout).getChildViews().forEach(function (child) {
+				$$(componentIds.editView).getChildViews().forEach(function (child) {
 					if (child.config.css === 'ab-component-view-edit-field') { // Get fields
 						if (child.getChildViews()[0].getValue() === 'show') { // Get visible field
 							var columnId = child.getChildViews()[0].config.dataId;
@@ -256,7 +258,7 @@ steal(
 				return settings;
 			};
 
-			this.populateSettings = function (setting, getDataCollection, showAll) {
+			this.populateSettings = function (setting, showAll) {
 				var self = this,
 					editable = true;
 
@@ -264,9 +266,11 @@ steal(
 					// Get data collection
 					function (next) {
 						if (setting && setting.object) {
-							getDataCollection(application, setting.object).then(function (dataCollection) {
-								next(null, dataCollection);
-							});
+							dataCollectionHelper.getDataCollection(application, setting.object)
+								.fail(next)
+								.then(function (dataCollection) {
+									next(null, dataCollection);
+								});
 						}
 						else {
 							next(null, null);
@@ -321,20 +325,25 @@ steal(
 				return data.isRendered === true;
 			};
 
+			this.onRender = function (renderFn) {
+				events.render = renderFn;
+			};
+
 			this.updateData = function (newData) {
-				var currModel = newData ? newData : data.dataCollection.AD.currModel();
+				var self = this,
+					currModel = newData ? newData : data.dataCollection.AD.currModel();
 
 				if (currModel) {
 					currModel = currModel.attr ? currModel.attr() : currModel;
 
 					data.currDataId = currModel.id;
 
-					$$(this.viewId).getChildViews().forEach(function (child) {
+					$$(self.viewId).getChildViews().forEach(function (child) {
 						var displayField = child.getChildViews()[1],
 							labelValue = currModel ? currModel[child.config.fieldName] : '';
 
 						if (child.config.editor === 'selectivity') {
-							selectivityHelper.renderSelectivity($$(this.viewId), 'ab-component-view-selectivity', true);
+							selectivityHelper.renderSelectivity($$(self.viewId), 'ab-component-view-selectivity', true);
 
 							var selectivityItem = $(child.$view).find('.ab-component-view-selectivity');
 							if (labelValue) {
@@ -403,7 +412,7 @@ steal(
 			return editViewLayout;
 		};
 
-		viewComponent.getPropertyView = function (componentManager, getDataCollectionFn) {
+		viewComponent.getPropertyView = function (componentManager) {
 			return {
 				view: "property",
 				id: componentIds.propertyView,
@@ -451,7 +460,7 @@ steal(
 								break;
 							case componentIds.selectObject:
 								var setting = componentManager.editInstance.getSettings();
-								componentManager.editInstance.populateSettings(setting, getDataCollectionFn, true);
+								componentManager.editInstance.populateSettings(setting, true);
 								break;
 						}
 					}

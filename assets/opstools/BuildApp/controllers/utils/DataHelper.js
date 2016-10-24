@@ -99,17 +99,6 @@ steal(
 												else {
 													next();
 												}
-											},
-											// Convert string to Date object
-											function (next) {
-												if (dateFields && dateFields.length > 0) {
-													dateFields.forEach(function (dateCol) {
-														if (r[dateCol.id])
-															r.attr(dateCol.id, new Date(r[dateCol.id]));
-													});
-												}
-
-												next();
 											}
 										], ok);
 									});
@@ -118,6 +107,16 @@ steal(
 
 							async.parallel(Tasks, callback);
 						});
+
+
+						// Convert string to Date object
+						if (dateFields && dateFields.length > 0) {
+							dateFields.forEach(function (dateCol) {
+								if (r[dateCol.id])
+									r.attr(dateCol.id, new Date(r[dateCol.id]));
+							});
+						}
+
 					});
 				}
 

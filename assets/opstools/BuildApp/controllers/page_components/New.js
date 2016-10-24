@@ -1,57 +1,67 @@
 steal(
 	// List your Controller's dependencies here:
 	function () {
-        System.import('appdev').then(function () {
-			steal.import('appdev/ad',
-				'appdev/control/control').then(function () {
+		var componentIds = {
+			editView: 'ab-NEW-edit-view'
+		};
 
-					// Namespacing conventions:
-					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-					AD.Control.extend('opstools.BuildApp.Components.New', {
+		//Constructor
+		var newComponent = function (application, viewId, componentId) {
+			var events = {},
+				data = {};
 
-						init: function (element, options) {
-							var self = this;
+			// Set viewId to public
+			this.viewId = viewId;
+			this.editViewId = componentIds.editView;
 
-							self.data = {};
-							self.info = {
-								name: 'ComponentName',
-								icon: 'fa-icon'
-							};
+			// Instance functions
+			this.render = function (setting, editable, showAll, dataCollection) {
+				var q = $.Deferred();
+				q.resolve();
+				return q;
+			};
 
-							self.getView = function () {
-								return null;
-							};
+			this.getSettings = function () {
+				return {};
+			};
 
-							self.getEditView = function () {
-								return null;
-							};
+			this.populateSettings = function (setting, showAll) {
+			};
 
-							self.getPropertyView = function () {
-								return null;
-							};
+			this.isRendered = function () {
+				return data.isRendered === true;
+			};
 
-							self.render = function (viewId, settings) {
-							};
+			this.onRender = function (renderFn) {
+				events.render = renderFn;
+			}
 
-							self.getSettings = function () {
-								return null;
-							};
+		};
 
-							self.populateSettings = function (settings) {
-							};
+		// Static functions
+		newComponent.getInfo = function () {
+			return {
+				name: 'new', // name must be lower case characters
+				icon: 'fa-th-NEW'
+			};
+		};
 
-							self.editStop = function () {
-							};
+		newComponent.getView = function () {
+			return {};
+		};
 
-						},
+		newComponent.getEditView = function () {
+			return {};
+		};
 
-						getInstance: function () {
-							return this;
-						}
+		newComponent.getPropertyView = function (componentManager) {
+			return {};
+		};
 
-					});
+		newComponent.editStop = function () {
+		};
 
-				});
-		});
+		return newComponent;
+
 	}
 );
