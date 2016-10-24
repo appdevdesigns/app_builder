@@ -651,6 +651,7 @@ steal(
 								appList = AD.op.WebixDataCollection(self.data);
 
 							$$(self.webixUiId.appList).clearAll();
+							$$(self.webixUiId.appList).data.unsync();
 							$$(self.webixUiId.appList).data.sync(appList);
 
 							if (!$$(self.webixUiId.appList).count()) //if no data is available

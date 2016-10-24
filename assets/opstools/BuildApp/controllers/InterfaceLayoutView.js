@@ -25,7 +25,9 @@ steal(
 
 							// Call parent init
 							self._super(element, self.options);
-							self.data = {};
+							self.data = {
+								components: {} // { componentId: compInstance, ..., componentIdN: compInstanceN }
+							};
 
 							self.componentIds = {
 								layoutToolbar: 'ab-interface-layout-toolbar',
@@ -143,13 +145,14 @@ steal(
 
 													var editedComponent = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == self.data.editedComponentId; })[0],
 														componentName = editedComponent.attr('component'),
-														editViewId = componentManager.getEditView(componentName).id;
+														componentInstance = componentManager.getComponent(componentName),
+														editViewId = componentInstance.getEditView().id;
 
 													$$(editViewId).showProgress({ type: 'icon' });
 
-													componentManager.editStop(componentName);
+													componentInstance.editStop();
 
-													editedComponent.attr('setting', componentManager.getSettings(componentName));
+													editedComponent.attr('setting', self.data.components[self.data.editedComponentId].getSettings());
 
 													editedComponent.save()
 														.fail(function (err) {
@@ -163,12 +166,9 @@ steal(
 
 															self.openLayoutViewMode();
 
-															// self.generateComponentsInList()
-															// 	.always(function () {
-															// 		self.element.trigger(self.options.savedComponentEvent, {});
+															self.element.trigger(self.options.savedComponentEvent, {});
 
-															// 		$$(editViewId).hideProgress();
-															// 	});
+															$$(editViewId).hideProgress();
 														});
 												}
 											},
@@ -219,13 +219,11 @@ steal(
 																if ($$('ab-' + item.component + '-edit-view')) {
 																	if (!item.setting) item.setting = {};
 
-																	componentManager.populateSettings(item.component, // Component name
-																		AD.classes.AppBuilder.currApp, // Current application
-																		AD.classes.AppBuilder.currApp.currPage, // Current page
-																		item, // Component data
-																		dataCollectionHelper.getDataCollection.bind(dataCollectionHelper)); // Get data collection function
+																	componentManager.setEditInstance(self.data.components[item_id]);
 
-																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component + ' View');
+																	self.data.components[item_id].populateSettings(item.setting, dataCollectionHelper.getDataCollection.bind(dataCollectionHelper));
+
+																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
 
 																	$$(self.componentIds.saveComponentInfo).show();
@@ -246,28 +244,30 @@ steal(
 														'<div>{common.editButton()}</div>' +
 														'</div>' +
 														'<div class="ab-component-item-display">' +
-														'<div id="ab-layout-component-#id#"></div>' + //#view#
+														'<div id="#viewId#"></div>' +
 														'<i class="fa fa-times ab-component-remove"></i>' +
 														'</div>' +
 														'</div>';
 
 													// Replace values to template
 													for (var key in obj) {
-														templateHtml = templateHtml.replace(new RegExp('#' + key + '#', 'g'), obj[key]);
+														if (key === 'component')
+															templateHtml = templateHtml.replace(/#component#/g, obj['component'].capitalize());
+														else
+															templateHtml = templateHtml.replace(new RegExp('#' + key + '#', 'g'), obj[key]);
 													}
 
 													// Icon
-													var comInfo = componentManager.getInfo(obj.component);
-													if (comInfo)
-														templateHtml = templateHtml.replace(/#icon#/g, comInfo.icon);
+													var component = componentManager.getComponent(obj.component);
+													if (component && component.getInfo)
+														templateHtml = templateHtml.replace(/#icon#/g, component.getInfo().icon);
 
 													// Generate Edit button
 													var editButtonView = common['editButton'] ? common['editButton'].apply(this, arguments) : "";
 													templateHtml = templateHtml.replace('{common.editButton()}', editButtonView);
 
-													// // Set component view
-													// var componentView = common[obj.component] ? common[obj.component].apply(this, arguments) : "";
-													// templateHtml = templateHtml.replace(/#view#/g, componentView);
+													// ViewId
+													templateHtml = templateHtml.replace(/#viewId#/g, self.getComponentId(obj.id));
 
 													return templateHtml;
 												},
@@ -459,6 +459,7 @@ steal(
 
 							if (!AD.classes.AppBuilder.currApp.currPage) return;
 
+							$$(self.componentIds.componentList).clearAll();
 							$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 							$$(self.componentIds.layoutToolbar).show();
 
@@ -477,6 +478,7 @@ steal(
 									AD.classes.AppBuilder.currApp.currPage.attr('components', result);
 									var componentList = AD.op.WebixDataCollection(AD.classes.AppBuilder.currApp.currPage.components);
 
+									$$(self.componentIds.componentList).data.unsync();
 									$$(self.componentIds.componentList).data.sync(componentList);
 
 									self.initEvents();
@@ -523,9 +525,11 @@ steal(
 							}
 
 							// Generate component in list
-							AD.classes.AppBuilder.currApp.currPage.components.forEach(function (c) {
+							$$(self.componentIds.componentList).find({}).forEach(function (item) {
 								renderTasks.push(function (next) {
-									self.renderComponent(c)
+									var comp = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == item.id; });
+									if (!comp || comp.length < 1) return next();
+									self.renderComponent(comp[0])
 										.always(next);
 								});
 							});
@@ -538,17 +542,28 @@ steal(
 						renderComponent: function (com) {
 							var self = this,
 								q = $.Deferred(),
-								view = componentManager.getView(com.attr('component')),
+								componentInstance = componentManager.getComponent(com.attr('component')),
+								view = componentInstance.getView(),
+								viewId = self.getComponentId(com.attr('id')),
 								setting = com.attr('setting'),
 								dataCollection, linkedDataCollection;
 
+							// Create component instance
+							if (!self.data.components[com.attr('id')]) {
+								self.data.components[com.attr('id')] = new componentInstance(
+									AD.classes.AppBuilder.currApp, // Current application
+									viewId, // the view id
+									com.id // the component data id
+								);
+							}
+
 							if (view && setting) {
 								var setting = setting.attr ? setting.attr() : setting,
-									editable = false;
-								setting.page = self.data.page;
+									editable = false,
+									showAll = false;
 
 								view = $.extend(true, {}, view);
-								view.id = self.getComponentId(com.attr('id'));
+								view.id = viewId;
 								view.container = view.id;
 								view.autowidth = true;
 
@@ -585,17 +600,7 @@ steal(
 									},
 									// Render component
 									function (next) {
-										componentManager.render(
-											com.attr('component'), // Component name
-											AD.classes.AppBuilder.currApp, // Current applcation
-											AD.classes.AppBuilder.currApp.currPage, // Current page
-											view.id,
-											com.id,
-											setting,
-											editable,
-											false, // Show all
-											dataCollection,
-											linkedDataCollection)
+										self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection)
 											.then(function () {
 												next();
 											});
@@ -652,6 +657,7 @@ steal(
 						resetState: function () {
 							var self = this;
 
+							self.data.components = {};
 							self.data.editedComponentId = null;
 
 							$$(self.componentIds.layoutToolbar).hide();

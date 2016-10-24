@@ -309,6 +309,7 @@ steal(
 									// Populate data
 									if (result instanceof webix.DataCollection) {
 										self.dataTable.data.clearAll();
+										self.dataTable.data.unsync();
 										self.dataTable.data.sync(result);
 									}
 									else

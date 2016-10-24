@@ -1,117 +1,39 @@
 steal(
 	// List your Controller's dependencies here:
 	function () {
-		var data = {},
-			componentIds = {
-				editView: 'ab-menu-edit-view',
-				editMenu: 'ab-menu-edit-mode',
-				propertyView: 'ab-menu-property-view',
-				pageTree: 'ab-menu-page-tree'
-			};
+		var componentIds = {
+			editView: 'ab-menu-edit-view',
+			editMenu: 'ab-menu-edit-mode',
+			propertyView: 'ab-menu-property-view',
+			pageTree: 'ab-menu-page-tree'
+		};
 
-		return {
-			getInfo: function () {
-				return {
-					name: 'menu',
-					icon: 'fa-th-list'
-				};
-			},
+		//Constructor
+		var menuComponent = function (application, viewId, componentId) {
+			var events = {};
 
-			getView: function () {
-				return {
-					view: "menu",
-					autoheight: true,
-					minWidth: 500,
-					datatype: "json"
-				};
-			},
+			this.viewId = viewId;
+			this.editViewId = componentIds.editMenu;
 
-			getEditView: function () {
-				var menu = $.extend(true, {}, this.getView());
-				menu.id = componentIds.editMenu;
-
-				return {
-					id: componentIds.editView,
-					padding: 10,
-					rows: [
-						menu,
-						{
-							view: 'label',
-							label: 'Page list'
-						},
-						{
-							id: componentIds.pageTree,
-							view: 'tree',
-							template: "<div class='ab-page-list-item'>" +
-							"{common.icon()} {common.checkbox()} {common.folder()} #label#" +
-							"</div>",
-							on: {
-								onItemCheck: function () {
-									$$(componentIds.editMenu).clearAll();
-
-									$$(componentIds.pageTree).getChecked().forEach(function (pageId) {
-										var item = $$(componentIds.pageTree).getItem(pageId);
-
-										$$(componentIds.editMenu).add({
-											id: pageId,
-											value: item.label
-										}, $$(componentIds.editMenu).count());
-									});
-								}
-							}
-						}
-					]
-				};
-			},
-
-			getPropertyView: function (application, page) {
-				return {
-					view: "property",
-					id: componentIds.propertyView,
-					elements: [
-						{ label: "Layout", type: "label" },
-						{
-							id: 'orientation',
-							type: "richselect",
-							label: "Orientation",
-							options: [
-								{ id: 'x', value: "Horizontal" },
-								{ id: 'y', value: "Vertical" }
-							]
-						},
-					],
-					on: {
-						onAfterEditStop: function (state, editor, ignoreUpdate) {
-							if (state.old === state.value) return true;
-
-							switch (editor.id) {
-								case 'orientation':
-									this.render(application, page, componentIds.editMenu, null, this.getSettings());
-									break;
-							}
-						}
-					}
-				};
-			},
-
-			render: function (application, page, viewId, componentId, setting) {
+			// Instance functions
+			this.render = function (setting) {
 				var q = $.Deferred(),
 					self = this;
 
-				if ($$(viewId))
-					$$(viewId).clearAll();
-
-				var view = $.extend(true, {}, this.getView());
-				view.id = viewId;
-				view.layout = setting.layout || 'x';
+				var view = $.extend(true, {}, menuComponent.getView());
+				view.id = self.viewId;
+				view.layout = 'x';
+				if (setting.layout)
+					view.layout = setting.layout;
 
 				if (setting.click)
 					view.click = setting.click;
 
-				webix.ui(view, $$(viewId));
-				webix.extend($$(viewId), webix.ProgressBar);
+				webix.ui(view, $$(self.viewId));
+				webix.extend($$(self.viewId), webix.ProgressBar);
 
-				$$(viewId).showProgress({ type: 'icon' });
+				$$(self.viewId).clearAll();
+				$$(self.viewId).showProgress({ type: 'icon' });
 
 				if (setting.pageIds && setting.pageIds.length > 0) {
 					// Convert array to object
@@ -137,33 +59,29 @@ steal(
 							});
 
 							// Show page menu
-							$$(viewId).parse(pageMenu, 'json');
+							$$(self.viewId).parse(pageMenu, 'json');
 
-							$(self).trigger('render', {
-								viewId: viewId,
-								componentId: componentId
-							});
+							if (events.render)
+								events.render();
 
-							$$(viewId).hideProgress();
+							$$(self.viewId).hideProgress();
 
 							q.resolve();
 						});
 				}
 				else {
-					$(self).trigger('render', {
-						viewId: viewId,
-						componentId: componentId
-					});
+					if (events.render)
+						events.render();
 
-					$$(viewId).hideProgress();
+					$$(self.viewId).hideProgress();
 
 					q.resolve();
 				}
 
 				return q;
-			},
+			};
 
-			getSettings: function () {
+			this.getSettings = function () {
 				var values = $$(componentIds.propertyView).getValues(),
 					selectedPages = $$(componentIds.editMenu).find(function () { return true; }),
 					selectedPageIds = $.map(selectedPages || [], function (page) {
@@ -174,21 +92,21 @@ steal(
 					layout: values.orientation,
 					pageIds: selectedPageIds
 				};
-			},
+			};
 
-			populateSettings: function (application, page, item) {
+			this.populateSettings = function (setting) {
 				// Menu
-				this.render(application, page, componentIds.editMenu, item.id, item.setting);
+				this.render(setting);
 
 				// Page list
 				$$(componentIds.pageTree).clearAll();
 				var pageItems = [];
-				if (page) {
+				if (application.currPage) {
 					webix.extend($$(componentIds.pageTree), webix.ProgressBar);
 
 					$$(componentIds.pageTree).showProgress({ type: 'icon' });
 
-					var parentId = page.parent ? page.parent.attr('id') : page.attr('id');
+					var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 					application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
 						.fail(function (err) {
 							$$(componentIds.pageTree).hideProgress();
@@ -226,8 +144,8 @@ steal(
 							$$(componentIds.pageTree).openAll();
 
 							// Set checked items
-							if (item.setting && item.setting.pageIds) {
-								item.setting.pageIds.forEach(function (pageId) {
+							if (setting && setting.pageIds) {
+								setting.pageIds.forEach(function (pageId) {
 									$$(componentIds.pageTree).checkItem(pageId);
 								});
 							}
@@ -240,16 +158,111 @@ steal(
 				if (!$$(componentIds.propertyView)) return;
 
 				$$(componentIds.propertyView).setValues({
-					orientation: item.setting.layout || 'x'
+					orientation: setting.layout || 'x'
 				});
 				$$(componentIds.propertyView).refresh();
-			},
+			};
 
-			editStop: function () {
-				if ($$(componentIds.propertyView))
-					$$(componentIds.propertyView).editStop();
+			this.onRender = function (renderFn) {
+				events.render = renderFn;
 			}
+
 		};
+
+		// Static functions
+		menuComponent.getInfo = function () {
+			return {
+				name: 'menu',
+				icon: 'fa-th-list'
+			};
+		};
+
+		menuComponent.getView = function () {
+			return {
+				view: "menu",
+				autoheight: true,
+				minWidth: 500,
+				datatype: "json"
+			};
+		};
+
+		menuComponent.getEditView = function () {
+			var menu = $.extend(true, {}, this.getView());
+			menu.id = componentIds.editMenu;
+
+			return {
+				id: componentIds.editView,
+				padding: 10,
+				rows: [
+					menu,
+					{
+						view: 'label',
+						label: 'Page list'
+					},
+					{
+						id: componentIds.pageTree,
+						view: 'tree',
+						template: "<div class='ab-page-list-item'>" +
+						"{common.icon()} {common.checkbox()} {common.folder()} #label#" +
+						"</div>",
+						on: {
+							onItemCheck: function () {
+								$$(componentIds.editMenu).clearAll();
+
+								$$(componentIds.pageTree).getChecked().forEach(function (pageId) {
+									var item = $$(componentIds.pageTree).getItem(pageId);
+
+									$$(componentIds.editMenu).add({
+										id: pageId,
+										value: item.label
+									}, $$(componentIds.editMenu).count());
+								});
+							}
+						}
+					}
+				]
+			};
+		};
+
+		menuComponent.getPropertyView = function (componentManager) {
+			var self = this;
+
+			return {
+				view: "property",
+				id: componentIds.propertyView,
+				elements: [
+					{ label: "Layout", type: "label" },
+					{
+						id: 'orientation',
+						type: "richselect",
+						label: "Orientation",
+						options: [
+							{ id: 'x', value: "Horizontal" },
+							{ id: 'y', value: "Vertical" }
+						]
+					},
+				],
+				on: {
+					onAfterEditStop: function (state, editor, ignoreUpdate) {
+						if (state.old === state.value) return true;
+
+						switch (editor.id) {
+							case 'orientation':
+								var setting = componentManager.editInstance.getSettings();
+								componentManager.editInstance.render(setting);
+								break;
+						}
+					}
+				}
+			};
+		};
+
+		menuComponent.editStop = function () {
+			if ($$(componentIds.propertyView))
+				$$(componentIds.propertyView).editStop();
+		};
+
+		return menuComponent;
 
 	}
 );

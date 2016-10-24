@@ -153,6 +153,7 @@ steal(
 				$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
 			});
 			$$(componentIds.objectList).clearAll();
+			$$(componentIds.objectList).data.unsync();
 			$$(componentIds.objectList).data.sync(objectList);
 			$$(componentIds.objectList).refresh();
 			$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });

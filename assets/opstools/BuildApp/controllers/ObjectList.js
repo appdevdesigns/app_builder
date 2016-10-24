@@ -395,6 +395,7 @@ steal(
 							$$(this.webixUiId.objectList).showProgress({ type: "icon" });
 
 							$$(this.webixUiId.objectList).clearAll();
+							$$(this.webixUiId.objectList).data.unsync();
 							$$(this.webixUiId.objectList).data.sync(objectList);
 							$$(this.webixUiId.objectList).refresh();
 							$$(this.webixUiId.objectList).unselectAll();

@@ -9,18 +9,18 @@ steal(
 		var dataCollections = {};
 
 		return {
-			getDataCollection: function (applcation, objectId) {
+			getDataCollection: function (application, objectId) {
 				var self = this,
 					q = $.Deferred();
 
 				if (!objectId) {
 					q.reject("Object id is required.");
-					return;
+					return q;
 				}
 
 				if (!dataCollections[objectId]) {
 					// Get object info
-					var objInfo = applcation.objects.filter(function () { return obj.id == objectId });
+					var objInfo = application.objects.filter(function (obj) { return obj.id == objectId });
 
 					if (!objInfo || objInfo.length < 1) {
 						q.reject(err);
@@ -53,7 +53,7 @@ steal(
 								.then(function (data) {
 
 									// Populate labels & Convert string to Date object
-									dataHelper.normalizeData(applcation, data, linkColObjs, dateCols)
+									dataHelper.normalizeData(application, data, linkColObjs, dateCols)
 										.then(function (result) {
 											if (!dataCollections[objectId])
 												dataCollections[objectId] = AD.op.WebixDataCollection(result);
@@ -71,7 +71,7 @@ steal(
 
 									if (hasUpdateLink && newVal) {
 										// Update connected data
-										dataHelper.normalizeData(applcation, ev.target, linkColObjs, dateCols)
+										dataHelper.normalizeData(application, ev.target, linkColObjs, dateCols)
 											.then(function (result) { });
 									}
 								});

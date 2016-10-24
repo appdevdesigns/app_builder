@@ -50,19 +50,8 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var 
-							// Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
-							// 	Form = AD.Control.get('opstools.BuildApp.Components.Form'),
-							// 	View = AD.Control.get('opstools.BuildApp.Components.View'),
-
-								LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView'),
+							var LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView'),
 								ComponentList = AD.Control.get('opstools.BuildApp.InterfaceComponentList');
-
-
-							// self.controllers.Grid = new Grid(self.element, {});
-							// self.controllers.Form = new Form(self.element, {});
-							// self.controllers.View = new View(self.element, {});
-
 
 							self.controllers.LayoutView = new LayoutView(self.element, {
 								editComponentEvent: self.options.editComponentEvent,
@@ -111,15 +100,8 @@ steal(
 						},
 
 						initComponents: function () {
-							var self = this;
-							self.components = {};
-
-							// self.components.Grid = self.controllers.Grid.getInstance();
-							// self.components.Form = self.controllers.Form.getInstance();
-							// self.components.View = self.controllers.View.getInstance();
-
-							self.controllers.LayoutView.initComponents();
-							self.controllers.ComponentList.setComponents(self.components);
+							this.controllers.LayoutView.initComponents();
+							this.controllers.ComponentList.initComponents();
 						},
 
 						webix_ready: function () {

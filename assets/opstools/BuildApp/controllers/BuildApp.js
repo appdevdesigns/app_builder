@@ -1,5 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/JsObjectHelper.js',
+
 	'opstools/BuildApp/BuildApp.css',
 	'opstools/BuildApp/views/BuildApp/BuildApp.ejs',
 	'opstools/BuildApp/controllers/AppList.js',
