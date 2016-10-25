@@ -533,12 +533,12 @@ steal(
 					// Properties
 					// Data source - Object
 					function (next) {
-						if (!objects)
+						if (!application.objects)
 							return next();
 
 						// Data source - Object
 						var objectList = $$(componentIds.propertyView).getItem('object');
-						objectList.options = $.map(objects, function (o) {
+						objectList.options = $.map(application.objects, function (o) {
 							return {
 								id: o.id,
 								value: o.label
@@ -546,8 +546,8 @@ steal(
 						});
 
 						// Data source - Linked to
-						var linkedObjIds = self.data.columns.filter(function (col) { return col.linkObject != null; }).map(function (col) { return col.linkObject.id || col.linkObject }),
-							linkedObjs = objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id) > -1; }),
+						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject }),
+							linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; }),
 							linkedToItem = $$(componentIds.propertyView).getItem('linkedTo');
 						linkedToItem.options = $.map(linkedObjs, function (o) {
 							return {
@@ -564,7 +564,7 @@ steal(
 						var linkedFieldItem = $$(componentIds.propertyView).getItem('linkedField');
 						if (setting.linkedTo) {
 							linkedFieldItem.options = self.data.columns
-								.filter(function (col) { return col.linkObject && col.linkObject.id == setting.linkedTo; })
+								.filter(function (col) { return col.setting.linkObject == setting.linkedTo; })
 								.map(function (col) {
 									return {
 										id: col.id,
@@ -901,7 +901,7 @@ steal(
 
 								if (linkedTo != 'none') {
 									linkedField.options = editInstance.data.columns
-										.filter(function (col) { return col.linkObject && col.linkObject.id == linkedTo; })
+										.filter(function (col) { return col.setting.linkObject == linkedTo; })
 										.map(function (col) {
 											return {
 												id: col.id,
