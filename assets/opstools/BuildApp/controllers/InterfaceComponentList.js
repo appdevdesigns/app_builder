@@ -170,7 +170,6 @@ steal(
 							$$(this.componentIds.componentListPanel).hide();
 						}
 
-
 					});
 				});
 		})

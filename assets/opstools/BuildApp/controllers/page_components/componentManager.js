@@ -60,6 +60,13 @@ steal(
 			}
 		};
 
+		componentManager.resize = function (height) {
+			components.forEach(function (comp) {
+				if (comp.resize)
+					comp.resize(height);
+			});
+		};
+
 		return componentManager;
 	}
 );

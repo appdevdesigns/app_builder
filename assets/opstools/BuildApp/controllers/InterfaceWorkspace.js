@@ -135,14 +135,10 @@ steal(
 						resetState: function () {
 							this.controllers.LayoutView.resetState();
 							this.controllers.ComponentList.resetState();
-
-							// Reset page components 
-							// this.controllers.Grid.resetState();
 						},
 
 						resize: function (height) {
-							// this.controllers.Form.resize(height);
-							// this.controllers.View.resize(height);
+							this.controllers.LayoutView.resize(height);
 						}
 
 

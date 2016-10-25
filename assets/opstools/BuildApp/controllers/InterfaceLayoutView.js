@@ -220,7 +220,7 @@ steal(
 																	if (!item.setting) item.setting = {};
 
 																	componentManager.setEditInstance(self.data.components[item_id]);
-																	componentManager.editInstance.populateSettings(item.setting, dataCollectionHelper.getDataCollection.bind(dataCollectionHelper));
+																	componentManager.editInstance.populateSettings(item.setting);
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -669,7 +669,15 @@ steal(
 
 							$$(self.componentIds.componentList).clearValidation();
 							$$(self.componentIds.componentList).clearAll();
+
+							// Reset page components 
+							// this.controllers.Grid.resetState();
+						},
+
+						resize: function (height) {
+							componentManager.resize(height);
 						}
+
 
 					});
 				});
