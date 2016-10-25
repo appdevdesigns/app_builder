@@ -591,7 +591,7 @@ steal(
 								pages.forEach(function (p) {
 									// Details view components
 									var detailsViews = p.components.filter(function (c) {
-										return c.component === "View" && c.setting && c.setting.object === setting.object;
+										return c.component === "view" && c.setting && c.setting.object === setting.object;
 									});
 
 									if (detailsViews && detailsViews.length > 0) {
@@ -605,7 +605,7 @@ steal(
 
 									// Filter form components
 									var forms = p.components.filter(function (c) {
-										return c.component === "Form" && c.setting && c.setting.object === setting.object;
+										return c.component === "form" && c.setting && c.setting.object === setting.object;
 									});
 
 									if (forms && forms.length > 0) {
