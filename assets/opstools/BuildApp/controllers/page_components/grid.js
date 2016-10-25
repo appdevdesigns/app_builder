@@ -3,10 +3,6 @@ steal(
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
 
-	// 'opstools/BuildApp/models/ABPage.js',
-	// 'opstools/BuildApp/models/ABObject.js',
-	// 'opstools/BuildApp/models/ABColumn.js',
-
 	'opstools/BuildApp/controllers/webix_custom_components/DynamicDataTable.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
