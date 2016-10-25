@@ -26,7 +26,8 @@ steal(
 			icon: 'external-link',
 			menuName: 'Connect to another record',
 			includeHeader: true,
-			description: ''
+			description: '',
+			formView: 'template' //
 		};
 
 		function initConnectDataPopup(objectId, selectivityNode) {

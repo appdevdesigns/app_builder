@@ -2,6 +2,7 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	function (dataCollectionHelper, selectivityHelper) {
 		var componentIds = {
 			editViewLayout: 'ab-view-edit-view',
@@ -99,6 +100,8 @@ steal(
 
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 							if (!editable && !isVisible) return; // Hidden
+
+							// dataFieldsManager.customDisplay
 
 							var displayDataView = null;
 

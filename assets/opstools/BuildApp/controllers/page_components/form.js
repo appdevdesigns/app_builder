@@ -1,10 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
-	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
-	function (dataCollectionHelper, selectivityHelper) {
+	function (dataCollectionHelper) {
 		var componentIds = {
 			editView: 'ab-form-edit-view',
 			editForm: 'ab-form-edit-mode',
@@ -67,18 +66,6 @@ steal(
 						modelData.removeAttr(fieldName);
 				});
 
-				// Populate selectivity values to model
-				$$(self.viewId).getChildViews()
-					.filter(function (cView) { return cView.config.editor === 'selectivity'; })
-					.forEach(function (cView) {
-						var nodeItem = $(cView.$view).find('.ab-form-connect-data'),
-							fieldName = cView.config.name,
-							value = selectivityHelper.getData(nodeItem, []).map(function (item) { return { id: item.id, dataLabel: item.text }; });
-
-						modelData.attr(fieldName, value);
-					});
-
-
 				modelData.save()
 					.fail(q.reject)
 					.then(function (result) {
@@ -100,75 +87,12 @@ steal(
 
 						// Clear form
 						$$(self.viewId).setValues({});
-						clearSelectivity.call(self);
+						// TODO : clear customDisplay
 
 						q.resolve();
 					});
 
 				return q;
-			};
-
-			function clickSelectivityItems(dataCollection) {
-				var item = $(this),
-					currModel = dataCollection.AD.currModel(),
-					objectId = item.data('object'),
-					linkType = item.data('link-type'),
-					linkVia = item.data('link-via'),
-					linkViaType = item.data('link-via-type'),
-					updatingItem = item;
-
-				var object = application.objects.filter(function (obj) { return obj.id == objectId; });
-
-				if (object && object.length > 0) {
-					var selectedIds = $.map(selectivityHelper.getData(item), function (d) { return d.id; });
-
-					$$(componentIds.addConnectObjectDataPopup).onSelect(function (selectedItems) {
-						if (updatingItem)
-							selectivityHelper.setData(updatingItem, selectedItems);
-					});
-
-					$$(componentIds.addConnectObjectDataPopup).onClose(function (selectedItems) {
-						if (updatingItem)
-							selectivityHelper.setData(updatingItem, selectedItems);
-
-						updatingItem = null;
-					});
-
-					$$(componentIds.addConnectObjectDataPopup).open(object[0], (currModel ? currModel.id : null), selectedIds, linkType, linkVia, linkViaType);
-				}
-			};
-
-
-			function populateSelectivityValues(dataCollection) {
-				var modelData = dataCollection.AD.currModel();
-
-				$$(this.viewId).getChildViews().forEach(function (cView) {
-					// Find selectivity field
-					if (cView.config.editor === 'selectivity') {
-						var nodeItem = $(cView.$view).find('.ab-form-connect-data');
-
-						if (modelData) {
-							selectedValues = modelData[cView.config.name].attr ? modelData[cView.config.name].attr() : modelData[cView.config.name];
-
-							selectivityHelper.setData(nodeItem, $.map(selectedValues, function (d) {
-								return {
-									id: d.id,
-									text: d.dataLabel
-								};
-							}));
-						}
-						else {
-							// Clear selectivity
-							selectivityHelper.setData(nodeItem, []);
-						}
-					}
-				});
-			};
-
-			function clearSelectivity() {
-				$($$(this.viewId).$view).find('.ab-form-connect-data').each(function (index) {
-					selectivityHelper.setData($(this), []);
-				});
 			};
 
 
@@ -187,7 +111,7 @@ steal(
 
 				if (dataCollection) {
 					dataCollection.attachEvent('onAfterCursorChange', function (id) {
-						populateSelectivityValues.call(self);
+						// TODO : Update custom display
 					});
 				}
 
@@ -264,29 +188,24 @@ steal(
 							};
 							element.label = col.label;
 
-							// TODO: custom view
-							if (!col.setting.editor) { // Checkbox
+							if (col.type == 'boolean') {
 								element.view = 'checkbox';
 							}
-							else if (col.setting.editor === 'selectivity') {
+							else if (col.setting.template) {
+								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
+									.replace(/#width#/g, element.labelWidth - 3)
+									.replace(/#label#/g, element.label)
+									.replace(/#template#/g, col.setting.template);
+
 								element.view = 'template';
-								element.editor = 'selectivity';
 								element.minHeight = 45;
 								element.borderless = true;
-								element.template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>" +
-									"<div class='ab-form-connect-data' data-object='#object#' data-link-type='#linkType#' data-link-via='#linkVia#' data-link-via-type='#linkViaType#'></div>";
-
-								var linkObjectId = '';
-								if (col.setting.linkObject)
-									linkObjectId = col.setting.linkObject;
-
-								element.template = element.template
-									.replace('#width#', element.labelWidth - 3)
-									.replace('#label#', element.label)
-									.replace('#object#', linkObjectId)
-									.replace('#linkType#', col.setting.linkType)
-									.replace('#linkVia#', col.setting.linkVia)
-									.replace('#linkViaType#', col.setting.linkViaType);
+								element.template = template;
+								element.on = {
+									onFocus: function (current_view, prev_view) {
+										AD.classes.AppBuilder.DataFields.customEdit(application, col, data, current_view.$view);
+									}
+								};
 							}
 							else if (col.setting.editor === 'popup') {
 								element.view = 'textarea';
@@ -458,7 +377,7 @@ steal(
 
 									// Clear form
 									$$(self.viewId).setValues({});
-									clearSelectivity.call(self);
+									// TODO : clear customView
 								}
 							});
 						}
@@ -467,12 +386,10 @@ steal(
 
 						$$(self.viewId).refresh();
 
-						selectivityHelper.renderSelectivity($$(self.viewId), 'ab-form-connect-data');
-
-						// Set selectivity values
-						populateSelectivityValues.call(self, dataCollection);
-
-						$($$(self.viewId).$view).find('.ab-form-connect-data').click(function () { clickSelectivityItems.call(this, dataCollection) });
+						// Custom view
+						columns.forEach(function (col) {
+							AD.classes.AppBuilder.DataFields.customDisplay(col.fieldName, data, $$(self.viewId).elements[col.name].$view);
+						});
 
 						next();
 					}
@@ -601,8 +518,7 @@ steal(
 			return {
 				view: "form",
 				autoheight: true,
-				elements: [],
-				drag: true
+				elements: []
 			};
 		};
 

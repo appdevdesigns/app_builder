@@ -267,6 +267,7 @@ steal(
 
 			customDisplay: function (fieldName, data, itemNode, options) {
 				var field = getField(fieldName);
+				options = options || {};
 
 				if (field && field.customDisplay)
 					return field.customDisplay(data, itemNode, options);
