@@ -23,7 +23,7 @@ steal(
 					var objInfo = application.objects.filter(function (obj) { return obj.id == objectId });
 
 					if (!objInfo || objInfo.length < 1) {
-						q.reject(err);
+						q.reject('System could not found this object.');
 						return q;
 					}
 

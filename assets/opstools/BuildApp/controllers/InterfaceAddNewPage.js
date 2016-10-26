@@ -4,7 +4,7 @@ steal(
 	'opstools/BuildApp/controllers/page_templates/BlankPage.js',
 	'opstools/BuildApp/controllers/page_templates/QuickPage.js',
 
-	function (blankPage) {
+	function (blankPage, quickPage) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -27,7 +27,6 @@ steal(
 								this.data = {};
 
 								this.initMultilingualLabels();
-								this.initControllers();
 								this.initWebixUI();
 							},
 
@@ -43,20 +42,12 @@ steal(
 								self.labels.interface.addNewPage = AD.lang.label.getLabel('ab.interface.addNewPage') || 'Add a new page';
 							},
 
-							initControllers: function () {
-								var QuickPage = AD.Control.get('opstools.BuildApp.Templates.QuickPage');
-
-								this.controllers = {
-									QuickPage: new QuickPage(this.element, { data: this.options.data })
-								};
-							},
-
 							initWebixUI: function () {
 								var self = this;
 
 								// Get UI definitions
 								var tabContents = [
-									self.controllers.QuickPage.getUIDefinition(),
+									quickPage.getUIDefinition(),
 									blankPage.getUIDefinition()
 								];
 
@@ -108,7 +99,7 @@ steal(
 							},
 
 							webix_ready: function () {
-								this.controllers.QuickPage.webix_ready();
+								quickPage.webix_ready();
 								blankPage.webix_ready();
 							},
 
@@ -124,7 +115,7 @@ steal(
 								if (newv != oldv) {
 									switch (newv) {
 										case 'QuickPage':
-											this.controllers.QuickPage.show();
+											quickPage.show(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currPage);
 											break;
 										case 'BlankPage':
 											blankPage.show(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currPage);
@@ -138,7 +129,7 @@ steal(
 
 								switch ($$(self.componentId.selectTab).getValue()) {
 									case 'QuickPage':
-										self.controllers.QuickPage.save()
+										quickPage.save(AD.classes.AppBuilder.currApp)
 											.then(function (newPage) {
 												self.callAddNewPageEvent(newPage);
 
