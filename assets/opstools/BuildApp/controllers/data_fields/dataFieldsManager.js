@@ -272,7 +272,7 @@ steal(
 				if (field && field.customDisplay)
 					return field.customDisplay(data, itemNode, options);
 				else
-					return true;
+					return false;
 			},
 
 

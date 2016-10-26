@@ -224,7 +224,7 @@ steal(
 						};
 					});
 				}
-				else {
+				else if (data.id) {
 					selectedItems.push({
 						id: data.id,
 						text: data.dataLabel
@@ -235,6 +235,8 @@ steal(
 			// Set selectivity data
 			var fieldNode = $(itemNode).find('.connect-data-values');
 			selectivityHelper.setData(fieldNode, selectedItems);
+
+			return true;
 		};
 
 		connectObjectField.customEdit = function (application, fieldData, dataId, itemNode) {

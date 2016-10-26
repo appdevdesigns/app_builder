@@ -50,11 +50,13 @@ steal(
 								if (self.events.changeSelectivityItem) {
 									var result = {};
 									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
-									result.columnId = self.dataTable.columnId(result.columnIndex);
-									result.rowIndex = data.itemNode.parent('.webix_cell').index();
-									result.rowId = self.dataTable.getIdByIndex(result.rowIndex);
-									result.item = self.dataTable.getItem(result.rowId);
-									result.itemData = result.item[result.columnId];
+									if (result.columnIndex) {
+										result.columnId = self.dataTable.columnId(result.columnIndex);
+										result.rowIndex = data.itemNode.parent('.webix_cell').index();
+										result.rowId = self.dataTable.getIdByIndex(result.rowIndex);
+										result.item = self.dataTable.getItem(result.rowId);
+										result.itemData = result.item[result.columnId];
+									}
 
 									self.events.changeSelectivityItem(data.event, result);
 								}

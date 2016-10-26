@@ -50,6 +50,7 @@ steal(
 
 						if (colInfo) {
 							switch (colInfo.type) {
+								// TODO : get data
 								case "boolean":
 									modelData.attr(fieldName, editValues[fieldName] === 1 ? true : false);
 									break;
@@ -75,14 +76,14 @@ steal(
 
 						// Add to data collection
 						if (isAdd)
-							data.dataCollection.AD.__list.push(result);
+							dataCollection.AD.__list.push(result);
 
 						// self.callEvent('save', viewId, {
 						// 	returnPage: data.returnPage,
 						// 	id: componentId
 						// });
 
-						data.dataCollection.setCursor(null);
+						dataCollection.setCursor(null);
 						data.returnPage = null;
 
 						// Clear form
@@ -128,12 +129,12 @@ steal(
 				// Get object
 				var object = application.objects.filter(function (obj) { return obj.id == setting.object; });
 				if (!object || object.length < 1) return;
-				object = object[0];
+				application.currObj = object[0];
 
 				async.series([
 					// Get columns data
 					function (next) {
-						object.getColumns()
+						application.currObj.getColumns()
 							.fail(next)
 							.then(function (result) {
 								result.forEach(function (d) {
@@ -388,7 +389,10 @@ steal(
 
 						// Custom view
 						columns.forEach(function (col) {
-							AD.classes.AppBuilder.DataFields.customDisplay(col.fieldName, data, $$(self.viewId).elements[col.name].$view);
+							var childView = $$(self.viewId).getChildViews().find(function (view) { return view.config && view.config.name == col.name });
+							if (!childView) return;
+
+							AD.classes.AppBuilder.DataFields.customDisplay(col.fieldName, data, childView.$view);
 						});
 
 						next();
