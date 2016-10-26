@@ -1,8 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
-	function (selectivityHelper, dataHelper) {
+	function (dataFieldsManager, selectivityHelper, dataHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -98,16 +100,16 @@ steal(
 							}
 
 							self.dataTable.attachEvent("onAfterRender", function (data) {
-								self.dataTable.eachRow(function (rowId) {
-									self.dataTable.eachColumn(function (columnId) {
-										var col = self.dataTable.config.columns.filter(function (col) { return col.id == columnId });
-										if (!col || col.length < 1) return;
-										col = col[0];
+								var dataTable = this;
+								dataTable.eachRow(function (rowId) {
+									dataTable.eachColumn(function (columnId) {
+										var col = dataTable.config.columns.find(function (col) { return col.id == columnId });
+										if (!col) return;
 
-										var itemNode = self.dataTable.getItemNode({ row: rowId, column: columnId });
+										var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
 										if (!itemNode) return;
 
-										AD.classes.AppBuilder.DataFields.customDisplay(col.fieldName, self.dataTable.getItem(rowId)[columnId], itemNode, {
+										dataFieldsManager.customDisplay(col.fieldName, dataTable.getItem(rowId)[columnId], itemNode, {
 											readOnly: self.data.readOnly
 										});
 									});
