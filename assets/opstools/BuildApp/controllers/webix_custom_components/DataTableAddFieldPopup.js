@@ -1,7 +1,7 @@
 steal(
     // List your Controller's dependencies here:
     'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
-    function () {
+    function (dataFieldsManager) {
         var data = {},
             componentIds = {
                 chooseTypeMenu: 'ab-new-type-menu',
@@ -39,7 +39,7 @@ steal(
                     waitRestructureObjects: AD.lang.label.getLabel('ab.add_fields.waitRestructureObjects') || "Please wait until restructure objects is complete"
                 }
             },
-            editDefinitions = AD.classes.AppBuilder.DataFields.getEditDefinitions();
+            editDefinitions = dataFieldsManager.getEditDefinitions();
 
         // Insert please select data type view
         editDefinitions.splice(0, 0, {
@@ -68,16 +68,16 @@ steal(
                             autowidth: true,
                             data: [{
                                 value: labels.add_fields.chooseType,
-                                submenu: AD.classes.AppBuilder.DataFields.getFieldMenuList()
+                                submenu: dataFieldsManager.getFieldMenuList()
                             }],
                             on: {
                                 onMenuItemClick: function (id) {
                                     var base = this.getTopParentView(),
                                         selectedMenuItem = this.getMenuItem(id),
-                                        viewName = AD.classes.AppBuilder.DataFields.getEditViewId(selectedMenuItem.fieldName);
+                                        viewName = dataFieldsManager.getEditViewId(selectedMenuItem.fieldName);
 
                                     if (viewName) {
-                                        AD.classes.AppBuilder.DataFields.populateSettings(AD.classes.AppBuilder.currApp, {
+                                        dataFieldsManager.populateSettings(AD.classes.AppBuilder.currApp, {
                                             fieldName: selectedMenuItem.fieldName,
                                             name: base.getDefaultFieldName(), // Set default field name
                                             label: base.getDefaultFieldName()
@@ -102,7 +102,7 @@ steal(
                                     view: "button", id: componentIds.saveButton, label: labels.add_fields.addNewField, type: "form", width: 120, click: function () {
                                         var base = this.getTopParentView(),
                                             dataTable = base.dataTable,
-                                            fieldInfo = AD.classes.AppBuilder.DataFields.getSettings(base.fieldName);
+                                            fieldInfo = dataFieldsManager.getSettings(base.fieldName);
 
                                         if (!dataTable) {
                                             webix.message({ type: "error", text: labels.add_fields.registerTableWarning });
@@ -207,10 +207,10 @@ steal(
                 data.editFieldId = info.id;
 
                 // Get view name
-                var viewName = AD.classes.AppBuilder.DataFields.getEditViewId(info.fieldName);
+                var viewName = dataFieldsManager.getEditViewId(info.fieldName);
 
                 // Populate data
-                AD.classes.AppBuilder.DataFields.populateSettings(AD.classes.AppBuilder.currApp, info);
+                dataFieldsManager.populateSettings(AD.classes.AppBuilder.currApp, info);
 
                 $$(viewName).show();
 
@@ -228,7 +228,7 @@ steal(
                 $$(componentIds.chooseTypeView).show();
                 $$(componentIds.chooseTypeMenu).show();
 
-                AD.classes.AppBuilder.DataFields.resetState();
+                dataFieldsManager.resetState();
             },
 
             getDefaultFieldName: function () {

@@ -1,9 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
-	function (dataCollectionHelper) {
+	function (dataFieldsManager, dataCollectionHelper) {
 		var componentIds = {
 			editView: 'ab-form-edit-view',
 			editForm: 'ab-form-edit-mode',
@@ -204,7 +205,7 @@ steal(
 								element.template = template;
 								element.on = {
 									onFocus: function (current_view, prev_view) {
-										AD.classes.AppBuilder.DataFields.customEdit(application, col, data, current_view.$view);
+										dataFieldsManager.customEdit(application, col, data, current_view.$view);
 									}
 								};
 							}
@@ -392,7 +393,7 @@ steal(
 							var childView = $$(self.viewId).getChildViews().find(function (view) { return view.config && view.config.name == col.name });
 							if (!childView) return;
 
-							AD.classes.AppBuilder.DataFields.customDisplay(col.fieldName, data, childView.$view);
+							dataFieldsManager.customDisplay(col.fieldName, data, childView.$view);
 						});
 
 						next();

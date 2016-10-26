@@ -1,8 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
-	function (dataCollectionHelper) {
+	function (dataFieldsManager, dataCollectionHelper) {
 		var componentIds = {
 			editViewLayout: 'ab-view-edit-view',
 			editView: 'ab-view-edit-view-detail',
@@ -343,7 +344,7 @@ steal(
 						var displayField = child.getChildViews()[1],
 							fieldData = currModel ? currModel[child.config.fieldName] : '';
 
-						if (AD.classes.AppBuilder.DataFields.customDisplay(child.fieldType, fieldData, child.$view, { readOnly: true }))
+						if (dataFieldsManager.customDisplay(child.fieldType, fieldData, child.$view, { readOnly: true }))
 							return;
 
 						if (child.config.editor === 'date' || child.config.editor === 'datetime') {

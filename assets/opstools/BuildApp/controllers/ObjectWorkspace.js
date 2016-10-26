@@ -1,5 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
@@ -17,7 +19,7 @@ steal(
 
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
-	function (modelCreator) {
+	function (dataFieldsManager, modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -214,7 +216,7 @@ steal(
 												} else
 													column = column[0];
 
-												return AD.classes.AppBuilder.DataFields.customEdit(AD.classes.AppBuilder.currApp, column, data.row, itemNode);
+												return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, column, data.row, itemNode);
 											},
 											onAfterSelect: function (data, prevent) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
@@ -245,7 +247,7 @@ steal(
 												if (!column || column.length < 1) return true;
 												column = column[0];
 
-												return AD.classes.AppBuilder.DataFields.validate(column, state.value);
+												return dataFieldsManager.validate(column, state.value);
 											},
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
 												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
@@ -345,7 +347,7 @@ steal(
 						initEvents: function () {
 							var self = this;
 
-							$(AD.classes.AppBuilder.DataFields).on('save', function (event, result) {
+							$(dataFieldsManager).on('save', function (event, result) {
 								if (result.objectId != AD.classes.AppBuilder.currApp.currObj.id) return;
 
 								switch (result.name) {
