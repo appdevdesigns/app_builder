@@ -35,7 +35,7 @@ steal(
 							linkFields.forEach(function (linkCol) {
 								if (r[linkCol.name] && !r[linkCol.name].dataLabel) {
 									Tasks.push(function (ok) {
-										var linkObj = application.objects.filter(function (obj) { return obj.id == (linkCol.linkObject.id || linkCol.linkObject) })[0],
+										var linkObj = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject; })[0],
 											linkedLabels = [];
 
 										// Get linked object model
@@ -112,8 +112,8 @@ steal(
 						// Convert string to Date object
 						if (dateFields && dateFields.length > 0) {
 							dateFields.forEach(function (dateCol) {
-								if (r[dateCol.id])
-									r.attr(dateCol.id, new Date(r[dateCol.id]));
+								if (r[dateCol.name])
+									r.attr(dateCol.name, new Date(r[dateCol.name]));
 							});
 						}
 

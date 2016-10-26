@@ -20,8 +20,6 @@ steal(
 							this._super(element, options);
 
 							self.data = {};
-							self.data.objectList = [];
-
 							self.events = {};
 
 							self.initMultilingualLabels();
@@ -48,7 +46,7 @@ steal(
 						initEvents: function () {
 							var self = this;
 
-							selectivityHelper.onSelectItem(function (data) {
+							$(selectivityHelper).on('change', function (event, data) {
 								if (self.events.changeSelectivityItem) {
 									var result = {};
 									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
@@ -103,7 +101,7 @@ steal(
 								var dataTable = this;
 								dataTable.eachRow(function (rowId) {
 									dataTable.eachColumn(function (columnId) {
-										var col = dataTable.config.columns.find(function (col) { return col.id == columnId });
+										var col = dataTable.getColumnConfig(columnId);
 										if (!col) return;
 
 										var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
@@ -124,10 +122,6 @@ steal(
 							});
 						},
 
-						setObjectList: function (objectList) {
-							this.data.objectList = objectList;
-						},
-
 						setReadOnly: function (readOnly) {
 							this.data.readOnly = readOnly;
 						},
@@ -144,7 +138,7 @@ steal(
 							this.events.deleteRow = deleteRow;
 						},
 
-						bindColumns: function (columns, resetColumns, addTrashColumn) {
+						bindColumns: function (application, columns, resetColumns, addTrashColumn) {
 							var self = this;
 
 							if (resetColumns)
@@ -152,7 +146,7 @@ steal(
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 
-								col.setting.width = self.calculateColumnWidth(col);
+								col.setting.width = self.calculateColumnWidth(application, col);
 
 								if (col.setting.format && webix.i18n[col.setting.format])
 									col.setting.format = webix.i18n[col.setting.format];
@@ -161,7 +155,7 @@ steal(
 									id: col.name,
 									dataId: col.id,
 									label: col.label,
-									header: self.getHeader(col, self.data.readOnly),
+									header: self.getHeader(application, col, self.data.readOnly),
 									weight: col.weight,
 									fieldName: col.fieldName
 								});
@@ -206,15 +200,15 @@ steal(
 							self.dataTable.refreshColumns(headers, resetColumns || false);
 						},
 
-						getHeader: function (col, readOnly) {
+						getHeader: function (application, col, readOnly) {
 							var self = this,
 								label = col.label || '';
 
 							// Show connect object name in header
 							if (col.setting.editor === 'selectivity') {
 								// Find label of connect object
-								var connectObj = self.data.objectList.filter(function (o) {
-									return col.linkObject && o.id == (col.linkObject.id || col.linkObject);
+								var connectObj = application.objects.filter(function (o) {
+									return o.id == col.setting.linkObject;
 								});
 
 								if (connectObj && connectObj.length > 0)
@@ -232,17 +226,17 @@ steal(
 							};
 						},
 
-						calculateColumnWidth: function (col) {
-							if (col.width > 0) return col.width;
+						calculateColumnWidth: function (application, column) {
+							if (column.width > 0) return column.width;
 
 							var self = this,
 								charWidth = 7,
-								charLength = col.label ? col.label.length : 0,
+								charLength = column.label ? column.label.length : 0,
 								width = (charLength * charWidth) + 80;
 
-							if (col.linkObject) {// Connect to... label
-								var object = self.data.objectList.filter(function (o) {
-									return o.id === (col.linkObject.id || col.linkObject);
+							if (column.setting.linkObject) {// Connect to... label
+								var object = application.objects.filter(function (o) {
+									return o.id === column.setting.linkObject;
 								});
 
 								if (object && object.length > 0)
@@ -276,19 +270,13 @@ steal(
 							}
 
 							// Get link columns
-							var linkCols = self.dataTable.config.columns.filter(function (col) { return col.linkObject != null }),
-								linkColObjs = linkCols.map(function (col) {
-									return {
-										name: col.id,
-										linkObject: col.linkObject
-									};
-								});
+							var linkCols = application.currObj.columns.filter(function (col) { return col.setting.linkObject });
 
 							// Get date & datetime columns
-							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
+							var dateCols = application.currObj.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
 
 							// Populate labels & Convert string to Date object
-							dataHelper.normalizeData(application, data, linkColObjs, dateCols)
+							dataHelper.normalizeData(application, data, linkCols, dateCols)
 								.fail(q.reject)
 								.then(function (result) {
 									self.dataTable.clearAll();
@@ -303,8 +291,8 @@ steal(
 										var rowHeight = r.attr ? r.attr('$height') : r.$height;
 
 										linkCols.forEach(function (linkCol) {
-											if (r[linkCol.id]) {
-												var calHeight = self.getRowHeight(r[linkCol.id].length || 0);
+											if (r[linkCol.name]) {
+												var calHeight = self.getRowHeight(r[linkCol.name].length || 0);
 												if (calHeight > rowHeight || !rowHeight)
 													rowHeight = calHeight;
 											}

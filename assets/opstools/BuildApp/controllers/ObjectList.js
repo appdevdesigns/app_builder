@@ -134,8 +134,10 @@ steal(
 												});
 
 												// Show gear icon
-												if (this.getSelectedId(true).length > 0)
+												if (this.getSelectedId(true).length > 0) {
 													$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+													self.refreshUnsyncNumber();
+												}
 											},
 											onAfterSelect: function (id) {
 												// Fire select object event

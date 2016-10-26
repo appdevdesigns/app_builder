@@ -132,7 +132,7 @@ steal(
 					self.data.visibleColumns = $.map(setting.columns, function (cId) { return cId.toString(); });
 
 				var dataTableController = getObjectDataTable.call(self);
-				dataTableController.bindColumns([], true, setting.removable);
+				dataTableController.bindColumns(application, [], true, setting.removable);
 				dataTableController.registerDeleteRowHandler(function (deletedId) {
 					$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -162,8 +162,6 @@ steal(
 								});
 
 								objects = result;
-
-								dataTableController.setObjectList(objects);
 
 								next();
 							});

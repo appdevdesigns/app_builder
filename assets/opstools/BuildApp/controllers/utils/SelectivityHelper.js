@@ -1,6 +1,4 @@
 steal(function () {
-	var events = {};
-
 	return {
 		renderSelectivity: function (node, cssClass, readOnly) {
 			var self = this;
@@ -19,11 +17,10 @@ steal(function () {
 				placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected"
 			}).on('change', function (ev) {
 				// Trigger event
-				if (events.selectItem)
-					events.selectItem({
-						event: ev,
-						itemNode: $(this)
-					});
+				$(self).trigger('change', {
+					event: ev,
+					itemNode: $(this)
+				});
 			});
 		},
 
@@ -42,10 +39,7 @@ steal(function () {
 				return node.selectivity('data');
 			else
 				return null;
-		},
-
-		onSelectItem: function (selectItemEvent) {
-			events.selectItem = selectItemEvent;
 		}
+
 	};
 });
