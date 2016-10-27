@@ -45,8 +45,15 @@ module.exports = {
         'app_builder/ABRoleController.deleteRole',
 
     'put /app_builder/:id/role/assign':
-        'app_builder/ABRoleController.assignRole'
-
+        'app_builder/ABRoleController.assignRole',
+        
+    /* Import & Export */
+    'get /app_builder/appJSON/:id':
+        'app_builder/ABApplicationController.jsonExport',
+        
+    'post /app_builder/appJSON':
+        'app_builder/ABApplicationController.jsonImport',
+    
   /*
 
   '/': {
