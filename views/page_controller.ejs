@@ -4,7 +4,9 @@
 
 steal(
     // List your Controller's dependencies here:
-    function() {
+    'opstools/BuildApp/controllers/utils/ModelCreator.js',
+    'opstools/BuildApp/controllers/utils/DataHelper.js'
+    function(modelCreator, dataHelper) {
         System.import('appdev').then(function () {
             System.import('opstools/BuildApp').then(function () {
                 steal.import('appdev/ad',
@@ -19,9 +21,6 @@ steal(
                     'opstools/BuildApp/controllers/page_components/Grid',
                     'opstools/BuildApp/controllers/page_components/Form',
                     'opstools/BuildApp/controllers/page_components/View',
-
-                    'opstools/BuildApp/controllers/utils/ModelCreator',
-                    'opstools/BuildApp/controllers/utils/DataHelper'
 
                     ).then(function() {
                         // Namespacing conventions:
@@ -86,19 +85,10 @@ steal(
                             initControllers: function() {
                                 this.controllers = {};
 
-                                var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-                                    DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
-
-                                    Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
+                                var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
                                     Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
                                     Form = AD.Control.get('opstools.BuildApp.Components.Form'),
                                     View = AD.Control.get('opstools.BuildApp.Components.View');
-
-                                this.controllers.ModelCreator = new ModelCreator(this.element);
-                                this.controllers.ModelCreator.setApp(this.data.app);
-
-                                this.controllers.DataHelper = new DataHelper(this.element);
-                                this.controllers.DataHelper.setApp(this.data.app);
 
                                 this.controllers.Menu = new Menu(this.element, {});
                                 this.controllers.Grid = new Grid(this.element, {});
@@ -122,7 +112,6 @@ steal(
 
                                 self.Model.ABObject.findAll({ application: self.data.app.id })
                                     .then(function(result) {
-                                        self.controllers.DataHelper.setObjectList(result);
                                         self.components.Form.setObjectList(result.attr());
                                     });
                             },
@@ -361,6 +350,9 @@ steal(
 
                                     if (!self.data.dataCollections) self.data.dataCollections = {};
 
+                                    // Get object model
+                                    var objectModel = modelCreator.getModel(app, objInfo.attr('name'));
+
                                     if (!self.data.dataCollections[objectId]) {
                                         async.waterfall([
                                             // Get object info
@@ -371,16 +363,8 @@ steal(
                                                         next(null, objInfo);
                                                     });
                                             },
-                                            // Get object model
-                                            function (objInfo, next) {
-                                                self.controllers.ModelCreator.getModel(objInfo.attr('name'))
-                                                    .fail(function (err) { next(err); })
-                                                    .then(function (objectModel) {
-                                                        next(null, objInfo, objectModel);
-                                                    });
-                                            },
                                             // Find data
-                                            function (objInfo, objModel, next) {
+                                            function (objInfo, next) {
                                                 // Get link columns
                                                 var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
                                                     linkColObjs = linkCols.map(function (col) {
@@ -393,12 +377,12 @@ steal(
                                                 // Get date & datetime columns
                                                 var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
 
-                                                objModel.findAll({})
+                                                objectModel.findAll({})
                                                     .fail(function (err) { next(err); })
                                                     .then(function (data) {
 
                                                         // Populate labels & Convert string to Date object
-                                                        self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
+                                                        dataHelper.normalizeData(data, linkColObjs, dateCols)
                                                             .then(function (result) {
                                                                 if (!self.data.dataCollections[objectId])
                                                                     self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
@@ -415,7 +399,7 @@ steal(
                                                             hasUpdateLink = linkColObjs.filter(function (col) { return col.name == attName; }).length > 0;
 
                                                         if (hasUpdateLink && newVal) {
-                                                            self.controllers.DataHelper.normalizeData(ev.target, linkColObjs, dateCols)
+                                                            dataHelper.normalizeData(ev.target, linkColObjs, dateCols)
                                                                 .then(function (result) { });
                                                         }
                                                     });

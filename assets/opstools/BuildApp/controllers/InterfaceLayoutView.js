@@ -1,15 +1,11 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/models/ABObject.js',
-	'opstools/BuildApp/models/ABPage.js',
-	'opstools/BuildApp/models/ABPageComponent.js',
-
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 
+	'opstools/BuildApp/controllers/page_components/componentManager.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
-	function () {
+	function (dataCollectionHelper, componentManager) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -29,12 +25,9 @@ steal(
 
 							// Call parent init
 							self._super(element, self.options);
-							self.Model = {
-								ABObject: AD.Model.get('opstools.BuildApp.ABObject'),
-								ABPage: AD.Model.get('opstools.BuildApp.ABPage'),
-								ABPageComponent: AD.Model.get('opstools.BuildApp.ABPageComponent')
+							self.data = {
+								components: {} // { componentId: compInstance, ..., componentIdN: compInstanceN }
 							};
-							self.data = {};
 
 							self.componentIds = {
 								layoutToolbar: 'ab-interface-layout-toolbar',
@@ -49,7 +42,6 @@ steal(
 							};
 
 							self.initMultilingualLabels();
-							self.initControllers();
 							self.initWebixUI();
 						},
 
@@ -75,66 +67,56 @@ steal(
 							self.labels.interface.component.confirmDeleteMessage = AD.lang.label.getLabel('ab.interface.component.confirmDeleteMessage') || "Do you want to delete <b>{0}</b>?";
 						},
 
-						initControllers: function () {
-							var self = this;
-
-							var ActiveList = AD.Control.get('opstools.BuildApp.ActiveList'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
-								DataCollectionHelper = AD.Control.get('opstools.BuildApp.DataCollectionHelper');
-
-							this.controllers = {
-								ActiveList: new ActiveList(),
-								ModelCreator: new ModelCreator(),
-								DataHelper: new DataHelper(),
-								DataCollectionHelper: new DataCollectionHelper(),
-							};
-						},
-
 						initEvents: function () {
-							var self = this,
-								event_aggregator = $(self);
+							// TODO : Listen component events
 
-							for (var key in self.data.components) {
-								var comInstance = self.data.components[key];
-								if (comInstance.registerEventAggregator)
-									comInstance.registerEventAggregator(event_aggregator);
-							}
+							// var self = this,
+							// 	event_aggregator = $(self);
 
-							event_aggregator.on('save', function (sender, data) {
-								switch (data.component_name) {
-									case 'Form':
-										var objectGridDatas = self.data.componentsInPage.filter(function (c) {
-											return c.component === 'Grid' && c.setting.editForm == data.id;
-										});
+							// for (var key in self.data.components) {
+							// 	var comInstance = self.data.components[key];
+							// 	if (comInstance.registerEventAggregator)
+							// 		comInstance.registerEventAggregator(event_aggregator);
+							// }
 
-										objectGridDatas.forEach(function (grid) {
-											var gridId = self.getComponentId(grid.id);
-											if ($$(gridId)) $$(gridId).unselectAll();
-										});
+							// event_aggregator.on('save', function (sender, data) {
+							// 	if (!AD.classes.AppBuilder.currApp.currPage) return;
 
-										$$(data.viewId).setValues({});
-										break;
-								}
-							});
+							// 	switch (data.component_name) {
+							// 		case 'Form':
+							// 			var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
+							// 				return c.component === 'Grid' && c.setting.editForm == data.id;
+							// 			});
 
-							event_aggregator.on('cancel', function (sender, data) {
-								switch (data.component_name) {
-									case 'Form':
-										var objectGridDatas = self.data.componentsInPage.filter(function (c) {
-											return c.component === 'Grid' && c.setting.editForm == data.id;
-										});
+							// 			objectGridDatas.forEach(function (grid) {
+							// 				var gridId = self.getComponentId(grid.id);
+							// 				if ($$(gridId)) $$(gridId).unselectAll();
+							// 			});
 
-										objectGridDatas.forEach(function (grid) {
-											var gridId = self.getComponentId(grid.id);
-											if ($$(gridId) && $$(gridId).unselectAll)
-												$$(gridId).unselectAll();
-										});
+							// 			$$(data.viewId).setValues({});
+							// 			break;
+							// 	}
+							// });
 
-										$$(data.viewId).setValues({});
-										break;
-								}
-							});
+							// event_aggregator.on('cancel', function (sender, data) {
+							// 	if (!AD.classes.AppBuilder.currApp.currPage) return;
+
+							// 	switch (data.component_name) {
+							// 		case 'Form':
+							// 			var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
+							// 				return c.component === 'Grid' && c.setting.editForm == data.id;
+							// 			});
+
+							// 			objectGridDatas.forEach(function (grid) {
+							// 				var gridId = self.getComponentId(grid.id);
+							// 				if ($$(gridId) && $$(gridId).unselectAll)
+							// 					$$(gridId).unselectAll();
+							// 			});
+
+							// 			$$(data.viewId).setValues({});
+							// 			break;
+							// 	}
+							// });
 
 						},
 
@@ -159,17 +141,18 @@ steal(
 												label: self.labels.common.save,
 												width: 100,
 												click: function () {
-													if (!self.data.editedComponentId) return;
+													if (!self.data.editedComponentId || !AD.classes.AppBuilder.currApp.currPage) return;
 
-													var editedComponent = $.grep(self.data.componentsInPage, function (c) { return c.id == self.data.editedComponentId; })[0],
-														component = self.data.components[editedComponent.attr('component')],
-														editViewId = component.getEditView().id;
+													var editedComponent = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == self.data.editedComponentId; })[0],
+														componentName = editedComponent.attr('component'),
+														componentInstance = componentManager.getComponent(componentName),
+														editViewId = componentInstance.getEditView().id;
 
 													$$(editViewId).showProgress({ type: 'icon' });
 
-													component.editStop();
+													componentInstance.editStop();
 
-													editedComponent.attr('setting', component.getSettings());
+													editedComponent.attr('setting', self.data.components[self.data.editedComponentId].getSettings());
 
 													editedComponent.save()
 														.fail(function (err) {
@@ -183,12 +166,9 @@ steal(
 
 															self.openLayoutViewMode();
 
-															self.generateComponentsInList()
-																.always(function () {
-																	self.element.trigger(self.options.savedComponentEvent, {});
+															self.element.trigger(self.options.savedComponentEvent, {});
 
-																	$$(editViewId).hideProgress();
-																});
+															$$(editViewId).hideProgress();
 														});
 												}
 											},
@@ -218,6 +198,11 @@ steal(
 												type: {
 													height: 'auto'
 												},
+												sort: {
+													by: "#weight#",
+													dir: "asc",
+													as: "int"
+												},
 												activeContent: {
 													editButton: {
 														view: 'button',
@@ -227,28 +212,23 @@ steal(
 														on: {
 															onItemClick: function (id, e) { // Open Component view
 																var item_id = $$(self.componentIds.componentList).locate(e),
-																	item = $$(self.componentIds.componentList).getItem(item_id),
-																	component = self.data.components[item.name];
+																	item = $$(self.componentIds.componentList).getItem(item_id);
 
 																self.data.editedComponentId = item_id;
 
-
-																if ($$(item.name + '-edit-view')) {
+																if ($$('ab-' + item.component + '-edit-view')) {
 																	if (!item.setting) item.setting = {};
 
-																	// Pass current page
-																	if (component.setPage)
-																		component.setPage(self.data.page);
+																	componentManager.setEditInstance(self.data.components[item_id]);
+																	componentManager.editInstance.populateSettings(item.setting);
 
-																	component.populateSettings(item, self.controllers.DataCollectionHelper.getDataCollection.bind(self.controllers.DataCollectionHelper));
-
-																	$$(self.componentIds.layoutToolbarHeader).define('label', item.name + ' View');
+																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
 
 																	$$(self.componentIds.saveComponentInfo).show();
 																	$$(self.componentIds.cancelComponentInfo).show();
 
-																	$$(item.name + '-edit-view').show();
+																	$$('ab-' + item.component + '-edit-view').show();
 																}
 
 																self.element.trigger(self.options.editComponentEvent, { item: item });
@@ -259,27 +239,34 @@ steal(
 												template: function (obj, common) {
 													var templateHtml = '<div class="ab-component-in-page">' +
 														'<div class="ab-component-item-name">' +
-														'<div><i class="fa #icon#"" aria-hidden="true"></i> #name#</div>' +
+														'<div><i class="fa #icon#"" aria-hidden="true"></i> #component#</div>' +
 														'<div>{common.editButton()}</div>' +
 														'</div>' +
 														'<div class="ab-component-item-display">' +
-														'<div id="ab-layout-component-#id#"></div>' + //#view#
+														'<div id="#viewId#"></div>' +
 														'<i class="fa fa-times ab-component-remove"></i>' +
 														'</div>' +
 														'</div>';
 
 													// Replace values to template
 													for (var key in obj) {
-														templateHtml = templateHtml.replace(new RegExp('#' + key + '#', 'g'), obj[key]);
+														if (key === 'component')
+															templateHtml = templateHtml.replace(/#component#/g, obj['component'].capitalize());
+														else
+															templateHtml = templateHtml.replace(new RegExp('#' + key + '#', 'g'), obj[key]);
 													}
+
+													// Icon
+													var component = componentManager.getComponent(obj.component);
+													if (component && component.getInfo)
+														templateHtml = templateHtml.replace(/#icon#/g, component.getInfo().icon);
 
 													// Generate Edit button
 													var editButtonView = common['editButton'] ? common['editButton'].apply(this, arguments) : "";
 													templateHtml = templateHtml.replace('{common.editButton()}', editButtonView);
 
-													// // Set component view
-													// var componentView = common[obj.name] ? common[obj.name].apply(this, arguments) : "";
-													// templateHtml = templateHtml.replace(/#view#/g, componentView);
+													// ViewId
+													templateHtml = templateHtml.replace(/#viewId#/g, self.getComponentId(obj.id));
 
 													return templateHtml;
 												},
@@ -287,12 +274,11 @@ steal(
 													if (id) {
 														$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 
-														var addNewComponent = self.Model.ABPageComponent.newInstance();
-														addNewComponent.attr('page', self.data.page.attr('id'));
-														addNewComponent.attr('component', data.name);
-														addNewComponent.attr('weight', $$(self.componentIds.componentList).count());
-
-														addNewComponent.save()
+														AD.classes.AppBuilder.currApp.currPage.createComponent({
+															component: data.name,
+															weight: $$(self.componentIds.componentList).count(),
+															setting: {}
+														})
 															.fail(function (err) {
 																$$(self.componentIds.componentList).hideProgress();
 
@@ -304,17 +290,19 @@ steal(
 																AD.error.log('Add Component : Error add component', { error: err });
 															})
 															.then(function (result) {
-																$$(self.componentIds.componentList).data.changeId(id, result.attr('id'));
+																$$(self.componentIds.componentList).data.changeId(id, result.id);
 
-																var existsCom = $.grep(self.data.componentsInPage, function (c) { c.id == result.attr('id') });
+																if (!AD.classes.AppBuilder.currApp.currPage) return;
+
+																var existsCom = $.grep(AD.classes.AppBuilder.currApp.currPage.components.attr(), function (c) { c.id == result.id });
 																if (existsCom && existsCom.length > 0) {
-																	self.data.componentsInPage.forEach(function (c) {
+																	AD.classes.AppBuilder.currApp.currPage.components.forEach(function (c) {
 																		if (c.id == result.attr('id'))
 																			c = result;
 																	});
 																}
 																else {
-																	self.data.componentsInPage.push(result);
+																	AD.classes.AppBuilder.currApp.currPage.components.push(result);
 																}
 
 																webix.message({
@@ -330,6 +318,9 @@ steal(
 													return data;
 												},
 												on: {
+													onAfterRender: function () {
+														self.generateComponentsInList();
+													},
 													onBeforeDrop: function (context, ev) {
 														if (context.from.config.id === self.componentIds.componentList) {
 															return true;
@@ -353,7 +344,7 @@ steal(
 															// Sort data
 															for (var index = 0; index < $$(self.componentIds.componentList).count(); index++) {
 																var comId = $$(self.componentIds.componentList).getIdByIndex(index),
-																	com = self.data.componentsInPage.filter(function (c) { return c.id == comId });
+																	com = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == comId });
 
 																if (com && com.length > 0) {
 																	com[0].attr('weight', index);
@@ -367,7 +358,7 @@ steal(
 															}
 
 															// Call sort components api
-															self.Model.ABPage.sortComponents(self.data.page.id, componentIndexes, function (err, result) {
+															AD.classes.AppBuilder.currApp.currPage.sortComponents(componentIndexes, function (err, result) {
 																$$(self.componentIds.componentList).hideProgress();
 
 																if (err) {
@@ -388,47 +379,37 @@ steal(
 															title: self.labels.interface.component.confirmDeleteTitle,
 															ok: self.labels.common.yes,
 															cancel: self.labels.common.no,
-															text: self.labels.interface.component.confirmDeleteMessage.replace('{0}', deletedComponent.name),
+															text: self.labels.interface.component.confirmDeleteMessage.replace('{0}', deletedComponent.component.capitalize()),
 															callback: function (result) {
 																if (result) {
 
 																	$$(self.componentIds.componentList).showProgress({ type: "icon" });
 
-																	var deletedCom = self.data.componentsInPage.filter(function (c) { return c.id == id; });
+																	var deletedCom = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == id; });
 
 																	if (!deletedCom || deletedCom.length < 1) {
 																		$$(self.componentIds.componentList).hideProgress();
 																		return;
 																	}
 
-																	deletedCom = deletedCom[0];
-
 																	// Call server to delete object data
-																	// self.Model.ABPageComponent.destroy(id)
-																	deletedCom.destroy()
+																	deletedCom[0].destroy()
 																		.fail(function (err) {
 																			$$(self.componentIds.componentList).hideProgress();
 
 																			webix.message({
 																				type: "error",
-																				text: self.labels.common.deleteErrorMessage.replace("{0}", deletedComponent.name)
+																				text: self.labels.common.deleteErrorMessage.replace("{0}", deletedComponent.component)
 																			});
 
 																			AD.error.log('Component : Error delete component', { error: err });
 																		})
 																		.then(function (result) {
-																			self.data.componentsInPage.forEach(function (c, index) {
-																				if (c.id == id) {
-																					self.data.componentsInPage.removeAttr(index);
-																					c.destroyed();
-																				}
-																			});
-
 																			$$(self.componentIds.componentList).remove(id);
 
 																			webix.message({
 																				type: "success",
-																				text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.name)
+																				text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
 																			});
 
 																			$$(self.componentIds.componentList).hideProgress();
@@ -456,12 +437,10 @@ steal(
 
 							webix.extend($$(self.componentIds.componentList), webix.ProgressBar);
 
-							for (var key in self.data.components) {
-								var editView = self.data.components[key].getEditView();
-								if (editView) {
-									webix.extend($$(editView.id), webix.ProgressBar);
-								}
-							}
+							componentManager.getAllComponents().forEach(function (component) {
+								if (component.getEditView)
+									webix.extend($$(component.getEditView().id), webix.ProgressBar);
+							});
 						},
 
 						getUIDefinition: function () {
@@ -472,29 +451,18 @@ steal(
 							return 'ab-layout-component-{0}'.replace('{0}', id);
 						},
 
-						setApp: function (app) {
+						showComponents: function () {
 							var self = this;
 
 							self.resetState();
 
-							self.data.app = app;
+							if (!AD.classes.AppBuilder.currApp.currPage) return;
 
-							self.controllers.ModelCreator.setApp(app);
-							self.controllers.DataHelper.setApp(app);
-							self.controllers.DataCollectionHelper.setApp(app);
-						},
-
-						setPage: function (page) {
-							var self = this;
-
-							self.resetState();
-
+							$$(self.componentIds.componentList).clearAll();
 							$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 							$$(self.componentIds.layoutToolbar).show();
 
-							self.data.page = page;
-
-							self.Model.ABPageComponent.findAll({ page: page.attr('id') })
+							AD.classes.AppBuilder.currApp.currPage.getComponents()
 								.fail(function (err) {
 									$$(self.componentIds.componentList).hideProgress();
 
@@ -506,31 +474,11 @@ steal(
 									AD.error.log('Get components in page : Error get components', { error: err });
 								})
 								.then(function (result) {
-									self.data.componentsInPage = result;
+									AD.classes.AppBuilder.currApp.currPage.attr('components', result);
+									var componentList = AD.op.WebixDataCollection(AD.classes.AppBuilder.currApp.currPage.components);
 
-									var definedComponents = $.map(result.attr(), function (r) {
-										var com = {
-											id: r.id,
-											name: r.component,
-											weight: r.weight,
-											setting: r.setting
-										};
-
-										return com;
-									});
-
-									definedComponents.forEach(function (c) {
-										var comObj = self.data.components[c.name];
-
-										if (comObj)
-											c.icon = comObj.info.icon;
-									});
-
-									definedComponents.sort(function (a, b) { return a.weight - b.weight });
-
-									$$(self.componentIds.componentList).parse(definedComponents);
-
-									self.generateComponentsInList();
+									$$(self.componentIds.componentList).data.unsync();
+									$$(self.componentIds.componentList).data.sync(componentList);
 
 									self.initEvents();
 
@@ -538,25 +486,17 @@ steal(
 								});
 						},
 
-						setObjectList: function (objectList) {
-							this.controllers.DataHelper.setObjectList(objectList);
-							this.controllers.DataCollectionHelper.setObjectList(objectList);
-						},
-
-						setComponents: function (components) {
+						initComponents: function () {
 							var self = this;
-
-							self.data.components = components;
 
 							// Get layout space definition
 							var layoutSpaceDefinition = $.grep(self.data.definition.rows, function (r) { return r.id == self.componentIds.layoutSpace; });
 							layoutSpaceDefinition = (layoutSpaceDefinition && layoutSpaceDefinition.length > 0) ? layoutSpaceDefinition[0] : null;
 
-							for (var key in self.data.components) {
-								var editView = self.data.components[key].getEditView();
-								if (editView)
-									layoutSpaceDefinition.cells.push(editView);
-							}
+							componentManager.getAllComponents().forEach(function (component) {
+								if (component.getEditView)
+									layoutSpaceDefinition.cells.push(component.getEditView());
+							});
 						},
 
 						openLayoutViewMode: function () {
@@ -578,10 +518,17 @@ steal(
 								q = $.Deferred(),
 								renderTasks = [];
 
+							if (!AD.classes.AppBuilder.currApp.currPage) {
+								q.resolve();
+								return q;
+							}
+
 							// Generate component in list
-							self.data.componentsInPage.forEach(function (c) {
+							$$(self.componentIds.componentList).find({}).forEach(function (item) {
 								renderTasks.push(function (next) {
-									self.renderComponent(c)
+									var comp = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == item.id; });
+									if (!comp || comp.length < 1) return next();
+									self.renderComponent(comp[0])
 										.always(next);
 								});
 							});
@@ -594,18 +541,28 @@ steal(
 						renderComponent: function (com) {
 							var self = this,
 								q = $.Deferred(),
-								component = self.data.components[com.attr('component')],
-								view = component.getView(),
-								settings = com.attr('setting'),
+								componentInstance = componentManager.getComponent(com.attr('component')),
+								view = componentInstance.getView(),
+								viewId = self.getComponentId(com.attr('id')),
+								setting = com.attr('setting'),
 								dataCollection, linkedDataCollection;
 
-							if (view && component.render && settings) {
-								var settings = settings.attr(),
-									editable = false;
-								settings.page = self.data.page;
+							// Create component instance
+							if (!self.data.components[com.attr('id')]) {
+								self.data.components[com.attr('id')] = new componentInstance(
+									AD.classes.AppBuilder.currApp, // Current application
+									viewId, // the view id
+									com.id // the component data id
+								);
+							}
+
+							if (view && setting) {
+								var setting = setting.attr ? setting.attr() : setting,
+									editable = false,
+									showAll = false;
 
 								view = $.extend(true, {}, view);
-								view.id = self.getComponentId(com.attr('id'));
+								view.id = viewId;
 								view.container = view.id;
 								view.autowidth = true;
 
@@ -616,8 +573,8 @@ steal(
 								async.series([
 									// Get data collection
 									function (next) {
-										if (settings.object) {
-											self.controllers.DataCollectionHelper.getDataCollection(settings.object)
+										if (setting.object) {
+											dataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, setting.object)
 												.fail(next)
 												.then(function (result) {
 													dataCollection = result;
@@ -629,8 +586,8 @@ steal(
 									},
 									// Get data collection of connected data
 									function (next) {
-										if (settings.linkedTo) {
-											self.controllers.DataCollectionHelper.getDataCollection(settings.linkedTo)
+										if (setting.linkedTo) {
+											dataCollectionHelper.getDataCollection(AD.classes.AppBuilder.currApp, setting.linkedTo)
 												.fail(next)
 												.then(function (result) {
 													linkedDataCollection = result;
@@ -642,7 +599,8 @@ steal(
 									},
 									// Render component
 									function (next) {
-										component.render(view.id, com.id, settings, editable, false, dataCollection, linkedDataCollection)
+										self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection)
+											.fail(next)
 											.then(function () {
 												next();
 											});
@@ -654,18 +612,21 @@ steal(
 									else
 										q.resolve();
 								});
-
+							}
+							else {
+								q.resolve();
 							}
 
 							return q;
 						},
 
 						refreshMenuComponent: function (pageId) {
-							var self = this;
+							if (!AD.classes.AppBuilder.currApp.currPage) return;
 
-							var updateMenus = self.data.componentsInPage.filter(function (c) {
-								return c.component === 'Menu' && c.setting.data && c.setting.data.filter(function (d) { return d == pageId; }).length > 0;
-							})
+							var self = this,
+								updateMenus = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
+									return c.component === 'Menu' && c.setting.data && c.setting.data.filter(function (d) { return d == pageId; }).length > 0;
+								})
 
 							updateMenus.forEach(function (c) {
 								self.renderComponent(c);
@@ -696,6 +657,7 @@ steal(
 						resetState: function () {
 							var self = this;
 
+							self.data.components = {};
 							self.data.editedComponentId = null;
 
 							$$(self.componentIds.layoutToolbar).hide();
@@ -707,7 +669,15 @@ steal(
 
 							$$(self.componentIds.componentList).clearValidation();
 							$$(self.componentIds.componentList).clearAll();
+
+							// Reset page components 
+							// this.controllers.Grid.resetState();
+						},
+
+						resize: function (height) {
+							componentManager.resize(height);
 						}
+
 
 					});
 				});

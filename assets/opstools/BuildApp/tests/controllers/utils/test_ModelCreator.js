@@ -1,8 +1,8 @@
 steal(
 	// Dependencies
-	"opstools/BuildApp/tests/stubHelper.js",
 	"opstools/BuildApp/controllers/utils/ModelCreator.js",
-	function () {
+	"opstools/BuildApp/tests/stubHelper.js",
+	function (modelCreator) {
 		// the div to attach the controller to
 		var divID = 'test_ModelCreator';
 
@@ -19,20 +19,16 @@ steal(
 		//Define the unit tests
 		describe('testing ModelCreator utility ', function () {
 
-			var modelCreator = null,
-				appInfo = {
-					id: 1,
-					name: 'TEST_application'
-				};
+			var appInfo = {
+				id: 1,
+				name: 'TEST_application'
+			};
 
 			before(function () {
 
 				buildHTML();
 
 				// Initialize the controller
-				modelCreator = new AD.controllers.opstools.BuildApp.ModelCreator($('#' + divID), {});
-				modelCreator.setApp(appInfo);
-
 				abStubHelper.convertToStub(modelCreator.Model.ABObject, 'ABObject');
 				abStubHelper.convertToStub(modelCreator.Model.ABColumn, 'ABColumn');
 			});
@@ -61,33 +57,27 @@ steal(
 
 			describe('Object model', function () {
 
-				it('should return object model', function (done) {
-					modelCreator.getModel('One')
-						.fail(function (err) {
-							assert.fail(err, undefined, 'should not return any error');
+				it('should return object model', function () {
+					var objModel = modelCreator.getModel('One');
 
-							done(err);
-						})
-						.then(function (objModel) {
-							assert.isOk(objModel);
-
-							done();
-						});
+					if (objModel) {
+						assert.isOk(objModel);
+					}
+					else {
+						assert.fail(err, undefined, 'should not return any error');
+					}
 				});
 
 
-				it('should not return object model', function (done) {
-					modelCreator.getModel('NotExistsModel')
-						.fail(function (err) {
-							assert.isOk(true);
+				it('should not return object model', function () {
+					var objModel = modelCreator.getModel('NotExistsModel');
 
-							done();
-						})
-						.then(function (objModel) {
-							assert.fail(objModel, undefined, 'should not return');
-
-							done();
-						});
+					if (objModel) {
+						assert.fail(objModel, undefined, 'should not return');
+					}
+					else {
+						assert.isOk(true);
+					}
 				});
 
 			});

@@ -1,5 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/JsObjectHelper.js',
+
 	'opstools/BuildApp/BuildApp.css',
 	'opstools/BuildApp/views/BuildApp/BuildApp.ejs',
 	'opstools/BuildApp/controllers/AppList.js',
@@ -22,6 +24,9 @@ steal(
 
 						init: function (element, options) {
 							var self = this;
+
+							AD.classes.AppBuilder = AD.classes.AppBuilder || {};
+
 							options = AD.defaults({
 								templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',
 								resize_notification: 'BuildApp.resize',
@@ -88,7 +93,15 @@ steal(
 
 									// Sync object data
 									self.controllers.AppWorkspace.syncObjectsData()
-										.always(function () {
+										.fail(function (err) {
+											console.error(err);
+											$$(self.webixUiId.loadingScreen).showErrorScreen('There is a error when is syncing object data', "Reload", function () {
+												$$(self.webixUiId.loadingScreen).start();
+
+												self.controllers.AppWorkspace.syncObjectsData();
+											});
+										})
+										.then(function () {
 											self.data.curLoadProgress += 0.1;
 											$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
 
@@ -111,7 +124,9 @@ steal(
 							self.controllers.AppList.element.on(self.CONST.APP_SELECTED, function (event, app) {
 								self.element.find(".ab-app-list").hide();
 
-								self.controllers.AppWorkspace.setApplication(app);
+								AD.classes.AppBuilder.currApp = app;
+
+								self.controllers.AppWorkspace.refresh();
 
 								self.element.find(".ab-app-workspace").show();
 								self.controllers.AppWorkspace.resize(self.data.height);
@@ -134,6 +149,14 @@ steal(
 								});
 
 								self.controllers.AppWorkspace.syncObjectFields()
+									.fail(function (err) {
+										console.error(err);
+										$$(self.webixUiId.loadingScreen).showErrorScreen('There is a error when updates object fields', "Reload", function () {
+											$$(self.webixUiId.loadingScreen).start();
+
+											self.controllers.AppWorkspace.syncObjectFields();
+										});
+									})
 									.then(function () {
 										self.updateSyncStatus({
 											action: 'done',

@@ -22,6 +22,21 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 // {  ABApplication.id : dfd }
 
 
+
+var DataFields = {};
+
+
+function importDataFields() {
+    var dataFieldPath = path.join(__dirname, 'data_fields');
+
+    DataFields = {};
+
+    fs.readdirSync(dataFieldPath).forEach(function (file) {
+        DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+    });
+}
+
+
 function notifyToClients(reloading, step, action) {
     var data = {
         reloading: reloading
@@ -426,6 +441,8 @@ module.exports = {
         var fullPath, fullPathTrans, clientPath, baseClientPath;
         var cwd = process.cwd();
 
+        importDataFields();
+
         async.series([
             // Find object info
             function (next) {
@@ -486,42 +503,67 @@ module.exports = {
                     // Define columns
                     function (callback) {
                         async.eachSeries(columns, function (col, ok) {
+
                             var colString = '',
-                                isDefinedLabel = false;
+                                isDefinedLabel = false,
+                                field = DataFields[col.fieldName];
 
-                            if (col.linkObject && col.linkVia) {
-                                ABColumn.findOne({ id: col.id })
-                                    .populate('linkObject')
-                                    .populate('linkVia')
-                                    .fail(ok)
-                                    .then(function (linkedCol) {
-                                        colString += linkedCol.name;
-                                        colString += ':' + linkedCol.linkType; // model, collection
-                                        colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name) // model name
-
-                                        if (linkedCol.linkVia)
-                                            colString += ':' + linkedCol.linkVia.name; // viaReference
-
-                                        cliParams.push(colString);
-
-                                        ok();
-                                    });
+                            if (!field) {
+                                ok('System could not found this field type: ' + col.fieldName);
+                                return;
                             }
-                            else {
-                                colString += col.name + ':' + col.type;
 
-                                if (col.supportMultilingual) {
-                                    colString += ':multilingual';
-                                }
-                                // if this field is the Label, then:
-                                if (!isDefinedLabel && (col.type === 'string' || col.type === 'text')) {
-                                    colString += ':label';
-                                    isDefinedLabel = true;
-                                }
-                                cliParams.push(colString);
+                            field.getFieldString(col)
+                                .fail(ok)
+                                .then(function (colStr) {
+                                    colString = colStr;
 
-                                ok();
-                            }
+                                    if (!isDefinedLabel &&
+                                        ((colString.indexOf(':string:') > -1)
+                                            || (colString.indexOf(':text:') > -1))) {
+
+                                        colString += ':label';
+                                        isDefinedLabel = true;
+                                    }
+
+                                    cliParams.push(colString);
+
+                                    ok();
+                                })
+
+                            // if (col.linkObject && col.linkVia) {
+                            //     ABColumn.findOne({ id: col.id })
+                            //         .populate('linkObject')
+                            //         .populate('linkVia')
+                            //         .fail(ok)
+                            //         .then(function (linkedCol) {
+                            //             colString += linkedCol.name;
+                            //             colString += ':' + linkedCol.linkType; // model, collection
+                            //             colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name) // model name
+
+                            //             if (linkedCol.linkVia)
+                            //                 colString += ':' + linkedCol.linkVia.name; // viaReference
+
+                            //             cliParams.push(colString);
+
+                            //             ok();
+                            //         });
+                            // }
+                            // else {
+                            //     colString += col.name + ':' + col.type;
+
+                            //     if (col.supportMultilingual) {
+                            //         colString += ':multilingual';
+                            //     }
+                            //     // if this field is the Label, then:
+                            //     if (!isDefinedLabel && (col.type === 'string' || col.type === 'text')) {
+                            //         colString += ':label';
+                            //         isDefinedLabel = true;
+                            //     }
+                            //     cliParams.push(colString);
+
+                            //     ok();
+                            // }
                         }, callback);
                     }
                 ], function (err) {

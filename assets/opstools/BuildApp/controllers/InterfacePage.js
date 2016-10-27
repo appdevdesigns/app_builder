@@ -61,7 +61,9 @@ steal(
 							var self = this;
 
 							self.controllers.InterfaceList.on(self.options.selectedPageEvent, function (event, data) {
-								self.controllers.InterfaceWorkspace.setPage(data.selectedPage);
+								AD.classes.AppBuilder.currApp.currPage = data.selectedPage;
+
+								self.controllers.InterfaceWorkspace.showPage();
 							});
 
 							self.controllers.InterfaceList.on(self.options.updatedPageEvent, function (event, data) {
@@ -69,7 +71,9 @@ steal(
 							});
 
 							self.controllers.InterfaceList.on(self.options.deletedPageEvent, function (event, id) {
-								self.controllers.InterfaceWorkspace.setPage(null);
+								AD.classes.AppBuilder.currApp.currPage = null;
+
+								self.controllers.InterfaceWorkspace.showPage();
 							});
 						},
 
@@ -84,17 +88,9 @@ steal(
 							self.controllers.InterfaceWorkspace.webix_ready();
 						},
 
-						loadData: function (app) {
-							var self = this;
-
-							self.controllers.InterfaceList.loadPages(app.id);
-							self.controllers.InterfaceWorkspace.setApp(app);
-						},
-
-						setObjectList: function (objectList) {
-							var self = this;
-
-							self.controllers.InterfaceWorkspace.setObjectList(objectList);
+						refresh: function () {
+							this.controllers.InterfaceList.loadPages();
+							this.controllers.InterfaceWorkspace.resetState();
 						},
 
 						resize: function (height) {

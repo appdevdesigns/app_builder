@@ -1,14 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/page_components/Menu.js',
-	'opstools/BuildApp/controllers/page_components/Grid.js',
-	'opstools/BuildApp/controllers/page_components/Form.js',
-	'opstools/BuildApp/controllers/page_components/View.js',
-
 	'opstools/BuildApp/controllers/InterfaceLayoutView.js',
 	'opstools/BuildApp/controllers/InterfaceComponentList.js',
 	function () {
-        System.import('appdev').then(function () {
+		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
 
@@ -55,20 +50,8 @@ steal(
 							var self = this;
 							self.controllers = {};
 
-							var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
-								Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
-								Form = AD.Control.get('opstools.BuildApp.Components.Form'),
-								View = AD.Control.get('opstools.BuildApp.Components.View'),
-
-								LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView'),
+							var LayoutView = AD.Control.get('opstools.BuildApp.InterfaceLayoutView'),
 								ComponentList = AD.Control.get('opstools.BuildApp.InterfaceComponentList');
-
-
-							self.controllers.Menu = new Menu(self.element, {});
-							self.controllers.Grid = new Grid(self.element, {});
-							self.controllers.Form = new Form(self.element, {});
-							self.controllers.View = new View(self.element, {});
-
 
 							self.controllers.LayoutView = new LayoutView(self.element, {
 								editComponentEvent: self.options.editComponentEvent,
@@ -117,16 +100,8 @@ steal(
 						},
 
 						initComponents: function () {
-							var self = this;
-							self.components = {};
-
-							self.components.Menu = self.controllers.Menu.getInstance();
-							self.components.Grid = self.controllers.Grid.getInstance();
-							self.components.Form = self.controllers.Form.getInstance();
-							self.components.View = self.controllers.View.getInstance();
-
-							self.controllers.LayoutView.setComponents(self.components);
-							self.controllers.ComponentList.setComponents(self.components);
+							this.controllers.LayoutView.initComponents();
+							this.controllers.ComponentList.initComponents();
 						},
 
 						webix_ready: function () {
@@ -140,52 +115,30 @@ steal(
 							return this.data.definition;
 						},
 
-						setApp: function (app) {
-							var self = this;
+						showPage: function () {
+							this.resetState();
 
-							self.data.app = app;
-							self.controllers.LayoutView.setApp(app);
-							self.controllers.Grid.setApp(app);
-							self.controllers.Form.setApp(app);
-							self.controllers.View.setApp(app);
-						},
-
-						setPage: function (page) {
-							var self = this;
-
-							self.controllers.LayoutView.resetState();
-							self.controllers.ComponentList.resetState();
-
-							// Reset page components 
-							self.controllers.Grid.resetState();
-
-							if (page) {
-								self.data.page = page;
-
-								self.controllers.LayoutView.setPage(page);
-								self.controllers.ComponentList.show();
+							if (AD.classes.AppBuilder.currApp.currPage) {
+								this.controllers.LayoutView.showComponents();
+								this.controllers.ComponentList.show();
 							}
 							else {
-								self.controllers.ComponentList.hide();
+								this.controllers.LayoutView.showComponents();
+								this.controllers.ComponentList.hide();
 							}
-						},
-
-						setObjectList: function (objectList) {
-							var self = this;
-
-							self.controllers.LayoutView.setObjectList(objectList);
-
-							self.controllers.Form.setObjectList(objectList);
-							self.controllers.View.setObjectList(objectList);
 						},
 
 						refreshMenuComponent: function (pageId) {
 							this.controllers.LayoutView.refreshMenuComponent(pageId);
 						},
 
+						resetState: function () {
+							this.controllers.LayoutView.resetState();
+							this.controllers.ComponentList.resetState();
+						},
+
 						resize: function (height) {
-							this.controllers.Form.resize(height);
-							this.controllers.View.resize(height);
+							this.controllers.LayoutView.resize(height);
 						}
 
 

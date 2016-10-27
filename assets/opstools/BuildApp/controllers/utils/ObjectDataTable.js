@@ -1,9 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
-	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
-	function () {
+	function (dataFieldsManager, dataHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -19,12 +19,9 @@ steal(
 							this._super(element, options);
 
 							self.data = {};
-							self.data.objectList = [];
-
 							self.events = {};
 
 							self.initMultilingualLabels();
-							self.initControllers();
 							self.initEvents();
 						},
 
@@ -45,41 +42,27 @@ steal(
 
 						},
 
-						initControllers: function () {
-							var self = this;
-							self.controllers = {};
-
-							var ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator'),
-								DataHelper = AD.Control.get('opstools.BuildApp.DataHelper'),
-								SelectivityHelper = AD.Control.get('opstools.BuildApp.SelectivityHelper');
-
-							self.controllers = {
-								ModelCreator: new ModelCreator(),
-								DataHelper: new DataHelper(),
-								SelectivityHelper: new SelectivityHelper(self.element, { changedSelectivityEvent: self.options.changedSelectivityEvent })
-							};
-						},
-
 						initEvents: function () {
 							var self = this;
 
-							self.controllers.SelectivityHelper.on(self.options.changedSelectivityEvent, function (event, data) {
+							$(dataFieldsManager).on('update', function (event, data) {
 								if (self.events.changeSelectivityItem) {
 									var result = {};
 									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
-									result.columnId = self.dataTable.columnId(result.columnIndex);
-									result.rowIndex = data.itemNode.parent('.webix_cell').index();
-									result.rowId = self.dataTable.getIdByIndex(result.rowIndex);
-									result.item = self.dataTable.getItem(result.rowId);
-									result.itemData = result.item[result.columnId];
+									if (result.columnIndex && self.dataTable.config.columns.length >= result.columnIndex) {
+										result.columnId = self.dataTable.columnId(result.columnIndex);
+										result.rowIndex = data.itemNode.parent('.webix_cell').index();
+										result.rowId = self.dataTable.getIdByIndex(result.rowIndex);
+										result.item = self.dataTable.getItem(result.rowId);
+										result.itemData = result.item[result.columnId];
+									}
 
 									self.events.changeSelectivityItem(data.event, result);
 								}
 							});
-
 						},
 
-						registerDataTable: function (dataTable) {
+						registerDataTable: function (dataTable, application) {
 							var self = this;
 							self.dataTable = dataTable;
 
@@ -113,73 +96,28 @@ steal(
 							}
 
 							self.dataTable.attachEvent("onAfterRender", function (data) {
-								// Render selectivity node
-								self.controllers.SelectivityHelper.renderSelectivity(self.dataTable, 'connect-data-values', self.data.readOnly);
+								var dataTable = this;
+								dataTable.eachRow(function (rowId) {
+									dataTable.eachColumn(function (columnId) {
+										var col = dataTable.getColumnConfig(columnId);
+										if (!col) return;
 
-								var linkColumns = self.dataTable.config.columns.filter(function (c) { return c.editor === 'selectivity'; });
+										var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
+										if (!itemNode) return;
 
-								data.each(function (d) {
-									var maxConnectedDataNum = {};
-
-									linkColumns.forEach(function (col) {
-										columnName = col.id;
-
-										if (d[columnName]) {
-											var linkFieldNode = $(self.dataTable.getItemNode({ row: d.id, column: columnName })).find('.connect-data-values');
-
-											var selectedItems = [];
-
-											if (d[columnName].map) {
-												selectedItems = d[columnName].map(function (cVal) {
-													return {
-														id: cVal.id,
-														text: cVal.dataLabel
-													};
-												});
-											} else if (d[columnName]) {
-												selectedItems.push({
-													id: d[columnName].id,
-													text: d[columnName].dataLabel
-												});
-											}
-
-											// Set selectivity data
-											self.controllers.SelectivityHelper.setData(linkFieldNode, selectedItems);
-
-											if (maxConnectedDataNum.dataNum < d[columnName].length || !maxConnectedDataNum.dataNum) {
-												maxConnectedDataNum.dataId = d.id;
-												maxConnectedDataNum.colName = columnName;
-												maxConnectedDataNum.dataNum = d[columnName].length;
-											}
-
-										}
+										dataFieldsManager.customDisplay(col.fieldName, dataTable.getItem(rowId)[columnId], itemNode, {
+											readOnly: self.data.readOnly
+										});
 									});
 
-									// 	if (d.isUnsync) { // TODO: Highlight unsync data
-									// 		self.dataTable.config.columns.forEach(function (col) {
-									// 			var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
-									// 			rowNode.classList.add('ab-object-unsync-data');
-									// 		});
-									// 	}
-
-									// Call to calculate row height
-									if (maxConnectedDataNum.dataId)
-										self.calculateRowHeight(maxConnectedDataNum.dataId, maxConnectedDataNum.colName, maxConnectedDataNum.dataNum);
+									// if (d.isUnsync) { // TODO: Highlight unsync data
+									// 	self.dataTable.config.columns.forEach(function (col) {
+									// 		var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
+									// 		rowNode.classList.add('ab-object-unsync-data');
+									// 	});
+									// }
 								});
 							});
-
-							self.dataTable.refresh();
-						},
-
-						setApp: function (app) {
-							this.controllers.ModelCreator.setApp(app);
-							this.controllers.DataHelper.setApp(app);
-						},
-
-						setObjectList: function (objectList) {
-							this.data.objectList = objectList;
-
-							this.controllers.DataHelper.setObjectList(objectList);
 						},
 
 						setReadOnly: function (readOnly) {
@@ -190,15 +128,11 @@ steal(
 							this.events.itemClick = itemClick;
 						},
 
-						registerChangeSelectivityItem: function (changeSelectivityItem) {
-							this.events.changeSelectivityItem = changeSelectivityItem;
-						},
-
 						registerDeleteRowHandler: function (deleteRow) {
 							this.events.deleteRow = deleteRow;
 						},
 
-						bindColumns: function (columns, resetColumns, addTrashColumn) {
+						bindColumns: function (application, columns, resetColumns, addTrashColumn) {
 							var self = this;
 
 							if (resetColumns)
@@ -206,28 +140,18 @@ steal(
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 
-								col.setting.width = self.calculateColumnWidth(col);
+								col.setting.width = self.calculateColumnWidth(application, col);
 
-								if (col.setting.format)
+								if (col.setting.format && webix.i18n[col.setting.format])
 									col.setting.format = webix.i18n[col.setting.format];
-
-								var options = [];
-								if (col.setting.options && col.setting.options.length > 0) {
-									col.setting.options.forEach(function (opt) {
-										options.push({
-											id: opt.id,
-											value: opt.label
-										});
-									});
-								}
 
 								var mapCol = $.extend(col.setting, {
 									id: col.name,
 									dataId: col.id,
 									label: col.label,
-									header: self.getHeader(col, self.data.readOnly),
+									header: self.getHeader(application, col, self.data.readOnly),
 									weight: col.weight,
-									linkObject: col.linkObject
+									fieldName: col.fieldName
 								});
 
 								if (mapCol.filter_type === 'boolean' && self.data.readOnly) { // Checkbox - read only mode
@@ -238,29 +162,17 @@ steal(
 											return "<div class='webix_icon fa-square-o'></div>";
 									};
 								}
-								else if (col.type === 'integer') {
-									mapCol.format = webix.Number.numToStr({
-										groupDelimiter: ",",
-										groupSize: 3,
-										decimalSize: 0
-									});
-								}
-								else if (col.type === 'float') {
-									mapCol.format = webix.Number.numToStr({
-										groupDelimiter: ",",
-										groupSize: 3,
-										decimalDelimiter: ".",
-										decimalSize: 1
-									});
-								}
-								else if (mapCol.editor === 'date') {
-									mapCol.format = webix.i18n.dateFormatStr;
-								}
-								else if (mapCol.editor === 'datetime') {
-									mapCol.format = webix.i18n.fullDateFormatStr;
-								}
 
 								// richselect
+								var options = [];
+								if (col.setting.options && col.setting.options.length > 0) {
+									col.setting.options.forEach(function (opt) {
+										options.push({
+											id: opt.id,
+											value: opt.label
+										});
+									});
+								}
 								if (options && options.length > 0)
 									mapCol.options = options;
 
@@ -282,15 +194,15 @@ steal(
 							self.dataTable.refreshColumns(headers, resetColumns || false);
 						},
 
-						getHeader: function (col, readOnly) {
+						getHeader: function (application, col, readOnly) {
 							var self = this,
 								label = col.label || '';
 
 							// Show connect object name in header
 							if (col.setting.editor === 'selectivity') {
 								// Find label of connect object
-								var connectObj = self.data.objectList.filter(function (o) {
-									return col.linkObject && o.id == (col.linkObject.id || col.linkObject);
+								var connectObj = application.objects.filter(function (o) {
+									return o.id == col.setting.linkObject;
 								});
 
 								if (connectObj && connectObj.length > 0)
@@ -308,17 +220,17 @@ steal(
 							};
 						},
 
-						calculateColumnWidth: function (col) {
-							if (col.width > 0) return col.width;
+						calculateColumnWidth: function (application, column) {
+							if (column.width > 0) return column.width;
 
 							var self = this,
 								charWidth = 7,
-								charLength = col.label ? col.label.length : 0,
+								charLength = column.label ? column.label.length : 0,
 								width = (charLength * charWidth) + 80;
 
-							if (col.linkObject) {// Connect to... label
-								var object = self.data.objectList.filter(function (o) {
-									return o.id === (col.linkObject.id || col.linkObject);
+							if (column.setting.linkObject) {// Connect to... label
+								var object = application.objects.filter(function (o) {
+									return o.id === column.setting.linkObject;
 								});
 
 								if (object && object.length > 0)
@@ -328,19 +240,23 @@ steal(
 							return width;
 						},
 
-						calculateRowHeight: function (row, column, dataNumber) {
-							var self = this,
-								rowHeight = 35,
+						getRowHeight: function (dataNumber) {
+							var rowHeight = 35,
 								calHeight = dataNumber * rowHeight;
 
-							if (self.dataTable.getItem(row) && self.dataTable.getItem(row).$height != calHeight)
-								self.dataTable.setRowHeight(row, calHeight);
+							return calHeight;
 						},
 
-						populateData: function (data) {
+						calculateRowHeight: function (row, dataNumber) {
+							var rowHeight = this.getRowHeight(dataNumber);
+
+							if (this.dataTable.getItem(row) && this.dataTable.getItem(row).$height < rowHeight)
+								this.dataTable.setRowHeight(row, rowHeight);
+						},
+
+						populateData: function (application, data) {
 							var self = this,
-								q = $.Deferred(),
-								result;
+								q = $.Deferred();
 
 							if (!data) {
 								q.resolve();
@@ -348,26 +264,44 @@ steal(
 							}
 
 							// Get link columns
-							var linkCols = self.dataTable.config.columns.filter(function (col) { return col.linkObject != null }),
-								linkColObjs = linkCols.map(function (col) {
-									return {
-										name: col.id,
-										linkObject: col.linkObject
-									};
-								});
+							var linkCols = application.currObj.columns.filter(function (col) { return col.setting.linkObject });
 
 							// Get date & datetime columns
-							var dateCols = self.dataTable.config.columns.filter(function (col) { return col.editor === 'date' || col.editor === 'datetime'; });
+							var dateCols = application.currObj.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
 
 							// Populate labels & Convert string to Date object
-							self.controllers.DataHelper.normalizeData(data, linkColObjs, dateCols)
+							dataHelper.normalizeData(application, data, linkCols, dateCols)
 								.fail(q.reject)
 								.then(function (result) {
 									self.dataTable.clearAll();
 
+									// Get Map.List in DataCollection
+									var list = result;
+									if (result instanceof webix.DataCollection)
+										list = result.AD.__list;
+
+									// Update row height
+									list.forEach(function (r) {
+										var rowHeight = r.attr ? r.attr('$height') : r.$height;
+
+										linkCols.forEach(function (linkCol) {
+											if (r[linkCol.name]) {
+												var calHeight = self.getRowHeight(r[linkCol.name].length || 0);
+												if (calHeight > rowHeight || !rowHeight)
+													rowHeight = calHeight;
+											}
+										});
+
+										if (r.attr)
+											r.attr('$height', rowHeight);
+										else
+											r.$height = rowHeight;
+									});
+
 									// Populate data
 									if (result instanceof webix.DataCollection) {
 										self.dataTable.data.clearAll();
+										self.dataTable.data.unsync();
 										self.dataTable.data.sync(result);
 									}
 									else

@@ -1,74 +1,48 @@
 steal(
 	// List your Controller's dependencies here:
 	function () {
-		System.import('appdev').then(function () {
-			steal.import('appdev/ad',
-				'appdev/control/control').then(function () {
+		var additionalClassName = 'dynamic-datatable-view';
 
-					// Namespacing conventions:
-					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
-					AD.Control.extend('opstools.BuildApp.DynamicDataTable', {
+		webix.protoUI({
+			name: "dynamicdatatable",
 
+			prependView: function (view) {
+				var generatedView = webix.ui(view);
+				generatedView.define('width', this.config.width + 2);
 
-						init: function (element, options) {
-							var self = this;
-							options = AD.defaults({
-							}, options);
-							this.options = options;
+				if (!this.additionViews) this.additionViews = [];
+				this.additionViews.push(generatedView);
 
-							// Call parent init
-							this._super(element, options);
+				webix.html.addCss(generatedView.getNode(), additionalClassName);
 
-							this.additionalClassName = 'dynamic-datatable-view';
+				$(this.getNode().parentNode).prepend(generatedView.$view);
 
-							this.initWebixControls();
-						},
+				generatedView.resize();
+			},
 
-						initWebixControls: function () {
-							var self = this;
+			appendView: function (view) {
+				var generatedView = webix.ui(view);
+				generatedView.define('width', this.config.width + 2);
 
-							webix.protoUI({
-								name: "dynamicdatatable",
+				if (!this.additionViews) this.additionViews = [];
+				this.additionViews.push(generatedView);
 
-								prependView: function (view) {
-									var generatedView = webix.ui(view);
-									generatedView.define('width', this.config.width + 2);
+				webix.html.addCss(generatedView.getNode(), additionalClassName);
 
-									if (!this.additionViews) this.additionViews = [];
-									this.additionViews.push(generatedView);
+				$(this.getNode().parentNode).append(generatedView.$view);
 
-									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
+				generatedView.resize();
+			},
 
-									$(this.getNode().parentNode).prepend(generatedView.$view);
-
-									generatedView.resize();
-								},
-
-								appendView: function (view) {
-									var generatedView = webix.ui(view);
-									generatedView.define('width', this.config.width + 2);
-
-									if (!this.additionViews) this.additionViews = [];
-									this.additionViews.push(generatedView);
-
-									webix.html.addCss(generatedView.getNode(), self.additionalClassName);
-
-									$(this.getNode().parentNode).append(generatedView.$view);
-
-									generatedView.resize();
-								},
-
-								clearAdditionalView: function () {
-									this.additionViews.forEach(function (view) {
-										view.destructor();
-									});
-								}
-
-							}, webix.ui.datatable);
-
-						}
+			clearAdditionalView: function () {
+				if (this.additionViews) {
+					this.additionViews.forEach(function (view) {
+						view.destructor();
 					});
-				});
-		});
+				}
+			}
+
+		}, webix.ui.datatable);
+
 	}
 );

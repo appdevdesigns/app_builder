@@ -1,0 +1,178 @@
+[
+	{
+		"id": 1,
+		"object": 1,
+		"name": "Field_1",
+		"fieldName": "string",
+		"type": "string",
+		"weight": 5,
+		"required": null,
+		"unique": null,
+		"setting": {
+			"icon": "font",
+			"editor": "text",
+			"filter_type": "text",
+			"supportMultilingual": true
+		},
+		"createdAt": "2016-10-03T08:07:04.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z"
+	},
+	{
+		"id": 2,
+		"object": 1,
+		"name": "Field_2",
+		"fieldName": "number",
+		"type": "integer",
+		"weight": 6,
+		"required": null,
+		"unique": null,
+		"default": null,
+		"setting": {
+			"icon": "slack",
+			"editor": "number",
+			"filter_type": "number",
+			"format": "numberFormat"
+		},
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z"
+	},
+	{
+		"id": 3,
+		"object": 1,
+		"name": "Field_3",
+		"fieldName": "boolean",
+		"type": "boolean",
+		"weight": 7,
+		"required": null,
+		"unique": null,
+		"setting": {
+			"icon": "check-square-o",
+			"filter_type": "boolean",
+			"template": "{common.checkbox()}"
+		},
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z"
+	},
+	{
+		"id": 4,
+		"object": 1,
+		"name": "Field_4",
+		"fieldName": "connectObject",
+		"type": "connectObject",
+		"weight": 8,
+		"required": null,
+		"setting": {
+			"icon": "external-link",
+			"editor": "selectivity",
+			"template": "<div class=\"connect-data-values\"></div>",
+			"filter_type": "multiselect",
+			"appName": "TEST_application",
+			"linkObject": 2,
+			"linkVia": 5,
+			"linkViaType": "model",
+			"linkType": "collection",
+			"linkDefault": true
+		},
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z"
+	},
+	{
+		"id": 5,
+		"object": 2,
+		"name": "One",
+		"fieldName": "connectObject",
+		"type": "connectObject",
+		"weight": 3,
+		"required": null,
+		"unique": null,
+		"setting": {
+			"icon": "external-link",
+			"editor": "selectivity",
+			"template": "<div class=\"connect-data-values\"></div>",
+			"filter_type": "multiselect",
+			"appName": "TEST_application",
+			"linkType": "model",
+			"linkDefault": false,
+			"linkObject": 1,
+			"linkVia": 4,
+			"linkViaType": "collection"
+		},
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z"
+	},
+	{
+		"id": 6,
+		"object": 2,
+		"name": "Field_2",
+		"fieldName": "date",
+		"type": "date",
+		"weight": 4,
+		"required": null,
+		"unique": null,
+		"setting": {
+			"icon": "calendar",
+			"filter_type": "date",
+			"editor": "date"
+		},
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z"
+	},
+	{
+		"id": 7,
+		"object": 2,
+		"name": "Field_3",
+		"fieldName": "list",
+		"type": "string",
+		"weight": 5,
+		"required": null,
+		"unique": null,
+		"setting": {
+			"icon": "th-list",
+			"filter_type": "list",
+			"editor": "richselect",
+			"filter_options": [
+				"Apple",
+				"Banana",
+				"Orange"
+			]
+		},
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z"
+	},
+	{
+		"id": 8,
+		"object": 3,
+		"name": "Long_text",
+		"fieldName": "text",
+		"type": "text",
+		"weight": 3,
+		"required": null,
+		"unique": null,
+		"setting": {
+			"icon": "align-right",
+			"editor": "popup",
+			"filter_type": "text"
+		},
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z"
+	},
+	{
+		"id": 9,
+		"object": 3,
+		"name": "Number",
+		"fieldName": "number",
+		"type": "integer",
+		"weight": 4,
+		"required": null,
+		"unique": null,
+		"setting": {
+			"icon": "slack",
+			"editor": "number",
+			"filter_type": "number",
+			"format": "numberFormat",
+			"value": ""
+		},
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z"
+	}
+]

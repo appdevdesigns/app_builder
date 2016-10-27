@@ -1,6 +1,3 @@
-.op-stage {
-/*     overflow-y: hidden; */
-}
 .ab-generated-page {
 	overflow-y: auto;
 }
@@ -26,6 +23,11 @@
 }
 .ab-scroll-y {
 	overflow-y: auto !important;
+}
+
+/* Webix icon */
+.ab-main-container .webix_icon {
+	line-height: inherit;
 }
 
 /* Fix overflow-x */
@@ -248,6 +250,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 
 /* Interface tree view */
 .ab-main-container .webix_tree_item.webix_selected span {
+	padding: 0px; 
 	background: #3498db !important;
 }
 
@@ -279,8 +282,6 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	vertical-align: top;
 	padding-top: 10px;
 	width: 90px;
-	height: 100%;
-	line-height: 100%;
 	margin-bottom: -500em; /* CSS hack: equal height of right float */
 	padding-bottom: 500em;
 }
@@ -290,7 +291,6 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	vertical-align: top;
 	padding: 10px;
 	width: 87%;
-	height: 100%;
 	line-height: 100%;
 	overflow-x: auto;
 }

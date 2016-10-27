@@ -14,7 +14,7 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
-								selectedAppEvent: 'AB_Application.Selected'
+								APP_SELECTED: 'AB_Application.Selected'
 							}, options);
 							this.options = options;
 
@@ -127,11 +127,53 @@ steal(
 										select: false,
 										onClick: {
 											"ab-app-list-item": function (e, id, trg) {
-												this.select(id);
-												var selectedApp = $$(self.webixUiId.appList).getSelectedItem();
+												if ($$(self.webixUiId.appList).showProgress)
+													$$(self.webixUiId.appList).showProgress({ icon: 'cursor' });
 
-												// Trigger select app event
-												self.element.trigger(self.options.selectedAppEvent, selectedApp);
+												this.select(id);
+
+												var selectedApp = self.data.filter(function (app) { return app.id == id })
+
+												if (selectedApp && selectedApp.length > 0) {
+													async.parallel([
+														// Get objects of the current application
+														function (next) {
+															selectedApp[0].getObjects()
+																.fail(next)
+																.then(function (objects) {
+																	objects.forEach(function (obj) {
+																		if (obj.translate) obj.translate();
+																	});
+
+																	selectedApp[0].attr('objects', objects);
+
+																	next();
+																});
+														},
+														// Get pages of the current application
+														function (next) {
+															selectedApp[0].getPages()
+																.fail(next)
+																.then(function (pages) {
+																	pages.forEach(function (p) {
+																		if (p.translate) p.translate();
+																	});
+
+																	selectedApp[0].attr('pages', pages);
+
+																	next();
+																});
+														}
+													], function (err) {
+														if ($$(self.webixUiId.appList).hideProgress)
+															$$(self.webixUiId.appList).hideProgress();
+
+														if (err) return;
+
+														// Trigger select app event
+														self.element.trigger(self.options.APP_SELECTED, selectedApp[0]);
+													});
+												}
 
 												return false; //here it blocks default behavior
 											},
@@ -170,7 +212,7 @@ steal(
 
 											switch (trg.textContent.trim()) {
 												case self.labels.common.edit:
-													self.populateForm(selectedApp);
+													self.populateForm(selectedApp.id);
 													break;
 												case self.labels.common.delete:
 													webix.confirm({
@@ -179,36 +221,33 @@ steal(
 														cancel: self.labels.common.no,
 														text: self.labels.application.confirmDeleteMessage.replace('{0}', selectedApp.label),
 														callback: function (result) {
-															if (result) {
-																// Delete application data
-																$$(self.webixUiId.appList).showProgress({ type: "icon" });
-																self.Model.destroy(selectedApp.id)
-																	.fail(function (err) {
-																		$$(self.webixUiId.appList).hideProgress();
+															if (!result) return;
 
-																		webix.message({
-																			type: "error",
-																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedApp.label)
-																		});
+															// Delete application data
+															$$(self.webixUiId.appList).showProgress({ type: "icon" });
 
-																		AD.error.log('App Builder : Error delete application data', { error: err });
-																	})
-																	.then(function (result) {
-																		self.data.forEach(function (item, index, list) {
-																			if (item && item.id === result.id)
-																				self.data.splice(index, 1);
-																		});
+															var app = self.data.filter(function (a) { return a.id == selectedApp.id; })
+															if (!app || app.length < 1) return;
 
-																		self.refreshList();
+															app[0].destroy()
+																.fail(function (err) {
+																	$$(self.webixUiId.appList).hideProgress();
 
-																		$$(self.webixUiId.appList).hideProgress();
-
-																		webix.message({
-																			type: "success",
-																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedApp.label)
-																		});
+																	webix.message({
+																		type: "error",
+																		text: self.labels.common.deleteErrorMessage.replace("{0}", selectedApp.label)
 																	});
-															}
+
+																	AD.error.log('App Builder : Error delete application data', { error: err });
+																})
+																.then(function (result) {
+																	$$(self.webixUiId.appList).hideProgress();
+
+																	webix.message({
+																		type: "success",
+																		text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedApp.label)
+																	});
+																});
 
 															self.resetState();
 														}
@@ -355,10 +394,10 @@ steal(
 															var selectedId = $$(self.webixUiId.appList).getSelectedId();
 															var updateApp = self.data.filter(function (d) { return d.id == selectedId })[0];
 
-															if (updateApp) {
+															if (updateApp) { // Update
 																async.waterfall([
 																	function (next) {
-																		self.savePermissions(selectedId)
+																		self.savePermissions(updateApp)
 																			.fail(function (err) { next(err); })
 																			.then(function (result) { next(null, result); });
 																	},
@@ -389,9 +428,9 @@ steal(
 																			});
 																	}
 																], function (err) {
-																	if (err) {
-																		$$(self.webixUiId.appListForm).hideProgress();
+																	$$(self.webixUiId.appListForm).hideProgress();
 
+																	if (err) {
 																		webix.message({
 																			type: "error",
 																			text: self.labels.common.updateErrorMessage.replace('{0}', updateApp.attr('label'))
@@ -402,9 +441,6 @@ steal(
 																		return;
 																	}
 
-																	self.refreshList();
-
-																	$$(self.webixUiId.appListForm).hideProgress();
 																	$$(self.webixUiId.appListRow).show();
 
 																	webix.message({
@@ -413,7 +449,7 @@ steal(
 																	});
 
 																});
-															} else {
+															} else { // Create
 																var newApp = {
 																	name: $$(self.webixUiId.appListForm).elements['label'].getValue(),
 																	label: $$(self.webixUiId.appListForm).elements['label'].getValue(),
@@ -430,18 +466,18 @@ steal(
 
 																				self.data.push(result);
 
-																				cb(null, result.id);
+																				cb(null, result);
 																			});
 																	},
-																	function (appId, cb) {
-																		self.savePermissions(appId)
+																	function (createdApp, cb) {
+																		self.savePermissions(createdApp)
 																			.fail(function (err) { cb(err); })
 																			.then(function () { cb(); });
 																	}
 																], function (err) {
-																	if (err) {
-																		$$(self.webixUiId.appListForm).hideProgress();
+																	$$(self.webixUiId.appListForm).hideProgress();
 
+																	if (err) {
 																		webix.message({
 																			type: "error",
 																			text: self.labels.common.createErrorMessage.replace('{0}', newApp.label)
@@ -451,10 +487,11 @@ steal(
 
 																		return;
 																	}
-																	self.refreshList();
 
-																	$$(self.webixUiId.appListForm).hideProgress();
 																	$$(self.webixUiId.appListRow).show();
+
+																	if ($$(self.webixUiId.appList).hideOverlay)
+																		$$(self.webixUiId.appList).hideOverlay();
 
 																	webix.message({
 																		type: "success",
@@ -525,7 +562,7 @@ steal(
 
 						},
 
-						savePermissions: function (appId) {
+						savePermissions: function (app) {
 							var q = $.Deferred(),
 								self = this,
 								saveRoleTasks = [],
@@ -534,7 +571,7 @@ steal(
 							// Create new role for application
 							if ($$(self.webixUiId.appFormCreateRoleButton).getValue()) {
 								saveRoleTasks.push(function (cb) {
-									AD.comm.service.post({ url: '/app_builder/' + appId + '/role' })
+									app.createPermission()
 										.fail(function (err) {
 											cb(err);
 										})
@@ -548,7 +585,7 @@ steal(
 							else {
 								// Delete application roles
 								saveRoleTasks.push(function (cb) {
-									AD.comm.service.delete({ url: '/app_builder/' + appId + '/role' })
+									app.deletePermission()
 										.fail(function (err) { cb(err); })
 										.then(function () { cb(); });
 								});
@@ -570,12 +607,7 @@ steal(
 								}
 
 								// Assign Role Permissions
-								AD.comm.service.put({
-									url: '/app_builder/' + appId + '/role/assign',
-									data: {
-										roles: permItems
-									}
-								})
+								app.assignPermissions(permItems)
 									.fail(function (err) { cb(err); })
 									.then(function () { cb(); });
 							});
@@ -583,7 +615,7 @@ steal(
 							// Final task
 							saveRoleTasks.push(function (cb) {
 								// Update store app data
-								var applicationData = self.data.filter(function (d) { return d.id == appId; });
+								var applicationData = self.data.filter(function (d) { return d.id == app.id; });
 								applicationData.forEach(function (app) {
 									app.attr('permissions', $.map(permItems, function (item) {
 										return {
@@ -615,10 +647,12 @@ steal(
 						},
 
 						refreshList: function () {
-							var self = this;
+							var self = this,
+								appList = AD.op.WebixDataCollection(self.data);
 
 							$$(self.webixUiId.appList).clearAll();
-							$$(self.webixUiId.appList).parse(self.data.attr());
+							$$(self.webixUiId.appList).data.unsync();
+							$$(self.webixUiId.appList).data.sync(appList);
 
 							if (!$$(self.webixUiId.appList).count()) //if no data is available
 								$$(self.webixUiId.appList).showOverlay("There is no application data"); // TODO: translate
@@ -626,18 +660,29 @@ steal(
 								$$(self.webixUiId.appList).hideOverlay();
 
 							$$(self.webixUiId.appList).refresh();
+
+							$$(self.webixUiId.appList).hideProgress();
 						},
 
-						populateForm: function (selectedApp) {
-							var self = this;
+						populateForm: function (appId) {
+							var self = this,
+								selectedApp;
 
 							$$(self.webixUiId.appListFormView).show();
 
 							// Populate data to form
-							if (selectedApp) {
-								for (var key in selectedApp) {
-									if ($$(self.webixUiId.appListForm).elements[key])
-										$$(self.webixUiId.appListForm).elements[key].setValue(selectedApp[key]);
+							if (appId) {
+								var selectedApp = self.data.filter(function (app) { return app.id == appId; });
+
+								if (selectedApp && selectedApp.length > 0) {
+									selectedApp = selectedApp[0];
+									selectedApp.each(function (item, attr) {
+										if ($$(self.webixUiId.appListForm).elements[attr])
+											$$(self.webixUiId.appListForm).elements[attr].setValue(selectedApp.attr(attr));
+									});
+								}
+								else {
+									selectedApp = null;
 								}
 							}
 
@@ -653,7 +698,7 @@ steal(
 								},
 								function (available_roles, next) {
 									if (selectedApp && selectedApp.id) {
-										AD.comm.service.get({ url: '/app_builder/' + selectedApp.id + '/role' })
+										selectedApp.getPermissions()
 											.fail(function (err) { next(err); })
 											.done(function (selected_role_ids) {
 												next(null, available_roles, selected_role_ids);

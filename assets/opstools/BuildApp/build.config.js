@@ -11,7 +11,7 @@ module.exports = {
 				"async",
 				"can",
 				"js/selectivity/selectivity-full.min",
-				'OpsPortal/classes/OpsWebixDataCollection'
+				"OpsPortal/classes/OpsWebixDataCollection"
 			]
 		},
 		"js/selectivity/selectivity-full.min": {

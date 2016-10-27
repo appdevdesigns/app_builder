@@ -38,9 +38,12 @@ module.exports = {
 
         object: { model: 'ABObject' },
 
-        list: { collection: 'ABList', via: 'column' },
-
         name: {
+            type: 'string',
+            required: true
+        },
+
+        fieldName: {
             type: 'string',
             required: true
         },
@@ -59,32 +62,7 @@ module.exports = {
 
         unique: { type: 'boolean' },
 
-        default: { type: 'string' },
-
-        setting: { type: 'json' },
-
-        linkType: {
-            type: 'string',
-            enum: ['collection', 'model'],
-            required: false
-        },
-
-        linkObject: {
-            model: 'ABObject',
-            required: false
-        },
-
-        linkVia: {
-            model: 'ABColumn',
-            required: false
-        },
-
-        linkDefault: {
-            type: 'boolean',
-            required: false
-        },
-
-        supportMultilingual: { type: 'boolean' },
+        setting: { type: 'json' }
 
     },
 

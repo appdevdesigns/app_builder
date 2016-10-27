@@ -1,6 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
-	function () {
+	'opstools/BuildApp/controllers/page_components/componentManager.js',
+	function (componentManager) {
         System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -73,7 +74,11 @@ steal(
 												id: self.componentIds.componentList,
 												view: 'list',
 												drag: 'source',
-												template: "<i class='fa #icon#' aria-hidden='true'></i> #name#",
+												template: function (obj, common) {
+													return "<i class='fa #icon#' aria-hidden='true'></i> #name#"
+														.replace(/#icon#/g, obj.icon)
+														.replace(/#name#/g, obj.name.capitalize());
+												},
 												on: {
 													onBeforeDrag: function (context, ev) {
 														self.element.trigger(self.options.startDragEvent, {});
@@ -93,25 +98,26 @@ steal(
 							};
 						},
 
-						setComponents: function (components) {
+						initComponents: function () {
 							var self = this;
-
-							self.data.componentItems = $.map(components, function (c) {
-								return {
-									name: c.info.name,
-									icon: c.info.icon
-								};
-							});
+							self.data.componentItems = [];
 
 							var componentSpaceDefinition = $.grep(self.data.definition.rows, function (r) { return r.id == self.componentIds.componentSpace; });
 							componentSpaceDefinition = componentSpaceDefinition && componentSpaceDefinition.length > 0 ? componentSpaceDefinition[0] : null;
 
-							for (var key in components) {
-								var propertyView = components[key].getPropertyView();
+							componentManager.getAllComponents().forEach(function (component) {
+								if (component.getInfo) {
+									var info = component.getInfo();
+									self.data.componentItems.push({
+										name: info.name,
+										icon: info.icon
+									});
+								}
 
-								if (propertyView)
-									componentSpaceDefinition.cells.push(propertyView);
-							}
+								if (component.getPropertyView) {
+									componentSpaceDefinition.cells.push(component.getPropertyView());
+								}
+							});
 						},
 
 						webix_ready: function () {
@@ -130,11 +136,11 @@ steal(
 						openComponentPropertyView: function (item) {
 							var self = this;
 
-							if (item && $$(item.name + '-property-view')) {
-								$$(self.componentIds.componentToolbarHeader).define('label', item.name + ' Properties');
+							if (item && $$('ab-' + item.component + '-property-view')) {
+								$$(self.componentIds.componentToolbarHeader).define('label', item.component.capitalize() + ' Properties');
 								$$(self.componentIds.componentToolbarHeader).refresh();
 
-								$$(item.name + '-property-view').show();
+								$$('ab-' + item.component + '-property-view').show();
 							}
 						},
 
@@ -163,7 +169,6 @@ steal(
 						hide: function () {
 							$$(this.componentIds.componentListPanel).hide();
 						}
-
 
 					});
 				});

@@ -1,0 +1,290 @@
+[
+	{
+		"label": "Field 1",
+		"language_code": "en",
+		"id": 1,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 1
+	},
+	{
+		"label": "[ko]Field 1",
+		"language_code": "ko",
+		"id": 2,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 1
+	},
+	{
+		"label": "[zh-hans]Field 1",
+		"language_code": "zh-hans",
+		"id": 3,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 1
+	},
+	{
+		"label": "[th]Field 1",
+		"language_code": "th",
+		"id": 4,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 1
+	},
+	{
+		"label": "[zh-hans]Field 2",
+		"language_code": "zh-hans",
+		"id": 5,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 2
+	},
+	{
+		"label": "[th]Field 2",
+		"language_code": "th",
+		"id": 6,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 2
+	},
+	{
+		"label": "Field 2",
+		"language_code": "en",
+		"id": 7,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 2
+	},
+	{
+		"label": "[ko]Field 2",
+		"language_code": "ko",
+		"id": 8,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 2
+	},
+	{
+		"label": "Field 3",
+		"language_code": "en",
+		"id": 9,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 3
+	},
+	{
+		"label": "[ko]Field 3",
+		"language_code": "ko",
+		"id": 10,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 3
+	},
+	{
+		"label": "[zh-hans]Field 3",
+		"language_code": "zh-hans",
+		"id": 11,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 3
+	},
+	{
+		"label": "[th]Field 3",
+		"language_code": "th",
+		"id": 12,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 3
+	},
+	{
+		"label": "Field 4",
+		"language_code": "en",
+		"id": 13,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 4
+	},
+	{
+		"label": "[ko]Field 4",
+		"language_code": "ko",
+		"id": 14,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 4
+	},
+	{
+		"label": "[zh-hans]Field 4",
+		"language_code": "zh-hans",
+		"id": 15,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 4
+	},
+	{
+		"label": "[th]Field 4",
+		"language_code": "th",
+		"id": 16,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 4
+	},
+	{
+		"label": "One",
+		"language_code": "en",
+		"id": 17,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 5
+	},
+	{
+		"label": "[ko]One",
+		"language_code": "ko",
+		"id": 18,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 5
+	},
+	{
+		"label": "[zh-hans]One",
+		"language_code": "zh-hans",
+		"id": 19,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 5
+	},
+	{
+		"label": "[th]One",
+		"language_code": "th",
+		"id": 20,
+		"createdAt": "2016-10-03T08:07:05.000Z",
+		"updatedAt": "2016-10-03T08:07:05.000Z",
+		"abcolumn": 5
+	},
+	{
+		"label": "Field 2",
+		"language_code": "en",
+		"id": 21,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 6
+	},
+	{
+		"label": "[ko]Field 2",
+		"language_code": "ko",
+		"id": 22,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 6
+	},
+	{
+		"label": "[zh-hans]Field 2",
+		"language_code": "zh-hans",
+		"id": 23,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 6
+	},
+	{
+		"label": "[th]Field 2",
+		"language_code": "th",
+		"id": 24,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 6
+	},
+	{
+		"label": "Field 3",
+		"language_code": "en",
+		"id": 25,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 7
+	},
+	{
+		"label": "[ko]Field 3",
+		"language_code": "ko",
+		"id": 26,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 7
+	},
+	{
+		"label": "[zh-hans]Field 3",
+		"language_code": "zh-hans",
+		"id": 27,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 7
+	},
+	{
+		"label": "[th]Field 3",
+		"language_code": "th",
+		"id": 28,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 7
+	},
+	{
+		"label": "Long text",
+		"language_code": "en",
+		"id": 29,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 8
+	},
+	{
+		"label": "[ko]Long text",
+		"language_code": "ko",
+		"id": 30,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 8
+	},
+	{
+		"label": "[zh-hans]Long text",
+		"language_code": "zh-hans",
+		"id": 31,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 8
+	},
+	{
+		"label": "[th]Long text",
+		"language_code": "th",
+		"id": 32,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 8
+	},
+	{
+		"label": "Number",
+		"language_code": "en",
+		"id": 33,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 9
+	},
+	{
+		"label": "[ko]Number",
+		"language_code": "ko",
+		"id": 34,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 9
+	},
+	{
+		"label": "[zh-hans]Number",
+		"language_code": "zh-hans",
+		"id": 35,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 9
+	},
+	{
+		"label": "[th]Number",
+		"language_code": "th",
+		"id": 36,
+		"createdAt": "2016-10-03T08:07:06.000Z",
+		"updatedAt": "2016-10-03T08:07:06.000Z",
+		"abcolumn": 9
+	}
+]

@@ -1,12 +1,10 @@
 
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/models/ABObject.js',
-
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
-	function () {
+	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -20,7 +18,6 @@ steal(
 							options = AD.defaults({
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
-								updatedObjectEvent: 'AB_Object.Updated',
 								deletedObjectEvent: 'AB_Object.Deleted',
 
 								countCachedItemEvent: 'AB_Cached.Count'
@@ -30,7 +27,6 @@ steal(
 							// Call parent init
 							this._super(element, options);
 
-							this.Model = AD.Model.get('opstools.BuildApp.ABObject');
 							this.data = {};
 
 							this.webixUiId = {
@@ -44,8 +40,8 @@ steal(
 							this.rules = {};
 							this.rules.preventDuplicateName = function (value) {
 								// Check duplicate
-								var duplicateObject = jQuery.grep(self.data.objectList, function (m, index) {
-									return m.name.toLowerCase().trim() == value.toLowerCase();
+								var duplicateObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
+									return obj.name.toLowerCase().trim() == value.toLowerCase().trim();
 								});
 
 								if (duplicateObject && duplicateObject.length > 0) {
@@ -57,7 +53,6 @@ steal(
 							};
 
 							this.initMultilingualLabels();
-							this.initControllers();
 							this.initEvents();
 
 							webix.ready(function () {
@@ -99,20 +94,10 @@ steal(
 							self.labels.object.placeholderName = AD.lang.label.getLabel('ab.object.form.placeholderName') || "Object name";
 						},
 
-						initControllers: function () {
-							var EditList = AD.Control.get('opstools.BuildApp.EditList'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
-
-							this.controllers = {
-								EditList: new EditList(),
-								ModelCreator: new ModelCreator(this.element)
-							};
-						},
-
 						initEvents: function () {
 							var self = this;
 
-							self.controllers.ModelCreator.on(self.options.countCachedItemEvent, function (event, data) {
+							$(modelCreator).on(self.options.countCachedItemEvent, function (event, data) {
 								self.refreshUnsyncNumber(data.objectName);
 							});
 						},
@@ -147,6 +132,12 @@ steal(
 														$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
 													});
 												});
+
+												// Show gear icon
+												if (this.getSelectedId(true).length > 0) {
+													$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+													self.refreshUnsyncNumber();
+												}
 											},
 											onAfterSelect: function (id) {
 												// Fire select object event
@@ -180,7 +171,7 @@ steal(
 
 													this.showProgress({ type: 'icon' });
 
-													var selectedObject = self.data.objectList.filter(function (item, index, list) { return item.id == editor.id; })[0];
+													var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
 													selectedObject.attr('label', state.value);
 
 													// Call server to rename
@@ -208,8 +199,6 @@ steal(
 
 															// Show gear icon
 															$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
-
-															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
 														});
 												}
 											}
@@ -269,48 +258,37 @@ steal(
 														cancel: self.labels.common.no,
 														text: self.labels.object.confirmDeleteMessage.replace('{0}', selectedObject.label),
 														callback: function (result) {
-															if (result) {
+															if (!result) return;
 
-																$$(self.webixUiId.objectList).showProgress({ type: "icon" });
+															$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
-																// Call server to delete object data
-																self.Model.destroy(selectedObject.id)
-																	.fail(function (err) {
-																		$$(self.webixUiId.objectList).hideProgress();
+															var delApp = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == selectedObject.id });
+															if (delApp && delApp.length < 1) return;
 
-																		webix.message({
-																			type: "error",
-																			text: self.labels.common.deleteErrorMessage.replace("{0}", selectedObject.label)
-																		});
+															// Call server to delete object data
+															delApp[0].destroy()
+																.fail(function (err) {
+																	$$(self.webixUiId.objectList).hideProgress();
 
-																		AD.error.log('Object List : Error delete object data', { error: err });
-																	})
-																	.then(function (result) {
-																		var deletedObj = null;
-																		self.data.objectList.forEach(function (item, index, list) {
-																			if (item && item.id === selectedObject.id) {
-																				deletedObj = item;
-																				self.data.objectList.splice(index, 1);
-																			}
-																		});
-
-																		$$(self.webixUiId.objectList).remove(selectedObject.id);
-
-																		self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
-
-																		if (deletedObj)
-																			self.element.trigger(self.options.deletedObjectEvent, { object: deletedObj });
-
-																		webix.message({
-																			type: "success",
-																			text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedObject.label)
-																		});
-
-																		$$(self.webixUiId.objectList).hideProgress();
-
+																	webix.message({
+																		type: "error",
+																		text: self.labels.common.deleteErrorMessage.replace("{0}", delApp.label)
 																	});
-															}
 
+																	AD.error.log('Object List : Error delete object data', { error: err });
+																})
+																.then(function (result) {
+																	if (delApp)
+																		self.element.trigger(self.options.deletedObjectEvent, { object: selectedObject });
+
+																	webix.message({
+																		type: "success",
+																		text: self.labels.common.deleteSuccessMessage.replace('{0}', selectedObject.label)
+																	});
+
+																	$$(self.webixUiId.objectList).hideProgress();
+
+																});
 														}
 													});
 
@@ -357,12 +335,11 @@ steal(
 
 														var newObject = {
 															name: newObjectName,
-															label: newObjectName,
-															application: self.data.app.id
+															label: newObjectName
 														};
 
 														// Add new object to server
-														self.Model.create(newObject).fail(function (err) {
+														AD.classes.AppBuilder.currApp.createObject(newObject).fail(function (err) {
 															$$(self.webixUiId.objectList).hideProgress();
 
 															AD.error.log('Object : Error create object data', { error: err });
@@ -372,17 +349,12 @@ steal(
 
 															if (result.translate) result.translate();
 
-															self.data.objectList.push(result);
-
-															$$(self.webixUiId.objectList).add(result);
+															AD.classes.AppBuilder.currApp.objects.push(result);
 
 															if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
 																$$(self.webixUiId.objectList).unselectAll();
 																$$(self.webixUiId.objectList).select(result.id);
 															}
-
-															self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
-															self.element.trigger(self.options.createdObjectEvent, { newObject: result });
 
 															$$(self.webixUiId.objectList).hideProgress();
 
@@ -408,61 +380,31 @@ steal(
 						},
 
 						webix_ready: function () {
-							var self = this;
-
-							webix.extend($$(self.webixUiId.objectList), webix.ProgressBar);
+							webix.extend($$(this.webixUiId.objectList), webix.ProgressBar);
 						},
 
 						getUIDefinition: function () {
 							return this.data.definition;
 						},
 
-						setApp: function (app) {
-							var self = this;
-
-							self.data.app = app;
-
-							$$(self.webixUiId.objectList).showProgress({ type: "icon" });
-
-							self.controllers.ModelCreator.setApp(app);
-
-							// Get object list from server
-							self.Model.findAll({ application: app.id })
-								.fail(function (err) {
-									$$(self.webixUiId.objectList).hideProgress();
-									webix.message({
-										type: "error",
-										text: err
-									});
-									AD.error.log('Object list : Error loading object list data', { error: err });
-								})
-								.then(function (data) {
-									// Popupate translate properties to object
-									data.forEach(function (d) {
-										if (d.translate) d.translate();
-									});
-
-									self.data.objectList = data;
-
-									self.refreshObjectList();
-
-									self.element.trigger(self.options.updatedObjectEvent, { objectList: self.data.objectList });
-								});
+						selectObjectItem: function (objId) {
+							$$(this.webixUiId.objectList).select(objId);
 						},
 
 						refreshObjectList: function () {
-							var self = this;
+							var objectList = AD.op.WebixDataCollection(AD.classes.AppBuilder.currApp.objects);
 
-							$$(self.webixUiId.objectList).showProgress({ type: "icon" });
+							$$(this.webixUiId.objectList).showProgress({ type: "icon" });
 
-							$$(self.webixUiId.objectList).clearAll();
-							$$(self.webixUiId.objectList).parse(self.data.objectList.attr());
-							$$(self.webixUiId.objectList).refresh();
-							$$(self.webixUiId.objectList).unselectAll();
+							$$(this.webixUiId.objectList).clearAll();
+							$$(this.webixUiId.objectList).data.unsync();
+							$$(this.webixUiId.objectList).data.sync(objectList);
+							$$(this.webixUiId.objectList).refresh();
+							$$(this.webixUiId.objectList).unselectAll();
 
-							self.refreshUnsyncNumber();
+							this.refreshUnsyncNumber();
 
-							$$(self.webixUiId.objectList).hideProgress();
+							$$(this.webixUiId.objectList).hideProgress();
 						},
 
 						refreshUnsyncNumber: function (objectName) {
@@ -474,28 +416,24 @@ steal(
 							}, false, true);
 
 							objects.forEach(function (obj) {
-								self.controllers.ModelCreator.getModel(obj.name)
-									.then(function (objectModel) {
-										var unsyncNumber = objectModel.Cached.count(),
-											htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
+								var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
+									unsyncNumber = objectModel.Cached.count(),
+									htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
 
-										if (unsyncNumber > 0) {
-											htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
-											htmlItem.find('.ab-object-unsync').show();
-										}
-										else {
-											htmlItem.find('.ab-object-unsync').hide();
-										}
-									});
+								if (unsyncNumber > 0) {
+									htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
+									htmlItem.find('.ab-object-unsync').show();
+								}
+								else {
+									htmlItem.find('.ab-object-unsync').hide();
+								}
 							});
 						},
 
 						resetState: function () {
-							var self = this;
-
-							$$(self.webixUiId.objectList).unselectAll();
-							$$(self.webixUiId.objectList).clearAll();
-							$$(self.webixUiId.objectList).refresh();
+							$$(this.webixUiId.objectList).unselectAll();
+							$$(this.webixUiId.objectList).clearAll();
+							$$(this.webixUiId.objectList).refresh();
 						}
 
 					}); // end AD.Control.extend

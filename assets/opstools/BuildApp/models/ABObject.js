@@ -1,39 +1,28 @@
 steal(
 	'opstools/BuildApp/models/base/ABObject.js',
+
+	'opstools/BuildApp/models/ABColumn.js',
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/model/model').then(function () {
 
 				// Namespacing conventions:
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
-				AD.Model.extend('opstools.BuildApp.ABObject', {
-					// useSockets: true,
-					/*
-						findAll: 'GET /app_builder/abobject',
-						findOne: 'GET /app_builder/abobject/{id}',
-						create:  'POST /app_builder/abobject',
-						update:  'PUT /app_builder/abobject/{id}',
-						destroy: 'DELETE /app_builder/abobject/{id}',
-						describe: function() {},   // returns an object describing the Model definition
-						fieldId: 'id',             // which field is the ID
-						fieldLabel:'label'      // which field is considered the Label
-					*/
-					sortColumns: function (id, data, cb) {
-						return AD.comm.service.put({
-							url: '/app_builder/object/sortColumns/' + id,
-							data: {
-								columns: data
-							}
-						}, cb);
-					}
-
-				}, {
+				AD.Model.extend('opstools.BuildApp.ABObject',
+					{
+						useSockets: true
 						/*
-							// Already Defined:
-							model: function() {},   // returns the Model Class for an instance
-							getID: function() {},   // returns the unique ID of this row,
-							getLabel: function() {} // returns the defined label value
+							findAll: 'GET /app_builder/abobject',
+							findOne: 'GET /app_builder/abobject/{id}',
+							create:  'POST /app_builder/abobject',
+							update:  'PUT /app_builder/abobject/{id}',
+							destroy: 'DELETE /app_builder/abobject/{id}',
+							describe: function() {},   // returns an object describing the Model definition
+							fieldId: 'id',             // which field is the ID
+							fieldLabel:'label'      // which field is considered the Label
 						*/
+					},
+					{
 						getDataLabel: function (data) {
 							if (!this.columns || this.columns.length < 1) return '';
 
@@ -53,7 +42,34 @@ steal(
 							}
 
 							return labelFormat;
+						},
+
+						getColumns: function () {
+							return AD.Model.get('opstools.BuildApp.ABColumn').findAll({ object: this.id });
+						},
+
+						getColumn: function (colId) {
+							return AD.Model.get('opstools.BuildApp.ABColumn').findOne({ object: this.id, id: colId });
+						},
+
+						sortColumns: function (cols) {
+							var q = AD.sal.Deferred();
+
+							AD.comm.service.put({
+								url: '/app_builder/object/sortColumns/' + this.id,
+								data: {
+									columns: cols
+								}
+							}, function (err, result) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve(result);
+							});
+
+							return q;
 						}
+
 					});
 			});
 		});

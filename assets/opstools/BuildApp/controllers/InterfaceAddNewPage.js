@@ -1,10 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
 
-	'opstools/BuildApp/controllers/page_templates/QuickPage.js',
 	'opstools/BuildApp/controllers/page_templates/BlankPage.js',
+	'opstools/BuildApp/controllers/page_templates/QuickPage.js',
 
-	function () {
+	function (blankPage, quickPage) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -27,7 +27,6 @@ steal(
 								this.data = {};
 
 								this.initMultilingualLabels();
-								this.initControllers();
 								this.initWebixUI();
 							},
 
@@ -43,23 +42,13 @@ steal(
 								self.labels.interface.addNewPage = AD.lang.label.getLabel('ab.interface.addNewPage') || 'Add a new page';
 							},
 
-							initControllers: function () {
-								var QuickPage = AD.Control.get('opstools.BuildApp.Templates.QuickPage'),
-									BlankPage = AD.Control.get('opstools.BuildApp.Templates.BlankPage');
-
-								this.controllers = {
-									QuickPage: new QuickPage(this.element, { data: this.options.data }),
-									BlankPage: new BlankPage(this.element, { data: this.options.data })
-								};
-							},
-
 							initWebixUI: function () {
 								var self = this;
 
 								// Get UI definitions
 								var tabContents = [
-									self.controllers.QuickPage.getUIDefinition(),
-									self.controllers.BlankPage.getUIDefinition()
+									quickPage.getUIDefinition(),
+									blankPage.getUIDefinition()
 								];
 
 								// Initial popup
@@ -110,8 +99,8 @@ steal(
 							},
 
 							webix_ready: function () {
-								this.controllers.QuickPage.webix_ready();
-								this.controllers.BlankPage.webix_ready();
+								quickPage.webix_ready();
+								blankPage.webix_ready();
 							},
 
 							show: function () {
@@ -126,10 +115,10 @@ steal(
 								if (newv != oldv) {
 									switch (newv) {
 										case 'QuickPage':
-											this.controllers.QuickPage.show();
+											quickPage.show(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currPage);
 											break;
 										case 'BlankPage':
-											this.controllers.BlankPage.show();
+											blankPage.show(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currPage);
 											break;
 									}
 								}
@@ -140,7 +129,7 @@ steal(
 
 								switch ($$(self.componentId.selectTab).getValue()) {
 									case 'QuickPage':
-										self.controllers.QuickPage.save()
+										quickPage.save(AD.classes.AppBuilder.currApp)
 											.then(function (newPage) {
 												self.callAddNewPageEvent(newPage);
 
@@ -148,7 +137,7 @@ steal(
 											});
 										break;
 									case 'BlankPage':
-										self.controllers.BlankPage.save()
+										blankPage.save(AD.classes.AppBuilder.currApp)
 											.then(function (newPage) {
 												self.callAddNewPageEvent(newPage);
 

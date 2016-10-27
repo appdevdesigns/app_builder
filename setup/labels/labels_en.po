@@ -109,6 +109,18 @@ msgstr "Header name"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.save.error
+msgid "System could not save <b>{0}</b>."
+msgstr "System could not save <b>{0}</b>."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.save.success
+msgid "<b>{0}</b> is saved."
+msgstr "<b>{0}</b> is saved."
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.create.error
 msgid "System could not create <b>{0}</b>."
 msgstr "System could not create <b>{0}</b>."

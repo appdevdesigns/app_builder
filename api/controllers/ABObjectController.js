@@ -60,19 +60,19 @@ module.exports = {
             });
         }
 
-        if (updateEvents && updateEvents.length > 0) {
-            async.parallel(updateEvents, function (err) {
-                if (err) {
-                    res.AD.error(err);
-                }
-                else {
-                    res.AD.success(true);
-                }
-            });
+        if (!updateEvents || updateEvents.length < 1) {
+            res.AD.success(true);
+            return;
         }
-        else {
-            
-        }
+
+        async.parallel(updateEvents, function (err) {
+            if (err) {
+                res.AD.error(err);
+            }
+            else {
+                res.AD.success(true);
+            }
+        });
 
     }
 

@@ -1,15 +1,15 @@
 
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+
 	'opstools/BuildApp/controllers/ObjectList.js',
 	'opstools/BuildApp/controllers/ObjectWorkspace.js',
-
-	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
 
-	function () {
+	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -49,8 +49,7 @@ steal(
 							self.controllers = {};
 
 							var ObjectList = AD.Control.get('opstools.BuildApp.ObjectList'),
-								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace'),
-								ModelCreator = AD.Control.get('opstools.BuildApp.ModelCreator');
+								ObjectWorkspace = AD.Control.get('opstools.BuildApp.ObjectWorkspace');
 
 							self.controllers.ObjectList = new ObjectList(self.element, {
 								selectedObjectEvent: self.options.selectedObjectEvent,
@@ -58,7 +57,6 @@ steal(
 								deletedObjectEvent: self.options.deletedObjectEvent
 							});
 							self.controllers.ObjectWorkspace = new ObjectWorkspace(self.element);
-							self.controllers.ModelCreator = new ModelCreator(self.element);
 						},
 
 						initWebixUI: function () {
@@ -82,18 +80,15 @@ steal(
 							var self = this;
 
 							self.controllers.ObjectList.on(self.options.selectedObjectEvent, function (event, id) {
-								self.data.objectId = id;
+								var currObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == id });
+								if (currObj && currObj.length > 0)
+									AD.classes.AppBuilder.currApp.currObj = currObj[0];
 
-								self.controllers.ObjectWorkspace.setObjectId(id);
-							});
-
-							self.controllers.ObjectList.on(self.options.updatedObjectEvent, function (event, data) {
-								self.data.objectList = data.objectList;
-
-								self.controllers.ObjectWorkspace.setObjectList(data.objectList);
+								self.controllers.ObjectWorkspace.showTable();
 							});
 
 							self.controllers.ObjectList.on(self.options.deletedObjectEvent, function (event, data) {
+								// Clear cache
 								self.controllers.ObjectWorkspace.deleteObject(data.object);
 							});
 						},
@@ -109,136 +104,124 @@ steal(
 							self.controllers.ObjectWorkspace.webix_ready();
 						},
 
-						setApp: function (app) {
+						refresh: function () {
 							var self = this;
-							self.data.app = app;
 
 							self.controllers.ObjectWorkspace.resetState();
+
 							self.controllers.ObjectList.resetState();
+							self.controllers.ObjectList.refreshObjectList();
+							self.controllers.ObjectList.refreshUnsyncNumber();
 
-							self.controllers.ObjectWorkspace.setApp(app);
-							self.controllers.ObjectList.setApp(app);
-
-							self.controllers.ModelCreator.setApp(app);
-						},
-
-						refresh: function () {
-							this.controllers.ObjectList.refreshUnsyncNumber();
-							this.controllers.ObjectWorkspace.setObjectId(this.data.objectId);
+							if (AD.classes.AppBuilder.currApp.currObj)
+								self.controllers.ObjectList.selectObjectItem(AD.classes.AppBuilder.currApp.currObj.id);
 						},
 
 						syncObjectFields: function () {
 							var self = this,
 								q = $.Deferred();
 
-							if (self.data.objectList) {
-								async.eachSeries(self.data.objectList, function (object, next) {
-									async.waterfall([
-										function (cb) {
-											// Get object model
-											self.controllers.ModelCreator.getModel(object.name)
-												.fail(function (err) { cb(err); })
-												.then(function (objectModel) {
-													cb(null, objectModel);
-												});
-										},
-										function (objectModel, cb) {
-											// Get cached fields
-											var newFields = objectModel.Cached.getNewFields();
-
-											newFields.sort(function (a, b) { return a.weight - b.weight; });
-
-											if (!newFields || newFields.length < 1) {
-												cb();
-											}
-											else {
-												var saveFieldsTasks = [];
-
-												newFields.forEach(function (field, index) {
-													saveFieldsTasks.push(function (callback) {
-														var tempId = field.id;
-														delete field.id;
-
-														field.weight = object.columns.length + (index + 1);
-
-														async.waterfall([
-															// Create object column
-															function (ok) {
-																self.Model.ABColumn.create(field)
-																	.fail(ok)
-																	.then(function (result) {
-																		// Delete field cache
-																		objectModel.Cached.deleteCachedField(tempId);
-
-																		ok(null, result);
-																	});
-															},
-															// Create link column
-															function (column, ok) {
-																if (field.linkObject && field.linkVia) {
-																	self.createLinkColumn(field.linkObject, field.linkVia, column.id)
-																		.fail(ok)
-																		.then(function (linkCol) {
-																			// set linkVia
-																			column.attr('linkVia', linkCol.id);
-																			column.save()
-																				.fail(function (err) { ok(err) })
-																				.then(function (result) {
-																					ok(null, result);
-																				});
-																		});
-																}
-																else {
-																	ok(null, column);
-																}
-															},
-															// Create list option of select column
-															function (column, ok) {
-																if (field.setting.editor === 'richselect' && field.setting.filter_options) {
-																	var createOptionEvents = [];
-
-																	field.setting.filter_options.forEach(function (opt, index) {
-																		createOptionEvents.push(function (createOk) {
-																			var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
-
-																			self.Model.ABList.create({
-																				key: list_key,
-																				weight: index + 1,
-																				column: column.id,
-																				label: opt,
-																				value: opt
-																			})
-																				.fail(createOk)
-																				.then(function () { createOk(); });
-																		});
-																	});
-
-																	async.parallel(createOptionEvents, ok);
-																}
-																else {
-																	ok();
-																}
-															}
-														], callback);
-													});
-												});
-
-												async.parallel(saveFieldsTasks, cb);
-											}
-										}
-									], next);
-								}, function (err) {
-									if (err) {
-										q.reject(err);
-										return;
-									}
-
-									q.resolve();
-								});
-							}
-							else {
+							if (AD.classes.AppBuilder.currApp.objects.length < 1) {
 								q.resolve();
+								return q;
 							}
+
+							async.eachSeries(AD.classes.AppBuilder.currApp.objects.attr(), function (object, next) {
+								// Get object model
+								var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name);
+
+								// Get cached fields
+								var newFields = objectModel.Cached.getNewFields();
+
+								if (!newFields || newFields.length < 1)
+									return next();
+
+								newFields.sort(function (a, b) { return a.weight - b.weight; });
+
+								var saveFieldsTasks = [];
+
+								newFields.forEach(function (field, index) {
+									saveFieldsTasks.push(function (callback) {
+										var tempId = field.id;
+										delete field.id;
+
+										if (!field.weight)
+											field.weight = object.columns.length + index;
+
+										async.waterfall([
+											// Create object column
+											function (ok) {
+												self.Model.ABColumn.create(field)
+													.fail(ok)
+													.then(function (result) {
+														// Delete field cache
+														objectModel.Cached.deleteCachedField(tempId);
+
+														ok(null, result);
+													});
+											},
+											// Create link column
+											function (column, ok) {
+												if (field.setting.linkObject && field.setting.linkVia) {
+													self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
+														.fail(ok)
+														.then(function (linkCol) {
+															// set linkVia
+															column.setting.attr('linkVia', linkCol.id);
+															column.save()
+																.fail(function (err) { ok(err) })
+																.then(function (result) {
+																	ok(null, result);
+																});
+														});
+												}
+												else {
+													ok(null, column);
+												}
+											},
+											// Create list option of select column
+											function (column, ok) {
+												if (field.setting.editor === 'richselect' && field.setting.filter_options) {
+													var createOptionEvents = [];
+
+													field.setting.filter_options.forEach(function (opt, index) {
+														createOptionEvents.push(function (createOk) {
+															var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
+
+															self.Model.ABList.create({
+																key: list_key,
+																weight: index + 1,
+																column: column.id,
+																label: opt,
+																value: opt
+															})
+																.fail(createOk)
+																.then(function () { createOk(); });
+														});
+													});
+
+													async.parallel(createOptionEvents, ok);
+												}
+												else {
+													ok();
+												}
+											}
+										], callback);
+									});
+								});
+
+								async.parallel(saveFieldsTasks, function (err) {
+									// Update object model
+									modelCreator.updateModel(AD.classes.AppBuilder.currApp, object.name);
+
+									next(err);
+								});
+							}, function (err) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve();
+							});
 
 							return q;
 						},
@@ -247,45 +230,32 @@ steal(
 							var q = $.Deferred(),
 								self = this;
 
-							if (self.data.objectList) {
-								var syncDataTasks = [];
-
-								self.data.objectList.forEach(function (object) {
-									syncDataTasks.push(function (next) {
-
-										async.waterfall([
-											function (cb) {
-												self.controllers.ModelCreator.getModel(object.name)
-													.fail(function (err) { cb(err); })
-													.then(function (objectModel) {
-														cb(null, objectModel);
-													});
-											},
-											function (objectModel, cb) {
-												objectModel.Cached.syncDataToServer()
-													.fail(function (err) { cb(err); })
-													.then(function () {
-														cb(null);
-														next();
-													});
-											}
-										]);
-
-									});
-								});
-
-								async.parallel(syncDataTasks, function (err) {
-									if (err) {
-										q.reject(err);
-										return;
-									}
-
-									q.resolve();
-								});
-							}
-							else {
+							if (!AD.classes.AppBuilder.currApp.objects || AD.classes.AppBuilder.currApp.objects.length < 1) {
 								q.resolve();
+								return q;
 							}
+
+							var syncDataTasks = [];
+
+							AD.classes.AppBuilder.currApp.objects.forEach(function (object) {
+								syncDataTasks.push(function (next) {
+									var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name);
+
+									objectModel.Cached.syncDataToServer()
+										.fail(next)
+										.then(function () {
+											next();
+										});
+
+								});
+							});
+
+							async.parallel(syncDataTasks, function (err) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve();
+							});
 
 							return q;
 						},
@@ -295,33 +265,30 @@ steal(
 								self = this;
 
 							// Find link object
-							var linkObj = self.data.objectList.filter(function (obj) { return obj.id == linkObject })[0];
+							var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == linkObject })[0];
 
 							// Get object model
-							self.controllers.ModelCreator.getModel(linkObj.name)
-								.fail(function (err) { ok(err); })
-								.then(function (objModel) {
-									// Get cache
-									var cachedFields = objModel.Cached.getNewFields(),
-										linkCol = cachedFields.filter(function (f) { return f.id == linkVia; })[0],
-										tempId = linkCol.id;
+							var objModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, linkObj.name);
 
-									linkCol.linkVia = linkColumnId;
-									linkCol.weight = linkObj.columns.length + Object.keys(cachedFields).indexOf(linkVia) + 1;
+							// Get cache
+							var cachedFields = objModel.Cached.getNewFields(),
+								linkCol = cachedFields.filter(function (f) { return f.id == linkVia; })[0],
+								tempId = linkCol.id;
 
-									delete linkCol.id;
+							linkCol.setting.linkVia = linkColumnId;
+							linkCol.weight = linkObj.columns.length + Object.keys(cachedFields).indexOf(linkVia) + 1;
 
-									// Create
-									self.Model.ABColumn.create(linkCol)
-										.fail(function (err) { q.reject(err) })
-										.then(function (result) {
-											objModel.Cached.deleteCachedField(tempId);
+							delete linkCol.id;
 
-											if (result.translate) result.translate();
+							// Create
+							self.Model.ABColumn.create(linkCol)
+								.fail(function (err) { q.reject(err) })
+								.then(function (result) {
+									objModel.Cached.deleteCachedField(tempId);
 
-											q.resolve(result);
-										});
+									if (result.translate) result.translate();
 
+									q.resolve(result);
 								});
 
 							return q;

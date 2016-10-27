@@ -5,6 +5,8 @@ steal(
 
 	'opstools/BuildApp/controllers/webix_custom_components/LoadingScreen.js',
 
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -83,19 +85,17 @@ steal(
 							self.controllers = {};
 
 							var ObjectPage = AD.Control.get('opstools.BuildApp.ObjectPage'),
-								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage'),
-								LoadingScreen = AD.Control.get('opstools.BuildApp.LoadingScreen');
+								InterfacePage = AD.Control.get('opstools.BuildApp.InterfacePage');
 
 							self.controllers.ObjectPage = new ObjectPage(self.element, { 'objectView': self.webixUiId.objectView });
 							self.controllers.InterfacePage = new InterfacePage(self.element, { 'interfaceView': self.webixUiId.interfaceView });
-							self.controllers.LoadingScreen = new LoadingScreen(self.element);
 						},
 
 						initEvents: function () {
 							var self = this;
 
 							self.controllers.ObjectPage.element.on(self.options.updatedObjectEvent, function (event, data) {
-								self.controllers.InterfacePage.setObjectList(data.objectList);
+								self.controllers.InterfacePage.refresh();
 							});
 						},
 
@@ -138,7 +138,7 @@ steal(
 												align: "right",
 												click: function () {
 													self.element.trigger(self.options.synchronizeEvent, {
-														appID: self.data.app.id
+														appID: AD.classes.AppBuilder.currApp.id
 													});
 												}
 											},
@@ -156,14 +156,7 @@ steal(
 										on: {
 											onChange: function (newv, oldv) {
 												if (newv != oldv) {
-													switch (newv) {
-														case self.webixUiId.objectView:
-															self.controllers.ObjectPage.setApp(self.data.app);
-															break;
-														case self.webixUiId.interfaceView:
-															self.controllers.InterfacePage.loadData(self.data.app);
-															break;
-													}
+													self.refresh();
 												}
 											}
 										}
@@ -180,32 +173,20 @@ steal(
 
 						},
 
-						setApplication: function (app) {
+						refresh: function () {
 							var self = this;
 
-							self.data.app = app;
-
-							$$(self.webixUiId.appNameLabel).define('label', app.label);
+							$$(self.webixUiId.appNameLabel).define('label', AD.classes.AppBuilder.currApp.attr('label'));
 							$$(self.webixUiId.appNameLabel).refresh();
-
-							// FOR TEST
-							// $$(self.webixUiId.appWorkspaceMenu).setValue(self.webixUiId.interfaceView);
 
 							switch ($$(self.webixUiId.appWorkspaceMenu).getValue()) {
 								case self.webixUiId.objectView:
-									self.controllers.ObjectPage.setApp(app);
+									self.controllers.ObjectPage.refresh();
 									break;
 								case self.webixUiId.interfaceView:
-									self.controllers.InterfacePage.loadData(app);
+									self.controllers.InterfacePage.refresh();
 									break;
 							}
-
-
-
-						},
-
-						refresh: function () {
-							this.controllers.ObjectPage.refresh();
 						},
 
 						syncObjectFields: function () {
