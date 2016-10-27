@@ -22,7 +22,6 @@ steal(
 							self.events = {};
 
 							self.initMultilingualLabels();
-							self.initEvents();
 						},
 
 						initMultilingualLabels: function () {
@@ -40,26 +39,6 @@ steal(
 							self.labels.confirmDeleteRowTitle = AD.lang.label.getLabel('ab.object.deleteRow.title') || "Delete data";
 							self.labels.confirmDeleteRowMessage = AD.lang.label.getLabel('ab.object.deleteRow.message') || "Do you want to delete this row?";
 
-						},
-
-						initEvents: function () {
-							var self = this;
-
-							$(dataFieldsManager).on('update', function (event, data) {
-								if (self.events.changeSelectivityItem) {
-									var result = {};
-									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
-									if (result.columnIndex && self.dataTable.config.columns.length >= result.columnIndex) {
-										result.columnId = self.dataTable.columnId(result.columnIndex);
-										result.rowIndex = data.itemNode.parent('.webix_cell').index();
-										result.rowId = self.dataTable.getIdByIndex(result.rowIndex);
-										result.item = self.dataTable.getItem(result.rowId);
-										result.itemData = result.item[result.columnId];
-									}
-
-									self.events.changeSelectivityItem(data.event, result);
-								}
-							});
 						},
 
 						registerDataTable: function (dataTable, application) {
@@ -105,9 +84,17 @@ steal(
 										var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
 										if (!itemNode) return;
 
-										dataFieldsManager.customDisplay(col.fieldName, dataTable.getItem(rowId)[columnId], itemNode, {
-											readOnly: self.data.readOnly
-										});
+										dataFieldsManager.customDisplay(
+											col.fieldName,
+											AD.classes.AppBuilder.currApp,
+											AD.classes.AppBuilder.currApp.currObj,
+											columnId,
+											rowId,
+											dataTable.getItem(rowId)[columnId],
+											itemNode,
+											{
+												readOnly: self.data.readOnly
+											});
 									});
 
 									// if (d.isUnsync) { // TODO: Highlight unsync data

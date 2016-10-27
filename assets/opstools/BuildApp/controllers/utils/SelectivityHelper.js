@@ -28,7 +28,7 @@ steal(function () {
 			if (!(node instanceof jQuery)) node = $(node);
 
 			if (node.selectivity) {
-				node.selectivity('data', data.filter(function (d) { return d.id && d.text; }));
+				node.selectivity('data', data.filter(function (d) { return d.id; }));
 			}
 		},
 

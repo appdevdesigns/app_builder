@@ -30,7 +30,7 @@ steal(
 			formView: 'template' //
 		};
 
-		function initConnectDataPopup(objectId, fieldData, selectivityNode) {
+		function initConnectDataPopup(object, columnName, rowId, selectivityNode) {
 			if (!$$(componentIds.connectDataPopup)) {
 				webix.ui({
 					id: componentIds.connectDataPopup,
@@ -46,32 +46,46 @@ steal(
 			$$(componentIds.connectDataPopup).onClose(function (selectedItems) {
 				selectivityHelper.setData(selectivityNode, selectedItems);
 
-				// Convert Array to Object
-				if (fieldData.setting.linkType == 'model' && selectedItems[0])
-					selectedItems = selectedItems[0];
+				var connectData = getReturnData(object, columnName, rowId, selectedItems);
 
-				var returnData = {
-					objectId: objectId,
-					data: $.map(selectedItems, function (item) { return item.id; }),
-					displayData: $.map(selectedItems, function (item) {
-						return {
-							id: item.id,
-							dataLabel: item.text
-						}
-					})
-				};
-
-				// $.map(result.data, function (item) {
-				// 	return {
-				// 		id: item.id,
-				// 		dataLabel: item.text
-				// 	};
-				// }) || [];
-
-				$(connectObjectField).trigger('update', returnData);
-
+				$(connectObjectField).trigger('update', connectData);
 			});
 		}
+
+		function getReturnData(object, columnName, rowId, selectedItems) {
+			var connectData = {};
+			connectData.objectId = object.id;
+			connectData.columnName = columnName;
+			connectData.rowId = rowId;
+			connectData.data = $.map(selectedItems, function (item) { return item.id; });
+			connectData.displayData = $.map(selectedItems, function (item) {
+				return {
+					id: item.id,
+					dataLabel: item.text
+				}
+			});
+
+			if (connectData.data.length === 0)
+				connectData.data = '';
+			else if (connectData.data.length === 1)
+				connectData.data = connectData.data[0]; // Convert Array to string
+
+			return connectData;
+		}
+
+		// Listen change selectivity item event
+		$(selectivityHelper).on('change', function (event, result) {
+			if (result.event && result.event.removed) {
+				var selectedItems = selectivityHelper.getData(result.itemNode),
+					connectData = getReturnData(
+						result.event.removed.object,
+						result.event.removed.columnName,
+						result.event.removed.rowId,
+						selectedItems);
+
+				$(connectObjectField).trigger('update', connectData);
+			}
+		});
 
 		// Edit definition
 		connectObjectField.editDefinition = {
@@ -229,7 +243,7 @@ steal(
 			};
 		};
 
-		connectObjectField.customDisplay = function (data, itemNode, options) {
+		connectObjectField.customDisplay = function (application, object, columnName, rowId, data, itemNode, options) {
 			// Initial selectivity
 			selectivityHelper.renderSelectivity(itemNode, 'connect-data-values', options.readOnly);
 
@@ -239,36 +253,32 @@ steal(
 					selectedItems = data.map(function (cVal) {
 						return {
 							id: cVal.id,
-							text: cVal.dataLabel
+							text: cVal.dataLabel,
+							object: object,
+							columnName: columnName,
+							rowId: rowId
 						};
 					});
 				}
 				else if (data.id) {
 					selectedItems.push({
 						id: data.id,
-						text: data.dataLabel
+						text: data.dataLabel,
+						object: object,
+						columnName: columnName,
+						rowId: rowId
 					});
 				}
 			}
 
 			// Set selectivity data
-			var fieldNode = $(itemNode).find('.connect-data-values');
-			selectivityHelper.setData(fieldNode, selectedItems);
-
-			// Listen change selectivity item event
-			$(selectivityHelper).on('change', function (event, data) {
-				if (event.removed) {
-					$(connectObjectField).trigger('update', { data: data });
-
-					// id: item.id,
-					// dataLabel: item.text
-				}
-			});
+			var selectivityNode = $(itemNode).find('.connect-data-values');
+			selectivityHelper.setData(selectivityNode, selectedItems);
 
 			return true;
 		};
 
-		connectObjectField.customEdit = function (application, fieldData, dataId, itemNode) {
+		connectObjectField.customEdit = function (application, object, fieldData, dataId, itemNode) {
 			if (!application || !fieldData || !fieldData.setting.linkObject || !fieldData.setting.linkVia) return false;
 
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
@@ -276,7 +286,7 @@ steal(
 				selectedIds = $.map(selectedData, function (d) { return d.id; });
 
 			// Init connect data popup
-			initConnectDataPopup(application.currObj.id, fieldData, selectivityNode);
+			initConnectDataPopup(object, fieldData.name, dataId, selectivityNode);
 
 			// Get the link object
 			var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (o) { return o.id == fieldData.setting.linkObject; });
@@ -296,10 +306,6 @@ steal(
 			$$(componentIds.connectDataPopup).open(linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
 
 			return false;
-		};
-
-		connectObjectField.getValue = function () {
-
 		};
 
 		// Reset state

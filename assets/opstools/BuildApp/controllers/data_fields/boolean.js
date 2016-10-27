@@ -37,7 +37,7 @@ steal(function () {
 		};
 	};
 
-	boolDataField.customEdit = function (application, fieldData, dataId, itemNode) {
+	boolDataField.customEdit = function (application, object, fieldData, dataId, itemNode) {
 		return false;
 	};
 

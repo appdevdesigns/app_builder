@@ -97,6 +97,20 @@ steal(
 				return q;
 			};
 
+			function showCustomFields(object, columns, rowId, rowData) {
+				var self = this;
+
+				// Custom view
+				columns.forEach(function (col) {
+					var childView = $$(self.viewId).getChildViews().find(function (view) {
+						return view.config && view.config.name == col.name
+					});
+					if (!childView) return;
+
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col.name, rowId, rowData[col.name], childView.$view);
+				});
+			}
+
 
 			// Set viewId to public
 			this.viewId = viewId;
@@ -110,12 +124,6 @@ steal(
 					header = { rows: [] },
 					listOptions = {}, // { columnId: [{}, ..., {}] }
 					columns;
-
-				if (dataCollection) {
-					dataCollection.attachEvent('onAfterCursorChange', function (id) {
-						// TODO : Update custom display
-					});
-				}
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
 
@@ -131,6 +139,13 @@ steal(
 				var object = application.objects.filter(function (obj) { return obj.id == setting.object; });
 				if (!object || object.length < 1) return;
 				application.currObj = object[0];
+
+				if (dataCollection) {
+					dataCollection.attachEvent('onAfterCursorChange', function (id) {
+						// Show custom display
+						showCustomFields.call(self, object, columns, id);
+					});
+				}
 
 				async.series([
 					// Get columns data
@@ -205,7 +220,10 @@ steal(
 								element.template = template;
 								element.on = {
 									onFocus: function (current_view, prev_view) {
-										dataFieldsManager.customEdit(application, col, data, current_view.$view);
+										var currModel = dataCollection.AD.currModel(),
+											rowId = currModel ? currModel.id : null;
+
+										dataFieldsManager.customEdit(application, object, col, rowId, current_view.$view);
 									}
 								};
 							}
@@ -388,13 +406,7 @@ steal(
 
 						$$(self.viewId).refresh();
 
-						// Custom view
-						columns.forEach(function (col) {
-							var childView = $$(self.viewId).getChildViews().find(function (view) { return view.config && view.config.name == col.name });
-							if (!childView) return;
-
-							dataFieldsManager.customDisplay(col.fieldName, data, childView.$view);
-						});
+						showCustomFields.call(self, object, columns);
 
 						next();
 					}

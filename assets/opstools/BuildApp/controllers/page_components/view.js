@@ -50,11 +50,11 @@ steal(
 				// Initial events
 				if (data.dataCollection) {
 					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
-						self.updateData();
+						self.updateData(setting);
 					});
 					data.dataCollection.attachEvent('onDataUpdate', function (id, newData) {
 						if (data.currDataId == id)
-							self.updateData(newData);
+							self.updateData(setting, newData);
 
 						return true;
 					});
@@ -222,7 +222,7 @@ steal(
 						$$(self.viewId).addView(header, 0);
 
 						// Populate data to fields
-						self.updateData();
+						self.updateData(setting);
 
 						$$(self.viewId).hideProgress();
 
@@ -331,11 +331,12 @@ steal(
 				events.render = renderFn;
 			};
 
-			this.updateData = function (newData) {
+			this.updateData = function (setting, newData) {
 				var self = this,
-					currModel = newData ? newData : data.dataCollection.AD.currModel();
+					currModel = newData ? newData : data.dataCollection.AD.currModel(),
+					object = application.objects.filter(function (obj) { return obj.id == setting.object })[0];
 
-				if (currModel) {
+				if (currModel && object) {
 					currModel = currModel.attr ? currModel.attr() : currModel;
 
 					data.currDataId = currModel.id;
@@ -344,7 +345,7 @@ steal(
 						var displayField = child.getChildViews()[1],
 							fieldData = currModel ? currModel[child.config.fieldName] : '';
 
-						if (dataFieldsManager.customDisplay(child.fieldType, fieldData, child.$view, { readOnly: true }))
+						if (dataFieldsManager.customDisplay(child.fieldType, application, object, child.config.fieldName, newData.id, fieldData, child.$view, { readOnly: true }))
 							return;
 
 						if (child.config.editor === 'date' || child.config.editor === 'datetime') {

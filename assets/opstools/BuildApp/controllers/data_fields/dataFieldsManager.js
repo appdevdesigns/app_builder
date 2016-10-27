@@ -257,21 +257,21 @@ steal(
 			field.populateSettings(application, data);
 		};
 
-		self.customDisplay = function (fieldName, data, itemNode, options) {
+		self.customDisplay = function (fieldName, application, object, columnName, rowId, data, itemNode, options) {
 			var field = getField(fieldName);
 			options = options || {};
 
 			if (field && field.customDisplay)
-				return field.customDisplay(data, itemNode, options);
+				return field.customDisplay(application, object, columnName, rowId, data, itemNode, options);
 			else
 				return false;
 		};
 
-		self.customEdit = function (application, fieldData, dataId, itemNode) {
+		self.customEdit = function (application, object, fieldData, dataId, itemNode) {
 			var field = getField(fieldData.fieldName);
 
 			if (field && field.customEdit)
-				return field.customEdit(application, fieldData, dataId, itemNode);
+				return field.customEdit(application, object, fieldData, dataId, itemNode);
 			else
 				return true;
 		};
