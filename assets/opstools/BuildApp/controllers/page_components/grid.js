@@ -437,7 +437,7 @@ steal(
 
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self).bindColumns(columns, true, isTrashVisible);
+				getObjectDataTable.call(self).bindColumns(application, columns, true, isTrashVisible);
 
 				self.populateData(dataCollection)
 					.then(function () {
