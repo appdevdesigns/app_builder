@@ -30,7 +30,7 @@ steal(
 			formView: 'template' //
 		};
 
-		function initConnectDataPopup(objectId, selectivityNode) {
+		function initConnectDataPopup(objectId, fieldData, selectivityNode) {
 			if (!$$(componentIds.connectDataPopup)) {
 				webix.ui({
 					id: componentIds.connectDataPopup,
@@ -46,10 +46,29 @@ steal(
 			$$(componentIds.connectDataPopup).onClose(function (selectedItems) {
 				selectivityHelper.setData(selectivityNode, selectedItems);
 
-				$(connectObjectField).trigger('save', {
+				// Convert Array to Object
+				if (fieldData.setting.linkType == 'model' && selectedItems[0])
+					selectedItems = selectedItems[0];
+
+				var returnData = {
 					objectId: objectId,
-					data: selectedItems
-				});
+					data: $.map(selectedItems, function (item) { return item.id; }),
+					displayData: $.map(selectedItems, function (item) {
+						return {
+							id: item.id,
+							dataLabel: item.text
+						}
+					})
+				};
+
+				// $.map(result.data, function (item) {
+				// 	return {
+				// 		id: item.id,
+				// 		dataLabel: item.text
+				// 	};
+				// }) || [];
+
+				$(connectObjectField).trigger('update', returnData);
 
 			});
 		}
@@ -236,6 +255,16 @@ steal(
 			var fieldNode = $(itemNode).find('.connect-data-values');
 			selectivityHelper.setData(fieldNode, selectedItems);
 
+			// Listen change selectivity item event
+			$(selectivityHelper).on('change', function (event, data) {
+				if (event.removed) {
+					$(connectObjectField).trigger('update', { data: data });
+
+					// id: item.id,
+					// dataLabel: item.text
+				}
+			});
+
 			return true;
 		};
 
@@ -247,7 +276,7 @@ steal(
 				selectedIds = $.map(selectedData, function (d) { return d.id; });
 
 			// Init connect data popup
-			initConnectDataPopup(application.currObj.id, selectivityNode);
+			initConnectDataPopup(application.currObj.id, fieldData, selectivityNode);
 
 			// Get the link object
 			var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (o) { return o.id == fieldData.setting.linkObject; });
@@ -267,6 +296,10 @@ steal(
 			$$(componentIds.connectDataPopup).open(linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
 
 			return false;
+		};
+
+		connectObjectField.getValue = function () {
+
 		};
 
 		// Reset state

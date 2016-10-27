@@ -29,12 +29,9 @@ steal(
 
 		// Listen save event
 		fields.forEach(function (field) {
-			$(field).on('save', function (event, data) {
-				$(self).trigger('save', {
-					name: field.name,
-					objectId: data.objectId,
-					data: data.data
-				});
+			$(field).on('update', function (event, data) {
+				data.fieldName = field.name;
+				$(self).trigger('update', data);
 			});
 		});
 

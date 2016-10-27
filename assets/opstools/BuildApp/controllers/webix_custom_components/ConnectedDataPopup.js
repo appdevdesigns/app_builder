@@ -140,6 +140,7 @@ steal(
 
 						var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
+						// [{ id: id, text: '' }, ..., { id: idn, text: '' }]
 						var selectedItems = $.map(dataList.getSelectedId(true), function (id) {
 							var htmlNode = dataList.getItemNode(id);
 							if (!htmlNode) return;

@@ -347,65 +347,50 @@ steal(
 						initEvents: function () {
 							var self = this;
 
-							$(dataFieldsManager).on('save', function (event, result) {
+							$(dataFieldsManager).on('update', function (event, result) {
 								if (result.objectId != AD.classes.AppBuilder.currApp.currObj.id || !self.data.selectedCell) return;
 
-								switch (result.name) {
-									case 'connectObject':
-										$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-										var selectedIds = [];
+								self.updateRowData(
+									{ value: result.data }, // state
+									{ // editor
+										row: self.data.selectedCell.row,
+										column: self.data.selectedCell.column
+									},
+									false)
+									.then(function () {
+										// Update row
+										var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
+										rowData[self.data.selectedCell.column] = result.displayData || result.data;
+										$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
 
-										if (result.data && result.data.length > 0)
-											selectedIds = $.map(result.data, function (item) { return { id: item.id }; });
+										// Connect Data: Remove duplicate selected item when the link column supports one value
+										var colData = self.data.columns.filter(function (col) { return col.name == self.data.selectedCell.column; })[0];
+										if (result.fieldName == 'connectObject' && result.data && colData.setting.linkViaType === 'model') {
+											$$(self.webixUiId.objectDatatable).eachRow(function (row) {
+												if (row != self.data.selectedCell.row) {
+													var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
+													if (otherRow[self.data.selectedCell.column]) {
+														// Filter difference values
+														otherRow[self.data.selectedCell.column] = otherRow[self.data.selectedCell.column].filter(function (i) {
+															return result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
+														});
 
-										self.updateRowData(
-											{ value: selectedIds }, // state
-											{ // editor
-												row: self.data.selectedCell.row,
-												column: self.data.selectedCell.column
-											},
-											false)
-											.then(function () {
-												// Update row
-												var rowData = $$(self.webixUiId.objectDatatable).getItem(self.data.selectedCell.row);
-
-												rowData[self.data.selectedCell.column] = $.map(result.data, function (item) {
-													return {
-														id: item.id,
-														dataLabel: item.text
-													};
-												}) || [];
-
-												$$(self.webixUiId.objectDatatable).updateItem(self.data.selectedCell.row, rowData);
-
-												// Remove duplicate selected item when the link column supports one value
-												var colData = self.data.columns.filter(function (col) { return col.name == self.data.selectedCell.column; })[0];
-												if (selectedIds && colData.setting.linkViaType === 'model') {
-													$$(self.webixUiId.objectDatatable).eachRow(function (row) {
-														if (row != self.data.selectedCell.row) {
-															var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
-															if (otherRow[self.data.selectedCell.column]) {
-																// Filter difference values
-																otherRow[self.data.selectedCell.column] = otherRow[self.data.selectedCell.column].filter(function (i) {
-																	return selectedIds.filter(function (sId) { return i.id == sId.id; }).length < 1;
-																});
-
-																$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
-															}
-														}
-													});
+														$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
+													}
 												}
-
-												// Resize row height
-												self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, selectedIds.length);
-
-												$$(self.webixUiId.objectDatatable).hideProgress();
-
-												self.data.selectedCell = null
 											});
-										break;
-								}
+										}
+
+										// Resize row height
+										if (rowData[self.data.selectedCell.column] instanceof Array)
+											self.controllers.ObjectDataTable.calculateRowHeight(self.data.selectedCell.row, rowData[self.data.selectedCell.column].length);
+
+										$$(self.webixUiId.objectDatatable).hideProgress();
+
+										self.data.selectedCell = null
+									});
 							});
 						},
 
@@ -415,40 +400,40 @@ steal(
 							webix.extend($$(self.webixUiId.objectDatatable), webix.ProgressBar);
 
 							self.controllers.ObjectDataTable.registerDataTable($$(self.webixUiId.objectDatatable));
-							self.controllers.ObjectDataTable.registerChangeSelectivityItem(function (ev, data) {
-								// Remove selected items
-								if (ev.removed) {
-									// Delete removed value - Array
-									if (data.itemData.forEach) {
-										data.itemData.forEach(function (item, index) {
-											var id = item.id ? item.id : item;
-											if (id == ev.removed.id)
-												data.itemData.splice(index, 1);
-										});
+							// self.controllers.ObjectDataTable.registerChangeSelectivityItem(function (ev, data) {
+							// 	// Remove selected items
+							// 	if (ev.removed) {
+							// 		// Delete removed value - Array
+							// 		if (data.itemData.forEach) {
+							// 			data.itemData.forEach(function (item, index) {
+							// 				var id = item.id ? item.id : item;
+							// 				if (id == ev.removed.id)
+							// 					data.itemData.splice(index, 1);
+							// 			});
 
-										if (data.itemData.length < 1) {
-											data.itemData = '';
-											data.item[data.columnId] = [];
-										}
-									}
-									// Delete removed value - Object
-									else if (data.itemData.id == ev.removed.id) {
-										data.itemData = '';
-										data.item[data.columnId] = [];
-									}
+							// 			if (data.itemData.length < 1) {
+							// 				data.itemData = '';
+							// 				data.item[data.columnId] = [];
+							// 			}
+							// 		}
+							// 		// Delete removed value - Object
+							// 		else if (data.itemData.id == ev.removed.id) {
+							// 			data.itemData = '';
+							// 			data.item[data.columnId] = [];
+							// 		}
 
-									$$(self.webixUiId.objectDatatable).updateItem(data.rowId, data.item);
+							// 		$$(self.webixUiId.objectDatatable).updateItem(data.rowId, data.item);
 
-									// Call server to remove value
-									self.updateRowData({ value: data.itemData }, { column: data.columnId, row: data.rowId }, false)
-										.then(function (result) {
-											$$(self.webixUiId.objectDatatable).hideProgress();
+							// 		// Call server to remove value
+							// 		self.updateRowData({ value: data.itemData }, { column: data.columnId, row: data.rowId }, false)
+							// 			.then(function (result) {
+							// 				$$(self.webixUiId.objectDatatable).hideProgress();
 
-											$$(self.webixUiId.objectDatatable).render({ column: data.columnId });
-										});
+							// 				$$(self.webixUiId.objectDatatable).render({ column: data.columnId });
+							// 			});
 
-								}
-							});
+							// 	}
+							// });
 
 							// Register delete event handler
 							self.controllers.ObjectDataTable.registerDeleteRowHandler(function (deletedId) {

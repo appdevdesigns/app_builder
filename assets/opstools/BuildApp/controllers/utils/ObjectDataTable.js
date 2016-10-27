@@ -2,9 +2,8 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 
-	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
-	function (dataFieldsManager, selectivityHelper, dataHelper) {
+	function (dataFieldsManager, dataHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -46,7 +45,7 @@ steal(
 						initEvents: function () {
 							var self = this;
 
-							$(selectivityHelper).on('change', function (event, data) {
+							$(dataFieldsManager).on('update', function (event, data) {
 								if (self.events.changeSelectivityItem) {
 									var result = {};
 									result.columnIndex = data.itemNode.parents('.webix_column').attr('column');
@@ -61,7 +60,6 @@ steal(
 									self.events.changeSelectivityItem(data.event, result);
 								}
 							});
-
 						},
 
 						registerDataTable: function (dataTable, application) {
@@ -128,10 +126,6 @@ steal(
 
 						registerItemClick: function (itemClick) {
 							this.events.itemClick = itemClick;
-						},
-
-						registerChangeSelectivityItem: function (changeSelectivityItem) {
-							this.events.changeSelectivityItem = changeSelectivityItem;
 						},
 
 						registerDeleteRowHandler: function (deleteRow) {
