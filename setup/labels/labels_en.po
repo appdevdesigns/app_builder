@@ -31,6 +31,18 @@ msgstr "Delete"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.import
+msgid "Import"
+msgstr "Import"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.export
+msgid "Export"
+msgstr "Export"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.cancel
 msgid "Cancel"
 msgstr "Cancel"
