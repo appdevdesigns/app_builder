@@ -29,49 +29,47 @@ steal(
 
 					objInfo = objInfo[0];
 
-
 					// Get object model
-					var objectModel = modelCreator.getModel(application, objInfo.attr('name'));
+					var objectModel = modelCreator.getModel(application, objInfo.attr('name')),
+						objectData,
+						linkCols = objInfo.columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
+						dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || [];// Get date & datetime columns
 
-					async.waterfall([
+					async.series([
 						// Find data
 						function (next) {
-							// Get link columns
-							var linkCols = objInfo.columns.filter(function (col) { return col.setting.linkObject });
-
-							// Get date & datetime columns
-							var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
-
 							objectModel.findAll({})
 								.fail(next)
 								.then(function (data) {
-
-									// Populate labels & Convert string to Date object
-									dataHelper.normalizeData(application, data, linkCols, dateCols)
-										.then(function (result) {
-											if (!dataCollections[objectId])
-												dataCollections[objectId] = AD.op.WebixDataCollection(result);
-
-											next(null, dataCollections[objectId], linkCols, dateCols);
-										});
+									objectData = data;
+									next();
 								});
 						},
-						// Listen change data event to update data label
-						function (dataCollection, linkCols, dateCols, next) {
-							linkCols.forEach(function (linkCol) {
-								dataCollection.AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-									var attName = attr.indexOf('.') > -1 ? attr.split('.')[1] : attr, // 0.attrName
-										hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0;
+						// Populate labels & Convert string to Date object
+						function (next) {
+							if (!objectData) return next();
 
-									if (hasUpdateLink && newVal) {
-										// Update connected data
-										dataHelper.normalizeData(application, ev.target, linkCols, dateCols)
-											.then(function (result) { });
+							dataHelper.normalizeData(application, objectData, linkCols, dateCols)
+								.fail(next)
+								.then(function (result) {
+									if (!dataCollections[objectId]) {
+										dataCollections[objectId] = AD.op.WebixDataCollection(result);
+
+										// Listen change data event to update data label
+										dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
+
+											var attName = attr.indexOf('.') > -1 ? attr.split('.')[1] : attr, // 0.attrName
+												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0;
+
+											if (hasUpdateLink && newVal) {
+												// Update connected data
+												dataHelper.normalizeData(application, ev.target, linkCols, dateCols).then(function (result) { });
+											}
+										});
 									}
-								});
-							});
 
-							next();
+									next();
+								});
 						}
 					], function (err) {
 						if (err) {
