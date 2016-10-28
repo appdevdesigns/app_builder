@@ -720,9 +720,13 @@ steal(
 									self.Model.ObjectModel.Cached.findAll({})
 										.fail(function (err) { next(err); })
 										.then(function (data) {
-											self.controllers.ObjectDataTable.populateData(AD.classes.AppBuilder.currApp, data).then(function () {
-												next();
-											});
+											self.controllers.ObjectDataTable.populateData(
+												AD.classes.AppBuilder.currApp,
+												AD.classes.AppBuilder.currApp.currObj,
+												data)
+												.then(function () {
+													next();
+												});
 										});
 								}
 							], function () {

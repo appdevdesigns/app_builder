@@ -243,7 +243,7 @@ steal(
 								this.dataTable.setRowHeight(row, rowHeight);
 						},
 
-						populateData: function (application, data) {
+						populateData: function (application, object, data) {
 							var self = this,
 								q = $.Deferred();
 
@@ -253,10 +253,10 @@ steal(
 							}
 
 							// Get link columns
-							var linkCols = application.currObj.columns.filter(function (col) { return col.setting.linkObject });
+							var linkCols = object.columns.filter(function (col) { return col.setting.linkObject });
 
 							// Get date & datetime columns
-							var dateCols = application.currObj.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
+							var dateCols = object.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
 
 							// Populate labels & Convert string to Date object
 							dataHelper.normalizeData(application, data, linkCols, dateCols)

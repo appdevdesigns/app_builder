@@ -673,12 +673,17 @@ steal(
 				if ($$(self.viewId).showProgress)
 					$$(self.viewId).showProgress({ type: 'icon' });
 
-				getObjectDataTable.call(self, application, objectId).populateData(application, dataCollection).then(function () {
-					q.resolve();
+				var object = application.objects.filter(function (obj) { return obj.id == objectId });
+				if (object && object[0]) object = object[0];
 
-					if ($$(self.viewId).hideProgress)
-						$$(self.viewId).hideProgress();
-				});
+				getObjectDataTable.call(self, application, objectId)
+					.populateData(application, object, dataCollection)
+					.then(function () {
+						q.resolve();
+
+						if ($$(self.viewId).hideProgress)
+							$$(self.viewId).hideProgress();
+					});
 
 				return q;
 			};
