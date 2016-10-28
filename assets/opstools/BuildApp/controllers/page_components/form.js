@@ -79,14 +79,14 @@ steal(
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
 
-						if (self.returnPage) {
+						if (self.fromPage) {
 							$(self).trigger('page', {
-								pageId: self.returnPage
+								pageId: self.fromPage
 							});
 						}
 
 						dataCollection.setCursor(null);
-						data.returnPage = null;
+						data.fromPage = null;
 
 						// Clear form
 						$$(self.viewId).setValues({});
@@ -391,13 +391,13 @@ steal(
 								click: function () {
 									dataCollection.setCursor(null);
 
-									if (self.returnPage) {
+									if (self.fromPage) {
 										$(self).trigger('page', {
-											pageId: self.returnPage
+											pageId: self.fromPage
 										});
 									}
 
-									self.returnPage = null;
+									self.fromPage = null;
 
 									// Clear form
 									$$(self.viewId).setValues({});
@@ -422,9 +422,7 @@ steal(
 
 					$$(self.viewId).hideProgress();
 
-					$(self).trigger('render', {
-						pageId: self.returnPage
-					})
+					$(self).trigger('render', {});
 
 					data.isRendered = true;
 					q.resolve();
@@ -520,8 +518,8 @@ steal(
 				events.render = renderFn;
 			}
 
-			this.setReturnPage = function (pageId) {
-				this.returnPage = pageId;
+			this.setFromPageId = function (pageId) {
+				this.fromPage = pageId;
 			};
 
 		}

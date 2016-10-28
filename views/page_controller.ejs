@@ -112,88 +112,6 @@ steal(
 <% } %>
                             },
 
-                            initEvents: function (pageId) {
-                                var self = this,
-                                    event_aggregator = $(self),
-                                    page = self.pages[pageId];
-
-                                for (var key in self.components) {
-                                    var comInstance = self.components[key];
-                                    if (comInstance.registerEventAggregator)
-                                        comInstance.registerEventAggregator(event_aggregator);
-                                }
-
-                                event_aggregator.on('renderComplete', function (sender, data) {
-                                    $$("<%- domID() %>").adjust();
-                                });
-
-                                event_aggregator.on('view', function (sender, data) {
-                                    switch (data.component_name) {
-                                        case 'Grid':
-                                            var com = self.getComponent(pageId, data.viewId);
-                                            if (!com) break;
-
-                                            // Go to view page
-                                            if (com.setting.viewPage && com.setting.viewPage != self.activePageID) {
-                                                self.showPage(com.setting.viewPage);
-                                            }
-
-                                            break;
-                                    }
-                                });
-
-                                event_aggregator.on('edit', function (sender, data) {
-                                    switch (data.component_name) {
-                                        case 'Grid':
-                                            var com = self.getComponent(pageId, data.viewId);
-                                            if (!com) break;
-
-                                            // Go to edit page
-                                            if (com.setting.editPage && com.setting.editPage != self.activePageID) {
-                                                self.showPage(com.setting.editPage);
-
-                                                // Populate data to edit form
-                                                var formViewId = self.getComponentId('<%- domID() %>' + com.setting.editPage, com.setting.editForm);
-                                                self.components.Form.setReturnPage(formViewId, com.page);
-                                            }
-
-                                            break;
-                                    }
-                                });
-
-                                event_aggregator.on('save', function (sender, data) {
-                                    switch (data.component_name) {
-                                        case 'Form':
-                                            var com = self.getComponent(pageId, data.viewId);
-                                            if (!com) break;
-
-                                            // Redirect to return page
-                                            if (data.returnPage && data.returnPage != self.activePageID) {
-                                                self.showPage(data.returnPage);
-                                            }
-
-                                            break;
-                                    }
-                                });
-
-                                event_aggregator.on('cancel', function (sender, data) {
-                                    switch (data.component_name) {
-                                        case 'Form':
-                                            if (data.returnPage && data.returnPage != self.activePageID)
-                                                self.showPage(data.returnPage);
-                                            else {
-                                                var curPage = self.pages[self.activePageID];
-
-                                                $$(data.viewId).setValues({});
-                                            }
-
-                                            break;
-                                    }
-                                });
-
-                            },
-
-
                             initDOM: function () {
                                 var self = this,
                                     html = '',
@@ -262,21 +180,41 @@ steal(
                                     linkedDataCollection;
 
                                 if (!page.comInstances) page.comInstances = {};
+                                if (page.comInstances[item.id]){
+                                    // Set return page to previous page
+                                    if (page.comInstances[item.id].setFromPageId)
+                                        page.comInstances[item.id].setFromPageId(self.previousPageID);
+
+                                    return;
+                                }
 
                                 // Create component instance
-                                if (!page.comInstances[item.id]) {
-                                    page.comInstances[item.id] = new componentInstance(
-                                        self.application, // Current application
-                                        viewId, // the view id
-                                        item.id // the component data id
-                                    );
+                                page.comInstances[item.id] = new componentInstance(
+                                    self.application, // Current application
+                                    viewId, // the view id
+                                    item.id // the component data id
+                                );
 
-                                    // Listen component events
-                                    $(page.comInstances[item.id]).on('page', function(event, data) {
-                                        if (self.activePageID != data.pageId)
-                                            self.showPage(data.pageId);
-                                    });
-                                }
+                                // Set return page to previous page
+                                if (page.comInstances[item.id].setFromPageId)
+                                    page.comInstances[item.id].setFromPageId(self.previousPageID);
+
+                                // Listen component events
+                                $(page.comInstances[item.id]).on('render', function(event, data) {
+                                    $$("<%- domID() %>").adjust();
+                                });
+
+                                $(page.comInstances[item.id]).on('page', function(event, data) {
+                                    // Store previous page id when click on menu
+                                    if (item.component == 'menu')
+                                        self.previousPageID = self.activePageID;
+                                    else
+                                        self.previousPageID = null;
+
+                                    // Redirect to another page
+                                    if (self.activePageID != data.pageId)
+                                        self.showPage(data.pageId);
+                                });
 
                                 if (view && setting) {
                                     var setting = setting.attr ? setting.attr() : setting,
@@ -287,11 +225,6 @@ steal(
                                     view.id = viewId;
                                     view.container = view.id;
                                     view.autowidth = true;
-
-                                    // Set return page to previous page
-                                    if (page.comInstances[item.id].setReturnPage) {
-                                        page.comInstances[item.id].setReturnPage(self.previousPageID);
-                                    }
 
                                     $('#' + view.id).html('');
 
@@ -380,7 +313,6 @@ steal(
                                 this.activePageID = pageID;
 
                                 this.initWebix(this.activePageID);
-                                this.initEvents(this.activePageID);
 
                                 this.resize();
 

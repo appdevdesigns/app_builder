@@ -128,7 +128,7 @@ steal(
 				if (linkedToDataCollection) {
 					self.data.linkedToDataCollection = linkedToDataCollection;
 					self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
-						filterLinkedData(self.viewId, setting.linkedField);
+						// filterLinkedData(self.viewId, setting.linkedField);
 					});
 				}
 
@@ -353,19 +353,17 @@ steal(
 					// Select edit item
 					getObjectDataTable.call(self, application, setting.object).registerItemClick(function (id, e, node) {
 						if (id.column === 'view_detail') {
-							// callEvent('view', self.viewId, {
-							// 	id: componentId,
-							// 	selected_data: id
-							// });
+							$(self).trigger('page', {
+								pageId: setting.viewPage
+							});
 
 							$$(self.viewId).define('select', true);
 							$$(self.viewId).select(id);
 						}
 						else if (id.column === 'edit_form') {
-							// callEvent('edit', self.viewId, {
-							// 	id: componentId,
-							// 	selected_data: id
-							// });
+							$(self).trigger('page', {
+								pageId: setting.editPage
+							});
 
 							$$(self.viewId).define('select', true);
 							$$(self.viewId).select(id);
@@ -373,11 +371,11 @@ steal(
 					});
 
 					$$(self.viewId).attachEvent('onAfterRender', function (data) {
-						// callEvent('renderComplete', self.viewId);
+						$(self).trigger('render', {});
 					});
 
 					$$(self.viewId).attachEvent('onAfterSelect', function (data, perserve) {
-						dataCollection.setCursor(self.data.id);
+						dataCollection.setCursor(data.id);
 					});
 
 					if (dataCollection) {

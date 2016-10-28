@@ -336,36 +336,41 @@ steal(
 					currModel = newData ? newData : data.dataCollection.AD.currModel(),
 					object = application.objects.filter(function (obj) { return obj.id == setting.object })[0];
 
-				if (currModel && object) {
-					currModel = currModel.attr ? currModel.attr() : currModel;
+				if (!currModel || !object) return;
 
-					data.currDataId = currModel.id;
+				currModel = currModel.attr ? currModel.attr() : currModel;
 
-					$$(self.viewId).getChildViews().forEach(function (child) {
-						var displayField = child.getChildViews()[1],
-							fieldData = currModel ? currModel[child.config.fieldName] : '';
+				data.currDataId = currModel.id;
 
-						if (dataFieldsManager.customDisplay(child.fieldType, application, object, child.config.fieldName, newData.id, fieldData, child.$view, { readOnly: true }))
-							return;
+				$$(self.viewId).getChildViews().forEach(function (child) {
+					if (!child.config.fieldName) return;
 
-						if (child.config.editor === 'date' || child.config.editor === 'datetime') {
-							if (fieldData) {
-								var dateValue = (fieldData instanceof Date) ? fieldData : new Date(fieldData),
-									dateFormat = webix.i18n.dateFormatStr(dateValue);
-								displayField.setValue(dateFormat);
-							}
-							else {
-								displayField.setValue(fieldData);
-							}
+					var displayField = child.getChildViews()[1],
+						fieldData = currModel ? currModel[child.config.fieldName] : '';
+
+					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, child.config.fieldName, currModel.id, fieldData, child.$view, { readOnly: true }))
+						return;
+
+					if (child.config.editor === 'date' || child.config.editor === 'datetime') {
+						if (fieldData) {
+							var dateValue = (fieldData instanceof Date) ? fieldData : new Date(fieldData),
+								dateFormat = webix.i18n.dateFormatStr(dateValue);
+							displayField.setValue(dateFormat);
 						}
-						else if (child.config.editor) {
-							if (fieldData)
-								displayField.setValue(fieldData);
-							else
-								displayField.setValue('');
+						else {
+							displayField.setValue(fieldData);
 						}
-					});
-				}
+					}
+					else if (child.config.editor) {
+						if (fieldData)
+							displayField.setValue(fieldData);
+						else
+							displayField.setValue('');
+					}
+				});
+
+				$$(self.viewId).adjust();
+
 			};
 		};
 
