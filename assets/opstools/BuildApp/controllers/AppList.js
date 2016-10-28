@@ -43,6 +43,8 @@ steal(
 							self.labels.common.edit = AD.lang.label.getLabel('ab.common.edit') || "Edit";
 							self.labels.common.save = AD.lang.label.getLabel('ab.common.save') || "Save";
 							self.labels.common.delete = AD.lang.label.getLabel('ab.common.delete') || "Delete";
+							self.labels.common.import = AD.lang.label.getLabel('ab.common.import') || "Import";
+							self.labels.common.export = AD.lang.label.getLabel('ab.common.export') || "Export";
 							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
 							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
 							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
@@ -72,6 +74,15 @@ steal(
 
 						initWebixUI: function () {
 							var self = this;
+							var csrf = '';
+                            $.ajax('/csrfToken')
+                            .done(function(data, status, xhr) {
+                                csrf = data._csrf;
+                            });
+							webix.attachEvent('onBeforeAjax', function(mode, url, params, x, headers) {
+							    headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || csrf;
+							});
+							
 							self.webixUiId = {
 								appView: "ab-app-view",
 								appListRow: 'ab-app-list-row',
@@ -103,7 +114,36 @@ steal(
 													self.resetState();
 													self.populateForm();
 												}
-											}]
+											},
+											{
+											    view: "uploader", 
+											    value: self.labels.common.import, 
+											    width: 200,
+											    upload: '/app_builder/appJSON',
+											    multiple: false,
+											    autosend: true,
+											    on: {
+											        onAfterFileAdd: function() {
+											            this.disable();
+                                                        $$(self.webixUiId.appList).showProgress({ type: "icon" });
+											            /*
+											            this.send(function() {
+											                console.log('after send');
+											            });
+											            */
+											        },
+											        onFileUpload: function(item, response) {
+											            self.loadData(); // refresh app list
+											            this.enable();
+                                                        $$(self.webixUiId.appList).hideProgress();
+											        },
+											        onFileUploadError: function() {
+											            this.enable();
+                                                        $$(self.webixUiId.appList).hideProgress();
+											        }
+											    }
+											}
+								        ]
 									},
 									{
 										id: self.webixUiId.appList,
@@ -199,7 +239,8 @@ steal(
 									view: "list",
 									data: [
 										{ command: self.labels.common.edit, icon: "fa-pencil-square-o" },
-										{ command: self.labels.common.delete, icon: "fa-trash" }
+										{ command: self.labels.common.delete, icon: "fa-trash" },
+										{ command: self.labels.common.export, icon: "fa-download" }
 									],
 									datatype: "json",
 
@@ -254,6 +295,10 @@ steal(
 													});
 
 													break;
+												case self.labels.common.export:
+												    // Download the JSON file to disk
+												    window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
+												    break;
 											}
 
 											$$(self.webixUiId.appListMenu).hide();

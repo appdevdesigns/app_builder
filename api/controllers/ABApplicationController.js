@@ -6,6 +6,7 @@
  */
 
 var AD = require('ad-utils');
+var fs = require('fs');
 var reloading = null;
 
 module.exports = {
@@ -229,6 +230,77 @@ module.exports = {
             } else {
                 res.AD.success({});
                 reloading.resolve();
+            }
+        });
+    },
+    
+    
+    /**
+     * GET /app_builder/appJSON/:id?download=1
+     * 
+     * Export an app in JSON format
+     */
+    jsonExport: function(req, res) {
+        var appID = req.param('id');
+        var forDownload = req.param('download');
+        
+        AppBuilderExport.appToJSON(appID)
+        .fail(function(err) {
+            res.AD.error(err);
+        })
+        .done(function(data) {
+            if (forDownload) {
+                res.set('Content-Disposition', 'attachment; filename="app.json"');
+            }
+            res.json(data);
+        });
+    },
+    
+    
+    /**
+     * POST /app_builder/appJSON
+     *
+     * Import an app from uploaded JSON data file.
+     *
+     * The file is expexted to be uploaded via the Webix uploader widget.
+     */
+    jsonImport: function(req, res) {
+        req.file('upload').upload(function(err, files) {
+            if (err) {
+                console.log('jsonImport upload error', err);
+                res.send({ status: 'error' });
+                //res.AD.error(err);
+            }
+            else if (!files || !files[0]) {
+                //res.AD.error(new Error('No file was uploaded'));
+                res.send({ status: 'error' });
+            }
+            else {
+                fs.readFile(files[0].fd, function(err, data) {
+                    if (err) {
+                        console.log('jsonImport read error', err);
+                        res.send({ status: 'error' });
+                        //res.AD.error(err);
+                    }
+                    else {
+                        try {
+                            var jsonData = JSON.parse(data.toString());
+                            AppBuilderExport.appFromJSON(jsonData)
+                            .fail(function(err) {
+                                console.log('jsonImport import error', err);
+                                res.send({ status: 'error' });
+                                //res.AD.error(err);
+                            })
+                            .done(function() {
+                                res.send({ status: "server" });
+                            });
+                        } catch (err) {
+                            console.log('jsonImport parse error', err);
+                            res.send({ status: 'error' });
+                            //res.AD.error(err);
+                        }
+                    }
+                });
             }
         });
     }
