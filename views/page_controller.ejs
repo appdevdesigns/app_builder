@@ -281,6 +281,8 @@ steal(
                             },
 
                             resize: function (height) {
+                                if (!$$("<%- domID() %>")) return;
+
                                 var width = this.element.width();
 
                                 if (!width) {
