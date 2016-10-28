@@ -264,8 +264,8 @@ steal(
 													.then(function (result) {
 														item[editor.column] = state.value;
 
-														if (result.constructor.name === 'Cached' && result.isUnsync())
-															item.isUnsync = true;
+														// if (result.constructor.name === 'Cached' && result.isUnsync())
+														// 	item.isUnsync = true;
 
 														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
 
@@ -395,42 +395,6 @@ steal(
 							var self = this;
 
 							webix.extend($$(self.webixUiId.objectDatatable), webix.ProgressBar);
-
-							self.controllers.ObjectDataTable.registerDataTable($$(self.webixUiId.objectDatatable));
-							// self.controllers.ObjectDataTable.registerChangeSelectivityItem(function (ev, data) {
-							// 	// Remove selected items
-							// 	if (ev.removed) {
-							// 		// Delete removed value - Array
-							// 		if (data.itemData.forEach) {
-							// 			data.itemData.forEach(function (item, index) {
-							// 				var id = item.id ? item.id : item;
-							// 				if (id == ev.removed.id)
-							// 					data.itemData.splice(index, 1);
-							// 			});
-
-							// 			if (data.itemData.length < 1) {
-							// 				data.itemData = '';
-							// 				data.item[data.columnId] = [];
-							// 			}
-							// 		}
-							// 		// Delete removed value - Object
-							// 		else if (data.itemData.id == ev.removed.id) {
-							// 			data.itemData = '';
-							// 			data.item[data.columnId] = [];
-							// 		}
-
-							// 		$$(self.webixUiId.objectDatatable).updateItem(data.rowId, data.item);
-
-							// 		// Call server to remove value
-							// 		self.updateRowData({ value: data.itemData }, { column: data.columnId, row: data.rowId }, false)
-							// 			.then(function (result) {
-							// 				$$(self.webixUiId.objectDatatable).hideProgress();
-
-							// 				$$(self.webixUiId.objectDatatable).render({ column: data.columnId });
-							// 			});
-
-							// 	}
-							// });
 
 							// Register delete event handler
 							self.controllers.ObjectDataTable.registerDeleteRowHandler(function (deletedId) {
@@ -655,6 +619,11 @@ steal(
 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
 							self.resetState();
+
+							self.controllers.ObjectDataTable.registerDataTable(
+								AD.classes.AppBuilder.currApp,
+								AD.classes.AppBuilder.currApp.currObj,
+								$$(self.webixUiId.objectDatatable));
 
 							if (!AD.classes.AppBuilder.currApp.currObj) {
 								$$(self.webixUiId.objectDatatable).hideProgress();

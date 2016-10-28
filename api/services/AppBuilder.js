@@ -838,6 +838,7 @@ module.exports = {
             function (next) {
                 sails.renderView(path.join('app_builder', 'page_controller'), {
                     layout: false,
+                    appId: appID,
                     appName: appName,
                     pageName: pageName,
                     pages: pages,

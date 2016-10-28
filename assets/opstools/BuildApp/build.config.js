@@ -10,6 +10,7 @@ module.exports = {
 			"deps": [
 				"async",
 				"can",
+				"webix",
 				"js/selectivity/selectivity-full.min",
 				"OpsPortal/classes/OpsWebixDataCollection"
 			]

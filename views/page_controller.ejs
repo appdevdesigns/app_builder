@@ -4,23 +4,19 @@
 
 steal(
     // List your Controller's dependencies here:
+    'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
+    'opstools/BuildApp/controllers/utils/DataHelper.js',
     'opstools/BuildApp/controllers/utils/ModelCreator.js',
-    'opstools/BuildApp/controllers/utils/DataHelper.js'
-    function(modelCreator, dataHelper) {
+    'opstools/BuildApp/controllers/page_components/componentManager.js',
+    function(dataCollectionHelper, dataHelper, modelCreator, componentManager) {
         System.import('appdev').then(function () {
             System.import('opstools/BuildApp').then(function () {
                 steal.import('appdev/ad',
                     'appdev/control/control',
+                    'opstools/BuildApp/models/ABApplication'
 
-<% for(var i = 0; i < models.length; i++) {%>                    'opstools/<%= appName %>/models/<%= appName %>_<%= models[i] %>',
+<% for(var i = 0; i < models.length; i++) {%>                    ,'opstools/<%= appName %>/models/<%= appName %>_<%= models[i] %>'
 <% } %>
-
-                    'opstools/BuildApp/models/ABObject',
-
-                    'opstools/BuildApp/controllers/page_components/Menu',
-                    'opstools/BuildApp/controllers/page_components/Grid',
-                    'opstools/BuildApp/controllers/page_components/Form',
-                    'opstools/BuildApp/controllers/page_components/View',
 
                     ).then(function() {
                         // Namespacing conventions:
@@ -37,30 +33,66 @@ steal(
                                 // Call parent init
                                 this._super(element, options);
 
-                                this.data = {};
+                                this.data = {
+                                    components: {}
+                                };
                                 this.dataSource = this.options.dataSource;
                                 this.rootPageID = this.activePageID = <%- rootPageID %>;
+                                this.application;
                                 this.pages = <%- JSON.stringify(pages) %>;
                                 
                                 for (var id in this.pages) {
                                     this.pages[id].domID = '<%- domID() %>' + id;
                                 }
 
-                                // Find application object
-                                for (var key in this.pages) {
-                                    if (typeof this.pages[key].application === 'object')
-                                        this.data.app = this.pages[key].application;
-                                }
-
                                 this.initModels();
-                                this.initControllers();
-                                this.initComponents();
-                                this.setObjectList();
 
-                                webix.ready(function() {
-                                    self.initDOM();
-                                    self.showPage();
-                                });
+                                async.series([
+                                    // Get application model
+                                    function(next) {
+                                        self.Model.ABApplication.findOne({ id: <%- appId %> })
+                                            .fail(next)
+                                            .then(function(result) {
+                                                if (result.translate) result.translate();
+                                                self.application = result;
+                                                next();
+                                            });
+                                    },
+                                    // Get objects
+                                    function(next) {
+                                        self.application.getObjects()
+                                            .fail(next)
+                                            .then(function(result) {
+                                                result.forEach(function(r) {
+                                                    if (r.translate) r.translate();
+                                                });
+
+                                                self.application.attr('objects', result);
+                                                next();
+                                            });
+                                    },
+                                    // Get pages
+                                    function(next) {
+                                        self.application.getPages()
+                                            .fail(next)
+                                            .then(function(result) {
+                                                result.forEach(function(r) {
+                                                    if (r.translate) r.translate();
+                                                });
+
+                                                self.application.attr('pages', result);
+                                                next();
+                                            });
+                                    },
+                                    // Initial UI
+                                    function(next){
+                                        webix.ready(function() {
+                                            self.initDOM();
+                                            self.showPage();
+                                        });
+                                        next();
+                                    }
+                                ]);
 
                                 /*
                                 AD.comm.hub.subscribe(this.options.resize_notification, function(message, data) {
@@ -76,44 +108,10 @@ steal(
 
                             initModels: function() {
                                 this.Model = {};
-                                this.Model.ABObject = AD.Model.get('opstools.BuildApp.ABObject');
+                                this.Model.ABApplication = AD.Model.get('opstools.BuildApp.ABApplication');
 
 <% for(var i = 0; i < models.length; i++) {%>                                this.Model.<%= appName %>_<%= models[i] %> = AD.Model.get('opstools.<%= appName %>.<%= appName %>_<%= models[i] %>');
 <% } %>
-                            },
-
-                            initControllers: function() {
-                                this.controllers = {};
-
-                                var Menu = AD.Control.get('opstools.BuildApp.Components.Menu'),
-                                    Grid = AD.Control.get('opstools.BuildApp.Components.Grid'),
-                                    Form = AD.Control.get('opstools.BuildApp.Components.Form'),
-                                    View = AD.Control.get('opstools.BuildApp.Components.View');
-
-                                this.controllers.Menu = new Menu(this.element, {});
-                                this.controllers.Grid = new Grid(this.element, {});
-                                this.controllers.Form = new Form(this.element, {});
-                                this.controllers.View = new View(this.element, {});
-                            },
-
-
-                            initComponents: function () {
-                                var self = this;
-                                self.components = {};
-
-                                self.components.Menu = self.controllers.Menu.getInstance();
-                                self.components.Grid = self.controllers.Grid.getInstance();
-                                self.components.Form = self.controllers.Form.getInstance();
-                                self.components.View = self.controllers.View.getInstance();
-                            },
-
-                            setObjectList: function() {
-                                var self = this;
-
-                                self.Model.ABObject.findAll({ application: self.data.app.id })
-                                    .then(function(result) {
-                                        self.components.Form.setObjectList(result.attr());
-                                    });
                             },
 
                             initEvents: function (pageId) {
@@ -257,241 +255,156 @@ steal(
 
                             renderComponent: function (page, item) {
                                 var self = this,
-                                    component = self.components[item.component],
-                                    view = component.getView(),
+                                    q = $.Deferred(),
+                                    componentInstance = componentManager.getComponent(item.component),
+                                    view = componentInstance.getView(),
                                     viewId = self.getComponentId(page.domID, item.id),
-                                    app;
+                                    setting = item.setting,
+                                    dataCollection,
+                                    linkedDataCollection;
 
-                                if(component.isRendered(viewId)) return;
-
-                                if (page.application && typeof page.application === 'object')
-                                        app = page.application;
-                                    else if (!isNaN(page.application)) {
-                                        for(var key in self.pages) {
-                                            var p = self.pages[key];
-
-                                            if (typeof p.application === 'object' && p.application.id == page.application)
-                                                app = p.application;
-                                        }
-                                    }
-
-                                    if (component.setApp && app)
-                                        component.setApp(app);
-
-                                    if (view && component.render && item.setting) {
-                                        view = $.extend(true, {}, view);
-                                        view.id = viewId;
-                                        view.container = view.id;
-                                        view.autowidth = true;
-
-                                        if (item.component === 'Menu') {
-                                            item.setting.click = function (id, ev) {
-                                                // Find form to set return page
-                                                self.pages[id].components.forEach(function(c) {
-                                                    if (c.component === 'Form' && c.setting.cancelVisible && c.setting.cancelVisible === 'show') {
-                                                        var formViewId = self.getComponentId(self.pages[id].domID, c.id);
-                                                        self.components.Form.setReturnPage(formViewId, self.activePageID);
-                                                    }
-                                                });
-                                                
-                                                self.showPage(id);
-                                            };
-                                        }
-
-                                        $('#' + view.id).html('');
-
-                                        webix.ui(view);
-
-                                        var dataCollection, linkedDataCollection;
-                                        async.series([
-                                            // Get data collection
-                                            function(next){
-                                                if (item.setting.object) {
-                                                    self.getDataCollection(item.setting.object)
-                                                        .then(function(result) {
-                                                            dataCollection = result;
-                                                            next();
-                                                        });
-                                                }
-                                                else {
-                                                    next();
-                                                }
-                                            },
-                                            // Get linked data collection
-                                            function(next){
-                                                if (item.setting.linkedTo) {
-                                                    self.getDataCollection(item.setting.linkedTo)
-                                                        .then(function(result) {
-                                                            linkedDataCollection = result;
-                                                            next();
-                                                        });
-                                                }
-                                                else {
-                                                    next();
-                                                }
-                                            },
-                                            function (next) {
-                                                component.render(view.id, item.id, item.setting, false, false, dataCollection, linkedDataCollection);
-                                                next();
-                                            }
-                                        ]);
-
-                                    }
-                                },
-
-                                getDataCollection: function (objectId) {
-                                    var self = this,
-                                        q = $.Deferred();
-
-                                    if (!objectId) {
-                                        q.reject("Object id is required.");
-                                        return;
-                                    }
-
-                                    if (!self.data.dataCollections) self.data.dataCollections = {};
-
-                                    // Get object model
-                                    var objectModel = modelCreator.getModel(app, objInfo.attr('name'));
-
-                                    if (!self.data.dataCollections[objectId]) {
-                                        async.waterfall([
-                                            // Get object info
-                                            function (next) {
-                                                self.Model.ABObject.findOne({ id: objectId })
-                                                    .fail(function (err) { next(err); })
-                                                    .then(function (objInfo) {
-                                                        next(null, objInfo);
-                                                    });
-                                            },
-                                            // Find data
-                                            function (objInfo, next) {
-                                                // Get link columns
-                                                var linkCols = objInfo.columns.filter(function (col) { return col.linkObject != null }),
-                                                    linkColObjs = linkCols.map(function (col) {
-                                                        return {
-                                                            name: col.name,
-                                                            linkObject: col.linkObject
-                                                        };
-                                                    });
-
-                                                // Get date & datetime columns
-                                                var dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
-
-                                                objectModel.findAll({})
-                                                    .fail(function (err) { next(err); })
-                                                    .then(function (data) {
-
-                                                        // Populate labels & Convert string to Date object
-                                                        dataHelper.normalizeData(data, linkColObjs, dateCols)
-                                                            .then(function (result) {
-                                                                if (!self.data.dataCollections[objectId])
-                                                                    self.data.dataCollections[objectId] = AD.op.WebixDataCollection(result);
-
-                                                                next(null, self.data.dataCollections[objectId], linkColObjs, dateCols);
-                                                            });
-                                                    });
-                                            },
-                                            // Listen change data event to update data label
-                                            function (dataCollection, linkColObjs, dateCols, next) {
-                                                linkColObjs.forEach(function (linkCol) {
-                                                    dataCollection.AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-                                                        var attName = attr.indexOf('.') > -1 ? attr.split('.')[1] : attr, // 0.attrName
-                                                            hasUpdateLink = linkColObjs.filter(function (col) { return col.name == attName; }).length > 0;
-
-                                                        if (hasUpdateLink && newVal) {
-                                                            dataHelper.normalizeData(ev.target, linkColObjs, dateCols)
-                                                                .then(function (result) { });
-                                                        }
-                                                    });
-                                                });
-
-                                                next();
-                                            }
-                                        ], function (err) {
-                                            if (err) {
-                                                q.reject(err);
-                                                return;
-                                            }
-
-                                            q.resolve(self.data.dataCollections[objectId]);
-                                        });
-                                    }
-                                    else {
-                                        q.resolve(self.data.dataCollections[objectId]);
-                                    }
-
-                                    return q;
-                                },
-
-                                resize: function (height) {
-                                    var width = this.element.width();
-
-                                    if (!width) {
-                                        this.element.parents().each(function(index, elm) {
-                                            if ($(elm).width() > width)
-                                                width = $(elm).width();
-                                        });
-                                    }
-
-                                    if (width > 0)
-                                        $$("<%- domID() %>").define('width', width);
-
-                                    if (height > 0)
-                                        $$("<%- domID() %>").define('height', height);
-
-                                    $$("<%- domID() %>").adjust();
-                                },
-                                
-                                
-                                /**
-                                * @param integer pageID
-                                *      Optional page ID number. Default is to show
-                                *      the root page.
-                                */
-                                showPage: function (pageID) {
-                                    if (typeof pageID == 'undefined') {
-                                        pageID = this.rootPageID;
-                                    }
-                                    $$(this.pages[pageID].domID).show();
-                                    this.activePageID = pageID;
-
-                                    this.initWebix(this.activePageID);
-                                    this.initEvents(this.activePageID);
-
-                                    this.resize();
-
-                                },
-                                
-                                
-                                /**
-                                * Returns a basic object containing the names of all
-                                * the pages from this controller, indexed by their
-                                * page ID number.
-                                */
-                                getPages: function() {
-                                    var result = {};
-                                    for (var id in this.pages) {
-                                        result[id] = pages[id].name;
-                                    }
-                                },
-
-                                getComponentId: function(pageId, itemId) {
-                                    return pageId + '-component-' + itemId;
-                                },
-
-                                getComponent: function (pageId, viewId) {
-                                    var self = this,
-                                        page = self.pages[pageId];
-
-                                    var coms = page.components.filter(function (com) {
-                                        return viewId == self.getComponentId(page.domID, com.id);
-                                    });
-
-                                    if (coms && coms.length > 0)
-                                        return coms[0];
-                                    else
-                                        return null;
+                                // Create component instance
+                                if (!self.data.components[item.id]) {
+                                    self.data.components[item.id] = new componentInstance(
+                                        self.application, // Current application
+                                        viewId, // the view id
+                                        item.id // the component data id
+                                    );
                                 }
+
+                                if (view && setting) {
+                                    var setting = setting.attr ? setting.attr() : setting,
+                                        editable = false,
+                                        showAll = false;
+
+                                    view = $.extend(true, {}, view);
+                                    view.id = viewId;
+                                    view.container = view.id;
+                                    view.autowidth = true;
+
+                                    $('#' + view.id).html('');
+
+                                    webix.ui(view);
+
+                                    async.series([
+                                        // Get data collection
+                                        function (next) {
+                                            if (setting.object) {
+                                                dataCollectionHelper.getDataCollection(self.application, setting.object)
+                                                    .fail(next)
+                                                    .then(function (result) {
+                                                        dataCollection = result;
+                                                        next();
+                                                    });
+                                            }
+                                            else
+                                                next();
+                                        },
+                                        // Get data collection of connected data
+                                        function (next) {
+                                            if (setting.linkedTo) {
+                                                dataCollectionHelper.getDataCollection(self.application, setting.linkedTo)
+                                                    .fail(next)
+                                                    .then(function (result) {
+                                                        linkedDataCollection = result;
+                                                        next();
+                                                    });
+                                            }
+                                            else
+                                                next();
+                                        },
+                                        // Render component
+                                        function (next) {
+                                            self.data.components[item.id].render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
+                                                .fail(next)
+                                                .then(function () {
+                                                    next();
+                                                });
+
+                                        }
+                                    ], function (err) {
+                                        if (err)
+                                            q.reject(err);
+                                        else
+                                            q.resolve();
+                                    });
+                                }
+                                else {
+                                    q.resolve();
+                                }
+
+                                return q;
+                            },
+
+                            resize: function (height) {
+                                var width = this.element.width();
+
+                                if (!width) {
+                                    this.element.parents().each(function(index, elm) {
+                                        if ($(elm).width() > width)
+                                            width = $(elm).width();
+                                    });
+                                }
+
+                                if (width > 0)
+                                    $$("<%- domID() %>").define('width', width);
+
+                                if (height > 0)
+                                    $$("<%- domID() %>").define('height', height);
+
+                                $$("<%- domID() %>").adjust();
+                            },
+                            
+                            
+                            /**
+                            * @param integer pageID
+                            *      Optional page ID number. Default is to show
+                            *      the root page.
+                            */
+                            showPage: function (pageID) {
+                                if (typeof pageID == 'undefined') {
+                                    pageID = this.rootPageID;
+                                }
+                                $$(this.pages[pageID].domID).show();
+                                this.activePageID = pageID;
+
+                                this.initWebix(this.activePageID);
+                                this.initEvents(this.activePageID);
+
+                                this.resize();
+
+                            },
+                            
+                            
+                            /**
+                            * Returns a basic object containing the names of all
+                            * the pages from this controller, indexed by their
+                            * page ID number.
+                            */
+                            getPages: function() {
+                                var result = {};
+                                for (var id in this.pages) {
+                                    result[id] = pages[id].name;
+                                }
+                            },
+
+                            getComponentId: function(pageId, itemId) {
+                                return pageId + '-component-' + itemId;
+                            },
+
+                            getComponent: function (pageId, viewId) {
+                                var self = this,
+                                    page = self.pages[pageId];
+
+                                var coms = page.components.filter(function (com) {
+                                    return viewId == self.getComponentId(page.domID, com.id);
+                                });
+
+                                if (coms && coms.length > 0)
+                                    return coms[0];
+                                else
+                                    return null;
+                            }
 
 
                         });

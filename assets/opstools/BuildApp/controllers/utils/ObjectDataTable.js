@@ -41,8 +41,10 @@ steal(
 
 						},
 
-						registerDataTable: function (dataTable, application) {
+						registerDataTable: function (application, object, dataTable) {
 							var self = this;
+							self.application = application;
+							self.object = object;
 							self.dataTable = dataTable;
 
 							// Trash
@@ -86,8 +88,8 @@ steal(
 
 										dataFieldsManager.customDisplay(
 											col.fieldName,
-											AD.classes.AppBuilder.currApp,
-											AD.classes.AppBuilder.currApp.currObj,
+											self.application,
+											self.object,
 											columnId,
 											rowId,
 											dataTable.getItem(rowId)[columnId],

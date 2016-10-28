@@ -38,7 +38,7 @@ steal(
 				return Math.max.apply(null, weightList);
 			}
 
-			function getObjectDataTable() {
+			function getObjectDataTable(application, objectId) {
 				if (!this.data.objectDataTable) {
 					var ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
 
@@ -46,7 +46,10 @@ steal(
 					this.data.objectDataTable.setReadOnly(true);
 				}
 
-				this.data.objectDataTable.registerDataTable($$(this.viewId));
+				var object = application.objects.filter(function (obj) { return obj.id == objectId });
+				if (object && object[0]) object = object[0];
+
+				this.data.objectDataTable.registerDataTable(application, object, $$(this.viewId));
 
 				return this.data.objectDataTable;
 			};
@@ -112,12 +115,13 @@ steal(
 			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
 					q = $.Deferred(),
-					dataTableController = getObjectDataTable.call(this);
+					dataTableController = getObjectDataTable.call(this, application, setting.object);
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
 				$$(self.viewId).clearAll();
 				$$(self.viewId).showProgress({ type: 'icon' });
 
+				self.data.setting = setting;
 				self.data.dataCollection = dataCollection;
 
 				// Initial linked dataCollection events
@@ -131,7 +135,7 @@ steal(
 				if (setting.columns)
 					self.data.visibleColumns = $.map(setting.columns, function (cId) { return cId.toString(); });
 
-				var dataTableController = getObjectDataTable.call(self);
+				var dataTableController = getObjectDataTable.call(self, application, setting.object);
 				dataTableController.bindColumns(application, [], true, setting.removable);
 				dataTableController.registerDeleteRowHandler(function (deletedId) {
 					$$(self.viewId).showProgress({ type: 'icon' });
@@ -195,12 +199,16 @@ steal(
 						return;
 					}
 
-					self.renderDataTable(dataCollection, {
-						viewPage: setting.viewPage,
-						viewId: setting.viewId,
-						editPage: setting.editPage,
-						editForm: setting.editForm
-					}, setting.removable, setting.linkedField);
+					self.renderDataTable(
+						dataCollection,
+						{
+							viewPage: setting.viewPage,
+							viewId: setting.viewId,
+							editPage: setting.editPage,
+							editForm: setting.editForm
+						},
+						setting.removable,
+						setting.linkedField);
 
 					$$(self.viewId).hideProgress();
 
@@ -343,7 +351,7 @@ steal(
 					}
 
 					// Select edit item
-					getObjectDataTable.call(self).registerItemClick(function (id, e, node) {
+					getObjectDataTable.call(self, application, setting.object).registerItemClick(function (id, e, node) {
 						if (id.column === 'view_detail') {
 							// callEvent('view', self.viewId, {
 							// 	id: componentId,
@@ -437,9 +445,9 @@ steal(
 
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self).bindColumns(application, columns, true, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object).bindColumns(application, columns, true, isTrashVisible);
 
-				self.populateData(dataCollection)
+				self.populateData(self.data.setting.object, dataCollection)
 					.then(function () {
 						if (linkedField)
 							filterLinkedData.call(self, linkedField);
@@ -660,14 +668,14 @@ steal(
 				]);
 			};
 
-			this.populateData = function (dataCollection) {
+			this.populateData = function (objectId, dataCollection) {
 				var self = this,
 					q = $.Deferred();
 
 				if ($$(self.viewId).showProgress)
 					$$(self.viewId).showProgress({ type: 'icon' });
 
-				getObjectDataTable.call(self).populateData(application, dataCollection).then(function () {
+				getObjectDataTable.call(self, application, objectId).populateData(application, dataCollection).then(function () {
 					q.resolve();
 
 					if ($$(self.viewId).hideProgress)
