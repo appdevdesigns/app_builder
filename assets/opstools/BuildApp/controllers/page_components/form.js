@@ -79,10 +79,11 @@ steal(
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
 
-						// self.callEvent('save', viewId, {
-						// 	returnPage: data.returnPage,
-						// 	id: componentId
-						// });
+						if (self.returnPage) {
+							$(self).trigger('page', {
+								pageId: self.returnPage
+							});
+						}
 
 						dataCollection.setCursor(null);
 						data.returnPage = null;
@@ -358,19 +359,21 @@ steal(
 								width: 90,
 								inputWidth: 80,
 								click: function () {
-									if ($$(this))
-										$$(this).disable();
+									var saveButton = this;
+
+									if ($$(saveButton))
+										$$(saveButton).disable();
 
 									saveModelData.call(self, dataCollection, columns)
 										.fail(function (err) {
 											console.error(err);
 
-											if ($$(this))
-												$$(this).enable();
+											if ($$(saveButton))
+												$$(saveButton).enable();
 										})
 										.then(function () {
-											if ($$(this))
-												$$(this).enable();
+											if ($$(saveButton))
+												$$(saveButton).enable();
 										});
 								}
 							});
@@ -388,12 +391,13 @@ steal(
 								click: function () {
 									dataCollection.setCursor(null);
 
-									// self.callEvent('cancel', viewId, {
-									// 	returnPage: data.returnPage,
-									// 	id: componentId
-									// });
+									if (self.returnPage) {
+										$(self).trigger('page', {
+											pageId: self.returnPage
+										});
+									}
 
-									data.returnPage = null;
+									self.returnPage = null;
 
 									// Clear form
 									$$(self.viewId).setValues({});
@@ -418,8 +422,9 @@ steal(
 
 					$$(self.viewId).hideProgress();
 
-					// TODO;
-					// self.callEvent('renderComplete', viewId);
+					$(self).trigger('render', {
+						pageId: self.returnPage
+					})
 
 					data.isRendered = true;
 					q.resolve();
@@ -515,10 +520,8 @@ steal(
 				events.render = renderFn;
 			}
 
-			self.setReturnPage = function (viewId, pageId) {
-				var data = self.getData(viewId);
-
-				data.returnPage = pageId;
+			this.setReturnPage = function (pageId) {
+				this.returnPage = pageId;
 			};
 
 		}

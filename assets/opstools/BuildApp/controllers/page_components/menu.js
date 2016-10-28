@@ -27,8 +27,11 @@ steal(
 				if (setting.layout)
 					view.layout = setting.layout;
 
-				if (setting.click)
-					view.click = setting.click;
+				view.click = function (id, ev) {
+					$(self).trigger('page', {
+						pageId: id
+					})
+				};
 
 				webix.ui(view, $$(self.viewId));
 				webix.extend($$(self.viewId), webix.ProgressBar);

@@ -160,7 +160,7 @@ steal(
 				}
 			},
 
-			open: function (object, rowId, selectedIds, linkType, linkColName, linkViaType) {
+			open: function (application, object, rowId, selectedIds, linkType, linkColName, linkViaType) {
 				var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
 				dataList.clearAll();
@@ -200,7 +200,7 @@ steal(
 				});
 				dataList.refresh();
 
-				var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name),
+				var objectModel = modelCreator.getModel(application, object.name),
 					cond = {};
 
 				// // Filter selected data

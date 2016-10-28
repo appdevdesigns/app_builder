@@ -289,7 +289,7 @@ steal(
 			initConnectDataPopup(object, fieldData.name, dataId, selectivityNode);
 
 			// Get the link object
-			var linkObject = AD.classes.AppBuilder.currApp.objects.filter(function (o) { return o.id == fieldData.setting.linkObject; });
+			var linkObject = application.objects.filter(function (o) { return o.id == fieldData.setting.linkObject; });
 			if (!linkObject || linkObject.length < 1)
 				return false;
 			else
@@ -303,7 +303,7 @@ steal(
 				linkVia = linkVia[0];
 
 			// Open popup
-			$$(componentIds.connectDataPopup).open(linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
+			$$(componentIds.connectDataPopup).open(application, linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
 
 			return false;
 		};

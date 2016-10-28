@@ -33,9 +33,7 @@ steal(
                                 // Call parent init
                                 this._super(element, options);
 
-                                this.data = {
-                                    components: {}
-                                };
+                                this.data = {};
                                 this.dataSource = this.options.dataSource;
                                 this.rootPageID = this.activePageID = <%- rootPageID %>;
                                 this.application;
@@ -263,13 +261,21 @@ steal(
                                     dataCollection,
                                     linkedDataCollection;
 
+                                if (!page.comInstances) page.comInstances = {};
+
                                 // Create component instance
-                                if (!self.data.components[item.id]) {
-                                    self.data.components[item.id] = new componentInstance(
+                                if (!page.comInstances[item.id]) {
+                                    page.comInstances[item.id] = new componentInstance(
                                         self.application, // Current application
                                         viewId, // the view id
                                         item.id // the component data id
                                     );
+
+                                    // Listen component events
+                                    $(page.comInstances[item.id]).on('page', function(event, data) {
+                                        if (self.activePageID != data.pageId)
+                                            self.showPage(data.pageId);
+                                    });
                                 }
 
                                 if (view && setting) {
@@ -281,6 +287,11 @@ steal(
                                     view.id = viewId;
                                     view.container = view.id;
                                     view.autowidth = true;
+
+                                    // Set return page to previous page
+                                    if (page.comInstances[item.id].setReturnPage) {
+                                        page.comInstances[item.id].setReturnPage(self.previousPageID);
+                                    }
 
                                     $('#' + view.id).html('');
 
@@ -315,7 +326,7 @@ steal(
                                         },
                                         // Render component
                                         function (next) {
-                                            self.data.components[item.id].render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
+                                            page.comInstances[item.id].render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
                                                 .fail(next)
                                                 .then(function () {
                                                     next();
