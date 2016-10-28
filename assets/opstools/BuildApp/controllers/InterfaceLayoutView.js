@@ -192,16 +192,10 @@ steal(
 											{
 												view: 'activelist',
 												id: self.componentIds.componentList,
-												// drag: 'target',
 												drag: true,
 												select: false,
 												type: {
 													height: 'auto'
-												},
-												sort: {
-													by: "#weight#",
-													dir: "asc",
-													as: "int"
 												},
 												activeContent: {
 													editButton: {
@@ -347,11 +341,9 @@ steal(
 																	com = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == comId });
 
 																if (com && com.length > 0) {
-																	com[0].attr('weight', index);
-
 																	componentIndexes.push({
 																		id: com[0].id,
-																		index: com[0].weight
+																		index: index
 																	});
 
 																}
@@ -363,7 +355,6 @@ steal(
 
 																if (err) {
 																	// TODO : show error message
-																	return false;
 																}
 															});
 														}
@@ -479,6 +470,7 @@ steal(
 
 									$$(self.componentIds.componentList).data.unsync();
 									$$(self.componentIds.componentList).data.sync(componentList);
+									$$(self.componentIds.componentList).sort('weight', 'asc', 'int');
 
 									self.initEvents();
 
