@@ -739,76 +739,76 @@ module.exports = {
 
             },
 
-            // Prepare additional component metadata
-            function (next) {
-                async.forEachOf(pages, function (page, pageID, pageDone) {
-                    async.each(page.components, function (item, itemDone) {
-                        switch (item.component.toLowerCase()) {
-                            case 'grid':
-                                // Add a `columns` property
-                                item.columns = [];
-                                if (!Array.isArray(item.setting.columns)) {
-                                    sails.log('Unknown `setting` format:', item.setting);
-                                    itemDone();
-                                    return;
-                                }
-                                async.each(item.setting.columns, function (col, colDone) {
-                                    var colID;
-                                    if (typeof col == 'string' || typeof col == 'number') {
-                                        // Old format
-                                        colID = col;
-                                    }
-                                    else if (col.dataId) {
-                                        // New format
-                                        colID = col.dataId;
-                                    }
-                                    else if (col.id && col.id == 'appbuilder_trash') {
-                                        item.columns.push('trash');
-                                        colDone();
-                                        return;
-                                    }
-                                    else {
-                                        sails.log('Unexpected column format:', col);
-                                        colDone();
-                                        return;
-                                    }
-                                    ABColumn.find({ id: colID })
-                                        .populate('object')
-                                        .populate('translations')
-                                        .then(function (list) {
-                                            if (list && list[0]) {
-                                                item.modelName = appName + '_' + AppBuilder.rules.nameFilter(list[0].object.name);
-                                                item.columns.push({
-                                                    id: AppBuilder.rules.nameFilter(list[0].name),
-                                                    header: list[0].translations[0].label
-                                                });
-                                            }
-                                            colDone();
-                                            return null;
-                                        })
-                                        .catch(function (err) {
-                                            colDone(err);
-                                            return null;
-                                        });
-                                }, function (err) {
-                                    if (err) itemDone(err);
-                                    else itemDone();
-                                });
-                                break;
+            // // Prepare additional component metadata
+            // function (next) {
+            //     async.forEachOf(pages, function (page, pageID, pageDone) {
+            //         async.each(page.components, function (item, itemDone) {
+            //             switch (item.component.toLowerCase()) {
+            //                 case 'grid':
+            //                     // Add a `columns` property
+            //                     item.columns = [];
+            //                     if (!Array.isArray(item.setting.columns)) {
+            //                         sails.log('Unknown `setting` format:', item.setting);
+            //                         itemDone();
+            //                         return;
+            //                     }
+            //                     async.each(item.setting.columns, function (col, colDone) {
+            //                         var colID;
+            //                         if (typeof col == 'string' || typeof col == 'number') {
+            //                             // Old format
+            //                             colID = col;
+            //                         }
+            //                         else if (col.dataId) {
+            //                             // New format
+            //                             colID = col.dataId;
+            //                         }
+            //                         else if (col.id && col.id == 'appbuilder_trash') {
+            //                             item.columns.push('trash');
+            //                             colDone();
+            //                             return;
+            //                         }
+            //                         else {
+            //                             sails.log('Unexpected column format:', col);
+            //                             colDone();
+            //                             return;
+            //                         }
+            //                         ABColumn.find({ id: colID })
+            //                             .populate('object')
+            //                             .populate('translations')
+            //                             .then(function (list) {
+            //                                 if (list && list[0]) {
+            //                                     item.modelName = appName + '_' + AppBuilder.rules.nameFilter(list[0].object.name);
+            //                                     item.columns.push({
+            //                                         id: AppBuilder.rules.nameFilter(list[0].name),
+            //                                         header: list[0].translations[0].label
+            //                                     });
+            //                                 }
+            //                                 colDone();
+            //                                 return null;
+            //                             })
+            //                             .catch(function (err) {
+            //                                 colDone(err);
+            //                                 return null;
+            //                             });
+            //                     }, function (err) {
+            //                         if (err) itemDone(err);
+            //                         else itemDone();
+            //                     });
+            //                     break;
 
-                            default:
-                                itemDone();
-                                break;
-                        }
-                    }, function (err) {
-                        if (err) pageDone(err);
-                        else pageDone();
-                    });
-                }, function (err) {
-                    if (err) next(err);
-                    else next();
-                });
-            },
+            //                 default:
+            //                     itemDone();
+            //                     break;
+            //             }
+            //         }, function (err) {
+            //             if (err) pageDone(err);
+            //             else pageDone();
+            //         });
+            //     }, function (err) {
+            //         if (err) next(err);
+            //         else next();
+            //     });
+            // },
 
             // Find related objects
             function (next) {
