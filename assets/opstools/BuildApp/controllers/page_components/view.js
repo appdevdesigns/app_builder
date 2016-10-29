@@ -227,8 +227,7 @@ steal(
 						$$(self.viewId).hideProgress();
 
 						// Trigger render event
-						if (events.render)
-							events.render();
+						$(self).trigger('render', {});
 
 						q.resolve();
 					});
@@ -325,10 +324,6 @@ steal(
 
 			this.isRendered = function () {
 				return data.isRendered === true;
-			};
-
-			this.onRender = function (renderFn) {
-				events.render = renderFn;
 			};
 
 			this.updateData = function (setting, newData) {

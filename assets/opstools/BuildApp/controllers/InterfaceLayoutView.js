@@ -159,7 +159,6 @@ steal(
 															$$(editViewId).hideProgress();
 														})
 														.then(function (result) {
-															// Update item in list
 															var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
 															updatedItem.setting = result.attr('setting');
 															$$(self.componentIds.componentList).updateItem(self.data.editedComponentId, updatedItem);
@@ -285,6 +284,7 @@ steal(
 															})
 															.then(function (result) {
 																$$(self.componentIds.componentList).data.changeId(id, result.id);
+																$$(self.componentIds.componentList).updateItem(result.id, result);
 
 																if (!AD.classes.AppBuilder.currApp.currPage) return;
 
@@ -298,6 +298,8 @@ steal(
 																else {
 																	AD.classes.AppBuilder.currApp.currPage.components.push(result);
 																}
+
+																self.generateComponentsInList();
 
 																webix.message({
 																	type: "success",
@@ -466,11 +468,10 @@ steal(
 								})
 								.then(function (result) {
 									AD.classes.AppBuilder.currApp.currPage.attr('components', result);
-									var componentList = AD.op.WebixDataCollection(AD.classes.AppBuilder.currApp.currPage.components);
 
-									$$(self.componentIds.componentList).data.unsync();
-									$$(self.componentIds.componentList).data.sync(componentList);
-									$$(self.componentIds.componentList).sort('weight', 'asc', 'int');
+									var components = result.attr();
+									components.sort(function (a, b) { return a.weight - b.weight });
+									$$(self.componentIds.componentList).parse(components);
 
 									self.initEvents();
 
@@ -521,11 +522,15 @@ steal(
 									var comp = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == item.id; });
 									if (!comp || comp.length < 1) return next();
 									self.renderComponent(comp[0])
-										.always(next);
+										.fail(next)
+										.then(function () { next(); });
 								});
 							});
 
-							async.parallel(renderTasks, function () { q.resolve(); });
+							async.parallel(renderTasks, function (err) {
+								if (err) q.reject(err);
+								else q.resolve();
+							});
 
 							return q;
 						},
@@ -540,13 +545,11 @@ steal(
 								dataCollection, linkedDataCollection;
 
 							// Create component instance
-							if (!self.data.components[com.attr('id')]) {
-								self.data.components[com.attr('id')] = new componentInstance(
-									AD.classes.AppBuilder.currApp, // Current application
-									viewId, // the view id
-									com.id // the component data id
-								);
-							}
+							self.data.components[com.attr('id')] = new componentInstance(
+								AD.classes.AppBuilder.currApp, // Current application
+								viewId, // the view id
+								com.id // the component data id
+							);
 
 							if (view && setting) {
 								var setting = setting.attr ? setting.attr() : setting,

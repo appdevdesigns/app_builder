@@ -32,10 +32,6 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.onRender = function (renderFn) {
-				events.render = renderFn;
-			}
-
 		};
 
 		// Static functions

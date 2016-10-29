@@ -514,10 +514,6 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.onRender = function (renderFn) {
-				events.render = renderFn;
-			}
-
 			this.setFromPageId = function (pageId) {
 				this.fromPage = pageId;
 			};

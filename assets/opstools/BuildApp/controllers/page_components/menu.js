@@ -47,6 +47,7 @@ steal(
 
 					// Get selected pages
 					application.getPages({ or: pageIds })
+						.fail(q.reject)
 						.then(function (pages) {
 
 							pages.forEach(function (p) {
@@ -65,18 +66,17 @@ steal(
 							// Show page menu
 							$$(self.viewId).parse(pageMenu, 'json');
 
-							if (events.render)
-								events.render();
+							$(self).trigger('render', {});
 
 							$$(self.viewId).hideProgress();
 
 							data.isRendered = true;
+
 							q.resolve();
 						});
 				}
 				else {
-					if (events.render)
-						events.render();
+					$(self).trigger('render', {});
 
 					$$(self.viewId).hideProgress();
 
@@ -172,10 +172,6 @@ steal(
 			this.isRendered = function () {
 				return data.isRendered === true;
 			};
-
-			this.onRender = function (renderFn) {
-				events.render = renderFn;
-			}
 
 		};
 
