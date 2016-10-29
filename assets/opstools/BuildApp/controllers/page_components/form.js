@@ -80,7 +80,7 @@ steal(
 							dataCollection.AD.__list.push(result);
 
 						if (self.fromPage) {
-							$(self).trigger('page', {
+							$(self).trigger('changePage', {
 								pageId: self.fromPage
 							});
 						}
@@ -392,7 +392,7 @@ steal(
 									dataCollection.setCursor(null);
 
 									if (self.fromPage) {
-										$(self).trigger('page', {
+										$(self).trigger('changePage', {
 											pageId: self.fromPage
 										});
 									}
@@ -422,7 +422,7 @@ steal(
 
 					$$(self.viewId).hideProgress();
 
-					$(self).trigger('render', {});
+					$(self).trigger('renderComplete', {});
 
 					data.isRendered = true;
 					q.resolve();

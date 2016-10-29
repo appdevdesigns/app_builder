@@ -227,7 +227,7 @@ steal(
 						$$(self.viewId).hideProgress();
 
 						// Trigger render event
-						$(self).trigger('render', {});
+						$(self).trigger('renderComplete', {});
 
 						q.resolve();
 					});

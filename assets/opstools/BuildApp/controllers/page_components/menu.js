@@ -28,7 +28,7 @@ steal(
 					view.layout = setting.layout;
 
 				view.click = function (id, ev) {
-					$(self).trigger('page', {
+					$(self).trigger('changePage', {
 						pageId: id
 					})
 				};
@@ -66,7 +66,7 @@ steal(
 							// Show page menu
 							$$(self.viewId).parse(pageMenu, 'json');
 
-							$(self).trigger('render', {});
+							$(self).trigger('renderComplete', {});
 
 							$$(self.viewId).hideProgress();
 
@@ -76,7 +76,7 @@ steal(
 						});
 				}
 				else {
-					$(self).trigger('render', {});
+					$(self).trigger('renderComplete', {});
 
 					$$(self.viewId).hideProgress();
 

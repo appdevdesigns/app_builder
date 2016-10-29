@@ -353,7 +353,7 @@ steal(
 					// Select edit item
 					getObjectDataTable.call(self, application, setting.object).registerItemClick(function (id, e, node) {
 						if (id.column === 'view_detail') {
-							$(self).trigger('page', {
+							$(self).trigger('changePage', {
 								pageId: setting.viewPage
 							});
 
@@ -361,7 +361,7 @@ steal(
 							$$(self.viewId).select(id);
 						}
 						else if (id.column === 'edit_form') {
-							$(self).trigger('page', {
+							$(self).trigger('changePage', {
 								pageId: setting.editPage
 							});
 
@@ -371,7 +371,7 @@ steal(
 					});
 
 					$$(self.viewId).attachEvent('onAfterRender', function (data) {
-						$(self).trigger('render', {});
+						$(self).trigger('renderComplete', {});
 					});
 
 					$$(self.viewId).attachEvent('onAfterSelect', function (data, perserve) {

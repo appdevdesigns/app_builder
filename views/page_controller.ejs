@@ -200,11 +200,11 @@ steal(
                                     page.comInstances[item.id].setFromPageId(self.previousPageID);
 
                                 // Listen component events
-                                $(page.comInstances[item.id]).on('render', function(event, data) {
+                                $(page.comInstances[item.id]).on('renderComplete', function(event, data) {
                                     $$("<%- domID() %>").adjust();
                                 });
 
-                                $(page.comInstances[item.id]).on('page', function(event, data) {
+                                $(page.comInstances[item.id]).on('changePage', function(event, data) {
                                     // Store previous page id when click on menu
                                     if (item.component == 'menu')
                                         self.previousPageID = self.activePageID;
