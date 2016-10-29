@@ -25,15 +25,15 @@ steal(
 					normalizeDataTasks = [];
 
 				if (list.forEach) {
-					list.forEach(function (r) {
+					list.forEach(function (row) {
 						normalizeDataTasks.push(function (callback) {
 							// Translate
-							if (r.translate) r.translate();
+							if (row.translate) row.translate();
 
 							var Tasks = [];
 
 							linkFields.forEach(function (linkCol) {
-								if (r[linkCol.name] && !r[linkCol.name].dataLabel) {
+								if (row[linkCol.name] && !row[linkCol.name].dataLabel) {
 									Tasks.push(function (ok) {
 										var linkObj = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject; })[0],
 											linkedLabels = [];
@@ -46,16 +46,15 @@ steal(
 											function (next) {
 												var connectIds = [];
 
-												if (r[linkCol.name].forEach) {
-													r[linkCol.name].forEach(function (val) {
+												if (row[linkCol.name].forEach) {
+													row[linkCol.name].forEach(function (val) {
 														if (!val.dataLabel)
 															connectIds.push({ id: val.id || val });
 													});
 												}
-												else if (!r[linkCol.name].dataLabel) {
-													connectIds.push({ id: r[linkCol.name].id || r[linkCol.name] });
+												else if (!row[linkCol.name].dataLabel) {
+													connectIds.push({ id: row[linkCol.name].id || row[linkCol.name] });
 												}
-
 
 												if (connectIds && connectIds.length > 0) {
 													linkObjModel.findAll({ or: connectIds })
@@ -78,18 +77,18 @@ steal(
 														// Set data label
 														linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
 
-														if (r[linkCol.name].forEach) {
+														if (row[linkCol.name].forEach) {
 															// FIX : CANjs attr to set nested value
-															if (r.attr)
-																r.attr(linkCol.name + '.' + index, linkVal.attr());
+															if (row.attr)
+																row.attr(linkCol.name + '.' + index, linkVal.attr());
 															else
-																r[linkCol.name + '.' + index] = linkVal.attr();
+																row[linkCol.name + '.' + index] = linkVal.attr();
 														}
 														else {
-															if (r.attr)
-																r.attr(linkCol.name, linkVal.attr());
+															if (row.attr)
+																row.attr(linkCol.name, linkVal.attr());
 															else
-																r[linkCol.name] = linkVal.attr();
+																row[linkCol.name] = linkVal.attr();
 														}
 
 													});
@@ -112,8 +111,8 @@ steal(
 						// Convert string to Date object
 						if (dateFields && dateFields.length > 0) {
 							dateFields.forEach(function (dateCol) {
-								if (r[dateCol.name])
-									r.attr(dateCol.name, new Date(r[dateCol.name]));
+								if (row[dateCol.name] && !(row[dateCol.name] instanceof Date))
+									row.attr(dateCol.name, new Date(row[dateCol.name]));
 							});
 						}
 

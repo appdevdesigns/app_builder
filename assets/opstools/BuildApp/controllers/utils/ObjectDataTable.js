@@ -1,9 +1,7 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
-
-	'opstools/BuildApp/controllers/utils/DataHelper.js',
-	function (dataFieldsManager, dataHelper) {
+	function (dataFieldsManager) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -243,63 +241,50 @@ steal(
 								this.dataTable.setRowHeight(row, rowHeight);
 						},
 
-						populateData: function (application, object, data) {
+						calculateRowHeightToData: function (data, linkCols) {
+							if (!data || !linkCols || !linkCols.forEach) return;
+
+							// Get Map.List in DataCollection
 							var self = this,
-								q = $.Deferred();
+								list = data;
+							if (data instanceof webix.DataCollection)
+								list = data.AD.__list;
 
-							if (!data) {
-								q.resolve();
-								return q;
-							}
+							// Update row height
+							list.forEach(function (r) {
+								var rowHeight = r.attr ? r.attr('$height') : r.$height;
 
-							// Get link columns
-							var linkCols = object.columns.filter(function (col) { return col.setting.linkObject });
-
-							// Get date & datetime columns
-							var dateCols = object.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
-
-							// Populate labels & Convert string to Date object
-							dataHelper.normalizeData(application, data, linkCols, dateCols)
-								.fail(q.reject)
-								.then(function (result) {
-									self.dataTable.clearAll();
-
-									// Get Map.List in DataCollection
-									var list = result;
-									if (result instanceof webix.DataCollection)
-										list = result.AD.__list;
-
-									// Update row height
-									list.forEach(function (r) {
-										var rowHeight = r.attr ? r.attr('$height') : r.$height;
-
-										linkCols.forEach(function (linkCol) {
-											if (r[linkCol.name]) {
-												var calHeight = self.getRowHeight(r[linkCol.name].length || 0);
-												if (calHeight > rowHeight || !rowHeight)
-													rowHeight = calHeight;
-											}
-										});
-
-										if (r.attr)
-											r.attr('$height', rowHeight);
-										else
-											r.$height = rowHeight;
-									});
-
-									// Populate data
-									if (result instanceof webix.DataCollection) {
-										self.dataTable.data.clearAll();
-										self.dataTable.data.unsync();
-										self.dataTable.data.sync(result);
+								linkCols.forEach(function (linkCol) {
+									if (r[linkCol.name]) {
+										var calHeight = self.getRowHeight(r[linkCol.name].length || 0);
+										if (calHeight > rowHeight || !rowHeight)
+											rowHeight = calHeight;
 									}
-									else
-										self.dataTable.parse(result.attr());
-
-									q.resolve();
 								});
 
-							return q;
+								if (r.attr)
+									r.attr('$height', rowHeight);
+								else
+									r.$height = rowHeight;
+							});
+						},
+
+						populateData: function (data) {
+							var self = this;
+
+							self.dataTable.clearAll();
+
+							if (!data) return;
+
+							// Populate data
+							if (data instanceof webix.DataCollection) {
+								self.dataTable.data.clearAll();
+								self.dataTable.data.unsync();
+								self.dataTable.data.sync(data);
+							}
+							else
+								self.dataTable.parse(data.attr());
+
 						}
 
 					});

@@ -445,11 +445,10 @@ steal(
 
 				getObjectDataTable.call(self, application, self.data.setting.object).bindColumns(application, columns, true, isTrashVisible);
 
-				self.populateData(self.data.setting.object, dataCollection)
-					.then(function () {
-						if (linkedField)
-							filterLinkedData.call(self, linkedField);
-					});
+				self.populateData(self.data.setting.object, dataCollection);
+
+				if (linkedField)
+					filterLinkedData.call(self, linkedField);
 			};
 
 			this.getSettings = function () {
@@ -667,25 +666,16 @@ steal(
 			};
 
 			this.populateData = function (objectId, dataCollection) {
-				var self = this,
-					q = $.Deferred();
+				var self = this;
 
 				if ($$(self.viewId).showProgress)
 					$$(self.viewId).showProgress({ type: 'icon' });
 
-				var object = application.objects.filter(function (obj) { return obj.id == objectId });
-				if (object && object[0]) object = object[0];
-
 				getObjectDataTable.call(self, application, objectId)
-					.populateData(application, object, dataCollection)
-					.then(function () {
-						q.resolve();
+					.populateData(dataCollection);
 
-						if ($$(self.viewId).hideProgress)
-							$$(self.viewId).hideProgress();
-					});
-
-				return q;
+				if ($$(self.viewId).hideProgress)
+					$$(self.viewId).hideProgress();
 			};
 		};
 

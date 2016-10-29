@@ -3,6 +3,7 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	'opstools/BuildApp/controllers/utils/ObjectDataTable.js',
 
@@ -19,7 +20,7 @@ steal(
 
 	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
-	function (dataFieldsManager, modelCreator) {
+	function (dataFieldsManager, modelCreator, dataHelper) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -613,7 +614,8 @@ steal(
 						},
 
 						showTable: function () {
-							var self = this;
+							var self = this,
+								objectData;
 
 							$$(self.webixUiId.objectDatatable).show();
 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
@@ -712,22 +714,38 @@ steal(
 								},
 								// Get data from server
 								function (next) {
-									// Find the link columns
-									var linkCols = self.data.columns.filter(function (col) { return col.setting && col.setting.linkObject != null }),
-										linkColNames = $.map(linkCols, function (col) { return col.name; });
-
 									self.Model.ObjectModel.store = {}; // Clear CanJS local repository
 									self.Model.ObjectModel.Cached.findAll({})
-										.fail(function (err) { next(err); })
+										.fail(next)
 										.then(function (data) {
-											self.controllers.ObjectDataTable.populateData(
-												AD.classes.AppBuilder.currApp,
-												AD.classes.AppBuilder.currApp.currObj,
-												data)
-												.then(function () {
-													next();
-												});
+											objectData = data;
+											next();
 										});
+								},
+								// Normalize data
+								function (next) {
+									// Get link columns
+									var linkCols = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.setting.linkObject });
+
+									// Get date & datetime columns
+									var dateCols = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
+
+									// Populate labels & Convert string to Date object
+									dataHelper.normalizeData(AD.classes.AppBuilder.currApp, objectData, linkCols, dateCols)
+										.fail(next)
+										.then(function (result) {
+											self.controllers.ObjectDataTable.calculateRowHeightToData(result, linkCols);
+
+											objectData = result;
+
+											next();
+										});
+								},
+								// Populate date to Grid
+								function (next) {
+									self.controllers.ObjectDataTable.populateData(objectData);
+
+									next();
 								}
 							], function () {
 								$$(self.webixUiId.objectToolbar).show();

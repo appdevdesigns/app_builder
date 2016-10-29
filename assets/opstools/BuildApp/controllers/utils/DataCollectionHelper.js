@@ -57,11 +57,11 @@ steal(
 
 										// Listen change data event to update data label
 										dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-
 											var attName = attr.indexOf('.') > -1 ? attr.split('.')[1] : attr, // 0.attrName
-												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0;
+												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0,
+												hasUpdateDate = dateCols.filter(function (col) { return col.name == attName; }).length > 0;
 
-											if (hasUpdateLink && newVal) {
+											if ((hasUpdateLink || hasUpdateDate) && newVal) {
 												// Update connected data
 												dataHelper.normalizeData(application, ev.target, linkCols, dateCols).then(function (result) { });
 											}

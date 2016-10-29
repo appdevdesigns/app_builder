@@ -28,7 +28,13 @@ steal(function () {
 			if (!(node instanceof jQuery)) node = $(node);
 
 			if (node.selectivity) {
-				node.selectivity('data', data.filter(function (d) { return d.id; }));
+				var copied = data.slice();
+				copied = copied.filter(function (d) { return d.id; });
+				copied = $.map(copied, function (d) {
+					if (!d.text) d.text = '[ID: #id#]'.replace('#id#', d.id);
+					return d;
+				});
+				node.selectivity('data', copied);
 			}
 		},
 
