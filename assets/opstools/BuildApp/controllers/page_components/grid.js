@@ -379,8 +379,7 @@ steal(
 			};
 
 			this.renderDataTable = function (dataCollection, extraColumns, isTrashVisible, linkedField) {
-				var self = this,
-					propertyValues = $$(componentIds.propertyView).getValues();
+				var self = this;
 
 				if (!self.data.columns) return;
 
@@ -420,9 +419,6 @@ steal(
 						}
 					});
 				}
-
-				if (typeof isTrashVisible === 'undefined' || isTrashVisible === null)
-					isTrashVisible = propertyValues.removable;
 
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
@@ -729,7 +725,7 @@ steal(
 											viewId: propertyValues.viewId,
 											editPage: propertyValues.editPage,
 											editForm: propertyValues.editForm
-										}, false, propertyValues.linkedField);
+										}, propertyValues.removable, propertyValues.linkedField);
 									}
 								}
 							}
