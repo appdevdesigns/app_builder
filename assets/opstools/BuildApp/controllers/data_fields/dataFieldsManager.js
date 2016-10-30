@@ -276,6 +276,15 @@ steal(
 				return true;
 		};
 
+		self.getValue = function (application, object, fieldData, itemNode) {
+			var field = getField(fieldData.fieldName);
+
+			if (field && field.getValue)
+				return field.getValue(application, object, fieldData, itemNode);
+			else
+				return null;
+		};
+
 		self.validate = function (fieldData, value) {
 			if (value == null || typeof value == 'undefined' || value.length < 1) return true;
 

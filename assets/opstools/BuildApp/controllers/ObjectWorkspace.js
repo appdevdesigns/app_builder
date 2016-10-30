@@ -348,7 +348,7 @@ steal(
 							var self = this;
 
 							$(dataFieldsManager).on('update', function (event, result) {
-								if (result.objectId != AD.classes.AppBuilder.currApp.currObj.id || !result.rowId || !result.columnName) return;
+								if (!AD.classes.AppBuilder.currApp || !AD.classes.AppBuilder.currApp.currObj || result.objectId != AD.classes.AppBuilder.currApp.currObj.id || !result.rowId || !result.columnName) return;
 
 								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 

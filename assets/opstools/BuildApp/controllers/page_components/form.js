@@ -41,31 +41,32 @@ steal(
 					isAdd = true;
 				}
 
-				var editValues = $$(self.viewId).getValues(),
-					keys = Object.keys(editValues);
+				var editValues = $$(self.viewId).getValues();
+				var keys = Object.keys(editValues);
 
 				// Populate values to model
-				keys.forEach(function (fieldName) {
-					if (typeof editValues[fieldName] !== 'undefined' && editValues[fieldName] !== null) {
-						var colInfo = columns.filter(function (col) { return col.name === fieldName; })[0];
-
-						if (colInfo) {
-							switch (colInfo.type) {
-								// TODO : get data
-								case "boolean":
-									modelData.attr(fieldName, editValues[fieldName] === 1 ? true : false);
-									break;
-								default:
-									modelData.attr(fieldName, editValues[fieldName]);
-									break;
-							}
+				columns.forEach(function (col) {
+					if (typeof editValues[col.name] !== 'undefined') {
+						if (col.type == "boolean") {
+							modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
 						}
 						else {
-							modelData.attr(fieldName, editValues[fieldName]);
+							var childView = $$(self.viewId).getChildViews().find(function (view) {
+								return view.config && view.config.name == col.name
+							});
+							if (!childView) return;
+
+							// Get value in custom data field
+							var val = dataFieldsManager.getValue(application, null, col, childView.$view);
+							if (val)
+								modelData.attr(col.name, val);
+							else if (editValues[col.name])
+								modelData.attr(col.name, editValues[col.name]);
+							else
+								modelData.removeAttr(col.name);
+
 						}
 					}
-					else
-						modelData.removeAttr(fieldName);
 				});
 
 				modelData.save()
@@ -90,7 +91,6 @@ steal(
 
 						// Clear form
 						$$(self.viewId).setValues({});
-						// TODO : clear customDisplay
 
 						q.resolve();
 					});
@@ -111,7 +111,6 @@ steal(
 					dataFieldsManager.customDisplay(col.fieldName, application, object, col.name, rowId, rowData ? rowData[col.name] : null, childView.$view);
 				});
 			}
-
 
 			// Set viewId to public
 			this.viewId = viewId;
@@ -144,7 +143,7 @@ steal(
 				if (dataCollection) {
 					dataCollection.attachEvent('onAfterCursorChange', function (id) {
 						// Show custom display
-						showCustomFields.call(self, object, columns, id);
+						showCustomFields.call(self, object, columns, id, dataCollection.AD.currModel());
 					});
 				}
 
@@ -280,10 +279,6 @@ steal(
 						// Redraw
 						webix.ui(elementViews, $$(self.viewId));
 
-						// Bind data
-						if (dataCollection)
-							$$(self.viewId).bind(dataCollection);
-
 						// Title
 						if (editable) {
 							header.rows.push({
@@ -401,7 +396,6 @@ steal(
 
 									// Clear form
 									$$(self.viewId).setValues({});
-									// TODO : clear customView
 								}
 							});
 						}
@@ -410,7 +404,14 @@ steal(
 
 						$$(self.viewId).refresh();
 
-						showCustomFields.call(self, object, columns);
+						// Bind data
+						if (dataCollection)
+							$$(self.viewId).bind(dataCollection);
+
+						// Show data of current select data
+						var currData = dataCollection.AD.currModel();
+						if (currData)
+							showCustomFields.call(self, object, columns, currData.id, currData);
 
 						next();
 					}

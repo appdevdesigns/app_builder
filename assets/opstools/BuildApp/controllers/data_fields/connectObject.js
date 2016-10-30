@@ -308,6 +308,13 @@ steal(
 			return false;
 		};
 
+		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
+			var selectivityNode = $(itemNode).find('.connect-data-values');
+			return $.map(selectivityHelper.getData(selectivityNode), function (selectedItem) {
+				return selectedItem.id;
+			});
+		};
+
 		// Reset state
 		connectObjectField.resetState = function () {
 			$$(componentIds.editView).appName = null;
