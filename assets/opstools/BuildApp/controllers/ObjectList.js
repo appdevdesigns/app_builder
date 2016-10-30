@@ -38,10 +38,10 @@ steal(
 							};
 
 							this.rules = {};
-							this.rules.preventDuplicateName = function (value) {
+							this.rules.preventDuplicateName = function (value, id) {
 								// Check duplicate
 								var duplicateObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
-									return obj.name.toLowerCase().trim() == value.toLowerCase().trim();
+									return obj.name.toLowerCase().trim() == value.toLowerCase().trim() && obj.id != id;
 								});
 
 								if (duplicateObject && duplicateObject.length > 0) {
@@ -155,7 +155,7 @@ steal(
 											},
 											onBeforeEditStop: function (state, editor) {
 												// Validation - check duplicate
-												if (!self.rules.preventDuplicateName(state.value) && state.value != state.old) {
+												if (!self.rules.preventDuplicateName(state.value, editor.id) && state.value != state.old) {
 													webix.alert({
 														title: self.labels.object.invalidName,
 														ok: self.labels.common.ok,
