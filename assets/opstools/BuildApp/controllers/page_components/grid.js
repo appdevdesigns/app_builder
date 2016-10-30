@@ -154,23 +154,6 @@ steal(
 
 				AD.util.async.parallel([
 					function (next) {
-						objects = null;
-
-						// Get object list
-						application.getObjects()
-							.fail(function (err) { next(err); })
-							.then(function (result) {
-								result.forEach(function (o) {
-									if (o.translate)
-										o.translate();
-								});
-
-								objects = result;
-
-								next();
-							});
-					},
-					function (next) {
 						self.data.columns = [];
 
 						if (!setting.object)
@@ -193,7 +176,7 @@ steal(
 								next();
 							});
 					}
-				], function (err, results) {
+				], function (err) {
 					if (err) {
 						q.reject(err);
 						return;
@@ -329,8 +312,8 @@ steal(
 
 						$$(self.viewId + '-filter-popup').registerDataTable($$(self.viewId));
 						$$(self.viewId + '-filter-popup').setFieldList(columns);
-						$$(self.viewId + '-filter-popup').attachEvent('onChange', function (number) {
-							$$(self.viewId + '-filter-button').define('badge', number);
+						$$(self.viewId + '-filter-popup').attachEvent('onChange', function (num) {
+							$$(self.viewId + '-filter-button').define('badge', num);
 							$$(self.viewId + '-filter-button').refresh();
 						});
 					}
@@ -344,8 +327,8 @@ steal(
 
 						$$(self.viewId + '-sort-popup').registerDataTable($$(self.viewId));
 						$$(self.viewId + '-sort-popup').setFieldList(columns);
-						$$(self.viewId + '-sort-popup').attachEvent('onChange', function (number) {
-							$$(self.viewId + '-sort-button').define('badge', number);
+						$$(self.viewId + '-sort-popup').attachEvent('onChange', function (num) {
+							$$(self.viewId + '-sort-button').define('badge', num);
 							$$(self.viewId + '-sort-button').refresh();
 						});
 					}
