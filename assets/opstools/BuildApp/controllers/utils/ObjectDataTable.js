@@ -31,7 +31,7 @@ steal(
 							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
 
 							// Connected data
-							self.labels.connectToObjectName = AD.lang.label.getLabel('ab.object.connectToObjectName') || " (Connect to <b>{0}</b>)";
+							self.labels.connectToObjectName = AD.lang.label.getLabel('ab.object.connectToObjectName') || "(Connect to <b>{0}</b>)";
 
 							// Delete row
 							self.labels.confirmDeleteRowTitle = AD.lang.label.getLabel('ab.object.deleteRow.title') || "Delete data";
@@ -193,7 +193,7 @@ steal(
 								});
 
 								if (connectObj && connectObj.length > 0)
-									label += self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
+									label += ' '+ self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
 							var headerTemplate = '<div class="ab-object-data-header"><span class="webix_icon {0}"></span>{1}{2}</div>'
