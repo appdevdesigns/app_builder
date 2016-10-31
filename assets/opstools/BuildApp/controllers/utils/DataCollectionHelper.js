@@ -61,7 +61,7 @@ steal(
 												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0,
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attName; }).length > 0;
 
-											if ((hasUpdateLink || hasUpdateDate) && newVal) {
+											if (how == 'add' || (hasUpdateLink || hasUpdateDate) && newVal) {
 												// Update connected data
 												dataHelper.normalizeData(application, ev.target, linkCols, dateCols).then(function (result) { });
 											}
