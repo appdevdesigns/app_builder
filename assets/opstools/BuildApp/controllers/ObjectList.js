@@ -41,7 +41,9 @@ steal(
 							this.rules.preventDuplicateName = function (value, id) {
 								// Check duplicate
 								var duplicateObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
-									return obj.name.toLowerCase().trim() == value.toLowerCase().trim() && obj.id != id;
+									return obj.id != id &&
+										(obj.name.toLowerCase().trim() == value.toLowerCase().trim() ||
+											obj.label.toLowerCase().trim() == value.toLowerCase().trim());
 								});
 
 								if (duplicateObject && duplicateObject.length > 0) {
