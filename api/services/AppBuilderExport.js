@@ -42,6 +42,7 @@ module.exports = {
             function(next) {
                 ABObject.find({ application: appID })
                 .populate('translations')
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -60,6 +61,7 @@ module.exports = {
             function(next) {
                 ABColumn.find({ object: objectIDs })
                 .populate('translations')
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -78,6 +80,7 @@ module.exports = {
                     columnIDs.push(col.id);
                 });
                 ABList.find({ column: columnIDs })
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -93,6 +96,7 @@ module.exports = {
             function(next) {
                 ABPage.find({ application: appID })
                 .populate('translations')
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -110,6 +114,7 @@ module.exports = {
             
             function(next) {
                 ABPageComponent.find({ page: pageIDs })
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -166,6 +171,11 @@ module.exports = {
             ...
         */
         };
+        
+        // Some columns reference other columns via settings.linkVia.
+        // These will need to be remapped in a 2nd pass.
+        var columnsNeedRemap = [];
+        
         
         async.series([
             // Find unique app name
@@ -314,6 +324,18 @@ module.exports = {
                 async.each(data.columns, function(col, colDone) {
                     var oldObjID = col.object;
                     var oldColID = col.id;
+                    
+                    var setting = col.setting;
+                    // Remap the linked object IDs
+                    var oldLinkObject = setting.linkObject;
+                    if (oldLinkObject) {
+                        var newLinkObject = objIDs[oldLinkObject];
+                        if (!newLinkObject) {
+                            sails.log('Warning! Unable to remap object id in column setting.linkObject', col.setting);
+                        }
+                        setting.linkObject = newLinkObject;
+                    }
+                    
                     var colData = {
                         object: objIDs[oldObjID],
                         name: col.name,
@@ -322,7 +344,7 @@ module.exports = {
                         weight: col.weight,
                         required: col.required,
                         unique: col.unique,
-                        setting: col.setting,
+                        setting: setting,
                         linkType: col.linkType,
                         linkVia: col.linkVia,
                         linkDefault: col.linkDefault,
@@ -334,6 +356,14 @@ module.exports = {
                         else {
                             var newID = result.id;
                             colIDs[ oldColID ] = newID;
+                            
+                            // If this column references another column's ID,
+                            // that ID will need to be remapped later.
+                            if (setting.linkVia) {
+                                columnsNeedRemap.push(newID);
+                            }
+                            
+                            
                             // Column translations
                             async.each(col.translations, function(trans, transDone) {
                                 var transData = {
@@ -349,6 +379,38 @@ module.exports = {
                                     }
                                 });
                             }, function(err) {
+                                if (err) colDone(err);
+                                else {
+                                    colDone();
+                                }
+                            });
+                        }
+                    });
+                
+                }, function(err) {
+                    if (err) next(err);
+                    else {
+                        next();
+                    }
+                });
+            },
+            
+            // Remap column linkVia ID references
+            function(next) {
+                async.each(columnsNeedRemap, function(colID, colDone) {
+                    
+                    ABColumn.findOne({ id: colID })
+                    .exec(function(err, result) {
+                        if (err) colDone(err);
+                        else if (!result) {
+                            colDone(new Error('Column not found: ' + colID));
+                        }
+                        else {
+                            var oldLinkVia = result.setting.linkVia;
+                            var newLinkVia = colIDs[oldLinkVia];
+                            result.setting.linkVia = newLinkVia;
+                            ABColumn.update({ id: colID }, result)
+                            .exec(function(err) {
                                 if (err) colDone(err);
                                 else {
                                     colDone();

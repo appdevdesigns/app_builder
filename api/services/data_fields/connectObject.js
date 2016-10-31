@@ -29,9 +29,17 @@ module.exports = {
 				ABObject.findOne({ id: column.setting.linkObject })
 					.fail(next)
 					.then(function (object) {
+					    if (!object) {
+					        console.log('Object not found');
+					        console.log('id: ' + column.setting.linkObject);
+					        console.log(column.setting);
+					        next(new Error('object not found'));
+					        return;
+					    }
 						colString += ':' + AppBuilder.rules.toObjectNameFormat(formatAppName, object.name) // model name
 
 						next();
+						return null;
 					});
 			},
 			function (next) {
@@ -47,6 +55,7 @@ module.exports = {
 							colString += ':' + linkVia.name; // viaReference
 
 						next();
+						return null;
 					});
 			}
 		], function (err) {
