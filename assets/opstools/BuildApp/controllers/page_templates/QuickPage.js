@@ -233,6 +233,7 @@ steal(
 						})
 							.fail(next)
 							.then(function (result) {
+								if (result.translate) result.translate();
 								mainPage = result;
 								next();
 							});
@@ -251,6 +252,7 @@ steal(
 						})
 							.fail(next)
 							.then(function (result) {
+								if (result.translate) result.translate();
 								addFormPage = result;
 								next();
 							});
@@ -269,6 +271,7 @@ steal(
 						})
 							.fail(next)
 							.then(function (result) {
+								if (result.translate) result.translate();
 								editFormPage = result;
 								next();
 							});
@@ -286,6 +289,8 @@ steal(
 						})
 							.fail(next)
 							.then(function (result) {
+								if (result.translate) result.translate();
+
 								viewPage = result;
 								next();
 							});
@@ -349,6 +354,24 @@ steal(
 							});
 					},
 
+					// Insert 'Link' to the add object page
+					function (next) {
+						if (!addFormPage) return next();
+
+						addFormPage.createComponent({
+							component: 'link',
+							weight: 1,
+							setting: {
+								title: 'Back to #pageName#'.replace(/#pageName#/g, mainPage.label),
+								linkTo: mainPage.id
+							}
+						})
+							.fail(next)
+							.then(function (result) {
+								next();
+							});
+					},
+
 					// Insert 'Edit Object form' to the edit object page
 					function (next) {
 						if (!editFormPage) return next();
@@ -367,6 +390,24 @@ steal(
 							.fail(next)
 							.then(function (result) {
 								editForm = result;
+								next();
+							});
+					},
+
+					// Insert 'Link'  to the edit object page
+					function (next) {
+						if (!editFormPage) return next();
+
+						editFormPage.createComponent({
+							component: 'link',
+							weight: 1,
+							setting: {
+								title: 'Back to #pageName#'.replace(/#pageName#/g, mainPage.label),
+								linkTo: mainPage.id
+							}
+						})
+							.fail(next)
+							.then(function (result) {
 								next();
 							});
 					},
@@ -446,7 +487,7 @@ steal(
 						async.parallel(createPageTask, next);
 					},
 
-					// Add 'Form' to the connect page
+					// Add 'Form' to the connect pages
 					function (next) {
 						var addFormTasks = [];
 
@@ -475,6 +516,31 @@ steal(
 						});
 
 						async.parallel(addFormTasks, next);
+					},
+
+					// Add 'Link' to the connect pages
+					function (next) {
+						var addLinkTasks = [];
+
+						Object.keys(connectPages).forEach(function (key) {
+							addLinkTasks.push(function (ok) {
+								var columnId = parseInt(key),
+									page = connectPages[columnId];
+
+								page.createComponent({
+									component: 'link',
+									weight: 1,
+									setting: {
+										title: 'Back to ' + viewPage.label,
+										linkTo: viewPage.id
+									}
+								})
+									.fail(ok)
+									.then(function () { ok(); });
+							});
+						});
+
+						async.parallel(addLinkTasks, next);
 					},
 
 					// Insert 'Menu' to the view page
@@ -544,16 +610,16 @@ steal(
 						async.parallel(createGridTasks, next);
 					},
 
-					// Add 'Menu' to the view page
+					// Add 'Link' to the view page
 					function (next) {
 						if (!viewPage) return next();
 
 						viewPage.createComponent({
-							component: 'menu',
+							component: 'link',
 							weight: 1000,
 							setting: {
-								layout: "y",
-								pageIds: [mainPage.id]
+								title: "Back to #pageName#".replace(/#pageName#/g, mainPage.label),
+								linkTo: mainPage.id
 							}
 						})
 							.fail(next)
