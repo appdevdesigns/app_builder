@@ -145,7 +145,7 @@ steal(
 										var tempId = field.id;
 										delete field.id;
 
-										if (!field.weight)
+										if (typeof field.weight == 'undefined' || field.weight == null)
 											field.weight = object.columns.length + index;
 
 										async.waterfall([
