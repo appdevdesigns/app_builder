@@ -118,7 +118,6 @@ steal(
 					dataTableController = getObjectDataTable.call(this, application, setting.object);
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
-				$$(self.viewId).clearAll();
 				$$(self.viewId).showProgress({ type: 'icon' });
 
 				self.data.setting = setting;
@@ -435,7 +434,7 @@ steal(
 					columns = $.map($$(componentIds.editDataTable).config.columns, function (c) { return [c.dataId]; }),
 					detailView = propertyValues.detailView && propertyValues.detailView.split('|') || null,
 					viewPageId = detailView && detailView[0] || null,
-					viewId = detailView && detailView[1] || null,
+					detailViewId = detailView && detailView[1] || null,
 					editForm = propertyValues.editForm && propertyValues.editForm.split('|') || null,
 					editPageId = editForm && editForm[0] || null,
 					editFormId = editForm && editForm[1] || null;
@@ -447,7 +446,7 @@ steal(
 					linkedTo: propertyValues.linkedTo != 'none' ? propertyValues.linkedTo : '',
 					linkedField: propertyValues.linkedField != 'none' ? propertyValues.linkedField : '',
 					viewPage: viewPageId,
-					viewId: this.viewId,
+					viewId: detailViewId,
 					editPage: editPageId,
 					editForm: editFormId,
 					columns: columns.filter(function (c) { return c; }),
