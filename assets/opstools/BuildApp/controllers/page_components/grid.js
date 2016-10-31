@@ -128,7 +128,7 @@ steal(
 				if (linkedToDataCollection) {
 					self.data.linkedToDataCollection = linkedToDataCollection;
 					self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
-						// filterLinkedData(self.viewId, setting.linkedField);
+						filterLinkedData.call(self, setting.linkedField);
 					});
 				}
 
