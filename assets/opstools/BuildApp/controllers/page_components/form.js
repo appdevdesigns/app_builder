@@ -57,13 +57,12 @@ steal(
 
 							// Get value in custom data field
 							var val = dataFieldsManager.getValue(application, null, col, childView.$view);
-							if (val)
+							if (typeof val != 'undefined' && val != null)
 								modelData.attr(col.name, val);
-							else if (editValues[col.name])
+							else if (typeof editValues[col.name] != 'undefined')
 								modelData.attr(col.name, editValues[col.name]);
 							else
 								modelData.removeAttr(col.name);
-
 						}
 					}
 				});

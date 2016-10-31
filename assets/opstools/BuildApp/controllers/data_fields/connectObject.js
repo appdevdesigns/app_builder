@@ -309,10 +309,17 @@ steal(
 		};
 
 		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
-			var selectivityNode = $(itemNode).find('.connect-data-values');
-			return $.map(selectivityHelper.getData(selectivityNode), function (selectedItem) {
-				return selectedItem.id;
-			});
+			var selectivityNode = $(itemNode).find('.connect-data-values'),
+				selectedValues = selectivityHelper.getData(selectivityNode);
+
+			if (selectedValues && selectedValues.length > 0) {
+				return $.map(selectedValues, function (selectedItem) {
+					return selectedItem.id;
+				});
+			}
+			else {
+				return '';
+			}
 		};
 
 		// Reset state
