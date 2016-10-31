@@ -364,8 +364,9 @@ steal(
 					}
 				});
 
-				$$(self.viewId).adjust();
-
+				setTimeout(function () { // Wait animate of change page event
+					$$(self.viewId).adjust();
+				}, 500);
 			};
 		};
 
