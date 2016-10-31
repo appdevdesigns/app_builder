@@ -410,8 +410,7 @@ steal(
 
 						// Show data of current select data
 						var currData = dataCollection.AD.currModel();
-						if (currData)
-							showCustomFields.call(self, object, columns, currData.id, currData);
+						showCustomFields.call(self, object, columns, currData ? currData.id : null, currData);
 
 						next();
 					}
