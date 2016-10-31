@@ -317,6 +317,7 @@ module.exports = {
                     var colData = {
                         object: objIDs[oldObjID],
                         name: col.name,
+                        fieldName: col.fieldName,
                         type: col.type,
                         weight: col.weight,
                         required: col.required,
