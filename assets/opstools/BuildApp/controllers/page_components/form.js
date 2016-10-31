@@ -404,12 +404,15 @@ steal(
 
 						$$(self.viewId).refresh();
 
+						var currData;
+
 						// Bind data
-						if (dataCollection)
+						if (dataCollection) {
 							$$(self.viewId).bind(dataCollection);
+							currData = dataCollection.AD.currModel();
+						}
 
 						// Show data of current select data
-						var currData = dataCollection.AD.currModel();
 						showCustomFields.call(self, object, columns, currData ? currData.id : null, currData);
 
 						next();
