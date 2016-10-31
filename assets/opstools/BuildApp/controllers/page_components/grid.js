@@ -28,8 +28,7 @@ steal(
 
 		// Instance functions
 		var gridComponent = function (application, viewId, componentId) {
-			var events = {},
-				data = {};
+			var data = {};
 
 			function getMaxWeight(columns) {
 				if (!columns) return 0;

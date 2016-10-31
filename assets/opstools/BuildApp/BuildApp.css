@@ -301,6 +301,12 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	right: 1px;
 }
 
+.ab-component-link {
+	color: #003B7E;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
 /* Interface component list */
 .ab-component-item-drag {
 	border: 1px dotted #000 !important;

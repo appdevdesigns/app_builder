@@ -10,8 +10,7 @@ steal(
 
 		//Constructor
 		var menuComponent = function (application, viewId, componentId) {
-			var events = {},
-				data = {};
+			var data = {};
 
 			this.viewId = viewId;
 			this.editViewId = componentIds.editMenu;

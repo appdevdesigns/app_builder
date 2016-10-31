@@ -3,6 +3,7 @@ steal(
 	'opstools/BuildApp/controllers/page_components/grid.js',
 	'opstools/BuildApp/controllers/page_components/form.js',
 	'opstools/BuildApp/controllers/page_components/view.js',
+	'opstools/BuildApp/controllers/page_components/link.js',
 	function (dataCollectionHelper) {
 		var componentManager = function () { };
 

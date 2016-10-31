@@ -24,8 +24,7 @@ steal(
 
 		//Constructor
 		var formComponent = function (application, viewId, componentId) {
-			var events = {},
-				data = {};
+			var data = {};
 
 			// Private methods
 			function saveModelData(dataCollection, columns) {

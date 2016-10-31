@@ -19,8 +19,7 @@ steal(
 
 		// Instance functions
 		var viewComponent = function (application, viewId, componentId) {
-			var data = {},
-				events = {},
+			var data = {}
 				objectModels = {};
 
 			// Private functions

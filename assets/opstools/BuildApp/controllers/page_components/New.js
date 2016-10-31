@@ -7,8 +7,7 @@ steal(
 
 		//Constructor
 		var newComponent = function (application, viewId, componentId) {
-			var events = {},
-				data = {};
+			var data = {};
 
 			// Set viewId to public
 			this.viewId = viewId;
