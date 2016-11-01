@@ -59,9 +59,13 @@ steal(
 						return;
 					}
 
-					var fieldData = currModel[child.config.fieldName];
+					var fieldData = currModel[child.config.fieldName],
+						column = data.columns.filter(function (col) { return col.name == child.config.fieldName });
 
-					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, child.config.fieldName, currModel.id, fieldData, child.$view, { readOnly: true }))
+					if (column && column.length > 0) column = column[0];
+					else return;
+
+					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, column, currModel.id, fieldData, child.$view, { readOnly: true }))
 						return;
 
 					if (child.config.editor === 'date' || child.config.editor === 'datetime') {
@@ -84,7 +88,7 @@ steal(
 
 				setTimeout(function () { // Wait animate of change page event
 					$$(self.viewId).adjust();
-				}, 500);
+				}, 700);
 			};
 
 			this.viewId = viewId;
@@ -145,11 +149,15 @@ steal(
 						$$(self.viewId).hideProgress();
 						next(err);
 					})
-					.then(function (columns) {
-						clearViews.call(self);
-						columns.forEach(function (col) {
+					.then(function (result) {
+						result.forEach(function (col) {
 							if (col.translate) col.translate();
+						});
+						data.columns = result;
 
+						clearViews.call(self);
+
+						result.forEach(function (col) {
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 							if (!editable && !isVisible) return; // Hidden
 

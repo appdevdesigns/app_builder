@@ -622,11 +622,6 @@ steal(
 
 							self.resetState();
 
-							self.controllers.ObjectDataTable.registerDataTable(
-								AD.classes.AppBuilder.currApp,
-								AD.classes.AppBuilder.currApp.currObj,
-								$$(self.webixUiId.objectDatatable));
-
 							if (!AD.classes.AppBuilder.currApp.currObj) {
 								$$(self.webixUiId.objectDatatable).hideProgress();
 								$$(self.webixUiId.objectDatatable).hide();
@@ -698,6 +693,16 @@ steal(
 												next();
 											}
 										});
+								},
+								// Register DataTable
+								function (next) {
+									self.controllers.ObjectDataTable.registerDataTable(
+										AD.classes.AppBuilder.currApp,
+										AD.classes.AppBuilder.currApp.currObj,
+										self.data.columns,
+										$$(self.webixUiId.objectDatatable));
+
+									next();
 								},
 								// Bind columns to DataTable
 								function (next) {

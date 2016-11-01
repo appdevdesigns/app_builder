@@ -27,7 +27,7 @@ steal(
 			var data = {};
 
 			// Private methods
-			function saveModelData(dataCollection, columns) {
+			function saveModelData(dataCollection, object, columns) {
 				var self = this,
 					q = $.Deferred(),
 					modelData = dataCollection.AD.currModel(),
@@ -87,6 +87,8 @@ steal(
 
 						// Clear form
 						$$(self.viewId).setValues({});
+						// Clear custom views
+						showCustomFields.call(self, object, columns, null, null);
 
 						q.resolve();
 					});
@@ -104,7 +106,7 @@ steal(
 					});
 					if (!childView) return;
 
-					dataFieldsManager.customDisplay(col.fieldName, application, object, col.name, rowId, rowData ? rowData[col.name] : null, childView.$view);
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
 				});
 			}
 
@@ -355,7 +357,7 @@ steal(
 									if ($$(saveButton))
 										$$(saveButton).disable();
 
-									saveModelData.call(self, dataCollection, columns)
+									saveModelData.call(self, dataCollection, object, columns)
 										.fail(function (err) {
 											console.error(err);
 
@@ -392,6 +394,8 @@ steal(
 
 									// Clear form
 									$$(self.viewId).setValues({});
+									// Clear custom views
+									showCustomFields.call(self, object, columns, null, null);
 								}
 							});
 						}

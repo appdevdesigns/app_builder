@@ -26,14 +26,11 @@ steal(
 						q.reject('System could not found this object.');
 						return q;
 					}
-
 					objInfo = objInfo[0];
 
 					// Get object model
 					var objectModel = modelCreator.getModel(application, objInfo.attr('name')),
-						objectData,
-						linkCols = objInfo.columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
-						dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || [];// Get date & datetime columns
+						objectData;
 
 					async.series([
 						// Find data
@@ -49,6 +46,9 @@ steal(
 						function (next) {
 							if (!objectData) return next();
 
+							var linkCols = objInfo.columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
+								dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || [];// Get date & datetime columns
+
 							dataHelper.normalizeData(application, objectData, linkCols, dateCols)
 								.fail(next)
 								.then(function (result) {
@@ -57,13 +57,31 @@ steal(
 
 										// Listen change data event to update data label
 										dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-											var attName = attr.indexOf('.') > -1 ? attr.split('.')[1] : attr, // 0.attrName
+											var rowIndex = -1,
+												attrName = attr;
+
+											if (attr.indexOf('.') > -1) {  // 0.attrName
+												rowIndex = attr.split('.')[0];
+												attName = attr.split('.')[1];
+											}
+
+											var rowData = rowIndex > -1 ? this[rowIndex] : this, // Get data
 												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0,
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attName; }).length > 0;
 
+											// console.log(
+											// 	'DATA COLLECTION : ',
+											// 	ev,
+											// 	attr,
+											// 	how,
+											// 	newVal,
+											// 	hasUpdateLink,
+											// 	hasUpdateDate
+											// );
+
 											if (how == 'add' || (hasUpdateLink || hasUpdateDate) && newVal) {
 												// Update connected data
-												dataHelper.normalizeData(application, ev.target, linkCols, dateCols).then(function (result) { });
+												dataHelper.normalizeData(application, rowData, linkCols, dateCols).then(function (result) { });
 											}
 										});
 									}

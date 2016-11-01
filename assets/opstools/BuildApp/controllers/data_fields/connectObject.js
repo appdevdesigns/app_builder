@@ -255,6 +255,7 @@ template: function(data) {
 			};
 		};
 
+
 // customDisplay : renders this DataField in it's cell. (form or grid)
 // application: the ABApplication instance for our running application
 // object : the ABObject that contains this DataField
@@ -263,7 +264,7 @@ template: function(data) {
 // data : the value of this DataField
 // itemNode : the cell that contains this DataField (DOM reference)
 // options  : provided by the calling component (grid or Form) and currently only has .readOnly:bool
-		connectObjectField.customDisplay = function (application, object, columnName, rowId, data, itemNode, options) {
+		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 			
 // insert a <div id="xxx"></div> into current itemNode,
 // then create a Webix container that 
@@ -284,7 +285,7 @@ template: function(data) {
 							id: cVal.id,
 							text: cVal.dataLabel,
 							object: object,
-							columnName: columnName,
+							columnName: fieldData.name,
 							rowId: rowId
 						};
 					});
@@ -296,7 +297,7 @@ template: function(data) {
 						id: data.id,
 						text: data.dataLabel,
 						object: object,
-						columnName: columnName,
+						columnName: fieldData.name,
 						rowId: rowId
 					});
 				}
