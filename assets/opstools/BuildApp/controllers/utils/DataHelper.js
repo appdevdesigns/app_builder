@@ -33,7 +33,7 @@ steal(
 							var Tasks = [];
 
 							linkFields.forEach(function (linkCol) {
-								if (row[linkCol.name] && !row[linkCol.name].dataLabel) {
+								if (row[linkCol.name] && (typeof row[linkCol.name].dataLabel == 'undefined' || row[linkCol.name].dataLabel == null)) {
 									Tasks.push(function (ok) {
 										var linkObj = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject; })[0],
 											linkedLabels = [];
@@ -48,11 +48,11 @@ steal(
 
 												if (row[linkCol.name].forEach) {
 													row[linkCol.name].forEach(function (val) {
-														if (!val.dataLabel)
+														if (typeof val.dataLabel == 'undefined' || val.dataLabel == null)
 															connectIds.push({ id: val.id || val });
 													});
 												}
-												else if (!row[linkCol.name].dataLabel) {
+												else if (typeof row[linkCol.name].dataLabel == 'undefined' || row[linkCol.name].dataLabel == null) {
 													connectIds.push({ id: row[linkCol.name].id || row[linkCol.name] });
 												}
 

@@ -243,7 +243,7 @@ steal(
 			};
 		};
 
-		connectObjectField.customDisplay = function (application, object, columnName, rowId, data, itemNode, options) {
+		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 			// Initial selectivity
 			selectivityHelper.renderSelectivity(itemNode, 'connect-data-values', options.readOnly);
 
@@ -255,7 +255,7 @@ steal(
 							id: cVal.id,
 							text: cVal.dataLabel,
 							object: object,
-							columnName: columnName,
+							columnName: fieldData.name,
 							rowId: rowId
 						};
 					});
@@ -265,7 +265,7 @@ steal(
 						id: data.id,
 						text: data.dataLabel,
 						object: object,
-						columnName: columnName,
+						columnName: fieldData.name,
 						rowId: rowId
 					});
 				}

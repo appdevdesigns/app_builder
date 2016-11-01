@@ -39,10 +39,11 @@ steal(
 
 						},
 
-						registerDataTable: function (application, object, dataTable) {
+						registerDataTable: function (application, object, columns, dataTable) {
 							var self = this;
 							self.application = application;
 							self.object = object;
+							self.columns = columns;
 							self.dataTable = dataTable;
 
 							// Trash
@@ -78,8 +79,9 @@ steal(
 								var dataTable = this;
 								dataTable.eachRow(function (rowId) {
 									dataTable.eachColumn(function (columnId) {
-										var col = dataTable.getColumnConfig(columnId);
-										if (!col) return;
+										var col = self.columns.filter(function (col) { return col.name == columnId });
+										if (col && col.length > 0) col = col[0];
+										else return;
 
 										var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
 										if (!itemNode) return;
@@ -88,7 +90,7 @@ steal(
 											col.fieldName,
 											self.application,
 											self.object,
-											columnId,
+											col,
 											rowId,
 											dataTable.getItem(rowId)[columnId],
 											itemNode,
@@ -193,7 +195,7 @@ steal(
 								});
 
 								if (connectObj && connectObj.length > 0)
-									label += ' '+ self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
+									label += ' ' + self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
 							var headerTemplate = '<div class="ab-object-data-header"><span class="webix_icon {0}"></span>{1}{2}</div>'

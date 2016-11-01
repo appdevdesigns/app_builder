@@ -106,7 +106,7 @@ steal(
 					});
 					if (!childView) return;
 
-					dataFieldsManager.customDisplay(col.fieldName, application, object, col.name, rowId, rowData ? rowData[col.name] : null, childView.$view);
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
 				});
 			}
 

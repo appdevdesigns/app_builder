@@ -37,7 +37,7 @@ steal(
 				return Math.max.apply(null, weightList);
 			}
 
-			function getObjectDataTable(application, objectId) {
+			function getObjectDataTable(application, objectId, columns) {
 				if (!this.data.objectDataTable) {
 					var ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
 
@@ -48,7 +48,7 @@ steal(
 				var object = application.objects.filter(function (obj) { return obj.id == objectId });
 				if (object && object[0]) object = object[0];
 
-				this.data.objectDataTable.registerDataTable(application, object, $$(this.viewId));
+				this.data.objectDataTable.registerDataTable(application, object, columns, $$(this.viewId));
 
 				return this.data.objectDataTable;
 			};
@@ -74,13 +74,13 @@ steal(
 				$$(componentIds.columnList).parse(columns);
 			};
 
-			function populateData(objectId, dataCollection) {
+			function populateData(objectId, dataCollection, columns) {
 				var self = this;
 
 				if ($$(self.viewId).showProgress)
 					$$(self.viewId).showProgress({ type: 'icon' });
 
-				getObjectDataTable.call(self, application, objectId)
+				getObjectDataTable.call(self, application, objectId, columns)
 					.populateData(dataCollection);
 
 				if ($$(self.viewId).hideProgress)
@@ -126,8 +126,7 @@ steal(
 
 			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
-					q = $.Deferred(),
-					dataTableController = getObjectDataTable.call(this, application, setting.object);
+					q = $.Deferred();
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
 				$$(self.viewId).showProgress({ type: 'icon' });
@@ -145,23 +144,6 @@ steal(
 
 				if (setting.columns)
 					self.data.visibleColumns = $.map(setting.columns, function (cId) { return cId.toString(); });
-
-				var dataTableController = getObjectDataTable.call(self, application, setting.object);
-				dataTableController.bindColumns(application, [], true, setting.removable);
-				dataTableController.registerDeleteRowHandler(function (deletedId) {
-					$$(self.viewId).showProgress({ type: 'icon' });
-
-					// Delete data
-					dataCollection.AD.destroyModel(deletedId.row)
-						.fail(function (err) {
-							AD.error.log('Error destroying entry.', { error: err, id: deletedId.row });
-
-							$$(self.viewId).hideProgress();
-						})
-						.then(function (oldData) {
-							$$(self.viewId).hideProgress();
-						});
-				});
 
 				AD.util.async.parallel([
 					function (next) {
@@ -186,6 +168,25 @@ steal(
 
 								next();
 							});
+					},
+					function (next) {
+						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
+						dataTableController.bindColumns(application, [], true, setting.removable);
+						dataTableController.registerDeleteRowHandler(function (deletedId) {
+							$$(self.viewId).showProgress({ type: 'icon' });
+
+							// Delete data
+							dataCollection.AD.destroyModel(deletedId.row)
+								.fail(function (err) {
+									AD.error.log('Error destroying entry.', { error: err, id: deletedId.row });
+
+									$$(self.viewId).hideProgress();
+								})
+								.then(function (oldData) {
+									$$(self.viewId).hideProgress();
+								});
+						});
+						next();
 					}
 				], function (err) {
 					if (err) {
@@ -345,7 +346,7 @@ steal(
 					}
 
 					// Select edit item
-					getObjectDataTable.call(self, application, setting.object).registerItemClick(function (id, e, node) {
+					getObjectDataTable.call(self, application, setting.object, self.data.columns).registerItemClick(function (id, e, node) {
 						if (id.column === 'view_detail') {
 							$(self).trigger('changePage', {
 								pageId: setting.viewPage
@@ -446,9 +447,9 @@ steal(
 
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self, application, self.data.setting.object).bindColumns(application, columns, true, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, isTrashVisible);
 
-				populateData.call(self, self.data.setting.object, dataCollection);
+				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
 				if (linkedField)
 					filterLinkedData.call(self, linkedField);
