@@ -1,6 +1,6 @@
 steal(function () {
 
-	// [DataFieldType] 
+	// image 
 	//
 	// A DataField that handles simple text data for an Object.
 	//
@@ -16,7 +16,7 @@ steal(function () {
 	//
 	//				but the Webix Grid will display .labelName for the column header.
 	//
-	// [DataFieldType]  uniquely defines:
+	// image  uniquely defines:
 	//		.[field] : [description]
 
 
@@ -34,20 +34,18 @@ steal(function () {
 	//							DataField to the User.
 	//      .includeHeader {bool} allow the AppBuilder to add in the [name] and [label] fields
 	//							for you.  (why reinvent the wheel?)
-	//		.description {string} (optional) The multilingual key for displaying a brief description of
-	// 							this DataField to the User. (usually under the Name, Label)
 	// 
-	var [DataFieldType]DataField = {
-		name: '[DataFieldType]', // unique key to reference this specific DataField
+	var imageDataField = {
+		name: 'image',  // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+		icon: 'file-image-o',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 // TODO: to support a proper multilingual display, 
 //       .menuName & .description  need to be  multilingual Keys
 //       not straight up labels.		
-		menuName: '[DataFieldType]',  
+		menuName: 'Image Attachment',  
 		includeHeader: true,
-		description: ''
+		description: 'Attach an image to this object.'
 	};
 
 
@@ -57,7 +55,7 @@ steal(function () {
 	 * Definitions of the Webix.id for the items in this DataField's Editor
 	 *
 	 *	.editView : 	the .id of the editor for this DataField
-	 *					->  [DataFieldType]DataField.editDefinition.id
+	 *					->  imageDataField.editDefinition.id
 	 */
 	var componentIds = {
 		editView: 'ab-new-image',
@@ -80,7 +78,7 @@ steal(function () {
 	 * This UI is used for both the initial create, as well as the Edit form.
 	 *
 	 */
-	[DataFieldType]DataField.editDefinition = {
+	imageDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
 
@@ -119,10 +117,10 @@ steal(function () {
 	 *
 	 * @param {ABColumn} data  the ABColumn info saved for this DataField.
 	 */
-	[DataFieldType]DataField.populateSettings = function (application, data) {
+	imageDataField.populateSettings = function (application, data) {
 		if (!data.setting) return;
 
-		// Access the Webix components defined in [DataFieldType]DataField.editDefinition 
+		// Access the Webix components defined in imageDataField.editDefinition 
 		// and set their values according to their references in data.setting
 		// (NOTE: see .getSettings() for when you store the values)
 
@@ -154,17 +152,17 @@ steal(function () {
 	 *						.editor: Webix UI editor type for this entry
 	 *						.filter_type: Webix UI filter type 
 	 *
-	 * 					Unique [DataFieldType] settings:
+	 * 					Unique image settings:
 	 *						[field] 	:  [description]
 	 *
 	 * @return {json}  data formatted to be saved in ABColumn instance.
 	 */
-	[DataFieldType]DataField.getSettings = function () {
+	imageDataField.getSettings = function () {
 		return {
-			fieldName: [DataFieldType]DataField.name,
-			type: [DataFieldType]DataField.type,
+			fieldName: imageDataField.name,
+			type: imageDataField.type,
 			setting: {
-				icon: [DataFieldType]DataField.icon,
+				icon: imageDataField.icon,
 				editor: 'text', // http://docs.webix.com/desktop__editing.html
 				filter_type: 'text', // DataTableFilterPopup - filter type
 
@@ -188,7 +186,7 @@ steal(function () {
 	 * fields.
 	 *
 	 */
-	[DataFieldType]DataField.resetState = function () {
+	imageDataField.resetState = function () {
 
 		// this should be almost identical to .populateSettings() but with
 		// all values set to proper 'empty' values.
@@ -200,5 +198,5 @@ steal(function () {
 		// $$(componentIds.supportMultilingual).setValue(1);
 	};
 
-	return [DataFieldType]DataField;
+	return imageDataField;
 });

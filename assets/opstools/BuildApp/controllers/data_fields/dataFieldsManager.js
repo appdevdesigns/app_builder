@@ -7,6 +7,7 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/boolean.js',
 	'opstools/BuildApp/controllers/data_fields/list.js',
 	'opstools/BuildApp/controllers/data_fields/attachment.js',
+	'opstools/BuildApp/controllers/data_fields/image.js',
 	function () {
 		var self = {};
 
@@ -33,6 +34,9 @@ steal(
 				data.fieldName = field.name;
 				$(self).trigger('update', data);
 			});
+// TODO:			
+// possible way to have each field able to reference the DataFieldManager:
+// field.DataFieldManager = self;
 		});
 
 		/**
