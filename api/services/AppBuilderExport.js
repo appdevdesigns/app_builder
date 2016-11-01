@@ -326,14 +326,20 @@ module.exports = {
                     var oldColID = col.id;
                     
                     var setting = col.setting;
-                    // Remap the linked object IDs
-                    var oldLinkObject = setting.linkObject;
-                    if (oldLinkObject) {
-                        var newLinkObject = objIDs[oldLinkObject];
-                        if (!newLinkObject) {
-                            sails.log('Warning! Unable to remap object id in column setting.linkObject', col.setting);
+                    if (setting) {
+                        // Application name is duplicated here. Make sure it
+                        // uses the adjusted name.
+                        setting.appName = appName;
+                        
+                        // Remap the linked object IDs
+                        var oldLinkObject = setting.linkObject;
+                        if (oldLinkObject) {
+                            var newLinkObject = objIDs[oldLinkObject];
+                            if (!newLinkObject) {
+                                sails.log('Warning! Unable to remap object id in column setting.linkObject', col.setting);
+                            }
+                            setting.linkObject = newLinkObject;
                         }
-                        setting.linkObject = newLinkObject;
                     }
                     
                     var colData = {
