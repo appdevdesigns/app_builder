@@ -45,25 +45,23 @@ steal(
 
 				// Populate values to model
 				columns.forEach(function (col) {
-					if (typeof editValues[col.name] !== 'undefined') {
-						if (col.type == "boolean") {
-							modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
-						}
-						else {
-							var childView = $$(self.viewId).getChildViews().find(function (view) {
-								return view.config && view.config.name == col.name
-							});
-							if (!childView) return;
+					if (col.type == "boolean") {
+						modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
+					}
+					else {
+						var childView = $$(self.viewId).getChildViews().find(function (view) {
+							return view.config && view.config.name == col.name
+						});
+						if (!childView) return;
 
-							// Get value in custom data field
-							var val = dataFieldsManager.getValue(application, null, col, childView.$view);
-							if (typeof val != 'undefined' && val != null)
-								modelData.attr(col.name, val);
-							else if (typeof editValues[col.name] != 'undefined')
-								modelData.attr(col.name, editValues[col.name]);
-							else
-								modelData.removeAttr(col.name);
-						}
+						// Get value in custom data field
+						var val = dataFieldsManager.getValue(application, null, col, childView.$view);
+						if (typeof val != 'undefined' && val != null)
+							modelData.attr(col.name, val);
+						else if (typeof editValues[col.name] != 'undefined')
+							modelData.attr(col.name, editValues[col.name]);
+						else
+							modelData.removeAttr(col.name);
 					}
 				});
 
@@ -136,7 +134,7 @@ steal(
 				// Get object
 				var object = application.objects.filter(function (obj) { return obj.id == setting.object; });
 				if (!object || object.length < 1) return;
-				application.currObj = object[0];
+				object = object[0];
 
 				if (dataCollection) {
 					dataCollection.attachEvent('onAfterCursorChange', function (id) {
@@ -148,7 +146,7 @@ steal(
 				async.series([
 					// Get columns data
 					function (next) {
-						application.currObj.getColumns()
+						object.getColumns()
 							.fail(next)
 							.then(function (result) {
 								result.forEach(function (d) {

@@ -74,6 +74,19 @@ steal(
 				$$(componentIds.columnList).parse(columns);
 			};
 
+			function populateData(objectId, dataCollection) {
+				var self = this;
+
+				if ($$(self.viewId).showProgress)
+					$$(self.viewId).showProgress({ type: 'icon' });
+
+				getObjectDataTable.call(self, application, objectId)
+					.populateData(dataCollection);
+
+				if ($$(self.viewId).hideProgress)
+					$$(self.viewId).hideProgress();
+			};
+
 			function filterLinkedData(linkedField) {
 				var self = this;
 
@@ -368,6 +381,19 @@ steal(
 							else if (selectedItem && selectedItem.id != id && $$(self.viewId).select)
 								$$(self.viewId).select(id);
 						});
+
+						dataCollection.attachEvent("onDataUpdate", function (id, data) {
+							filterLinkedData.call(self, setting.linkedField);
+						});
+
+						dataCollection.attachEvent("onAfterAdd", function (id, index) {
+							filterLinkedData.call(self, setting.linkedField);
+						});
+
+						dataCollection.attachEvent('onBindUpdate', function (data, key) {
+							filterLinkedData.call(self, setting.linkedField);
+						});
+
 					}
 
 					q.resolve();
@@ -422,7 +448,7 @@ steal(
 
 				getObjectDataTable.call(self, application, self.data.setting.object).bindColumns(application, columns, true, isTrashVisible);
 
-				self.populateData(self.data.setting.object, dataCollection);
+				populateData.call(self, self.data.setting.object, dataCollection);
 
 				if (linkedField)
 					filterLinkedData.call(self, linkedField);
@@ -640,19 +666,6 @@ steal(
 					}
 
 				]);
-			};
-
-			this.populateData = function (objectId, dataCollection) {
-				var self = this;
-
-				if ($$(self.viewId).showProgress)
-					$$(self.viewId).showProgress({ type: 'icon' });
-
-				getObjectDataTable.call(self, application, objectId)
-					.populateData(dataCollection);
-
-				if ($$(self.viewId).hideProgress)
-					$$(self.viewId).hideProgress();
 			};
 		};
 
