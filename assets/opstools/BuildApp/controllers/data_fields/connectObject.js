@@ -61,7 +61,7 @@ steal(
 			connectData.displayData = $.map(selectedItems, function (item) {
 				return {
 					id: item.id,
-					dataLabel: item.text
+					_dataLabel: item.text
 				}
 			});
 
@@ -253,7 +253,7 @@ steal(
 					selectedItems = data.map(function (cVal) {
 						return {
 							id: cVal.id,
-							text: cVal.dataLabel,
+							text: cVal._dataLabel,
 							object: object,
 							columnName: fieldData.name,
 							rowId: rowId
@@ -263,7 +263,7 @@ steal(
 				else if (data.id) {
 					selectedItems.push({
 						id: data.id,
-						text: data.dataLabel,
+						text: data._dataLabel,
 						object: object,
 						columnName: fieldData.name,
 						rowId: rowId
