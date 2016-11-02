@@ -11,7 +11,8 @@ module.exports = {
 
 		var colString = column.name + ':' + column.type;
 
-		if (column.setting.supportMultilingual) {
+
+		if (column.setting.supportMultilingual == true) {
 			colString += ':multilingual';
 		}
 
