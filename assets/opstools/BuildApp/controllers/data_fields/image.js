@@ -216,13 +216,34 @@ steal(function () {
 	 */
 	imageDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 
-		var inHere = true;
+		// var inHere = true;
 
-		var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
+		// var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
+
 		// $(itemNode).find('.ab-image-data-field').append('<div id="' + keyField + '">'+keyField+'</div>');
-		// $(itemNode).find('.ab-image-data-field').attr('id', keyField);
-		// $(itemNode).find('.ab-image-data-field').html(keyField);
-$(itemNode).find('.ab-image-data-field').append(' YES !');
+
+		// find the container from our this.getSettings().setting.template 
+		var $container = $(itemNode).find('.ab-image-data-field');
+
+		// clear contents
+		$container.html('');
+
+		// the display of our image:
+		var imgDiv = '';
+
+		// if data is empty, then display a file Icon
+		if ( !data || data == '') {
+			imgDiv = '<div style="text-align: center;"><i class="fa fa-file-image-o fa-2x"></i></div>';
+		} else {
+			// else display an image:
+			imgDiv = data;
+		}
+
+		// insert the image to display
+		$container.html(imgDiv);
+
+
+
 		// // Example Custom Display:
 		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
 		// $(itemNode).append('<div id="' + key + '"></div>');		// create a div
