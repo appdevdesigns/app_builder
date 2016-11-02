@@ -228,7 +228,7 @@ template:'<div class="ab-image-data-field"></div>',
 		var inHere = true;
 
 		var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
-		$(itemNode).append('<div id="' + keyField + '">'+keyField+'</div>');
+		$(itemNode).find('.ab-image-data-field').append('<div id="' + keyField + '">'+keyField+'</div>');
 
 		// // Example Custom Display:
 		// var key = fieldData.fieldName+"-"+rowId;					// unique reference

@@ -225,9 +225,16 @@ steal(function () {
 /*
 	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 
+		// for this to work right: 
+		// set your 
+		//     	[DataFieldType]DataField.type =  'someNonStandardValue'
+		// 		[DataFieldType]DataField.getSettings().setting.editor = 'someNonStandardValue'
+		//      [DataFieldType]DataField.getSettings().setting.template = '<div class="classReferenceInTemplate"></div>'
+
+		
 		// // Example Custom Display:
 		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
-		// $(itemNode).append('<div id="' + key + '"></div>');		// create a div
+		// $(itemNode).find('.classReferenceInTemplate').append('<div id="' + key + '"></div>');		// create a div
 
 		// webix.ui({												// attach a webix component 
 		// 	container: key,										    // to our new div
