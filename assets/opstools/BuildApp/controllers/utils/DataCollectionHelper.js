@@ -61,7 +61,9 @@ steal(
 												attrName = attr;
 
 											if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
-												|| newVal == oldVal) return;
+												|| newVal == oldVal
+												|| newVal == null
+												|| typeof newVal == 'undefined') return;
 
 											if (attr.indexOf('.') > -1) {  // 0.attrName
 												rowIndex = attr.split('.')[0];
@@ -74,7 +76,7 @@ steal(
 												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0,
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attName; }).length > 0;
 
-											if (how == 'add' || (hasUpdateLink || hasUpdateDate) && newVal) {
+											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
 												// Update connected data
 												dataHelper.normalizeData(application, rowData, linkCols, dateCols, true).then(function (result) { });
 											}

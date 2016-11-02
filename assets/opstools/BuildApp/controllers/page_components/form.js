@@ -66,7 +66,11 @@ steal(
 				});
 
 				modelData.save()
-					.fail(q.reject)
+					.fail(function (err) {
+						console.error(err);
+						$$(self.viewId).hideProgress();
+						q.reject(err);
+					})
 					.then(function (result) {
 						$$(self.viewId).hideProgress();
 
