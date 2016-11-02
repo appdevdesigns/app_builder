@@ -67,14 +67,14 @@ steal(
 
 											if (attr.indexOf('.') > -1) {  // 0.attrName
 												rowIndex = attr.split('.')[0];
-												attName = attr.split('.')[1];
+												attrName = attr.split('.')[1];
 											}
 
-											if (attName == 'updatedAt' || attrName == 'translations') return;
+											if (attrName == 'updatedAt' || attrName == 'translations') return;
 
 											var rowData = rowIndex > -1 ? this[rowIndex] : this, // Get data
-												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0,
-												hasUpdateDate = dateCols.filter(function (col) { return col.name == attName; }).length > 0;
+												hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
+												hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
 
 											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
 												// Update connected data
