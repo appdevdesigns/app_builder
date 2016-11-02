@@ -66,7 +66,11 @@ steal(
 				});
 
 				modelData.save()
-					.fail(q.reject)
+					.fail(function (err) {
+						console.error(err);
+						$$(self.viewId).hideProgress();
+						q.reject(err);
+					})
 					.then(function (result) {
 						$$(self.viewId).hideProgress();
 
@@ -76,14 +80,11 @@ steal(
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
 
-						if (self.fromPage) {
-							$(self).trigger('changePage', {
-								pageId: self.fromPage
-							});
-						}
+						$(self).trigger('changePage', {
+							previousPage: true
+						});
 
 						dataCollection.setCursor(null);
-						data.fromPage = null;
 
 						// Clear form
 						$$(self.viewId).setValues({});
@@ -384,13 +385,9 @@ steal(
 								click: function () {
 									dataCollection.setCursor(null);
 
-									if (self.fromPage) {
-										$(self).trigger('changePage', {
-											pageId: self.fromPage
-										});
-									}
-
-									self.fromPage = null;
+									$(self).trigger('changePage', {
+										previousPage: true
+									});
 
 									// Clear form
 									$$(self.viewId).setValues({});
@@ -515,10 +512,6 @@ steal(
 
 			this.isRendered = function () {
 				return data.isRendered === true;
-			};
-
-			this.setFromPageId = function (pageId) {
-				this.fromPage = pageId;
 			};
 
 		}

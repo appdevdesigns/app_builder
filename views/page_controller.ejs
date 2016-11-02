@@ -181,10 +181,6 @@ steal(
 
                                 if (!page.comInstances) page.comInstances = {};
                                 if (page.comInstances[item.id]){
-                                    // Set return page to previous page
-                                    if (page.comInstances[item.id].setFromPageId)
-                                        page.comInstances[item.id].setFromPageId(self.previousPageID);
-
                                     return;
                                 }
 
@@ -195,24 +191,16 @@ steal(
                                     item.id // the component data id
                                 );
 
-                                // Set return page to previous page
-                                if (page.comInstances[item.id].setFromPageId)
-                                    page.comInstances[item.id].setFromPageId(self.previousPageID);
-
                                 // Listen component events
                                 $(page.comInstances[item.id]).on('renderComplete', function(event, data) {
                                     $$("<%- domID() %>").adjust();
                                 });
 
                                 $(page.comInstances[item.id]).on('changePage', function(event, data) {
-                                    // Store previous page id when click on menu
-                                    if (item.component == 'menu')
-                                        self.previousPageID = self.activePageID;
-                                    else
-                                        self.previousPageID = null;
-
                                     // Redirect to another page
-                                    if (self.activePageID != data.pageId)
+                                    if (data.previousPage)
+                                        self.showPage(self.previousPageID);
+                                    else if (self.activePageID != data.pageId && data.pageId)
                                         self.showPage(data.pageId);
                                 });
 
@@ -312,6 +300,7 @@ steal(
                                     pageID = this.rootPageID;
                                 }
                                 $$(this.pages[pageID].domID).show();
+                                this.previousPageID = this.activePageID;
                                 this.activePageID = pageID;
 
                                 this.initWebix(this.activePageID);

@@ -64,7 +64,7 @@ steal(
 			connectData.displayData = $.map(selectedItems, function (item) {
 				return {
 					id: item.id,
-					dataLabel: item.text
+					_dataLabel: item.text
 				}
 			});
 
@@ -283,7 +283,7 @@ template: function(data) {
 					selectedItems = data.map(function (cVal) {
 						return {
 							id: cVal.id,
-							text: cVal.dataLabel,
+							text: cVal._dataLabel,
 							object: object,
 							columnName: fieldData.name,
 							rowId: rowId
@@ -295,7 +295,7 @@ template: function(data) {
 // add in additional data values so that they get passed back on the selectivity .change event
 // this is where we get the result.XXX values in the getReturnData() function.
 						id: data.id,
-						text: data.dataLabel,
+						text: data._dataLabel,
 						object: object,
 						columnName: fieldData.name,
 						rowId: rowId

@@ -6,9 +6,138 @@ var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
 
+/**
+ * Deeply iterates through an object or array and removes any properties
+ * named 'createdAt' or 'updatedAt'. Also removes primary and foreign keys
+ * from translations.
+ *
+ * @param Mixed thing
+ *      Array or Object to remove timestamp properties from.
+ * @param Array toRemove
+ *      Optional array of properties to remove from `thing`.
+ *      Default is 'createdAt' and 'updatedAt'.
+ * @private
+ */
+var removeTimestamps = function(thing, toRemove) {
+    toRemove = toRemove || ['createdAt', 'updatedAt'];
+    if (Array.isArray(thing)) {
+        thing.forEach(function(t) {
+            removeTimestamps(t, toRemove);
+        });
+    }
+    else if (typeof thing == 'object') {
+        for (var key in thing) {
+            if (toRemove.indexOf(key) >= 0) {
+                delete thing[key];
+            }
+            else if (key == 'translations') {
+                removeTimestamps(thing[key], toRemove.concat(['id', 'abapplication', 'abobject', 'abcolumn', 'abpage']));
+            }
+            else {
+                removeTimestamps(thing[key], toRemove);
+            }
+        }
+    }
+    else {
+        // nothing to do
+    }
+};
+
+
+/**
+ * Changes all primary keys to start from 1, and remapping all internal 
+ * references to maintain consistency.
+ *
+ * @param JSON data
+ *      This is the data object used for app exports.
+ * @private
+ */
+var normalizeIDs = function(data) {
+    var appID = 1;
+    var reference = {};
+    for (var key in data) {
+        if (key == 'app') continue;
+        reference[key] = {
+            counter: 1,
+            map: {}
+        };
+    }
+    
+    // First pass: normalize primary keys
+    data.app.id = appID;
+    for (var key in data) {
+        if (key == 'app') continue;
+        data[key].forEach(function(obj) {
+            reference[key].map[ obj.id ] = reference[key].counter;
+            obj.id = reference[key].counter;
+            reference[key].counter += 1;
+        });
+    };
+    
+    // Second pass: adjust references
+    data.objects.forEach(function(obj) {
+        obj.application = appID;
+    });
+    data.pages.forEach(function(page) {
+        page.parent = reference.pages.map[ page.parent ];
+        page.application = appID;
+    });
+    data.columns.forEach(function(col) {
+        col.object = reference.objects.map[ col.object ];
+        if (col.setting) {
+            col.setting.linkObject = reference.objects.map[ col.setting.linkObject ];
+            col.setting.linkVia = reference.columns.map[ col.setting.linkVia ];
+        }
+    });
+    data.lists.forEach(function(list) {
+        list.column = reference.columns.map[ list.column ];
+    });
+    data.components.forEach(function(comp) {
+        comp.page = reference.pages.map[ comp.page ];
+        if (comp.setting) {
+            comp.setting.object = reference.objects.map[ parseInt(comp.setting.object) ];
+            if (Array.isArray(comp.setting.visibleFieldIds)) {
+                for (var i=0; i<comp.setting.visibleFieldIds.length; i++) {
+                    var colID = parseInt(comp.setting.visibleFieldIds[i]);
+                    comp.setting.visibleFieldIds[i] = reference.columns.map[ colID ] || (colID + '!!');
+                }
+            }
+            if (Array.isArray(comp.setting.pageIds)) {
+                for (var i=0; i<comp.setting.pageIds.length; i++) {
+                    var pageID = parseInt(comp.setting.pageIds[i]);
+                    comp.setting.pageIds[i] = reference.pages.map[ pageID ] || (pageID + '!!');
+                }
+            }
+            if (Array.isArray(comp.setting.columns)) {
+                for (var i=0; i<comp.setting.columns.length; i++) {
+                    var colID = parseInt(comp.setting.columns[i]);
+                    comp.setting.columns[i] = reference.columns.map[ colID ] || (colID + '!!');
+                }
+            }
+            ['viewPage', 'editPage'].forEach(function(key) {
+                if (!comp.setting[key]) return;
+                var pageID = parseInt(comp.setting[key]);
+                comp.setting[key] = reference.pages.map[ pageID ] || (pageID + '!!');
+            });
+            ['viewId', 'editForm'].forEach(function(key) {
+                if (!comp.setting[key]) return;
+                var compID = parseInt(comp.setting[key]);
+                comp.setting[key] = reference.components.map[ compID ] || (compID + '!!');
+            });
+        }
+    });
+};
+
+
 
 module.exports = {
     
+    /**
+     * Export an application's metadata to JSON
+     *
+     * @param integer appID
+     * @return JSON object
+     */
     appToJSON: function(appID) {
         var dfd = AD.sal.Deferred();
         var data = {
@@ -131,6 +260,9 @@ module.exports = {
             if (err) {
                 dfd.reject(err);
             } else {
+                removeTimestamps(data);
+                normalizeIDs(data);
+                
                 dfd.resolve(data);
             }
         });
@@ -139,7 +271,12 @@ module.exports = {
     },
     
     
-    
+    /**
+     * Import JSON data to create an application.
+     *
+     * @param JSON data
+     *      This is the JSON object produced by appToJSON()
+     */
     appFromJSON: function(data) {
         var dfd = AD.sal.Deferred();
         
@@ -157,24 +294,14 @@ module.exports = {
             ...
         */
         };
+        var colIDs = {};
+        var pageIDs = {};
+        var componentIDs = {};
         
-        var colIDs = {
-        /*
-            oldID: newID,
-            ...
-        */
-        };
-        
-        var pageIDs = {
-        /*
-            oldID: newID,
-            ...
-        */
-        };
-        
-        // Some columns reference other columns via settings.linkVia.
+        // Some columns reference other columns via `settings.linkVia`.
         // These will need to be remapped in a 2nd pass.
         var columnsNeedRemap = [];
+        var componentsNeedRemap = [];
         
         
         async.series([
@@ -198,7 +325,7 @@ module.exports = {
                                 done(err);
                             }
                             else if (list && list[0]) {
-                                // Already being used. Keep trying.
+                                // Name is already being used. Keep trying.
                                 done(null, true);
                             }
                             else {
@@ -284,8 +411,6 @@ module.exports = {
                     .exec(function(err, result) {
                         if (err) objDone(err);
                         else {
-                            console.log('Object created');
-                            console.log(result);
                             var newID = result.id;
                             objIDs[ oldID ] = newID;
                             
@@ -401,7 +526,7 @@ module.exports = {
                 });
             },
             
-            // Remap column linkVia ID references
+            // Remap column `linkVia` ID references
             function(next) {
                 async.each(columnsNeedRemap, function(colID, colDone) {
                     
@@ -511,19 +636,87 @@ module.exports = {
             // Page components
             function(next) {
                 async.each(data.components, function(comp, compDone) {
+                    var oldCompID = comp.id;
+                    var setting = comp.setting;
+                    if (setting) {
+                        if (Array.isArray(setting.visibleFieldIds)) {
+                            for (var i=0; i<setting.visibleFieldIds.length; i++) {
+                                var oldID = parseInt(setting.visibleFieldIds[i]);
+                                setting.visibleFieldIds[i] = colIDs[oldID];
+                            }
+                        }
+                        if (Array.isArray(setting.pageIds)) {
+                            for (var i=0; i<setting.pageIds.length; i++) {
+                                var oldID = parseInt(setting.pageIds[i]);
+                                setting.pageIds[i] = pageIDs[oldID];
+                            }
+                        }
+                        if (Array.isArray(setting.columns)) {
+                            for (var i=0; i<setting.columns.length; i++) {
+                                var oldID = parseInt(setting.columns[i]);
+                                setting.columns[i] = colIDs[oldID];
+                            }
+                        }
+                        ['viewPage', 'editPage'].forEach(function(key) {
+                            if (!setting[key]) return;
+                            var oldID = parseInt(setting[key]);
+                            setting[key] = pageIDs[oldID];
+                        });
+                    }
                     var compData = {
                         page: pageIDs[ comp.page ],
                         component: comp.component,
                         weight: comp.weight,
-                        setting: comp.setting,
+                        setting: setting,
                     };
                     ABPageComponent.create(compData)
                     .exec(function(err, result) {
                         if (err) compDone(err);
                         else {
+                            componentIDs[oldCompID] = compData.id;
+                            // Some settings reference other components.
+                            // These will be remapped later.
+                            ['viewId', 'editForm'].forEach(function(key) {
+                                if (setting[key]) {
+                                    componentsNeedRemap.push(compData.id);
+                                }
+                            });
                             compDone();
                         }
                     });
+                }, function(err) {
+                    if (err) next(err);
+                    else {
+                        next();
+                    }
+                });
+            },
+            
+            // Remap component references
+            function(next) {
+                async.each(componentsNeedRemap, function(compID, compDone) {
+                    
+                    ABPageComponent.findOne({ id: compID })
+                    .exec(function(err, result) {
+                        if (err) compDone(err);
+                        else if (!result) {
+                            compDone(new Error('component not found: ' + compID));
+                        }
+                        else {
+                            ['viewId', 'editForm'].forEach(function(key) {
+                                var oldID = parseInt(result.setting[key]);
+                                if (oldID) {
+                                    result.setting[key] = componentIDs[oldID];
+                                }
+                            });
+                            ABPageComponent.update({ id: compID }, result)
+                            .exec(function(err) {
+                                if (err) compDone(err);
+                                else compDone();
+                            });
+                        }
+                    });
+                    
                 }, function(err) {
                     if (err) next(err);
                     else {

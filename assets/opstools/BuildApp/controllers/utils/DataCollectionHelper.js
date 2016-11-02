@@ -60,28 +60,25 @@ steal(
 											var rowIndex = -1,
 												attrName = attr;
 
+											if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
+												|| newVal == oldVal
+												|| newVal == null
+												|| typeof newVal == 'undefined') return;
+
 											if (attr.indexOf('.') > -1) {  // 0.attrName
 												rowIndex = attr.split('.')[0];
 												attName = attr.split('.')[1];
 											}
 
+											if (attName == 'updatedAt' || attrName == 'translations') return;
+
 											var rowData = rowIndex > -1 ? this[rowIndex] : this, // Get data
 												hasUpdateLink = linkCols.filter(function (col) { return col.name == attName; }).length > 0,
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attName; }).length > 0;
 
-											// console.log(
-											// 	'DATA COLLECTION : ',
-											// 	ev,
-											// 	attr,
-											// 	how,
-											// 	newVal,
-											// 	hasUpdateLink,
-											// 	hasUpdateDate
-											// );
-
-											if (how == 'add' || (hasUpdateLink || hasUpdateDate) && newVal) {
+											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
 												// Update connected data
-												dataHelper.normalizeData(application, rowData, linkCols, dateCols).then(function (result) { });
+												dataHelper.normalizeData(application, rowData, linkCols, dateCols, true).then(function (result) { });
 											}
 										});
 									}
