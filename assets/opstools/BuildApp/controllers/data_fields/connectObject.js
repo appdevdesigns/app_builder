@@ -243,13 +243,6 @@ steal(
 // then add a .template field. (use a class definition that you can lookup in .customDisplay)
 					editor: 'selectivity',
 					template: '<div class="connect-data-values"></div>',
-/*
-
-template: function(data) {
-	return '<div class="unique-value'
-}
-
-*/
 					filter_type: 'multiselect'
 				}
 			};

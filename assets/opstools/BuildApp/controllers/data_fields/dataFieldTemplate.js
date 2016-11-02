@@ -200,5 +200,44 @@ steal(function () {
 		// $$(componentIds.supportMultilingual).setValue(1);
 	};
 
+
+	/*
+	 * @function customDisplay
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method to 
+	 * display the Data Field in the appropriate Grid/Form element.
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {int} rowId   : the .id of the Model instance from which we are 
+	 *						  getting the data for this DataField
+	 * @param {} data       : the value of this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @param {obj} options : provided by the calling UI component (Grid/Form)
+	 *						  .readOnly  {bool}  should we display as readOnly?
+	 * @return {bool}       : True if we have a custom display
+	 *						  False if we don't.  (or just comment this out)
+	 */
+/*
+	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+
+		// // Example Custom Display:
+		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
+		// $(itemNode).append('<div id="' + key + '"></div>');		// create a div
+
+		// webix.ui({												// attach a webix component 
+		// 	container: key,										    // to our new div
+		// 	template:'<img src="'+data+'" style="width:'+fieldData.setting.width+'px;height:'+fieldData.setting.height+'px;">'
+		// })
+
+		return true;
+	};
+*/
+
+
 	return [DataFieldType]DataField;
 });
