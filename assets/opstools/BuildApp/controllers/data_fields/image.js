@@ -163,20 +163,9 @@ steal(function () {
 			type: imageDataField.type,
 			setting: {
 				icon: imageDataField.icon,
-// 1) 
-editor: 'imageDataField',
+				editor: 'imageDataField',
 template:'<div class="ab-image-data-field"></div>',
-
 				filter_type: 'text', // DataTableFilterPopup - filter type
-
-				// 
-				// Your unique fields here:
-			
-				// 
-				// Example: a Text entry and a Checkbox:
-				//
-				// default: $$(componentIds.textDefault).getValue(), // Default value
-				// supportMultilingual: $$(componentIds.supportMultilingual).getValue(),
 			}
 		};
 	};
