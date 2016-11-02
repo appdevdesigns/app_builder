@@ -285,11 +285,11 @@ steal(
 				return null;
 		};
 
-		self.getRowHeight = function (application, object, fieldData, data, itemNode) {
+		self.getRowHeight = function (fieldData, data) {
 			var field = getField(fieldData.fieldName);
 
 			if (field && field.getRowHeight) {
-				return field.getRowHeight(application, object, fieldData, data, itemNode);
+				return field.getRowHeight(fieldData, data);
 			}
 			else
 				return null;

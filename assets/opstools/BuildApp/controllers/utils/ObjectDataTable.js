@@ -232,48 +232,6 @@ steal(
 							return width;
 						},
 
-						getRowHeight: function (dataNumber) {
-							var rowHeight = 35,
-								calHeight = dataNumber * rowHeight;
-
-							return calHeight;
-						},
-
-						calculateRowHeight: function (row, dataNumber) {
-							var rowHeight = this.getRowHeight(dataNumber);
-
-							if (this.dataTable.getItem(row) && this.dataTable.getItem(row).$height < rowHeight)
-								this.dataTable.setRowHeight(row, rowHeight);
-						},
-
-						calculateRowHeightToData: function (data, linkCols) {
-							if (!data || !linkCols || !linkCols.forEach) return;
-
-							// Get Map.List in DataCollection
-							var self = this,
-								list = data;
-							if (data instanceof webix.DataCollection)
-								list = data.AD.__list;
-
-							// Update row height
-							list.forEach(function (r) {
-								var rowHeight = r.attr ? r.attr('$height') : r.$height;
-
-								linkCols.forEach(function (linkCol) {
-									if (r[linkCol.name]) {
-										var calHeight = self.getRowHeight(r[linkCol.name].length || 0);
-										if (calHeight > rowHeight || !rowHeight)
-											rowHeight = calHeight;
-									}
-								});
-
-								if (r.attr)
-									r.attr('$height', rowHeight);
-								else
-									r.$height = rowHeight;
-							});
-						},
-
 						populateData: function (data) {
 							var self = this;
 

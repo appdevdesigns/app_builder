@@ -322,7 +322,7 @@ steal(
 			}
 		};
 
-		connectObjectField.getRowHeight = function (application, object, fieldData, data, itemNode) {
+		connectObjectField.getRowHeight = function (fieldData, data) {
 			var dataNumber = data && data.length ? data.length : 1,
 				rowHeight = 35,
 				calHeight = dataNumber * rowHeight;

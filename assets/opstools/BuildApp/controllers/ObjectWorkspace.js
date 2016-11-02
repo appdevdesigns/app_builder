@@ -738,14 +738,10 @@ steal(
 								},
 								// Normalize data
 								function (next) {
-									// Get link columns
-									var linkCols = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.setting.linkObject });
-
-									// Get date & datetime columns
-									var dateCols = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
-
-									// Populate labels & Convert string to Date object
-									dataHelper.normalizeData(AD.classes.AppBuilder.currApp, objectData, linkCols, dateCols)
+									dataHelper.normalizeData(
+										AD.classes.AppBuilder.currApp,
+										AD.classes.AppBuilder.currApp.currObj.columns,
+										objectData)
 										.fail(next)
 										.then(function (result) {
 											objectData = result;
