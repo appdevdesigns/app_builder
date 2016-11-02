@@ -344,7 +344,8 @@ steal(
 								title: 'Add ' + selectedObj.label,
 								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
 								saveVisible: "show",
-								cancelVisible: "show"
+								cancelVisible: "show",
+								clearOnLoad: "yes"
 							}
 						})
 							.fail(next)
@@ -507,7 +508,8 @@ steal(
 										object: column.setting.linkObject,
 										visibleFieldIds: visibleFieldIds,
 										saveVisible: 'show',
-										cancelVisible: 'show'
+										cancelVisible: 'show',
+										clearOnLoad: 'yes'
 									}
 								})
 									.fail(ok)
