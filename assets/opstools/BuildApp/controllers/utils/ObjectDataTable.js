@@ -47,7 +47,7 @@ steal(
 							self.dataTable = dataTable;
 
 							// Trash
-							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable has select, then it has onItemClick by default
+							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable set select is true, then it has onItemClick by default
 								self.dataTable.attachEvent("onItemClick", function (id, e, node) {
 									if (e.target.className.indexOf('trash') > -1) {
 										webix.confirm({
@@ -75,7 +75,8 @@ steal(
 								});
 							}
 
-							self.dataTable.attachEvent("onAfterRender", function (data) {
+							if (self.data.onAfterRenderId) self.dataTable.detachEvent(self.data.onAfterRenderId);
+							self.data.onAfterRenderId = self.dataTable.attachEvent("onAfterRender", function (data) {
 								var dataTable = this;
 								dataTable.eachRow(function (rowId) {
 									dataTable.eachColumn(function (columnId) {
@@ -107,6 +108,7 @@ steal(
 									// }
 								});
 							});
+
 						},
 
 						setReadOnly: function (readOnly) {
