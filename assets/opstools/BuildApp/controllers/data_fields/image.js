@@ -37,7 +37,7 @@ steal(function () {
 	// 
 	var imageDataField = {
 		name: 'image',  // unique key to reference this specific DataField
-		type: 'image',  // use a non-standard type to prevent Webix from using default displays.
+		type: 'string',  // use a non-standard type to prevent Webix from using default displays.
 		icon: 'file-image-o',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 // TODO: to support a proper multilingual display, 
@@ -217,7 +217,9 @@ template:'<div class="ab-image-data-field"></div>',
 		var inHere = true;
 
 		var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
-		$(itemNode).find('.ab-image-data-field').append('<div id="' + keyField + '">'+keyField+'</div>');
+		// $(itemNode).find('.ab-image-data-field').append('<div id="' + keyField + '">'+keyField+'</div>');
+		$(itemNode).find('.ab-image-data-field').attr('id', keyField);
+		$(itemNode).find('.ab-image-data-field').html(keyField);
 
 		// // Example Custom Display:
 		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
