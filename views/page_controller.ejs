@@ -180,7 +180,12 @@ steal(
                                     linkedDataCollection;
 
                                 if (!page.comInstances) page.comInstances = {};
-                                if (page.comInstances[item.id]){
+
+                                if (page.comInstances[item.id]) {
+                                    if (setting.clearOnLoad === 'yes' && page.comInstances[item.id].clearOnLoad) {
+                                        page.comInstances[item.id].clearOnLoad();
+                                    }
+
                                     return;
                                 }
 
@@ -253,6 +258,13 @@ steal(
                                                     next();
                                                 });
 
+                                        },
+                                        // Clear on load
+                                        function (next) {
+                                            if (setting.clearOnLoad === 'yes' && page.comInstances[item.id].clearOnLoad)
+                                                page.comInstances[item.id].clearOnLoad();
+
+                                            next();
                                         }
                                     ], function (err) {
                                         if (err)

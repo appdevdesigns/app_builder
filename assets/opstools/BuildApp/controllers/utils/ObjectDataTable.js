@@ -129,7 +129,8 @@ steal(
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 
-								col.setting.width = self.calculateColumnWidth(application, col);
+								if (!col.setting.width)
+									col.setting.width = self.calculateColumnWidth(application, col);
 
 								if (col.setting.format && webix.i18n[col.setting.format])
 									col.setting.format = webix.i18n[col.setting.format];

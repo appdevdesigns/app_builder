@@ -220,7 +220,7 @@ steal(
 											},
 											onAfterSelect: function (data, prevent) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
-												if (columnConfig.editor === 'selectivity')
+												if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null)
 													return false;
 
 												this.editCell(data.row, data.column);
@@ -275,13 +275,13 @@ steal(
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													});
 											},
-											onColumnResize: function (id, newWidth, oldWidth, user_action) {
-												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
-												if (columnConfig.editor === 'selectivity') {
-													// For calculate/refresh row height
-													$$(self.webixUiId.objectDatatable).render();
-												}
-											},
+											// onColumnResize: function (id, newWidth, oldWidth, user_action) {
+											// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
+											// if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
+											// 	// For calculate/refresh row height
+											// 	$$(self.webixUiId.objectDatatable).render();
+											// }
+											// },
 											onBeforeColumnDrop: function (sourceId, targetId, event) {
 												if (targetId === 'appbuilder_trash') // Remove column
 													return false;
@@ -384,8 +384,17 @@ steal(
 										}
 
 										// Resize row height
-										if (rowData[result.columnName] instanceof Array)
-											self.controllers.ObjectDataTable.calculateRowHeight(result.rowId, rowData[result.columnName].length);
+										var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: result.rowId, column: result.columnName }),
+											rowHeight = dataFieldsManager.getRowHeight(
+												AD.classes.AppBuilder.currApp,
+												AD.classes.AppBuilder.currApp.currObj,
+												colData,
+												rowData[result.columnName],
+												itemNode
+											);
+
+										if (rowData && (!rowData.$height || rowData.$height < rowHeight))
+											$$(self.webixUiId.objectDatatable).setRowHeight(result.rowId, rowHeight);
 
 										$$(self.webixUiId.objectDatatable).hideProgress();
 									});
@@ -739,8 +748,6 @@ steal(
 									dataHelper.normalizeData(AD.classes.AppBuilder.currApp, objectData, linkCols, dateCols)
 										.fail(next)
 										.then(function (result) {
-											self.controllers.ObjectDataTable.calculateRowHeightToData(result, linkCols);
-
 											objectData = result;
 
 											next();

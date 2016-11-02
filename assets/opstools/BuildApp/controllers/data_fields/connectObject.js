@@ -355,6 +355,14 @@ steal(
 			}
 		};
 
+		connectObjectField.getRowHeight = function (application, object, fieldData, data, itemNode) {
+			var dataNumber = data && data.length ? data.length : 1,
+				rowHeight = 35,
+				calHeight = dataNumber * rowHeight;
+
+			return calHeight;
+		};
+
 		// Reset state
 		connectObjectField.resetState = function () {
 			$$(componentIds.editView).appName = null;

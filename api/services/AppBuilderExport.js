@@ -585,14 +585,10 @@ module.exports = {
             function(next) {
                 async.each(data.pages, function(page, pageDone) {
                     var oldPageID = page.id;
-                    var parentPageID = null;
-                    if (page.parent && pageIDs[page.parent]) {
-                        parentPageID = pageIDs[page.parent];
-                    }
                     var pageData = {
                         application: appID,
                         name: page.name,
-                        parent: parentPageID,
+                        parent: page.parent,
                         permissionActionKey: page.permissionActionKey,
                     };
                     ABPage.create(pageData)
@@ -625,6 +621,37 @@ module.exports = {
                         }
                     });
                 
+                }, function(err) {
+                    if (err) next(err);
+                    else {
+                        next();
+                    }
+                });
+            },
+            
+            // Remap page references
+            function(next) {
+                async.eachOf(pageIDs, function(pageID, oldPageID, pageDone) {
+                    ABPage.findOne({ id: pageID })
+                    .exec(function(err, result) {
+                        if (err) pageDone(err);
+                        else if (!result) {
+                            pageDone(new Error('page not found: ' + pageID));
+                        }
+                        else if (!result.parent) {
+                            // This is a root page
+                            pageDone();
+                        }
+                        else {
+                            // Remap the parent page ID
+                            result.parent = pageIDs[ result.parent ] || (result.parent + '!!');
+                            ABPage.update({ id: pageID }, result)
+                            .exec(function(err) {
+                                if (err) pageDone(err);
+                                else pageDone();
+                            });
+                        }
+                    });
                 }, function(err) {
                     if (err) next(err);
                     else {

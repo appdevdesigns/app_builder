@@ -19,15 +19,23 @@ steal(
 			isSaveVisible: 'ab-form-save-visible',
 			isCancelVisible: 'ab-form-cancel-visible',
 
+			clearOnLoad: 'ab-form-clear-on-load',
+			clearOnSave: 'ab-form-clear-on-save',
+
 			addConnectObjectDataPopup: 'ab-form-connected-data-popup'
-		};
+		},
+			labels = {
+				common: {
+					saveSuccessMessage: AD.lang.label.getLabel('ab.common.save.success') || "<b>{0}</b> is saved."
+				}
+			};
 
 		//Constructor
 		var formComponent = function (application, viewId, componentId) {
 			var data = {};
 
 			// Private methods
-			function saveModelData(dataCollection, object, columns) {
+			function saveModelData(dataCollection, object, columns, setting) {
 				var self = this,
 					q = $.Deferred(),
 					modelData = dataCollection.AD.currModel(),
@@ -80,16 +88,18 @@ steal(
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
 
+						if (setting.clearOnSave == 'yes')
+							dataCollection.setCursor(null);
+
+						// Show success message
+						webix.message({
+							type: "success",
+							text: labels.common.saveSuccessMessage.replace('{0}', result._dataLabel ? result._dataLabel : 'This data')
+						});
+
 						$(self).trigger('changePage', {
 							previousPage: true
 						});
-
-						dataCollection.setCursor(null);
-
-						// Clear form
-						$$(self.viewId).setValues({});
-						// Clear custom views
-						showCustomFields.call(self, object, columns, null, null);
 
 						q.resolve();
 					});
@@ -99,6 +109,8 @@ steal(
 
 			function showCustomFields(object, columns, rowId, rowData) {
 				var self = this;
+
+				if (!columns || columns.length < 1) return;
 
 				// Custom view
 				columns.forEach(function (col) {
@@ -111,6 +123,15 @@ steal(
 				});
 			}
 
+			function clearForm(object, columns, dataCollection) {
+				var self = this;
+
+				// Clear form
+				$$(self.viewId).setValues({});
+				// Clear custom views
+				showCustomFields.call(self, object, columns, null, null);
+			}
+
 			// Set viewId to public
 			this.viewId = viewId;
 			this.editViewId = componentIds.editForm;
@@ -121,8 +142,9 @@ steal(
 					q = $.Deferred(),
 					elementViews = [],
 					header = { rows: [] },
-					listOptions = {}, // { columnId: [{}, ..., {}] }
-					columns;
+					listOptions = {}; // { columnId: [{}, ..., {}] }
+
+				data.dataCollection = dataCollection;
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
 
@@ -135,28 +157,28 @@ steal(
 				$$(self.viewId).showProgress({ type: "icon" });
 
 				// Get object
-				var object = application.objects.filter(function (obj) { return obj.id == setting.object; });
-				if (!object || object.length < 1) return;
-				object = object[0];
+				data.object = application.objects.filter(function (obj) { return obj.id == setting.object; });
+				if (!data.object || data.object.length < 1) return;
+				data.object = data.object[0];
 
-				if (dataCollection) {
-					dataCollection.attachEvent('onAfterCursorChange', function (id) {
+				if (data.dataCollection) {
+					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 						// Show custom display
-						showCustomFields.call(self, object, columns, id, dataCollection.AD.currModel());
+						showCustomFields.call(self, data.object, data.columns, id, data.dataCollection.AD.currModel());
 					});
 				}
 
 				async.series([
 					// Get columns data
 					function (next) {
-						object.getColumns()
+						data.object.getColumns()
 							.fail(next)
 							.then(function (result) {
 								result.forEach(function (d) {
 									if (d.translate) d.translate();
 								});
 
-								columns = result;
+								data.columns = result;
 								next();
 							});
 					},
@@ -164,7 +186,7 @@ steal(
 					function (next) {
 						var getOptionsTasks = [];
 
-						columns.filter(function (col) { return col.setting.editor === 'richselect'; })
+						data.columns.filter(function (col) { return col.setting.editor === 'richselect'; })
 							.forEach(function (col) {
 								getOptionsTasks.push(function (callback) {
 									col.getList()
@@ -189,7 +211,7 @@ steal(
 					},
 					// Add form elements
 					function (next) {
-						async.eachSeries(columns, function (col, callback) {
+						async.eachSeries(data.columns, function (col, callback) {
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 
 							if (!editable && !isVisible) { // Hidden
@@ -219,10 +241,14 @@ steal(
 								element.template = template;
 								element.on = {
 									onFocus: function (current_view, prev_view) {
-										var currModel = dataCollection.AD.currModel(),
-											rowId = currModel ? currModel.id : null;
+										var rowId;
 
-										dataFieldsManager.customEdit(application, object, col, rowId, current_view.$view);
+										if (data.dataCollection) {
+											var currModel = data.dataCollection.AD.currModel(),
+												rowId = currModel ? currModel.id : null;
+										}
+
+										dataFieldsManager.customEdit(application, data.object, col, rowId, current_view.$view);
 									}
 								};
 							}
@@ -358,7 +384,7 @@ steal(
 									if ($$(saveButton))
 										$$(saveButton).disable();
 
-									saveModelData.call(self, dataCollection, object, columns)
+									saveModelData.call(self, dataCollection, data.object, data.columns, setting)
 										.fail(function (err) {
 											console.error(err);
 
@@ -383,16 +409,13 @@ steal(
 								width: 90,
 								inputWidth: 80,
 								click: function () {
-									dataCollection.setCursor(null);
+									data.dataCollection.setCursor(null);
+
+									clearForm.call(self, data.object, data.columns, data.dataCollection);
 
 									$(self).trigger('changePage', {
 										previousPage: true
 									});
-
-									// Clear form
-									$$(self.viewId).setValues({});
-									// Clear custom views
-									showCustomFields.call(self, object, columns, null, null);
 								}
 							});
 						}
@@ -410,7 +433,7 @@ steal(
 						}
 
 						// Show data of current select data
-						showCustomFields.call(self, object, columns, currData ? currData.id : null, currData);
+						showCustomFields.call(self, data.object, data.columns, currData ? currData.id : null, currData);
 
 						next();
 					}
@@ -448,7 +471,9 @@ steal(
 					object: propertyValues[componentIds.selectObject] || '',
 					visibleFieldIds: visibleFieldIds,
 					saveVisible: propertyValues[componentIds.isSaveVisible],
-					cancelVisible: propertyValues[componentIds.isCancelVisible]
+					cancelVisible: propertyValues[componentIds.isCancelVisible],
+					clearOnLoad: propertyValues[componentIds.clearOnLoad],
+					clearOnSave: propertyValues[componentIds.clearOnSave],
 				};
 
 				return settings;
@@ -472,7 +497,7 @@ steal(
 
 
 				// Get object list
-				data.objects = null;
+				var objects = null;
 				application.getObjects()
 					.fail(function (err) {
 						// TODO : Error message
@@ -484,13 +509,13 @@ steal(
 								o.translate();
 						});
 
-						data.objects = result;
+						objects = result;
 
 						// Properties
 
 						// Data source - Object
 						var objSource = $$(componentIds.propertyView).getItem(componentIds.selectObject);
-						objSource.options = $.map(data.objects, function (o) {
+						objSource.options = $.map(objects, function (o) {
 							return {
 								id: o.id,
 								value: o.label
@@ -504,14 +529,23 @@ steal(
 						propValues[componentIds.selectObject] = setting.object;
 						propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
 						propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
-						$$(componentIds.propertyView).setValues(propValues);
+						propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
+						propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
 
+						$$(componentIds.propertyView).setValues(propValues);
 						$$(componentIds.propertyView).refresh();
 					});
 			};
 
 			this.isRendered = function () {
 				return data.isRendered === true;
+			};
+
+			this.clearOnLoad = function () {
+				if (data.dataCollection)
+					data.dataCollection.setCursor(null);
+
+				clearForm.call(this, data.object, data.columns, data.dataCollection);
 			};
 
 		}
@@ -600,6 +634,27 @@ steal(
 						options: [
 							{ id: 'show', value: "Yes" },
 							{ id: 'hide', value: "No" },
+						]
+					},
+					{ label: "Data selection", type: "label" },
+					{
+						id: componentIds.clearOnLoad,
+						name: 'clearOnLoad',
+						type: 'richselect',
+						label: 'Clear on load',
+						options: [
+							{ id: 'yes', value: "Yes" },
+							{ id: 'no', value: "No" },
+						]
+					},
+					{
+						id: componentIds.clearOnSave,
+						name: 'clearOnSave',
+						type: 'richselect',
+						label: 'Clear on save',
+						options: [
+							{ id: 'yes', value: "Yes" },
+							{ id: 'no', value: "No" },
 						]
 					}
 				],

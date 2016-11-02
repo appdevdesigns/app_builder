@@ -309,6 +309,16 @@ steal(
 				return null;
 		};
 
+		self.getRowHeight = function (application, object, fieldData, data, itemNode) {
+			var field = getField(fieldData.fieldName);
+
+			if (field && field.getRowHeight) {
+				return field.getRowHeight(application, object, fieldData, data, itemNode);
+			}
+			else
+				return null;
+		};
+
 		self.validate = function (fieldData, value) {
 			if (value == null || typeof value == 'undefined' || value.length < 1) return true;
 

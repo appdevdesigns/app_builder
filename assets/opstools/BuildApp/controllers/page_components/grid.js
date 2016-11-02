@@ -681,6 +681,7 @@ steal(
 			return {
 				view: "dynamicdatatable",
 				autoheight: true,
+				fixedRowHeight: false,
 				datatype: "json"
 			};
 		};
