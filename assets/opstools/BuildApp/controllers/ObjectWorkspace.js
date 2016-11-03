@@ -376,7 +376,7 @@ steal(
 													if (otherRow[result.columnName]) {
 														// Filter difference values
 														otherRow[result.columnName] = otherRow[result.columnName].filter(function (i) {
-															return result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
+															return result.data && result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
 														});
 
 														$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
@@ -1017,13 +1017,31 @@ steal(
 								.then(function (result) {
 									result.attr(editor.column, state.value, true);
 
+									// Fix update translates of model that have connect object values
+									// By convert connect objects to id
+									result.each(function (val, propName) {
+										var linkedCol = self.data.columns.filter(function (col) { return col.fieldName == 'connectObject' && col.name == propName });
+										if (!linkedCol || linkedCol.length < 1) return;
+
+										var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: editor.row, column: propName });
+
+										var connectValue = dataFieldsManager.getValue(
+											AD.classes.AppBuilder.currApp,
+											AD.classes.AppBuilder.currApp.currObj,
+											linkedCol[0],
+											itemNode
+										);
+
+										result.attr(propName, connectValue);
+									});
+
 									// Update data
 									result.save()
 										.fail(q.reject)
 										.then(function (result) {
-											if (result.translate) result.translate();
-
-											q.resolve(result);
+											dataHelper.normalizeData(AD.classes.AppBuilder.currApp, self.data.columns, result)
+												.fail(q.reject)
+												.then(q.resolve);
 										});
 								});
 

@@ -319,16 +319,18 @@ steal(
 
 		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
-				selectedValues = selectivityHelper.getData(selectivityNode);
+				selectedValues = selectivityHelper.getData(selectivityNode),
+				result;
 
-			if (selectedValues && selectedValues.length > 0) {
-				return $.map(selectedValues, function (selectedItem) {
-					return selectedItem.id;
-				});
-			}
-			else {
-				return '';
-			}
+			if (selectedValues && selectedValues.length > 0)
+				result = $.map(selectedValues, function (selectedItem) { return selectedItem.id; });
+			else
+				result = [];
+
+			if (fieldData.setting.linkType == 'model')
+				result = result[0] || '';
+
+			return result;
 		};
 
 		connectObjectField.getRowHeight = function (fieldData, data) {
