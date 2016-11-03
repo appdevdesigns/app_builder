@@ -276,6 +276,15 @@ steal(
 				return true;
 		};
 
+		self.hasCustomEdit = function (fieldName) {
+			var field = getField(fieldName);
+
+			if (field && field.customEdit)
+				return true;
+			else
+				return false;
+		};
+
 		self.getValue = function (application, object, fieldData, itemNode) {
 			var field = getField(fieldData.fieldName);
 

@@ -220,7 +220,7 @@ steal(
 											},
 											onAfterSelect: function (data, prevent) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
-												if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null)
+												if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName))
 													return false;
 
 												this.editCell(data.row, data.column);
