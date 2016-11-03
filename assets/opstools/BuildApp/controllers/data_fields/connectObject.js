@@ -235,9 +235,9 @@ steal(
 				setting: {
 					appName: $$(componentIds.editView).appName,
 					linkType: $$(componentIds.fieldLinkType).getValue(),
-					linkObject: $$(componentIds.objectList).getSelectedId(false),
+					linkObject: $$(componentIds.objectList).getSelectedId(false), // ABObject.id
 					linkViaType: $$(componentIds.fieldLinkViaType).getValue(),
-					linkVia: $$(componentIds.fieldLinkViaType).linkVia,
+					linkVia: $$(componentIds.fieldLinkViaType).linkVia, // ABColumn.id
 					icon: connectObjectField.icon,
 // choose something that isn't a Webix standard data editor
 // then add a .template field. (use a class definition that you can lookup in .customDisplay)
@@ -355,7 +355,7 @@ steal(
 			}
 		};
 
-		connectObjectField.getRowHeight = function (application, object, fieldData, data, itemNode) {
+		connectObjectField.getRowHeight = function (fieldData, data) {
 			var dataNumber = data && data.length ? data.length : 1,
 				rowHeight = 35,
 				calHeight = dataNumber * rowHeight;

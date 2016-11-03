@@ -468,8 +468,8 @@ steal(
 				var settings = {
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
-					object: propertyValues[componentIds.selectObject] || '',
-					visibleFieldIds: visibleFieldIds,
+					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
+					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
 					clearOnLoad: propertyValues[componentIds.clearOnLoad],

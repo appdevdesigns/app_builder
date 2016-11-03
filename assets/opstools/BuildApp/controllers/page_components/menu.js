@@ -104,7 +104,7 @@ steal(
 
 				return {
 					layout: values.orientation,
-					pageIds: selectedPageIds
+					pageIds: selectedPageIds // [ABPage.id]
 				};
 			};
 

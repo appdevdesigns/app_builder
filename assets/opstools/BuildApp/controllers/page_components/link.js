@@ -50,7 +50,7 @@ steal(
 
 				return {
 					title: values.title,
-					linkTo: values.linkTo
+					linkTo: values.linkTo // ABPage.id
 				};
 			};
 

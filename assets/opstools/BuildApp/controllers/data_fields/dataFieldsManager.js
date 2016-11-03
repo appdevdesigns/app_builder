@@ -300,6 +300,15 @@ steal(
 				return true;
 		};
 
+		self.hasCustomEdit = function (fieldName) {
+			var field = getField(fieldName);
+
+			if (field && field.customEdit)
+				return true;
+			else
+				return false;
+		};
+
 		self.getValue = function (application, object, fieldData, itemNode) {
 			var field = getField(fieldData.fieldName);
 
@@ -309,11 +318,11 @@ steal(
 				return null;
 		};
 
-		self.getRowHeight = function (application, object, fieldData, data, itemNode) {
+		self.getRowHeight = function (fieldData, data) {
 			var field = getField(fieldData.fieldName);
 
 			if (field && field.getRowHeight) {
-				return field.getRowHeight(application, object, fieldData, data, itemNode);
+				return field.getRowHeight(fieldData, data);
 			}
 			else
 				return null;

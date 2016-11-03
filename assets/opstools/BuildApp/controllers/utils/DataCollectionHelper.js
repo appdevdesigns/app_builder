@@ -47,9 +47,9 @@ steal(
 							if (!objectData) return next();
 
 							var linkCols = objInfo.columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
-								dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || [];// Get date & datetime columns
+								dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || []; // Get date & datetime columns
 
-							dataHelper.normalizeData(application, objectData, linkCols, dateCols)
+							dataHelper.normalizeData(application, objInfo.columns, objectData)
 								.fail(next)
 								.then(function (result) {
 									if (!dataCollections[objectId]) {
@@ -70,7 +70,7 @@ steal(
 												attrName = attr.split('.')[1];
 											}
 
-											if (attrName == 'updatedAt' || attrName == 'translations') return;
+											if (attrName == 'updatedAt' || attrName == 'translations' || attrName == '$height') return;
 
 											var rowData = rowIndex > -1 ? this[rowIndex] : this, // Get data
 												hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
@@ -78,7 +78,7 @@ steal(
 
 											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
 												// Update connected data
-												dataHelper.normalizeData(application, rowData, linkCols, dateCols, true).then(function (result) { });
+												dataHelper.normalizeData(application, objInfo.columns, rowData, true).then(function (result) { });
 											}
 										});
 									}

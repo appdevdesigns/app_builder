@@ -1,9 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	function (modelCreator) {
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+	function (modelCreator, dataFieldsManager) {
 		return {
-			normalizeData: function (application, data, linkFields, dateFields, ignoreTranslate) {
+			normalizeData: function (application, columns, data, ignoreTranslate) {
 				var self = this,
 					q = new AD.sal.Deferred(),
 					normalizeDataTasks = [],
@@ -23,15 +24,18 @@ steal(
 					list = data; // It is Can.Map
 				}
 
+				var linkColumns = columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
+					dateColumns = columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || [];// Get date & datetime columns
+
 				if (list.forEach) {
 					list.forEach(function (row) {
 						normalizeDataTasks.push(function (callback) {
 							// Translate
 							if (!ignoreTranslate && row.translate) row.translate();
 
-							var Tasks = [];
+							var linkTasks = [];
 
-							linkFields.forEach(function (linkCol) {
+							linkColumns.forEach(function (linkCol) {
 								if (typeof row[linkCol.name] == 'undefined' || row[linkCol.name] == null) {
 									if (linkCol.setting.linkType === 'collection')
 										row.attr(linkCol.name, []);
@@ -41,7 +45,7 @@ steal(
 									return;
 								}
 
-								Tasks.push(function (ok) {
+								linkTasks.push(function (ok) {
 									var linkObj = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject; })[0],
 										linkedData = [];
 
@@ -112,16 +116,23 @@ steal(
 								});
 							});
 
-							async.parallel(Tasks, callback);
+							async.parallel(linkTasks, callback);
 						});
 
-
 						// Convert string to Date object
-						if (dateFields && dateFields.length > 0) {
-							dateFields.forEach(function (dateCol) {
-								self.normalizeDateData(row, dateCol.name);
+						if (dateColumns && dateColumns.length > 0) {
+							dateColumns.forEach(function (dateCol) {
+								if (row[dateCol.name] && !(row[dateCol.name] instanceof Date))
+									row.attr(dateCol.name, new Date(row[dateCol.name]));
 							});
 						}
+
+						// Set height of row ($height)
+						columns.forEach(function (col) {
+							var rowHeight = dataFieldsManager.getRowHeight(col, row[col.name]);
+							if (rowHeight && (!row.$height || row.$height < rowHeight))
+								row.attr('$height', rowHeight);
+						});
 
 					});
 				}
@@ -136,11 +147,6 @@ steal(
 				});
 
 				return q;
-			},
-
-			normalizeDateData: function (row, attr) {
-				if (row[attr] && !(row[attr] instanceof Date))
-					row.attr(attr, new Date(row[attr]));
 			}
 
 
