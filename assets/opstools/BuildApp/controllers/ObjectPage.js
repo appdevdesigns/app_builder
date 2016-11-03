@@ -181,10 +181,10 @@ steal(
 											},
 											// Create list option of select column
 											function (column, ok) {
-												if (field.setting.editor === 'richselect' && field.setting.filter_options) {
+												if (field.setting.editor === 'richselect' && field.setting.options) {
 													var createOptionEvents = [];
 
-													field.setting.filter_options.forEach(function (opt, index) {
+													field.setting.options.forEach(function (opt, index) {
 														createOptionEvents.push(function (createOk) {
 															var list_key = self.Model.ABList.getKey(object.application.name, object.name, column.name);
 
@@ -192,15 +192,29 @@ steal(
 																key: list_key,
 																weight: index + 1,
 																column: column.id,
-																label: opt,
-																value: opt
+																label: opt.value,
+																value: opt.value
 															})
 																.fail(createOk)
-																.then(function () { createOk(); });
+																.then(function (createdCol) {
+																	// set dataId to option
+																	opt.dataId = createdCol.id;
+																	createOk();
+																});
 														});
 													});
 
-													async.parallel(createOptionEvents, ok);
+													async.parallel(createOptionEvents, function (err) {
+														if (err) return ok(err);
+
+														// Save dataId to options
+														column.setting.attr('options', field.setting.options);
+														column.save()
+															.fail(ok)
+															.then(function () {
+																ok();
+															});
+													});
 												}
 												else {
 													ok();

@@ -208,7 +208,7 @@ steal(
 
 							return {
 								text: headerTemplate,
-								css: col.isNew ? 'ab-object-data-new-header' : ''
+								css: col.isNewColumn ? 'ab-object-data-new-header' : ''
 							};
 						},
 
