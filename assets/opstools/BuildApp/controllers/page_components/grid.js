@@ -468,13 +468,13 @@ steal(
 				var settings = {
 					title: propertyValues.title || '',
 					description: propertyValues.description || '',
-					object: propertyValues.object,
-					linkedTo: propertyValues.linkedTo != 'none' ? propertyValues.linkedTo : '',
-					linkedField: propertyValues.linkedField != 'none' ? propertyValues.linkedField : '',
-					viewPage: viewPageId,
-					viewId: detailViewId,
-					editPage: editPageId,
-					editForm: editFormId,
+					object: propertyValues.object, // ABObject.id
+					linkedTo: propertyValues.linkedTo != 'none' ? propertyValues.linkedTo : '', // ABObject.id
+					linkedField: propertyValues.linkedField != 'none' ? propertyValues.linkedField : '', // ABColumn.id
+					viewPage: viewPageId, // ABPage.id
+					viewId: detailViewId, // ABPageComponent.id
+					editPage: editPageId, // ABPage.id
+					editForm: editFormId, // ABPageComponent.id
 					columns: columns.filter(function (c) { return c; }),
 					removable: propertyValues.removable,
 					filter: propertyValues.filter,

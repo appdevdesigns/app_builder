@@ -232,9 +232,9 @@ steal(
 				setting: {
 					appName: $$(componentIds.editView).appName,
 					linkType: $$(componentIds.fieldLinkType).getValue(),
-					linkObject: $$(componentIds.objectList).getSelectedId(false),
+					linkObject: $$(componentIds.objectList).getSelectedId(false), // ABObject.id
 					linkViaType: $$(componentIds.fieldLinkViaType).getValue(),
-					linkVia: $$(componentIds.fieldLinkViaType).linkVia,
+					linkVia: $$(componentIds.fieldLinkViaType).linkVia, // ABColumn.id
 					icon: connectObjectField.icon,
 					editor: 'selectivity',
 					template: '<div class="connect-data-values"></div>',

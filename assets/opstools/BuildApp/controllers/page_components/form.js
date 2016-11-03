@@ -468,7 +468,7 @@ steal(
 				var settings = {
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
-					object: propertyValues[componentIds.selectObject] || '',
+					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
 					visibleFieldIds: visibleFieldIds,
 					saveVisible: propertyValues[componentIds.isSaveVisible],
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
