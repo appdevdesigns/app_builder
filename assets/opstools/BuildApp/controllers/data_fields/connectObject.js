@@ -333,7 +333,7 @@ steal(
 
 		connectObjectField.getRowHeight = function (fieldData, data) {
 			var dataNumber = data && data.length ? data.length : 1,
-				rowHeight = 35,
+				rowHeight = 36,
 				calHeight = dataNumber * rowHeight;
 
 			return calHeight;
