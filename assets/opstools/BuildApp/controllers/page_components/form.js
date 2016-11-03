@@ -542,7 +542,7 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.update = function () {
+			this.onDisplay = function () {
 				var self = this;
 
 				if (!data.dataCollection) return;

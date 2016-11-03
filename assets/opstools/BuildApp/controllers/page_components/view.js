@@ -386,7 +386,7 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.update = function () {
+			this.onDisplay = function () {
 				$$(this.viewId).adjust();
 			};
 

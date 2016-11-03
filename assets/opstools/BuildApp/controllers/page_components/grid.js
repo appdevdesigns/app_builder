@@ -669,7 +669,7 @@ steal(
 				]);
 			};
 
-			this.update = function () {
+			this.onDisplay = function () {
 				if (this.data.setting.linkedField)
 					filterLinkedData.call(this, this.data.setting.linkedField);
 			}

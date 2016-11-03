@@ -182,8 +182,8 @@ steal(
                                 if (!page.comInstances) page.comInstances = {};
 
                                 if (page.comInstances[item.id]) {
-                                    if (page.comInstances[item.id].update)
-                                        page.comInstances[item.id].update();
+                                    if (page.comInstances[item.id].onDisplay)
+                                        page.comInstances[item.id].onDisplay();
 
                                     return;
                                 }
@@ -260,8 +260,8 @@ steal(
                                         },
                                         // Update state on load
                                         function (next) {
-                                            if (page.comInstances[item.id].update)
-                                                page.comInstances[item.id].update();
+                                            if (page.comInstances[item.id].onDisplay)
+                                                page.comInstances[item.id].onDisplay();
 
                                             next();
                                         }
