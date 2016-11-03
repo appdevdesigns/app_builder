@@ -144,6 +144,7 @@ steal(
 					header = { rows: [] },
 					listOptions = {}; // { columnId: [{}, ..., {}] }
 
+				data.setting = setting;
 				data.dataCollection = dataCollection;
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
@@ -541,11 +542,13 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.clearOnLoad = function () {
-				if (data.dataCollection)
-					data.dataCollection.setCursor(null);
+			this.update = function () {
+				if (data.setting.clearOnLoad === 'yes') {
+					if (data.dataCollection)
+						data.dataCollection.setCursor(null);
 
-				clearForm.call(this, data.object, data.columns, data.dataCollection);
+					clearForm.call(this, data.object, data.columns, data.dataCollection);
+				}
 			};
 
 		}

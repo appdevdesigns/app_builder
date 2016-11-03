@@ -386,6 +386,10 @@ steal(
 				return data.isRendered === true;
 			};
 
+			this.update = function () {
+				$$(this.viewId).adjust();
+			};
+
 		};
 
 		// Static functions
