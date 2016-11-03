@@ -308,6 +308,15 @@ steal(
 			return false;
 		};
 
+		connectObjectField.setValue = function (fieldData, itemNode, data) {
+			var selectivityNode = $(itemNode).find('.connect-data-values');
+
+			if (typeof data == 'undefined' || data == null) data = [];
+			else if (!(data instanceof Array)) data = [data];
+
+			selectivityHelper.setData(selectivityNode, data);
+		};
+
 		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
 				selectedValues = selectivityHelper.getData(selectivityNode);

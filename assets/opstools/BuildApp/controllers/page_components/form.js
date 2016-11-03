@@ -543,12 +543,44 @@ steal(
 			};
 
 			this.update = function () {
-				if (data.setting.clearOnLoad === 'yes') {
-					if (data.dataCollection)
-						data.dataCollection.setCursor(null);
+				var self = this;
 
-					clearForm.call(this, data.object, data.columns, data.dataCollection);
+				if (!data.dataCollection) return;
+
+				if (data.setting.clearOnLoad === 'yes') {
+					data.dataCollection.setCursor(null);
+					clearForm.call(self, data.object, data.columns, data.dataCollection);
 				}
+
+				// Set default connect data when add
+				var currModel = data.dataCollection.AD.currModel();
+				if (currModel) return;
+
+				data.columns.forEach(function (col) {
+					switch (col.fieldName) {
+						case 'connectObject':
+							var childView = $$(self.viewId).getChildViews().find(function (view) {
+								return view.config && view.config.name == col.name
+							});
+							if (!childView) return;
+
+							dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
+								.then(function (linkedDataCollection) {
+									var linkCurrModel = linkedDataCollection.AD.currModel();
+									if (!linkCurrModel) return;
+
+									// Get default value of linked data
+									var defaultVal = {
+										id: linkCurrModel.id,
+										text: linkCurrModel._dataLabel
+									};
+
+									dataFieldsManager.setValue(col, childView.$view, defaultVal);
+								});
+							break;
+					}
+				});
+
 			};
 
 		}

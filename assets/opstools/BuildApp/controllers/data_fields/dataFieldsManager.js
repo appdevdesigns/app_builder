@@ -294,12 +294,18 @@ steal(
 				return null;
 		};
 
+		self.setValue = function (fieldData, itemNode, data) {
+			var field = getField(fieldData.fieldName);
+
+			if (field && field.setValue)
+				return field.setValue(fieldData, itemNode, data);
+		};
+
 		self.getRowHeight = function (fieldData, data) {
 			var field = getField(fieldData.fieldName);
 
-			if (field && field.getRowHeight) {
+			if (field && field.getRowHeight)
 				return field.getRowHeight(fieldData, data);
-			}
 			else
 				return null;
 		};
