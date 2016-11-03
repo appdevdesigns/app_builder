@@ -308,6 +308,7 @@ module.exports = {
                     columnIDs.push(col.id);
                 });
                 ABList.find({ column: columnIDs })
+                .populate('translations')
                 .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
@@ -620,7 +621,24 @@ module.exports = {
                     .exec(function(err, result) {
                         if (err) listDone(err);
                         else {
-                            listDone();
+                            // List item translations
+                            var listID = listData.id;
+                            async.eachlist.translations.each(function(trans, transDone) {
+                                var transData = {
+                                    ablist: listID,
+                                    label: trans.label,
+                                    language_code: trans.language_code,
+                                    weight: trans.weight
+                                };
+                                ABListTrans.create(transData)
+                                .exec(function(err) {
+                                    if (err) transDone(err);
+                                    else transDone();
+                                });
+                            }, function(err) {
+                                if (err) listDone(err);
+                                else listDone();
+                            });
                         }
                     });
                 }, function(err) {
@@ -745,7 +763,7 @@ module.exports = {
                             // Some settings reference other components.
                             // These will be remapped later.
                             ['viewId', 'editForm'].forEach(function(key) {
-                                if (setting[key]) {
+                                if (compData.setting[key]) {
                                     componentsNeedRemap.push(newCompID);
                                 }
                             });
