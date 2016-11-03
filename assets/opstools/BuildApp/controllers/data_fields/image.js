@@ -216,33 +216,150 @@ steal(function () {
 	 */
 	imageDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 
-		// var inHere = true;
 
-		// var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
+		var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
+		var keyContainer = keyField+'-container';
+		var keyUploader = keyField+'-uploader';
 
-		// $(itemNode).find('.ab-image-data-field').append('<div id="' + keyField + '">'+keyField+'</div>');
+
+		////
+		//// Prepare the Display
+		////
+
 
 		// find the container from our this.getSettings().setting.template 
 		var $container = $(itemNode).find('.ab-image-data-field');
 
 		// clear contents
 		$container.html('');
+		$container.attr('id', keyField);
+
 
 		// the display of our image:
-		var imgDiv = '';
+		// .image-data-field-icon : for an image icon when no data is present
+		// .image-data-field-image: for an actual <img> of the data.
+		var imgDiv = [
+			'<div class="image-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file-image-o fa-2x"></i></div>',
+			'<div class="image-data-field-image" style="display:none;"><img src=""></div>'
+		].join('\n');
 
-		// if data is empty, then display a file Icon
-		if ( !data || data == '') {
-			imgDiv = '<div style="text-align: center;"><i class="fa fa-file-image-o fa-2x"></i></div>';
-		} else {
-			// else display an image:
-			imgDiv = data;
+
+		// use a webix component for displaying the content.
+		// do this so I can use the progress spinner
+		var webixContainer = webix.ui({
+			view:'template',
+			id: keyContainer,
+			container:keyField,
+			
+			template:imgDiv,
+
+			borderless:true,
+			height:33,
+			autoHeight:true,
+			autoWidth:true
+		});
+		webix.extend(webixContainer, webix.ProgressBar);
+
+
+		$container.showIcon = function () {
+			// $($container.find('img')).prop('src', '');
+			$container.find('.image-data-field-image').hide();
+			$container.find('.image-data-field-icon').show();
+		}
+		$container.showImage = function (uuid) {
+			$($container.find('img')).prop('src', '/opsportal/image/'+application.name+'/'+uuid);
+			$container.find('.image-data-field-icon').hide();
+			$container.find('.image-data-field-image').show();
 		}
 
-		// insert the image to display
-		$container.html(imgDiv);
+		// if data is empty, then display the file Icon
+		if ( !data || data == '') {
+			$container.showIcon();
+		} else {
+			// else display the image:
+			$container.showImage(data);
+		}
 
 
+
+
+
+
+
+		
+		////
+		//// Prepare the Uploader
+		////
+
+		// The Server Side action key format for this Application:
+		var actionKey = 'opstool.AB_'+application.name.replace('_','')+'.view';
+
+
+		var uploader = webix.ui({ 
+		    view:"uploader",  
+		    id:keyUploader, 
+		    apiOnly: true, 
+		    upload:"/opsportal/image",
+		    multiple: false,
+		    formData:{
+		    	appKey:application.name,
+		    	permission:actionKey,
+		    	isWebix:true,
+		    	imageParam:'upload'
+		    },
+		    on: {
+
+		    	// when a file is added to the uploader
+		    	onBeforeFileAdd:function(item){
+				    var type = item.type.toLowerCase();
+				    if (type != "jpg" && type != "png"){
+				        webix.message("Only PNG or JPG images are supported");
+				        return false;
+				    }
+
+					webixContainer.showProgress({
+					   type:"icon",
+					   delay:2000
+					});
+				},
+
+		    	// when upload is complete:
+		    	onFileUpload:function(item, response){
+					webix.message('Done!');
+					webixContainer.hideProgress();
+					$container.showImage(response.data.uuid);
+				},
+
+				// if an error was returned
+				onFileUploadError:function(item, response){
+					AD.error.log('Error loading image', response);
+					webixContainer.hideProgress();
+				}
+		    }
+		});
+		uploader.addDropZone(webixContainer.$view);
+
+
+
+		// // setup our container to receive 'drop dragdrop' events:
+		// $container.on('drop dragdrop',function(event){
+		// 	event.preventDefault();
+
+		// 	var validTypes = ['image/jpeg', 'image/png', 'image/gif' ];
+		// 	event.dataTransfer.items.forEach(function(item){
+
+		// 	})
+		//     console.log(event);
+		// });
+		// $container.on('dragenter',function(event){
+		//     event.preventDefault();
+		// })
+		// // $container.on('dragleave',function(){
+		// //     $(this).html('drop here').css('background','red');
+		// // })
+		// $container.on('dragover',function(event){
+		//     event.preventDefault();
+		// })
 
 		// // Example Custom Display:
 		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
