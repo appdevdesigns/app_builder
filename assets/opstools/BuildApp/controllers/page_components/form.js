@@ -57,9 +57,7 @@ steal(
 						modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
 					}
 					else {
-						var childView = $$(self.viewId).getChildViews().find(function (view) {
-							return view.config && view.config.name == col.name
-						});
+						var childView = getChildView.call(self, col.name);
 						if (!childView) return;
 
 						// Get value in custom data field
@@ -114,12 +112,39 @@ steal(
 
 				// Custom view
 				columns.forEach(function (col) {
-					var childView = $$(self.viewId).getChildViews().find(function (view) {
-						return view.config && view.config.name == col.name
-					});
+					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
 					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
+				});
+			}
+
+			function getChildView(columnName) {
+				var childView = $$(this.viewId).getChildViews().find(function (view) {
+					return view.config && view.config.name == columnName
+				});
+
+				return childView;
+			}
+
+			function setElementHeights(columns, currModel) {
+				var self = this;
+
+				columns.forEach(function (col) {
+					var childView = getChildView.call(self, col.name);
+					if (!childView) return;
+
+					if (currModel) {
+						var rowHeight = dataFieldsManager.getRowHeight(col, currModel[col.name]);
+						if (rowHeight) {
+							childView.define('height', rowHeight);
+							childView.resize();
+							return;
+						}
+					}
+
+					childView.define('height', 35); // Default height
+					childView.resize();
 				});
 			}
 
@@ -144,6 +169,7 @@ steal(
 					header = { rows: [] },
 					listOptions = {}; // { columnId: [{}, ..., {}] }
 
+				data.setting = setting;
 				data.dataCollection = dataCollection;
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
@@ -163,8 +189,11 @@ steal(
 
 				if (data.dataCollection) {
 					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+						var currModel = data.dataCollection.AD.currModel();
 						// Show custom display
-						showCustomFields.call(self, data.object, data.columns, id, data.dataCollection.AD.currModel());
+						showCustomFields.call(self, data.object, data.columns, id, currModel);
+
+						setElementHeights.call(self, data.columns, currModel);
 					});
 				}
 
@@ -541,11 +570,42 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.clearOnLoad = function () {
-				if (data.dataCollection)
-					data.dataCollection.setCursor(null);
+			this.onDisplay = function () {
+				var self = this;
 
-				clearForm.call(this, data.object, data.columns, data.dataCollection);
+				if (!data.dataCollection) return;
+
+				var currModel = data.dataCollection.AD.currModel();
+
+				if (data.setting.clearOnLoad === 'yes') {
+					data.dataCollection.setCursor(null);
+					clearForm.call(self, data.object, data.columns, data.dataCollection);
+				}
+
+				setElementHeights.call(self, data.columns, currModel);
+
+				data.columns.forEach(function (col) {
+					var childView = getChildView.call(self, col.name);
+					if (!childView) return;
+
+					// Set default connect data when add
+					if (col.fieldName == 'connectObject') {
+						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
+							.then(function (linkedDataCollection) {
+								var linkCurrModel = linkedDataCollection.AD.currModel();
+								if (!linkCurrModel) return;
+
+								// Get default value of linked data
+								var defaultVal = {
+									id: linkCurrModel.id,
+									text: linkCurrModel._dataLabel
+								};
+
+								dataFieldsManager.setValue(col, childView.$view, defaultVal);
+							});
+					}
+				});
+
 			};
 
 		}

@@ -339,25 +339,37 @@ steal(
 		};
 
 
+		connectObjectField.setValue = function (fieldData, itemNode, data) {
+			var selectivityNode = $(itemNode).find('.connect-data-values');
+
+			if (typeof data == 'undefined' || data == null) data = [];
+			else if (!(data instanceof Array)) data = [data];
+
+			selectivityHelper.setData(selectivityNode, data);
+		};
+
+
 // when a Form component gathers the data, this gets called to interpret what should be returned.
 // 
 		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
-				selectedValues = selectivityHelper.getData(selectivityNode);
+				selectedValues = selectivityHelper.getData(selectivityNode),
+				result;
 
-			if (selectedValues && selectedValues.length > 0) {
-				return $.map(selectedValues, function (selectedItem) {
-					return selectedItem.id;
-				});
-			}
-			else {
-				return '';
-			}
+			if (selectedValues && selectedValues.length > 0)
+				result = $.map(selectedValues, function (selectedItem) { return selectedItem.id; });
+			else
+				result = [];
+
+			if (fieldData.setting.linkType == 'model')
+				result = result[0] || '';
+
+			return result;
 		};
 
 		connectObjectField.getRowHeight = function (fieldData, data) {
 			var dataNumber = data && data.length ? data.length : 1,
-				rowHeight = 35,
+				rowHeight = 36,
 				calHeight = dataNumber * rowHeight;
 
 			return calHeight;

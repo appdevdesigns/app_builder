@@ -668,6 +668,12 @@ steal(
 
 				]);
 			};
+
+			this.onDisplay = function () {
+				if (this.data.setting.linkedField)
+					filterLinkedData.call(this, this.data.setting.linkedField);
+			}
+
 		};
 
 		gridComponent.getInfo = function () {

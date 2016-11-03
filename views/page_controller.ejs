@@ -182,9 +182,8 @@ steal(
                                 if (!page.comInstances) page.comInstances = {};
 
                                 if (page.comInstances[item.id]) {
-                                    if (setting.clearOnLoad === 'yes' && page.comInstances[item.id].clearOnLoad) {
-                                        page.comInstances[item.id].clearOnLoad();
-                                    }
+                                    if (page.comInstances[item.id].onDisplay)
+                                        page.comInstances[item.id].onDisplay();
 
                                     return;
                                 }
@@ -259,10 +258,10 @@ steal(
                                                 });
 
                                         },
-                                        // Clear on load
+                                        // Update state on load
                                         function (next) {
-                                            if (setting.clearOnLoad === 'yes' && page.comInstances[item.id].clearOnLoad)
-                                                page.comInstances[item.id].clearOnLoad();
+                                            if (page.comInstances[item.id].onDisplay)
+                                                page.comInstances[item.id].onDisplay();
 
                                             next();
                                         }
