@@ -475,7 +475,7 @@ steal(
 					viewId: detailViewId, // ABPageComponent.id
 					editPage: editPageId, // ABPage.id
 					editForm: editFormId, // ABPageComponent.id
-					columns: columns.filter(function (c) { return c; }),
+					columns: columns.filter(function (c) { return c; }), // [ABColumn.id]
 					removable: propertyValues.removable,
 					filter: propertyValues.filter,
 					sort: propertyValues.sort

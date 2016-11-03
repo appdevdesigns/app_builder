@@ -73,32 +73,23 @@ steal(function () {
 
 	// For save field
 	listDataField.getSettings = function () {
-		var fieldInfo = {
-			fieldName: listDataField.name,
-			type: 'string',
-			setting: {
-				icon: listDataField.icon,
-				filter_type: 'list',
-				editor: 'richselect',
-				options: [],
-				filter_options: []
-			}
-		};
+		var options = [],
+			filter_options = [];
 
 		$$(componentIds.listOptions).editStop(); // Close edit mode
 		$$(componentIds.listOptions).data.each(function (opt) {
 			var optId = typeof opt.dataId == 'string' && opt.dataId.startsWith('temp') ? null : opt.dataId;
 
-			fieldInfo.setting.options.push({ dataId: optId, id: opt.label.replace(/ /g, '_'), value: opt.label });
+			options.push({ dataId: optId, id: opt.label.replace(/ /g, '_'), value: opt.label });
 
-			fieldInfo.setting.filter_options.push(opt.label);
+			filter_options.push(opt.label);
 		});
 
 		// Filter value is not empty
-		fieldInfo.setting.filter_options = $.grep(fieldInfo.setting.filter_options, function (name) { return name && name.length > 0; });
-		fieldInfo.setting.options = $.grep(fieldInfo.setting.options, function (opt) { return opt && opt.value && opt.value.length > 0; });
+		filter_options = $.grep(filter_options, function (name) { return name && name.length > 0; });
+		options = $.grep(options, function (opt) { return opt && opt.value && opt.value.length > 0; });
 
-		if (fieldInfo.setting.options.length < 1) {
+		if (options.length < 1) {
 			webix.alert({
 				title: "Option required",
 				text: "Enter at least one option.",
@@ -108,10 +99,18 @@ steal(function () {
 			return null;
 		}
 
-		if (removedOptionIds && removedOptionIds.length > 0)
-			fieldInfo.removedOptionIds = removedOptionIds;
-
-		return fieldInfo;
+		return {
+			fieldName: listDataField.name,
+			type: 'string',
+			setting: {
+				icon: listDataField.icon,
+				filter_type: 'list',
+				editor: 'richselect',
+				options: options, // [{"dataId":"ABList.id","id":"STRING","label":"STRING"}]
+				filter_options: filter_options
+			},
+			removedOptionIds: removedOptionIds
+		};
 	};
 
 	// Reset state
