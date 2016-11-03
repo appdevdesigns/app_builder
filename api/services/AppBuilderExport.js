@@ -137,6 +137,7 @@ var normalizeIDs = function(data) {
  *          'lists': { ... },
  *          ...
  *      }
+ * @private
  */
 var remap = function(obj, settingKey, objType, reference) {
     var value = obj.setting[settingKey];
@@ -151,6 +152,80 @@ var remap = function(obj, settingKey, objType, reference) {
             obj.setting[settingKey] = reference[objType].map[oldID] || (oldID + '!!');
         }
     }
+};
+
+
+/**
+ * Find a unique app name or label
+ * 
+ * @param string name
+ * @param string type
+ *      'app' or 'label'
+ * @param string langCode
+ * @return Deferred
+ *
+ * @private
+ */
+var uniqueName = function(name, type, langCode) {
+    var dfd = AD.sal.Deferred();
+    name = name || 'imported';
+    type = type || 'name';
+    
+    async.during(
+        // Condition test
+        function(done) {
+            var model = ABApplication;
+            var cond = { name: name };
+            if (type == 'label') {
+                model = ABApplicationTrans;
+                cond = {
+                    label: name,
+                    language_code: langCode
+                };
+            }
+            
+            // Check if the given name is already being used
+            model.find(cond)
+            .exec(function(err, list) {
+                if (err) {
+                    sails.log(err);
+                    // Error. Abort.
+                    done(err);
+                }
+                else if (list && list[0]) {
+                    // Name is already being used. Keep trying.
+                    done(null, true);
+                }
+                else {
+                    // Success
+                    done(null, false);
+                }
+            });
+        },
+        // Loop
+        function(tryAgain) {
+            // Increment the number at the end of the name
+            var match = name.match(/^(.+?)_?(\d+)?$/);
+            if (!match) {
+                throw new Error('bad name?');
+            }
+            var base = match[1];
+            var count = parseInt(match[2]);
+            if (count) {
+                name = base + '_' + (count+1);
+            } else {
+                name = base + '_1';
+            }
+            tryAgain();
+        },
+        // Completion
+        function(err) {
+            if (err) dfd.reject(err);
+            else dfd.resolve(name);
+        }
+    );
+    
+    return dfd;
 };
 
 
@@ -330,62 +405,13 @@ module.exports = {
             // Find unique app name
             function(next) {
                 appName = data.app.name;
-                if (!appName) {
-                    next(new Error('No app name given'));
-                    return;
-                }
                 
-                async.during(
-                    // Condition test
-                    function(done) {
-                        // Check if the given name is already being used
-                        ABApplication.find({ name: appName })
-                        .exec(function(err, list) {
-                            if (err) {
-                                sails.log(err);
-                                // Error. Abort.
-                                done(err);
-                            }
-                            else if (list && list[0]) {
-                                // Name is already being used. Keep trying.
-                                done(null, true);
-                            }
-                            else {
-                                // Success
-                                done(null, false);
-                            }
-                        });
-                    },
-                    // Loop
-                    function(tryAgain) {
-                        // Increment the number at the end of the name
-                        var match = appName.match(/^(.+?)_?(\d+)?$/);
-                        if (!match) {
-                            throw new Error('bad name?');
-                        }
-                        var base = match[1];
-                        var count = parseInt(match[2]);
-                        if (count) {
-                            appName = base + '_' + (count+1);
-                        } else {
-                            appName = base + '_1';
-                        }
-                        tryAgain();
-                    },
-                    // Completion
-                    function(err) {
-                        if (err) next(err);
-                        else {
-                            // Also update the app labels
-                            if (appName != data.app.name) {
-                                data.app.translations.forEach(function(trans) {
-                                    trans.label += ' (' + appName + ')';
-                                });
-                            }
-                            next();
-                        }
-                    }
-                );
+                uniqueName(appName, 'app')
+                .fail(next)
+                .done(function(result) {
+                    appName = result;
+                    next();
+                });
             },
             
             // Create app
@@ -407,18 +433,22 @@ module.exports = {
             // App translations
             function(next) {
                 async.each(data.app.translations, function(trans, transDone) {
-                    var transData = {
-                        abapplication: appID,
-                        label: trans.label,
-                        description: trans.description,
-                        language_code: trans.language_code
-                    }
-                    ABApplicationTrans.create(transData)
-                    .exec(function(err, result) {
-                        if (err) transDone(err);
-                        else {
-                            transDone();
+                    uniqueName(trans.label, 'label', trans.language_code)
+                    .fail(transDone)
+                    .done(function(uniqueResult) {
+                        var transData = {
+                            abapplication: appID,
+                            label: uniqueResult,
+                            description: trans.description,
+                            language_code: trans.language_code
                         }
+                        ABApplicationTrans.create(transData)
+                        .exec(function(err, result) {
+                            if (err) transDone(err);
+                            else {
+                                transDone();
+                            }
+                        });
                     });
                 }, function(err) {
                     if (err) next(err);
@@ -516,7 +546,6 @@ module.exports = {
                             if (setting.linkVia) {
                                 columnsNeedRemap.push(newColID);
                             }
-                            
                             
                             // Column translations
                             async.each(col.translations, function(trans, transDone) {
