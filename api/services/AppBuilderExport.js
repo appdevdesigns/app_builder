@@ -93,7 +93,6 @@ var normalizeIDs = function(data) {
     data.components.forEach(function(comp) {
         comp.page = reference.pages.map[ parseInt(comp.page) ];
         if (comp.setting) {
-            comp.setting.object = reference.objects.map[ parseInt(comp.setting.object) ];
             ['viewPage', 'editPage', 'pageIds'].forEach(function(key) {
                 remap(comp, key, 'pages', reference);
             });
