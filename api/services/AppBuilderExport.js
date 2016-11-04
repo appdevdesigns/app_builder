@@ -623,7 +623,7 @@ module.exports = {
                         else {
                             // List item translations
                             var listID = listData.id;
-                            async.eachlist.translations.each(function(trans, transDone) {
+                            async.each(list.translations, function(trans, transDone) {
                                 var transData = {
                                     ablist: listID,
                                     label: trans.label,
