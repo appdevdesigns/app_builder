@@ -263,7 +263,7 @@ steal(
 						if (setting.title) {
 							header.rows.push({
 								view: 'label',
-								css: 'ab-component-header',
+								css: 'ab-component-header ab-ellipses-text',
 								label: setting.title || ''
 							});
 						}
@@ -271,7 +271,7 @@ steal(
 						if (setting.description) {
 							header.rows.push({
 								view: 'label',
-								css: 'ab-component-description',
+								css: 'ab-component-description ab-ellipses-text',
 								label: setting.description || ''
 							});
 						}

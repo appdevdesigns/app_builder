@@ -24,6 +24,11 @@
 .ab-scroll-y {
 	overflow-y: auto !important;
 }
+.ab-ellipses-text, .ab-ellipses-text > div {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
 
 /* Webix icon */
 .ab-main-container .webix_icon {
