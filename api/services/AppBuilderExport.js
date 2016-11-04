@@ -510,11 +510,10 @@ module.exports = {
                     var oldObjID = col.object;
                     var oldColID = col.id;
                     
-                    var setting = col.setting;
-                    if (setting) {
+                    if (col.setting) {
                         // Application name is duplicated here. Make sure it
                         // uses the adjusted name.
-                        setting.appName = appName;
+                        col.setting.appName = appName;
                         
                         // Remap the linked object IDs
                         remap(col, 'linkObject', 'objects', reference);
@@ -543,7 +542,7 @@ module.exports = {
                             
                             // If this column references another column's ID,
                             // that ID will need to be remapped later.
-                            if (setting.linkVia) {
+                            if (col.setting.linkVia) {
                                 columnsNeedRemap.push(newColID);
                             }
                             
