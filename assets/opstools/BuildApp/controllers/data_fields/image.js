@@ -80,29 +80,55 @@ steal(function () {
 	 */
 	imageDataField.editDefinition = {
 		id: componentIds.editView,
-		rows: [
+		rows:[
+			{
+				cols: [
+					{
+						view:"checkbox", 
+						id:"useWidth", 
+						labelRight:"width", 
+			            width: 80,
+			            labelWidth: 0,
+						value:1,
+			            click: function() {
+							if (this.getValue())
+								$$('imageWidth').enable()
+							else
+								$$('imageWidth').disable();
+			            }
+					},
+					{
+						view: 'text',
+			          	id: 'imageWidth'
+					}
+				]
+			},
+			{
+				cols: [
+					{
+						view:"checkbox", 
+						id:"useHeight", 
+						labelRight:"height", 
+			          	width: 80,
+			            labelWidth: 0,
+						value:1,
+			            click: function() {
+							if (this.getValue())
+								$$('imageHeight').enable()
+							else
+								$$('imageHeight').disable();
+			            }
 
-			//
-			// put your webix json description here
-			//
-
-
-			// Example: a Text entry and a Checkbox:
-			// 
-			// {
-			// 	view: "text",
-			// 	id: componentIds.textDefault,
-			// 	placeholder: 'Default text'
-			// },
-			// {
-			// 	view: "checkbox",
-			// 	id: componentIds.supportMultilingual,
-			// 	labelRight: 'Support multilingual',
-			// 	labelWidth: 0,
-			// 	value: true
-			// }
+					},
+					{
+						view: 'text',
+			          	id: 'imageHeight'
+					}
+				]
+			}
 		]
-	};
+	}
+
 
 
 	/**
@@ -158,6 +184,13 @@ steal(function () {
 	 * @return {json}  data formatted to be saved in ABColumn instance.
 	 */
 	imageDataField.getSettings = function () {
+
+		var useWidth 	= $$('useWidth').getValue();
+		var imageWidth 	= $$('imageWidth').getValue();
+		var useHeight 	= $$('useHeight').getValue();
+		var imageHeight = $$('imageHeight').getValue();
+
+
 		return {
 			fieldName: imageDataField.name,
 			type: imageDataField.type,
@@ -167,7 +200,12 @@ steal(function () {
 				editor: 'imageDataField',
 				template:'<div class="ab-image-data-field"></div>',
 
-				filter_type: 'text' // DataTableFilterPopup - filter type
+				filter_type: 'text', // DataTableFilterPopup - filter type
+
+				useWidth:useWidth,
+				imageWidth:imageWidth,
+				useHeight:useHeight,
+				imageHeight:imageHeight
 			}
 		};
 	};
