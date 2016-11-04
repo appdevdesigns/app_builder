@@ -177,6 +177,7 @@ steal(
 				$$(self.viewId).clear();
 				$$(self.viewId).clearValidation();
 
+				$$(self.viewId).hide();
 				if (!setting.object) return;
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
@@ -197,6 +198,7 @@ steal(
 					});
 				}
 
+				$$(self.viewId).show();
 				async.series([
 					// Get columns data
 					function (next) {
@@ -509,17 +511,21 @@ steal(
 			};
 
 			this.populateSettings = function (setting, showAll) {
-				var self = this;
+				var self = this,
+					dataCollection;
 
-				async.waterfall([
+				async.series([
 					// Get data collection
 					function (next) {
-						dataCollectionHelper.getDataCollection(application, setting.object).then(function (dataCollection) {
-							next(null, dataCollection);
-						});
+						dataCollectionHelper.getDataCollection(application, setting.object)
+							.fail(function (err) { next(); })
+							.then(function (result) {
+								dataCollection = result;
+								next();
+							});
 					},
 					// Render form component
-					function (dataCollection, next) {
+					function (next) {
 						self.render(setting, true, showAll, dataCollection);
 					}
 				]);
@@ -727,10 +733,12 @@ steal(
 
 						switch (editor.id) {
 							case componentIds.editTitle:
-								$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
+								if ($$(componentIds.title))
+									$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
 								break;
 							case componentIds.editDescription:
-								$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
+								if ($$(componentIds.description))
+									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
 							case componentIds.isSaveVisible:
