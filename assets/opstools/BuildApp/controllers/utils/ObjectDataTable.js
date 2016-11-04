@@ -77,38 +77,54 @@ steal(
 
 							if (self.data.onAfterRenderId) self.dataTable.detachEvent(self.data.onAfterRenderId);
 							self.data.onAfterRenderId = self.dataTable.attachEvent("onAfterRender", function (data) {
-								var dataTable = this;
-								dataTable.eachRow(function (rowId) {
-									dataTable.eachColumn(function (columnId) {
-										var col = self.columns.filter(function (col) { return col.name == columnId });
-										if (col && col.length > 0) col = col[0];
-										else return;
-
-										var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
-										if (!itemNode) return;
-
-										dataFieldsManager.customDisplay(
-											col.fieldName,
-											self.application,
-											self.object,
-											col,
-											rowId,
-											dataTable.getItem(rowId)[columnId],
-											itemNode,
-											{
-												readOnly: self.data.readOnly
-											});
-									});
-
-									// if (d.isUnsync) { // TODO: Highlight unsync data
-									// 	self.dataTable.config.columns.forEach(function (col) {
-									// 		var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
-									// 		rowNode.classList.add('ab-object-unsync-data');
-									// 	});
-									// }
-								});
+								self.showCustomDisplay.call(self, this);
 							});
 
+							var scrollTimeoutId;
+							if (self.data.onAfterScrollId) self.dataTable.detachEvent(self.data.onAfterScrollId);
+							self.data.onAfterScrollId = self.dataTable.attachEvent("onAfterScroll", function () {
+								var dataTable = this;
+
+								if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
+								scrollTimeoutId = setTimeout(function () {
+									self.showCustomDisplay.call(self, dataTable);
+								}, 200);
+
+							});
+
+						},
+
+						showCustomDisplay: function (dataTable) {
+							var self = this;
+							dataTable.eachRow(function (rowId) {
+								dataTable.eachColumn(function (columnId) {
+									var col = self.columns.filter(function (col) { return col.name == columnId });
+									if (col && col.length > 0) col = col[0];
+									else return;
+
+									var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
+									if (!itemNode) return;
+
+									dataFieldsManager.customDisplay(
+										col.fieldName,
+										self.application,
+										self.object,
+										col,
+										rowId,
+										dataTable.getItem(rowId)[columnId],
+										itemNode,
+										{
+											readOnly: self.data.readOnly
+										});
+								});
+
+								// if (d.isUnsync) { // TODO: Highlight unsync data
+								// 	self.dataTable.config.columns.forEach(function (col) {
+								// 		var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
+								// 		rowNode.classList.add('ab-object-unsync-data');
+								// 	});
+								// }
+							});
 						},
 
 						setReadOnly: function (readOnly) {
