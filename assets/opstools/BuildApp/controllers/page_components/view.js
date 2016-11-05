@@ -19,9 +19,8 @@ steal(
 
 		// Instance functions
 		var viewComponent = function (application, viewId, componentId) {
-			var data = {},
-				events = {},
-				objectModels = {};
+			var data = {}
+			objectModels = {};
 
 			// Private functions
 			function clearViews() {
@@ -33,6 +32,63 @@ steal(
 				childViews.forEach(function (child) {
 					$$(self.viewId).removeView(child.config.id);
 				});
+			};
+
+			function updateData(setting, newData) {
+				var self = this,
+					currModel = newData ? newData : data.dataCollection.AD.currModel(),
+					object = application.objects.filter(function (obj) { return obj.id == setting.object })[0];
+
+				if (!object) return;
+
+				currModel = currModel && currModel.attr ? currModel.attr() : currModel;
+				data.currDataId = currModel ? currModel.id : null;
+
+				$$(self.viewId).getChildViews().forEach(function (child) {
+					if (!child.config.fieldName) return;
+
+					var displayField = child.getChildViews()[1];
+
+					if (!currModel) {
+						// Clear display
+						if (displayField.setValue)
+							displayField.setValue('');
+						else if (displayField.render)
+							displayField.render();
+
+						return;
+					}
+
+					var fieldData = currModel[child.config.fieldName],
+						column = data.columns.filter(function (col) { return col.name == child.config.fieldName });
+
+					if (column && column.length > 0) column = column[0];
+					else return;
+
+					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, column, currModel.id, fieldData, child.$view, { readOnly: true }))
+						return;
+
+					if (child.config.editor === 'date' || child.config.editor === 'datetime') {
+						if (fieldData) {
+							var dateValue = (fieldData instanceof Date) ? fieldData : new Date(fieldData),
+								dateFormat = webix.i18n.dateFormatStr(dateValue);
+							displayField.setValue(dateFormat);
+						}
+						else {
+							displayField.setValue(fieldData);
+						}
+					}
+					else if (child.config.editor) {
+						if (fieldData)
+							displayField.setValue(fieldData);
+						else
+							displayField.setValue('');
+					}
+				});
+
+				setTimeout(function () { // Wait animate of change page event
+					$$(self.viewId).adjust();
+				}, 700);
 			};
 
 			this.viewId = viewId;
@@ -50,11 +106,11 @@ steal(
 				// Initial events
 				if (data.dataCollection) {
 					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
-						self.updateData(setting);
+						updateData.call(self, setting);
 					});
 					data.dataCollection.attachEvent('onDataUpdate', function (id, newData) {
 						if (data.currDataId == id)
-							self.updateData(setting, newData);
+							updateData.call(self, setting, newData);
 
 						return true;
 					});
@@ -93,11 +149,15 @@ steal(
 						$$(self.viewId).hideProgress();
 						next(err);
 					})
-					.then(function (columns) {
-						clearViews.call(self);
-						columns.forEach(function (col) {
+					.then(function (result) {
+						result.forEach(function (col) {
 							if (col.translate) col.translate();
+						});
+						data.columns = result;
 
+						clearViews.call(self);
+
+						result.forEach(function (col) {
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 							if (!editable && !isVisible) return; // Hidden
 
@@ -222,7 +282,7 @@ steal(
 						$$(self.viewId).addView(header, 0);
 
 						// Populate data to fields
-						self.updateData(setting);
+						updateData.call(self, setting);
 
 						$$(self.viewId).hideProgress();
 
@@ -252,8 +312,8 @@ steal(
 				var settings = {
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
-					object: propertyValues[componentIds.selectObject] || '',
-					visibleFieldIds: visibleFieldIds
+					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
+					visibleFieldIds: visibleFieldIds // [ABColumn.id]
 				};
 
 				return settings;
@@ -326,47 +386,10 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.updateData = function (setting, newData) {
-				var self = this,
-					currModel = newData ? newData : data.dataCollection.AD.currModel(),
-					object = application.objects.filter(function (obj) { return obj.id == setting.object })[0];
-
-				if (!currModel || !object) return;
-
-				currModel = currModel.attr ? currModel.attr() : currModel;
-
-				data.currDataId = currModel.id;
-
-				$$(self.viewId).getChildViews().forEach(function (child) {
-					if (!child.config.fieldName) return;
-
-					var displayField = child.getChildViews()[1],
-						fieldData = currModel ? currModel[child.config.fieldName] : '';
-
-					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, child.config.fieldName, currModel.id, fieldData, child.$view, { readOnly: true }))
-						return;
-
-					if (child.config.editor === 'date' || child.config.editor === 'datetime') {
-						if (fieldData) {
-							var dateValue = (fieldData instanceof Date) ? fieldData : new Date(fieldData),
-								dateFormat = webix.i18n.dateFormatStr(dateValue);
-							displayField.setValue(dateFormat);
-						}
-						else {
-							displayField.setValue(fieldData);
-						}
-					}
-					else if (child.config.editor) {
-						if (fieldData)
-							displayField.setValue(fieldData);
-						else
-							displayField.setValue('');
-					}
-				});
-
-				$$(self.viewId).adjust();
-
+			this.onDisplay = function () {
+				$$(this.viewId).adjust();
 			};
+
 		};
 
 		// Static functions

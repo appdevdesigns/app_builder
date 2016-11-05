@@ -19,16 +19,23 @@ steal(
 			isSaveVisible: 'ab-form-save-visible',
 			isCancelVisible: 'ab-form-cancel-visible',
 
+			clearOnLoad: 'ab-form-clear-on-load',
+			clearOnSave: 'ab-form-clear-on-save',
+
 			addConnectObjectDataPopup: 'ab-form-connected-data-popup'
-		};
+		},
+			labels = {
+				common: {
+					saveSuccessMessage: AD.lang.label.getLabel('ab.common.save.success') || "<b>{0}</b> is saved."
+				}
+			};
 
 		//Constructor
 		var formComponent = function (application, viewId, componentId) {
-			var events = {},
-				data = {};
+			var data = {};
 
 			// Private methods
-			function saveModelData(dataCollection, columns) {
+			function saveModelData(dataCollection, object, columns, setting) {
 				var self = this,
 					q = $.Deferred(),
 					modelData = dataCollection.AD.currModel(),
@@ -46,31 +53,30 @@ steal(
 
 				// Populate values to model
 				columns.forEach(function (col) {
-					if (typeof editValues[col.name] !== 'undefined') {
-						if (col.type == "boolean") {
-							modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
-						}
-						else {
-							var childView = $$(self.viewId).getChildViews().find(function (view) {
-								return view.config && view.config.name == col.name
-							});
-							if (!childView) return;
+					if (col.type == "boolean") {
+						modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
+					}
+					else {
+						var childView = getChildView.call(self, col.name);
+						if (!childView) return;
 
-							// Get value in custom data field
-							var val = dataFieldsManager.getValue(application, null, col, childView.$view);
-							if (val)
-								modelData.attr(col.name, val);
-							else if (editValues[col.name])
-								modelData.attr(col.name, editValues[col.name]);
-							else
-								modelData.removeAttr(col.name);
-
-						}
+						// Get value in custom data field
+						var val = dataFieldsManager.getValue(application, null, col, childView.$view);
+						if (typeof val != 'undefined' && val != null)
+							modelData.attr(col.name, val);
+						else if (typeof editValues[col.name] != 'undefined')
+							modelData.attr(col.name, editValues[col.name]);
+						else
+							modelData.removeAttr(col.name);
 					}
 				});
 
 				modelData.save()
-					.fail(q.reject)
+					.fail(function (err) {
+						console.error(err);
+						$$(self.viewId).hideProgress();
+						q.reject(err);
+					})
 					.then(function (result) {
 						$$(self.viewId).hideProgress();
 
@@ -80,17 +86,18 @@ steal(
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
 
-						if (self.fromPage) {
-							$(self).trigger('changePage', {
-								pageId: self.fromPage
-							});
-						}
+						if (setting.clearOnSave == 'yes')
+							dataCollection.setCursor(null);
 
-						dataCollection.setCursor(null);
-						data.fromPage = null;
+						// Show success message
+						webix.message({
+							type: "success",
+							text: labels.common.saveSuccessMessage.replace('{0}', result._dataLabel ? result._dataLabel : 'This data')
+						});
 
-						// Clear form
-						$$(self.viewId).setValues({});
+						$(self).trigger('changePage', {
+							previousPage: true
+						});
 
 						q.resolve();
 					});
@@ -101,15 +108,53 @@ steal(
 			function showCustomFields(object, columns, rowId, rowData) {
 				var self = this;
 
+				if (!columns || columns.length < 1) return;
+
 				// Custom view
 				columns.forEach(function (col) {
-					var childView = $$(self.viewId).getChildViews().find(function (view) {
-						return view.config && view.config.name == col.name
-					});
+					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
-					dataFieldsManager.customDisplay(col.fieldName, application, object, col.name, rowId, rowData ? rowData[col.name] : null, childView.$view);
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
 				});
+			}
+
+			function getChildView(columnName) {
+				var childView = $$(this.viewId).getChildViews().find(function (view) {
+					return view.config && view.config.name == columnName
+				});
+
+				return childView;
+			}
+
+			function setElementHeights(columns, currModel) {
+				var self = this;
+
+				columns.forEach(function (col) {
+					var childView = getChildView.call(self, col.name);
+					if (!childView) return;
+
+					if (currModel) {
+						var rowHeight = dataFieldsManager.getRowHeight(col, currModel[col.name]);
+						if (rowHeight) {
+							childView.define('height', rowHeight);
+							childView.resize();
+							return;
+						}
+					}
+
+					childView.define('height', 35); // Default height
+					childView.resize();
+				});
+			}
+
+			function clearForm(object, columns, dataCollection) {
+				var self = this;
+
+				// Clear form
+				$$(self.viewId).setValues({});
+				// Clear custom views
+				showCustomFields.call(self, object, columns, null, null);
 			}
 
 			// Set viewId to public
@@ -122,42 +167,49 @@ steal(
 					q = $.Deferred(),
 					elementViews = [],
 					header = { rows: [] },
-					listOptions = {}, // { columnId: [{}, ..., {}] }
-					columns;
+					listOptions = {}; // { columnId: [{}, ..., {}] }
+
+				data.setting = setting;
+				data.dataCollection = dataCollection;
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
 
 				$$(self.viewId).clear();
 				$$(self.viewId).clearValidation();
 
+				$$(self.viewId).hide();
 				if (!setting.object) return;
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
 				$$(self.viewId).showProgress({ type: "icon" });
 
 				// Get object
-				var object = application.objects.filter(function (obj) { return obj.id == setting.object; });
-				if (!object || object.length < 1) return;
-				application.currObj = object[0];
+				data.object = application.objects.filter(function (obj) { return obj.id == setting.object; });
+				if (!data.object || data.object.length < 1) return;
+				data.object = data.object[0];
 
-				if (dataCollection) {
-					dataCollection.attachEvent('onAfterCursorChange', function (id) {
+				if (data.dataCollection) {
+					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+						var currModel = data.dataCollection.AD.currModel();
 						// Show custom display
-						showCustomFields.call(self, object, columns, id, dataCollection.AD.currModel());
+						showCustomFields.call(self, data.object, data.columns, id, currModel);
+
+						setElementHeights.call(self, data.columns, currModel);
 					});
 				}
 
+				$$(self.viewId).show();
 				async.series([
 					// Get columns data
 					function (next) {
-						application.currObj.getColumns()
+						data.object.getColumns()
 							.fail(next)
 							.then(function (result) {
 								result.forEach(function (d) {
 									if (d.translate) d.translate();
 								});
 
-								columns = result;
+								data.columns = result;
 								next();
 							});
 					},
@@ -165,7 +217,7 @@ steal(
 					function (next) {
 						var getOptionsTasks = [];
 
-						columns.filter(function (col) { return col.setting.editor === 'richselect'; })
+						data.columns.filter(function (col) { return col.setting.editor === 'richselect'; })
 							.forEach(function (col) {
 								getOptionsTasks.push(function (callback) {
 									col.getList()
@@ -190,7 +242,7 @@ steal(
 					},
 					// Add form elements
 					function (next) {
-						async.eachSeries(columns, function (col, callback) {
+						async.eachSeries(data.columns, function (col, callback) {
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 
 							if (!editable && !isVisible) { // Hidden
@@ -220,10 +272,14 @@ steal(
 								element.template = template;
 								element.on = {
 									onFocus: function (current_view, prev_view) {
-										var currModel = dataCollection.AD.currModel(),
-											rowId = currModel ? currModel.id : null;
+										var rowId;
 
-										dataFieldsManager.customEdit(application, object, col, rowId, current_view.$view);
+										if (data.dataCollection) {
+											var currModel = data.dataCollection.AD.currModel(),
+												rowId = currModel ? currModel.id : null;
+										}
+
+										dataFieldsManager.customEdit(application, data.object, col, rowId, current_view.$view);
 									}
 								};
 							}
@@ -359,7 +415,7 @@ steal(
 									if ($$(saveButton))
 										$$(saveButton).disable();
 
-									saveModelData.call(self, dataCollection, columns)
+									saveModelData.call(self, dataCollection, data.object, data.columns, setting)
 										.fail(function (err) {
 											console.error(err);
 
@@ -384,18 +440,13 @@ steal(
 								width: 90,
 								inputWidth: 80,
 								click: function () {
-									dataCollection.setCursor(null);
+									data.dataCollection.setCursor(null);
 
-									if (self.fromPage) {
-										$(self).trigger('changePage', {
-											pageId: self.fromPage
-										});
-									}
+									clearForm.call(self, data.object, data.columns, data.dataCollection);
 
-									self.fromPage = null;
-
-									// Clear form
-									$$(self.viewId).setValues({});
+									$(self).trigger('changePage', {
+										previousPage: true
+									});
 								}
 							});
 						}
@@ -404,14 +455,16 @@ steal(
 
 						$$(self.viewId).refresh();
 
+						var currData;
+
 						// Bind data
-						if (dataCollection)
+						if (dataCollection) {
 							$$(self.viewId).bind(dataCollection);
+							currData = dataCollection.AD.currModel();
+						}
 
 						// Show data of current select data
-						var currData = dataCollection.AD.currModel();
-						if (currData)
-							showCustomFields.call(self, object, columns, currData.id, currData);
+						showCustomFields.call(self, data.object, data.columns, currData ? currData.id : null, currData);
 
 						next();
 					}
@@ -446,34 +499,40 @@ steal(
 				var settings = {
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
-					object: propertyValues[componentIds.selectObject] || '',
-					visibleFieldIds: visibleFieldIds,
+					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
+					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
-					cancelVisible: propertyValues[componentIds.isCancelVisible]
+					cancelVisible: propertyValues[componentIds.isCancelVisible],
+					clearOnLoad: propertyValues[componentIds.clearOnLoad],
+					clearOnSave: propertyValues[componentIds.clearOnSave],
 				};
 
 				return settings;
 			};
 
 			this.populateSettings = function (setting, showAll) {
-				var self = this;
+				var self = this,
+					dataCollection;
 
-				async.waterfall([
+				async.series([
 					// Get data collection
 					function (next) {
-						dataCollectionHelper.getDataCollection(application, setting.object).then(function (dataCollection) {
-							next(null, dataCollection);
-						});
+						dataCollectionHelper.getDataCollection(application, setting.object)
+							.fail(function (err) { next(); })
+							.then(function (result) {
+								dataCollection = result;
+								next();
+							});
 					},
 					// Render form component
-					function (dataCollection, next) {
+					function (next) {
 						self.render(setting, true, showAll, dataCollection);
 					}
 				]);
 
 
 				// Get object list
-				data.objects = null;
+				var objects = null;
 				application.getObjects()
 					.fail(function (err) {
 						// TODO : Error message
@@ -485,13 +544,13 @@ steal(
 								o.translate();
 						});
 
-						data.objects = result;
+						objects = result;
 
 						// Properties
 
 						// Data source - Object
 						var objSource = $$(componentIds.propertyView).getItem(componentIds.selectObject);
-						objSource.options = $.map(data.objects, function (o) {
+						objSource.options = $.map(objects, function (o) {
 							return {
 								id: o.id,
 								value: o.label
@@ -505,8 +564,10 @@ steal(
 						propValues[componentIds.selectObject] = setting.object;
 						propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
 						propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
-						$$(componentIds.propertyView).setValues(propValues);
+						propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
+						propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
 
+						$$(componentIds.propertyView).setValues(propValues);
 						$$(componentIds.propertyView).refresh();
 					});
 			};
@@ -515,8 +576,42 @@ steal(
 				return data.isRendered === true;
 			};
 
-			this.setFromPageId = function (pageId) {
-				this.fromPage = pageId;
+			this.onDisplay = function () {
+				var self = this;
+
+				if (!data.dataCollection) return;
+
+				var currModel = data.dataCollection.AD.currModel();
+
+				if (data.setting.clearOnLoad === 'yes') {
+					data.dataCollection.setCursor(null);
+					clearForm.call(self, data.object, data.columns, data.dataCollection);
+				}
+
+				setElementHeights.call(self, data.columns, currModel);
+
+				data.columns.forEach(function (col) {
+					var childView = getChildView.call(self, col.name);
+					if (!childView) return;
+
+					// Set default connect data when add
+					if (col.fieldName == 'connectObject') {
+						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
+							.then(function (linkedDataCollection) {
+								var linkCurrModel = linkedDataCollection.AD.currModel();
+								if (!linkCurrModel) return;
+
+								// Get default value of linked data
+								var defaultVal = {
+									id: linkCurrModel.id,
+									text: linkCurrModel._dataLabel
+								};
+
+								dataFieldsManager.setValue(col, childView.$view, defaultVal);
+							});
+					}
+				});
+
 			};
 
 		}
@@ -606,6 +701,27 @@ steal(
 							{ id: 'show', value: "Yes" },
 							{ id: 'hide', value: "No" },
 						]
+					},
+					{ label: "Data selection", type: "label" },
+					{
+						id: componentIds.clearOnLoad,
+						name: 'clearOnLoad',
+						type: 'richselect',
+						label: 'Clear on load',
+						options: [
+							{ id: 'yes', value: "Yes" },
+							{ id: 'no', value: "No" },
+						]
+					},
+					{
+						id: componentIds.clearOnSave,
+						name: 'clearOnSave',
+						type: 'richselect',
+						label: 'Clear on save',
+						options: [
+							{ id: 'yes', value: "Yes" },
+							{ id: 'no', value: "No" },
+						]
 					}
 				],
 				on: {
@@ -617,10 +733,12 @@ steal(
 
 						switch (editor.id) {
 							case componentIds.editTitle:
-								$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
+								if ($$(componentIds.title))
+									$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
 								break;
 							case componentIds.editDescription:
-								$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
+								if ($$(componentIds.description))
+									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
 							case componentIds.isSaveVisible:

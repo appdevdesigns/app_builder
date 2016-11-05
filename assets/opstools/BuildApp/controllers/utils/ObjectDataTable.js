@@ -39,14 +39,15 @@ steal(
 
 						},
 
-						registerDataTable: function (application, object, dataTable) {
+						registerDataTable: function (application, object, columns, dataTable) {
 							var self = this;
 							self.application = application;
 							self.object = object;
+							self.columns = columns;
 							self.dataTable = dataTable;
 
 							// Trash
-							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable has select, then it has onItemClick by default
+							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable set select is true, then it has onItemClick by default
 								self.dataTable.attachEvent("onItemClick", function (id, e, node) {
 									if (e.target.className.indexOf('trash') > -1) {
 										webix.confirm({
@@ -74,36 +75,55 @@ steal(
 								});
 							}
 
-							self.dataTable.attachEvent("onAfterRender", function (data) {
+							if (self.data.onAfterRenderId) self.dataTable.detachEvent(self.data.onAfterRenderId);
+							self.data.onAfterRenderId = self.dataTable.attachEvent("onAfterRender", function (data) {
+								self.showCustomDisplay.call(self, this);
+							});
+
+							var scrollTimeoutId;
+							if (self.data.onAfterScrollId) self.dataTable.detachEvent(self.data.onAfterScrollId);
+							self.data.onAfterScrollId = self.dataTable.attachEvent("onAfterScroll", function () {
 								var dataTable = this;
-								dataTable.eachRow(function (rowId) {
-									dataTable.eachColumn(function (columnId) {
-										var col = dataTable.getColumnConfig(columnId);
-										if (!col) return;
 
-										var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
-										if (!itemNode) return;
+								if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
+								scrollTimeoutId = setTimeout(function () {
+									self.showCustomDisplay.call(self, dataTable);
+								}, 200);
 
-										dataFieldsManager.customDisplay(
-											col.fieldName,
-											self.application,
-											self.object,
-											columnId,
-											rowId,
-											dataTable.getItem(rowId)[columnId],
-											itemNode,
-											{
-												readOnly: self.data.readOnly
-											});
-									});
+							});
 
-									// if (d.isUnsync) { // TODO: Highlight unsync data
-									// 	self.dataTable.config.columns.forEach(function (col) {
-									// 		var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
-									// 		rowNode.classList.add('ab-object-unsync-data');
-									// 	});
-									// }
+						},
+
+						showCustomDisplay: function (dataTable) {
+							var self = this;
+							dataTable.eachRow(function (rowId) {
+								dataTable.eachColumn(function (columnId) {
+									var col = self.columns.filter(function (col) { return col.name == columnId });
+									if (col && col.length > 0) col = col[0];
+									else return;
+
+									var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
+									if (!itemNode) return;
+
+									dataFieldsManager.customDisplay(
+										col.fieldName,
+										self.application,
+										self.object,
+										col,
+										rowId,
+										dataTable.getItem(rowId)[columnId],
+										itemNode,
+										{
+											readOnly: self.data.readOnly
+										});
 								});
+
+								// if (d.isUnsync) { // TODO: Highlight unsync data
+								// 	self.dataTable.config.columns.forEach(function (col) {
+								// 		var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
+								// 		rowNode.classList.add('ab-object-unsync-data');
+								// 	});
+								// }
 							});
 						},
 
@@ -127,7 +147,8 @@ steal(
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 
-								col.setting.width = self.calculateColumnWidth(application, col);
+								if (!col.setting.width)
+									col.setting.width = self.calculateColumnWidth(application, col);
 
 								if (col.setting.format && webix.i18n[col.setting.format])
 									col.setting.format = webix.i18n[col.setting.format];
@@ -193,7 +214,7 @@ steal(
 								});
 
 								if (connectObj && connectObj.length > 0)
-									label += ' '+ self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
+									label += ' ' + self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
 							}
 
 							var headerTemplate = '<div class="ab-object-data-header"><span class="webix_icon {0}"></span>{1}{2}</div>'
@@ -203,7 +224,7 @@ steal(
 
 							return {
 								text: headerTemplate,
-								css: col.isNew ? 'ab-object-data-new-header' : ''
+								css: col.isNewColumn ? 'ab-object-data-new-header' : ''
 							};
 						},
 
@@ -225,48 +246,6 @@ steal(
 							}
 
 							return width;
-						},
-
-						getRowHeight: function (dataNumber) {
-							var rowHeight = 35,
-								calHeight = dataNumber * rowHeight;
-
-							return calHeight;
-						},
-
-						calculateRowHeight: function (row, dataNumber) {
-							var rowHeight = this.getRowHeight(dataNumber);
-
-							if (this.dataTable.getItem(row) && this.dataTable.getItem(row).$height < rowHeight)
-								this.dataTable.setRowHeight(row, rowHeight);
-						},
-
-						calculateRowHeightToData: function (data, linkCols) {
-							if (!data || !linkCols || !linkCols.forEach) return;
-
-							// Get Map.List in DataCollection
-							var self = this,
-								list = data;
-							if (data instanceof webix.DataCollection)
-								list = data.AD.__list;
-
-							// Update row height
-							list.forEach(function (r) {
-								var rowHeight = r.attr ? r.attr('$height') : r.$height;
-
-								linkCols.forEach(function (linkCol) {
-									if (r[linkCol.name]) {
-										var calHeight = self.getRowHeight(r[linkCol.name].length || 0);
-										if (calHeight > rowHeight || !rowHeight)
-											rowHeight = calHeight;
-									}
-								});
-
-								if (r.attr)
-									r.attr('$height', rowHeight);
-								else
-									r.$height = rowHeight;
-							});
 						},
 
 						populateData: function (data) {

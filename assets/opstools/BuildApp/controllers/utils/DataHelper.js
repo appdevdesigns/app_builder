@@ -1,10 +1,13 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	function (modelCreator) {
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+	function (modelCreator, dataFieldsManager) {
 		return {
-			normalizeData: function (application, data, linkFields, dateFields) {
-				var q = new AD.sal.Deferred(),
+			normalizeData: function (application, columns, data, ignoreTranslate) {
+				var self = this,
+					q = new AD.sal.Deferred(),
+					normalizeDataTasks = [],
 					list;
 
 				if (!data) {
@@ -21,100 +24,115 @@ steal(
 					list = data; // It is Can.Map
 				}
 
-				var self = this,
-					normalizeDataTasks = [];
+				var linkColumns = columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
+					dateColumns = columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || [];// Get date & datetime columns
 
 				if (list.forEach) {
 					list.forEach(function (row) {
 						normalizeDataTasks.push(function (callback) {
 							// Translate
-							if (row.translate) row.translate();
+							if (!ignoreTranslate && row.translate) row.translate();
 
-							var Tasks = [];
+							var linkTasks = [];
 
-							linkFields.forEach(function (linkCol) {
-								if (row[linkCol.name] && !row[linkCol.name].dataLabel) {
-									Tasks.push(function (ok) {
-										var linkObj = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject; })[0],
-											linkedLabels = [];
+							linkColumns.forEach(function (linkCol) {
+								if (typeof row[linkCol.name] == 'undefined' || row[linkCol.name] == null) {
+									if (linkCol.setting.linkType === 'collection')
+										row.attr(linkCol.name, []);
+									else
+										row.attr(linkCol.name, '');
 
-										// Get linked object model
-										var linkObjModel = modelCreator.getModel(application, linkObj.name);
+									return;
+								}
 
-										async.series([
-											// Find labels of linked fields
-											function (next) {
-												var connectIds = [];
+								linkTasks.push(function (ok) {
+									var linkObj = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject; })[0],
+										linkedData = [];
 
-												if (row[linkCol.name].forEach) {
-													row[linkCol.name].forEach(function (val) {
-														if (!val.dataLabel)
-															connectIds.push({ id: val.id || val });
-													});
-												}
-												else if (!row[linkCol.name].dataLabel) {
-													connectIds.push({ id: row[linkCol.name].id || row[linkCol.name] });
-												}
+									// Get linked object model
+									var linkObjModel = modelCreator.getModel(application, linkObj.name);
 
-												if (connectIds && connectIds.length > 0) {
-													linkObjModel.findAll({ or: connectIds })
-														.fail(next)
-														.then(function (result) {
-															linkedLabels = result;
-															next();
-														});
-												}
-												else {
-													next();
-												}
-											},
-											// Set label to linked fields
-											function (next) {
-												if (linkedLabels) {
-													linkedLabels.forEach(function (linkVal, index) {
+									async.series([
+										// Find labels of linked fields
+										function (next) {
+											var connectIds = [];
+
+											if (row[linkCol.name].forEach) {
+												row[linkCol.name].forEach(function (val) {
+													if (typeof val._dataLabel == 'undefined' || val._dataLabel == null)
+														connectIds.push({ id: val.id || val });
+												});
+											}
+											else if (typeof row[linkCol.name]._dataLabel == 'undefined' || row[linkCol.name]._dataLabel == null) {
+												connectIds.push({ id: row[linkCol.name].id || row[linkCol.name] });
+											}
+
+											if (!connectIds || connectIds.length < 1) return next();
+
+											linkObjModel.findAll({ or: connectIds })
+												.fail(next)
+												.then(function (result) {
+													result.forEach(function (linkVal) {
 														if (linkVal.translate) linkVal.translate();
 
-														// Set data label
-														linkVal.attr('dataLabel', linkObj.getDataLabel(linkVal.attr()));
-
-														if (row[linkCol.name].forEach) {
-															// FIX : CANjs attr to set nested value
-															if (row.attr)
-																row.attr(linkCol.name + '.' + index, linkVal.attr());
-															else
-																row[linkCol.name + '.' + index] = linkVal.attr();
-														}
-														else {
-															if (row.attr)
-																row.attr(linkCol.name, linkVal.attr());
-															else
-																row[linkCol.name] = linkVal.attr();
-														}
-
+														linkVal.attr('_dataLabel', linkObj.getDataLabel(linkVal.attr()));
 													});
 
+													linkedData = result;
 													next();
-												}
-												else {
-													next();
-												}
+												});
+										},
+										// Set label to linked fields
+										function (next) {
+											if (!linkedData || linkedData.length < 1) return next();
+
+											if (row[linkCol.name].forEach) {
+												row[linkCol.name].forEach(function (val, index) {
+													if (typeof val._dataLabel == 'undefined' || val._dataLabel == null) {
+														var linkVal = linkedData.filter(function (link) { return link.id == val.id });
+														if (!linkVal[0]) return;
+
+														// FIX : CANjs attr to set nested value
+														if (row.attr)
+															row.attr(linkCol.name + '.' + index, linkVal[0].attr());
+														else
+															row[linkCol.name + '.' + index] = linkVal[0].attr();
+													}
+												});
 											}
-										], ok);
-									});
-								}
+											else if (typeof row[linkCol.name]._dataLabel == 'undefined' || row[linkCol.name]._dataLabel == null) {
+												var linkVal = linkedData.filter(function (link) { return link.id == row[linkCol.name].id });
+												if (!linkVal[0]) return next();
+
+												if (row.attr)
+													row.attr(linkCol.name, linkVal[0].attr());
+												else
+													row[linkCol.name] = linkVal[0].attr();
+											}
+
+											next();
+										}
+									], ok);
+								});
 							});
 
-							async.parallel(Tasks, callback);
+							async.parallel(linkTasks, callback);
 						});
 
-
 						// Convert string to Date object
-						if (dateFields && dateFields.length > 0) {
-							dateFields.forEach(function (dateCol) {
+						if (dateColumns && dateColumns.length > 0) {
+							dateColumns.forEach(function (dateCol) {
 								if (row[dateCol.name] && !(row[dateCol.name] instanceof Date))
 									row.attr(dateCol.name, new Date(row[dateCol.name]));
 							});
 						}
+
+						// Set height of row ($height)
+						columns.forEach(function (col) {
+							var rowHeight = dataFieldsManager.getRowHeight(col, row[col.name]);
+							if (rowHeight && (!row.$height || row.$height < rowHeight))
+								row.attr('$height', rowHeight);
+						});
 
 					});
 				}
@@ -130,6 +148,7 @@ steal(
 
 				return q;
 			}
+
 
 		};
 	}

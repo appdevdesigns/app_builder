@@ -28,8 +28,7 @@ steal(
 
 		// Instance functions
 		var gridComponent = function (application, viewId, componentId) {
-			var events = {},
-				data = {};
+			var data = {};
 
 			function getMaxWeight(columns) {
 				if (!columns) return 0;
@@ -38,7 +37,7 @@ steal(
 				return Math.max.apply(null, weightList);
 			}
 
-			function getObjectDataTable(application, objectId) {
+			function getObjectDataTable(application, objectId, columns) {
 				if (!this.data.objectDataTable) {
 					var ObjectDataTable = AD.Control.get('opstools.BuildApp.ObjectDataTable');
 
@@ -49,7 +48,7 @@ steal(
 				var object = application.objects.filter(function (obj) { return obj.id == objectId });
 				if (object && object[0]) object = object[0];
 
-				this.data.objectDataTable.registerDataTable(application, object, $$(this.viewId));
+				this.data.objectDataTable.registerDataTable(application, object, columns, $$(this.viewId));
 
 				return this.data.objectDataTable;
 			};
@@ -73,6 +72,19 @@ steal(
 				});
 
 				$$(componentIds.columnList).parse(columns);
+			};
+
+			function populateData(objectId, dataCollection, columns) {
+				var self = this;
+
+				if ($$(self.viewId).showProgress)
+					$$(self.viewId).showProgress({ type: 'icon' });
+
+				getObjectDataTable.call(self, application, objectId, columns)
+					.populateData(dataCollection);
+
+				if ($$(self.viewId).hideProgress)
+					$$(self.viewId).hideProgress();
 			};
 
 			function filterLinkedData(linkedField) {
@@ -114,11 +126,9 @@ steal(
 
 			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
-					q = $.Deferred(),
-					dataTableController = getObjectDataTable.call(this, application, setting.object);
+					q = $.Deferred();
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
-				$$(self.viewId).clearAll();
 				$$(self.viewId).showProgress({ type: 'icon' });
 
 				self.data.setting = setting;
@@ -128,29 +138,12 @@ steal(
 				if (linkedToDataCollection) {
 					self.data.linkedToDataCollection = linkedToDataCollection;
 					self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
-						// filterLinkedData(self.viewId, setting.linkedField);
+						filterLinkedData.call(self, setting.linkedField);
 					});
 				}
 
 				if (setting.columns)
 					self.data.visibleColumns = $.map(setting.columns, function (cId) { return cId.toString(); });
-
-				var dataTableController = getObjectDataTable.call(self, application, setting.object);
-				dataTableController.bindColumns(application, [], true, setting.removable);
-				dataTableController.registerDeleteRowHandler(function (deletedId) {
-					$$(self.viewId).showProgress({ type: 'icon' });
-
-					// Delete data
-					dataCollection.AD.destroyModel(deletedId.row)
-						.fail(function (err) {
-							AD.error.log('Error destroying entry.', { error: err, id: deletedId.row });
-
-							$$(self.viewId).hideProgress();
-						})
-						.then(function (oldData) {
-							$$(self.viewId).hideProgress();
-						});
-				});
 
 				AD.util.async.parallel([
 					function (next) {
@@ -175,6 +168,25 @@ steal(
 
 								next();
 							});
+					},
+					function (next) {
+						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
+						dataTableController.bindColumns(application, [], true, setting.removable);
+						dataTableController.registerDeleteRowHandler(function (deletedId) {
+							$$(self.viewId).showProgress({ type: 'icon' });
+
+							// Delete data
+							dataCollection.AD.destroyModel(deletedId.row)
+								.fail(function (err) {
+									AD.error.log('Error destroying entry.', { error: err, id: deletedId.row });
+
+									$$(self.viewId).hideProgress();
+								})
+								.then(function (oldData) {
+									$$(self.viewId).hideProgress();
+								});
+						});
+						next();
 					}
 				], function (err) {
 					if (err) {
@@ -251,7 +263,7 @@ steal(
 						if (setting.title) {
 							header.rows.push({
 								view: 'label',
-								css: 'ab-component-header',
+								css: 'ab-component-header ab-ellipses-text',
 								label: setting.title || ''
 							});
 						}
@@ -259,7 +271,7 @@ steal(
 						if (setting.description) {
 							header.rows.push({
 								view: 'label',
-								css: 'ab-component-description',
+								css: 'ab-component-description ab-ellipses-text',
 								label: setting.description || ''
 							});
 						}
@@ -334,7 +346,7 @@ steal(
 					}
 
 					// Select edit item
-					getObjectDataTable.call(self, application, setting.object).registerItemClick(function (id, e, node) {
+					getObjectDataTable.call(self, application, setting.object, self.data.columns).registerItemClick(function (id, e, node) {
 						if (id.column === 'view_detail') {
 							$(self).trigger('changePage', {
 								pageId: setting.viewPage
@@ -370,6 +382,19 @@ steal(
 							else if (selectedItem && selectedItem.id != id && $$(self.viewId).select)
 								$$(self.viewId).select(id);
 						});
+
+						dataCollection.attachEvent("onDataUpdate", function (id, data) {
+							filterLinkedData.call(self, setting.linkedField);
+						});
+
+						dataCollection.attachEvent("onAfterAdd", function (id, index) {
+							filterLinkedData.call(self, setting.linkedField);
+						});
+
+						dataCollection.attachEvent('onBindUpdate', function (data, key) {
+							filterLinkedData.call(self, setting.linkedField);
+						});
+
 					}
 
 					q.resolve();
@@ -422,9 +447,9 @@ steal(
 
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self, application, self.data.setting.object).bindColumns(application, columns, true, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, isTrashVisible);
 
-				self.populateData(self.data.setting.object, dataCollection);
+				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
 				if (linkedField)
 					filterLinkedData.call(self, linkedField);
@@ -435,7 +460,7 @@ steal(
 					columns = $.map($$(componentIds.editDataTable).config.columns, function (c) { return [c.dataId]; }),
 					detailView = propertyValues.detailView && propertyValues.detailView.split('|') || null,
 					viewPageId = detailView && detailView[0] || null,
-					viewId = detailView && detailView[1] || null,
+					detailViewId = detailView && detailView[1] || null,
 					editForm = propertyValues.editForm && propertyValues.editForm.split('|') || null,
 					editPageId = editForm && editForm[0] || null,
 					editFormId = editForm && editForm[1] || null;
@@ -443,14 +468,14 @@ steal(
 				var settings = {
 					title: propertyValues.title || '',
 					description: propertyValues.description || '',
-					object: propertyValues.object,
-					linkedTo: propertyValues.linkedTo != 'none' ? propertyValues.linkedTo : '',
-					linkedField: propertyValues.linkedField != 'none' ? propertyValues.linkedField : '',
-					viewPage: viewPageId,
-					viewId: this.viewId,
-					editPage: editPageId,
-					editForm: editFormId,
-					columns: columns.filter(function (c) { return c; }),
+					object: propertyValues.object, // ABObject.id
+					linkedTo: propertyValues.linkedTo != 'none' ? propertyValues.linkedTo : '', // ABObject.id
+					linkedField: propertyValues.linkedField != 'none' ? propertyValues.linkedField : '', // ABColumn.id
+					viewPage: viewPageId, // ABPage.id
+					viewId: detailViewId, // ABPageComponent.id
+					editPage: editPageId, // ABPage.id
+					editForm: editFormId, // ABPageComponent.id
+					columns: columns.filter(function (c) { return c; }), // [ABColumn.id]
 					removable: propertyValues.removable,
 					filter: propertyValues.filter,
 					sort: propertyValues.sort
@@ -644,18 +669,11 @@ steal(
 				]);
 			};
 
-			this.populateData = function (objectId, dataCollection) {
-				var self = this;
+			this.onDisplay = function () {
+				if (this.data.setting.linkedField)
+					filterLinkedData.call(this, this.data.setting.linkedField);
+			}
 
-				if ($$(self.viewId).showProgress)
-					$$(self.viewId).showProgress({ type: 'icon' });
-
-				getObjectDataTable.call(self, application, objectId)
-					.populateData(dataCollection);
-
-				if ($$(self.viewId).hideProgress)
-					$$(self.viewId).hideProgress();
-			};
 		};
 
 		gridComponent.getInfo = function () {
@@ -669,6 +687,7 @@ steal(
 			return {
 				view: "dynamicdatatable",
 				autoheight: true,
+				fixedRowHeight: false,
 				datatype: "json"
 			};
 		};

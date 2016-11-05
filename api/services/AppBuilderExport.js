@@ -2,13 +2,240 @@
  * Import and export AppBuilder apps.
  */
 
-var fs = require('fs');
-var path = require('path');
 var AD = require('ad-utils');
+
+/**
+ * Deeply iterates through an object or array and removes any properties
+ * named 'createdAt' or 'updatedAt'. Also removes primary and foreign keys
+ * from translations.
+ *
+ * @param Mixed thing
+ *      Array or Object to remove timestamp properties from.
+ * @param Array toRemove
+ *      Optional array of properties to remove from `thing`.
+ *      Default is 'createdAt' and 'updatedAt'.
+ * @private
+ */
+var removeTimestamps = function(thing, toRemove) {
+    toRemove = toRemove || ['createdAt', 'updatedAt'];
+    if (Array.isArray(thing)) {
+        thing.forEach(function(t) {
+            removeTimestamps(t, toRemove);
+        });
+    }
+    else if (typeof thing == 'object') {
+        for (var key in thing) {
+            if (toRemove.indexOf(key) >= 0) {
+                delete thing[key];
+            }
+            else if (key == 'translations') {
+                removeTimestamps(thing[key], toRemove.concat(['id', 'abapplication', 'abobject', 'abcolumn', 'abpage']));
+            }
+            else {
+                removeTimestamps(thing[key], toRemove);
+            }
+        }
+    }
+    else {
+        // nothing to do
+    }
+};
+
+
+/**
+ * Changes all primary keys to start from 1, and remapping all internal 
+ * references to maintain consistency. This is done for exports.
+ *
+ * @param JSON data
+ *      This is the data object used for app exports.
+ * @private
+ */
+var normalizeIDs = function(data) {
+    var appID = 1;
+    var reference = {};
+    for (var key in data) {
+        if (key == 'app') continue;
+        reference[key] = {
+            counter: 1,
+            map: {}
+        };
+    }
+    
+    // First pass: normalize primary keys
+    data.app.id = appID;
+    for (var key in data) {
+        if (key == 'app') continue;
+        data[key].forEach(function(obj) {
+            reference[key].map[ parseInt(obj.id) ] = reference[key].counter;
+            obj.id = reference[key].counter;
+            reference[key].counter += 1;
+        });
+    };
+    
+    // Second pass: adjust internal references
+    data.objects.forEach(function(obj) {
+        obj.application = appID;
+    });
+    data.pages.forEach(function(page) {
+        page.parent = reference.pages.map[ parseInt(page.parent) ];
+        page.application = appID;
+    });
+    data.columns.forEach(function(col) {
+        col.object = reference.objects.map[ parseInt(col.object) ];
+        if (col.setting) {
+            remap(col, 'linkObject', 'objects', reference);
+            remap(col, 'linkVia', 'columns', reference);
+        }
+    });
+    data.lists.forEach(function(list) {
+        list.column = reference.columns.map[ parseInt(list.column) ];
+    });
+    data.components.forEach(function(comp) {
+        comp.page = reference.pages.map[ parseInt(comp.page) ];
+        if (comp.setting) {
+            ['viewPage', 'editPage', 'pageIds'].forEach(function(key) {
+                remap(comp, key, 'pages', reference);
+            });
+            ['viewId', 'editForm'].forEach(function(key) {
+                remap(comp, key, 'components', reference);
+            });
+            ['linkField', 'columns', 'visibleFieldIds'].forEach(function(key) {
+                remap(comp, key, 'columns', reference)
+            });
+            ['object', 'linkedTo'].forEach(function(key) {
+                remap(comp, key, 'objects', reference);
+            });
+            if (comp.component == 'link') {
+                remap(comp, 'linkTo', 'pages', reference);
+            } else {
+                remap(comp, 'linkTo', 'objects', reference);
+            }
+        }
+    });
+};
+
+
+/**
+ * Remaps IDs within a `setting` object based on a given reference object.
+ * This is used during both import and export.
+ *
+ * @param Object obj
+ *      A single AppBuilder object/column/page/component/list
+ * @param String settingKey
+ *      The index key of the setting property that is being remapped
+ * @param String objType
+ *      'objects', 'columns', 'lists', 'pages', or 'components'
+ * @param Object reference
+ *      {
+ *          'objects': { 'map': {
+ *              oldID: newID,
+ *              oldID2: newID2,
+ *              ...
+ *          }},
+ *          'columns': { ... },
+ *          'lists': { ... },
+ *          ...
+ *      }
+ * @private
+ */
+var remap = function(obj, settingKey, objType, reference) {
+    var value = obj.setting[settingKey];
+    if (Array.isArray(value)) {
+        for (var i=0; i<value.length; i++) {
+            var oldID = value[i];
+            obj.setting[settingKey][i] = reference[objType].map[oldID] || (oldID + '!!');
+        }
+    } else {
+        var oldID = parseInt(obj.setting[settingKey]);
+        if (oldID) {
+            obj.setting[settingKey] = reference[objType].map[oldID] || (oldID + '!!');
+        }
+    }
+};
+
+
+/**
+ * Find a unique app name or label
+ * 
+ * @param string name
+ * @param string type
+ *      'app' or 'label'
+ * @param string langCode
+ * @return Deferred
+ *
+ * @private
+ */
+var uniqueName = function(name, type, langCode) {
+    var dfd = AD.sal.Deferred();
+    name = name || 'imported';
+    type = type || 'name';
+    
+    async.during(
+        // Condition test
+        function(done) {
+            var model = ABApplication;
+            var cond = { name: name };
+            if (type == 'label') {
+                model = ABApplicationTrans;
+                cond = {
+                    label: name,
+                    language_code: langCode
+                };
+            }
+            
+            // Check if the given name is already being used
+            model.find(cond)
+            .exec(function(err, list) {
+                if (err) {
+                    sails.log(err);
+                    // Error. Abort.
+                    done(err);
+                }
+                else if (list && list[0]) {
+                    // Name is already being used. Keep trying.
+                    done(null, true);
+                }
+                else {
+                    // Success
+                    done(null, false);
+                }
+            });
+        },
+        // Loop
+        function(tryAgain) {
+            // Increment the number at the end of the name
+            var match = name.match(/^(.+?)_?(\d+)?$/);
+            if (!match) {
+                throw new Error('bad name?');
+            }
+            var base = match[1];
+            var count = parseInt(match[2]);
+            if (count) {
+                name = base + '_' + (count+1);
+            } else {
+                name = base + '_1';
+            }
+            tryAgain();
+        },
+        // Completion
+        function(err) {
+            if (err) dfd.reject(err);
+            else dfd.resolve(name);
+        }
+    );
+    
+    return dfd;
+};
 
 
 module.exports = {
     
+    /**
+     * Export an application's metadata to JSON
+     *
+     * @param integer appID
+     * @return JSON object
+     */
     appToJSON: function(appID) {
         var dfd = AD.sal.Deferred();
         var data = {
@@ -42,6 +269,7 @@ module.exports = {
             function(next) {
                 ABObject.find({ application: appID })
                 .populate('translations')
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -60,6 +288,7 @@ module.exports = {
             function(next) {
                 ABColumn.find({ object: objectIDs })
                 .populate('translations')
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -78,6 +307,8 @@ module.exports = {
                     columnIDs.push(col.id);
                 });
                 ABList.find({ column: columnIDs })
+                .populate('translations')
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -93,6 +324,7 @@ module.exports = {
             function(next) {
                 ABPage.find({ application: appID })
                 .populate('translations')
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -110,6 +342,7 @@ module.exports = {
             
             function(next) {
                 ABPageComponent.find({ page: pageIDs })
+                .sort('id')
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
@@ -126,6 +359,9 @@ module.exports = {
             if (err) {
                 dfd.reject(err);
             } else {
+                removeTimestamps(data);
+                normalizeIDs(data);
+                
                 dfd.resolve(data);
             }
         });
@@ -134,7 +370,12 @@ module.exports = {
     },
     
     
-    
+    /**
+     * Import JSON data to create an application.
+     *
+     * @param JSON data
+     *      This is the JSON object produced by appToJSON()
+     */
     appFromJSON: function(data) {
         var dfd = AD.sal.Deferred();
         
@@ -146,79 +387,31 @@ module.exports = {
         
         // This will map the old object IDs to the new IDs assigned by the
         // database.
-        var objIDs = {
-        /*
-            oldID: newID,
-            ...
-        */
+        var reference = {
+            objects: { map: {} },
+            columns: { map: {} },
+            lists: { map: {} },
+            pages: { map: {} },
+            components: { map: {} }
         };
         
-        var colIDs = {
-        /*
-            oldID: newID,
-            ...
-        */
-        };
+        // Some columns reference other columns via `settings.linkVia`.
+        // These will need to be remapped in a 2nd pass.
+        var columnsNeedRemap = [];
+        var componentsNeedRemap = [];
         
-        var pageIDs = {
-        /*
-            oldID: newID,
-            ...
-        */
-        };
         
         async.series([
             // Find unique app name
             function(next) {
                 appName = data.app.name;
-                if (!appName) {
-                    next(new Error('No app name given'));
-                    return;
-                }
                 
-                async.during(
-                    // Condition test
-                    function(done) {
-                        // Check if the given name is already being used
-                        ABApplication.find({ name: appName })
-                        .exec(function(err, list) {
-                            if (err) {
-                                sails.log(err);
-                                // Error. Abort.
-                                done(err);
-                            }
-                            else if (list && list[0]) {
-                                // Already being used. Keep trying.
-                                done(null, true);
-                            }
-                            else {
-                                // Success
-                                done(null, false);
-                            }
-                        });
-                    },
-                    // Loop
-                    function(tryAgain) {
-                        // Increment the number at the end of the name
-                        var match = appName.match(/^(.+?)_?(\d+)?$/);
-                        if (!match) {
-                            throw new Error('bad name?');
-                        }
-                        var base = match[1];
-                        var count = parseInt(match[2]);
-                        if (count) {
-                            appName = base + '_' + (count+1);
-                        } else {
-                            appName = base + '_1';
-                        }
-                        tryAgain();
-                    },
-                    // Completion
-                    function(err) {
-                        if (err) next(err);
-                        else next();
-                    }
-                );
+                uniqueName(appName, 'app')
+                .fail(next)
+                .done(function(result) {
+                    appName = result;
+                    next();
+                });
             },
             
             // Create app
@@ -240,18 +433,22 @@ module.exports = {
             // App translations
             function(next) {
                 async.each(data.app.translations, function(trans, transDone) {
-                    var transData = {
-                        abapplication: appID,
-                        label: trans.label,
-                        description: trans.description,
-                        language_code: trans.language_code
-                    }
-                    ABApplicationTrans.create(transData)
-                    .exec(function(err, result) {
-                        if (err) transDone(err);
-                        else {
-                            transDone();
+                    uniqueName(trans.label, 'label', trans.language_code)
+                    .fail(transDone)
+                    .done(function(uniqueResult) {
+                        var transData = {
+                            abapplication: appID,
+                            label: uniqueResult,
+                            description: trans.description,
+                            language_code: trans.language_code
                         }
+                        ABApplicationTrans.create(transData)
+                        .exec(function(err, result) {
+                            if (err) transDone(err);
+                            else {
+                                transDone();
+                            }
+                        });
                     });
                 }, function(err) {
                     if (err) next(err);
@@ -274,10 +471,8 @@ module.exports = {
                     .exec(function(err, result) {
                         if (err) objDone(err);
                         else {
-                            console.log('Object created');
-                            console.log(result);
                             var newID = result.id;
-                            objIDs[ oldID ] = newID;
+                            reference.objects.map[ oldID ] = newID;
                             
                             // Object translations
                             async.each(obj.translations, function(trans, transDone) {
@@ -314,9 +509,20 @@ module.exports = {
                 async.each(data.columns, function(col, colDone) {
                     var oldObjID = col.object;
                     var oldColID = col.id;
+                    
+                    if (col.setting) {
+                        // Application name is duplicated here. Make sure it
+                        // uses the adjusted name.
+                        col.setting.appName = appName;
+                        
+                        // Remap the linked object IDs
+                        remap(col, 'linkObject', 'objects', reference);
+                    }
+                    
                     var colData = {
-                        object: objIDs[oldObjID],
+                        object: reference.objects.map[ oldObjID ],
                         name: col.name,
+                        fieldName: col.fieldName,
                         type: col.type,
                         weight: col.weight,
                         required: col.required,
@@ -331,14 +537,21 @@ module.exports = {
                     .exec(function(err, result) {
                         if (err) colDone(err);
                         else {
-                            var newID = result.id;
-                            colIDs[ oldColID ] = newID;
+                            var newColID = result.id;
+                            reference.columns.map[ oldColID ] = newColID;
+                            
+                            // If this column references another column's ID,
+                            // that ID will need to be remapped later.
+                            if (col.setting.linkVia) {
+                                columnsNeedRemap.push(newColID);
+                            }
+                            
                             // Column translations
                             async.each(col.translations, function(trans, transDone) {
                                 var transData = {
-                                    abcolumn: newID,
+                                    abcolumn: newColID,
                                     label: trans.label,
-                                    language_code: trans.language_code,
+                                    language_code: trans.language_code
                                 };
                                 ABColumnTrans.create(transData)
                                 .exec(function(err, result) {
@@ -364,11 +577,44 @@ module.exports = {
                 });
             },
             
+            // Remap column `linkVia` ID references
+            function(next) {
+                async.each(columnsNeedRemap, function(colID, colDone) {
+                    
+                    ABColumn.findOne({ id: colID })
+                    .exec(function(err, result) {
+                        if (err) colDone(err);
+                        else if (!result) {
+                            colDone(new Error('Column not found: ' + colID));
+                        }
+                        else {
+                            remap(result, 'linkVia', 'columns', reference);
+                            ABColumn.update(
+                                { id: colID }, 
+                                { setting: result.setting }
+                            )
+                            .exec(function(err) {
+                                if (err) colDone(err);
+                                else {
+                                    colDone();
+                                }
+                            });
+                        }
+                    });
+                
+                }, function(err) {
+                    if (err) next(err);
+                    else {
+                        next();
+                    }
+                });
+            },
+            
             // Column list items
             function(next) {
                 async.each(data.lists, function(list, listDone) {
                     var listData = {
-                        column: colIDs[list.column],
+                        column: reference.columns.map[ list.column ],
                         key: list.key,
                         value: list.value,
                     };
@@ -376,7 +622,24 @@ module.exports = {
                     .exec(function(err, result) {
                         if (err) listDone(err);
                         else {
-                            listDone();
+                            // List item translations
+                            var listID = result.id;
+                            async.each(list.translations, function(trans, transDone) {
+                                var transData = {
+                                    ablist: listID,
+                                    label: trans.label,
+                                    language_code: trans.language_code,
+                                    weight: trans.weight
+                                };
+                                ABListTrans.create(transData)
+                                .exec(function(err) {
+                                    if (err) transDone(err);
+                                    else transDone();
+                                });
+                            }, function(err) {
+                                if (err) listDone(err);
+                                else listDone();
+                            });
                         }
                     });
                 }, function(err) {
@@ -391,14 +654,10 @@ module.exports = {
             function(next) {
                 async.each(data.pages, function(page, pageDone) {
                     var oldPageID = page.id;
-                    var parentPageID = null;
-                    if (page.parent && pageIDs[page.parent]) {
-                        parentPageID = pageIDs[page.parent];
-                    }
                     var pageData = {
                         application: appID,
                         name: page.name,
-                        parent: parentPageID,
+                        parent: page.parent, // will be remapped later
                         permissionActionKey: page.permissionActionKey,
                     };
                     ABPage.create(pageData)
@@ -406,7 +665,7 @@ module.exports = {
                         if (err) pageDone(err);
                         else {
                             var newPageID = result.id;
-                            pageIDs[oldPageID] = newPageID;
+                            reference.pages.map[ oldPageID ] = newPageID;
                             
                             // Page translations
                             async.each(page.translations, function(trans, transDone) {
@@ -439,11 +698,62 @@ module.exports = {
                 });
             },
             
+            // Remap parent page references
+            function(next) {
+                async.eachOf(reference.pages.map, function(pageID, oldPageID, pageDone) {
+                    ABPage.findOne({ id: pageID })
+                    .exec(function(err, result) {
+                        if (err) pageDone(err);
+                        else if (!result) {
+                            pageDone(new Error('page not found: ' + pageID));
+                        }
+                        else if (!result.parent) {
+                            // This is a root page
+                            pageDone();
+                        }
+                        else {
+                            // Remap the parent page ID
+                            result.parent = reference.pages.map[ parseInt(result.parent) ];
+                            ABPage.update(
+                                { id: pageID }, 
+                                { parent: result.parent }
+                            )
+                            .exec(function(err) {
+                                if (err) pageDone(err);
+                                else pageDone();
+                            });
+                        }
+                    });
+                }, function(err) {
+                    if (err) next(err);
+                    else {
+                        next();
+                    }
+                });
+            },
+            
             // Page components
             function(next) {
                 async.each(data.components, function(comp, compDone) {
+                    var oldCompID = comp.id;
+                    if (comp.setting) {
+                        if (comp.component == 'link') {
+                            remap(comp, 'linkTo', 'pages', reference);
+                        } else {
+                            remap(comp, 'linkTo', 'objects', reference);
+                        }
+                        ['object', 'linkedTo'].forEach(function(key) {
+                            remap(comp, key, 'objects', reference);
+                        });
+                        ['pageIds', 'pages', 'viewPage', 'editPage'].forEach(function(key) {
+                            remap(comp, key, 'pages', reference);
+                        });
+                        ['linkedField', 'linkField', 'columns', 'visibleFieldIds'].forEach(function(key) {
+                            remap(comp, key, 'columns', reference);
+                        });
+                    }
                     var compData = {
-                        page: pageIDs[ comp.page ],
+                        page: reference.pages.map[ parseInt(comp.page) ],
                         component: comp.component,
                         weight: comp.weight,
                         setting: comp.setting,
@@ -452,9 +762,51 @@ module.exports = {
                     .exec(function(err, result) {
                         if (err) compDone(err);
                         else {
+                            var newCompID = compData.id
+                            reference.components.map[ oldCompID ] = newCompID;
+                            // Some settings reference other components.
+                            // These will be remapped later.
+                            ['viewId', 'editForm'].forEach(function(key) {
+                                if (compData.setting[key]) {
+                                    componentsNeedRemap.push(newCompID);
+                                }
+                            });
                             compDone();
                         }
                     });
+                }, function(err) {
+                    if (err) next(err);
+                    else {
+                        next();
+                    }
+                });
+            },
+            
+            // Remap component references
+            function(next) {
+                async.each(componentsNeedRemap, function(compID, compDone) {
+                    
+                    ABPageComponent.findOne({ id: compID })
+                    .exec(function(err, result) {
+                        if (err) compDone(err);
+                        else if (!result) {
+                            compDone(new Error('component not found: ' + compID));
+                        }
+                        else {
+                            ['viewId', 'editForm'].forEach(function(key) {
+                                remap(result, key, 'components', reference);
+                            });
+                            ABPageComponent.update(
+                                { id: compID }, 
+                                { setting: result.setting }
+                            )
+                            .exec(function(err) {
+                                if (err) compDone(err);
+                                else compDone();
+                            });
+                        }
+                    });
+                    
                 }, function(err) {
                     if (err) next(err);
                     else {

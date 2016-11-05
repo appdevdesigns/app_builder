@@ -148,7 +148,8 @@ steal(
 														componentInstance = componentManager.getComponent(componentName),
 														editViewId = componentInstance.getEditView().id;
 
-													$$(editViewId).showProgress({ type: 'icon' });
+													if ($$(editViewId).showProgress)
+														$$(editViewId).showProgress({ type: 'icon' });
 
 													componentInstance.editStop();
 
@@ -156,7 +157,8 @@ steal(
 
 													editedComponent.save()
 														.fail(function (err) {
-															$$(editViewId).hideProgress();
+															if ($$(editViewId).hideProgress)
+																$$(editViewId).hideProgress();
 														})
 														.then(function (result) {
 															var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
@@ -167,7 +169,8 @@ steal(
 
 															self.element.trigger(self.options.savedComponentEvent, {});
 
-															$$(editViewId).hideProgress();
+															if ($$(editViewId).hideProgress)
+																$$(editViewId).hideProgress();
 														});
 												}
 											},

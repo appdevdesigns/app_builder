@@ -220,7 +220,7 @@ steal(
 											},
 											onAfterSelect: function (data, prevent) {
 												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
-												if (columnConfig.editor === 'selectivity')
+												if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName))
 													return false;
 
 												this.editCell(data.row, data.column);
@@ -263,25 +263,27 @@ steal(
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													})
 													.then(function (result) {
-														item[editor.column] = state.value;
+														if (item) {
+															item[editor.column] = state.value;
 
-														// if (result.constructor.name === 'Cached' && result.isUnsync())
-														// 	item.isUnsync = true;
+															// if (result.constructor.name === 'Cached' && result.isUnsync())
+															// 	item.isUnsync = true;
 
-														$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+															$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+														}
 
 														// TODO : Message
 
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													});
 											},
-											onColumnResize: function (id, newWidth, oldWidth, user_action) {
-												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
-												if (columnConfig.editor === 'selectivity') {
-													// For calculate/refresh row height
-													$$(self.webixUiId.objectDatatable).render();
-												}
-											},
+											// onColumnResize: function (id, newWidth, oldWidth, user_action) {
+											// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
+											// if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
+											// 	// For calculate/refresh row height
+											// 	$$(self.webixUiId.objectDatatable).render();
+											// }
+											// },
 											onBeforeColumnDrop: function (sourceId, targetId, event) {
 												if (targetId === 'appbuilder_trash') // Remove column
 													return false;
@@ -374,7 +376,12 @@ steal(
 													if (otherRow[result.columnName]) {
 														// Filter difference values
 														otherRow[result.columnName] = otherRow[result.columnName].filter(function (i) {
-															return result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
+															if (typeof result.data == 'undefined' || result.data == null) return false;
+
+															if (result.data.filter)
+																return result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
+															else
+																return i.id != result.data;
 														});
 
 														$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
@@ -384,8 +391,17 @@ steal(
 										}
 
 										// Resize row height
-										if (rowData[result.columnName] instanceof Array)
-											self.controllers.ObjectDataTable.calculateRowHeight(result.rowId, rowData[result.columnName].length);
+										var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: result.rowId, column: result.columnName }),
+											rowHeight = dataFieldsManager.getRowHeight(
+												AD.classes.AppBuilder.currApp,
+												AD.classes.AppBuilder.currApp.currObj,
+												colData,
+												rowData[result.columnName],
+												itemNode
+											);
+
+										if (rowData && (!rowData.$height || rowData.$height < rowHeight))
+											$$(self.webixUiId.objectDatatable).setRowHeight(result.rowId, rowHeight);
 
 										$$(self.webixUiId.objectDatatable).hideProgress();
 									});
@@ -622,11 +638,6 @@ steal(
 
 							self.resetState();
 
-							self.controllers.ObjectDataTable.registerDataTable(
-								AD.classes.AppBuilder.currApp,
-								AD.classes.AppBuilder.currApp.currObj,
-								$$(self.webixUiId.objectDatatable));
-
 							if (!AD.classes.AppBuilder.currApp.currObj) {
 								$$(self.webixUiId.objectDatatable).hideProgress();
 								$$(self.webixUiId.objectDatatable).hide();
@@ -699,6 +710,16 @@ steal(
 											}
 										});
 								},
+								// Register DataTable
+								function (next) {
+									self.controllers.ObjectDataTable.registerDataTable(
+										AD.classes.AppBuilder.currApp,
+										AD.classes.AppBuilder.currApp.currObj,
+										self.data.columns,
+										$$(self.webixUiId.objectDatatable));
+
+									next();
+								},
 								// Bind columns to DataTable
 								function (next) {
 									self.bindColumns(true, true);
@@ -724,18 +745,12 @@ steal(
 								},
 								// Normalize data
 								function (next) {
-									// Get link columns
-									var linkCols = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.setting.linkObject });
-
-									// Get date & datetime columns
-									var dateCols = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; });
-
-									// Populate labels & Convert string to Date object
-									dataHelper.normalizeData(AD.classes.AppBuilder.currApp, objectData, linkCols, dateCols)
+									dataHelper.normalizeData(
+										AD.classes.AppBuilder.currApp,
+										AD.classes.AppBuilder.currApp.currObj.columns,
+										objectData)
 										.fail(next)
 										.then(function (result) {
-											self.controllers.ObjectDataTable.calculateRowHeightToData(result, linkCols);
-
 											objectData = result;
 
 											next();
@@ -815,7 +830,78 @@ steal(
 												else {
 													next();
 												}
-											}
+											},
+											// Create list option of select column
+											function (next) {
+												if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+													var createOptionEvents = [];
+
+													columnInfo.setting.options.forEach(function (opt, index) {
+														createOptionEvents.push(function (createOk) {
+															var list_key = self.Model.ABList.getKey(
+																AD.classes.AppBuilder.currApp.name,
+																AD.classes.AppBuilder.currApp.currObj.name,
+																columnInfo.name);
+
+															self.Model.ABList.create({
+																key: list_key,
+																weight: index + 1,
+																column: updateColumn.id,
+																label: opt.value,
+																value: opt.value
+															})
+																.fail(createOk)
+																.then(function (createdCol) {
+																	// set dataId to option
+																	opt.dataId = createdCol.id;
+																	createOk();
+																});
+														});
+													});
+
+													async.parallel(createOptionEvents, function (err) {
+														if (err) return next(err);
+
+														// Save dataId to options
+														updateColumn.setting.attr('options', columnInfo.setting.options);
+														updateColumn.save()
+															.fail(next)
+															.then(function () {
+																next();
+															});
+													});
+												}
+												else {
+													next();
+												}
+											},
+											// Delete old options list data
+											function (next) {
+												if (columnInfo.removedOptionIds && columnInfo.removedOptionIds.length > 0) {
+													var deleteListEvents = [];
+
+													columnInfo.removedOptionIds.forEach(function (id) {
+														deleteListEvents.push(function (cb) {
+															self.Model.ABList.destroy(id)
+																.fail(cb)
+																.then(function () { cb(); });
+														});
+													});
+
+													AD.util.async.parallel(deleteListEvents, function (err) {
+														if (err) {
+															next(err);
+														}
+														else {
+															delete columnInfo.removedOptionIds;
+															next();
+														}
+													});
+												}
+												else {
+													next();
+												}
+											},
 										], function (err) {
 											if (err) {
 												q.reject(err);
@@ -936,13 +1022,31 @@ steal(
 								.then(function (result) {
 									result.attr(editor.column, state.value, true);
 
+									// Fix update translates of model that have connect object values
+									// By convert connect objects to id
+									result.each(function (val, propName) {
+										var linkedCol = self.data.columns.filter(function (col) { return col.fieldName == 'connectObject' && col.name == propName });
+										if (!linkedCol || linkedCol.length < 1) return;
+
+										var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: editor.row, column: propName });
+
+										var connectValue = dataFieldsManager.getValue(
+											AD.classes.AppBuilder.currApp,
+											AD.classes.AppBuilder.currApp.currObj,
+											linkedCol[0],
+											itemNode
+										);
+
+										result.attr(propName, connectValue);
+									});
+
 									// Update data
 									result.save()
 										.fail(q.reject)
 										.then(function (result) {
-											if (result.translate) result.translate();
-
-											q.resolve(result);
+											dataHelper.normalizeData(AD.classes.AppBuilder.currApp, self.data.columns, result)
+												.fail(q.reject)
+												.then(q.resolve);
 										});
 								});
 
@@ -961,7 +1065,7 @@ steal(
 								newFields = objectModel.Cached.getNewFields();
 
 							newFields.forEach(function (f) {
-								f.isNew = true;
+								f.isNewColumn = true;
 
 								// Add new describe to object model
 								objectModel.describe()[f.name] = f.type;
@@ -993,53 +1097,15 @@ steal(
 
 							if (columnInfo.translate) columnInfo.translate();
 
-							var list_key = null,
-								list_options = [];
+							var list_options = [];
 
 							AD.util.async.series([
-								// Find key of option list
-								function (cb) {
-									if (columnInfo.options && columnInfo.options.length > 0) {
-										list_key = self.Model.ABList.getKey(AD.classes.AppBuilder.currApp.name, AD.classes.AppBuilder.currApp.currObj.name, columnInfo.name);
-										cb();
-									}
-									else {
-										cb();
-									}
-								},
-								// Delete options list data
-								function (cb) {
-									if (columnInfo.removedOptionIds && columnInfo.removedOptionIds.length > 0) {
-										var deleteListEvents = [];
-
-										columnInfo.removedOptionIds.forEach(function (id) {
-											deleteListEvents.push(function (next) {
-												self.Model.ABList.destroy(id)
-													.fail(function (err) { next(err); })
-													.then(function () { next(); });
-											});
-										});
-
-										AD.util.async.parallel(deleteListEvents, function (err) {
-											if (err) {
-												cb(err);
-											}
-											else {
-												delete columnInfo.removedOptionIds;
-												cb();
-											}
-										});
-									}
-									else {
-										cb();
-									}
-								},
 								// Populate options list data
 								function (cb) {
-									if (columnInfo.options && columnInfo.options.length > 0) {
+									if (columnInfo.setting.options && columnInfo.setting.options.length > 0) {
 										var createListEvents = [];
 
-										columnInfo.options.forEach(function (opt, index) {
+										columnInfo.setting.options.forEach(function (opt, index) {
 											createListEvents.push(function (next) {
 
 												if (opt.dataId && !opt.dataId.toString().startsWith('temp')) { // Update
@@ -1062,8 +1128,8 @@ steal(
 														});
 												}
 												else {
-													if (columnInfo.options && columnInfo.options.length > 0) {
-														list_options = $.map(columnInfo.options, function (opt) {
+													if (columnInfo.setting.options && columnInfo.setting.options.length > 0) {
+														list_options = $.map(columnInfo.setting.options, function (opt) {
 															return {
 																id: opt.dataId,
 																value: opt.id,
@@ -1090,7 +1156,7 @@ steal(
 									return;
 								}
 
-								columnInfo.isNew = (columnInfo.id === null || typeof columnInfo.id === 'undefined' || columnInfo.id.toString().startsWith('temp'));
+								columnInfo.isNewColumn = (columnInfo.id === null || typeof columnInfo.id === 'undefined' || columnInfo.id.toString().startsWith('temp'));
 
 								var addColumnHeader = $.extend(columnInfo.setting, {
 									id: columnInfo.name,
@@ -1116,7 +1182,10 @@ steal(
 									});
 								}
 
-								addColumnHeader.width = self.controllers.ObjectDataTable.calculateColumnWidth(AD.classes.AppBuilder.currApp, columnInfo);
+								if (columnInfo.setting.width)
+									addColumnHeader.width = columnInfo.setting.width;
+								else
+									addColumnHeader.width = self.controllers.ObjectDataTable.calculateColumnWidth(AD.classes.AppBuilder.currApp, columnInfo);
 
 								// Update objectList.columns data
 								if (AD.classes.AppBuilder.currApp.currObj) {

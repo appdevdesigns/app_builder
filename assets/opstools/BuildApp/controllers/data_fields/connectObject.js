@@ -61,7 +61,7 @@ steal(
 			connectData.displayData = $.map(selectedItems, function (item) {
 				return {
 					id: item.id,
-					dataLabel: item.text
+					_dataLabel: item.text
 				}
 			});
 
@@ -232,9 +232,9 @@ steal(
 				setting: {
 					appName: $$(componentIds.editView).appName,
 					linkType: $$(componentIds.fieldLinkType).getValue(),
-					linkObject: $$(componentIds.objectList).getSelectedId(false),
+					linkObject: $$(componentIds.objectList).getSelectedId(false), // ABObject.id
 					linkViaType: $$(componentIds.fieldLinkViaType).getValue(),
-					linkVia: $$(componentIds.fieldLinkViaType).linkVia,
+					linkVia: $$(componentIds.fieldLinkViaType).linkVia, // ABColumn.id
 					icon: connectObjectField.icon,
 					editor: 'selectivity',
 					template: '<div class="connect-data-values"></div>',
@@ -243,7 +243,7 @@ steal(
 			};
 		};
 
-		connectObjectField.customDisplay = function (application, object, columnName, rowId, data, itemNode, options) {
+		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 			// Initial selectivity
 			selectivityHelper.renderSelectivity(itemNode, 'connect-data-values', options.readOnly);
 
@@ -253,9 +253,9 @@ steal(
 					selectedItems = data.map(function (cVal) {
 						return {
 							id: cVal.id,
-							text: cVal.dataLabel,
+							text: cVal._dataLabel,
 							object: object,
-							columnName: columnName,
+							columnName: fieldData.name,
 							rowId: rowId
 						};
 					});
@@ -263,9 +263,9 @@ steal(
 				else if (data.id) {
 					selectedItems.push({
 						id: data.id,
-						text: data.dataLabel,
+						text: data._dataLabel,
 						object: object,
-						columnName: columnName,
+						columnName: fieldData.name,
 						rowId: rowId
 					});
 				}
@@ -308,11 +308,37 @@ steal(
 			return false;
 		};
 
-		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
+		connectObjectField.setValue = function (fieldData, itemNode, data) {
 			var selectivityNode = $(itemNode).find('.connect-data-values');
-			return $.map(selectivityHelper.getData(selectivityNode), function (selectedItem) {
-				return selectedItem.id;
-			});
+
+			if (typeof data == 'undefined' || data == null) data = [];
+			else if (!(data instanceof Array)) data = [data];
+
+			selectivityHelper.setData(selectivityNode, data);
+		};
+
+		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
+			var selectivityNode = $(itemNode).find('.connect-data-values'),
+				selectedValues = selectivityHelper.getData(selectivityNode),
+				result;
+
+			if (selectedValues && selectedValues.length > 0)
+				result = $.map(selectedValues, function (selectedItem) { return selectedItem.id; });
+			else
+				result = [];
+
+			if (fieldData.setting.linkType == 'model')
+				result = result[0] || '';
+
+			return result;
+		};
+
+		connectObjectField.getRowHeight = function (fieldData, data) {
+			var dataNumber = data && data.length ? data.length : 1,
+				rowHeight = 36,
+				calHeight = dataNumber * rowHeight;
+
+			return calHeight;
 		};
 
 		// Reset state

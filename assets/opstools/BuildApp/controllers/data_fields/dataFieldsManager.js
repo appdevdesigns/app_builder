@@ -257,12 +257,12 @@ steal(
 			field.populateSettings(application, data);
 		};
 
-		self.customDisplay = function (fieldName, application, object, columnName, rowId, data, itemNode, options) {
+		self.customDisplay = function (fieldName, application, object, fieldData, rowId, data, itemNode, options) {
 			var field = getField(fieldName);
 			options = options || {};
 
 			if (field && field.customDisplay)
-				return field.customDisplay(application, object, columnName, rowId, data, itemNode, options);
+				return field.customDisplay(application, object, fieldData, rowId, data, itemNode, options);
 			else
 				return false;
 		};
@@ -276,11 +276,36 @@ steal(
 				return true;
 		};
 
+		self.hasCustomEdit = function (fieldName) {
+			var field = getField(fieldName);
+
+			if (field && field.customEdit)
+				return true;
+			else
+				return false;
+		};
+
 		self.getValue = function (application, object, fieldData, itemNode) {
 			var field = getField(fieldData.fieldName);
 
 			if (field && field.getValue)
 				return field.getValue(application, object, fieldData, itemNode);
+			else
+				return null;
+		};
+
+		self.setValue = function (fieldData, itemNode, data) {
+			var field = getField(fieldData.fieldName);
+
+			if (field && field.setValue)
+				return field.setValue(fieldData, itemNode, data);
+		};
+
+		self.getRowHeight = function (fieldData, data) {
+			var field = getField(fieldData.fieldName);
+
+			if (field && field.getRowHeight)
+				return field.getRowHeight(fieldData, data);
 			else
 				return null;
 		};

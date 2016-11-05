@@ -10,8 +10,7 @@ steal(
 
 		//Constructor
 		var menuComponent = function (application, viewId, componentId) {
-			var events = {},
-				data = {};
+			var data = {};
 
 			this.viewId = viewId;
 			this.editViewId = componentIds.editMenu;
@@ -57,10 +56,19 @@ steal(
 							// Convert object format (same arrange)
 							var pageMenu = [];
 							pageIds.forEach(function (page) {
-								pageMenu.push({
-									id: page.id,
-									value: pages.filter(function (p) { return p.id == page.id })[0].label
-								});
+								
+								// NOTE: if a page was just deleted, an existing menu might 
+								// still be trying to reference it.  Verify it still exists
+								// before trying to add it:
+								var foundPage = pages.filter(function (p) { return p.id == page.id })[0];
+								if (foundPage && foundPage.label) {
+									pageMenu.push({
+										id: page.id,
+										value: foundPage.label
+									});
+								} else {
+									console.warn('AppBuilder:Menu: tried to reference a Page['+page.id+'] that was not found.');
+								}
 							});
 
 							// Show page menu
@@ -96,7 +104,7 @@ steal(
 
 				return {
 					layout: values.orientation,
-					pageIds: selectedPageIds
+					pageIds: selectedPageIds // [ABPage.id]
 				};
 			};
 

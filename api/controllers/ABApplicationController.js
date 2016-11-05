@@ -143,6 +143,10 @@ module.exports = {
                             objIDs.push( list[i].objects[j].id );
                         }
                     }
+                    objIDs.sort(function(a, b) {
+                        return parseInt(a) - parseInt(b);
+                    });
+                    
                     next();
                     return null;
                 })
