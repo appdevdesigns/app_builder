@@ -551,7 +551,7 @@ module.exports = {
                                 var transData = {
                                     abcolumn: newColID,
                                     label: trans.label,
-                                    language_code: trans.language_code,
+                                    language_code: trans.language_code
                                 };
                                 ABColumnTrans.create(transData)
                                 .exec(function(err, result) {
@@ -589,7 +589,10 @@ module.exports = {
                         }
                         else {
                             remap(result, 'linkVia', 'columns', reference);
-                            ABColumn.update({ id: colID }, result)
+                            ABColumn.update(
+                                { id: colID }, 
+                                { setting: result.setting }
+                            )
                             .exec(function(err) {
                                 if (err) colDone(err);
                                 else {
@@ -620,7 +623,7 @@ module.exports = {
                         if (err) listDone(err);
                         else {
                             // List item translations
-                            var listID = listData.id;
+                            var listID = result.id;
                             async.each(list.translations, function(trans, transDone) {
                                 var transData = {
                                     ablist: listID,
@@ -711,7 +714,10 @@ module.exports = {
                         else {
                             // Remap the parent page ID
                             result.parent = reference.pages.map[ parseInt(result.parent) ];
-                            ABPage.update({ id: pageID }, result)
+                            ABPage.update(
+                                { id: pageID }, 
+                                { parent: result.parent }
+                            )
                             .exec(function(err) {
                                 if (err) pageDone(err);
                                 else pageDone();
@@ -790,7 +796,10 @@ module.exports = {
                             ['viewId', 'editForm'].forEach(function(key) {
                                 remap(result, key, 'components', reference);
                             });
-                            ABPageComponent.update({ id: compID }, result)
+                            ABPageComponent.update(
+                                { id: compID }, 
+                                { setting: result.setting }
+                            )
                             .exec(function(err) {
                                 if (err) compDone(err);
                                 else compDone();
