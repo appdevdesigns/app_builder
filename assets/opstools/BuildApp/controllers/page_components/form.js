@@ -2,7 +2,6 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
-
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
 	function (dataFieldsManager, dataCollectionHelper) {
 		var componentIds = {
@@ -16,6 +15,7 @@ steal(
 			editTitle: 'ab-form-edit-title',
 			editDescription: 'ab-form-edit-description',
 			selectObject: 'ab-form-select-object',
+			selectColCount: 'ab-form-select-column-count',
 			isSaveVisible: 'ab-form-save-visible',
 			isCancelVisible: 'ab-form-cancel-visible',
 
@@ -43,7 +43,8 @@ steal(
 
 				$$(self.viewId).showProgress({ type: "icon" });
 
-				if (modelData === null) { // Create
+				// Create
+				if (modelData === null) {
 					modelData = new dataCollection.AD.getModelObject()();
 					isAdd = true;
 				}
@@ -103,7 +104,7 @@ steal(
 					});
 
 				return q;
-			};
+			}
 
 			function showCustomFields(object, columns, rowId, rowData) {
 				var self = this;
@@ -505,6 +506,7 @@ console.warn('!!! form.setElementHeights() called with no columns.  Why?');
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
+					colCount: propertyValues[componentIds.selectColCount] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
@@ -562,11 +564,22 @@ console.warn('!!! form.setElementHeights() called with no columns.  Why?');
 							};
 						});
 
+						//
+						var colCountOptions = [1, 2, 3];
+						var colCountSource = $$(componentIds.propertyView).getItem(componentIds.selectColCount);
+						colCountSource.options = $.map(colCountOptions, function(o) {
+							return {
+								id: o,
+								value: o
+							};
+						})
+
 						// Set property values
 						var propValues = {};
 						propValues[componentIds.editTitle] = setting.title || '';
 						propValues[componentIds.editDescription] = setting.description || '';
 						propValues[componentIds.selectObject] = setting.object;
+						propValues[componentIds.selectColCount] = setting.colCount;
 						propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
 						propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
 						propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
@@ -686,6 +699,20 @@ console.warn('!!! form.setElementHeights() called with no columns.  Why?');
 								return "[Select]";
 						}
 					},
+					{ label: "Misc", type: "label" },
+					{
+						id: componentIds.selectColCount,
+						name: 'colCount',
+						type: 'richselect',
+						label: 'Column Count',
+						template: function (data, dataValue) {
+							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+							if (selectedData && selectedData.length > 0)
+								return selectedData[0].value;
+							else
+								return "[Select]";
+						}
+					},
 					{ label: "Actions", type: "label" },
 					{
 						id: componentIds.isSaveVisible,
@@ -746,7 +773,11 @@ console.warn('!!! form.setElementHeights() called with no columns.  Why?');
 									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
+								break;
+							case componentIds.selectColCount:
+								break;
 							case componentIds.isSaveVisible:
+								break;
 							case componentIds.isCancelVisible:
 								var setting = componentManager.editInstance.getSettings();
 								componentManager.editInstance.populateSettings(setting, true);
