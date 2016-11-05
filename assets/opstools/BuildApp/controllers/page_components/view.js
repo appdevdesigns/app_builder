@@ -14,13 +14,14 @@ steal(
 			propertyView: 'ab-view-property-view',
 			editTitle: 'ab-view-edit-title',
 			editDescription: 'ab-view-edit-description',
-			selectObject: 'ab-view-select-object'
+			selectObject: 'ab-view-select-object',
+			selectColumns: 'ab-view-select-columns',
 		};
 
 		// Instance functions
 		var viewComponent = function (application, viewId, componentId) {
-			var data = {}
-			objectModels = {};
+			var data = {},
+				objectModels = {};
 
 			// Private functions
 			function clearViews() {
@@ -32,12 +33,12 @@ steal(
 				childViews.forEach(function (child) {
 					$$(self.viewId).removeView(child.config.id);
 				});
-			};
+			}
 
 			function updateData(setting, newData) {
 				var self = this,
 					currModel = newData ? newData : data.dataCollection.AD.currModel(),
-					object = application.objects.filter(function (obj) { return obj.id == setting.object })[0];
+					object = application.objects.filter(function (obj) { return obj.id == setting.object; })[0];
 
 				if (!object) return;
 
@@ -60,7 +61,7 @@ steal(
 					}
 
 					var fieldData = currModel[child.config.fieldName],
-						column = data.columns.filter(function (col) { return col.name == child.config.fieldName });
+						column = data.columns.filter(function (col) { return col.name == child.config.fieldName; });
 
 					if (column && column.length > 0) column = column[0];
 					else return;
@@ -89,7 +90,7 @@ steal(
 				setTimeout(function () { // Wait animate of change page event
 					$$(self.viewId).adjust();
 				}, 700);
-			};
+			}
 
 			this.viewId = viewId;
 			this.editViewId = componentIds.editView;
@@ -130,6 +131,15 @@ steal(
 
 					q.resolve();
 					return q;
+				}
+
+				if (!setting.columns) {
+					if (editable && $$(self.viewId).addView) {
+						$$(self.viewId).addView({
+							view: 'label',
+							label: 'Please select columns'
+						});
+					}
 				}
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
@@ -196,7 +206,8 @@ steal(
 								]
 							};
 
-							if (editable) { // Show/Hide options
+							// Show/Hide options
+							if (editable) {
 								field = {
 									css: 'ab-component-view-edit-field',
 									cols: [
@@ -313,6 +324,7 @@ steal(
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
+					columns: propertyValues[componentIds.selectColumns] || '',
 					visibleFieldIds: visibleFieldIds // [ABColumn.id]
 				};
 
@@ -371,11 +383,22 @@ steal(
 							};
 						});
 
+						// Data source - Column
+						var colOptions = [1, 2, 3],
+							colSource = $$(componentIds.propertyView).getItem(componentIds.selectColumns);
+						colSource.options = $.map(colOptions, function(o) {
+							return {
+								id: o,
+								value: o
+							};
+						});
+
 						// Set property values
 						var propValues = {};
 						propValues[componentIds.editTitle] = setting.title || '';
 						propValues[componentIds.editDescription] = setting.description || '';
 						propValues[componentIds.selectObject] = setting.object;
+						propValues[componentIds.selectColumns] = setting.columns;
 
 						$$(componentIds.propertyView).setValues(propValues);
 						$$(componentIds.propertyView).refresh();
@@ -456,6 +479,18 @@ steal(
 							else
 								return "[Select]";
 						}
+					},
+					{ label: "Settings", type: "label" },
+					{
+						id: componentIds.selectColumns,
+						name: 'columns',
+						type: 'richselect',
+						label: 'Columns',
+						template: function(data, dataValue) {
+							var selectedData = $.grep(data.options, function (opt) { return opt.value == dataValue; });
+							console.log('*****HEY', data, dataValue, selectedData);
+							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
+						}
 					}
 				],
 				on: {
@@ -469,9 +504,16 @@ steal(
 								$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
 								break;
 							case componentIds.editDescription:
+								console.log('***DESCRIPTION', state, editor, ignoreUpdate);
 								$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
+								console.log('***SELECT OBJECT', state, editor, ignoreUpdate);
+								var setting = componentManager.editInstance.getSettings();
+								componentManager.editInstance.populateSettings(setting, true);
+								break;
+							case componentIds.selectColumns:
+								console.log('***SELECT COLUMN', state, editor, ignoreUpdate);
 								var setting = componentManager.editInstance.getSettings();
 								componentManager.editInstance.populateSettings(setting, true);
 								break;
