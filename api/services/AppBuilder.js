@@ -32,7 +32,10 @@ function importDataFields() {
     DataFields = {};
 
     fs.readdirSync(dataFieldPath).forEach(function (file) {
-        DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+                
+        if ( path.parse(file).name != 'dataFieldTemplate') {
+            DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+        }
     });
 }
 
