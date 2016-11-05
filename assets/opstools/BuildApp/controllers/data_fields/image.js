@@ -185,12 +185,6 @@ steal(function () {
 	 */
 	imageDataField.getSettings = function () {
 
-		var useWidth 	= $$('useWidth').getValue();
-		var imageWidth 	= $$('imageWidth').getValue();
-		var useHeight 	= $$('useHeight').getValue();
-		var imageHeight = $$('imageHeight').getValue();
-
-
 		return {
 			fieldName: imageDataField.name,
 			type: imageDataField.type,
@@ -202,10 +196,10 @@ steal(function () {
 
 				filter_type: 'text', // DataTableFilterPopup - filter type
 
-				useWidth:useWidth,
-				imageWidth:imageWidth,
-				useHeight:useHeight,
-				imageHeight:imageHeight
+				useWidth	: $$('useWidth').getValue(),	
+				imageWidth	: $$('imageWidth').getValue(),		
+				useHeight	: $$('useHeight').getValue(),
+				imageHeight	: $$('imageHeight').getValue()
 			}
 		};
 	};
@@ -220,14 +214,11 @@ steal(function () {
 	 */
 	imageDataField.resetState = function () {
 
-		// this should be almost identical to .populateSettings() but with
-		// all values set to proper 'empty' values.
+		$$('useWidth').setValue(0);
+		$$('imageWidth').setValue('');
+		$$('useHeight').setValue(0);
+		$$('imageHeight').setValue('');
 
-		// 
-		// Example: a Text entry and a Checkbox:
-		//
-		// $$(componentIds.textDefault).setValue('');
-		// $$(componentIds.supportMultilingual).setValue(1);
 	};
 
 
