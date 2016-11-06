@@ -58,15 +58,12 @@ steal(function () {
 	 *					->  imageDataField.editDefinition.id
 	 */
 	var componentIds = {
-		editView: 'ab-new-image'
+		editView: 'ab-new-image',
 
-		//
-		// For each property field you want to reference,
-		// create a  [key]: [uniqueKeyReference]   combo here:
-
-		// [field] : 'ab-unique-field-reference',
-		// textDefault: 'ab-new-singleText-default',
-		// supportMultilingual: 'ab-new-singleText-support-multilingual',
+		useWidth	: 'useWidth',
+		imageWidth	: 'imageWidth', 
+		useHeight	: 'useHeight',
+		imageHeight	: 'imageHeight'
 	};
 
 
@@ -85,21 +82,21 @@ steal(function () {
 				cols: [
 					{
 						view:"checkbox", 
-						id:"useWidth", 
+						id:componentIds.useWidth, 
 						labelRight:"width", 
 			            width: 80,
 			            labelWidth: 0,
 						value:1,
 			            click: function() {
 							if (this.getValue())
-								$$('imageWidth').enable()
+								$$(componentIds.imageWidth).enable()
 							else
-								$$('imageWidth').disable();
+								$$(componentIds.imageWidth).disable();
 			            }
 					},
 					{
 						view: 'text',
-			          	id: 'imageWidth'
+			          	id: componentIds.imageWidth
 					}
 				]
 			},
@@ -107,22 +104,22 @@ steal(function () {
 				cols: [
 					{
 						view:"checkbox", 
-						id:"useHeight", 
+						id:componentIds.useHeight, 
 						labelRight:"height", 
 			          	width: 80,
 			            labelWidth: 0,
 						value:1,
 			            click: function() {
 							if (this.getValue())
-								$$('imageHeight').enable()
+								$$(componentIds.imageHeight).enable()
 							else
-								$$('imageHeight').disable();
+								$$(componentIds.imageHeight).disable();
 			            }
 
 					},
 					{
 						view: 'text',
-			          	id: 'imageHeight'
+			          	id: componentIds.imageHeight
 					}
 				]
 			}
@@ -146,15 +143,11 @@ steal(function () {
 	imageDataField.populateSettings = function (application, data) {
 		if (!data.setting) return;
 
-		// Access the Webix components defined in imageDataField.editDefinition 
-		// and set their values according to their references in data.setting
-		// (NOTE: see .getSettings() for when you store the values)
+		$$(componentIds.useWidth).setValue(data.setting.useWidth);
+		$$(componentIds.imageWidth).setValue(data.setting.imageWidth);
+		$$(componentIds.useHeight).setValue(data.setting.useHeight);
+		$$(componentIds.imageHeight).setValue(data.setting.imageHeight);
 
-		// 
-		// Example: a Text entry and a Checkbox:
-		// 
-		// $$(componentIds.textDefault).setValue(data.setting.default);
-		// $$(componentIds.supportMultilingual).setValue(data.setting.supportMultilingual);
 	};
 
 
@@ -196,10 +189,10 @@ steal(function () {
 
 				filter_type: 'text', // DataTableFilterPopup - filter type
 
-				useWidth	: $$('useWidth').getValue(),	
-				imageWidth	: $$('imageWidth').getValue(),		
-				useHeight	: $$('useHeight').getValue(),
-				imageHeight	: $$('imageHeight').getValue()
+				useWidth	: $$(componentIds.useWidth).getValue(),	
+				imageWidth	: $$(componentIds.imageWidth).getValue(),		
+				useHeight	: $$(componentIds.useHeight).getValue(),
+				imageHeight	: $$(componentIds.imageHeight).getValue()
 			}
 		};
 	};
@@ -214,10 +207,10 @@ steal(function () {
 	 */
 	imageDataField.resetState = function () {
 
-		$$('useWidth').setValue(0);
-		$$('imageWidth').setValue('');
-		$$('useHeight').setValue(0);
-		$$('imageHeight').setValue('');
+		$$(componentIds.useWidth).setValue(0);
+		$$(componentIds.imageWidth).setValue('');
+		$$(componentIds.useHeight).setValue(0);
+		$$(componentIds.imageHeight).setValue('');
 
 	};
 
@@ -384,14 +377,30 @@ steal(function () {
 		$container.attr('id', keyField);
 
 
+		var style = '';
+		if (fieldData.setting.useWidth) {
+			style = 'width:'+fieldData.setting.imageWidth+'px;';
+		}
+		if (fieldData.setting.useHeight) {
+			style += 'height:'+fieldData.setting.imageHeight+'px;';
+		}
+		if (style != '') {
+			style = 'style="'+style+'"';
+		}
+
 		// the display of our image:
 		// .image-data-field-icon : for an image icon when no data is present
 		// .image-data-field-image: for an actual <img> of the data.
 		var imgDiv = [
 			'<div class="image-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file-image-o fa-2x"></i></div>',
-			'<div class="image-data-field-image" style="display:none;"><img src=""></div>'
+			'<div class="image-data-field-image" style="display:none;"><img src="" '+style+' ></div>'
 		].join('\n');
 
+
+		var imgHeight = 33;
+		if (fieldData.setting.useHeight){
+			imgHeight = fieldData.setting.imageHeight;
+		}
 
 		// use a webix component for displaying the content.
 		// do this so I can use the progress spinner
@@ -403,9 +412,7 @@ steal(function () {
 			template:imgDiv,
 
 			borderless:true,
-			height:33,
-			autoHeight:true,
-			autoWidth:true
+			height: imgHeight
 		});
 		webix.extend(webixContainer, webix.ProgressBar);
 
@@ -501,6 +508,19 @@ steal(function () {
 
 
 		return true;
+	};
+
+
+// fieldData : ABColumn
+// data : the value for this field
+	imageDataField.getRowHeight = function (fieldData, data) {
+		
+		var height = 36;
+		if (fieldData.setting.useHeight) {
+			height = fieldData.setting.imageHeight;
+		}
+console.log('... getRowHeight():'+height);
+		return height;
 	};
 
 
