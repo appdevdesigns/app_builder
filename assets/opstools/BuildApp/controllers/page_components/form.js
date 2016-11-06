@@ -780,6 +780,8 @@ console.warn('!!! form.setElementHeights() called with no columns.  Why?');
 							case componentIds.selectObject:
 								break;
 							case componentIds.selectColCount:
+								var setting = componentManager.editInstance.getSettings();
+								componentManager.editInstance.populateSettings(setting, true);
 								break;
 							case componentIds.isSaveVisible:
 								break;
