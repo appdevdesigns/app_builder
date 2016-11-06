@@ -34,14 +34,18 @@ steal(function () {
 	//							DataField to the User.
 	//      .includeHeader {bool} allow the AppBuilder to add in the [name] and [label] fields
 	//							for you.  (why reinvent the wheel?)
+	//		.description {string} (optional) The multilingual key for displaying a brief description of
+	// 							this DataField to the User. (usually under the Name, Label)
 	// 
 	var [DataFieldType]DataField = {
-		name: 'string', // unique key to reference this specific DataField
+		name: '[DataFieldType]', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
-// TODO: .menuName needs to be a multilingual Key		
-		menuName: 'Single line text',  
+// TODO: to support a proper multilingual display, 
+//       .menuName & .description  need to be  multilingual Keys
+//       not straight up labels.		
+		menuName: '[DataFieldType]',  
 		includeHeader: true,
 		description: ''
 	};
@@ -56,7 +60,12 @@ steal(function () {
 	 *					->  [DataFieldType]DataField.editDefinition.id
 	 */
 	var componentIds = {
-		editView: 'ab-new-singleText',
+		editView: 'ab-new-image',
+
+		//
+		// For each property field you want to reference,
+		// create a  [key]: [uniqueKeyReference]   combo here:
+
 		// [field] : 'ab-unique-field-reference',
 		// textDefault: 'ab-new-singleText-default',
 		// supportMultilingual: 'ab-new-singleText-support-multilingual',
@@ -190,6 +199,52 @@ steal(function () {
 		// $$(componentIds.textDefault).setValue('');
 		// $$(componentIds.supportMultilingual).setValue(1);
 	};
+
+
+	/*
+	 * @function customDisplay
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method to 
+	 * display the Data Field in the appropriate Grid/Form element.
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {int} rowId   : the .id of the Model instance from which we are 
+	 *						  getting the data for this DataField
+	 * @param {} data       : the value of this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @param {obj} options : provided by the calling UI component (Grid/Form)
+	 *						  .readOnly  {bool}  should we display as readOnly?
+	 * @return {bool}       : True if we have a custom display
+	 *						  False if we don't.  (or just comment this out)
+	 */
+/*
+	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+
+		// for this to work right: 
+		// set your 
+		//     	[DataFieldType]DataField.type =  'someNonStandardValue'
+		// 		[DataFieldType]DataField.getSettings().setting.editor = 'someNonStandardValue'
+		//      [DataFieldType]DataField.getSettings().setting.template = '<div class="classReferenceInTemplate"></div>'
+
+		
+		// // Example Custom Display:
+		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
+		// $(itemNode).find('.classReferenceInTemplate').append('<div id="' + key + '"></div>');		// create a div
+
+		// webix.ui({												// attach a webix component 
+		// 	container: key,										    // to our new div
+		// 	template:'<img src="'+data+'" style="width:'+fieldData.setting.width+'px;height:'+fieldData.setting.height+'px;">'
+		// })
+
+		return true;
+	};
+*/
+
 
 	return [DataFieldType]DataField;
 });
