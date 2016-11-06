@@ -311,7 +311,7 @@ steal(
 		};
 
 		self.validate = function (fieldData, value) {
-			if (value == null || typeof value == 'undefined' || value.length < 1) return true;
+			//if (value == null || typeof value == 'undefined' || value.length < 1) return true;
 
 			var field = getField(fieldData.fieldName);
 
