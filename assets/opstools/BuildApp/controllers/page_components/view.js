@@ -2,8 +2,9 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
+	'opstools/BuildApp/controllers/utils/ColumnizerHelper.js',
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
-	function (dataFieldsManager, dataCollectionHelper) {
+	function (dataFieldsManager, dataCollectionHelper, columnizerHelper) {
 		var componentIds = {
 			editViewLayout: 'ab-view-edit-view',
 			editView: 'ab-view-edit-view-detail',
@@ -38,12 +39,7 @@ steal(
 
 			// Return an array the view's column items
 			function getColumns() {
-				// The columns are nested within groups, so flatten the two-dimensional hierarchy into a one-dimensional
-				// array of column views
-				var columnView = $$(componentIds.columns);
-				return $.map(columnView ? columnView.getChildViews() : [], function (group) {
-					return group.getChildViews();
-				});
+				return columnizerHelper.getColumns($$(componentIds.columns));
 			}
 
 			function updateData(setting, newData) {
@@ -244,17 +240,10 @@ steal(
 						});
 
 						var columnCount = parseInt(setting.columns, 10) || 1;
-						var columnLength = columns.length / columnCount;
+						var columnView = columnizerHelper.columnize(columns, columnCount);
+						columnView.id = componentIds.columns;
 						$$(self.viewId).removeView(componentIds.columns);
-						$$(self.viewId).addView({
-							id: componentIds.columns,
-							view: 'layout',
-							cols: $.map(new Array(columnCount), function (_, index) {
-								return {
-									rows: columns.slice(Math.ceil(index * columnLength), Math.ceil((index + 1) * columnLength))
-								};
-							}),
-						});
+						$$(self.viewId).addView(columnView);
 
 						// Title
 						if (editable) {

@@ -2,14 +2,16 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
+	'opstools/BuildApp/controllers/utils/ColumnizerHelper.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
-	function (dataFieldsManager, dataCollectionHelper) {
+	function (dataFieldsManager, dataCollectionHelper, columnizerHelper) {
 		var componentIds = {
 			editView: 'ab-form-edit-view',
 			editForm: 'ab-form-edit-mode',
 
 			title: 'ab-form-title',
 			description: 'ab-form-description',
+			columns: 'ab-form-columns',
 
 			propertyView: 'ab-form-property-view',
 			editTitle: 'ab-form-edit-title',
@@ -121,8 +123,8 @@ steal(
 			}
 
 			function getChildView(columnName) {
-				var childView = $$(this.viewId).getChildViews().find(function (view) {
-					return view.config && view.config.name == columnName
+				var childView = columnizerHelper.getColumns($$(componentIds.columns)).find(function (view) {
+					return view.config && view.config.name == columnName;
 				});
 
 				return childView;
@@ -339,7 +341,10 @@ console.warn('!!! form.setElementHeights() called with no columns.  Why?');
 					},
 					function (next) {
 						// Redraw
-						webix.ui(elementViews, $$(self.viewId));
+						var columnCount = parseInt(setting.colCount, 10) || 1;
+						var columnView = columnizerHelper.columnize(elementViews, columnCount);
+						columnView.id = componentIds.columns;
+						webix.ui([columnView], $$(self.viewId));
 
 						// Title
 						if (editable) {
