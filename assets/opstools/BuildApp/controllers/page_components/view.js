@@ -10,6 +10,7 @@ steal(
 
 			title: 'ab-view-title',
 			description: 'ab-view-description',
+			columns: 'ab-view-columns',
 
 			propertyView: 'ab-view-property-view',
 			editTitle: 'ab-view-edit-title',
@@ -31,7 +32,17 @@ steal(
 					childViews = $$(this.viewId).getChildViews().slice();
 
 				childViews.forEach(function (child) {
-					$$(self.viewId).removeView(child.config.id);
+					$$(self.viewId).removeView(child);
+				});
+			}
+
+			// Return an array the view's column items
+			function getColumns() {
+				// The columns are nested within groups, so flatten the two-dimensional hierarchy into a one-dimensional
+				// array of column views
+				var columnView = $$(componentIds.columns);
+				return $.map(columnView ? columnView.getChildViews() : [], function (group) {
+					return group.getChildViews();
 				});
 			}
 
@@ -45,7 +56,7 @@ steal(
 				currModel = currModel && currModel.attr ? currModel.attr() : currModel;
 				data.currDataId = currModel ? currModel.id : null;
 
-				$$(self.viewId).getChildViews().forEach(function (child) {
+				getColumns().forEach(function (child) {
 					if (!child.config.fieldName) return;
 
 					var displayField = child.getChildViews()[1];
@@ -167,7 +178,7 @@ steal(
 
 						clearViews.call(self);
 
-						result.forEach(function (col) {
+						var columns = $.map(result, function (col) {
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 							if (!editable && !isVisible) return; // Hidden
 
@@ -229,9 +240,21 @@ steal(
 								};
 							}
 
-							$$(self.viewId).addView(field);
+							return field;
 						});
 
+						var columnCount = parseInt(setting.columns, 10) || 1;
+						var columnLength = columns.length / columnCount;
+						$$(self.viewId).removeView(componentIds.columns);
+						$$(self.viewId).addView({
+							id: componentIds.columns,
+							view: 'layout',
+							cols: $.map(new Array(columnCount), function (_, index) {
+								return {
+									rows: columns.slice(Math.ceil(index * columnLength), Math.ceil((index + 1) * columnLength))
+								};
+							}),
+						});
 
 						// Title
 						if (editable) {
@@ -310,13 +333,12 @@ steal(
 				var propertyValues = $$(componentIds.propertyView).getValues(),
 					visibleFieldIds = [];
 
-				// Find visibleFieldIds
-				$$(componentIds.editView).getChildViews().forEach(function (child) {
-					if (child.config.css === 'ab-component-view-edit-field') { // Get fields
-						if (child.getChildViews()[0].getValue() === 'show') { // Get visible field
-							var columnId = child.getChildViews()[0].config.dataId;
-							visibleFieldIds.push(columnId);
-						}
+				// From the columns array, generate an array of the ids of all visible columns
+				getColumns().forEach(function (column) {
+					var visibility = column.getChildViews()[0];
+					if (visibility.getValue() === 'show') { // Get visible field
+						var columnId = visibility.config.dataId;
+						visibleFieldIds.push(columnId);
 					}
 				});
 
@@ -514,6 +536,10 @@ steal(
 								break;
 							case componentIds.selectColumns:
 								console.log('***SELECT COLUMN', state, editor, ignoreUpdate);
+								var setting = componentManager.editInstance.getSettings();
+								componentManager.editInstance.populateSettings(setting, true);
+								break;
+							case componentIds.selectColumns:
 								var setting = componentManager.editInstance.getSettings();
 								componentManager.editInstance.populateSettings(setting, true);
 								break;
