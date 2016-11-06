@@ -376,7 +376,12 @@ steal(
 													if (otherRow[result.columnName]) {
 														// Filter difference values
 														otherRow[result.columnName] = otherRow[result.columnName].filter(function (i) {
-															return result.data && result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
+															if (typeof result.data == 'undefined' || result.data == null) return false;
+
+															if (result.data.filter)
+																return result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
+															else
+																return i.id != result.data;
 														});
 
 														$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
