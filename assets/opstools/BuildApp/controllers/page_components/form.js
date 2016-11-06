@@ -130,10 +130,8 @@ steal(
 			function setElementHeights(columns, currModel) {
 				var self = this;
 
-				if (!columns) {
-console.warn('!!! form.setElementHeights() called with no columns.  Why?');
-					return;
-				}
+				if (!columns || columns.length < 1) return;
+
 
 				columns.forEach(function (col) {
 					var childView = getChildView.call(self, col.name);
