@@ -130,6 +130,9 @@ steal(
 			function setElementHeights(columns, currModel) {
 				var self = this;
 
+				if (!columns || columns.length < 1) return;
+
+
 				columns.forEach(function (col) {
 					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
