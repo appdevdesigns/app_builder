@@ -35,123 +35,117 @@ steal(function () {
 	// Edit definition
 	numberDataField.editDefinition = {
 		id: componentIds.editView,
-		rows: [{
-			cols: [
-				{
-					view: "checkbox",
-					id: componentIds.allowRequired,
-					label: "required",
-					inputWidth: 130,
-					labelWidth: 100
-				},
-				{
-					view: "checkbox",
-					id: componentIds.mustBeUnique,
-					label: "Must be unique",
-					inputWidth: 180,
-					labelWidth: 150
-				}
-			]
-		},
-			{
-				cols: [
-					{
-						view: "text",
-						label: "Default Value",
-						labelWidth: "100",
-						labelAlign: "right",
-						id: componentIds.numberDefault,
-						//placeholder: 'Default number'
-					}
-				]
-			},
+		rows: [
 			{
 				cols: [
 					{
 						view: "checkbox",
-						id: componentIds.allowDecimal,
-						labelRight: "Allow decimal numbers",
+						id: componentIds.allowRequired,
+						labelRight: "Required",
+						inputWidth: 130,
+						labelWidth: 0
+					},
+					{
+						view: "checkbox",
+						id: componentIds.mustBeUnique,
+						labelRight: "Must be unique",
+						inputWidth: 180,
 						labelWidth: 0
 					}
 				]
 			},
 			{
+				view: "text",
+				label: "Default Value",
+				labelWidth: "100",
+				id: componentIds.numberDefault,
+				placeholder: 'Default number'
+			},
+			{
 				cols: [
 					{
-						view: "combo",
+						view: "richselect",
 						id: componentIds.typeDecimals,
 						label: "Decimals",
-						value: 1,
+						value: 'none',
 						options: [
-							{ id: 1, value: "None" },
-							{ id: 2, value: "Period" },
-							{ id: 3, value: "Comma" }
-						]
+							{ id: 'none', value: "None" },
+							{ id: 'period', value: "Period" },
+							{ id: 'comma', value: "Comma" }
+						],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								if (newValue == 'none') {
+									$$(componentIds.typeDecimalPlaces).disable();
+									$$(componentIds.typeRounding).disable();
+									$$(componentIds.typeThousands).disable();
+									$$(componentIds.typeFormat).disable();
+								}
+								else {
+									$$(componentIds.typeDecimalPlaces).enable();
+									$$(componentIds.typeRounding).enable();
+									$$(componentIds.typeThousands).enable();
+									$$(componentIds.typeFormat).enable();
+								}
+							}
+						}
 					},
 					{
-						view: "combo",
+						view: "richselect",
 						id: componentIds.typeDecimalPlaces,
-						label: "Decimal places",
-						value: 1,
+						label: "Places",
+						value: 'none',
+						disabled: true,
 						options: [
-							{ id: 1, value: "0" },
-							{ id: 2, value: "1" },
-							{ id: 3, value: "2" },
-							{ id: 4, value: "3" },
-							{ id: 5, value: "4" },
-							{ id: 6, value: "5" },
-							{ id: 7, value: "10" }
+							{ id: 'none', value: "0" },
+							{ id: 1, value: "1" },
+							{ id: 2, value: "2" },
+							{ id: 3, value: "3" },
+							{ id: 4, value: "4" },
+							{ id: 5, value: "5" },
+							{ id: 10, value: "10" }
 						]
 					}
 				]
 			},
 			{
-				cols: [
-					{
-						view: "radio",
-						id: componentIds.typeRounding,
-						label: "Rounding",
-						value: 1,
-						vertical: true,
-						options: [
-							{ id: 1, value: "Default" },
-							{ id: 2, value: "Round Up" },
-							{ id: 3, value: "Round Down" }
-						]
-					}
+				view: "radio",
+				id: componentIds.typeRounding,
+				label: "Rounding",
+				value: 'none',
+				vertical: true,
+				disabled: true,
+				options: [
+					{ id: 'none', value: "Default" },
+					{ id: 'roundUp', value: "Round Up" },
+					{ id: 'roundDown', value: "Round Down" }
 				]
 			},
 			{
-				cols: [
-					{
-						view: "radio",
-						id: componentIds.typeThousands,
-						label: "Rounding",
-						value: 1,
-						vertical: true,
-						options: [
-							{ id: 1, value: "None" },
-							{ id: 2, value: "Comma" },
-							{ id: 3, value: "Period" },
-							{ id: 4, value: "Space" }
-						]
-					}
+				view: "radio",
+				id: componentIds.typeThousands,
+				label: "Rounding",
+				value: 'none',
+				vertical: true,
+				disabled: true,
+				options: [
+					{ id: 'none', value: "None" },
+					{ id: 'comma', value: "Comma" },
+					{ id: 'period', value: "Period" },
+					{ id: 'space', value: "Space" }
 				]
 			},
 			{
-				cols: [
-					{
-						view: "combo",
-						id: componentIds.typeFormat,
-						label: "Format",
-						value: 1,
-						options: [
-							{ id: 1, value: "None" },
-							{ id: 2, value: "$" },
-							{ id: 3, value: "B" },
-							{ id: 3, value: "%" }
-						]
-					}
+				view: "combo",
+				id: componentIds.typeFormat,
+				label: "Format",
+				value: 'none',
+				disabled: true,
+				options: [
+					{ id: 'none', value: "None" },
+					{ id: 'dollar', value: "$" },
+					{ id: 'pound', value: "£" },
+					{ id: 'percent', value: "%" }
 				]
 			}
 		]
@@ -160,16 +154,12 @@ steal(function () {
 	numberDataField.populateSettings = function (application, data) {
 		if (!data.type || !data.setting) return;
 
-		$$(componentIds.allowDecimal).setValue(data.type == 'float');
-		$$(componentIds.allowDecimal).disable();
-
 		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
 		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
 		$$(componentIds.allowRequired).setValue(data.setting.allowRequired);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
-
 
 		if (data.setting.default)
 			$$(componentIds.numberDefault).setValue(data.setting.default);
@@ -179,7 +169,7 @@ steal(function () {
 		var type = 'integer',
 			format = 'intFormat';
 
-		if ($$(componentIds.allowDecimal).getValue()) {
+		if ($$(componentIds.typeDecimals).getValue() !== 'none') {
 			type = 'float';
 			format = 'numberFormat';
 		}
@@ -202,8 +192,7 @@ steal(function () {
 				icon: numberDataField.icon,
 				editor: 'number',
 				filter_type: 'number',
-				template: '<div class="nember-format-show"></div>',
-				//format: format,
+				template: '<div class="number-format-show"></div>',
 				default: $$(componentIds.numberDefault).getValue()
 			}
 		};
@@ -212,57 +201,56 @@ steal(function () {
 	numberDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 
 		var decimalSizeNum = 0;
-		console.log(fieldData.setting.typeDecimalPlaces);
-		if (fieldData.setting.typeDecimalPlaces != undefined) {
-			if (fieldData.setting.typeDecimalPlaces == 1) {
-				decimalSizeNum = 0;
-			}
-			else {
-				decimalSizeNum = fieldData.setting.typeDecimalPlacesText;
-			}
-
+		if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
+			decimalSizeNum = fieldData.setting.typeDecimalPlacesText;
 		}
 
 		var decimalDelimiters = ".";
 		if (fieldData.setting.typeDecimals != undefined) {
-			if (fieldData.setting.typeDecimals == 2) {
-				decimalDelimiters = ".";
-			}
-			else if (fieldData.setting.typeDecimals == 3) {
-				decimalDelimiters = ",";
+			switch (fieldData.setting.typeDecimals) {
+				case 'period':
+					decimalDelimiters = ".";
+					break;
+				case 'comma':
+					decimalDelimiters = ",";
+					break;
 			}
 		}
 
 		var groupDelimiters = "";
 		if (fieldData.setting.typeThousands != undefined) {
-			if (fieldData.setting.typeThousands == 2) {
-				groupDelimiters = ",";
-			}
-			else if (fieldData.setting.typeThousands == 3) {
-				groupDelimiters = ".";
-			}
-			else if (fieldData.setting.typeThousands == 4) {
-				groupDelimiters = " ";
+			switch (fieldData.setting.typeThousands) {
+				case 'comma':
+					groupDelimiters = ",";
+					break;
+				case 'period':
+					groupDelimiters = ".";
+					break;
+				case 'space':
+					groupDelimiters = " ";
+					break;
 			}
 		}
 
 		var sum = data;
 		if (fieldData.setting.typeRounding != undefined) {
-			if (fieldData.setting.typeRounding == 2) {
-				var num = data;
-				var precision = -decimalSizeNum;
-				var div = Math.pow(10, precision);
-				sum = Math.ceil(num / div) * div;
-			}
-			else if (fieldData.setting.typeRounding == 3) {
-				var num = data;
-				var precision = -decimalSizeNum;
-				var div = Math.pow(10, precision);
-				sum = Math.floor(num / div) * div;
+			switch (fieldData.setting.typeRounding) {
+				case 'roundUp':
+					var num = data;
+					var precision = -decimalSizeNum;
+					var div = Math.pow(10, precision);
+					sum = Math.ceil(num / div) * div;
+					break;
+				case 'roundDown':
+					var num = data;
+					var precision = -decimalSizeNum;
+					var div = Math.pow(10, precision);
+					sum = Math.floor(num / div) * div;
+					break;
 			}
 		}
 
-		var string1 = webix.Number.format(sum, {
+		var numberFormat = webix.Number.format(sum, {
 			groupDelimiter: groupDelimiters,
 			groupSize: 3,
 			decimalDelimiter: decimalDelimiters,
@@ -270,66 +258,47 @@ steal(function () {
 		});
 
 		if (fieldData.setting.typeFormat != undefined) {
-
-			if (fieldData.setting.typeFormat == 2) {
-				string1 = fieldData.setting.typeFormatText + "" + string1;
+			switch (fieldData.setting.typeFormat) {
+				case 'dollar':
+					numberFormat = fieldData.setting.typeFormatText + "" + numberFormat;
+					break;
+				case 'pound':
+					numberFormat = numberFormat + "" + fieldData.setting.typeFormatText;
+					break;
 			}
-			else if (fieldData.setting.typeFormat == 3) {
-				string1 = string1 + "" + fieldData.setting.typeFormatText;
-			}
-
 		}
 
-
-
-
-		var $container = $(itemNode).find('.nember-format-show');
-
-		// clear contents
-		$container.html(string1);
-
-
+		var container = $(itemNode).find('.number-format-show');
+		container.html(numberFormat);
 
 		return true;
 	};
 
 	numberDataField.validate = function (fieldData, value) {
 
-		if (fieldData.setting.allowRequired != undefined) {
-			if (fieldData.setting.allowRequired == 1) {
-				if (value == "") {
-					webix.alert({
-						title: "This value is invalid",
-						text: "This column Required number",
-						ok: "OK"
-					});
-					return false;
-				}
-			}
-
+		if (fieldData.setting.allowRequired == 1 && value == "") {
+			webix.alert({
+				title: "This value is invalid",
+				text: "This column Required number",
+				ok: "OK"
+			});
+			return false;
 		}
 
-
-		if (!isNaN(parseFloat(value)) && isFinite(value)) {
-
-			if (fieldData.type == 'integer' && isFloat(value)) {
-				webix.alert({
-					title: "This value is invalid",
-					text: "This column disallows decimal number",
-					ok: "OK"
-				});
-				return false;
-			}
-			else {
-				return true;
-			}
+		if (!isNaN(parseFloat(value)) && isFinite(value) && fieldData.type == 'integer' && isFloat(value)) {
+			webix.alert({
+				title: "This value is invalid",
+				text: "This column disallows decimal number",
+				ok: "OK"
+			});
+			return false;
 		}
 
+		return true;
 	};
 
 	numberDataField.resetState = function () {
-		$$(componentIds.allowDecimal).setValue(false);
-		$$(componentIds.allowDecimal).enable();
+		// TODO
 		$$(componentIds.numberDefault).setValue('');
 	};
 
