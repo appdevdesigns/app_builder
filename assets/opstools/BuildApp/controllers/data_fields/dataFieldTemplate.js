@@ -246,5 +246,28 @@ steal(function () {
 */
 
 
+	/*
+	 * @function getRowHeight
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method to 
+	 * determine what the row height should be for this Data Field in a grid/form.
+	 *
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {} data         : the value of this DataField
+	 * @return {integer}      : the {integer} value for the height of this field.
+	 */
+/*
+	[DataFieldType]DataField.getRowHeight = function (fieldData, data) {
+		
+		var height = 36;
+		if (fieldData.setting.useHeight) {
+			height = parseInt(fieldData.setting.imageHeight);
+		}
+		return height;
+	};
+*/
+
 	return [DataFieldType]DataField;
 });

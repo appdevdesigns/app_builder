@@ -178,10 +178,7 @@ steal(function () {
 	 */
 	imageDataField.getSettings = function () {
 
-		return {
-			fieldName: imageDataField.name,
-			type: imageDataField.type,
-			setting: {
+		var setting = {
 				icon: imageDataField.icon,
 
 				editor: 'imageDataField',
@@ -194,6 +191,15 @@ steal(function () {
 				useHeight	: $$(componentIds.useHeight).getValue(),
 				imageHeight	: $$(componentIds.imageHeight).getValue()
 			}
+
+		if ($$(componentIds.useWidth).getValue()) { 
+			setting.width = $$(componentIds.imageWidth).getValue();
+		}
+
+		return {
+			fieldName: imageDataField.name,
+			type: imageDataField.type,
+			setting: setting
 		};
 	};
 
@@ -237,9 +243,9 @@ steal(function () {
 	 *						  False if we don't.  (or just comment this out)
 	 */
 	imageDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-/*
-// This is used for the tutorial
 
+// This is used for the tutorial
+/*
 		var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
 
 
@@ -248,30 +254,46 @@ steal(function () {
 
 		// clear contents
 		$container.html('');
-		$container.attr('id', keyField);			// <--- add the keyField as the #id
+		$container.attr('id', keyField);
+
+
+		var style = '';
+		if (fieldData.setting.useWidth) {
+			style = 'width:'+fieldData.setting.imageWidth+'px;';
+		}
+		if (fieldData.setting.useHeight) {
+			style += 'height:'+fieldData.setting.imageHeight+'px;';
+		}
+		if (style != '') {
+			style = 'style="'+style+'"';
+		}
 
 		// the display of our image:
 		// .image-data-field-icon : for an image icon when no data is present
 		// .image-data-field-image: for an actual <img> of the data.
 		var imgDiv = [
 			'<div class="image-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file-image-o fa-2x"></i></div>',
-			'<div class="image-data-field-image" style="display:none;"><img src=""></div>'
+			'<div class="image-data-field-image" style="display:none;"><img src="" '+style+' ></div>'
 		].join('\n');
 
+
+
+		var imgHeight = 33;										// <-- calculate the height
+		if (fieldData.setting.useHeight){
+			imgHeight = parseInt(fieldData.setting.imageHeight);
+		}
 
 		// use a webix component for displaying the content.
 		// do this so I can use the progress spinner
 		var webixContainer = webix.ui({
 			view:'template',
 
-			container:keyField,			// <--- must match the $container.id
+			container:keyField,
 			
-			template:imgDiv,			// <--- here is our data now
+			template:imgDiv,
 
 			borderless:true,
-			height:33,
-			autoHeight:true,
-			autoWidth:true
+			height: imgHeight									// <-- use it here
 		});
 		webix.extend(webixContainer, webix.ProgressBar);
 
@@ -380,6 +402,7 @@ steal(function () {
 		var style = '';
 		if (fieldData.setting.useWidth) {
 			style = 'width:'+fieldData.setting.imageWidth+'px;';
+			fieldData.setting.width = fieldData.setting.imageWidth;
 		}
 		if (fieldData.setting.useHeight) {
 			style += 'height:'+fieldData.setting.imageHeight+'px;';
@@ -506,20 +529,29 @@ steal(function () {
 		});
 		uploader.addDropZone(webixContainer.$view);
 
-
 		return true;
+
 	};
 
 
-// fieldData : ABColumn
-// data : the value for this field
+	/*
+	 * @function getRowHeight
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method to 
+	 * determine what the row height should be for this Data Field in a grid/form.
+	 *
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {} data         : the value of this DataField
+	 * @return {integer}      : the {integer} value for the height of this field.
+	 */
 	imageDataField.getRowHeight = function (fieldData, data) {
 		
 		var height = 36;
 		if (fieldData.setting.useHeight) {
-			height = fieldData.setting.imageHeight;
+			height = parseInt(fieldData.setting.imageHeight);
 		}
-console.log('... getRowHeight():'+height);
 		return height;
 	};
 

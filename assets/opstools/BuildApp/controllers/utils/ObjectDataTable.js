@@ -147,7 +147,14 @@ steal(
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 
-								if (!col.setting.width)
+								if (col.setting.width) {
+									var colWidth = parseInt(col.setting.width);
+									if (typeof colWidth === 'number')
+										col.setting.width = colWidth;
+									else
+										col.setting.width = self.calculateColumnWidth(application, col);
+								}
+								else
 									col.setting.width = self.calculateColumnWidth(application, col);
 
 								if (col.setting.format && webix.i18n[col.setting.format])
