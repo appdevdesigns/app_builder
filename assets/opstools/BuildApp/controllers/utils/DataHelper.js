@@ -92,11 +92,13 @@ steal(
 														var linkVal = linkedData.filter(function (link) { return link.id == val.id });
 														if (!linkVal[0]) return;
 
+														var dataLabel = linkVal[0].attr();
+
 														// FIX : CANjs attr to set nested value
 														if (row.attr)
-															row.attr(linkCol.name + '.' + index, linkVal[0].attr());
+															row.attr(linkCol.name + '.' + index, dataLabel);
 														else
-															row[linkCol.name + '.' + index] = linkVal[0].attr();
+															row[linkCol.name + '.' + index] = dataLabel;
 													}
 												});
 											}
@@ -104,10 +106,12 @@ steal(
 												var linkVal = linkedData.filter(function (link) { return link.id == row[linkCol.name].id });
 												if (!linkVal[0]) return next();
 
+												var dataLabel = linkVal[0].attr();
+
 												if (row.attr)
-													row.attr(linkCol.name, linkVal[0].attr());
+													row.attr(linkCol.name, dataLabel);
 												else
-													row[linkCol.name] = linkVal[0].attr();
+													row[linkCol.name] = dataLabel;
 											}
 
 											next();

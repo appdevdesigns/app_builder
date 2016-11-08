@@ -34,9 +34,9 @@ steal(
 				data.fieldName = field.name;
 				$(self).trigger('update', data);
 			});
-// TODO:			
-// possible way to have each field able to reference the DataFieldManager:
-// field.DataFieldManager = self;
+			// TODO:			
+			// possible way to have each field able to reference the DataFieldManager:
+			// field.DataFieldManager = self;
 		});
 
 		/**
@@ -328,14 +328,19 @@ steal(
 		self.getRowHeight = function (fieldData, data) {
 			var field = getField(fieldData.fieldName);
 
-			if (field && field.getRowHeight)
-				return field.getRowHeight(fieldData, data);
+			if (field && field.getRowHeight) {
+				var rowHeight = parseInt(field.getRowHeight(fieldData, data));
+				if (typeof rowHeight === "number")
+					return rowHeight;
+				else
+					return null
+			}
 			else
 				return null;
 		};
 
 		self.validate = function (fieldData, value) {
-			if (value == null || typeof value == 'undefined' || value.length < 1) return true;
+			//if (value == null || typeof value == 'undefined' || value.length < 1) return true;
 
 			var field = getField(fieldData.fieldName);
 
