@@ -268,10 +268,19 @@ steal(function () {
 
 	numberDataField.validate = function (fieldData, value) {
 
-		if (fieldData.setting.allowRequired == 1 && value == "") {
+		if (fieldData.setting.allowRequired == 1 && (value == "" || value == undefined || value == null)) {
+			webix.alert({
+				title: "Required",
+				text: "This column requires number value",
+				ok: "OK"
+			});
+			return false;
+		}
+
+		if (!new RegExp('^[0-9.]*$').test(value)) {
 			webix.alert({
 				title: "This value is invalid",
-				text: "This column Required number",
+				text: "Please enter number",
 				ok: "OK"
 			});
 			return false;
