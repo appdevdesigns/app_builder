@@ -47,6 +47,11 @@
 .ab-main-container .ab-app-list-descriptionwebix_hs_right td.webix_last {
 	border-right-width: 1px !important;
 }
+/* No padding/margin column */
+.ab-column-no-padding div {
+	padding: 0px !important;
+	margin: 0px !important;
+}
 
 /* Webix selected item */
 .webix_list_item.webix_selected,
@@ -54,10 +59,6 @@
 .webix_column>div.webix_column_select,
 .webix_column>div.webix_row_select {
 	background-color: #3498db !important;
-}
-.ab-column-no-padding div {
-	padding: 0px !important;
-	margin: 0px !important;
 }
 
 /* Webix message */
