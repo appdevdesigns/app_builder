@@ -15,7 +15,10 @@ module.exports = {
 		var appId = req.param('id');
 
 		if (!appId) {
-			res.AD.error('Application id is invalid.');
+			var error = ADCore.error.fromKey('E_INVALIDPARAMS');
+			error.invalidParam = 'id';
+			error.expectedURLFormat = 'get /app_builder/:id/role';
+			res.AD.error(error);
 			return;
 		}
 
@@ -72,7 +75,10 @@ module.exports = {
 		var appId = req.param('id');
 
 		if (!appId) {
-			res.AD.error('Application id is invalid.');
+			var error = ADCore.error.fromKey('E_INVALIDPARAMS');
+			error.invalidParam = 'id';
+			error.expectedURLFormat = 'post /app_builder/:id/role';
+			res.AD.error(error);
 			return;
 		}
 
@@ -131,7 +137,10 @@ module.exports = {
 		var appId = req.param('id');
 
 		if (!appId) {
-			res.AD.error('Role id is invalid.');
+			var error = ADCore.error.fromKey('E_INVALIDPARAMS');
+			error.invalidParam = 'id';
+			error.expectedURLFormat = 'delete /app_builder/:id/role';
+			res.AD.error(error);
 			return;
 		}
 
@@ -180,7 +189,10 @@ module.exports = {
 			roleIds = req.body.roles || [];
 
 		if (!appId) {
-			res.AD.error('Bad request.');
+			var error = ADCore.error.fromKey('E_INVALIDPARAMS');
+			error.invalidParam = 'id';
+			error.expectedURLFormat = '/app_builder/:id/role/assign';
+			res.AD.error(error);
 			return;
 		}
 
