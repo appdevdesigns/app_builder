@@ -55,6 +55,10 @@
 .webix_column>div.webix_row_select {
 	background-color: #3498db !important;
 }
+.ab-column-no-padding div {
+	padding: 0px !important;
+	margin: 0px !important;
+}
 
 /* Webix message */
 .webix_success {
