@@ -3,7 +3,7 @@ steal(
 	"opstools/BuildApp/controllers/data_fields/number.js",
 	function (target) {
 		//Define the unit tests
-		describe('testing data field: number ', function () {
+		describe('testing data field: number', function () {
 
 			var divID = "testNumberDataField";
 			var application, object, rowId, options;
@@ -52,6 +52,125 @@ steal(
 				assert.equal(expectedValue, result);
 			});
 
+			it('should show integer with dollar format', function () {
+				var expectedValue = "$ 654321";
+				var data = 654321;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'none',
+						typeDecimalPlaces: 'none',
+						typeThousands: 'none',
+						typeRounding: 'none',
+						typeFormat: 'dollar'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
+			it('should show integer with pound format', function () {
+				var expectedValue = "£ 654321";
+				var data = 654321;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'none',
+						typeDecimalPlaces: 'none',
+						typeThousands: 'none',
+						typeRounding: 'none',
+						typeFormat: 'pound'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
+			it('should show integer with euro(before) format', function () {
+				var expectedValue = "€ 654321";
+				var data = 654321;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'none',
+						typeDecimalPlaces: 'none',
+						typeThousands: 'none',
+						typeRounding: 'none',
+						typeFormat: 'euroBefore'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
+			it('should show integer with euro(after) format', function () {
+				var expectedValue = "654321 €";
+				var data = 654321;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'none',
+						typeDecimalPlaces: 'none',
+						typeThousands: 'none',
+						typeRounding: 'none',
+						typeFormat: 'euroAfter'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
+			it('should show integer with percent format', function () {
+				var expectedValue = "654321 %";
+				var data = 654321;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'none',
+						typeDecimalPlaces: 'none',
+						typeThousands: 'none',
+						typeRounding: 'none',
+						typeFormat: 'percent'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
 
 			it('should show 3 decimal places', function () {
 				var expectedValue = "654321.659";
@@ -60,8 +179,8 @@ steal(
 				// Assign
 				var fieldData = {
 					setting: {
+						typeDecimals: 'period',
 						typeDecimalPlaces: '3',
-						typeDecimals: 'none',
 						typeThousands: 'none',
 						typeRounding: 'none',
 						typeFormat: 'none'
@@ -180,8 +299,8 @@ steal(
 				// Assign
 				var fieldData = {
 					setting: {
+						typeDecimals: 'period',
 						typeDecimalPlaces: '4',
-						typeDecimals: 'none',
 						typeThousands: 'space',
 						typeRounding: 'none',
 						typeFormat: 'none'
@@ -196,6 +315,79 @@ steal(
 				// Assert
 				assert.equal(expectedValue, result);
 			});
+
+			it('should show round up at 2 decimal places', function () {
+				var expectedValue = "654321.16";
+				var data = 654321.1543;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'period',
+						typeDecimalPlaces: '2',
+						typeThousands: 'none',
+						typeRounding: 'roundUp',
+						typeFormat: 'none'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
+			it('should show round down at 2 decimal places', function () {
+				var expectedValue = "654321.15";
+				var data = 654321.1593;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'period',
+						typeDecimalPlaces: '2',
+						typeThousands: 'none',
+						typeRounding: 'roundDown',
+						typeFormat: 'none'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
+			it('should show round down at 2 decimal places', function () {
+				var expectedValue = "654321.15";
+				var data = 654321.1593;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'period',
+						typeDecimalPlaces: '2',
+						typeThousands: 'none',
+						typeRounding: 'roundDown',
+						typeFormat: 'none'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
 
 
 		});
