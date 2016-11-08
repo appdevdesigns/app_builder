@@ -181,7 +181,6 @@ steal(function () {
 
 			setting: {
 				typeDecimalPlaces: $$(componentIds.typeDecimalPlaces).getValue(),
-				typeDecimalPlacesText: $$(componentIds.typeDecimalPlaces).getText(),
 				typeDecimals: $$(componentIds.typeDecimals).getValue(),
 				typeThousands: $$(componentIds.typeThousands).getValue(),
 				typeRounding: $$(componentIds.typeRounding).getValue(),
@@ -202,7 +201,7 @@ steal(function () {
 
 		var decimalSizeNum = 0;
 		if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
-			decimalSizeNum = fieldData.setting.typeDecimalPlacesText;
+			decimalSizeNum = fieldData.setting.typeDecimalPlaces;
 		}
 
 		var decimalDelimiters = ".";
@@ -268,8 +267,7 @@ steal(function () {
 			}
 		}
 
-		var container = $(itemNode).find('.number-format-show');
-		container.html(numberFormat);
+		$(itemNode).find('.number-format-show').html(numberFormat);
 
 		return true;
 	};
