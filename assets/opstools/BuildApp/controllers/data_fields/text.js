@@ -9,9 +9,9 @@ steal(function () {
 		name: 'text',
 		type: 'text', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'align-right',
-		menuName: 'Long text',
+		menuName: AD.lang.label.getLabel('ab.dataField.text.menuName') || 'Long text',
 		includeHeader: true,
-		description: 'A long text field that can span multiple lines.'
+		description: AD.lang.label.getLabel('ab.dataField.text.description') || 'A long text field that can span multiple lines.'
 	};
 
 	// Edit definition
@@ -21,7 +21,7 @@ steal(function () {
 			{
 				view: "checkbox",
 				id: componentIds.supportMultilingual,
-				labelRight: 'Support multilingual',
+				labelRight: AD.lang.label.getLabel('ab.dataField.text.supportMultilingual') || 'Support multilingual',
 				labelWidth: 0,
 				value: true
 			}

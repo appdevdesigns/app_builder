@@ -327,6 +327,7 @@ steal(
 
 													newModel.save()
 														.fail(function (err) {
+															console.error(err);
 															// TODO message
 
 															$$(self.webixUiId.objectDatatable).hideProgress();

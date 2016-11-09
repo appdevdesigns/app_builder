@@ -9,7 +9,7 @@ steal(function () {
 		name: 'date',
 		type: ['datetime', 'date'], // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'calendar',
-		menuName: 'Date',
+		menuName: AD.lang.label.getLabel('ab.dataField.date.menuName') || 'Date',
 		includeHeader: true,
 		description: ''
 	};
@@ -20,12 +20,12 @@ steal(function () {
 		rows: [
 			{
 				view: "label",
-				label: "Pick one from a calendar."
+				label: AD.lang.label.getLabel('ab.dataField.date.pickCalendar') || "Pick one from a calendar."
 			},
 			{
 				view: "checkbox",
 				id: componentIds.includeTime,
-				labelRight: "Include time",
+				labelRight: AD.lang.label.getLabel('ab.dataField.date.includeTime') || "Include time",
 				labelWidth: 0
 			},
 		]

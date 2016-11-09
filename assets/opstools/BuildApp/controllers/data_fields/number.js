@@ -13,12 +13,12 @@ steal(function () {
 	};
 
 	var formatList = [
-		{ id: 'none', value: "None" },
-		{ id: 'dollar', value: "$", sign: "$", position: "prefix" },
-		{ id: 'pound', value: "£", sign: "£", position: "prefix" },
-		{ id: 'euroBefore', value: "€ (before)", sign: "€", position: "prefix" },
-		{ id: 'euroAfter', value: "€ (after)", sign: "€", position: "postfix" },
-		{ id: 'percent', value: "%", sign: "%", position: "postfix" },
+		{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.number.none') || "None" },
+		{ id: 'dollar', value: AD.lang.label.getLabel('ab.dataField.number.format.dollar') || "$", sign: "$", position: "prefix" },
+		{ id: 'pound', value: AD.lang.label.getLabel('ab.dataField.number.format.pound') || "£", sign: "£", position: "prefix" },
+		{ id: 'euroBefore', value: AD.lang.label.getLabel('ab.dataField.number.format.euroBefore') || "€ (before)", sign: "€", position: "prefix" },
+		{ id: 'euroAfter', value: AD.lang.label.getLabel('ab.dataField.number.format.euroAfter') || "€ (after)", sign: "€", position: "postfix" },
+		{ id: 'percent', value: AD.lang.label.getLabel('ab.dataField.number.format.percent') || "%", sign: "%", position: "postfix" },
 	];
 
 	// General settings
@@ -26,7 +26,7 @@ steal(function () {
 		name: 'number',
 		type: ['float', 'integer'], // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'slack',
-		menuName: 'Number',
+		menuName: AD.lang.label.getLabel('ab.dataField.number.menuName') || 'Number',
 		includeHeader: true,
 		description: ''
 	};
@@ -50,7 +50,7 @@ steal(function () {
 					{
 						view: "checkbox",
 						id: componentIds.allowRequired,
-						labelRight: "Required",
+						labelRight: AD.lang.label.getLabel('ab.dataField.number.required') || "Required",
 						inputWidth: 130,
 						labelWidth: 0
 					}
@@ -68,7 +68,7 @@ steal(function () {
 				label: "Default Value",
 				labelWidth: "100",
 				id: componentIds.numberDefault,
-				placeholder: 'Default number'
+				placeholder: AD.lang.label.getLabel('ab.dataField.number.defaultNumber') || 'Default number'
 			},
 			{
 				view: "richselect",
@@ -85,9 +85,9 @@ steal(function () {
 						label: "Decimals",
 						value: 'none',
 						options: [
-							{ id: 'none', value: "None" },
-							{ id: 'period', value: "Period" },
-							{ id: 'comma', value: "Comma" }
+							{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.number.none') || "None" },
+							{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.number.period') || "Period" },
+							{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.number.comma') || "Comma" }
 						],
 						on: {
 							'onChange': function (newValue, oldValue) {
@@ -128,9 +128,9 @@ steal(function () {
 				vertical: true,
 				disabled: true,
 				options: [
-					{ id: 'none', value: "Default" },
-					{ id: 'roundUp', value: "Round Up" },
-					{ id: 'roundDown', value: "Round Down" }
+					{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.number.default') || "Default" },
+					{ id: 'roundUp', value: AD.lang.label.getLabel('ab.dataField.number.roundUp') || "Round Up" },
+					{ id: 'roundDown', value: AD.lang.label.getLabel('ab.dataField.number.roundDown') || "Round Down" }
 				]
 			},
 			{
@@ -140,10 +140,10 @@ steal(function () {
 				value: 'none',
 				vertical: true,
 				options: [
-					{ id: 'none', value: "None" },
-					{ id: 'comma', value: "Comma" },
-					{ id: 'period', value: "Period" },
-					{ id: 'space', value: "Space" }
+					{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.number.none') || "None" },
+					{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.number.comma') || "Comma" },
+					{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.number.period') || "Period" },
+					{ id: 'space', value: AD.lang.label.getLabel('ab.dataField.number.space') || "Space" }
 				]
 			}
 		]
@@ -270,27 +270,27 @@ steal(function () {
 
 		if (fieldData.setting.allowRequired == 1 && (value == "" || value == undefined || value == null)) {
 			webix.alert({
-				title: "Required",
-				text: "This column requires number value",
-				ok: "OK"
+				title: AD.lang.label.getLabel('ab.dataField.number.require') || "Required",
+				text: AD.lang.label.getLabel('ab.dataField.number.requireDescription') || "This column requires number value",
+				ok: AD.lang.label.getLabel('ab.common.ok') || "OK"
 			});
 			return false;
 		}
 
 		if (!new RegExp('^[0-9.]*$').test(value)) {
 			webix.alert({
-				title: "This value is invalid",
-				text: "Please enter number",
-				ok: "OK"
+				title: AD.lang.label.getLabel('ab.dataField.number.notNumberTitle') || "This value is invalid",
+				text: AD.lang.label.getLabel('ab.dataField.number.notNumberDescription') || "Please enter number",
+				ok: AD.lang.label.getLabel('ab.common.ok') || "OK"
 			});
 			return false;
 		}
 
 		if (!isNaN(parseFloat(value)) && isFinite(value) && fieldData.type == 'integer' && isFloat(value)) {
 			webix.alert({
-				title: "This value is invalid",
-				text: "This column disallows decimal number",
-				ok: "OK"
+				title: AD.lang.label.getLabel('ab.dataField.number.disallowDecimalTitle') || "This value is invalid",
+				text: AD.lang.label.getLabel('ab.dataField.number.disallowDecimalDescription') || "This column disallows decimal number",
+				ok: AD.lang.label.getLabel('ab.common.ok') || "OK"
 			});
 			return false;
 		}

@@ -8,9 +8,9 @@ steal(function () {
 		name: 'boolean',
 		type: 'boolean', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'check-square-o',
-		menuName: 'Checkbox',
+		menuName: AD.lang.label.getLabel('ab.dataField.boolean.menuName') || 'Checkbox',
 		includeHeader: true,
-		description: 'A single checkbox that can be checked or unchecked.'
+		description: AD.lang.label.getLabel('ab.dataField.boolean.description') || 'A single checkbox that can be checked or unchecked.'
 	};
 
 	// Edit definition

@@ -24,7 +24,7 @@ steal(
 			name: 'connectObject',
 			type: 'connectObject',
 			icon: 'external-link',
-			menuName: 'Connect to another record',
+			menuName: AD.lang.label.getLabel('ab.dataField.connectObject.menuName') || 'Connect to another record',
 			includeHeader: true,
 			description: '',
 			formView: 'template' //
@@ -93,7 +93,7 @@ steal(
 			rows: [
 				{
 					view: "label",
-					label: "Connect to Object"
+					label: AD.lang.label.getLabel('ab.dataField.connectObject.connectToObject') || "Connect to Object"
 				},
 				{
 					view: "list",
@@ -112,7 +112,7 @@ steal(
 				{
 					view: 'button',
 					id: componentIds.objectCreateNew,
-					value: 'Connect to new Object',
+					value: AD.lang.label.getLabel('ab.dataField.connectObject.connectToNewObject') || 'Connect to new Object',
 					click: function () {
 						if (this.getTopParentView().createNewObjectEvent)
 							this.getTopParentView().createNewObjectEvent();
@@ -133,8 +133,8 @@ steal(
 							width: 165,
 							inputWidth: 160,
 							options: [
-								{ id: "collection", value: "Has many" },
-								{ id: "model", value: "Belong to" }
+								{ id: "collection", value: AD.lang.label.getLabel('ab.dataField.connectObject.hasMany') || "Has many" },
+								{ id: "model", value: AD.lang.label.getLabel('ab.dataField.connectObject.belongTo') || "Belong to" }
 							]
 						},
 						{
@@ -161,8 +161,8 @@ steal(
 							width: 165,
 							inputWidth: 160,
 							options: [
-								{ id: "collection", value: "Has many" },
-								{ id: "model", value: "Belong to" }
+								{ id: "collection", value: AD.lang.label.getLabel('ab.dataField.connectObject.hasMany') || "Has many" },
+								{ id: "model", value: AD.lang.label.getLabel('ab.dataField.connectObject.belongTo') || "Belong to" }
 							]
 						},
 						{
@@ -219,9 +219,9 @@ steal(
 			var linkObject = $$(componentIds.objectList).getSelectedItem();
 			if (!linkObject) {
 				webix.alert({
-					title: "Object required",
-					text: "Please select object to connect.",
-					ok: "Ok"
+					title: AD.lang.label.getLabel('ab.dataField.connectObject.warning.objRequired') || "Object required",
+					text: AD.lang.label.getLabel('ab.dataField.connectObject.warning.objRequireDescription') || "Please select object to connect.",
+					ok: AD.lang.label.getLabel('ab.common.ok') || "Ok"
 				})
 				return null;
 			}

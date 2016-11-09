@@ -61,6 +61,7 @@ steal(
 							self.labels.application.title = AD.lang.label.getLabel('ab.application.application') || "Application";
 							self.labels.application.createNew = AD.lang.label.getLabel('ab.application.createNew') || "Add new application";
 							self.labels.application.menu = AD.lang.label.getLabel('ab.application.menu') || "Application Menu";
+							self.labels.application.noApplication  = AD.lang.label.getLabel('ab.application.noApplication') || "There is no application data";
 
 							// Delete
 							self.labels.application.confirmDeleteTitle = AD.lang.label.getLabel('ab.application.delete.title') || "Delete application";
@@ -700,7 +701,7 @@ steal(
 							$$(self.webixUiId.appList).data.sync(appList);
 
 							if (!$$(self.webixUiId.appList).count()) //if no data is available
-								$$(self.webixUiId.appList).showOverlay("There is no application data"); // TODO: translate
+								$$(self.webixUiId.appList).showOverlay(self.labels.application.noApplication);
 							else
 								$$(self.webixUiId.appList).hideOverlay();
 

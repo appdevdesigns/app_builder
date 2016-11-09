@@ -95,18 +95,23 @@ steal(
 									self.controllers.AppWorkspace.syncObjectsData()
 										.fail(function (err) {
 											console.error(err);
-											$$(self.webixUiId.loadingScreen).showErrorScreen('There is a error when is syncing object data', "Reload", function () {
-												$$(self.webixUiId.loadingScreen).start();
+											$$(self.webixUiId.loadingScreen).showErrorScreen(
+												AD.lang.label.getLabel('ab.sync.syncObjectDataError') || 'There is a error when is syncing object data',
+												AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
+												function () {
+													$$(self.webixUiId.loadingScreen).start();
 
-												self.controllers.AppWorkspace.syncObjectsData();
-											});
+													self.controllers.AppWorkspace.syncObjectsData();
+												});
 										})
 										.then(function () {
 											self.data.curLoadProgress += 0.1;
 											$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
 
 											// Reloaded - Reset values
-											$$(self.webixUiId.loadingScreen).showFinishScreen("Synchronized", "OK");
+											$$(self.webixUiId.loadingScreen).showFinishScreen(
+												AD.lang.label.getLabel('ab.sync.synchronized') || "Synchronized",
+												AD.lang.label.getLabel('ab.common.ok') || "OK");
 											self.data.curLoadProgress = 0;
 
 											$$(self.webixUiId.syncButton).enable();
@@ -151,11 +156,14 @@ steal(
 								self.controllers.AppWorkspace.syncObjectFields()
 									.fail(function (err) {
 										console.error(err);
-										$$(self.webixUiId.loadingScreen).showErrorScreen('There is a error when updates object fields', "Reload", function () {
-											$$(self.webixUiId.loadingScreen).start();
+										$$(self.webixUiId.loadingScreen).showErrorScreen(
+											AD.lang.label.getLabel('ab.sync.syncObjectFieldsError') || 'There is a error when updates object fields',
+											AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
+											function () {
+												$$(self.webixUiId.loadingScreen).start();
 
-											self.controllers.AppWorkspace.syncObjectFields();
-										});
+												self.controllers.AppWorkspace.syncObjectFields();
+											});
 									})
 									.then(function () {
 										self.updateSyncStatus({
@@ -187,11 +195,14 @@ steal(
 									webix.message(err);
 
 									// Show retry screen
-									$$(self.webixUiId.loadingScreen).showErrorScreen("There are errors", "Reload", function () {
-										$$(self.webixUiId.loadingScreen).start();
+									$$(self.webixUiId.loadingScreen).showErrorScreen(
+										AD.lang.label.getLabel('ab.sync.syncError') || 'There are errors',
+										AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
+										function () {
+											$$(self.webixUiId.loadingScreen).start();
 
-										self.callReload(data);
-									});
+											self.callReload(data);
+										});
 									$$(self.webixUiId.syncButton).enable();
 								});
 						},
@@ -204,28 +215,28 @@ steal(
 									var message = '';
 									switch (data.step) {
 										case 'syncObjectFields':
-											message = 'Updating object fields...';
+											message = AD.lang.label.getLabel('ab.sync.status.updateObjFields') || 'Updating object fields...';
 											break;
 										case 'request':
-											message = 'Requesting...';
+											message = AD.lang.label.getLabel('ab.sync.status.request') || 'Requesting...';
 											break;
 										case 'findApplication':
-											message = 'Preparing Application info...';
+											message = AD.lang.label.getLabel('ab.sync.status.prepareAppInfo') || 'Preparing Application info...';
 											break;
 										case 'prepareFolder':
-											message = 'Preparing Application folders...';
+											message = AD.lang.label.getLabel('ab.sync.status.prepareAppFolders') || 'Preparing Application folders...';
 											break;
 										case 'reloadControllers':
-											message = 'Reloading Controllers...';
+											message = AD.lang.label.getLabel('ab.sync.status.reloadControllers') || 'Reloading Controllers...';
 											break;
 										case 'reloadORM':
-											message = 'Reloading Databases...';
+											message = AD.lang.label.getLabel('ab.sync.status.reloadDatabases') || 'Reloading Databases...';
 											break;
 										case 'reloadBlueprints':
-											message = 'Reloading Blueprints...';
+											message = AD.lang.label.getLabel('ab.sync.status.reloadBlueprints') || 'Reloading Blueprints...';
 											break;
 										case 'syncObjectData':
-											message = 'Syncing objects data...';
+											message = AD.lang.label.getLabel('ab.sync.status.syncObjData') || 'Syncing objects data...';
 											break;
 									}
 									$$(self.webixUiId.loadingScreen).setMessage(message);
