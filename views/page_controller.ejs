@@ -201,6 +201,17 @@ steal(
                                 });
 
                                 $(page.comInstances[item.id]).on('changePage', function(event, data) {
+
+                                // lookup page by data.pageId
+                                // if page.parent == isTabbed
+                                    // if current page != page.parent  then showPage(page.parent)
+                                    // convert pageId => tabId
+                                    // showTab(tabId)
+                                // else
+                                    // showPage(pageId)
+                                // 
+
+
                                     // Redirect to another page
                                     if (data.previousPage)
                                         self.showPage(self.previousPageID);
