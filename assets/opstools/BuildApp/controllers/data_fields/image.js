@@ -194,6 +194,7 @@ steal(function () {
 
 		if ($$(componentIds.useWidth).getValue()) { 
 			setting.width = $$(componentIds.imageWidth).getValue();
+			// setting.css = 'ab-column-no-padding';
 		}
 
 		return {
