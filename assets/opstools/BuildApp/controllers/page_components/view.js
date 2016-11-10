@@ -3,7 +3,6 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/ColumnizerHelper.js',
-	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	function (dataFieldsManager, dataCollectionHelper, columnizerHelper) {
 		var componentIds = {
 			editViewLayout: 'ab-view-edit-view',

@@ -10,9 +10,9 @@ steal(function () {
 		name: 'list',
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'th-list',
-		menuName: 'Select list',
+		menuName: AD.lang.label.getLabel('ab.dataField.list.menuName') || 'Select list',
 		includeHeader: true,
-		description: 'Single select allows you to select a single predefined options below from a dropdown.'
+		description: AD.lang.label.getLabel('ab.dataField.list.description') || 'Single select allows you to select a single predefined options below from a dropdown.'
 	};
 
 	var removedOptionIds = [];
@@ -91,9 +91,9 @@ steal(function () {
 
 		if (options.length < 1) {
 			webix.alert({
-				title: "Option required",
-				text: "Enter at least one option.",
-				ok: "Ok"
+				title: AD.lang.label.getLabel('ab.dataField.list.warning.optionRequired') || "Option required",
+				text: AD.lang.label.getLabel('ab.dataField.list.warning.optionRequireDescription') || "Enter at least one option.",
+				ok: AD.lang.label.getLabel('ab.common.ok') || "Ok"
 			})
 
 			return null;

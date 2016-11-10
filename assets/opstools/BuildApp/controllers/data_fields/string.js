@@ -44,7 +44,7 @@ steal(function () {
 		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 // TODO: .menuName needs to be a multilingual Key		
-		menuName: 'Single line text',  
+		menuName: AD.lang.label.getLabel('ab.dataField.string.menuName') || 'Single line text',  
 		includeHeader: true,
 		description: ''
 	};
@@ -78,12 +78,12 @@ steal(function () {
 			{
 				view: "text",
 				id: componentIds.textDefault,
-				placeholder: 'Default text'
+				placeholder: AD.lang.label.getLabel('ab.dataField.string.default') || 'Default text'
 			},
 			{
 				view: "checkbox",
 				id: componentIds.supportMultilingual,
-				labelRight: 'Support multilingual',
+				labelRight: AD.lang.label.getLabel('ab.dataField.string.supportMultilingual') || 'Support multilingual',
 				labelWidth: 0,
 				value: true
 			}
