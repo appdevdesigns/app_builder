@@ -151,7 +151,7 @@ steal(
 													if ($$(editViewId).showProgress)
 														$$(editViewId).showProgress({ type: 'icon' });
 
-													componentInstance.editStop();
+													componentManager.editStop();
 
 													editedComponent.attr('setting', self.data.components[self.data.editedComponentId].getSettings());
 

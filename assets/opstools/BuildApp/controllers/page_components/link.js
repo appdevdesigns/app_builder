@@ -114,7 +114,8 @@ steal(
 		linkComponent.getInfo = function () {
 			return {
 				name: 'link',
-				icon: 'fa-external-link-square'
+				icon: 'fa-external-link-square',
+				propertyView: componentIds.propertyView
 			};
 		};
 
@@ -177,11 +178,6 @@ steal(
 					}
 				}
 			};
-		};
-
-		linkComponent.editStop = function () {
-			if ($$(componentIds.propertyView))
-				$$(componentIds.propertyView).editStop();
 		};
 
 		return linkComponent;

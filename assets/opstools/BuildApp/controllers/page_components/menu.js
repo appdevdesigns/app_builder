@@ -187,7 +187,8 @@ steal(
 		menuComponent.getInfo = function () {
 			return {
 				name: 'menu',
-				icon: 'fa-th-list'
+				icon: 'fa-th-list',
+				propertyView: componentIds.propertyView
 			};
 		};
 
@@ -269,11 +270,6 @@ steal(
 					}
 				}
 			};
-		};
-
-		menuComponent.editStop = function () {
-			if ($$(componentIds.propertyView))
-				$$(componentIds.propertyView).editStop();
 		};
 
 		return menuComponent;

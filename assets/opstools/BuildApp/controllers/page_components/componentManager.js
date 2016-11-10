@@ -61,6 +61,19 @@ steal(
 			}
 		};
 
+		componentManager.editStop = function () {
+			components.forEach(function (component) {
+				if (component.editStop)
+					component.editStop();
+				else {
+					var compInfo = component.getInfo();
+					if (compInfo.propertyView && $$(compInfo.propertyView) && $$(compInfo.propertyView).editStop) {
+						$$(compInfo.propertyView).editStop();
+					}
+				}
+			});
+		};
+
 		componentManager.resize = function (height) {
 			components.forEach(function (comp) {
 				if (comp.resize)

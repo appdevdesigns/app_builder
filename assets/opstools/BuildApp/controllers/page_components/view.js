@@ -396,7 +396,7 @@ steal(
 						// Data source - Column
 						var colOptions = [1, 2, 3],
 							colSource = $$(componentIds.propertyView).getItem(componentIds.selectColumns);
-						colSource.options = $.map(colOptions, function(o) {
+						colSource.options = $.map(colOptions, function (o) {
 							return {
 								id: o,
 								value: o
@@ -429,7 +429,8 @@ steal(
 		viewComponent.getInfo = function () {
 			return {
 				name: 'view',
-				icon: 'fa-file-text-o'
+				icon: 'fa-file-text-o',
+				propertyView: componentIds.propertyView
 			};
 		}
 
@@ -496,7 +497,7 @@ steal(
 						name: 'columns',
 						type: 'richselect',
 						label: 'Columns',
-						template: function(data, dataValue) {
+						template: function (data, dataValue) {
 							var selectedData = $.grep(data.options, function (opt) { return opt.value == dataValue; });
 							console.log('*****HEY', data, dataValue, selectedData);
 							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
@@ -535,10 +536,6 @@ steal(
 					}
 				}
 			};
-		};
-
-		viewComponent.editStop = function () {
-			$$(componentIds.propertyView).editStop();
 		};
 
 		viewComponent.resize = function (height) {

@@ -570,7 +570,7 @@ steal(
 						//
 						var colCountOptions = [1, 2, 3];
 						var colCountSource = $$(componentIds.propertyView).getItem(componentIds.selectColCount);
-						colCountSource.options = $.map(colCountOptions, function(o) {
+						colCountSource.options = $.map(colCountOptions, function (o) {
 							return {
 								id: o,
 								value: o
@@ -641,7 +641,8 @@ steal(
 		formComponent.getInfo = function () {
 			return {
 				name: 'form',
-				icon: 'fa-list-alt'
+				icon: 'fa-list-alt',
+				propertyView: componentIds.propertyView
 			};
 		};
 
@@ -776,13 +777,8 @@ steal(
 									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
-								break;
 							case componentIds.selectColCount:
-								var setting = componentManager.editInstance.getSettings();
-								componentManager.editInstance.populateSettings(setting, true);
-								break;
 							case componentIds.isSaveVisible:
-								break;
 							case componentIds.isCancelVisible:
 								var setting = componentManager.editInstance.getSettings();
 								componentManager.editInstance.populateSettings(setting, true);
@@ -791,10 +787,6 @@ steal(
 					}
 				}
 			};
-		};
-
-		formComponent.editStop = function () {
-			$$(componentIds.propertyView).editStop();
 		};
 
 		formComponent.resize = function (height) {
