@@ -4,6 +4,7 @@ steal(
         var componentIds = {
             editView: 'ab-tab-edit-view',
             editMenu: 'ab-tab-edit-mode',
+            addTabForm: 'ab-tab-create-form',
             propertyView: 'ab-tab-property-view',
             pageTree: 'ab-tab-page-tree'
         };
@@ -160,15 +161,23 @@ console.error(' todo!');
             };
 
             this.getSettings = function () {
-                var values = $$(componentIds.propertyView).getValues(),
-                    selectedPages = $$(componentIds.editMenu).find(function () { return true; }),
-                    selectedPageIds = $.map(selectedPages || [], function (page) {
-                        return page.id;
-                    });
+                // var values = $$(componentIds.propertyView).getValues(),
+                //     selectedPages = $$(componentIds.editMenu).find(function () { return true; }),
+                //     selectedPageIds = $.map(selectedPages || [], function (page) {
+                //         return page.id;
+                //     });
 
+                var tabs = [];
+                $$(componentIds.pageTree).find(function(obj){
+                    tabs.push({
+                        checked:obj.checked || false,
+                        icon: obj.icon,
+                        label: obj.label
+                    })
+                    return true
+                })
                 return {
-                    layout: values.orientation,
-                    pageIds: selectedPageIds // [ABPage.id]
+                    tabs: tabs
                 };
             };
 
@@ -177,7 +186,29 @@ console.error(' todo!');
                 this.render(setting);
 
                 // // Page list
-                // $$(componentIds.pageTree).clearAll();
+                $$(componentIds.pageTree).clearAll();
+
+                var tabs = setting.tabs || [];
+                tabs.forEach(function(tab){
+
+                    // make a copy of tab so changes don't persist unless we click [save]
+                    var cTab = {
+                        icon: tab.icon,
+                        label: tab.label
+                    }
+                    if (tab.checked == 'true') {
+                        cTab.checked = true;
+                    } else { 
+                        cTab.checked = false; 
+                    }
+
+                    $$(componentIds.pageTree).add(cTab, $$(componentIds.pageTree).count());
+                })
+                
+
+                menuComponent.refreshEditView();
+
+
                 // var pageItems = [];
                 // if (application.currPage) {
                 //  webix.extend($$(componentIds.pageTree), webix.ProgressBar);
@@ -246,7 +277,26 @@ console.error(' todo!');
                 return data.isRendered === true;
             };
 
+
+
+
         };
+
+
+        /**
+         * @function afterSaveSettings
+         * 
+         * called after the settings are saved and allows your component
+         * to perform additional commands to complete the process.
+         *
+         * @param {obj} page  the ABPage this component is on.
+         * @param {obj} component the ABPageComponent instance of this component
+         */
+        menuComponent.afterSaveSetting = function (page, component) {
+
+var soNowWhat="?";
+
+        }
 
 
         // Static functions
@@ -264,6 +314,7 @@ console.error(' todo!');
         // the base tabview definition
         menuComponent.tabView = function(){
             return  { 
+                id:componentIds.editMenu,
                 view:"tabview", 
                 cells: [
                     // {
@@ -293,7 +344,49 @@ console.error(' todo!');
             };
         };
 
-        menuComponent.getEditView = function () {
+        menuComponent.refreshEditView = function() {
+            var currentPages = [];
+            $$(componentIds.pageTree).getChecked().forEach(function (pageId) {
+                currentPages.push($$(componentIds.pageTree).getItem(pageId));
+            });
+            
+            var updatedView = {};
+
+            // if we have tabs
+            if (currentPages.length) {
+
+                // get the tabView data
+                updatedView = menuComponent.tabView();
+
+                // for each tab
+                    // add a cell to the template
+                currentPages.forEach(function(obj){
+                    if (obj.checked) {
+                        updatedView.cells.push(
+                            {
+                              header: "<i class='fa "+obj.icon+"'></i> "+obj.label,
+                              body: {
+                                view: "label", 
+                                label:""
+                              }
+                            }
+                        );
+                    }
+                    return true;
+                });
+
+            } else {
+
+                // get the base label view
+                updatedView = menuComponent.getView();
+            }
+
+
+            // overwrite the current instance of our component
+            webix.ui(updatedView, $$(componentIds.editMenu));
+        }
+
+        menuComponent.getEditView = function (componentManager) {
             var menu = $.extend(true, {}, menuComponent.getView());
             // menu.id = componentIds.editMenu;
 
@@ -304,8 +397,8 @@ console.error(' todo!');
                     menu,
 
                     {
-                        id:'spiffy-form-here',
-                        width:900,
+                        id:componentIds.addTabForm,
+                  
 
                       "view": "form",
                       "elements": [{
@@ -316,7 +409,7 @@ console.error(' todo!');
                                                     {
                                                       "view": "text",
                                                       "name": "Name",
-                                                      "label": "Form Name",
+                                                      "label": "Tab Name",
                                                       "labelWidth": "100",
 // TODO: make this multilingual
                                                       "placeholder": "Enter a page name",
@@ -338,13 +431,84 @@ console.error(' todo!');
                                                   ]
                                                 },
                                                 {
-                                                  view:"button",
-                                                  width:100,
-// TODO: make this multilingual
-                                                  value: 'Add Page',
-                                                  click:function(){
-                                                      console.log('so what now?')
-                                                  }
+                                                    view:"button",
+                                                    width:100,
+                                                    // TODO: make this multilingual
+                                                    value: 'Add Page',
+                                                    click:function(){
+                                                        console.log('so what now?');
+                                                        var values = $$(componentIds.addTabForm).getValues();
+
+                                                        // componentManager.editInstance is the reference to
+                                                        // the current instance of the Tab we are editing.
+                                                        // store the new page values here:
+                                                        var currentTab = componentManager.editInstance;
+                                                        if (!currentTab.pendingTransactions) {
+                                                            currentTab.pendingTransactions = [];
+                                                        }
+
+                                                        // record a new 'add' operation
+                                                        currentTab.pendingTransactions.push({
+                                                            op:'add',
+                                                            values: values
+                                                        });
+
+                                                        console.log('transactions:', currentTab.pendingTransactions);
+
+                                                        // $$(componentIds.pageTree).add({label:values.Name, icon:values.Icon}, $$(componentIds.pageTree).count(), "root" );
+                                                        $$(componentIds.addTabForm).clear();
+
+                                                        var currentValue = {label:values.Name, icon:values.Icon, checked:true};
+
+
+                                                        // update the display of our pageTree
+                                                        $$(componentIds.pageTree).add(currentValue, $$(componentIds.pageTree).count());
+
+                                                        menuComponent.refreshEditView();
+
+                                                        // var currentPages = $$(componentIds.pageTree).getChecked();
+                                                        
+
+                                                        // var updatedView = {};
+                                                        // // if we have tabs
+                                                        // if (currentPages.length) {
+
+                                                        //     // get the tabView data
+                                                        //     updatedView = menuComponent.tabView();
+
+                                                        //     // for each tab
+                                                        //         // add a cell to the template
+                                                        //     currentPages.forEach(function(obj){
+                                                        //         updatedView.cells.push(
+                                                        //             {
+                                                        //               header: "<i class='fa "+obj.icon+"'></i> "+obj.label,
+                                                        //               body: {
+                                                        //                 view: "label", 
+                                                        //                 label:"Your tab content will appear here."
+                                                        //               }
+                                                        //             }
+                                                        //         );
+                                                        //         return true;
+                                                        //     });
+
+                                                        // }
+                                                        // // else
+                                                        //     // get the base label view
+                                                        //     // endif
+
+                                                        // // overwrite the current instance of our component
+                                                        // webix.ui(updatedView, $$(componentIds.editMenu));
+
+
+                                                        
+
+                                                        // // caus of that stupid Webix issue!
+                                                        // currentPages.forEach(function(obj){
+                                                        //     $$(componentIds.pageTree).add(obj, $$(componentIds.pageTree).count(), "root" );
+                                                        // })
+                                                        // //$$(componentIds.editMenu).adjust();
+
+                                                    }
                                                   
                                                 }
                                               ]
@@ -356,27 +520,18 @@ console.error(' todo!');
                         view: 'label',
                         label: 'Tab list'
                     },
-                    // {
-                    //  id: componentIds.pageTree,
-                    //  view: 'tree',
-                    //  template: "<div class='ab-page-list-item'>" +
-                    //  "{common.icon()} {common.checkbox()} {common.folder()} #label#" +
-                    //  "</div>",
-                    //  on: {
-                    //      onItemCheck: function () {
-                    //          $$(componentIds.editMenu).clearAll();
-
-                    //          $$(componentIds.pageTree).getChecked().forEach(function (pageId) {
-                    //              var item = $$(componentIds.pageTree).getItem(pageId);
-
-                    //              $$(componentIds.editMenu).add({
-                    //                  id: pageId,
-                    //                  value: item.label
-                    //              }, $$(componentIds.editMenu).count());
-                    //          });
-                    //      }
-                    //  }
-                    // }
+                    {
+                     id: componentIds.pageTree,
+                     view: 'tree',
+                     template: "<div class='ab-page-list-item'>" +
+                     "{common.checkbox()} <i class='fa #icon#'></i> #label#" +
+                     "</div>",
+                     on: {
+                         onItemCheck: function () {
+                             menuComponent.refreshEditView();
+                         }
+                     }
+                    }
                 ]
             };
         };
