@@ -291,8 +291,40 @@ console.error(' todo!');
              * @param {obj} component the ABPageComponent instance of this component
              */
             this.afterSaveSetting = function (page, component) {
+                var dfd = AD.sal.Deferred();
 
-var soNowWhat="?";
+
+                var actions = [];
+
+                this.pendingTransactions.forEach(function(trans){
+
+                    switch(trans.op) {
+                        case 'add':
+                            actions.push(page.createTab({ name: 'tab-'+trans.values.Name, label:trans.values.Name }));
+                            break;
+
+
+                        case 'delete':
+                            break;
+
+                        default:
+                            console.error('unknown transaction type:', trans.op);
+                            break;
+                    }
+                })
+
+                $.when.apply($, actions)
+                .fail(function(err){
+                    AD.error.log('Problems creating the Pages', err);
+                    dfd.reject(err);
+                })
+                .then(function() {
+                    console.log('looks good.');
+                    dfd.resolve();
+                })
+
+
+                return dfd;
 
             }
 
@@ -455,6 +487,8 @@ var soNowWhat="?";
 
                                     // 1) Trim value
                                     // 2) lowerCase() name must not match any existing lc names
+
+
 
                                     // componentManager.editInstance is the reference to
                                     // the current instance of the Tab we are editing.
