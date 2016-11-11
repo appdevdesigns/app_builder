@@ -179,32 +179,50 @@ steal(
 
 													editedComponent.attr('setting', componentManager.editInstance.getSettings());
 
-													editedComponent.save()
-														.fail(function (err) {
-															if ($$(editViewId).hideProgress)
-																$$(editViewId).hideProgress();
-														})
-														.then(function (result) {
-															if (result.translate) result.translate();
+													var savedComponent;
+													async.series([
+														function (next) {
+															editedComponent.save()
+																.fail(next)
+																.then(function (result) {
+																	if (result.translate) result.translate();
 
-															var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
-															updatedItem.setting = result.attr('setting');
-															$$(self.componentIds.componentList).updateItem(self.data.editedComponentId, updatedItem);
+																	var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
+																	updatedItem.setting = result.attr('setting');
+																	$$(self.componentIds.componentList).updateItem(self.data.editedComponentId, updatedItem);
 
-															self.openLayoutViewMode();
+																	savedComponent = result;
 
+																	next();
+																});
+														},
+														function (next) {
 															if (componentManager.editInstance.afterSaveSetting) {
-																componentManager.editInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, result);
+																componentManager.editInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, savedComponent)
+																	.fail(next)
+																	.then(function () { next() });
 															}
+															else {
+																next();
+															}
+														}
+													], function (err) {
+														if ($$(editViewId).hideProgress)
+															$$(editViewId).hideProgress();
 
-															self.element.trigger(self.options.savedComponentEvent, {
-																page: AD.classes.AppBuilder.currApp.currPage,
-																component: result
-															});
+														if (err) {
+															console.error(err);
+															return;
+														}
 
-															if ($$(editViewId).hideProgress)
-																$$(editViewId).hideProgress();
+														self.openLayoutViewMode();
+
+														self.element.trigger(self.options.savedComponentEvent, {
+															page: AD.classes.AppBuilder.currApp.currPage,
+															component: savedComponent
 														});
+													});
+
 												}
 											},
 											{
