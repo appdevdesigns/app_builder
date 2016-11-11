@@ -170,6 +170,7 @@ steal(
 													var editedComponent = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == self.data.editedComponentId; })[0],
 														componentName = editedComponent.attr('component'),
 														componentInstance = componentManager.getComponent(componentName),
+														editComponentInstance = self.data.components[self.data.editedComponentId],
 														editViewId = componentInstance.getEditView().id;
 
 													if ($$(editViewId).showProgress)
@@ -177,7 +178,7 @@ steal(
 
 													componentManager.editStop();
 
-													editedComponent.attr('setting', self.data.components[self.data.editedComponentId].getSettings());
+													editedComponent.attr('setting', editComponentInstance.getSettings());
 
 													editedComponent.save()
 														.fail(function (err) {
@@ -193,8 +194,8 @@ steal(
 
 															self.openLayoutViewMode();
 
-															if (componentInstance.afterSaveSetting) {
-																componentInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, result);
+															if (editComponentInstance.afterSaveSetting) {
+																editComponentInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, result);
 															}
 
 															self.element.trigger(self.options.savedComponentEvent, {
@@ -494,7 +495,7 @@ steal(
 
 							// Set page type
 							var pageType = AD.classes.AppBuilder.currApp.currPage.type ? AD.classes.AppBuilder.currApp.currPage.type : 'page';
-							if (pageType == 'page' || pageType == 'modal') {
+							if (AD.classes.AppBuilder.currApp.currPage.parent && (pageType == 'page' || pageType == 'modal')) {
 								$$(self.componentIds.pageType).show();
 								$$(self.componentIds.pageType).define('value', pageType); // Use define() instead of setValues to ignore update data to server
 								$$(self.componentIds.pageType).refresh();
