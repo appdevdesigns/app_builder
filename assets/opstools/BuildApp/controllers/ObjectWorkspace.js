@@ -816,7 +816,14 @@ steal(
 											},
 											// Update the link column
 											function (next) {
-												if (updateColumn.setting.linkVia) {
+											    if (!updateColumn.setting.linkVia) {
+											        next()
+											    }
+											    else if (updateColumn.setting.linkObject == updateColumn.object) {
+											        // link to self. no need to create redundant connection.
+											        next();
+											    }
+												else {
 													AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.setting.linkVia)
 														.fail(next)
 														.then(function (result) {
@@ -827,9 +834,6 @@ steal(
 																next();
 															});
 														});
-												}
-												else {
-													next();
 												}
 											},
 											// Create list option of select column
@@ -916,8 +920,9 @@ steal(
 									}
 									else { // Cache new field
 										var firstColumn = self.cacheNewField(objectName, columnInfo);
+										var isSelfLink = firstColumn.setting.linkObject && (firstColumn.setting.linkObject == columnInfo.object);
 
-										if (firstColumn.setting.linkType && firstColumn.setting.linkObject) {
+										if (firstColumn.setting.linkType && firstColumn.setting.linkObject && !isSelfLink) {
 											// Find object
 											var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == firstColumn.setting.linkObject; })[0];
 
