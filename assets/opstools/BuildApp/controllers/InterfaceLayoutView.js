@@ -170,7 +170,6 @@ steal(
 													var editedComponent = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == self.data.editedComponentId; })[0],
 														componentName = editedComponent.attr('component'),
 														componentInstance = componentManager.getComponent(componentName),
-														editComponentInstance = self.data.components[self.data.editedComponentId],
 														editViewId = componentInstance.getEditView().id;
 
 													if ($$(editViewId).showProgress)
@@ -178,7 +177,7 @@ steal(
 
 													componentManager.editStop();
 
-													editedComponent.attr('setting', editComponentInstance.getSettings());
+													editedComponent.attr('setting', componentManager.editInstance.getSettings());
 
 													editedComponent.save()
 														.fail(function (err) {
@@ -194,8 +193,8 @@ steal(
 
 															self.openLayoutViewMode();
 
-															if (editComponentInstance.afterSaveSetting) {
-																editComponentInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, result);
+															if (componentManager.editInstance.afterSaveSetting) {
+																componentManager.editInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, result);
 															}
 
 															self.element.trigger(self.options.savedComponentEvent, {
