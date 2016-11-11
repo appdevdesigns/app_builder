@@ -413,7 +413,16 @@ var soNowWhat="?";
                                   "labelWidth": "100",
     // TODO: make this multilingual
                                   "placeholder": "Enter a tab name",
-                                  "width": 300
+                                  "invalidMessage": "Tab name cannot be empty",
+                                  "required":true,
+                                  "width": 300, on:{
+                                    "onBlur":function(){
+                                        //or validate this element only
+                                        if (!this.validate()) {
+                                            webix.message("Please enter a tab name");
+                                            return false;
+                                        }
+                                    }}
                                 }
                               ]
                             },
@@ -441,8 +450,11 @@ var soNowWhat="?";
                                         return false;
                                     }
 
-                                    console.log('so what now?');
+                                    
                                     var values = $$(componentIds.addTabForm).getValues();
+
+                                    // 1) Trim value
+                                    // 2) lowerCase() name must not match any existing lc names
 
                                     // componentManager.editInstance is the reference to
                                     // the current instance of the Tab we are editing.
@@ -517,10 +529,7 @@ var soNowWhat="?";
                               
                             }
                           ]
-                        }],
-                        rules: {
-                            "Name": webix.rules.isNotEmpty
-                        },
+                        }]
                     },
 
                     {
