@@ -16,6 +16,9 @@ steal(
             this.viewId = viewId;
             this.editViewId = componentIds.editMenu;
 
+
+            this.pendingTransactions = [];
+
             // Instance functions
             /*
              * @function render
@@ -278,25 +281,22 @@ console.error(' todo!');
             };
 
 
-
-
-        };
-
-
-        /**
-         * @function afterSaveSettings
-         * 
-         * called after the settings are saved and allows your component
-         * to perform additional commands to complete the process.
-         *
-         * @param {obj} page  the ABPage this component is on.
-         * @param {obj} component the ABPageComponent instance of this component
-         */
-        menuComponent.afterSaveSetting = function (page, component) {
+            /**
+             * @function afterSaveSettings
+             * 
+             * called after the settings are saved and allows your component
+             * to perform additional commands to complete the process.
+             *
+             * @param {obj} page  the ABPage this component is on.
+             * @param {obj} component the ABPageComponent instance of this component
+             */
+            this.afterSaveSetting = function (page, component) {
 
 var soNowWhat="?";
 
-        }
+            }
+
+        };
 
 
         // Static functions
@@ -402,117 +402,125 @@ var soNowWhat="?";
 
                       "view": "form",
                       "elements": [{
-                                              "margin": 10,
-                                              "cols": [
-                                                {
-                                                  "rows": [
-                                                    {
-                                                      "view": "text",
-                                                      "name": "Name",
-                                                      "label": "Tab Name",
-                                                      "labelWidth": "100",
-// TODO: make this multilingual
-                                                      "placeholder": "Enter a page name",
-                                                      "width": 300
-                                                    }
-                                                  ]
-                                                },
-                                                {
-                                                  "rows": [
-                                                    {
-                                                      "view": "text",
-                                                      "name": "Icon",
-                                                      "label": "Icon",
-                                                      "labelWidth": "50",
-// TODO: make this multilingual
-                                                      "placeholder": "Choose an icon",
-                                                      "width": 200
-                                                    }
-                                                  ]
-                                                },
-                                                {
-                                                    view:"button",
-                                                    width:100,
-                                                    // TODO: make this multilingual
-                                                    value: 'Add Page',
-                                                    click:function(){
-                                                        console.log('so what now?');
-                                                        var values = $$(componentIds.addTabForm).getValues();
+                          "margin": 10,
+                          "cols": [
+                            {
+                              "rows": [
+                                {
+                                  "view": "text",
+                                  "name": "Name",
+                                  "label": "Tab Name",
+                                  "labelWidth": "100",
+    // TODO: make this multilingual
+                                  "placeholder": "Enter a tab name",
+                                  "width": 300
+                                }
+                              ]
+                            },
+                            {
+                              "rows": [
+                                {
+                                  "view": "text",
+                                  "name": "Icon",
+                                  "label": "Icon",
+                                  "labelWidth": "50",
+    // TODO: make this multilingual
+                                  "placeholder": "Choose an icon",
+                                  "width": 200
+                                }
+                              ]
+                            },
+                            {
+                                view:"button",
+                                width:100,
+                                // TODO: make this multilingual
+                                value: 'Add Page',
+                                click:function(){
+                                    if (!$$(componentIds.addTabForm).validate()) {
+                                        webix.message("Please enter a tab name");
+                                        return false;
+                                    }
 
-                                                        // componentManager.editInstance is the reference to
-                                                        // the current instance of the Tab we are editing.
-                                                        // store the new page values here:
-                                                        var currentTab = componentManager.editInstance;
-                                                        if (!currentTab.pendingTransactions) {
-                                                            currentTab.pendingTransactions = [];
-                                                        }
+                                    console.log('so what now?');
+                                    var values = $$(componentIds.addTabForm).getValues();
 
-                                                        // record a new 'add' operation
-                                                        currentTab.pendingTransactions.push({
-                                                            op:'add',
-                                                            values: values
-                                                        });
+                                    // componentManager.editInstance is the reference to
+                                    // the current instance of the Tab we are editing.
+                                    // store the new page values here:
+                                    var currentTab = componentManager.editInstance;
+                                    if (!currentTab.pendingTransactions) {
+                                        currentTab.pendingTransactions = [];
+                                    }
 
-                                                        console.log('transactions:', currentTab.pendingTransactions);
+                                    // record a new 'add' operation
+                                    currentTab.pendingTransactions.push({
+                                        op:'add',
+                                        values: values
+                                    });
 
-                                                        // $$(componentIds.pageTree).add({label:values.Name, icon:values.Icon}, $$(componentIds.pageTree).count(), "root" );
-                                                        $$(componentIds.addTabForm).clear();
+                                    console.log('transactions:', currentTab.pendingTransactions);
 
-                                                        var currentValue = {label:values.Name, icon:values.Icon, checked:true};
+                                    // $$(componentIds.pageTree).add({label:values.Name, icon:values.Icon}, $$(componentIds.pageTree).count(), "root" );
+                                    $$(componentIds.addTabForm).clear();
 
-
-                                                        // update the display of our pageTree
-                                                        $$(componentIds.pageTree).add(currentValue, $$(componentIds.pageTree).count());
-
-                                                        menuComponent.refreshEditView();
-
-                                                        // var currentPages = $$(componentIds.pageTree).getChecked();
-                                                        
-
-                                                        // var updatedView = {};
-                                                        // // if we have tabs
-                                                        // if (currentPages.length) {
-
-                                                        //     // get the tabView data
-                                                        //     updatedView = menuComponent.tabView();
-
-                                                        //     // for each tab
-                                                        //         // add a cell to the template
-                                                        //     currentPages.forEach(function(obj){
-                                                        //         updatedView.cells.push(
-                                                        //             {
-                                                        //               header: "<i class='fa "+obj.icon+"'></i> "+obj.label,
-                                                        //               body: {
-                                                        //                 view: "label", 
-                                                        //                 label:"Your tab content will appear here."
-                                                        //               }
-                                                        //             }
-                                                        //         );
-                                                        //         return true;
-                                                        //     });
-
-                                                        // }
-                                                        // // else
-                                                        //     // get the base label view
-                                                        //     // endif
-
-                                                        // // overwrite the current instance of our component
-                                                        // webix.ui(updatedView, $$(componentIds.editMenu));
+                                    var currentValue = {label:values.Name, icon:values.Icon, checked:true};
 
 
-                                                        
+                                    // update the display of our pageTree
+                                    $$(componentIds.pageTree).add(currentValue, $$(componentIds.pageTree).count());
 
-                                                        // // caus of that stupid Webix issue!
-                                                        // currentPages.forEach(function(obj){
-                                                        //     $$(componentIds.pageTree).add(obj, $$(componentIds.pageTree).count(), "root" );
-                                                        // })
-                                                        // //$$(componentIds.editMenu).adjust();
+                                    menuComponent.refreshEditView();
 
-                                                    }
-                                                  
-                                                }
-                                              ]
-                                            }]
+                                    // var currentPages = $$(componentIds.pageTree).getChecked();
+                                    
+
+                                    // var updatedView = {};
+                                    // // if we have tabs
+                                    // if (currentPages.length) {
+
+                                    //     // get the tabView data
+                                    //     updatedView = menuComponent.tabView();
+
+                                    //     // for each tab
+                                    //         // add a cell to the template
+                                    //     currentPages.forEach(function(obj){
+                                    //         updatedView.cells.push(
+                                    //             {
+                                    //               header: "<i class='fa "+obj.icon+"'></i> "+obj.label,
+                                    //               body: {
+                                    //                 view: "label", 
+                                    //                 label:"Your tab content will appear here."
+                                    //               }
+                                    //             }
+                                    //         );
+                                    //         return true;
+                                    //     });
+
+                                    // }
+                                    // // else
+                                    //     // get the base label view
+                                    //     // endif
+
+                                    // // overwrite the current instance of our component
+                                    // webix.ui(updatedView, $$(componentIds.editMenu));
+
+
+                                    
+
+                                    // // caus of that stupid Webix issue!
+                                    // currentPages.forEach(function(obj){
+                                    //     $$(componentIds.pageTree).add(obj, $$(componentIds.pageTree).count(), "root" );
+                                    // })
+                                    // //$$(componentIds.editMenu).adjust();
+
+                                }
+                              
+                            }
+                          ]
+                        }],
+                        rules: {
+                            "Name": webix.rules.isNotEmpty
+                        },
                     },
 
                     {
