@@ -511,15 +511,7 @@ steal(
 							$$(self.componentIds.layoutToolbar).show();
 
 							// Set page type
-							var pageType = AD.classes.AppBuilder.currApp.currPage.type ? AD.classes.AppBuilder.currApp.currPage.type : 'page';
-							if (AD.classes.AppBuilder.currApp.currPage.parent && (pageType == 'page' || pageType == 'modal')) {
-								$$(self.componentIds.pageType).show();
-								$$(self.componentIds.pageType).define('value', pageType); // Use define() instead of setValues to ignore update data to server
-								$$(self.componentIds.pageType).refresh();
-							}
-							else {
-								$$(self.componentIds.pageType).hide();
-							}
+							self.showPageTypeSelector();
 
 							AD.classes.AppBuilder.currApp.currPage.getComponents()
 								.fail(function (err) {
@@ -568,7 +560,7 @@ steal(
 
 							$$(self.componentIds.saveComponentInfo).hide();
 							$$(self.componentIds.cancelComponentInfo).hide();
-							$$(self.componentIds.pageType).show();
+							self.showPageTypeSelector();
 
 							$$(self.componentIds.componentList).show();
 						},
@@ -716,6 +708,20 @@ steal(
 							webix.html.removeCss($$(this.componentIds.componentList).getNode(), "ab-component-drop-area");
 						},
 
+						showPageTypeSelector: function () {
+							var self = this,
+								pageType = AD.classes.AppBuilder.currApp.currPage.type ? AD.classes.AppBuilder.currApp.currPage.type : 'page';
+
+							if (AD.classes.AppBuilder.currApp.currPage.parent && (pageType == 'page' || pageType == 'modal')) {
+								$$(self.componentIds.pageType).show();
+								$$(self.componentIds.pageType).define('value', pageType); // Use define() instead of setValues to ignore update data to server
+								$$(self.componentIds.pageType).refresh();
+							}
+							else {
+								$$(self.componentIds.pageType).hide();
+							}
+						},
+
 						resetState: function () {
 							var self = this;
 
@@ -726,7 +732,6 @@ steal(
 
 							$$(self.componentIds.saveComponentInfo).hide();
 							$$(self.componentIds.cancelComponentInfo).hide();
-							$$(self.componentIds.pageType).show();
 
 							$$(self.componentIds.componentList).show();
 
