@@ -23,6 +23,18 @@ steal(
 						*/
 					},
 					{
+						changeType: function (pageType) {
+							if (pageType == 'page' || pageType == 'modal') {
+								this.attr('type', pageType);
+								return this.save();
+							}
+							else {
+								var q = $.Deferred();
+								q.reject('Invalid page type');
+								return q;
+							}
+						},
+
 						getComponents: function () {
 							return AD.Model.get('opstools.BuildApp.ABPageComponent').findAll({ page: this.id });
 						},

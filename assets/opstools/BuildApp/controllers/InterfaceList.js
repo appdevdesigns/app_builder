@@ -34,8 +34,6 @@ steal(
 
 							self.initMultilingualLabels();
 							self.initControllers();
-							self.initEvents();
-
 							self.initWebixUI();
 						},
 
@@ -66,23 +64,6 @@ steal(
 							var AddNewPage = AD.Control.get('opstools.BuildApp.InterfaceAddNewPage');
 
 							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
-						},
-
-						initEvents: function () {
-							var self = this;
-
-							// // Create new page handler
-							// self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
-							// 	if (data.newPage instanceof Array) {
-							// 		data.newPage.forEach(function (page) {
-							// 			var noSelect = page.parent !== null;
-							// 			self.addPage(page, noSelect);
-							// 		});
-							// 	}
-							// 	else {
-							// 		self.addPage(data.newPage);
-							// 	}
-							// });
 						},
 
 						initWebixUI: function () {
@@ -334,7 +315,7 @@ steal(
 
 							AD.classes.AppBuilder.currApp.unbind('change');
 							AD.classes.AppBuilder.currApp.bind('change', function (ev, attr, how, newVals, oldVals) {
-								if (attr.indexOf('pages') !== 0 || (attr.match(/\./g) || []).length > 1) return;
+								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
 
 								console.log('InterfaceList: change ', ev, attr, how, newVals, oldVals);
 
@@ -348,10 +329,14 @@ steal(
 										}
 										break;
 									case 'set':
-										// TODO
-										// label
-										// type
-										// weight
+										if (ev.target) { // Update label or page type
+											$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
+
+											// Show gear
+											if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+												self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+										}
+										// TODO: weight -> reorder
 										break;
 									case 'remove':
 										if (oldVals.forEach) {
@@ -368,12 +353,14 @@ steal(
 							var pages = AD.classes.AppBuilder.currApp.pages.attr();
 							var map = {}, page, treeData = [];
 
+							// Convert array to tree data
 							for (var i = 0; i < pages.length; i += 1) {
 								page = pages[i];
 								page.data = [];
 								map[page.id] = i; // use map to look-up the parents
 								if (page.parent) {
-									pages[map[page.parent.id]].data.push(page);
+									var parentId = page.parent.id ? page.parent.id : page.parent;
+									pages[map[parentId]].data.push(page);
 								} else {
 									treeData.push(page);
 								}

@@ -33,6 +33,8 @@ steal(
 								layoutToolbar: 'ab-interface-layout-toolbar',
 								layoutToolbarHeader: 'ab-interface-layout-toolbar-header',
 
+								pageType: 'ab-interface-page-type',
+
 								saveComponentInfo: 'ab-interface-save-component-info',
 								cancelComponentInfo: 'ab-interface-cancel-component-info',
 
@@ -135,6 +137,28 @@ steal(
 												id: self.componentIds.layoutToolbarHeader,
 												label: self.labels.interface.component.layoutHeader
 											},
+
+											{
+												view: "segmented",
+												id: self.componentIds.pageType,
+												width: 200,
+												inputWidth: 200,
+												options: [
+													{ id: "page", value: "Page" },
+													{ id: "modal", value: "Popup" }
+												],
+												on: {
+													onChange: function (newValue, oldValue) {
+														if (newValue == oldValue) return;
+
+														// Call server to change page type
+														AD.classes.AppBuilder.currApp.currPage.changeType(newValue)
+															.fail(function (err) { console.error(err) })
+															.then(function () { });
+													}
+												}
+											},
+
 											{
 												view: 'button',
 												id: self.componentIds.saveComponentInfo,
@@ -230,6 +254,7 @@ steal(
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
 
+																	$$(self.componentIds.pageType).hide();
 																	$$(self.componentIds.saveComponentInfo).show();
 																	$$(self.componentIds.cancelComponentInfo).show();
 
@@ -467,6 +492,17 @@ steal(
 							$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 							$$(self.componentIds.layoutToolbar).show();
 
+							// Set page type
+							var pageType = AD.classes.AppBuilder.currApp.currPage.type ? AD.classes.AppBuilder.currApp.currPage.type : 'page';
+							if (pageType == 'page' || pageType == 'modal') {
+								$$(self.componentIds.pageType).show();
+								$$(self.componentIds.pageType).define('value', pageType); // Use define() instead of setValues to ignore update data to server
+								$$(self.componentIds.pageType).refresh();
+							}
+							else {
+								$$(self.componentIds.pageType).hide();
+							}
+
 							AD.classes.AppBuilder.currApp.currPage.getComponents()
 								.fail(function (err) {
 									$$(self.componentIds.componentList).hideProgress();
@@ -514,6 +550,7 @@ steal(
 
 							$$(self.componentIds.saveComponentInfo).hide();
 							$$(self.componentIds.cancelComponentInfo).hide();
+							$$(self.componentIds.pageType).show();
 
 							$$(self.componentIds.componentList).show();
 						},
@@ -671,6 +708,7 @@ steal(
 
 							$$(self.componentIds.saveComponentInfo).hide();
 							$$(self.componentIds.cancelComponentInfo).hide();
+							$$(self.componentIds.pageType).show();
 
 							$$(self.componentIds.componentList).show();
 

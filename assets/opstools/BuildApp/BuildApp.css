@@ -67,7 +67,8 @@
 }
 
 /* Webix list */
-.ab-main-container .webix_selected {
+.ab-main-container .webix_list_item .webix_selected,
+.ab-main-container .webix_tree_item.webix_selected {
 	color: #fff !important;
 	background-color: #3498db !important;
 }
@@ -77,16 +78,22 @@
 }
 
 /* Webix segmented */
-.ab-main-container .webix_segment_0.webix_selected,
-.ab-main-container .webix_segment_1.webix_selected,
-.ab-main-container .webix_segment_N.webix_selected {
+.ab-form-component-item .webix_segment_0.webix_selected,
+.ab-form-component-item .webix_segment_1.webix_selected,
+.ab-form-component-item .webix_segment_N.webix_selected,
+.ab-component-view-edit-field .webix_segment_0.webix_selected,
+.ab-component-view-edit-field .webix_segment_1.webix_selected,
+.ab-component-view-edit-field .webix_segment_N.webix_selected {
 	color: #fff !important;
 	background-color: #3498db !important;
 }
 
-.ab-main-container .webix_segment_0,
-.ab-main-container .webix_segment_1,
-.ab-main-container .webix_segment_N {
+.ab-form-component-item .webix_segment_0,
+.ab-form-component-item .webix_segment_1,
+.ab-form-component-item .webix_segment_N,
+.ab-component-view-edit-field .webix_segment_0,
+.ab-component-view-edit-field .webix_segment_1,
+.ab-component-view-edit-field .webix_segment_N {
 	color: #3498db;
 	background: #fff;
 }
