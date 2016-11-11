@@ -190,7 +190,9 @@ steal(
 			$$(componentIds.objectList).data.unsync();
 			$$(componentIds.objectList).data.sync(objectList);
 			$$(componentIds.objectList).refresh();
-			$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
+			
+			// Allow linking to self
+			//$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
 
 			$$(componentIds.fieldLink).setValue(application.currObj.label);
 			$$(componentIds.fieldLink2).setValue(application.currObj.label);
