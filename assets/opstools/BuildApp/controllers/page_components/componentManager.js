@@ -62,11 +62,11 @@ steal(
 		};
 
 		componentManager.editStop = function () {
-			components.forEach(function (component) {
-				if (component.editStop)
-					component.editStop();
+			components.forEach(function (comp) {
+				if (comp.editStop)
+					comp.editStop();
 				else {
-					var compInfo = component.getInfo();
+					var compInfo = comp.getInfo();
 					if (compInfo.propertyView && $$(compInfo.propertyView) && $$(compInfo.propertyView).editStop) {
 						$$(compInfo.propertyView).editStop();
 					}

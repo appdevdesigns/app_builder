@@ -161,13 +161,22 @@ steal(
 																$$(editViewId).hideProgress();
 														})
 														.then(function (result) {
+															if (result.translate) result.translate();
+
 															var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
 															updatedItem.setting = result.attr('setting');
 															$$(self.componentIds.componentList).updateItem(self.data.editedComponentId, updatedItem);
 
 															self.openLayoutViewMode();
 
-															self.element.trigger(self.options.savedComponentEvent, {});
+															if (componentInstance.afterSaveSetting) {
+																componentInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, result);
+															}
+
+															self.element.trigger(self.options.savedComponentEvent, {
+																page: AD.classes.AppBuilder.currApp.currPage,
+																component: result
+															});
 
 															if ($$(editViewId).hideProgress)
 																$$(editViewId).hideProgress();
