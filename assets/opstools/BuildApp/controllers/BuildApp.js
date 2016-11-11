@@ -129,6 +129,8 @@ steal(
 							self.controllers.AppList.element.on(self.CONST.APP_SELECTED, function (event, app) {
 								self.element.find(".ab-app-list").hide();
 
+								if (AD.classes.AppBuilder.currApp)
+									AD.classes.AppBuilder.currApp.unbind('change');
 								AD.classes.AppBuilder.currApp = app;
 
 								self.controllers.AppWorkspace.refresh();

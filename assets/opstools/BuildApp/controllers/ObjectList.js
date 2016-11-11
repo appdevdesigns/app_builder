@@ -264,23 +264,23 @@ steal(
 
 															$$(self.webixUiId.objectList).showProgress({ type: "icon" });
 
-															var delApp = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == selectedObject.id });
-															if (delApp && delApp.length < 1) return;
+															var delObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == selectedObject.id });
+															if (delObj && delObj.length < 1) return;
 
 															// Call server to delete object data
-															delApp[0].destroy()
+															delObj[0].destroy()
 																.fail(function (err) {
 																	$$(self.webixUiId.objectList).hideProgress();
 
 																	webix.message({
 																		type: "error",
-																		text: self.labels.common.deleteErrorMessage.replace("{0}", delApp.label)
+																		text: self.labels.common.deleteErrorMessage.replace("{0}", delObj.label)
 																	});
 
 																	AD.error.log('Object List : Error delete object data', { error: err });
 																})
 																.then(function (result) {
-																	if (delApp)
+																	if (delObj)
 																		self.element.trigger(self.options.deletedObjectEvent, { object: selectedObject });
 
 																	webix.message({
@@ -348,10 +348,6 @@ steal(
 
 														}).then(function (result) {
 															$$(self.webixUiId.addNewPopup).hide();
-
-															if (result.translate) result.translate();
-
-															AD.classes.AppBuilder.currApp.objects.push(result);
 
 															if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
 																$$(self.webixUiId.objectList).unselectAll();

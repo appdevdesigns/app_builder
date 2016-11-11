@@ -679,7 +679,8 @@ steal(
 		gridComponent.getInfo = function () {
 			return {
 				name: 'grid',
-				icon: 'fa-table'
+				icon: 'fa-table',
+				propertyView: componentIds.propertyView
 			};
 		};
 
@@ -934,10 +935,6 @@ steal(
 					}
 				}
 			};
-		};
-
-		gridComponent.editStop = function () {
-			$$(componentIds.propertyView).editStop();
 		};
 
 		return gridComponent;
