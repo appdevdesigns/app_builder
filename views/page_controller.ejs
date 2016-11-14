@@ -140,9 +140,24 @@ steal(
 												position: "center",
 												resize: true,
 												width: 700,
+												height: 450,
 												css: 'ab-main-container',
-												head: pageData.label,
+												head:{
+													view: "toolbar",
+													cols:[
+														{ view:"label", label: pageData.label },
+														{ view:"button", label: "Close", width: 100, align: "right",
+															click: function() {
+																if (self.pages[self.previousPageID].type === 'modal')
+																	self.showPage();
+																else
+																	self.showPage(self.previousPageID);
+															}
+														}
+													]
+												},
 												body:{
+													scroll: true,
 													template: comTemplate
 												}
 											}).hide();
@@ -337,6 +352,11 @@ steal(
 								if (typeof pageID == 'undefined') {
 									pageID = this.rootPageID;
 								}
+
+								// Hide page popup
+								if ($$(this.pages[this.activePageID].domID).hide)
+									$$(this.pages[this.activePageID].domID).hide();
+
 								$$(this.pages[pageID].domID).show();
 								this.previousPageID = this.activePageID;
 								this.activePageID = pageID;
