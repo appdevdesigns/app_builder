@@ -63,6 +63,25 @@ steal(
 							return AD.Model.get('opstools.BuildApp.ABColumn').findOne({ object: this.id, id: colId });
 						},
 
+						createColumn: function (col) {
+							var self = this,
+								q = $.Deferred();
+
+							col.object = self.id;
+
+							AD.Model.get('opstools.BuildApp.ABColumn').create(col)
+								.fail(q.reject)
+								.then(function (result) {
+									if (result.translate) result.translate();
+
+									self.columns.push(result);
+
+									q.resolve(result);
+								});
+
+							return q;
+						},
+
 						sortColumns: function (cols) {
 							var q = AD.sal.Deferred();
 
