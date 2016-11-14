@@ -329,7 +329,7 @@ steal(
 										}
 										break;
 									case 'set':
-										if (ev.target) { // Update label or page type
+										if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) { // Update label or page type
 											$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
 
 											// Show gear
@@ -341,7 +341,7 @@ steal(
 									case 'remove':
 										if (oldVals.forEach) {
 											oldVals.forEach(function (deletedPage) {
-												if (deletedPage)
+												if (deletedPage && $$(self.webixUiId.interfaceTree).exists(deletedPage.id))
 													$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
 											});
 											self.element.trigger(self.options.updatedPageEvent, {});
