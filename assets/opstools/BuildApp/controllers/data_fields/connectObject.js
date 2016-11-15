@@ -50,7 +50,7 @@ steal(
 				// Wait until selectivity populate data completely
 				setTimeout(function () {
 					$(connectObjectField).trigger('update', connectData);
-				}, 200);
+				}, 600);
 			});
 		}
 

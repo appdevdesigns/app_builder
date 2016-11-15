@@ -393,13 +393,7 @@ steal(
 
 										// Resize row height
 										var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: result.rowId, column: result.columnName }),
-											rowHeight = dataFieldsManager.getRowHeight(
-												AD.classes.AppBuilder.currApp,
-												AD.classes.AppBuilder.currApp.currObj,
-												colData,
-												rowData[result.columnName],
-												itemNode
-											);
+											rowHeight = dataFieldsManager.getRowHeight(colData, rowData[result.columnName]);
 
 										if (rowData && (!rowData.$height || rowData.$height < rowHeight))
 											$$(self.webixUiId.objectDatatable).setRowHeight(result.rowId, rowHeight);
@@ -816,13 +810,13 @@ steal(
 											},
 											// Update the link column
 											function (next) {
-											    if (!updateColumn.setting.linkVia) {
-											        next()
-											    }
-											    else if (updateColumn.setting.linkObject == updateColumn.object) {
-											        // link to self. no need to create redundant connection.
-											        next();
-											    }
+												if (!updateColumn.setting.linkVia) {
+													next()
+												}
+												else if (updateColumn.setting.linkObject == updateColumn.object) {
+													// link to self. no need to create redundant connection.
+													next();
+												}
 												else {
 													AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.setting.linkVia)
 														.fail(next)
