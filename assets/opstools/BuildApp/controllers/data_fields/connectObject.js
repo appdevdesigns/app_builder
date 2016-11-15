@@ -39,9 +39,9 @@ steal(
 			}
 
 			// Connect data popup
-			$$(componentIds.connectDataPopup).onSelect(function (selectedItems) {
-				selectivityHelper.setData(selectivityNode, selectedItems);
-			});
+			// $$(componentIds.connectDataPopup).onSelect(function (selectedItems) {
+			// 	selectivityHelper.setData(selectivityNode, selectedItems);
+			// });
 
 			$$(componentIds.connectDataPopup).onClose(function (selectedItems) {
 				selectivityHelper.setData(selectivityNode, selectedItems);
