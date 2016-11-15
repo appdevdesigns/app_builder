@@ -190,7 +190,7 @@ steal(
 			$$(componentIds.objectList).data.unsync();
 			$$(componentIds.objectList).data.sync(objectList);
 			$$(componentIds.objectList).refresh();
-			
+
 			// Allow linking to self
 			//$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
 
@@ -251,11 +251,11 @@ steal(
 
 			var selectedItems = [];
 			if (data) {
-				if (data.map) {
-					selectedItems = data.map(function (cVal) {
+				if (data.length) {
+					selectedItems = $.map(data.attr ? data.attr() : data, function (item) {
 						return {
-							id: cVal.id,
-							text: cVal._dataLabel,
+							id: item.id,
+							text: item._dataLabel,
 							object: object,
 							columnName: fieldData.name,
 							rowId: rowId
