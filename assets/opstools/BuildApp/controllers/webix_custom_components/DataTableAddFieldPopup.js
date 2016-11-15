@@ -5,7 +5,6 @@ steal(
 		var data = {},
 			componentIds = {
 				chooseTypeMenu: 'ab-new-type-menu',
-				chooseTypeView: 'ab-new-none',
 
 				headerNameText: 'ab-new-field-name',
 				labelNameText: 'ab-new-label-name',
@@ -40,14 +39,6 @@ steal(
 				}
 			},
 			editDefinitions = dataFieldsManager.getEditDefinitions();
-
-		// Insert please select data type view
-		editDefinitions.splice(0, 0, {
-			id: componentIds.chooseTypeView,
-			rows: [
-				{ view: "label", label: labels.add_fields.chooseType }
-			]
-		});
 
 		webix.protoUI({
 			name: 'add_fields_popup',
@@ -225,7 +216,7 @@ steal(
 
 				$$(componentIds.saveButton).define('label', labels.add_fields.addNewField);
 				$$(componentIds.saveButton).refresh();
-				$$(componentIds.chooseTypeView).show();
+				$$('ab-new-singleText').show(); // Show 'string' data field to default
 				$$(componentIds.chooseTypeMenu).show();
 
 				dataFieldsManager.resetState();
