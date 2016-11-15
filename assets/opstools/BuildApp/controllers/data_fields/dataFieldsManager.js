@@ -14,7 +14,6 @@ steal(
 		// as parameters to this function().
 
 		var componentIds = {
-			headerName: 'ab-new-{0}-header',
 			labelName: 'ab-new-{0}-label'
 		};
 
@@ -63,7 +62,6 @@ steal(
 		 *
 		 * The common layout header contains:
 		 *		[Menu Label]
-		 *		[textBox: headerName]
 		 *		[textBox: labelName]
 		 *		[text:    description]
 		 *
@@ -87,22 +85,6 @@ steal(
 						label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', field.icon).replace('{1}', field.menuName)
 					});
 				}
-
-				// Name text box
-				headerDefinition.push({
-					view: "text",
-					id: componentIds.headerName.replace('{0}', field.name),
-					label: "Name",
-					placeholder: "Name",
-					labelWidth: 50,
-					css: 'ab-new-field-name', // Highlight this when open
-					on: {
-						onChange: function (newValue, oldValue) {
-							if (oldValue == $$(componentIds.labelName.replace('{0}', field.name)).getValue())
-								$$(componentIds.labelName.replace('{0}', field.name)).setValue(newValue);
-						}
-					}
-				});
 
 				// Label text box
 				headerDefinition.push({
@@ -206,10 +188,10 @@ steal(
 			if (field != null) {
 				var fieldInfo = field.getSettings();
 				if (fieldInfo) {
-					fieldInfo.name = $$(componentIds.headerName.replace('{0}', name)).getValue();
+					fieldInfo.name = $$(componentIds.labelName.replace('{0}', name)).getValue();
 					fieldInfo.label = $$(componentIds.labelName.replace('{0}', name)).getValue();
-					fieldInfo.id = $$(componentIds.headerName.replace('{0}', name)).columnId;
-					fieldInfo.weight = $$(componentIds.headerName.replace('{0}', name)).weight;
+					fieldInfo.id = $$(componentIds.labelName.replace('{0}', name)).columnId;
+					fieldInfo.weight = $$(componentIds.labelName.replace('{0}', name)).weight;
 				}
 
 				return fieldInfo;
@@ -241,18 +223,13 @@ steal(
 
 			if (!field) return;
 
-			if ($$(componentIds.headerName.replace('{0}', data.fieldName)))
-				$$(componentIds.headerName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
-			else
-				$$(componentIds.headerName.replace('{0}', data.fieldName)).setValue('');
-
 			if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
 				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
 			else
 				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue('');
 
-			$$(componentIds.headerName.replace('{0}', data.fieldName)).columnId = data.id;
-			$$(componentIds.headerName.replace('{0}', data.fieldName)).weight = data.weight;
+			$$(componentIds.labelName.replace('{0}', data.fieldName)).columnId = data.id;
+			$$(componentIds.labelName.replace('{0}', data.fieldName)).weight = data.weight;
 
 			field.populateSettings(application, data);
 		};
@@ -329,11 +306,6 @@ steal(
 		 */
 		self.resetState = function () {
 			fields.forEach(function (f) {
-				var elHeader = $$(componentIds.headerName.replace('{0}', f.name));
-				if (elHeader) {
-					elHeader.setValue('');
-					elHeader.enable();
-				}
 				var elLabel = $$(componentIds.labelName.replace('{0}', f.name));
 				if (elLabel)
 					elLabel.setValue('');
