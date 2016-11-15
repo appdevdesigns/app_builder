@@ -38,7 +38,6 @@ steal(
 				});
 			}
 
-			// Connect data popup
 			// $$(componentIds.connectDataPopup).onSelect(function (selectedItems) {
 			// 	selectivityHelper.setData(selectivityNode, selectedItems);
 			// });
@@ -48,7 +47,10 @@ steal(
 
 				var connectData = getReturnData(object, columnName, rowId, selectedItems);
 
-				$(connectObjectField).trigger('update', connectData);
+				// Wait until selectivity populate data completely
+				setTimeout(function () {
+					$(connectObjectField).trigger('update', connectData);
+				}, 200);
 			});
 		}
 
