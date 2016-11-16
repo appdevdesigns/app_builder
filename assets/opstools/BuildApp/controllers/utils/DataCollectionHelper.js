@@ -62,7 +62,7 @@ steal(
 
 											if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
 												|| (oldVal == null && newVal == null)
-												|| oldVal == newVal) return;
+												|| oldVal === newVal) return;
 
 											if (attr.indexOf('.') > -1) {  // 0.attrName
 												rowIndex = attr.split('.')[0];
