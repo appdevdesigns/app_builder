@@ -281,8 +281,13 @@ steal(
 		self.getRowHeight = function (fieldData, data) {
 			var field = getField(fieldData.fieldName);
 
-			if (field && field.getRowHeight)
-				return field.getRowHeight(fieldData, data);
+			if (field && field.getRowHeight) {
+				var rowHeight = parseInt(field.getRowHeight(fieldData, data));
+				if (typeof rowHeight === "number")
+					return rowHeight;
+				else
+					return null
+			}
 			else
 				return null;
 		};
