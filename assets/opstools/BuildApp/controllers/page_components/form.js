@@ -625,7 +625,10 @@ steal(
 								// Get default value of linked data
 								var defaultVal = {
 									id: linkCurrModel.id,
-									text: linkCurrModel._dataLabel
+									text: linkCurrModel._dataLabel,
+									objectId: data.setting.object, // ABObject.id
+									columnName: col.name,
+									rowId: linkCurrModel.id
 								};
 
 								dataFieldsManager.setValue(col, childView.$view, defaultVal);
