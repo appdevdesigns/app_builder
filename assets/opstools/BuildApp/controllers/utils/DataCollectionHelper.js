@@ -61,19 +61,27 @@ steal(
 												attrName = attr;
 
 											if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
-												|| newVal == oldVal
-												|| newVal == null
-												|| typeof newVal == 'undefined') return;
+												|| (oldVal == null && newVal == null)
+												|| oldVal == newVal) return;
 
 											if (attr.indexOf('.') > -1) {  // 0.attrName
 												rowIndex = attr.split('.')[0];
 												attrName = attr.split('.')[1];
 											}
 
-											if (attrName == 'updatedAt' || attrName == 'translations' || attrName == '$height') return;
+											var rowData = rowIndex > -1 ? this[rowIndex] : this; // Get data
 
-											var rowData = rowIndex > -1 ? this[rowIndex] : this, // Get data
-												hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
+											// Convert $height to number
+											if (attrName == '$height' && newVal) {
+												if (typeof newVal !== 'number') {
+													var rowHeight = parseInt(newVal);
+													rowData.attr('$height', rowHeight);
+												}
+												return;
+											}
+											else if (attrName == 'updatedAt' || attrName == 'translations') return;
+
+											var hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
 
 											if (how == 'add' || hasUpdateLink || hasUpdateDate) {

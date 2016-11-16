@@ -253,7 +253,7 @@ steal(
 
 			var selectedItems = [];
 			if (data) {
-				if (data.length) {
+				if (data.each || data.forEach) {
 					selectedItems = $.map(data.attr ? data.attr() : data, function (item) {
 						return {
 							id: item.id,
