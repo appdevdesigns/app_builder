@@ -253,7 +253,16 @@ steal(
 
 			var selectedItems = [];
 			if (data) {
-				if (data.each || data.forEach) {
+				if (data.id) {
+					selectedItems.push({
+						id: data.id,
+						text: data._dataLabel,
+						objectId: object.id,
+						columnName: fieldData.name,
+						rowId: rowId
+					});
+				}
+				else if (data.each || data.forEach) {
 					selectedItems = $.map(data.attr ? data.attr() : data, function (item) {
 						return {
 							id: item.id,
@@ -262,15 +271,6 @@ steal(
 							columnName: fieldData.name,
 							rowId: rowId
 						};
-					});
-				}
-				else if (data.id) {
-					selectedItems.push({
-						id: data.id,
-						text: data._dataLabel,
-						objectId: object.id,
-						columnName: fieldData.name,
-						rowId: rowId
 					});
 				}
 			}
