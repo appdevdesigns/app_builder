@@ -49,7 +49,7 @@ steal(
 							var linkCols = objInfo.columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
 								dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || []; // Get date & datetime columns
 
-							dataHelper.normalizeData(application, objInfo.columns, objectData)
+							dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, objectData)
 								.fail(next)
 								.then(function (result) {
 									if (!dataCollections[objectId]) {
@@ -86,7 +86,7 @@ steal(
 
 											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
 												// Update connected data
-												dataHelper.normalizeData(application, objInfo.columns, rowData, true).then(function (result) { });
+												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData, true).then(function (result) { });
 											}
 										});
 									}

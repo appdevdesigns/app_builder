@@ -742,6 +742,7 @@ steal(
 								function (next) {
 									dataHelper.normalizeData(
 										AD.classes.AppBuilder.currApp,
+										AD.classes.AppBuilder.currApp.currObj.id,
 										AD.classes.AppBuilder.currApp.currObj.columns,
 										objectData)
 										.fail(next)
@@ -1044,7 +1045,11 @@ steal(
 									result.save()
 										.fail(q.reject)
 										.then(function (result) {
-											dataHelper.normalizeData(AD.classes.AppBuilder.currApp, self.data.columns, result)
+											dataHelper.normalizeData(
+												AD.classes.AppBuilder.currApp,
+												AD.classes.AppBuilder.currApp.currObj.id,
+												self.data.columns,
+												result)
 												.fail(q.reject)
 												.then(q.resolve);
 										});

@@ -4,7 +4,7 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	function (modelCreator, dataFieldsManager) {
 		return {
-			normalizeData: function (application, columns, data, ignoreTranslate) {
+			normalizeData: function (application, objectId, columns, data, ignoreTranslate) {
 				var self = this,
 					q = new AD.sal.Deferred(),
 					normalizeDataTasks = [],
@@ -23,6 +23,9 @@ steal(
 				else {
 					list = data; // It is Can.Map
 				}
+
+				var objectModel = application.objects.filter(function (obj) { return objectId == obj.id });
+				if (objectModel && objectModel[0]) objectModel = objectModel[0];
 
 				var linkColumns = columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
 					dateColumns = columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || [];// Get date & datetime columns
@@ -88,7 +91,7 @@ steal(
 
 											if (row[linkCol.name].forEach) {
 												row[linkCol.name].forEach(function (val, index) {
-													if (typeof val._dataLabel == 'undefined' || val._dataLabel == null) {
+													if (val._dataLabel == null) {
 														var linkVal = linkedData.filter(function (link) { return link.id == val.id });
 														if (!linkVal[0]) return;
 
@@ -102,7 +105,7 @@ steal(
 													}
 												});
 											}
-											else if (typeof row[linkCol.name]._dataLabel == 'undefined' || row[linkCol.name]._dataLabel == null) {
+											else if (row[linkCol.name]._dataLabel == null) {
 												var linkVal = linkedData.filter(function (link) { return link.id == row[linkCol.name].id });
 												if (!linkVal[0]) return next();
 
@@ -122,6 +125,12 @@ steal(
 
 							async.parallel(linkTasks, callback);
 						});
+
+						// Set _dataLabel
+						if (row._dataLabel == null && objectModel) {
+							var dataLabel = objectModel.getDataLabel(row.attr());
+							row.attr('_dataLabel', dataLabel);
+						}
 
 						// Convert string to Date object
 						if (dateColumns && dateColumns.length > 0) {
