@@ -36,6 +36,12 @@ steal(
 							// Translate
 							if (!ignoreTranslate && row.translate) row.translate();
 
+							// Set _dataLabel
+							if (row._dataLabel == null && objectModel) {
+								var dataLabel = objectModel.getDataLabel(row.attr());
+								row.attr('_dataLabel', dataLabel);
+							}
+
 							var linkTasks = [];
 
 							linkColumns.forEach(function (linkCol) {
@@ -125,12 +131,6 @@ steal(
 
 							async.parallel(linkTasks, callback);
 						});
-
-						// Set _dataLabel
-						if (row._dataLabel == null && objectModel) {
-							var dataLabel = objectModel.getDataLabel(row.attr());
-							row.attr('_dataLabel', dataLabel);
-						}
 
 						// Convert string to Date object
 						if (dateColumns && dateColumns.length > 0) {

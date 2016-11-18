@@ -18,7 +18,7 @@ steal(
 					return q;
 				}
 
-				if (!dataCollections[objectId]) {
+				if (dataCollections[objectId] == null) {
 					// Get object info
 					var objInfo = application.objects.filter(function (obj) { return obj.id == objectId });
 
@@ -44,7 +44,7 @@ steal(
 						},
 						// Populate labels & Convert string to Date object
 						function (next) {
-							if (!objectData) return next();
+							if (objectData == null) return next();
 
 							var linkCols = objInfo.columns.filter(function (col) { return col.setting.linkObject }) || [], // Get link columns
 								dateCols = objInfo.columns.filter(function (col) { return col.setting.editor === 'date' || col.setting.editor === 'datetime'; }) || []; // Get date & datetime columns
@@ -57,8 +57,40 @@ steal(
 
 										// Listen change data event to update data label
 										dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
+											console.log('DC.change: ', objInfo.attr('name'), attr, how, newVal, oldVal);
 											var rowIndex = -1,
 												attrName = attr;
+
+											// Remove link data
+											if (how === 'remove') {
+												linkCols.forEach(function (col) {
+													var linkDC = dataCollections[col.setting.linkObject],
+														linkObjInfo = application.objects.filter(function (obj) { return obj.id == col.setting.linkObject; });
+													if (linkDC == null || linkObjInfo == null) return;
+
+													linkObjInfo = linkObjInfo[0];
+
+													// Get link column name
+													var updateLinkCol = linkObjInfo.columns.filter(function (c) { return c.id == col.setting.linkVia; });
+													if (!updateLinkCol || !updateLinkCol[0]) return;
+
+													updateLinkCol = updateLinkCol[0];
+
+													linkDC.AD.__list.forEach(function (linkRow) {
+														// Remove link data
+														var linkVal = linkRow.attr(updateLinkCol.name);
+														if (linkVal instanceof can.List) {
+															var removedData = linkVal.filter(function (val) {
+																return val.id != (oldVal[0] ? oldVal[0].id : oldVal.id);
+															});
+
+															if (linkVal.length != removedData.length)
+																linkRow.attr(updateLinkCol.name, removedData);
+														}
+													});
+												});
+												return;
+											}
 
 											if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
 												|| (oldVal == null && newVal == null)
@@ -85,6 +117,7 @@ steal(
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
 
 											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
+												console.log('DC.normalize: ', objInfo.attr('name'), attr, how);
 												// Update connected data
 												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData, true).then(function (result) { });
 											}
