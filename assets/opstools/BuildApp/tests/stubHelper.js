@@ -1,67 +1,5 @@
-var abStubHelper = (function ($) {
+steal(function () {
 	var data = {}; // { objectName: [data], ..., objectNameN: [datan] };
-
-	function getFixtureData(objectName, cond) {
-		var q = $.Deferred(),
-			dataResult = null;
-
-		async.series([
-			// Get data
-			function (next) {
-				if (!data[objectName]) {
-					$.ajax({
-						url: '/opstools/BuildApp/tests/fixtures/' + objectName + '.json',
-						type: 'GET',
-						dataType: "json"
-					})
-						.fail(next)
-						.then(function (result) {
-							data[objectName] = new can.List(result);
-
-							next();
-						});
-				}
-				else {
-					next();
-				}
-			},
-			// Filter data
-			function (next) {
-				if (cond) {
-					dataResult = data[objectName].filter(function (item) {
-						var result = true;
-
-						for (key in cond) {
-							if (result && item.hasOwnProperty(key) && (item.attr(key) == cond[key] || item.attr(key).id == cond[key])) {
-								result = true;
-							}
-							else {
-								result = false;
-							}
-						}
-
-						return result;
-					});
-
-					next();
-				}
-				else {
-					dataResult = data[objectName];
-
-					next();
-				}
-			}
-		], function (err) {
-			if (err) {
-				q.reject(err);
-			}
-			else {
-				q.resolve(dataResult);
-			}
-		});
-
-		return q;
-	};
 
 	function saveData(objectName, obj) {
 		var q = $.Deferred();
@@ -146,6 +84,72 @@ var abStubHelper = (function ($) {
 	};
 
 	return {
+		getFixtureData: function (objectName, cond) {
+			var q = $.Deferred(),
+				dataResult = null;
+
+			async.series([
+				// Get data
+				function (next) {
+					if (!data[objectName]) {
+						$.ajax({
+							url: '/opstools/BuildApp/tests/fixtures/' + objectName + '.json',
+							type: 'GET',
+							dataType: "json"
+						})
+							.fail(next)
+							.then(function (result) {
+								data[objectName] = new can.List(result);
+
+								data[objectName].forEach(function (d) {
+									d.getDataLabel = function (rowData) {
+										return "TODO : getDataLabel";
+									}
+								});
+
+								next();
+							});
+					}
+					else {
+						next();
+					}
+				},
+				// Filter data
+				function (next) {
+					if (cond) {
+						dataResult = data[objectName].filter(function (item) {
+							var result = true;
+
+							for (key in cond) {
+								if (result && item.hasOwnProperty(key) && (item.attr(key) == cond[key] || item.attr(key).id == cond[key])) {
+									result = true;
+								}
+								else {
+									result = false;
+								}
+							}
+
+							return result;
+						});
+					}
+					else {
+						dataResult = data[objectName];
+					}
+
+					next();
+				}
+			], function (err) {
+				if (err) {
+					q.reject(err);
+				}
+				else {
+					q.resolve(dataResult);
+				}
+			});
+
+			return q;
+		},
+
 		convertToStub: function (model, objectName) {
 			sinon.stub(model, 'findAll', function (cond) { return getFixtureData(objectName, cond); });
 			sinon.stub(model, 'findOne', function (cond) {
@@ -218,4 +222,4 @@ var abStubHelper = (function ($) {
 		}
 	};
 
-})(jQuery);
+});
