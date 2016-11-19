@@ -6,7 +6,6 @@ steal(
 			componentIds = {
 				chooseTypeMenu: 'ab-new-type-menu',
 
-				headerNameText: 'ab-new-field-name',
 				labelNameText: 'ab-new-label-name',
 
 				saveButton: 'ab-new-save-button'
@@ -77,7 +76,7 @@ steal(
 										$$(viewName).show();
 
 										// Highlight name in text box
-										$('.' + componentIds.headerNameText + ' input[type="text"]').select();
+										$('.' + componentIds.labelNameText + ' input[type="text"]').select();
 
 										this.getTopParentView().fieldName = selectedMenuItem.fieldName;
 									}
@@ -205,10 +204,8 @@ steal(
 
 				$$(viewName).show();
 
-				$('.' + componentIds.headerNameText).webix_text().disable();
-
 				// Highlight name in text box
-				$('.' + componentIds.headerNameText + ' input[type="text"]').select();
+				$('.' + componentIds.labelNameText + ' input[type="text"]').select();
 			},
 
 			resetState: function () {
