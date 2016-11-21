@@ -161,7 +161,7 @@ steal(
 											// Create link column
 											function (column, ok) {
 												var isLinkToSelf = (field.setting.linkObject == field.object);
-												if (field.setting.linkObject && field.setting.linkVia && !isLinkToSelf) {
+												if (field.setting.linkObject && field.setting.linkVia) {
 													self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
 														.fail(ok)
 														.then(function (linkCol) {
