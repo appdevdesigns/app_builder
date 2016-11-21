@@ -10,7 +10,7 @@ steal(
         };
 
         //Constructor
-        var menuComponent = function (application, viewId, componentId) {
+        var tabComponent = function (application, viewId, componentId) {
             var data = {};
 
             this.viewId = viewId;
@@ -19,10 +19,16 @@ steal(
 
             this.pendingTransactions = [];
 
+            //
             // Instance functions
+            //
+
             /*
              * @function render
              * display this instance on the screen.
+             *
+             * in whatever context this component is being displayed, in the editor or on 
+             * a generated page, render this instance based upon the provided settings.
              *
              * @param {json} setting  our instance settings.
              * @return {deferred}
@@ -34,7 +40,7 @@ steal(
                 // 1) rebuild the current view of our component 
                 // based upon the given setting
 
-                var view = $.extend(true, {}, menuComponent.getView());
+                var view = $.extend(true, {}, tabComponent.getView());
                 view.id = self.viewId;  
 
                 // setting.pages    : {array} of { page definition }
@@ -56,11 +62,14 @@ steal(
                     && (setting.pages.length)) {
 console.error(' todo!');
 
-                    view = menuComponent.tabView();
+                    view = tabComponent.tabView();
                     
                 } 
 
 
+                // there are several paths in .render() that need to
+                // properly close out the method.  This is a common
+                // routine to properly finish off the process.
                 function finishIt() {
 
                     // event to notifiy the [ask pong who?] we are finished 
@@ -74,7 +83,7 @@ console.error(' todo!');
                 }
 
 
-
+                // if we are actually rendering tabs here
                 if (view.view == 'tabview') {
 
 
@@ -163,7 +172,22 @@ console.error(' todo!');
                 return q;
             };
 
+
+            /**
+             * @function getSettings
+             *
+             * In the Editor, once the user clicks [save], this is called
+             * to pull out the current settings for this component.
+             * @return {json}  the {json} configuration that becomes our 
+             *                 {settings} parameters in our instance methods.
+             *                  .tabs {array} of tab definitions for this instance
+             *                      .checked {bool} if this tab is currently included
+             *                      .icon {string} the fa-[icon] for this tab
+             *                      .label {string} what is displayed for this  
+             *                                      tab's label
+             */
             this.getSettings = function () {
+
                 // var values = $$(componentIds.propertyView).getValues(),
                 //     selectedPages = $$(componentIds.editMenu).find(function () { return true; }),
                 //     selectedPageIds = $.map(selectedPages || [], function (page) {
@@ -184,17 +208,45 @@ console.error(' todo!');
                 };
             };
 
+
+            /**
+             * @function populateSettings
+             *
+             * In the Editor, take our current {settings} and display those 
+             * values in the component's editor.
+             */
             this.populateSettings = function (setting) {
-                // Menu
+                
+
+//// LEFT OFF HERE:
+
+// option 1:
+// when saving a page, put in a uuid reference in it's name
+// save this uuid in our settings for the tab
+// on .render() get the pages with our uuid values, and 
+// insert them in our tab cells (or make them use containers with the tab cells id's )
+
+// option 2:
+// generate a uuid for this tab
+// make sure setting.uuid is set
+// then reference this uuid in each page definition
+// then when .render() is called, make sure each page
+//      has a container referencing the uuid for the tab container.
+//
+
+                // Render the component as it currently looks.
                 this.render(setting);
 
-                // // Page list
+
+                // Clear the current tree view
                 $$(componentIds.pageTree).clearAll();
 
+                // display each tab definition in our tree view
                 var tabs = setting.tabs || [];
                 tabs.forEach(function(tab){
 
-                    // make a copy of tab so changes don't persist unless we click [save]
+                    // make a copy of tab so changes don't persist unless 
+                    // we click [save]
                     var cTab = {
                         icon: tab.icon,
                         label: tab.label
@@ -205,77 +257,29 @@ console.error(' todo!');
                         cTab.checked = false; 
                     }
 
+                    // add it to the tree view
                     $$(componentIds.pageTree).add(cTab, $$(componentIds.pageTree).count());
                 })
                 
 
-                menuComponent.refreshEditView();
-
-
-                // var pageItems = [];
-                // if (application.currPage) {
-                //  webix.extend($$(componentIds.pageTree), webix.ProgressBar);
-
-                //  $$(componentIds.pageTree).showProgress({ type: 'icon' });
-
-                //  var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
-                //  application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
-                //      .fail(function (err) {
-                //          $$(componentIds.pageTree).hideProgress();
-                //      })
-                //      .then(function (pages) {
-                //          pages.forEach(function (p) {
-                //              if (p.translate)
-                //                  p.translate();
-                //          });
-
-                //          pageItems = $.map(pages.attr(), function (p) {
-                //              if (!p.parent) { // Get root page
-                //                  var pageItem = {
-                //                      id: p.id,
-                //                      value: p.name,
-                //                      label: p.label
-                //                  };
-
-                //                  // Get children pages
-                //                  pageItem.data = $.map(pages.attr(), function (subP) {
-                //                      if (subP.parent && subP.parent.id == p.id) {
-                //                          return {
-                //                              id: subP.id,
-                //                              value: subP.name,
-                //                              label: subP.label
-                //                          }
-                //                      }
-                //                  });
-
-                //                  return pageItem;
-                //              }
-                //          });
-
-                //          $$(componentIds.pageTree).parse(pageItems);
-                //          $$(componentIds.pageTree).openAll();
-
-                //          // Set checked items
-                //          if (setting && setting.pageIds) {
-                //              setting.pageIds.forEach(function (pageId) {
-                //                  $$(componentIds.pageTree).checkItem(pageId);
-                //              });
-                //          }
-
-                //          $$(componentIds.pageTree).hideProgress();
-                //      });
-                // }
-
-                // // Properties
-                // if (!$$(componentIds.propertyView)) return;
-
-                // $$(componentIds.propertyView).setValues({
-                //  orientation: setting.layout || 'x'
-                // });
+                // we've added a method to our component to update the display 
+                // once a configuration change has been made.
+                tabComponent.refreshEditView();
 
                 $$(componentIds.propertyView).refresh();
             };
 
+
+            /**
+             * @function isRendered
+             *
+             * indicates wether or not our component has rendered itself to the 
+             * display.
+             *
+             * Should return TRUE after our .render() method has been called.
+             *
+             * @return {bool}
+             */
             this.isRendered = function () {
                 return data.isRendered === true;
             };
@@ -289,6 +293,8 @@ console.error(' todo!');
              *
              * @param {obj} page  the ABPage this component is on.
              * @param {obj} component the ABPageComponent instance of this component
+             * @return {Deferred} since this can be an async method of updating
+             *              DB settings.
              */
             this.afterSaveSetting = function (page, component) {
                 var dfd = AD.sal.Deferred();
@@ -325,16 +331,30 @@ console.error(' todo!');
 
 
                 return dfd;
-
             }
+
 
         };
 
 
-        // Static functions
-        // .getInfo()
-        // shows the entry in the component picker
-        menuComponent.getInfo = function () {
+        //
+        // Static Class functions
+        // 
+
+
+        /**
+         * @function getInfo
+         *
+         * returns the definition that allows the Editor to display an icon
+         * to drag this component onto the Page layout.
+         *
+         * This needs to provide a 
+         *      .name : {string}  The label for this component
+         *      .icon : {string}  The font awesome icon to display 
+         *
+         * @return {json} 
+         */
+        tabComponent.getInfo = function () {
             return {
                 name: 'tab',
                 icon: 'fa-window-maximize'
@@ -343,8 +363,8 @@ console.error(' todo!');
 
 
         // .tabView()
-        // the base tabview definition
-        menuComponent.tabView = function(){
+        // the base tabview Webix definition
+        tabComponent.tabView = function(){
             return  { 
                 id:componentIds.editMenu,
                 view:"tabview", 
@@ -365,9 +385,21 @@ console.error(' todo!');
             };
         }
 
-        // .getView()
-        // return the base Webix component definition
-        menuComponent.getView = function () {
+
+        /**
+         * @function getView
+         * 
+         * returns the Webix definition for this component.
+         *
+         * For our Tab Component, we start off by returning a Label view.
+         * If any tabs are available, we then swtich to the .tabView definition.
+         * 
+         * We do it this way because Webix will not display a tab view correctly
+         * if there are no .cell entries.
+         *
+         * @return {json} 
+         */
+        tabComponent.getView = function () {
             return { 
                 view:'label', 
 // TODO: make this a multilingual string:
@@ -376,7 +408,16 @@ console.error(' todo!');
             };
         };
 
-        menuComponent.refreshEditView = function() {
+
+        // refreshEditView
+        // There are several places in our Tab Component when we want to 
+        // update the Editor once a change has been made (click on a tab entry
+        // to include or exclude from the list)
+        //
+        // this is unique to our Tab View
+        tabComponent.refreshEditView = function() {
+
+            // find out which pages have been included (those that are checked)
             var currentPages = [];
             $$(componentIds.pageTree).getChecked().forEach(function (pageId) {
                 currentPages.push($$(componentIds.pageTree).getItem(pageId));
@@ -388,7 +429,7 @@ console.error(' todo!');
             if (currentPages.length) {
 
                 // get the tabView data
-                updatedView = menuComponent.tabView();
+                updatedView = tabComponent.tabView();
 
                 // for each tab
                     // add a cell to the template
@@ -410,7 +451,7 @@ console.error(' todo!');
             } else {
 
                 // get the base label view
-                updatedView = menuComponent.getView();
+                updatedView = tabComponent.getView();
             }
 
 
@@ -418,8 +459,17 @@ console.error(' todo!');
             webix.ui(updatedView, $$(componentIds.editMenu));
         }
 
-        menuComponent.getEditView = function (componentManager) {
-            var menu = $.extend(true, {}, menuComponent.getView());
+
+        /**
+         * @function getEditView
+         *
+         * return the Webix layout definition for what should be displayed for
+         * this component's Editor.
+         *
+         * @return {json}
+         */
+        tabComponent.getEditView = function (componentManager) {
+            var menu = $.extend(true, {}, tabComponent.getView());
             // menu.id = componentIds.editMenu;
 
             return {
@@ -432,52 +482,61 @@ console.error(' todo!');
                         id:componentIds.addTabForm,
                   
 
-                      "view": "form",
-                      "elements": [{
-                          "margin": 10,
-                          "cols": [
-                            {
-                              "rows": [
+                        "view": "form",
+                        "elements": [{
+                            "margin": 10,
+                            "cols": [
                                 {
-                                  "view": "text",
-                                  "name": "Name",
-                                  "label": "Tab Name",
-                                  "labelWidth": "100",
-    // TODO: make this multilingual
-                                  "placeholder": "Enter a tab name",
-                                  "invalidMessage": "Tab name cannot be empty",
-                                  "required":true,
-                                  "width": 300, on:{
-                                    "onBlur":function(){
-                                        //or validate this element only
-                                        if (!this.validate()) {
-                                            webix.message("Please enter a tab name");
-                                            return false;
+                                    "rows": [
+                                        {
+                                            "view": "text",
+                                            "name": "Name",
+                                            "label": "Tab Name",
+                                            "labelWidth": "100",
+// TODO: make this multilingual
+                                            "placeholder": "Enter a tab name",
+                                            "invalidMessage": "Tab name cannot be empty",
+                                            "required":true,
+                                            "width": 300, 
+                                            on:{
+
+                                                "onBlur":function(){
+                                                    //or validate this element only
+                                                    if (!this.validate()) {
+                                                        webix.message("Please enter a tab name");
+                                                        return false;
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }}
-                                }
-                              ]
-                            },
+                                    ]
+                                },
                             {
-                              "rows": [
-                                {
-                                  "view": "text",
-                                  "name": "Icon",
-                                  "label": "Icon",
-                                  "labelWidth": "50",
-    // TODO: make this multilingual
-                                  "placeholder": "Choose an icon",
-                                  "width": 200
-                                }
-                              ]
+                                "rows": [
+                                    {
+                                        "view": "text",
+                                        "name": "Icon",
+                                        "label": "Icon",
+                                        "labelWidth": "50",
+// TODO: make this multilingual
+                                        "placeholder": "Choose an icon",
+                                        "width": 200
+                                    }
+                                ]
                             },
                             {
                                 view:"button",
                                 width:100,
-                                // TODO: make this multilingual
+// TODO: make this multilingual
                                 value: 'Add Page',
+
+                                // .click
+                                // the [Add Page] button for our input form
                                 click:function(){
+
+                                    // make sure our form is valid
                                     if (!$$(componentIds.addTabForm).validate()) {
+// TODO: make this multilingual
                                         webix.message("Please enter a tab name");
                                         return false;
                                     }
@@ -490,9 +549,26 @@ console.error(' todo!');
 
 
 
+                                    // after all our validations pass, we will 
+                                    // store this as a pending transaction.
+                                    //
+                                    // we will add a new page to our page list to
+                                    // reference this tab. The user can edit the 
+                                    // tab view by editing that page in the editor.
+                                    //
+                                    // but we will wait until [save] is pressed 
+                                    // before actually creating those pages.
+                                    // 
+                                    // to do that, we will store this as a pendingTransaction
+                                    // on our component.  And when the .afterSaveSetting() is
+                                    // called, we will then issue the commands to create the
+                                    // pages.
+                                    // 
                                     // componentManager.editInstance is the reference to
                                     // the current instance of the Tab we are editing.
-                                    // store the new page values here:
+                                    // store the new page transactions here:
+
+                                    // make sure we have a .pendingTransactions
                                     var currentTab = componentManager.editInstance;
                                     if (!currentTab.pendingTransactions) {
                                         currentTab.pendingTransactions = [];
@@ -504,60 +580,20 @@ console.error(' todo!');
                                         values: values
                                     });
 
-                                    console.log('transactions:', currentTab.pendingTransactions);
+console.log('transactions:', currentTab.pendingTransactions);
 
-                                    // $$(componentIds.pageTree).add({label:values.Name, icon:values.Icon}, $$(componentIds.pageTree).count(), "root" );
+                                    // clear our form
                                     $$(componentIds.addTabForm).clear();
 
+                                    // new tab definition value
                                     var currentValue = {label:values.Name, icon:values.Icon, checked:true};
-
 
                                     // update the display of our pageTree
                                     $$(componentIds.pageTree).add(currentValue, $$(componentIds.pageTree).count());
 
-                                    menuComponent.refreshEditView();
-
-                                    // var currentPages = $$(componentIds.pageTree).getChecked();
-                                    
-
-                                    // var updatedView = {};
-                                    // // if we have tabs
-                                    // if (currentPages.length) {
-
-                                    //     // get the tabView data
-                                    //     updatedView = menuComponent.tabView();
-
-                                    //     // for each tab
-                                    //         // add a cell to the template
-                                    //     currentPages.forEach(function(obj){
-                                    //         updatedView.cells.push(
-                                    //             {
-                                    //               header: "<i class='fa "+obj.icon+"'></i> "+obj.label,
-                                    //               body: {
-                                    //                 view: "label", 
-                                    //                 label:"Your tab content will appear here."
-                                    //               }
-                                    //             }
-                                    //         );
-                                    //         return true;
-                                    //     });
-
-                                    // }
-                                    // // else
-                                    //     // get the base label view
-                                    //     // endif
-
-                                    // // overwrite the current instance of our component
-                                    // webix.ui(updatedView, $$(componentIds.editMenu));
-
-
-                                    
-
-                                    // // caus of that stupid Webix issue!
-                                    // currentPages.forEach(function(obj){
-                                    //     $$(componentIds.pageTree).add(obj, $$(componentIds.pageTree).count(), "root" );
-                                    // })
-                                    // //$$(componentIds.editMenu).adjust();
+                                    // now update the Edit View to represent the 
+                                    // current settings/values
+                                    tabComponent.refreshEditView();
 
                                 }
                               
@@ -572,60 +608,69 @@ console.error(' todo!');
                         label: 'Tab list'
                     },
                     {
-                     id: componentIds.pageTree,
-                     view: 'tree',
-                     template: "<div class='ab-page-list-item'>" +
-                     "{common.checkbox()} <i class='fa #icon#'></i> #label#" +
-                     "</div>",
-                     on: {
-                         onItemCheck: function () {
-                             menuComponent.refreshEditView();
-                         }
-                     }
+                        id: componentIds.pageTree,
+                        view: 'tree',
+                        template: "<div class='ab-page-list-item'>" +
+                                  "{common.checkbox()} <i class='fa #icon#'></i> #label#" +
+                                  "</div>",
+                        on: {
+
+                            // .onItemCheck
+                            // the [] next to the tab in the tree view
+                            // each time one is clicked we need to update the Edit View
+                            onItemCheck: function () {
+                                tabComponent.refreshEditView();
+                            }
+                        }
                     }
                 ]
             };
         };
 
-        menuComponent.getPropertyView = function (componentManager) {
+
+        /**
+         * @function getPropertyView
+         *
+         * The Editor has a property list on the right side.
+         * 
+         * This method returns the Webix layout for that display.
+         *
+         * @param {object} componentManager
+         * @return {json} 
+         */
+        tabComponent.getPropertyView = function (componentManager) {
             var self = this;
 
-            return {
-                view: "property",
-                id: componentIds.propertyView,
-                elements: [
-                    { label: "Layout", type: "label" },
-                    {
-                        id: 'orientation',
-                        type: "richselect",
-                        label: "Orientation",
-                        options: [
-                            { id: 'x', value: "Horizontal" },
-                            { id: 'y', value: "Vertical" }
-                        ]
-                    },
-                ],
-                on: {
-                    onAfterEditStop: function (state, editor, ignoreUpdate) {
-                        if (state.old === state.value) return true;
+            // if you change a property value, you can reset the display by:
+            // var setting = componentManager.editInstance.getSettings();
+            // componentManager.editInstance.render(setting);
 
-                        switch (editor.id) {
-                            case 'orientation':
-                                var setting = componentManager.editInstance.getSettings();
-                                componentManager.editInstance.render(setting);
-                                break;
-                        }
-                    }
-                }
+            return {
+                id: componentIds.propertyView,
+                view: "label",
+                label: "no properties yet."
             };
         };
 
-        menuComponent.editStop = function () {
+
+        /**
+         * @function editStop
+         *
+         * This method is called before .saveSetting().  It is for making
+         * sure any field in your property editor is no longer in an edit mode 
+         * before you try to read from them.
+         *
+         * (if they are in edit mode, then you wont get the updated value)
+         *
+         * @param {object} componentManager
+         * @return {json} 
+         */
+        tabComponent.editStop = function () {
             if ($$(componentIds.propertyView))
                 $$(componentIds.propertyView).editStop();
         };
 
-        return menuComponent;
 
+        return tabComponent;
     }
 );
