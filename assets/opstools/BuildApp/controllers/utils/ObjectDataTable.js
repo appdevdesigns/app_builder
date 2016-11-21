@@ -147,7 +147,10 @@ steal(
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 
-								if (col.setting.width) {
+								if (col.width) {
+									col.setting.width = col.width;
+								}
+								else if (col.setting.width) {
 									var colWidth = parseInt(col.setting.width);
 									if (typeof colWidth === 'number')
 										col.setting.width = colWidth;

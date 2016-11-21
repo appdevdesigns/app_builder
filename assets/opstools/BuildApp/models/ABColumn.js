@@ -23,6 +23,23 @@ steal(
 						*/
 					},
 					{
+						setWidth: function (width) {
+							var q = AD.sal.Deferred();
+
+							AD.comm.service.put({
+								url: '/app_builder/column/' + this.id + '/width',
+								data: {
+									width: width
+								}
+							}, function (err, result) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve(result);
+							});
+
+							return q;
+						},
 						getList: function () {
 							return AD.Model.get('opstools.BuildApp.ABList').findAll({ column: this.id });
 						}
