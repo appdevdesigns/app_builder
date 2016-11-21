@@ -1,8 +1,8 @@
 steal(
 	// Dependencies
-	"opstools/BuildApp/controllers/utils/ModelCreator.js",
 	"opstools/BuildApp/tests/stubHelper.js",
-	function (modelCreator) {
+	"opstools/BuildApp/controllers/utils/ModelCreator.js",
+	function (abStubHelper, modelCreator) {
 		// the div to attach the controller to
 		var divID = 'test_ModelCreator';
 
@@ -19,18 +19,22 @@ steal(
 		//Define the unit tests
 		describe('testing ModelCreator utility ', function () {
 
+			// Mock up application data
 			var appInfo = {
 				id: 1,
 				name: 'TEST_application'
 			};
 
-			before(function () {
+			before(function (done) {
 
 				buildHTML();
 
-				// Initialize the controller
-				abStubHelper.convertToStub(modelCreator.Model.ABObject, 'ABObject');
-				abStubHelper.convertToStub(modelCreator.Model.ABColumn, 'ABColumn');
+				abStubHelper.getMockModel('ABObject').findAll({})
+					.then(function (result) {
+						appInfo.objects = result;
+						done();
+					});
+
 			});
 
 
@@ -38,27 +42,13 @@ steal(
 				// remove the div to the window
 				$('body').find('#' + divID).remove();
 
-				// Restore to their original state
-				abStubHelper.restore(modelCreator.Model.ABObject);
-				abStubHelper.restore(modelCreator.Model.ABColumn);
 			});
 
 
-			afterEach(function () {
-				abStubHelper.clearLocalData('ABObject');
-				abStubHelper.clearLocalData('ABColumn');
-			});
-
-
-			it('should have application id & name', function () {
-				assert.equal(modelCreator.data.appId, appInfo.id);
-				assert.equal(modelCreator.data.appName, appInfo.name);
-			});
-
-			describe('Object model', function () {
+			describe('Object model : get', function () {
 
 				it('should return object model', function () {
-					var objModel = modelCreator.getModel('One');
+					var objModel = modelCreator.getModel(appInfo, 'Owner');
 
 					if (objModel) {
 						assert.isOk(objModel);
@@ -70,7 +60,7 @@ steal(
 
 
 				it('should not return object model', function () {
-					var objModel = modelCreator.getModel('NotExistsModel');
+					var objModel = modelCreator.getModel(appInfo, 'NotExistsModel');
 
 					if (objModel) {
 						assert.fail(objModel, undefined, 'should not return');
@@ -82,39 +72,18 @@ steal(
 
 			});
 
-			describe('Base model', function () {
+			describe('Object model : update', function () {
 
 				it('should return a valid base model', function () {
-					// Assign
-					var objectName = 'New Base Object model',
-						describe = { 'field1': 'string', 'field2': 'text', 'field3': 'number', 'link': 'anotherModel' },
-						multilingualFields = ['field1', 'field2'],
-						associations = { 'link': 'anotherModelFullName' };
-
 					// Action
-					var result = modelCreator.defineBaseModel('New Object', describe, multilingualFields, associations);
+					var objModel = modelCreator.updateModel(appInfo, 'Owner');
 
 					// Assert
-					assert.equal(describe, result.describe());
-					assert.equal(multilingualFields, result.multilingualFields);
-					assert.equal(associations, result.associations);
-				});
-
-				it('should error when required params are missing', function () {
-					// Assign
-					var result,
-						objectName = 'New Base Object model',
-						describe = null,
-						multilingualFields = null,
-						associations = null;
-
-					try {
-						// Action
-						result = modelCreator.defineBaseModel('New Object', describe, multilingualFields, associations);
+					if (objModel) {
+						assert.isOk(objModel);
 					}
-					catch (err) {
-						// Assert
-						assert.isOk(err, 'should throw a error');
+					else {
+						assert.fail(err, undefined, 'should not return any error');
 					}
 				});
 

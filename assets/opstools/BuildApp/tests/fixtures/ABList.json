@@ -1,218 +1,40 @@
 [
 	{
-		"key": "TEST_application.Two.Field_3",
-		"value": "Apple",
+		"translations": [
+			{
+				"label": "Male",
+				"language_code": "en",
+				"weight": 1,
+				"id": 50,
+				"createdAt": "2016-11-19T05:27:13.000Z",
+				"updatedAt": "2016-11-19T05:27:13.000Z",
+				"ablist": 1
+			}
+		],
+		"column": 3,
+		"key": "test.Owner.Gender",
+		"value": "Male",
 		"id": 1,
-		"createdAt": "2016-10-03T08:07:06.000Z",
-		"updatedAt": "2016-10-03T08:07:06.000Z",
-		"column": {
-			"name": "Field_3",
-			"type": "string",
-			"weight": 5,
-			"required": null,
-			"unique": null,
-			"default": null,
-			"setting": {
-				"icon": "th-list",
-				"filter_type": "list",
-				"editor": "richselect",
-				"filter_options": [
-					"Apple",
-					"Banana",
-					"Orange"
-				]
-			},
-			"linkType": null,
-			"linkDefault": null,
-			"supportMultilingual": null,
-			"id": 7,
-			"createdAt": "2016-10-03T08:07:06.000Z",
-			"updatedAt": "2016-10-03T08:07:06.000Z",
-			"object": 2,
-			"linkObject": null,
-			"linkVia": null
-		},
-		"translations": [
-			{
-				"label": "Apple",
-				"language_code": "th",
-				"weight": 1,
-				"id": 1,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 1
-			},
-			{
-				"label": "Apple",
-				"language_code": "en",
-				"weight": 1,
-				"id": 2,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 1
-			},
-			{
-				"label": "Apple",
-				"language_code": "ko",
-				"weight": 1,
-				"id": 3,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 1
-			},
-			{
-				"label": "Apple",
-				"language_code": "zh-hans",
-				"weight": 1,
-				"id": 4,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 1
-			}
-		]
+		"createdAt": "2016-11-19T05:27:13.000Z",
+		"updatedAt": "2016-11-19T05:27:13.000Z"
 	},
 	{
-		"key": "TEST_application.Two.Field_3",
-		"value": "Orange",
+		"translations": [
+			{
+				"label": "Female",
+				"language_code": "en",
+				"weight": 2,
+				"id": 51,
+				"createdAt": "2016-11-19T05:27:13.000Z",
+				"updatedAt": "2016-11-19T05:27:13.000Z",
+				"ablist": 2
+			}
+		],
+		"column": 3,
+		"key": "test.Owner.Gender",
+		"value": "Female",
 		"id": 2,
-		"createdAt": "2016-10-03T08:07:06.000Z",
-		"updatedAt": "2016-10-03T08:07:06.000Z",
-		"column": {
-			"name": "Field_3",
-			"type": "string",
-			"weight": 5,
-			"required": null,
-			"unique": null,
-			"default": null,
-			"setting": {
-				"icon": "th-list",
-				"filter_type": "list",
-				"editor": "richselect",
-				"filter_options": [
-					"Apple",
-					"Banana",
-					"Orange"
-				]
-			},
-			"linkType": null,
-			"linkDefault": null,
-			"supportMultilingual": null,
-			"id": 7,
-			"createdAt": "2016-10-03T08:07:06.000Z",
-			"updatedAt": "2016-10-03T08:07:06.000Z",
-			"object": 2,
-			"linkObject": null,
-			"linkVia": null
-		},
-		"translations": [
-			{
-				"label": "Orange",
-				"language_code": "ko",
-				"weight": 3,
-				"id": 5,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 2
-			},
-			{
-				"label": "Orange",
-				"language_code": "en",
-				"weight": 3,
-				"id": 6,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 2
-			},
-			{
-				"label": "Orange",
-				"language_code": "zh-hans",
-				"weight": 3,
-				"id": 7,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 2
-			},
-			{
-				"label": "Orange",
-				"language_code": "th",
-				"weight": 3,
-				"id": 8,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 2
-			}
-		]
-	},
-	{
-		"key": "TEST_application.Two.Field_3",
-		"value": "Banana",
-		"id": 3,
-		"createdAt": "2016-10-03T08:07:06.000Z",
-		"updatedAt": "2016-10-03T08:07:06.000Z",
-		"column": {
-			"name": "Field_3",
-			"type": "string",
-			"weight": 5,
-			"required": null,
-			"unique": null,
-			"default": null,
-			"setting": {
-				"icon": "th-list",
-				"filter_type": "list",
-				"editor": "richselect",
-				"filter_options": [
-					"Apple",
-					"Banana",
-					"Orange"
-				]
-			},
-			"linkType": null,
-			"linkDefault": null,
-			"supportMultilingual": null,
-			"id": 7,
-			"createdAt": "2016-10-03T08:07:06.000Z",
-			"updatedAt": "2016-10-03T08:07:06.000Z",
-			"object": 2,
-			"linkObject": null,
-			"linkVia": null
-		},
-		"translations": [
-			{
-				"label": "Banana",
-				"language_code": "ko",
-				"weight": 2,
-				"id": 9,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 3
-			},
-			{
-				"label": "Banana",
-				"language_code": "en",
-				"weight": 2,
-				"id": 10,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 3
-			},
-			{
-				"label": "Banana",
-				"language_code": "zh-hans",
-				"weight": 2,
-				"id": 11,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 3
-			},
-			{
-				"label": "Banana",
-				"language_code": "th",
-				"weight": 2,
-				"id": 12,
-				"createdAt": "2016-10-03T08:07:06.000Z",
-				"updatedAt": "2016-10-03T08:07:06.000Z",
-				"ablist": 3
-			}
-		]
+		"createdAt": "2016-11-19T05:27:13.000Z",
+		"updatedAt": "2016-11-19T05:27:13.000Z"
 	}
 ]

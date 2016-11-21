@@ -61,7 +61,7 @@ steal(
 							self.labels.application.title = AD.lang.label.getLabel('ab.application.application') || "Application";
 							self.labels.application.createNew = AD.lang.label.getLabel('ab.application.createNew') || "Add new application";
 							self.labels.application.menu = AD.lang.label.getLabel('ab.application.menu') || "Application Menu";
-							self.labels.application.noApplication  = AD.lang.label.getLabel('ab.application.noApplication') || "There is no application data";
+							self.labels.application.noApplication = AD.lang.label.getLabel('ab.application.noApplication') || "There is no application data";
 
 							// Delete
 							self.labels.application.confirmDeleteTitle = AD.lang.label.getLabel('ab.application.delete.title') || "Delete application";
@@ -77,13 +77,13 @@ steal(
 							var self = this;
 							var csrf = '';
                             $.ajax('/csrfToken')
-                            .done(function(data, status, xhr) {
-                                csrf = data._csrf;
-                            });
-							webix.attachEvent('onBeforeAjax', function(mode, url, params, x, headers) {
-							    headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || csrf;
+								.done(function (data, status, xhr) {
+									csrf = data._csrf;
+								});
+							webix.attachEvent('onBeforeAjax', function (mode, url, params, x, headers) {
+								headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || csrf;
 							});
-							
+
 							self.webixUiId = {
 								appView: "ab-app-view",
 								appListRow: 'ab-app-list-row',
@@ -117,34 +117,34 @@ steal(
 												}
 											},
 											{
-											    view: "uploader", 
-											    value: self.labels.common.import, 
-											    width: 200,
-											    upload: '/app_builder/appJSON',
-											    multiple: false,
-											    autosend: true,
-											    on: {
-											        onAfterFileAdd: function() {
-											            this.disable();
+												view: "uploader",
+												value: self.labels.common.import,
+												width: 200,
+												upload: '/app_builder/appJSON',
+												multiple: false,
+												autosend: true,
+												on: {
+													onAfterFileAdd: function () {
+														this.disable();
                                                         $$(self.webixUiId.appList).showProgress({ type: "icon" });
 											            /*
 											            this.send(function() {
 											                console.log('after send');
 											            });
 											            */
-											        },
-											        onFileUpload: function(item, response) {
-											            self.loadData(); // refresh app list
-											            this.enable();
+													},
+													onFileUpload: function (item, response) {
+														self.loadData(); // refresh app list
+														this.enable();
                                                         $$(self.webixUiId.appList).hideProgress();
-											        },
-											        onFileUploadError: function() {
-											            this.enable();
+													},
+													onFileUploadError: function () {
+														this.enable();
                                                         $$(self.webixUiId.appList).hideProgress();
-											        }
-											    }
+													}
+												}
 											}
-								        ]
+										]
 									},
 									{
 										id: self.webixUiId.appList,
@@ -152,15 +152,22 @@ steal(
 										minHeight: 227,
 										autowidth: true,
 										css: 'ab-app-select-list',
-										template: "<div class='ab-app-list-item'>" +
-										"<div class='ab-app-list-info'>" +
-										"<div class='ab-app-list-name'>#label#</div>" +
-										"<div class='ab-app-list-description'>#description#</div>" +
-										"</div>" +
-										"<div class='ab-app-list-edit'>" +
-										"{common.iconGear}" +
-										"</div>" +
-										"</div>",
+										template: function (obj, common) {
+											var template = "<div class='ab-app-list-item'>" +
+												"<div class='ab-app-list-info'>" +
+												"<div class='ab-app-list-name'>#label#</div>" +
+												"<div class='ab-app-list-description'>#description#</div>" +
+												"</div>" +
+												"<div class='ab-app-list-edit'>" +
+												"{common.iconGear}" +
+												"</div>" +
+												"</div>";
+
+											return template
+												.replace('#label#', obj.label || '')
+												.replace('#description#', obj.description || '')
+												.replace('{common.iconGear}', common.iconGear);
+										},
 										type: {
 											height: 100, // Defines item height
 											iconGear: "<span class='webix_icon fa-cog'></span>"
@@ -297,9 +304,9 @@ steal(
 
 													break;
 												case self.labels.common.export:
-												    // Download the JSON file to disk
-												    window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
-												    break;
+													// Download the JSON file to disk
+													window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
+													break;
 											}
 
 											$$(self.webixUiId.appListMenu).hide();

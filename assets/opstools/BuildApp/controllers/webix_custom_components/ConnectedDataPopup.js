@@ -8,7 +8,8 @@ steal(
 				common: {
 					ok: AD.lang.label.getLabel('ab.common.ok') || "Ok",
 					search: AD.lang.label.getLabel('ab.common.search') || "Search",
-					close: AD.lang.label.getLabel('ab.common.close') || "Close"
+					save: AD.lang.label.getLabel('ab.common.save') || "Save",
+					cancel: AD.lang.label.getLabel('ab.common.cancel') || "Cancel"
 				},
 				// Connected data
 				object: {
@@ -124,39 +125,55 @@ steal(
 							}
 						},
 						{
-							view: "button",
-							value: labels.common.close,
 							align: "right",
-							width: 150,
-							click: function () {
-								this.getTopParentView().hide();
-							}
+							cols: [
+								{
+									autowidth: true
+								},
+								{
+									view: "button",
+									value: labels.common.save,
+									type: "form",
+									align: "right",
+									width: 150,
+									click: function () {
+										if (!events.close) return true;
+
+										var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
+
+										// [{ id: id, text: '' }, ..., { id: idn, text: '' }]
+										var selectedItems = $.map(dataList.getSelectedId(true), function (id) {
+											var htmlNode = dataList.getItemNode(id);
+											if (!htmlNode) return;
+
+											var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
+
+											return [{ id: id, text: connectData }];
+										});
+
+										if (!selectedItems || selectedItems.length < 1)
+											selectedItems = [];
+
+										events.close(selectedItems);
+
+										dataList.clearAll();
+
+
+										this.getTopParentView().hide();
+									}
+								},
+								{
+									view: "button",
+									value: labels.common.cancel,
+									align: "right",
+									width: 150,
+									click: function () {
+										this.getTopParentView().hide();
+									}
+								}
+							]
 						}
 					]
-				},
-				on: {
-					onHide: function () {
-						if (!events.close) return true;
-
-						var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
-
-						// [{ id: id, text: '' }, ..., { id: idn, text: '' }]
-						var selectedItems = $.map(dataList.getSelectedId(true), function (id) {
-							var htmlNode = dataList.getItemNode(id);
-							if (!htmlNode) return;
-
-							var connectData = $(htmlNode).find('.ab-connect-data')[0].innerText;
-
-							return [{ id: id, text: connectData }];
-						});
-
-						if (!selectedItems || selectedItems.length < 1)
-							selectedItems = [];
-
-						events.close(selectedItems);
-
-						dataList.clearAll();
-					}
 				}
 			},
 

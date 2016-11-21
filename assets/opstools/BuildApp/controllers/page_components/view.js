@@ -75,17 +75,16 @@ steal(
 					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, column, currModel.id, fieldData, child.$view, { readOnly: true }))
 						return;
 
-					if (child.config.editor === 'date' || child.config.editor === 'datetime') {
+					if (column.setting.format && webix.i18n[column.setting.format]) {
 						if (fieldData) {
-							var dateValue = (fieldData instanceof Date) ? fieldData : new Date(fieldData),
-								dateFormat = webix.i18n.dateFormatStr(dateValue);
+							var dateFormat = webix.i18n[column.setting.format](fieldData);
 							displayField.setValue(dateFormat);
 						}
 						else {
 							displayField.setValue(fieldData);
 						}
 					}
-					else if (child.config.editor) {
+					else if (column.setting.editor) {
 						if (fieldData)
 							displayField.setValue(fieldData);
 						else

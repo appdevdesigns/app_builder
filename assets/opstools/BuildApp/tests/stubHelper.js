@@ -1,5 +1,6 @@
-var abStubHelper = (function ($) {
-	var data = {}; // { objectName: [data], ..., objectNameN: [datan] };
+steal(function () {
+	var data = {}, // { objectName: [data], ..., objectNameN: [dataN] };
+		models = {}; // { objectName: [can.Model], ..., objectNameN: [can.ModelN] };
 
 	function getFixtureData(objectName, cond) {
 		var q = $.Deferred(),
@@ -16,7 +17,7 @@ var abStubHelper = (function ($) {
 					})
 						.fail(next)
 						.then(function (result) {
-							data[objectName] = new can.List(result);
+							data[objectName] = result;
 
 							next();
 						});
@@ -42,14 +43,12 @@ var abStubHelper = (function ($) {
 
 						return result;
 					});
-
-					next();
 				}
 				else {
 					dataResult = data[objectName];
-
-					next();
 				}
+
+				next();
 			}
 		], function (err) {
 			if (err) {
@@ -61,7 +60,7 @@ var abStubHelper = (function ($) {
 		});
 
 		return q;
-	};
+	}
 
 	function saveData(objectName, obj) {
 		var q = $.Deferred();
@@ -104,7 +103,7 @@ var abStubHelper = (function ($) {
 		return q;
 	};
 
-	function removeData(id) {
+	function removeData(objectName, id) {
 		var q = $.Deferred();
 
 		async.series([
@@ -124,7 +123,7 @@ var abStubHelper = (function ($) {
 				var index = null;
 
 				data[objectName].forEach(function (item, i) {
-					if (item.attr('id') == id)
+					if (item.id == id)
 						index = i;
 				});
 
@@ -146,15 +145,93 @@ var abStubHelper = (function ($) {
 	};
 
 	return {
+
+		getMockModel: function (objectName) {
+			if (models[objectName] == null) {
+
+				var instanceProps = {
+					getID: function () { return this.id; }
+				};
+
+				if (objectName == 'ABObject')
+					instanceProps.getDataLabel = function (item) { return 'TODO: getDataLabel'; };
+
+				var mockModel = can.Model(
+					objectName,
+					{
+						findAll: function (cond) {
+							var self = this,
+								q = $.Deferred();
+
+							if (self._mockData == null) {
+								// Get mock data
+								getFixtureData(objectName)
+									.then(function (result) {
+console.log('DC fixture:', objectName, result);
+										self._mockData = self.models(result);
+										q.resolve(self._mockData);
+									});
+							}
+							else {
+								// TODO : filter condition
+								q.resolve(self._mockData);
+							}
+
+							return q;
+						},
+						findOne: function (cond) {
+							var self = this,
+								q = $.Deferred();
+
+							// TODO : filter condition
+							q.resolve(self._mockData[0]);
+
+							return q;
+						},
+						create: function () {
+							var q = $.Deferred();
+							q.resolve();
+							return q;
+						},
+						update: function () {
+							var q = $.Deferred();
+							q.resolve();
+							return q;
+						},
+						destroy: function (def) {
+							var q = $.Deferred();
+							q.resolve();
+							return q;
+						}
+					},
+					instanceProps);
+
+				models[objectName] = mockModel;
+			}
+
+			return models[objectName];
+		},
+
 		convertToStub: function (model, objectName) {
-			sinon.stub(model, 'findAll', function (cond) { return getFixtureData(objectName, cond); });
+			sinon.stub(model, 'findAll', function (cond) {
+				var q = $.Deferred();
+
+				getFixtureData(objectName, cond)
+					.fail(q.reject)
+					.then(function (result) {
+						q.resolve(model.models(result));
+					});
+
+				return q;
+			});
+
 			sinon.stub(model, 'findOne', function (cond) {
 				var q = $.Deferred();
 
 				getFixtureData(objectName, cond).fail(q.reject)
 					.then(function (result) {
 						if (result && result.length > 0)
-							q.resolve(result[0]);
+							q.resolve(model.model(result[0]));
 						else
 							q.resolve(null);
 					});
@@ -167,30 +244,6 @@ var abStubHelper = (function ($) {
 				return saveData(objectName, obj);
 			});
 			sinon.stub(model, 'destroy', function (id) { return removeData(objectName, id); });
-
-			if (model.getDataLabel) {
-				sinon.stub(model, 'getDataLabel', function (data) {
-					return '';
-					// 	if (!this.columns || this.columns.length < 1) return '';
-
-					// 	var labelFormat;
-
-					// 	if (this.labelFormat) {
-					// 		labelFormat = this.labelFormat;
-					// 	} else { // Default label format
-					// 		var textCols = this.columns.filter(function (col) { return col.type === 'string' || col.type === 'text' }),
-					// 			defaultCol = textCols.length > 0 ? textCols[0] : this.columns[0];
-
-					// 		labelFormat = '{' + defaultCol.name + '}';
-					// 	}
-
-					// 	for (var c in data) {
-					// 		labelFormat = labelFormat.replace(new RegExp('{' + c + '}', 'g'), data[c]);
-					// 	}
-
-					// 	return labelFormat;
-				});
-			}
 		},
 
 		restore: function (model) {
@@ -218,4 +271,4 @@ var abStubHelper = (function ($) {
 		}
 	};
 
-})(jQuery);
+});

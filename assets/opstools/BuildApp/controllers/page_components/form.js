@@ -11,7 +11,7 @@ steal(
 
 			title: 'ab-form-title',
 			description: 'ab-form-description',
-			columns: 'ab-form-columns',
+			columns: '#viewId#-columns',
 
 			propertyView: 'ab-form-property-view',
 			editTitle: 'ab-form-edit-title',
@@ -123,7 +123,7 @@ steal(
 			}
 
 			function getChildView(columnName) {
-				var childView = columnizerHelper.getColumns($$(componentIds.columns)).find(function (view) {
+				var childView = columnizerHelper.getColumns($$(componentIds.columns.replace('#viewId#', this.viewId))).find(function (view) {
 					return view.config && view.config.name == columnName;
 				});
 
@@ -341,7 +341,7 @@ steal(
 						// Redraw
 						var columnCount = parseInt(setting.colCount, 10) || 1;
 						var columnView = columnizerHelper.columnize(elementViews, columnCount);
-						columnView.id = componentIds.columns;
+						columnView.id = componentIds.columns.replace('#viewId#', self.viewId);
 						webix.ui([columnView], $$(self.viewId));
 
 						// Title
@@ -625,7 +625,10 @@ steal(
 								// Get default value of linked data
 								var defaultVal = {
 									id: linkCurrModel.id,
-									text: linkCurrModel._dataLabel
+									text: linkCurrModel._dataLabel,
+									objectId: data.setting.object, // ABObject.id
+									columnName: col.name,
+									rowId: linkCurrModel.id
 								};
 
 								dataFieldsManager.setValue(col, childView.$view, defaultVal);

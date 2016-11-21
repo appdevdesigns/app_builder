@@ -44,6 +44,9 @@ module.exports = {
 			},
 			function (next) {
 				if (!column.setting.linkVia) {
+				    if (column.setting.linkType == 'collection') {
+				        colString += ':id';
+				    }
 					next();
 					return;
 				}

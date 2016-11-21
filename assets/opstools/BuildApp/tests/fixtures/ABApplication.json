@@ -6,7 +6,7 @@
 		"updatedAt": "2016-10-03T07:45:22.000Z",
 		"object": [
 			{
-				"name": "One",
+				"name": "Owner",
 				"labelFormat": null,
 				"id": 1,
 				"createdAt": "2016-10-03T07:45:31.000Z",
@@ -14,19 +14,11 @@
 				"application": 1
 			},
 			{
-				"name": "Two",
+				"name": "Pet",
 				"labelFormat": null,
 				"id": 2,
 				"createdAt": "2016-10-03T07:45:35.000Z",
 				"updatedAt": "2016-10-03T07:45:35.000Z",
-				"application": 1
-			},
-			{
-				"name": "Three",
-				"labelFormat": null,
-				"id": 3,
-				"createdAt": "2016-10-03T07:45:41.000Z",
-				"updatedAt": "2016-10-03T07:45:41.000Z",
 				"application": 1
 			}
 		],

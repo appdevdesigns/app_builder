@@ -38,23 +38,25 @@ steal(
 				});
 			}
 
-			// Connect data popup
-			$$(componentIds.connectDataPopup).onSelect(function (selectedItems) {
-				selectivityHelper.setData(selectivityNode, selectedItems);
-			});
+			// $$(componentIds.connectDataPopup).onSelect(function (selectedItems) {
+			// 	selectivityHelper.setData(selectivityNode, selectedItems);
+			// });
 
 			$$(componentIds.connectDataPopup).onClose(function (selectedItems) {
 				selectivityHelper.setData(selectivityNode, selectedItems);
 
-				var connectData = getReturnData(object, columnName, rowId, selectedItems);
+				var connectData = getReturnData(object.id, columnName, rowId, selectedItems);
 
-				$(connectObjectField).trigger('update', connectData);
+				// Wait until selectivity populate data completely
+				setTimeout(function () {
+					$(connectObjectField).trigger('update', connectData);
+				}, 600);
 			});
 		}
 
-		function getReturnData(object, columnName, rowId, selectedItems) {
+		function getReturnData(objectId, columnName, rowId, selectedItems) {
 			var connectData = {};
-			connectData.objectId = object.id;
+			connectData.objectId = objectId;
 			connectData.columnName = columnName;
 			connectData.rowId = rowId;
 			connectData.data = $.map(selectedItems, function (item) { return item.id; });
@@ -78,7 +80,7 @@ steal(
 			if (result.event && result.event.removed) {
 				var selectedItems = selectivityHelper.getData(result.itemNode),
 					connectData = getReturnData(
-						result.event.removed.object,
+						result.event.removed.objectId,
 						result.event.removed.columnName,
 						result.event.removed.rowId,
 						selectedItems);
@@ -190,7 +192,7 @@ steal(
 			$$(componentIds.objectList).data.unsync();
 			$$(componentIds.objectList).data.sync(objectList);
 			$$(componentIds.objectList).refresh();
-			
+
 			// Allow linking to self
 			//$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
 
@@ -251,24 +253,24 @@ steal(
 
 			var selectedItems = [];
 			if (data) {
-				if (data.map) {
-					selectedItems = data.map(function (cVal) {
-						return {
-							id: cVal.id,
-							text: cVal._dataLabel,
-							object: object,
-							columnName: fieldData.name,
-							rowId: rowId
-						};
-					});
-				}
-				else if (data.id) {
+				if (data.id) {
 					selectedItems.push({
 						id: data.id,
 						text: data._dataLabel,
-						object: object,
+						objectId: object.id,
 						columnName: fieldData.name,
 						rowId: rowId
+					});
+				}
+				else if (data.each || data.forEach) {
+					selectedItems = $.map(data.attr ? data.attr() : data, function (item) {
+						return {
+							id: item.id,
+							text: item._dataLabel,
+							objectId: object.id,
+							columnName: fieldData.name,
+							rowId: rowId
+						};
 					});
 				}
 			}
