@@ -97,8 +97,6 @@ steal(
 
 					// AD.error.log('Page : Error create page data', { error: err });
 				}).then(function (result) {
-					if (result.translate) result.translate();
-
 					$$(componentId.addNewForm).hideProgress();
 					$$(componentId.addNewForm).clear();
 

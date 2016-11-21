@@ -75,17 +75,16 @@ steal(
 					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, column, currModel.id, fieldData, child.$view, { readOnly: true }))
 						return;
 
-					if (child.config.editor === 'date' || child.config.editor === 'datetime') {
+					if (column.setting.format && webix.i18n[column.setting.format]) {
 						if (fieldData) {
-							var dateValue = (fieldData instanceof Date) ? fieldData : new Date(fieldData),
-								dateFormat = webix.i18n.dateFormatStr(dateValue);
+							var dateFormat = webix.i18n[column.setting.format](fieldData);
 							displayField.setValue(dateFormat);
 						}
 						else {
 							displayField.setValue(fieldData);
 						}
 					}
-					else if (child.config.editor) {
+					else if (column.setting.editor) {
 						if (fieldData)
 							displayField.setValue(fieldData);
 						else
@@ -396,7 +395,7 @@ steal(
 						// Data source - Column
 						var colOptions = [1, 2, 3],
 							colSource = $$(componentIds.propertyView).getItem(componentIds.selectColumns);
-						colSource.options = $.map(colOptions, function(o) {
+						colSource.options = $.map(colOptions, function (o) {
 							return {
 								id: o,
 								value: o
@@ -429,7 +428,8 @@ steal(
 		viewComponent.getInfo = function () {
 			return {
 				name: 'view',
-				icon: 'fa-file-text-o'
+				icon: 'fa-file-text-o',
+				propertyView: componentIds.propertyView
 			};
 		}
 
@@ -496,7 +496,7 @@ steal(
 						name: 'columns',
 						type: 'richselect',
 						label: 'Columns',
-						template: function(data, dataValue) {
+						template: function (data, dataValue) {
 							var selectedData = $.grep(data.options, function (opt) { return opt.value == dataValue; });
 							console.log('*****HEY', data, dataValue, selectedData);
 							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
@@ -535,10 +535,6 @@ steal(
 					}
 				}
 			};
-		};
-
-		viewComponent.editStop = function () {
-			$$(componentIds.propertyView).editStop();
 		};
 
 		viewComponent.resize = function (height) {

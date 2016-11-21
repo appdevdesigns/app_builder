@@ -6,7 +6,6 @@ steal(
 	'opstools/BuildApp/controllers/ObjectList.js',
 	'opstools/BuildApp/controllers/ObjectWorkspace.js',
 
-	'opstools/BuildApp/models/ABColumn.js',
 	'opstools/BuildApp/models/ABList.js',
 
 	function (modelCreator) {
@@ -33,7 +32,6 @@ steal(
 							this._super(element, options);
 
 							this.Model = {
-								ABColumn: AD.Model.get('opstools.BuildApp.ABColumn'),
 								ABList: AD.Model.get('opstools.BuildApp.ABList')
 							};
 
@@ -126,7 +124,7 @@ steal(
 								return q;
 							}
 
-							async.eachSeries(AD.classes.AppBuilder.currApp.objects.attr(), function (object, next) {
+							async.eachSeries(AD.classes.AppBuilder.currApp.objects, function (object, next) {
 								// Get object model
 								var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name);
 
@@ -151,7 +149,7 @@ steal(
 										async.waterfall([
 											// Create object column
 											function (ok) {
-												self.Model.ABColumn.create(field)
+												object.createColumn(field)
 													.fail(ok)
 													.then(function (result) {
 														// Delete field cache
@@ -162,6 +160,7 @@ steal(
 											},
 											// Create link column
 											function (column, ok) {
+												var isLinkToSelf = (field.setting.linkObject == field.object);
 												if (field.setting.linkObject && field.setting.linkVia) {
 													self.createLinkColumn(field.setting.linkObject, field.setting.linkVia, column.id)
 														.fail(ok)
@@ -211,7 +210,7 @@ steal(
 														column.setting.attr('options', field.setting.options);
 														column.save()
 															.fail(ok)
-															.then(function () {
+															.then(function (result) {
 																ok();
 															});
 													});
@@ -295,7 +294,7 @@ steal(
 							delete linkCol.id;
 
 							// Create
-							self.Model.ABColumn.create(linkCol)
+							linkObj.createColumn(linkCol)
 								.fail(function (err) { q.reject(err) })
 								.then(function (result) {
 									objModel.Cached.deleteCachedField(tempId);

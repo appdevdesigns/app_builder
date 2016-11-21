@@ -34,8 +34,6 @@ steal(
 
 							self.initMultilingualLabels();
 							self.initControllers();
-							self.initEvents();
-
 							self.initWebixUI();
 						},
 
@@ -68,23 +66,6 @@ steal(
 							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
 						},
 
-						initEvents: function () {
-							var self = this;
-
-							// Create new page handler
-							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
-								if (data.newPage instanceof Array) {
-									data.newPage.forEach(function (page) {
-										var noSelect = page.parent !== null;
-										self.addPage(page, noSelect);
-									});
-								}
-								else {
-									self.addPage(data.newPage);
-								}
-							});
-						},
-
 						initWebixUI: function () {
 							var self = this;
 
@@ -99,12 +80,32 @@ steal(
 										editable: true,
 										editor: "text",
 										editValue: "label",
-										template: "<div class='ab-page-list-item'>" +
-										"{common.icon()} {common.folder()} #label#" +
-										"<div class='ab-page-list-edit'>" +
-										"{common.iconGear}" +
-										"</div>" +
-										"</div>",
+										template: function (item, common) {
+											var template = "<div class='ab-page-list-item'>" +
+												"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label#" +
+												"<div class='ab-page-list-edit'>" +
+												"{common.iconGear}" +
+												"</div>" +
+												"</div>";
+
+											switch (item.type) {
+												case 'modal':
+													template = template.replace('#typeIcon#', 'fa-list-alt');
+													break;
+												case 'tab':
+													template = template.replace('#typeIcon#', 'fa-folder-o');
+													break;
+												case 'page':
+												default:
+													template = template.replace('#typeIcon#', 'fa-file-o');
+													break;
+											}
+
+											return template
+												.replace('#label#', item.label)
+												.replace('{common.icon()}', common.icon(item))
+												.replace('{common.iconGear}', common.iconGear);
+										},
 										type: {
 											iconGear: "<span class='webix_icon fa-cog'></span>"
 										},
@@ -269,10 +270,7 @@ steal(
 																		AD.error.log('Pages List : Error delete page data', { error: err });
 																	})
 																	.then(function (result) {
-																		$$(self.webixUiId.interfaceTree).remove(result.id);
 																		$$(self.webixUiId.interfaceTree).unselectAll();
-
-																		self.element.trigger(self.options.updatedPageEvent, {});
 
 																		webix.message({
 																			type: "success",
@@ -280,7 +278,6 @@ steal(
 																		});
 
 																		$$(self.webixUiId.interfaceTree).hideProgress();
-
 																	});
 															}
 
@@ -311,35 +308,66 @@ steal(
 						},
 
 						loadPages: function () {
-							$$(this.webixUiId.interfaceTree).clearAll();
-							$$(this.webixUiId.interfaceTree).showProgress({ type: 'icon' });
+							var self = this;
 
-							// Convert data to tree
-							var treeData = $.map(AD.classes.AppBuilder.currApp.pages.attr(), function (d) {
-								if (!d.parent) { // Get root page
-									var pageItem = {
-										id: d.id,
-										value: d.name,
-										label: d.label
-									};
+							$$(self.webixUiId.interfaceTree).clearAll();
+							$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
-									// Get children pages
-									pageItem.data = $.map(AD.classes.AppBuilder.currApp.pages.attr(), function (subD) {
-										if (subD.parent && (subD.parent == d.id || subD.parent.id == d.id)) {
-											return {
-												id: subD.id,
-												value: subD.name,
-												label: subD.label
-											}
+							AD.classes.AppBuilder.currApp.unbind('change');
+							AD.classes.AppBuilder.currApp.bind('change', function (ev, attr, how, newVals, oldVals) {
+								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
+
+								console.log('InterfaceList: change ', ev, attr, how, newVals, oldVals);
+
+								switch (how) {
+									case 'add':
+										if (newVals.forEach) {
+											newVals.forEach(function (newPage) {
+												if (newPage)
+													self.addPage(newPage, true);
+											});
 										}
-									});
+										break;
+									case 'set':
+										if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) { // Update label or page type
+											$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
 
-									return pageItem;
+											// Show gear
+											if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+												self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+										}
+										// TODO: weight -> reorder
+										break;
+									case 'remove':
+										if (oldVals.forEach) {
+											oldVals.forEach(function (deletedPage) {
+												if (deletedPage && $$(self.webixUiId.interfaceTree).exists(deletedPage.id))
+													$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
+											});
+											self.element.trigger(self.options.updatedPageEvent, {});
+										}
+										break;
 								}
 							});
 
-							$$(this.webixUiId.interfaceTree).parse(treeData);
-							$$(this.webixUiId.interfaceTree).hideProgress();
+							var pages = AD.classes.AppBuilder.currApp.pages.attr();
+							var map = {}, page, treeData = [];
+
+							// Convert array to tree data
+							for (var i = 0; i < pages.length; i += 1) {
+								page = pages[i];
+								page.data = [];
+								map[page.id] = i; // use map to look-up the parents
+								if (page.parent) {
+									var parentId = page.parent.id ? page.parent.id : page.parent;
+									pages[map[parentId]].data.push(page);
+								} else {
+									treeData.push(page);
+								}
+							}
+
+							$$(self.webixUiId.interfaceTree).parse(treeData);
+							$$(self.webixUiId.interfaceTree).hideProgress();
 						},
 
 						showGear: function (id) {
@@ -351,12 +379,12 @@ steal(
 						addPage: function (page, noSelect) {
 							var self = this;
 
-							AD.classes.AppBuilder.currApp.pages.push(page);
-
 							$$(self.webixUiId.interfaceTree).add({
 								id: page.id,
 								value: page.name,
-								label: page.label
+								label: page.label,
+								type: page.type
+								// weight: page.weight
 							}, -1, page.parent ? page.parent.id : null);
 
 							if (page.parent)

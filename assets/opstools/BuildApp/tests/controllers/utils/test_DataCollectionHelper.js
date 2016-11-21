@@ -1,8 +1,9 @@
 steal(
 	// Dependencies
-	"opstools/BuildApp/controllers/utils/DataCollectionHelper.js",
 	"opstools/BuildApp/tests/stubHelper.js",
-	function (dataCollectionHelper) {
+	"opstools/BuildApp/controllers/utils/DataCollectionHelper.js",
+	function (abStubHelper, dataCollectionHelper) {
+
 		// the div to attach the controller to
 		var divID = 'test_DataCollectionHelper';
 
@@ -22,81 +23,34 @@ steal(
 			var appInfo = {
 				id: 1,
 				name: 'TEST_application'
-			},
-				objectList;
+			};
 
 			before(function (done) {
 
 				buildHTML();
 
-				abStubHelper.convertToStub(dataCollectionHelper.Model.ABObject, 'ABObject');
+				async.series([
+					function (next) {
+						abStubHelper.getMockModel('ABObject').findAll({})
+							.then(function (result) {
+								appInfo.objects = result;
+								next();
+							});
+					},
+					function (next) {
+						// Stub ModelCreator
+						sinon.stub(dataCollectionHelper.modelCreator, 'getModel', function (application, objectName) {
+							// get Mock model
+							return abStubHelper.getMockModel(objectName);
+						});
 
-				// Stub ModelCreator
-				sinon.stub(dataCollectionHelper.controllers.ModelCreator, 'getModel', function (objectName) {
-					var q = $.Deferred();
-
-					// Stub Object model
-					q.resolve({
-						findAll: function (cond) {
-							var q = $.Deferred();
-
-							$.ajax({
-								url: '/opstools/BuildApp/tests/fixtures/' + objectName + '.json',
-								type: 'GET',
-								dataType: "json"
-							})
-								.fail(q.reject)
-								.then(function (result) {
-									q.resolve(new can.List(result));
-								});
-
-							return q;
-						}
-					});
-
-					return q;
-				});
-
-				sinon.stub(dataCollectionHelper.controllers.DataHelper.controllers.ModelCreator, 'getModel', function (objectName) {
-					var q = $.Deferred();
-
-					// Stub Object model
-					q.resolve({
-						findAll: function (cond) {
-							var q = $.Deferred();
-
-							$.ajax({
-								url: '/opstools/BuildApp/tests/fixtures/' + objectName + '.json',
-								type: 'GET',
-								dataType: "json"
-							})
-								.fail(q.reject)
-								.then(function (result) {
-									q.resolve(new can.List(result));
-								});
-
-							return q;
-						}
-					});
-
-					return q;
-				});
-
-				// Set object list to data collection helper
-				dataCollectionHelper.Model.ABObject.findAll().then(function (objects) {
-					objectList = objects;
-					appInfo.objects = objects;
-
-					done();
-				});
-			});
-
-			afterEach(function () {
-				abStubHelper.clearLocalData('ABObject');
+						next();
+					}
+				], done);
 			});
 
 			it('should return data collection of object data', function (done) {
-				var objectId = objectList[0].id;
+				var objectId = appInfo.objects[0].id;
 
 				dataCollectionHelper.getDataCollection(appInfo, objectId)
 					.fail(function (err) {
@@ -109,6 +63,63 @@ steal(
 
 						done();
 					});
+			});
+
+			describe('test update connect data', function () {
+
+				it('should remove data in parent when child data is deleted', function (done) {
+					var ownerObjectId = 1,
+						petObjectId = 2,
+						ownerDC, petDC;
+
+					async.series([
+						// Get parent data collection
+						function (next) {
+							dataCollectionHelper.getDataCollection(appInfo, ownerObjectId)
+								.fail(next)
+								.then(function (result) {
+									ownerDC = result;
+console.log('ownerDC: ', ownerDC);
+									next();
+								});
+						},
+						// Get child data collection
+						function (next) {
+							dataCollectionHelper.getDataCollection(appInfo, petObjectId)
+								.fail(next)
+								.then(function (result) {
+									petDC = result;
+console.log('petDC: ', petDC);
+									next();
+								});
+						}
+						// ,
+						// // Delete data of child
+						// function (next) {
+						// 	var deleteTasks = [];
+
+						// 	ownerDC.find({}).forEach(function (owner) {
+						// 		owner.Pet.forEach(function (pet) {
+
+						// 			deleteTasks.push(function (ok) {
+						// 				petDC.AD.destroyModel(pet.id)
+						// 					.fail(ok)
+						// 					.then(function () {
+						// 						ok();
+
+						// 						console.log('PET: ', petDC.AD.__list);
+						// 					});
+						// 			});
+
+						// 		});
+						// 	});
+
+						// 	async.series(deleteTasks, next);
+						// }
+					], done);
+
+				});
+
 			});
 
 		});

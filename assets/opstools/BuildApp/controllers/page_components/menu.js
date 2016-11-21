@@ -194,9 +194,9 @@ steal(
 		// used in the component list.  : icon + name
 		menuComponent.getInfo = function () {
 			return {
-				propertyView:componentIds.propertyView,
 				name: 'menu',
-				icon: 'fa-th-list'
+				icon: 'fa-th-list',
+				propertyView: componentIds.propertyView
 			};
 		};
 
@@ -284,13 +284,18 @@ steal(
 			};
 		};
 
+
 		// called when click on the component [save] button.
 		// ensures that an editor value in the property is 'set' before we go on to try to get those values
 		// in 
-		menuComponent.editStop = function () {
-			if ($$(componentIds.propertyView))
-				$$(componentIds.propertyView).editStop();
-		};
+		// 
+		//  Now handled if getInfo().propertyView is set 
+		//
+		// menuComponent.editStop = function () {
+		// 	if ($$(componentIds.propertyView))
+		// 		$$(componentIds.propertyView).editStop();
+		// };
+
 
 		return menuComponent;
 

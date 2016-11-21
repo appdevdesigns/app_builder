@@ -44,18 +44,29 @@ module.exports = {
 			},
 			function (next) {
 				if (!column.setting.linkVia) {
+				    if (column.setting.linkType == 'collection') {
+				        colString += ':id';
+				    }
 					next();
 					return;
 				}
-
+                
+                if (!parseInt(column.setting.linkVia)) {
+                    AD.log.error('Warning! `setting.linkVia` is invalid!');
+                    AD.log.error('in connectObject.js :: getFieldString()');
+                }
+                
 				ABColumn.findOne({ id: column.setting.linkVia })
-					.fail(next)
 					.then(function (linkVia) {
 						if (linkVia)
 							colString += ':' + linkVia.name; // viaReference
 
 						next();
 						return null;
+					})
+					.catch(function(err) {
+					   next(err);
+					   return null;
 					});
 			}
 		], function (err) {

@@ -117,13 +117,12 @@ steal(
 
 						showPage: function () {
 							this.resetState();
+							this.controllers.LayoutView.showComponents();
 
 							if (AD.classes.AppBuilder.currApp.currPage) {
-								this.controllers.LayoutView.showComponents();
 								this.controllers.ComponentList.show();
 							}
 							else {
-								this.controllers.LayoutView.showComponents();
 								this.controllers.ComponentList.hide();
 							}
 						},

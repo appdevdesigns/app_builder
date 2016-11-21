@@ -248,7 +248,8 @@ steal(
 						application.createPage({
 							parent: mainPage.id,
 							name: 'Add ' + selectedObj.name,
-							label: 'Add ' + selectedObj.label
+							label: 'Add ' + selectedObj.label,
+							type: 'modal'
 						})
 							.fail(next)
 							.then(function (result) {
@@ -267,7 +268,8 @@ steal(
 						application.createPage({
 							parent: mainPage.id,
 							name: 'Edit ' + selectedObj.name,
-							label: 'Edit ' + selectedObj.label
+							label: 'Edit ' + selectedObj.label,
+							type: 'modal'
 						})
 							.fail(next)
 							.then(function (result) {
@@ -473,7 +475,8 @@ steal(
 									application.createPage({
 										parent: mainPage.id,
 										name: 'Add ' + object.name,
-										label: 'Add ' + object.label
+										label: 'Add ' + object.label,
+										type: 'modal'
 									})
 										.fail(ok)
 										.then(function (result) {

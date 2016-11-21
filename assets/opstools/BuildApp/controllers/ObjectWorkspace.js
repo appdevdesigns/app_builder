@@ -393,13 +393,7 @@ steal(
 
 										// Resize row height
 										var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: result.rowId, column: result.columnName }),
-											rowHeight = dataFieldsManager.getRowHeight(
-												AD.classes.AppBuilder.currApp,
-												AD.classes.AppBuilder.currApp.currObj,
-												colData,
-												rowData[result.columnName],
-												itemNode
-											);
+											rowHeight = dataFieldsManager.getRowHeight(colData, rowData[result.columnName]);
 
 										if (rowData && (!rowData.$height || rowData.$height < rowHeight))
 											$$(self.webixUiId.objectDatatable).setRowHeight(result.rowId, rowHeight);
@@ -748,6 +742,7 @@ steal(
 								function (next) {
 									dataHelper.normalizeData(
 										AD.classes.AppBuilder.currApp,
+										AD.classes.AppBuilder.currApp.currObj.id,
 										AD.classes.AppBuilder.currApp.currObj.columns,
 										objectData)
 										.fail(next)
@@ -816,7 +811,10 @@ steal(
 											},
 											// Update the link column
 											function (next) {
-												if (updateColumn.setting.linkVia) {
+												if (!updateColumn.setting.linkVia) {
+													next()
+												}
+												else {
 													AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.setting.linkVia)
 														.fail(next)
 														.then(function (result) {
@@ -827,9 +825,6 @@ steal(
 																next();
 															});
 														});
-												}
-												else {
-													next();
 												}
 											},
 											// Create list option of select column
@@ -916,6 +911,7 @@ steal(
 									}
 									else { // Cache new field
 										var firstColumn = self.cacheNewField(objectName, columnInfo);
+										var isSelfLink = firstColumn.setting.linkObject && (firstColumn.setting.linkObject == columnInfo.object);
 
 										if (firstColumn.setting.linkType && firstColumn.setting.linkObject) {
 											// Find object
@@ -1045,7 +1041,11 @@ steal(
 									result.save()
 										.fail(q.reject)
 										.then(function (result) {
-											dataHelper.normalizeData(AD.classes.AppBuilder.currApp, self.data.columns, result)
+											dataHelper.normalizeData(
+												AD.classes.AppBuilder.currApp,
+												AD.classes.AppBuilder.currApp.currObj.id,
+												self.data.columns,
+												result)
 												.fail(q.reject)
 												.then(q.resolve);
 										});

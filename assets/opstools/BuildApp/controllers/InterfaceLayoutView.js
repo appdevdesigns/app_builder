@@ -33,6 +33,8 @@ steal(
 								layoutToolbar: 'ab-interface-layout-toolbar',
 								layoutToolbarHeader: 'ab-interface-layout-toolbar-header',
 
+								pageType: 'ab-interface-page-type',
+
 								saveComponentInfo: 'ab-interface-save-component-info',
 								cancelComponentInfo: 'ab-interface-cancel-component-info',
 
@@ -135,6 +137,28 @@ steal(
 												id: self.componentIds.layoutToolbarHeader,
 												label: self.labels.interface.component.layoutHeader
 											},
+
+											{
+												view: "segmented",
+												id: self.componentIds.pageType,
+												width: 200,
+												inputWidth: 200,
+												options: [
+													{ id: "page", value: "Page" },
+													{ id: "modal", value: "Popup" }
+												],
+												on: {
+													onChange: function (newValue, oldValue) {
+														if (newValue == oldValue) return;
+
+														// Call server to change page type
+														AD.classes.AppBuilder.currApp.currPage.changeType(newValue)
+															.fail(function (err) { console.error(err) })
+															.then(function () { });
+													}
+												}
+											},
+
 											{
 												view: 'button',
 												id: self.componentIds.saveComponentInfo,
@@ -151,27 +175,54 @@ steal(
 													if ($$(editViewId).showProgress)
 														$$(editViewId).showProgress({ type: 'icon' });
 
-													componentInstance.editStop();
+													componentManager.editStop();
 
-													editedComponent.attr('setting', self.data.components[self.data.editedComponentId].getSettings());
+													editedComponent.attr('setting', componentManager.editInstance.getSettings());
 
-													editedComponent.save()
-														.fail(function (err) {
-															if ($$(editViewId).hideProgress)
-																$$(editViewId).hideProgress();
-														})
-														.then(function (result) {
-															var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
-															updatedItem.setting = result.attr('setting');
-															$$(self.componentIds.componentList).updateItem(self.data.editedComponentId, updatedItem);
+													var savedComponent;
+													async.series([
+														function (next) {
+															editedComponent.save()
+																.fail(next)
+																.then(function (result) {
+																	if (result.translate) result.translate();
 
-															self.openLayoutViewMode();
+																	var updatedItem = $$(self.componentIds.componentList).getItem(self.data.editedComponentId);
+																	updatedItem.setting = result.attr('setting');
+																	$$(self.componentIds.componentList).updateItem(self.data.editedComponentId, updatedItem);
 
-															self.element.trigger(self.options.savedComponentEvent, {});
+																	savedComponent = result;
 
-															if ($$(editViewId).hideProgress)
-																$$(editViewId).hideProgress();
+																	next();
+																});
+														},
+														function (next) {
+															if (componentManager.editInstance.afterSaveSetting) {
+																componentManager.editInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, savedComponent)
+																	.fail(next)
+																	.then(function () { next() });
+															}
+															else {
+																next();
+															}
+														}
+													], function (err) {
+														if ($$(editViewId).hideProgress)
+															$$(editViewId).hideProgress();
+
+														if (err) {
+															console.error(err);
+															return;
+														}
+
+														self.openLayoutViewMode();
+
+														self.element.trigger(self.options.savedComponentEvent, {
+															page: AD.classes.AppBuilder.currApp.currPage,
+															component: savedComponent
 														});
+													});
+
 												}
 											},
 											{
@@ -221,6 +272,7 @@ steal(
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
 
+																	$$(self.componentIds.pageType).hide();
 																	$$(self.componentIds.saveComponentInfo).show();
 																	$$(self.componentIds.cancelComponentInfo).show();
 
@@ -458,6 +510,9 @@ steal(
 							$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 							$$(self.componentIds.layoutToolbar).show();
 
+							// Set page type
+							self.showPageTypeSelector();
+
 							AD.classes.AppBuilder.currApp.currPage.getComponents()
 								.fail(function (err) {
 									$$(self.componentIds.componentList).hideProgress();
@@ -505,6 +560,7 @@ steal(
 
 							$$(self.componentIds.saveComponentInfo).hide();
 							$$(self.componentIds.cancelComponentInfo).hide();
+							self.showPageTypeSelector();
 
 							$$(self.componentIds.componentList).show();
 						},
@@ -650,6 +706,20 @@ steal(
 
 						hideDropAreaZone: function () {
 							webix.html.removeCss($$(this.componentIds.componentList).getNode(), "ab-component-drop-area");
+						},
+
+						showPageTypeSelector: function () {
+							var self = this,
+								pageType = AD.classes.AppBuilder.currApp.currPage.type ? AD.classes.AppBuilder.currApp.currPage.type : 'page';
+
+							if (AD.classes.AppBuilder.currApp.currPage.parent && (pageType == 'page' || pageType == 'modal')) {
+								$$(self.componentIds.pageType).show();
+								$$(self.componentIds.pageType).define('value', pageType); // Use define() instead of setValues to ignore update data to server
+								$$(self.componentIds.pageType).refresh();
+							}
+							else {
+								$$(self.componentIds.pageType).hide();
+							}
 						},
 
 						resetState: function () {

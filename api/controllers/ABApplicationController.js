@@ -100,7 +100,7 @@ module.exports = {
     
     
     /**
-     * Generate the server side model definitions of all AB applications
+     * Generate the server side model definitions of a given AB application
      * and then reload the ORM.
      *
      * POST /app_builder/fullReload/:id
@@ -128,13 +128,13 @@ module.exports = {
             pageIDs = [];
 
         async.series([
-            // Find all AB applications
+            // Find the application info
             function(next) {
                 ABApplication.find({ id : appID })
                 .populate('objects')
                 .then(function(list) {
                     if (!list || !list[0]) {
-                        throw new Error('No applications found');
+                        throw new Error('No application found');
                     }
                     
                     for (var i=0; i<list.length; i++) {
@@ -266,7 +266,7 @@ module.exports = {
      *
      * Import an app from uploaded JSON data file.
      *
-     * The file is expexted to be uploaded via the Webix uploader widget.
+     * The file is expected to be uploaded via the Webix uploader widget.
      */
     jsonImport: function(req, res) {
         req.file('upload').upload(function(err, files) {

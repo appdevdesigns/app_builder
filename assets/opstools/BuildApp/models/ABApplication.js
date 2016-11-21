@@ -37,8 +37,21 @@ steal(
 						},
 
 						createObject: function (obj) {
+							var q = $.Deferred(),
+								self = this;
+
 							obj.application = this.id;
-							return AD.Model.get('opstools.BuildApp.ABObject').create(obj);
+							AD.Model.get('opstools.BuildApp.ABObject').create(obj)
+								.fail(q.reject)
+								.then(function (result) {
+									if (result.translate) result.translate();
+
+									self.objects.push(result);
+
+									q.resolve(result);
+								});
+
+							return q;
 						},
 
 						// Page
@@ -54,8 +67,21 @@ steal(
 						},
 
 						createPage: function (page) {
-							page.application = this.id;
-							return AD.Model.get('opstools.BuildApp.ABPage').create(page);
+							var q = $.Deferred(),
+								self = this;
+
+							page.application = self.id;
+							AD.Model.get('opstools.BuildApp.ABPage').create(page)
+								.fail(q.reject)
+								.then(function (result) {
+									if (result.translate) result.translate();
+
+									self.pages.push(result);
+
+									q.resolve(result);
+								});
+
+							return q;
 						},
 
 						// Permission

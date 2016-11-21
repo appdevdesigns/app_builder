@@ -1,0 +1,89 @@
+[
+	{
+		"translations": [
+			{
+				"Name": "Pong",
+				"language_code": "en",
+				"id": 1,
+				"createdAt": "2016-11-15T10:02:46.000Z",
+				"updatedAt": "2016-11-19T05:29:04.000Z",
+				"ab_test_owner": 1
+			}
+		],
+		"Pet": [
+			{
+				"id": 1,
+				"createdAt": "2016-11-18T02:36:01.000Z",
+				"updatedAt": "2016-11-19T05:09:24.000Z",
+				"Owner": 1
+			},
+			{
+				"id": 2,
+				"createdAt": "2016-11-18T04:43:58.000Z",
+				"updatedAt": "2016-11-19T05:09:24.000Z",
+				"Owner": 1
+			},
+			{
+				"id": 3,
+				"createdAt": "2016-11-18T04:44:06.000Z",
+				"updatedAt": "2016-11-19T05:09:24.000Z",
+				"Owner": 1
+			}
+		],
+		"Gender": "Male",
+		"id": 1,
+		"createdAt": "2016-11-15T10:02:46.000Z",
+		"updatedAt": "2016-11-19T05:29:04.000Z"
+	},
+	{
+		"translations": [
+			{
+				"Name": "Second man",
+				"language_code": "en",
+				"id": 2,
+				"createdAt": "2016-11-16T04:12:40.000Z",
+				"updatedAt": "2016-11-19T05:30:24.000Z",
+				"ab_test_owner": 2
+			}
+		],
+		"Pet": [],
+		"Gender": "Female",
+		"id": 2,
+		"createdAt": "2016-11-16T04:12:40.000Z",
+		"updatedAt": "2016-11-19T05:30:24.000Z"
+	},
+	{
+		"translations": [
+			{
+				"Name": "Third man",
+				"language_code": "en",
+				"id": 4,
+				"createdAt": "2016-11-17T04:34:00.000Z",
+				"updatedAt": "2016-11-19T05:30:26.000Z",
+				"ab_test_owner": 4
+			}
+		],
+		"Pet": [],
+		"Gender": "Male",
+		"id": 2,
+		"createdAt": "2016-11-17T04:33:59.000Z",
+		"updatedAt": "2016-11-19T05:30:26.000Z"
+	},
+	{
+		"translations": [
+			{
+				"Name": "Fourth man",
+				"language_code": "en",
+				"id": 6,
+				"createdAt": "2016-11-17T04:44:01.000Z",
+				"updatedAt": "2016-11-19T05:30:28.000Z",
+				"ab_test_owner": 6
+			}
+		],
+		"Pet": [],
+		"Gender": "Male",
+		"id": 3,
+		"createdAt": "2016-11-17T04:44:01.000Z",
+		"updatedAt": "2016-11-19T05:30:28.000Z"
+	}
+]

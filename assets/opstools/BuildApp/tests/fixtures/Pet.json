@@ -1,0 +1,65 @@
+[
+	{
+		"translations": [
+			{
+				"Name": "Dog",
+				"language_code": "en",
+				"id": 37,
+				"createdAt": "2016-11-18T02:36:01.000Z",
+				"updatedAt": "2016-11-18T02:36:01.000Z",
+				"ab_test_pet": 1
+			}
+		],
+		"Owner": {
+			"Gender": "Male",
+			"id": 1,
+			"createdAt": "2016-11-15T10:02:46.000Z",
+			"updatedAt": "2016-11-19T05:29:04.000Z"
+		},
+		"id": 1,
+		"createdAt": "2016-11-18T02:36:01.000Z",
+		"updatedAt": "2016-11-19T05:09:24.000Z"
+	},
+	{
+		"translations": [
+			{
+				"Name": "Cat",
+				"language_code": "en",
+				"id": 4,
+				"createdAt": "2016-11-16T04:51:49.000Z",
+				"updatedAt": "2016-11-16T04:51:49.000Z",
+				"ab_test_pet": 2
+			}
+		],
+		"Owner": {
+			"Gender": "Male",
+			"id": 1,
+			"createdAt": "2016-11-15T10:02:46.000Z",
+			"updatedAt": "2016-11-19T05:29:04.000Z"
+		},
+		"id": 2,
+		"createdAt": "2016-11-18T04:43:58.000Z",
+		"updatedAt": "2016-11-19T05:09:24.000Z"
+	},
+	{
+		"translations": [
+			{
+				"Name": "Bird",
+				"language_code": "en",
+				"id": 41,
+				"createdAt": "2016-11-18T04:44:06.000Z",
+				"updatedAt": "2016-11-18T04:44:06.000Z",
+				"ab_test_pet": 3
+			}
+		],
+		"Owner": {
+			"Gender": "Male",
+			"id": 1,
+			"createdAt": "2016-11-15T10:02:46.000Z",
+			"updatedAt": "2016-11-19T05:29:04.000Z"
+		},
+		"id": 3,
+		"createdAt": "2016-11-18T04:44:06.000Z",
+		"updatedAt": "2016-11-19T05:09:24.000Z"
+	}
+]
