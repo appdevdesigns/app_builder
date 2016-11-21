@@ -814,10 +814,6 @@ steal(
 												if (!updateColumn.setting.linkVia) {
 													next()
 												}
-												else if (updateColumn.setting.linkObject == updateColumn.object) {
-													// link to self. no need to create redundant connection.
-													next();
-												}
 												else {
 													AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.setting.linkVia)
 														.fail(next)
@@ -917,7 +913,7 @@ steal(
 										var firstColumn = self.cacheNewField(objectName, columnInfo);
 										var isSelfLink = firstColumn.setting.linkObject && (firstColumn.setting.linkObject == columnInfo.object);
 
-										if (firstColumn.setting.linkType && firstColumn.setting.linkObject && !isSelfLink) {
+										if (firstColumn.setting.linkType && firstColumn.setting.linkObject) {
 											// Find object
 											var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == firstColumn.setting.linkObject; })[0];
 
