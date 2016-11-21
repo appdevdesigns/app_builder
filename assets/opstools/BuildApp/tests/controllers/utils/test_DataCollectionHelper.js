@@ -31,33 +31,17 @@ steal(
 
 				async.series([
 					function (next) {
-						abStubHelper.getFixtureData('ABObject')
-							.then(function (objects) {
-								appInfo.objects = objects;
+						abStubHelper.getMockModel('ABObject').findAll({})
+							.then(function (result) {
+								appInfo.objects = result;
 								next();
 							});
 					},
 					function (next) {
 						// Stub ModelCreator
 						sinon.stub(dataCollectionHelper.modelCreator, 'getModel', function (application, objectName) {
-							// Stub Object model
-							return {
-								findAll: function (cond) {
-									var q = $.Deferred();
-
-									$.ajax({
-										url: '/opstools/BuildApp/tests/fixtures/' + objectName + '.json',
-										type: 'GET',
-										dataType: "json"
-									})
-										.fail(q.reject)
-										.then(function (result) {
-											q.resolve(new can.List(result));
-										});
-
-									return q;
-								}
-							};
+							// get Mock model
+							return abStubHelper.getMockModel(objectName);
 						});
 
 						next();
@@ -83,7 +67,56 @@ steal(
 
 			describe('test update connect data', function () {
 
-				it('test', function () {
+				it('should remove data in parent when child data is deleted', function (done) {
+					var ownerObjectId = 1,
+						petObjectId = 2,
+						ownerDC, petDC;
+
+					async.series([
+						// Get parent data collection
+						function (next) {
+							dataCollectionHelper.getDataCollection(appInfo, ownerObjectId)
+								.fail(next)
+								.then(function (result) {
+									ownerDC = result;
+console.log('ownerDC: ', ownerDC);
+									next();
+								});
+						},
+						// Get child data collection
+						function (next) {
+							dataCollectionHelper.getDataCollection(appInfo, petObjectId)
+								.fail(next)
+								.then(function (result) {
+									petDC = result;
+console.log('petDC: ', petDC);
+									next();
+								});
+						}
+						// ,
+						// // Delete data of child
+						// function (next) {
+						// 	var deleteTasks = [];
+
+						// 	ownerDC.find({}).forEach(function (owner) {
+						// 		owner.Pet.forEach(function (pet) {
+
+						// 			deleteTasks.push(function (ok) {
+						// 				petDC.AD.destroyModel(pet.id)
+						// 					.fail(ok)
+						// 					.then(function () {
+						// 						ok();
+
+						// 						console.log('PET: ', petDC.AD.__list);
+						// 					});
+						// 			});
+
+						// 		});
+						// 	});
+
+						// 	async.series(deleteTasks, next);
+						// }
+					], done);
 
 				});
 

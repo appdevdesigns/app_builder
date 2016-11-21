@@ -1,5 +1,66 @@
 steal(function () {
-	var data = {}; // { objectName: [data], ..., objectNameN: [datan] };
+	var data = {}, // { objectName: [data], ..., objectNameN: [dataN] };
+		models = {}; // { objectName: [can.Model], ..., objectNameN: [can.ModelN] };
+
+	function getFixtureData(objectName, cond) {
+		var q = $.Deferred(),
+			dataResult = null;
+
+		async.series([
+			// Get data
+			function (next) {
+				if (!data[objectName]) {
+					$.ajax({
+						url: '/opstools/BuildApp/tests/fixtures/' + objectName + '.json',
+						type: 'GET',
+						dataType: "json"
+					})
+						.fail(next)
+						.then(function (result) {
+							data[objectName] = result;
+
+							next();
+						});
+				}
+				else {
+					next();
+				}
+			},
+			// Filter data
+			function (next) {
+				if (cond) {
+					dataResult = data[objectName].filter(function (item) {
+						var result = true;
+
+						for (key in cond) {
+							if (result && item.hasOwnProperty(key) && (item.attr(key) == cond[key] || item.attr(key).id == cond[key])) {
+								result = true;
+							}
+							else {
+								result = false;
+							}
+						}
+
+						return result;
+					});
+				}
+				else {
+					dataResult = data[objectName];
+				}
+
+				next();
+			}
+		], function (err) {
+			if (err) {
+				q.reject(err);
+			}
+			else {
+				q.resolve(dataResult);
+			}
+		});
+
+		return q;
+	}
 
 	function saveData(objectName, obj) {
 		var q = $.Deferred();
@@ -42,7 +103,7 @@ steal(function () {
 		return q;
 	};
 
-	function removeData(id) {
+	function removeData(objectName, id) {
 		var q = $.Deferred();
 
 		async.series([
@@ -62,7 +123,7 @@ steal(function () {
 				var index = null;
 
 				data[objectName].forEach(function (item, i) {
-					if (item.attr('id') == id)
+					if (item.id == id)
 						index = i;
 				});
 
@@ -84,81 +145,93 @@ steal(function () {
 	};
 
 	return {
-		getFixtureData: function (objectName, cond) {
-			var q = $.Deferred(),
-				dataResult = null;
 
-			async.series([
-				// Get data
-				function (next) {
-					if (!data[objectName]) {
-						$.ajax({
-							url: '/opstools/BuildApp/tests/fixtures/' + objectName + '.json',
-							type: 'GET',
-							dataType: "json"
-						})
-							.fail(next)
-							.then(function (result) {
-								data[objectName] = new can.List(result);
+		getMockModel: function (objectName) {
+			if (models[objectName] == null) {
 
-								data[objectName].forEach(function (d) {
-									d.getDataLabel = function (rowData) {
-										return "TODO : getDataLabel";
-									}
-								});
+				var instanceProps = {
+					getID: function () { return this.id; }
+				};
 
-								next();
-							});
-					}
-					else {
-						next();
-					}
-				},
-				// Filter data
-				function (next) {
-					if (cond) {
-						dataResult = data[objectName].filter(function (item) {
-							var result = true;
+				if (objectName == 'ABObject')
+					instanceProps.getDataLabel = function (item) { return 'TODO: getDataLabel'; };
 
-							for (key in cond) {
-								if (result && item.hasOwnProperty(key) && (item.attr(key) == cond[key] || item.attr(key).id == cond[key])) {
-									result = true;
-								}
-								else {
-									result = false;
-								}
+				var mockModel = can.Model(
+					objectName,
+					{
+						findAll: function (cond) {
+							var self = this,
+								q = $.Deferred();
+
+							if (self._mockData == null) {
+								// Get mock data
+								getFixtureData(objectName)
+									.then(function (result) {
+console.log('DC fixture:', objectName, result);
+										self._mockData = self.models(result);
+										q.resolve(self._mockData);
+									});
+							}
+							else {
+								// TODO : filter condition
+								q.resolve(self._mockData);
 							}
 
-							return result;
-						});
-					}
-					else {
-						dataResult = data[objectName];
-					}
+							return q;
+						},
+						findOne: function (cond) {
+							var self = this,
+								q = $.Deferred();
 
-					next();
-				}
-			], function (err) {
-				if (err) {
-					q.reject(err);
-				}
-				else {
-					q.resolve(dataResult);
-				}
-			});
+							// TODO : filter condition
+							q.resolve(self._mockData[0]);
 
-			return q;
+							return q;
+						},
+						create: function () {
+							var q = $.Deferred();
+							q.resolve();
+							return q;
+						},
+						update: function () {
+							var q = $.Deferred();
+							q.resolve();
+							return q;
+						},
+						destroy: function (def) {
+							var q = $.Deferred();
+							q.resolve();
+							return q;
+						}
+					},
+					instanceProps);
+
+				models[objectName] = mockModel;
+			}
+
+			return models[objectName];
 		},
 
 		convertToStub: function (model, objectName) {
-			sinon.stub(model, 'findAll', function (cond) { return getFixtureData(objectName, cond); });
+			sinon.stub(model, 'findAll', function (cond) {
+				var q = $.Deferred();
+
+				getFixtureData(objectName, cond)
+					.fail(q.reject)
+					.then(function (result) {
+						q.resolve(model.models(result));
+					});
+
+				return q;
+			});
+
 			sinon.stub(model, 'findOne', function (cond) {
 				var q = $.Deferred();
 
 				getFixtureData(objectName, cond).fail(q.reject)
 					.then(function (result) {
 						if (result && result.length > 0)
-							q.resolve(result[0]);
+							q.resolve(model.model(result[0]));
 						else
 							q.resolve(null);
 					});
@@ -171,30 +244,6 @@ steal(function () {
 				return saveData(objectName, obj);
 			});
 			sinon.stub(model, 'destroy', function (id) { return removeData(objectName, id); });
-
-			if (model.getDataLabel) {
-				sinon.stub(model, 'getDataLabel', function (data) {
-					return '';
-					// 	if (!this.columns || this.columns.length < 1) return '';
-
-					// 	var labelFormat;
-
-					// 	if (this.labelFormat) {
-					// 		labelFormat = this.labelFormat;
-					// 	} else { // Default label format
-					// 		var textCols = this.columns.filter(function (col) { return col.type === 'string' || col.type === 'text' }),
-					// 			defaultCol = textCols.length > 0 ? textCols[0] : this.columns[0];
-
-					// 		labelFormat = '{' + defaultCol.name + '}';
-					// 	}
-
-					// 	for (var c in data) {
-					// 		labelFormat = labelFormat.replace(new RegExp('{' + c + '}', 'g'), data[c]);
-					// 	}
-
-					// 	return labelFormat;
-				});
-			}
 		},
 
 		restore: function (model) {

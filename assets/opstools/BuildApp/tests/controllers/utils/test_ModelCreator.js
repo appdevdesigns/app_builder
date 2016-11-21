@@ -29,10 +29,9 @@ steal(
 
 				buildHTML();
 
-				abStubHelper.getFixtureData('ABObject')
-					.then(function (objects) {
-						appInfo.objects = objects;
-
+				abStubHelper.getMockModel('ABObject').findAll({})
+					.then(function (result) {
+						appInfo.objects = result;
 						done();
 					});
 
