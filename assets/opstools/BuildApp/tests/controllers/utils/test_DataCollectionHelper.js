@@ -65,7 +65,7 @@ steal(
 					});
 			});
 
-			describe('test update connect data', function () {
+			describe('test 1:M connect data', function () {
 
 				it('should remove data in parent when child data is deleted', function (done) {
 					var ownerObjectId = 1,
@@ -79,7 +79,6 @@ steal(
 								.fail(next)
 								.then(function (result) {
 									ownerDC = result;
-console.log('ownerDC: ', ownerDC);
 									next();
 								});
 						},
@@ -89,33 +88,32 @@ console.log('ownerDC: ', ownerDC);
 								.fail(next)
 								.then(function (result) {
 									petDC = result;
-console.log('petDC: ', petDC);
 									next();
 								});
+						},
+						// Delete data of child
+						function (next) {
+							var deleteTasks = [];
+
+							ownerDC.find({}).forEach(function (owner) {
+								owner.Pet.forEach(function (pet) {
+
+									deleteTasks.push(function (ok) {
+										petDC.AD.destroyModel(pet.id)
+											.fail(ok)
+											.then(function () {
+												// Assert
+												assert.equal(0, owner.Pet.filter(function (p) { return p.id == pet.id }).length, 'should not have deleted pet in owner');
+
+												ok();
+											});
+									});
+
+								});
+							});
+
+							async.series(deleteTasks, next);
 						}
-						// ,
-						// // Delete data of child
-						// function (next) {
-						// 	var deleteTasks = [];
-
-						// 	ownerDC.find({}).forEach(function (owner) {
-						// 		owner.Pet.forEach(function (pet) {
-
-						// 			deleteTasks.push(function (ok) {
-						// 				petDC.AD.destroyModel(pet.id)
-						// 					.fail(ok)
-						// 					.then(function () {
-						// 						ok();
-
-						// 						console.log('PET: ', petDC.AD.__list);
-						// 					});
-						// 			});
-
-						// 		});
-						// 	});
-
-						// 	async.series(deleteTasks, next);
-						// }
 					], done);
 
 				});
