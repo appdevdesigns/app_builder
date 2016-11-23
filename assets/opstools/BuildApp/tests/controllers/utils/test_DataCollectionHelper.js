@@ -66,11 +66,62 @@ steal(
 			});
 
 			describe('test 1:M connect data', function () {
+				var ownerObjectId = 1,
+					petObjectId = 2;
+
+				it('should update parent data when child data is update', function (done) {
+					var ownerDC, petDC;
+
+					async.series([
+						// Get parent data collection
+						function (next) {
+							dataCollectionHelper.getDataCollection(appInfo, ownerObjectId)
+								.fail(next)
+								.then(function (result) {
+									ownerDC = result;
+									next();
+								});
+						},
+						// Get child data collection
+						function (next) {
+							dataCollectionHelper.getDataCollection(appInfo, petObjectId)
+								.fail(next)
+								.then(function (result) {
+									petDC = result;
+									next();
+								});
+						},
+						// Update data of child
+						function (next) {
+							var updateTasks = [];
+
+							petDC.find({}).forEach(function (pet) {
+								updateTasks.push(function (ok) {
+									// Update Owner of pet data
+									petDC.setCursor(pet.id);
+									var petModel = petDC.AD.currModel();
+									petModel.attr('Owner', 2);
+
+									petModel.save().fail(ok)
+										.then(function () {
+											// Assert
+											ownerDC.find({}).forEach(function (owner) {
+												assert.isTrue(owner.Pet != pet.id && owner.Pet.filter(function (p) { return p.id == pet.id; }).length == 0);
+											});
+
+											ok();
+										});
+								});
+							});
+
+							async.series(updateTasks, next);
+						}
+					], done);
+
+				});
 
 				it('should remove data in parent when child data is deleted', function (done) {
-					var ownerObjectId = 1,
-						petObjectId = 2,
-						ownerDC, petDC;
+					var ownerDC, petDC;
 
 					async.series([
 						// Get parent data collection
