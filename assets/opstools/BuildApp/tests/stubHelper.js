@@ -192,17 +192,18 @@ steal(function () {
 							var self = this,
 								q = $.Deferred();
 
-							if (self._mockData == null) {
+							if (models[objectName]._mockData == null) {
 								// Get mock data
 								getFixtureData(objectName)
 									.then(function (result) {
-										self._mockData = self.models(result);
+										models[objectName]._mockData = self.models(result);
+										models[objectName]._mockData._Klass = self;
 
-										q.resolve(filterData(self._mockData, cond));
+										q.resolve(filterData(models[objectName]._mockData, cond));
 									});
 							}
 							else {
-								q.resolve(filterData(self._mockData, cond));
+								q.resolve(filterData(models[objectName]._mockData, cond));
 							}
 
 							return q;
@@ -211,7 +212,7 @@ steal(function () {
 							var self = this,
 								q = $.Deferred();
 
-							q.resolve(filterData(self._mockData, cond)[0]);
+							q.resolve(filterData(models[objectName]._mockData, cond)[0]);
 
 							return q;
 						},
@@ -291,6 +292,13 @@ steal(function () {
 
 			if (model.getDataLabel && model.getDataLabel.restore)
 				model.getDataLabel.restore();
+		},
+
+		clearModel: function (objectName) {
+			if (models[objectName]) {
+				models[objectName].store = {};
+				delete models[objectName];
+			}
 		},
 
 		clearLocalData: function (objectName) {
