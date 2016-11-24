@@ -244,7 +244,7 @@ steal(
 					async.series(updateTasks, done);
 				});
 
-				it('should remove child data when parent data is deleted', function (done) {
+				it('should update child data when parent data is deleted', function (done) {
 					var deleteTasks = [];
 
 					ownerDC.find({}).forEach(function (owner) {

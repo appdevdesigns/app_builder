@@ -174,16 +174,31 @@ steal(
 							case 'set':
 								if (col.name != attrName || isSame(newVal, oldVal)) return;
 
-								if (col.setting.linkType == 'collection' && linkVia.setting.linkType == 'model') { // M:1
+								// 1:1
+								if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'model') {
 									// TODO
 								}
-								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') { // 1:M
+								// M:1
+								else if (col.setting.linkType == 'collection' && linkVia.setting.linkType == 'model') {
+									// Remove parent data (when child is not in list)
+									if (linkViaVal && rowData.id == (linkViaVal.id || linkViaVal)
+										&& newVal.filter(function (v) { return v.id == (linkViaVal.id || linkViaVal); }).length < 1) {
+										linkRow.attr(linkVia.name, null);
+									}
+									// Add parent data to child
+									else if (linkViaVal && rowData.id != (linkViaVal.id || linkViaVal)
+										&& newVal.filter(function (v) { return v.id == (linkViaVal.id || linkViaVal); }).length > 0) {
+										linkRow.attr(linkVia.name, linkViaVal.id || linkViaVal);
+									}
+								}
+								// 1:M
+								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') {
 									if (oldVal && linkRow.id == oldVal.id) {
 										var removeChildData = linkViaVal.attr().filter(function (v) { return v.id != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
 									}
 									else if (newVal && linkRow.id == (newVal.id || newVal)) {
-										var exists = linkViaVal.filter(function (val) { return val.id == rowData.id; });
+										var exists = linkViaVal.filter(function (val) { return val.id == rowData.id || val == rowData.id; });
 
 										if (!exists[0]) {
 											var childVal = linkViaVal.attr();
@@ -191,6 +206,10 @@ steal(
 											linkRow.attr(linkVia.name, childVal);
 										}
 									}
+								}
+								// M:N
+								else if (col.setting.linkType == 'collection' && linkVia.setting.linkType == 'collection') {
+									// TODO
 								}
 								break;
 
