@@ -140,7 +140,7 @@ steal(
 						switch (how) {
 							case 'add':
 								// Check row id of parent
-								if (!newVal[0] || !newVal[0][col.name] ||
+								if (col.name != attrName || !newVal[0] || !newVal[0][col.name] ||
 									(newVal[0][col.name].id != linkRow.id && newVal[0][col.name].filter && newVal[0][col.name].filter(function (c) { return c.id == linkRow.id; }).length < 1))
 									return;
 
