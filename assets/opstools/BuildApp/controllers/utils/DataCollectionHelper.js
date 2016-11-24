@@ -182,7 +182,7 @@ steal(
 										var removeChildData = linkViaVal.attr().filter(function (v) { return v.id != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
 									}
-									else if (newVal && linkRow.id == newVal.id) {
+									else if (newVal && linkRow.id == (newVal.id || newVal)) {
 										var exists = linkViaVal.filter(function (val) { return val.id == rowData.id; });
 
 										if (!exists[0]) {
