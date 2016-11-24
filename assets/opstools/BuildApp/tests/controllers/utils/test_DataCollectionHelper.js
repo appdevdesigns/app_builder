@@ -102,27 +102,25 @@ steal(
 				it('should update parent data when add new child data', function (done) {
 					console.log('-- Unit test 1:M add new child data --');
 
-					var addTasks = [];
+					var newPet = new petDC.AD.getModelObject()(),
+						newPetId = 999;
+					newPet.attr('id', newPetId);
+					newPet.attr('Name', 'New Pet');
+					newPet.attr('Owner', { id: 1 });
+					newPet.save().fail(done)
+						.then(function (result) {
+							petDC.AD.__list.push(result);
 
-					ownerDC.find({}).forEach(function (owner, index) {
-						addTasks.push(function (ok) {
-							var newPet = new petDC.AD.getModelObject()();
-							newPet.attr('id', 999 + index);
-							newPet.attr('Name', 'New Pet ' + (999 + index));
-							newPet.attr('Owner', { id: owner.id });
-							newPet.save().fail(ok)
-								.then(function (result) {
-									petDC.AD.__list.push(result);
+							// Assert
+							ownerDC.find({}).forEach(function (owner) {
+								if (owner.id == 1)
+									assert.equal(1, owner.Pet.filter(function (p) { return p.id == newPetId; }).length);
+								else
+									assert.equal(0, owner.Pet.filter(function (p) { return p.id == newPetId; }).length);
+							});
 
-									// Assert
-									assert.equal(1, owner.Pet.filter(function (p) { return p.id == 999 + index; }).length);
-
-									ok();
-								});
+							done();
 						});
-					});
-
-					async.series(addTasks, done);
 				});
 
 				it('should update parent data when child data is update', function (done) {
@@ -183,21 +181,44 @@ steal(
 				it('should update child data when add new parent data', function (done) {
 					var newOwnerId = 999,
 						newOwner = new ownerDC.AD.getModelObject()(),
-						petId = 1;
+						newPet = new petDC.AD.getModelObject()(),
+						newPetId = 9999;
 
-					newOwner.attr('id', newOwnerId);
-					newOwner.attr('name', 'New Owner');
-					newOwner.attr('Pet', [{ id: petId }]);
-					newOwner.save().fail(done)
-						.then(function (result) {
-							ownerDC.AD.__list.push(result);
+					async.series([
+						function (ok) {
+							newPet.attr('id', newPetId);
+							newPet.attr('Name', 'New Pet');
+							newPet.save().fail(ok)
+								.then(function (result) {
+									petDC.AD.__list.push(result);
+									ok();
+								});
+						},
+						function (ok) {
+							newOwner.attr('id', newOwnerId);
+							newOwner.attr('name', 'New Owner');
+							newOwner.attr('Pet', [{ id: newPetId }]);
+							newOwner.save().fail(ok)
+								.then(function (result) {
+									// Assert
+									assert.equal(newOwnerId, result.id, 'should be new owner id');
 
-							// Assert
-							assert.equal(newOwnerId, result.id);
-							assert.equal(newOwnerId, petDC.find({ id: petId })[0].Owner.id || petDC.find({ id: petId })[0].Owner);
+									ownerDC.AD.__list.push(result);
+									ok();
+								});
+						}
+					], function (err) {
+						if (err) {
+							done(err);
+							return;
+						}
 
-							done();
-						});
+						// Assert
+						assert.equal(1, ownerDC.find({ id: newOwnerId })[0].Pet.filter(function (p) { return p.id == newPetId }).length, 'the new owner should have a pet');
+						assert.equal(newOwnerId, petDC.find({ id: newPetId })[0].Owner.id, 'owner data of pet should be the new onwer');
+
+						done();
+					})
 				});
 
 				it('should update child data when parent data is update', function (done) {

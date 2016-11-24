@@ -9,6 +9,13 @@ steal(
 
 		var dataCollections = {};
 
+		function isSame(newVal, oldVal) {
+			return oldVal == newVal ||
+				(newVal && oldVal == newVal.id) ||
+				(oldVal && oldVal.id == newVal) ||
+				(oldVal && newVal && oldVal.id && newVal.id && oldVal.id == newVal.id);
+		}
+
 		return {
 			modelCreator: modelCreator,
 			dataHelper: dataHelper,
@@ -76,10 +83,6 @@ steal(
 
 											var rowData = rowIndex > -1 ? this[rowIndex] : this; // Get data
 
-											self.updateConnectData(application, linkCols, rowData, attrName, how, newVal, oldVal);
-
-											if (oldVal == null && newVal == null) return;
-
 											// Convert $height to number
 											if (attrName == '$height' && newVal) {
 												if (typeof newVal !== 'number') {
@@ -90,11 +93,16 @@ steal(
 											}
 											else if (attrName == '_dataLabel' || attrName == 'updatedAt' || attrName == 'translations') return;
 
+											console.log('DC after updateConnectData: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+											self.updateConnectData(application, linkCols, rowData, attrName, how, newVal, oldVal);
+
+											if (oldVal == null && newVal == null) return;
+
 											var hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
 
 											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
-												console.log('DC.normalize: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+												console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, oldVal);
 												// Update connected data
 												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData, true).then(function (result) { });
 											}
@@ -140,8 +148,9 @@ steal(
 						switch (how) {
 							case 'add':
 								// Check row id of parent
-								if (col.name != attrName || !newVal[0] || !newVal[0][col.name] ||
-									(newVal[0][col.name].id != linkRow.id && newVal[0][col.name].filter && newVal[0][col.name].filter(function (c) { return c.id == linkRow.id; }).length < 1))
+								if (!newVal[0] || !newVal[0][col.name] ||
+									(newVal[0][col.name].id && newVal[0][col.name].id != linkRow.id) ||
+									(newVal[0][col.name].filter && newVal[0][col.name].filter(function (c) { return c.id == linkRow.id; }).length < 1))
 									return;
 
 								// Add link data to link via
@@ -163,13 +172,12 @@ steal(
 
 
 							case 'set':
-								if (col.name != attrName || oldVal == newVal || oldVal == newVal.id || oldVal.id == newVal ||
-									(oldVal && newVal && oldVal.id && newVal.id && oldVal.id == newVal.id)) return;
+								if (col.name != attrName || isSame(newVal, oldVal)) return;
 
-								if (linkVia.setting.linkType == 'model' && col.setting.linkType == 'collection') {
+								if (col.setting.linkType == 'collection' && linkVia.setting.linkType == 'model') { // M:1
 									// TODO
 								}
-								else if (linkVia.setting.linkType == 'collection' && col.setting.linkType == 'model') {
+								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') { // 1:M
 									if (oldVal && linkRow.id == oldVal.id) {
 										var removeChildData = linkViaVal.attr().filter(function (v) { return v.id != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
