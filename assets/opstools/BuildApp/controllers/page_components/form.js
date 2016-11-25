@@ -258,8 +258,7 @@ steal(
 
 							var element = {
 								name: col.name, // Field name
-								labelWidth: 100,
-								minWidth: 500
+								labelWidth: 100
 							};
 							element.label = col.label;
 
@@ -487,8 +486,10 @@ steal(
 						return;
 					}
 
+					$$(self.viewId).adjust();
 					$$(self.viewId).hideProgress();
 
+console.error('FIRE: ', self.viewId);
 					$(self).trigger('renderComplete', {});
 
 					data.isRendered = true;
@@ -640,6 +641,10 @@ steal(
 					}
 				});
 
+			};
+
+			this.resize = function(width, height) {
+				$$(this.viewId).adjust();
 			};
 
 		}
