@@ -189,7 +189,9 @@ steal(function () {
 				useWidth	: $$(componentIds.useWidth).getValue(),	
 				imageWidth	: $$(componentIds.imageWidth).getValue(),		
 				useHeight	: $$(componentIds.useHeight).getValue(),
-				imageHeight	: $$(componentIds.imageHeight).getValue()
+				imageHeight	: $$(componentIds.imageHeight).getValue(),
+
+				padding:0
 			}
 
 		if ($$(componentIds.useWidth).getValue()) { 
@@ -400,10 +402,10 @@ steal(function () {
 		$container.attr('id', keyField);
 
 
-		var style = '';
+		var style = 'display:none;';
 		if (fieldData.setting.useWidth) {
-			style = 'width:'+fieldData.setting.imageWidth+'px;';
-			fieldData.setting.width = fieldData.setting.imageWidth;
+			style += 'width:'+fieldData.setting.imageWidth+'px;';
+			fieldData.setting.width = fieldData.setting.imageWidth; // pass this to the webix column
 		}
 		if (fieldData.setting.useHeight) {
 			style += 'height:'+fieldData.setting.imageHeight+'px;';
@@ -417,13 +419,19 @@ steal(function () {
 		// .image-data-field-image: for an actual <img> of the data.
 		var imgDiv = [
 			'<div class="image-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file-image-o fa-2x"></i></div>',
-			'<div class="image-data-field-image" style="display:none;"><img src="" '+style+' ></div>'
+			// '<div class="image-data-field-image" style="display:none;"><img src="" '+style+' ></div>'
+			'<div class="image-data-field-image" style="display:none; width:100%; height:100%; background-repeat: no-repeat; "></div>'
 		].join('\n');
 
 
 		var imgHeight = 33;
 		if (fieldData.setting.useHeight){
 			imgHeight = fieldData.setting.imageHeight;
+		}
+
+		var imgWidth = 50;
+		if (fieldData.setting.useWidth){
+			imgWidth = fieldData.setting.imageWidth;
 		}
 
 		// use a webix component for displaying the content.
@@ -436,7 +444,8 @@ steal(function () {
 			template:imgDiv,
 
 			borderless:true,
-			height: imgHeight
+			height: imgHeight,
+			width:imgWidth
 		});
 		webix.extend(webixContainer, webix.ProgressBar);
 
@@ -447,7 +456,8 @@ steal(function () {
 			$container.find('.image-data-field-icon').show();
 		}
 		$container.showImage = function (uuid) {
-			$($container.find('img')).prop('src', '/opsportal/image/'+application.name+'/'+uuid);
+			// $($container.find('img')).prop('src', '/opsportal/image/'+application.name+'/'+uuid);
+			$container.find('.image-data-field-image').css('background-image', "url('/opsportal/image/"+application.name+'/'+uuid+"')" );
 			$container.find('.image-data-field-icon').hide();
 			$container.find('.image-data-field-image').show();
 		}
@@ -528,7 +538,7 @@ steal(function () {
 				}
 		    }
 		});
-		uploader.addDropZone(webixContainer.$view);
+		// uploader.addDropZone(webixContainer.$view);
 
 		return true;
 

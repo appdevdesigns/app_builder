@@ -63,9 +63,13 @@ steal(
 
 		componentManager.editStop = function () {
 			components.forEach(function (comp) {
+
+				// if the component defines an .editStop() method directly
 				if (comp.editStop)
 					comp.editStop();
 				else {
+
+					// or the component defines a .propertyView in it's getInfo()
 					var compInfo = comp.getInfo();
 					if (compInfo.propertyView && $$(compInfo.propertyView) && $$(compInfo.propertyView).editStop) {
 						$$(compInfo.propertyView).editStop();
