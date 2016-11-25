@@ -415,3 +415,8 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .dynamic-datatable-view .webix_badge {
 	margin: 0 !important;
 }
+
+/* Number data field */
+.ab-number-format-show {
+	white-space: nowrap;
+}

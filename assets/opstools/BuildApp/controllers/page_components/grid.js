@@ -372,6 +372,12 @@ steal(
 					});
 
 					if (dataCollection) {
+						$$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
+							var currModel = dataCollection.AD.currModel();
+							if (!currModel || currModel.id != data.id)
+								dataCollection.setCursor(data.id);
+						});
+
 						dataCollection.attachEvent("onAfterCursorChange", function (id) {
 							var selectedItem = $$(self.viewId).getSelectedId(false);
 
@@ -687,7 +693,8 @@ steal(
 				view: "dynamicdatatable",
 				autoheight: true,
 				fixedRowHeight: false,
-				datatype: "json"
+				datatype: "json",
+				resizeColumn: true
 			};
 		};
 

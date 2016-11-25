@@ -188,13 +188,15 @@ steal(function () {
 				icon: numberDataField.icon,
 				editor: 'number',
 				filter_type: 'number',
-				template: '<div class="number-format-show"></div>',
+				template: '<div class="ab-number-format-show"></div>',
 				default: $$(componentIds.numberDefault).getValue()
 			}
 		};
 	};
 
 	numberDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+		if (data == null) return '';
+
 		var decimalSizeNum = 0,
 			decimalDelimiters = ".",
 			groupDelimiters = "";
@@ -261,7 +263,7 @@ steal(function () {
 			}
 		}
 
-		$(itemNode).find('.number-format-show').html(numberFormat);
+		$(itemNode).find('.ab-number-format-show').html(numberFormat);
 
 		return true;
 	};
