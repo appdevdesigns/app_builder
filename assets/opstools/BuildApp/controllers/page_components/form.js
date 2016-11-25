@@ -266,6 +266,28 @@ steal(
 							if (col.type == 'boolean') {
 								element.view = 'checkbox';
 							}
+							else if (col.setting.editor === 'popup') {
+								element.view = 'textarea';
+							}
+							else if (col.setting.editor === 'number') {
+								// element.view = 'counter';
+								// element.pattern = { mask: "##############", allow: /[0-9]/g }; // Available in webix PRO edition
+								element.view = 'text';
+								element.validate = webix.rules.isNumber;
+								element.validateEvent = 'key';
+							}
+							else if (col.setting.editor === 'date') {
+								element.view = 'datepicker';
+								element.timepicker = false;
+							}
+							else if (col.setting.editor === 'datetime') {
+								element.view = 'datepicker';
+								element.timepicker = true;
+							}
+							else if (col.setting.editor === 'richselect') {
+								element.view = 'richselect';
+								element.options = listOptions[col.id];
+							}
 							else if (col.setting.template) {
 								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
 									.replace(/#width#/g, element.labelWidth - 3)
@@ -288,24 +310,6 @@ steal(
 										dataFieldsManager.customEdit(application, data.object, col, rowId, current_view.$view);
 									}
 								};
-							}
-							else if (col.setting.editor === 'popup') {
-								element.view = 'textarea';
-							}
-							else if (col.setting.editor === 'number') {
-								element.view = 'counter';
-							}
-							else if (col.setting.editor === 'date') {
-								element.view = 'datepicker';
-								element.timepicker = false;
-							}
-							else if (col.setting.editor === 'datetime') {
-								element.view = 'datepicker';
-								element.timepicker = true;
-							}
-							else if (col.setting.editor === 'richselect') {
-								element.view = 'richselect';
-								element.options = listOptions[col.id];
 							}
 							else {
 								element.view = col.setting.editor;
