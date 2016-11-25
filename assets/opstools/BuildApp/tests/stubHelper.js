@@ -29,20 +29,7 @@ steal(function () {
 			// Filter data
 			function (next) {
 				if (cond) {
-					dataResult = data[objectName].filter(function (item) {
-						var result = true;
-
-						for (key in cond) {
-							if (result && item.hasOwnProperty(key) && (item.attr(key) == cond[key] || item.attr(key).id == cond[key])) {
-								result = true;
-							}
-							else {
-								result = false;
-							}
-						}
-
-						return result;
-					});
+					dataResult = filterData(data[objectName], cond);
 				}
 				else {
 					dataResult = data[objectName];
@@ -60,6 +47,48 @@ steal(function () {
 		});
 
 		return q;
+	}
+
+	function filterData(data, cond) {
+		if (cond == null || Object.keys(cond).length < 1) return data;
+
+		// OR condition
+		if (cond.or) {
+			return data.filter(function (item) {
+				var condResult = false;
+
+				cond.or.forEach(function (condItem) {
+					for (key in condItem) {
+						if (item.hasOwnProperty(key) && (item.attr(key) == condItem[key] || item.attr(key).id == condItem[key])) {
+							condResult = true;
+							break;
+						}
+
+						if (condResult) return;
+					}
+				});
+
+				return condResult;
+			});
+		}
+		// AND condition
+		else {
+			return data.filter(function (item) {
+				var condResult = true;
+
+				for (key in cond) {
+					if (condResult && item.hasOwnProperty(key) && (item.attr(key) == cond[key] || item.attr(key).id == cond[key])) {
+						condResult = true;
+					}
+					else {
+						condResult = false;
+						break;
+					}
+				}
+
+				return condResult;
+			});
+		}
 	}
 
 	function saveData(objectName, obj) {
@@ -154,7 +183,7 @@ steal(function () {
 				};
 
 				if (objectName == 'ABObject')
-					instanceProps.getDataLabel = function (item) { return 'TODO: getDataLabel'; };
+					instanceProps.getDataLabel = function (item) { return 'Label ID: #id#'.replace('#id#', item.id); };
 
 				var mockModel = can.Model(
 					objectName,
@@ -163,18 +192,18 @@ steal(function () {
 							var self = this,
 								q = $.Deferred();
 
-							if (self._mockData == null) {
+							if (models[objectName]._mockData == null) {
 								// Get mock data
 								getFixtureData(objectName)
 									.then(function (result) {
-console.log('DC fixture:', objectName, result);
-										self._mockData = self.models(result);
-										q.resolve(self._mockData);
+										models[objectName]._mockData = self.models(result);
+										models[objectName]._mockData._Klass = self;
+
+										q.resolve(filterData(models[objectName]._mockData, cond));
 									});
 							}
 							else {
-								// TODO : filter condition
-								q.resolve(self._mockData);
+								q.resolve(filterData(models[objectName]._mockData, cond));
 							}
 
 							return q;
@@ -183,8 +212,7 @@ console.log('DC fixture:', objectName, result);
 							var self = this,
 								q = $.Deferred();
 
-							// TODO : filter condition
-							q.resolve(self._mockData[0]);
+							q.resolve(filterData(models[objectName]._mockData, cond)[0]);
 
 							return q;
 						},
@@ -264,6 +292,13 @@ console.log('DC fixture:', objectName, result);
 
 			if (model.getDataLabel && model.getDataLabel.restore)
 				model.getDataLabel.restore();
+		},
+
+		clearModel: function (objectName) {
+			if (models[objectName]) {
+				models[objectName].store = {};
+				delete models[objectName];
+			}
 		},
 
 		clearLocalData: function (objectName) {

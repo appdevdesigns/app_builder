@@ -45,7 +45,7 @@ steal(
 							var linkTasks = [];
 
 							linkColumns.forEach(function (linkCol) {
-								if (typeof row[linkCol.name] == 'undefined' || row[linkCol.name] == null) {
+								if (row[linkCol.name] == null) {
 									if (linkCol.setting.linkType === 'collection')
 										row.attr(linkCol.name, []);
 									else
@@ -112,7 +112,7 @@ steal(
 												});
 											}
 											else if (row[linkCol.name]._dataLabel == null) {
-												var linkVal = linkedData.filter(function (link) { return link.id == row[linkCol.name].id });
+												var linkVal = linkedData.filter(function (link) { return link.id == (row[linkCol.name].id || row[linkCol.name])  });
 												if (!linkVal[0]) return next();
 
 												var dataLabel = linkVal[0].attr();

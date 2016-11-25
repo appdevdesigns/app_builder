@@ -63,23 +63,9 @@ steal(
 							on: {
 								onMenuItemClick: function (id) {
 									var base = this.getTopParentView(),
-										selectedMenuItem = this.getMenuItem(id),
-										viewName = dataFieldsManager.getEditViewId(selectedMenuItem.fieldName);
+										selectedMenuItem = this.getMenuItem(id);
 
-									if (viewName) {
-										dataFieldsManager.populateSettings(AD.classes.AppBuilder.currApp, {
-											fieldName: selectedMenuItem.fieldName,
-											name: base.getDefaultFieldName(), // Set default field name
-											label: base.getDefaultFieldName()
-										});
-
-										$$(viewName).show();
-
-										// Highlight name in text box
-										$('.' + componentIds.labelNameText + ' input[type="text"]').select();
-
-										this.getTopParentView().fieldName = selectedMenuItem.fieldName;
-									}
+									base.showFieldData(selectedMenuItem.fieldName);
 								}
 							}
 						},
@@ -167,6 +153,9 @@ steal(
 								ok: labels.common.ok
 							});
 						}
+						else { // Set default field type
+							this.showFieldData('string');
+						}
 					},
 					onHide: function () {
 						this.resetState();
@@ -184,6 +173,25 @@ steal(
 
 			registerCreateNewObjectEvent: function (createNewObjectEvent) {
 				this.createNewObjectEvent = createNewObjectEvent;
+			},
+
+			showFieldData(fieldName) {
+				var viewName = dataFieldsManager.getEditViewId(fieldName);
+
+				if (viewName) {
+					dataFieldsManager.populateSettings(AD.classes.AppBuilder.currApp, {
+						fieldName: fieldName,
+						name: this.getDefaultFieldName(), // Set default field name
+						label: this.getDefaultFieldName()
+					});
+
+					$$(viewName).show();
+
+					// Highlight name in text box
+					$('.' + componentIds.labelNameText + ' input[type="text"]').select();
+
+					this.fieldName = fieldName;
+				}
 			},
 
 			editMode: function (info) {
