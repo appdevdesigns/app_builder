@@ -195,7 +195,10 @@ steal(function () {
 	};
 
 	numberDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-		if (data == null) return '';
+		if (data == null) {
+			$(itemNode).find('.ab-number-format-show').html('');
+			return true;
+		}
 
 		var decimalSizeNum = 0,
 			decimalDelimiters = ".",
