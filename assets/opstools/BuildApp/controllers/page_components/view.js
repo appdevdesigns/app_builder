@@ -183,7 +183,8 @@ steal(
 									view: 'template',
 									dataId: col.id,
 									borderless: true,
-									template: col.setting.template
+									template: col.setting.template,
+									css: col.setting.css
 								};
 							}
 							else {

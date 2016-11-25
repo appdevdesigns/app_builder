@@ -171,15 +171,6 @@ steal(
 									fieldName: col.fieldName
 								});
 
-								if (mapCol.filter_type === 'boolean' && self.data.readOnly) { // Checkbox - read only mode
-									mapCol.template = function (obj, common, value) {
-										if (value)
-											return "<div class='webix_icon fa-check-square-o'></div>";
-										else
-											return "<div class='webix_icon fa-square-o'></div>";
-									};
-								}
-
 								// richselect
 								var options = [];
 								if (col.setting.options && col.setting.options.length > 0) {
@@ -233,7 +224,7 @@ steal(
 
 							return {
 								text: headerTemplate,
-								css: col.isNewColumn ? 'ab-object-data-new-header' : ''
+								css: col.isNewColumn ? ' ab-object-data-new-header' : ''
 							};
 						},
 
