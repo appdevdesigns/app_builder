@@ -31,6 +31,9 @@ module.exports = {
     'put /app_builder/page/sortComponents/:id': 
         'app_builder/ABPageController.sortComponents',
 
+    'put /app_builder/column/:id/width': 
+        'app_builder/ABColumnController.saveWidth',
+
     /* Application permissions */
     'get /app_builder/user/roles':
         'app_builder/ABUserController.getRoles',

@@ -40,6 +40,11 @@ module.exports = {
             required: false
         },
 
+        width: {
+            type: 'integer',
+            required: false
+        },
+
         required: { type: 'boolean' },
 
         unique: { type: 'boolean' },

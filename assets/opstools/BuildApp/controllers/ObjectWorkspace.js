@@ -277,13 +277,17 @@ steal(
 														$$(self.webixUiId.objectDatatable).hideProgress();
 													});
 											},
-											// onColumnResize: function (id, newWidth, oldWidth, user_action) {
-											// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
-											// if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
-											// 	// For calculate/refresh row height
-											// 	$$(self.webixUiId.objectDatatable).render();
-											// }
-											// },
+											onColumnResize: function (id, newWidth, oldWidth, user_action) {
+												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
+												var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
+												if (column && column[0])
+													column[0].setWidth(newWidth);
+
+												// if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
+												// 	// For calculate/refresh row height
+												// 	$$(self.webixUiId.objectDatatable).render();
+												// }
+											},
 											onBeforeColumnDrop: function (sourceId, targetId, event) {
 												if (targetId === 'appbuilder_trash') // Remove column
 													return false;

@@ -47,33 +47,32 @@ steal(
 							self.dataTable = dataTable;
 
 							// Trash
-							if (!self.dataTable.hasEvent("onItemClick") || self.dataTable.select) { // If dataTable set select is true, then it has onItemClick by default
-								self.dataTable.attachEvent("onItemClick", function (id, e, node) {
-									if (e.target.className.indexOf('trash') > -1) {
-										webix.confirm({
-											title: self.labels.confirmDeleteRowTitle,
-											ok: self.labels.common.yes,
-											cancel: self.labels.common.no,
-											text: self.labels.confirmDeleteRowMessage,
-											callback: function (result) {
-												if (result) {
-													if (self.events.deleteRow)
-														self.events.deleteRow(id);
-												}
-
-												if (self.dataTable.unselectAll)
-													self.dataTable.unselectAll();
-
-												return true;
+							if (self.data.onItemClickId) self.dataTable.detachEvent(self.data.onItemClickId);
+							self.data.onItemClickId = self.dataTable.attachEvent("onItemClick", function (id, e, node) {
+								if (e.target.className.indexOf('trash') > -1) {
+									webix.confirm({
+										title: self.labels.confirmDeleteRowTitle,
+										ok: self.labels.common.yes,
+										cancel: self.labels.common.no,
+										text: self.labels.confirmDeleteRowMessage,
+										callback: function (result) {
+											if (result) {
+												if (self.events.deleteRow)
+													self.events.deleteRow(id);
 											}
-										});
-									}
-									else {
-										if (self.events.itemClick)
-											self.events.itemClick(id, e, node);
-									}
-								});
-							}
+
+											if (self.dataTable.unselectAll)
+												self.dataTable.unselectAll();
+
+											return true;
+										}
+									});
+								}
+								else {
+									if (self.events.itemClick)
+										self.events.itemClick(id, e, node);
+								}
+							});
 
 							if (self.data.onAfterRenderId) self.dataTable.detachEvent(self.data.onAfterRenderId);
 							self.data.onAfterRenderId = self.dataTable.attachEvent("onAfterRender", function (data) {
@@ -147,7 +146,10 @@ steal(
 
 							var headers = $.map(columns.attr ? columns.attr() : columns, function (col, i) {
 
-								if (col.setting.width) {
+								if (col.width) {
+									col.setting.width = col.width;
+								}
+								else if (col.setting.width) {
 									var colWidth = parseInt(col.setting.width);
 									if (typeof colWidth === 'number')
 										col.setting.width = colWidth;
