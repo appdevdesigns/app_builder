@@ -489,7 +489,6 @@ steal(
 					$$(self.viewId).adjust();
 					$$(self.viewId).hideProgress();
 
-console.error('FIRE: ', self.viewId);
 					$(self).trigger('renderComplete', {});
 
 					data.isRendered = true;

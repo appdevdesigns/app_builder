@@ -734,7 +734,9 @@ steal(
 									'onChange': function (newv, oldv) {
 										var item_id = this.config.$masterId,
 											propertyValues = $$(componentIds.propertyView).getValues(),
-											editInstance = componentManager.editInstance;
+											editInstance = componentManager.editInstance,
+											detailView = propertyValues.detailView && propertyValues.detailView.indexOf('|') > -1 ? propertyValues.detailView.split('|') : null,
+											editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
 
 										if (this.getValue()) // Check
 											editInstance.data.visibleColumns.push(item_id);
@@ -746,10 +748,10 @@ steal(
 										}
 
 										editInstance.renderDataTable(editInstance.data.dataCollection, {
-											viewPage: propertyValues.viewPage,
-											viewId: propertyValues.viewId,
-											editPage: propertyValues.editPage,
-											editForm: propertyValues.editForm
+											viewPage: detailView ? detailView[0] : null,
+											viewId: detailView ? detailView[1] : null,
+											editPage: editValue ? editValue[0] : null,
+											editForm: editValue ? editValue[1] : null
 										}, propertyValues.removable, propertyValues.linkedField);
 									}
 								}
