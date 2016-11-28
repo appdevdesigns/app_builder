@@ -333,10 +333,10 @@ steal(function () {
 							});
 
 							// Check has update to new column
-							var isUpdateNew = Object.keys(obj).filter(function (k) {
-								if (typeof obj[k] !== 'undefined' && obj[k] !== null) {
-									var newFields = self.getNewFields().filter(function (f) { return k == f.name; });
-									return newFields && newFields.length > 0;
+							var isUpdateNew = Object.keys(obj).filter(function (key) {
+								if (typeof obj[key] !== 'undefined' && obj[key] !== null) {
+									var unsyncField = self.columns.filter(function (f) { return key == f.name && !f.isSynced; });
+									return unsyncField && unsyncField.length > 0;
 								}
 								else {
 									return false;
@@ -351,7 +351,7 @@ steal(function () {
 								function (next) {
 									update(id, saveObj)
 										.fail(function (err) {
-											if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object case 
+											if (err === null || err.message.indexOf('ER_NO_SUCH_TABLE') > -1) { // 404 Not found - new object (unsync) 
 												self.saveLocalItem(saveObj2, id)
 													.fail(function (err) { next(err); })
 													.then(function (result) {
@@ -464,68 +464,6 @@ steal(function () {
 						return typeof id === 'string' && id.startsWith('temp');
 					},
 
-
-
-					// Cache new fields
-					cacheNewFieldKey: function () {
-						return this.cachedKey() + '_new_fields';
-					},
-
-					cacheNewField: function (newField) {
-						if (newField) {
-							var cacheFields = this.getNewFields(),
-								result;
-
-							newField.name = newField.name.replace(/ /g, '_');
-
-							if (!newField.id) { // Add
-								newField.id = 'temp' + webix.uid();
-								cacheFields.push(newField);
-
-								result = newField;
-							}
-							else { // Update
-								cacheFields.forEach(function (f, index) {
-									if (f.id == newField.id) {
-										for (var key in newField) {
-											cacheFields[index][key] = newField[key];
-										}
-
-										result = cacheFields[index];
-									}
-								});
-							}
-
-							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(cacheFields));
-
-							return result;
-						}
-						else {
-							return null;
-						}
-					},
-
-					getNewFields: function () {
-						return JSON.parse(window.localStorage.getItem(this.cacheNewFieldKey())) || [];
-					},
-
-					deleteCachedField: function (fieldId) {
-						var cacheFields = this.getNewFields();
-
-						cacheFields.forEach(function (f, index) {
-							if (f.id == fieldId)
-								cacheFields.splice(index, 1)
-						});
-
-						if (cacheFields && cacheFields.length > 0)
-							window.localStorage.setItem(this.cacheNewFieldKey(), JSON.stringify(cacheFields));
-						else
-							this.clearCacheFields();
-					},
-
-					clearCacheFields: function () {
-						window.localStorage.removeItem(this.cacheNewFieldKey());
-					},
 
 
 					// Sync to database

@@ -210,7 +210,24 @@ module.exports = {
                     next();
                 });
             },
-            
+
+            // Set columns are synced
+            function(next) {
+                ABApplication.find({ id : appID })
+                    .populate('objects')
+                    .then(function(list) {
+                        var updateTasks = [];
+                        
+                        list.forEach(function(object) {
+                            updateTasks.push(function(ok) {
+                                ABColumn.update({ object: object.id }, { isSynced: true }).exec(ok);
+                            })
+                        });
+
+                        async.parallel(updateTasks, next);
+                    });
+            },
+
             // Generate all client side page controllers
             function(next) {
                 async.eachSeries(pageIDs, function(id, ok) {

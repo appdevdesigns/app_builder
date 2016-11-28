@@ -105,8 +105,10 @@ steal(
 												});
 										})
 										.then(function () {
-											self.data.curLoadProgress += 0.1;
-											$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
+											self.updateSyncStatus({
+												action: 'done',
+												step: 'syncObjectData'
+											});
 
 											// Reloaded - Reset values
 											$$(self.webixUiId.loadingScreen).showFinishScreen(
@@ -150,32 +152,7 @@ steal(
 								$$(self.webixUiId.loadingScreen).start();
 								$$(self.webixUiId.syncButton).disable();
 
-								self.updateSyncStatus({
-									action: 'start',
-									step: 'syncObjectFields'
-								});
-
-								self.controllers.AppWorkspace.syncObjectFields()
-									.fail(function (err) {
-										console.error(err);
-										$$(self.webixUiId.loadingScreen).showErrorScreen(
-											AD.lang.label.getLabel('ab.sync.syncObjectFieldsError') || 'There is a error when updates object fields',
-											AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
-											function () {
-												$$(self.webixUiId.loadingScreen).start();
-
-												self.controllers.AppWorkspace.syncObjectFields();
-											});
-									})
-									.then(function () {
-										self.updateSyncStatus({
-											action: 'done',
-											step: 'syncObjectFields'
-										});
-
-										self.callReload(data);
-									});
-
+								self.callReload(data);
 							});
 						},
 
@@ -216,9 +193,6 @@ steal(
 								case 'start': // Update loading message
 									var message = '';
 									switch (data.step) {
-										case 'syncObjectFields':
-											message = AD.lang.label.getLabel('ab.sync.status.updateObjFields') || 'Updating object fields...';
-											break;
 										case 'request':
 											message = AD.lang.label.getLabel('ab.sync.status.request') || 'Requesting...';
 											break;
@@ -246,9 +220,6 @@ steal(
 								case 'done': // Update progress bar
 									if (!self.data.curLoadProgress) self.data.curLoadProgress = 0;
 									switch (data.step) {
-										case 'syncObjectFields':
-											self.data.curLoadProgress += 0.1;
-											break;
 										case 'findApplication':
 											self.data.curLoadProgress += 0.2;
 											break;
@@ -256,7 +227,7 @@ steal(
 											self.data.curLoadProgress += 0.2;
 											break;
 										case 'reloadControllers':
-											self.data.curLoadProgress += 0.1;
+											self.data.curLoadProgress += 0.2;
 											break;
 										case 'reloadORM':
 											self.data.curLoadProgress += 0.2;

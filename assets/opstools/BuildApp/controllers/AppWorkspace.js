@@ -189,10 +189,6 @@ steal(
 							}
 						},
 
-						syncObjectFields: function () {
-							return this.controllers.ObjectPage.syncObjectFields();
-						},
-
 						syncObjectsData: function () {
 							return this.controllers.ObjectPage.syncData();
 						},

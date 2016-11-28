@@ -224,7 +224,7 @@ steal(
 
 							return {
 								text: headerTemplate,
-								css: col.isNewColumn ? ' ab-object-data-new-header' : ''
+								css: !col.isSynced ? ' ab-object-data-new-header' : ''
 							};
 						},
 

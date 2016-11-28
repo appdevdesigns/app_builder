@@ -67,7 +67,9 @@ module.exports = {
 
         unique: { type: 'boolean' },
 
-        setting: { type: 'json' }
+        setting: { type: 'json' },
+
+        isSynced: { type: 'boolean' }
 
     },
 
