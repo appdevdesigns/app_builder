@@ -767,7 +767,8 @@ steal(
 
 									// Get deferred when save complete
 									var q = $.Deferred(),
-										updateColumn;
+										updateColumn,
+										updateTargetColumn;
 
 									async.series([
 										// Update the column
@@ -808,21 +809,65 @@ steal(
 													});
 											}
 										},
+										// Set up linkVia column
+										function (next) {
+                                            if (updateColumn.setting.linkType == 'collection' && !updateColumn.setting.linkVia) {
+                                                // Need to create the link back from the target object
+                                                //AD.classes.AppBuilder.currApp.currObj.createColumn({
+                                                AD.Model.get('opstools.BuildApp.ABColumn').create({
+                                                    name: updateColumn.name + 'Link',
+                                                    object: updateColumn.setting.linkObject,
+                                                    fieldName: 'connectObject',
+                                                    type: 'connectObject',
+                                                    weight: 1,
+                                                    setting: {
+                                                        appName: AD.classes.AppBuilder.currApp.name,
+                                                        linkType: updateColumn.setting.linkViaType || 'model',
+                                                        linkObject: updateColumn.object.id, // ABObject id
+                                                        linkViaType: 'collection',
+                                                        linkVia: updateColumn.id, // ABColumn id
+                                                        icon: 'external-link',
+                                                        editor: 'selectivity',
+                                                        template: '<div class="connect-data-values"></div>"',
+                                                        filter_type: 'multiselect'
+                                                    }
+                                                })
+                                                    .fail(next)
+                                                    .then(function (result) {
+                    									if (result.translate) result.translate();
+                                                        updateTargetColumn = result;
+                                                        next();
+                                                    });
+                                            }
+                                            else next();
+										},
 										// Update the link column
 										function (next) {
-											if (!updateColumn.setting.linkVia)
-												return next();
-
-											AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.setting.linkVia)
-												.fail(next)
-												.then(function (result) {
-													result.setting.attr('linkType', columnInfo.setting.linkViaType);
-													result.setting.attr('linkViaType', columnInfo.setting.linkType);
-
-													result.save().fail(next).then(function () {
-														next();
-													});
-												});
+											if (!updateColumn.setting.linkVia && updateTargetColumn) {
+								                // setting.linkVia was not defined, but we can do it now.
+								                var data = { setting: updateColumn.setting.serialize() };
+								                data.setting.linkVia = updateTargetColumn.id;
+								                AD.Model.get('opstools.BuildApp.ABColumn').update(updateColumn.id, JSON.stringify(data))
+								                    .fail(next)
+								                    .then(function () {
+								                        next();
+								                    });
+								            }
+								            else if (!updateColumn.setting.linkVia) {
+								                next();
+								            }
+								            else {
+                                                AD.classes.AppBuilder.currApp.currObj.getColumn(updateColumn.setting.linkVia)
+                                                    .fail(next)
+                                                    .then(function (result) {
+                                                        result.setting.attr('linkType', columnInfo.setting.linkViaType);
+                                                        result.setting.attr('linkViaType', columnInfo.setting.linkType);
+    
+                                                        result.save().fail(next).then(function () {
+                                                            next();
+                                                        });
+                                                    });
+                                            }
 										},
 										// Create list option of select column
 										function (next) {
