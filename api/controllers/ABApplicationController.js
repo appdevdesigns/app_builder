@@ -213,15 +213,14 @@ module.exports = {
 
             // Set columns are synced
             function(next) {
-                ABApplication.find({ id : appID })
-                    .populate('objects')
+                ABObject.find({ application : appID })
                     .then(function(list) {
                         var updateTasks = [];
                         
                         list.forEach(function(object) {
                             updateTasks.push(function(ok) {
                                 ABColumn.update({ object: object.id }, { isSynced: true }).exec(ok);
-                            })
+                            });
                         });
 
                         async.parallel(updateTasks, next);

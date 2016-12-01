@@ -131,6 +131,11 @@ steal(
 								syncDataTasks.push(function (next) {
 									var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, object.name);
 
+									// Set columns is synced
+									objectModel.Cached.columns.forEach(function (col) {
+										col.isSynced = true;
+									});
+
 									objectModel.Cached.syncDataToServer()
 										.fail(next)
 										.then(function () {

@@ -800,7 +800,7 @@ steal(
 														objectModel.describe()[result.name] = result.type;
 
 														// Add multilingual field to object model
-														if (result.supportMultilingual)
+														if (result.setting.supportMultilingual)
 															objectModel.multilingualFields.push(result.name);
 
 														updateColumn = result;
