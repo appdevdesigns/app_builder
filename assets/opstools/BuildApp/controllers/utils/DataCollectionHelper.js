@@ -68,7 +68,7 @@ steal(
 
 										// Listen change data event to update data label
 										dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-											console.log('DC.change: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+console.log('DC.change: ', objInfo.attr('name'), attr, how, newVal, oldVal);
 
 											if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
 												|| oldVal === newVal) return;
@@ -93,7 +93,7 @@ steal(
 											}
 											else if (attrName == '_dataLabel' || attrName == 'updatedAt' || attrName == 'translations') return;
 
-											console.log('DC after updateConnectData: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+console.log('DC after updateConnectData: ', objInfo.attr('name'), attr, how, newVal, oldVal);
 											self.updateConnectData(application, linkCols, rowData, attrName, how, newVal, oldVal);
 
 											if (oldVal == null && newVal == null) return;
@@ -102,7 +102,7 @@ steal(
 												hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
 
 											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
-												console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, oldVal);
 												// Update connected data
 												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData, true).then(function (result) { });
 											}
@@ -186,19 +186,19 @@ steal(
 										linkRow.attr(linkVia.name, null);
 									}
 									// Add parent data to child
-									else if (linkViaVal && rowData.id != (linkViaVal.id || linkViaVal)
-										&& newVal.filter(function (v) { return v.id == (linkViaVal.id || linkViaVal); }).length > 0) {
-										linkRow.attr(linkVia.name, linkViaVal.id || linkViaVal);
+									else if ((!linkViaVal || rowData.id != (linkViaVal.id || linkViaVal))
+										&& newVal.filter(function (v) { return v.id == linkRow.id; }).length > 0) {
+										linkRow.attr(linkVia.name, rowData.id);
 									}
 								}
 								// 1:M
 								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') {
 									if (oldVal && linkRow.id == oldVal.id) {
-										var removeChildData = linkViaVal.attr().filter(function (v) { return v.id != rowData.id; });
+										var removeChildData = linkViaVal.attr().filter(function (v) { return (v.id || v) != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
 									}
 									else if (newVal && linkRow.id == (newVal.id || newVal)) {
-										var exists = linkViaVal.filter(function (val) { return val.id == rowData.id || val == rowData.id; });
+										var exists = linkViaVal.filter(function (val) { return (val.id || val) == rowData.id; });
 
 										if (!exists[0]) {
 											var childVal = linkViaVal.attr();
