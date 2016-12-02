@@ -857,7 +857,7 @@ steal(
 														linkVia: updateColumn.id, // ABColumn id
 														icon: 'external-link',
 														editor: 'selectivity',
-														template: '<div class="connect-data-values"></div>"',
+														template: '<div class="connect-data-values"></div>',
 														filter_type: 'multiselect'
 													}
 												})
