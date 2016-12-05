@@ -642,7 +642,7 @@ steal(
 
 			};
 
-			this.resize = function(width, height) {
+			this.resize = function (width, height) {
 				$$(this.viewId).adjust();
 			};
 

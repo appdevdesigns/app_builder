@@ -148,24 +148,26 @@ console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, old
 						switch (how) {
 							case 'add':
 								// Check row id of parent
-								if (!newVal[0] || !newVal[0][col.name] ||
-									(newVal[0][col.name].id && newVal[0][col.name].id != linkRow.id) ||
-									(newVal[0][col.name].filter && newVal[0][col.name].filter(function (c) { return c.id == linkRow.id; }).length < 1))
-									return;
+								if (newVal[0] && newVal[0][col.name] &&
+									((newVal[0][col.name].id || newVal[0][col.name]) == linkRow.id ||
+										(newVal[0][col.name].filter && newVal[0][col.name].filter(function (c) { return (c.id || c) == linkRow.id; }).length > 0))) {
 
-								// Add link data to link via
-								if (linkVia.setting.linkType == 'model') {
-									linkRow.attr(linkVia.name, newVal[0] ? newVal[0] : newVal);
-								}
-								else if (linkVia.setting.linkType == 'collection') {
-									var exists = linkViaVal.filter(function (val) {
-										return val.id == (newVal[0] ? newVal[0].id : newVal.id);
-									});
+									// Add link data to link via
+									if (linkVia.setting.linkType == 'model') {
+console.log('Test add : ', attrName, rowData, linkRow, newVal, oldVal);
+										linkRow.attr(linkVia.name, newVal[0] ? (newVal[0].id || newVal[0]) : (newVal.id || newVal));
+									}
+									else if (linkVia.setting.linkType == 'collection') {
+										var exists = linkViaVal.filter(function (val) {
+											return val.id == (newVal[0] ? (newVal[0].id || newVal[0]) : (newVal.id || newVal));
+										});
 
-									if (!exists[0]) {
-										var childVal = linkViaVal.attr();
-										childVal.push(newVal[0] ? newVal[0] : newVal);
-										linkRow.attr(linkVia.name, childVal);
+										if (!exists[0]) {
+console.log('Test add : ', attrName, rowData, linkRow, newVal, oldVal);
+											var childVal = linkViaVal.attr();
+											childVal.push(newVal[0] ? newVal[0] : newVal);
+											linkRow.attr(linkVia.name, childVal);
+										}
 									}
 								}
 								break;
@@ -181,26 +183,33 @@ console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, old
 								// M:1
 								else if (col.setting.linkType == 'collection' && linkVia.setting.linkType == 'model') {
 									// Remove parent data (when child is not in list)
-									if (linkViaVal && rowData.id == (linkViaVal.id || linkViaVal)
-										&& newVal.filter(function (v) { return v.id == (linkViaVal.id || linkViaVal); }).length < 1) {
+									if (linkViaVal && rowData.id == (linkViaVal.id || linkViaVal) && newVal.filter
+										&& newVal.filter(function (v) { return (v.id || v) == linkRow.id; }).length < 1) {
+console.log('Test1 : ', attrName, rowData, linkRow, newVal, oldVal);
 										linkRow.attr(linkVia.name, null);
 									}
 									// Add parent data to child
-									else if ((!linkViaVal || rowData.id != (linkViaVal.id || linkViaVal))
-										&& newVal.filter(function (v) { return v.id == linkRow.id; }).length > 0) {
+									else if ((!linkViaVal || rowData.id != (linkViaVal.id || linkViaVal)) && newVal.filter
+										&& newVal.filter(function (v) { return (v.id || v) == linkRow.id; }).length > 0) {
+console.log('Test2 : ', attrName, rowData, linkRow, newVal, oldVal);
 										linkRow.attr(linkVia.name, rowData.id);
 									}
 								}
 								// 1:M
 								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') {
+									// Remove child data
 									if (oldVal && linkRow.id == oldVal.id) {
+console.log('Test3 : ', attrName, rowData, linkRow, newVal, oldVal);
 										var removeChildData = linkViaVal.attr().filter(function (v) { return (v.id || v) != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
 									}
+									// Add new child data to parent
 									else if (newVal && linkRow.id == (newVal.id || newVal)) {
 										var exists = linkViaVal.filter(function (val) { return (val.id || val) == rowData.id; });
+console.log('Test4 : ', attrName, rowData, linkRow, newVal, oldVal);
 
 										if (!exists[0]) {
+console.log('Test5 : ', attrName, rowData, linkRow, newVal, oldVal);
 											var childVal = linkViaVal.attr();
 											childVal.push(rowData.attr ? rowData.attr() : rowData);
 											linkRow.attr(linkVia.name, childVal);
