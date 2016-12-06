@@ -13,7 +13,7 @@ steal(
 					AD.Control.extend('opstools.BuildApp.ABLiveTool', {
 
 						init: function (element, options) {
-							var self = this;
+							var _this = this;
 							options = AD.defaults({
 								app:-1,
 								page: -1
@@ -26,6 +26,17 @@ steal(
 
 							this.initDOM();
 
+
+							AD.comm.hub.subscribe('ab.interface.update', function(msg, data) {
+
+								if ((data.app == _this.options.app)
+									&& (data.page == _this.options.page)) {
+
+									// flush the display
+									// rebuild our display
+
+								}
+							})
 						},
 
 						initDOM: function() {
