@@ -272,6 +272,9 @@ steal(
 																	.then(function (result) {
 																		$$(self.webixUiId.interfaceTree).unselectAll();
 
+																		// Remove sub-pages
+																		AD.classes.AppBuilder.currApp.pages = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return !p.parent || p.parent.id != result.id; });
+
 																		webix.message({
 																			type: "success",
 																			text: self.labels.common.deleteSuccessMessage.replace('{0}', result.label)

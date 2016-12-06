@@ -99,7 +99,12 @@ steal(
 								});
 								*/
 								
+								AD.comm.hub.subscribe('opsportal.tool.show', function(message, data) {
+									self.resize(self.height);
+								});
+
 								AD.comm.hub.subscribe('opsportal.resize', function(message, data) {
+									self.height = data.height;
 									self.resize(data.height);
 								});
 							},
@@ -240,6 +245,7 @@ steal(
 								// Listen component events
 								$(page.comInstances[item.id]).on('renderComplete', function(event, data) {
 									$$("<%- domID() %>").adjust();
+									$$(viewId).adjust();
 								});
 
 								$(page.comInstances[item.id]).on('changePage', function(event, data) {
@@ -322,7 +328,7 @@ steal(
 							},
 
 							resize: function (height) {
-								if (!$$("<%- domID() %>")) return;
+								if (!$$("<%- domID() %>") || !$(this.element).is(":visible")) return;
 
 								var width = this.element.width();
 
@@ -340,6 +346,14 @@ steal(
 									$$("<%- domID() %>").define('height', height);
 
 								$$("<%- domID() %>").adjust();
+
+								if (this.activePageID && this.pages[this.activePageID] && this.pages[this.activePageID].comInstances) {
+									for (var key in this.pages[this.activePageID].comInstances) {
+										if (this.pages[this.activePageID].comInstances[key].resize)
+											this.pages[this.activePageID].comInstances[key].resize(width, height);
+									}
+								}
+
 							},
 							
 							

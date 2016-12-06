@@ -5,8 +5,10 @@ steal(function () {
 			var columnLength = views.length / columnCount;
 			return {
 				view: 'layout',
+				autowidth: true,
 				cols: $.map(new Array(columnCount), function (_, index) {
 					return {
+						autowidth: true,
 						rows: views.slice(Math.ceil(index * columnLength), Math.ceil((index + 1) * columnLength))
 					};
 				}),

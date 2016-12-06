@@ -52,6 +52,7 @@ module.exports = {
         setting: { type: 'json' },
 
 
+
         //// Multilingual Definitions
 
         // this will pull in the translations using .populate('translations')
@@ -71,6 +72,9 @@ module.exports = {
         _Klass: function () {
             return ABColumn;
         },
+
+        isSynced: { type: 'boolean' }
+
 
     },
 
