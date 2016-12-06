@@ -189,14 +189,12 @@ steal(function () {
 				useWidth	: $$(componentIds.useWidth).getValue(),	
 				imageWidth	: $$(componentIds.imageWidth).getValue(),		
 				useHeight	: $$(componentIds.useHeight).getValue(),
-				imageHeight	: $$(componentIds.imageHeight).getValue(),
-
-				padding:0
+				imageHeight	: $$(componentIds.imageHeight).getValue()
 			}
 
 		if ($$(componentIds.useWidth).getValue()) { 
 			setting.width = $$(componentIds.imageWidth).getValue();
-			// setting.css = 'ab-column-no-padding';
+			setting.css = 'ab-column-no-padding';
 		}
 
 		return {
@@ -420,18 +418,18 @@ steal(function () {
 		var imgDiv = [
 			'<div class="image-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file-image-o fa-2x"></i></div>',
 			// '<div class="image-data-field-image" style="display:none;"><img src="" '+style+' ></div>'
-			'<div class="image-data-field-image" style="display:none; width:100%; height:100%; background-repeat: no-repeat; "></div>'
+			'<div class="image-data-field-image" style="display:none; width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover;"></div>'
 		].join('\n');
 
 
 		var imgHeight = 33;
 		if (fieldData.setting.useHeight){
-			imgHeight = fieldData.setting.imageHeight;
+			imgHeight = parseInt(fieldData.setting.imageHeight);
 		}
 
 		var imgWidth = 50;
 		if (fieldData.setting.useWidth){
-			imgWidth = fieldData.setting.imageWidth;
+			imgWidth = parseInt(fieldData.setting.imageWidth);
 		}
 
 		// use a webix component for displaying the content.
@@ -538,7 +536,7 @@ steal(function () {
 				}
 		    }
 		});
-		// uploader.addDropZone(webixContainer.$view);
+		uploader.addDropZone(webixContainer.$view);
 
 		return true;
 
