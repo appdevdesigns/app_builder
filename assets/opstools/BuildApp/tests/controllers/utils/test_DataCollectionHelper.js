@@ -279,7 +279,7 @@ steal(
 								.fail(ok)
 								.then(function () {
 									// Assert
-									assert.equal(0, petDC.find(function (pet) { return pet.Owner.id == owner.id; }).length, 'should not have deleted owner in pet data');
+									assert.equal(0, petDC.find(function (pet) { return pet.Owner && pet.Owner.id  == owner.id; }).length, 'should not have deleted owner in pet data');
 
 									ok();
 								});

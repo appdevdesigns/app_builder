@@ -66,47 +66,75 @@ steal(
 									if (!dataCollections[objectId] || isRefresh) {
 										dataCollections[objectId] = AD.op.WebixDataCollection(result);
 
-										// Listen change data event to update data label
-										dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-console.log('DC.change: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+										// Listen change data event
+										dataCollections[objectId].attachEvent('onAfterAdd', function (id, index) {
+											var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
+											if (!rowData || !rowData[0]) return;
 
-											if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
-												|| oldVal === newVal) return;
+											self.updateConnectData(application, linkCols, null, null, 'add', rowData, null);
 
-											var rowIndex = -1,
-												attrName = attr;
-
-											if (attr.indexOf('.') > -1) {  // 0.attrName
-												rowIndex = attr.split('.')[0];
-												attrName = attr.split('.')[1];
-											}
-
-											var rowData = rowIndex > -1 ? this[rowIndex] : this; // Get data
-
-											// Convert $height to number
-											if (attrName == '$height' && newVal) {
-												if (typeof newVal !== 'number') {
-													var rowHeight = parseInt(newVal);
-													rowData.attr('$height', rowHeight);
-												}
-												return;
-											}
-											else if (attrName == '_dataLabel' || attrName == 'updatedAt' || attrName == 'translations') return;
-
-console.log('DC after updateConnectData: ', objInfo.attr('name'), attr, how, newVal, oldVal);
-											self.updateConnectData(application, linkCols, rowData, attrName, how, newVal, oldVal);
-
-											if (oldVal == null && newVal == null) return;
-
-											var hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
-												hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
-
-											if (how == 'add' || hasUpdateLink || hasUpdateDate) {
-console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, oldVal);
-												// Update connected data
-												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData, true).then(function (result) { });
-											}
+											dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
 										});
+
+										dataCollections[objectId].attachEvent("onDataUpdate", function (id, data) {
+											var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
+											if (!rowData || !rowData[0]) return;
+
+											var oldData = dataCollections[objectId].getItem(id);
+
+											self.updateConnectData(application, linkCols, rowData[0], null, 'set', data, oldData);
+
+											dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
+										});
+
+										dataCollections[objectId].attachEvent('onBeforeDelete', function (id) {
+											var rowData = dataCollections[objectId].getItem(id);
+											if (!rowData) return true;
+
+											self.updateConnectData(application, linkCols, null, null, 'remove', null, rowData);
+
+											return true;
+										});
+										// dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
+										// 	console.log('DC.change: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+
+										// 	if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
+										// 		|| oldVal === newVal) return;
+
+										// 	var rowIndex = -1,
+										// 		attrName = attr;
+
+										// 	if (attr.indexOf('.') > -1) {  // 0.attrName
+										// 		rowIndex = attr.split('.')[0];
+										// 		attrName = attr.split('.')[1];
+										// 	}
+
+										// 	var rowData = rowIndex > -1 ? this[rowIndex] : this; // Get data
+
+										// 	// Convert $height to number
+										// 	if (attrName == '$height' && newVal) {
+										// 		if (typeof newVal !== 'number') {
+										// 			var rowHeight = parseInt(newVal);
+										// 			rowData.attr('$height', rowHeight);
+										// 		}
+										// 		return;
+										// 	}
+										// 	else if (attrName == '_dataLabel' || attrName == 'updatedAt' || attrName == 'translations') return;
+
+										// 	console.log('DC after updateConnectData: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+										// 	self.updateConnectData(application, linkCols, rowData, attrName, how, newVal, oldVal);
+
+										// 	if (oldVal == null && newVal == null) return;
+
+										// 	var hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
+										// 		hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
+
+										// 	if (how == 'add' || hasUpdateLink || hasUpdateDate) {
+										// 		console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, oldVal);
+										// 		// Update connected data
+										// 		dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData, true).then(function (result) { });
+										// 	}
+										// });
 									}
 
 									next();
@@ -154,7 +182,6 @@ console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, old
 
 									// Add link data to link via
 									if (linkVia.setting.linkType == 'model') {
-console.log('Test add : ', attrName, rowData, linkRow, newVal, oldVal);
 										linkRow.attr(linkVia.name, newVal[0] ? (newVal[0].id || newVal[0]) : (newVal.id || newVal));
 									}
 									else if (linkVia.setting.linkType == 'collection') {
@@ -163,7 +190,6 @@ console.log('Test add : ', attrName, rowData, linkRow, newVal, oldVal);
 										});
 
 										if (!exists[0]) {
-console.log('Test add : ', attrName, rowData, linkRow, newVal, oldVal);
 											var childVal = linkViaVal.attr();
 											childVal.push(newVal[0] ? newVal[0] : newVal);
 											linkRow.attr(linkVia.name, childVal);
@@ -174,7 +200,8 @@ console.log('Test add : ', attrName, rowData, linkRow, newVal, oldVal);
 
 
 							case 'set':
-								if (col.name != attrName || isSame(newVal, oldVal)) return;
+								// if (col.name != attrName || isSame(newVal, oldVal)) return;
+								if (isSame(newVal, oldVal)) return;
 
 								// 1:1
 								if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'model') {
@@ -185,13 +212,11 @@ console.log('Test add : ', attrName, rowData, linkRow, newVal, oldVal);
 									// Remove parent data (when child is not in list)
 									if (linkViaVal && rowData.id == (linkViaVal.id || linkViaVal) && newVal.filter
 										&& newVal.filter(function (v) { return (v.id || v) == linkRow.id; }).length < 1) {
-console.log('Test1 : ', attrName, rowData, linkRow, newVal, oldVal);
 										linkRow.attr(linkVia.name, null);
 									}
 									// Add parent data to child
 									else if ((!linkViaVal || rowData.id != (linkViaVal.id || linkViaVal)) && newVal.filter
 										&& newVal.filter(function (v) { return (v.id || v) == linkRow.id; }).length > 0) {
-console.log('Test2 : ', attrName, rowData, linkRow, newVal, oldVal);
 										linkRow.attr(linkVia.name, rowData.id);
 									}
 								}
@@ -199,17 +224,14 @@ console.log('Test2 : ', attrName, rowData, linkRow, newVal, oldVal);
 								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') {
 									// Remove child data
 									if (oldVal && linkRow.id == oldVal.id) {
-console.log('Test3 : ', attrName, rowData, linkRow, newVal, oldVal);
 										var removeChildData = linkViaVal.attr().filter(function (v) { return (v.id || v) != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
 									}
 									// Add new child data to parent
 									else if (newVal && linkRow.id == (newVal.id || newVal)) {
 										var exists = linkViaVal.filter(function (val) { return (val.id || val) == rowData.id; });
-console.log('Test4 : ', attrName, rowData, linkRow, newVal, oldVal);
 
 										if (!exists[0]) {
-console.log('Test5 : ', attrName, rowData, linkRow, newVal, oldVal);
 											var childVal = linkViaVal.attr();
 											childVal.push(rowData.attr ? rowData.attr() : rowData);
 											linkRow.attr(linkVia.name, childVal);
@@ -227,13 +249,13 @@ console.log('Test5 : ', attrName, rowData, linkRow, newVal, oldVal);
 								// Remove link data
 								if (linkViaVal instanceof can.List) {
 									var removedData = linkViaVal.filter(function (val) {
-										return val.id != (oldVal[0] ? oldVal[0].id : oldVal.id);
+										return val.id != (oldVal ? oldVal.id : oldVal.id);
 									});
 
 									if (linkViaVal.length != removedData.length)
 										linkRow.attr(linkVia.name, removedData);
 								}
-								else if (linkViaVal.id == (oldVal[0] ? oldVal[0].id : oldVal.id)) {
+								else if (linkViaVal && linkViaVal.id == (oldVal ? oldVal.id : oldVal.id)) {
 									linkRow.attr(linkVia.name, null);
 								}
 								break;
