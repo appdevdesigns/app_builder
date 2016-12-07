@@ -382,10 +382,9 @@ steal(function () {
 */
 
 	
-		var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
-		var keyContainer = keyField+'-container';
-		var keyUploader = keyField+'-uploader';
-
+		var keyField = this.keyField( application, object, fieldData, rowId);
+		var keyContainer = this.keyContainer(application, object, fieldData, rowId); // keyField+'-container';
+		var keyUploader = this.keyUploader(application, object, fieldData, rowId);  // keyField+'-uploader';
 
 		////
 		//// Prepare the Display
@@ -443,7 +442,18 @@ steal(function () {
 
 			borderless:true,
 			height: imgHeight,
-			width:imgWidth
+			width:imgWidth,
+			onClick:{
+
+				// 'image-data-field-icon': function(ev, id) {
+				// 	$$(keyUploader).fileDialog({ rowid : id });				
+				// },
+
+				// 'image-data-field-image': function(ev, id) {
+				// 	$$(keyUploader).fileDialog({ rowid : id });
+				// }
+				
+			}
 		});
 		webix.extend(webixContainer, webix.ProgressBar);
 
@@ -456,6 +466,7 @@ steal(function () {
 		$container.showImage = function (uuid) {
 			// $($container.find('img')).prop('src', '/opsportal/image/'+application.name+'/'+uuid);
 			$container.find('.image-data-field-image').css('background-image', "url('/opsportal/image/"+application.name+'/'+uuid+"')" );
+			$container.find('.image-data-field-image').attr('image-uuid', uuid );
 			$container.find('.image-data-field-icon').hide();
 			$container.find('.image-data-field-image').show();
 		}
@@ -542,6 +553,46 @@ steal(function () {
 
 	};
 
+
+	/*
+	 * @function customEdit
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method when 
+	 * this field is clicked on in a grid/form.
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {int} rowId   : the .id of the Model instance from which we are 
+	 *						  getting the data for this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @return {bool}      : return {false} if you want to prevent the default webix
+	 *						 grid/form editor.
+	 */
+	imageDataField.customEdit = function (application, object, fieldData, rowId, itemNode) {
+		if (!application || !object || !fieldData ) return false;
+
+
+		var keyUploader = this.keyUploader(application, object, fieldData, rowId);
+		$$(keyUploader).fileDialog({ rowid : rowId });
+
+
+		return false;
+	};
+
+
+	imageDataField.keyField = function (application, object, fieldData, rowId) {
+		return [ application.name, object.name, fieldData.name, rowId].join('-');
+	}
+	imageDataField.keyContainer = function (application, object, fieldData, rowId) {
+		return [ this.keyField(application, object, fieldData, rowId), 'container' ].join('-');
+	}
+	imageDataField.keyUploader = function (application, object, fieldData, rowId) {
+		return [ this.keyField(application, object, fieldData, rowId), 'uploader' ].join('-');
+	}
 
 	/*
 	 * @function getRowHeight

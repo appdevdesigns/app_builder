@@ -247,6 +247,33 @@ steal(function () {
 
 
 	/*
+	 * @function customEdit
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method when 
+	 * this field is clicked on in a grid.
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {int} rowId   : the .id of the Model instance from which we are 
+	 *						  getting the data for this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @return {bool}      : return {false} if you want to prevent the default webix
+	 *						 grid/form editor.
+	 */
+/*
+	[DataFieldType]DataField.customEdit = function (application, object, fieldData, rowId, itemNode) {
+		if (!application || !object || !fieldData  || !rowId) return false;
+
+		return false;
+	};
+*/
+
+
+	/*
 	 * @function getRowHeight
 	 *
 	 * This is an optional method for a Data Field.  

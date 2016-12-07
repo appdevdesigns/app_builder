@@ -30,13 +30,17 @@ function importDataFields() {
     var dataFieldPath = path.join(__dirname, 'data_fields');
 
     DataFields = {};
+ 
+    var ignoreFiles = ['.DS_Store', 'dataFieldTemplate.js'];
 
-    fs.readdirSync(dataFieldPath).forEach(function (file) {
-        
-        if ( path.parse(file).name != 'dataFieldTemplate') {
-            DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
-        }
-    });
+     fs.readdirSync(dataFieldPath).forEach(function (file) {
+                         
+        // if not one of our ignored files:      
+        if ( ignoreFiles.indexOf(file) == -1) {
+             DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+         }
+     });
+
 }
 
 
