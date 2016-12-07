@@ -479,7 +479,7 @@ steal(function () {
 			$container.showImage(data);
 		}
 
-
+		$(itemNode).data('image-container', $container);
 		
 		////
 		//// Prepare the Uploader
@@ -593,6 +593,51 @@ steal(function () {
 	imageDataField.keyUploader = function (application, object, fieldData, rowId) {
 		return [ this.keyField(application, object, fieldData, rowId), 'uploader' ].join('-');
 	}
+
+
+	/*
+	 * @function setValue
+	 *
+	 * Form Processing: allow the form to set the current value.  
+	 *
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @param {} data         : the value of this DataField
+	 */
+	imageDataField.setValue = function (fieldData, itemNode, data) {
+		var $container = $(itemNode).data('image-container');
+
+		if ( !data || data == '') {
+			$container.showIcon();
+		} else {
+			// else display the image:
+			$container.showImage(data);
+		}
+
+	};
+
+
+	/*
+	 * @function getValue
+	 *
+	 * Form Processing: allow a form to request the current value of your Data Field. 
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 */
+	imageDataField.getValue = function (application, object, fieldData, itemNode) {
+		var image = $(itemNode).find('.image-data-field-image'),
+			result;
+
+		result = image.attr('image-uuid');
+
+		return result;
+	};
+
 
 	/*
 	 * @function getRowHeight

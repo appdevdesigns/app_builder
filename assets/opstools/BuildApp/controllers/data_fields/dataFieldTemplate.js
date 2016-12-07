@@ -273,6 +273,43 @@ steal(function () {
 */
 
 
+
+	/*
+	 * @function setValue
+	 *
+	 * Form Processing: allow the form to set the current value.  
+	 *
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @param {} data         : the value of this DataField
+	 */
+	[DataFieldType]DataField.setValue = function (fieldData, itemNode, data) {
+
+		// do something here to save your value 
+
+	};
+
+
+	/*
+	 * @function getValue
+	 *
+	 * Form Processing: allow a form to request the current value of your Data Field. 
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 */
+	[DataFieldType]DataField.getValue = function (application, object, fieldData, itemNode) {
+		var result;
+
+		// figure out how to return your value here:
+
+		return result;
+	};
+
 	/*
 	 * @function getRowHeight
 	 *
