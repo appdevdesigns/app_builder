@@ -7,8 +7,6 @@ steal(
 			modelCreator: modelCreator,
 
 			normalizeData: function (application, objectId, columns, data, ignoreTranslate) {
-				console.log('normalizeData: ', $.extend({}, data));
-
 				var self = this,
 					q = new AD.sal.Deferred(),
 					normalizeDataTasks = [],
@@ -85,7 +83,6 @@ steal(
 
 											if (!connectIds || connectIds.length < 1) return next();
 
-											console.log('normalizeData: connectIds ', connectIds);
 											linkObjModel.findAll({ or: connectIds })
 												.fail(next)
 												.then(function (result) {
@@ -95,7 +92,6 @@ steal(
 														linkVal.attr('_dataLabel', linkObj.getDataLabel(linkVal.attr()));
 													});
 
-													console.log('normalizeData: result ', result);
 													linkedData = result;
 													next();
 												});

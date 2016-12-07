@@ -101,46 +101,6 @@ steal(
 
 											return true;
 										});
-										// dataCollections[objectId].AD.__list.bind('change', function (ev, attr, how, newVal, oldVal) {
-										// 	console.log('DC.change: ', objInfo.attr('name'), attr, how, newVal, oldVal);
-
-										// 	if ((attr.match(/\./g) || []).length > 2 // Ignore 0.attrName.1.linkedAttrName
-										// 		|| oldVal === newVal) return;
-
-										// 	var rowIndex = -1,
-										// 		attrName = attr;
-
-										// 	if (attr.indexOf('.') > -1) {  // 0.attrName
-										// 		rowIndex = attr.split('.')[0];
-										// 		attrName = attr.split('.')[1];
-										// 	}
-
-										// 	var rowData = rowIndex > -1 ? this[rowIndex] : this; // Get data
-
-										// 	// Convert $height to number
-										// 	if (attrName == '$height' && newVal) {
-										// 		if (typeof newVal !== 'number') {
-										// 			var rowHeight = parseInt(newVal);
-										// 			rowData.attr('$height', rowHeight);
-										// 		}
-										// 		return;
-										// 	}
-										// 	else if (attrName == '_dataLabel' || attrName == 'updatedAt' || attrName == 'translations') return;
-
-										// 	console.log('DC after updateConnectData: ', objInfo.attr('name'), attr, how, newVal, oldVal);
-										// 	self.updateConnectData(application, linkCols, rowData, attrName, how, newVal, oldVal);
-
-										// 	if (oldVal == null && newVal == null) return;
-
-										// 	var hasUpdateLink = linkCols.filter(function (col) { return col.name == attrName; }).length > 0,
-										// 		hasUpdateDate = dateCols.filter(function (col) { return col.name == attrName; }).length > 0;
-
-										// 	if (how == 'add' || hasUpdateLink || hasUpdateDate) {
-										// 		console.log('DC after normalize: ', objInfo.attr('name'), attr, how, newVal, oldVal);
-										// 		// Update connected data
-										// 		dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData, true).then(function (result) { });
-										// 	}
-										// });
 									}
 
 									next();
