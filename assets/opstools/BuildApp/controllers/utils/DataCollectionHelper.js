@@ -65,33 +65,39 @@ steal(
 								.then(function (result) {
 									if (!dataCollections[objectId] || isRefresh) {
 										dataCollections[objectId] = AD.op.WebixDataCollection(result);
+										dataCollections[objectId].updateDataTimeout = {}; // { dataId: timeoutId }
 
 										// Listen change data event
 										dataCollections[objectId].attachEvent('onAfterAdd', function (id, index) {
 											var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
 											if (!rowData || !rowData[0]) return;
 
-											self.updateConnectData(application, linkCols, null, null, 'add', rowData, null);
+											self.updateConnectData(application, linkCols, rowData, 'add');
 
 											dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
 										});
 
 										dataCollections[objectId].attachEvent("onDataUpdate", function (id, data) {
-											var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
-											if (!rowData || !rowData[0]) return;
+											if (dataCollections[objectId].updateDataTimeout[id]) clearTimeout(dataCollections[objectId].updateDataTimeout[id]);
+											dataCollections[objectId].updateDataTimeout[id] = setTimeout(function () {
+												var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
+												if (!rowData || !rowData[0]) return true;
 
-											var oldData = dataCollections[objectId].getItem(id);
+												var oldData = dataCollections[objectId].getItem(id);
 
-											self.updateConnectData(application, linkCols, rowData[0], null, 'set', data, oldData);
+												self.updateConnectData(application, linkCols, rowData[0], 'set');
 
-											dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
+												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
+											}, 500);
+
+											return true;
 										});
 
 										dataCollections[objectId].attachEvent('onBeforeDelete', function (id) {
 											var rowData = dataCollections[objectId].getItem(id);
 											if (!rowData) return true;
 
-											self.updateConnectData(application, linkCols, null, null, 'remove', null, rowData);
+											self.updateConnectData(application, linkCols, rowData, 'remove');
 
 											return true;
 										});
@@ -156,7 +162,7 @@ steal(
 				return q;
 			},
 
-			updateConnectData: function (application, linkCols, rowData, attrName, how, newVal, oldVal) {
+			updateConnectData: function (application, linkCols, rowData, how) {
 				linkCols.forEach(function (col) {
 					var linkDC = dataCollections[col.setting.linkObject],
 						linkObjInfo = application.objects.filter(function (obj) { return obj.id == col.setting.linkObject; });
@@ -176,22 +182,22 @@ steal(
 						switch (how) {
 							case 'add':
 								// Check row id of parent
-								if (newVal[0] && newVal[0][col.name] &&
-									((newVal[0][col.name].id || newVal[0][col.name]) == linkRow.id ||
-										(newVal[0][col.name].filter && newVal[0][col.name].filter(function (c) { return (c.id || c) == linkRow.id; }).length > 0))) {
+								if (rowData[0] && rowData[0][col.name] &&
+									((rowData[0][col.name].id || rowData[0][col.name]) == linkRow.id ||
+										(rowData[0][col.name].filter && rowData[0][col.name].filter(function (c) { return (c.id || c) == linkRow.id; }).length > 0))) {
 
 									// Add link data to link via
 									if (linkVia.setting.linkType == 'model') {
-										linkRow.attr(linkVia.name, newVal[0] ? (newVal[0].id || newVal[0]) : (newVal.id || newVal));
+										linkRow.attr(linkVia.name, rowData[0] ? (rowData[0].id || rowData[0]) : (rowData.id || rowData));
 									}
 									else if (linkVia.setting.linkType == 'collection') {
 										var exists = linkViaVal.filter(function (val) {
-											return val.id == (newVal[0] ? (newVal[0].id || newVal[0]) : (newVal.id || newVal));
+											return val.id == (rowData[0] ? (rowData[0].id || rowData[0]) : (rowData.id || rowData));
 										});
 
 										if (!exists[0]) {
 											var childVal = linkViaVal.attr();
-											childVal.push(newVal[0] ? newVal[0] : newVal);
+											childVal.push(rowData[0] ? rowData[0] : rowData);
 											linkRow.attr(linkVia.name, childVal);
 										}
 									}
@@ -200,9 +206,6 @@ steal(
 
 
 							case 'set':
-								// if (col.name != attrName || isSame(newVal, oldVal)) return;
-								if (isSame(newVal, oldVal)) return;
-
 								// 1:1
 								if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'model') {
 									// TODO
@@ -210,25 +213,27 @@ steal(
 								// M:1
 								else if (col.setting.linkType == 'collection' && linkVia.setting.linkType == 'model') {
 									// Remove parent data (when child is not in list)
-									if (linkViaVal && rowData.id == (linkViaVal.id || linkViaVal) && newVal.filter
-										&& newVal.filter(function (v) { return (v.id || v) == linkRow.id; }).length < 1) {
+									if (linkViaVal && rowData.id == (linkViaVal.id || linkViaVal) && rowData[col.name].filter
+										&& rowData[col.name].filter(function (v) { return (v.id || v) == linkRow.id; }).length < 1) {
 										linkRow.attr(linkVia.name, null);
 									}
 									// Add parent data to child
-									else if ((!linkViaVal || rowData.id != (linkViaVal.id || linkViaVal)) && newVal.filter
-										&& newVal.filter(function (v) { return (v.id || v) == linkRow.id; }).length > 0) {
+									else if ((!linkViaVal || rowData.id != (linkViaVal.id || linkViaVal)) && rowData[col.name].filter
+										&& rowData[col.name].filter(function (v) { return (v.id || v) == linkRow.id; }).length > 0) {
 										linkRow.attr(linkVia.name, rowData.id);
 									}
 								}
 								// 1:M
 								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') {
 									// Remove child data
-									if (oldVal && linkRow.id == oldVal.id) {
+									if (rowData[col.name] && linkRow[linkVia.name].filter && linkRow.id != (rowData[col.name].id || rowData[col.name])
+										&& linkRow[linkVia.name].filter(function (v) { return (v.id || v) == rowData.id; }).length > 0) {
 										var removeChildData = linkViaVal.attr().filter(function (v) { return (v.id || v) != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
 									}
+
 									// Add new child data to parent
-									else if (newVal && linkRow.id == (newVal.id || newVal)) {
+									if (rowData[col.name] && linkRow.id == (rowData[col.name].id || rowData[col.name])) {
 										var exists = linkViaVal.filter(function (val) { return (val.id || val) == rowData.id; });
 
 										if (!exists[0]) {
@@ -249,13 +254,13 @@ steal(
 								// Remove link data
 								if (linkViaVal instanceof can.List) {
 									var removedData = linkViaVal.filter(function (val) {
-										return val.id != (oldVal ? oldVal.id : oldVal.id);
+										return val.id != (rowData ? rowData.id : rowData.id);
 									});
 
 									if (linkViaVal.length != removedData.length)
 										linkRow.attr(linkVia.name, removedData);
 								}
-								else if (linkViaVal && linkViaVal.id == (oldVal ? oldVal.id : oldVal.id)) {
+								else if (linkViaVal && linkViaVal.id == (rowData ? rowData.id : rowData.id)) {
 									linkRow.attr(linkVia.name, null);
 								}
 								break;

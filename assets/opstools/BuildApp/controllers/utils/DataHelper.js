@@ -4,7 +4,11 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	function (modelCreator, dataFieldsManager) {
 		return {
+			modelCreator: modelCreator,
+
 			normalizeData: function (application, objectId, columns, data, ignoreTranslate) {
+				console.log('normalizeData: ', $.extend({}, data));
+
 				var self = this,
 					q = new AD.sal.Deferred(),
 					normalizeDataTasks = [],
@@ -66,7 +70,10 @@ steal(
 										function (next) {
 											var connectIds = [];
 
-											if (row[linkCol.name].forEach) {
+											if (!row[linkCol.name]) {
+												return next();
+											}
+											else if (row[linkCol.name].forEach) {
 												row[linkCol.name].forEach(function (val) {
 													if (typeof val._dataLabel == 'undefined' || val._dataLabel == null)
 														connectIds.push({ id: val.id || val });
@@ -78,6 +85,7 @@ steal(
 
 											if (!connectIds || connectIds.length < 1) return next();
 
+											console.log('normalizeData: connectIds ', connectIds);
 											linkObjModel.findAll({ or: connectIds })
 												.fail(next)
 												.then(function (result) {
@@ -87,6 +95,7 @@ steal(
 														linkVal.attr('_dataLabel', linkObj.getDataLabel(linkVal.attr()));
 													});
 
+													console.log('normalizeData: result ', result);
 													linkedData = result;
 													next();
 												});
@@ -112,7 +121,7 @@ steal(
 												});
 											}
 											else if (row[linkCol.name]._dataLabel == null) {
-												var linkVal = linkedData.filter(function (link) { return link.id == (row[linkCol.name].id || row[linkCol.name])  });
+												var linkVal = linkedData.filter(function (link) { return link.id == (row[linkCol.name].id || row[linkCol.name]) });
 												if (!linkVal[0]) return next();
 
 												var dataLabel = linkVal[0].attr();

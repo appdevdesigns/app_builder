@@ -4,19 +4,6 @@ steal(
 	"opstools/BuildApp/controllers/utils/DataCollectionHelper.js",
 	function (abStubHelper, dataCollectionHelper) {
 
-		// the div to attach the controller to
-		var divID = 'test_DataCollectionHelper';
-
-		// add the div to the window
-		var buildHTML = function () {
-			var html = [
-				'<div id="' + divID + '">',
-				'</div>'
-			].join('\n');
-
-			$('body').append($(html));
-		}
-
 		//Define the unit tests
 		describe('testing DataCollectionHelper utility ', function () {
 
@@ -26,8 +13,6 @@ steal(
 			};
 
 			before(function (done) {
-
-				buildHTML();
 
 				async.series([
 					function (next) {
@@ -47,6 +32,10 @@ steal(
 						next();
 					}
 				], done);
+			});
+
+			after(function () {
+				dataCollectionHelper.modelCreator.getModel.restore();
 			});
 
 			it('should return data collection of object data', function (done) {
@@ -107,7 +96,7 @@ steal(
 					newPet.attr('id', newPetId);
 					newPet.attr('Name', 'New Pet');
 					newPet.attr('Owner', 1);
-					newPet.save().fail(done)
+					newPet.save()
 						.then(function (result) {
 							petDC.AD.__list.push(result);
 
@@ -119,7 +108,7 @@ steal(
 									assert.equal(0, owner.Pet.filter(function (p) { return p.id == newPetId; }).length);
 							});
 
-							done();
+							setTimeout(done, 501);
 						});
 				});
 
@@ -129,6 +118,7 @@ steal(
 					var updateTasks = [];
 
 					petDC.find({}).forEach(function (pet, index) {
+						// if (index > 0) return;
 						updateTasks.push(function (ok) {
 							// Update Owner of pet data
 							petDC.setCursor(pet.id);
@@ -141,15 +131,17 @@ steal(
 					});
 
 					async.series(updateTasks, function () {
-						// Assert
-						ownerDC.find({}).forEach(function (owner) {
-							if (owner.id == 2)
-								assert.equal(petDC.count(), owner.Pet.length, 'should have pets in owner ID: 2');
-							else
-								assert.equal(0, owner.Pet.length, 'should not have this pet in owner ID: ' + owner.id);
-						});
+						setTimeout(function () {
+							// Assert
+							ownerDC.find({}).forEach(function (owner) {
+								if (owner.id == 2)
+									assert.equal(petDC.count(), owner.Pet.length, 'should have pets in owner ID: 2');
+								else
+									assert.equal(0, owner.Pet.length, 'should not have this pet in owner ID: ' + owner.id);
+							});
 
-						done();
+							done();
+						}, 501);
 					});
 				});
 
@@ -211,16 +203,13 @@ steal(
 								});
 						}
 					], function (err) {
-						if (err) {
+						setTimeout(function () {
+							// Assert
+							assert.equal(1, ownerDC.find({ id: newOwnerId })[0].Pet.filter(function (p) { return (p.id || p) == newPetId }).length, 'the new owner should have a pet');
+							assert.equal(newOwnerId, petDC.find({ id: newPetId })[0].Owner.id, 'owner data of pet should be the new onwer');
+
 							done(err);
-							return;
-						}
-
-						// Assert
-						assert.equal(1, ownerDC.find({ id: newOwnerId })[0].Pet.filter(function (p) { return (p.id || p) == newPetId }).length, 'the new owner should have a pet');
-						assert.equal(newOwnerId, petDC.find({ id: newPetId })[0].Owner.id, 'owner data of pet should be the new onwer');
-
-						done();
+						}, 501);
 					})
 				});
 
@@ -258,16 +247,20 @@ steal(
 							ownerModel.attr('Pet', []);
 
 							ownerModel.save().fail(ok)
-								.then(function () {
-									// Assert
-									assert.equal(0, petDC.find(function (p) { return p.Owner.id == owner.id; }).length, 'should not have this owner in pet data');
-
-									ok();
-								});
+								.then(function () { ok() });
 						});
 					});
 
-					async.series(updateTasks, done);
+					async.series(updateTasks, function (err) {
+						setTimeout(function () {
+							ownerDC.find({}).forEach(function (owner) {
+								// Assert
+								assert.equal(0, petDC.find(function (p) { return p.Owner && p.Owner.id == owner.id; }).length, 'should not have this owner in pet data');
+							});
+
+							done(err);
+						}, 501);
+					});
 				});
 
 				it('should update child data when parent data is deleted', function (done) {
@@ -279,7 +272,7 @@ steal(
 								.fail(ok)
 								.then(function () {
 									// Assert
-									assert.equal(0, petDC.find(function (pet) { return pet.Owner && pet.Owner.id  == owner.id; }).length, 'should not have deleted owner in pet data');
+									assert.equal(0, petDC.find(function (pet) { return pet.Owner && pet.Owner.id == owner.id; }).length, 'should not have deleted owner in pet data');
 
 									ok();
 								});
