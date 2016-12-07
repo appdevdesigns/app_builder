@@ -273,7 +273,6 @@ steal(function () {
 */
 
 
-
 	/*
 	 * @function setValue
 	 *
@@ -309,6 +308,7 @@ steal(function () {
 
 		return result;
 	};
+
 
 	/*
 	 * @function getRowHeight

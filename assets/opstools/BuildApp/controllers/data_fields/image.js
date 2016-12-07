@@ -127,7 +127,6 @@ steal(function () {
 	}
 
 
-
 	/**
 	 * @function populateSettings
 	 *
@@ -244,142 +243,6 @@ steal(function () {
 	 *						  False if we don't.  (or just comment this out)
 	 */
 	imageDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-
-// This is used for the tutorial
-/*
-		var keyField = [ application.name, object.name, fieldData.name, rowId].join('-');
-
-
-		// find the container from our this.getSettings().setting.template 
-		var $container = $(itemNode).find('.ab-image-data-field');
-
-		// clear contents
-		$container.html('');
-		$container.attr('id', keyField);
-
-
-		var style = '';
-		if (fieldData.setting.useWidth) {
-			style = 'width:'+fieldData.setting.imageWidth+'px;';
-		}
-		if (fieldData.setting.useHeight) {
-			style += 'height:'+fieldData.setting.imageHeight+'px;';
-		}
-		if (style != '') {
-			style = 'style="'+style+'"';
-		}
-
-		// the display of our image:
-		// .image-data-field-icon : for an image icon when no data is present
-		// .image-data-field-image: for an actual <img> of the data.
-		var imgDiv = [
-			'<div class="image-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file-image-o fa-2x"></i></div>',
-			'<div class="image-data-field-image" style="display:none;"><img src="" '+style+' ></div>'
-		].join('\n');
-
-
-
-		var imgHeight = 33;										// <-- calculate the height
-		if (fieldData.setting.useHeight){
-			imgHeight = parseInt(fieldData.setting.imageHeight);
-		}
-
-		// use a webix component for displaying the content.
-		// do this so I can use the progress spinner
-		var webixContainer = webix.ui({
-			view:'template',
-
-			container:keyField,
-			
-			template:imgDiv,
-
-			borderless:true,
-			height: imgHeight									// <-- use it here
-		});
-		webix.extend(webixContainer, webix.ProgressBar);
-
-
-		$container.showIcon = function () {
-			// $($container.find('img')).prop('src', '');
-			$container.find('.image-data-field-image').hide();
-			$container.find('.image-data-field-icon').show();
-		}
-		$container.showImage = function (uuid) {
-			$($container.find('img')).prop('src', '/opsportal/image/'+application.name+'/'+uuid);
-			$container.find('.image-data-field-icon').hide();
-			$container.find('.image-data-field-image').show();
-		}
-
-		// if data is empty, then display the file Icon
-		if ( !data || data == '') {
-			$container.showIcon();
-		} else {
-			// else display the image:
-			$container.showImage(data);
-		}
-
-
-
-		// The Server Side action key format for this Application:
-		var actionKey = 'opstool.AB_'+application.name.replace('_','')+'.view';
-
-
-		var uploader = webix.ui({ 
-		    view:"uploader",  
-		    apiOnly: true, 
-		    upload:'/opsportal/image',
-		    inputName:'image',
-		    multiple: false,
-		    formData:{
-		    	appKey:application.name,
-		    	permission:actionKey,
-		    	isWebix:true
-		    },
-		    on: {
-
-				onBeforeFileAdd:function(item){
-
-		    		// verify file type
-		    		var acceptableTypes = ['jpg', 'jpeg', 'bmp', 'png', 'gif'];
-				    var type = item.type.toLowerCase();
-				    if (acceptableTypes.indexOf(type) == -1){
-				        webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
-				        return false;
-				    }
-
-					// start progress indicator
-					webixContainer.showProgress({
-					   type:"icon",
-					   delay:2000
-					});
-				},
-
-		    	// when upload is complete:
-		    	onFileUpload:function(item, response){
-					webix.message('Done!');
-					webixContainer.hideProgress();
-					$container.showImage(response.data.uuid);
-
-					var updatePacket = {
-						objectId : object.id,
-						columnName : fieldData.name,
-						rowId : rowId,
-						data : response.data.uuid
-					};
-					$(imageDataField).trigger('update', updatePacket);
-				},
-
-				// if an error was returned
-				onFileUploadError:function(item, response){
-					
-					webixContainer.hideProgress();
-				}
-		    }
-		});
-		uploader.addDropZone($container[0]);
-
-		return true;
-*/
 
 	
 		var keyField = this.keyField( application, object, fieldData, rowId);
@@ -659,7 +522,6 @@ steal(function () {
 		}
 		return height;
 	};
-
 
 
 	return imageDataField;
