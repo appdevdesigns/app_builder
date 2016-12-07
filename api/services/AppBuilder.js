@@ -31,9 +31,12 @@ function importDataFields() {
 
     DataFields = {};
 
+    var ignoreFiles = ['.DS_Store', 'dataFieldTemplate.js'];
+
     fs.readdirSync(dataFieldPath).forEach(function (file) {
-                
-        if ( path.parse(file).name != 'dataFieldTemplate') {
+         
+        // if not one of our ignored files:      
+        if ( ignoreFiles.indexOf(file) == -1) {
             DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
         }
     });
@@ -624,6 +627,336 @@ module.exports = {
      * @return Deferred
      */
     buildPage: function (pageID) {
+        var dfd = AD.sal.Deferred();
+        var cwd = process.cwd();
+
+
+        var appID, appName, pageName, pageKey, pagePerms, toolLabel;
+        var roles = [];
+        var objectIncludes = [];
+        var controllerIncludes = [];
+
+        var Application = null;
+
+        var pages = {};
+        var modelNames = [];
+
+        async.series([
+            // Find basic page info
+            function (next) {
+                ABPage.find({ id: pageID })
+                    .populate('application')
+                    .populate('components')
+                    .populate('translations')
+                    .then(function (list) {
+                        if (!list || !list[0]) {
+                            var err = new Error('invalid page id');
+                            next(err);
+                            return;
+                        }
+                        var page = list[0];
+                        if (page.parent > 0) throw new Error('not a root page');
+
+                        appID = page.application.id;
+                        appName = AppBuilder.rules.toApplicationNameFormat(page.application.name);
+                        pageName = AppBuilder.rules.nameFilter(page.name);
+                        toolLabel = pageName;
+                        page.translations.some(function (trans) {
+                            if (toolLabel == pageName) {
+                                toolLabel = trans.label;
+                                return true;
+                            }
+                        })
+
+                        // Only numbers and alphabets will be used
+                        Application = page.application;
+
+                        pageKey = ['opstools', appName, pageName].join('.'); // appName.pageName
+                        pagePerms = 'adcore.admin,' + pageKey + '.view';
+
+                        // controllerIncludes.push({
+                        //     key: 'opstools.' + appName + '.' + pageName,
+                        //     path: 'opstools/' + appName + '/controllers/'
+                        //     + pageName + '.js'
+                        // });
+
+                        // Switching to the new ABLiveTool controller:
+                        controllerIncludes.push({
+                            key: 'opstools.BuildApp.ABLiveTool',
+                            path: 'opstools/BuildApp/controllers/ABLiveTool.js',
+                            init: {
+                                app: appID,
+                                page: pageID
+                            }
+                        });
+
+                        pages[pageID] = page;
+
+                        next();
+                        return null;
+                    })
+                    .catch(function (err) {
+                        next(err);
+                        return null;
+                    });
+            },
+
+            // Find assign roles
+            function (next) {
+                var action_key = Application.actionKeyName(); // 'opstools.' + appName + '.view';
+
+                Permissions.getRolesByActionKey(action_key)
+                    .fail(function (err) {
+                        next(err);
+                        return null;
+                    })
+                    .then(function (result) {
+                        roles = result;
+
+                        next();
+                    });
+            },
+
+            // Find all sub-pages
+            function (next) {
+                var pageQueue = [pageID];
+                var completed = [];
+
+                async.whilst(
+                    function () { return (pageQueue.length > 0) },
+                    function (ok) {
+                        var pID = pageQueue.pop();
+                        ABPage.find()
+                            .where({ parent: pID })
+                            .populate('components')
+                            .then(function (list) {
+                                completed.push(pID);
+                                if (list && list[0]) {
+                                    list.forEach(function (page) {
+                                        if (completed.indexOf(page.id) < 0) {
+                                            pageQueue.push(page.id);
+                                        }
+                                        pages[page.id] = page;
+                                    });
+                                }
+                                ok();
+                                return null;
+                            })
+                            .catch(function (err) {
+                                ok(err);
+                                return null;
+                            });
+                    },
+                    function (err) {
+                        if (err) next(err);
+                        else next();
+                    }
+                );
+
+            },
+
+            // // Find related objects
+            // function (next) {
+            //     ABObject.find({ application: appID })
+            //         .then(function (list) {
+            //             for (var i = 0; i < list.length; i++) {
+            //                 var obj = list[i];
+            //                 objectIncludes.push({
+            //                     key: 'opstools.' + appName + '.'
+            //                     + appName + '_' + AppBuilder.rules.nameFilter(obj.name),
+            //                     path: 'opstools/' + appName + '/models/'
+            //                     + appName + '_' + AppBuilder.rules.nameFilter(obj.name) + '.js'
+            //                 });
+
+            //                 modelNames.push(AppBuilder.rules.nameFilter(obj.name));
+            //             }
+            //             next();
+            //             return null;
+            //         })
+            //         .catch(function (err) {
+            //             next(err);
+            //             return null;
+            //         });
+            // },
+
+            // // Generate the client side controller for the app page
+            // function (next) {
+            //     sails.renderView(path.join('app_builder', 'page_controller'), {
+            //         layout: false,
+            //         appId: appID,
+            //         appName: appName,
+            //         pageName: pageName,
+            //         pages: pages,
+            //         models: modelNames,
+            //         rootPageID: pageID,
+            //         domID: function (pid) {
+            //             pid = pid || '';
+            //             return 'abpage-' + appName + '-' + pageName + '-' + pid;
+            //         }
+            //     }, function (err, output) {
+            //         if (err) next(err);
+            //         else {
+            //             fs.writeFile(
+            //                 path.join(
+            //                     'assets', 'opstools', appName,
+            //                     'controllers', pageName + '.js'
+            //                 ),
+            //                 output,
+            //                 function (err) {
+            //                     if (err) next(err);
+            //                     else next();
+            //                 }
+            //             );
+            //         }
+            //     });
+            //     /*
+            //     AD.spawn.command({
+            //         command: cliCommand,
+            //         options: [
+            //             'controllerUI',
+            //             path.join('opstools', appName),
+            //             pageName
+            //         ],
+            //         shouldEcho: true
+            //     })
+            //     .fail(next)
+            //     .done(function() {
+            //         next();
+            //     });
+            //     */
+            // },
+
+            // Create Page's permission action
+            function (next) {
+                var page = pages[pageID];
+                page.permissionActionKey = pageKey + '.view';
+                Permissions.action.create({
+                    key: page.permissionActionKey,
+                    description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
+                    language_code: 'en'
+                })
+                    .always(function () {
+                        // If permission action already exists, that's fine.
+                        next();
+                    });
+            },
+
+            // Assign permission actions to assign roles
+            function (next) {
+                var assignActionTasks = [];
+
+                roles.forEach(function (r) {
+                    assignActionTasks.push(function (callback) {
+                        Permissions.assignAction(r.id, pageKey + '.view')
+                            .fail(function (err) { callback(err); })
+                            .then(function () { callback(); });
+                    });
+                });
+
+                async.parallel(assignActionTasks, function (err) {
+                    if (err) {
+                        next(err);
+                        return null;
+                    }
+
+                    next();
+                });
+            },
+
+            // Create OPView entry
+            function (next) {
+                OPSPortal.View.createOrUpdate(
+                    pageKey,
+                    objectIncludes,
+                    controllerIncludes
+                )
+                    .fail(next)
+                    .done(function () {
+                        next();
+                    });
+            },
+
+            // create a Tool Definition for the OP Portal Navigation
+            function (next) {
+                // sails.log('create tool definition')
+                var areaName = Application.name;
+                var areaKey = Application.areaKey();
+
+                var def = {
+                    key: _.kebabCase(pageKey),
+                    permissions: pagePerms,
+                    icon: 'fa-lock', // TODO: get this from Page Definition.
+                    label: toolLabel,
+                    // context: pageKey,
+                    controller: 'OPView',
+                    isController: false,
+                    options: { url: '/opsportal/view/' + pageKey },
+                    version: '0'
+                }
+                OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
+
+                    next(err);
+                })
+            },
+
+
+            // make sure our ToolDefinition is linked to our Area Definition.
+            function (next) {
+                // sails.log('... todo: link tooldef to area');
+
+                OPSPortal.NavBar.Area.link({
+                    keyArea: Application.areaKey(),
+                    keyTool: _.kebabCase(pageKey),
+                    instance: {
+                        icon: 'fa-cube',
+                        permissions: pagePerms,
+                        options: {
+                            is: 'there'
+                        }
+                    }
+                }, function (err) {
+                    if (err) {
+                        if (err.code == 'E_AREANOTFOUND') {
+                            console.log('... Area[' + Application.areaKey() + '] not found.  Move along ... ');
+                            // this probably means that they deleted this default area 
+                            // using the Navigation Editor.
+                            // no problem here:
+                            next();
+                            return;
+                        }
+                    }
+                    next(err);
+                });
+
+            }
+
+
+        ], function (err) {
+            if (err) dfd.reject(err);
+            else {
+                var page = pages[pageID];
+
+                // save any updates to our page instance.
+                page.save(function (err) {
+                    // should we pay attention to this error?
+
+                    dfd.resolve({});
+                })
+
+            }
+        });
+
+        return dfd;
+    },
+
+
+    /**
+     * Generate the client side controller for a root page
+     *
+     * @param integer pageID
+     * @return Deferred
+     */
+    exportPage: function (pageID) {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
 
