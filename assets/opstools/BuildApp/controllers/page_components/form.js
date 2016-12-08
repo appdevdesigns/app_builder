@@ -34,9 +34,24 @@ steal(
 
 		//Constructor
 		var formComponent = function (application, viewId, componentId) {
-			var data = {};
+			var data = {},
+				customEditTimeout = {}; // { colId: timeoutId }
 
 			// Private methods
+			function showCustomEdit(column, current_view) {
+				if (customEditTimeout[column.id]) clearTimeout(customEditTimeout[column.id]);
+				customEditTimeout[column.id] = setTimeout(function () {
+					var rowId;
+
+					if (data.dataCollection) {
+						var currModel = data.dataCollection.AD.currModel(),
+							rowId = currModel ? currModel.id : null;
+					}
+
+					dataFieldsManager.customEdit(application, data.object, column, rowId, current_view.$view);
+				}, 50);
+			}
+
 			function saveModelData(dataCollection, object, columns, setting) {
 				var self = this,
 					q = $.Deferred(),
@@ -119,6 +134,12 @@ steal(
 					if (!childView) return;
 
 					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
+
+					if (childView.config && childView.config.view === 'template') {
+						webix.event(childView.$view, "click", function (e) {
+							showCustomEdit(col, childView.$view);
+						});
+					}
 				});
 			}
 
@@ -299,14 +320,7 @@ steal(
 								element.template = template;
 								element.on = {
 									onFocus: function (current_view, prev_view) {
-										var rowId;
-
-										if (data.dataCollection) {
-											var currModel = data.dataCollection.AD.currModel(),
-												rowId = currModel ? currModel.id : null;
-										}
-
-										dataFieldsManager.customEdit(application, data.object, col, rowId, current_view.$view);
+										showCustomEdit(col, current_view);
 									}
 								};
 							}
