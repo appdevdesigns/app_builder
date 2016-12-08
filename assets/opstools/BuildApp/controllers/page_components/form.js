@@ -48,7 +48,7 @@ steal(
 							rowId = currModel ? currModel.id : null;
 					}
 
-					dataFieldsManager.customEdit(application, data.object, column, rowId, current_view.$view);
+					dataFieldsManager.customEdit(application, data.object, column, rowId, current_view);
 				}, 50);
 			}
 
@@ -136,9 +136,12 @@ steal(
 					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
 
 					if (childView.config && childView.config.view === 'template') {
-						webix.event(childView.$view, "click", function (e) {
+
+						if (childView.customEditEventId) webix.eventRemove(childView.customEditEventId);
+						childView.customEditEventId = webix.event(childView.$view, "click", function (e) {
 							showCustomEdit(col, childView.$view);
 						});
+
 					}
 				});
 			}
@@ -320,7 +323,7 @@ steal(
 								element.template = template;
 								element.on = {
 									onFocus: function (current_view, prev_view) {
-										showCustomEdit(col, current_view);
+										showCustomEdit(col, current_view.$view);
 									}
 								};
 							}
