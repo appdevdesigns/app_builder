@@ -321,11 +321,6 @@ steal(
 								element.minHeight = 45;
 								element.borderless = true;
 								element.template = template;
-								element.on = {
-									onFocus: function (current_view, prev_view) {
-										showCustomEdit(col, current_view.$view);
-									}
-								};
 							}
 							else {
 								element.view = col.setting.editor;
