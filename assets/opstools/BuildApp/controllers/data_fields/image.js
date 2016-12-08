@@ -445,7 +445,11 @@ steal(function () {
 
 
 	imageDataField.getContainer = function (itemNode) {
-		return $(itemNode).data('image-container');
+		var $container = $(itemNode).data('image-container');
+
+		if (!$container) $container = $(itemNode).find('.ab-image-data-field');
+
+		return $container;
 	}
 	imageDataField.keyField = function (application, object, fieldData, rowId) {
 		return [ application.name, object.name, fieldData.name, rowId, AD.util.uuid()].join('-');
