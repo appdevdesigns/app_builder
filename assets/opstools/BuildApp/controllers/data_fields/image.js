@@ -246,13 +246,10 @@ steal(function () {
 
 	
 		var keyField = this.keyField( application, object, fieldData, rowId);
-		var keyContainer = this.keyContainer(application, object, fieldData, rowId); // keyField+'-container';
-		var keyUploader = this.keyUploader(application, object, fieldData, rowId);  // keyField+'-uploader';
 
 		////
 		//// Prepare the Display
 		////
-
 
 		// find the container from our this.getSettings().setting.template 
 		var $container = $(itemNode).find('.ab-image-data-field');
@@ -260,6 +257,10 @@ steal(function () {
 		// clear contents
 		$container.html('');
 		$container.attr('id', keyField);
+
+		var keyContainer = this.keyContainer(itemNode); // keyField+'-container';
+		var keyUploader = this.keyUploader(itemNode);  // keyField+'-uploader';
+
 
 
 		var style = 'display:none;';
@@ -439,7 +440,7 @@ steal(function () {
 		if (!application || !object || !fieldData ) return false;
 
 
-		var keyUploader = this.keyUploader(application, object, fieldData, rowId);
+		var keyUploader = this.keyUploader(itemNode);
 		$$(keyUploader).fileDialog({ rowid : rowId });
 
 
@@ -448,13 +449,17 @@ steal(function () {
 
 
 	imageDataField.keyField = function (application, object, fieldData, rowId) {
-		return [ application.name, object.name, fieldData.name, rowId].join('-');
+		return [ application.name, object.name, fieldData.name, rowId, AD.util.uuid()].join('-');
 	}
-	imageDataField.keyContainer = function (application, object, fieldData, rowId) {
-		return [ this.keyField(application, object, fieldData, rowId), 'container' ].join('-');
+	imageDataField.keyContainer = function (itemNode) {
+		var $container = $(itemNode).find('.ab-image-data-field');
+		return [ $container.attr('id'), 'container' ].join('-');
 	}
-	imageDataField.keyUploader = function (application, object, fieldData, rowId) {
-		return [ this.keyField(application, object, fieldData, rowId), 'uploader' ].join('-');
+	imageDataField.keyUploader = function (itemNode) {
+		
+		var $container = $(itemNode).find('.ab-image-data-field');
+		
+		return [ $container.attr('id'), 'uploader' ].join('-');
 	}
 
 
