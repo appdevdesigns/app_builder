@@ -263,24 +263,23 @@ steal(function () {
 
 
 
-		var style = 'display:none;';
-		if (fieldData.setting.useWidth) {
-			style += 'width:'+fieldData.setting.imageWidth+'px;';
-			fieldData.setting.width = fieldData.setting.imageWidth; // pass this to the webix column
-		}
-		if (fieldData.setting.useHeight) {
-			style += 'height:'+fieldData.setting.imageHeight+'px;';
-		}
-		if (style != '') {
-			style = 'style="'+style+'"';
-		}
+		// var style = 'display:none;';
+		// if (fieldData.setting.useWidth) {
+		// 	style += 'width:'+fieldData.setting.imageWidth+'px;';
+		// 	fieldData.setting.width = fieldData.setting.imageWidth; // pass this to the webix column
+		// }
+		// if (fieldData.setting.useHeight) {
+		// 	style += 'height:'+fieldData.setting.imageHeight+'px;';
+		// }
+		// if (style != '') {
+		// 	style = 'style="'+style+'"';
+		// }
 
 		// the display of our image:
 		// .image-data-field-icon : for an image icon when no data is present
 		// .image-data-field-image: for an actual <img> of the data.
 		var imgDiv = [
 			'<div class="image-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file-image-o fa-2x"></i></div>',
-			// '<div class="image-data-field-image" style="display:none;"><img src="" '+style+' ></div>'
 			'<div class="image-data-field-image" style="display:none; width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover;"></div>'
 		].join('\n');
 
@@ -307,28 +306,27 @@ steal(function () {
 			borderless:true,
 			height: imgHeight,
 			width:imgWidth,
-			onClick:{
+			// onClick:{
 
-				// 'image-data-field-icon': function(ev, id) {
-				// 	$$(keyUploader).fileDialog({ rowid : id });				
-				// },
+			// 	// 'image-data-field-icon': function(ev, id) {
+			// 	// 	$$(keyUploader).fileDialog({ rowid : id });				
+			// 	// },
 
-				// 'image-data-field-image': function(ev, id) {
-				// 	$$(keyUploader).fileDialog({ rowid : id });
-				// }
+			// 	// 'image-data-field-image': function(ev, id) {
+			// 	// 	$$(keyUploader).fileDialog({ rowid : id });
+			// 	// }
 				
-			}
+			// }
 		});
 		webix.extend(webixContainer, webix.ProgressBar);
 
 
 		$container.showIcon = function () {
-			// $($container.find('img')).prop('src', '');
+			$container.find('.image-data-field-image').attr('image-uuid', '' );
 			$container.find('.image-data-field-image').hide();
 			$container.find('.image-data-field-icon').show();
 		}
 		$container.showImage = function (uuid) {
-			// $($container.find('img')).prop('src', '/opsportal/image/'+application.name+'/'+uuid);
 			$container.find('.image-data-field-image').css('background-image', "url('/opsportal/image/"+application.name+'/'+uuid+"')" );
 			$container.find('.image-data-field-image').attr('image-uuid', uuid );
 			$container.find('.image-data-field-icon').hide();
@@ -439,26 +437,25 @@ steal(function () {
 	imageDataField.customEdit = function (application, object, fieldData, rowId, itemNode) {
 		if (!application || !object || !fieldData ) return false;
 
-
 		var keyUploader = this.keyUploader(itemNode);
 		$$(keyUploader).fileDialog({ rowid : rowId });
-
 
 		return false;
 	};
 
 
+	imageDataField.getContainer = function (itemNode) {
+		return $(itemNode).data('image-container');
+	}
 	imageDataField.keyField = function (application, object, fieldData, rowId) {
 		return [ application.name, object.name, fieldData.name, rowId, AD.util.uuid()].join('-');
 	}
 	imageDataField.keyContainer = function (itemNode) {
-		var $container = $(itemNode).find('.ab-image-data-field');
+		var $container = this.getContainer(itemNode);
 		return [ $container.attr('id'), 'container' ].join('-');
 	}
 	imageDataField.keyUploader = function (itemNode) {
-		
-		var $container = $(itemNode).find('.ab-image-data-field');
-		
+		var $container = this.getContainer(itemNode);
 		return [ $container.attr('id'), 'uploader' ].join('-');
 	}
 
@@ -474,7 +471,7 @@ steal(function () {
 	 * @param {} data         : the value of this DataField
 	 */
 	imageDataField.setValue = function (fieldData, itemNode, data) {
-		var $container = $(itemNode).data('image-container');
+		var $container = this.getContainer(itemNode);
 
 		if ( !data || data == '') {
 			$container.showIcon();
@@ -498,12 +495,9 @@ steal(function () {
 	 * 						  the display of this DataField
 	 */
 	imageDataField.getValue = function (application, object, fieldData, itemNode) {
-		var image = $(itemNode).find('.image-data-field-image'),
-			result;
+		var image = $(itemNode).find('.image-data-field-image');
 
-		result = image.attr('image-uuid');
-
-		return result;
+		return image.attr('image-uuid');
 	};
 
 
