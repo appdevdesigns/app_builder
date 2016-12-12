@@ -632,7 +632,7 @@ steal(
 					if (!childView) return;
 
 					// Set default connect data when add
-					if (col.fieldName == 'connectObject') {
+					if (col.fieldName == 'connectObject' && !currModel) {
 						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
 							.then(function (linkedDataCollection) {
 								var linkCurrModel = linkedDataCollection.AD.currModel();
