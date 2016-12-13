@@ -88,6 +88,8 @@ steal(
 
 							self.controllers.LayoutView.on(self.options.savedComponentEvent, function (event) {
 								self.controllers.ComponentList.closeComponentPropertyView();
+
+								self.element.trigger(self.options.updatedPageEvent, { page: AD.classes.AppBuilder.currApp.currPage.id });
 							});
 
 							self.controllers.LayoutView.on(self.options.cancelComponentEvent, function (event) {
@@ -96,6 +98,8 @@ steal(
 
 							self.controllers.ComponentList.on(self.options.startDragEvent, function (event) {
 								self.controllers.LayoutView.startDragComponent();
+
+								self.element.trigger(self.options.updatedPageEvent, { page: AD.classes.AppBuilder.currApp.currPage.id });
 							});
 						},
 

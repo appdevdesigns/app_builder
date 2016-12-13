@@ -15,6 +15,8 @@ steal(
 							var self = this;
 							options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
+								addedPageEvent: 'AB_Page.Added',
+								renamePageEvent: 'AB_Page.Rename',
 								updatedPageEvent: 'AB_Page.Updated',
 								deletedPageEvent: 'AB_Page.Deleted'
 							}, options);
@@ -38,7 +40,7 @@ steal(
 							var InterfaceWorkspace = AD.Control.get('opstools.BuildApp.InterfaceWorkspace');
 
 							self.controllers.InterfaceList = new InterfaceList(self.element, { selectedPageEvent: self.options.selectedPageEvent, updatedPageEvent: self.options.updatedPageEvent, deletedPageEvent: self.options.deletedPageEvent });
-							self.controllers.InterfaceWorkspace = new InterfaceWorkspace(self.element, {});
+							self.controllers.InterfaceWorkspace = new InterfaceWorkspace(self.element, { updatedPageEvent: self.options.updatedPageEvent });
 						},
 
 						initWebixUI: function () {
@@ -60,20 +62,51 @@ steal(
 						initEvents: function () {
 							var self = this;
 
+							// Switch page
 							self.controllers.InterfaceList.on(self.options.selectedPageEvent, function (event, data) {
 								AD.classes.AppBuilder.currApp.currPage = data.selectedPage;
 
 								self.controllers.InterfaceWorkspace.showPage();
 							});
 
-							self.controllers.InterfaceList.on(self.options.updatedPageEvent, function (event, data) {
-								self.controllers.InterfaceWorkspace.refreshMenuComponent(data.updatedPageId);
+							// Add new page
+							self.controllers.InterfaceList.on(self.options.addedPageEvent, function (event, data) {
+								// Fire added event to the live page
+								AD.comm.hub.publish('ab.interface.add', {
+									app: AD.classes.AppBuilder.currApp.id, // ABApplication.id
+									parent: data.parentId, // Parent page id (ABPage.id)
+									page: data.page // ABPage.id
+								});
+
 							});
 
-							self.controllers.InterfaceList.on(self.options.deletedPageEvent, function (event, id) {
+							// Rename page
+							self.controllers.InterfaceList.on(self.options.renamePageEvent, function (event, data) {
+								self.controllers.InterfaceWorkspace.refreshMenuComponent(data.page);
+							});
+
+							// Delete page
+							self.controllers.InterfaceList.on(self.options.deletedPageEvent, function (event, data) {
 								AD.classes.AppBuilder.currApp.currPage = null;
 
 								self.controllers.InterfaceWorkspace.showPage();
+
+								// Fire deleted event to the live page
+								AD.comm.hub.publish('ab.interface.remove', {
+									app: AD.classes.AppBuilder.currApp.id, // ABApplication.id
+									page: data.page // ABPage.id
+								});
+							});
+
+							// Update components
+							self.controllers.InterfaceWorkspace.on(self.options.updatedPageEvent, function (event, data) {
+
+								// Fire deleted event to the live page
+								AD.comm.hub.publish('ab.interface.update', {
+									app: AD.classes.AppBuilder.currApp.id, // ABApplication.id
+									page: data.page // ABPage.id
+								});
+
 							});
 						},
 

@@ -17,8 +17,8 @@ steal(
 
 							options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
-								createdPageEvent: 'AB_Page.Created',
-								updatedPageEvent: 'AB_Page.Updated',
+								addedPageEvent: 'AB_Page.Added',
+								renamePageEvent: 'AB_Page.Rename',
 								deletedPageEvent: 'AB_Page.Deleted'
 							}, options);
 							this.options = options;
@@ -186,13 +186,9 @@ steal(
 															// Show gear icon
 															self.showGear(result.id);
 
-															self.element.trigger(self.options.updatedPageEvent, { updatedPageId: result.id });
+															self.element.trigger(self.options.renamePageEvent, { page: result.id });
 														});
 												}
-											},
-											onAfterDelete: function (id) {
-												// Fire unselect page event
-												self.element.trigger(self.options.deletedPageEvent, {});
 											}
 										},
 										onClick: {
@@ -344,10 +340,13 @@ steal(
 									case 'remove':
 										if (oldVals.forEach) {
 											oldVals.forEach(function (deletedPage) {
-												if (deletedPage && $$(self.webixUiId.interfaceTree).exists(deletedPage.id))
-													$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
+												if (deletedPage) {
+													if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id))
+														$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
+
+													self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
+												}
 											});
-											self.element.trigger(self.options.updatedPageEvent, {});
 										}
 										break;
 								}
@@ -397,6 +396,11 @@ steal(
 								$$(self.webixUiId.interfaceTree).unselectAll();
 								$$(self.webixUiId.interfaceTree).select(page.id);
 							}
+
+							self.element.trigger(self.options.addedPageEvent, {
+								parentId: page.parent ? page.parent.id : null,
+								page: page.id
+							});
 
 							// Show success message
 							webix.message({
