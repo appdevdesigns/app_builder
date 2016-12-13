@@ -321,11 +321,6 @@ steal(
 								element.minHeight = 45;
 								element.borderless = true;
 								element.template = template;
-								element.on = {
-									onFocus: function (current_view, prev_view) {
-										showCustomEdit(col, current_view.$view);
-									}
-								};
 							}
 							else {
 								element.view = col.setting.editor;
@@ -637,7 +632,7 @@ steal(
 					if (!childView) return;
 
 					// Set default connect data when add
-					if (col.fieldName == 'connectObject') {
+					if (col.fieldName == 'connectObject' && !currModel) {
 						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
 							.then(function (linkedDataCollection) {
 								var linkCurrModel = linkedDataCollection.AD.currModel();

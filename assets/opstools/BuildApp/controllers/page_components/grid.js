@@ -354,7 +354,7 @@ steal(
 
 							$$(self.viewId).define('select', true);
 							if (dataCollection)
-								dataCollection.setCursor(id);
+								dataCollection.setCursor((id.row || id));
 						}
 						else if (id.column === 'edit_form') {
 							$(self).trigger('changePage', {
@@ -363,7 +363,7 @@ steal(
 
 							$$(self.viewId).define('select', true);
 							if (dataCollection)
-								dataCollection.setCursor(id);
+								dataCollection.setCursor((id.row || id));
 						}
 					});
 
@@ -374,8 +374,8 @@ steal(
 					if (dataCollection) {
 						$$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
 							var currModel = dataCollection.AD.currModel();
-							if (!currModel || currModel.id != data.id)
-								dataCollection.setCursor(data.id);
+							if (!currModel || currModel.id != (data.id || data))
+								dataCollection.setCursor((data.id || data));
 						});
 
 						dataCollection.attachEvent("onAfterCursorChange", function (id) {

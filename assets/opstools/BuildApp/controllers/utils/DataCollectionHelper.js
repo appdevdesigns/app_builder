@@ -72,6 +72,7 @@ steal(
 											var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
 											if (!rowData || !rowData[0]) return;
 
+console.log('DC onAfterAdd - objectId:', objectId, ' dataId: ', id, $.extend({}, rowData[0]));
 											self.updateConnectData(application, linkCols, rowData, 'add');
 
 											dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
@@ -85,9 +86,12 @@ steal(
 
 												var oldData = dataCollections[objectId].getItem(id);
 
+console.log('DC onDataUpdate - objectId:', objectId, ' dataId: ', id, $.extend({}, rowData[0]));
 												self.updateConnectData(application, linkCols, rowData[0], 'set');
 
 												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
+
+												delete dataCollections[objectId].updateDataTimeout[id];
 											}, 500);
 
 											return true;
@@ -97,6 +101,7 @@ steal(
 											var rowData = dataCollections[objectId].getItem(id);
 											if (!rowData) return true;
 
+console.log('DC onBeforeDelete - objectId:', objectId, ' dataId: ', id, $.extend({}, rowData));
 											self.updateConnectData(application, linkCols, rowData, 'remove');
 
 											return true;
@@ -123,6 +128,7 @@ steal(
 			},
 
 			updateConnectData: function (application, linkCols, rowData, how) {
+console.log('test updateConnectData: ');
 				linkCols.forEach(function (col) {
 					var linkDC = dataCollections[col.setting.linkObject],
 						linkObjInfo = application.objects.filter(function (obj) { return obj.id == col.setting.linkObject; });
@@ -175,28 +181,33 @@ steal(
 									// Remove parent data (when child is not in list)
 									if (linkViaVal && rowData.id == (linkViaVal.id || linkViaVal) && rowData[col.name].filter
 										&& rowData[col.name].filter(function (v) { return (v.id || v) == linkRow.id; }).length < 1) {
+console.log('test 2 : ', $.extend({}, rowData));
 										linkRow.attr(linkVia.name, null);
 									}
 									// Add parent data to child
 									else if ((!linkViaVal || rowData.id != (linkViaVal.id || linkViaVal)) && rowData[col.name].filter
 										&& rowData[col.name].filter(function (v) { return (v.id || v) == linkRow.id; }).length > 0) {
+console.log('test 3 : ', $.extend({}, rowData));
 										linkRow.attr(linkVia.name, rowData.id);
 									}
 								}
 								// 1:M
 								else if (col.setting.linkType == 'model' && linkVia.setting.linkType == 'collection') {
 									// Remove child data
-									if (rowData[col.name] && linkRow[linkVia.name].filter && linkRow.id != (rowData[col.name].id || rowData[col.name])
+									if (linkRow[linkVia.name].filter && linkRow.id != (rowData[col.name].id || rowData[col.name])
 										&& linkRow[linkVia.name].filter(function (v) { return (v.id || v) == rowData.id; }).length > 0) {
+console.log('test 4 : ', $.extend({}, rowData));
 										var removeChildData = linkViaVal.attr().filter(function (v) { return (v.id || v) != rowData.id; });
 										linkRow.attr(linkVia.name, removeChildData);
 									}
 
 									// Add new child data to parent
 									if (rowData[col.name] && linkRow.id == (rowData[col.name].id || rowData[col.name])) {
+console.log('test 5 : ', $.extend({}, rowData));
 										var exists = linkViaVal.filter(function (val) { return (val.id || val) == rowData.id; });
 
 										if (!exists[0]) {
+console.log('test 6 : ', $.extend({}, rowData));
 											var childVal = linkViaVal.attr();
 											childVal.push(rowData.attr ? rowData.attr() : rowData);
 											linkRow.attr(linkVia.name, childVal);

@@ -108,7 +108,7 @@ steal(
 									assert.equal(0, owner.Pet.filter(function (p) { return p.id == newPetId; }).length);
 							});
 
-							setTimeout(done, 501);
+							setTimeout(done, 1300);
 						});
 				});
 
@@ -118,7 +118,6 @@ steal(
 					var updateTasks = [];
 
 					petDC.find({}).forEach(function (pet, index) {
-						// if (index > 0) return;
 						updateTasks.push(function (ok) {
 							// Update Owner of pet data
 							petDC.setCursor(pet.id);
