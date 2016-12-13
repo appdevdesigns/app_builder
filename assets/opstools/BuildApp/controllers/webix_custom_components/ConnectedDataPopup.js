@@ -208,7 +208,7 @@ steal(
 					templateText = templateText.replace(/[{]/g, '#').replace(/[}]/g, '#'); // Replace label format
 
 					for (var key in item) {
-						templateText = templateText.replace(new RegExp('#' + key + '#', 'g'), item[key]);
+						templateText = templateText.replace(new RegExp('#' + key + '#', 'g'), (item[key] || ''));
 					}
 
 					templateText = templateText.replace(/#(.+?)#/g, '');
