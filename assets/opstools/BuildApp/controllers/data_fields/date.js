@@ -6,7 +6,7 @@ steal(function () {
 		includeMonth : 'ab-new-date-include-month',
 		includeYear : 'ab-new-date-include-year',
 		typedayformatDatetime : 'ab-new-date-typedayformatDatetime',
-		typemonthdayformatDatetime : 'ab-new-date-typemonthdayformatDatetime',
+		typemonthformatDatetime : 'ab-new-date-typemonthdayformatDatetime',
 		typeyearformatDatetime : 'ab-new-date-typeyearformatDatetime',
 		
 	};
@@ -151,8 +151,8 @@ steal(function () {
 		}
 		
 		var getDateformat = $$(componentIds.includeDay).getValue() + $$(componentIds.typedayformatDatetime).getValue()
-		    		    $$(componentIds.includeMonth).getValue() + $$(componentIds.typemonthdayformatDatetime).getValue()
-		    		    $$(componentIds.includeYear).getValue() ;
+		    		    +$$(componentIds.includeMonth).getValue() + $$(componentIds.typemonthformatDatetime).getValue()
+		    		    +$$(componentIds.includeYear).getValue() ;
 		return {
 			fieldName: dateDataField.name,
 			type: type,
