@@ -150,9 +150,9 @@ steal(function () {
 			//format = 'fullDateFormatStr';
 		}
 		
-		var getDateformat = $$(componentIds.includeDay).getValue() + $$(componentIds.typedayformatDatetime).getValue()
-		    		    +$$(componentIds.includeMonth).getValue() + $$(componentIds.typemonthformatDatetime).getValue()
-		    		    +$$(componentIds.includeYear).getValue() ;
+		var getDateformat = $$(componentIds.includeDay).getValue().split("-")[1] + $$(componentIds.typedayformatDatetime).getValue()
+		    		    +$$(componentIds.includeMonth).getValue().split("-")[1] + $$(componentIds.typemonthformatDatetime).getValue()
+		    		    +$$(componentIds.includeYear).getValue().split("-")[1] ;
 		return {
 			fieldName: dateDataField.name,
 			type: type,
