@@ -5,7 +5,9 @@ steal(function () {
 		includeDay : 'ab-new-date-include-day',
 		includeMonth : 'ab-new-date-include-month',
 		includeYear : 'ab-new-date-include-year',
-		typeDatetime : 'ab-new-date-typeDatetime',
+		typedayformatDatetime : 'ab-new-date-typedayformatDatetime',
+		typemonthdayformatDatetime : 'ab-new-date-typemonthdayformatDatetime',
+		typeyearformatDatetime : 'ab-new-date-typeyearformatDatetime',
 		
 	};
 
@@ -59,6 +61,18 @@ steal(function () {
 	
 			},
 			{
+				view: "radio",
+				id: componentIds.typedayformatDatetime,
+				label: "dayformat",
+				value: 'none',
+				vertical: true,
+				options: [
+					{ id: 'comma', value: "Comma" },
+					{ id: 'Slash', value: "Slash" },
+					{ id: 'space', value: "Space" }
+				]
+			},
+			{
 		
 				view: "richselect",
 				id: componentIds.includeMonth,
@@ -71,6 +85,18 @@ steal(function () {
 					{ id: 'includeDay-MMMM', value: "June" }
 					]
 	
+			},
+			{
+				view: "radio",
+				id: componentIds.typemonthformatDatetime,
+				label: "monthformat",
+				value: 'none',
+				vertical: true,
+				options: [
+					{ id: 'comma', value: "Comma" },
+					{ id: 'Slash', value: "Slash" },
+					{ id: 'space', value: "Space" }
+				]
 			},
 			{
 		
@@ -88,13 +114,13 @@ steal(function () {
 			},
 			{
 				view: "radio",
-				id: componentIds.typeDatetime,
-				label: "typeDatetime",
+				id: componentIds.typeyearformatDatetime,
+				label: "yearformat",
 				value: 'none',
 				vertical: true,
 				options: [
 					{ id: 'comma', value: "Comma" },
-					{ id: 'period', value: "Period" },
+					{ id: 'Slash', value: "Slash" },
 					{ id: 'space', value: "Space" }
 				]
 			}
