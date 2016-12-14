@@ -110,6 +110,7 @@ steal(
 										self.object,
 										col,
 										rowId,
+										dataTable.config.id,
 										dataTable.getItem(rowId)[columnId],
 										itemNode,
 										{
