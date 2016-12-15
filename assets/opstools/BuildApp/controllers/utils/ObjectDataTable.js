@@ -110,8 +110,8 @@ steal(
 										self.object,
 										col,
 										rowId,
-										dataTable.config.id,
 										dataTable.getItem(rowId)[columnId],
+										dataTable.config.id,
 										itemNode,
 										{
 											readOnly: self.data.readOnly
