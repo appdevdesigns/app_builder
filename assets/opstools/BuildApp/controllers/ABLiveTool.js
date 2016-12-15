@@ -149,11 +149,30 @@ steal(
 
 								if ((data.app == self.options.app) && (page.length > 0)) {
 
-									// rebuild our display
-									self.renderPage(page[0].attr());
+									// Get the new page data
+									self.data.application.getPage(data.page)
+										.then(function (updatePage) {
+											if (updatePage.translate) updatePage.translate();
 
-									// Refresh components
-									self.showPage(self.activePage);
+											updatePage.attr('domID', self.unique('ab_live_page', self.options.app, updatePage.id));
+
+											// Update page in list
+											self.data.pages.forEach(function (page, index) {
+												if (page.id == updatePage.id)
+													self.data.pages.attr(index, updatePage.attr());
+											});
+
+											// rebuild our display
+											self.renderPage(updatePage.attr());
+
+											// Update the active page
+											if (self.activePage.id == updatePage.id)
+												self.activePage = updatePage.attr();
+
+											// Refresh components
+											self.showPage(self.activePage);
+
+										});
 								}
 							});
 
