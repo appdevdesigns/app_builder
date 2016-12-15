@@ -64,7 +64,7 @@ steal(function () {
 			},
 			{
 				view: "radio",
-				id: componentIds.typedayformatDatetime,
+				id: componentIds.typedayformatDelimiters,
 				label: "dayformat",
 				value: 'none',
 				vertical: true,
@@ -90,7 +90,7 @@ steal(function () {
 			},
 			{
 				view: "radio",
-				id: componentIds.typemonthformatDatetime,
+				id: componentIds.typemonthformatDelimiters,
 				label: "monthformat",
 				value: 'none',
 				vertical: true,
@@ -116,7 +116,7 @@ steal(function () {
 			},
 			{
 				view: "radio",
-				id: componentIds.typeyearformatDatetime,
+				id: componentIds.typeyearformatDelimiters,
 				label: "yearformat",
 				value: 'none',
 				vertical: true,
