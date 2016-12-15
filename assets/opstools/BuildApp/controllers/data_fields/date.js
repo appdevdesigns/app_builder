@@ -51,7 +51,7 @@ steal(function () {
 			{
 		
 				view: "richselect",
-				id: componentIds.includeDay,
+				id: componentIds.includedayFormat,
 				label: "Day",
 				value: 'none',
 				options: [
@@ -77,7 +77,7 @@ steal(function () {
 			{
 		
 				view: "richselect",
-				id: componentIds.includeMonth,
+				id: componentIds.includeMonthFormat,
 				label: "Month",
 				value: 'none',
 				options: [
@@ -103,7 +103,7 @@ steal(function () {
 			{
 		
 				view: "richselect",
-				id: componentIds.includeYear,
+				id: componentIds.includeYearFormat,
 				label: "Year",
 				value: 'none',
 				options: [
