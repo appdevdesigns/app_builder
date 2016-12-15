@@ -247,7 +247,7 @@ steal(
 			};
 		};
 
-		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
 			// Initial selectivity
 			selectivityHelper.renderSelectivity(itemNode, 'connect-data-values', options.readOnly);
 

@@ -37,7 +37,7 @@ steal(function () {
 		};
 	};
 
-	boolDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+	boolDataField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
 		if (options.readOnly) {
 			var checkboxHtml;
 

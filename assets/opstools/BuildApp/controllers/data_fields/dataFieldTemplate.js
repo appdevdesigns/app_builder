@@ -223,7 +223,7 @@ steal(function () {
 	 *						  False if we don't.  (or just comment this out)
 	 */
 /*
-	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
 
 		// for this to work right: 
 		// set your 
