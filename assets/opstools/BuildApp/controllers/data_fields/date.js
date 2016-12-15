@@ -2,12 +2,14 @@ steal(function () {
 	var componentIds = {
 		editView: 'ab-new-date',
 		includeTime: 'ab-new-date-include-time',
-		includeDay : 'ab-new-date-include-day',
-		includeMonth : 'ab-new-date-include-month',
-		includeYear : 'ab-new-date-include-year',
-		typedayformatDatetime : 'ab-new-date-typedayformatDatetime',
-		typemonthformatDatetime : 'ab-new-date-typemonthdayformatDatetime',
-		typeyearformatDatetime : 'ab-new-date-typeyearformatDatetime',
+		
+		includedayFormat : 'ab-new-date-includedayFormat',
+		includemonthFormat : 'ab-new-date-includemonthFormat',
+		includeyearFormat : 'ab-new-date-includeyearFormat',
+		
+		typedayformatDelimiters  : 'ab-new-date-typedayformatDatetime',
+		typemonthformatDelimiters  : 'ab-new-date-typemonthdayformatDatetime',
+		typeyearformatDelimiters  : 'ab-new-date-typeyearformatDatetime',
 		
 	};
 
@@ -79,10 +81,10 @@ steal(function () {
 				label: "Month",
 				value: 'none',
 				options: [
-					{ id: 'includeDay-M', value: "1" },
-					{ id: 'includeDay-MM', value: "01" },
-					{ id: 'includeDay-MMM', value: "Jun" },
-					{ id: 'includeDay-MMMM', value: "June" }
+					{ id: 'includeMonth-M', value: "1" },
+					{ id: 'includeMonth-MM', value: "01" },
+					{ id: 'includeMonth-MMM', value: "Jun" },
+					{ id: 'includeMonth-MMMM', value: "June" }
 					]
 	
 			},
@@ -105,10 +107,10 @@ steal(function () {
 				label: "Year",
 				value: 'none',
 				options: [
-					{ id: 'includeDay-Y', value: "1" },
-					{ id: 'includeDay-YY', value: "01" },
-					{ id: 'includeDay-YYY', value: "001" },
-					{ id: 'includeDay-YYYY', value: "0001" }
+					{ id: 'includeYear-Y', value: "1" },
+					{ id: 'includeYear-YY', value: "01" },
+					{ id: 'includeYear-YYY', value: "001" },
+					{ id: 'includeYear-YYYY', value: "0001" }
 					]
 	
 			},
@@ -132,7 +134,12 @@ steal(function () {
 	dateDataField.populateSettings = function (application, data) {
 		if (!data.type || !data.setting) return;
 		
-		
+		$$(componentIds.includedayFormat).setValue("includeDay-" + data.setting.includedayFormat);
+		$$(componentIds.typedayformatDelimiters).setValue(data.setting.typedayformatDelimiters);
+		$$(componentIds.includemonthFormat).setValue("includeMonth-" + data.setting.includemonthFormat);
+		$$(componentIds.typemonthformatDelimiters).setValue(data.setting.typemonthformatDelimiters);
+		$$(componentIds.includeyearFormat).setValue("includeYear-" +data.setting.includeyearFormat);
+		$$(componentIds.typeyearformatDelimiters).setValue(data.setting.typeyearformatDelimiters);
 		
 		$$(componentIds.includeTime).setValue(data.type == 'datetime');
 		$$(componentIds.includeTime).disable();
