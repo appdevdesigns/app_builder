@@ -40,6 +40,27 @@ steal(function () {
 					break;
 			}
 	}
+	
+	
+	function showdateDisplay(){
+		if(($$(componentIds.includedayFormat).getValue().split("-")[1] && $$(componentIds.includedayFormat).getValue().split("-")[1] != 'none')
+		   && ($$(componentIds.includemonthFormat).getValue().split("-")[1] && $$(componentIds.includemonthFormat).getValue().split("-")[1] != 'none')
+		   && ($$(componentIds.includeyearFormat).getValue().split("-")[1] && $$(componentIds.includeyearFormat).getValue().split("-")[1] != 'none')
+		   && ($$(componentIds.typedayformatDelimiters).getValue() && $$(componentIds.typedayformatDelimiters).getValue() != 'none')
+		   && ($$(componentIds.typemonthformatDelimiters).getValue() && $$(componentIds.typemonthformatDelimiters).getValue() != 'none')
+		   && ($$(componentIds.typeyearformatDelimiters).getValue() && $$(componentIds.typeyearformatDelimiters).getValue() != 'none')
+		   )
+		  {
+		    	var dateformat = $(componentIds.includemonthFormat).getValue().split("-")[1]+  $$(componentIds.typedayformatDelimiters).getValue()
+			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
+			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
+		  	
+			  var $container = $("#date-display").html(dateformat);
+			  
+		  }
+		
+		
+	}
 
 	// Edit definition
 	dateDataField.editDefinition = {
@@ -78,14 +99,20 @@ steal(function () {
 						{ id: 'includeDay-dd', value: "01" },
 						{ id: 'includeDay-ddd', value: "Fri" },
 						{ id: 'includeDay-dddd', value: "Monday" }
-						]
+						],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								
+							}
+						}
+					
 				 },
 				 {
 						view: "richselect",
 						id: componentIds.includedayOrder,
 						label: "Places",
 						value: 'none',
-						disabled: true,
+						//disabled: true,
 						options: [
 							{ id: 1, value: "1" },
 							{ id: 2, value: "2" },
@@ -127,7 +154,7 @@ steal(function () {
 						id: componentIds.includemonthOrder,
 						label: "Places",
 						value: 'none',
-						disabled: true,
+						//disabled: true,
 						options: [
 							{ id: 1, value: "1" },
 							{ id: 2, value: "2" },
@@ -167,7 +194,7 @@ steal(function () {
 						id: componentIds.includeyearOrder,
 						label: "Places",
 						value: 'none',
-						disabled: true,
+						//disabled: true,
 						options: [
 							{ id: 1, value: "1" },
 							{ id: 2, value: "2" },
