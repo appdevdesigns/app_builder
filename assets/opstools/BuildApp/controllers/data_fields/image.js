@@ -308,7 +308,7 @@ console.log($container);
 		var webixContainer = webix.ui({
 			view:'template',
 			id: keyContainer,
-			container:keyField,
+			container: $container[0],
 			
 			template:imgDiv,
 
