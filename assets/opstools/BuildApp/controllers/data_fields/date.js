@@ -215,7 +215,7 @@ steal(function () {
 		   && (fieldData.setting.typeyearformatDelimiters && fieldData.setting.typeyearformatDelimiters != 'none')
 		   )
 		  {
-		    	dateformat = fieldData.setting.includemonthFormat +  getDelimiters(fieldData.setting.typedayformatDelimiters)
+		    	dateformat = fieldData.setting.includedayFormat +  getDelimiters(fieldData.setting.typedayformatDelimiters)
 			   	+ fieldData.setting.includemonthFormat + getDelimiters(fieldData.setting.typemonthformatDelimiters)
 			  	+ fieldData.setting.includeyearFormat ;
 		  }
