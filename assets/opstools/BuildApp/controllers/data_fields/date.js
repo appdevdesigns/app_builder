@@ -102,7 +102,7 @@ steal(function () {
 						],
 						on: {
 							'onChange': function (newValue, oldValue) {
-								
+								showdateDisplay();
 							}
 						}
 					
