@@ -133,7 +133,7 @@ steal(function () {
 		if (!data.type || !data.setting) return;
 		
 		
-
+		
 		$$(componentIds.includeTime).setValue(data.type == 'datetime');
 		$$(componentIds.includeTime).disable();
 	};
@@ -150,41 +150,6 @@ steal(function () {
 			//format = 'fullDateFormatStr';
 		}
 		
-		var typedayformatDelimiters =" ";
-		if ($$(componentIds.typedayformatDatetime).getValue() != null) {
-			switch ($$(componentIds.typedayformatDatetime).getValue()) {
-				case 'comma':
-					typedayformatDelimiters = ",";
-					break;
-				case 'Slash':
-					typedayformatDelimiters = "/";
-					break;
-				case 'space':
-					typedayformatDelimiters = " ";
-					break;
-			}
-		}
-
-		var typemonthformatDelimiters =" ";
-		if ($$(componentIds.typemonthformatDatetime).getValue() != null) {
-			switch ($$(componentIds.typemonthformatDatetime).getValue()) {
-				case 'comma':
-					typemonthformatDelimiters = ",";
-					break;
-				case 'Slash':
-					typemonthformatDelimiters = "/";
-					break;
-				case 'space':
-					typemonthformatDelimiters = " ";
-					break;
-			}
-		}
-		
-		var typeyearformatDelimiters =" ";
-		
-		var getDateformat = $$(componentIds.includeDay).getValue().split("-")[1] + typedayformatDelimiters
-		    		    +$$(componentIds.includeMonth).getValue().split("-")[1] + typemonthformatDelimiters
-		    		    +$$(componentIds.includeYear).getValue().split("-")[1] ;
 		return {
 			fieldName: dateDataField.name,
 			type: type,
@@ -193,7 +158,12 @@ steal(function () {
 				editor: editor, // http://docs.webix.com/desktop__editing.html
 				filter_type: 'date', // DataTableFilterPopup - filter type
 				template:'<div class="ab-date-data-field"></div>',
-				dateformat: getDateformat
+				includedayFormat: $$(componentIds.includedayFormat).getValue().split("-")[1],
+				typedayformatDelimiters : $$(componentIds.typedayformatDelimiters).getValue(),
+				includemonthFormat: $$(componentIds.includemonthFormat).getValue().split("-")[1],
+				typemonthformatDelimiters : $$(componentIds.typemonthformatDelimiters).getValue(),
+				includeyearFormat: $$(componentIds.includeyearFormat).getValue().split("-")[1],
+				typeyearformatDelimiters : $$(componentIds.typeyearformatDelimiters).getValue(),
 			}
 		};
 	};
