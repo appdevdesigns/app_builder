@@ -55,7 +55,7 @@ steal(function () {
 			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
 		  	
-			  var $container = $("#date-display").html(dateformat);
+			  var $container = $$("date-display").html(dateformat);
 			  
 		  }
 		
