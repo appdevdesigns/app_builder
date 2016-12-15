@@ -51,7 +51,7 @@ steal(function () {
 		   && ($$(componentIds.typeyearformatDelimiters).getValue() && $$(componentIds.typeyearformatDelimiters).getValue() != 'none')
 		   )
 		  {
-		    	var dateformat = $(componentIds.includemonthFormat).getValue().split("-")[1]+  $$(componentIds.typedayformatDelimiters).getValue()
+		    	var dateformat = $$(componentIds.includemonthFormat).getValue().split("-")[1]+  $$(componentIds.typedayformatDelimiters).getValue()
 			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
 		  	
