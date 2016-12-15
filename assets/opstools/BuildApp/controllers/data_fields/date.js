@@ -150,8 +150,40 @@ steal(function () {
 			//format = 'fullDateFormatStr';
 		}
 		
-		var getDateformat = $$(componentIds.includeDay).getValue().split("-")[1] + $$(componentIds.typedayformatDatetime).getValue()
-		    		    +$$(componentIds.includeMonth).getValue().split("-")[1] + $$(componentIds.typemonthformatDatetime).getValue()
+		var typedayformatDelimiters =" ";
+		if ($$(componentIds.typedayformatDatetime).getValue() != null) {
+			switch ($$(componentIds.typedayformatDatetime).getValue()) {
+				case 'comma':
+					typedayformatDelimiters = ",";
+					break;
+				case 'Slash':
+					typedayformatDelimiters = "/";
+					break;
+				case 'space':
+					typedayformatDelimiters = " ";
+					break;
+			}
+		}
+
+		var typemonthformatDelimiters =" ";
+		if ($$(componentIds.typemonthformatDatetime).getValue() != null) {
+			switch ($$(componentIds.typemonthformatDatetime).getValue()) {
+				case 'comma':
+					typemonthformatDelimiters = ",";
+					break;
+				case 'Slash':
+					typemonthformatDelimiters = "/";
+					break;
+				case 'space':
+					typemonthformatDelimiters = " ";
+					break;
+			}
+		}
+		
+		var typeyearformatDelimiters =" ";
+		
+		var getDateformat = $$(componentIds.includeDay).getValue().split("-")[1] + typedayformatDelimiters
+		    		    +$$(componentIds.includeMonth).getValue().split("-")[1] + typemonthformatDelimiters
 		    		    +$$(componentIds.includeYear).getValue().split("-")[1] ;
 		return {
 			fieldName: dateDataField.name,
