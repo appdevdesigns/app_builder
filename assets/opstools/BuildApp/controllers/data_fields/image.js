@@ -254,9 +254,18 @@ steal(function () {
 		// find the container from our this.getSettings().setting.template 
 		var $container = $(itemNode).find('.ab-image-data-field');
 
+		// if our contents are already generated:
+		if ($container.find('.image-data-field-image').length>0) {
+
+			// let's not update the contents:
+			return true;
+		}
+
 		// clear contents
 		$container.html('');
 		$container.attr('id', keyField);
+console.log('... container:');
+console.log($container);
 
 		var keyContainer = this.keyContainer(itemNode); // keyField+'-container';
 		var keyUploader = this.keyUploader(itemNode);  // keyField+'-uploader';
