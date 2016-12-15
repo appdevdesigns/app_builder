@@ -11,6 +11,10 @@ steal(function () {
 		typemonthformatDelimiters  : 'ab-new-date-typemonthdayformatDatetime',
 		typeyearformatDelimiters  : 'ab-new-date-typeyearformatDatetime',
 		
+		includedayOrder  : 'ab-new-date-includedayOrder',
+		includemonthOrder  : 'ab-new-date-includemonthOrder',
+		includeyearOrder  : 'ab-new-date-includeyearOrder',
+		
 	};
 
 	// General settings
@@ -63,17 +67,33 @@ steal(function () {
 				placeholder: "date-display"
 			},
 			{
-		
-				view: "richselect",
-				id: componentIds.includedayFormat,
-				label: "Day",
-				value: 'none',
-				options: [
-					{ id: 'includeDay-d', value: "1" },
-					{ id: 'includeDay-dd', value: "01" },
-					{ id: 'includeDay-ddd', value: "Fri" },
-					{ id: 'includeDay-dddd', value: "Monday" }
-					]
+				cols: [
+				   {
+					view: "richselect",
+					id: componentIds.includedayFormat,
+					label: "Day",
+					value: 'none',
+					options: [
+						{ id: 'includeDay-d', value: "1" },
+						{ id: 'includeDay-dd', value: "01" },
+						{ id: 'includeDay-ddd', value: "Fri" },
+						{ id: 'includeDay-dddd', value: "Monday" }
+						]
+				   },
+				   {
+						view: "richselect",
+						id: componentIds.includedayOrder,
+						label: "Places",
+						value: 'none',
+						disabled: true,
+						options: [
+							{ id: 1, value: "1" },
+							{ id: 2, value: "2" },
+							{ id: 3, value: "3" },
+					
+						]
+				 }
+				]
 	
 			},
 			{
@@ -89,18 +109,31 @@ steal(function () {
 				]
 			},
 			{
-		
-				view: "richselect",
-				id: componentIds.includemonthFormat,
-				label: "Month",
-				value: 'none',
-				options: [
-					{ id: 'includeMonth-M', value: "1" },
-					{ id: 'includeMonth-MM', value: "01" },
-					{ id: 'includeMonth-MMM', value: "Jun" },
-					{ id: 'includeMonth-MMMM', value: "June" }
+				cols: [
+					{
+					view: "richselect",
+					id: componentIds.includemonthFormat,
+					label: "Month",
+					value: 'none',
+					options: [
+						{ id: 'includeMonth-M', value: "1" },
+						{ id: 'includeMonth-MM', value: "01" },
+						{ id: 'includeMonth-MMM', value: "Jun" },
+						{ id: 'includeMonth-MMMM', value: "June" }
+						]
+					},
+					{
+						view: "richselect",
+						id: componentIds.includemonthOrder,
+						label: "Places",
+						value: 'none',
+						disabled: true,
+						options: [
+							{ id: 1, value: "1" },
+							{ id: 2, value: "2" },
+							{ id: 3, value: "3" },
+					}
 					]
-	
 			},
 			{
 				view: "radio",
@@ -115,17 +148,31 @@ steal(function () {
 				]
 			},
 			{
-		
-				view: "richselect",
-				id: componentIds.includeyearFormat,
-				label: "Year",
-				value: 'none',
-				options: [
-					{ id: 'includeYear-Y', value: "1" },
-					{ id: 'includeYear-YY', value: "01" },
-					{ id: 'includeYear-YYY', value: "001" },
-					{ id: 'includeYear-YYYY', value: "0001" }
-					]
+				cols: [
+					{
+						view: "richselect",
+						id: componentIds.includeyearFormat,
+						label: "Year",
+						value: 'none',
+						options: [
+							{ id: 'includeYear-Y', value: "1" },
+							{ id: 'includeYear-YY', value: "01" },
+							{ id: 'includeYear-YYY', value: "001" },
+							{ id: 'includeYear-YYYY', value: "0001" }
+							]
+					},
+					{
+						view: "richselect",
+						id: componentIds.includeyearOrder,
+						label: "Places",
+						value: 'none',
+						disabled: true,
+						options: [
+							{ id: 1, value: "1" },
+							{ id: 2, value: "2" },
+							{ id: 3, value: "3" },			
+					}
+				]
 	
 			},
 			{
