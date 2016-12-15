@@ -22,6 +22,20 @@ steal(function () {
 		includeHeader: true,
 		description: ''
 	};
+	
+	function getDelimiters(d){
+		switch (d) {
+				case 'comma':
+					return ",";
+					break;
+				case 'slash':
+					return "/";
+					break;
+				case 'space':
+					return " ";
+					break;
+			}
+	}
 
 	// Edit definition
 	dateDataField.editDefinition = {
@@ -70,7 +84,7 @@ steal(function () {
 				vertical: true,
 				options: [
 					{ id: 'comma', value: "Comma" },
-					{ id: 'Slash', value: "Slash" },
+					{ id: 'slash', value: "Slash" },
 					{ id: 'space', value: "Space" }
 				]
 			},
@@ -96,7 +110,7 @@ steal(function () {
 				vertical: true,
 				options: [
 					{ id: 'comma', value: "Comma" },
-					{ id: 'Slash', value: "Slash" },
+					{ id: 'slash', value: "Slash" },
 					{ id: 'space', value: "Space" }
 				]
 			},
@@ -191,6 +205,21 @@ steal(function () {
 		//	datadateFormat = fieldData.setting.dateformat;
 		//}
 		
+		//setdateformat
+		var dateformat = "mm/dd/yyyy";
+		if((fieldData.setting.includedayFormat && fieldData.setting.includedayFormat != 'none')
+		   && (fieldData.setting.includemonthFormat && fieldData.setting.includemonthFormat != 'none')
+		   && (fieldData.setting.includeyearFormat && fieldData.setting.includeyearFormat != 'none')
+		   && (fieldData.setting.typedayformatDelimiters && fieldData.setting.typedayformatDelimiters != 'none')
+		   && (fieldData.setting.typemonthformatDelimiters && fieldData.setting.typemonthformatDelimiters != 'none')
+		   && (fieldData.setting.typeyearformatDelimiters && fieldData.setting.typeyearformatDelimiters != 'none')
+		   )
+		  {
+		    	dateformat = fieldData.setting.includemonthFormat +  getDelimiters(fieldData.setting.typedayformatDelimiters)
+			   	+ fieldData.setting.includemonthFormat + getDelimiters(fieldData.setting.typemonthformatDelimiters)
+			  	+ fieldData.setting.includeyearFormat ;
+		  }
+		
 
         	var imgDiv = null; 
 
@@ -200,7 +229,7 @@ steal(function () {
             	// else display the image:
 
 			var date = new Date(data);
-			var formattedDate = moment(date).format("M D, YYYY");
+			var formattedDate = moment(date).format(dateformat);
 	    		
 			dateDiv = formattedDate;
         	}
