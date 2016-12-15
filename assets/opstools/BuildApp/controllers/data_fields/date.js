@@ -68,7 +68,7 @@ steal(function () {
 			},
 			{
 				cols: [
-				   {
+				{
 					view: "richselect",
 					id: componentIds.includedayFormat,
 					label: "Day",
@@ -79,8 +79,8 @@ steal(function () {
 						{ id: 'includeDay-ddd', value: "Fri" },
 						{ id: 'includeDay-dddd', value: "Monday" }
 						]
-				   },
-				   {
+				 },
+				 {
 						view: "richselect",
 						id: componentIds.includedayOrder,
 						label: "Places",
@@ -111,16 +111,16 @@ steal(function () {
 			{
 				cols: [
 					{
-					view: "richselect",
-					id: componentIds.includemonthFormat,
-					label: "Month",
-					value: 'none',
-					options: [
-						{ id: 'includeMonth-M', value: "1" },
-						{ id: 'includeMonth-MM', value: "01" },
-						{ id: 'includeMonth-MMM', value: "Jun" },
-						{ id: 'includeMonth-MMMM', value: "June" }
-						]
+						view: "richselect",
+						id: componentIds.includemonthFormat,
+						label: "Month",
+						value: 'none',
+						options: [
+							{ id: 'includeMonth-M', value: "1" },
+							{ id: 'includeMonth-MM', value: "01" },
+							{ id: 'includeMonth-MMM', value: "Jun" },
+							{ id: 'includeMonth-MMMM', value: "June" }
+							]
 					},
 					{
 						view: "richselect",
@@ -132,6 +132,7 @@ steal(function () {
 							{ id: 1, value: "1" },
 							{ id: 2, value: "2" },
 							{ id: 3, value: "3" },
+						]
 					}
 					]
 			},
@@ -170,7 +171,8 @@ steal(function () {
 						options: [
 							{ id: 1, value: "1" },
 							{ id: 2, value: "2" },
-							{ id: 3, value: "3" },			
+							{ id: 3, value: "3" },		
+						]
 					}
 				]
 	
