@@ -34,9 +34,24 @@ steal(
 
 		//Constructor
 		var formComponent = function (application, viewId, componentId) {
-			var data = {};
+			var data = {},
+				customEditTimeout = {}; // { colId: timeoutId }
 
 			// Private methods
+			function showCustomEdit(column, current_view) {
+				if (customEditTimeout[column.id]) clearTimeout(customEditTimeout[column.id]);
+				customEditTimeout[column.id] = setTimeout(function () {
+					var rowId;
+
+					if (data.dataCollection) {
+						var currModel = data.dataCollection.AD.currModel(),
+							rowId = currModel ? currModel.id : null;
+					}
+
+					dataFieldsManager.customEdit(application, data.object, column, rowId, current_view);
+				}, 50);
+			}
+
 			function saveModelData(dataCollection, object, columns, setting) {
 				var self = this,
 					q = $.Deferred(),
@@ -118,7 +133,16 @@ steal(
 					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
-					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, viewId, childView.$view);
+
+					if (childView.config && childView.config.view === 'template') {
+
+						if (childView.customEditEventId) webix.eventRemove(childView.customEditEventId);
+						childView.customEditEventId = webix.event(childView.$view, "click", function (e) {
+							showCustomEdit(col, childView.$view);
+						});
+
+					}
 				});
 			}
 
@@ -258,42 +282,22 @@ steal(
 
 							var element = {
 								name: col.name, // Field name
-								labelWidth: 100,
-								minWidth: 500
+								labelWidth: 100
 							};
 							element.label = col.label;
 
 							if (col.type == 'boolean') {
 								element.view = 'checkbox';
 							}
-							else if (col.setting.template) {
-								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
-									.replace(/#width#/g, element.labelWidth - 3)
-									.replace(/#label#/g, element.label)
-									.replace(/#template#/g, col.setting.template);
-
-								element.view = 'template';
-								element.minHeight = 45;
-								element.borderless = true;
-								element.template = template;
-								element.on = {
-									onFocus: function (current_view, prev_view) {
-										var rowId;
-
-										if (data.dataCollection) {
-											var currModel = data.dataCollection.AD.currModel(),
-												rowId = currModel ? currModel.id : null;
-										}
-
-										dataFieldsManager.customEdit(application, data.object, col, rowId, current_view.$view);
-									}
-								};
-							}
 							else if (col.setting.editor === 'popup') {
 								element.view = 'textarea';
 							}
 							else if (col.setting.editor === 'number') {
-								element.view = 'counter';
+								// element.view = 'counter';
+								// element.pattern = { mask: "##############", allow: /[0-9]/g }; // Available in webix PRO edition
+								element.view = 'text';
+								element.validate = webix.rules.isNumber;
+								element.validateEvent = 'key';
 							}
 							else if (col.setting.editor === 'date') {
 								element.view = 'datepicker';
@@ -306,6 +310,17 @@ steal(
 							else if (col.setting.editor === 'richselect') {
 								element.view = 'richselect';
 								element.options = listOptions[col.id];
+							}
+							else if (col.setting.template) {
+								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
+									.replace(/#width#/g, element.labelWidth - 3)
+									.replace(/#label#/g, element.label)
+									.replace(/#template#/g, col.setting.template);
+
+								element.view = 'template';
+								element.minHeight = 45;
+								element.borderless = true;
+								element.template = template;
 							}
 							else {
 								element.view = col.setting.editor;
@@ -483,6 +498,7 @@ steal(
 						return;
 					}
 
+					$$(self.viewId).adjust();
 					$$(self.viewId).hideProgress();
 
 					$(self).trigger('renderComplete', {});
@@ -616,7 +632,7 @@ steal(
 					if (!childView) return;
 
 					// Set default connect data when add
-					if (col.fieldName == 'connectObject') {
+					if (col.fieldName == 'connectObject' && !currModel) {
 						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
 							.then(function (linkedDataCollection) {
 								var linkCurrModel = linkedDataCollection.AD.currModel();
@@ -636,6 +652,10 @@ steal(
 					}
 				});
 
+			};
+
+			this.resize = function (width, height) {
+				$$(this.viewId).adjust();
 			};
 
 		}

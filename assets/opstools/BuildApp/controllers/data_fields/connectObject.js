@@ -54,7 +54,10 @@ steal(
 			});
 		}
 
+// TODO: relocat this to dataFieldsManager.getReturnData()
+// connectObjectField.DataFieldManager.getReturnData()
 		function getReturnData(objectId, columnName, rowId, selectedItems) {
+
 			var connectData = {};
 			connectData.objectId = objectId;
 			connectData.columnName = columnName;
@@ -240,6 +243,8 @@ steal(
 					linkViaType: $$(componentIds.fieldLinkViaType).getValue(),
 					linkVia: $$(componentIds.fieldLinkViaType).linkVia, // ABColumn.id
 					icon: connectObjectField.icon,
+// choose something that isn't a Webix standard data editor
+// then add a .template field. (use a class definition that you can lookup in .customDisplay)
 					editor: 'selectivity',
 					template: '<div class="connect-data-values"></div>',
 					filter_type: 'multiselect'
@@ -247,14 +252,35 @@ steal(
 			};
 		};
 
-		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+
+// customDisplay : renders this DataField in it's cell. (form or grid)
+// application: the ABApplication instance for our running application
+// object : the ABObject that contains this DataField
+// columnName : the ABColumn.name of the column definition that contains this DataField 
+// rowId : the .id of the Model Instance from which we are getting the data for this DataField
+// data : the value of this DataField
+// viewId : the webix id ( $$(viewId) ) of the component calling this Data Field's .customDisplay()
+// itemNode : the cell that contains this DataField (DOM reference)
+// options  : provided by the calling component (grid or Form) and currently only has .readOnly:bool
+		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
+
+// insert a <div id="xxx"></div> into current itemNode,
+// then create a Webix container that 
+// webix.ui({
+// 	container:'xxx',
+// })
+// 'xxx' must be unique for this row/column entry.
+
 			// Initial selectivity
 			selectivityHelper.renderSelectivity(itemNode, 'connect-data-values', options.readOnly);
+
 
 			var selectedItems = [];
 			if (data) {
 				if (data.id) {
 					selectedItems.push({
+// add in additional data values so that they get passed back on the selectivity .change event
+// this is where we get the result.XXX values in the getReturnData() function.
 						id: data.id,
 						text: data._dataLabel,
 						objectId: object.id,
@@ -282,6 +308,11 @@ steal(
 			return true;
 		};
 
+
+// on a grid or form, when the user clicks on a Data Field, this gets called to display the Editor.
+// if the DataField defines this, our AppBuilder knows to call this when clicked.
+// fieldData : the ABColumn object that contains this DataField
+// dataId : the rowId
 		connectObjectField.customEdit = function (application, object, fieldData, dataId, itemNode) {
 			if (!application || !fieldData || !fieldData.setting.linkObject || !fieldData.setting.linkVia) return false;
 
@@ -312,6 +343,7 @@ steal(
 			return false;
 		};
 
+
 		connectObjectField.setValue = function (fieldData, itemNode, data) {
 			var selectivityNode = $(itemNode).find('.connect-data-values');
 
@@ -321,6 +353,9 @@ steal(
 			selectivityHelper.setData(selectivityNode, data);
 		};
 
+
+// when a Form component gathers the data, this gets called to interpret what should be returned.
+// 
 		connectObjectField.getValue = function (application, object, fieldData, itemNode) {
 			var selectivityNode = $(itemNode).find('.connect-data-values'),
 				selectedValues = selectivityHelper.getData(selectivityNode),

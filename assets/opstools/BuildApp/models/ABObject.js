@@ -41,7 +41,10 @@ steal(
 									defaultCol = textCols[0];
 								}
 
-								labelFormat = '{' + defaultCol.name + '}';
+								if (defaultCol)
+									labelFormat = '{' + defaultCol.name + '}';
+								else
+									labelFormat = '';
 							}
 
 							for (var c in data) {

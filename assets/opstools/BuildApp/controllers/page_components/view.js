@@ -52,7 +52,7 @@ steal(
 				data.currDataId = currModel ? currModel.id : null;
 
 				getColumns().forEach(function (child) {
-					if (!child.config.fieldName) return;
+					if (!child.config.name) return;
 
 					var displayField = child.getChildViews()[1];
 
@@ -66,16 +66,16 @@ steal(
 						return;
 					}
 
-					var fieldData = currModel[child.config.fieldName],
-						column = data.columns.filter(function (col) { return col.name == child.config.fieldName; });
+					var fieldData = currModel[child.config.name],
+						column = data.columns.filter(function (col) { return col.name == child.config.name; });
 
 					if (column && column.length > 0) column = column[0];
 					else return;
 
-					if (dataFieldsManager.customDisplay(child.config.fieldType, application, object, column, currModel.id, fieldData, child.$view, { readOnly: true }))
+					if (dataFieldsManager.customDisplay(child.config.fieldName, application, object, column, currModel.id, fieldData, viewId, child.$view, { readOnly: true }))
 						return;
 
-					if (column.setting.format && webix.i18n[column.setting.format]) {
+					if (column.setting.format && webix.i18n[column.setting.format] && displayField.setValue) {
 						if (fieldData) {
 							var dateFormat = webix.i18n[column.setting.format](fieldData);
 							displayField.setValue(dateFormat);
@@ -84,7 +84,7 @@ steal(
 							displayField.setValue(fieldData);
 						}
 					}
-					else if (column.setting.editor) {
+					else if (column.setting.editor && displayField.setValue) {
 						if (fieldData)
 							displayField.setValue(fieldData);
 						else
@@ -183,7 +183,8 @@ steal(
 									view: 'template',
 									dataId: col.id,
 									borderless: true,
-									template: col.setting.template
+									template: col.setting.template,
+									css: col.setting.css
 								};
 							}
 							else {
@@ -198,7 +199,8 @@ steal(
 							var field = {
 								view: 'layout',
 								editor: col.setting.editor,
-								fieldName: col.name,
+								name: col.name,
+								fieldName: col.fieldName,
 								fieldType: col.type,
 								cols: [
 									{

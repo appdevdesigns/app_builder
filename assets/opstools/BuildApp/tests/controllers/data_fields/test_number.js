@@ -6,17 +6,18 @@ steal(
 		describe('testing data field: number', function () {
 
 			var divID = "testNumberDataField";
-			var application, object, rowId, options;
+			var application, object, rowId, viewId, options;
 
 			before(function () {
 				application = {};
 				object = {};
 				rowId = 999;
+				viewId = 'Test-view-id';
 				options = {};
 
 				var html = [
 					'<div id="' + divID + '">',
-					'<div class="number-format-show"></div>',
+					'<div class="ab-number-format-show"></div>',
 					'</div>'
 				].join('\n');
 
@@ -24,7 +25,7 @@ steal(
 			});
 
 			after(function () {
-				$('#' + divID).find('.number-format-show').html('');
+				$('#' + divID).find('.ab-number-format-show').html('');
 			});
 
 			it('should show integer without format', function () {
@@ -44,9 +45,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, expectedValue, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, expectedValue, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -68,9 +69,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -92,9 +93,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -118,7 +119,7 @@ steal(
 				// Action
 				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -140,9 +141,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -164,9 +165,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -188,9 +189,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -212,9 +213,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -236,9 +237,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -260,9 +261,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -284,9 +285,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -308,9 +309,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -332,33 +333,9 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
-
-				// Assert
-				assert.equal(expectedValue, result);
-			});
-
-			it('should show round down at 2 decimal places', function () {
-				var expectedValue = "654321.15";
-				var data = 654321.1593;
-
-				// Assign
-				var fieldData = {
-					setting: {
-						typeDecimals: 'period',
-						typeDecimalPlaces: '2',
-						typeThousands: 'none',
-						typeRounding: 'roundDown',
-						typeFormat: 'none'
-					}
-				};
-
-				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
-
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);
@@ -380,9 +357,33 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
-				var result = $('#' + divID).find('.number-format-show').html();
+				var result = $('#' + divID).find('.ab-number-format-show').html();
+
+				// Assert
+				assert.equal(expectedValue, result);
+			});
+
+			it('should show round down at 2 decimal places', function () {
+				var expectedValue = "654321.15";
+				var data = 654321.1593;
+
+				// Assign
+				var fieldData = {
+					setting: {
+						typeDecimals: 'period',
+						typeDecimalPlaces: '2',
+						typeThousands: 'none',
+						typeRounding: 'roundDown',
+						typeFormat: 'none'
+					}
+				};
+
+				// Action
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
+
+				var result = $('#' + divID).find('.ab-number-format-show').html();
 
 				// Assert
 				assert.equal(expectedValue, result);

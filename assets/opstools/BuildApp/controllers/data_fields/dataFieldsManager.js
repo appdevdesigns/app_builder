@@ -7,6 +7,7 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/boolean.js',
 	'opstools/BuildApp/controllers/data_fields/list.js',
 	'opstools/BuildApp/controllers/data_fields/attachment.js',
+	'opstools/BuildApp/controllers/data_fields/image.js',
 	function () {
 		var self = {};
 
@@ -32,6 +33,9 @@ steal(
 				data.fieldName = field.name;
 				$(self).trigger('update', data);
 			});
+			// TODO:			
+			// possible way to have each field able to reference the DataFieldManager:
+			// field.DataFieldManager = self;
 		});
 
 		/**
@@ -234,12 +238,33 @@ steal(
 			field.populateSettings(application, data);
 		};
 
-		self.customDisplay = function (fieldName, application, object, fieldData, rowId, data, itemNode, options) {
+
+		/**
+		 * customDisplay
+		 *
+		 * Allow a DataField to manually create it's display in other UI components.
+		 *
+		 * @param {string} fieldName  Which DataField to work with.	
+		 * @param {obj} application : The current ABApplication instance 
+		 * @param {obj} object  : The ABObject that contains this DataField
+		 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+		 * @param {int} rowId   : the .id of the Model instance from which we are 
+		 *						  getting the data for this DataField
+		 * @param {} data       : the value of this DataField
+		 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+		 * 						  the display of this DataField
+		 * @param {obj} options : provided by the calling UI component (Grid/Form)
+		 *						  .readOnly  {bool}  should we display as readOnly?	
+		 * @return {bool}		: true (or non False) if there is a customDisplay
+		 *						: false if no customDisplay
+		 */
+		self.customDisplay = function (fieldName, application, object, fieldData, rowId, data, viewId, itemNode, options) {
+
 			var field = getField(fieldName);
 			options = options || {};
 
 			if (field && field.customDisplay)
-				return field.customDisplay(application, object, fieldData, rowId, data, itemNode, options);
+				return field.customDisplay(application, object, fieldData, rowId, data, viewId, itemNode, options);
 			else
 				return false;
 		};

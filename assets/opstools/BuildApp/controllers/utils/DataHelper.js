@@ -4,6 +4,8 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	function (modelCreator, dataFieldsManager) {
 		return {
+			modelCreator: modelCreator,
+
 			normalizeData: function (application, objectId, columns, data, ignoreTranslate) {
 				var self = this,
 					q = new AD.sal.Deferred(),
@@ -66,7 +68,10 @@ steal(
 										function (next) {
 											var connectIds = [];
 
-											if (row[linkCol.name].forEach) {
+											if (!row[linkCol.name]) {
+												return next();
+											}
+											else if (row[linkCol.name].forEach) {
 												row[linkCol.name].forEach(function (val) {
 													if (typeof val._dataLabel == 'undefined' || val._dataLabel == null)
 														connectIds.push({ id: val.id || val });
@@ -112,7 +117,7 @@ steal(
 												});
 											}
 											else if (row[linkCol.name]._dataLabel == null) {
-												var linkVal = linkedData.filter(function (link) { return link.id == (row[linkCol.name].id || row[linkCol.name])  });
+												var linkVal = linkedData.filter(function (link) { return link.id == (row[linkCol.name].id || row[linkCol.name]) });
 												if (!linkVal[0]) return next();
 
 												var dataLabel = linkVal[0].attr();

@@ -354,7 +354,7 @@ steal(
 
 							$$(self.viewId).define('select', true);
 							if (dataCollection)
-								dataCollection.setCursor(id);
+								dataCollection.setCursor((id.row || id));
 						}
 						else if (id.column === 'edit_form') {
 							$(self).trigger('changePage', {
@@ -363,7 +363,7 @@ steal(
 
 							$$(self.viewId).define('select', true);
 							if (dataCollection)
-								dataCollection.setCursor(id);
+								dataCollection.setCursor((id.row || id));
 						}
 					});
 
@@ -372,6 +372,12 @@ steal(
 					});
 
 					if (dataCollection) {
+						$$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
+							var currModel = dataCollection.AD.currModel();
+							if (!currModel || currModel.id != (data.id || data))
+								dataCollection.setCursor((data.id || data));
+						});
+
 						dataCollection.attachEvent("onAfterCursorChange", function (id) {
 							var selectedItem = $$(self.viewId).getSelectedId(false);
 
@@ -687,7 +693,8 @@ steal(
 				view: "dynamicdatatable",
 				autoheight: true,
 				fixedRowHeight: false,
-				datatype: "json"
+				datatype: "json",
+				resizeColumn: true
 			};
 		};
 
@@ -727,7 +734,9 @@ steal(
 									'onChange': function (newv, oldv) {
 										var item_id = this.config.$masterId,
 											propertyValues = $$(componentIds.propertyView).getValues(),
-											editInstance = componentManager.editInstance;
+											editInstance = componentManager.editInstance,
+											detailView = propertyValues.detailView && propertyValues.detailView.indexOf('|') > -1 ? propertyValues.detailView.split('|') : null,
+											editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
 
 										if (this.getValue()) // Check
 											editInstance.data.visibleColumns.push(item_id);
@@ -739,10 +748,10 @@ steal(
 										}
 
 										editInstance.renderDataTable(editInstance.data.dataCollection, {
-											viewPage: propertyValues.viewPage,
-											viewId: propertyValues.viewId,
-											editPage: propertyValues.editPage,
-											editForm: propertyValues.editForm
+											viewPage: detailView ? detailView[0] : null,
+											viewId: detailView ? detailView[1] : null,
+											editPage: editValue ? editValue[0] : null,
+											editForm: editValue ? editValue[1] : null
 										}, propertyValues.removable, propertyValues.linkedField);
 									}
 								}

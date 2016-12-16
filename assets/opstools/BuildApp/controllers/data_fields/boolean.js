@@ -32,9 +32,27 @@ steal(function () {
 				icon: boolDataField.icon,
 				// editor: 'inline-text', // http://docs.webix.com/desktop__editing.html
 				filter_type: 'boolean',
-				template: "{common.checkbox()}"
+				template: '<div class="ab-boolean-display">{common.checkbox()}</div>'
 			}
 		};
+	};
+
+	boolDataField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
+		if (options.readOnly) {
+			var checkboxHtml;
+
+			if (data)
+				checkboxHtml = "<div class='webix_icon fa-check-square-o'></div>";
+			else
+				checkboxHtml = "<div class='webix_icon fa-square-o'></div>";
+
+			$(itemNode).find('.ab-boolean-display').html(checkboxHtml);
+
+			return true;
+		}
+		else {
+			return false;
+		}
 	};
 
 	boolDataField.customEdit = function (application, object, fieldData, dataId, itemNode) {

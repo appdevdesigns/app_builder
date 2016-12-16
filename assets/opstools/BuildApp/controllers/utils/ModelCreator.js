@@ -121,12 +121,12 @@ steal(
 
 				// Setup cached model
 				var cachedKey = '#appName#_#objectName#_cache'.replace(/#appName#/g, formatAppName).replace(/#objectName#/g, formatObjectName);
-				self.initModelCached(objectName, modelResult, cachedKey);
+				self.initModelCached(objectName, modelResult, cachedKey, objectData.columns.attr());
 
 				return modelResult;
 			},
 
-			initModelCached: function (objectName, model, cachedKey) {
+			initModelCached: function (objectName, model, cachedKey, columns) {
 				var self = this;
 
 				// Initial cache object
@@ -136,6 +136,7 @@ steal(
 							return cachedKey
 						},
 						fieldId: 'id',
+						columns: columns,
 						describe: model.describe,
 						multilingualFields: model.multilingualFields,
 						findAll: function (params) {
