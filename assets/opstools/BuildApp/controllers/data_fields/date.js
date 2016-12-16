@@ -2,6 +2,7 @@ steal(function () {
 	var componentIds = {
 		editView: 'ab-new-date',
 		includeTime: 'ab-new-date-include-time',
+		datedisPlay: 'ab-new-date-date-display',
 		
 		includedayFormat : 'ab-new-date-includedayFormat',
 		includemonthFormat : 'ab-new-date-includemonthFormat',
@@ -55,7 +56,7 @@ steal(function () {
 			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
 		  	
-			  var $container = $$("date-display").html(dateformat);
+			  var $container = $(componentIds.datedisPlay).html(dateformat);
 			  
 		  }
 		
