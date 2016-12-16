@@ -259,10 +259,11 @@ steal(
 // columnName : the ABColumn.name of the column definition that contains this DataField 
 // rowId : the .id of the Model Instance from which we are getting the data for this DataField
 // data : the value of this DataField
+// viewId : the webix id ( $$(viewId) ) of the component calling this Data Field's .customDisplay()
 // itemNode : the cell that contains this DataField (DOM reference)
 // options  : provided by the calling component (grid or Form) and currently only has .readOnly:bool
-		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-			
+		connectObjectField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
+
 // insert a <div id="xxx"></div> into current itemNode,
 // then create a Webix container that 
 // webix.ui({

@@ -235,6 +235,8 @@ steal(function () {
 	 * @param {int} rowId   : the .id of the Model instance from which we are 
 	 *						  getting the data for this DataField
 	 * @param {} data       : the value of this DataField
+	 * @param {string} viewId : the webix id ( $$(viewId) ) of the component 
+	 *						  calling this Data Field's .customDisplay()
 	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
 	 * 						  the display of this DataField
 	 * @param {obj} options : provided by the calling UI component (Grid/Form)
@@ -242,7 +244,7 @@ steal(function () {
 	 * @return {bool}       : True if we have a custom display
 	 *						  False if we don't.  (or just comment this out)
 	 */
-	imageDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+	imageDataField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
 
 	
 		var keyField = this.keyField( application, object, fieldData, rowId);
@@ -264,25 +266,12 @@ steal(function () {
 		// clear contents
 		$container.html('');
 		$container.attr('id', keyField);
-console.log('... container:');
-console.log($container);
+// console.log('... container:');
+// console.log($container);
 
 		var keyContainer = this.keyContainer(itemNode); // keyField+'-container';
 		var keyUploader = this.keyUploader(itemNode);  // keyField+'-uploader';
 
-
-
-		// var style = 'display:none;';
-		// if (fieldData.setting.useWidth) {
-		// 	style += 'width:'+fieldData.setting.imageWidth+'px;';
-		// 	fieldData.setting.width = fieldData.setting.imageWidth; // pass this to the webix column
-		// }
-		// if (fieldData.setting.useHeight) {
-		// 	style += 'height:'+fieldData.setting.imageHeight+'px;';
-		// }
-		// if (style != '') {
-		// 	style = 'style="'+style+'"';
-		// }
 
 		// the display of our image:
 		// .image-data-field-icon : for an image icon when no data is present

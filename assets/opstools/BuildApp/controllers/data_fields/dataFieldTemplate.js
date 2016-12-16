@@ -215,6 +215,8 @@ steal(function () {
 	 * @param {int} rowId   : the .id of the Model instance from which we are 
 	 *						  getting the data for this DataField
 	 * @param {} data       : the value of this DataField
+	 * @param {string} viewId : the webix id ( $$(viewId) ) of the component 
+	 *						  calling this Data Field's .customDisplay()
 	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
 	 * 						  the display of this DataField
 	 * @param {obj} options : provided by the calling UI component (Grid/Form)
@@ -223,7 +225,7 @@ steal(function () {
 	 *						  False if we don't.  (or just comment this out)
 	 */
 /*
-	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
 
 		// for this to work right: 
 		// set your 

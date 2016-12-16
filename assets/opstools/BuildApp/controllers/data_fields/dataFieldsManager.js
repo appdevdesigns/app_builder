@@ -258,12 +258,13 @@ steal(
 		 * @return {bool}		: true (or non False) if there is a customDisplay
 		 *						: false if no customDisplay
 		 */
-		self.customDisplay = function (fieldName, application, object, fieldData, rowId, data, itemNode, options) {
+		self.customDisplay = function (fieldName, application, object, fieldData, rowId, data, viewId, itemNode, options) {
+
 			var field = getField(fieldName);
 			options = options || {};
 
 			if (field && field.customDisplay)
-				return field.customDisplay(application, object, fieldData, rowId, data, itemNode, options);
+				return field.customDisplay(application, object, fieldData, rowId, data, viewId, itemNode, options);
 			else
 				return false;
 		};
