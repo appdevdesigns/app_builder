@@ -56,7 +56,7 @@ steal(function () {
 			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
 		  	
-			  var $container = $$(componentIds.datedisPlay).setValue("kid");
+			  var $container = $$(componentIds.datedisPlay).setValue(moment(new Date()).format(dateformat););
 			  
 		  }
 		
@@ -86,6 +86,7 @@ steal(function () {
 				label: "Date Display",
 				labelWidth: "100",
 				id: componentIds.datedisPlay,
+				disabled: true,
 				placeholder: "date-display"
 			},
 			{
