@@ -56,7 +56,7 @@ steal(function () {
 			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
 		  	
-			  var $container = $("#"+componentIds.datedisPlay).html(dateformat);
+			  var $container = $(componentIds.datedisPlay).val("kid");
 			  
 		  }
 		
