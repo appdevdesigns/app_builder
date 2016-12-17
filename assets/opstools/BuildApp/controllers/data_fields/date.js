@@ -56,6 +56,7 @@ steal(function () {
 			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
 		  	
+			  $$(componentIds.datedisPlay).setValue("");
 			  var $container = $$(componentIds.datedisPlay).setValue(moment(new Date()).format(dateformat));
 			  
 		  }
