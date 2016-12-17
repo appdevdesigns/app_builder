@@ -61,7 +61,7 @@ steal(function () {
 		  	
 			  $$(componentIds.datedisPlay).setValue("");
 			  var fulldatetime = moment(new Date()).format(dateformat);
-			  var $container = $$(componentIds.datedisPlay).setValue(fulldate);
+			  var $container = $$(componentIds.datedisPlay).setValue(fulldatetime);
 			  //console.log("fulldate:" + fulldate);
 			  
 		  }
