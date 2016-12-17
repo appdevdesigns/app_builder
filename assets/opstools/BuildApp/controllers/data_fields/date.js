@@ -85,7 +85,7 @@ steal(function () {
 				view: "text",
 				label: "Date Display",
 				labelWidth: "100",
-				id: "date-display",
+				id: componentIds.datedisPlay,
 				placeholder: "date-display"
 			},
 			{
