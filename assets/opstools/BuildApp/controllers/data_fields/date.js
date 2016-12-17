@@ -57,7 +57,9 @@ steal(function () {
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
 		  	
 			  $$(componentIds.datedisPlay).setValue("");
-			  var $container = $$(componentIds.datedisPlay).setValue(moment(new Date()).format(dateformat));
+			  var fulldate =moment(new Date()).format(dateformat);
+			  var $container = $$(componentIds.datedisPlay).setValue(dateformat);
+			  console.log("fulldate:" + fulldate);
 			  
 		  }
 		
