@@ -76,10 +76,10 @@ steal(function () {
 			orderformatdate[0] = 'y';
 		}
 		else if(orderYear == 2){
-			orderformatdate[0] = 'yy';
+			orderformatdate[1] = 'yy';
 		}
 		else if(orderYear == 3){
-			orderformatdate[0] = 'yyy';
+			orderformatdate[2] = 'yyy';
 		}
 		
 		return orderformatdate;
