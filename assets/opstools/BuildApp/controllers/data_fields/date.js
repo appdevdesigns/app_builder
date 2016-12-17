@@ -45,6 +45,47 @@ steal(function () {
 			}
 	}
 	
+	function setformatdatetimeOrder(orderDay,orderMonth,orderYear){
+		
+		var orderformatdate = [];
+		
+		//check orderDay
+		if(orderDay == 1){
+			orderformatdate[0] = 'd';
+		}
+		else if (orderDay == 2){
+			orderformatdate[1] = 'dd';
+		}
+		else if (orderDay ==3){
+			orderformatdate[2] = 'dd';
+		}
+		
+		//check orderMonth
+		if(orderMonth == 1){
+			orderformatdate[0] = 'm';
+		}
+		else if(orderMonth == 2){
+			orderformatdate[1] = 'mm';
+		}
+		else if(orderMonth == 3){
+			orderformatdate[2] = 'mmm';
+		}
+		
+		//check OrderYear
+		if(orderYear == 1){
+			orderformatdate[0] = 'y';
+		}
+		else if(orderYear == 2){
+			orderformatdate[0] = 'yy';
+		}
+		else if(orderYear == 3){
+			orderformatdate[0] = 'yyy';
+		}
+		
+		return orderformatdate;
+		
+		
+	}
 	
 	function showdateDisplay(){
 		if(($$(componentIds.includedayFormat).getValue().split("-")[1] && $$(componentIds.includedayFormat).getValue().split("-")[1] != 'none')
@@ -59,9 +100,19 @@ steal(function () {
 			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typemonthformatDelimiters).getValue())
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typeyearformatDelimiters).getValue()); 
 		  	
-			  $$(componentIds.datedisPlay).setValue("");
+			  
+			   var formatdateorder = setformatdatetimeOrder($$(componentIds.includedayOrder).getValue(),
+						 $$(componentIds.includemonthOrder).getValue(),
+						 $$(componentIds.includeyearOrder).getValue());
+			  
+			 console.log("formatdateorder:" + formatdateorder);
+			  
+			  
+			  $$(componentIds.datedisPlay).setValue("");;
 			  var fulldatetime = moment(new Date()).format(dateformat);
 			  var $container = $$(componentIds.datedisPlay).setValue(fulldatetime);
+			  
+			 
 			  //console.log("fulldate:" + fulldate);
 			  
 		  }
@@ -69,42 +120,7 @@ steal(function () {
 		
 	}
 	
-	function setformatdatetimeOrder(orderDay,orderMonth,orderYear){
-		//check orderDay
-		if(orderDay == 1){
-			
-		}
-		else if (orderDay == 2){
-			
-		}
-		else if (orderDay ==3){
-			
-		}
-		
-		//check orderMonth
-		if(orderMonth == 1){
-			
-		}
-		else if(orderMonth == 2){
-			
-		}
-		else if(orderMonth == 3){
-		
-		}
-		
-		//check OrderYear
-		if(orderYear == 1){
-			
-		}
-		else if(orderYear == 2){
-			
-		}
-		else if(orderYear == 3){
-		
-		}
-		
-		
-	}
+	
 
 	// Edit definition
 	dateDataField.editDefinition = {
