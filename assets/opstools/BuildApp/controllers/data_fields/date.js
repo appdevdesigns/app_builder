@@ -39,6 +39,9 @@ steal(function () {
 				case 'space':
 					return " ";
 					break;
+				case 'dash':
+					return "-";
+					break;
 			}
 	}
 	
@@ -137,7 +140,8 @@ steal(function () {
 				options: [
 					{ id: 'comma', value: "Comma" },
 					{ id: 'slash', value: "Slash" },
-					{ id: 'space', value: "Space" }
+					{ id: 'space', value: "Space" },
+					{ id: 'dash', value: "Dash" }
 				]
 			},
 			{
@@ -177,7 +181,8 @@ steal(function () {
 				options: [
 					{ id: 'comma', value: "Comma" },
 					{ id: 'slash', value: "Slash" },
-					{ id: 'space', value: "Space" }
+					{ id: 'space', value: "Space" },
+					{ id: 'dash', value: "Dash" }
 				]
 			},
 			{
@@ -218,7 +223,8 @@ steal(function () {
 				options: [
 					{ id: 'comma', value: "Comma" },
 					{ id: 'Slash', value: "Slash" },
-					{ id: 'space', value: "Space" }
+					{ id: 'space', value: "Space" },
+					{ id: 'dash', value: "Dash" }
 				]
 			}
 
