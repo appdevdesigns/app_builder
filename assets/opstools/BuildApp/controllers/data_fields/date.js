@@ -68,6 +68,43 @@ steal(function () {
 		
 		
 	}
+	
+	function setformatdatetimeOrder(orderDay,orderMonth,orderYear){
+		//check orderDay
+		if(orderDay == 1){
+			
+		}
+		else if (orderDay == 2){
+			
+		}
+		else if (orderDay ==3){
+			
+		}
+		
+		//check orderMonth
+		if(orderMonth == 1){
+			
+		}
+		else if(orderMonth == 2){
+			
+		}
+		else if(orderMonth == 3){
+		
+		}
+		
+		//check OrderYear
+		if(orderYear == 1){
+			
+		}
+		else if(orderYear == 2){
+			
+		}
+		else if(orderYear == 3){
+		
+		}
+		
+		
+	}
 
 	// Edit definition
 	dateDataField.editDefinition = {
