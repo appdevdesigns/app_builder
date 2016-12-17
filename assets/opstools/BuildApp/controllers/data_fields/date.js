@@ -45,44 +45,45 @@ steal(function () {
 			}
 	}
 	
-	function setformatdatetimeOrder(orderDay,orderMonth,orderYear){
+	function setformatdatetimeOrder(orderday,ordermonth,orderyear,includedayformat,includemonthformat,includeyearformat,
+					typedayformatdelimiters,typemonthformatdelimiters,typeyearformatdelimiters){
 		
 		var orderformatdate = [];
 		
 		//check orderDay
-		if(orderDay == 1){
-			orderformatdate[0] = 'd';
+		if(orderday == 1){
+			orderformatdate[0] = includedayformat + getDelimiters(typedayformatdelimiters);
 		}
-		else if (orderDay == 2){
-			orderformatdate[1] = 'dd';
+		else if (orderday == 2){
+			orderformatdate[1] = includedayformat + getDelimiters(typedayformatdelimiters);
 		}
-		else if (orderDay ==3){
-			orderformatdate[2] = 'dd';
+		else if (orderday == 3){
+			orderformatdate[2] = includedayformat ;
 		}
 		
 		//check orderMonth
-		if(orderMonth == 1){
-			orderformatdate[0] = 'm';
+		if(ordermonth == 1){
+			orderformatdate[0] = includemonthformat + getDelimiters(typemonthformatdelimiters);
 		}
-		else if(orderMonth == 2){
-			orderformatdate[1] = 'mm';
+		else if(ordermonth == 2){
+			orderformatdate[1] = includemonthformat + getDelimiters(typemonthformatdelimiters);
 		}
-		else if(orderMonth == 3){
-			orderformatdate[2] = 'mmm';
+		else if(ordermonth == 3){
+			orderformatdate[2] = includemonthformat;
 		}
 		
 		//check OrderYear
-		if(orderYear == 1){
-			orderformatdate[0] = 'y';
+		if(orderyear == 1){
+			orderformatdate[0] = includeyearformat + getDelimiters(typeyearformatdelimiters);
 		}
-		else if(orderYear == 2){
-			orderformatdate[1] = 'yy';
+		else if(orderyear == 2){
+			orderformatdate[1] = includeyearformat + getDelimiters(typeyearformatdelimiters);
 		}
-		else if(orderYear == 3){
-			orderformatdate[2] = 'yyy';
+		else if(orderyear == 3){
+			orderformatdate[2] = includeyearformat;
 		}
 		
-		return orderformatdate;
+		return orderformatdate[0]+orderformatdate[1]+orderformatdate[2];
 		
 		
 	}
@@ -96,28 +97,32 @@ steal(function () {
 		   && ($$(componentIds.typeyearformatDelimiters).getValue() && $$(componentIds.typeyearformatDelimiters).getValue() != 'none')
 		   )
 		  {
-		    	var dateformat = $$(componentIds.includedayFormat).getValue().split("-")[1]+  getDelimiters($$(componentIds.typedayformatDelimiters).getValue())
-			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typemonthformatDelimiters).getValue())
-			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typeyearformatDelimiters).getValue()); 
+		    	//var dateformat = $$(componentIds.includedayFormat).getValue().split("-")[1]+  getDelimiters($$(componentIds.typedayformatDelimiters).getValue())
+			//   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typemonthformatDelimiters).getValue())
+			 // 	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typeyearformatDelimiters).getValue()); 
 		  	
 			  
-			   var formatdateorder = setformatdatetimeOrder($$(componentIds.includedayOrder).getValue(),
+			   var formatdateorder = setformatdatetimeOrder(
+				   		 $$(componentIds.includedayOrder).getValue(),
 						 $$(componentIds.includemonthOrder).getValue(),
-						 $$(componentIds.includeyearOrder).getValue());
-			  
-			 console.log("formatdateorder:" + formatdateorder);
-			  
-			  
+						 $$(componentIds.includeyearOrder).getValue(),
+				   		 $$(componentIds.includedayFormat).getValue().split("-")[1],
+				   		 $$(componentIds.includemonthFormat).getValue().split("-")[1],
+				   		 $$(componentIds.includeyearFormat).getValue().split("-")[1],
+				   		 $$(componentIds.typedayformatDelimiters).getValue(),
+						 $$(componentIds.typemonthformatDelimiters).getValue(),
+				   		 $$(componentIds.typeyearformatDelimiters).getValue()
+			   			);
+
 			  $$(componentIds.datedisPlay).setValue("");;
-			  var fulldatetime = moment(new Date()).format(dateformat);
+			  var fulldatetime = moment(new Date()).format(formatdateorder);
 			  var $container = $$(componentIds.datedisPlay).setValue(fulldatetime);
 			  
 			 
 			  //console.log("fulldate:" + fulldate);
 			  
 		  }
-		
-		
+	
 	}
 	
 	
