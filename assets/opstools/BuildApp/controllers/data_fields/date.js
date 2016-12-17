@@ -367,9 +367,22 @@ steal(function () {
 		   && (fieldData.setting.typeyearformatDelimiters && fieldData.setting.typeyearformatDelimiters != 'none')
 		   )
 		  {
-		    	dateformat = fieldData.setting.includedayFormat +  getDelimiters(fieldData.setting.typedayformatDelimiters)
-			   	+ fieldData.setting.includemonthFormat + getDelimiters(fieldData.setting.typemonthformatDelimiters)
-			  	+ fieldData.setting.includeyearFormat ;
+		    	//dateformat = fieldData.setting.includedayFormat +  getDelimiters(fieldData.setting.typedayformatDelimiters)
+			  // 	+ fieldData.setting.includemonthFormat + getDelimiters(fieldData.setting.typemonthformatDelimiters)
+			 // 	+ fieldData.setting.includeyearFormat ;
+			  
+			  dateformat =  setformatdatetimeOrder(fieldData.setting.includedayOrder,
+							       fieldData.setting.includemonthOrder,
+							       fieldData.setting.includeyearOrder,
+							       fieldData.setting.includedayFormat,
+							       fieldData.setting.includemonthFormat,
+							       fieldData.setting.includeyearFormat,
+							       fieldData.setting.typedayformatDelimiters,
+							       fieldData.setting.typemonthformatDelimiters,
+							       fieldData.setting.typeyearformatDelimiters
+							       );
+			  
+			  
 		  }
 		
 
