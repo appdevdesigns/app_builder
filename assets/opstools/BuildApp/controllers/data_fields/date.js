@@ -119,7 +119,7 @@ steal(function () {
 						view: "richselect",
 						id: componentIds.includedayOrder,
 						label: "Places",
-						value: 'none',
+						value: 1,
 						//disabled: true,
 						options: [
 							{ id: 1, value: "1" },
@@ -162,7 +162,7 @@ steal(function () {
 						view: "richselect",
 						id: componentIds.includemonthOrder,
 						label: "Places",
-						value: 'none',
+						value: 2,
 						//disabled: true,
 						options: [
 							{ id: 1, value: "1" },
@@ -203,7 +203,7 @@ steal(function () {
 						view: "richselect",
 						id: componentIds.includeyearOrder,
 						label: "Places",
-						value: 'none',
+						value: 3,
 						//disabled: true,
 						options: [
 							{ id: 1, value: "1" },
