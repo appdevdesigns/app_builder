@@ -60,9 +60,9 @@ steal(function () {
 			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typeyearformatDelimiters).getValue()); 
 		  	
 			  $$(componentIds.datedisPlay).setValue("");
-			  var fulldate =moment(new Date()).format(dateformat);
+			  var fulldatetime = moment(new Date()).format(dateformat);
 			  var $container = $$(componentIds.datedisPlay).setValue(fulldate);
-			  console.log("fulldate:" + fulldate);
+			  //console.log("fulldate:" + fulldate);
 			  
 		  }
 		
@@ -242,6 +242,10 @@ steal(function () {
 		$$(componentIds.includeyearFormat).setValue("includeYear-" +data.setting.includeyearFormat);
 		$$(componentIds.typeyearformatDelimiters).setValue(data.setting.typeyearformatDelimiters);
 		
+		$$(componentIds.includedayOrder).setValue(data.setting.includedayOrder);
+		$$(componentIds.includemonthOrder).setValue(data.setting.includemonthOrder);
+		$$(componentIds.includeyearOrder).setValue(data.setting.includeyearOrder);
+		
 		$$(componentIds.includeTime).setValue(data.type == 'datetime');
 		$$(componentIds.includeTime).disable();
 	};
@@ -272,6 +276,9 @@ steal(function () {
 				typemonthformatDelimiters : $$(componentIds.typemonthformatDelimiters).getValue(),
 				includeyearFormat: $$(componentIds.includeyearFormat).getValue().split("-")[1],
 				typeyearformatDelimiters : $$(componentIds.typeyearformatDelimiters).getValue(),
+				includedayOrder :  $$(componentIds.includedayOrder).getValue(),
+				includemonthOrder :  $$(componentIds.includemonthOrder).getValue(),
+				includeyearOrder :  $$(componentIds.includeyearOrder).getValue(),
 			}
 		};
 	};
