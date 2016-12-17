@@ -52,9 +52,9 @@ steal(function () {
 		   && ($$(componentIds.typeyearformatDelimiters).getValue() && $$(componentIds.typeyearformatDelimiters).getValue() != 'none')
 		   )
 		  {
-		    	var dateformat = $$(componentIds.includemonthFormat).getValue().split("-")[1]+  $$(componentIds.typedayformatDelimiters).getValue()
-			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + $$(componentIds.typemonthformatDelimiters).getValue()
-			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + $$(componentIds.typeyearformatDelimiters).getValue(); 
+		    	var dateformat = $$(componentIds.includemonthFormat).getValue().split("-")[1]+  getDelimiters($$(componentIds.typedayformatDelimiters).getValue())
+			   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typemonthformatDelimiters).getValue())
+			  	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typeyearformatDelimiters).getValue()); 
 		  	
 			  $$(componentIds.datedisPlay).setValue("");
 			  var fulldate =moment(new Date()).format(dateformat);
