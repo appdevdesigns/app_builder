@@ -184,7 +184,12 @@ steal(function () {
 							{ id: 2, value: "2" },
 							{ id: 3, value: "3" },
 					
-						]
+						],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 				 }
 				]
 	
@@ -200,7 +205,12 @@ steal(function () {
 					{ id: 'slash', value: "Slash" },
 					{ id: 'space', value: "Space" },
 					{ id: 'dash', value: "Dash" }
-				]
+				],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 			},
 			{
 				cols: [
@@ -214,7 +224,12 @@ steal(function () {
 							{ id: 'includeMonth-MM', value: "01" },
 							{ id: 'includeMonth-MMM', value: "Jun" },
 							{ id: 'includeMonth-MMMM', value: "June" }
-							]
+							],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 					},
 					{
 						view: "richselect",
@@ -226,7 +241,12 @@ steal(function () {
 							{ id: 1, value: "1" },
 							{ id: 2, value: "2" },
 							{ id: 3, value: "3" },
-						]
+						],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 					}
 					]
 			},
@@ -241,7 +261,12 @@ steal(function () {
 					{ id: 'slash', value: "Slash" },
 					{ id: 'space', value: "Space" },
 					{ id: 'dash', value: "Dash" }
-				]
+				],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 			},
 			{
 				cols: [
@@ -255,7 +280,12 @@ steal(function () {
 							{ id: 'includeYear-YY', value: "01" },
 							{ id: 'includeYear-YYY', value: "001" },
 							{ id: 'includeYear-YYYY', value: "0001" }
-							]
+							],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 					},
 					{
 						view: "richselect",
@@ -267,7 +297,12 @@ steal(function () {
 							{ id: 1, value: "1" },
 							{ id: 2, value: "2" },
 							{ id: 3, value: "3" },		
-						]
+						],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 					}
 				]
 	
@@ -283,7 +318,12 @@ steal(function () {
 					{ id: 'Slash', value: "Slash" },
 					{ id: 'space', value: "Space" },
 					{ id: 'dash', value: "Dash" }
-				]
+				],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showdateDisplay();
+							}
+						}
 			}
 
 		]
