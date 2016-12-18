@@ -151,7 +151,7 @@ steal(function () {
 				labelWidth: "100",
 				id: componentIds.datedisPlay,
 				disabled: true,
-				value : showdateDisplay(),
+				//value : showdateDisplay(),
 				placeholder: "date-display"
 			},
 			{
