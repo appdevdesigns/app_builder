@@ -159,7 +159,7 @@ steal(function () {
 					view: "richselect",
 					id: componentIds.includedayFormat,
 					label: "Day",
-					value: 'none',
+					value: 'includeDay-ddd',
 					options: [
 						{ id: 'includeDay-d', value: "1" },
 						{ id: 'includeDay-dd', value: "01" },
@@ -198,7 +198,7 @@ steal(function () {
 				view: "radio",
 				id: componentIds.typedayformatDelimiters,
 				label: "Delimiters",
-				value: 'none',
+				value: 'slash',
 				vertical: true,
 				options: [
 					{ id: 'comma', value: "Comma" },
@@ -218,7 +218,7 @@ steal(function () {
 						view: "richselect",
 						id: componentIds.includemonthFormat,
 						label: "Month",
-						value: 'none',
+						value: 'includeMonth-MMM',
 						options: [
 							{ id: 'includeMonth-M', value: "1" },
 							{ id: 'includeMonth-MM', value: "01" },
@@ -254,7 +254,7 @@ steal(function () {
 				view: "radio",
 				id: componentIds.typemonthformatDelimiters,
 				label: "Delimiters",
-				value: 'none',
+				value: 'slash',
 				vertical: true,
 				options: [
 					{ id: 'comma', value: "Comma" },
@@ -274,7 +274,7 @@ steal(function () {
 						view: "richselect",
 						id: componentIds.includeyearFormat,
 						label: "Year",
-						value: 'none',
+						value: 'includeYear-YYYY',
 						options: [
 							{ id: 'includeYear-Y', value: "1" },
 							{ id: 'includeYear-YY', value: "01" },
@@ -311,11 +311,11 @@ steal(function () {
 				view: "radio",
 				id: componentIds.typeyearformatDelimiters,
 				label: "Delimiters",
-				value: 'none',
+				value: 'slash',
 				vertical: true,
 				options: [
 					{ id: 'comma', value: "Comma" },
-					{ id: 'Slash', value: "Slash" },
+					{ id: 'slash', value: "slash" },
 					{ id: 'space', value: "Space" },
 					{ id: 'dash', value: "Dash" }
 				],
