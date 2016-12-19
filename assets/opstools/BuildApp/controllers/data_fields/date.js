@@ -470,4 +470,8 @@ Bug on 19/12/2016
 6. check the default value all the dropdown
 7. 
 
+- Page Layout [Interface]
+1. Add date format not work.
+
+
 */
