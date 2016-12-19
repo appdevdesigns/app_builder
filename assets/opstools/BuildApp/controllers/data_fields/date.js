@@ -456,3 +456,18 @@ steal(function () {
 	return dateDataField;
 
 });
+
+
+/*
+[To do]
+Bug on 19/12/2016
+- Add Date page
+1. validate duplicate order in date format.
+2. Default show display not work for new loading.
+3. check show display for moment .js 
+4. check validate dateformat order equal 3 should show / hide for delimiters ?
+5. check the funtion include time [check box] what is the fuction ?
+6. check the default value all the dropdown
+7. 
+
+*/
