@@ -473,5 +473,14 @@ Bug on 19/12/2016
 - Page Layout [Interface]
 1. Add date format not work.
 
+Bug on 20/12/2016
+1. Drow down Day , Month , should display follow: http://momentjs.com/docs/#/displaying/format/
+2. when select places duplicate , display date show invalid date.
+3. Delimiter title value should be show symbol example Comma(,) Slash (/) ...
+
+- Page Layout [Interface]
+1. Add date format not work.
+2. when add 2 date date 1 and date 2 format not the same display
+
 
 */
