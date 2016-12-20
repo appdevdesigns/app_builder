@@ -156,20 +156,6 @@ module.exports = {
                 });
             },
             
-            // Create the application folders
-            function(next) {
-                async.eachSeries(appIDs, function(id, ok) {
-                    AppBuilder.buildApplication(id)
-                    .fail(ok)
-                    .done(function() {
-                        ok();
-                    });
-                }, function(err) {
-                    if (err) next(err);
-                    else next();
-                });
-            },
-            
             // Create model definitions for each AB Object
             function(next) {
                 async.eachSeries(objIDs, function(id, ok) {
@@ -225,20 +211,6 @@ module.exports = {
 
                         async.parallel(updateTasks, next);
                     });
-            },
-
-            // Generate all client side page controllers
-            function(next) {
-                async.eachSeries(pageIDs, function(id, ok) {
-                    AppBuilder.buildPage(id)
-                    .fail(ok)
-                    .done(function() {
-                        ok();
-                    });
-                }, function(err) {
-                    if (err) next(err);
-                    else next();
-                });
             },
             
             

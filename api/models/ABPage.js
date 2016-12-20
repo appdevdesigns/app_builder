@@ -95,6 +95,14 @@ module.exports = {
     cb();
   },
 
+  afterCreate: function (newPage, cb) {
+    if (newPage && !newPage.parent) { // Root page - build new page
+      AppBuilder.buildPage(newPage.id).then(function () { cb() }, cb);
+    }
+    else
+      cb();
+  },
+
   beforeUpdate: function (values, cb) {
     if (values.name)
       values.name = values.name.replace(/ /g, '_');

@@ -644,17 +644,13 @@ module.exports = {
         async.series([
             // Find basic page info
             function (next) {
-                ABPage.find({ id: pageID })
+                ABPage.findOne({ id: pageID })
                     .populate('application')
                     .populate('components')
                     .populate('translations')
-                    .then(function (list) {
-                        if (!list || !list[0]) {
-                            var err = new Error('invalid page id');
-                            next(err);
-                            return;
-                        }
-                        var page = list[0];
+                    .then(function (page) {
+                        if (!page) return next(new Error('invalid page id'));
+
                         if (page.parent > 0) throw new Error('not a root page');
 
                         appID = page.application.id;
@@ -706,15 +702,11 @@ module.exports = {
                 var action_key = Application.actionKeyName(); // 'opstools.' + appName + '.view';
 
                 Permissions.getRolesByActionKey(action_key)
-                    .fail(function (err) {
-                        next(err);
-                        return null;
-                    })
                     .then(function (result) {
                         roles = result;
 
                         next();
-                    });
+                    }, next);
             },
 
             // Find all sub-pages
