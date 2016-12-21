@@ -57,6 +57,8 @@ steal(
 					return obj.id == $$(componentIds.selectObjects).getValue();
 				})[0];
 
+			if (!selectedObj) return;
+
 			// Rename object name to template
 			uiDefinition.rows.forEach(function (r) {
 				if (r.id && $$(r.id).config.labelRight) {

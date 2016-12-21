@@ -110,68 +110,46 @@ module.exports = {
     cb();
   },
 
-  afterDestroy: function (destroyedObjects, cb) {
+  afterDestroy: function (destroyedPages, cb) {
+    var ids = _.map(destroyedPages, 'id');
 
-    var ids = _.map(destroyedObjects, 'id');
+    if (!ids || ids.length < 1) return cb();
 
-    if (ids && ids.length) {
-      async.parallel([
-        function (callback) {
-          ABPage.count({ parent: ids })
-            .fail(function (err) {
-              callback(err)
-            })
-            .then(function (found) {
-              if (found > 0) {
-                ABPage.destroy({ parent: ids })
-                  .fail(function (err) {
-                    callback(err)
-                  })
-                  .then(function () {
-                    callback();
-                  });
-              } else {
-                callback();
-              }
-            });
-        },
-        function (callback) {
-          ABPageComponent.destroy({ page: ids })
-            .fail(function (err) {
-              callback(err)
-            })
-            .then(function () {
-              callback();
-            });
-        },
-        function (callback) {
-          ABPageTrans.destroy({ abpage: ids })
-            .fail(function (err) {
-              callback(err)
-            })
-            .then(function () {
-              callback();
-            });
-        },
-        function ABPage_AfterDelete_RemovePermissions(callback) {
-          var actionKeys = [];
-          destroyedObjects.forEach(function (deletedPage) {
-            actionKeys.push(deletedPage.permissionActionKey);
-          })
+    async.parallel([
+      // Delete sub-pages
+      function (next) {
+        ABPage.count({ parent: ids })
+          .then(function (found) {
+            if (found < 1) return next();
 
-          Permissions.action.destroyKeys(actionKeys)
-            .fail(function (err) {
-              callback(err);
-            })
-            .then(function (data) {
-              callback();
-            })
-        }
-      ], cb);
-    }
-    else {
-      cb();
-    }
+            ABPage.destroy({ parent: ids })
+              .then(function () {
+                next();
+              }, next);
+          }, next);
+      },
+      // Delete components
+      function (next) {
+        ABPageComponent.destroy({ page: ids })
+          .then(function () {
+            next();
+          }, next);
+      },
+      // Delete translations of pages
+      function (next) {
+        ABPageTrans.destroy({ abpage: ids })
+          .then(function () {
+            next();
+          }, next);
+      },
+
+      function (next) {
+        AppBuilder.removePages(destroyedPages)
+          .then(function() {
+            next();
+          }, next);
+      }
+    ], cb);
 
   }
 };

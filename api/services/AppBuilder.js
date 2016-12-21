@@ -34,9 +34,9 @@ function importDataFields() {
     var ignoreFiles = ['.DS_Store', 'dataFieldTemplate.js'];
 
     fs.readdirSync(dataFieldPath).forEach(function (file) {
-         
+
         // if not one of our ignored files:      
-        if ( ignoreFiles.indexOf(file) == -1) {
+        if (ignoreFiles.indexOf(file) == -1) {
             DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
         }
     });
@@ -64,6 +64,10 @@ function getObjectModel(objectId) {
         .then(function (result) { dfd.resolve(result); });
 
     return dfd;
+}
+
+function getPageKey(appName, pageName) {
+    return ['opstools', appName, pageName].join('.'); // appName.pageName
 }
 
 module.exports = {
@@ -667,7 +671,7 @@ module.exports = {
                         // Only numbers and alphabets will be used
                         Application = page.application;
 
-                        pageKey = ['opstools', appName, pageName].join('.'); // appName.pageName
+                        pageKey = getPageKey(appName, pageName);
                         pagePerms = 'adcore.admin,' + pageKey + '.view';
 
                         // controllerIncludes.push({
@@ -943,6 +947,99 @@ module.exports = {
 
 
     /**
+     * Remove pages
+     *
+     * @param [ABPage] deleted pages
+     * @return Deferred
+     */
+    removePages: function (deletedPages) {
+        var dfd = AD.sal.Deferred(),
+            applications = {}, // { appId: application }
+            removeTasks = [];
+
+        if (!deletedPages || deletedPages.length < 1) {
+            dfd.resolve();
+            return dfd
+        }
+
+        deletedPages.forEach(function (page) {
+            removeTasks.push(function (ok) {
+                var appName, pageKey;
+
+                async.series(
+                    [
+                        // Get application info
+                        function (next) {
+                            if (applications[page.application]) {
+                                appName = AppBuilder.rules.toApplicationNameFormat(applications[page.application].name);
+                                pageKey = _.kebabCase(getPageKey(appName, page.name));
+
+                                next();
+                            }
+                            else {
+                                ABApplication.findOne({ id: page.application })
+                                    .then(function (result) {
+                                        if (result) {
+                                            applications[page.application] = result;
+
+                                            appName = AppBuilder.rules.toApplicationNameFormat(applications[page.application].name);
+                                            pageKey = _.kebabCase(getPageKey(appName, page.name));
+
+                                            next();
+                                        }
+                                        else {
+                                            next('Could not found application');
+                                        }
+                                    }, next);
+                            }
+                        },
+
+                        function (next) {
+                            OPConfigTool.destroy({ key: pageKey })
+                                .then(function () {
+                                    next();
+                                }, next);
+                        },
+
+                        // Remove OPView entry
+                        function (next) {
+                            OPSPortal.View.remove(pageKey)
+                                .then(function () {
+                                    next();
+                                }, next);
+                        },
+
+                        // Remove a Tool Definition for the OP Portal Navigation
+                        function (next) {
+                            OPSPortal.NavBar.ToolDefinition.remove(pageKey)
+                                .then(function () {
+                                    next();
+                                }, next);
+                        },
+
+                        // Remove permissions of pages
+                        function ABPage_AfterDelete_RemovePermissions(next) {
+                            Permissions.action.destroyKeys([page.permissionActionKey])
+                                .then(function (data) {
+                                    next();
+                                }, next);
+                        }
+                    ], ok);
+            });
+        });
+
+        async.parallel(removeTasks, function (err) {
+            if (err)
+                dfd.reject(err);
+            else
+                dfd.resolve();
+        });
+
+        return dfd;
+    },
+
+
+    /**
      * Generate the client side controller for a root page
      *
      * @param integer pageID
@@ -993,7 +1090,7 @@ module.exports = {
                         // Only numbers and alphabets will be used
                         Application = page.application;
 
-                        pageKey = ['opstools', appName, pageName].join('.'); // appName.pageName
+                        pageKey = getPageKey(appName, pageName);
                         pagePerms = 'adcore.admin,' + pageKey + '.view';
 
                         controllerIncludes.push({
