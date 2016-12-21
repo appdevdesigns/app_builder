@@ -162,10 +162,12 @@ steal(function () {
 					label: "Day",
 					value: 'includeDay-ddd',
 					options: [
-						{ id: 'includeDay-d', value: "1" },
-						{ id: 'includeDay-dd', value: "01" },
-						{ id: 'includeDay-ddd', value: "Fri" },
-						{ id: 'includeDay-dddd', value: "Monday" }
+						{ id: 'includeDay-D', value: "1 2 ... 30 31" },
+						{ id: 'includeDay-Do', value: "1st 2nd ... 30th 31st" },
+						{ id: 'includeDay-DD', value: "01 02 ... 30 31" },
+						{ id: 'includeDay-dd', value: "Su Mo ... Fr Sa" },
+						{ id: 'includeDay-ddd', value: "Sun Mon ... Fri Sat" },
+						{ id: 'includeDay-dddd', value: "Sunday Monday ... Friday Saturday" },
 						],
 						on: {
 							'onChange': function (newValue, oldValue) {
