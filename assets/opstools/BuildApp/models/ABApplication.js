@@ -63,6 +63,9 @@ steal(
 						},
 
 						getPage: function (pageId) {
+							if (AD.Model.get('opstools.BuildApp.ABPage').store[pageId])
+								delete AD.Model.get('opstools.BuildApp.ABPage').store[pageId];
+
 							return AD.Model.get('opstools.BuildApp.ABPage').findOne({ application: this.id, id: pageId });
 						},
 

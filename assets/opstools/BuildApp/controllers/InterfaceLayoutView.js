@@ -20,6 +20,8 @@ steal(
 							self.options = AD.defaults({
 								editComponentEvent: 'AB_Page.EditComponent',
 								savedComponentEvent: 'AB_Page.SavedComponent',
+								deletedComponentEvent: 'AB_Page.DeletedComponent',
+								sortComponentEvent: 'AB_Page.SortComponent',
 								cancelComponentEvent: 'AB_Page.CancelComponent'
 							}, options);
 
@@ -67,59 +69,6 @@ steal(
 							self.labels.interface.component.getErrorMessage = AD.lang.label.getLabel('ab.interface.component.getErrorMessage') || "System could not load components in this page";
 							self.labels.interface.component.confirmDeleteTitle = AD.lang.label.getLabel('ab.interface.component.confirmDeleteTitle') || "Delete component";
 							self.labels.interface.component.confirmDeleteMessage = AD.lang.label.getLabel('ab.interface.component.confirmDeleteMessage') || "Do you want to delete <b>{0}</b>?";
-						},
-
-						initEvents: function () {
-							// TODO : Listen component events
-
-							// var self = this,
-							// 	event_aggregator = $(self);
-
-							// for (var key in self.data.components) {
-							// 	var comInstance = self.data.components[key];
-							// 	if (comInstance.registerEventAggregator)
-							// 		comInstance.registerEventAggregator(event_aggregator);
-							// }
-
-							// event_aggregator.on('save', function (sender, data) {
-							// 	if (!AD.classes.AppBuilder.currApp.currPage) return;
-
-							// 	switch (data.component_name) {
-							// 		case 'Form':
-							// 			var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
-							// 				return c.component === 'Grid' && c.setting.editForm == data.id;
-							// 			});
-
-							// 			objectGridDatas.forEach(function (grid) {
-							// 				var gridId = self.getComponentId(grid.id);
-							// 				if ($$(gridId)) $$(gridId).unselectAll();
-							// 			});
-
-							// 			$$(data.viewId).setValues({});
-							// 			break;
-							// 	}
-							// });
-
-							// event_aggregator.on('cancel', function (sender, data) {
-							// 	if (!AD.classes.AppBuilder.currApp.currPage) return;
-
-							// 	switch (data.component_name) {
-							// 		case 'Form':
-							// 			var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
-							// 				return c.component === 'Grid' && c.setting.editForm == data.id;
-							// 			});
-
-							// 			objectGridDatas.forEach(function (grid) {
-							// 				var gridId = self.getComponentId(grid.id);
-							// 				if ($$(gridId) && $$(gridId).unselectAll)
-							// 					$$(gridId).unselectAll();
-							// 			});
-
-							// 			$$(data.viewId).setValues({});
-							// 			break;
-							// 	}
-							// });
-
 						},
 
 						initWebixUI: function () {
@@ -413,6 +362,11 @@ steal(
 																if (err) {
 																	// TODO : show error message
 																}
+																else {
+																	self.element.trigger(self.options.sortComponentEvent, {
+																		page: AD.classes.AppBuilder.currApp.currPage
+																	});
+																}
 															});
 														}
 													}
@@ -452,7 +406,7 @@ steal(
 
 																			AD.error.log('Component : Error delete component', { error: err });
 																		})
-																		.then(function (result) {
+																		.done(function (result) {
 																			$$(self.componentIds.componentList).remove(id);
 
 																			webix.message({
@@ -462,6 +416,10 @@ steal(
 
 																			$$(self.componentIds.componentList).hideProgress();
 
+																			self.element.trigger(self.options.deletedComponentEvent, {
+																				page: AD.classes.AppBuilder.currApp.currPage,
+																				component: deletedCom[0]
+																			});
 																		});
 																}
 
@@ -530,8 +488,6 @@ steal(
 									var components = result.attr();
 									components.sort(function (a, b) { return a.weight - b.weight });
 									$$(self.componentIds.componentList).parse(components);
-
-									self.initEvents();
 
 									$$(self.componentIds.componentList).hideProgress();
 								});

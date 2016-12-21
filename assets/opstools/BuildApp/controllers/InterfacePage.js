@@ -75,14 +75,14 @@ steal(
 								AD.comm.hub.publish('ab.interface.add', {
 									app: AD.classes.AppBuilder.currApp.id, // ABApplication.id
 									parent: data.parentId, // Parent page id (ABPage.id)
-									page: data.page // ABPage.id
+									page: data.page.id || data.page // ABPage.id
 								});
 
 							});
 
 							// Rename page
 							self.controllers.InterfaceList.on(self.options.renamePageEvent, function (event, data) {
-								self.controllers.InterfaceWorkspace.refreshMenuComponent(data.page);
+								self.controllers.InterfaceWorkspace.refreshMenuComponent(data.page.id || data.page);
 							});
 
 							// Delete page
@@ -94,7 +94,7 @@ steal(
 								// Fire deleted event to the live page
 								AD.comm.hub.publish('ab.interface.remove', {
 									app: AD.classes.AppBuilder.currApp.id, // ABApplication.id
-									page: data.page // ABPage.id
+									page: data.page.id || data.page // ABPage.id
 								});
 							});
 
@@ -104,7 +104,7 @@ steal(
 								// Fire deleted event to the live page
 								AD.comm.hub.publish('ab.interface.update', {
 									app: AD.classes.AppBuilder.currApp.id, // ABApplication.id
-									page: data.page // ABPage.id
+									page: data.page.id || data.page // ABPage.id
 								});
 
 							});

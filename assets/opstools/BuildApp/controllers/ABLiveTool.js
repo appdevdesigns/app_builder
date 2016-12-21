@@ -22,10 +22,8 @@ steal(
 							var self = this;
 
 							options = AD.defaults({
-								// app: -1,
-								// page: -1
-								app: 2, // FOR TEST: Mock up
-								page: 27
+								app: -1,
+								page: -1
 							}, options);
 							self.options = options;
 
@@ -474,13 +472,14 @@ steal(
 							if (!$$(this.rootPage.domID) || !$(this.element).is(":visible")) return;
 
 							var width = this.element.width();
-
 							if (!width) {
 								this.element.parents().each(function (index, elm) {
 									if ($(elm).width() > width)
 										width = $(elm).width();
 								});
 							}
+
+							if (height == null) height = self.height;
 
 							if (width > 0)
 								$$(this.rootPage.domID).define('width', width);
@@ -489,6 +488,7 @@ steal(
 								$$(this.rootPage.domID).define('height', height);
 
 							$$(this.rootPage.domID).adjust();
+							$$(this.activePage.domID).adjust();
 
 							// Resize components
 							if (this.activePage && this.activePage.comInstances) {

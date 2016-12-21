@@ -1001,21 +1001,21 @@ module.exports = {
                                 }, next);
                         },
 
-                        // Remove OPView entry
-                        function (next) {
-                            OPSPortal.View.remove(pageKey)
-                                .then(function () {
-                                    next();
-                                }, next);
-                        },
+                        // // Remove OPView entry
+                        // function (next) {
+                        //     OPSPortal.View.remove(pageKey)
+                        //         .then(function () {
+                        //             next();
+                        //         }, next);
+                        // },
 
-                        // Remove a Tool Definition for the OP Portal Navigation
-                        function (next) {
-                            OPSPortal.NavBar.ToolDefinition.remove(pageKey)
-                                .then(function () {
-                                    next();
-                                }, next);
-                        },
+                        // // Remove a Tool Definition for the OP Portal Navigation
+                        // function (next) {
+                        //     OPSPortal.NavBar.ToolDefinition.remove(pageKey)
+                        //         .then(function () {
+                        //             next();
+                        //         }, next);
+                        // },
 
                         // Remove permissions of pages
                         function ABPage_AfterDelete_RemovePermissions(next) {
