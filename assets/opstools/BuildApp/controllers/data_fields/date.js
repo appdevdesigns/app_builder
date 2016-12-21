@@ -282,7 +282,7 @@ steal(function () {
 						options: [
 							{ id: 'includeYear-YY', value: "70 71 ... 29 30" },
 							{ id: 'includeYear-YYYY', value: "1970 1971 ... 2029 2030" },
-							{ id: 'includeYear-Y', value: "1970 1971 ... 9999 +10000 +10001 " }
+							
 							],
 						on: {
 							'onChange': function (newValue, oldValue) {
