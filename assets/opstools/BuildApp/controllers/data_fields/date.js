@@ -223,10 +223,11 @@ steal(function () {
 						label: "Month",
 						value: 'includeMonth-MMM',
 						options: [
-							{ id: 'includeMonth-M', value: "1" },
-							{ id: 'includeMonth-MM', value: "01" },
-							{ id: 'includeMonth-MMM', value: "Jun" },
-							{ id: 'includeMonth-MMMM', value: "June" }
+							{ id: 'includeMonth-M', value: "1 2 ... 11 12" },
+							{ id: 'includeMonth-Mo', value: "1st 2nd ... 11th 12th" },
+							{ id: 'includeMonth-MM', value: "01 02 ... 11 12" },
+							{ id: 'includeMonth-MMM', value: "Jan Feb ... Nov Dec" },
+							{ id: 'includeMonth-MMMM', value: "January February ... November December" }
 							],
 						on: {
 							'onChange': function (newValue, oldValue) {
@@ -279,10 +280,9 @@ steal(function () {
 						label: "Year",
 						value: 'includeYear-YYYY',
 						options: [
-							{ id: 'includeYear-Y', value: "1" },
-							{ id: 'includeYear-YY', value: "01" },
-							{ id: 'includeYear-YYY', value: "001" },
-							{ id: 'includeYear-YYYY', value: "0001" }
+							{ id: 'includeYear-YY', value: "70 71 ... 29 30" },
+							{ id: 'includeYear-YYYY', value: "1970 1971 ... 2029 2030" },
+							{ id: 'includeYear-Y', value: "1970 1971 ... 9999 +10000 +10001 " }
 							],
 						on: {
 							'onChange': function (newValue, oldValue) {
