@@ -30,6 +30,20 @@ steal(
 							// Call parent init
 							self._super(element, options);
 
+							options.app = -1;
+							options.page = -1;
+
+							// Validate
+							if (options.app == null || options.app < 0) {
+								self.invalidApp();
+								return;
+							}
+
+							if (options.page == null || options.page < 0) {
+								self.invalidPage();
+								return;
+							}
+
 							self.containerDomID = self.unique('ab_live_tool', self.options.app, self.options.page);
 
 							self.initModels();
@@ -48,6 +62,22 @@ steal(
 									self.showPage();
 								});
 							});
+						},
+
+						invalidApp: function () {
+							webix.message({
+								type: "error",
+								text: 'Application id is invalid.'
+							});
+							console.error('Application id is invalid.');
+						},
+
+						invalidPage: function () {
+							webix.message({
+								type: "error",
+								text: 'Page id is invalid.'
+							});
+							console.error('Page id is invalid.');
 						},
 
 						initDOM: function () {
