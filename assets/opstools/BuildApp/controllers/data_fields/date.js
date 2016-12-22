@@ -334,6 +334,7 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	dateDataField.populateSettings = function (application, data) {
+		showdateDisplay();
 		if (!data.type || !data.setting) return;
 		showdateDisplay();
 		$$(componentIds.includedayFormat).setValue("includeDay-" + data.setting.includedayFormat);
