@@ -56,7 +56,7 @@ steal(
 							// Convert object format (same arrange)
 							var pageMenu = [];
 							pageIds.forEach(function (page) {
-								
+
 								// NOTE: if a page was just deleted, an existing menu might 
 								// still be trying to reference it.  Verify it still exists
 								// before trying to add it:
@@ -67,7 +67,7 @@ steal(
 										value: foundPage.label
 									});
 								} else {
-									console.warn('AppBuilder:Menu: tried to reference a Page['+page.id+'] that was not found.');
+									console.warn('AppBuilder:Menu: tried to reference a Page[' + page.id + '] that was not found.');
 								}
 							});
 
@@ -160,7 +160,8 @@ steal(
 							// Set checked items
 							if (setting && setting.pageIds) {
 								setting.pageIds.forEach(function (pageId) {
-									$$(componentIds.pageTree).checkItem(pageId);
+									if ($$(componentIds.pageTree).getIndexById(pageId) > -1)
+										$$(componentIds.pageTree).checkItem(pageId);
 								});
 							}
 

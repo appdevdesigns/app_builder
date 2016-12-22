@@ -17,6 +17,7 @@ steal(
 
 							options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
+								createdPageEvent: 'AB_Page.Created',
 								addedPageEvent: 'AB_Page.Added',
 								renamePageEvent: 'AB_Page.Rename',
 								deletedPageEvent: 'AB_Page.Deleted'
@@ -34,6 +35,7 @@ steal(
 
 							self.initMultilingualLabels();
 							self.initControllers();
+							self.initEvents();
 							self.initWebixUI();
 						},
 
@@ -64,6 +66,14 @@ steal(
 							var AddNewPage = AD.Control.get('opstools.BuildApp.InterfaceAddNewPage');
 
 							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
+						},
+
+						initEvents: function () {
+							var self = this;
+
+							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
+								self.addPage(data.newPage, true);
+							});
 						},
 
 						initWebixUI: function () {
@@ -380,6 +390,9 @@ steal(
 
 						addPage: function (page, noSelect) {
 							var self = this;
+
+							// Exists
+							if ($$(self.webixUiId.interfaceTree).getIndexById(page.id) > -1) return;
 
 							$$(self.webixUiId.interfaceTree).add({
 								id: page.id,

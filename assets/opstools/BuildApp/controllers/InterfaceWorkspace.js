@@ -22,7 +22,9 @@ steal(
 								savedComponentEvent: 'AB_Page.SavedComponent',
 								deletedComponentEvent: 'AB_Page.DeletedComponent',
 								sortComponentEvent: 'AB_Page.SortComponent',
-								cancelComponentEvent: 'AB_Page.CancelComponent'
+								cancelComponentEvent: 'AB_Page.CancelComponent',
+
+								changeTypeEvent: 'AB_Page.ChangeType'
 							}, options);
 
 							// Call parent init
@@ -104,6 +106,10 @@ steal(
 
 							self.controllers.LayoutView.on(self.options.cancelComponentEvent, function (event) {
 								self.controllers.ComponentList.closeComponentPropertyView();
+							});
+
+							self.controllers.LayoutView.on(self.options.changeTypeEvent, function (event, data) {
+								self.element.trigger(self.options.updatedPageEvent, { page: data.page });
 							});
 
 							self.controllers.ComponentList.on(self.options.startDragEvent, function (event) {

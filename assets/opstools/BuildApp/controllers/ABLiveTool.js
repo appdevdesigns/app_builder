@@ -30,9 +30,6 @@ steal(
 							// Call parent init
 							self._super(element, options);
 
-							options.app = -1;
-							options.page = -1;
-
 							// Validate
 							if (options.app == null || options.app < 0) {
 								self.invalidApp();
@@ -65,19 +62,11 @@ steal(
 						},
 
 						invalidApp: function () {
-							webix.message({
-								type: "error",
-								text: 'Application id is invalid.'
-							});
-							console.error('Application id is invalid.');
+							AD.error.log('Application id is invalid.');
 						},
 
 						invalidPage: function () {
-							webix.message({
-								type: "error",
-								text: 'Page id is invalid.'
-							});
-							console.error('Page id is invalid.');
+							AD.error.log('Page id is invalid.');
 						},
 
 						initDOM: function () {
@@ -165,7 +154,7 @@ steal(
 											self.data.pages.push(newPage);
 
 											// Render the new page
-											$$(self.containerDomID).addView(self.renderPage(newPage.attr()));
+											self.renderPage(newPage.attr());
 										});
 								}
 							});
@@ -213,7 +202,7 @@ steal(
 									if (self.activePage && self.activePage.id == data.page && self.previousPage)
 										self.showPage(self.previousPage);
 
-									self.data.pages.forEach(function (page, index) {
+									self.data.pages.slice(0).forEach(function (page, index) {
 										if (data.page != page.id) return;
 
 										// Remove sub-page
@@ -233,6 +222,8 @@ steal(
 
 										// TODO: Update menu and link components
 									});
+
+
 								}
 							});
 
@@ -249,8 +240,25 @@ steal(
 
 						renderPageContainer: function () {
 							var self = this,
-								pageTemplates = [],
 								pages = self.data.pages.attr();
+
+							// Clear UI content
+							if ($$(self.rootPage.domID))
+								webix.ui({}, $$(self.rootPage.domID));
+
+							// Create sub pages
+							webix.ui({
+								view: "multiview",
+								container: self.containerDomID,
+								css: "ab-main-container ab-generated-page",
+								id: self.containerDomID,
+								cells: [{}],
+								on: {
+									onViewChange: function (prevId, nextId) {
+										self.resize();
+									}
+								}
+							});
 
 							// Sort pages
 							pages.sort(function (a, b) {
@@ -264,28 +272,7 @@ steal(
 
 							// Render pages
 							pages.forEach(function (page) {
-								var pageTemplate = self.renderPage(page);
-
-								if (pageTemplate)
-									pageTemplates.push(pageTemplate);
-							});
-
-							// Clear UI content
-							if ($$(self.rootPage.domID))
-								webix.ui({}, $$(self.rootPage.domID));
-
-							// Create sub pages
-							webix.ui({
-								view: "multiview",
-								container: self.containerDomID,
-								css: "ab-main-container ab-generated-page",
-								id: self.containerDomID,
-								cells: pageTemplates,
-								on: {
-									onViewChange: function (prevId, nextId) {
-										self.resize();
-									}
-								}
+								self.renderPage(page);
 							});
 
 						},
@@ -304,7 +291,7 @@ steal(
 
 							switch (page.type) {
 								case 'modal':
-									webix.ui({
+									var popupTemplate = {
 										view: "window",
 										id: page.domID,
 										modal: true,
@@ -332,7 +319,25 @@ steal(
 											scroll: true,
 											template: comTemplate
 										}
-									}).hide();
+									};
+
+									if ($$(page.domID)) {
+										// Rebuild
+										if ($$(page.domID).config.view == 'window') {
+											webix.ui(popupTemplate, $$(page.domID));
+										}
+										// Change page type (Page -> Popup)
+										else if ($$(self.containerDomID)) {
+											$$(self.containerDomID).removeView(page.domID);
+
+											webix.ui(popupTemplate).hide();
+										}
+									}
+									// Create popup
+									else {
+										webix.ui(popupTemplate).hide();
+									}
+
 									break;
 								case 'tab':
 									// TODO : tab view
@@ -348,12 +353,21 @@ steal(
 										scroll: true
 									};
 
-									if ($$(page.domID)) { // Rebuild
-										webix.ui(pageTemplate, $$(page.domID));
+									if ($$(page.domID)) {
+										// Change page type (Popup -> Page)
+										if ($$(page.domID).config.view == 'window') {
+											$$(page.domID).destructor();
+
+											$$(self.containerDomID).addView(pageTemplate);
+										}
+										// Rebuild
+										else {
+											webix.ui(pageTemplate, $$(page.domID));
+										}
 									}
-									else { // Return template to container
-										return pageTemplate;
-									}
+									// Add to multi-view
+									else if ($$(self.containerDomID))
+										$$(self.containerDomID).addView(pageTemplate);
 							}
 						},
 

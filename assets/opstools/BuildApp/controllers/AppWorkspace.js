@@ -155,9 +155,13 @@ steal(
 										],
 										on: {
 											onChange: function (newv, oldv) {
-												if (newv != oldv) {
+												if (newv != oldv)
 													self.refresh();
-												}
+
+												if (newv == self.webixUiId.objectView)
+													$$(self.webixUiId.synchronizeButton).show();
+												else
+													$$(self.webixUiId.synchronizeButton).hide();
 											}
 										}
 									},

@@ -83,6 +83,8 @@ steal(
 							// Rename page
 							self.controllers.InterfaceList.on(self.options.renamePageEvent, function (event, data) {
 								self.controllers.InterfaceWorkspace.refreshMenuComponent(data.page.id || data.page);
+
+								
 							});
 
 							// Delete page

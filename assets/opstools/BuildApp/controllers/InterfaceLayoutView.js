@@ -22,7 +22,9 @@ steal(
 								savedComponentEvent: 'AB_Page.SavedComponent',
 								deletedComponentEvent: 'AB_Page.DeletedComponent',
 								sortComponentEvent: 'AB_Page.SortComponent',
-								cancelComponentEvent: 'AB_Page.CancelComponent'
+								cancelComponentEvent: 'AB_Page.CancelComponent',
+
+								changeTypeEvent: 'AB_Page.ChangeType'
 							}, options);
 
 							// Call parent init
@@ -103,7 +105,11 @@ steal(
 														// Call server to change page type
 														AD.classes.AppBuilder.currApp.currPage.changeType(newValue)
 															.fail(function (err) { console.error(err) })
-															.then(function () { });
+															.then(function () {
+																self.element.trigger(self.options.changeTypeEvent, {
+																	page: AD.classes.AppBuilder.currApp.currPage
+																});
+															});
 													}
 												}
 											},
