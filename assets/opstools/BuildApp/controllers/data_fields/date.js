@@ -385,6 +385,7 @@ steal(function () {
 	};
 	
 	dateDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+		showdateDisplay();
 		if (data == null) {
 			$(itemNode).find('.ab-date-data-field').html('');
 			return true;
@@ -445,7 +446,7 @@ steal(function () {
 	        // insert the image to display
         	$container.html(dateDiv);
 		
-		showdateDisplay();
+		
 		return true;
 	};
 	
