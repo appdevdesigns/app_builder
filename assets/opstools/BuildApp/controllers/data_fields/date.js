@@ -445,7 +445,7 @@ steal(function () {
 	        // insert the image to display
         	$container.html(dateDiv);
 		
-		
+		showdateDisplay();
 		return true;
 	};
 	
@@ -466,7 +466,7 @@ Bug on 19/12/2016
 - Add Date page
 1. validate duplicate order in date format.
 2. Default show display not work for new loading.
-3. check show display for moment .js 
+(done)3. check show display for moment .js 
 4. check validate dateformat order equal 3 should show / hide for delimiters ?
 5. check the funtion include time [check box] what is the fuction ?
 6. check the default value all the dropdown
@@ -476,7 +476,7 @@ Bug on 19/12/2016
 1. Add date format not work.
 
 Bug on 20/12/2016
-1. Drow down Day , Month , should display follow: http://momentjs.com/docs/#/displaying/format/
+(done)1. Drow down Day , Month , should display follow: http://momentjs.com/docs/#/displaying/format/
 2. when select places duplicate , display date show invalid date.
 3. Delimiter title value should be show symbol example Comma(,) Slash (/) ...
 
