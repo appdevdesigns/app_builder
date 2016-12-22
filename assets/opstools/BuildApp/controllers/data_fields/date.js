@@ -335,7 +335,7 @@ steal(function () {
 	// Populate settings (when Edit field)
 	dateDataField.populateSettings = function (application, data) {
 		if (!data.type || !data.setting) return;
-		
+		showdateDisplay();
 		$$(componentIds.includedayFormat).setValue("includeDay-" + data.setting.includedayFormat);
 		$$(componentIds.typedayformatDelimiters).setValue(data.setting.typedayformatDelimiters);
 		$$(componentIds.includemonthFormat).setValue("includeMonth-" + data.setting.includemonthFormat);
@@ -385,7 +385,7 @@ steal(function () {
 	};
 	
 	dateDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-		showdateDisplay();
+		
 		if (data == null) {
 			$(itemNode).find('.ab-date-data-field').html('');
 			return true;
