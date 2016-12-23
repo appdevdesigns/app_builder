@@ -39,13 +39,13 @@ steal(
 		}
 
 		function hasAddConnectPage() {
-			var self = this;
+			var self = this,
+				connectFields = {};
 
-			if (!$$(componentIds.connectedData))
-				return false;
+			if ($$(componentIds.connectedData))
+				connectFields = $$(componentIds.connectedData).getValues();
 
-			var connectFields = $$(componentIds.connectedData).getValues(),
-				connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
+			var connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
 
 			return connectValues.indexOf(1) > -1;
 		}
@@ -283,7 +283,7 @@ steal(
 
 					// Create the view & connected data page
 					function (next) {
-						if (!$$(componentIds.viewData).getValue() || !hasAddConnectPage.call(self) || !application) return next();
+						if (!$$(componentIds.viewData).getValue() || !application) return next();
 
 						// Create the view page
 						application.createPage({
