@@ -665,10 +665,10 @@ console.log('transactions:', currentTab.pendingTransactions);
          * @param {object} componentManager
          * @return {json} 
          */
-        tabComponent.editStop = function () {
-            if ($$(componentIds.propertyView))
-                $$(componentIds.propertyView).editStop();
-        };
+        // tabComponent.editStop = function () {
+        //     if ($$(componentIds.propertyView))
+        //         $$(componentIds.propertyView).editStop();
+        // };
 
 
         return tabComponent;
