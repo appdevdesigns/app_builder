@@ -125,16 +125,7 @@ steal(function () {
 	
 	}
 	
-	function datetimeValidate(orderday,ordermonth,orderyear){
-		if(orderday == ordermonth){
-		   webix.alert({
-				title: "testtitle",
-				text: "testtitle",
-				ok: "testtitle ok"
-			});
-			return false;
-		}
-	}
+
 	
 	
 
@@ -461,6 +452,18 @@ steal(function () {
 		
 		return true;
 	};
+	
+	/*dateDataField.validate = function (fieldData, value) {
+		
+		if(orderday == ordermonth){
+		   webix.alert({
+				title: "testtitle",
+				text: "testtitle",
+				ok: "testtitle ok"
+			});
+			return false;
+		}
+	};*/
 
 	
 
