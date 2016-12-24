@@ -375,12 +375,6 @@ steal(function () {
 			//format = 'fullDateFormatStr';
 		}
 		
-		if(!datetimeValidate($$(componentIds.includedayOrder).getValue(),
-				$$(componentIds.includemonthOrder).getValue(),
-				$$(componentIds.includeyearOrder).getValue()){
-			return false;   
-		}
-		
 		return {
 			fieldName: dateDataField.name,
 			type: type,
