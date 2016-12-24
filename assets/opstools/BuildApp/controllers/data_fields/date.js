@@ -125,6 +125,17 @@ steal(function () {
 	
 	}
 	
+	function datetimeValidate(orderday,ordermonth,orderyear){
+		if(orderday == ordermonth){
+		   webix.alert({
+				title: "testtitle",
+				text: "testtitle",
+				ok: "testtitle ok"
+			});
+			return false;
+		}
+	}
+	
 	
 
 	// Edit definition
@@ -364,6 +375,10 @@ steal(function () {
 			//format = 'fullDateFormatStr';
 		}
 		
+		datetimeValidate($$(componentIds.includedayOrder).getValue(),
+				$$(componentIds.includemonthOrder).getValue(),
+				$$(componentIds.includeyearOrder).getValue());
+		
 		return {
 			fieldName: dateDataField.name,
 			type: type,
@@ -450,6 +465,7 @@ steal(function () {
 		
 		return true;
 	};
+
 	
 
 	dateDataField.resetState = function () {
