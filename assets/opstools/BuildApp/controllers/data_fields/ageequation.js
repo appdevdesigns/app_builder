@@ -17,12 +17,12 @@ steal(function () {
 	};
 	
 	var formatList = [
-		{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.number.none') || "None" },
-		{ id: 'dollar', value: AD.lang.label.getLabel('ab.dataField.number.format.dollar') || "$", sign: "$", position: "prefix" },
-		{ id: 'pound', value: AD.lang.label.getLabel('ab.dataField.number.format.pound') || "£", sign: "£", position: "prefix" },
-		{ id: 'euroBefore', value: AD.lang.label.getLabel('ab.dataField.number.format.euroBefore') || "€ (before)", sign: "€", position: "prefix" },
-		{ id: 'euroAfter', value: AD.lang.label.getLabel('ab.dataField.number.format.euroAfter') || "€ (after)", sign: "€", position: "postfix" },
-		{ id: 'percent', value: AD.lang.label.getLabel('ab.dataField.number.format.percent') || "%", sign: "%", position: "postfix" },
+		{ id: 'none', value:  "None" },
+		{ id: 'dollar', value:  "$", sign: "$", position: "prefix" },
+		{ id: 'pound', value: "£", sign: "£", position: "prefix" },
+		{ id: 'euroBefore', value: "€ (before)", sign: "€", position: "prefix" },
+		{ id: 'euroAfter', value:  "€ (after)", sign: "€", position: "postfix" },
+		{ id: 'percent', value:  "%", sign: "%", position: "postfix" },
 	];
 	
 	var ageequationDataField = {
