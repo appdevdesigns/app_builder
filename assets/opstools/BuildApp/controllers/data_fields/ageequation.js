@@ -161,45 +161,42 @@ steal(function () {
 							 { id: 10, value: "10" }
 						]
 					},
-					{
-						view: "radio",
-						id: componentIds.typeRounding,
-						label: "Rounding",
-						value: 'none',
-						vertical: true,
-						disabled: true,
-						options: [
-							{ id: 'none', value:  "Default" },
-							{ id: 'roundUp', value:  "Round Up" },
-							{ id: 'roundDown', value:  "Round Down" }
-						]
-					},
-					{
-						view: "radio",
-						id: componentIds.typeThousands,
-						label: "Thousands",
-						value: 'none',
-						vertical: true,
-						options: [
-							{ id: 'none', value:  "None" },
-							{ id: 'comma', value: "Comma" },
-							{ id: 'period', value:  "Period" },
-							{ id: 'space', value: "Space" }
-						]
-					},
-					{
-						view: "richselect",
-						id: componentIds.typeFormat,
-						label: "Format",
-						value: 'none',
-						options: formatList
-					},
+				 ]
+			},
+			{
+					view: "radio",
+					id: componentIds.typeRounding,
+					label: "Rounding",
+					value: 'none',
+					vertical: true,
+					disabled: true,
+					options: [
+						{ id: 'none', value:  "Default" },
+						{ id: 'roundUp', value:  "Round Up" },
+						{ id: 'roundDown', value:  "Round Down" }
+					]
+			},
+			{
+					view: "radio",
+					id: componentIds.typeThousands,
+					label: "Thousands",
+					value: 'none',
+					vertical: true,
+					options: [
+						{ id: 'none', value:  "None" },
+						{ id: 'comma', value: "Comma" },
+						{ id: 'period', value:  "Period" },
+						{ id: 'space', value: "Space" }
+					]
+			},
+			{
+					view: "richselect",
+					id: componentIds.typeFormat,
+					label: "Format",
+					value: 'none',
+					options: formatList
+			},
 					
-				 
-				]	
-			}
-			
-
 		]
 	};
 
