@@ -78,6 +78,49 @@ steal(function () {
 				id: componentIds.name,
 				placeholder: 'Age'
 			},
+			{
+				view: "radio",
+				id: componentIds.equaltionType,
+				label: "equaltionType",
+				value: 'none',
+				vertical: true,
+				disabled: true,
+				options: [
+					{ id: 'numeric',"Numeric" },
+					{ id: 'date', "Date" },
+					
+				]
+			},
+			{
+				cols: [
+					{
+						view: "richselect",
+						id: componentIds.dateType,
+						label: "Date Type",
+						value: 'none',
+						options: [
+							{ id: 'hours', value:  "Hours" },
+							{ id: 'days', value:  "Days" },
+							{ id: 'weeks', value: "Weeks" },
+							{ id: 'years', value: "Years" },
+						]
+					},
+					{
+						view: "richselect",
+						id: componentIds.resultType,
+						label: "Result Type",
+						value: 'none',
+						disabled: true,
+						options: [
+							{ id: 'number', value: "Number" },
+							{ id: 'date', value: "Date" },
+							
+						]
+					}
+				 
+				]
+				
+			},
 			
 					
 		]
