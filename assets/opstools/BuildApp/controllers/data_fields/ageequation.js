@@ -45,7 +45,7 @@ steal(function () {
 // TODO: to support a proper multilingual display, 
 //       .menuName & .description  need to be  multilingual Keys
 //       not straight up labels.		
-		menuName: 'ageequation',  
+		menuName: 'Age equation',  
 		includeHeader: true,
 		description: ''
 	};
