@@ -1,42 +1,14 @@
 steal(function () {
-
-	// [DataFieldType] 
-	//
-	// A DataField that handles simple text data for an Object.
-	//
-	// Each DataField already defines:
-	//		.headerName	: becomes the created object's field reference.
-	//		.labelName  : is what is shown in the UI for this field's data
-	//
-	//				ex: you create a "Person"  object. Then add a string field: {
-	//						headerName: 'name_surname', labelName:'Surname' }
-	//
-	//				when you work with the data from a model, person.name_surname has
-	//				the value.
-	//
-	//				but the Webix Grid will display .labelName for the column header.
-	//
-	// [DataFieldType]  uniquely defines:
-	//		.[field] : [description]
+	var componentIds = {
+		editView: 'ab-new-age',
+		name: 'ab-new-age-name',
+		equaltionType: 'ab-new-age-equaltionType',
+		equaltionType: 'ab-new-age-dateType',
+		equaltionType: 'ab-new-age-resultType',
 
 
-	// General settings
-	// 
-	// To plug-in to the AppBuilder, each DataField must define the following:
-	//		.name 	{string}	unique key to reference this specific DataField
-	//		.type 	{string}	the fundamental data type for this DataField.
-	//							the type should match one of the given sails attribute types:
-	//							http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	//		.icon 	{string}	A font-awesome icon to represent this DataField
-	//							the icon is specified without the 'fa-' prefix.
-	//							so .icon='user'  is the 'fa-user' icon.
-	//		.menuName {string}  The multilingual key for displaying the name of this 
-	//							DataField to the User.
-	//      .includeHeader {bool} allow the AppBuilder to add in the [name] and [label] fields
-	//							for you.  (why reinvent the wheel?)
-	//		.description {string} (optional) The multilingual key for displaying a brief description of
-	// 							this DataField to the User. (usually under the Name, Label)
-	// 
+	};
+	
 	var ageequationDataField = {
 		name: 'ageequation', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
@@ -83,26 +55,57 @@ steal(function () {
 	ageequationDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
+			{
+				view: "text",
+				label: "Name",
+				labelWidth: "100",
+				id: componentIds.name,
+				placeholder: 'Age'
+			},
+			{
+				view: "radio",
+				id: componentIds.equaltionType,
+				label: "equaltionType",
+				value: 'none',
+				vertical: true,
+				disabled: true,
+				options: [
+					{ id: 'numeric',"Numeric" },
+					{ id: 'date', "Date" },
+					
+				]
+			},
+			{
+				cols: [
+					{
+						view: "richselect",
+						id: componentIds.dateType,
+						label: "Date Type",
+						value: 'none',
+						options: [
+							{ id: 'hours', value:  "Hours" },
+							{ id: 'days', value:  "Days" },
+							{ id: 'weeks', value: "Weeks" },
+							{ id: 'years', value: "Years" 
+						]
+					},
+					{
+						view: "richselect",
+						id: componentIds.resultType,
+						label: "Result Type",
+						value: 'none',
+						disabled: true,
+						options: [
+							{ id: 'number', value: "Number" },
+							{ id: 'date', value: "Date" },
+							
+						]
+					}
+				 
+				]
+				
+			}
 
-			//
-			// put your webix json description here
-			//
-
-
-			// Example: a Text entry and a Checkbox:
-			// 
-			// {
-			// 	view: "text",
-			// 	id: componentIds.textDefault,
-			// 	placeholder: 'Default text'
-			// },
-			// {
-			// 	view: "checkbox",
-			// 	id: componentIds.supportMultilingual,
-			// 	labelRight: 'Support multilingual',
-			// 	labelWidth: 0,
-			// 	value: true
-			// }
 		]
 	};
 
