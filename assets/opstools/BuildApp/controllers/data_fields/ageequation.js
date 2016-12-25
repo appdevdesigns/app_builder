@@ -130,7 +130,7 @@ steal(function () {
 				labelWidth: "100",
 				id: componentIds.equation,
 				placeholder: 'currentTime() - {Birthday}',
-				options:application.currObj.getColumns
+				//options: application.currObj.getColumns
 			},
 			{
 				cols: [
