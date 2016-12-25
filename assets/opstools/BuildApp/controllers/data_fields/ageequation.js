@@ -4,10 +4,26 @@ steal(function () {
 		name: 'ab-new-age-name',
 		equaltionType: 'ab-new-age-equaltionType',
 		equaltionType: 'ab-new-age-dateType',
-		equaltionType: 'ab-new-age-resultType',
+		resultType: 'ab-new-age-resultType',
+		resultType: 'ab-new-age-equation',
+		decimals: 'ab-new-age-decimals',
+		decimalplaces: 'ab-new-age-decimalplaces',
+		typeRounding: 'ab-new-age-typeRounding',
+		typeThousands: 'ab-new-age-typeThousands',
+		typeFormat: 'ab-new-age-typeFormat',
+
 
 
 	};
+	
+	var formatList = [
+		{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.number.none') || "None" },
+		{ id: 'dollar', value: AD.lang.label.getLabel('ab.dataField.number.format.dollar') || "$", sign: "$", position: "prefix" },
+		{ id: 'pound', value: AD.lang.label.getLabel('ab.dataField.number.format.pound') || "£", sign: "£", position: "prefix" },
+		{ id: 'euroBefore', value: AD.lang.label.getLabel('ab.dataField.number.format.euroBefore') || "€ (before)", sign: "€", position: "prefix" },
+		{ id: 'euroAfter', value: AD.lang.label.getLabel('ab.dataField.number.format.euroAfter') || "€ (after)", sign: "€", position: "postfix" },
+		{ id: 'percent', value: AD.lang.label.getLabel('ab.dataField.number.format.percent') || "%", sign: "%", position: "postfix" },
+	];
 	
 	var ageequationDataField = {
 		name: 'ageequation', // unique key to reference this specific DataField
@@ -104,7 +120,85 @@ steal(function () {
 				 
 				]
 				
+			},
+			{
+				view: "label",
+				label: "Example Output"
+			},	
+			{
+				view: "text",
+				label: "Equation",
+				labelWidth: "100",
+				id: componentIds.equation,
+				placeholder: 'currentTime() - {Birthday}'
+			},
+			{
+				cols: [
+					{
+						view: "richselect",
+						id: componentIds.decimals,
+						label: "Date Type",
+						value: 'none',
+						options: [
+							{ id: 'none', value: "None" },
+							{ id: 'period', value: "Period" },
+							{ id: 'comma', value: "Comma" }
+						],
+					},
+					{
+						view: "richselect",
+						id: componentIds.decimalplaces,
+						label: "Result Type",
+						value: 'none',
+						disabled: true,
+						options: [
+							 { id: 'none', value: "0" },
+							 { id: 1, value: "1" },
+							 { id: 2, value: "2" },
+							 { id: 3, value: "3" },
+							 { id: 4, value: "4" },
+							 { id: 5, value: "5" },
+							 { id: 10, value: "10" }
+						]
+					},
+					{
+						view: "radio",
+						id: componentIds.typeRounding,
+						label: "Rounding",
+						value: 'none',
+						vertical: true,
+						disabled: true,
+						options: [
+							{ id: 'none', value:  "Default" },
+							{ id: 'roundUp', value:  "Round Up" },
+							{ id: 'roundDown', value:  "Round Down" }
+						]
+					},
+					{
+						view: "radio",
+						id: componentIds.typeThousands,
+						label: "Thousands",
+						value: 'none',
+						vertical: true,
+						options: [
+							{ id: 'none', value:  "None" },
+							{ id: 'comma', value: "Comma" },
+							{ id: 'period', value:  "Period" },
+							{ id: 'space', value: "Space" }
+						]
+					},
+					{
+						view: "richselect",
+						id: componentIds.typeFormat,
+						label: "Format",
+						value: 'none',
+						options: formatList
+					},
+					
+				 
+				]	
 			}
+			
 
 		]
 	};
