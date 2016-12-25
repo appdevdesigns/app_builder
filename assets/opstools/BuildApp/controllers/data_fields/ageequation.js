@@ -86,8 +86,8 @@ steal(function () {
 				vertical: true,
 				disabled: true,
 				options: [
-					{ id: 'numeric',"Numeric" },
-					{ id: 'date', "Date" },
+					{ id: 'numeric',value: "Numeric" },
+					{ id: 'date',value:  "Date" },
 					
 				]
 			},
@@ -121,7 +121,81 @@ steal(function () {
 				]
 				
 			},
-			
+			{
+				view: "label",
+				label: "Example Output"
+			},	
+			{
+				view: "text",
+				label: "Equation",
+				labelWidth: "100",
+				id: componentIds.equation,
+				placeholder: 'currentTime() - {Birthday}'
+			},
+			{
+				cols: [
+					{
+						view: "richselect",
+						id: componentIds.decimals,
+						label: "Date Type",
+						value: 'none',
+						options: [
+							{ id: 'none', value: "None" },
+							{ id: 'period', value: "Period" },
+							{ id: 'comma', value: "Comma" }
+						],
+					},
+					{
+						view: "richselect",
+						id: componentIds.decimalplaces,
+						label: "Result Type",
+						value: 'none',
+						disabled: true,
+						options: [
+							 { id: 'none', value: "0" },
+							 { id: 1, value: "1" },
+							 { id: 2, value: "2" },
+							 { id: 3, value: "3" },
+							 { id: 4, value: "4" },
+							 { id: 5, value: "5" },
+							 { id: 10, value: "10" }
+						]
+					},
+				 ]
+			},
+			{
+					view: "radio",
+					id: componentIds.typeRounding,
+					label: "Rounding",
+					value: 'none',
+					vertical: true,
+					disabled: true,
+					options: [
+						{ id: 'none', value:  "Default" },
+						{ id: 'roundUp', value:  "Round Up" },
+						{ id: 'roundDown', value:  "Round Down" }
+					]
+			},
+			{
+					view: "radio",
+					id: componentIds.typeThousands,
+					label: "Thousands",
+					value: 'none',
+					vertical: true,
+					options: [
+						{ id: 'none', value:  "None" },
+						{ id: 'comma', value: "Comma" },
+						{ id: 'period', value:  "Period" },
+						{ id: 'space', value: "Space" }
+					]
+			},
+			{
+					view: "richselect",
+					id: componentIds.typeFormat,
+					label: "Format",
+					value: 'none',
+					options: formatList
+			},
 					
 		]
 	};
