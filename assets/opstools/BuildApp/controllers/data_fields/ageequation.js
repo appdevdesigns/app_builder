@@ -84,7 +84,6 @@ steal(function () {
 				label: "equaltionType",
 				value: 'none',
 				vertical: true,
-				disabled: true,
 				options: [
 					{ id: 'numeric',value: "Numeric" },
 					{ id: 'date',value:  "Date" },
@@ -150,7 +149,6 @@ steal(function () {
 						id: componentIds.decimalplaces,
 						label: "Result Type",
 						value: 'none',
-						disabled: true,
 						options: [
 							 { id: 'none', value: "0" },
 							 { id: 1, value: "1" },
@@ -169,7 +167,6 @@ steal(function () {
 					label: "Rounding",
 					value: 'none',
 					vertical: true,
-					disabled: true,
 					options: [
 						{ id: 'none', value:  "Default" },
 						{ id: 'roundUp', value:  "Round Up" },
