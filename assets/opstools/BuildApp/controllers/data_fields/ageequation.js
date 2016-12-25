@@ -125,11 +125,12 @@ steal(function () {
 				label: "Example Output"
 			},	
 			{
-				view: "text",
+				view: "richselect",
 				label: "Equation",
 				labelWidth: "100",
 				id: componentIds.equation,
-				placeholder: 'currentTime() - {Birthday}'
+				placeholder: 'currentTime() - {Birthday}',
+				options:application.currObj.getColumns
 			},
 			{
 				cols: [
@@ -211,7 +212,7 @@ steal(function () {
 	 * @param {ABColumn} data  the ABColumn info saved for this DataField.
 	 */
 	ageequationDataField.populateSettings = function (application, data) {
-		$$(componentIds.equation).setValue(application.currObj.getColumns);
+		
 		if (!data.setting) return;
 
 		// Access the Webix components defined in [DataFieldType]DataField.editDefinition 
