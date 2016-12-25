@@ -5,7 +5,7 @@ steal(function () {
 		equaltionType: 'ab-new-age-equaltionType',
 		equaltionType: 'ab-new-age-dateType',
 		resultType: 'ab-new-age-resultType',
-		resultType: 'ab-new-age-equation',
+		equation: 'ab-new-age-equation',
 		decimals: 'ab-new-age-decimals',
 		decimalplaces: 'ab-new-age-decimalplaces',
 		typeRounding: 'ab-new-age-typeRounding',
@@ -211,6 +211,7 @@ steal(function () {
 	 * @param {ABColumn} data  the ABColumn info saved for this DataField.
 	 */
 	ageequationDataField.populateSettings = function (application, data) {
+		$$(componentIds.equation).setValue(application.currObj.getColumns);
 		if (!data.setting) return;
 
 		// Access the Webix components defined in [DataFieldType]DataField.editDefinition 
