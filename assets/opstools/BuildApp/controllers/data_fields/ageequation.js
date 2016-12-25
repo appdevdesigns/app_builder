@@ -37,15 +37,15 @@ steal(function () {
 	//		.description {string} (optional) The multilingual key for displaying a brief description of
 	// 							this DataField to the User. (usually under the Name, Label)
 	// 
-	var [DataFieldType]DataField = {
-		name: '[DataFieldType]', // unique key to reference this specific DataField
+	var ageequationDataField = {
+		name: 'ageequation', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 // TODO: to support a proper multilingual display, 
 //       .menuName & .description  need to be  multilingual Keys
 //       not straight up labels.		
-		menuName: '[DataFieldType]',  
+		menuName: 'ageequation',  
 		includeHeader: true,
 		description: ''
 	};
