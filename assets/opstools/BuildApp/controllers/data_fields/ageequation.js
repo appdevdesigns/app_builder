@@ -102,7 +102,7 @@ steal(function () {
 							{ id: 'hours', value:  "Hours" },
 							{ id: 'days', value:  "Days" },
 							{ id: 'weeks', value: "Weeks" },
-							{ id: 'years', value: "Years" 
+							{ id: 'years', value: "Years" },
 						]
 					},
 					{
