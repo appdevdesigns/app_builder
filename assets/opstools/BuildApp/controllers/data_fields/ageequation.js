@@ -176,7 +176,7 @@ steal(function () {
 		application.currObj.getColumns().then(function(columns) {
 				columns.forEach(function(col) {
 					//if (col.translate) col.translate();
-					list.parse([{ id:col.names, value:col.names}]); 
+					list.parse([{ id:col.names, value:col.name}]); 
 				});
 				$$(componentIds.equation).setValue(list);
 			
