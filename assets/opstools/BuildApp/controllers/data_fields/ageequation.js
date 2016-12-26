@@ -166,59 +166,16 @@ steal(function () {
 	};
 
 
-	/**
-	 * @function populateSettings
-	 *
-	 * initialize this DataFields Editor with the provided data.
-	 *
-	 * @param {ABApplication} application the ABApplication object that defines 
-	 *							this App.  From this we can access any additional
-	 *							info required for this DataField to work.
-	 *							ex: attempting to access other objects ..
-	 *
-	 * @param {ABColumn} data  the ABColumn info saved for this DataField.
-	 */
+
 	ageequationDataField.populateSettings = function (application, data) {
 		
 		if (!data.setting) return;
 
-		// Access the Webix components defined in [DataFieldType]DataField.editDefinition 
-		// and set their values according to their references in data.setting
-		// (NOTE: see .getSettings() for when you store the values)
 
-		// 
-		// Example: a Text entry and a Checkbox:
-		// 
-		// $$(componentIds.textDefault).setValue(data.setting.default);
-		// $$(componentIds.supportMultilingual).setValue(data.setting.supportMultilingual);
 	};
 
 
-	/**
-	 * @function getSettings
-	 *
-	 * pull the data out of this DataField's Editor, and format it to be
-	 * saved in an ABColumn instance.
-	 *
-	 * Note: fields that are common for ABColumn:
-	 *		.name 		: the column name for the related Object 
-	 *		.label 		: UI label to display for this field
-	 *		.fieldName 	: The reference to this DataField
-	 *		.type 		: the SailsJS data type
-	 *
-	 * If your DataField has more info than this, it should be stored in 
-	 *		.setting 	: {json} representation of unique data for this DataField
-	 *
-	 *					common setting values:
-	 *						.icon: the icon for this field entry
-	 *						.editor: Webix UI editor type for this entry
-	 *						.filter_type: Webix UI filter type 
-	 *
-	 * 					Unique [DataFieldType] settings:
-	 *						[field] 	:  [description]
-	 *
-	 * @return {json}  data formatted to be saved in ABColumn instance.
-	 */
+
 	ageequationDataField.getSettings = function () {
 		var type = 'integer';
 		
@@ -249,56 +206,8 @@ steal(function () {
 	 */
 	ageequationDataField.resetState = function () {
 
-		// this should be almost identical to .populateSettings() but with
-		// all values set to proper 'empty' values.
 
-		// 
-		// Example: a Text entry and a Checkbox:
-		//
-		// $$(componentIds.textDefault).setValue('');
-		// $$(componentIds.supportMultilingual).setValue(1);
 	};
-
-
-	/*
-	 * @function customDisplay
-	 *
-	 * This is an optional method for a Data Field.  
-	 *
-	 * If this method exists, then the App Builder will call this method to 
-	 * display the Data Field in the appropriate Grid/Form element.
-	 *
-	 * @param {obj} application : The current ABApplication instance 
-	 * @param {obj} object  : The ABObject that contains this DataField
-	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
-	 * @param {int} rowId   : the .id of the Model instance from which we are 
-	 *						  getting the data for this DataField
-	 * @param {} data       : the value of this DataField
-	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
-	 * 						  the display of this DataField
-	 * @param {obj} options : provided by the calling UI component (Grid/Form)
-	 *						  .readOnly  {bool}  should we display as readOnly?
-	 * @return {bool}       : True if we have a custom display
-	 *						  False if we don't.  (or just comment this out)
-	 */
-/*
-	ageequationDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-		// for this to work right: 
-		// set your 
-		//     	[DataFieldType]DataField.type =  'someNonStandardValue'
-		// 		[DataFieldType]DataField.getSettings().setting.editor = 'someNonStandardValue'
-		//      [DataFieldType]DataField.getSettings().setting.template = '<div class="classReferenceInTemplate"></div>'
-		
-		// // Example Custom Display:
-		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
-		// $(itemNode).find('.classReferenceInTemplate').append('<div id="' + key + '"></div>');		// create a div
-		// webix.ui({												// attach a webix component 
-		// 	container: key,										    // to our new div
-		// 	template:'<img src="'+data+'" style="width:'+fieldData.setting.width+'px;height:'+fieldData.setting.height+'px;">'
-		// })
-		return true;
-	};
-*/
 
 
 	return ageequationDataField;
