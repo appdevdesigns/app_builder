@@ -173,7 +173,7 @@ steal(function () {
 					if (col.translate) col.translate();
 				});
 
-				console.log(columns);
+				console.log("col:" + columns.names);
 			});
 		if (!data.setting){
 			
