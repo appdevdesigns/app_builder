@@ -171,9 +171,16 @@ steal(function () {
 		application.currObj.getColumns().then(function(columns) {
 				columns.forEach(function(col) {
 					//if (col.translate) col.translate();
-					$$(componentIds.equation).define('options', col.name );
-					$$(componentIds.equation).refresh();
+					
 				});
+				
+			
+				var list = $$(componentIds.equation).getPopup().getList();
+				list.clearAll(); 
+				list.parse([{ id:1, value:"C"}, {id:2, value:"D"}]); 
+				list.parse([{ id:3, value:"3"}, {id:4, value:"4"}]); 
+				$$(componentIds.equation).setValue(list.getFirstId());
+			
 				
 				console.log("col:" + columns[0].name);
 			});
