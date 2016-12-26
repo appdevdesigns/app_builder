@@ -168,7 +168,7 @@ steal(function () {
 
 
 	ageequationDataField.populateSettings = function (application, data) {
-		application.currObj.getColumns.then(function(columns) {
+		application.currObj.getColumns().then(function(columns) {
 				columns.forEach(function(col) {
 					if (col.translate) col.translate();
 				});
