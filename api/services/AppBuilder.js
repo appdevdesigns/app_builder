@@ -67,7 +67,7 @@ function getObjectModel(objectId) {
 }
 
 function getPageKey(appName, pageName) {
-    return ['opstools', appName, pageName].join('.'); // appName.pageName
+    return ['opstools', appName, pageName.toLowerCase()].join('.'); // appName.pageName
 }
 
 module.exports = {

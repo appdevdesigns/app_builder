@@ -43,17 +43,17 @@ steal(
 
 							self.containerDomID = self.unique('ab_live_tool', self.options.app, self.options.page);
 
+							self.initDOM();
 							self.initModels();
+
 							self.getData().then(function () {
+
+								self.initEvents();
 
 								// Store the root page
 								self.rootPage = self.data.pages.filter(function (page) { return page.id == self.options.page })[0];
 
-								self.initDOM();
-
 								self.renderPageContainer();
-
-								self.initEvents();
 
 								webix.ready(function () {
 									self.showPage();
@@ -88,17 +88,15 @@ steal(
 								// Get application data
 								function (next) {
 									self.Models.ABApplication.findOne({ id: self.options.app })
-										.fail(next)
 										.then(function (result) {
 											self.data.application = result;
 
 											next();
-										});
+										}, next);
 								},
 								// Get objects data
 								function (next) {
 									self.data.application.getObjects()
-										.fail(next)
 										.then(function (result) {
 											result.forEach(function (page) {
 												if (page.translate) page.translate();
@@ -107,7 +105,7 @@ steal(
 											self.data.application.objects = result;
 
 											next();
-										});
+										}, next);
 								},
 								// Get pages data
 								function (next) {
@@ -116,19 +114,17 @@ steal(
 											{ id: self.options.page },
 											{ parent: self.options.page }
 										]
-									})
-										.fail(next)
-										.then(function (result) {
-											result.forEach(function (page) {
-												if (page.translate) page.translate();
+									}).then(function (result) {
+										result.forEach(function (page) {
+											if (page.translate) page.translate();
 
-												page.attr('domID', self.unique('ab_live_page', self.options.app, page.id));
-											});
-
-											self.data.pages = result;
-
-											next();
+											page.attr('domID', self.unique('ab_live_page', self.options.app, page.id));
 										});
+
+										self.data.pages = result;
+
+										next();
+									}, next);
 								}
 							], function (err) {
 								if (err) q.reject(err);
@@ -142,7 +138,8 @@ steal(
 							var self = this;
 
 							AD.comm.hub.subscribe('ab.interface.add', function (msg, data) {
-								if (data.app == self.options.app && data.parent == self.options.page) {
+								if (data.app == self.options.app
+									&& (data.page == self.options.page || data.parent == self.options.page)) {
 
 									// Get the new page data
 									self.data.application.getPage(data.page)
@@ -151,10 +148,30 @@ steal(
 
 											newPage.attr('domID', self.unique('ab_live_page', self.options.app, newPage.id));
 
-											self.data.pages.push(newPage);
+											var exists = false;
+
+											self.data.pages.forEach(function (page, index) {
+												// Update exists page
+												if (page.id == data.page) {
+													self.data.pages.attr(index, newPage.attr());
+													exists = true;
+												}
+											});
+
+											// Add new page to list
+											if (!exists) self.data.pages.push(newPage);
 
 											// Render the new page
 											self.renderPage(newPage.attr());
+
+											// Set root page
+											if (data.page == self.options.page) {
+												self.rootPage = newPage;
+
+												// Refresh components of root page
+												if (self.activePage && data.page == self.activePage.id)
+													self.showPage(newPage.attr());
+											}
 										});
 								}
 							});
@@ -322,21 +339,18 @@ steal(
 									};
 
 									if ($$(page.domID)) {
-										// Rebuild
+										// Destroy old popup
 										if ($$(page.domID).config.view == 'window') {
-											webix.ui(popupTemplate, $$(page.domID));
+											$$(page.domID).destructor();
 										}
 										// Change page type (Page -> Popup)
 										else if ($$(self.containerDomID)) {
 											$$(self.containerDomID).removeView(page.domID);
-
-											webix.ui(popupTemplate).hide();
 										}
 									}
+
 									// Create popup
-									else {
-										webix.ui(popupTemplate).hide();
-									}
+									webix.ui(popupTemplate).hide();
 
 									break;
 								case 'tab':
@@ -460,11 +474,10 @@ steal(
 									function (next) {
 										if (setting.object) {
 											dataCollectionHelper.getDataCollection(self.data.application, setting.object)
-												.fail(next)
 												.then(function (result) {
 													dataCollection = result;
 													next();
-												});
+												}, next);
 										}
 										else
 											next();
@@ -473,11 +486,10 @@ steal(
 									function (next) {
 										if (setting.linkedTo) {
 											dataCollectionHelper.getDataCollection(self.data.application, setting.linkedTo)
-												.fail(next)
 												.then(function (result) {
 													linkedDataCollection = result;
 													next();
-												});
+												}, next);
 										}
 										else
 											next();
@@ -485,10 +497,7 @@ steal(
 									// Render component
 									function (next) {
 										page.comInstances[item.id].render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
-											.fail(next)
-											.then(function () {
-												next();
-											});
+											.then(function () { next(); }, next);
 
 									},
 									// Update state on load

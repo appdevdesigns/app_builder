@@ -391,8 +391,14 @@ steal(
 						addPage: function (page, noSelect) {
 							var self = this;
 
+							self.element.trigger(self.options.addedPageEvent, {
+								parentId: page.parent ? page.parent.id : null,
+								page: page.id
+							});
+
 							// Exists
-							if ($$(self.webixUiId.interfaceTree).getIndexById(page.id) > -1) return;
+							if ($$(self.webixUiId.interfaceTree).getIndexById(page.id) > -1
+								|| !page.label) return;
 
 							$$(self.webixUiId.interfaceTree).add({
 								id: page.id,
@@ -409,11 +415,6 @@ steal(
 								$$(self.webixUiId.interfaceTree).unselectAll();
 								$$(self.webixUiId.interfaceTree).select(page.id);
 							}
-
-							self.element.trigger(self.options.addedPageEvent, {
-								parentId: page.parent ? page.parent.id : null,
-								page: page.id
-							});
 
 							// Show success message
 							webix.message({

@@ -59,6 +59,13 @@ steal(
 							if (!cond) cond = {};
 							cond.application = this.id;
 
+							Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
+								var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+
+								if (cond.application == storePage.application.id || storePage.application)
+									delete AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+							});
+
 							return AD.Model.get('opstools.BuildApp.ABPage').findAll(cond);
 						},
 
