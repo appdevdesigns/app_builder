@@ -98,10 +98,8 @@ steal(function () {
 				id: componentIds.equation,
 				placeholder: 'currentTime() - {Birthday}',
 				options: [
-							{ id: 'hours', value:  "Hours" },
-							{ id: 'days', value:  "Days" },
-							{ id: 'weeks', value: "Weeks" },
-							{ id: 'years', value: "Years" },
+							{ id: 'none', value:  "none" },
+						
 						]
 			},
 			{
