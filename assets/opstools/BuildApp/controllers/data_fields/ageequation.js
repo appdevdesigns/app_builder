@@ -3,7 +3,7 @@ steal(function () {
 		editView: 'ab-new-age',
 		name: 'ab-new-age-name',
 		equaltionType: 'ab-new-age-equaltionType',
-		equaltionType: 'ab-new-age-dateType',
+		dateType: 'ab-new-age-dateType',
 		resultType: 'ab-new-age-resultType',
 		equation: 'ab-new-age-equation',
 		decimals: 'ab-new-age-decimals',
