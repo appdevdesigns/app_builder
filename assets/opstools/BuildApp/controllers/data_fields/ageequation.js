@@ -253,9 +253,11 @@ steal(function () {
 	 * @return {json}  data formatted to be saved in ABColumn instance.
 	 */
 	ageequationDataField.getSettings = function () {
+		var type = 'integer';
+		
 		return {
 			fieldName: ageequationDataField.name,
-			type: ageequationDataField.type,
+			type: type,
 			setting: {
 				equaltionType : $$(componentIds.equaltionType).getValue(),
 				dateType : $$(componentIds.dateType).getValue(),
