@@ -171,18 +171,20 @@ steal(function () {
 
 
 	ageequationDataField.populateSettings = function (application, data) {
+		var list = $$(componentIds.equation).getPopup();
+		
 		application.currObj.getColumns().then(function(columns) {
 				columns.forEach(function(col) {
 					//if (col.translate) col.translate();
-					
+					list.parse([{ id:col.names, value:col.names}]); 
 				});
 				
 			
-				var list = $$(componentIds.equation).getPopup().getList();
-				list.clearAll(); 
-				list.parse([{ id:1, value:"C"}, {id:2, value:"D"}]); 
-				list.parse([{ id:3, value:"3"}, {id:4, value:"4"}]); 
-				$$(componentIds.equation).setValue(list.getFirstId());
+				//var list = $$(componentIds.equation).getPopup().getList();
+				//list.clearAll(); 
+				//list.parse([{ id:1, value:"C"}, {id:2, value:"D"}]); 
+				//list.parse([{ id:3, value:"3"}, {id:4, value:"4"}]); 
+				//$$(componentIds.equation).setValue(list.getFirstId());
 			
 				
 				console.log("col:" + columns[0].name);
