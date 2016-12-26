@@ -172,8 +172,9 @@ steal(function () {
 				columns.forEach(function(col) {
 					//if (col.translate) col.translate();
 					$$(componentIds.equation).define('options', col.name );
+					$$(componentIds.equation).refresh();
 				});
-
+				
 				console.log("col:" + columns[0].name);
 			});
 		if (!data.setting){
