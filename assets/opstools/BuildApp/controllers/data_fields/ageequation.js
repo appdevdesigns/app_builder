@@ -130,7 +130,7 @@ steal(function () {
 				labelWidth: "100",
 				id: componentIds.equation,
 				placeholder: 'currentTime() - {Birthday}',
-				options: application.currObj.getColumns
+				//options: application.currObj.getColumns
 			},
 			{
 				cols: [
@@ -257,18 +257,15 @@ steal(function () {
 			fieldName: ageequationDataField.name,
 			type: ageequationDataField.type,
 			setting: {
-				icon: ageequationDataField.icon,
-				editor: 'text', // http://docs.webix.com/desktop__editing.html
-				filter_type: 'text', // DataTableFilterPopup - filter type
-
-				// 
-				// Your unique fields here:
-			
-				// 
-				// Example: a Text entry and a Checkbox:
-				//
-				// default: $$(componentIds.textDefault).getValue(), // Default value
-				// supportMultilingual: $$(componentIds.supportMultilingual).getValue(),
+				equaltionType : $$(componentIds.equaltionType).getValue(),
+				dateType : $$(componentIds.dateType).getValue(),
+				resultType : $$(componentIds.resultType).getValue(),
+				equation : $$(componentIds.equation).getValue(),
+				decimals : $$(componentIds.decimals).getValue(),
+				decimalplaces : $$(componentIds.decimalplaces).getValue(),
+				typeRounding : $$(componentIds.typeRounding).getValue(),
+				typeThousands : $$(componentIds.typeThousands).getValue(),
+				typeFormat : $$(componentIds.typeFormat).getValue(),
 			}
 		};
 	};
