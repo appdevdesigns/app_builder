@@ -231,7 +231,7 @@ steal(function () {
 
 
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-		console.log("customDisplay:" + data);
+		console.log(object);
 	};
 	/**
 	 * @function resetState
