@@ -169,7 +169,17 @@ steal(function () {
 
 	ageequationDataField.populateSettings = function (application, data) {
 		
-		if (!data.setting) return;
+		if (!data.setting){
+			application.currObj.getColumns.then(function(columns) {
+				columns.forEach(function(col) {
+					if (col.translate) col.translate();
+				});
+
+				console.log(columns);
+			});
+			
+			return;
+		}
 		
 		$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
 		$$(componentIds.dateType).setValue(data.setting.dateType);
