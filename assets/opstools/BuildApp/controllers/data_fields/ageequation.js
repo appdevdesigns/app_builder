@@ -29,45 +29,12 @@ steal(function () {
 		name: 'ageequation', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
-
-// TODO: to support a proper multilingual display, 
-//       .menuName & .description  need to be  multilingual Keys
-//       not straight up labels.		
+	
 		menuName: 'Age equation',  
 		includeHeader: true,
 		description: ''
 	};
 
-
-	/*
-	 * componentIds:
-	 *
-	 * Definitions of the Webix.id for the items in this DataField's Editor
-	 *
-	 *	.editView : 	the .id of the editor for this DataField
-	 *					->  [DataFieldType]DataField.editDefinition.id
-	 */
-	var componentIds = {
-		editView: 'ab-new-image',
-
-		//
-		// For each property field you want to reference,
-		// create a  [key]: [uniqueKeyReference]   combo here:
-
-		// [field] : 'ab-unique-field-reference',
-		// textDefault: 'ab-new-singleText-default',
-		// supportMultilingual: 'ab-new-singleText-support-multilingual',
-	};
-
-
-	/*
-	 * .editDefinition
-	 * 
-	 * Define the Webix UI description for the Editor that defines this DataField.
-	 *
-	 * This UI is used for both the initial create, as well as the Edit form.
-	 *
-	 */
 	ageequationDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
