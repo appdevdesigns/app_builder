@@ -170,7 +170,16 @@ steal(function () {
 	ageequationDataField.populateSettings = function (application, data) {
 		
 		if (!data.setting) return;
-
+		
+		$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+		$$(componentIds.dateType).setValue(data.setting.dateType);
+		$$(componentIds.resultType).setValue(data.setting.resultType);
+		$$(componentIds.equation).setValue(data.setting.equation);
+		$$(componentIds.decimals).setValue(data.setting.decimals);
+		$$(componentIds.decimalplaces).setValue(data.setting.decimalplaces);
+		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
+		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
+		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
 
 	};
 
