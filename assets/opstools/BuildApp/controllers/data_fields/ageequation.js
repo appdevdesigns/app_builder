@@ -178,7 +178,7 @@ steal(function () {
 					//if (col.translate) col.translate();
 					list.parse([{ id:col.names, value:col.name}]); 
 				});
-				$$(componentIds.equation).setValue(list);
+				//$$(componentIds.equation).setValue(list);
 			
 				//var list = $$(componentIds.equation).getPopup().getList();
 				//list.clearAll(); 
