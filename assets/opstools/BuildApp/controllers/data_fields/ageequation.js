@@ -225,13 +225,16 @@ steal(function () {
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
+				template:'<div class="ab-age-data-field"></div>',
+				
 			}
 		};
 	};
 
 
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-		console.log("oo"+ object[0]);
+		console.log("oo"+ math:"500 - 300");
+		
 	};
 	/**
 	 * @function resetState
