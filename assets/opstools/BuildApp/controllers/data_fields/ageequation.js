@@ -233,7 +233,7 @@ steal(function () {
 
 
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-		console.log("oo"+ math:"500 - 300");
+		//console.log("oo"+ math:"500 - 300");
 		
 	};
 	/**
