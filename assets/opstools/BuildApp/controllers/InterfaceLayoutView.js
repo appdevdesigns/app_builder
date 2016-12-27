@@ -560,17 +560,21 @@ steal(
 							var self = this,
 								q = $.Deferred(),
 								componentInstance = componentManager.getComponent(com.attr('component')),
-								view = componentInstance.getView(),
+								view = componentInstance ? componentInstance.getView() : null,
 								viewId = self.getComponentId(com.attr('id')),
 								setting = com.attr('setting'),
 								dataCollection, linkedDataCollection;
 
 							// Create component instance
-							self.data.components[com.attr('id')] = new componentInstance(
-								AD.classes.AppBuilder.currApp, // Current application
-								viewId, // the view id
-								com.id // the component data id
-							);
+							if (componentInstance) {
+								self.data.components[com.attr('id')] = new componentInstance(
+									AD.classes.AppBuilder.currApp, // Current application
+									viewId, // the view id
+									com.id // the component data id
+								);
+							} else {
+								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for ['+ com.attr('component') + ']');
+							}
 
 							if (view && setting) {
 								var setting = setting.attr ? setting.attr() : setting,
