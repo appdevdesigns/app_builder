@@ -130,8 +130,15 @@ steal(
 								switch ($$(self.componentId.selectTab).getValue()) {
 									case 'QuickPage':
 										quickPage.save(AD.classes.AppBuilder.currApp)
-											.then(function (newPage) {
-												self.callAddNewPageEvent(newPage);
+											.then(function (newPages) {
+												if (newPages.forEach) {
+													newPages.forEach(function (nPage) {
+														self.callAddNewPageEvent(nPage);
+													});
+												}
+												else {
+													self.callAddNewPageEvent(newPages);
+												}
 
 												$$(self.componentId.addNewPopup).hide();
 											});

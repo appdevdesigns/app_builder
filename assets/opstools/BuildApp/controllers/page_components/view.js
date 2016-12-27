@@ -43,10 +43,15 @@ steal(
 
 			function updateData(setting, newData) {
 				var self = this,
-					currModel = newData ? newData : data.dataCollection.AD.currModel(),
+					currModel = null,
 					object = application.objects.filter(function (obj) { return obj.id == setting.object; })[0];
 
 				if (!object) return;
+
+				if (newData)
+					currModel = newData;
+				else if (data.dataCollection)
+					currModel = data.dataCollection.AD.currModel();
 
 				currModel = currModel && currModel.attr ? currModel.attr() : currModel;
 				data.currDataId = currModel ? currModel.id : null;
