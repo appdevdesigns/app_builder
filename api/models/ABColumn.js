@@ -18,24 +18,6 @@ module.exports = {
 
     attributes: {
 
-        // this will pull in the translations using .populate('translations')
-        translations: {
-            collection: 'ABColumnTrans',
-            via: 'abcolumn'
-        },
-
-        translate: function (code) {
-            return ADCore.model.translate({
-                model: this,         // this instance of a Model
-                code: code,          // the language code of the translation to use.
-                ignore: ['abcolumn']     // don't include this field when translating
-            });
-        },
-
-        _Klass: function () {
-            return ABColumn;
-        },
-
         object: { model: 'ABObject' },
 
         name: {
@@ -69,7 +51,30 @@ module.exports = {
 
         setting: { type: 'json' },
 
+
+
+        //// Multilingual Definitions
+
+        // this will pull in the translations using .populate('translations')
+        translations: {
+            collection: 'ABColumnTrans',
+            via: 'abcolumn'
+        },
+
+        translate: function (code) {
+            return ADCore.model.translate({
+                model: this,         // this instance of a Model
+                code: code,          // the language code of the translation to use.
+                ignore: ['abcolumn']     // don't include this field when translating
+            });
+        },
+
+        _Klass: function () {
+            return ABColumn;
+        },
+
         isSynced: { type: 'boolean' }
+
 
     },
 

@@ -26,20 +26,32 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 var DataFields = {};
 
 
-function importDataFields() {
+function importDataFields( next ) {
     var dataFieldPath = path.join(__dirname, 'data_fields');
 
     DataFields = {};
 
     var ignoreFiles = ['.DS_Store', 'dataFieldTemplate.js'];
 
-    fs.readdirSync(dataFieldPath).forEach(function (file) {
+    fs.readdir(dataFieldPath, function(err, files) {
 
-        // if not one of our ignored files:      
-        if (ignoreFiles.indexOf(file) == -1) {
-            DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+        if (err) {
+            next(err);
+            return;
         }
-    });
+
+        files.forEach(function (file) {
+
+            // if not one of our ignored files:      
+            if (ignoreFiles.indexOf(file) == -1) {
+                DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+            }
+        });
+
+        next();
+
+    })
+
 }
 
 
@@ -451,9 +463,12 @@ module.exports = {
         var fullPath, fullPathTrans, clientPath, baseClientPath;
         var cwd = process.cwd();
 
-        importDataFields();
-
         async.series([
+
+            // make sure our dataFields have been imported:
+            importDataFields,
+
+
             // Find object info
             function (next) {
                 ABObject.find({ id: objectID })
@@ -1428,125 +1443,372 @@ module.exports = {
 
         return dfd;
     },
-
-
-
+    
+    
+    
     /**
-     * Generate AppBuilder data entries based on a Sails model that was
-     * previously created by AppBuilder.
+     * Imports an existing Sails model for use in an AB application.
+     * New client side model files will be generated for that application.
      *
+     * @param integer appID
      * @param string modelName
-     *      The model name including the "AB_" prefix.
      * @return Deferred
      */
-    /*
-   modelToObject: function(modelName) {
-       var dfd = AD.sal.Deferred();
-       var model = sails.models[modelName.toLowerCase()];
+    modelToObject: function (appID, modelName) {
+        var dfd = AD.sal.Deferred();
+        var model = sails.models[modelName.toLowerCase()];
        
-       if (!model || !model.definition) {
-           dfd.reject(new Error('unrecognized model'));
-       }
-       else {
-           var def = model.definition;
-           var modelName = model.identity.replace(/^AB_\w+_/i, '');
-           var appID, objectID;
-           
-           async.series([
-               // Find Object in database
-               function(next) {
-                   ABObject.find({ name: modelName })
-                   .then(function(list) {
-                       if (list && list[0]) {
-                           appID = list[0].application;
-                           objectID = list[0].id;
-                       }
-                       next();
-                       return null;
-                   })
-                   .catch(next);
-               },
-               
-               // Create Object in database if needed
-               function(next) {
-                   if (!objectID) {
-                       ABObject.create({
+        if (!model || !model.definition) {
+            dfd.reject(new Error('unrecognized model'));
+        }
+        else {
+            //var modelName = model.identity.replace(/^AB_\w+/i, '');
+            var application, object;
+            var appName, moduleName, clientPath;
+            var languages = [];
+            var columns = [];
+            var associations = [];
+            var multilingualFields = [];
+            
+            async.series([
+                // Find app in database
+                function(next) {
+                    ABApplication.find({ id: appID })
+                    .exec(function(err, list) {
+                        if (err) {
+                            next(err);
+                        }
+                        else if (!list || !list[0]) {
+                            next(new Error('application not found: ' + appID));
+                        }
+                        else {
+                            application = list[0];
+                            appName = AppBuilder.rules.toApplicationNameFormat(application.name);
+                            moduleName = appName.toLowerCase();
+                            modelFileName = AppBuilder.rules.toObjectNameFormat(appName, modelName);
+                            clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
+                            next();
+                        }
+                    });
+                },
+                
+                // Create Object in database
+                function(next) {
+                    ABObject.create({
                            application: appID,
-                           name: modelName
-                       })
-                       .then(function(obj) {
-                           objectID = obj.id;
-                           next();
-                           return null;
-                       })
-                       .catch(next);
-                   } else {
-                       next();
-                   }
-               },
+                           name: modelName,
+                           isImported: true
+                    })
+                    .exec(function(err, result) {
+                        if (err) next(err);
+                        else {
+                            object = result;
+                            next();
+                        }
+                    });
+                },
+                
+                // Get site languages
+                function(next) {
+                    SiteMultilingualLanguage.find()
+                    .exec(function(err, list) {
+                        if (err) next(err);
+                        else {
+                            languages = _.pluck(list, 'language_code');
+                            next();
+                        }
+                    });
+                },
+                
+                // Create object translations
+                function (next) {
+                    async.forEach(languages, function(langCode, langDone) {
+                        ABObjectTrans.create({
+                            language_code: langCode,
+                            abobject: object.id,
+                            label: modelName
+                        })
+                        .exec(function(err, result) {
+                            if (err) langDone(err);
+                            else langDone();
+                        });
+                    }, function(err) {
+                        if (err) next(err);
+                        else next();
+                    });
+                },
                
-               // Delete old Columns from database
-               function(next) {
-                   ABColumn.destroy({
-                       object: objectID
-                   })
-                   .then(function() {
-                       next();
-                       return null;
-                   })
-                   .catch(next);
-               },
+                // Create Columns in database
+                function(next) {
+                    async.forEachOfSeries(model.definition, function(col, colName, colDone) {
+                       
+                        // Skip these columns
+                        var ignore = ['id', 'createdAt', 'updatedAt'];
+                        if (ignore.indexOf(colName) >= 0) {
+                            return ok();
+                        }
+                       
+                        var defaultValue = col.default;
+                        if (typeof col.default == 'function') {
+                            defaultValue = col.default();
+                        }
+                        
+                        // For the client side model
+                        columns.push({
+                            name: colName,
+                            type: col.type
+                        });
+                        
+                        ABColumn.create({
+                            object: object.id,
+                            name: colName,
+                            fieldName: col.type,
+                            type: col.type,
+                            required: col.required,
+                            unique: col.unique,
+                            default: defaultValue,
+                            setting: {
+                                appName: application.name,
+                                icon: 'font',
+                                editor: 'text',
+                                filter_type: 'text',
+                                supportMultilingual: '0'
+                            }
+                        })
+                        .exec(function(err, result) {
+                            if (err) colDone(err);
+                            else {
+                                // Create column translations
+                                async.forEach(languages, function(langCode, transDone) {
+                                    ABColumnTrans.create({
+                                        abcolumn: result.id,
+                                        //label: '[' + langCode + '] ' + colName),
+                                        label: colName,
+                                        language_code: langCode
+                                    })
+                                    .exec(function(err, result) {
+                                        if (err) transDone(err);
+                                        else transDone();
+                                    });
+                                }, function(err) {
+                                    if (err) colDone(err);
+                                    else colDone();
+                                });
+                            }
+                        });
+                       
+                    }, function(err) {
+                        if (err) next(err);
+                        else next();
+                    });
+                },
+                
+                // Create associations in database
+                function(next) {
+                    async.foreEach(model.associations, function(assoc, assocDone) {
+                        /*
+                            assoc: [
+                                {
+                                    alias: 'assoc name 1',
+                                    type: 'collection',
+                                    collection: 'model name',
+                                    via: 'column name'
+                                },
+                                {
+                                    alias: 'assoc name 2',
+                                    type: 'object',
+                                    model: 'model name'
+                                }
+                            ]
+                        */
+                        
+                        if (assoc.alias == 'translations' && assoc.type == 'collection') {
+                            var transModelName = assoc.collection.toLowerCase();
+                            var transModel = sails.models[transModelName];
+                            for (var colName in transModel.definition) {
+                                var col = transModel.definition[colName];
+                                if (_.contains(['string', 'text'], col.type)) {
+                                    // For later steps
+                                    multilingualFields.push({
+                                        name: colName,
+                                        type: col.type
+                                    });
+                                }
+                            }
+                            assocDone();
+                            return;
+                        }
+                        
+                        // For the client side model
+                        associations.push({
+                            name: assoc.alias,
+                            model: assoc.collection || assoc.model
+                        });
+                        
+                        ABColumn.create({
+                            object: object.id,
+                            name: assoc.alias,
+                            fieldName: 'connectObject',
+                            type: 'connectObject',
+                            required: null,
+                            unique: null,
+                            default: null,
+                            setting: {
+                                appName: application.name,
+                                linkType: assoc.type,
+                                linkVia: assoc.via, // change to column id
+                                linkModel: assoc.model, // change to object id
+                                icon: 'eternal-link',
+                                editor: 'selectivity',
+                                template: '<div class="connect-data-values"></div>',
+                                'filter-type': 'multiselect'
+                            }
+                        })
+                        .exec(function(err, result) {
+                            if (err) assocDone(err);
+                            else {
+                                // Create translations
+                                async.forEach(languages, function(langCode, transDone) {
+                                    ABColumnTrans.create({
+                                        abcolumn: result.id,
+                                        label: assoc.alias,
+                                        language_code: langCode
+                                    })
+                                    .exec(function(err, result) {
+                                        if (err) transDone(err);
+                                        else transDone();
+                                    });
+                                }, function(err) {
+                                    if (err) assocDone(err);
+                                    else assocDone();
+                                });
+                            }
+                        });
+                    }, function(err) {
+                        if (err) next(err);
+                        else next();
+                    });
+                },
+                
+                // Create multilingual columns
+                function(next) {
+                    async.forEach(multilingualFields, function(col, colDone) {
+                        ABColumn.create({
+                            object: object.id,
+                            name: col.name,
+                            fieldName: col.type,
+                            type: col.type,
+                            required: col.required,
+                            unique: col.unique,
+                            default: defaultValue,
+                            setting: {
+                                appName: application.name,
+                                icon: 'font',
+                                editor: 'text',
+                                filter_type: 'text',
+                                supportMultilingual: '1'
+                            }
+                        })
+                        .exec(function(result, err) {
+                            if (err) colDone(err);
+                            else {
+                                async.forEach(languages, function(langCode, transDone) {
+                                    ABColumnTrans.create({
+                                        abcolumn: result.id,
+                                        label: col.name,
+                                        language_code: langCode
+                                    });
+                                }, function(err, result) {
+                                    if (err) transDone(err);
+                                    else transDone();
+                                });
+                            }
+                        });
+                    }, function(err) {
+                        if (err) next(err);
+                        else next();
+                    });
+                },
+                
+                // Create client side models
+                function(next) {
+                    var columns = []; // used for the `describe` function
+                    var fieldLabel = 'id';
+                    for (var colName in model.definition) {
+                        var column = model.definition[colName];
+                        if (fieldLabel != 'id') continue;
+                        if (_.contains(['string', 'text'], column.type)) {
+                            fieldLabel = colName;
+                        }
+                    }
+                    
+                    // Determine the blueprints modelURL
+                    var controllerInfo = _.find(sails.controllers, function(c) {
+                        // 1st try: look for `model` config in the controllers
+                        if (c._config.model == modelName.toLowerCase()) return true;
+                        return false;
+                    });
+                    if (!controllerInfo) {
+                        // 2nd try: look for matching controller-model name
+                        controllerInfo = _.find(sails.controllers, function(c) {
+                            var nameParts = c.identitiy.split('/');
+                            var finalName = nameParts[ nameParts.length-1 ];
+                            if (finalName == modelName.toLowerCase()) return true;
+                            return false;
+                        });                    
+                    }
+                    var modelURL = '/' + controllerInfo.identity;
+                    
+                    sails.renderView(path.join('app_builder', 'clientModelBase'), {
+                        layout: false,
+                        appName: application.name,
+                        objectName: modelName,
+                        fieldLabel: fieldLabel,
+                        modelURL: modelURL,
+                        columns: columns,
+                        associations: associations,
+                        multilingualFields: multilingualFields,
+                        
+                    }, function (err, output) {
+                        if (err) next(err);
+                        else {
+                            var dest = path.join(clientPath, 'models', 'base', modelName) + '.js';
+                            fs.writeFile(dest, output, function(err) {
+                                if (err) next(err);
+                                else next();
+                            });
+                        }
+                    });
+                },
+                function(next) {
+                    sails.renderView(path.join('app_builder', 'clientModel'), {
+                        layout: false,
+                        appName: appName,
+                        objectName: modelName,
+                        
+                    }, function (err, output) {
+                        if (err) next(err);
+                        else {
+                            var dest = path.join(clientPath, 'models', modelName) + '.js';
+                            fs.writeFile(dest, output, function(err) {
+                                if (err) next(err);
+                                else next();
+                            });
+                        }
+                    });
+                }
                
-               // Create Columns in database
-               function(next) {
-                   async.forEachOfSeries(def, function(col, colName, ok) {
-                       
-                       // Skip these columns
-                       var ignore = [
-                           'createdAt', 'updatedAt',
-                       ];
-                       if (ignore.indexOf(colName) >= 0) {
-                           return ok();
-                       }
-                       
-                       var defaultValue = col.default;
-                       if (typeof col.default == 'function') {
-                           defaultValue = col.default();
-                       }
-                       
-                       var setting = model._attributes[colName].setting;
-                       
-                       ABColumn.create({
-                           object: objectID,
-                           name: colName,
-                           type: col.type,
-                           required: col.required,
-                           unique: col.unique,
-                           default: defaultValue,
-                           setting: setting
-                       })
-                       .then(function() {
-                           ok();
-                           return null;
-                       })
-                       .catch(ok);
-                       
-                   }, function(err) {
-                       if (err) next(err);
-                       else next();
-                   });
-               }
-           
-           ], function(err) {
-               if (err) dfd.reject(err);
-               else {
-                   dfd.resolve();
-               }
-           });
-       }
-       
-       return dfd;
-   },
-   */
+               
+            ], function(err) {
+                if (err) dfd.reject(err);
+                else {
+                    dfd.resolve();
+                }
+            });
+        }
+        
+        return dfd;
+    },
+
 
 };
