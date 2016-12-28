@@ -190,6 +190,18 @@ steal(
 
 							headers.sort(function (a, b) { return a.weight - b.weight; });
 
+							// Select column by checkbox
+							if (true) {
+								headers.unshift({
+									id: "select_column",
+									header: { content: "masterCheckbox", css: "center" },
+									template: "{common.checkbox()}",
+									css: "center",
+									width: 50
+								});
+							}
+
+							// Removable
 							if (addTrashColumn) {
 								headers.push({
 									id: "appbuilder_trash",

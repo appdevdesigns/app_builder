@@ -346,45 +346,90 @@ steal(
 					}
 
 					// Select edit item
-					getObjectDataTable.call(self, application, setting.object, self.data.columns).registerItemClick(function (id, e, node) {
-						if (id.column === 'view_detail') {
-							$(self).trigger('changePage', {
-								pageId: setting.viewPage
-							});
+					getObjectDataTable.call(self, application, setting.object, self.data.columns)
+						.registerItemClick(function (id, e, node) {
+							switch (id.column) {
+								case 'view_detail':
+									$(self).trigger('changePage', {
+										pageId: setting.viewPage
+									});
 
-							$$(self.viewId).define('select', true);
-							if (dataCollection)
-								dataCollection.setCursor((id.row || id));
-						}
-						else if (id.column === 'edit_form') {
-							$(self).trigger('changePage', {
-								pageId: setting.editPage
-							});
+									if (!$$(self.viewId).config.multiselect || !$$(self.viewId).config.select)
+										$$(self.viewId).define('select', true);
 
-							$$(self.viewId).define('select', true);
-							if (dataCollection)
-								dataCollection.setCursor((id.row || id));
-						}
-					});
+									if (dataCollection)
+										dataCollection.setCursor((id.row || id));
+									break;
+								case 'edit_form':
+									$(self).trigger('changePage', {
+										pageId: setting.editPage
+									});
+
+									if (!$$(self.viewId).config.multiselect || !$$(self.viewId).config.select)
+										$$(self.viewId).define('select', true);
+
+									if (dataCollection)
+										dataCollection.setCursor((id.row || id));
+									break;
+							}
+						});
 
 					$$(self.viewId).attachEvent('onAfterRender', function (data) {
 						$(self).trigger('renderComplete', {});
 					});
 
+
+					$$(self.viewId).attachEvent('onSelectChange', function () {
+						if ($$(self.viewId).config.columns[0].id != 'select_column') return;
+						var selectedIds = $$(self.viewId).getSelectedId(true, true);
+
+						// Update select checkbox
+						$$(self.viewId).eachRow(function (rowId) {
+							var colNode = $$(self.viewId).getItemNode({ row: rowId, column: 'select_column' }),
+								checkboxElem = $(colNode).find('input[type=checkbox]');
+
+							if (selectedIds.filter(function (rId) { return rId == rowId; }).length < 1)
+								checkboxElem.removeAttr('checked');
+							else
+								checkboxElem.prop('checked', true);
+						});
+					});
+
+					// Select column by checkbox
+					$$(self.viewId).attachEvent("onCheck", function (row, col, state) {
+						if (col == 'select_column') {
+							if (!$$(self.viewId).config.multiselect)
+								$$(self.viewId).define('multiselect', true);
+
+							if (!$$(self.viewId).select)
+								$$(self.viewId).define('select', true);
+
+							if (state)
+								$$(self.viewId).select(row, true);
+							else
+								$$(self.viewId).unselect(row);
+						}
+					});
+
 					if (dataCollection) {
 						$$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
+							var rowId = data.id || data;
+
+							// Set cursor of data collection
 							var currModel = dataCollection.AD.currModel();
-							if (!currModel || currModel.id != (data.id || data))
-								dataCollection.setCursor((data.id || data));
+							if (!currModel || currModel.id != rowId)
+								dataCollection.setCursor(rowId);
 						});
 
 						dataCollection.attachEvent("onAfterCursorChange", function (id) {
-							var selectedItem = $$(self.viewId).getSelectedId(false);
+							var selectedItem = $$(self.viewId).getSelectedId(false),
+								preserve = $$(self.viewId).config.multiselect;
 
 							if (!id && $$(self.viewId).unselectAll)
 								$$(self.viewId).unselectAll();
-							else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select)
-								$$(self.viewId).select(id);
+							else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
+								$$(self.viewId).select(id, preserve);
+							}
 						});
 
 						dataCollection.attachEvent("onDataUpdate", function (id, data) {
@@ -482,7 +527,8 @@ steal(
 					columns: columns.filter(function (c) { return c; }), // [ABColumn.id]
 					removable: propertyValues.removable,
 					filter: propertyValues.filter,
-					sort: propertyValues.sort
+					sort: propertyValues.sort,
+					selectColumn: propertyValues.selectColumn
 				};
 
 				return settings;
@@ -664,7 +710,8 @@ steal(
 							editForm: editForm,
 							removable: setting.removable || 'disable',
 							filter: setting.filter || 'disable',
-							sort: setting.sort || 'disable'
+							sort: setting.sort || 'disable',
+							selectColumn: setting.selectColumn || 'disable'
 						});
 
 						$$(componentIds.propertyView).refresh();
@@ -768,6 +815,7 @@ steal(
 			return {
 				view: "property",
 				id: componentIds.propertyView,
+				nameWidth: 110,
 				elements: [
 					{ label: "Header", type: "label" },
 					{
@@ -849,16 +897,6 @@ steal(
 								return "[none]";
 						}
 					},
-					{
-						id: 'removable',
-						name: 'removable',
-						type: 'richselect',
-						label: 'Removable',
-						options: [
-							{ id: 'enable', value: "Yes" },
-							{ id: 'disable', value: "No" },
-						]
-					},
 					{ label: "Options", type: "label" },
 					{
 						id: 'filter',
@@ -875,6 +913,26 @@ steal(
 						name: 'sort',
 						type: 'richselect',
 						label: 'Sort',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
+						id: 'selectColumn',
+						name: 'selectColumn',
+						type: 'richselect',
+						label: 'Select Column',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
+						id: 'removable',
+						name: 'removable',
+						type: 'richselect',
+						label: 'Removable',
 						options: [
 							{ id: 'enable', value: "Yes" },
 							{ id: 'disable', value: "No" },
@@ -920,6 +978,7 @@ steal(
 							case 'object':
 							case 'filter':
 							case 'sort':
+							case 'selectColumn':
 								var setting = editInstance.getSettings();
 								setting.columns = editInstance.data.visibleColumns;
 

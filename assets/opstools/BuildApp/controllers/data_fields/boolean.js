@@ -32,6 +32,7 @@ steal(function () {
 				icon: boolDataField.icon,
 				// editor: 'inline-text', // http://docs.webix.com/desktop__editing.html
 				filter_type: 'boolean',
+				css: 'center',
 				template: '<div class="ab-boolean-display">{common.checkbox()}</div>'
 			}
 		};
