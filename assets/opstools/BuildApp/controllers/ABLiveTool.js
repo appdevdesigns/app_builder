@@ -1,12 +1,10 @@
 
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	'opstools/BuildApp/controllers/page_components/componentManager.js',
 
-	function (dataCollectionHelper, dataHelper, modelCreator, componentManager) {
+	function (dataHelper, modelCreator) {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',
@@ -257,7 +255,7 @@ steal(
 
 						renderPageContainer: function () {
 							var self = this,
-								pages = self.data.pages.attr();
+								pages = self.data.pages;
 
 							// Clear UI content
 							if ($$(self.rootPage.domID))
@@ -278,14 +276,16 @@ steal(
 							});
 
 							// Sort pages
-							pages.sort(function (a, b) {
-								if (a.parent)
-									return 1;
-								else if (b.parent)
-									return -1;
-								else
-									return a.weight - b.weight;
-							});
+							if (pages.sort) {
+								pages.sort(function (a, b) {
+									if (a.parent)
+										return 1;
+									else if (b.parent)
+										return -1;
+									else
+										return a.weight - b.weight;
+								});
+							}
 
 							// Render pages
 							pages.forEach(function (page) {
@@ -295,16 +295,7 @@ steal(
 						},
 
 						renderPage: function (page) {
-							var self = this,
-								comTemplate = '';
-
-							page.components.sort(function (a, b) { return a.weight - b.weight });
-							page.components.forEach(function (item) {
-								item.domID = self.unique('ab_live_item', page.id, item.id);
-
-								comTemplate += '<div id="#domID#"></div>'.replace('#domID#', item.domID);
-								comTemplate += '<div style="height: 30px;"></div>'; // Gap between components
-							});
+							var self = this;
 
 							switch (page.type) {
 								case 'modal':
@@ -334,7 +325,7 @@ steal(
 										},
 										body: {
 											scroll: true,
-											template: comTemplate
+											template: page.getItemTemplate()
 										}
 									};
 
@@ -361,7 +352,7 @@ steal(
 									var pageTemplate = {
 										view: "template",
 										id: page.domID,
-										template: comTemplate,
+										template: page.getItemTemplate(),
 										minWidth: 700,
 										autoheight: true,
 										scroll: true
@@ -404,121 +395,32 @@ steal(
 							self.activePage = page;
 
 							self.activePage.components.forEach(function (item) {
-								self.renderComponent(self.activePage, item);
+
+								self.activePage.renderComponent(self.data.application, item).done(function () {
+
+									// Listen component events
+									$(page.comInstances[item.id]).on('renderComplete', function (event, data) {
+										$$(self.rootPage.domID).adjust();
+										$$(viewId).adjust();
+									});
+
+									$(page.comInstances[item.id]).on('changePage', function (event, data) {
+										// Redirect to another page
+										if (data.previousPage)
+											self.showPage(self.previousPage);
+										else if (self.activePage.id != data.pageId && data.pageId) {
+
+											var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
+
+											if (redirectPage && redirectPage.length > 0)
+												self.showPage(redirectPage[0]);
+										}
+									});
+								});
+
 							});
 
 							self.resize();
-						},
-
-						renderComponent: function (page, item) {
-							var self = this,
-								q = $.Deferred(),
-								componentInstance = componentManager.getComponent(item.component),
-								view = componentInstance.getView(),
-								viewId = self.unique('ab_live_item', page.id, item.id),
-								setting = item.setting,
-								dataCollection,
-								linkedDataCollection;
-
-							if (!page.comInstances) page.comInstances = {};
-
-							if (page.comInstances[item.id]) {
-								if (page.comInstances[item.id].onDisplay)
-									page.comInstances[item.id].onDisplay();
-
-								return;
-							}
-
-							// Create component instance
-							page.comInstances[item.id] = new componentInstance(
-								self.data.application, // Current application
-								viewId, // the view id
-								item.id // the component data id
-							);
-
-							// Listen component events
-							$(page.comInstances[item.id]).on('renderComplete', function (event, data) {
-								$$(self.rootPage.domID).adjust();
-								$$(viewId).adjust();
-							});
-
-							$(page.comInstances[item.id]).on('changePage', function (event, data) {
-								// Redirect to another page
-								if (data.previousPage)
-									self.showPage(self.previousPage);
-								else if (self.activePage.id != data.pageId && data.pageId) {
-
-									var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
-
-									if (redirectPage && redirectPage.length > 0)
-										self.showPage(redirectPage[0]);
-								}
-							});
-
-							if (view && setting) {
-								var setting = setting.attr ? setting.attr() : setting,
-									editable = false,
-									showAll = false;
-
-								view = $.extend(true, {}, view);
-								view.id = viewId;
-								view.container = view.id;
-								view.autowidth = true;
-
-								$('#' + view.id).html('');
-
-								webix.ui(view);
-
-								async.series([
-									// Get data collection
-									function (next) {
-										if (setting.object) {
-											dataCollectionHelper.getDataCollection(self.data.application, setting.object)
-												.then(function (result) {
-													dataCollection = result;
-													next();
-												}, next);
-										}
-										else
-											next();
-									},
-									// Get data collection of connected data
-									function (next) {
-										if (setting.linkedTo) {
-											dataCollectionHelper.getDataCollection(self.data.application, setting.linkedTo)
-												.then(function (result) {
-													linkedDataCollection = result;
-													next();
-												}, next);
-										}
-										else
-											next();
-									},
-									// Render component
-									function (next) {
-										page.comInstances[item.id].render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
-											.then(function () { next(); }, next);
-
-									},
-									// Update state on load
-									function (next) {
-										if (page.comInstances[item.id].onDisplay)
-											page.comInstances[item.id].onDisplay();
-
-										next();
-									}
-								], function (err) {
-									if (err)
-										q.reject(err);
-									else
-										q.resolve();
-								});
-							}
-							else {
-								q.resolve();
-							}
-
-							return q;
 						},
 
 						resize: function (height) {
