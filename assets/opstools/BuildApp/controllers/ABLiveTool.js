@@ -355,7 +355,7 @@ steal(
 									break;
 								case 'tab':
 									// TODO : tab view
-									break;
+									// break;
 								case 'page':
 								default:
 									var pageTemplate = {
@@ -399,6 +399,7 @@ steal(
 							if (self.activePage && $$(self.activePage.domID).hide)
 								$$(self.activePage.domID).hide();
 
+if ($$(page.domID).show) {
 							$$(page.domID).show();
 							self.previousPage = self.activePage;
 							self.activePage = page;
@@ -408,6 +409,9 @@ steal(
 							});
 
 							self.resize();
+} else {
+	console.error('**** Hey!');
+}
 						},
 
 						renderComponent: function (page, item) {
@@ -540,8 +544,8 @@ steal(
 							if (height > 0)
 								$$(this.rootPage.domID).define('height', height);
 
-							$$(this.rootPage.domID).adjust();
-							$$(this.activePage.domID).adjust();
+							if (this.rootPage) { $$(this.rootPage.domID).adjust(); }
+							if (this.activePage) { $$(this.activePage.domID).adjust(); }
 
 							// Resize components
 							if (this.activePage && this.activePage.comInstances) {

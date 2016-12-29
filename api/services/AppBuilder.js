@@ -36,6 +36,7 @@ function importDataFields( next ) {
     fs.readdir(dataFieldPath, function(err, files) {
 
         if (err) {
+            ADCore.error.log('Service:AppBuilder:Error reading in Data Fields.', { error:err, path:dataFieldPath } );
             next(err);
             return;
         }

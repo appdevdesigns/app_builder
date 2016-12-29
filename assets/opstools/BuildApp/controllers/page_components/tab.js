@@ -43,24 +43,13 @@ steal(
                 var view = $.extend(true, {}, tabComponent.getView());
                 view.id = self.viewId;  
 
-                // setting.pages    : {array} of { page definition }
+                // setting.tabs    : {array} of { tab definitions }
 
 
-                            // view.layout = 'x';
-                // if (setting.layout)
-                //  view.layout = setting.layout;
-
-
-                // view.click = function (id, ev) {
-                //  $(self).trigger('changePage', {
-                //      pageId: id
-                //  })
-                // };
 
                 // do we have any pages added?
-                if ((setting.pages)
-                    && (setting.pages.length)) {
-console.error(' todo!');
+                if ((setting.tabs)
+                    && (setting.tabs.length)) {
 
                     view = tabComponent.tabView();
                     
@@ -89,9 +78,26 @@ console.error(' todo!');
 
                     // perform the page lookup here.
 
-                    // foreach page:
-                        // add a tab cell
+                    var listPagesToLoad = [];
 
+                    // for each tab
+                        // add a cell to the template
+                    setting.tabs.forEach(function(tab){
+                        if (tab.checked) {
+                            view.cells.push(
+                                {
+                                  header: "<i class='fa "+tab.icon+"'></i> "+tab.label,
+                                  body: {
+                                    view: "template", 
+                                    template:"<div id=\""+tab.uuid+"\" > " + tab.uuid + "</div>",
+                                    height:500
+                                  }
+                                }
+                            );
+                            listPagesToLoad.push(tab.uuid);
+                        }
+                        return true;
+                    });
 
 
 
@@ -102,9 +108,37 @@ console.error(' todo!');
                     webix.ui(view, $$(self.viewId));  // create the view at location $$(self.viewId) ?
                     webix.extend($$(self.viewId), webix.ProgressBar);
 
-                    finishIt();
+//// LEFT OFF HERE:
+// ask Pong how to load a Page and display it:
+// maybe we need to save the current Page.id in our settings? So we can load the tabs from our page,
+// without a page being passed into .render()
+
+
+                    // 3) load the pages associated with these tabs:
+//                     if (listPagesToLoad.length) {
+
+// // var LiveTool = AD.Control.get('opstools.BuildApp.ABLiveTool');
+
+//                         var Page = AD.Model.get('opstools.BuildApp.ABPage');
+//                         Page.findAll({ name: listPagesToLoad })
+//                         .then(function(pageTabs){
+
+//                             pageTabs.forEach(function(page){
+
+//                                 // page.display($('#'+page.name));
+// // new LiveTool($('#'+page.name), { app: application.id, page:page.id });
+
+//                             })
+//                         })
+//                         finishIt();
+
+//                     } else {
+                        finishIt();
+                    // }
 
                 } else {
+
+                    // else our tabView currently doesn't have any Tabs to render.
 
                     finishIt();
                 }
@@ -185,6 +219,8 @@ console.error(' todo!');
              *                      .icon {string} the fa-[icon] for this tab
              *                      .label {string} what is displayed for this  
              *                                      tab's label
+             *                      .uuid {string} the uuid link to the ABPage that
+             *                                     is displayed in this Tab area.
              */
             this.getSettings = function () {
 
@@ -199,7 +235,8 @@ console.error(' todo!');
                     tabs.push({
                         checked:obj.checked || false,
                         icon: obj.icon,
-                        label: obj.label
+                        label: obj.label,
+                        uuid: obj.uuid
                     })
                     return true
                 })
@@ -218,24 +255,10 @@ console.error(' todo!');
             this.populateSettings = function (setting) {
                 
 
-//// LEFT OFF HERE:
-
-// option 1:
-// when saving a page, put in a uuid reference in it's name
-// save this uuid in our settings for the tab
-// on .render() get the pages with our uuid values, and 
-// insert them in our tab cells (or make them use containers with the tab cells id's )
-
-// option 2:
-// generate a uuid for this tab
-// make sure setting.uuid is set
-// then reference this uuid in each page definition
-// then when .render() is called, make sure each page
-//      has a container referencing the uuid for the tab container.
-//
-
-                // Render the component as it currently looks.
-                this.render(setting);
+                // call .render() to place the element on the page.
+                // NOTE: this is happening in the Editor, so don't display
+                // the rendered Tabs here:
+                this.render({});
 
 
                 // Clear the current tree view
@@ -249,7 +272,8 @@ console.error(' todo!');
                     // we click [save]
                     var cTab = {
                         icon: tab.icon,
-                        label: tab.label
+                        label: tab.label,
+                        uuid: tab.uuid
                     }
                     if (tab.checked == 'true') {
                         cTab.checked = true;
@@ -306,7 +330,8 @@ console.error(' todo!');
 
                     switch(trans.op) {
                         case 'add':
-                            actions.push(page.createTab({ name: 'tab-'+trans.values.Name, label:trans.values.Name }));
+                            // name the page with our uuid, so we can manage it later.
+                            actions.push(page.createTab({ name: trans.values.uuid, label:trans.values.Name }));
                             break;
 
 
@@ -544,6 +569,8 @@ console.error(' todo!');
                                     
                                     var values = $$(componentIds.addTabForm).getValues();
 
+                                    values.uuid = 'tabs-'+AD.util.uuid()+'-';
+
                                     // 1) Trim value
                                     // 2) lowerCase() name must not match any existing lc names
 
@@ -586,7 +613,7 @@ console.log('transactions:', currentTab.pendingTransactions);
                                     $$(componentIds.addTabForm).clear();
 
                                     // new tab definition value
-                                    var currentValue = {label:values.Name, icon:values.Icon, checked:true};
+                                    var currentValue = {label:values.Name, icon:values.Icon, checked:true, uuid:values.uuid};
 
                                     // update the display of our pageTree
                                     $$(componentIds.pageTree).add(currentValue, $$(componentIds.pageTree).count());

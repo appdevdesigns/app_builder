@@ -58,7 +58,7 @@ steal(function () {
 	 *					->  imageDataField.editDefinition.id
 	 */
 	var componentIds = {
-		editView: 'ab-new-image',
+		editView	: 'ab-new-image',
 
 		useWidth	: 'useWidth',
 		imageWidth	: 'imageWidth', 
