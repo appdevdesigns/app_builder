@@ -447,8 +447,8 @@ steal(function () {
         	}
 
 	        // insert the image to display
-        	$container.html(dateDiv);
-		
+        	//$container.html(dateDiv);
+		$container.html("kidtest");
 		
 		return true;
 	};
