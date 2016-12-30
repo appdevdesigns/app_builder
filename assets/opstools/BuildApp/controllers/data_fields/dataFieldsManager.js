@@ -248,8 +248,8 @@ steal(
 		 * @param {obj} application : The current ABApplication instance 
 		 * @param {obj} object  : The ABObject that contains this DataField
 		 * @param {obj} fieldData : The ABColumn instance that defines this DataField
-		 * @param {int} rowId   : the .id of the Model instance from which we are 
-		 *						  getting the data for this DataField
+		 * @param {obj} rowData   : the data of the Model instance from which we are 
+		 *						  	getting the data for this DataField
 		 * @param {} data       : the value of this DataField
 		 * @param {el} itemNode : the DOM element of the Webix Cell that contains
 		 * 						  the display of this DataField
@@ -258,13 +258,13 @@ steal(
 		 * @return {bool}		: true (or non False) if there is a customDisplay
 		 *						: false if no customDisplay
 		 */
-		self.customDisplay = function (fieldName, application, object, fieldData, rowId, data, viewId, itemNode, options) {
+		self.customDisplay = function (fieldName, application, object, fieldData, rowData, data, viewId, itemNode, options) {
 
 			var field = getField(fieldName);
 			options = options || {};
 
 			if (field && field.customDisplay)
-				return field.customDisplay(application, object, fieldData, rowId, data, viewId, itemNode, options);
+				return field.customDisplay(application, object, fieldData, rowData, data, viewId, itemNode, options);
 			else
 				return false;
 		};
