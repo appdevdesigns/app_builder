@@ -388,12 +388,13 @@ steal(function () {
 	};
 	
 	dateDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
-		
+		console.log("startdisplay");
 		if (data == null) {
-			$(itemNode).find('.ab-date-data-field').html('null');
+			console.log("startdisplay : null");
+			$(itemNode).find('.ab-date-data-field').html('');
 			return true;
 		}
-		
+		console.log("startdisplay2 : notnull");
 		var $container = $(itemNode).find('.ab-date-data-field');
 		$container.html('');
 		
@@ -434,7 +435,7 @@ steal(function () {
 		
 
         	var imgDiv = null; 
-
+		console.log("startdisplay2 : " + data);
 		 if ( !data || data == '') {
             		dateDiv = "no data";
         	} else {
