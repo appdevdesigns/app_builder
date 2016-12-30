@@ -390,7 +390,7 @@ steal(function () {
 	dateDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
 		
 		if (data == null) {
-			$(itemNode).find('.ab-date-data-field').html('');
+			$(itemNode).find('.ab-date-data-field').html('null');
 			return true;
 		}
 		
