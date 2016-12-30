@@ -194,7 +194,7 @@ steal(function () {
 		};
 	};
 
-	numberDataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+	numberDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		if (data == null) {
 			$(itemNode).find('.ab-number-format-show').html('');
 			return true;

@@ -212,9 +212,11 @@ steal(function () {
 	 * @param {obj} application : The current ABApplication instance 
 	 * @param {obj} object  : The ABObject that contains this DataField
 	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
-	 * @param {int} rowId   : the .id of the Model instance from which we are 
-	 *						  getting the data for this DataField
+	 * @param {obj} rowData   : the data of the Model instance from which we are 
+	 *						  	getting the data for this DataField
 	 * @param {} data       : the value of this DataField
+	 * @param {string} viewId : the webix id ( $$(viewId) ) of the component 
+	 *						  calling this Data Field's .customDisplay()
 	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
 	 * 						  the display of this DataField
 	 * @param {obj} options : provided by the calling UI component (Grid/Form)
@@ -223,7 +225,7 @@ steal(function () {
 	 *						  False if we don't.  (or just comment this out)
 	 */
 /*
-	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, itemNode, options) {
+	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 
 		// for this to work right: 
 		// set your 
@@ -245,6 +247,93 @@ steal(function () {
 	};
 */
 
+
+	/*
+	 * @function customEdit
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method when 
+	 * this field is clicked on in a grid.
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {int} rowId   : the .id of the Model instance from which we are 
+	 *						  getting the data for this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @return {bool}      : return {false} if you want to prevent the default webix
+	 *						 grid/form editor.
+	 */
+/*
+	[DataFieldType]DataField.customEdit = function (application, object, fieldData, rowId, itemNode) {
+		if (!application || !object || !fieldData  || !rowId) return false;
+
+		return false;
+	};
+*/
+
+
+	/*
+	 * @function setValue
+	 *
+	 * Form Processing: allow the form to set the current value.  
+	 *
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @param {} data         : the value of this DataField
+	 */
+	[DataFieldType]DataField.setValue = function (fieldData, itemNode, data) {
+
+		// do something here to save your value 
+
+	};
+
+
+	/*
+	 * @function getValue
+	 *
+	 * Form Processing: allow a form to request the current value of your Data Field. 
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 */
+	[DataFieldType]DataField.getValue = function (application, object, fieldData, itemNode) {
+		var result;
+
+		// figure out how to return your value here:
+
+		return result;
+	};
+
+
+	/*
+	 * @function getRowHeight
+	 *
+	 * This is an optional method for a Data Field.  
+	 *
+	 * If this method exists, then the App Builder will call this method to 
+	 * determine what the row height should be for this Data Field in a grid/form.
+	 *
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {} data         : the value of this DataField
+	 * @return {integer}      : the {integer} value for the height of this field.
+	 */
+/*
+	[DataFieldType]DataField.getRowHeight = function (fieldData, data) {
+		
+		var height = 36;
+		if (fieldData.setting.useHeight) {
+			height = parseInt(fieldData.setting.imageHeight);
+		}
+		return height;
+	};
+*/
 
 	return [DataFieldType]DataField;
 });

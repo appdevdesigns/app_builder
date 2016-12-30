@@ -133,7 +133,7 @@ steal(
 					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
-					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, childView.$view);
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, viewId, childView.$view);
 
 					if (childView.config && childView.config.view === 'template') {
 
@@ -632,7 +632,7 @@ steal(
 					if (!childView) return;
 
 					// Set default connect data when add
-					if (col.fieldName == 'connectObject') {
+					if (col.fieldName == 'connectObject' && !currModel) {
 						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
 							.then(function (linkedDataCollection) {
 								var linkCurrModel = linkedDataCollection.AD.currModel();

@@ -6,12 +6,13 @@ steal(
 		describe('testing data field: number', function () {
 
 			var divID = "testNumberDataField";
-			var application, object, rowId, options;
+			var application, object, rowId, viewId, options;
 
 			before(function () {
 				application = {};
 				object = {};
 				rowId = 999;
+				viewId = 'Test-view-id';
 				options = {};
 
 				var html = [
@@ -44,7 +45,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, expectedValue, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, expectedValue, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -68,7 +69,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -92,7 +93,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -140,7 +141,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -164,7 +165,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -188,7 +189,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -212,7 +213,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -236,7 +237,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -260,7 +261,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -284,7 +285,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -308,7 +309,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -332,7 +333,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -356,7 +357,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 
@@ -380,7 +381,7 @@ steal(
 				};
 
 				// Action
-				target.customDisplay(application, object, fieldData, rowId, data, $('#' + divID), options);
+				target.customDisplay(application, object, fieldData, rowId, data, viewId, $('#' + divID), options);
 
 				var result = $('#' + divID).find('.ab-number-format-show').html();
 

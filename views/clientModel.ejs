@@ -1,0 +1,14 @@
+steal(
+'opstools/<%= appName %>/models/base/<%= objectName %>.js',
+function() {
+    System.import('appdev').then(function() {
+		steal.import('appdev/model/model').then(function() {
+
+			AD.Model.extend('opstools.<%= appName %>.<%= objectName %>', {
+			
+			}, {
+			
+			});
+		});
+	});
+});
