@@ -250,11 +250,10 @@ steal(function () {
 
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		//
-		for (i = 0; i < rowData.length; i++) {
-   			 console.log(rowData[i]);
-			
-		}
-		console.log("oo: "+ rowData);
+		rowData.each(function(index, value)) {
+		      console.log(value);
+		 }
+	
 		return true;
 	};
 	/**
