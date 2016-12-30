@@ -387,7 +387,7 @@ steal(function () {
 		};
 	};
 	
-	dateDataField..customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
+	dateDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		console.log("startdisplay");
 		if (data == null) {
 			console.log("startdisplay : null");
