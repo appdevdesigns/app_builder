@@ -77,7 +77,6 @@ steal(
 
 
                     // perform the page lookup here.
-
                     var listPagesToLoad = [];
 
                     // for each tab
@@ -89,7 +88,7 @@ steal(
                                   header: "<i class='fa "+tab.icon+"'></i> "+tab.label,
                                   body: {
                                     view: "template", 
-                                    template:"<div id=\""+tab.uuid+"\" > " + tab.uuid + "</div>",
+                                    template:"<div id=\""+tab.uuid+"\" > </div>",
                                     height:500
                                   }
                                 }
@@ -105,41 +104,56 @@ steal(
 
                     // 2) find the existing element on our page, and replace it with the
                     // current view:
-                    webix.ui(view, $$(self.viewId));  // create the view at location $$(self.viewId) ?
+                    var tabView = webix.ui(view, $$(self.viewId));  // create the view at location $$(self.viewId) ?
                     webix.extend($$(self.viewId), webix.ProgressBar);
 
-//// LEFT OFF HERE:
-// ask Pong how to load a Page and display it:
-// maybe we need to save the current Page.id in our settings? So we can load the tabs from our page,
-// without a page being passed into .render()
+                    tabView.getTabbar().attachEvent("onChange", function(newv, oldv){
+
+                        refreshTabView();
+                    });
+
+
+
+
+                    var Page = AD.Model.get('opstools.BuildApp.ABPage');
+
+                    function refreshTabView(cb) {
+
+                        if (tabView._pageTabs) {
+                            tabView._pageTabs.forEach(function(page){
+
+                                var id = '#'+page.name;
+                                if ($(id).length) {
+
+                                    $(id).html(page.getItemTemplate());
+                                    page.comInstances = null; // force a refresh on components
+                                    page.display(application);
+                                }
+
+                            });
+                        }
+                        if (cb) cb();
+                    }
 
 
                     // 3) load the pages associated with these tabs:
-//                     if (listPagesToLoad.length) {
+                    if (listPagesToLoad.length) {
 
-// // var LiveTool = AD.Control.get('opstools.BuildApp.ABLiveTool');
+                        Page.findAll({ name: listPagesToLoad })
+                        .then(function(pageTabs){
 
-//                         var Page = AD.Model.get('opstools.BuildApp.ABPage');
-//                         Page.findAll({ name: listPagesToLoad })
-//                         .then(function(pageTabs){
+                            tabView._pageTabs = pageTabs;
 
-//                             pageTabs.forEach(function(page){
+                            refreshTabView(finishIt);
+                        })
 
-//                                 // page.display($('#'+page.name));
-// // new LiveTool($('#'+page.name), { app: application.id, page:page.id });
-
-//                             })
-//                         })
-//                         finishIt();
-
-//                     } else {
+                    } else {
                         finishIt();
-                    // }
+                    }
 
                 } else {
 
                     // else our tabView currently doesn't have any Tabs to render.
-
                     finishIt();
                 }
 
