@@ -449,7 +449,8 @@ steal(function () {
 
 	        // insert the image to display
         	//$container.html(dateDiv);
-		$container.html("kidtest");
+		console.log("startdisplay4 : dateDiv "+dateDiv );
+		$container.html(dateDiv);
 		
 		return true;
 	};
