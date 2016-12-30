@@ -250,8 +250,8 @@ steal(function () {
 
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		//
-		for (rowData in person) {
-   			 console.log("oo: "+ person[x]);
+		for (i = 0; i < rowData.length; i++) {
+   			 console.log("oo: "+ rowData[i]);
 			
 		}
 		console.log("oo: "+ rowData);
