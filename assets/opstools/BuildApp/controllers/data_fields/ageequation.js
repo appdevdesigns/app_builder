@@ -251,7 +251,7 @@ steal(function () {
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		//
 		$.each(rowData, function(index, value) {
-    			console.log(value);
+    			console.log("out: " + value + " index: " + index);
 		}); 
 	
 		return true;
