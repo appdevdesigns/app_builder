@@ -254,7 +254,7 @@ steal(function () {
     			console.log("out: " + value + " index: " + index);
 		}); 
 		
-		$(itemNode).find('.ab-age-data-field').html(rowData['Field_2']);
+		$(itemNode).find('.ab-age-data-field').html(caldateDiff('d',rowData['Field_2'],new Date()));
 	
 		return true;
 	};
