@@ -37,15 +37,16 @@ steal(function () {
 	
 	// datepart: 'y', 'm', 'w', 'd', 'h', 'n', 's'
 	function caldateDiff(datepart, fromdate, todate){
+		
 		  datepart = datepart.toLowerCase();	
-  		  var diff = todate - fromdate;	
-  		  var divideBy = { w:604800000, 
-                   	d:86400000, 
-                   	h:3600000, 
-                   	n:60000, 
-                   	s:1000 };	
-  
- 	 	return Math.floor( diff/divideBy[datepart]);
+			  var diff = todate - fromdate;	
+			  var divideBy = { weeks:604800000, 
+				days:86400000, 
+				hours:3600000, 
+				years:31557600000};	
+
+			return Math.floor( diff/divideBy[datepart]);
+
 	}
 	
 
@@ -254,7 +255,7 @@ steal(function () {
     			console.log("out: " + value + " index: " + index);
 		}); 
 		
-		$(itemNode).find('.ab-age-data-field').html(caldateDiff('d',rowData['Field_2'],new Date()));
+		$(itemNode).find('.ab-age-data-field').html(caldateDiff('years',rowData['Field_2'],new Date()));
 	
 		return true;
 	};
