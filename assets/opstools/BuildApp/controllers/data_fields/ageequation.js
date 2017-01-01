@@ -334,7 +334,7 @@ steal(function () {
 		
 		var data = caldateDiff(fieldData.setting.dateType,rowData[fieldData.setting.equation],new Date());
 		
-		console.log("data: "+ data);
+		console.log("datakid: "+ data);
 		
 		var numberFormat = webix.Number.format(data, {
 			groupDelimiter: groupDelimiters,
@@ -343,7 +343,7 @@ steal(function () {
 			decimalSize: decimalSizeNum
 		});
 		
-		console.log("numberFormat: "+ numberFormat);
+		console.log("numberFormatkid: "+ numberFormat);
 		/*if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
 			var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
 			if (formatItem) {
