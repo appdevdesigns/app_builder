@@ -275,7 +275,7 @@ steal(function () {
 
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		
-		if (data == null) {
+		if (rowData == null) {
 			$(itemNode).find('.ab-age-data-field').html('');
 			return true;
 		}
