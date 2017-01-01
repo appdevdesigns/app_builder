@@ -55,7 +55,8 @@ steal(function () {
 	}
 	
 	function showsettingDate(){
-		
+		$$(componentIds.dateType).show();
+		$$(componentIds.resultType).show();
 	}
 	
 
@@ -85,7 +86,13 @@ steal(function () {
 				],
 				on: {
 					'onChange': function (newValue, oldValue) {
-						showsettingNumeric();
+						if(newValue == "Numeric"){
+							showsettingNumeric();
+						}else{
+							showsettingDate();
+						}
+						
+						
 					}
 				}
 			},
