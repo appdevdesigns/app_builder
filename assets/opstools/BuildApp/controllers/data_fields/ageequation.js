@@ -49,6 +49,15 @@ steal(function () {
 
 	}
 	
+	function showsettingNumeric(){
+		$$(componentIds.dateType).hide();
+		$$(componentIds.resultType).hide();
+	}
+	
+	function showsettingDate(){
+		
+	}
+	
 
 
 
@@ -73,7 +82,12 @@ steal(function () {
 					{ id: 'numeric',value: "Numeric" },
 					{ id: 'date',value:  "Date" },
 					
-				]
+				],
+				on: {
+					'onChange': function (newValue, oldValue) {
+						showsettingNumeric();
+					}
+				}
 			},
 			{
 				cols: [
