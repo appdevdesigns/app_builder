@@ -81,6 +81,7 @@ steal(function () {
 						view: "richselect",
 						id: componentIds.dateType,
 						label: "Date Type",
+						labelWidth: "110",
 						value: 'none',
 						options: [
 							{ id: 'hours', value:  "Hours" },
@@ -93,6 +94,7 @@ steal(function () {
 						view: "richselect",
 						id: componentIds.resultType,
 						label: "Result Type",
+						labelWidth: "110",
 						value: 'none',
 						//disabled: true,
 						options: [
