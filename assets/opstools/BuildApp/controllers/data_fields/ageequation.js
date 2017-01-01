@@ -94,7 +94,7 @@ steal(function () {
 						id: componentIds.resultType,
 						label: "Result Type",
 						value: 'none',
-						disabled: true,
+						//disabled: true,
 						options: [
 							{ id: 'number', value: "Number" },
 							{ id: 'date', value: "Date" },
