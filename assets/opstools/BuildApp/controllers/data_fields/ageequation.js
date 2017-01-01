@@ -86,7 +86,7 @@ steal(function () {
 				],
 				on: {
 					'onChange': function (newValue, oldValue) {
-						if(newValue == "Numeric"){
+						if(newValue == 'numeric'){
 							showsettingNumeric();
 						}else{
 							showsettingDate();
