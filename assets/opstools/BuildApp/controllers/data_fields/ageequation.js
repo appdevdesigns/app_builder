@@ -65,7 +65,8 @@ steal(function () {
 			{
 				view: "radio",
 				id: componentIds.equaltionType,
-				label: "equaltionType",
+				label: "Equaltion Type",
+				labelWidth: "150",
 				value: 'none',
 				vertical: true,
 				options: [
