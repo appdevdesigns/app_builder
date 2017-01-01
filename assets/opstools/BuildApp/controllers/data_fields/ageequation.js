@@ -127,7 +127,7 @@ steal(function () {
 					{
 						view: "richselect",
 						id: componentIds.decimals,
-						label: "Date Type",
+						label: "Decimals",
 						value: 'none',
 						options: [
 							{ id: 'none', value: "None" },
@@ -138,7 +138,7 @@ steal(function () {
 					{
 						view: "richselect",
 						id: componentIds.decimalplaces,
-						label: "Result Type",
+						label: "Decimal Places",
 						value: 'none',
 						options: [
 							 { id: 'none', value: "0" },
