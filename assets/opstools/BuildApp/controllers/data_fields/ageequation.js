@@ -6,8 +6,8 @@ steal(function () {
 		dateType: 'ab-new-age-dateType',
 		resultType: 'ab-new-age-resultType',
 		equation: 'ab-new-age-equation',
-		decimals: 'ab-new-age-decimals',
-		decimalplaces: 'ab-new-age-decimalplaces',
+		typeDecimals: 'ab-new-age-typeDecimals',
+		typeDecimalPlaces: 'ab-new-age-typeDecimalPlaces',
 		typeRounding: 'ab-new-age-typeRounding',
 		typeThousands: 'ab-new-age-typeThousands',
 		typeFormat: 'ab-new-age-typeFormat',
@@ -147,7 +147,7 @@ steal(function () {
 				cols: [
 					{
 						view: "richselect",
-						id: componentIds.decimals,
+						id: componentIds.typeDecimals,
 						label: "Decimals",
 						value: 'none',
 						options: [
@@ -158,7 +158,7 @@ steal(function () {
 					},
 					{
 						view: "richselect",
-						id: componentIds.decimalplaces,
+						id: componentIds.typeDecimalPlaces,
 						label: "Decimal Places",
 						value: 'none',
 						options: [
@@ -240,8 +240,8 @@ steal(function () {
 		$$(componentIds.dateType).setValue(data.setting.dateType);
 		$$(componentIds.resultType).setValue(data.setting.resultType);
 		$$(componentIds.equation).setValue(data.setting.equation);
-		$$(componentIds.decimals).setValue(data.setting.decimals);
-		$$(componentIds.decimalplaces).setValue(data.setting.decimalplaces);
+		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
+		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
 		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
@@ -261,8 +261,8 @@ steal(function () {
 				dateType : $$(componentIds.dateType).getValue(),
 				resultType : $$(componentIds.resultType).getValue(),
 				equation : $$(componentIds.equation).getValue(),
-				decimals : $$(componentIds.decimals).getValue(),
-				decimalplaces : $$(componentIds.decimalplaces).getValue(),
+				typeDecimals : $$(componentIds.typeDecimals).getValue(),
+				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
@@ -274,13 +274,89 @@ steal(function () {
 
 
 	ageequationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
-		//
-		$.each(rowData, function(index, value) {
+		
+		if (data == null) {
+			$(itemNode).find('.ab-age-data-field').html('');
+			return true;
+		}
+		
+		var decimalSizeNum = 0,
+			decimalDelimiters = ".",
+			groupDelimiters = "";
+		
+		if (fieldData.setting.typeDecimals && fieldData.setting.typeDecimals != 'none') {
+			if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
+				decimalSizeNum = fieldData.setting.typeDecimalPlaces;
+			}
+
+			if (fieldData.setting.typeDecimals != undefined) {
+				switch (fieldData.setting.typeDecimals) {
+					case 'period':
+						decimalDelimiters = ".";
+						break;
+					case 'comma':
+						decimalDelimiters = ",";
+						break;
+				}
+			}
+
+			/*if (fieldData.setting.typeRounding != undefined) {
+				switch (fieldData.setting.typeRounding) {
+					case 'roundUp':
+						var num = data;
+						var precision = -decimalSizeNum;
+						var div = Math.pow(10, precision);
+						data = Math.ceil(num / div) * div;
+						break;
+					case 'roundDown':
+						var num = data;
+						var precision = -decimalSizeNum;
+						var div = Math.pow(10, precision);
+						data = Math.floor(num / div) * div;
+						break;
+				}
+			}*/
+		}
+		
+		if (fieldData.setting.typeThousands != undefined) {
+			switch (fieldData.setting.typeThousands) {
+				case 'comma':
+					groupDelimiters = ",";
+					break;
+				case 'period':
+					groupDelimiters = ".";
+					break;
+				case 'space':
+					groupDelimiters = " ";
+					break;
+			}
+		}
+		
+		var data = caldateDiff(fieldData.setting.dateType,rowData[fieldData.setting.equation],new Date());
+		
+		var numberFormat = webix.Number.format(data, {
+			groupDelimiter: groupDelimiters,
+			groupSize: 3,
+			decimalDelimiter: decimalDelimiters,
+			decimalSize: decimalSizeNum
+		});
+		
+		/*if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
+			var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
+			if (formatItem) {
+				numberFormat = (formatItem.position == 'prefix' ? formatItem.sign + ' ' + numberFormat : numberFormat + ' ' + formatItem.sign);
+			}
+		}*/
+		
+		$(itemNode).find('.ab-age-data-field').html(numberFormat);
+		
+		
+		/*$.each(rowData, function(index, value) {
     			console.log("out: " + value + " index: " + index);
 		}); 
 		
 		$(itemNode).find('.ab-age-data-field').html(caldateDiff(fieldData.setting.dateType,rowData[fieldData.setting.equation],new Date()));
-	
+		*/
 		return true;
 	};
 	/**
