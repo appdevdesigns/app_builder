@@ -59,6 +59,10 @@ steal(function () {
 		$$(componentIds.resultType).show();
 	}
 	
+	function equationValidate(text){
+		//{currentdate} - {birthdate} 
+	}
+	
 
 
 
