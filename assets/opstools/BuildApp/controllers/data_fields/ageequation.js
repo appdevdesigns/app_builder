@@ -142,7 +142,12 @@ steal(function () {
 				labelWidth: "100",
 				id: componentIds.equation,
 				placeholder: 'currentTime() - {Birthday}',
-				options:["One", "Two", "Three"]
+				options:["One", "Two", "Three"],
+				on: {
+					'onChange': function (newValue, oldValue) {
+						$$(componentIds.equation).setValue(oldValue + newValue)
+					}
+				}
 			},
 			{
 				cols: [
