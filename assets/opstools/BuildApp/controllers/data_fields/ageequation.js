@@ -145,8 +145,10 @@ steal(function () {
 				options:["One", "Two", "Three"],
 				on: {
 					'onChange': function (newValue, oldValue) {
-						var test = " " + oldValue + newValue;
-						$$(componentIds.equation).setValue(test);
+						
+						console.log("oldValue: " + oldValue);
+						console.log("newValue: " + newValue);
+						$$(componentIds.equation).setValue("eidi");
 					}
 				}
 			},
