@@ -137,15 +137,12 @@ steal(function () {
 				label: "Example Output"
 			},	
 			{
-				view: "richselect",
+				view: "combo",
 				label: "Equation",
 				labelWidth: "100",
 				id: componentIds.equation,
 				placeholder: 'currentTime() - {Birthday}',
-				options: [
-							{ id: 'none', value:  "none" },
-						
-						]
+				options:["One", "Two", "Three"]
 			},
 			{
 				cols: [
