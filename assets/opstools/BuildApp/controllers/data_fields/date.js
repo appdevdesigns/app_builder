@@ -419,7 +419,7 @@ steal(function () {
 			  // 	+ fieldData.setting.includemonthFormat + getDelimiters(fieldData.setting.typemonthformatDelimiters)
 			 // 	+ fieldData.setting.includeyearFormat ;
 			  
-			  dateformat =  setformatdatetimeOrder(fieldData.setting.includeDayOrder,
+			  dateformat =  setFormatDateTimeOrder(fieldData.setting.includeDayOrder,
 							       fieldData.setting.includeMonthOrder,
 							       fieldData.setting.includeYearOrder,
 							       fieldData.setting.includeDayFormat,
