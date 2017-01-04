@@ -4,17 +4,17 @@ steal(function () {
 		includeTime: 'ab-new-date-include-time',
 		datedisPlay: 'ab-new-date-date-display',
 		
-		includedayFormat : 'ab-new-date-includedayFormat',
-		includemonthFormat : 'ab-new-date-includemonthFormat',
-		includeyearFormat : 'ab-new-date-includeyearFormat',
+		includeDayFormat : 'ab-new-date-includedayFormat',
+		includeMonthFormat : 'ab-new-date-includemonthFormat',
+		includeYearFormat : 'ab-new-date-includeyearFormat',
 		
-		typedayformatDelimiters  : 'ab-new-date-typedayformatDatetime',
-		typemonthformatDelimiters  : 'ab-new-date-typemonthdayformatDatetime',
-		typeyearformatDelimiters  : 'ab-new-date-typeyearformatDatetime',
+		typeDayFormatDelimiters  : 'ab-new-date-typedayformatDatetime',
+		typeMonthFormatDelimiters  : 'ab-new-date-typemonthdayformatDatetime',
+		typeYearFormatDelimiters  : 'ab-new-date-typeyearformatDatetime',
 		
-		includedayOrder  : 'ab-new-date-includedayOrder',
-		includemonthOrder  : 'ab-new-date-includemonthOrder',
-		includeyearOrder  : 'ab-new-date-includeyearOrder',
+		includeDayOrder  : 'ab-new-date-includedayOrder',
+		includeMonthOrder  : 'ab-new-date-includemonthOrder',
+		includeYearOrder  : 'ab-new-date-includeyearOrder',
 		
 	};
 
@@ -23,7 +23,7 @@ steal(function () {
 		name: 'date',
 		type: ['datetime', 'date'], // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'calendar',
-		menuName: 'Date',
+		menuName: AD.lang.label.getLabel('ab.dataField.date.menuName') || 'Date',
 		includeHeader: true,
 		description: ''
 	};
@@ -45,56 +45,56 @@ steal(function () {
 			}
 	}
 	
-	function setformatdatetimeOrder(orderday,ordermonth,orderyear,includedayformat,includemonthformat,includeyearformat,
-					typedayformatdelimiters,typemonthformatdelimiters,typeyearformatdelimiters){
+	function setFormatDateTimeOrder(orderDay,orderMonth,orderYear,includeDayFormat,includeMonthFormat,includeYearFormat,
+					typeDayFormatDelimiters,typeMonthFormatDelimiters,typeYearFormatDelimiters){
 		
-		var orderformatdate = [];
+		var orderFormatDate = [];
 		
 		//check orderDay
-		if(orderday == 1){
-			orderformatdate[0] = includedayformat + getDelimiters(typedayformatdelimiters);
+		if(orderDay == 1){
+			orderFormatDate[0] = includeDayFormat + getDelimiters(typeDayFormatDelimiters);
 		}
-		else if (orderday == 2){
-			orderformatdate[1] = includedayformat + getDelimiters(typedayformatdelimiters);
+		else if (orderDay == 2){
+			orderFormatDate[1] = includeDayFormat + getDelimiters(typeDayFormatDelimiters);
 		}
-		else if (orderday == 3){
-			orderformatdate[2] = includedayformat ;
+		else if (orderDay == 3){
+			orderFormatDate[2] = includeDayFormat ;
 		}
 		
 		//check orderMonth
-		if(ordermonth == 1){
-			orderformatdate[0] = includemonthformat + getDelimiters(typemonthformatdelimiters);
+		if(orderMonth == 1){
+			orderFormatDate[0] = includeMonthFormat + getDelimiters(typeMonthFormatDelimiters);
 		}
-		else if(ordermonth == 2){
-			orderformatdate[1] = includemonthformat + getDelimiters(typemonthformatdelimiters);
+		else if(orderMonth == 2){
+			orderFormatDate[1] = includeMonthFormat + getDelimiters(typeMonthFormatDelimiters);
 		}
-		else if(ordermonth == 3){
-			orderformatdate[2] = includemonthformat;
+		else if(orderMonth == 3){
+			orderFormatDate[2] = includeMonthFormat;
 		}
 		
 		//check OrderYear
-		if(orderyear == 1){
-			orderformatdate[0] = includeyearformat + getDelimiters(typeyearformatdelimiters);
+		if(orderYear == 1){
+			orderFormatDate[0] = includeYearFormat + getDelimiters(typeYearFormatDelimiters);
 		}
-		else if(orderyear == 2){
-			orderformatdate[1] = includeyearformat + getDelimiters(typeyearformatdelimiters);
+		else if(orderYear == 2){
+			orderFormatDate[1] = includeYearFormat + getDelimiters(typeYearFormatDelimiters);
 		}
-		else if(orderyear == 3){
-			orderformatdate[2] = includeyearformat;
+		else if(orderYear == 3){
+			orderFormatDate[2] = includeYearFormat;
 		}
 		
-		return orderformatdate[0]+orderformatdate[1]+orderformatdate[2];
+		return orderFormatDate[0]+orderFormatDate[1]+orderFormatDate[2];
 		
 		
 	}
 	
 	function showdateDisplay(){
-		if(($$(componentIds.includedayFormat).getValue().split("-")[1] && $$(componentIds.includedayFormat).getValue().split("-")[1] != 'none')
-		   && ($$(componentIds.includemonthFormat).getValue().split("-")[1] && $$(componentIds.includemonthFormat).getValue().split("-")[1] != 'none')
-		   && ($$(componentIds.includeyearFormat).getValue().split("-")[1] && $$(componentIds.includeyearFormat).getValue().split("-")[1] != 'none')
-		   && ($$(componentIds.typedayformatDelimiters).getValue() && $$(componentIds.typedayformatDelimiters).getValue() != 'none')
-		   && ($$(componentIds.typemonthformatDelimiters).getValue() && $$(componentIds.typemonthformatDelimiters).getValue() != 'none')
-		   && ($$(componentIds.typeyearformatDelimiters).getValue() && $$(componentIds.typeyearformatDelimiters).getValue() != 'none')
+		if(($$(componentIds.includeDayFormat).getValue().split("-")[1] && $$(componentIds.includeDayFormat).getValue().split("-")[1] != 'none')
+		   && ($$(componentIds.includeMonthFormat).getValue().split("-")[1] && $$(componentIds.includeMonthFormat).getValue().split("-")[1] != 'none')
+		   && ($$(componentIds.includeYearFormat).getValue().split("-")[1] && $$(componentIds.includeYearFormat).getValue().split("-")[1] != 'none')
+		   && ($$(componentIds.typeDayFormatDelimiters).getValue() && $$(componentIds.typeDayFormatDelimiters).getValue() != 'none')
+		   && ($$(componentIds.typeMonthFormatDelimiters).getValue() && $$(componentIds.typeMonthFormatDelimiters).getValue() != 'none')
+		   && ($$(componentIds.typeYearFormatDelimiters).getValue() && $$(componentIds.typeYearFormatDelimiters).getValue() != 'none')
 		   )
 		  {
 		    	//var dateformat = $$(componentIds.includedayFormat).getValue().split("-")[1]+  getDelimiters($$(componentIds.typedayformatDelimiters).getValue())
@@ -102,21 +102,21 @@ steal(function () {
 			 // 	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typeyearformatDelimiters).getValue()); 
 		  	
 			  
-			   var formatdateorder = setformatdatetimeOrder(
-				   		 $$(componentIds.includedayOrder).getValue(),
-						 $$(componentIds.includemonthOrder).getValue(),
-						 $$(componentIds.includeyearOrder).getValue(),
-				   		 $$(componentIds.includedayFormat).getValue().split("-")[1],
-				   		 $$(componentIds.includemonthFormat).getValue().split("-")[1],
-				   		 $$(componentIds.includeyearFormat).getValue().split("-")[1],
-				   		 $$(componentIds.typedayformatDelimiters).getValue(),
-						 $$(componentIds.typemonthformatDelimiters).getValue(),
-				   		 $$(componentIds.typeyearformatDelimiters).getValue()
+			   var formatDateOrder = setFormatDateTimeOrder(
+				   		 $$(componentIds.includeDayOrder).getValue(),
+						 $$(componentIds.includeMonthOrder).getValue(),
+						 $$(componentIds.includeYearOrder).getValue(),
+				   		 $$(componentIds.includeDayFormat).getValue().split("-")[1],
+				   		 $$(componentIds.includeMonthFormat).getValue().split("-")[1],
+				   		 $$(componentIds.includeYearFormat).getValue().split("-")[1],
+				   		 $$(componentIds.typeDayFormatDelimiters).getValue(),
+						 $$(componentIds.typeMonthFormatDelimiters).getValue(),
+				   		 $$(componentIds.typeYearFormatDelimiters).getValue()
 			   			);
 
 			  $$(componentIds.datedisPlay).setValue("");;
-			  var fulldatetime = moment(new Date()).format(formatdateorder);
-			  var $container = $$(componentIds.datedisPlay).setValue(fulldatetime);
+			  var fullDatetime = moment(new Date()).format(formatDateOrder);
+			  var $container = $$(componentIds.datedisPlay).setValue(fullDatetime);
 			  
 			 
 			  //console.log("fulldate:" + fulldate);
@@ -160,7 +160,7 @@ steal(function () {
 				cols: [
 				{
 					view: "richselect",
-					id: componentIds.includedayFormat,
+					id: componentIds.includeDayFormat,
 					label: "Day",
 					value: 'includeDay-ddd',
 					options: [
@@ -180,7 +180,7 @@ steal(function () {
 				 },
 				 {
 						view: "richselect",
-						id: componentIds.includedayOrder,
+						id: componentIds.includeDayOrder,
 						label: "Places",
 						value: 1,
 						//disabled: true,
@@ -201,7 +201,7 @@ steal(function () {
 			},
 			{
 				view: "radio",
-				id: componentIds.typedayformatDelimiters,
+				id: componentIds.typeDayFormatDelimiters,
 				label: "Delimiters",
 				value: 'slash',
 				vertical: true,
@@ -221,7 +221,7 @@ steal(function () {
 				cols: [
 					{
 						view: "richselect",
-						id: componentIds.includemonthFormat,
+						id: componentIds.includeMonthFormat,
 						label: "Month",
 						value: 'includeMonth-MMM',
 						options: [
@@ -239,7 +239,7 @@ steal(function () {
 					},
 					{
 						view: "richselect",
-						id: componentIds.includemonthOrder,
+						id: componentIds.includeMonthOrder,
 						label: "Places",
 						value: 2,
 						//disabled: true,
@@ -258,7 +258,7 @@ steal(function () {
 			},
 			{
 				view: "radio",
-				id: componentIds.typemonthformatDelimiters,
+				id: componentIds.typeMonthFormatDelimiters,
 				label: "Delimiters",
 				value: 'slash',
 				vertical: true,
@@ -278,7 +278,7 @@ steal(function () {
 				cols: [
 					{
 						view: "richselect",
-						id: componentIds.includeyearFormat,
+						id: componentIds.includeYearFormat,
 						label: "Year",
 						value: 'includeYear-YYYY',
 						options: [
@@ -294,7 +294,7 @@ steal(function () {
 					},
 					{
 						view: "richselect",
-						id: componentIds.includeyearOrder,
+						id: componentIds.includeYearOrder,
 						label: "Places",
 						value: 3,
 						//disabled: true,
@@ -314,7 +314,7 @@ steal(function () {
 			},
 			{
 				view: "radio",
-				id: componentIds.typeyearformatDelimiters,
+				id: componentIds.typeYearFormatDelimiters,
 				label: "Delimiters",
 				value: 'slash',
 				vertical: true,
@@ -339,16 +339,16 @@ steal(function () {
 		showdateDisplay();
 		if (!data.type || !data.setting) return;
 		showdateDisplay();
-		$$(componentIds.includedayFormat).setValue("includeDay-" + data.setting.includedayFormat);
-		$$(componentIds.typedayformatDelimiters).setValue(data.setting.typedayformatDelimiters);
-		$$(componentIds.includemonthFormat).setValue("includeMonth-" + data.setting.includemonthFormat);
-		$$(componentIds.typemonthformatDelimiters).setValue(data.setting.typemonthformatDelimiters);
-		$$(componentIds.includeyearFormat).setValue("includeYear-" +data.setting.includeyearFormat);
-		$$(componentIds.typeyearformatDelimiters).setValue(data.setting.typeyearformatDelimiters);
+		$$(componentIds.includeDayFormat).setValue("includeDay-" + data.setting.includeDayFormat);
+		$$(componentIds.typeDayFormatDelimiters).setValue(data.setting.typeDayFormatDelimiters);
+		$$(componentIds.includeMonthFormat).setValue("includeMonth-" + data.setting.includeMonthFormat);
+		$$(componentIds.typeMonthFormatDelimiters).setValue(data.setting.typeMonthFormatDelimiters);
+		$$(componentIds.includeYearFormat).setValue("includeYear-" +data.setting.includeYearFormat);
+		$$(componentIds.typeYearFormatDelimiters).setValue(data.setting.typeYearFormatDelimiters);
 		
-		$$(componentIds.includedayOrder).setValue(data.setting.includedayOrder);
-		$$(componentIds.includemonthOrder).setValue(data.setting.includemonthOrder);
-		$$(componentIds.includeyearOrder).setValue(data.setting.includeyearOrder);
+		$$(componentIds.includeDayOrder).setValue(data.setting.includeDayOrder);
+		$$(componentIds.includeMonthOrder).setValue(data.setting.includeMonthOrder);
+		$$(componentIds.includeYearOrder).setValue(data.setting.includeYearOrder);
 		
 		$$(componentIds.includeTime).setValue(data.type == 'datetime');
 		$$(componentIds.includeTime).disable();
@@ -374,15 +374,15 @@ steal(function () {
 				editor: editor, // http://docs.webix.com/desktop__editing.html
 				filter_type: 'date', // DataTableFilterPopup - filter type
 				template:'<div class="ab-date-data-field"></div>',
-				includedayFormat: $$(componentIds.includedayFormat).getValue().split("-")[1],
-				typedayformatDelimiters : $$(componentIds.typedayformatDelimiters).getValue(),
-				includemonthFormat: $$(componentIds.includemonthFormat).getValue().split("-")[1],
-				typemonthformatDelimiters : $$(componentIds.typemonthformatDelimiters).getValue(),
-				includeyearFormat: $$(componentIds.includeyearFormat).getValue().split("-")[1],
-				typeyearformatDelimiters : $$(componentIds.typeyearformatDelimiters).getValue(),
-				includedayOrder :  $$(componentIds.includedayOrder).getValue(),
-				includemonthOrder :  $$(componentIds.includemonthOrder).getValue(),
-				includeyearOrder :  $$(componentIds.includeyearOrder).getValue(),
+				includeDayFormat: $$(componentIds.includeDayFormat).getValue().split("-")[1],
+				typeDayFormatDelimiters : $$(componentIds.typeDayFormatDelimiters).getValue(),
+				includeMonthFormat: $$(componentIds.includeMonthFormat).getValue().split("-")[1],
+				typeMonthFormatDelimiters : $$(componentIds.typeMonthFormatDelimiters).getValue(),
+				includeYearFormat: $$(componentIds.includeYearFormat).getValue().split("-")[1],
+				typeYearFormatDelimiters : $$(componentIds.typeYearFormatDelimiters).getValue(),
+				includeDayOrder :  $$(componentIds.includeDayOrder).getValue(),
+				includeMonthOrder :  $$(componentIds.includeMonthOrder).getValue(),
+				includeYearOrder :  $$(componentIds.includeYearOrder).getValue(),
 			}
 		};
 	};
@@ -407,27 +407,27 @@ steal(function () {
 		
 		//setdateformat
 		var dateformat = "mm/dd/yyyy";
-		if((fieldData.setting.includedayFormat && fieldData.setting.includedayFormat != 'none')
-		   && (fieldData.setting.includemonthFormat && fieldData.setting.includemonthFormat != 'none')
-		   && (fieldData.setting.includeyearFormat && fieldData.setting.includeyearFormat != 'none')
-		   && (fieldData.setting.typedayformatDelimiters && fieldData.setting.typedayformatDelimiters != 'none')
-		   && (fieldData.setting.typemonthformatDelimiters && fieldData.setting.typemonthformatDelimiters != 'none')
-		   && (fieldData.setting.typeyearformatDelimiters && fieldData.setting.typeyearformatDelimiters != 'none')
+		if((fieldData.setting.includeDayFormat && fieldData.setting.includeDayFormat != 'none')
+		   && (fieldData.setting.includeMonthFormat && fieldData.setting.includeMonthFormat != 'none')
+		   && (fieldData.setting.includeYearFormat && fieldData.setting.includeYearFormat != 'none')
+		   && (fieldData.setting.typeDayFormatDelimiters && fieldData.setting.typeDayFormatDelimiters != 'none')
+		   && (fieldData.setting.typeMonthFormatDelimiters && fieldData.setting.typeMonthFormatDelimiters != 'none')
+		   && (fieldData.setting.typeYearFormatDelimiters && fieldData.setting.typeYearFormatDelimiters != 'none')
 		   )
 		  {
 		    	//dateformat = fieldData.setting.includedayFormat +  getDelimiters(fieldData.setting.typedayformatDelimiters)
 			  // 	+ fieldData.setting.includemonthFormat + getDelimiters(fieldData.setting.typemonthformatDelimiters)
 			 // 	+ fieldData.setting.includeyearFormat ;
 			  
-			  dateformat =  setformatdatetimeOrder(fieldData.setting.includedayOrder,
-							       fieldData.setting.includemonthOrder,
-							       fieldData.setting.includeyearOrder,
-							       fieldData.setting.includedayFormat,
-							       fieldData.setting.includemonthFormat,
-							       fieldData.setting.includeyearFormat,
-							       fieldData.setting.typedayformatDelimiters,
-							       fieldData.setting.typemonthformatDelimiters,
-							       fieldData.setting.typeyearformatDelimiters
+			  dateformat =  setformatdatetimeOrder(fieldData.setting.includeDayOrder,
+							       fieldData.setting.includeMonthOrder,
+							       fieldData.setting.includeYearOrder,
+							       fieldData.setting.includeDayFormat,
+							       fieldData.setting.includeMonthFormat,
+							       fieldData.setting.includeYearFormat,
+							       fieldData.setting.typeDayFormatDelimiters,
+							       fieldData.setting.typeMonthFormatDelimiters,
+							       fieldData.setting.typeYearFormatDelimiters
 							       );
 			  
 			  
