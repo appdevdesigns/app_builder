@@ -1,16 +1,16 @@
 steal(function () {
 	var componentIds = {
-		editView: 'ab-new-age',
-		name: 'ab-new-age-name',
-		equaltionType: 'ab-new-age-equaltionType',
-		dateType: 'ab-new-age-dateType',
-		resultType: 'ab-new-age-resultType',
-		equation: 'ab-new-age-equation',
-		typeDecimals: 'ab-new-age-typeDecimals',
-		typeDecimalPlaces: 'ab-new-age-typeDecimalPlaces',
-		typeRounding: 'ab-new-age-typeRounding',
-		typeThousands: 'ab-new-age-typeThousands',
-		typeFormat: 'ab-new-age-typeFormat',
+		editView: 'ab-new-equation',
+		name: 'ab-new-equation-name',
+		equaltionType: 'ab-new-equation-equaltionType',
+		dateType: 'ab-new-equation-dateType',
+		resultType: 'ab-new-equation-resultType',
+		equation: 'ab-new-equation-equation',
+		typeDecimals: 'ab-new-equation-typeDecimals',
+		typeDecimalPlaces: 'ab-new-equation-typeDecimalPlaces',
+		typeRounding: 'ab-new-equation-typeRounding',
+		typeThousands: 'ab-new-equation-typeThousands',
+		typeFormat: 'ab-new-equation-typeFormat',
 
 
 
@@ -25,12 +25,12 @@ steal(function () {
 		{ id: 'percent', value:  "%", sign: "%", position: "postfix" },
 	];
 	
-	var ageequationDataField = {
-		name: 'ageequation', // unique key to reference this specific DataField
+	var equationDataField = {
+		name: 'equation', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 	
-		menuName: 'Age equation',  
+		menuName: 'Equation',  
 		includeHeader: true,
 		description: ''
 	};
@@ -66,7 +66,7 @@ steal(function () {
 
 
 
-	ageequationDataField.editDefinition = {
+	equationDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
 			{
@@ -74,7 +74,7 @@ steal(function () {
 				label: "Name",
 				labelWidth: "100",
 				id: componentIds.name,
-				placeholder: 'Age'
+				placeholder: ''
 			},
 			{
 				view: "radio",
@@ -220,7 +220,7 @@ steal(function () {
 
 
 
-	ageequationDataField.populateSettings = function (application, data) {
+	equationDataField.populateSettings = function (application, data) {
 		var list = $$(componentIds.equation).getPopup().getList();;
 		list.clearAll(); 
 		application.currObj.getColumns().then(function(columns) {
@@ -259,11 +259,11 @@ steal(function () {
 
 
 
-	ageequationDataField.getSettings = function () {
+	equationDataField.getSettings = function () {
 		var type = 'integer';
 		
 		return {
-			fieldName: ageequationDataField.name,
+			fieldName: equationDataField.name,
 			type: type,
 			setting: {
 				equaltionType : $$(componentIds.equaltionType).getValue(),
@@ -275,17 +275,17 @@ steal(function () {
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
-				template:'<div class="ab-age-data-field"></div>',
+				template:'<div class="ab-equation-data-field"></div>',
 				
 			}
 		};
 	};
 
 
-	ageequationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
+	equationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		
 		if (rowData == null) {
-			$(itemNode).find('.ab-age-data-field').html('');
+			$(itemNode).find('.ab-equation-data-field').html('');
 			return true;
 		}
 		
@@ -360,7 +360,7 @@ steal(function () {
 			}
 		}*/
 		
-		$(itemNode).find('.ab-age-data-field').html(numberFormat);
+		$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
 		
 		/*$.each(rowData, function(index, value) {
@@ -378,11 +378,11 @@ steal(function () {
 	 * fields.
 	 *
 	 */
-	ageequationDataField.resetState = function () {
+	equationDataField.resetState = function () {
 
 
 	};
 
 
-	return ageequationDataField;
+	return equationDataField;
 });
