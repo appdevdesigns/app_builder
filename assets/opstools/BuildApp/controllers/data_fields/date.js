@@ -100,8 +100,8 @@ steal(function () {
 		    	//var dateformat = $$(componentIds.includedayFormat).getValue().split("-")[1]+  getDelimiters($$(componentIds.typedayformatDelimiters).getValue())
 			//   	+ $$(componentIds.includemonthFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typemonthformatDelimiters).getValue())
 			 // 	+ $$(componentIds.includeyearFormat).getValue().split("-")[1] + getDelimiters($$(componentIds.typeyearformatDelimiters).getValue()); 
-			 
-			 
+
+
 			 var formatDateOrder = setFormatDateTimeOrder(
 			 	$$(componentIds.includeDayOrder).getValue(),
 			 	$$(componentIds.includeMonthOrder).getValue(),
@@ -117,17 +117,17 @@ steal(function () {
 			 $$(componentIds.datedisPlay).setValue("");;
 			 var fullDatetime = moment(new Date()).format(formatDateOrder);
 			 var $container = $$(componentIds.datedisPlay).setValue(fullDatetime);
-			 
+
 			 
 			  //console.log("fulldate:" + fulldate);
 			  
 			}
-			
-		}
-		
 
-		
-		
+		}
+
+
+
+
 
 	// Edit definition
 	dateDataField.editDefinition = {
@@ -188,7 +188,7 @@ steal(function () {
 						{ id: 1, value: "1" },
 						{ id: 2, value: "2" },
 						{ id: 3, value: "3" },
-						
+
 						],
 						on: {
 							'onChange': function (newValue, oldValue) {
@@ -197,7 +197,7 @@ steal(function () {
 						}
 					}
 					]
-					
+
 				},
 				{
 					view: "radio",
@@ -284,7 +284,7 @@ steal(function () {
 						options: [
 						{ id: 'includeYear-YY', value: "70 71 ... 29 30" },
 						{ id: 'includeYear-YYYY', value: "1970 1971 ... 2029 2030" },
-						
+
 						],
 						on: {
 							'onChange': function (newValue, oldValue) {
@@ -310,7 +310,7 @@ steal(function () {
 						}
 					}
 					]
-					
+
 				},
 				{
 					view: "radio",
@@ -336,9 +336,10 @@ steal(function () {
 
 	// Populate settings (when Edit field)
 	dateDataField.populateSettings = function (application, data) {
-		showdateDisplay();
+		
 		if (!data.type || !data.setting) return;
 		showdateDisplay();
+		
 		$$(componentIds.includeDayFormat).setValue("includeDay-" + data.setting.includeDayFormat);
 		$$(componentIds.typeDayFormatDelimiters).setValue(data.setting.typeDayFormatDelimiters);
 		$$(componentIds.includeMonthFormat).setValue("includeMonth-" + data.setting.includeMonthFormat);
@@ -418,7 +419,7 @@ steal(function () {
 		    	//dateformat = fieldData.setting.includedayFormat +  getDelimiters(fieldData.setting.typedayformatDelimiters)
 			  // 	+ fieldData.setting.includemonthFormat + getDelimiters(fieldData.setting.typemonthformatDelimiters)
 			 // 	+ fieldData.setting.includeyearFormat ;
-			 
+
 			 dateformat =  setFormatDateTimeOrder(fieldData.setting.includeDayOrder,
 			 	fieldData.setting.includeMonthOrder,
 			 	fieldData.setting.includeYearOrder,
@@ -429,10 +430,10 @@ steal(function () {
 			 	fieldData.setting.typeMonthFormatDelimiters,
 			 	fieldData.setting.typeYearFormatDelimiters
 			 	);
-			 
-			 
+
+
 			}
-			
+
 
 			var dateDiv = null; 
 			console.log("startdisplay2 : " + data);
@@ -443,7 +444,7 @@ steal(function () {
 
             	var date = new Date(data);
             	var formattedDate = moment(date).format(dateformat);
-            	
+
             	dateDiv = formattedDate;
             }
 
@@ -451,10 +452,10 @@ steal(function () {
         	//$container.html(dateDiv);
         	console.log("startdisplay4 : dateDiv "+dateDiv );
         	$container.html(dateDiv);
-        	
+
         	return true;
         };
-        
+
 	/*dateDataField.validate = function (fieldData, value) {
 		
 		if(orderday == ordermonth){
