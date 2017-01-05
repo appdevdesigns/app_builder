@@ -63,7 +63,33 @@ steal(function () {
 		//{currentdate} - {birthdate} 
 	}
 	
+	function isBalanced(arr){
+	  var stack = [];
 
+	  arr.forEach(function(curr){
+	    if (curr === '(' || curr === '[' || curr === '{') {
+		console.log("push");
+	      stack.push(curr);
+	    }
+
+	    if (curr === ')' || curr === ']' || curr === '}') {
+		var currpop = stack.pop();
+		console.log("pop: " + currpop + " crr: " + curr);
+		if(currpop == '(' && curr == ')' ){
+			console.log('true');
+
+		}
+		else if(currpop == '{' && curr == '}'){
+			console.log('true');
+
+		}else{
+			console.log('false');
+			return false;
+		}
+		    
+		//var symbols = ['{', '(', '}', ']','(', ')','(', ')'];
+		//isBalanced(symbols)
+	    }
 
 
 	equationDataField.editDefinition = {
