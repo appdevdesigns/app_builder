@@ -7,7 +7,41 @@
 
 var async = require('async'),
     _ = require('lodash'),
-    AD = require('ad-utils');
+    AD = require('ad-utils'),
+    fs = require('fs'),
+    path = require('path');
+
+// This will be populated from the exported `defaults` properties of .js files
+// found in /api/services/data_fields
+var typeDefaults = {
+/*
+    number: {
+        type: 'integer',
+        fieldName: 'number',
+        setting: {
+            icon: 'slack',
+            editor: 'number',
+            filter_type: 'number',
+            format: 'numberFormat'
+        }
+    },
+    string: {...},
+    boolean: {...},
+    ...
+*/
+};
+
+var pathToFieldFiles = path.join(process.cwd(), 'api', 'services', 'data_fields');
+var fieldFiles = fs.readdirSync(pathToFieldFiles);
+fieldFiles.forEach(function(fieldFile) {
+    var match = fieldFile.match(/^(\w+)\.js$/);
+    if (match) {
+        var name = match[1];
+        var def = require(path.join(pathToFieldFiles, fieldFile));
+        typeDefaults[ name ] = def.defaults;
+    }
+});
+
 
 module.exports = {
 
@@ -150,132 +184,6 @@ module.exports = {
 
     },
     
-    ////
-    // Defaults for column types
-    ////
-    
-    typeDefaults: {
-        
-        boolean: {
-            type: 'boolean',
-            fieldName: 'boolean',
-            setting: {
-                icon: 'check-square-o',
-                filter_type: 'boolean',
-                template: '{common.checkbox()}',
-            }
-        },
-        
-        date: {
-            type: 'date',
-            fieldName: 'date',
-            setting: {
-                icon: 'calendar',
-                editor: 'date',
-                filter_type: 'date',
-                format: 'dateFormatStr',
-            }
-        },
-        
-        float: {
-            type: 'float',
-            fieldName: 'number',
-            setting: {
-                icon: 'slack',
-                editor: 'number',
-                filter_type: 'number',
-                format: 'numberFormat',
-            }
-        },
-        
-        integer: {
-            type: 'integer',
-            fieldName: 'number',
-            setting: {
-                icon: 'slack',
-                editor: 'number',
-                filter_type: 'number',
-                format: 'numberFormat',
-            }
-        },
-        
-        list: {
-            type: 'string',
-            fieldName: 'list',
-            setting: {
-                icon: 'th-list',
-                filter_type: 'list',
-                editor: 'richselect',
-                options: [],
-            }
-        },
-        
-        string: {
-            type: 'string',
-            fieldName: 'string',
-            setting: {
-                icon: 'font',
-                editor: 'text',
-                filter_type: 'text',
-                supportMultilingual: '0',
-            }
-        },
-        
-        text: {
-            type: 'text',
-            fieldName: 'text',
-            setting: {
-                icon: 'align-right',
-                editor: 'popup',
-                filter_type: 'text',
-                supportMultilingual: '0',
-            }
-        },
-        
-        attachment: {
-            type: 'string',
-            fieldName: 'attachment',
-            setting: {
-                // under construction
-            }
-        },
-        
-        image: {
-            type: 'string',
-            fieldName: 'image',
-            setting: {
-                icon: 'file-image-o',
-                editor: 'imageDataField',
-                template: '<div class="ab-image-data-field"></div>',
-                filter_type: 'text',
-                /*
-                useWidth: '1',
-                imageWidth: '100',
-                useHeight: '1',
-                imageHeight: '100',
-                width: '100',
-                */
-                css: 'ab-column-no-padding'
-            }
-        },
-        
-        connectObject: {
-            type: 'connectObject',
-            fieldName: 'connectObject',
-            setting: {
-                appName: '',
-                //linkType: 'model' or 'collection',
-                //linkObject: {integer},
-                //linkViaType: 'model' or 'collection',
-                icon: 'external-link',
-                editor: 'selectivity',
-                template: '<div class="connect-data-values"></div>',
-                filter_type: 'multiselect'
-            }
-        }
-        
-    },
-    
     
     ////
     // Model class methods
@@ -286,8 +194,15 @@ module.exports = {
      * generated app's model.
      *
      * Examples:
-     *     ABColumn.createColumn('float', { name: 'Price', object: 123 })
-     *     ABColumn.createColumn('text', 'en', { name: 'Description', object: 123 })
+     *     ABColumn.createColumn('number', { name: 'Population', object: 10 })
+     *     ABColumn.createColumn('string', { 
+     *         name: 'Hello', 
+     *         object: 11, 
+     *         language_code: 'zh-hans', 
+     *         label: '你好'
+     *     })
+     *     ABColumn.createColumn('number', { name: 'Price', object: 123, type: 'float', language_code: 'en' })
+     *     ABColumn.createColumn('text', { name: 'Description', object: 123 })
      *     ABColumn.createColumn('list', {
      *         name: 'Toppings',
      *         object: 123,
@@ -299,33 +214,34 @@ module.exports = {
      *                 {dataId: 48, id: "Ketchup"}
      *             ]
      *         }
-     *     )
+     *     })
      *
      * @param {string} type
      *     One of the following: 
-     *         boolean, date, float, integer, list, string, text,
+     *         boolean, date, number, list, string, text,
      *         attachment, image.
      *
      *     Default values for `data` will be populated based on this. 
-     *     See ABColumn.typeDefaults.
+     *     See /api/services/data_fields/*.js
      *
      *     Note that this `type` parameter is different from `data.type` or
      *     `data.fieldName` in some situations.
      *     For connections to other objects, use ABColumn.createLink() instead.
      *
-     * @param {string} [currentLanguage]
-     *     Optional language code of the current language.
-     *     The `data.name` value will be copied to the column label in the 
-     *     current language. A language code prefix will be added to all other 
-     *     language labels.
      * @param {object} data
      * @param {string} data.name
      *     The name of the column. Required.
      * @param {integer} data.object
      *     The primary key ID of the ABObject that this column belongs to.
      *     Required.
+     * @param {string} [data.language_code]
+     *     Optional language code of the current language.
+     *     The `data.name` value will be copied to the column label in the 
+     *     current language. A language code prefix will be added to all other 
+     *     language labels.
      * @param {string} [data.type]
      *     Optional. If you want to override the default for some reason.
+     *     Such as specifying a 'float' type for a number field.
      * @param {string} [data.fieldName]
      *     Optional. If you want to override the default for some reason.
      * @param {integer} [data.weight]
@@ -335,21 +251,10 @@ module.exports = {
      * @return Deferred
      *     Resolves with the new column's data.
      */
-    createColumn: function (type, currentLanguage, data) {
+    createColumn: function (type, data) {
         var dfd = AD.sal.Deferred();
         
-        // Check if currentLanguage was omitted
-        if (arguments.length == 2) {
-            data = currentLanguage;
-            currentLanguage = '';
-        
-            // Can use site default language
-            if (sails.config.appdev && sails.config.appdev['lang.default']) {
-                currentLanguage = sails.config.appdev['lang.default'];
-            }
-        }
-        
-        var defaultData = ABColumn.typeDefaults[type] || {};
+        var defaultData = typeDefaults[type] || {};
         
         var columnData = data || {};
         _.defaults(data, {
@@ -361,12 +266,12 @@ module.exports = {
         
         var column;
         var languages = [];
-        var appID, columnID;
+        var appID;
         
         async.series([
             // Preliminary checks
             function(next) {
-                if (!ABColumn.typeDefaults[type]) return next(new Error('Type is not recognized: ' + type));
+                if (!typeDefaults[type]) return next(new Error('Type is not recognized: ' + type));
                 if (!columnData.object) return next(new Error('data.object is required'));
                 if (!columnData.name) return next(new Error('data.name is required'));
                 next();
@@ -377,7 +282,7 @@ module.exports = {
                 ABObject.find({ id: columnData.object })
                 .exec(function(err, list) {
                     if (err) next(err);
-                    else if (!list || !list[0]) next(new Error('Object not found'));
+                    else if (!list || !list[0]) next(new Error('Object not found: ' + columnData.object));
                     else {
                         appID = list[0].application;
                         next();
@@ -399,7 +304,7 @@ module.exports = {
                 });
             },
             
-            // The `settings` field needs to have the app name for some reason
+            // The `setting` field needs to have the app name for some reason
             function(next) {
                 // Skip if app name is already given
                 if (columnData.setting.appName) return next();
@@ -408,7 +313,7 @@ module.exports = {
                 .exec(function(err, list) {
                     if (err) next(err);
                     else if (!list || !list[0]) {
-                        next(new Error('Application not found:' + appID));
+                        next(new Error('Application not found: ' + appID));
                     }
                     else {
                         columnData.setting.appName = list[0].name;
@@ -416,51 +321,18 @@ module.exports = {
                     }
                 });
             },
-        
-            // Create column entry
-            function(next) {
-                ABColumn.create(columnData)
-                .exec(function(err, result) {
-                    if (err) next(err);
-                    else {
-                        column = result;
-                        next();
-                    }
-                });
-            },
             
-            // Find installed languages
+            // Create column entry & multilingual labels
             function(next) {
-                SiteMultilingualLanguage.find()
-                .exec(function(err, list) {
-                    if (err) next(err);
-                    else {
-                        languages = _.map(list, 'language_code');
-                        next();
-                    }
-                });
-            },
-            
-            // Create column translations
-            function(next) {
-                async.forEach(languages, function(langCode, transDone) {
-                    var label = column.name;
-                    if (langCode != currentLanguage) {
-                        label = `[${langCode}] ${label}`;
-                    }
-                    
-                    ABColumnTrans.create({
-                        abcolumn: column.id,
-                        label: label,
-                        language_code: langCode
-                    })
-                    .exec(function(err, result) {
-                        if (err) transDone(err);
-                        else transDone();
-                    });
-                }, function(err) {
-                    if (err) next(err);
-                    else next();
+                columnData.label = columnData.label || columnData.name;
+                Multilingual.model.create({
+                    model: ABColumn,
+                    data: columnData
+                })
+                .fail(next)
+                .done(function(newColumn) {
+                    column = newColumn;
+                    next();
                 });
             }
             
@@ -474,44 +346,45 @@ module.exports = {
     
     
     /**
-     * Create a connection column, together with the return connection column.
+     * Create a connection column, together with the optional return connection
+     * column.
      * It is possible for both the source and target to be same object.
      *
-     * Example:
-     * ABColumn.createLink('MyLinkName', {
+     * Examples:
+     *
+     * ABColumn.createLink({
+     *     name: 'MyLinkName',
      *     sourceObjectID: 5,
      *     targetObjectID: 7,
      *     sourceRelation: 'one',
+     *     targetRelation: 'many',
+     *     language_code: 'zh-hans'
+     * }).then( ... )
+     *
+     * ABColumn.createLink({
+     *     name: 'AnotherLinkName',
+     *     sourceObjectID: 8,
+     *     targetObjectID: 9,
      *     targetRelation: 'many'
      * }).then( ... )
      *
-     * @param {string} name
-     * @param {string} [currentLanguage]
      * @param {object} data
+     * @param {string} data.name
      * @param {integer} data.sourceObjectID
      *     The primary key value of the object containing the column.
      * @param {integer} data.targetObjectID
      *     The primary key value of the object being linked to.
-     * @param {string} data.sourceRelation
-     *     Either "one" or "many".
+     * @param {string} [data.sourceRelation]
+     *     Optional. Either "one" or "many".
+     *     If omitted, then the retun connection column will not be created.
      * @param {string} data.targetRelation
-     *     Either "one" or "many".
+     *     Either "one" or "many". Required.
+     * @param {string} [data.language_code]
      * @return Deferred
      *     Resolves with (sourceObjectColumn, targetObjectColumn)
      */
-    createLink: function(name, currentLanguage, data) {
+    createLink: function(data) {
         var dfd = AD.sal.Deferred();
-        
-        // Check if currentLanguage was omitted
-        if (arguments.length == 2) {
-            data = currentLanguage;
-            currentLanguage = '';
-        
-            // Can use site default language
-            if (sails.config.appdev && sails.config.appdev['lang.default']) {
-                currentLanguage = sails.config.appdev['lang.default'];
-            }
-        }
         
         var sourceSetting = {
             linkObject: data.targetObjectID,
@@ -541,8 +414,7 @@ module.exports = {
             function(next) {
                 var msg = null;
                 [
-                    'sourceObjectID', 'targetObjectID', 
-                    'sourceRelation', 'targetRelation'
+                    'name', 'sourceObjectID', 'targetObjectID', 'targetRelation'
                 ].forEach(function(paramName) {
                     if (!data[paramName]) msg = `data.${paramName} is required`;
                 });
@@ -553,9 +425,10 @@ module.exports = {
             
             // Create source connection column
             function(next) {
-                ABColumn.createColumn('connectObject', currentLanguage, {
-                    name: name,
+                ABColumn.createColumn('connectObject', {
+                    name: data.name,
                     object: data.sourceObjectID,
+                    language_code: data.language_code,
                     setting: sourceSetting
                 })
                 .fail(next)
@@ -572,9 +445,13 @@ module.exports = {
             
             // Create target connection column
             function(next) {
-                ABColumn.createColumn('connectObject', currentLanguage, {
-                    name: name + 'Link',
+                // Skip if the source relation was not given.
+                if (!data.sourceRelation) return next();
+                
+                ABColumn.createColumn('connectObject', {
+                    name: data.name + 'Link',
                     object: data.targetObjectID,
+                    language_code: data.language_code,
                     setting: targetSetting
                 })
                 .fail(next)
@@ -594,10 +471,12 @@ module.exports = {
                 if (!sourceSetting.linkVia) return next();
                 
                 ABColumn.update(sourceColumn.id, { setting: sourceSetting })
-                .fail(next)
-                .done(function(col) {
-                    sourceColumn = col;
-                    next();
+                .exec(function(err, col) {
+                    if (err) next(err);
+                    else {
+                        sourceColumn = col;
+                        next();
+                    }
                 });
             }
         

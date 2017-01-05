@@ -33,6 +33,12 @@ module.exports = {
 
     'put /app_builder/column/:id/width': 
         'app_builder/ABColumnController.saveWidth',
+        
+    'post /app_builder/column/createColumn':
+        'app_builder/ABColumnController.createColumn',
+    
+    'post /app_builder/column/createLink':
+        'app_builder/ABColumnController.createLink',
 
     /* Application permissions */
     'get /app_builder/user/roles':
