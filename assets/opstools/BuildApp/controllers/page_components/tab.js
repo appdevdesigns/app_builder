@@ -100,8 +100,6 @@ steal(
 
 
 
-
-
                     // 2) find the existing element on our page, and replace it with the
                     // current view:
                     var tabView = webix.ui(view, $$(self.viewId));  // create the view at location $$(self.viewId) ?
@@ -111,7 +109,6 @@ steal(
 
                         refreshTabView();
                     });
-
 
 
 
@@ -158,64 +155,11 @@ steal(
                 }
 
 
-                // $$(self.viewId).clearAll();
-                // $$(self.viewId).showProgress({ type: 'icon' });
-
-                // if (setting.pageIds && setting.pageIds.length > 0) {
-                //  // Convert array to object
-                //  var pageIds = $.map(setting.pageIds, function (id) {
-                //      return { id: id };
-                //  });
-
-                //  // Get selected pages
-                //  application.getPages({ or: pageIds })
-                //      .fail(q.reject)
-                //      .then(function (pages) {
-
-                //          pages.forEach(function (p) {
-                //              if (p.translate) p.translate();
-                //          });
-
-                //          // Convert object format (same arrange)
-                //          var pageMenu = [];
-                //          pageIds.forEach(function (page) {
-                                
-                //              // NOTE: if a page was just deleted, an existing menu might 
-                //              // still be trying to reference it.  Verify it still exists
-                //              // before trying to add it:
-                //              var foundPage = pages.filter(function (p) { return p.id == page.id })[0];
-                //              if (foundPage && foundPage.label) {
-                //                  pageMenu.push({
-                //                      id: page.id,
-                //                      value: foundPage.label
-                //                  });
-                //              } else {
-                //                  console.warn('AppBuilder:Menu: tried to reference a Page['+page.id+'] that was not found.');
-                //              }
-                //          });
-
-                //          // Show page menu
-                //          $$(self.viewId).parse(pageMenu, 'json');
-
-                //          $(self).trigger('renderComplete', {});
-
-                //          $$(self.viewId).hideProgress();
-
-                //          data.isRendered = true;
-
-                //          q.resolve();
-                //      });
-                // }
-                // else {
-                //  $(self).trigger('renderComplete', {});
-
-                //  $$(self.viewId).hideProgress();
-
-                //  data.isRendered = true;
-                //  q.resolve();
-                // }
-
-
+//// LEFT OFF HERE:
+// - debug display errors:
+//      - drop onto page, add tabs, save,
+//        change page, add tabs -> tab preview doesn't change
+//      - after create a new tab, return to edit results in page display errors.
 
                 return q;
             };
