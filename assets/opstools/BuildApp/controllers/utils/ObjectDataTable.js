@@ -139,7 +139,7 @@ steal(
 							this.events.deleteRow = deleteRow;
 						},
 
-						bindColumns: function (application, columns, resetColumns, addTrashColumn) {
+						bindColumns: function (application, columns, resetColumns, showSelectCol, showTrashCol) {
 							var self = this;
 
 							if (resetColumns)
@@ -191,7 +191,7 @@ steal(
 							headers.sort(function (a, b) { return a.weight - b.weight; });
 
 							// Select column by checkbox
-							if (true) {
+							if (showSelectCol && columns.length > 0) {
 								headers.unshift({
 									id: "select_column",
 									header: { content: "masterCheckbox", css: "center" },
@@ -202,7 +202,7 @@ steal(
 							}
 
 							// Removable
-							if (addTrashColumn) {
+							if (showTrashCol && columns.length > 0) {
 								headers.push({
 									id: "appbuilder_trash",
 									header: "",

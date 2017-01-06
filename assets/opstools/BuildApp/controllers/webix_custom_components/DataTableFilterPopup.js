@@ -187,7 +187,7 @@ steal(
                         // Value
                         {},
                         {
-                            view: "button", value: "X", width: 30, click: function () {
+                            view: "button", icon: "trash", type: "icon", width: 30, click: function () {
                                 var filter_item = this.getParentView();
                                 filter_form.removeView(filter_item);
                                 filter_popup.filter();

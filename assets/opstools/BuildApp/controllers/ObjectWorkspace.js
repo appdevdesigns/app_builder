@@ -578,7 +578,7 @@ steal(
 																}
 															});
 
-															self.bindColumns(false, true);
+															self.bindColumns(false, false, true);
 
 															self.reorderColumns();
 
@@ -708,7 +708,7 @@ steal(
 								},
 								// Bind columns to DataTable
 								function (next) {
-									self.bindColumns(true, true);
+									self.bindColumns(true, false, true);
 									next();
 								},
 								// Get object model
@@ -1040,7 +1040,7 @@ steal(
 							return q;
 						},
 
-						bindColumns: function (resetColumns, addTrashColumn) {
+						bindColumns: function (resetColumns, showSelectCol, showTrashCol) {
 							if (!AD.classes.AppBuilder.currApp.currObj)
 								return;
 
@@ -1048,7 +1048,7 @@ steal(
 								objectName = AD.classes.AppBuilder.currApp.currObj.attr('name'),
 								objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, objectName);
 
-							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, addTrashColumn);
+							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, showSelectCol, showTrashCol);
 						},
 
 						refreshColumns: function (columnInfo) {

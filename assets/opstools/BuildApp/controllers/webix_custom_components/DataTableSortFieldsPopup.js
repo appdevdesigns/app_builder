@@ -133,7 +133,7 @@ steal(
 							}
 						},
 						{
-							view: "button", value: "X", width: 30, click: function () {
+							view: "button", icon: "trash", type: "icon", width: 30, click: function () {
 								sort_form.removeView(this.getParentView());
 								sort_popup.refreshFieldList(true);
 								sort_popup.sort();
@@ -162,6 +162,7 @@ steal(
 				sort_form.clear();
 				sort_form.clearValidation();
 
+				// Clear children views
 				var cViews = [];
 				var childViews = sort_form.getChildViews();
 				for (var i = 0; i < childViews.length; i++) {
