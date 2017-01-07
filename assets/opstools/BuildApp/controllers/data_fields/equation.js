@@ -147,9 +147,7 @@ steal(function () {
 				on: {
 					'onChange': function (newValue, oldValue) {
 						
-						console.log("oldValue: " + oldValue);
-						console.log("newValue: " + newValue);
-						$$(componentIds.equation).setValue("eidi");
+						
 					}
 				}
 			},
