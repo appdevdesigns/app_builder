@@ -312,7 +312,7 @@ steal(function () {
 
 
 	equationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
-		
+		/*
 		if (rowData == null) {
 			$(itemNode).find('.ab-equation-data-field').html('');
 			return true;
@@ -336,7 +336,7 @@ steal(function () {
 						decimalDelimiters = ",";
 						break;
 				}
-			}
+			}*/
 
 			/*if (fieldData.setting.typeRounding != undefined) {
 				switch (fieldData.setting.typeRounding) {
@@ -354,9 +354,9 @@ steal(function () {
 						break;
 				}
 			}*/
-		}
+		//}
 		
-		if (fieldData.setting.typeThousands != undefined) {
+		/*if (fieldData.setting.typeThousands != undefined) {
 			switch (fieldData.setting.typeThousands) {
 				case 'comma':
 					groupDelimiters = ",";
@@ -368,9 +368,9 @@ steal(function () {
 					groupDelimiters = " ";
 					break;
 			}
-		}
+		}*/
 		
-		var data = caldateDiff(fieldData.setting.dateType,rowData[fieldData.setting.equation],new Date());
+		/*var data = caldateDiff(fieldData.setting.dateType,rowData[fieldData.setting.equation],new Date());
 		
 		console.log("datakid: "+ data);
 		
@@ -379,9 +379,9 @@ steal(function () {
 			groupSize: 3,
 			decimalDelimiter: decimalDelimiters,
 			decimalSize: decimalSizeNum
-		});
+		});*/
 		
-		console.log("numberFormatkid: "+ numberFormat);
+		//console.log("numberFormatkid: "+ numberFormat);
 		/*if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
 			var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
 			if (formatItem) {
@@ -389,15 +389,32 @@ steal(function () {
 			}
 		}*/
 		
-		$(itemNode).find('.ab-equation-data-field').html(numberFormat);
+		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
-		
-		/*$.each(rowData, function(index, value) {
-    			console.log("out: " + value + " index: " + index);
-		}); 
-		
-		$(itemNode).find('.ab-age-data-field').html(caldateDiff(fieldData.setting.dateType,rowData[fieldData.setting.equation],new Date()));
-		*/
+		if (rowData == null) {
+			$(itemNode).find('.ab-equation-data-field').html('');
+			return true;
+		}
+	
+		try {
+
+			var value = FunctionManager.parseEquation(fieldData.setting.equation, rowData);
+
+			var resultType = this.getDataField(fieldData.setting.equationType);
+			if(resultType.customDisplay) {
+				resultType.customDisplay(application, object, { setting: fieldData.setting.resultSettings }, rowData, value, viewId, itemNode, options);
+			}
+			// else do whatever we have to do to display this value
+			$(itemNode).find('.ab-equation-data-field').html(value);
+
+		} catch(e){
+			// handle error
+		}
+
+
+
+
+
 		return true;
 	};
 	/**
