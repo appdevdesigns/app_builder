@@ -259,7 +259,7 @@ steal(function () {
 	
 			$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
 			$$(componentIds.equation).setValue(data.setting.equation);
-
+			console.log("datasetting: " + data.setting.resultSettings);
 			var resultSettings = {
 				setting: data.setting.resultSettings
 			}
