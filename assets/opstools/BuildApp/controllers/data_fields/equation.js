@@ -63,34 +63,39 @@ steal(function () {
 		//{currentdate} - {birthdate} 
 	}
 	
-	function isBalanced(arr){
-	  var stack = [];
+	function isBalanced(arr)
+	{
+		var stack = [];
+		 arr.forEach(function(curr){
+ 			if (curr === '(' || curr === '[' || curr === '{') {
+				console.log("push");
+	      		stack.push(curr);
+	    	}
+	    	if (curr === ')' || curr === ']' || curr === '}') {
+				var currpop = stack.pop();
+				console.log("pop: " + currpop + " crr: " + curr);
+				if(currpop == '(' && curr == ')' ){
+					console.log('true');
 
-	  arr.forEach(function(curr){
-	    if (curr === '(' || curr === '[' || curr === '{') {
-		console.log("push");
-	      stack.push(curr);
-	    }
+				}
+				else if(currpop == '{' && curr == '}'){
+					console.log('true');
 
-	    if (curr === ')' || curr === ']' || curr === '}') {
-		var currpop = stack.pop();
-		console.log("pop: " + currpop + " crr: " + curr);
-		if(currpop == '(' && curr == ')' ){
-			console.log('true');
-
+				}else{
+					console.log('false');
+					return false;
+				}
+			}
 		}
-		else if(currpop == '{' && curr == '}'){
-			console.log('true');
+	}
 
-		}else{
-			console.log('false');
-			return false;
-		}
-		    
-		//var symbols = ['{', '(', '}', ']','(', ')','(', ')'];
-		//isBalanced(symbols)
-	    }
+	function showSettings(type){
+		var resultType = this.getDataField(type);
 
+		var typeSettings = resultType.editDefinition;
+		webix.ui(typeSettings, $$('typeSettings'));   //<<——— update section with the webix definition of the component
+	}
+	  
 
 	equationDataField.editDefinition = {
 		id: componentIds.editView,
@@ -116,13 +121,8 @@ steal(function () {
 				],
 				on: {
 					'onChange': function (newValue, oldValue) {
-						if(newValue == 'numeric'){
-							showsettingNumeric();
-						}else{
-							showsettingDate();
-						}
-						
-						
+						showSettings(newValue);
+
 					}
 				}
 			},
@@ -247,7 +247,7 @@ steal(function () {
 
 
 	equationDataField.populateSettings = function (application, data) {
-		var list = $$(componentIds.equation).getPopup().getList();;
+		/*var list = $$(componentIds.equation).getPopup().getList();;
 		list.clearAll(); 
 		application.currObj.getColumns().then(function(columns) {
 				columns.forEach(function(col) {
@@ -281,14 +281,44 @@ steal(function () {
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
 
+		*/
+		if (!data.setting) return;
+	
+			$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+			$$(componentIds.equation).setValue(data.setting.equation);
+
+			var resultSettings = {
+				setting: data.setting.resultSettings
+			}
+
+			var resultType = this.getDataField(settings.setting.equationType);
+
+			resultType.populateSettings(application, resultSettings);
+
 	};
 
 
 
 	equationDataField.getSettings = function () {
 		var type = 'integer';
+
+		var settings = {
+			fieldName: equationDataField.name,
+			type: type,
+			setting: {
+				equationType : $$(componentIds.equationType).getValue(),
+				equation : $$(componentIds.equation).getValue(),
+				template:'<div class="ab-equation-data-field"></div>',
+			}
+		};
+
+		var resultType = this.getDataField(settings.setting.equationType);
+
+		settings.setting.resultSettings = resultType.getSettings();
+
+		return settings;
 		
-		return {
+		/*return {
 			fieldName: equationDataField.name,
 			type: type,
 			setting: {
@@ -304,7 +334,7 @@ steal(function () {
 				template:'<div class="ab-equation-data-field"></div>',
 				
 			}
-		};
+		};*/
 	};
 
 
