@@ -65,7 +65,7 @@ steal(function () {
 	
 
 	function showSettings(type){
-		var resultType = this.getDataField(type);
+		var resultType = this.getField(type);
 
 		var typeSettings = resultType.editDefinition;
 		webix.ui(typeSettings, $$('typeSettings'));   //<<——— update section with the webix definition of the component
@@ -143,7 +143,7 @@ steal(function () {
 				labelWidth: "100",
 				id: componentIds.equation,
 				placeholder: 'currentTime() - {Birthday}',
-				options:["One", "Two", "Three"],
+				
 				on: {
 					'onChange': function (newValue, oldValue) {
 						
@@ -264,7 +264,7 @@ steal(function () {
 				setting: data.setting.resultSettings
 			}
 
-			var resultType = this.getDataField(settings.setting.equationType);
+			var resultType = this.getField(settings.setting.equationType);
 
 			resultType.populateSettings(application, resultSettings);
 
@@ -285,7 +285,7 @@ steal(function () {
 			}
 		};
 
-		var resultType = this.getDataField(settings.setting.equationType);
+		var resultType = this.getField(settings.setting.equationType);
 
 		settings.setting.resultSettings = resultType.getSettings();
 
