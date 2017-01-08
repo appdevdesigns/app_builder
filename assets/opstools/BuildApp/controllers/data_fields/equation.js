@@ -94,12 +94,7 @@ steal(function () {
 						}
 					}
 				},
-				{
-					view: 'template', 
-					id: 'customSetting' ,
-					label: 'choose a type',
-					id:'typeSettings',
-				}
+
 				]
 			}
 		}
@@ -112,7 +107,7 @@ steal(function () {
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
-		webix.ui(typeSettings, $$('typeSettings'));   //<<——— update section with the webix definition of the component
+		webix.ui(typeSettings, $$(componentIds.editView));   //<<——— update section with the webix definition of the component
 	}
 	  
 
