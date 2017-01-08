@@ -62,10 +62,58 @@ steal(function () {
 	function equationValidate(text){
 		//{currentdate} - {birthdate} 
 	}
+
+	function getDataField(type){
+		if(type == 'date'){
+
+	}
+	else
+	{
+		equationDataField.editDefinition = {
+			id: componentIds.editView,
+		rows: [
+			{
+				view: "text",
+				label: "Name",
+				labelWidth: "100",
+				id: componentIds.name,
+				placeholder: ''
+			},
+			{
+				view: "radio",
+				id: componentIds.equationType,
+				label: "Equation Type",
+				labelWidth: "110",
+				value: 'none',
+				vertical: true,
+				options: [
+					{ id: 'numeric',value: "Numeric" },
+					{ id: 'date',value:  "Date" },
+					
+				],
+				on: {
+					'onChange': function (newValue, oldValue) {
+						showSettings(newValue);
+
+					}
+				}
+			},
+		},
+		{ 
+			 view: 'template', 
+			 id: 'customSetting' ,
+			 label: 'choose a type',
+			 id:'typeSettings'
+
+		}  
+		]
+	}
+}
+}
 	
 
 	function showSettings(type){
-		var resultType = this.getField(type);
+		var resultType = this.getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
 		webix.ui(typeSettings, $$('typeSettings'));   //<<——— update section with the webix definition of the component
@@ -142,12 +190,9 @@ steal(function () {
 				label: "Equation",
 				labelWidth: "100",
 				id: componentIds.equation,
-				placeholder: 'currentTime() - {Birthday}',
-				
 				on: {
 					'onChange': function (newValue, oldValue) {
-						
-						
+						showSettings(newValue);
 					}
 				}
 			},
@@ -213,6 +258,14 @@ steal(function () {
 					value: 'none',
 					options: formatList
 			},
+			{ 
+				 view: 'template', 
+				 id: 'customSetting' ,
+				 label: 'choose a type',
+				 id:'typeSettings'
+
+			}
+			
 					
 		]
 	};
@@ -264,7 +317,7 @@ steal(function () {
 				setting: data.setting.resultSettings
 			}
 
-			var resultType = this.getField(settings.setting.equationType);
+			var resultType = this.getDataField(settings.setting.equationType);
 
 			resultType.populateSettings(application, resultSettings);
 
@@ -285,7 +338,7 @@ steal(function () {
 			}
 		};
 
-		var resultType = this.getField(settings.setting.equationType);
+		var resultType = this.getDataField(settings.setting.equationType);
 
 		settings.setting.resultSettings = resultType.getSettings();
 
