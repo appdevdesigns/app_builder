@@ -69,44 +69,46 @@ steal(function () {
 		}
 		else
 		{
-			editDefinition = {
-				id: componentIds.editView,
-				rows: [
-				{
-					view: "text",
-					label: "Name",
-					labelWidth: "100",
-					id: componentIds.name,
-					placeholder: ''
-				},
-				{
-					view: "radio",
-					id: componentIds.equationType,
-					label: "Equation Type",
-					labelWidth: "110",
-					value: 'none',
-					vertical: true,
-					options: [
-					{ id: 'numeric',value: "Numeric" },
-					{ id: 'date',value:  "Date" },
-					
-					],
-					on: {
-						'onChange': function (newValue, oldValue) {
-							showSettings(newValue);
+			return {
+				editDefinition = {
+					id: componentIds.editView,
+					rows: [
+					{
+						view: "text",
+						label: "Name",
+						labelWidth: "100",
+						id: componentIds.name,
+						placeholder: ''
+					},
+					{
+						view: "radio",
+						id: componentIds.equationType,
+						label: "Equation Type",
+						labelWidth: "110",
+						value: 'none',
+						vertical: true,
+						options: [
+						{ id: 'numeric',value: "Numeric" },
+						{ id: 'date',value:  "Date" },
+						
+						],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								showSettings(newValue);
 
+							}
 						}
+					},{
+						view: 'template', 
+						id: 'customSetting' ,
+						label: 'choose a type',
+						id:'typeSettings',
 					}
-				},{
-					view: 'template', 
-					id: 'customSetting' ,
-					label: 'choose a type',
-					id:'typeSettings',
-				}
-				]
-			};
+					]
+				};
+			}
 		}
-	}
+}
 
 
 
