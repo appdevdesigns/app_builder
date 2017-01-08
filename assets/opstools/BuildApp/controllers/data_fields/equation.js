@@ -97,20 +97,18 @@ steal(function () {
 
 						}
 					}
-				},
-			},
-			{ 
-				view: 'template', 
-				id: 'customSetting' ,
-				label: 'choose a type',
-				id:'typeSettings'
-
-			}  
-			]
-		};
+				},{
+					view: 'template', 
+					id: 'customSetting' ,
+					label: 'choose a type',
+					id:'typeSettings',
+				}
+				]
+			};
+		}
 	}
-}
-}
+
+
 
 
 	function showSettings(type){
