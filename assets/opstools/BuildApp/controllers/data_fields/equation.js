@@ -101,7 +101,7 @@ steal(function () {
 					id:'typeSettings',
 				}
 				]
-			};
+			},
 		}
 	}
 
