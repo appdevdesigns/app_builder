@@ -69,7 +69,7 @@ steal(function () {
 		}
 		else
 		{
-			equationDataField.editDefinition = {
+			editDefinition = {
 				id: componentIds.editView,
 				rows: [
 				{
