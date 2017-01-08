@@ -64,51 +64,46 @@ steal(function () {
 	}
 
 	function getDataField(type){
-		if(type == 'date'){
+		return {
+			editDefinition = {
+				id: componentIds.editView,
+				rows: [
+				{
+					view: "text",
+					label: "Name",
+					labelWidth: "100",
+					id: componentIds.name,
+					placeholder: ''
+				},
+				{
+					view: "radio",
+					id: componentIds.equationType,
+					label: "Equation Type",
+					labelWidth: "110",
+					value: 'none',
+					vertical: true,
+					options: [
+					{ id: 'numeric',value: "Numeric" },
+					{ id: 'date',value:  "Date" },
 
-		}
-		else
-		{
-			return {
-				editDefinition = {
-					id: componentIds.editView,
-					rows: [
-					{
-						view: "text",
-						label: "Name",
-						labelWidth: "100",
-						id: componentIds.name,
-						placeholder: ''
-					},
-					{
-						view: "radio",
-						id: componentIds.equationType,
-						label: "Equation Type",
-						labelWidth: "110",
-						value: 'none',
-						vertical: true,
-						options: [
-						{ id: 'numeric',value: "Numeric" },
-						{ id: 'date',value:  "Date" },
-						
-						],
-						on: {
-							'onChange': function (newValue, oldValue) {
-								showSettings(newValue);
+					],
+					on: {
+						'onChange': function (newValue, oldValue) {
+							showSettings(newValue);
 
-							}
 						}
-					},{
-						view: 'template', 
-						id: 'customSetting' ,
-						label: 'choose a type',
-						id:'typeSettings',
 					}
-					]
-				};
-			}
+				},
+				{
+					view: 'template', 
+					id: 'customSetting' ,
+					label: 'choose a type',
+					id:'typeSettings',
+				}
+				]
+			};
 		}
-}
+	}
 
 
 
