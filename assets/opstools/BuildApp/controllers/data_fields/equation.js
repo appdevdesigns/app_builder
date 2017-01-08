@@ -112,7 +112,7 @@ steal(function () {
 
 
 	function showSettings(type){
-		var resultType = this.getDataField(type);
+		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
 		webix.ui(typeSettings, $$('typeSettings'));   //<<——— update section with the webix definition of the component
