@@ -235,7 +235,7 @@ steal(function () {
 
 		
 		// // Example Custom Display:
-		// var key = fieldData.fieldName+"-"+rowId;					// unique reference
+		// var key = fieldData.fieldName+"-"+rowData.id;					// unique reference
 		// $(itemNode).find('.classReferenceInTemplate').append('<div id="' + key + '"></div>');		// create a div
 
 		// webix.ui({												// attach a webix component 
