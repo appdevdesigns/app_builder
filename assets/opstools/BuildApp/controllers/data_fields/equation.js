@@ -153,7 +153,7 @@ steal(function () {
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
-		webix.ui(typeSettings, $$(componentIds.editView));   //<<——— update section with the webix definition of the component
+		webix.ui(typeSettings, $$('typeSettings'));   //<<——— update section with the webix definition of the component
 	}
 	  
 
