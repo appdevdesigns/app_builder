@@ -64,98 +64,49 @@ steal(function () {
 	}
 
 	function getDataField(type){
-		console.log("type: " + type);
-		if(type == "Date"){
-			console.log("datetype: " + type);
-			return {
-				editDefinition :{
-					id: componentIds.editView,
-					rows: [
-					{
-						view: "richselect",
-						id: componentIds.dateType,
-						label: "Date Type",
-						labelWidth: "110",
-						value: 'none',
-						options: [
-						{ id: 'hours', value:  "Hours" },
-						{ id: 'days', value:  "Days" },
-						{ id: 'weeks', value: "Weeks" },
-						{ id: 'years', value: "Years" },
-						]
-					},
-					{
-						view: "richselect",
-						id: componentIds.resultType,
-						label: "Result Type",
-						labelWidth: "110",
-						value: 'none',
-						//disabled: true,
-						options: [
-						{ id: 'number', value: "Number" },
-						{ id: 'date', value: "Date" },
-
-						]
-					},
-					{
-						view: 'template',
-						label: 'choose a type',
-						id:'typeSettings',
-					}
-					]
-
+		return {
+			editDefinition :{
+				id: componentIds.editView,
+				rows: [
+				{
+					view: "text",
+					label: "Name",
+					labelWidth: "100",
+					id: componentIds.name,
+					placeholder: ''
 				},
-				/*getSettings : function () {
-					var type = 'integer';
+				{
+					view: "radio",
+					id: componentIds.equationType,
+					label: "Equation Type",
+					labelWidth: "110",
+					value: 'none',
+					vertical: true,
+					options: [
+					{ id: 'numeric',value: "Numeric" },
+					{ id: 'date',value:  "Date" },
 
-					var settings = {
-						fieldName: equationDataField.name,
-						type: type,
-						setting: {
-							equationType : $$(componentIds.equationType).getValue(),
-							equation : $$(componentIds.equation).getValue(),
-							template:'<div class="ab-equation-data-field"></div>',
+					],
+					on: {
+						'onChange': function (newValue, oldValue) {
+							showSettings(newValue);
+
 						}
-					};
-
-					var resultType = this.getDataField(settings.setting.equationType);
-
-					settings.setting.resultSettings = resultType.getSettings();
-
-					return settings;
-				},
-				populateSettings : function (application, data) {
-					if (!data.setting) return;
-
-					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
-					$$(componentIds.equation).setValue(data.setting.equation);
-
-					var resultSettings = {
-						setting: data.setting.resultSettings
 					}
-
-					var resultType = this.getDataField(settings.setting.equationType);
-
-					resultType.populateSettings(application, resultSettings);
-				}*/
-
-			}
-		}
-		else {
-			console.log("numerictype: " + type);
-			return {
-				editDefinition :{
-					//
 				},
-				getSettings : function () {
-					//
-				},
-				populateSettings : function (application, data) {
-					//
+				{
+					view: 'template', 
+					id: 'customSetting' ,
+					label: 'choose a type',
+					id:'typeSettings',
 				}
+				]
 			}
 		}
 	}
+
+
+
 
 	function showSettings(type){
 		var resultType = getDataField(type);
@@ -194,13 +145,7 @@ steal(function () {
 					}
 				}
 			},
-			{ 
-				 view: 'template', 
-				 label: 'choose a type',
-				 id:'typeSettings'
-
-			},
-			/*{
+			{
 				cols: [
 					{
 						view: "richselect",
@@ -228,8 +173,10 @@ steal(function () {
 							
 						]
 					}
+				 
 				]
-			},*/
+				
+			},
 			{
 				view: "label",
 				label: "Example Output"
@@ -306,6 +253,13 @@ steal(function () {
 					label: "Format",
 					value: 'none',
 					options: formatList
+			},
+			{ 
+				 view: 'template', 
+				 id: 'customSetting' ,
+				 label: 'choose a type',
+				 id:'typeSettings'
+
 			}
 
 					
@@ -315,13 +269,13 @@ steal(function () {
 
 
 	equationDataField.populateSettings = function (application, data) {
-		//var list = $$(componentIds.equation).getPopup().getList();;
-		//list.clearAll(); 
-		//application.currObj.getColumns().then(function(columns) {
-			//	columns.forEach(function(col) {
+		/*var list = $$(componentIds.equation).getPopup().getList();;
+		list.clearAll(); 
+		application.currObj.getColumns().then(function(columns) {
+				columns.forEach(function(col) {
 					//if (col.translate) col.translate();
-			//		list.parse([{ id:col.name, value:col.name}]); 
-			//	});
+					list.parse([{ id:col.name, value:col.name}]); 
+				});
 				//$$(componentIds.equation).setValue(list);
 			
 				//var list = $$(componentIds.equation).getPopup().getList();
@@ -331,9 +285,9 @@ steal(function () {
 				//$$(componentIds.equation).setValue(list.getFirstId());
 			
 				
-		//		console.log("col:" + columns[0].name);
-		//	});
-		/*if (!data.setting){
+				console.log("col:" + columns[0].name);
+			});
+		if (!data.setting){
 			
 			
 			return;
@@ -347,21 +301,20 @@ steal(function () {
 		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
 		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
-		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);*/
+		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
+		*/
 		if (!data.setting) return;
-		
-		$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
-		$$(componentIds.equation).setValue(data.setting.equation);
+	
+			$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+			$$(componentIds.equation).setValue(data.setting.equation);
+			console.log("datasetting: " + data.setting.resultSettings);
+			var resultSettings = {
+				setting: data.setting.resultSettings
+			}
 
-		var resultSettings = {
-			setting: data.setting.resultSettings
-		}
+			var resultType = this.getDataField(settings.setting.equationType);
 
-		var resultType = this.getDataField(settings.setting.equationType);
-
-		resultType.populateSettings(application, resultSettings);
-		
-		
+			resultType.populateSettings(application, resultSettings);
 
 	};
 
@@ -369,7 +322,7 @@ steal(function () {
 
 	equationDataField.getSettings = function () {
 		var type = 'integer';
-		
+
 		var settings = {
 			fieldName: equationDataField.name,
 			type: type,
@@ -385,6 +338,24 @@ steal(function () {
 		settings.setting.resultSettings = resultType.getSettings();
 
 		return settings;
+		
+		/*return {
+			fieldName: equationDataField.name,
+			type: type,
+			setting: {
+				equationType : $$(componentIds.equationType).getValue(),
+				dateType : $$(componentIds.dateType).getValue(),
+				resultType : $$(componentIds.resultType).getValue(),
+				equation : $$(componentIds.equation).getValue(),
+				typeDecimals : $$(componentIds.typeDecimals).getValue(),
+				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
+				typeRounding : $$(componentIds.typeRounding).getValue(),
+				typeThousands : $$(componentIds.typeThousands).getValue(),
+				typeFormat : $$(componentIds.typeFormat).getValue(),
+				template:'<div class="ab-equation-data-field"></div>',
+				
+			}
+		};*/
 	};
 
 
@@ -403,7 +374,6 @@ steal(function () {
 			if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
 				decimalSizeNum = fieldData.setting.typeDecimalPlaces;
 			}
-
 			if (fieldData.setting.typeDecimals != undefined) {
 				switch (fieldData.setting.typeDecimals) {
 					case 'period':
