@@ -162,7 +162,7 @@ steal(
 			addNewField: function () {
 				var update_records_popup = this,
 					update_panel = update_records_popup.getChildViews()[0].getChildViews()[3],
-					viewIndex = update_panel.getChildViews().length - 1,
+					viewIndex = update_panel.getChildViews().length,
 					options = update_records_popup.getFieldList(true);
 
 				update_panel.addView({
@@ -173,7 +173,6 @@ steal(
 							labelWidth: 40,
 							width: 200,
 							options: options,
-							value: options[0].id,
 							on: {
 								"onChange": function (columnId) {
 									var update_item = this.getParentView(),
@@ -230,7 +229,10 @@ steal(
 							}
 						}
 					]
-				});
+				}, viewIndex);
+
+				// Select first option
+				update_panel.getChildViews()[viewIndex].getChildViews()[0].setValue(options[0].id);
 			},
 
 			getFieldList: function (excludeSelected) {
@@ -302,5 +304,6 @@ steal(
 			}
 
 		}, webix.ui.popup);
+
 	}
 );
