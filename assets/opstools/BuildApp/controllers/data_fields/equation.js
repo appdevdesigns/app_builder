@@ -117,7 +117,7 @@ steal(function () {
 
 					return settings;
 				},
-				populateSettings = function (application, data) {
+				populateSettings : function (application, data) {
 					if (!data.setting) return;
 
 					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
@@ -142,7 +142,7 @@ steal(function () {
 				getSettings : function () {
 					//
 				},
-				populateSettings = function (application, data) {
+				populateSettings : function (application, data) {
 					//
 				}
 			}
