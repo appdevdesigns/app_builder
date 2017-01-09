@@ -193,7 +193,7 @@ steal(function () {
 				 id:'typeSettings'
 
 			},
-			{
+			/*{
 				cols: [
 					{
 						view: "richselect",
@@ -222,7 +222,7 @@ steal(function () {
 						]
 					}
 				]
-			},
+			},*/
 			{
 				view: "label",
 				label: "Example Output"
@@ -238,7 +238,7 @@ steal(function () {
 					}
 				}
 			},
-			/*{
+			{
 				cols: [
 					{
 						view: "richselect",
@@ -267,7 +267,7 @@ steal(function () {
 						]
 					},
 				 ]
-			},*/
+			},
 			{
 					view: "radio",
 					id: componentIds.typeRounding,
