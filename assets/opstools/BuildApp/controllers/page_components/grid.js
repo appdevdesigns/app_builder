@@ -6,6 +6,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DynamicDataTable.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
 	'opstools/BuildApp/controllers/webix_custom_components/UpdateRecordsPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DeleteRecordsPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 
@@ -285,7 +286,7 @@ steal(
 						action_buttons.push({ view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', popup: self.viewId + '-update-items-popup', icon: "pencil", type: "icon", width: 140 });
 
 						if (setting.removable === 'enable')
-							action_buttons.push({ view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', icon: "trash", type: "icon", width: 140 });
+							action_buttons.push({ view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', popup: self.viewId + '-delete-items-popup', icon: "trash", type: "icon", width: 140 });
 					}
 
 					if (setting.filter === 'enable') {
@@ -324,19 +325,31 @@ steal(
 						}).slice(0);
 					}
 
-					// Create update checked items popup
 					if (setting.massUpdate === 'enable') {
+						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
+
+						// Create update checked items popup 
 						webix.ui({
 							id: self.viewId + '-update-items-popup',
 							view: "update_records_popup",
 						}).hide();
-
-						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
-
 						$$(self.viewId + '-update-items-popup').registerObject(object[0]);
 						$$(self.viewId + '-update-items-popup').registerDataTable($$(self.viewId));
 						$$(self.viewId + '-update-items-popup').registerDataCollection(self.data.dataCollection);
 						$$(self.viewId + '-update-items-popup').setColumns(columns);
+
+						// Create delete checked items popup
+						if (setting.removable === 'enable') {
+							webix.ui({
+								id: self.viewId + '-delete-items-popup',
+								view: "delete_records_popup",
+							}).hide();
+							$$(self.viewId + '-delete-items-popup').registerObject(object[0]);
+							$$(self.viewId + '-delete-items-popup').registerDataTable($$(self.viewId));
+							$$(self.viewId + '-delete-items-popup').registerDataCollection(self.data.dataCollection);
+							$$(self.viewId + '-delete-items-popup').setColumns(columns);
+						}
+
 
 						if ($$(self.viewId).checkedItems && Object.keys($$(self.viewId).checkedItems).length > 0) {
 							$$(self.viewId + '-update-items-button').enable();
@@ -471,6 +484,11 @@ steal(
 							filterLinkedData.call(self, setting.linkedField);
 						});
 
+						// Delete checked item when a record is deleted
+						dataCollection.attachEvent("onAfterDelete", function (rowId) {
+							if ($$(self.viewId).checkedItems[rowId])
+								delete $$(self.viewId).checkedItems[rowId];
+						});
 					}
 
 					q.resolve();
