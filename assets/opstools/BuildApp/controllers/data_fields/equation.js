@@ -68,6 +68,7 @@ steal(function () {
 		if(type == "Date"){
 			return {
 				editDefinition :{
+					rows: [
 					{
 						view: "richselect",
 						id: componentIds.dateType,
@@ -94,6 +95,7 @@ steal(function () {
 
 						]
 					}
+					]
 
 				},
 				getSettings : function () {
