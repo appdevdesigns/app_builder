@@ -308,13 +308,13 @@ steal(function () {
 
 
 	equationDataField.populateSettings = function (application, data) {
-		var list = $$(componentIds.equation).getPopup().getList();;
-		list.clearAll(); 
-		application.currObj.getColumns().then(function(columns) {
-				columns.forEach(function(col) {
+		//var list = $$(componentIds.equation).getPopup().getList();;
+		//list.clearAll(); 
+		//application.currObj.getColumns().then(function(columns) {
+			//	columns.forEach(function(col) {
 					//if (col.translate) col.translate();
-					list.parse([{ id:col.name, value:col.name}]); 
-				});
+			//		list.parse([{ id:col.name, value:col.name}]); 
+			//	});
 				//$$(componentIds.equation).setValue(list);
 			
 				//var list = $$(componentIds.equation).getPopup().getList();
@@ -324,8 +324,8 @@ steal(function () {
 				//$$(componentIds.equation).setValue(list.getFirstId());
 			
 				
-				console.log("col:" + columns[0].name);
-			});
+		//		console.log("col:" + columns[0].name);
+		//	});
 		if (!data.setting){
 			
 			
