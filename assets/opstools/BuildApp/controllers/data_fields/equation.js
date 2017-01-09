@@ -308,7 +308,7 @@ steal(function () {
 
 
 	equationDataField.populateSettings = function (application, data) {
-		/*var list = $$(componentIds.equation).getPopup().getList();;
+		var list = $$(componentIds.equation).getPopup().getList();;
 		list.clearAll(); 
 		application.currObj.getColumns().then(function(columns) {
 				columns.forEach(function(col) {
@@ -342,19 +342,8 @@ steal(function () {
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
 
-		*/
-		if (!data.setting) return;
-	
-			$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
-			$$(componentIds.equation).setValue(data.setting.equation);
-			console.log("datasetting: " + data.setting.resultSettings);
-			var resultSettings = {
-				setting: data.setting.resultSettings
-			}
-
-			var resultType = this.getDataField(settings.setting.equationType);
-
-			resultType.populateSettings(application, resultSettings);
+		
+		
 
 	};
 
@@ -363,23 +352,11 @@ steal(function () {
 	equationDataField.getSettings = function () {
 		var type = 'integer';
 
-		var settings = {
-			fieldName: equationDataField.name,
-			type: type,
-			setting: {
-				equationType : $$(componentIds.equationType).getValue(),
-				equation : $$(componentIds.equation).getValue(),
-				template:'<div class="ab-equation-data-field"></div>',
-			}
-		};
-
-		var resultType = this.getDataField(settings.setting.equationType);
-
-		settings.setting.resultSettings = resultType.getSettings();
+		
 
 		return settings;
 		
-		/*return {
+		return {
 			fieldName: equationDataField.name,
 			type: type,
 			setting: {
@@ -395,7 +372,7 @@ steal(function () {
 				template:'<div class="ab-equation-data-field"></div>',
 				
 			}
-		};*/
+		};
 	};
 
 
