@@ -98,8 +98,7 @@ steal(function () {
 						]
 					},
 					{
-						view: 'template', 
-						id: 'customSetting' ,
+						view: 'template', ,
 						label: 'choose a type',
 						id:'typeSettings',
 					}
@@ -197,7 +196,6 @@ steal(function () {
 			},
 			{ 
 				 view: 'template', 
-				 id: 'customSetting' ,
 				 label: 'choose a type',
 				 id:'typeSettings'
 
