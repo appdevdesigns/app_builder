@@ -333,7 +333,7 @@ steal(function () {
 				
 		//		console.log("col:" + columns[0].name);
 		//	});
-		if (!data.setting){
+		/*if (!data.setting){
 			
 			
 			return;
@@ -347,8 +347,19 @@ steal(function () {
 		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
 		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
-		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
+		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);*/
+		if (!data.setting) return;
+		
+		$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+		$$(componentIds.equation).setValue(data.setting.equation);
 
+		var resultSettings = {
+			setting: data.setting.resultSettings
+		}
+
+		var resultType = this.getDataField(settings.setting.equationType);
+
+		resultType.populateSettings(application, resultSettings);
 		
 		
 
@@ -358,28 +369,22 @@ steal(function () {
 
 	equationDataField.getSettings = function () {
 		var type = 'integer';
-
 		
-
-		return settings;
-		
-		return {
+		var settings = {
 			fieldName: equationDataField.name,
 			type: type,
 			setting: {
 				equationType : $$(componentIds.equationType).getValue(),
-				dateType : $$(componentIds.dateType).getValue(),
-				resultType : $$(componentIds.resultType).getValue(),
 				equation : $$(componentIds.equation).getValue(),
-				typeDecimals : $$(componentIds.typeDecimals).getValue(),
-				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
-				typeRounding : $$(componentIds.typeRounding).getValue(),
-				typeThousands : $$(componentIds.typeThousands).getValue(),
-				typeFormat : $$(componentIds.typeFormat).getValue(),
 				template:'<div class="ab-equation-data-field"></div>',
-				
 			}
 		};
+
+		var resultType = this.getDataField(settings.setting.equationType);
+
+		settings.setting.resultSettings = resultType.getSettings();
+
+		return settings;
 	};
 
 
