@@ -99,7 +99,7 @@ steal(function () {
 					]
 
 				},
-				getSettings : function () {
+				/*getSettings : function () {
 					var type = 'integer';
 
 					var settings = {
@@ -131,7 +131,7 @@ steal(function () {
 					var resultType = this.getDataField(settings.setting.equationType);
 
 					resultType.populateSettings(application, resultSettings);
-				}
+				}*/
 
 			}
 		}
