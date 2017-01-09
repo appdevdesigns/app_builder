@@ -64,7 +64,7 @@ steal(function () {
 	}
 
 	function getDataField(type){
-		
+		console.log("type: " + type);
 		if(type == "Date"){
 			return {
 				editDefinition :{
