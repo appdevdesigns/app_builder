@@ -238,7 +238,7 @@ steal(function () {
 					}
 				}
 			},
-			{
+			/*{
 				cols: [
 					{
 						view: "richselect",
@@ -267,7 +267,7 @@ steal(function () {
 						]
 					},
 				 ]
-			},
+			},*/
 			{
 					view: "radio",
 					id: componentIds.typeRounding,
