@@ -49,11 +49,26 @@ steal(
 						},
 
 						display: function (application) {
-							var page = this;
+							var page = this,
+								q = $.Deferred(),
+								tasks = [];
 
 							page.components.forEach(function (item) {
-								page.renderComponent(application, item);
+								tasks.push(function (next) {
+									page.renderComponent(application, item).then(function () {
+										next();
+									}, next);
+								});
 							});
+
+							async.series(tasks, function (err) {
+								if (err)
+									q.reject(err);
+								else
+									q.resolve();
+							});
+
+							return q;
 						},
 
 						renderComponent: function (application, item) {
@@ -72,7 +87,8 @@ steal(
 								if (page.comInstances[item.id].onDisplay)
 									page.comInstances[item.id].onDisplay();
 
-								return;
+								q.resolve(false); // return value is not a new component
+								return q;
 							}
 
 							// Create component instance
@@ -138,11 +154,11 @@ steal(
 									if (err)
 										q.reject(err);
 									else
-										q.resolve();
+										q.resolve(true);
 								});
 							}
 							else {
-								q.resolve();
+								q.resolve(true);
 							}
 
 							return q;

@@ -396,12 +396,11 @@ steal(
 
 							self.activePage.components.forEach(function (item) {
 
-								self.activePage.renderComponent(self.data.application, item).done(function () {
-
+								self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
 									// Listen component events
 									$(page.comInstances[item.id]).on('renderComplete', function (event, data) {
 										$$(self.rootPage.domID).adjust();
-										$$(viewId).adjust();
+										$$(item.domID).adjust();
 									});
 
 									$(page.comInstances[item.id]).on('changePage', function (event, data) {
