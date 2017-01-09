@@ -69,6 +69,7 @@ steal(function () {
 			console.log("datetype: " + type);
 			return {
 				editDefinition :{
+					id: componentIds.editView,
 					rows: [
 					{
 						view: "richselect",
@@ -95,6 +96,12 @@ steal(function () {
 						{ id: 'date', value: "Date" },
 
 						]
+					},
+					{
+						view: 'template', 
+						id: 'customSetting' ,
+						label: 'choose a type',
+						id:'typeSettings',
 					}
 					]
 
