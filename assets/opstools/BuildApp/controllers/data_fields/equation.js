@@ -64,44 +64,90 @@ steal(function () {
 	}
 
 	function getDataField(type){
-		return {
-			editDefinition :{
-				id: componentIds.editView,
-				rows: [
-				{
-					view: "text",
-					label: "Name",
-					labelWidth: "100",
-					id: componentIds.name,
-					placeholder: ''
-				},
-				{
-					view: "radio",
-					id: componentIds.equationType,
-					label: "Equation Type",
-					labelWidth: "110",
-					value: 'none',
-					vertical: true,
-					options: [
-					{ id: 'numeric',value: "Numeric" },
-					{ id: 'date',value:  "Date" },
+		
+		if(type == "Date"){
+			return {
+				editDefinition :{
+					cols: [
+					{
+						view: "richselect",
+						id: componentIds.dateType,
+						label: "Date Type",
+						labelWidth: "110",
+						value: 'none',
+						options: [
+						{ id: 'hours', value:  "Hours" },
+						{ id: 'days', value:  "Days" },
+						{ id: 'weeks', value: "Weeks" },
+						{ id: 'years', value: "Years" },
+						]
+					},
+					{
+						view: "richselect",
+						id: componentIds.resultType,
+						label: "Result Type",
+						labelWidth: "110",
+						value: 'none',
+						//disabled: true,
+						options: [
+						{ id: 'number', value: "Number" },
+						{ id: 'date', value: "Date" },
 
-					],
-					on: {
-						'onChange': function (newValue, oldValue) {
-							showSettings(newValue);
-
-						}
+						]
 					}
-				},
+					]
 
-				]
+				},
+				getSettings : function () {
+					var type = 'integer';
+
+					var settings = {
+						fieldName: equationDataField.name,
+						type: type,
+						setting: {
+							equationType : $$(componentIds.equationType).getValue(),
+							equation : $$(componentIds.equation).getValue(),
+							template:'<div class="ab-equation-data-field"></div>',
+						}
+					};
+
+					var resultType = this.getDataField(settings.setting.equationType);
+
+					settings.setting.resultSettings = resultType.getSettings();
+
+					return settings;
+				},
+				populateSettings = function (application, data) {
+					if (!data.setting) return;
+
+					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+					$$(componentIds.equation).setValue(data.setting.equation);
+
+					var resultSettings = {
+						setting: data.setting.resultSettings
+					}
+
+					var resultType = this.getDataField(settings.setting.equationType);
+
+					resultType.populateSettings(application, resultSettings);
+				}
+
+			}
+		}
+		else {
+			return {
+				editDefinition :{
+					//
+				},
+				getSettings : function () {
+					//
+				},
+				populateSettings = function (application, data) {
+					//
+				}
 			}
 		}
 	}
-
-
-
 
 	function showSettings(type){
 		var resultType = getDataField(type);
@@ -168,9 +214,7 @@ steal(function () {
 							
 						]
 					}
-				 
 				]
-				
 			},
 			{
 				view: "label",
