@@ -98,7 +98,7 @@ steal(function () {
 						]
 					},
 					{
-						view: 'template', ,
+						view: 'template',
 						label: 'choose a type',
 						id:'typeSettings',
 					}
