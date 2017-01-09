@@ -66,6 +66,7 @@ steal(function () {
 	function getDataField(type){
 		console.log("type: " + type);
 		if(type == "Date"){
+			console.log("datetype: " + type);
 			return {
 				editDefinition :{
 					rows: [
@@ -135,6 +136,7 @@ steal(function () {
 			}
 		}
 		else {
+			console.log("numerictype: " + type);
 			return {
 				editDefinition :{
 					//
