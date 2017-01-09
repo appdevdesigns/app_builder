@@ -486,7 +486,7 @@ steal(
 
 						// Delete checked item when a record is deleted
 						dataCollection.attachEvent("onAfterDelete", function (rowId) {
-							if ($$(self.viewId).checkedItems[rowId])
+							if ($$(self.viewId).checkedItems && $$(self.viewId).checkedItems[rowId])
 								delete $$(self.viewId).checkedItems[rowId];
 						});
 					}
