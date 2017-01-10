@@ -18,6 +18,17 @@ module.exports = {
 		dfd.resolve(colString);
 
 		return dfd;
+	},
+	
+	defaults: {
+        type: 'text',
+        fieldName: 'text',
+        setting: {
+            icon: 'align-right',
+            editor: 'popup',
+            filter_type: 'text',
+            supportMultilingual: '0',
+        }
 	}
 
 };
