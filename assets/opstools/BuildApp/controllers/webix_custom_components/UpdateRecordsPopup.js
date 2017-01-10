@@ -137,26 +137,17 @@ steal(
 					}
 				}
 			},
-			registerObject: function (objectModel) {
-				var update_records_popup = this;
-
-				update_records_popup.objectModel = objectModel;
+			objectModel_setter: function (objectModel) {
+				this.objectModel = objectModel;
 			},
-			registerDataTable: function (dataTable) {
-				var update_records_popup = this;
-
-				update_records_popup.dataTable = dataTable;
+			dataTable_setter: function (dataTable) {
+				this.dataTable = dataTable;
 			},
-			registerDataCollection: function (dataCollection) {
-				var update_records_popup = this;
-
-				update_records_popup.dataCollection = dataCollection;
+			dataCollection_setter: function (dataCollection) {
+				this.dataCollection = dataCollection;
 			},
-
-			setColumns: function (columns) {
-				var update_records_popup = this;
-
-				update_records_popup.columns = columns;
+			columns_setter: function (columns) {
+				this.columns = columns;
 			},
 
 			addNewField: function () {
@@ -304,6 +295,14 @@ steal(
 			}
 
 		}, webix.ui.popup);
+
+		// Create instance of popup
+		if ($$('ab-update-records-popup') == null) {
+			webix.ui({
+				id: 'ab-update-records-popup',
+				view: "update_records_popup",
+			});
+		}
 
 	}
 );

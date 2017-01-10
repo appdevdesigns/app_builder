@@ -283,10 +283,34 @@ steal(
 					var action_buttons = [];
 
 					if (setting.massUpdate === 'enable') {
-						action_buttons.push({ view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', popup: self.viewId + '-update-items-popup', icon: "pencil", type: "icon", width: 140 });
+						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
+
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', icon: "pencil", type: "icon", width: 140,
+							click: function () {
+								if ($$('ab-update-records-popup')) {
+									$$('ab-update-records-popup').define('objectModel', object[0]);
+									$$('ab-update-records-popup').define('dataTable', $$(self.viewId));
+									$$('ab-update-records-popup').define('dataCollection', self.data.dataCollection);
+									$$('ab-update-records-popup').define('columns', columns);
+									$$('ab-update-records-popup').show(this.$view);
+								}
+							}
+						});
 
 						if (setting.removable === 'enable')
-							action_buttons.push({ view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', popup: self.viewId + '-delete-items-popup', icon: "trash", type: "icon", width: 140 });
+							action_buttons.push({
+								view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', popup: self.viewId + '-delete-items-popup', icon: "trash", type: "icon", width: 140,
+								click: function () {
+									if ($$('ab-delete-records-popup')) {
+										$$('ab-delete-records-popup').define('objectModel', object[0]);
+										$$('ab-delete-records-popup').define('dataTable', $$(self.viewId));
+										$$('ab-delete-records-popup').define('dataCollection', self.data.dataCollection);
+										$$('ab-delete-records-popup').define('columns', columns);
+										$$('ab-delete-records-popup').show(this.$view);
+									}
+								}
+							});
 					}
 
 					if (setting.filter === 'enable') {
@@ -326,31 +350,6 @@ steal(
 					}
 
 					if (setting.massUpdate === 'enable') {
-						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
-
-						// Create update checked items popup 
-						webix.ui({
-							id: self.viewId + '-update-items-popup',
-							view: "update_records_popup",
-						}).hide();
-						$$(self.viewId + '-update-items-popup').registerObject(object[0]);
-						$$(self.viewId + '-update-items-popup').registerDataTable($$(self.viewId));
-						$$(self.viewId + '-update-items-popup').registerDataCollection(self.data.dataCollection);
-						$$(self.viewId + '-update-items-popup').setColumns(columns);
-
-						// Create delete checked items popup
-						if (setting.removable === 'enable') {
-							webix.ui({
-								id: self.viewId + '-delete-items-popup',
-								view: "delete_records_popup",
-							}).hide();
-							$$(self.viewId + '-delete-items-popup').registerObject(object[0]);
-							$$(self.viewId + '-delete-items-popup').registerDataTable($$(self.viewId));
-							$$(self.viewId + '-delete-items-popup').registerDataCollection(self.data.dataCollection);
-							$$(self.viewId + '-delete-items-popup').setColumns(columns);
-						}
-
-
 						if ($$(self.viewId).checkedItems && Object.keys($$(self.viewId).checkedItems).length > 0) {
 							$$(self.viewId + '-update-items-button').enable();
 							if ($$(self.viewId + '-delete-items-button'))

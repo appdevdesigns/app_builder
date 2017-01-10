@@ -93,31 +93,29 @@ steal(
 					}
 				}
 			},
-
-			registerObject: function (objectModel) {
-				var delete_records_popup = this;
-
-				delete_records_popup.objectModel = objectModel;
+			objectModel_setter: function (objectModel) {
+				this.objectModel = objectModel;
 			},
-			registerDataTable: function (dataTable) {
-				var delete_records_popup = this;
-
-				delete_records_popup.dataTable = dataTable;
+			dataTable_setter: function (dataTable) {
+				this.dataTable = dataTable;
 			},
-			registerDataCollection: function (dataCollection) {
-				var delete_records_popup = this;
-
-				delete_records_popup.dataCollection = dataCollection;
+			dataCollection_setter: function (dataCollection) {
+				this.dataCollection = dataCollection;
 			},
-
-			setColumns: function (columns) {
-				var delete_records_popup = this;
-
-				delete_records_popup.columns = columns;
+			columns_setter: function (columns) {
+				this.columns = columns;
 			}
 
-
-
 		}, webix.ui.popup);
+
+		// Create instance of popup
+		if ($$('ab-delete-records-popup') == null) {
+			webix.ui({
+				id: 'ab-delete-records-popup',
+				view: "delete_records_popup",
+			});
+		}
+
+
 	}
 );
