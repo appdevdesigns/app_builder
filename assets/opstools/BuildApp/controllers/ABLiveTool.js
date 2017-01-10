@@ -1,12 +1,10 @@
 
 steal(
 	// List your Controller's dependencies here:
-	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	'opstools/BuildApp/controllers/page_components/componentManager.js',
 
-	function (dataCollectionHelper, dataHelper, modelCreator, componentManager) {
+	function (dataHelper, modelCreator) {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',
@@ -392,63 +390,34 @@ steal(
 							if (self.activePage && $$(self.activePage.domID).hide)
 								$$(self.activePage.domID).hide();
 
-if ($$(page.domID).show) {
 							$$(page.domID).show();
 							self.previousPage = self.activePage;
 							self.activePage = page;
 
 							self.activePage.components.forEach(function (item) {
-								self.renderComponent(self.activePage, item);
-							});
 
-							self.resize();
-} else {
-	console.error('**** Hey!');
-}
-						},
+								self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
+									// Listen component events
+									$(page.comInstances[item.id]).on('renderComplete', function (event, data) {
+										$$(self.rootPage.domID).adjust();
+										$$(item.domID).adjust();
+									});
 
-						renderComponent: function (page, item) {
-							var self = this,
-								q = $.Deferred(),
-								componentInstance = componentManager.getComponent(item.component),
-								view = componentInstance.getView(),
-								viewId = self.unique('ab_live_item', page.id, item.id),
-								setting = item.setting,
-								dataCollection,
-								linkedDataCollection;
+									$(page.comInstances[item.id]).on('changePage', function (event, data) {
+										// Redirect to another page
+										if (data.previousPage)
+											self.showPage(self.previousPage);
+										else if (self.activePage.id != data.pageId && data.pageId) {
 
-							if (!page.comInstances) page.comInstances = {};
+											var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
 
-							if (page.comInstances[item.id]) {
-								if (page.comInstances[item.id].onDisplay)
-									page.comInstances[item.id].onDisplay();
-
-								return;
-							}
-
-
-							self.activePage.renderComponent(self.data.application, item).done(function () {
-
-								// Listen component events
-								$(page.comInstances[item.id]).on('renderComplete', function (event, data) {
-									$$(self.rootPage.domID).adjust();
-									$$(viewId).adjust();
+											if (redirectPage && redirectPage.length > 0)
+												self.showPage(redirectPage[0]);
+										}
+									});
 								});
 
-								$(page.comInstances[item.id]).on('changePage', function (event, data) {
-									// Redirect to another page
-									if (data.previousPage)
-										self.showPage(self.previousPage);
-									else if (self.activePage.id != data.pageId && data.pageId) {
-
-										var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
-
-										if (redirectPage && redirectPage.length > 0)
-											self.showPage(redirectPage[0]);
-									}
-								});
 							});
-
 
 							self.resize();
 						},
@@ -472,8 +441,8 @@ if ($$(page.domID).show) {
 							if (height > 0)
 								$$(this.rootPage.domID).define('height', height);
 
-							if (this.rootPage) { $$(this.rootPage.domID).adjust(); }
-							if (this.activePage) { $$(this.activePage.domID).adjust(); }
+							$$(this.rootPage.domID).adjust();
+							$$(this.activePage.domID).adjust();
 
 							// Resize components
 							if (this.activePage && this.activePage.comInstances) {
