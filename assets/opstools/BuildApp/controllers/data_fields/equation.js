@@ -83,12 +83,6 @@ steal(function () {
 					{ id: 'years', value: "Years" },
 					],
 					
-				},
-				{ 
-					view: 'template', 
-					label: 'choose a type',
-					id:'typeSettings'
-
 				}
 				]
 			}
