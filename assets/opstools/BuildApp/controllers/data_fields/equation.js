@@ -64,7 +64,7 @@ steal(function () {
 	}
 
 	function getDataField(type){
-		/*if(type == "Date"){*/
+		if(type == "Date"){
 			return {
 				editDefinition :{
 					id: componentIds.editView,
@@ -85,7 +85,7 @@ steal(function () {
 					]
 				}
 			}
-		//}
+		}
 		/*else{
 			return {
 				editDefinition :{
