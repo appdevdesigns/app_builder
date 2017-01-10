@@ -71,6 +71,7 @@ steal(function () {
 					id: componentIds.editView,
 					rows: [
 					{
+						id : "testcol",
 						cols: [
 						{
 							view: "richselect",
@@ -107,7 +108,7 @@ steal(function () {
 			}
 		}
 		else{
-			$$(componentIds.editView).removeView('typeSettings');
+			$$(componentIds.editView).removeView('testcol');
 			
 		}
 	}
