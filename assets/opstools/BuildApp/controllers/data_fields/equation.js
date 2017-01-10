@@ -67,28 +67,48 @@ steal(function () {
 	function getDataField(type){
 		if(type.toLowerCase() == 'numeric'){
 			return { 
-			editDefinition : {
-				id: componentIds.editView,
-				rows: [
-				{
-					view: "richselect",
-					id: componentIds.dateType,
-					label: "Date Type",
-					labelWidth: "110",
-					value: 'none',
-					options: [
-					{ id: 'hours', value:  "Hours" },
-					{ id: 'days', value:  "Days" },
-					{ id: 'weeks', value: "Weeks" },
-					{ id: 'years', value: "Years" },
-					],
-					
+				editDefinition : {
+					id: componentIds.editView,
+					rows: [
+					{
+						view: "richselect",
+						id: componentIds.dateType,
+						label: "Date Type",
+						labelWidth: "110",
+						value: 'none',
+						options: [
+						{ id: 'hours', value:  "Hours" },
+						{ id: 'days', value:  "Days" },
+						{ id: 'weeks', value: "Weeks" },
+						{ id: 'years', value: "Years" },
+						]
+						
+					},
+					{ 
+						view: 'template', 
+						label: 'choose a type',
+						id:'typeSettings'
+
+					}
+					]
 				}
-				]
 			}
 		}
+		else{
+			return {
+				editDefinition : {
+					id: componentIds.editView,
+					rows: [
+					{ 
+						view: 'template', 
+						label: 'choose a type',
+						id:'typeSettings'
+
+					}
+					]
+				}
+			}
 		}
-		
 	}
 
 	function showSettings(type){
