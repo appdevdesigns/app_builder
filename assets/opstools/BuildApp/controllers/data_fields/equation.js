@@ -136,6 +136,12 @@ steal(function () {
 					}
 				}
 			},
+			{ 
+				 view: 'template', 
+				 label: 'choose a type',
+				 id:'typeSettings'
+
+			},
 			{
 				
 			/*	cols: [
@@ -246,12 +252,7 @@ steal(function () {
 					value: 'none',
 					options: formatList
 			},
-			{ 
-				 view: 'template', 
-				 label: 'choose a type',
-				 id:'typeSettings'
-
-			}
+			
 
 					
 		]
