@@ -1,6 +1,6 @@
 module.exports = {
 	"paths": {
-		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js",
+		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js"
 	},
 	"bundle": [
 		"opstools/BuildApp"
@@ -24,6 +24,5 @@ module.exports = {
 			],
 			"sideBundle": true
 		}
-
 	}
 };
