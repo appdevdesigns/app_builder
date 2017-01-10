@@ -65,7 +65,7 @@ steal(function () {
 
 
 	function getDataField(type){
-		if(true){
+		if(type.toLowerCase() == 'numeric'){
 			return { 
 			editDefinition : {
 				id: componentIds.editView,
