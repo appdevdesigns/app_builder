@@ -114,6 +114,7 @@ steal(function () {
 		}
 		else{
 			$$(componentIds.editView).removeView(componentIds.dateType);
+			$$(componentIds.editView).removeView(componentIds.resultType);
 		}
 	}
 
