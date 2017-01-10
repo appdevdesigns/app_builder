@@ -215,7 +215,7 @@ steal(
 
 												break;
 											case "number":
-												inputView = { view: "text", validate: webix.rules.isNumber };
+												inputView = { view: "counter", validate: webix.rules.isNumber };
 												break;
 											case "list":
 												inputView = {
@@ -264,7 +264,13 @@ steal(
 			getFieldList: function (excludeSelected) {
 				var update_records_popup = this,
 					update_panel = update_records_popup.getChildViews()[0].getChildViews()[3],
-					options = $.extend({}, update_records_popup.columns);
+					options = $.extend({}, update_records_popup.columns).filter(function (col) {
+						// If this field have model link type, then it should not be allowed to mass update
+						if (col.setting && (col.setting.linkType == 'model' || col.setting.linkViaType == 'model'))
+							return false;
+						else
+							return true;
+					});
 
 				// Remove selected columns
 				if (excludeSelected) {
