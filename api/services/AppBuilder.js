@@ -1176,7 +1176,7 @@ module.exports = {
                             var transModel = sails.models[transModelName];
                             for (var colName in transModel.definition) {
                                 var col = transModel.definition[colName];
-                                if (_.contains(['string', 'text'], col.type)) {
+                                if (col.type == 'string' || col.type == 'text') {
                                     // For later steps
                                     multilingualFields.push({
                                         name: colName,
@@ -1219,13 +1219,12 @@ module.exports = {
                         }
                         
                         // Look for target object within AppBuilder
-                        ABObject.find({ and: [
-                            { name: targetModelName },
-                            { application: appID }
-                        ])
+                        ABObject.find()
+                        .where({ name: targetModelName })
+                        .where({ application: appID })
                         .exec(function(err, list) {
                             if (err) {
-                                assocNext(err);
+                                assocDone(err);
                             }
                             else if (!list || !list[0]) {
                                 // Target model has not been imported into 
