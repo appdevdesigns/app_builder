@@ -513,6 +513,8 @@ steal(
 																		return obj.id == selectedColumn.setting.linkObject;
 																	})[0];
 
+																	if (linkObject == null) return ok();
+
 																	var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, linkObject.name);
 
 																	objectModel.Cached.columns.forEach(function (col, index) {
