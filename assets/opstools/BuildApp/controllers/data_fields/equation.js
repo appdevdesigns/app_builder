@@ -71,18 +71,36 @@ steal(function () {
 					id: componentIds.editView,
 					rows: [
 					{
-						view: "richselect",
-						id: componentIds.dateType,
-						label: "Date Type",
-						labelWidth: "110",
-						value: 'none',
-						options: [
-						{ id: 'hours', value:  "Hours" },
-						{ id: 'days', value:  "Days" },
-						{ id: 'weeks', value: "Weeks" },
-						{ id: 'years', value: "Years" },
+						cols: [
+						{
+							view: "richselect",
+							id: componentIds.dateType,
+							label: "Date Type",
+							labelWidth: "110",
+							value: 'none',
+							options: [
+							{ id: 'hours', value:  "Hours" },
+							{ id: 'days', value:  "Days" },
+							{ id: 'weeks', value: "Weeks" },
+							{ id: 'years', value: "Years" },
+							]
+						},
+						{
+							view: "richselect",
+							id: componentIds.resultType,
+							label: "Result Type",
+							labelWidth: "110",
+							value: 'none',
+							//disabled: true,
+							options: [
+							{ id: 'number', value: "Number" },
+							{ id: 'date', value: "Date" },
+
+							]
+						}
+
 						]
-						
+
 					},
 					{ 
 						view: 'template', 
