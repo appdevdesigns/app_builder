@@ -85,7 +85,7 @@ steal(function () {
 					]
 				}
 			}
-		}
+		//}
 		/*else{
 			return {
 				editDefinition :{
