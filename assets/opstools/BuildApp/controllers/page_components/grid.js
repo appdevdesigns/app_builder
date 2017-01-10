@@ -290,6 +290,7 @@ steal(
 							view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', icon: "pencil", type: "icon", width: 140,
 							click: function () {
 								if ($$('ab-update-records-popup')) {
+									$$('ab-update-records-popup').define('application', application);
 									$$('ab-update-records-popup').define('objectModel', object[0]);
 									$$('ab-update-records-popup').define('dataTable', $$(self.viewId));
 									$$('ab-update-records-popup').define('dataCollection', self.data.dataCollection);

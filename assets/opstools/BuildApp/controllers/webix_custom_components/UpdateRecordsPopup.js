@@ -1,6 +1,8 @@
 steal(
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
-	function (selectivityHelper) {
+	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
+
+	function (selectivityHelper, dataFieldsManager) {
 		webix.protoUI({
 			name: "update_records_popup",
 			$init: function (config) {
@@ -67,9 +69,17 @@ steal(
 
 											update_items.forEach(function (item) {
 												var colSelector = item.getChildViews()[0],
-													valEditor = item.getChildViews()[2];
+													valEditor = item.getChildViews()[2],
+													columnData = update_records_popup.columns.filter(function (col) { return col.name == colSelector.getValue(); })[0];
 
-												modelData.attr(colSelector.getValue(), valEditor.getValue());
+												// Get value from data field manager
+												var val = dataFieldsManager.getValue(update_records_popup.application, update_records_popup.objectModel, columnData, valEditor.$view);
+
+												// Get value from webix components
+												if (val == null && valEditor.getValue)
+													val = valEditor.getValue();
+
+												modelData.attr(colSelector.getValue(), val);
 											});
 
 											updateTasks.push(function (next) {
@@ -137,6 +147,9 @@ steal(
 					}
 				}
 			},
+			application_setter: function (application) {
+				this.application = application;
+			},
 			objectModel_setter: function (objectModel) {
 				this.objectModel = objectModel;
 			},
@@ -167,41 +180,63 @@ steal(
 							on: {
 								"onChange": function (columnId) {
 									var update_item = this.getParentView(),
-										columnConfig = update_records_popup.dataTable.getColumnConfig(columnId);
+										columnConfig = update_records_popup.dataTable.getColumnConfig(columnId),
+										columnData = update_records_popup.columns.filter(function (col) { return col.name == columnId; })[0];
 
-									switch (columnConfig.filter_type) {
-										case "text":
-											inputView = { view: "text" };
-											break;
-										case "multiselect":
-											inputView = { view: "text" };
-											break;
-										case "date":
-											inputView = { view: "datepicker" };
+									if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName)) {
+										var htmlTemplate = columnData.setting.template || '<div></div>',
+											editHeight = dataFieldsManager.getRowHeight(columnData, null);
 
-											if (columnConfig.format)
-												inputView.format = columnConfig.format;
+										inputView = {
+											view: "template",
+											height: editHeight || 38,
+											borderless: true,
+											template: "<div class='custom-update-records'>#content#</div>".replace('#content#', htmlTemplate),
+											onClick: {
+												"custom-update-records": function (e, id, itemNode) {
+													dataFieldsManager.customEdit(update_records_popup.application, update_records_popup.objectModel, columnData, 'custom-update-records', itemNode);
+												}
+											}
+										};
+									}
+									else {
+										switch (columnConfig.filter_type) {
+											case "text":
+												inputView = { view: "text" };
+												break;
+											case "multiselect":
+												inputView = { view: "text" };
+												break;
+											case "date":
+												inputView = { view: "datepicker" };
 
-											break;
-										case "number":
-											inputView = { view: "text", validate: webix.rules.isNumber };
-											break;
-										case "list":
-											inputView = {
-												view: "combo",
-												options: columnConfig.filter_options
-											};
-											break;
-										case "boolean":
-											inputView = {
-												view: "checkbox"
-											};
-											break;
+												if (columnConfig.format)
+													inputView.format = columnConfig.format;
+
+												break;
+											case "number":
+												inputView = { view: "text", validate: webix.rules.isNumber };
+												break;
+											case "list":
+												inputView = {
+													view: "combo",
+													options: columnConfig.filter_options
+												};
+												break;
+											case "boolean":
+												inputView = {
+													view: "checkbox"
+												};
+												break;
+										}
 									}
 
 									// Change component to display value
 									update_item.removeView(update_item.getChildViews()[2]);
 									update_item.addView(inputView, 2);
+
+									// Show custom display of data field
+									dataFieldsManager.customDisplay(columnConfig.fieldName, update_records_popup.application, update_records_popup.objectModel, columnData, 'custom-update-records', null, update_records_popup.dataTable.config.id, update_item.getChildViews()[2].$view);
 
 									update_records_popup.refreshFieldList();
 								}
@@ -228,12 +263,8 @@ steal(
 
 			getFieldList: function (excludeSelected) {
 				var update_records_popup = this,
-					update_panel = update_records_popup.getChildViews()[0].getChildViews()[3];
-
-				// TODO : remove this filter
-				var options = $.extend({}, update_records_popup.columns).filter(function (opt) {
-					return ["text", "multiselect", "date", "number", "list", "boolean"].indexOf(opt.setting.filter_type) > -1;
-				});
+					update_panel = update_records_popup.getChildViews()[0].getChildViews()[3],
+					options = $.extend({}, update_records_popup.columns);
 
 				// Remove selected columns
 				if (excludeSelected) {
