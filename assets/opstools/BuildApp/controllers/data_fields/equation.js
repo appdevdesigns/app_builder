@@ -64,6 +64,7 @@ steal(function () {
 	}
 
 	function getDataField(type){
+		if(type==""){
 		return {
 			editDefinition :{
 				id: componentIds.editView,
@@ -95,9 +96,26 @@ steal(function () {
 							{ id: 'date', value: "Date" },
 							
 						]
-					}
+					},{
+						 view: 'template', 
+						 label: 'choose a type',
+						 id:'typeSettings'
+					},
 				 
 				]
+				},
+				]
+			}
+		}
+		}else{
+			return {
+			editDefinition :{
+				id: componentIds.editView,
+				rows: [
+				{
+					 view: 'template', 
+					 label: 'choose a type',
+					 id:'typeSettings'
 				},
 				]
 			}
@@ -145,7 +163,10 @@ steal(function () {
 				}
 			},
 			{
-				cols: [
+				 view: 'template', 
+				 label: 'choose a type',
+				 id:'typeSettings'
+			/*	cols: [
 					{
 						view: "richselect",
 						id: componentIds.dateType,
@@ -173,7 +194,7 @@ steal(function () {
 						]
 					}
 				 
-				]
+				]*/
 				
 			},
 			{
@@ -254,9 +275,9 @@ steal(function () {
 					options: formatList
 			},
 			{ 
-				 view: 'template', 
+				/* view: 'template', 
 				 label: 'choose a type',
-				 id:'typeSettings'
+				 id:'typeSettings'*/
 
 			}
 
