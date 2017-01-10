@@ -69,37 +69,36 @@ steal(function () {
 				id: componentIds.editView,
 				rows: [
 				{
-					view: "text",
-					label: "Name",
-					labelWidth: "100",
-					id: componentIds.name,
-					placeholder: ''
-				},
-				{
-					view: "radio",
-					id: componentIds.equationType,
-					label: "Equation Type",
-					labelWidth: "110",
-					value: 'none',
-					vertical: true,
-					options: [
-					{ id: 'numeric',value: "Numeric" },
-					{ id: 'date',value:  "Date" },
-
-					],
-					on: {
-						'onChange': function (newValue, oldValue) {
-							showSettings(newValue);
-
-						}
+				cols: [
+					{
+						view: "richselect",
+						id: componentIds.dateType,
+						label: "Date Type",
+						labelWidth: "110",
+						value: 'none',
+						options: [
+							{ id: 'hours', value:  "Hours" },
+							{ id: 'days', value:  "Days" },
+							{ id: 'weeks', value: "Weeks" },
+							{ id: 'years', value: "Years" },
+						]
+					},
+					{
+						view: "richselect",
+						id: componentIds.resultType,
+						label: "Result Type",
+						labelWidth: "110",
+						value: 'none',
+						//disabled: true,
+						options: [
+							{ id: 'number', value: "Number" },
+							{ id: 'date', value: "Date" },
+							
+						]
 					}
+				 
+				]
 				},
-				{
-					view: 'template', 
-					id: 'customSetting' ,
-					label: 'choose a type',
-					id:'typeSettings',
-				}
 				]
 			}
 		}
@@ -256,7 +255,6 @@ steal(function () {
 			},
 			{ 
 				 view: 'template', 
-				 id: 'customSetting' ,
 				 label: 'choose a type',
 				 id:'typeSettings'
 
@@ -265,8 +263,6 @@ steal(function () {
 					
 		]
 	};
-
-
 
 	equationDataField.populateSettings = function (application, data) {
 		/*var list = $$(componentIds.equation).getPopup().getList();;
