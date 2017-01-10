@@ -63,9 +63,11 @@ steal(function () {
 		//{currentdate} - {birthdate} 
 	}
 
+
 	function getDataField(type){
-		
-			var editDefinition  = {
+
+		return { 
+			editDefinition : {
 				id: componentIds.editView,
 				rows: [
 				{
@@ -79,11 +81,18 @@ steal(function () {
 					{ id: 'days', value:  "Days" },
 					{ id: 'weeks', value: "Weeks" },
 					{ id: 'years', value: "Years" },
-					]
+					],
+					
 				},
+				{ 
+					view: 'template', 
+					label: 'choose a type',
+					id:'typeSettings'
+
+				}
 				]
 			}
-		
+		}
 	}
 
 	function showSettings(type){
