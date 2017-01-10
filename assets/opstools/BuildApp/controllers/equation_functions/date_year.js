@@ -1,4 +1,5 @@
 steal(
+    'site/labels/app_builder',
     function () {
 
     // date_year
@@ -28,7 +29,7 @@ steal(
     // 
     var yearFunction = {
         token: 'year', 
-        description: AD.lang.label.getLabel('ab.equation.date_year', 'year( {datevalue} )') || '*year( {datevalue} )\nReturns the year of a given date', 
+        description: AD.lang.label.getLabel('ab.equation.date_year', ['year( {datevalue} )']) || '*year( {datevalue} )\nReturns the year of a given date', 
         initialText: 'year( /* date */ )',
 
         returns: 'numeric',  

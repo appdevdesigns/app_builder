@@ -1,4 +1,6 @@
-steal(function () {
+steal(
+    'site/labels/app_builder',
+    function () {
 
     // [Equation]Function
     //
@@ -31,7 +33,7 @@ steal(function () {
         // multilingual note: the '[Equation]( {paramType} )' is a programming 
         // token.  This part is not translated.  Just the description.
         // so the multilingual label should be something like:  '%s\n[what does this fn do?]'
-        description: AD.lang.label.getLabel('ab.equation.[Equation]', '[Equation]( {paramType} )') || '*[Equation]( {paramType} )\n[what does this fn do?]', 
+        description: AD.lang.label.getLabel('ab.equation.[Equation]', ['[Equation]( {paramType} )']) || '*[Equation]( {paramType} )\n[what does this fn do?]', 
         
         initialText: '[Equation]( /* paramType */ )',  
 
