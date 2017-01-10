@@ -195,13 +195,13 @@ module.exports = {
      *
      * Examples:
      *     ABColumn.createColumn('number', { name: 'Population', object: 10 })
+     *     ABColumn.createColumn('number', { name: 'Price', object: 123, type: 'float', language_code: 'en' })
      *     ABColumn.createColumn('string', { 
      *         name: 'Hello', 
      *         object: 11, 
      *         language_code: 'zh-hans', 
      *         label: '你好'
      *     })
-     *     ABColumn.createColumn('number', { name: 'Price', object: 123, type: 'float', language_code: 'en' })
      *     ABColumn.createColumn('text', { name: 'Description', object: 123 })
      *     ABColumn.createColumn('list', {
      *         name: 'Toppings',
@@ -225,7 +225,10 @@ module.exports = {
      *     See /api/services/data_fields/*.js
      *
      *     Note that this `type` parameter is different from `data.type` or
-     *     `data.fieldName` in some situations.
+     *     `data.fieldName` in some situations. For instance, a float number
+     *     field is a 'number' type, with and added '{type: float}' property
+     *     in `data`.
+     *
      *     For connections to other objects, use ABColumn.createLink() instead.
      *
      * @param {object} data
@@ -239,6 +242,8 @@ module.exports = {
      *     The `data.name` value will be copied to the column label in the 
      *     current language. A language code prefix will be added to all other 
      *     language labels.
+     * @param {string} [data.label]
+     *     Optional column label to use instead of just copying the column name.
      * @param {string} [data.type]
      *     Optional. If you want to override the default for some reason.
      *     Such as specifying a 'float' type for a number field.
@@ -350,7 +355,7 @@ module.exports = {
      * column.
      * It is possible for both the source and target to be same object.
      *
-     * Examples:
+     * Example:
      *
      * ABColumn.createLink({
      *     name: 'MyLinkName',
@@ -361,21 +366,16 @@ module.exports = {
      *     language_code: 'zh-hans'
      * }).then( ... )
      *
-     * ABColumn.createLink({
-     *     name: 'AnotherLinkName',
-     *     sourceObjectID: 8,
-     *     targetObjectID: 9,
-     *     targetRelation: 'many'
-     * }).then( ... )
-     *
      * @param {object} data
      * @param {string} data.name
+     * @param {string} [data.targetName]
+     *     If not given, then `data.name` + 'Link' will be used.
      * @param {integer} data.sourceObjectID
      *     The primary key value of the object containing the column.
      * @param {integer} data.targetObjectID
      *     The primary key value of the object being linked to.
-     * @param {string} [data.sourceRelation]
-     *     Optional. Either "one" or "many".
+     * @param {string} data.sourceRelation
+     *     Either "one" or "many".
      *     If omitted, then the retun connection column will not be created.
      * @param {string} data.targetRelation
      *     Either "one" or "many". Required.
@@ -408,6 +408,7 @@ module.exports = {
         }
         
         var sourceColumn, targetColumn;
+        var sourceObjectName;
         
         async.series([
             // Preliminary checks
@@ -449,7 +450,7 @@ module.exports = {
                 if (!data.sourceRelation) return next();
                 
                 ABColumn.createColumn('connectObject', {
-                    name: data.name + 'Link',
+                    name: data.targetName || data.name + 'Link',
                     object: data.targetObjectID,
                     language_code: data.language_code,
                     setting: targetSetting
@@ -478,8 +479,8 @@ module.exports = {
                         next();
                     }
                 });
-            }
-        
+            },
+                    
         ], function(err) {
             if (err) dfd.reject(err);
             else dfd.resolve(sourceColumn, targetColumn);
@@ -487,5 +488,6 @@ module.exports = {
         
         return dfd;
     },
-
+    
+    
 };
