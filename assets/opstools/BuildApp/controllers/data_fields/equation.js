@@ -65,13 +65,11 @@ steal(function () {
 
 	function getDataField(type){
 		if(type == "Date"){
-			//return {
+			return {
 				editDefinition :{
 					id: componentIds.editView,
 					rows: [
 					{
-						cols: [
-						{
 							view: "richselect",
 							id: componentIds.dateType,
 							label: "Date Type",
@@ -83,30 +81,10 @@ steal(function () {
 							{ id: 'weeks', value: "Weeks" },
 							{ id: 'years', value: "Years" },
 							]
-						},
-						{
-							view: "richselect",
-							id: componentIds.resultType,
-							label: "Result Type",
-							labelWidth: "110",
-							value: 'none',
-							//disabled: true,
-							options: [
-							{ id: 'number', value: "Number" },
-							{ id: 'date', value: "Date" },
-
-							]
-						},
-						{
-							view: 'template', 
-							label: 'choose a type',
-							id:'typeSettings'
-						},
-						]
 					},
 					]
 				}
-			//}
+			}
 		}
 		else{
 			return {
