@@ -95,19 +95,7 @@ steal(function () {
 			}
 		}
 		else{
-			return {
-				editDefinition : {
-					id: componentIds.editView,
-					rows: [
-					{ 
-						view: 'template', 
-						label: 'choose a type',
-						id:'typeSettings'
-
-					}
-					]
-				}
-			}
+			$$(componentIds.editView).removeView(componentIds.dateType);
 		}
 	}
 
