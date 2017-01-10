@@ -65,8 +65,8 @@ steal(function () {
 
 
 	function getDataField(type){
-
-		return { 
+		if(true){
+			return { 
 			editDefinition : {
 				id: componentIds.editView,
 				rows: [
@@ -93,6 +93,8 @@ steal(function () {
 				]
 			}
 		}
+		}
+		
 	}
 
 	function showSettings(type){
