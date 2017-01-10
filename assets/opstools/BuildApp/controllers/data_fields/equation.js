@@ -64,64 +64,65 @@ steal(function () {
 	}
 
 	function getDataField(type){
-		if(type==""){
-		return {
-			editDefinition :{
-				id: componentIds.editView,
-				rows: [
-				{
-				cols: [
+		if(type == "Date"){
+			return {
+				editDefinition :{
+					id: componentIds.editView,
+					rows: [
 					{
-						view: "richselect",
-						id: componentIds.dateType,
-						label: "Date Type",
-						labelWidth: "110",
-						value: 'none',
-						options: [
+						cols: [
+						{
+							view: "richselect",
+							id: componentIds.dateType,
+							label: "Date Type",
+							labelWidth: "110",
+							value: 'none',
+							options: [
 							{ id: 'hours', value:  "Hours" },
 							{ id: 'days', value:  "Days" },
 							{ id: 'weeks', value: "Weeks" },
 							{ id: 'years', value: "Years" },
-						]
-					},
-					{
-						view: "richselect",
-						id: componentIds.resultType,
-						label: "Result Type",
-						labelWidth: "110",
-						value: 'none',
-						//disabled: true,
-						options: [
+							]
+						},
+						{
+							view: "richselect",
+							id: componentIds.resultType,
+							label: "Result Type",
+							labelWidth: "110",
+							value: 'none',
+							//disabled: true,
+							options: [
 							{ id: 'number', value: "Number" },
 							{ id: 'date', value: "Date" },
-							
+
+							]
+						},
+						{
+							view: 'template', 
+							label: 'choose a type',
+							id:'typeSettings'
+						},
 						]
-					},{
-						 view: 'template', 
-						 label: 'choose a type',
-						 id:'typeSettings'
 					},
-				 
-				]
-				},
-				]
+					]
+				}
 			}
 		}
-		}else{
+		else{
 			return {
-			editDefinition :{
-				id: componentIds.editView,
-				rows: [
-				{
-					 view: 'template', 
-					 label: 'choose a type',
-					 id:'typeSettings'
-				},
-				]
+				editDefinition :{
+					id: componentIds.editView,
+					rows: [
+					{
+						view: 'template', 
+						label: 'choose a type',
+						id:'typeSettings'
+					},
+					]
+				}
 			}
 		}
 	}
-
 
 
 
