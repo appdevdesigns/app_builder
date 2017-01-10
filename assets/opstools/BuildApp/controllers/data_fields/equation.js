@@ -142,9 +142,7 @@ steal(function () {
 				}
 			},
 			{
-				 view: 'template', 
-				 label: 'choose a type',
-				 id:'typeSettings'
+				
 			/*	cols: [
 					{
 						view: "richselect",
@@ -254,9 +252,9 @@ steal(function () {
 					options: formatList
 			},
 			{ 
-				/* view: 'template', 
+				 view: 'template', 
 				 label: 'choose a type',
-				 id:'typeSettings'*/
+				 id:'typeSettings'
 
 			}
 
