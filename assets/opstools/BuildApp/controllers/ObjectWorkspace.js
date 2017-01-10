@@ -149,16 +149,6 @@ steal(
 							});
 
 							webix.ui({
-								id: self.webixUiId.filterFieldsPopup,
-								view: "filter_popup",
-							}).hide();
-
-							webix.ui({
-								id: self.webixUiId.sortFieldsPopup,
-								view: "sort_popup",
-							}).hide();
-
-							webix.ui({
 								id: self.webixUiId.frozenColumnsPopup,
 								view: "frozen_popup",
 							}).hide();
@@ -186,8 +176,20 @@ steal(
 										hidden: true,
 										cols: [
 											{ view: "button", label: self.labels.object.toolbar.hideFields, popup: self.webixUiId.visibleFieldsPopup, id: self.webixUiId.visibleButton, icon: "columns", type: "icon", width: 120, badge: 0 },
-											{ view: 'button', label: self.labels.object.toolbar.filterFields, popup: self.webixUiId.filterFieldsPopup, id: self.webixUiId.filterButton, icon: "filter", type: "icon", width: 120, badge: 0 },
-											{ view: 'button', label: self.labels.object.toolbar.sortFields, popup: self.webixUiId.sortFieldsPopup, id: self.webixUiId.sortButton, icon: "sort", type: "icon", width: 120, badge: 0 },
+											{
+												view: 'button', label: self.labels.object.toolbar.filterFields, id: self.webixUiId.filterButton, icon: "filter", type: "icon", width: 120, badge: 0,
+												click: function () {
+													self.refreshPopupData();
+													$$(self.webixUiId.filterFieldsPopup).show(this.$view);
+												}
+											},
+											{
+												view: 'button', label: self.labels.object.toolbar.sortFields, id: self.webixUiId.sortButton, icon: "sort", type: "icon", width: 120, badge: 0,
+												click: function () {
+													self.refreshPopupData();
+													$$(self.webixUiId.sortFieldsPopup).show(this.$view);
+												}
+											},
 											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton, icon: "table", type: "icon", width: 150, badge: 0 },
 											{ view: 'button', label: self.labels.object.toolbar.defineLabel, popup: self.webixUiId.defineLabelPopup, id: self.webixUiId.defineLabelButton, icon: "newspaper-o", type: "icon", width: 130 },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
@@ -438,11 +440,13 @@ steal(
 										$$(self.webixUiId.editHeaderPopup).hide();
 										break;
 									case self.labels.object.filterField:
+										self.refreshPopupData();
 										$$(self.webixUiId.filterFieldsPopup).addNewFilter(headerField.id);
 										$$(self.webixUiId.editHeaderPopup).hide();
 										$$(self.webixUiId.filterFieldsPopup).show($$(self.webixUiId.filterButton).getNode());
 										break;
 									case self.labels.object.sortField:
+										self.refreshPopupData();
 										$$(self.webixUiId.sortFieldsPopup).addNewSort(headerField.id);
 										$$(self.webixUiId.editHeaderPopup).hide();
 										$$(self.webixUiId.sortFieldsPopup).show($$(self.webixUiId.sortButton).getNode());
@@ -756,8 +760,6 @@ steal(
 
 								// Register table to popups
 								$$(self.webixUiId.visibleFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-								$$(self.webixUiId.filterFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
-								$$(self.webixUiId.sortFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.editHeaderPopup).registerDataTable($$(self.webixUiId.objectDatatable));
@@ -1208,11 +1210,12 @@ steal(
 
 							if (self.data.columns) {
 								var columns = self.data.columns.attr ? self.data.columns.attr() : self.data.columns;
-								columns.sort(function (a, b) { return a.weight - b.weight; });
 
 								$$(self.webixUiId.visibleFieldsPopup).setFieldList(columns);
-								$$(self.webixUiId.filterFieldsPopup).setFieldList(columns);
-								$$(self.webixUiId.sortFieldsPopup).setFieldList(columns);
+								$$(self.webixUiId.filterFieldsPopup).define('dataTable', $$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.filterFieldsPopup).define('columns', columns);
+								$$(self.webixUiId.sortFieldsPopup).define('dataTable', $$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.sortFieldsPopup).define('columns', columns);
 								$$(self.webixUiId.frozenColumnsPopup).setFieldList(columns);
 								$$(self.webixUiId.defineLabelPopup).setFieldList(columns);
 							}
@@ -1231,13 +1234,17 @@ steal(
 								$$(self.webixUiId.visibleButton).define('badge', num);
 								$$(self.webixUiId.visibleButton).refresh();
 							});
-							$$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (num) {
-								$$(self.webixUiId.filterButton).define('badge', num);
-								$$(self.webixUiId.filterButton).refresh();
+							$$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+								if (self.webixUiId.objectDatatable == dataTableId) {
+									$$(self.webixUiId.filterButton).define('badge', num);
+									$$(self.webixUiId.filterButton).refresh();
+								}
 							});
-							$$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (num) {
-								$$(self.webixUiId.sortButton).define('badge', num);
-								$$(self.webixUiId.sortButton).refresh();
+							$$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+								if (self.webixUiId.objectDatatable == dataTableId) {
+									$$(self.webixUiId.sortButton).define('badge', num);
+									$$(self.webixUiId.sortButton).refresh();
+								}
 							});
 							$$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
 								$$(self.webixUiId.frozenButton).define('badge', num);

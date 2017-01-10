@@ -30,7 +30,8 @@ steal(
 
 		// Instance functions
 		var gridComponent = function (application, viewId, componentId) {
-			var data = {};
+			var data = {},
+				events = {}; // { eventName: eventId, ..., eventNameN: eventIdN }
 
 			function getMaxWeight(columns) {
 				if (!columns) return 0;
@@ -314,11 +315,49 @@ steal(
 					}
 
 					if (setting.filter === 'enable') {
-						action_buttons.push({ view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', popup: self.viewId + '-filter-popup', icon: "filter", type: "icon", width: 120, badge: 0 });
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', icon: "filter", type: "icon", width: 120, badge: 0,
+							click: function () {
+								if ($$('ab-filter-popup')) {
+									$$('ab-filter-popup').define('dataTable', $$(self.viewId));
+									$$('ab-filter-popup').define('columns', columns);
+
+									if (!events['filterPopupOnChange']) {
+										events['filterPopupOnChange'] = $$('ab-filter-popup').attachEvent('onChange', function (dataTableId, num) {
+											if (self.viewId == dataTableId) {
+												$$(self.viewId + '-filter-button').define('badge', num);
+												$$(self.viewId + '-filter-button').refresh();
+											}
+										});
+									}
+
+									$$('ab-filter-popup').show(this.$view);
+								}
+							}
+						});
 					}
 
 					if (setting.sort === 'enable') {
-						action_buttons.push({ view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', popup: self.viewId + '-sort-popup', icon: "sort", type: "icon", width: 120, badge: 0 });
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', icon: "sort", type: "icon", width: 120, badge: 0,
+							click: function () {
+								if ($$('ab-sort-popup')) {
+									$$('ab-sort-popup').define('dataTable', $$(self.viewId));
+									$$('ab-sort-popup').define('columns', columns);
+
+									if (!events['sortPopupOnChange']) {
+										events['sortPopupOnChange'] = $$('ab-sort-popup').attachEvent('onChange', function (dataTableId, num) {
+											if (self.viewId == dataTableId) {
+												$$(self.viewId + '-sort-button').define('badge', num);
+												$$(self.viewId + '-sort-button').refresh();
+											}
+										});
+									}
+
+									$$('ab-sort-popup').show(this.$view);
+								}
+							}
+						});
 					}
 
 					if (action_buttons.length > 0) {
@@ -360,36 +399,6 @@ steal(
 							if ($$(self.viewId + '-delete-items-button'))
 								$$(self.viewId + '-delete-items-button').disable();
 						}
-					}
-
-					// Create filter popup
-					if (setting.filter === 'enable') {
-						webix.ui({
-							id: self.viewId + '-filter-popup',
-							view: "filter_popup",
-						}).hide();
-
-						$$(self.viewId + '-filter-popup').registerDataTable($$(self.viewId));
-						$$(self.viewId + '-filter-popup').setFieldList(columns);
-						$$(self.viewId + '-filter-popup').attachEvent('onChange', function (num) {
-							$$(self.viewId + '-filter-button').define('badge', num);
-							$$(self.viewId + '-filter-button').refresh();
-						});
-					}
-
-					// Create sort popup
-					if (setting.sort === 'enable') {
-						webix.ui({
-							id: self.viewId + '-sort-popup',
-							view: "sort_popup",
-						}).hide();
-
-						$$(self.viewId + '-sort-popup').registerDataTable($$(self.viewId));
-						$$(self.viewId + '-sort-popup').setFieldList(columns);
-						$$(self.viewId + '-sort-popup').attachEvent('onChange', function (num) {
-							$$(self.viewId + '-sort-button').define('badge', num);
-							$$(self.viewId + '-sort-button').refresh();
-						});
 					}
 
 					// Select edit item

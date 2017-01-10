@@ -49,6 +49,42 @@ steal(
 					}
 				}
 			},
+
+			dataTable_setter: function (dataTable) {
+				var sort_popup = this;
+
+				if (sort_popup.dataTable && sort_popup.dataTable.config.id == dataTable.config.id) return;
+
+				sort_popup.dataTable = dataTable;
+
+				// Reset form
+				var sort_form = this.getChildViews()[0];
+				sort_form.clear();
+				sort_form.clearValidation();
+
+				// Clear children views
+				var cViews = [];
+				var childViews = sort_form.getChildViews();
+				for (var i = 0; i < childViews.length; i++) {
+					if (i < childViews.length - 1)
+						cViews.push(childViews[i]);
+				}
+
+				cViews.forEach(function (v) {
+					sort_form.removeView(v);
+				});
+			},
+
+			columns_setter: function (fieldList) {
+				var sort_popup = this;
+
+				// We can remove it when we can get all column from webix datatable (include hidden fields)
+				sort_popup.fieldList = fieldList;
+
+				sort_popup.refreshFieldList();
+			},
+
+
 			addNewSort: function (fieldId) {
 				// Prevent duplicate fields
 				var sort_popup = this,
@@ -152,36 +188,6 @@ steal(
 				}
 			},
 
-			registerDataTable: function (dataTable) {
-				var sort_popup = this,
-					sort_form = this.getChildViews()[0];
-
-				sort_popup.dataTable = dataTable;
-
-				// Reset form
-				sort_form.clear();
-				sort_form.clearValidation();
-
-				// Clear children views
-				var cViews = [];
-				var childViews = sort_form.getChildViews();
-				for (var i = 0; i < childViews.length; i++) {
-					if (i < childViews.length - 1)
-						cViews.push(childViews[i]);
-				}
-
-				cViews.forEach(function (v) {
-					sort_form.removeView(v);
-				});
-			},
-			setFieldList: function (fieldList) {
-				var sort_popup = this;
-
-				// We can remove it when we can get all column from webix datatable (include hidden fields)
-				sort_popup.fieldList = fieldList;
-
-				sort_popup.refreshFieldList();
-			},
 			getFieldList: function (excludeSelected) {
 				var sort_popup = this,
 					sort_form = this.getChildViews()[0],
@@ -354,9 +360,18 @@ steal(
 						conditionNumber++;
 				});
 
-				this.getTopParentView().callEvent('onChange', [conditionNumber]);
+				this.getTopParentView().callEvent('onChange', [sort_popup.dataTable.config.id, conditionNumber]);
 			}
 
 		}, webix.ui.popup);
+
+		// Create instance of popup
+		if ($$('ab-sort-popup') == null) {
+			webix.ui({
+				id: 'ab-sort-popup',
+				view: 'sort_popup'
+			}).hide();
+		}
+
 	}
 );
