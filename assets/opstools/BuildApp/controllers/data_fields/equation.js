@@ -68,7 +68,6 @@ steal(function () {
 		if(type.toLowerCase() == 'numeric'){
 			return { 
 				editDefinition : {
-					id: componentIds.editView,
 					rows: [
 					{
 						id : "testcol",
@@ -99,12 +98,7 @@ steal(function () {
 
 							]
 						},
-						{ 
-							 view: 'template', 
-							 label: 'choose a type',
-							 id:'typeSettings'
 
-						},
 
 						]
 
