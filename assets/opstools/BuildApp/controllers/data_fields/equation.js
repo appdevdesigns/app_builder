@@ -108,7 +108,7 @@ steal(function () {
 			}
 		}
 		else{
-			$$('typeSettings').removeView('testcol');
+			$$('testtypeSettings').removeView('testcol');
 			
 		}
 	}
