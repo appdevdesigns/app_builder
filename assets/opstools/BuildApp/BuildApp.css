@@ -40,7 +40,18 @@
 	overflow: auto !important;
 }
 
-/* Webix datatable */
+/* == Webix datatable == */
+/* Checkbox column */
+.ab-main-container .webix_hcell.center input[type=checkbox] {
+	width:20px;
+	height:20px;
+	margin-top:12px;
+  }
+.ab-main-container .webix_table_checkbox {
+	width:20px;
+	height:20px;
+	margin-top:5px;
+}
 /* Last column */
 .ab-main-container .webix_column.webix_last > div,
 .ab-main-container .webix_hs_center td.webix_last,
