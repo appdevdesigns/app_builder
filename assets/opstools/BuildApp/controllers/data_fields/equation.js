@@ -121,7 +121,7 @@ steal(function () {
 		
 		webix.ui(typeSettings, $$('testtypeSettings'));  //<<——— update section with the webix definition of the component
 		}else{
-			$$('testtypeSettings').removeView('testcol');
+			$$('testtypeSettings').removeView('testeditview');
 		}
 	}
 	  
