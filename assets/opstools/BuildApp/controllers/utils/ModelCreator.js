@@ -72,7 +72,11 @@ steal(
 				var objectData = application.objects.filter(function (obj) { return obj.name == objectName; });
 
 				if (!objectData || objectData.length < 1) {
-					console.error('System could not found this object.');
+					AD.error.log('System could not found this object.', {
+						objectName:objectName,
+						application:application,
+						modelName:modelName
+					});
 					return null;
 				}
 

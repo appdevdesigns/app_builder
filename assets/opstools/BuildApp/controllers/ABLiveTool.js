@@ -345,8 +345,8 @@ steal(
 
 									break;
 								case 'tab':
-									// TODO : tab view
-									// break;
+									// don't render tabs.  The component will do that.
+									break;
 								case 'page':
 								default:
 									var pageTemplate = {
@@ -423,6 +423,11 @@ steal(
 						},
 
 						resize: function (height) {
+
+							// NOTE: resize() calls from the OpsPortal OPView element 
+							// .resize({ height:value });
+							if (height) height = height.height || height;
+
 							if (!$$(this.rootPage.domID) || !$(this.element).is(":visible")) return;
 
 							var width = this.element.width();

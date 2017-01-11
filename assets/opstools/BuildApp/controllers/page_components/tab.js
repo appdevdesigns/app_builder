@@ -317,6 +317,35 @@ steal(
             }
 
 
+
+            /**
+             * @function resize
+             *
+             * This method is called when the page this app is on initiates a 
+             * resize().
+             *
+             * (if they are in edit mode, then you wont get the updated value)
+             *
+             * @param {integer} width
+             * @param {integer} height
+             */
+            this.resize = function TabResize(width, height) {
+
+                // in case this is somehow called from the OPsPortal directly:
+                if (!height) {
+                    if (width.height) {
+                        // width parameter looks like the OPsPortal 
+                        // { height:value, width:value }
+                        height = width.height;
+                        width = width.width;
+                    }
+                }
+
+                $$(this.viewId).adjust();
+            
+            }
+
+
         };
 
 
@@ -527,6 +556,20 @@ steal(
                                     
                                     var values = $$(componentIds.addTabForm).getValues();
 
+
+//// LEFT OFF HERE:
+// get list of how many page:tabs there are:
+// values.uuid = 'tabs-'+list.length+1+'_'
+// 
+// - after adding a new page, the page display list doesn't update
+// - Deleting a Tab should remove all embedded Pages
+// - what about the Page Interface? how to update the Tab info.
+//      - do we update the tab data when loading the editor / or / rendering the tab?
+//          if page not found, then change our internal info?
+//      - is there a way in the Page delete routine to update the Tab Data?
+//
+//
+
                                     values.uuid = 'tabs-'+AD.util.uuid()+'-';
 
                                     // 1) Trim value
@@ -636,6 +679,7 @@ console.log('transactions:', currentTab.pendingTransactions);
                 label: "no properties yet."
             };
         };
+
 
 
         /**
