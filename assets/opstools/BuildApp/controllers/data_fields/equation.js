@@ -71,7 +71,6 @@ steal(function () {
 					id: "testeditview",
 					rows: [
 					{
-						id : "testcol",
 						cols: [
 						{
 							view: "richselect",
@@ -114,13 +113,13 @@ steal(function () {
 	}
 
 	function showSettings(type){
-		if(type.toLowerCase() == 'numeric'){
+		
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
 		
 		webix.ui(typeSettings, $$('testtypeSettings'));  //<<——— update section with the webix definition of the component
-		}
+		
 	}
 	  
 
