@@ -156,9 +156,7 @@ steal(function () {
 				}
 			},
 			{ 
-					view: 'template', 
-				 	label: 'choose a type',
-				 	id:'testtypeSettings'
+					
 
 			},
 			{
@@ -271,6 +269,12 @@ steal(function () {
 					value: 'none',
 					options: formatList
 			},
+			{ 
+					view: 'template', 
+				 	label: 'choose a type',
+				 	id:'testtypeSettings'
+
+			}
 			
 
 					
