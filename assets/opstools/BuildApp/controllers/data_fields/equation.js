@@ -68,7 +68,6 @@ steal(function () {
 		if(type.toLowerCase() == 'numeric'){
 			return { 
 				editDefinition : {
-					id: "testeditview",
 					rows: [
 					{
 						cols: [
@@ -98,7 +97,13 @@ steal(function () {
 
 							]
 						},
+						,
+						{ 
+								view: 'template', 
+							 	label: 'choose a type',
+							 	id:'testtypeSettings'
 
+						}	
 						]
 
 					}
