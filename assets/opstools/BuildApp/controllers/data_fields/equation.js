@@ -99,13 +99,6 @@ steal(function () {
 
 							]
 						},
-						{ 
-							 view: 'template', 
-							 label: 'choose a type',
-							 id:'testtypeSettings'
-
-						},
-
 
 						]
 
@@ -115,7 +108,7 @@ steal(function () {
 			}
 		}
 		else{
-			//$$('typeSettings').removeView('testcol');
+			$$('typeSettings').removeView('testcol');
 			
 		}
 	}
