@@ -98,7 +98,13 @@ steal(function () {
 							{ id: 'date', value: "Date" },
 
 							]
-						}
+						},
+						{ 
+							 view: 'template', 
+							 label: 'choose a type',
+							 id:'typeSettings'
+
+						},
 
 						]
 
