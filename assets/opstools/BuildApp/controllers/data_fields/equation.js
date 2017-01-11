@@ -117,7 +117,8 @@ steal(function () {
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
-		webix.ui(typeSettings, $$('testtypeSettings'),$$('testeditview'));  //<<——— update section with the webix definition of the component
+		$$("testtypeSettings").addView(typeSettings);
+		//webix.ui(typeSettings, $$('testtypeSettings'),$$('testeditview'));  //<<——— update section with the webix definition of the component
 	}
 	  
 
@@ -151,9 +152,12 @@ steal(function () {
 				}
 			},
 			{ 
-				 view: 'template', 
-				 label: 'choose a type',
-				 id:'testtypeSettings'
+				webix.ui({
+					view: 'form', 
+				 	label: 'choose a type',
+				 	id:'testtypeSettings'
+				});
+				 
 
 			},
 			{
