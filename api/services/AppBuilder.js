@@ -477,6 +477,11 @@ module.exports = {
                     .then(function (list) {
                         var obj = list[0];
                         if (!obj) throw new Error('invalid object id');
+                        if (obj.isImported) {
+                            // Imported objects should not be synced to the server
+                            next('IMPORTED OBJECT');
+                            return null;
+                        }
 
                         // Only numbers and alphabets will be used
                         appName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
@@ -631,7 +636,13 @@ module.exports = {
 
         ], function (err) {
             process.chdir(cwd);
-            if (err) dfd.reject(err);
+            if (err) {
+                if (err == 'IMPORTED OBJECT') {
+                    // Build was skipped because object was imported.
+                    dfd.resolve();
+                }
+                else dfd.reject(err);
+            }
             else dfd.resolve();
         });
 
@@ -1448,21 +1459,28 @@ module.exports = {
     
     /**
      * Imports an existing Sails model for use in an AB application.
-     * New client side model files will be generated for that application.
+     * An AB object will be created for that model.
+     * New client side model files will be generated for that object.
      *
      * @param integer appID
      * @param string modelName
      * @return Deferred
+     *     Resolves with a dictionary of models that were imported, with each
+     *     model's matching object ID.
+     *     {
+     *         <modelName>: <modelID>,
+     *         <modelName2>: <modelID2>,
+     *         ...
+     *     }
      */
     modelToObject: function (appID, modelName) {
         var dfd = AD.sal.Deferred();
         var model = sails.models[modelName.toLowerCase()];
        
         if (!model || !model.definition) {
-            dfd.reject(new Error('unrecognized model'));
+            dfd.reject(new Error('unrecognized model: ' + modelName));
         }
         else {
-            //var modelName = model.identity.replace(/^AB_\w+/i, '');
             var application, object;
             var appName, moduleName, clientPath;
             var languages = [];
@@ -1494,50 +1512,22 @@ module.exports = {
                 
                 // Create Object in database
                 function(next) {
-                    ABObject.create({
-                           application: appID,
-                           name: modelName,
-                           isImported: true
+                    Multilingual.model.create({
+                        model: ABObject,
+                        data: {
+                            application: appID,
+                            name: modelName,
+                            label: modelName,
+                            isImported: true
+                        }
                     })
-                    .exec(function(err, result) {
-                        if (err) next(err);
-                        else {
-                            object = result;
-                            next();
-                        }
+                    .fail(next)
+                    .done(function(result) {
+                        object = result;
+                        next();
                     });
                 },
                 
-                // Get site languages
-                function(next) {
-                    SiteMultilingualLanguage.find()
-                    .exec(function(err, list) {
-                        if (err) next(err);
-                        else {
-                            languages = _.pluck(list, 'language_code');
-                            next();
-                        }
-                    });
-                },
-                
-                // Create object translations
-                function (next) {
-                    async.forEach(languages, function(langCode, langDone) {
-                        ABObjectTrans.create({
-                            language_code: langCode,
-                            abobject: object.id,
-                            label: modelName
-                        })
-                        .exec(function(err, result) {
-                            if (err) langDone(err);
-                            else langDone();
-                        });
-                    }, function(err) {
-                        if (err) next(err);
-                        else next();
-                    });
-                },
-               
                 // Create Columns in database
                 function(next) {
                     async.forEachOfSeries(model.definition, function(col, colName, colDone) {
@@ -1545,7 +1535,7 @@ module.exports = {
                         // Skip these columns
                         var ignore = ['id', 'createdAt', 'updatedAt'];
                         if (ignore.indexOf(colName) >= 0) {
-                            return ok();
+                            return colDone();
                         }
                        
                         var defaultValue = col.default;
@@ -1559,42 +1549,30 @@ module.exports = {
                             type: col.type
                         });
                         
-                        ABColumn.create({
-                            object: object.id,
+                        var colData = {
                             name: colName,
-                            fieldName: col.type,
-                            type: col.type,
+                            object: object.id,
                             required: col.required,
-                            unique: col.unique,
-                            default: defaultValue,
-                            setting: {
-                                appName: application.name,
-                                icon: 'font',
-                                editor: 'text',
-                                filter_type: 'text',
-                                supportMultilingual: '0'
-                            }
-                        })
-                        .exec(function(err, result) {
-                            if (err) colDone(err);
-                            else {
-                                // Create column translations
-                                async.forEach(languages, function(langCode, transDone) {
-                                    ABColumnTrans.create({
-                                        abcolumn: result.id,
-                                        //label: '[' + langCode + '] ' + colName),
-                                        label: colName,
-                                        language_code: langCode
-                                    })
-                                    .exec(function(err, result) {
-                                        if (err) transDone(err);
-                                        else transDone();
-                                    });
-                                }, function(err) {
-                                    if (err) colDone(err);
-                                    else colDone();
-                                });
-                            }
+                            unique: col.unique
+                        };
+                        
+                        var typeMap = {
+                            integer: 'number',
+                            float: 'number',
+                            datetime: 'date',
+                        };
+                        var fieldType = typeMap[col.type] || col.type;
+                        
+                        // Special case for float type
+                        if (col.type == 'float') {
+                            fieldType = 'number';
+                            colData.type = 'float';
+                        }
+                        
+                        ABColumn.createColumn(fieldType, colData)
+                        .fail(colDone)
+                        .done(function(column) {
+                            colDone();
                         });
                        
                     }, function(err) {
@@ -1605,29 +1583,33 @@ module.exports = {
                 
                 // Create associations in database
                 function(next) {
-                    async.foreEach(model.associations, function(assoc, assocDone) {
-                        /*
-                            assoc: [
-                                {
-                                    alias: 'assoc name 1',
-                                    type: 'collection',
-                                    collection: 'model name',
-                                    via: 'column name'
-                                },
-                                {
-                                    alias: 'assoc name 2',
-                                    type: 'object',
-                                    model: 'model name'
-                                }
-                            ]
-                        */
+                    /*
+                        model.associations == [
+                            {
+                                alias: 'assoc name 1',
+                                type: 'collection',
+                                collection: 'model name',
+                                via: 'column name'
+                            },
+                            {
+                                alias: 'assoc name 2',
+                                type: 'object',
+                                model: 'model name'
+                            }
+                        ]
+                    */
+                    
+                    async.forEach(model.associations, function(assoc, assocDone) {
                         
+                        // Multilingual translations aren't treated like normal
+                        // associations. The associated text fields will be
+                        // created as local multilingual columns later.
                         if (assoc.alias == 'translations' && assoc.type == 'collection') {
                             var transModelName = assoc.collection.toLowerCase();
                             var transModel = sails.models[transModelName];
                             for (var colName in transModel.definition) {
                                 var col = transModel.definition[colName];
-                                if (_.contains(['string', 'text'], col.type)) {
+                                if (col.type == 'string' || col.type == 'text') {
                                     // For later steps
                                     multilingualFields.push({
                                         name: colName,
@@ -1645,45 +1627,61 @@ module.exports = {
                             model: assoc.collection || assoc.model
                         });
                         
-                        ABColumn.create({
-                            object: object.id,
-                            name: assoc.alias,
-                            fieldName: 'connectObject',
-                            type: 'connectObject',
-                            required: null,
-                            unique: null,
-                            default: null,
-                            setting: {
-                                appName: application.name,
-                                linkType: assoc.type,
-                                linkVia: assoc.via, // change to column id
-                                linkModel: assoc.model, // change to object id
-                                icon: 'eternal-link',
-                                editor: 'selectivity',
-                                template: '<div class="connect-data-values"></div>',
-                                'filter-type': 'multiselect'
+                        var targetLinkName, targetRelation, targetModelName;
+                        
+                        if (assoc.type == 'model') {
+                            targetRelation = 'one';
+                            targetModelName = assoc.model;
+                        } else {
+                            targetRelation = 'many';
+                            targetModelName = assoc.collection;
+                        }
+                        
+                        var targetModel = sails.models[targetModelName];
+                        var sourceRelation = 'one';
+                        if (Array.isArray(targetModel.associations)) {
+                            targetModel.associations.forEach(function(targetModelAssoc) {
+                                if (targetModelAssoc.collection == modelName.toLowerCase()) {
+                                    sourceRelation = 'many';
+                                    targetLinkName = targetModelAssoc.alias;
+                                }
+                                else if (targetModelAssoc.model == modelName.toLowerCase()) {
+                                    targetLinkName = targetModelAssoc.alias;
+                                }
+                            });
+                        }
+                        
+                        // Look for target object within AppBuilder
+                        ABObject.find()
+                        .where({ name: targetModelName })
+                        .where({ application: appID })
+                        .exec(function(err, list) {
+                            if (err) {
+                                assocDone(err);
                             }
-                        })
-                        .exec(function(err, result) {
-                            if (err) assocDone(err);
+                            else if (!list || !list[0]) {
+                                // Target model has not been imported into 
+                                // this AppBuilder app
+                                return assocDone();
+                            }
                             else {
-                                // Create translations
-                                async.forEach(languages, function(langCode, transDone) {
-                                    ABColumnTrans.create({
-                                        abcolumn: result.id,
-                                        label: assoc.alias,
-                                        language_code: langCode
-                                    })
-                                    .exec(function(err, result) {
-                                        if (err) transDone(err);
-                                        else transDone();
-                                    });
-                                }, function(err) {
-                                    if (err) assocDone(err);
-                                    else assocDone();
+                                // Target model already in AppBuilder.
+                                // Create connection links now.
+                                ABColumn.createLink({
+                                    name: assoc.alias,
+                                    sourceObjectID: object.id,
+                                    targetObjectID: list[0].id,
+                                    sourceRelation: sourceRelation,
+                                    targetRelation: targetRelation,
+                                    targetName: targetLinkName
+                                })
+                                .fail(assocDone)
+                                .done(function(sourceColumn, targetColumn) {
+                                    assocDone();
                                 });
                             }
                         });
+                            
                     }, function(err) {
                         if (err) next(err);
                         else next();
@@ -1691,38 +1689,19 @@ module.exports = {
                 },
                 
                 // Create multilingual columns
+                // (these were from the 'translations' association earlier)
                 function(next) {
                     async.forEach(multilingualFields, function(col, colDone) {
-                        ABColumn.create({
-                            object: object.id,
+                        ABColumn.createColumn(col.type, {
                             name: col.name,
-                            fieldName: col.type,
-                            type: col.type,
-                            required: col.required,
-                            unique: col.unique,
-                            default: defaultValue,
+                            object: object.id,
                             setting: {
-                                appName: application.name,
-                                icon: 'font',
-                                editor: 'text',
-                                filter_type: 'text',
                                 supportMultilingual: '1'
                             }
                         })
-                        .exec(function(result, err) {
-                            if (err) colDone(err);
-                            else {
-                                async.forEach(languages, function(langCode, transDone) {
-                                    ABColumnTrans.create({
-                                        abcolumn: result.id,
-                                        label: col.name,
-                                        language_code: langCode
-                                    });
-                                }, function(err, result) {
-                                    if (err) transDone(err);
-                                    else transDone();
-                                });
-                            }
+                        .fail(colDone)
+                        .done(function(result) {
+                            colDone();
                         });
                     }, function(err) {
                         if (err) next(err);
@@ -1732,20 +1711,19 @@ module.exports = {
                 
                 // Create client side models
                 function(next) {
-                    var columns = []; // used for the `describe` function
                     var fieldLabel = 'id';
                     for (var colName in model.definition) {
                         var column = model.definition[colName];
                         if (fieldLabel != 'id') continue;
-                        if (_.contains(['string', 'text'], column.type)) {
+                        if (column.type == 'string' || column.type == 'text') {
                             fieldLabel = colName;
                         }
                     }
                     
-                    // Determine the blueprints modelURL
+                    // Determine the model blueprints base URL
                     var controllerInfo = _.find(sails.controllers, function(c) {
                         // 1st try: look for `model` config in the controllers
-                        if (c._config.model == modelName.toLowerCase()) return true;
+                        if (c._config && c._config.model == modelName.toLowerCase()) return true;
                         return false;
                     });
                     if (!controllerInfo) {
@@ -1757,11 +1735,11 @@ module.exports = {
                             return false;
                         });                    
                     }
-                    var modelURL = '/' + controllerInfo.identity;
+                    var modelURL = controllerInfo.identity;
                     
                     sails.renderView(path.join('app_builder', 'clientModelBase'), {
                         layout: false,
-                        appName: application.name,
+                        appName: appName,
                         objectName: modelName,
                         fieldLabel: fieldLabel,
                         modelURL: modelURL,
@@ -1797,7 +1775,6 @@ module.exports = {
                         }
                     });
                 }
-               
                
             ], function(err) {
                 if (err) dfd.reject(err);

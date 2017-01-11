@@ -14,6 +14,16 @@ module.exports = {
 		dfd.resolve(colString);
 
 		return dfd;
-	}
+	},
 
+    defaults: {
+        type: 'string',
+        fieldName: 'list',
+        setting: {
+            icon: 'th-list',
+            filter_type: 'list',
+            editor: 'richselect',
+            options: [],
+        }
+    }    
 };

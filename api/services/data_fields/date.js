@@ -14,6 +14,16 @@ module.exports = {
 		dfd.resolve(colString);
 
 		return dfd;
-	}
-
+	},
+    
+    defaults: {
+        type: 'date',
+        fieldName: 'date',
+        setting: {
+            icon: 'calendar',
+            editor: 'date',
+            filter_type: 'date',
+            format: 'dateFormatStr',
+        }
+    }
 };

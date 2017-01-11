@@ -28,6 +28,11 @@ module.exports = {
 
         application: { model: 'ABApplication' },
 
+        isImported: {
+            type: 'boolean',
+            defaultsTo: false
+        },
+
 
         // this will pull in the translations using .populate('translations')
         translations: {

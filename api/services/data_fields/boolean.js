@@ -14,6 +14,16 @@ module.exports = {
 		dfd.resolve(colString);
 
 		return dfd;
+	},
+	
+	defaults: {
+        type: 'boolean',
+        fieldName: 'boolean',
+        setting: {
+            icon: 'check-square-o',
+            filter_type: 'boolean',
+            template: '{common.checkbox()}',
+        }
 	}
 
 };
