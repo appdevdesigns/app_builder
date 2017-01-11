@@ -99,6 +99,12 @@ steal(function () {
 
 							]
 						},
+						{ 
+							 view: 'template', 
+							 label: 'choose a type',
+							 id:'testtypeSettings'
+
+						},
 
 
 						]
