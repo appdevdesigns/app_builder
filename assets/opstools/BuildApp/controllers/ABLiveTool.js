@@ -195,11 +195,11 @@ steal(
 											});
 
 											// rebuild our display
-											self.renderPage(updatePage.attr());
+											self.renderPage(updatePage);
 
 											// Update the active page
 											if (self.activePage.id == updatePage.id)
-												self.activePage = updatePage.attr();
+												self.activePage = updatePage;
 
 											// Refresh components
 											self.showPage(self.activePage);

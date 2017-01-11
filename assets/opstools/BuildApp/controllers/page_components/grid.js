@@ -65,7 +65,7 @@ steal(
 
 				// Select this object at first time
 				var visibleColumns = this.data.visibleColumns ? this.data.visibleColumns.slice(0) : [];
-				if (selectAll && $.grep(columns, function (d) { return visibleColumns.indexOf(d.id.toString()) > -1; }).length < 1) {
+				if ($.grep(columns, function (d) { return visibleColumns.indexOf(d.id.toString()) > -1; }).length < 1) {
 					visibleColumns = visibleColumns.concat($.map(columns, function (d) { return d.id.toString(); }));
 				}
 
@@ -129,6 +129,7 @@ steal(
 
 			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
+					columns = [],
 					q = $.Deferred();
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
@@ -169,12 +170,25 @@ steal(
 
 								self.data.columns = result;
 
+								if (self.data.columns) {
+									if (!self.data.visibleColumns) self.data.visibleColumns = [];
+
+									if (showAll && self.data.visibleColumns.length === 0) { // Show all
+										columns = self.data.columns.slice(0);
+										self.data.visibleColumns = $.map(columns, function (col) { return col.id; });
+									}
+									else
+										columns = self.data.columns.filter(function (c) {
+											return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
+										}).slice(0);
+								}
+
 								next();
 							});
 					},
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
-						dataTableController.bindColumns(application, [], true, setting.massUpdate === 'enable', setting.removable === 'enable');
+						dataTableController.bindColumns(application, columns, true, setting.massUpdate === 'enable', setting.removable === 'enable');
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
 							$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -380,15 +394,6 @@ steal(
 							$$(self.viewId).prependView(header);
 					}
 
-					var columns = [];
-					if (self.data.columns) {
-						if (!self.data.visibleColumns) self.data.visibleColumns = [];
-
-						columns = self.data.columns.filter(function (c) {
-							return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
-						}).slice(0);
-					}
-
 					if (setting.massUpdate === 'enable') {
 						if ($$(self.viewId).checkedItems && Object.keys($$(self.viewId).checkedItems).length > 0) {
 							$$(self.viewId + '-update-items-button').enable();
@@ -516,7 +521,8 @@ steal(
 				var columns = self.data.columns.filter(function (c) {
 					return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
 				}).slice(0);
-				if (columns.length < 1) columns = self.data.columns.slice(0); // Show all
+
+				// if (columns.length < 1 && showAll) columns = self.data.columns.slice(0); // Show all
 
 				// View column
 				if (extraColumns.viewPage && extraColumns.viewId) {
@@ -630,7 +636,7 @@ steal(
 					},
 					// Render dataTable component
 					function (next) {
-						self.render(setting, true, false, dataCollection, linkedToDataCollection).then(function () {
+						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection).then(function () {
 							// Columns list
 							bindColumnList.call(self, setting.object, selectAll);
 							$$(componentIds.columnList).hideProgress();
@@ -844,9 +850,12 @@ steal(
 											editInstance.data.visibleColumns.push(item_id);
 										else // Uncheck
 										{
-											var index = editInstance.data.visibleColumns.indexOf(item_id);
-											if (index > -1)
-												editInstance.data.visibleColumns.splice(index, 1);
+											editInstance.data.visibleColumns.forEach(function (colId, index) {
+												if (colId == item_id) {
+													editInstance.data.visibleColumns.splice(index, 1);
+													return;
+												}
+											});
 										}
 
 										editInstance.renderDataTable(editInstance.data.dataCollection, {
