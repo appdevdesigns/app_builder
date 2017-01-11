@@ -68,6 +68,7 @@ steal(function () {
 		if(type.toLowerCase() == 'numeric'){
 			return { 
 				editDefinition : {
+					id: "editview",
 					rows: [
 					{
 						id : "testcol",
@@ -108,7 +109,7 @@ steal(function () {
 			}
 		}
 		else{
-			$$(componentIds.editView).removeView('testcol');
+			$$('typeSettings').removeView('testcol');
 			
 		}
 	}
