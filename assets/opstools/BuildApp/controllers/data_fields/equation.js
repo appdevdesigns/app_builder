@@ -120,8 +120,6 @@ steal(function () {
 		var typeSettings = resultType.editDefinition;
 		
 		webix.ui(typeSettings, $$('testtypeSettings'));  //<<——— update section with the webix definition of the component
-		}else{
-			$$('testtypeSettings').removeView('testeditview');
 		}
 	}
 	  
