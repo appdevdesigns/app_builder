@@ -68,7 +68,7 @@ steal(function () {
 		if(type.toLowerCase() == 'numeric'){
 			return { 
 				editDefinition : {
-					id: "editview",
+					id: "testeditview",
 					rows: [
 					{
 						id : "testcol",
@@ -118,7 +118,7 @@ steal(function () {
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
-		webix.ui(typeSettings, $$('typeSettings'),$$('editview'));  //<<——— update section with the webix definition of the component
+		webix.ui(typeSettings, $$('testtypeSettings'),$$('testeditview'));  //<<——— update section with the webix definition of the component
 	}
 	  
 
@@ -154,7 +154,7 @@ steal(function () {
 			{ 
 				 view: 'template', 
 				 label: 'choose a type',
-				 id:'typeSettings'
+				 id:'testtypeSettings'
 
 			},
 			{
