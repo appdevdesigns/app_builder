@@ -108,17 +108,21 @@ steal(function () {
 			}
 		}
 		else{
-			$$('testtypeSettings').removeView('testcol');
+			
 			
 		}
 	}
 
 	function showSettings(type){
+		if(type.toLowerCase() == 'numeric'){
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
-		$$("testtypeSettings").addView(typeSettings);
-		//webix.ui(typeSettings, $$('testtypeSettings'),$$('testeditview'));  //<<——— update section with the webix definition of the component
+		
+		webix.ui(typeSettings, $$('testtypeSettings'));  //<<——— update section with the webix definition of the component
+		}else{
+			$$('testtypeSettings').removeView('testcol');
+		}
 	}
 	  
 
@@ -152,12 +156,9 @@ steal(function () {
 				}
 			},
 			{ 
-				webix.ui({
-					view: 'form', 
+					view: 'template', 
 				 	label: 'choose a type',
 				 	id:'testtypeSettings'
-				});
-				 
 
 			},
 			{
