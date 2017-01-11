@@ -232,8 +232,8 @@ steal(function () {
 	 * @param {obj} application : The current ABApplication instance 
 	 * @param {obj} object  : The ABObject that contains this DataField
 	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
-	 * @param {int} rowId   : the .id of the Model instance from which we are 
-	 *						  getting the data for this DataField
+	 * @param {obj} rowData   : the data of the Model instance from which we are 
+	 *						  	getting the data for this DataField
 	 * @param {} data       : the value of this DataField
 	 * @param {string} viewId : the webix id ( $$(viewId) ) of the component 
 	 *						  calling this Data Field's .customDisplay()
@@ -244,10 +244,10 @@ steal(function () {
 	 * @return {bool}       : True if we have a custom display
 	 *						  False if we don't.  (or just comment this out)
 	 */
-	imageDataField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
+	imageDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 
 	
-		var keyField = this.keyField( application, object, fieldData, rowId);
+		var keyField = this.keyField( application, object, fieldData, rowData.id);
 
 		////
 		//// Prepare the Display
@@ -394,7 +394,7 @@ steal(function () {
 					var updatePacket = {
 						objectId : object.id,
 						columnName : fieldData.name,
-						rowId : rowId,
+						rowId : rowData.id,
 						data : response.data.uuid
 					};
 					$(imageDataField).trigger('update', updatePacket);

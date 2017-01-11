@@ -212,8 +212,8 @@ steal(function () {
 	 * @param {obj} application : The current ABApplication instance 
 	 * @param {obj} object  : The ABObject that contains this DataField
 	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
-	 * @param {int} rowId   : the .id of the Model instance from which we are 
-	 *						  getting the data for this DataField
+	 * @param {obj} rowData   : the data of the Model instance from which we are 
+	 *						  	getting the data for this DataField
 	 * @param {} data       : the value of this DataField
 	 * @param {string} viewId : the webix id ( $$(viewId) ) of the component 
 	 *						  calling this Data Field's .customDisplay()
@@ -225,7 +225,7 @@ steal(function () {
 	 *						  False if we don't.  (or just comment this out)
 	 */
 /*
-	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowId, data, viewId, itemNode, options) {
+	[DataFieldType]DataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 
 		// for this to work right: 
 		// set your 

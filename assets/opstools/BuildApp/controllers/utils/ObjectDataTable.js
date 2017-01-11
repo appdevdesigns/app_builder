@@ -101,16 +101,18 @@ steal(
 									if (col && col.length > 0) col = col[0];
 									else return;
 
-									var itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
-									if (!itemNode) return;
+									var itemNode = dataTable.getItemNode({ row: rowId, column: columnId }),
+										itemData = dataTable.getItem(rowId);
+
+									if (!itemNode || !itemData) return;
 
 									dataFieldsManager.customDisplay(
 										col.fieldName,
 										self.application,
 										self.object,
 										col,
-										rowId,
-										dataTable.getItem(rowId)[columnId],
+										itemData,
+										itemData[columnId],
 										dataTable.config.id,
 										itemNode,
 										{
