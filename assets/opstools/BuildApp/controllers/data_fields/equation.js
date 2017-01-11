@@ -109,7 +109,7 @@ steal(function () {
 			}
 		}
 		else{
-			$$('typeSettings').removeView('testcol');
+			//$$('typeSettings').removeView('testcol');
 			
 		}
 	}
@@ -118,7 +118,7 @@ steal(function () {
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
-		webix.ui(typeSettings, $$('typeSettings'));   //<<——— update section with the webix definition of the component
+		webix.ui(typeSettings, $$('typeSettings'),$$('editview'));  //<<——— update section with the webix definition of the component
 	}
 	  
 
