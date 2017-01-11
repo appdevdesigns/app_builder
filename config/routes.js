@@ -63,6 +63,12 @@ module.exports = {
     'post /app_builder/appJSON':
         'app_builder/ABApplicationController.jsonImport',
     
+    'get /app_builder/application/:appID/findModels':
+        'app_builder/ABApplicationController.findModels',
+    
+    'post /app_builder/application/:appID/importModel':
+        'app_builder/ABApplicationController.importModel',
+    
   /*
 
   '/': {
