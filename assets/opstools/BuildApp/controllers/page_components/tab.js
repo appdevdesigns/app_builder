@@ -41,7 +41,6 @@ steal(
                 // based upon the given setting
 
                 var view = $.extend(true, {}, tabComponent.getView());
-                view.id = self.viewId;  
 
                 // setting.tabs    : {array} of { tab definitions }
 
@@ -54,6 +53,7 @@ steal(
                     view = tabComponent.tabView();
                     
                 } 
+                view.id = self.viewId;  
 
 
                 // there are several paths in .render() that need to
@@ -246,7 +246,7 @@ steal(
 
                 // we've added a method to our component to update the display 
                 // once a configuration change has been made.
-                tabComponent.refreshEditView();
+                tabComponent.refreshEditView(viewId);
 
                 $$(componentIds.propertyView).refresh();
             };
@@ -349,7 +349,7 @@ steal(
         // the base tabview Webix definition
         tabComponent.tabView = function(){
             return  { 
-                id:componentIds.editMenu,
+                // id:componentIds.editMenu,
                 view:"tabview", 
                 cells: [
                     // {
@@ -386,8 +386,8 @@ steal(
             return { 
                 view:'label', 
 // TODO: make this a multilingual string:
-                label:'Add a page below', 
-                id:componentIds.editMenu 
+                label:'Add a page below'
+                // , id:componentIds.editMenu 
             };
         };
 
@@ -398,7 +398,7 @@ steal(
         // to include or exclude from the list)
         //
         // this is unique to our Tab View
-        tabComponent.refreshEditView = function() {
+        tabComponent.refreshEditView = function(tabViewId) {
 
             // find out which pages have been included (those that are checked)
             var currentPages = [];
@@ -439,7 +439,7 @@ steal(
 
 
             // overwrite the current instance of our component
-            webix.ui(updatedView, $$(componentIds.editMenu));
+            webix.ui(updatedView, $$(tabViewId));
         }
 
 
@@ -453,7 +453,7 @@ steal(
          */
         tabComponent.getEditView = function (componentManager) {
             var menu = $.extend(true, {}, tabComponent.getView());
-            // menu.id = componentIds.editMenu;
+            menu.id = componentIds.editMenu;
 
             return {
                 id: componentIds.editView,
@@ -578,7 +578,7 @@ console.log('transactions:', currentTab.pendingTransactions);
 
                                     // now update the Edit View to represent the 
                                     // current settings/values
-                                    tabComponent.refreshEditView();
+                                    tabComponent.refreshEditView(componentIds.editMenu);
 
                                 }
                               
@@ -604,7 +604,7 @@ console.log('transactions:', currentTab.pendingTransactions);
                             // the [] next to the tab in the tree view
                             // each time one is clicked we need to update the Edit View
                             onItemCheck: function () {
-                                tabComponent.refreshEditView();
+                                tabComponent.refreshEditView(componentIds.editMenu);
                             }
                         }
                     }
