@@ -288,9 +288,9 @@ steal(function () {
 					options: formatList
 			},
 			{ 
-					view: 'template', 
+					view: 'form', 
 				 	label: 'choose a type',
-				 	id:'testtypeSettings'
+				 	id:'testtypeSettings',
 
 			}
 			
