@@ -97,12 +97,59 @@ steal(function () {
 							{ id: 'date', value: "Date" },
 
 							]
-						}
+						},{
+							view: "label",
+							label: "Example Output"
+						},	
+						{
+							view: "combo",
+							label: "Equation",
+							labelWidth: "100",
+							id: componentIds.equation,
+							on: {
+								'onChange': function (newValue, oldValue) {
+
+								}
+							}
+						},
 						]
 
 					}
 					]
 				},
+				getSettings : function () {
+					var type = 'integer';
+
+					var settings = {
+						fieldName: equationDataField.name,
+						type: type,
+						setting: {
+							equationType : $$(componentIds.equationType).getValue(),
+							equation : $$(componentIds.equation).getValue(),
+							template:'<div class="ab-equation-data-field"></div>',
+						}
+					};
+
+					var resultType = this.getDataField(settings.setting.equationType);
+
+					settings.setting.resultSettings = resultType.getSettings();
+
+					return settings;
+				}),
+				populateSettings : function (application, data) {
+					if (!data.setting) return;
+					
+					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+					$$(componentIds.equation).setValue(data.setting.equation);
+
+					var resultSettings = {
+						setting: data.setting.resultSettings
+					}
+
+					var resultType = this.getDataField(settings.setting.equationType);
+
+					resultType.populateSettings(application, resultSettings);
+				}),
 			}
 		}
 		else{
@@ -204,19 +251,19 @@ steal(function () {
 				
 			},
 			{
-				view: "label",
-				label: "Example Output"
+				/*view: "label",
+				label: "Example Output"*/
 			},	
 			{
-				view: "combo",
+				/*view: "combo",
 				label: "Equation",
 				labelWidth: "100",
 				id: componentIds.equation,
 				on: {
 					'onChange': function (newValue, oldValue) {
-						showSettings(newValue);
+						
 					}
-				}
+				}*/
 			},
 			{
 				cols: [
@@ -304,7 +351,7 @@ steal(function () {
 			
 				
 				console.log("col:" + columns[0].name);
-			});
+			});*/
 		if (!data.setting){
 			
 			
@@ -312,27 +359,13 @@ steal(function () {
 		}
 		
 		$$(componentIds.equationType).setValue(data.setting.equationType);
-		$$(componentIds.dateType).setValue(data.setting.dateType);
-		$$(componentIds.resultType).setValue(data.setting.resultType);
-		$$(componentIds.equation).setValue(data.setting.equation);
 		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
 		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
 		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
-		*/
-		if (!data.setting) return;
-	
-			$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
-			$$(componentIds.equation).setValue(data.setting.equation);
-			console.log("datasetting: " + data.setting.resultSettings);
-			var resultSettings = {
-				setting: data.setting.resultSettings
-			}
-
-			var resultType = getDataField(settings.setting.equationType);
-
-			resultType.populateSettings(application, resultSettings);
+		
+		
 
 	};
 
@@ -341,39 +374,19 @@ steal(function () {
 	equationDataField.getSettings = function () {
 		var type = 'integer';
 
-		var settings = {
+		return {
 			fieldName: equationDataField.name,
 			type: type,
-			setting: {
-				equationType : $$(componentIds.equationType).getValue(),
-				equation : $$(componentIds.equation).getValue(),
-				template:'<div class="ab-equation-data-field"></div>',
-			}
-		};
-
-		var resultType = getDataField(settings.setting.equationType);
-
-		settings.setting.resultSettings = resultType.getSettings();
-
-		return settings;
-		
-		/*return {
-			fieldName: equationDataField.name,
-			type: type,
-			setting: {
-				equationType : $$(componentIds.equationType).getValue(),
-				dateType : $$(componentIds.dateType).getValue(),
-				resultType : $$(componentIds.resultType).getValue(),
-				equation : $$(componentIds.equation).getValue(),
+			setting: {	
 				typeDecimals : $$(componentIds.typeDecimals).getValue(),
 				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
-				template:'<div class="ab-equation-data-field"></div>',
+				
 				
 			}
-		};*/
+		};
 	};
 
 
