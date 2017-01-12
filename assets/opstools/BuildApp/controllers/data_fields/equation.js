@@ -68,7 +68,7 @@ steal(function () {
 		if(type == 'numeric'){
 			return { 
 				editDefinition : {
-					id:'testtypeSettings',
+					id:'typeSettings',
 					rows: [
 					{
 						
@@ -107,15 +107,11 @@ steal(function () {
 						label: "Example Output"
 					},	
 					{
-						view: "combo",
+						view: "text",
 						label: "Equation",
 						labelWidth: "100",
 						id: componentIds.equation,
-						on: {
-							'onChange': function (newValue, oldValue) {
-
-							}
-						}
+						
 					},
 					]
 				},
@@ -157,7 +153,7 @@ steal(function () {
 		else{
 			return { 
 				editDefinition : {
-					id:'testtypeSettings',
+					id:'typeSettings',
 					rows: [
 					{
 						
@@ -181,7 +177,7 @@ steal(function () {
 
 		var typeSettings = resultType.editDefinition;
 		
-		webix.ui(typeSettings, $$('testtypeSettings'));  //<<——— update section with the webix definition of the component
+		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
 		
 	}
 	  
@@ -218,7 +214,7 @@ steal(function () {
 			{ 
 					
 					label: 'choose a type',
-				 	id:'testtypeSettings',
+				 	id:'typeSettings',
 			},
 			{
 				
