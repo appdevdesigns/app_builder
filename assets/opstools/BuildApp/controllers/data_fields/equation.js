@@ -65,7 +65,7 @@ steal(function () {
 
 
 	function getDataField(type){
-		if(type.toLowerCase() == 'numeric'){
+		if(type == 'numeric'){
 			return { 
 				editDefinition : {
 					id:'testtypeSettings',
