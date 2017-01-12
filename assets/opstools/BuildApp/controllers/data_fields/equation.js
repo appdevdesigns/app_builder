@@ -110,6 +110,7 @@ steal(function () {
 				editDefinition : {
 					rows: [
 					{
+						id:'testtypeSettings',
 						cols: [
 						{
 							view: "richselect",
