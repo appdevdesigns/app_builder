@@ -65,7 +65,7 @@ steal(function () {
 
 
 	function getDataField(type){
-		if(type == 'numeric'){
+		if(type == 'date'){
 			return { 
 				editDefinition : {
 					id:'typeSettings',
@@ -161,6 +161,18 @@ steal(function () {
 						{
 							
 						},
+						{
+							view: "label",
+							label: "Example Output"
+						},	
+						{
+							view: "text",
+							label: "Equation",
+							labelWidth: "100",
+							id: componentIds.equation,
+							
+						},
+						
 						]
 
 					}
