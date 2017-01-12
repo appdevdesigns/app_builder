@@ -97,24 +97,25 @@ steal(function () {
 							{ id: 'date', value: "Date" },
 
 							]
-						},{
-							view: "label",
-							label: "Example Output"
-						},	
-						{
-							view: "combo",
-							label: "Equation",
-							labelWidth: "100",
-							id: componentIds.equation,
-							on: {
-								'onChange': function (newValue, oldValue) {
-
-								}
-							}
 						},
 						]
 
-					}
+					},
+					{
+						view: "label",
+						label: "Example Output"
+					},	
+					{
+						view: "combo",
+						label: "Equation",
+						labelWidth: "100",
+						id: componentIds.equation,
+						on: {
+							'onChange': function (newValue, oldValue) {
+
+							}
+						}
+					},
 					]
 				},
 				getSettings : function () {
