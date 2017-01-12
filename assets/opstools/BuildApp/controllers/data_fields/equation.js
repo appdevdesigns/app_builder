@@ -68,9 +68,10 @@ steal(function () {
 		if(type.toLowerCase() == 'numeric'){
 			return { 
 				editDefinition : {
+					id:'testtypeSettings',
 					rows: [
 					{
-						id:'testtypeSettings',
+						
 						cols: [
 						{
 							view: "richselect",
@@ -156,9 +157,10 @@ steal(function () {
 		else{
 			return { 
 				editDefinition : {
+					id:'testtypeSettings',
 					rows: [
 					{
-						id:'testtypeSettings',
+						
 						cols: [
 						{
 							
