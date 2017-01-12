@@ -5,6 +5,7 @@ steal(
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/model/model').then(function () {
+				var ABColumn = AD.Model.get('opstools.BuildApp.ABColumn');
 
 				// Namespacing conventions:
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
@@ -59,28 +60,88 @@ steal(
 						},
 
 						getColumns: function () {
-							return AD.Model.get('opstools.BuildApp.ABColumn').findAll({ object: this.id });
+							return ABColumn.findAll({ object: this.id });
 						},
 
 						getColumn: function (colId) {
-							return AD.Model.get('opstools.BuildApp.ABColumn').findOne({ object: this.id, id: colId });
+							return ABColumn.findOne({ object: this.id, id: colId });
 						},
 
-						createColumn: function (col) {
+						createColumn: function (type, col) {
 							var self = this,
-								q = $.Deferred();
+								q = $.Deferred(),
+								columnId,
+								column;
 
 							col.object = self.id;
 
-							AD.Model.get('opstools.BuildApp.ABColumn').create(col)
-								.fail(q.reject)
-								.then(function (result) {
-									if (result.translate) result.translate();
+							async.series([
+								function (next) {
+									ABColumn.createColumn(type, col)
+										.fail(next)
+										.done(function (result) {
+											columnId = result.id;
+											next();
+										});
 
-									self.columns.push(result);
+								},
+								function (next) {
+									self.getColumn(columnId)
+										.fail(next)
+										.done(function (result) {
+											if (result.translate) result.translate();
 
-									q.resolve(result);
-								});
+											self.columns.push(result);
+											column = result;
+
+											next();
+										});
+
+								}
+							], function (err) {
+								if (err) q.reject(err);
+								else q.resolve(column);
+							});
+
+							return q;
+						},
+
+						createLink: function (name, targetObjectID, sourceRelation, targetRelation) {
+							var self = this,
+								q = AD.sal.Deferred();
+
+							async.waterfall([
+								function (next) {
+									ABColumn.createLink({
+										name: name,
+										sourceObjectID: self.id,
+										targetObjectID: targetObjectID,
+										sourceRelation: sourceRelation == 'model' ? 'one' : 'many',
+										targetRelation: targetRelation == 'model' ? 'one' : 'many'
+									})
+										.fail(next)
+										.done(function (cols) {
+											var sourceCol = cols.filter(function (col) { return col.object == self.id })[0];
+
+											next(null, sourceCol);
+										});
+								},
+								function (sourceColumn, next) {
+									self.getColumn(sourceColumn.id)
+										.fail(next)
+										.done(function (result) {
+											if (result.translate) result.translate();
+
+											self.columns.push(result);
+											column = result;
+
+											next();
+										});
+								}
+							], function (err) {
+								if (err) q.reject(err);
+								else q.resolve(column);
+							});
 
 							return q;
 						},

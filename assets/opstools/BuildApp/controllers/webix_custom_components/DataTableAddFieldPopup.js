@@ -120,7 +120,7 @@ steal(
 
 										// Call callback function
 										if (base.saveFieldCallback && base.fieldName) {
-											base.saveFieldCallback(fieldInfo)
+											base.saveFieldCallback(base.fieldName, fieldInfo)
 												.then(function () {
 													base.resetState();
 													base.hide();
