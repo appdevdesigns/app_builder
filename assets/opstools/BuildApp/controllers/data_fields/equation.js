@@ -113,17 +113,7 @@ steal(function () {
 						id:'testtypeSettings',
 						cols: [
 						{
-							view: "richselect",
-							id: componentIds.dateType,
-							label: "Date Type",
-							labelWidth: "110",
-							value: 'none',
-							options: [
-							{ id: 'hours', value:  "Hours" },
-							{ id: 'days', value:  "Days" },
-							{ id: 'weeks', value: "Weeks" },
-							{ id: 'years', value: "Years" },
-							]
+							
 						},
 						]
 
@@ -177,7 +167,8 @@ steal(function () {
 			},
 			{ 
 					
-
+					label: 'choose a type',
+				 	id:'testtypeSettings',
 			},
 			{
 				
@@ -288,12 +279,6 @@ steal(function () {
 					label: "Format",
 					value: 'none',
 					options: formatList
-			},
-			{ 
-					
-				 	label: 'choose a type',
-				 	id:'testtypeSettings',
-
 			}
 			
 
