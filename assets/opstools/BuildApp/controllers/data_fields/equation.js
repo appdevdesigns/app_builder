@@ -381,6 +381,7 @@ steal(function () {
 			fieldName: equationDataField.name,
 			type: type,
 			setting: {	
+				equationType :  $$(componentIds.equationType).getValue(),
 				typeDecimals : $$(componentIds.typeDecimals).getValue(),
 				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
 				typeRounding : $$(componentIds.typeRounding).getValue(),
