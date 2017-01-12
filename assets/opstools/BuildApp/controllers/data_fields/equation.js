@@ -96,14 +96,7 @@ steal(function () {
 							{ id: 'date', value: "Date" },
 
 							]
-						},
-						,
-						{ 
-								view: 'template', 
-							 	label: 'choose a type',
-							 	id:'testtypeSettings'
-
-						}	
+						}
 						]
 
 					}
@@ -112,7 +105,30 @@ steal(function () {
 			}
 		}
 		else{
-			
+			return { 
+				editDefinition : {
+					rows: [
+					{
+						cols: [
+						{
+							view: "richselect",
+							id: componentIds.dateType,
+							label: "Date Type",
+							labelWidth: "110",
+							value: 'none',
+							options: [
+							{ id: 'hours', value:  "Hours" },
+							{ id: 'days', value:  "Days" },
+							{ id: 'weeks', value: "Weeks" },
+							{ id: 'years', value: "Years" },
+							]
+						},
+						]
+
+					}
+					]
+				}
+			}
 			
 		}
 	}
