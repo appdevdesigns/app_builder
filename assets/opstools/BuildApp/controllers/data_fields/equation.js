@@ -288,7 +288,7 @@ steal(function () {
 					options: formatList
 			},
 			{ 
-					view: 'form', 
+					
 				 	label: 'choose a type',
 				 	id:'testtypeSettings',
 
