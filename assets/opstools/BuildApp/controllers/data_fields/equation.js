@@ -135,7 +135,7 @@ steal(function () {
 					settings.setting.resultSettings = resultType.getSettings();
 
 					return settings;
-				}),
+				},
 				populateSettings : function (application, data) {
 					if (!data.setting) return;
 					
@@ -149,7 +149,7 @@ steal(function () {
 					var resultType = this.getDataField(settings.setting.equationType);
 
 					resultType.populateSettings(application, resultSettings);
-				}),
+				},
 			}
 		}
 		else{
