@@ -1032,13 +1032,7 @@ module.exports = {
      * @param integer appID
      * @param string modelName
      * @return Deferred
-     *     Resolves with a dictionary of models that were imported, with each
-     *     model's matching object ID.
-     *     {
-     *         <modelName>: <modelID>,
-     *         <modelName2>: <modelID2>,
-     *         ...
-     *     }
+     *     Resolves with the data of the new imported object
      */
     modelToObject: function (appID, modelName) {
         var dfd = AD.sal.Deferred();
@@ -1127,6 +1121,7 @@ module.exports = {
                             integer: 'number',
                             float: 'number',
                             datetime: 'date',
+                            json: 'text',
                         };
                         var fieldType = typeMap[col.type] || col.type;
                         
@@ -1296,13 +1291,14 @@ module.exports = {
                     if (!controllerInfo) {
                         // 2nd try: look for matching controller-model name
                         controllerInfo = _.find(sails.controllers, function(c) {
-                            var nameParts = c.identitiy.split('/');
+                            if (!c.identity) return false;
+                            var nameParts = c.identity.split('/');
                             var finalName = nameParts[ nameParts.length-1 ];
                             if (finalName == modelName.toLowerCase()) return true;
                             return false;
                         });                    
                     }
-                    var modelURL = controllerInfo.identity;
+                    var modelURL = controllerInfo && controllerInfo.identity || '';
                     
                     sails.renderView(path.join('app_builder', 'clientModelBase'), {
                         layout: false,
@@ -1346,7 +1342,7 @@ module.exports = {
             ], function(err) {
                 if (err) dfd.reject(err);
                 else {
-                    dfd.resolve();
+                    dfd.resolve(object);
                 }
             });
         }

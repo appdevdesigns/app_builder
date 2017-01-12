@@ -390,7 +390,7 @@ module.exports = {
     // POST /app_builder/application/:appID/importModel
     importModel: function (req, res) {
         var appID = req.param('appID');
-        var modelName = req.param('model');
+        var modelName = req.param('model') || '';
         
         AppBuilder.modelToObject(appID, modelName)
         .fail(function(err) {
