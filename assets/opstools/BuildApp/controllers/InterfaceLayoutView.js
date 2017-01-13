@@ -152,10 +152,10 @@ steal(
 																});
 														},
 														function (next) {
-															if (componentManager.editInstance.afterSaveSetting) {
-																componentManager.editInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, savedComponent)
+															if (componentManager.editInstance.afterUpdate) {
+																componentManager.editInstance.afterUpdate(AD.classes.AppBuilder.currApp.currPage, savedComponent)
 																	.fail(next)
-																	.then(function () { next() });
+																	.done(function () { next() });
 															}
 															else {
 																next();
