@@ -152,10 +152,9 @@ steal(
 																});
 														},
 														function (next) {
-															if (componentManager.editInstance.afterSaveSetting) {
-																componentManager.editInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, savedComponent)
-																	.fail(next)
-																	.then(function () { next() });
+															// Call .afterUpdate to updated instance
+															if (componentManager.editInstance && componentManager.editInstance.afterUpdate) {
+																componentManager.editInstance.afterUpdate(next);
 															}
 															else {
 																next();
@@ -292,7 +291,7 @@ steal(
 
 																AD.error.log('Add Component : Error add component', { error: err });
 															})
-															.then(function (result) {
+															.done(function (result) {
 																$$(self.componentIds.componentList).data.changeId(id, result.id);
 																$$(self.componentIds.componentList).updateItem(result.id, result);
 
@@ -311,12 +310,22 @@ steal(
 
 																self.generateComponentsInList();
 
-																webix.message({
-																	type: "success",
-																	text: self.labels.common.createSuccessMessage.replace('{0}', data.name)
-																});
+																function finishCreate() {
+																	webix.message({
+																		type: "success",
+																		text: self.labels.common.createSuccessMessage.replace('{0}', data.name)
+																	});
 
-																$$(self.componentIds.componentList).hideProgress();
+																	$$(self.componentIds.componentList).hideProgress();
+																}
+
+																// Call .afterCreate to new instance
+																if (self.data.components[result.id] && self.data.components[result.id].afterCreate) {
+																	self.data.components[result.id].afterCreate(finishCreate);
+																}
+																else {
+																	finishCreate();
+																}
 															});
 
 													}
@@ -420,12 +429,22 @@ steal(
 																				text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
 																			});
 
-																			$$(self.componentIds.componentList).hideProgress();
+																			function finishDelete() {
+																				self.element.trigger(self.options.deletedComponentEvent, {
+																					page: AD.classes.AppBuilder.currApp.currPage,
+																					component: deletedCom[0]
+																				});
 
-																			self.element.trigger(self.options.deletedComponentEvent, {
-																				page: AD.classes.AppBuilder.currApp.currPage,
-																				component: deletedCom[0]
-																			});
+																				$$(self.componentIds.componentList).hideProgress();
+																			}
+
+																			// Call .afterDestroy to deleted instance
+																			if (self.data.components[id] && self.data.components[id].afterDestroy) {
+																				self.data.components[id].afterDestroy(finishDelete);
+																			}
+																			else {
+																				finishDelete();
+																			}
 																		});
 																}
 
@@ -573,7 +592,7 @@ steal(
 									com.id // the component data id
 								);
 							} else {
-								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for ['+ com.attr('component') + ']');
+								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for [' + com.attr('component') + ']');
 							}
 
 							if (view && setting) {
