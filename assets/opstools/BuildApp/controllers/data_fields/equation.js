@@ -1,4 +1,6 @@
-steal(function () {
+steal('opstools/BuildApp/controllers/EquationManager.js',
+	function (EquationManager) {
+
 	var componentIds = {
 		editView: 'ab-new-equation',
 		name: 'ab-new-equation-name',
@@ -481,31 +483,19 @@ steal(function () {
 		
 		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
-		if (rowData == null) {
-			$(itemNode).find('.ab-equation-data-field').html('');
-			return true;
+		var parser = EquationManager.parse('year() - year(birthdate)');
+		if (parser) {
+			$(itemNode).find('.my_template').html(parser(rowData));
+		} else {
+			$(itemNode).find('.my_template'). html('invalid equation:'+fieldData.setting.equation);
 		}
-	
-		try {
-
-			var value = FunctionManager.parseEquation(fieldData.setting.equation, rowData);
-
-			var resultType = this.getDataField(fieldData.setting.equationType);
-			if(resultType.customDisplay) {
-				resultType.customDisplay(application, object, { setting: fieldData.setting.resultSettings }, rowData, value, viewId, itemNode, options);
-			}
-			// else do whatever we have to do to display this value
-			$(itemNode).find('.ab-equation-data-field').html(value);
-
-		} catch(e){
-			// handle error
-		}
-
-
-
-
 
 		return true;
+
+
+
+
+
 	};
 	/**
 	 * @function resetState
