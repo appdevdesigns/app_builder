@@ -153,9 +153,7 @@ steal(
 														},
 														function (next) {
 															if (componentManager.editInstance.afterUpdate) {
-																componentManager.editInstance.afterUpdate(AD.classes.AppBuilder.currApp.currPage, savedComponent)
-																	.fail(next)
-																	.done(function () { next() });
+																componentManager.editInstance.afterUpdate(AD.classes.AppBuilder.currApp.currPage, savedComponent, next);
 															}
 															else {
 																next();
@@ -573,7 +571,7 @@ steal(
 									com.id // the component data id
 								);
 							} else {
-								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for ['+ com.attr('component') + ']');
+								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for [' + com.attr('component') + ']');
 							}
 
 							if (view && setting) {
