@@ -290,7 +290,7 @@ steal(
 
 																AD.error.log('Add Component : Error add component', { error: err });
 															})
-															.then(function (result) {
+															.done(function (result) {
 																$$(self.componentIds.componentList).data.changeId(id, result.id);
 																$$(self.componentIds.componentList).updateItem(result.id, result);
 
@@ -424,6 +424,11 @@ steal(
 																				page: AD.classes.AppBuilder.currApp.currPage,
 																				component: deletedCom[0]
 																			});
+
+																			// Call .afterDestroy to deleted instance
+																			if (self.data.components[id] && self.data.components[id].afterDestroy) {
+																				self.data.components[id].afterDestroy();
+																			}
 																		});
 																}
 
