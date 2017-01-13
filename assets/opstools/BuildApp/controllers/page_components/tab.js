@@ -13,11 +13,14 @@ steal(
         var tabComponent = function (application, viewId, componentId) {
             var data = {};
 
+            var _this = this;
+
             this.viewId = viewId;
             this.editViewId = componentIds.editMenu;
 
 
             this.pendingTransactions = [];
+            this.listTabPages = [];
 
             //
             // Instance functions
@@ -47,12 +50,16 @@ steal(
 
 
                 // do we have any pages added?
-                if ((setting.tabs)
-                    && (setting.tabs.length)) {
+                if (!self.listTabPages.length > 0) {
+                    if ((setting.tabs)
+                        && (setting.tabs.length)) {
 
+                        view = tabComponent.tabView();
+                        self.listTabPages = setting.tabs;
+                    } 
+                } else {
                     view = tabComponent.tabView();
-                    
-                } 
+                }
                 view.id = self.viewId;  
 
 
@@ -65,7 +72,11 @@ steal(
                     // updating our display
                     $(self).trigger('renderComplete', {});
 
-                    if($$(self.viewId).hideProgress) $$(self.viewId).hideProgress();
+                    var tabView = $$(self.viewId);
+                    if (tabView && tabView.hideProgress) {
+                        tabView.hideProgress();
+                    }
+
 
                     data.isRendered = true;
                     q.resolve();
@@ -81,8 +92,8 @@ steal(
 
                     // for each tab
                         // add a cell to the template
-                    setting.tabs.forEach(function(tab){
-                        if (tab.checked) {
+                    self.listTabPages.forEach(function(tab){
+                        if ((tab.checked === true) || (tab.checked == 'true')) {
                             view.cells.push(
                                 {
                                   header: "<i class='fa "+tab.icon+"'></i> "+tab.label,
@@ -139,6 +150,7 @@ steal(
                         Page.findAll({ name: listPagesToLoad })
                         .then(function(pageTabs){
 
+                            self.pageTabs = pageTabs;
                             tabView._pageTabs = pageTabs;
 
                             refreshTabView(finishIt);
@@ -154,12 +166,6 @@ steal(
                     finishIt();
                 }
 
-
-//// LEFT OFF HERE:
-// - debug display errors:
-//      - drop onto page, add tabs, save,
-//        change page, add tabs -> tab preview doesn't change
-//      - after create a new tab, return to edit results in page display errors.
 
                 return q;
             };
@@ -268,7 +274,7 @@ steal(
 
 
             /**
-             * @function afterSaveSettings
+             * @function afterUpdate
              * 
              * called after the settings are saved and allows your component
              * to perform additional commands to complete the process.
@@ -278,7 +284,7 @@ steal(
              * @return {Deferred} since this can be an async method of updating
              *              DB settings.
              */
-            this.afterSaveSetting = function (page, component) {
+            this.afterUpdate = function (page, component) {
                 var dfd = AD.sal.Deferred();
 
 
@@ -330,6 +336,7 @@ steal(
              * @param {integer} height
              */
             this.resize = function TabResize(width, height) {
+                var _this = this;
 
                 // in case this is somehow called from the OPsPortal directly:
                 if (!height) {
@@ -341,12 +348,69 @@ steal(
                     }
                 }
 
-                $$(this.viewId).adjust();
-            
+                // .resize() can get spammed numerous times in a row.
+                // let's not .adjust() each time to increase performance.
+// console.log('tab resize()'); 
+                if (!this.resizeDebounce) {
+
+                    this.resizeDebounce = true;
+                    
+                    setTimeout(function(){
+// console.log('tab .adjust()');
+
+                        $$(_this.viewId).adjust();
+                        _this.resizeDebounce = false;
+                    }, 10);
+
+                }
             }
 
+AD.comm.hub.subscribe('ab.interface.remove', function(tag, data) {
+    // data.app  = ABApplication.id
+    // data.page = ABPage.id;
 
-        };
+console.log('... tab:  ab.interface.remove:', _this.listTabPages );
+_this.pageTabs.forEach(function(page){
+    if (page.id = data.page) {
+
+// delete this page from the tab's settings.
+        _this.listTabPages = _this.listTabPages.filter( function(t){
+            return t.uuid != page.name;
+        })
+
+console.log('... found a page to delete from tab');
+
+    }
+})
+
+
+
+/// LEFT OFF HERE:
+// for each tab, if page.name = tab.uuid  remove this tab
+// update our settings  ?? how ??
+//
+//
+// - after adding a new page, the page display list doesn't update
+// - Deleting a Tab should remove all embedded Pages
+// - what about the Page Interface? how to update the Tab info.
+//      - do we update the tab data when loading the editor / or / rendering the tab?
+//          if page not found, then change our internal info?
+//      - is there a way in the Page delete routine to update the Tab Data?
+//
+//
+//// LEFT OFF HERE:
+// - debug display errors:
+//      - drop onto page, add tabs, save,
+//        change page, add tabs -> tab preview doesn't change
+//      - after create a new tab, return to edit results in page display errors.
+
+
+
+  
+
+})
+
+        }
 
 
         //
@@ -557,20 +621,7 @@ steal(
                                     var values = $$(componentIds.addTabForm).getValues();
 
 
-//// LEFT OFF HERE:
-// get list of how many page:tabs there are:
-// values.uuid = 'tabs-'+list.length+1+'_'
-// 
-// - after adding a new page, the page display list doesn't update
-// - Deleting a Tab should remove all embedded Pages
-// - what about the Page Interface? how to update the Tab info.
-//      - do we update the tab data when loading the editor / or / rendering the tab?
-//          if page not found, then change our internal info?
-//      - is there a way in the Page delete routine to update the Tab Data?
-//
-//
-
-                                    values.uuid = 'tabs-'+AD.util.uuid()+'-';
+                                    values.uuid = AD.util.uuid('tabs-');
 
                                     // 1) Trim value
                                     // 2) lowerCase() name must not match any existing lc names
