@@ -20,7 +20,7 @@ steal(
 
 
             this.pendingTransactions = [];
-            this.listTabPages = [];
+            // this.listTabPages = [];
 
             //
             // Instance functions
@@ -50,16 +50,16 @@ steal(
 
 
                 // do we have any pages added?
-                if (!self.listTabPages.length > 0) {
+                // if (!self.listTabPages.length > 0) {
                     if ((setting.tabs)
                         && (setting.tabs.length)) {
 
                         view = tabComponent.tabView();
-                        self.listTabPages = setting.tabs;
+                        // self.listTabPages = setting.tabs;
                     } 
-                } else {
-                    view = tabComponent.tabView();
-                }
+                // } else {
+                //     view = tabComponent.tabView();
+                // }
                 view.id = self.viewId;  
 
 
@@ -92,7 +92,7 @@ steal(
 
                     // for each tab
                         // add a cell to the template
-                    self.listTabPages.forEach(function(tab){
+                    setting.tabs.forEach(function(tab){
                         if ((tab.checked === true) || (tab.checked == 'true')) {
                             view.cells.push(
                                 {
@@ -365,23 +365,23 @@ steal(
                 }
             }
 
-AD.comm.hub.subscribe('ab.interface.remove', function(tag, data) {
-    // data.app  = ABApplication.id
-    // data.page = ABPage.id;
+// AD.comm.hub.subscribe('ab.interface.remove', function(tag, data) {
+//     // data.app  = ABApplication.id
+//     // data.page = ABPage.id;
 
-console.log('... tab:  ab.interface.remove:', _this.listTabPages );
-_this.pageTabs.forEach(function(page){
-    if (page.id = data.page) {
+// console.log('... tab:  ab.interface.remove:', _this.listTabPages );
+// _this.pageTabs.forEach(function(page){
+//     if (page.id = data.page) {
 
-// delete this page from the tab's settings.
-        _this.listTabPages = _this.listTabPages.filter( function(t){
-            return t.uuid != page.name;
-        })
+// // delete this page from the tab's settings.
+//         _this.listTabPages = _this.listTabPages.filter( function(t){
+//             return t.uuid != page.name;
+//         })
 
-console.log('... found a page to delete from tab');
+// console.log('... found a page to delete from tab');
 
-    }
-})
+//     }
+// })
 
 
 
@@ -408,7 +408,7 @@ console.log('... found a page to delete from tab');
 
   
 
-})
+// }) // end AD.comm.hub.subscribe()
 
         }
 
@@ -659,7 +659,7 @@ console.log('... found a page to delete from tab');
                                         values: values
                                     });
 
-console.log('transactions:', currentTab.pendingTransactions);
+// console.log('transactions:', currentTab.pendingTransactions);
 
                                     // clear our form
                                     $$(componentIds.addTabForm).clear();
