@@ -314,6 +314,8 @@ steal(
 																	text: self.labels.common.createSuccessMessage.replace('{0}', data.name)
 																});
 
+
+
 																$$(self.componentIds.componentList).hideProgress();
 															});
 
@@ -418,16 +420,21 @@ steal(
 																				text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
 																			});
 
-																			$$(self.componentIds.componentList).hideProgress();
+																			function finishDelete() {
+																				self.element.trigger(self.options.deletedComponentEvent, {
+																					page: AD.classes.AppBuilder.currApp.currPage,
+																					component: deletedCom[0]
+																				});
 
-																			self.element.trigger(self.options.deletedComponentEvent, {
-																				page: AD.classes.AppBuilder.currApp.currPage,
-																				component: deletedCom[0]
-																			});
+																				$$(self.componentIds.componentList).hideProgress();
+																			}
 
 																			// Call .afterDestroy to deleted instance
 																			if (self.data.components[id] && self.data.components[id].afterDestroy) {
-																				self.data.components[id].afterDestroy();
+																				self.data.components[id].afterDestroy(finishDelete);
+																			}
+																			else {
+																				finishDelete();
 																			}
 																		});
 																}
