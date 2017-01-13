@@ -152,8 +152,9 @@ steal(
 																});
 														},
 														function (next) {
-															if (componentManager.editInstance.afterUpdate) {
-																componentManager.editInstance.afterUpdate(AD.classes.AppBuilder.currApp.currPage, savedComponent, next);
+															// Call .afterUpdate to updated instance
+															if (componentManager.editInstance && componentManager.editInstance.afterUpdate) {
+																componentManager.editInstance.afterUpdate(next);
 															}
 															else {
 																next();
@@ -309,14 +310,22 @@ steal(
 
 																self.generateComponentsInList();
 
-																webix.message({
-																	type: "success",
-																	text: self.labels.common.createSuccessMessage.replace('{0}', data.name)
-																});
+																function finishCreate() {
+																	webix.message({
+																		type: "success",
+																		text: self.labels.common.createSuccessMessage.replace('{0}', data.name)
+																	});
 
+																	$$(self.componentIds.componentList).hideProgress();
+																}
 
-
-																$$(self.componentIds.componentList).hideProgress();
+																// Call .afterCreate to new instance
+																if (self.data.components[result.id] && self.data.components[result.id].afterCreate) {
+																	self.data.components[result.id].afterCreate(finishCreate);
+																}
+																else {
+																	finishCreate();
+																}
 															});
 
 													}
