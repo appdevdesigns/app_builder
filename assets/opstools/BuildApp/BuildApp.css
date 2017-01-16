@@ -114,6 +114,12 @@
 	background: #fff;
 }
 
+/* Add new columns popup */
+.ab-add-fields-popup {
+	max-height: 450px; 
+	overflow-y: auto;
+}
+
 /* Application list */
 .ab-app-list {
 	min-height: 300px;

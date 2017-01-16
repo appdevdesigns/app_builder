@@ -49,6 +49,7 @@ steal(
 					this.resetState();
 				},
 				body: {
+					css: 'ab-add-fields-popup',
 					width: 380,
 					rows: [
 						{
