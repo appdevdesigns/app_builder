@@ -518,11 +518,13 @@ steal(
 
 						switch (editor.id) {
 							case componentIds.editTitle:
-								$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
+								if ($$(componentIds.title))
+									$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
 								break;
 							case componentIds.editDescription:
 								console.log('***DESCRIPTION', state, editor, ignoreUpdate);
-								$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
+								if ($$(componentIds.description))
+									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
 								console.log('***SELECT OBJECT', state, editor, ignoreUpdate);
