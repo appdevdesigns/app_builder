@@ -433,7 +433,7 @@ steal(
                                                         view: 'list',
                                                         id: self.webixUiId.importModelList,
                                                         select: true, 
-                                                        minHeight: 480,
+                                                        minHeight: 400,
                                                         data: [],
                                                         template: '<div>#id#</div>',
                                                     },

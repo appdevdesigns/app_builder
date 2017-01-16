@@ -1043,11 +1043,11 @@ module.exports = {
         }
         else {
             var application, object;
-            var appName, moduleName, clientPath;
-            var languages = [];
+            var appName, moduleName, clientPath, appPath;
             var columns = [];
             var associations = [];
             var multilingualFields = [];
+            var controllerInfo;
             
             async.series([
                 // Find app in database
@@ -1064,10 +1064,23 @@ module.exports = {
                             application = list[0];
                             appName = AppBuilder.rules.toApplicationNameFormat(application.name);
                             moduleName = appName.toLowerCase();
-                            modelFileName = AppBuilder.rules.toObjectNameFormat(appName, modelName);
                             clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
+                            appPath = path.join('node_modules', moduleName);
                             next();
                         }
+                    });
+                },
+                
+                // Make sure application directory exists
+                // (it needs to have been synced at least once before a model
+                //  can be imported into it)
+                function(next) {
+                    fs.stat(appPath, function(err, status) {
+                        if (err) {
+                            sails.log(`${appPath} not found`);
+                            next(new Error("The application directory could not be accessed. Have you synchronized it yet?"));
+                        }
+                        else next();
                     });
                 },
                 
@@ -1143,7 +1156,7 @@ module.exports = {
                     });
                 },
                 
-                // Create associations in database
+                // Create column associations in database
                 function(next) {
                     /*
                         model.associations == [
@@ -1271,19 +1284,9 @@ module.exports = {
                     });
                 },
                 
-                // Create client side models
+                // Find server side controller
                 function(next) {
-                    var fieldLabel = 'id';
-                    for (var colName in model.definition) {
-                        var column = model.definition[colName];
-                        if (fieldLabel != 'id') continue;
-                        if (column.type == 'string' || column.type == 'text') {
-                            fieldLabel = colName;
-                        }
-                    }
-                    
-                    // Determine the model blueprints base URL
-                    var controllerInfo = _.find(sails.controllers, function(c) {
+                    controllerInfo = _.find(sails.controllers, function(c) {
                         // 1st try: look for `model` config in the controllers
                         if (c._config && c._config.model == modelName.toLowerCase()) return true;
                         return false;
@@ -1298,6 +1301,67 @@ module.exports = {
                             return false;
                         });                    
                     }
+                    
+                    next();
+                },
+                
+                // Create server side controller if needed
+                function(next) {
+                    if (controllerInfo) return next();
+                    
+                    AD.spawn.command({
+                        command: 'sails',
+                        options: [ 
+                            'generate', 'controller', 
+                            path.join(moduleName, modelName)
+                        ]
+                    })
+                    .fail(next)
+                    .done(function () {
+                        next();
+                    });
+                },
+                function(next) {
+                    if (controllerInfo) return next();
+                    
+                    // Patch the newly created controller file to add 
+                    // the _config property.
+                    var controllerFile = path.join(appPath, 'api', 'controllers', modelName + 'Controller.js');
+                    fs.readFile(controllerFile, 'utf8', function(err, data) {
+                        if (err) next(err);
+                        else {
+                            var lcModelName = modelName.toLowerCase();
+                            var patchData = `
+    
+    _config: {
+        model: "${lcModelName}", // all lowercase model name
+        actions: false,
+        shortcuts: false,
+        rest: true
+    }
+`;
+                            data = data.replace(/^module\.exports = \{$/m, '$&' + patchData);
+                            controllerInfo = {
+                                identity: `${moduleName}/${lcModelName}`
+                            };
+                            fs.writeFile(controllerFile, data, next);
+                        }
+                    });
+                },
+                
+                // Create client side models
+                function(next) {
+                    // Find fieldLabel field
+                    var fieldLabel = 'id';
+                    for (var colName in model.definition) {
+                        var column = model.definition[colName];
+                        if (fieldLabel != 'id') continue;
+                        if (column.type == 'string' || column.type == 'text') {
+                            fieldLabel = colName;
+                        }
+                    }
+                    
+                    // Determine the model blueprints base URL
                     var modelURL = controllerInfo && controllerInfo.identity || '';
                     
                     sails.renderView(path.join('app_builder', 'clientModelBase'), {
