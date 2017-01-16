@@ -1,4 +1,5 @@
-steal('opstools/BuildApp/controllers/EquationManager.js',
+steal(
+	'opstools/BuildApp/controllers/EquationManager.js',
 	function (EquationManager) {
 
 	var componentIds = {
