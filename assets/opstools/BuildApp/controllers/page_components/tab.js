@@ -530,6 +530,8 @@ steal(
                 updatedView = tabComponent.getView();
             }
 
+            // make sure we continue our reference.
+            updatedView.id = tabViewId;
 
             // overwrite the current instance of our component
             webix.ui(updatedView, $$(tabViewId));
@@ -673,6 +675,9 @@ steal(
                                     // now update the Edit View to represent the 
                                     // current settings/values
                                     tabComponent.refreshEditView(componentIds.editMenu);
+
+                                    // set focus back on the Name text box
+                                    $$(componentIds.addTabForm).focus();
 
                                 }
                               
