@@ -997,11 +997,15 @@ module.exports = {
                     [
                         // Get application info
                         function (next) {
-                            if (applications[page.application]) {
+
+                            function pullData() {
                                 appName = AppBuilder.rules.toApplicationNameFormat(applications[page.application].name);
                                 pageKey = _.kebabCase(getPageKey(appName, page.name));
 
                                 next();
+                            }
+                            if (applications[page.application]) {
+                                pullData();
                             }
                             else {
                                 ABApplication.findOne({ id: page.application })
@@ -1009,13 +1013,11 @@ module.exports = {
                                         if (result) {
                                             applications[page.application] = result;
 
-                                            appName = AppBuilder.rules.toApplicationNameFormat(applications[page.application].name);
-                                            pageKey = _.kebabCase(getPageKey(appName, page.name));
-
-                                            next();
+                                            pullData();
                                         }
                                         else {
-                                            next('Could not found application');
+                                            var err = new Error('Could not find application ( id:'+page.application+')');
+                                            next(err);
                                         }
                                     }, next);
                             }

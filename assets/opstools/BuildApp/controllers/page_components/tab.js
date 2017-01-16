@@ -252,7 +252,7 @@ steal(
 
                 // we've added a method to our component to update the display 
                 // once a configuration change has been made.
-                tabComponent.refreshEditView(viewId);
+                tabComponent.refreshEditView(componentIds.editMenu /* viewId */);
 
                 $$(componentIds.propertyView).refresh();
             };
@@ -274,6 +274,94 @@ steal(
 
 
             /**
+             * @function beforeDestroy
+             *
+             * before a Tab component is destroyed, make sure all it's associated
+             * pages are deleted.
+             *
+             * Should return TRUE after our .render() method has been called.
+             *
+             * @return {bool}
+             */
+            this.beforeDestroy = function(next) {
+                console.error('beforeDestroy!');
+
+                // get the current instance of my component
+                var Component = AD.Model.get('opstools.BuildApp.ABPageComponent');
+                Component.findOne({id:componentId})
+                .fail(next)
+                .done(function(thisTab){
+
+                    // if we found our definition:
+                    if (thisTab) { 
+
+                        // if there are setting.tabs defined:
+                        if ((thisTab.setting) && (thisTab.setting.tabs)) {
+
+                            // find all the page.name(s) to remove
+                            var listPagesToRemove = [];
+                            thisTab.setting.tabs.forEach(function(tab){
+                                listPagesToRemove.push(tab.uuid);
+                            })
+
+                            // if pages to delete
+                            if (listPagesToRemove.length > 0) {
+
+                                var Page = AD.Model.get('opstools.BuildApp.ABPage');
+                                Page.findAll({name:listPagesToRemove})
+                                .fail(next)
+                                .done(function(pages){
+
+                                    var allDeleteIDs = [];
+                                    pages.forEach(function(page){
+                                        allDeleteIDs.push(page.id);
+                                    })
+
+                                    var allDeleteOperations = [];
+                                    var pagesToDelete = application.pages.filter(function (p ) { return allDeleteIDs.indexOf(p.id) > -1 });
+                                    pagesToDelete.forEach(function(p){
+                                        allDeleteOperations.push(p.destroy());
+                                    })
+
+                                    $.when.apply($, allDeleteOperations)
+                                    .fail(next)
+                                    .then(function() {
+
+                                        // all our pages have been removed
+                                        next();
+                                    })
+                                })  
+
+                            } else { 
+
+                                // defined tabs were empty
+                                next();
+                            }
+
+                        } else {
+                            // we haven't defined any tabs yet.  
+                            // move along.
+                            next();
+                        }
+
+                    } else {
+
+                        // couldn't find myself.  this shouldn't happen!
+                        next(new Error('no tab found (id:'+componentId+')'));
+                    }
+
+                });
+
+            }
+
+this.afterDestroy = function(next) {
+
+    console.error('afterDestroy!');
+    // Now would be a good time to tell the interface to Refresh itself
+
+    next();
+}
+            /**
              * @function afterUpdate
              * 
              * called after the settings are saved and allows your component
@@ -284,41 +372,63 @@ steal(
              * @return {Deferred} since this can be an async method of updating
              *              DB settings.
              */
-            this.afterUpdate = function (page, component) {
+            this.afterUpdate = function (next  /* page, component */) {
                 var dfd = AD.sal.Deferred();
+                var _this = this;
+
+                function onError(err){
+                    if(next) next(err);
+                    dfd.reject(err);
+                }
+
+                var Component = AD.Model.get('opstools.BuildApp.ABPageComponent');
+                Component.findOne({id:componentId})
+                .fail(onError)
+                .done(function(thisTab){
+
+                    if ((!thisTab) || (thisTab.length==0)) {
+                        onError(new Error('tab component not found (id:'+componentId+')'));
+                    } else {
 
 
-                var actions = [];
+                        var page = application.pages.filter(function(p) { return p.id == thisTab.page.id })[0];
 
-                this.pendingTransactions.forEach(function(trans){
+                        if (page) { 
 
-                    switch(trans.op) {
-                        case 'add':
-                            // name the page with our uuid, so we can manage it later.
-                            actions.push(page.createTab({ name: trans.values.uuid, label:trans.values.Name }));
-                            break;
+                            var actions = [];
+
+                            _this.pendingTransactions.forEach(function(trans){
+
+                                switch(trans.op) {
+                                    case 'add':
+                                        // name the page with our uuid, so we can manage it later.
+                                        actions.push(page.createTab({ name: trans.values.uuid, label:trans.values.Name }));
+                                        break;
 
 
-                        case 'delete':
-                            break;
+                                    case 'delete':
+                                        break;
 
-                        default:
-                            console.error('unknown transaction type:', trans.op);
-                            break;
+                                    default:
+                                        console.error('unknown transaction type:', trans.op);
+                                        break;
+                                }
+                            })
+
+                            $.when.apply($, actions)
+                            .fail(onError)
+                            .then(function() {
+                                console.log('looks good.');
+                                if (next) next();
+                                dfd.resolve();
+                            })
+
+                        } else {
+                            onError(new Error('could not find my application.page (id:'+thisTab.page.id+')'));
+                        }
+
                     }
                 })
-
-                $.when.apply($, actions)
-                .fail(function(err){
-                    AD.error.log('Problems creating the Pages', err);
-                    dfd.reject(err);
-                })
-                .then(function() {
-                    console.log('looks good.');
-                    dfd.resolve();
-                })
-
-
                 return dfd;
             }
 
