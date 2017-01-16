@@ -536,10 +536,6 @@ steal(
 								var setting = componentManager.editInstance.getSettings();
 								componentManager.editInstance.populateSettings(setting, true);
 								break;
-							case componentIds.selectColumns:
-								var setting = componentManager.editInstance.getSettings();
-								componentManager.editInstance.populateSettings(setting, true);
-								break;
 						}
 					}
 				}
