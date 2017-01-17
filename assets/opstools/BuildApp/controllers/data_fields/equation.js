@@ -170,7 +170,40 @@ steal(
 							
 						},
 					]
-				}
+				},
+				getSettings : function () {
+					var type = 'integer';
+
+					var settings = {
+						fieldName: equationDataField.name,
+						type: type,
+						setting: {
+							equationType : $$(componentIds.equationType).getValue(),
+							equation : $$(componentIds.equation).getValue(),
+							template:'<div class="ab-equation-data-field"></div>',
+						}
+					};
+
+					var resultType = this.getDataField(settings.setting.equationType);
+
+					settings.setting.resultSettings = resultType.getSettings();
+
+					return settings;
+				},
+				populateSettings : function (application, data) {
+					if (!data.setting) return;
+					
+					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+					$$(componentIds.equation).setValue(data.setting.equation);
+
+					var resultSettings = {
+						setting: data.setting.resultSettings
+					}
+
+					var resultType = this.getDataField(settings.setting.equationType);
+
+					resultType.populateSettings(application, resultSettings);
+				},
 			}
 			
 		}
