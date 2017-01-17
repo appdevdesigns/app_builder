@@ -479,7 +479,7 @@ steal(
 		if (parser) {
 			$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
 		} else {
-			$(itemNode).find('.ab-equation-data-field'). html('invalid equation:'+fieldData.setting.equation);
+			$(itemNode).find('.ab-equation-data-field').html('invalid equation:'+fieldData.setting.equation);
 		}
 
 		return true;
