@@ -346,6 +346,33 @@ steal(
 									break;
 								case 'tab':
 									// don't render tabs.  The component will do that.
+
+									// refresh tab view when update
+									var parentPage = self.data.pages.filter(function (p) { return p.id == page.parent.id })[0];
+									if (parentPage == null) break;
+
+									parentPage.components.forEach(function (com) {
+										if (parentPage.comInstances[com.id] == null || com.component !== 'tab' || com.setting.tabs == null || com.setting.tabs.filter(function (t) { return t.uuid == page.name; }).length < 1)
+											return;
+
+										var tabViewId = self.unique('ab_live_item', parentPage.id, com.id);
+										if ($$(tabViewId) == null) return;
+
+										// Get index of selected tab view
+										var selectedIndex = $$(tabViewId).getTabbar().optionIndex($$(tabViewId).getValue());
+
+										// force a refresh on component
+										parentPage.comInstances[com.id] = null;
+
+										// Rerender the tab component
+										parentPage.renderComponent(self.data.application, com)
+											.done(function () {
+												var selectedTabView = $$(tabViewId).getTabbar().config.options[selectedIndex];
+
+												// Switch to selected tab
+												$$(tabViewId).setValue(selectedTabView.id);
+											});
+									});
 									break;
 								case 'page':
 								default:

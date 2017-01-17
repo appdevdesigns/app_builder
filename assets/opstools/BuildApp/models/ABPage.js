@@ -98,7 +98,7 @@ steal(
 								item.id // the component data id
 							);
 
-							if (view && setting) {
+							if (view && setting && $('#' + viewId).length > 0) {
 								var setting = setting.attr ? setting.attr() : setting,
 									editable = false,
 									showAll = false;
