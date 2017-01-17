@@ -509,7 +509,7 @@ steal(
 		
 		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
-		var parser = EquationManager.parse('year() - year(birthdate)');
+		var parser = EquationManager.parse(fieldData.setting.equation);
 			console.log("parser: " + parser);
 		if (parser) {
 			$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
