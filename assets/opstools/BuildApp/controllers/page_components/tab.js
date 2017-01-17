@@ -669,7 +669,6 @@ steal(
 
                     {
                         id:componentIds.addTabForm,
-                  
 
                         "view": "form",
                         "elements": [{
@@ -686,7 +685,6 @@ steal(
                                             "placeholder": "Enter a tab name",
                                             "invalidMessage": "Tab name cannot be empty",
                                             "required":true,
-                                            "width": 300, 
                                             on:{
 
                                                 "onBlur":function(){
