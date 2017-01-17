@@ -318,8 +318,9 @@ steal(
                                     })
 
                                     var allDeleteOperations = [];
-                                    var pagesToDelete = application.pages.filter(function (p ) { return allDeleteIDs.indexOf(p.id) > -1 });
-                                    pagesToDelete.forEach(function(p){
+                                    application.pages
+                                    .filter(function (p ) { return allDeleteIDs.indexOf(p.id) > -1 })
+                                    .forEach(function(p){
                                         allDeleteOperations.push(p.destroy());
                                     })
 
@@ -354,13 +355,13 @@ steal(
 
             }
 
-this.afterDestroy = function(next) {
+// this.afterDestroy = function(next) {
 
-    console.error('afterDestroy!');
-    // Now would be a good time to tell the interface to Refresh itself
+//     console.error('afterDestroy!');
+//     // Now would be a good time to tell the interface to Refresh itself
 
-    next();
-}
+//     next();
+// }
             /**
              * @function afterUpdate
              * 
