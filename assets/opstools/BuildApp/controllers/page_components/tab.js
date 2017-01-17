@@ -1,4 +1,5 @@
 steal(
+    'opstools/BuildApp/controllers/webix_custom_components/EditTree.js',
     // List your Controller's dependencies here:
     function () {
         var componentIds = {
@@ -237,7 +238,8 @@ steal(
                     var cTab = {
                         icon: tab.icon,
                         label: tab.label,
-                        uuid: tab.uuid
+                        uuid: tab.uuid,
+                        tabID: componentId
                     }
                     if (tab.checked == 'true') {
                         cTab.checked = true;
@@ -408,6 +410,22 @@ steal(
 
 
                                     case 'delete':
+                                        var targetPage = application.pages.filter(function(p) { return p.name == trans.values.uuid })[0];
+                                        if (targetPage) {
+                                            actions.push(targetPage.destroy());
+                                        } else {
+console.error('! could not find target page to delete: uuid:'+trans.values.uuid );                                            
+                                        }
+                                        
+                                        break;
+                                    case 'update':
+                                        var targetPage = application.pages.filter(function(p) { return p.name == trans.values.uuid })[0];
+                                        if (targetPage) {
+                                            targetPage.attr('label', trans.values.label);
+                                            actions.push(targetPage.save());
+                                        } else {
+console.error('! could not find target page to update: uuid:'+trans.values.uuid );                                            
+                                        }
                                         break;
 
                                     default:
@@ -802,10 +820,25 @@ steal(
                     },
                     {
                         id: componentIds.pageTree,
-                        view: 'tree',
-                        template: "<div class='ab-page-list-item'>" +
+                        view: 'edittree',
+
+                        editaction: 'click',
+                        editable: true,
+                        editor: "text",
+                        editValue: "label",
+
+                        template: function(item, common) {
+
+                            var template = "<div class='ab-page-list-item'>" +
                                   "{common.checkbox()} <i class='fa #icon#'></i> #label#" +
-                                  "</div>",
+                                  common.iconDelete+
+                                  "</div>"
+                            template = template.replace('#label#', item.label).replace('#icon#', item.icon).replace('{common.checkbox()}', common.checkbox(item));
+                            return template;
+                        },
+                        type: {
+                            iconDelete: "<span class='webix_icon ab-tab-page-delete fa-trash pull-right'></span>"
+                        },
                         on: {
 
                             // .onItemCheck
@@ -813,6 +846,121 @@ steal(
                             // each time one is clicked we need to update the Edit View
                             onItemCheck: function () {
                                 tabComponent.refreshEditView(componentIds.editMenu);
+                            },
+
+                            onAfterEditStop: function (state, editor, ignoreUpdate) {
+                                if (state.value != state.old) {
+
+                                    var thisEntry = this.getItem(editor.id);
+
+
+                                    // mark this for an afterUpdate() action:
+                                    var currentTab = componentManager.editInstance;
+                                    if (!currentTab.pendingTransactions) {
+                                        currentTab.pendingTransactions = [];
+                                    }
+
+                                    // record a new 'add' operation
+                                    currentTab.pendingTransactions.push({
+                                        op:'update',
+                                        values: thisEntry
+                                    });
+
+
+                                    tabComponent.refreshEditView(componentIds.editMenu);
+
+
+                                    // var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (item, index, list) { return item.id == editor.id; });
+
+                                    // if (!selectedPage || selectedPage.length < 1) {
+                                    //     console.error('Could not found the page');
+                                    //     return;
+                                    // }
+
+                                    // selectedPage = selectedPage[0];
+                                    // selectedPage.attr('label', state.value);
+
+                                    // // Call server to rename
+                                    // selectedPage.save()
+                                    //     .fail(function () {
+                                    //         $$(self.webixUiId.interfaceTree).hideProgress();
+
+                                    //         // Show gear icon
+                                    //         self.showGear(result.id);
+
+                                    //         webix.message({
+                                    //             type: "error",
+                                    //             text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
+                                    //         });
+
+                                    //         AD.error.log('Page List : Error rename page data', { error: err });
+                                    //     })
+                                    //     .then(function (result) {
+                                    //         if (selectedPage.translate) selectedPage.translate();
+
+                                    //         // Show success message
+                                    //         webix.message({
+                                    //             type: "success",
+                                    //             text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
+                                    //         });
+
+                                    //         // Show gear icon
+                                    //         $($$(self.webixUiId.interfaceTree).getItemNode(editor.id)).find('.ab-object-list-edit').show();
+
+                                    //         $$(self.webixUiId.interfaceTree).hideProgress();
+
+                                    //         // Show gear icon
+                                    //         self.showGear(result.id);
+
+                                    //         self.element.trigger(self.options.renamePageEvent, { page: result.id });
+                                    //     });
+                                }
+                            }
+
+
+                        },
+                        onClick:{
+                            'ab-tab-page-delete': function(e, id, trg) {
+console.log(' tab-page-delete id:'+id);
+                                var _treeView = this;
+
+                                var currTab = this.getItem(id);
+                                webix.confirm({
+                                    title: 'Are you sure?', // self.labels.interface.confirmDeleteTitle,
+                                    ok: '*yes', //self.labels.common.yes,
+                                    cancel: '*no', // self.labels.common.no,
+                                    text: 'delete {0}?'.replace('{0}', currTab.label), // self.labels.interface.confirmDeleteMessage.replace('{0}', selectedPage.label),
+                                    callback: function (result) {
+                                        if (result) {
+                                            
+                                            // mark this for an afterUpdate() action:
+                                            var currentTab = componentManager.editInstance;
+                                            if (!currentTab.pendingTransactions) {
+                                                currentTab.pendingTransactions = [];
+                                            }
+
+                                            // record a new 'add' operation
+                                            currentTab.pendingTransactions.push({
+                                                op:'delete',
+                                                values: currTab
+                                            });
+
+
+                                            // remove this from the tree entry:
+                                            _treeView.remove(id);
+
+
+                                            tabComponent.refreshEditView(componentIds.editMenu);
+
+
+                                        }
+
+                                    }
+                                });
+
+
+
+
                             }
                         }
                     }
