@@ -159,11 +159,6 @@ steal(
 					id:'typeSettings',
 					rows: [
 					{
-						
-						cols: [
-						{
-							
-						},
 						{
 							view: "label",
 							label: "Example Output"
@@ -175,8 +170,6 @@ steal(
 							id: componentIds.equation,
 							
 						},
-						
-						]
 
 					}
 					]
