@@ -213,7 +213,7 @@ steal(
 		
 		var resultType = getDataField(type);
 
-		var typeSettings = resultType.editDefinition;
+		var typeSettings = resultType;
 		
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
 		
@@ -415,13 +415,14 @@ steal(
 			fieldName: equationDataField.name,
 			type: type,
 			setting: {	
+				template:'<div class="ab-equation-data-field"></div>',
 				equationType :  $$(componentIds.equationType).getValue(),
 				typeDecimals : $$(componentIds.typeDecimals).getValue(),
 				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
-				template:'<div class="ab-equation-data-field"></div>',
+				
 				
 				
 			}
@@ -511,7 +512,6 @@ steal(
 		var parser = EquationManager.parse('year() - year(birthdate)');
 			console.log("parser: " + parser);
 		if (parser) {
-			console.log("parser:true:"+parser(rowData));
 			$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
 		} else {
 			console.log("parser:false");
