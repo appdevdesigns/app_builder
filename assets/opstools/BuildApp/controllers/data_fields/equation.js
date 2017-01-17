@@ -421,6 +421,7 @@ steal(
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
+				template:'<div class="ab-equation-data-field"></div>',
 				
 				
 			}
