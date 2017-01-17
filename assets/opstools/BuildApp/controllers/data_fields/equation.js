@@ -477,7 +477,7 @@ steal(
 		var parser = EquationManager.parse('year() - year(birthdate)');
 			console.log("parser: " + parser);
 		if (parser) {
-			console.log("parser:true");
+			console.log("parser:true:"+parser(rowData));
 			$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
 		} else {
 			console.log("parser:false");
