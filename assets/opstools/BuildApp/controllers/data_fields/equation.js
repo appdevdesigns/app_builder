@@ -509,6 +509,12 @@ steal(
 		
 		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
+		if (rowData == null) {
+			$(itemNode).find('.ab-equation-data-field').html('');
+			return true;
+		}
+
+		
 		var parser = EquationManager.parse(fieldData.setting.equation);
 			console.log("parser: " + parser);
 		if (parser) {
