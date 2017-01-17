@@ -474,11 +474,13 @@ steal(
 		
 		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
-		var parser = EquationManager.parse(year() - year(birthdate));
+		var parser = EquationManager.parse('year() - year(birthdate)');
 			console.log("parser: " + parser);
 		if (parser) {
+			console.log("parser:true");
 			$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
 		} else {
+			console.log("parser:false");
 			$(itemNode).find('.ab-equation-data-field').html('invalid equation:'+fieldData.setting.equation);
 		}
 
