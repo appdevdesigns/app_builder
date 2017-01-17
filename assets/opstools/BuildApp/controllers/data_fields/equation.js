@@ -158,7 +158,6 @@ steal(
 				editDefinition : {
 					id:'typeSettings',
 					rows: [
-					{
 						{
 							view: "label",
 							label: "Example Output"
@@ -170,8 +169,6 @@ steal(
 							id: componentIds.equation,
 							
 						},
-
-					}
 					]
 				}
 			}
