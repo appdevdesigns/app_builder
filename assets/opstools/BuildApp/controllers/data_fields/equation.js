@@ -401,6 +401,7 @@ steal(
 		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
+		$$(componentIds.equation).setValue(data.setting.equation);
 		
 		
 
@@ -422,6 +423,8 @@ steal(
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
+				equation : $$(componentIds.equation).getValue(),
+				
 				
 				
 				
