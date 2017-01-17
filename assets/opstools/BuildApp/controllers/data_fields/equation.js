@@ -509,7 +509,7 @@ steal(
 		
 		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
-		if (rowData == null) {
+		if (fieldData == null) {
 			$(itemNode).find('.ab-equation-data-field').html('');
 			return true;
 		}
