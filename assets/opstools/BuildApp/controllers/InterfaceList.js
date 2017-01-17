@@ -92,11 +92,14 @@ steal(
 										editValue: "label",
 										template: function (item, common) {
 											var template = "<div class='ab-page-list-item'>" +
-												"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label#" +
-												"<div class='ab-page-list-edit'>" +
-												"{common.iconGear}" +
-												"</div>" +
+												"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#" +
 												"</div>";
+											
+											// Disallow rename/delete on Tabs
+											if (item.type !== 'tab')
+												template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
+											else
+												template = template.replace("#iconGear#", "");
 
 											switch (item.type) {
 												case 'modal':
