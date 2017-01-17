@@ -476,9 +476,9 @@ steal(
 		
 		var parser = EquationManager.parse('year() - year(birthdate)');
 		if (parser) {
-			$(itemNode).find('.my_template').html(parser(rowData));
+			$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
 		} else {
-			$(itemNode).find('.my_template'). html('invalid equation:'+fieldData.setting.equation);
+			$(itemNode).find('.ab-equation-data-field'). html('invalid equation:'+fieldData.setting.equation);
 		}
 
 		return true;
