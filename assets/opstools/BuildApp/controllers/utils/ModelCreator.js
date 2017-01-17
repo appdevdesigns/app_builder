@@ -89,7 +89,7 @@ steal(
 				});
 
 				// Set multilingual fields
-				var multilingualFields = objectData.columns.filter(function (col) { return col.setting && col.setting.supportMultilingual; });
+				var multilingualFields = objectData.columns.filter(function (col) { return col.setting && (col.setting.supportMultilingual == 1 || col.setting.supportMultilingual == true); });
 				multilingualFields = $.map(multilingualFields.attr(), function (f) { return f.name; });
 
 				// Set associations
