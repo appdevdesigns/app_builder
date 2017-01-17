@@ -668,7 +668,6 @@ this.afterDestroy = function(next) {
 
                     {
                         id:componentIds.addTabForm,
-                  
 
                         "view": "form",
                         "elements": [{
@@ -685,7 +684,7 @@ this.afterDestroy = function(next) {
                                             "placeholder": "Enter a tab name",
                                             "invalidMessage": "Tab name cannot be empty",
                                             "required":true,
-                                            "width": 300, 
+                                            // "width": 300, 
                                             on:{
 
                                                 "onBlur":function(){
