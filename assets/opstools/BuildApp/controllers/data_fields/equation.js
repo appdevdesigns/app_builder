@@ -514,7 +514,7 @@ steal(
 			return true;
 		}
 
-		
+		try {
 		var parser = EquationManager.parse(fieldData.setting.equation);
 			console.log("parser: " + parser);
 		if (parser) {
@@ -525,6 +525,10 @@ steal(
 		}
 
 		return true;
+		
+			} catch(e) {
+		// handle error
+	}
 
 
 
