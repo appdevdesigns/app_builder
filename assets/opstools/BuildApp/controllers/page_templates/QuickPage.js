@@ -149,7 +149,8 @@ steal(
 					id: 'QuickPage',
 					view: 'layout',
 					css: 'ab-interface-new-quick-page',
-					autoheight: true,
+					height: 350,
+					scroll: 'y',
 					rows: [
 						{
 							id: componentIds.selectObjects,

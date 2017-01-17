@@ -114,6 +114,12 @@
 	background: #fff;
 }
 
+/* Add new columns popup */
+.ab-add-fields-popup {
+	max-height: 450px; 
+	overflow-y: auto;
+}
+
 /* Application list */
 .ab-app-list {
 	min-height: 300px;
@@ -283,6 +289,12 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 
 /* Interface new page popup */
+.ab-interface-new-quick-page {
+    overflow: scroll !important;
+	overflow-x: hidden !important;
+	overflow-y: auto !important;
+}
+
 .ab-interface-new-quick-page label {
 	font-weight: normal; /* Override bootstrap*/
 }
