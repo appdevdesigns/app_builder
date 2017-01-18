@@ -20,12 +20,28 @@ steal(
             this.editViewId = componentIds.editMenu;
 
 
+            // transactions that should be processed after the Tab instance 
+            // is saved
             this.pendingTransactions = [];
-            // this.listTabPages = [];
+
 
             //
             // Instance functions
             //
+
+            this.transaction = function(action, value) {
+
+                if (!this.pendingTransactions) {
+                    this.pendingTransactions = [];
+                }
+
+                // record a new 'add' operation
+                this.pendingTransactions.push({
+                    op:action,
+                    values: value
+                });
+            }
+
 
             /*
              * @function render
@@ -111,7 +127,6 @@ steal(
                     });
 
 
-
                     // 2) find the existing element on our page, and replace it with the
                     // current view:
                     var tabView = webix.ui(view, $$(self.viewId));  // create the view at location $$(self.viewId) ?
@@ -121,7 +136,6 @@ steal(
 
                         refreshTabView();
                     });
-
 
 
                     var Page = AD.Model.get('opstools.BuildApp.ABPage');
@@ -188,12 +202,6 @@ steal(
              *                                     is displayed in this Tab area.
              */
             this.getSettings = function () {
-
-                // var values = $$(componentIds.propertyView).getValues(),
-                //     selectedPages = $$(componentIds.editMenu).find(function () { return true; }),
-                //     selectedPageIds = $.map(selectedPages || [], function (page) {
-                //         return page.id;
-                //     });
 
                 var tabs = [];
                 $$(componentIds.pageTree).find(function(obj){
@@ -286,7 +294,7 @@ steal(
              * @return {bool}
              */
             this.beforeDestroy = function(next) {
-                console.error('beforeDestroy!');
+                // console.error('beforeDestroy!');
 
                 // get the current instance of my component
                 var Component = AD.Model.get('opstools.BuildApp.ABPageComponent');
@@ -357,13 +365,7 @@ steal(
 
             }
 
-// this.afterDestroy = function(next) {
 
-//     console.error('afterDestroy!');
-//     // Now would be a good time to tell the interface to Refresh itself
-
-//     next();
-// }
             /**
              * @function afterUpdate
              * 
@@ -380,6 +382,7 @@ steal(
                 var _this = this;
 
                 function onError(err){
+                    AD.error.log('error in tab.afterUpdate()',err);
                     if(next) next(err);
                     dfd.reject(err);
                 }
@@ -414,7 +417,7 @@ steal(
                                         if (targetPage) {
                                             actions.push(targetPage.destroy());
                                         } else {
-console.error('! could not find target page to delete: uuid:'+trans.values.uuid );                                            
+                                            AD.error.log("Could not find target page to delete", { uuid: trans.values.uuid});                                            
                                         }
                                         
                                         break;
@@ -424,7 +427,7 @@ console.error('! could not find target page to delete: uuid:'+trans.values.uuid 
                                             targetPage.attr('label', trans.values.label);
                                             actions.push(targetPage.save());
                                         } else {
-console.error('! could not find target page to update: uuid:'+trans.values.uuid );                                            
+                                            AD.error.log("Could not find target page to update", { uuid: trans.values.uuid});
                                         }
                                         break;
 
@@ -450,7 +453,6 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                 })
                 return dfd;
             }
-
 
 
             /**
@@ -479,13 +481,11 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
 
                 // .resize() can get spammed numerous times in a row.
                 // let's not .adjust() each time to increase performance.
-// console.log('tab resize()'); 
                 if (!this.resizeDebounce) {
 
                     this.resizeDebounce = true;
                     
                     setTimeout(function(){
-// console.log('tab .adjust()');
 
                         $$(_this.viewId).adjust();
                         _this.resizeDebounce = false;
@@ -493,51 +493,6 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
 
                 }
             }
-
-// AD.comm.hub.subscribe('ab.interface.remove', function(tag, data) {
-//     // data.app  = ABApplication.id
-//     // data.page = ABPage.id;
-
-// console.log('... tab:  ab.interface.remove:', _this.listTabPages );
-// _this.pageTabs.forEach(function(page){
-//     if (page.id = data.page) {
-
-// // delete this page from the tab's settings.
-//         _this.listTabPages = _this.listTabPages.filter( function(t){
-//             return t.uuid != page.name;
-//         })
-
-// console.log('... found a page to delete from tab');
-
-//     }
-// })
-
-
-
-/// LEFT OFF HERE:
-// for each tab, if page.name = tab.uuid  remove this tab
-// update our settings  ?? how ??
-//
-//
-// - after adding a new page, the page display list doesn't update
-// - Deleting a Tab should remove all embedded Pages
-// - what about the Page Interface? how to update the Tab info.
-//      - do we update the tab data when loading the editor / or / rendering the tab?
-//          if page not found, then change our internal info?
-//      - is there a way in the Page delete routine to update the Tab Data?
-//
-//
-//// LEFT OFF HERE:
-// - debug display errors:
-//      - drop onto page, add tabs, save,
-//        change page, add tabs -> tab preview doesn't change
-//      - after create a new tab, return to edit results in page display errors.
-
-
-
-  
-
-// }) // end AD.comm.hub.subscribe()
 
         }
 
@@ -607,8 +562,7 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
         tabComponent.getView = function () {
             return { 
                 view:'label', 
-// TODO: make this a multilingual string:
-                label:'Add a page below'
+                label:AD.lang.label.getLabel('ab.component.tab.addPage') || '*Add a page below'
                 // , id:componentIds.editMenu 
             };
         };
@@ -699,18 +653,13 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                                             "name": "Name",
                                             "label": "Tab Name",
                                             "labelWidth": "100",
-// TODO: make this multilingual
-                                            "placeholder": "Enter a tab name",
-                                            "invalidMessage": "Tab name cannot be empty",
+                                            "placeholder": AD.lang.label.getLabel('ab.component.tab.enterTabName') || "*Enter a tab name",
+                                            "invalidMessage":AD.lang.label.getLabel('ab.component.tab.invalidTabName') || "*Tab name cannot be empty",
                                             "required":true,
                                             on:{
 
                                                 "onBlur":function(){
                                                     //or validate this element only
-                                                    if (!this.validate()) {
-                                                        webix.message("Please enter a tab name");
-                                                        return false;
-                                                    }
                                                 }
                                             }
                                         }
@@ -723,8 +672,7 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                                         "name": "Icon",
                                         "label": "Icon",
                                         "labelWidth": "50",
-// TODO: make this multilingual
-                                        "placeholder": "Choose an icon",
+                                        "placeholder": AD.lang.label.getLabel('ab.component.tab.chooseIcon') || "*Choose an icon",
                                         "width": 200
                                     }
                                 ]
@@ -732,8 +680,7 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                             {
                                 view:"button",
                                 width:100,
-// TODO: make this multilingual
-                                value: 'Add Page',
+                                value: AD.lang.label.getLabel('ab.component.tab.addTab') || "*Add Page",
 
                                 // .click
                                 // the [Add Page] button for our input form
@@ -741,8 +688,7 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
 
                                     // make sure our form is valid
                                     if (!$$(componentIds.addTabForm).validate()) {
-// TODO: make this multilingual
-                                        webix.message("Please enter a tab name");
+                                        webix.message(AD.lang.label.getLabel('ab.component.tab.enterTabName') || "*Please enter a tab name");
                                         return false;
                                     }
 
@@ -776,19 +722,10 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                                     // the current instance of the Tab we are editing.
                                     // store the new page transactions here:
 
-                                    // make sure we have a .pendingTransactions
+                                    // make sure we have a pending transaction
                                     var currentTab = componentManager.editInstance;
-                                    if (!currentTab.pendingTransactions) {
-                                        currentTab.pendingTransactions = [];
-                                    }
+                                    currentTab.transaction('add', values);
 
-                                    // record a new 'add' operation
-                                    currentTab.pendingTransactions.push({
-                                        op:'add',
-                                        values: values
-                                    });
-
-// console.log('transactions:', currentTab.pendingTransactions);
 
                                     // clear our form
                                     $$(componentIds.addTabForm).clear();
@@ -821,7 +758,6 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                     {
                         id: componentIds.pageTree,
                         view: 'edittree',
-
                         editaction: 'click',
                         editable: true,
                         editor: "text",
@@ -848,6 +784,8 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                                 tabComponent.refreshEditView(componentIds.editMenu);
                             },
 
+                            // .onAfterEditStop
+                            // store the info for updating the pages during .afterUpdate()
                             onAfterEditStop: function (state, editor, ignoreUpdate) {
                                 if (state.value != state.old) {
 
@@ -856,64 +794,11 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
 
                                     // mark this for an afterUpdate() action:
                                     var currentTab = componentManager.editInstance;
-                                    if (!currentTab.pendingTransactions) {
-                                        currentTab.pendingTransactions = [];
-                                    }
-
-                                    // record a new 'add' operation
-                                    currentTab.pendingTransactions.push({
-                                        op:'update',
-                                        values: thisEntry
-                                    });
+                                    currentTab.transaction('update', thisEntry)
 
 
+                                    // refresh our sample display
                                     tabComponent.refreshEditView(componentIds.editMenu);
-
-
-                                    // var selectedPage = AD.classes.AppBuilder.currApp.pages.filter(function (item, index, list) { return item.id == editor.id; });
-
-                                    // if (!selectedPage || selectedPage.length < 1) {
-                                    //     console.error('Could not found the page');
-                                    //     return;
-                                    // }
-
-                                    // selectedPage = selectedPage[0];
-                                    // selectedPage.attr('label', state.value);
-
-                                    // // Call server to rename
-                                    // selectedPage.save()
-                                    //     .fail(function () {
-                                    //         $$(self.webixUiId.interfaceTree).hideProgress();
-
-                                    //         // Show gear icon
-                                    //         self.showGear(result.id);
-
-                                    //         webix.message({
-                                    //             type: "error",
-                                    //             text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
-                                    //         });
-
-                                    //         AD.error.log('Page List : Error rename page data', { error: err });
-                                    //     })
-                                    //     .then(function (result) {
-                                    //         if (selectedPage.translate) selectedPage.translate();
-
-                                    //         // Show success message
-                                    //         webix.message({
-                                    //             type: "success",
-                                    //             text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
-                                    //         });
-
-                                    //         // Show gear icon
-                                    //         $($$(self.webixUiId.interfaceTree).getItemNode(editor.id)).find('.ab-object-list-edit').show();
-
-                                    //         $$(self.webixUiId.interfaceTree).hideProgress();
-
-                                    //         // Show gear icon
-                                    //         self.showGear(result.id);
-
-                                    //         self.element.trigger(self.options.renamePageEvent, { page: result.id });
-                                    //     });
                                 }
                             }
 
@@ -921,45 +806,37 @@ console.error('! could not find target page to update: uuid:'+trans.values.uuid 
                         },
                         onClick:{
                             'ab-tab-page-delete': function(e, id, trg) {
-console.log(' tab-page-delete id:'+id);
+
                                 var _treeView = this;
 
+                                // clear our form validation
+                                $$(componentIds.addTabForm).clearValidation();
+
+
                                 var currTab = this.getItem(id);
-                                webix.confirm({
-                                    title: 'Are you sure?', // self.labels.interface.confirmDeleteTitle,
-                                    ok: '*yes', //self.labels.common.yes,
-                                    cancel: '*no', // self.labels.common.no,
-                                    text: 'delete {0}?'.replace('{0}', currTab.label), // self.labels.interface.confirmDeleteMessage.replace('{0}', selectedPage.label),
+                                AD.op.Dialog.ConfirmDelete({
+
+                                    text: AD.lang.label.getLabel('opp.dialog.confirm.deleteMsg', [currTab.label]), // self.labels.interface.confirmDeleteMessage.replace('{0}', selectedPage.label),
                                     callback: function (result) {
                                         if (result) {
                                             
                                             // mark this for an afterUpdate() action:
                                             var currentTab = componentManager.editInstance;
-                                            if (!currentTab.pendingTransactions) {
-                                                currentTab.pendingTransactions = [];
-                                            }
-
-                                            // record a new 'add' operation
-                                            currentTab.pendingTransactions.push({
-                                                op:'delete',
-                                                values: currTab
-                                            });
+                                            currentTab.transaction('delete', currTab);
 
 
                                             // remove this from the tree entry:
                                             _treeView.remove(id);
 
-
+                                            // refresh our sample display
                                             tabComponent.refreshEditView(componentIds.editMenu);
-
-
                                         }
 
                                     }
                                 });
 
-
-
+                                // stop the click propogation, so the text editor doesn't show up.
+                                return false;
 
                             }
                         }
@@ -989,7 +866,7 @@ console.log(' tab-page-delete id:'+id);
             return {
                 id: componentIds.propertyView,
                 view: "label",
-                label: "no properties yet."
+                label: ""
             };
         };
 
@@ -1011,6 +888,7 @@ console.log(' tab-page-delete id:'+id);
         //     if ($$(componentIds.propertyView))
         //         $$(componentIds.propertyView).editStop();
         // };
+
 
 
         return tabComponent;
