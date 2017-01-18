@@ -256,6 +256,13 @@ steal(
 				 	id:'typeSettings',
 			},
 			{
+			    view:"popup",
+			    id:"my_popup",
+			    body:{
+			        template:"Some text" 
+			    }
+			},
+			{
 				
 			/*	cols: [
 					{
