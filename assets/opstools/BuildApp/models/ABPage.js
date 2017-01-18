@@ -18,7 +18,7 @@ steal(
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 				AD.Model.extend('opstools.BuildApp.ABPage',
 					{
-						useSockets: true
+						// useSockets: true
 						/*
 							findAll: 'GET /app_builder/abpage',
 							findOne: 'GET /app_builder/abpage/{id}',

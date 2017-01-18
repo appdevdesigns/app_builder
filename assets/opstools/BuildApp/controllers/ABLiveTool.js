@@ -352,7 +352,11 @@ steal(
 									if (parentPage == null) break;
 
 									parentPage.components.forEach(function (com) {
-										if (parentPage.comInstances[com.id] == null || com.component !== 'tab' || com.setting.tabs == null || com.setting.tabs.filter(function (t) { return t.uuid == page.name; }).length < 1)
+										if (parentPage.comInstances == null ||
+											parentPage.comInstances[com.id] == null ||
+											com.component !== 'tab' ||
+											com.setting.tabs == null ||
+											com.setting.tabs.filter(function (t) { return t.uuid == page.name; }).length < 1)
 											return;
 
 										var tabViewId = self.unique('ab_live_item', parentPage.id, com.id);
@@ -424,29 +428,60 @@ steal(
 							self.activePage.components.forEach(function (item) {
 
 								self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
-									// Listen component events
-									$(page.comInstances[item.id]).on('renderComplete', function (event, data) {
-										$$(self.rootPage.domID).adjust();
-										$$(item.domID).adjust();
-									});
-
-									$(page.comInstances[item.id]).on('changePage', function (event, data) {
-										// Redirect to another page
-										if (data.previousPage)
-											self.showPage(self.previousPage);
-										else if (self.activePage.id != data.pageId && data.pageId) {
-
-											var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
-
-											if (redirectPage && redirectPage.length > 0)
-												self.showPage(redirectPage[0]);
-										}
-									});
+									self.bindComponentEvents(page.comInstances[item.id], item);
+									self.bindComponentEventsInTab(item);
 								});
 
 							});
 
 							self.resize();
+						},
+
+						bindComponentEvents: function (comInstance, itemInfo) {
+							var self = this;
+
+							// Listen component events
+							$(comInstance).on('renderComplete', function (event, data) {
+								$$(self.rootPage.domID).adjust();
+								$$(itemInfo.domID).adjust();
+							});
+
+							$(comInstance).on('changePage', function (event, data) {
+								// Redirect to another page
+								if (data.previousPage)
+									self.showPage(self.previousPage);
+								else if (self.activePage.id != data.pageId && data.pageId) {
+
+									var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
+
+									if (redirectPage && redirectPage.length > 0)
+										self.showPage(redirectPage[0]);
+								}
+							});
+
+							if (itemInfo.component === 'tab') {
+								$(comInstance).on('changeTab', function (event, data) {
+									self.bindComponentEventsInTab(itemInfo);
+								});
+							}
+						},
+
+						bindComponentEventsInTab: function (item) {
+							var self = this;
+
+							// Bind events of components in tab
+							if (item.component == 'tab' && item.setting && item.setting.tabs) {
+								item.setting.tabs.forEach(function (tab) {
+									var tabPage = self.data.pages.filter(function (p) { return p.name == tab.uuid; })[0];
+
+									if (tabPage == null || tabPage.components == null || tabPage.comInstances == null) return;
+
+									tabPage.components.forEach(function (itemInTab) {
+										self.bindComponentEvents(tabPage.comInstances[itemInTab.id], itemInTab);
+									});
+
+								});
+							}
 						},
 
 						resize: function (height) {

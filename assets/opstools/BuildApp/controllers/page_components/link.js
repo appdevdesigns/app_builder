@@ -73,6 +73,9 @@ steal(
 									p.translate();
 							});
 
+							// Disallow select tabs to Link component
+							pages = pages.filter(function (p) { return p.type != 'tab'; });
+
 							// Populate pages data to list
 							var linkToList = $$(componentIds.propertyView).getItem('linkTo');
 							linkToList.options = $.map(pages, function (p) {

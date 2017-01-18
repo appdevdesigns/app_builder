@@ -134,13 +134,18 @@ steal(
 
                     tabView.getTabbar().attachEvent("onChange", function(newv, oldv){
 
-                        refreshTabView();
+                        refreshTabView(function(err) {
+                            if(err == null) {
+                                $(self).trigger('changeTab', {});
+                            }
+                        });
                     });
 
 
                     var Page = AD.Model.get('opstools.BuildApp.ABPage');
 
                     function refreshTabView(cb) {
+                        var renderTasks = [];
 
                         if (tabView._pageTabs) {
                             tabView._pageTabs.forEach(function(page){
@@ -148,14 +153,22 @@ steal(
                                 var id = '#'+page.name;
                                 if ($(id).length) {
 
-                                    $(id).html(page.getItemTemplate());
-                                    page.comInstances = null; // force a refresh on components
-                                    page.display(application);
+                                    renderTasks.push(function(next) {
+                                        $(id).html(page.getItemTemplate());
+                                        page.comInstances = null; // force a refresh on components
+                                        page.display(application).fail(next)
+                                            .done(function() {
+                                                next();
+                                            });
+                                    });
                                 }
 
                             });
                         }
-                        if (cb) cb();
+
+                        async.series(renderTasks, function(err) {
+                            if (cb) cb(err);
+                        });
                     }
 
 
