@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plainmsgstr charset=utf-8"
+"Content-Type: text/plain; charset=utf-8"
 "Content-Transfer-Encoding: 8bit"
 
 #. #########################################
@@ -28,18 +28,6 @@ msgstr "Save"
 #. key: ab.common.delete
 msgid "Delete"
 msgstr "Delete"
-
-#. path: app_builder
-#. code: en
-#. key: ab.common.import
-msgid "Import"
-msgstr "Import"
-
-#. path: app_builder
-#. code: en
-#. key: ab.common.export
-msgid "Export"
-msgstr "Export"
 
 #. path: app_builder
 #. code: en
@@ -118,18 +106,6 @@ msgstr "Description"
 #. key: ab.common.headerName
 msgid "Header name"
 msgstr "Header name"
-
-#. path: app_builder
-#. code: en
-#. key: ab.common.save.error
-msgid "System could not save <b>{0}</b>."
-msgstr "System could not save <b>{0}</b>."
-
-#. path: app_builder
-#. code: en
-#. key: ab.common.save.success
-msgid "<b>{0}</b> is saved."
-msgstr "<b>{0}</b> is saved."
 
 #. path: app_builder
 #. code: en
@@ -380,8 +356,8 @@ msgstr "No data selected"
 #. path: app_builder
 #. code: en
 #. key: ab.object.connectToObjectName
-msgid " (Connect to <b>{0}</b>)"
-msgstr " (Connect to <b>{0}</b>)"
+msgid "(Connect to <b>{0}</b>)"
+msgstr "(Connect to <b>{0}</b>)"
 
 #. path: app_builder
 #. code: en
@@ -448,8 +424,6 @@ msgstr "Permission"
 #. key: ab.object.toolbar.addFields
 msgid "Add new column"
 msgstr "Add new column"
-
-
 
 #. path: app_builder
 #. code: en
@@ -715,8 +689,6 @@ msgstr "Fields"
 msgid "System could not load label format data"
 msgstr "System could not load label format data"
 
-
-
 #. path: app_builder
 #. code: en
 #. key: ab.filter_fields.and
@@ -843,15 +815,11 @@ msgstr "is checked"
 msgid "is not checked"
 msgstr "is not checked"
 
-
-
 #. path: app_builder
 #. code: en
 #. key: ab.frozen_fields.clearAll
 msgid "Clear all"
 msgstr "Clear all"
-
-
 
 #. path: app_builder
 #. code: en
@@ -913,8 +881,6 @@ msgstr "Checked -> Unchecked"
 msgid "Unchecked -> Checked"
 msgstr "Unchecked -> Checked"
 
-
-
 #. path: app_builder
 #. code: en
 #. key: ab.visible_fields.showAll
@@ -926,8 +892,6 @@ msgstr "Show all"
 #. key: ab.visible_fields.hideAll
 msgid "Hide all"
 msgstr "Hide all"
-
-
 
 #. path: app_builder
 #. code: en
@@ -955,6 +919,67 @@ msgstr "Delete page"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.import
+msgid "Import"
+msgstr "Import"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.export
+msgid "Export"
+msgstr "Export"
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.save.error
+msgid "System could not save <b>{0}</b>."
+msgstr "System could not save <b>{0}</b>."
+
+#. path: app_builder
+#. code: en
+#. key: ab.common.save.success
+msgid "<b>{0}</b> is saved."
+msgstr "<b>{0}</b> is saved."
+
+#. path: app_builder
+#. code: en
+#. key: ab.equation.date_year
+msgid "%s:Returns the year of a given date"
+msgstr "%s:Returns the year of a given date"
+
+#. path: app_builder
+#. code: en
 #. key: ab.interface.delete.message
-msgid "Do you want to delete <b>{0}</b>?";
-msgstr "Do you want to delete <b>{0}</b>?";
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "Do you want to delete <b>{0}</b>?"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.addPage
+msgid "Add a tab below"
+msgstr "Add a tab below"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.enterTabName
+msgid "Enter a tab name"
+msgstr "Enter a tab name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.invalidTabName
+msgid "Tab name cannot be empty"
+msgstr "Tab name cannot be empty"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.chooseIcon
+msgid "Choose an icon"
+msgstr "Choose an icon"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.addTab
+msgid "Add Tab"
+msgstr "Add Tab"
+
