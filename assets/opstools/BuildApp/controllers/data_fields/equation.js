@@ -114,7 +114,11 @@ steal(
 						label: "Equation",
 						labelWidth: "100",
 						id: componentIds.equation,
-						
+						on: {
+							'onItemClick': function (newValue, oldValue) {
+								webix.message("Click on row: " + id.row+", column: " + id.column)
+							}
+						}
 					},
 					]
 				},
