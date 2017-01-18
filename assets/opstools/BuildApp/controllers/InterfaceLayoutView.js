@@ -409,9 +409,56 @@ steal(
 																		return;
 																	}
 
-																	// Call server to delete object data
-																	deletedCom[0].destroy()
-																		.fail(function (err) {
+																	async.series([
+
+																		// beforeDestroy()
+																		function(next) {
+																			if (self.data.components[id] && self.data.components[id].beforeDestroy) {
+																				self.data.components[id].beforeDestroy(next);
+																			} else {
+																				next();
+																			}
+																		},
+
+																		// destroy
+																		function(next) {
+
+																			// Call server to delete object data
+																			deletedCom[0].destroy()
+																				.fail(function (err) {
+																					next(err);
+																				})
+																				.done(function (result) {
+
+																					$$(self.componentIds.componentList).remove(id);
+
+																					webix.message({
+																						type: "success",
+																						text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
+																					});
+																					
+																					next();
+																				});
+
+																		},
+
+																		// afterDestroy()
+																		function(next) {
+
+																			// Call .afterDestroy to deleted instance
+																			if (self.data.components[id] && self.data.components[id].afterDestroy) {
+																				self.data.components[id].afterDestroy(next);
+																			}
+																			else {
+																				next();
+																			}
+
+																		}
+
+																	],function(err, results){
+
+																		if (err) {
+
 																			$$(self.componentIds.componentList).hideProgress();
 
 																			webix.message({
@@ -420,32 +467,19 @@ steal(
 																			});
 
 																			AD.error.log('Component : Error delete component', { error: err });
-																		})
-																		.done(function (result) {
-																			$$(self.componentIds.componentList).remove(id);
 
-																			webix.message({
-																				type: "success",
-																				text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
+																		} else {
+
+																			self.element.trigger(self.options.deletedComponentEvent, {
+																				page: AD.classes.AppBuilder.currApp.currPage,
+																				component: deletedCom[0]
 																			});
 
-																			function finishDelete() {
-																				self.element.trigger(self.options.deletedComponentEvent, {
-																					page: AD.classes.AppBuilder.currApp.currPage,
-																					component: deletedCom[0]
-																				});
-
-																				$$(self.componentIds.componentList).hideProgress();
-																			}
-
-																			// Call .afterDestroy to deleted instance
-																			if (self.data.components[id] && self.data.components[id].afterDestroy) {
-																				self.data.components[id].afterDestroy(finishDelete);
-																			}
-																			else {
-																				finishDelete();
-																			}
-																		});
+																			$$(self.componentIds.componentList).hideProgress();
+																		}
+																		
+																	});
+																	
 																}
 
 															}

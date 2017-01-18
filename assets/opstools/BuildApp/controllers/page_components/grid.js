@@ -782,8 +782,11 @@ steal(
 			};
 
 			this.onDisplay = function () {
-				if (this.data.setting.linkedField)
+				
+				if ((this.data.settings) && (this.data.setting.linkedField)) {
 					filterLinkedData.call(this, this.data.setting.linkedField);
+				}
+
 			}
 
 		};

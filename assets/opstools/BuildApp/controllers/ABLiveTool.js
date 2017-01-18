@@ -160,7 +160,7 @@ steal(
 											if (!exists) self.data.pages.push(newPage);
 
 											// Render the new page
-											self.renderPage(newPage.attr());
+											self.renderPage(newPage);
 
 											// Set root page
 											if (data.page == self.options.page) {
@@ -345,7 +345,34 @@ steal(
 
 									break;
 								case 'tab':
-									// TODO : tab view
+									// don't render tabs.  The component will do that.
+
+									// refresh tab view when update
+									var parentPage = self.data.pages.filter(function (p) { return p.id == page.parent.id })[0];
+									if (parentPage == null) break;
+
+									parentPage.components.forEach(function (com) {
+										if (parentPage.comInstances[com.id] == null || com.component !== 'tab' || com.setting.tabs == null || com.setting.tabs.filter(function (t) { return t.uuid == page.name; }).length < 1)
+											return;
+
+										var tabViewId = self.unique('ab_live_item', parentPage.id, com.id);
+										if ($$(tabViewId) == null) return;
+
+										// Get index of selected tab view
+										var selectedIndex = $$(tabViewId).getTabbar().optionIndex($$(tabViewId).getValue());
+
+										// force a refresh on component
+										parentPage.comInstances[com.id] = null;
+
+										// Rerender the tab component
+										parentPage.renderComponent(self.data.application, com)
+											.done(function () {
+												var selectedTabView = $$(tabViewId).getTabbar().config.options[selectedIndex];
+
+												// Switch to selected tab
+												$$(tabViewId).setValue(selectedTabView.id);
+											});
+									});
 									break;
 								case 'page':
 								default:
@@ -423,6 +450,11 @@ steal(
 						},
 
 						resize: function (height) {
+
+							// NOTE: resize() calls from the OpsPortal OPView element 
+							// .resize({ height:value });
+							if (height) height = height.height || height;
+
 							if (!$$(this.rootPage.domID) || !$(this.element).is(":visible")) return;
 
 							var width = this.element.width();

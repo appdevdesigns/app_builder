@@ -84,19 +84,22 @@ steal(
 							self.controllers.InterfaceList.on(self.options.renamePageEvent, function (event, data) {
 								self.controllers.InterfaceWorkspace.refreshMenuComponent(data.page.id || data.page);
 
-								
+
 							});
 
 							// Delete page
 							self.controllers.InterfaceList.on(self.options.deletedPageEvent, function (event, data) {
-								AD.classes.AppBuilder.currApp.currPage = null;
+								var pageId = data.page.id || data.page; // ABPage.id
+
+								if (pageId == AD.classes.AppBuilder.currApp.currPage.id)
+									AD.classes.AppBuilder.currApp.currPage = null;
 
 								self.controllers.InterfaceWorkspace.showPage();
 
 								// Fire deleted event to the live page
 								AD.comm.hub.publish('ab.interface.remove', {
 									app: AD.classes.AppBuilder.currApp.id, // ABApplication.id
-									page: data.page.id || data.page // ABPage.id
+									page: pageId
 								});
 							});
 
