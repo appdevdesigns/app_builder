@@ -116,7 +116,14 @@ steal(
 						id: componentIds.equation,
 						on: {
 							'onItemClick': function (newValue, oldValue) {
-								webix.message("Click on row: ");
+								webix.ui({
+								    view:"select", 
+								    label:"Branch", 
+								    value:1, options:[
+									{"id":1, "value":"Master"},
+									{"id":2, "value":"Release"}
+								    ]
+								});
 							}
 						}
 					},
