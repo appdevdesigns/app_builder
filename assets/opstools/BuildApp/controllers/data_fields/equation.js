@@ -169,8 +169,7 @@ steal(
 						popup:"my_pop",
 						id: componentIds.equation,
 
-					}
-
+					},
 					]
 				},
 				getSettings : function () {
