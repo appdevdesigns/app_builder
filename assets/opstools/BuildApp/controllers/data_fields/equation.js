@@ -516,7 +516,9 @@ steal(
 			$(itemNode).find('.ab-equation-data-field').html('');
 			return true;
 		}
-
+		
+		console.log("EList : " + EquationManager.getDescriptions());
+		
 		try {
 		var parser = EquationManager.parse(fieldData.setting.equation);
 			console.log("parser: " + parser);
