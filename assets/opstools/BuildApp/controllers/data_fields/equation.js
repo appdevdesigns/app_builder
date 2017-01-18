@@ -175,7 +175,7 @@ steal(
 						id:"my_pop",
 						body:{
 							 template:"Some text" 
-						  ]
+						  
 						}
 					}
 					]
