@@ -169,15 +169,12 @@ steal(
 						popup:"my_pop",
 						id: componentIds.equation,
 
-					},{
+					},
+					{
 						view:"popup",
 						id:"my_pop",
 						body:{
-							view:"list",
-							data:[
-						    { id:1, title:"Item 1"},
-						    { id:2, title:"Item 2"},
-						    { id:3, title:"Item 3"}
+							 template:"Some text" 
 						  ]
 						}
 					}
