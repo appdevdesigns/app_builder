@@ -114,18 +114,7 @@ steal(
 						label: "Equation",
 						labelWidth: "100",
 						id: componentIds.equation,
-						on: {
-							'onItemClick': function (newValue, oldValue) {
-								webix.ui({
-								    view:"select", 
-								    label:"Branch", 
-								    value:1, options:[
-									{"id":1, "value":"Master"},
-									{"id":2, "value":"Release"}
-								    ]
-								});
-							}
-						}
+	
 					},
 					]
 				},
@@ -169,17 +158,29 @@ steal(
 				editDefinition : {
 					id:'typeSettings',
 					rows: [
-						{
-							view: "label",
-							label: "Example Output"
-						},	
-						{
-							view: "text",
-							label: "Equation",
-							labelWidth: "100",
-							id: componentIds.equation,
-							
-						},
+					{
+						view: "label",
+						label: "Example Output"
+					},	
+					{
+						view: "text",
+						label: "Equation",
+						labelWidth: "100",
+						popup:"my_pop",
+						id: componentIds.equation,
+
+					},{
+						view:"popup",
+						id:"my_pop",
+						body:{
+							view:"list",
+							data:[
+						    { id:1, title:"Item 1"},
+						    { id:2, title:"Item 2"},
+						    { id:3, title:"Item 3"}
+						  ]
+						}
+					}
 					]
 				},
 				getSettings : function () {
