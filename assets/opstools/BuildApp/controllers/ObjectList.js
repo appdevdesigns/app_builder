@@ -529,7 +529,7 @@ steal(
 
 							objects.forEach(function (obj) {
 								var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
-									unsyncNumber = objectModel.Cached.count(),
+									unsyncNumber = (objectModel && objectModel.Cached ? objectModel.Cached.count() : 0),
 									htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
 
 								if (unsyncNumber > 0) {

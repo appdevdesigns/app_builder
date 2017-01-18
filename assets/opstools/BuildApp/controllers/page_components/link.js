@@ -108,6 +108,10 @@ steal(
 				return data.isRendered === true;
 			};
 
+			this.resize = function (width, height) {
+				$$(this.viewId).adjust();
+			};
+
 		};
 
 		// Static functions

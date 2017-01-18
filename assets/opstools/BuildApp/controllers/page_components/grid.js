@@ -5,6 +5,8 @@ steal(
 
 	'opstools/BuildApp/controllers/webix_custom_components/DynamicDataTable.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
+	'opstools/BuildApp/controllers/webix_custom_components/UpdateRecordsPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DeleteRecordsPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 
@@ -28,7 +30,8 @@ steal(
 
 		// Instance functions
 		var gridComponent = function (application, viewId, componentId) {
-			var data = {};
+			var data = {},
+				events = {}; // { eventName: eventId, ..., eventNameN: eventIdN }
 
 			function getMaxWeight(columns) {
 				if (!columns) return 0;
@@ -62,7 +65,7 @@ steal(
 
 				// Select this object at first time
 				var visibleColumns = this.data.visibleColumns ? this.data.visibleColumns.slice(0) : [];
-				if (selectAll && $.grep(columns, function (d) { return visibleColumns.indexOf(d.id.toString()) > -1; }).length < 1) {
+				if ($.grep(columns, function (d) { return visibleColumns.indexOf(d.id.toString()) > -1; }).length < 1) {
 					visibleColumns = visibleColumns.concat($.map(columns, function (d) { return d.id.toString(); }));
 				}
 
@@ -126,6 +129,7 @@ steal(
 
 			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
+					columns = [],
 					q = $.Deferred();
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
@@ -166,12 +170,25 @@ steal(
 
 								self.data.columns = result;
 
+								if (self.data.columns) {
+									if (!self.data.visibleColumns) self.data.visibleColumns = [];
+
+									if (showAll && self.data.visibleColumns.length === 0) { // Show all
+										columns = self.data.columns.slice(0);
+										self.data.visibleColumns = $.map(columns, function (col) { return col.id; });
+									}
+									else
+										columns = self.data.columns.filter(function (c) {
+											return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
+										}).slice(0);
+								}
+
 								next();
 							});
 					},
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
-						dataTableController.bindColumns(application, [], true, setting.removable);
+						dataTableController.bindColumns(application, columns, true, setting.massUpdate === 'enable', setting.removable === 'enable');
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
 							$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -202,6 +219,7 @@ steal(
 							editPage: setting.editPage,
 							editForm: setting.editForm
 						},
+						setting.massUpdate,
 						setting.removable,
 						setting.linkedField);
 
@@ -279,12 +297,82 @@ steal(
 
 					var action_buttons = [];
 
+					if (setting.massUpdate === 'enable') {
+						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
+
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', icon: "pencil", type: "icon", width: 140,
+							click: function () {
+								if ($$('ab-update-records-popup')) {
+									$$('ab-update-records-popup').define('application', application);
+									$$('ab-update-records-popup').define('objectModel', object[0]);
+									$$('ab-update-records-popup').define('dataTable', $$(self.viewId));
+									$$('ab-update-records-popup').define('dataCollection', self.data.dataCollection);
+									$$('ab-update-records-popup').define('columns', columns);
+									$$('ab-update-records-popup').show(this.$view);
+								}
+							}
+						});
+
+						if (setting.removable === 'enable')
+							action_buttons.push({
+								view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', popup: self.viewId + '-delete-items-popup', icon: "trash", type: "icon", width: 140,
+								click: function () {
+									if ($$('ab-delete-records-popup')) {
+										$$('ab-delete-records-popup').define('objectModel', object[0]);
+										$$('ab-delete-records-popup').define('dataTable', $$(self.viewId));
+										$$('ab-delete-records-popup').define('dataCollection', self.data.dataCollection);
+										$$('ab-delete-records-popup').define('columns', columns);
+										$$('ab-delete-records-popup').show(this.$view);
+									}
+								}
+							});
+					}
+
 					if (setting.filter === 'enable') {
-						action_buttons.push({ view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', popup: self.viewId + '-filter-popup', icon: "filter", type: "icon", width: 120, badge: 0 });
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', icon: "filter", type: "icon", width: 120, badge: 0,
+							click: function () {
+								if ($$('ab-filter-popup')) {
+									$$('ab-filter-popup').define('dataTable', $$(self.viewId));
+									$$('ab-filter-popup').define('columns', columns);
+
+									if (!events['filterPopupOnChange']) {
+										events['filterPopupOnChange'] = $$('ab-filter-popup').attachEvent('onChange', function (dataTableId, num) {
+											if (self.viewId == dataTableId) {
+												$$(self.viewId + '-filter-button').define('badge', num);
+												$$(self.viewId + '-filter-button').refresh();
+											}
+										});
+									}
+
+									$$('ab-filter-popup').show(this.$view);
+								}
+							}
+						});
 					}
 
 					if (setting.sort === 'enable') {
-						action_buttons.push({ view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', popup: self.viewId + '-sort-popup', icon: "sort", type: "icon", width: 120, badge: 0 });
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', icon: "sort", type: "icon", width: 120, badge: 0,
+							click: function () {
+								if ($$('ab-sort-popup')) {
+									$$('ab-sort-popup').define('dataTable', $$(self.viewId));
+									$$('ab-sort-popup').define('columns', columns);
+
+									if (!events['sortPopupOnChange']) {
+										events['sortPopupOnChange'] = $$('ab-sort-popup').attachEvent('onChange', function (dataTableId, num) {
+											if (self.viewId == dataTableId) {
+												$$(self.viewId + '-sort-button').define('badge', num);
+												$$(self.viewId + '-sort-button').refresh();
+											}
+										});
+									}
+
+									$$('ab-sort-popup').show(this.$view);
+								}
+							}
+						});
 					}
 
 					if (action_buttons.length > 0) {
@@ -306,85 +394,96 @@ steal(
 							$$(self.viewId).prependView(header);
 					}
 
-					var columns = [];
-					if (self.data.columns) {
-						if (!self.data.visibleColumns) self.data.visibleColumns = [];
-
-						columns = self.data.columns.filter(function (c) {
-							return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
-						}).slice(0);
-					}
-
-					// Create filter popup
-					if (setting.filter === 'enable') {
-						webix.ui({
-							id: self.viewId + '-filter-popup',
-							view: "filter_popup",
-						}).hide();
-
-						$$(self.viewId + '-filter-popup').registerDataTable($$(self.viewId));
-						$$(self.viewId + '-filter-popup').setFieldList(columns);
-						$$(self.viewId + '-filter-popup').attachEvent('onChange', function (num) {
-							$$(self.viewId + '-filter-button').define('badge', num);
-							$$(self.viewId + '-filter-button').refresh();
-						});
-					}
-
-					// Create sort popup
-					if (setting.sort === 'enable') {
-						webix.ui({
-							id: self.viewId + '-sort-popup',
-							view: "sort_popup",
-						}).hide();
-
-						$$(self.viewId + '-sort-popup').registerDataTable($$(self.viewId));
-						$$(self.viewId + '-sort-popup').setFieldList(columns);
-						$$(self.viewId + '-sort-popup').attachEvent('onChange', function (num) {
-							$$(self.viewId + '-sort-button').define('badge', num);
-							$$(self.viewId + '-sort-button').refresh();
-						});
+					if (setting.massUpdate === 'enable') {
+						if ($$(self.viewId).checkedItems && Object.keys($$(self.viewId).checkedItems).length > 0) {
+							$$(self.viewId + '-update-items-button').enable();
+							if ($$(self.viewId + '-delete-items-button'))
+								$$(self.viewId + '-delete-items-button').enable();
+						}
+						else {
+							$$(self.viewId + '-update-items-button').disable();
+							if ($$(self.viewId + '-delete-items-button'))
+								$$(self.viewId + '-delete-items-button').disable();
+						}
 					}
 
 					// Select edit item
-					getObjectDataTable.call(self, application, setting.object, self.data.columns).registerItemClick(function (id, e, node) {
-						if (id.column === 'view_detail') {
-							$(self).trigger('changePage', {
-								pageId: setting.viewPage
-							});
+					getObjectDataTable.call(self, application, setting.object, self.data.columns)
+						.registerItemClick(function (id, e, node) {
+							switch (id.column) {
+								case 'view_detail':
+									$(self).trigger('changePage', {
+										pageId: setting.viewPage
+									});
 
-							$$(self.viewId).define('select', true);
-							if (dataCollection)
-								dataCollection.setCursor((id.row || id));
-						}
-						else if (id.column === 'edit_form') {
-							$(self).trigger('changePage', {
-								pageId: setting.editPage
-							});
+									if (!$$(self.viewId).config.multiselect || !$$(self.viewId).config.select)
+										$$(self.viewId).define('select', true);
 
-							$$(self.viewId).define('select', true);
-							if (dataCollection)
-								dataCollection.setCursor((id.row || id));
-						}
-					});
+									if (dataCollection)
+										dataCollection.setCursor((id.row || id));
+									break;
+								case 'edit_form':
+									$(self).trigger('changePage', {
+										pageId: setting.editPage
+									});
+
+									if (!$$(self.viewId).config.multiselect || !$$(self.viewId).config.select)
+										$$(self.viewId).define('select', true);
+
+									if (dataCollection)
+										dataCollection.setCursor((id.row || id));
+									break;
+							}
+						});
 
 					$$(self.viewId).attachEvent('onAfterRender', function (data) {
 						$(self).trigger('renderComplete', {});
 					});
 
+					// Select column by checkbox
+					$$(self.viewId).attachEvent("onCheck", function (row, col, state) {
+						if (col == 'select_column') {
+							if ($$(self.viewId).checkedItems == null) $$(self.viewId).checkedItems = {};
+
+							if (state)
+								$$(self.viewId).checkedItems[row] = true;
+							else
+								delete $$(self.viewId).checkedItems[row];
+
+							// Enable Update/Delete buttons
+							if (Object.keys($$(self.viewId).checkedItems).length > 0) {
+								$$(self.viewId + '-update-items-button').enable();
+								if ($$(self.viewId + '-delete-items-button'))
+									$$(self.viewId + '-delete-items-button').enable();
+							}
+							// Disable Update/Delete buttons
+							else {
+								$$(self.viewId + '-update-items-button').disable();
+								if ($$(self.viewId + '-delete-items-button'))
+									$$(self.viewId + '-delete-items-button').disable();
+							}
+						}
+					});
+
 					if (dataCollection) {
 						$$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
+							var rowId = data.id || data;
+
+							// Set cursor of data collection
 							var currModel = dataCollection.AD.currModel();
-							if (!currModel || currModel.id != (data.id || data))
-								dataCollection.setCursor((data.id || data));
+							if (!currModel || currModel.id != rowId)
+								dataCollection.setCursor(rowId);
 						});
 
 						dataCollection.attachEvent("onAfterCursorChange", function (id) {
-							var selectedItem = $$(self.viewId).getSelectedId(false);
+							var selectedItem = $$(self.viewId).getSelectedId(false),
+								preserve = $$(self.viewId).config.multiselect;
 
 							if (!id && $$(self.viewId).unselectAll)
 								$$(self.viewId).unselectAll();
-							else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select)
-								$$(self.viewId).select(id);
+							else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
+								$$(self.viewId).select(id, preserve);
+							}
 						});
 
 						dataCollection.attachEvent("onDataUpdate", function (id, data) {
@@ -399,6 +498,11 @@ steal(
 							filterLinkedData.call(self, setting.linkedField);
 						});
 
+						// Delete checked item when a record is deleted
+						dataCollection.attachEvent("onAfterDelete", function (rowId) {
+							if ($$(self.viewId).checkedItems && $$(self.viewId).checkedItems[rowId])
+								delete $$(self.viewId).checkedItems[rowId];
+						});
 					}
 
 					q.resolve();
@@ -407,7 +511,7 @@ steal(
 				return q;
 			};
 
-			this.renderDataTable = function (dataCollection, extraColumns, isTrashVisible, linkedField) {
+			this.renderDataTable = function (dataCollection, extraColumns, massUpdate, isTrashVisible, linkedField) {
 				var self = this;
 
 				if (!self.data.columns) return;
@@ -417,7 +521,8 @@ steal(
 				var columns = self.data.columns.filter(function (c) {
 					return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
 				}).slice(0);
-				if (columns.length < 1) columns = self.data.columns.slice(0); // Show all
+
+				// if (columns.length < 1 && showAll) columns = self.data.columns.slice(0); // Show all
 
 				// View column
 				if (extraColumns.viewPage && extraColumns.viewId) {
@@ -449,9 +554,10 @@ steal(
 					});
 				}
 
+				massUpdate = massUpdate == 'enable';
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, massUpdate, isTrashVisible);
 
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
@@ -480,6 +586,7 @@ steal(
 					editPage: editPageId, // ABPage.id
 					editForm: editFormId, // ABPageComponent.id
 					columns: columns.filter(function (c) { return c; }), // [ABColumn.id]
+					massUpdate: propertyValues.massUpdate,
 					removable: propertyValues.removable,
 					filter: propertyValues.filter,
 					sort: propertyValues.sort
@@ -529,7 +636,7 @@ steal(
 					},
 					// Render dataTable component
 					function (next) {
-						self.render(setting, true, false, dataCollection, linkedToDataCollection).then(function () {
+						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection).then(function () {
 							// Columns list
 							bindColumnList.call(self, setting.object, selectAll);
 							$$(componentIds.columnList).hideProgress();
@@ -662,6 +769,7 @@ steal(
 							linkedField: setting.linkedField,
 							detailView: detailView,
 							editForm: editForm,
+							massUpdate: setting.massUpdate || 'disable',
 							removable: setting.removable || 'disable',
 							filter: setting.filter || 'disable',
 							sort: setting.sort || 'disable'
@@ -742,9 +850,12 @@ steal(
 											editInstance.data.visibleColumns.push(item_id);
 										else // Uncheck
 										{
-											var index = editInstance.data.visibleColumns.indexOf(item_id);
-											if (index > -1)
-												editInstance.data.visibleColumns.splice(index, 1);
+											editInstance.data.visibleColumns.forEach(function (colId, index) {
+												if (colId == item_id) {
+													editInstance.data.visibleColumns.splice(index, 1);
+													return;
+												}
+											});
 										}
 
 										editInstance.renderDataTable(editInstance.data.dataCollection, {
@@ -752,7 +863,10 @@ steal(
 											viewId: detailView ? detailView[1] : null,
 											editPage: editValue ? editValue[0] : null,
 											editForm: editValue ? editValue[1] : null
-										}, propertyValues.removable, propertyValues.linkedField);
+										},
+											propertyValues.massUpdate,
+											propertyValues.removable,
+											propertyValues.linkedField);
 									}
 								}
 							}
@@ -768,6 +882,7 @@ steal(
 			return {
 				view: "property",
 				id: componentIds.propertyView,
+				nameWidth: 110,
 				elements: [
 					{ label: "Header", type: "label" },
 					{
@@ -849,16 +964,6 @@ steal(
 								return "[none]";
 						}
 					},
-					{
-						id: 'removable',
-						name: 'removable',
-						type: 'richselect',
-						label: 'Removable',
-						options: [
-							{ id: 'enable', value: "Yes" },
-							{ id: 'disable', value: "No" },
-						]
-					},
 					{ label: "Options", type: "label" },
 					{
 						id: 'filter',
@@ -875,6 +980,26 @@ steal(
 						name: 'sort',
 						type: 'richselect',
 						label: 'Sort',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
+						id: 'massUpdate',
+						name: 'massUpdate',
+						type: 'richselect',
+						label: 'Mass update',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
+						id: 'removable',
+						name: 'removable',
+						type: 'richselect',
+						label: 'Removable',
 						options: [
 							{ id: 'enable', value: "Yes" },
 							{ id: 'disable', value: "No" },
@@ -920,6 +1045,8 @@ steal(
 							case 'object':
 							case 'filter':
 							case 'sort':
+							case 'massUpdate':
+							case 'removable':
 								var setting = editInstance.getSettings();
 								setting.columns = editInstance.data.visibleColumns;
 
@@ -927,7 +1054,6 @@ steal(
 								break;
 							case 'detailView':
 							case 'editForm':
-							case 'removable':
 								var detailView = propertyValues.detailView && propertyValues.detailView.indexOf('|') > -1 ? propertyValues.detailView.split('|') : null,
 									editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
 
@@ -936,7 +1062,10 @@ steal(
 									viewId: detailView ? detailView[1] : null,
 									editPage: editValue ? editValue[0] : null,
 									editForm: editValue ? editValue[1] : null
-								}, propertyValues.removable, propertyValues.linkedField);
+								},
+									propertyValues.massUpdate,
+									propertyValues.removable,
+									propertyValues.linkedField);
 								break;
 						}
 					}

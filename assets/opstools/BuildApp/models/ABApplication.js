@@ -59,10 +59,20 @@ steal(
 							if (!cond) cond = {};
 							cond.application = this.id;
 
+							Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
+								var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+
+								if (cond.application == storePage.application.id || storePage.application)
+									delete AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+							});
+
 							return AD.Model.get('opstools.BuildApp.ABPage').findAll(cond);
 						},
 
 						getPage: function (pageId) {
+							if (AD.Model.get('opstools.BuildApp.ABPage').store[pageId])
+								delete AD.Model.get('opstools.BuildApp.ABPage').store[pageId];
+
 							return AD.Model.get('opstools.BuildApp.ABPage').findOne({ application: this.id, id: pageId });
 						},
 
