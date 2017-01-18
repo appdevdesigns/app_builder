@@ -169,15 +169,8 @@ steal(
 						popup:"my_pop",
 						id: componentIds.equation,
 
-					},
-					{
-						view:"popup",
-						id:"my_pop",
-						body:{
-							 template:"Some text" 
-						  
-						}
 					}
+
 					]
 				},
 				getSettings : function () {
