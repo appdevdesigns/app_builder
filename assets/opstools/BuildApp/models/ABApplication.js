@@ -54,6 +54,114 @@ steal(
 							return q;
 						},
 
+
+
+						/**
+						 * @function getApplicationPages
+						 * return all ABPages (Root + 1st Child) of the current application
+						 * useful for when components need to offer these as selection options.
+						 * @return {deferred}
+						 */
+						getApplicationPages: function() {
+
+							var err = null;
+
+							// if our .pages looks like a proper array
+							if ((this.pages) && (this.pages.filter)) {
+								var currPage = this.pages.filter(function(p){ return !p.parent })[0];
+								if (currPage) {
+									return this.getPages({ or: [{ id: currPage.id }, { parent: currPage.id }] });
+								} else {
+									err = new Error('application.getApplicationPages(): no root page found!');
+								}
+							} else {
+								err = new Error('application.getApplicationPages() called with no pages defined.');
+							}
+
+							// if we get here, then we have an error:
+							var dfd = AD.sal.Deferred();
+							dfd.reject(err);
+							return dfd;
+							
+						},
+
+
+						getAllApplicationPages:function() {
+							var _this = this;
+
+							var dfd = AD.sal.Deferred();
+
+							var allPages = AD.Model.get('opstools.BuildApp.ABPage').List();
+							var rootPage = this.pages.filter(function(p){ return !p.parent })[0];
+
+
+							// a recursive method to gather the children of the 
+							// given array of parent id's
+							function recursiveGetChildren(aryIDs, cb) {
+
+								// if there are ids to process:
+								if (aryIDs.length) {
+
+									// find any children:
+									_this.getPages({ parent: aryIDs })
+									.fail(cb)
+									.then(function(newPages){
+
+										if (newPages.length == 0) {
+											// no new Pages, we're done
+											cb(null);
+										} else {
+
+											var newIDs = [];
+											newPages.forEach(function(p){
+												allPages.push(p);	// store in our main []
+												newIDs.push(p.id);
+											})
+											recursiveGetChildren(newIDs, cb);
+										}
+									})
+
+								} else {
+
+									// we're done.
+									cb(null);
+								}
+
+							}
+
+
+							// start with our root level pages:
+							this.getApplicationPages()
+							.fail(dfd.reject)
+							.then(function(pages) {
+
+								// assemble all Child page.ids ( not rootPage.id)
+								var childIDs = [];
+								pages.forEach(function(p){
+									allPages.push(p);
+									if (p.id != rootPage.id) {
+										childIDs.push(p.id);
+									}
+								})
+
+								recursiveGetChildren(childIDs, function(err){
+
+									if (err) {
+										dfd.reject(err);
+									} else {
+										// allPages have full list
+										dfd.resolve(allPages);
+									}
+
+								})
+							})
+
+
+
+							return dfd;
+						},
+
+
 						// Page
 						getPages: function (cond) {
 							if (!cond) cond = {};

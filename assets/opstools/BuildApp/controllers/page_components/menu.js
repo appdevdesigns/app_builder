@@ -126,8 +126,13 @@ steal(
 
 					$$(componentIds.pageTree).showProgress({ type: 'icon' });
 
-					var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
-					application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					// 19 Jan 2017
+					// Ric says we should always offer the pages from our current Root page and under it.
+					// when a menu is placed on a tab, we need to search upwards to find the tab's parent page:
+					// get the root page:
+						// var parentId = currPage.parent ?  currPage.parent.attr('id') : currPage.attr('id');
+						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					application.getApplicationPages()
 						.fail(function (err) {
 							$$(componentIds.pageTree).hideProgress();
 						})

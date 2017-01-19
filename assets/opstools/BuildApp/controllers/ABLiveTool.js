@@ -49,7 +49,9 @@ steal(
 								self.initEvents();
 
 								// Store the root page
-								self.rootPage = self.data.pages.filter(function (page) { return page.id == self.options.page })[0];
+								self.rootPage = self.data.pages.filter(function (page) { 
+									return page.id == self.options.page 
+								})[0];
 
 								self.renderPageContainer();
 
@@ -107,12 +109,14 @@ steal(
 								},
 								// Get pages data
 								function (next) {
-									self.data.application.getPages({
-										or: [
-											{ id: self.options.page },
-											{ parent: self.options.page }
-										]
-									}).then(function (result) {
+									// self.data.application.getPages({
+									// 	or: [
+									// 		{ id: self.options.page },
+									// 		{ parent: self.options.page }
+									// 	]
+									// }).then(function (result) {
+									self.data.application.getAllApplicationPages()
+									.then(function(result) { 
 										result.forEach(function (page) {
 											if (page.translate) page.translate();
 

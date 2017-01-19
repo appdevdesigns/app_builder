@@ -64,10 +64,12 @@ steal(
 				if (!$$(componentIds.propertyView)) return;
 
 				if (application.currPage) {
-					var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 
-					// Get pages
-					application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					// 19 Jan 2017
+					// Make sure pages don't get lost on embedded Tab pages:
+						// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
+						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					application.getApplicationPages()
 						.fail(function (err) { })
 						.then(function (pages) {
 							pages.forEach(function (p) {
