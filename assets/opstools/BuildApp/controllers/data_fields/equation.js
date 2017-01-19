@@ -265,7 +265,7 @@ steal(
 
 		var listItem = EquationManager.getDescriptions();
 		//console.log(listItem);
-		if(type=="Date"){
+		if(type == 'date'){
 			for(i = 0 ; i < listItem.length ; i++){
 				$$("popuplist").add({ id:listItem[i].split(":")[0], title: listItem[i]});
 
