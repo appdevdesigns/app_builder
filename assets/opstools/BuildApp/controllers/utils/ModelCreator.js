@@ -3,7 +3,7 @@ steal(
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	function () {
 
-		function defineBaseModel(application, objectName, describe, multilingualFields, associations) {
+		function defineBaseModel(application, objectName, describe, multilingualFields, associations, urlPath) {
 			if (!objectName || !describe || !multilingualFields) throw new Error('Invalid parameters');
 
 			var formatAppName = application.name.replace(/_/g, ''),
@@ -24,6 +24,16 @@ steal(
 				fieldId: 'id',
 				// fieldLabel: 'label'
 			};
+			if (urlPath) {
+				// Some models may have non-standard REST URL paths
+				_.extend(modelDefinition, {
+					findAll: 'GET /' + urlPath,
+					findOne: 'GET /' + urlPath + '/{id}',
+					create: 'POST /' + urlPath,
+					update: 'PUT /' + urlPath + '/{id}',
+					destroy: 'DELETE /' + urlPath + '/{id}'
+				});
+			}
 
 			for (var key in modelDefinition) {
 				if (typeof modelDefinition[key] == 'string')
@@ -81,6 +91,8 @@ steal(
 				}
 
 				objectData = objectData[0];
+				
+				var urlPath = objectData.urlPath || null;
 
 				// Set Describe
 				var describe = {};
@@ -109,7 +121,7 @@ steal(
 
 				// Define base model
 				try {
-					defineBaseModel(application, objectName, describe, multilingualFields, associations);
+					defineBaseModel(application, objectName, describe, multilingualFields, associations, urlPath);
 				}
 				catch (err) {
 					console.error(err);

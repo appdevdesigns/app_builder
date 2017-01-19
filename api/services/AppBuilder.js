@@ -1484,6 +1484,7 @@ module.exports = {
             var associations = [];
             var multilingualFields = [];
             var controllerInfo;
+            var modelURL = '';
             
             async.series([
                 // Find app in database
@@ -1738,12 +1739,15 @@ module.exports = {
                         });                    
                     }
                     
+                    // Determine the model blueprints base URL
+                    modelURL = controllerInfo && controllerInfo.identity || '';
+                    
                     next();
                 },
                 
                 // Create server side controller if needed
                 function(next) {
-                    if (controllerInfo) return next();
+                    if (modelURL) return next();
                     
                     AD.spawn.command({
                         command: 'sails',
@@ -1758,7 +1762,7 @@ module.exports = {
                     });
                 },
                 function(next) {
-                    if (controllerInfo) return next();
+                    if (modelURL) return next();
                     
                     // Patch the newly created controller file to add 
                     // the _config property.
@@ -1777,11 +1781,19 @@ module.exports = {
     }
 `;
                             data = data.replace(/^module\.exports = \{$/m, '$&' + patchData);
-                            controllerInfo = {
-                                identity: `${moduleName}/${lcModelName}`
-                            };
+                            modelURL = `${moduleName}/${lcModelName}`;
                             fs.writeFile(controllerFile, data, next);
                         }
+                    });
+                },
+                
+                // Save the model's blueprints base URL
+                function(next) {
+                    if (!modelURL) return next();
+                    ABObject.update({ id: object.id }, { urlPath: modelURL })
+                    .exec(function(err, results) {
+                        if (err) next(err);
+                        else next();
                     });
                 },
                 
@@ -1796,9 +1808,6 @@ module.exports = {
                             fieldLabel = colName;
                         }
                     }
-                    
-                    // Determine the model blueprints base URL
-                    var modelURL = controllerInfo && controllerInfo.identity || '';
                     
                     sails.renderView(path.join('app_builder', 'clientModelBase'), {
                         layout: false,
