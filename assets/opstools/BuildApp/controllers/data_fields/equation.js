@@ -261,7 +261,7 @@ steal(
 	}
 
 	function addListEquation(type){
-		$$("popuplist").add({ id:webix.uid(), value: "kid"  });
+		$$("popuplist").add({ id:webix.uid(), title: "kid"  });
 		//var listItem = EquationManager.getDescriptions();
 		//console.log(listItem);
 		/*for(i = 0 ; i < listItem.length ; i++){
