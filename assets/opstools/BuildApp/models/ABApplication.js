@@ -86,6 +86,82 @@ steal(
 						},
 
 
+						getAllApplicationPages:function() {
+							var _this = this;
+
+							var dfd = AD.sal.Deferred();
+
+							var allPages = AD.Model.get('opstools.BuildApp.ABPage').List();
+							var rootPage = this.pages.filter(function(p){ return !p.parent })[0];
+
+
+							// a recursive method to gather the children of the 
+							// given array of parent id's
+							function recursiveGetChildren(aryIDs, cb) {
+
+								// if there are ids to process:
+								if (aryIDs.length) {
+
+									// find any children:
+									_this.getPages({ parent: aryIDs })
+									.fail(cb)
+									.then(function(newPages){
+
+										if (newPages.length == 0) {
+											// no new Pages, we're done
+											cb(null);
+										} else {
+
+											var newIDs = [];
+											newPages.forEach(function(p){
+												allPages.push(p);	// store in our main []
+												newIDs.push(p.id);
+											})
+											recursiveGetChildren(newIDs, cb);
+										}
+									})
+
+								} else {
+
+									// we're done.
+									cb(null);
+								}
+
+							}
+
+
+							// start with our root level pages:
+							this.getApplicationPages()
+							.fail(dfd.reject)
+							.then(function(pages) {
+
+								// assemble all Child page.ids ( not rootPage.id)
+								var childIDs = [];
+								pages.forEach(function(p){
+									allPages.push(p);
+									if (p.id != rootPage.id) {
+										childIDs.push(p.id);
+									}
+								})
+
+								recursiveGetChildren(childIDs, function(err){
+
+									if (err) {
+										dfd.reject(err);
+									} else {
+										// allPages have full list
+										dfd.resolve(allPages);
+									}
+
+								})
+							})
+
+
+
+							return dfd;
+						},
+
+
 						// Page
 						getPages: function (cond) {
 							if (!cond) cond = {};
