@@ -373,6 +373,9 @@ steal(
 											.done(function () {
 												var selectedTabView = $$(tabViewId).getTabbar().config.options[selectedIndex];
 
+												if ($$(tabViewId).getValue() == selectedTabView.id)
+													self.bindComponentEventsInTab(com);
+
 												// Switch to selected tab
 												$$(tabViewId).setValue(selectedTabView.id);
 											});
