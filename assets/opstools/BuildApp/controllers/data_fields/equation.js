@@ -114,26 +114,31 @@ steal(
 						label: "Equation",
 						labelWidth: "100",
 						id: componentIds.equation,
-						
-							on: {
-						      "onItemClick": function(newv, oldv){
-							var list = webix.ui({
-							  view:"list",
-							  width:250,
-							  height:200,
-							  top: 30,
-							  left:30,
-							  template:"#title#",
-							  select:true,
-							  data:[
-							    { id:1, title:"Item 1"},
-							    { id:2, title:"Item 2"},
-							    { id:3, title:"Item 3"}
-							  ]
-							});
-								}
-						    }
+						popup:"my_pop",
 					},
+					{
+					       view:"popup",
+					       id:"my_pop",
+					       body:{
+						    view:"list",
+						  width:500,
+						  height:200,
+						  top: 30,
+						  left:30,
+						  template:"#title#",
+						  select:true,
+						  data:[
+						    { id:1, title:"Item 1"},
+						    { id:2, title:"Item 2"},
+						    { id:3, title:"Item 3"}
+						  ],
+						on: {
+					      "onItemClick": function(newv, oldv){
+								webix.message("test");
+							}
+					    }
+						}
+					}	
 					]
 				},
 				getSettings : function () {
