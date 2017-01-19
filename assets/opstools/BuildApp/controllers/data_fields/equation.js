@@ -230,7 +230,7 @@ steal(
 			body:{
 				view:"list",
 				id: "popuplist",
-				width:500,
+				width:400,
 				height:200,
 				top: 30,
 				left:30,
@@ -265,10 +265,16 @@ steal(
 
 		var listItem = EquationManager.getDescriptions();
 		//console.log(listItem);
-		for(i = 0 ; i < listItem.length ; i++){
-			$$("popuplist").add({ id:listItem[i].split(":")[0], title: listItem[i]});
-			
+		if(type=="Date"){
+			for(i = 0 ; i < listItem.length ; i++){
+				$$("popuplist").add({ id:listItem[i].split(":")[0], title: listItem[i]});
+
+			}
 		}
+		else{
+
+		}
+
 	}
 
 
