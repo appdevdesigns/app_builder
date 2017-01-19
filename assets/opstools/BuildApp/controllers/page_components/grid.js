@@ -188,7 +188,7 @@ steal(
 					},
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
-						dataTableController.bindColumns(application, columns, true, setting.massUpdate === 'enable', setting.removable === 'enable');
+						dataTableController.bindColumns(application, columns, true, setting.selectable === 'enable', setting.removable === 'enable');
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
 							$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -219,7 +219,7 @@ steal(
 							editPage: setting.editPage,
 							editForm: setting.editForm
 						},
-						setting.massUpdate,
+						setting.selectable,
 						setting.removable,
 						setting.linkedField);
 
@@ -313,20 +313,21 @@ steal(
 								}
 							}
 						});
+					}
 
-						if (setting.removable === 'enable')
-							action_buttons.push({
-								view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', popup: self.viewId + '-delete-items-popup', icon: "trash", type: "icon", width: 140,
-								click: function () {
-									if ($$('ab-delete-records-popup')) {
-										$$('ab-delete-records-popup').define('objectModel', object[0]);
-										$$('ab-delete-records-popup').define('dataTable', $$(self.viewId));
-										$$('ab-delete-records-popup').define('dataCollection', self.data.dataCollection);
-										$$('ab-delete-records-popup').define('columns', columns);
-										$$('ab-delete-records-popup').show(this.$view);
-									}
+					if (setting.selectable == 'enable' && setting.removable === 'enable') {
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', icon: "trash", type: "icon", width: 140,
+							click: function () {
+								if ($$('ab-delete-records-popup')) {
+									$$('ab-delete-records-popup').define('objectModel', object[0]);
+									$$('ab-delete-records-popup').define('dataTable', $$(self.viewId));
+									$$('ab-delete-records-popup').define('dataCollection', self.data.dataCollection);
+									$$('ab-delete-records-popup').define('columns', columns);
+									$$('ab-delete-records-popup').show(this.$view);
 								}
-							});
+							}
+						});
 					}
 
 					if (setting.filter === 'enable') {
@@ -394,17 +395,19 @@ steal(
 							$$(self.viewId).prependView(header);
 					}
 
-					if (setting.massUpdate === 'enable') {
-						if ($$(self.viewId).checkedItems && Object.keys($$(self.viewId).checkedItems).length > 0) {
+					if ($$(self.viewId).checkedItems && Object.keys($$(self.viewId).checkedItems).length > 0) {
+						if ($$(self.viewId + '-update-items-button'))
 							$$(self.viewId + '-update-items-button').enable();
-							if ($$(self.viewId + '-delete-items-button'))
-								$$(self.viewId + '-delete-items-button').enable();
-						}
-						else {
+
+						if ($$(self.viewId + '-delete-items-button'))
+							$$(self.viewId + '-delete-items-button').enable();
+					}
+					else {
+						if ($$(self.viewId + '-update-items-button'))
 							$$(self.viewId + '-update-items-button').disable();
-							if ($$(self.viewId + '-delete-items-button'))
-								$$(self.viewId + '-delete-items-button').disable();
-						}
+
+						if ($$(self.viewId + '-delete-items-button'))
+							$$(self.viewId + '-delete-items-button').disable();
 					}
 
 					// Select edit item
@@ -511,7 +514,7 @@ steal(
 				return q;
 			};
 
-			this.renderDataTable = function (dataCollection, extraColumns, massUpdate, isTrashVisible, linkedField) {
+			this.renderDataTable = function (dataCollection, extraColumns, selectable, isTrashVisible, linkedField) {
 				var self = this;
 
 				if (!self.data.columns) return;
@@ -554,10 +557,10 @@ steal(
 					});
 				}
 
-				massUpdate = massUpdate == 'enable';
+				selectable = selectable == 'enable';
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, massUpdate, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, selectable, isTrashVisible);
 
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
@@ -586,6 +589,7 @@ steal(
 					editPage: editPageId, // ABPage.id
 					editForm: editFormId, // ABPageComponent.id
 					columns: columns.filter(function (c) { return c; }), // [ABColumn.id]
+					selectable: propertyValues.selectable,
 					massUpdate: propertyValues.massUpdate,
 					removable: propertyValues.removable,
 					filter: propertyValues.filter,
@@ -769,6 +773,7 @@ steal(
 							linkedField: setting.linkedField,
 							detailView: detailView,
 							editForm: editForm,
+							selectable: setting.selectable || 'disable',
 							massUpdate: setting.massUpdate || 'disable',
 							removable: setting.removable || 'disable',
 							filter: setting.filter || 'disable',
@@ -782,7 +787,7 @@ steal(
 			};
 
 			this.onDisplay = function () {
-				
+
 				if ((this.data.settings) && (this.data.setting.linkedField)) {
 					filterLinkedData.call(this, this.data.setting.linkedField);
 				}
@@ -867,7 +872,7 @@ steal(
 											editPage: editValue ? editValue[0] : null,
 											editForm: editValue ? editValue[1] : null
 										},
-											propertyValues.massUpdate,
+											propertyValues.selectable,
 											propertyValues.removable,
 											propertyValues.linkedField);
 									}
@@ -989,6 +994,16 @@ steal(
 						]
 					},
 					{
+						id: 'selectable',
+						name: 'selectable',
+						type: 'richselect',
+						label: 'Selectable',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
 						id: 'massUpdate',
 						name: 'massUpdate',
 						type: 'richselect',
@@ -1048,6 +1063,7 @@ steal(
 							case 'object':
 							case 'filter':
 							case 'sort':
+							case 'selectable':
 							case 'massUpdate':
 							case 'removable':
 								var setting = editInstance.getSettings();
@@ -1066,7 +1082,7 @@ steal(
 									editPage: editValue ? editValue[0] : null,
 									editForm: editValue ? editValue[1] : null
 								},
-									propertyValues.massUpdate,
+									propertyValues.selectable,
 									propertyValues.removable,
 									propertyValues.linkedField);
 								break;
