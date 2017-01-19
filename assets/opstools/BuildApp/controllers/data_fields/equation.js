@@ -244,7 +244,7 @@ steal(
 				on: {
 					"onItemClick": function(newv, oldv){
 						var getEquation = $$(componentIds.equation).getValue();
-						var getEquationFunction = $$("popuplist").getValue();
+						var getEquationFunction = newv;
 						//var test2 = $$("popuplist").getItem(newv).title;
 						$$(componentIds.equation).setValue(getEquation + getEquationFunction);
 						$$("my_pop").hide();
