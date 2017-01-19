@@ -223,40 +223,38 @@ steal(
 
 		var typeSettings = resultType.editDefinition;
 		webix.ui({
-       view:"popup",
-       id:"my_pop",
-       body:{
-            view:"list",
-         id: "popuplist",
-          width:500,
-          height:200,
-          top: 30,
-          left:30,
-          template:"#title#",
-          select:true,
-          data:[
-            { id:1, title:"Item 1"},
-            { id:2, title:"Item 2"},
-            { id:3, title:"Item 3"}
-          ],
-  	on: {
-      "onItemClick": function(newv, oldv){
-        	var test = $$("testkid").getValue();
-        	var test2 = $$("popuplist").getItem(newv).title;
-			$$("testkid").setValue(test + test2);
-        	$$("my_pop").hide();
-        },
+			view:"popup",
+			id:"my_pop",
+			body:{
+				view:"list",
+				id: "popuplist",
+				width:500,
+				height:200,
+				top: 30,
+				left:30,
+				template:"#title#",
+				select:true,
+				data:[
+				{ id:1, title:"Item 1"},
+				{ id:2, title:"Item 2"},
+				{ id:3, title:"Item 3"}
+				],
+				on: {
+					"onItemClick": function(newv, oldv){
+						var test = $$(componentIds.equation).getValue();
+						var test2 = $$("popuplist").getItem(newv).title;
+						$$(componentIds.equation).setValue(test + test2);
+						$$("my_pop").hide();
+					},
 
-    }
-        }
-});
-	
-		
-		
+				}
+			}
+		});
+
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
 		
 	}
-	  
+
 
 	equationDataField.editDefinition = {
 		id: componentIds.editView,
