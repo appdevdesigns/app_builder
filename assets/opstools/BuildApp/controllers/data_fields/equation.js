@@ -261,13 +261,14 @@ steal(
 	}
 
 	function addListEquation(type){
-		var listItem = EquationManager.getDescriptions();
-		console.log(listItem);
-		for(i = 0 ; i < listItem.length ; i++){
+		$$("popuplist").add({ id:webix.uid(), value: "kid"  });
+		//var listItem = EquationManager.getDescriptions();
+		//console.log(listItem);
+		/*for(i = 0 ; i < listItem.length ; i++){
 			$$("popuplist").add({ id:webix.uid(), value: listItem[i],i});
 			$$("popuplist").add({ id:webix.uid(), value: "kid"  },2);
 			console.log("addlist:"+ listItem[i]);
-		}
+		}*/
 	}
 
 
