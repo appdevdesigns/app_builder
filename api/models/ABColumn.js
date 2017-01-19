@@ -270,7 +270,6 @@ module.exports = {
         _.defaults(columnData.setting, defaultData.setting);
         
         var column;
-        var languages = [];
         var appID;
         
         async.series([

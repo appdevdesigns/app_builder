@@ -32,6 +32,13 @@ module.exports = {
             type: 'boolean',
             defaultsTo: false
         },
+        
+        urlPath: {
+            type: 'string',
+            length: 80,
+            defaultsTo: '',
+            required: false
+        },
 
 
         // this will pull in the translations using .populate('translations')
