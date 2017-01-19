@@ -243,9 +243,10 @@ steal(
 				//],
 				on: {
 					"onItemClick": function(newv, oldv){
-						var test = $$(componentIds.equation).getValue();
-						var test2 = $$("popuplist").getItem(newv).title;
-						$$(componentIds.equation).setValue(test + test2);
+						var getEquation = $$(componentIds.equation).getValue();
+						var getEquationFunction = $$("popuplist").getValue();
+						//var test2 = $$("popuplist").getItem(newv).title;
+						$$(componentIds.equation).setValue(getEquation + getEquationFunction);
 						$$("my_pop").hide();
 					},
 
