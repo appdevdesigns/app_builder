@@ -54,6 +54,38 @@ steal(
 							return q;
 						},
 
+
+
+						/**
+						 * @function getApplicationPages
+						 * return all ABPages (Root + 1st Child) of the current application
+						 * useful for when components need to offer these as selection options.
+						 * @return {deferred}
+						 */
+						getApplicationPages: function() {
+
+							var err = null;
+
+							// if our .pages looks like a proper array
+							if ((this.pages) && (this.pages.filter)) {
+								var currPage = this.pages.filter(function(p){ return !p.parent })[0];
+								if (currPage) {
+									return this.getPages({ or: [{ id: currPage.id }, { parent: currPage.id }] });
+								} else {
+									err = new Error('application.getApplicationPages(): no root page found!');
+								}
+							} else {
+								err = new Error('application.getApplicationPages() called with no pages defined.');
+							}
+
+							// if we get here, then we have an error:
+							var dfd = AD.sal.Deferred();
+							dfd.reject(err);
+							return dfd;
+							
+						},
+
+
 						// Page
 						getPages: function (cond) {
 							if (!cond) cond = {};

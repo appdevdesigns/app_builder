@@ -694,9 +694,13 @@ steal(
 					},
 					// Data table - Detail view & Edit form
 					function (next) {
-						var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 
-						application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
+						// 19 Jan 2017
+						// Make sure we return all possible pages that can be selected, even if we are embedded 
+						// in a buried Tab component.
+							// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
+							// application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
+						application.getApplicationPages()
 							.fail(function (err) { next(err); })
 							.then(function (pages) {
 								var viewComponents = [],
