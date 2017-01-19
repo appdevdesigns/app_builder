@@ -36,7 +36,9 @@ steal(
 
 				webix.ui(view, $$(self.viewId));
 
-				$(self).trigger('renderComplete', {});
+				setTimeout(function () {
+					$(self).trigger('renderComplete', {});
+				}, 100);
 
 				data.isRendered = true;
 
