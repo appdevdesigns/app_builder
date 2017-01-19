@@ -221,6 +221,8 @@ steal(
 		
 		var resultType = getDataField(type);
 
+
+
 		var typeSettings = resultType.editDefinition;
 		webix.ui({
 			view:"popup",
@@ -234,11 +236,11 @@ steal(
 				left:30,
 				template:"#title#",
 				select:true,
-				data:[
-				{ id:1, title:"year()"},
-				{ id:2, title:"year(datevalue)"},
-				{ id:3, title:"Item 3"}
-				],
+				//data:[
+				//{ id:1, title:"year()"},
+				//{ id:2, title:"year(datevalue)"},
+				//{ id:3, title:"Item 3"}
+				//],
 				on: {
 					"onItemClick": function(newv, oldv){
 						var test = $$(componentIds.equation).getValue();
@@ -251,8 +253,19 @@ steal(
 			}
 		});
 
+		//@addlistdata
+		addListEquation(type);
+
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
 		
+	}
+
+	function addListEquation(type){
+		var listItem = EquationManager.getDescriptions();
+
+		for(i = 0 ; i < listItem.length ; i++){
+			$$("popuplist").add({ id:webix.uid(), value: listItem[i]  });
+		}
 	}
 
 
