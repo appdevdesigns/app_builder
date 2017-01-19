@@ -169,6 +169,8 @@ steal(
 					viewIndex = update_panel.getChildViews().length,
 					options = update_records_popup.getFieldList(true);
 
+				if (!options || options.length < 1) return;
+
 				update_panel.addView({
 					cols: [
 						{
