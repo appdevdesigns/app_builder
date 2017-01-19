@@ -115,6 +115,13 @@ steal(
 						labelWidth: "100",
 						id: componentIds.equation,
 						popup:"my_pop",
+						    on: {
+							    "onKeyPress" : function(code, e){ 
+								//var value = this.getValue().toLowerCase();
+								//$$("testkid").setValue("eiei");
+								//webix.message(code);
+								}
+						    }
 					},
 					]
 				},
@@ -215,12 +222,12 @@ steal(
 		var resultType = getDataField(type);
 
 		var typeSettings = resultType.editDefinition;
-		
 		webix.ui({
        view:"popup",
        id:"my_pop",
        body:{
             view:"list",
+         id: "popuplist",
           width:500,
           height:200,
           top: 30,
@@ -234,11 +241,16 @@ steal(
           ],
   	on: {
       "onItemClick": function(newv, oldv){
-			webix.message("test");
-                }
+        	var test = $$("testkid").getValue();
+        	var test2 = $$("popuplist").getItem(newv).title;
+			$$("testkid").setValue(test + test2);
+        	$$("my_pop").hide();
+        },
+
     }
         }
 });
+	
 		
 		
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
