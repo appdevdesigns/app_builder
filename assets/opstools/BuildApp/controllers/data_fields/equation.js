@@ -52,15 +52,6 @@ steal(
 
 	}
 	
-	function showsettingNumeric(){
-		$$(componentIds.dateType).hide();
-		$$(componentIds.resultType).hide();
-	}
-	
-	function showsettingDate(){
-		$$(componentIds.dateType).show();
-		$$(componentIds.resultType).show();
-	}
 	
 	function equationValidate(text){
 		//{currentdate} - {birthdate} 
@@ -198,9 +189,9 @@ steal(
 					settings.setting.resultSettings = resultType.getSettings();
 
 					return settings;
+					if (!data.setting) return;
 				},
 				populateSettings : function (application, data) {
-					if (!data.setting) return;
 					
 					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
 					$$(componentIds.equation).setValue(data.setting.equation);
@@ -259,7 +250,8 @@ steal(
 		addListEquation(type);
 
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
-		
+		resultType.getSettings;
+		resultType.populateSettings;
 	}
 
 	function addListEquation(type){
