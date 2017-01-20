@@ -448,7 +448,7 @@ steal(
 				
 				console.log("col:" + columns[0].name);
 			});*/
-		if (!data.setting){
+		/*if (!data.setting){
 			
 			
 			return;
@@ -462,7 +462,20 @@ steal(
 		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
-		//$$(componentIds.equation).setValue(data.setting.equation);
+		//$$(componentIds.equation).setValue(data.setting.equation);*/
+		
+		if (!data.setting) return;
+	
+			$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+			$$(componentIds.equation).setValue(data.setting.equation);
+
+			var resultSettings = {
+				setting: data.setting.resultSettings
+			}
+
+			var resultType = this.getDataField(settings.setting.equationType);
+
+			resultType.populateSettings(application, resultSettings);
 		
 		
 
@@ -471,7 +484,7 @@ steal(
 
 
 	equationDataField.getSettings = function () {
-		var type = 'integer';
+		/*var type = 'integer';
 		console.log("getSettingssna");	
 		return {
 			fieldName: equationDataField.name,
@@ -490,7 +503,25 @@ steal(
 				
 				
 			}
-		};
+		};*/
+			var type = 'integer';
+	
+			var settings = {
+				fieldName: equationDataField.name,
+				type: type,
+				setting: {
+					equationType : $$(componentIds.equationType).getValue(),
+					equation : $$(componentIds.equation).getValue(),
+					template:'<div class="ab-equation-data-field"></div>',
+				}
+			};
+
+			var resultType = this.getDataField(settings.setting.equationType);
+
+			settings.setting.resultSettings = resultType.getSettings();
+
+			return settings;
+		
 	};
 
 
