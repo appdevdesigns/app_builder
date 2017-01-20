@@ -250,8 +250,9 @@ steal(
 		addListEquation(type);
 
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
-		resultType.getSettings;
-		resultType.populateSettings;
+		webix.ui(resultType.getSettings, $$('typeSettings')); 
+		webix.ui(resultType.populateSettings, $$('typeSettings')); 
+	
 	}
 
 	function addListEquation(type){
