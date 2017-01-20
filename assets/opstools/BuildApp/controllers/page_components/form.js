@@ -547,7 +547,8 @@ steal(
 
 			this.populateSettings = function (setting, showAll) {
 				var self = this,
-					dataCollection;
+					dataCollection,
+					linkedToDataCollection;
 
 				async.series([
 					// Get data collection
@@ -575,7 +576,7 @@ steal(
 					},
 					// Render form component
 					function (next) {
-						self.render(setting, true, showAll, dataCollection)
+						self.render(setting, true, showAll, dataCollection, linkedToDataCollection)
 							.fail(next)
 							.then(function () { next(); });
 					},
@@ -631,38 +632,15 @@ steal(
 							linkedFieldItem.options = [];
 						}
 
+						// Set default of link field
+						if (linkedFieldItem.options.length > 0 && linkedFieldItem.options.filter(function (opt) { return opt.id == setting.linkField; }).length < 1) {
+							setting.linkField = linkedFieldItem.options[0].id;
+						}
+
 						next();
-					}
-				]);
-
-
-				// Get object list
-				var objects = null;
-				application.getObjects()
-					.fail(function (err) {
-						// TODO : Error message
-						console.error(err)
-					})
-					.then(function (result) {
-						result.forEach(function (o) {
-							if (o.translate)
-								o.translate();
-						});
-
-						objects = result;
-
-						// Properties
-
-						// Data source - Object
-						var objSource = $$(componentIds.propertyView).getItem(componentIds.selectObject);
-						objSource.options = $.map(objects, function (o) {
-							return {
-								id: o.id,
-								value: o.label
-							};
-						});
-
-						//
+					},
+					// Misc - Column
+					function (next) {
 						var colCountOptions = [1, 2, 3];
 						var colCountSource = $$(componentIds.propertyView).getItem(componentIds.selectColCount);
 						colCountSource.options = $.map(colCountOptions, function (o) {
@@ -670,24 +648,27 @@ steal(
 								id: o,
 								value: o
 							};
-						})
+						});
 
-						// Set property values
-						var propValues = {};
-						propValues[componentIds.editTitle] = setting.title || '';
-						propValues[componentIds.editDescription] = setting.description || '';
-						propValues[componentIds.selectObject] = setting.object;
-						propValues[componentIds.linkedTo] = setting.linkedTo;
-						propValues[componentIds.linkField] = setting.linkField;
-						propValues[componentIds.selectColCount] = setting.colCount;
-						propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
-						propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
-						propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
-						propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
+						next();
+					}
+				], function () {
+					// Set property values
+					var propValues = {};
+					propValues[componentIds.editTitle] = setting.title || '';
+					propValues[componentIds.editDescription] = setting.description || '';
+					propValues[componentIds.selectObject] = setting.object;
+					propValues[componentIds.linkedTo] = setting.linkedTo;
+					propValues[componentIds.linkField] = setting.linkField;
+					propValues[componentIds.selectColCount] = setting.colCount;
+					propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
+					propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
+					propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
+					propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
 
-						$$(componentIds.propertyView).setValues(propValues);
-						$$(componentIds.propertyView).refresh();
-					});
+					$$(componentIds.propertyView).setValues(propValues);
+					$$(componentIds.propertyView).refresh();
+				});
 			};
 
 			this.isRendered = function () {
@@ -910,7 +891,7 @@ steal(
 								var linkedTo = propertyValues.linkedTo,
 									linkedField = $$(componentIds.propertyView).getItem(componentIds.linkField);
 
-								if (linkedTo != 'none') {
+								if (linkedTo && linkedTo != 'none') {
 									linkedField.options = componentManager.editInstance.data.columns
 										.filter(function (col) { return col.setting.linkObject == linkedTo; })
 										.map(function (col) {
