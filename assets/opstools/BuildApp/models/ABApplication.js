@@ -72,14 +72,14 @@ steal(
 							if (typeof currPage == 'undefined') {
 								currPage = this.currPage;
 							}
-							
+
 							// if our .pages looks like a proper array
 							if ((this.pages) && (this.pages.filter)) {
 
 								function findParent(page) {
 									var parent = null;
 									if ((page)&&(page.parent)) {
-										parent = _this.pages.filter(function(p){ return p.id == page.parent; })[0];
+										parent = _this.pages.filter(function(p){ return ((p.id == page.parent) || (p.id == page.parent.id)); })[0];
 									}
 									return parent;
 								}
@@ -107,77 +107,25 @@ steal(
 						},
 
 
+
+						/**
+						 * @function getAllApplicationPages
+						 * return all the ABPages in the current application.
+						 * This will include all pages, not just the Root + 1st Child.
+						 * @return {deferred}
+						 */
 						getAllApplicationPages:function() {
 							var _this = this;
 
 							var dfd = AD.sal.Deferred();
 
-							var allPages = AD.Model.get('opstools.BuildApp.ABPage').List();
-							var rootPage = this.pages.filter(function(p){ return !p.parent })[0];
-
-
-							// a recursive method to gather the children of the 
-							// given array of parent id's
-							function recursiveGetChildren(aryIDs, cb) {
-
-								// if there are ids to process:
-								if (aryIDs.length) {
-
-									// find any children:
-									_this.getPages({ parent: aryIDs })
-									.fail(cb)
-									.then(function(newPages){
-
-										if (newPages.length == 0) {
-											// no new Pages, we're done
-											cb(null);
-										} else {
-
-											var newIDs = [];
-											newPages.forEach(function(p){
-												allPages.push(p);	// store in our main []
-												newIDs.push(p.id);
-											})
-											recursiveGetChildren(newIDs, cb);
-										}
-									})
-
-								} else {
-
-									// we're done.
-									cb(null);
-								}
-
-							}
-
-
-							// start with our root level pages:
-							this.getApplicationPages()
+							this.getPages()
 							.fail(dfd.reject)
-							.then(function(pages) {
+							.done(function(pages){
 
-								// assemble all Child page.ids ( not rootPage.id)
-								var childIDs = [];
-								pages.forEach(function(p){
-									allPages.push(p);
-									if (p.id != rootPage.id) {
-										childIDs.push(p.id);
-									}
-								})
-
-								recursiveGetChildren(childIDs, function(err){
-
-									if (err) {
-										dfd.reject(err);
-									} else {
-										// allPages have full list
-										dfd.resolve(allPages);
-									}
-
-								})
+								_this.pages = pages;  // replace our copy with proper ABPage instances
+								dfd.resolve(pages);
 							})
-
-
 
 							return dfd;
 						},
@@ -187,6 +135,11 @@ steal(
 						getPages: function (cond) {
 							if (!cond) cond = {};
 							cond.application = this.id;
+
+//// TODO: refactor this to make sure appdev-core/assets/appdev/model.js  .modelUpdate() properly 
+////       updates our model instances.  This will cause an error with other code trying to pull
+////       from ABPage.findAll() and getting models that our out of sync with any ABPages returned
+////       using this method.
 
 							Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
 								var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
@@ -199,6 +152,7 @@ steal(
 						},
 
 						getPage: function (pageId) {
+//// TODO: refactor this too.
 							if (AD.Model.get('opstools.BuildApp.ABPage').store[pageId])
 								delete AD.Model.get('opstools.BuildApp.ABPage').store[pageId];
 
@@ -246,8 +200,6 @@ steal(
 								}
 							})
 						}
-
-
 
 					}
 				);

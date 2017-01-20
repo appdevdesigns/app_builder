@@ -156,6 +156,8 @@ steal(
 												// Update exists page
 												if (page.id == data.page) {
 													self.data.pages.attr(index, newPage.attr());
+// #Hack! Fix the ModelUpdate() syncing
+if (self.data.application) self.data.application.pages = self.data.pages;
 													exists = true;
 												}
 											});
@@ -196,6 +198,9 @@ steal(
 											self.data.pages.forEach(function (page, index) {
 												if (page.id == updatePage.id)
 													self.data.pages.attr(index, updatePage.attr());
+// #Hack! Fix the ModelUpdate() syncing
+if (self.data.application) self.data.application.pages = self.data.pages;
+
 											});
 
 											// rebuild our display
@@ -425,7 +430,7 @@ steal(
 							page = page || self.rootPage;
 
 							// Hide page popup
-							if (self.activePage && $$(self.activePage.domID).hide)
+							if (self.activePage && $$(self.activePage.domID) && $$(self.activePage.domID).hide)
 								$$(self.activePage.domID).hide();
 
 							$$(page.domID).show();
@@ -467,6 +472,12 @@ steal(
 							});
 
 							if (itemInfo.component === 'tab') {
+
+								// make sure an embedded tab's component gets bound now.
+								self.bindComponentEventsInTab(itemInfo); 
+
+								// when the tab changes, be sure to rebind it's current
+								// components:
 								$(comInstance).on('changeTab', function (event, data) {
 									self.bindComponentEventsInTab(itemInfo);
 								});
