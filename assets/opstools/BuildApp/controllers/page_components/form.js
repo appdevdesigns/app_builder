@@ -17,6 +17,8 @@ steal(
 			editTitle: 'ab-form-edit-title',
 			editDescription: 'ab-form-edit-description',
 			selectObject: 'ab-form-select-object',
+			linkedTo: 'ab-form-linked-to',
+			linkField: 'ab-form-link-field',
 			selectColCount: 'ab-form-select-column-count',
 			isSaveVisible: 'ab-form-save-visible',
 			isCancelVisible: 'ab-form-cancel-visible',
@@ -190,6 +192,7 @@ steal(
 			// Set viewId to public
 			this.viewId = viewId;
 			this.editViewId = componentIds.editForm;
+			this.data = {};
 
 			// Instance functions
 			this.render = function (setting, editable, showAll, dataCollection) {
@@ -199,6 +202,7 @@ steal(
 					header = { rows: [] },
 					listOptions = {}; // { columnId: [{}, ..., {}] }
 
+				self.data.columns = [];
 				data.setting = setting;
 				data.dataCollection = dataCollection;
 
@@ -208,7 +212,10 @@ steal(
 				$$(self.viewId).clearValidation();
 
 				$$(self.viewId).hide();
-				if (!setting.object) return;
+				if (!setting.object) {
+					q.resolve();
+					return q;
+				}
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
 				$$(self.viewId).showProgress({ type: "icon" });
@@ -222,9 +229,9 @@ steal(
 					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 						var currModel = data.dataCollection.AD.currModel();
 						// Show custom display
-						showCustomFields.call(self, data.object, data.columns, id, currModel);
+						showCustomFields.call(self, data.object, self.data.columns, id, currModel);
 
-						setElementHeights.call(self, data.columns, currModel);
+						setElementHeights.call(self, self.data.columns, currModel);
 					});
 				}
 
@@ -239,7 +246,7 @@ steal(
 									if (d.translate) d.translate();
 								});
 
-								data.columns = result;
+								self.data.columns = result;
 								next();
 							});
 					},
@@ -247,7 +254,7 @@ steal(
 					function (next) {
 						var getOptionsTasks = [];
 
-						data.columns.filter(function (col) { return col.setting.editor === 'richselect'; })
+						self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; })
 							.forEach(function (col) {
 								getOptionsTasks.push(function (callback) {
 									col.getList()
@@ -272,7 +279,7 @@ steal(
 					},
 					// Add form elements
 					function (next) {
-						async.eachSeries(data.columns, function (col, callback) {
+						async.eachSeries(self.data.columns, function (col, callback) {
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 
 							if (!editable && !isVisible) { // Hidden
@@ -439,7 +446,7 @@ steal(
 									if ($$(saveButton))
 										$$(saveButton).disable();
 
-									saveModelData.call(self, dataCollection, data.object, data.columns, setting)
+									saveModelData.call(self, dataCollection, data.object, self.data.columns, setting)
 										.fail(function (err) {
 											console.error(err);
 
@@ -466,7 +473,7 @@ steal(
 								click: function () {
 									data.dataCollection.setCursor(null);
 
-									clearForm.call(self, data.object, data.columns, data.dataCollection);
+									clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 
 									$(self).trigger('changePage', {
 										previousPage: true
@@ -488,14 +495,14 @@ steal(
 						}
 
 						// Show data of current select data
-						showCustomFields.call(self, data.object, data.columns, currData ? currData.id : null, currData);
+						showCustomFields.call(self, data.object, self.data.columns, currData ? currData.id : null, currData);
 
 						next();
 					}
 				], function (err) {
 					if (err) {
 						q.reject();
-						return;
+						return q;
 					}
 
 					$$(self.viewId).adjust();
@@ -525,6 +532,8 @@ steal(
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
+					linkedTo: propertyValues[componentIds.linkedTo] || '', // ABObject.id
+					linkField: propertyValues[componentIds.linkField] || '', // ABColumn.id
 					colCount: propertyValues[componentIds.selectColCount] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
@@ -550,9 +559,79 @@ steal(
 								next();
 							});
 					},
+					// Get linked data colllection
+					function (next) {
+						if (setting.linkedTo && setting.linkedTo !== 'none') {
+							dataCollectionHelper.getDataCollection(application, setting.linkedTo)
+								.fail(next)
+								.then(function (result) {
+									linkedToDataCollection = result;
+									next();
+								});
+						}
+						else {
+							next();
+						}
+					},
 					// Render form component
 					function (next) {
-						self.render(setting, true, showAll, dataCollection);
+						self.render(setting, true, showAll, dataCollection)
+							.fail(next)
+							.then(function () { next(); });
+					},
+					// Properties
+					// Data source - Object
+					function (next) {
+						if (!application.objects)
+							return next();
+
+						// Data source - Object
+						var objectList = $$(componentIds.propertyView).getItem(componentIds.selectObject);
+						objectList.options = $.map(application.objects, function (o) {
+							return {
+								id: o.id,
+								value: o.label
+							};
+						});
+
+						// Data source - Linked to
+						var linkedObjIds = self.data.columns
+							.filter(function (col) {
+								return col.setting.linkObject != null && col.setting.linkType == 'model' && col.setting.linkViaType == 'collection';
+							})
+							.map(function (col) { return col.setting.linkObject });
+
+						var linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; });
+						var linkedToItem = $$(componentIds.propertyView).getItem(componentIds.linkedTo);
+
+						linkedToItem.options = $.map(linkedObjs, function (o) {
+							return {
+								id: o.id,
+								value: o.label
+							};
+						});
+						linkedToItem.options.splice(0, 0, {
+							id: 'none',
+							value: '[none]'
+						});
+
+						// Data source - Link field
+						var linkedFieldItem = $$(componentIds.propertyView).getItem(componentIds.linkField);
+						if (setting.linkedTo) {
+							linkedFieldItem.options = self.data.columns
+								.filter(function (col) { return col.setting.linkObject == setting.linkedTo; })
+								.map(function (col) {
+									return {
+										id: col.id,
+										value: col.label
+									};
+								}).attr();
+						}
+						else {
+							linkedFieldItem.options = [];
+						}
+
+						next();
 					}
 				]);
 
@@ -598,6 +677,8 @@ steal(
 						propValues[componentIds.editTitle] = setting.title || '';
 						propValues[componentIds.editDescription] = setting.description || '';
 						propValues[componentIds.selectObject] = setting.object;
+						propValues[componentIds.linkedTo] = setting.linkedTo;
+						propValues[componentIds.linkField] = setting.linkField;
 						propValues[componentIds.selectColCount] = setting.colCount;
 						propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
 						propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
@@ -622,12 +703,12 @@ steal(
 
 				if (data.setting.clearOnLoad === 'yes') {
 					data.dataCollection.setCursor(null);
-					clearForm.call(self, data.object, data.columns, data.dataCollection);
+					clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 				}
 
-				setElementHeights.call(self, data.columns, currModel);
+				setElementHeights.call(self, self.data.columns, currModel);
 
-				data.columns.forEach(function (col) {
+				self.data.columns.forEach(function (col) {
 					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
@@ -726,6 +807,32 @@ steal(
 								return "[Select]";
 						}
 					},
+					{
+						id: componentIds.linkedTo,
+						name: 'linkedTo',
+						type: 'richselect',
+						label: 'Linked to',
+						template: function (data, dataValue) {
+							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+							if (selectedData && selectedData.length > 0)
+								return selectedData[0].value;
+							else
+								return "[none]";
+						}
+					},
+					{
+						id: componentIds.linkField,
+						name: 'linkField',
+						type: 'richselect',
+						label: 'Link field',
+						template: function (data, dataValue) {
+							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+							if (selectedData && selectedData.length > 0)
+								return selectedData[0].value;
+							else
+								return "";
+						}
+					},
 					{ label: "Misc", type: "label" },
 					{
 						id: componentIds.selectColCount,
@@ -799,6 +906,27 @@ steal(
 								if ($$(componentIds.description))
 									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
+							case componentIds.linkedTo:
+								var linkedTo = propertyValues.linkedTo,
+									linkedField = $$(componentIds.propertyView).getItem(componentIds.linkField);
+
+								if (linkedTo != 'none') {
+									linkedField.options = componentManager.editInstance.data.columns
+										.filter(function (col) { return col.setting.linkObject == linkedTo; })
+										.map(function (col) {
+											return {
+												id: col.id,
+												value: col.label
+											}
+										}).attr();
+
+									propertyValues[componentIds.linkField] = linkedField.options[0].id; // Default selection
+								} else {
+									linkedField.options = [];
+									linkedField.hidden = true;
+									propertyValues[componentIds.linkField] = null;
+								}
+								$$(componentIds.propertyView).setValues(propertyValues);
 							case componentIds.selectObject:
 							case componentIds.selectColCount:
 							case componentIds.isSaveVisible:
