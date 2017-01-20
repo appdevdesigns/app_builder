@@ -1753,10 +1753,8 @@ module.exports = {
                     
                     AD.spawn.command({
                         command: 'sails',
-                        options: [ 
-                            'generate', 'controller', 
-                            path.join(moduleName, modelName)
-                        ]
+                        options: [ 'generate', 'controller', modelName ],
+                        spawnOpts: { cwd: appPath }
                     })
                     .fail(next)
                     .done(function () {
@@ -1768,7 +1766,7 @@ module.exports = {
                     
                     // Patch the newly created controller file to add 
                     // the _config property.
-                    var controllerFile = path.join(appPath, 'api', 'controllers', modelName + 'Controller.js');
+                    var controllerFile = path.join(appPath, 'api', 'controllers', _.upperFirst(modelName) + 'Controller.js');
                     fs.readFile(controllerFile, 'utf8', function(err, data) {
                         if (err) next(err);
                         else {
@@ -1836,6 +1834,7 @@ module.exports = {
                     sails.renderView(path.join('app_builder', 'clientModel'), {
                         layout: false,
                         appName,
+                        objectName: modelName,
                         modelFileName
                     }, function (err, output) {
                         if (err) next(err);
