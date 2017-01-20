@@ -60,15 +60,36 @@ steal(
 						 * @function getApplicationPages
 						 * return all ABPages (Root + 1st Child) of the current application
 						 * useful for when components need to offer these as selection options.
+						 * @param {ABPage} currPage  We need to contextualize this for the
+						 *					branch of pages under a RootPage. This page can
+						 *					be any page that can be resolved to a Root Page.
 						 * @return {deferred}
 						 */
-						getApplicationPages: function() {
-
+						getApplicationPages: function( currPage ) {
+							var _this = this;
 							var err = null;
 
+							if (typeof currPage == 'undefined') {
+								currPage = this.currPage;
+							}
+							
 							// if our .pages looks like a proper array
 							if ((this.pages) && (this.pages.filter)) {
-								var currPage = this.pages.filter(function(p){ return !p.parent })[0];
+
+								function findParent(page) {
+									var parent = null;
+									if ((page)&&(page.parent)) {
+										parent = _this.pages.filter(function(p){ return p.id == page.parent; })[0];
+									}
+									return parent;
+								}
+
+								var currPageParent = findParent(currPage);
+								while(currPageParent) {
+									currPage = currPageParent;
+									currPageParent = findParent(currPage);
+								}
+								// var currPage = this.pages.filter(function(p){ return !p.parent })[0];
 								if (currPage) {
 									return this.getPages({ or: [{ id: currPage.id }, { parent: currPage.id }] });
 								} else {
