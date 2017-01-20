@@ -149,7 +149,8 @@ steal(
 					
 					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
 					$$(componentIds.equation).setValue(data.setting.equation);
-
+					console.log("setting equation 2");
+					
 					var resultSettings = {
 						setting: data.setting.resultSettings
 					}
@@ -207,7 +208,7 @@ steal(
 					var resultSettings = {
 						setting: data.setting.resultSettings
 					}
-
+					console.log("setting equation 3");
 					var resultType = this.getDataField(settings.setting.equationType);
 
 					resultType.populateSettings(application, resultSettings);
