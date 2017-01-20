@@ -116,7 +116,7 @@ steal(
 					},
 					]
 				},
-				getSettings : function () {
+				/*getSettings : function () {
 					var type = 'integer';
 
 					var settings = {
@@ -149,7 +149,7 @@ steal(
 					var resultType = this.getDataField(settings.setting.equationType);
 
 					resultType.populateSettings(application, resultSettings);
-				},
+				},*/
 			}
 		}
 		else{
@@ -454,6 +454,8 @@ steal(
 			return;
 		}
 		
+		console.log("populateSettingsna");
+		
 		$$(componentIds.equationType).setValue(data.setting.equationType);
 		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
 		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
@@ -470,7 +472,7 @@ steal(
 
 	equationDataField.getSettings = function () {
 		var type = 'integer';
-
+		console.log("getSettingssna");	
 		return {
 			fieldName: equationDataField.name,
 			type: type,
