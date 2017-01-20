@@ -152,7 +152,7 @@ steal(
 				},
 			}
 		}
-		else{
+		else if (type == 'numeric') {
 			return { 
 				editDefinition : {
 					id:'typeSettings',
