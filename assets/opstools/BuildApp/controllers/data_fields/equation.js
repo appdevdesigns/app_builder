@@ -171,7 +171,7 @@ steal(
 					},
 					]
 				},
-				getSettings : function () {
+				/*getSettings : function () {
 					var type = 'integer';
 
 					var settings = {
@@ -203,7 +203,7 @@ steal(
 					var resultType = this.getDataField(settings.setting.equationType);
 
 					resultType.populateSettings(application, resultSettings);
-				},
+				},*/
 			}
 			
 		}
@@ -466,14 +466,14 @@ steal(
 		
 		if (!data.setting) return;
 	
-			$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+			$$(componentIds.equationType).setValue(data.setting.equationType);
 			$$(componentIds.equation).setValue(data.setting.equation);
 
 			var resultSettings = {
 				setting: data.setting.resultSettings
 			}
 
-			var resultType = this.getDataField(settings.setting.equationType);
+			var resultType = getDataField(data.setting.equationType);
 
 			resultType.populateSettings(application, resultSettings);
 		
