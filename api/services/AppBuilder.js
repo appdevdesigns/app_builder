@@ -1504,7 +1504,7 @@ module.exports = {
                             moduleName = appName.toLowerCase();
                             clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
                             appPath = path.join('node_modules', moduleName);
-                            modelFileName = `${moduleName}_${modelName}`;
+                            modelFileName = `${appName}_${modelName}`;
                             next();
                         }
                     });
