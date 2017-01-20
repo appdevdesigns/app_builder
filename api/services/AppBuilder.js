@@ -1485,6 +1485,7 @@ module.exports = {
             var multilingualFields = [];
             var controllerInfo;
             var modelURL = '';
+            var modelFileName = ''; // client side model file
             
             async.series([
                 // Find app in database
@@ -1503,6 +1504,7 @@ module.exports = {
                             moduleName = appName.toLowerCase();
                             clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
                             appPath = path.join('node_modules', moduleName);
+                            modelFileName = `${moduleName}_${modelName}`;
                             next();
                         }
                     });
@@ -1822,7 +1824,7 @@ module.exports = {
                     }, function (err, output) {
                         if (err) next(err);
                         else {
-                            var dest = path.join(clientPath, 'models', 'base', modelName) + '.js';
+                            var dest = path.join(clientPath, 'models', 'base', modelFileName) + '.js';
                             fs.writeFile(dest, output, function(err) {
                                 if (err) next(err);
                                 else next();
@@ -1833,13 +1835,12 @@ module.exports = {
                 function(next) {
                     sails.renderView(path.join('app_builder', 'clientModel'), {
                         layout: false,
-                        appName: appName,
-                        objectName: modelName,
-                        
+                        appName,
+                        modelFileName
                     }, function (err, output) {
                         if (err) next(err);
                         else {
-                            var dest = path.join(clientPath, 'models', modelName) + '.js';
+                            var dest = path.join(clientPath, 'models', modelFileName) + '.js';
                             fs.writeFile(dest, output, function(err) {
                                 if (err) next(err);
                                 else next();

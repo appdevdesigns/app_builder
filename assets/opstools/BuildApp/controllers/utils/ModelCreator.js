@@ -26,13 +26,11 @@ steal(
 			};
 			if (urlPath) {
 				// Some models may have non-standard REST URL paths
-				_.extend(modelDefinition, {
-					findAll: 'GET /' + urlPath,
-					findOne: 'GET /' + urlPath + '/{id}',
-					create: 'POST /' + urlPath,
-					update: 'PUT /' + urlPath + '/{id}',
-					destroy: 'DELETE /' + urlPath + '/{id}'
-				});
+				modelDefinition.findAll ='GET /' + urlPath;
+				modelDefinition.findOne = 'GET /' + urlPath + '/{id}';
+				modelDefinition.create = 'POST /' + urlPath;
+				modelDefinition.update = 'PUT /' + urlPath + '/{id}';
+				modelDefinition.destroy = 'DELETE /' + urlPath + '/{id}';
 			}
 
 			for (var key in modelDefinition) {
