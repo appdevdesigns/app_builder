@@ -129,7 +129,7 @@ steal(
 						}
 					};
 
-					var resultType = this.getDataField(settings.setting.equationType);
+					var resultType = getDataField(settings.setting.equationType);
 
 					settings.setting.resultSettings = resultType.getSettings();
 
@@ -146,7 +146,7 @@ steal(
 						setting: data.setting.resultSettings
 					}
 
-					var resultType = this.getDataField(settings.setting.equationType);
+					var resultType = getDataField(settings.setting.equationType);
 
 					resultType.populateSettings(application, resultSettings);
 				},
@@ -184,7 +184,7 @@ steal(
 						}
 					};
 
-					var resultType = this.getDataField(settings.setting.equationType);
+					var resultType = getDataField(settings.setting.equationType);
 
 					settings.setting.resultSettings = resultType.getSettings();
 
