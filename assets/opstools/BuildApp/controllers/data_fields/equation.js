@@ -192,15 +192,16 @@ steal(
 					if (!data.setting) return;
 				},
 				populateSettings : function (application, data) {
+					if (!data.setting) return;
 					
-					$$(componentIds.equaltionType).setValue(data.setting.equaltionType);
+					$$(componentIds.equationType).setValue(data.setting.equationType);
 					$$(componentIds.equation).setValue(data.setting.equation);
 
 					var resultSettings = {
 						setting: data.setting.resultSettings
 					}
 					console.log("setting equation 3");
-					var resultType = this.getDataField(settings.setting.equationType);
+					var resultType = getDataField(settings.setting.equationType);
 
 					resultType.populateSettings(application, resultSettings);
 				},
@@ -516,7 +517,7 @@ steal(
 				}
 			};
 
-			var resultType = this.getDataField(settings.setting.equationType);
+			var resultType = getDataField(settings.setting.equationType);
 
 			settings.setting.resultSettings = resultType.getSettings();
 
