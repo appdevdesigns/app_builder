@@ -69,7 +69,7 @@ steal(
 					// Make sure pages don't get lost on embedded Tab pages:
 						// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
-					application.getApplicationPages()
+					application.getApplicationPages(application.currPage)
 						.fail(function (err) { })
 						.then(function (pages) {
 							pages.forEach(function (p) {

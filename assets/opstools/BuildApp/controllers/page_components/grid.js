@@ -704,7 +704,7 @@ steal(
 						// in a buried Tab component.
 							// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 							// application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
-						application.getApplicationPages()
+						application.getApplicationPages(application.currPage)
 							.fail(function (err) { next(err); })
 							.then(function (pages) {
 								var viewComponents = [],

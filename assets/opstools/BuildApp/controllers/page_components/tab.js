@@ -150,13 +150,23 @@ steal(
                         if (tabView._pageTabs) {
                             tabView._pageTabs.forEach(function(page){
 
+                                // a tab view only generates the display of 1 page
+                                // at a time.  So find which one is displayed:
                                 var id = '#'+page.name;
                                 if ($(id).length) {
 
+                                    // mark this one to be rendered
                                     renderTasks.push(function(next) {
+
+                                        // insert the page template html
+                                        // this should have all the <div>s for 
+                                        // it's components to attach to.
                                         $(id).html(page.getItemTemplate());
                                         page.comInstances = null; // force a refresh on components
-                                        page.display(application).fail(next)
+
+                                        // cause the page to insert it's components:
+                                        page.display(application)
+                                            .fail(next)
                                             .done(function() {
                                                 next();
                                             });
@@ -169,20 +179,27 @@ steal(
                         async.series(renderTasks, function(err) {
                             if (cb) cb(err);
                         });
-                    }
+                    } // end refreshTabView()
 
 
                     // 3) load the pages associated with these tabs:
                     if (listPagesToLoad.length) {
 
-                        Page.findAll({ name: listPagesToLoad })
-                        .then(function(pageTabs){
+//// NOTE: due to ABApplication.getPage() deleting the store, we can't do this.
+//// instead pull our pages from application.pages:
 
-                            self.pageTabs = pageTabs;
-                            tabView._pageTabs = pageTabs;
+//                         Page.findAll({ name: listPagesToLoad })
+//                         .then(function(pageTabs){
 
-                            refreshTabView(finishIt);
-                        })
+// // self.pageTabs = pageTabs;
+//                             tabView._pageTabs = pageTabs;
+
+//                             refreshTabView(finishIt);
+//                         })
+                        // reuse existing application.pages
+                        var pageTabs = application.pages.filter(function(p){ return listPagesToLoad.indexOf(p.name) > -1; })
+                        tabView._pageTabs = pageTabs;
+                        refreshTabView(finishIt);
 
                     } else {
                         finishIt();

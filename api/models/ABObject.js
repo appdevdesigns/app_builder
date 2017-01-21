@@ -35,7 +35,7 @@ module.exports = {
         
         urlPath: {
             type: 'string',
-            length: 80,
+            size: 80,
             defaultsTo: '',
             required: false
         },
