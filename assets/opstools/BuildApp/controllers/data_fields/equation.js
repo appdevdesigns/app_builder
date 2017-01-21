@@ -117,6 +117,7 @@ steal(
 					]
 				},
 				getSettings : function () {
+					console.log("setting equation 22222");
 					var type = 'integer';
 
 					var settings = {
