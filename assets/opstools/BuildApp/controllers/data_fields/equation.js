@@ -2,37 +2,35 @@ steal(
 	'opstools/BuildApp/controllers/EquationManager.js',
 	function (EquationManager) {
 
-	var componentIds = {
-		editView: 'ab-new-equation',
-		name: 'ab-new-equation-name',
-		equationType: 'ab-new-equation-equationType',
-		dateType: 'ab-new-equation-dateType',
-		resultType: 'ab-new-equation-resultType',
-		equation: 'ab-new-equation-equation',
-		typeDecimals: 'ab-new-equation-typeDecimals',
-		typeDecimalPlaces: 'ab-new-equation-typeDecimalPlaces',
-		typeRounding: 'ab-new-equation-typeRounding',
-		typeThousands: 'ab-new-equation-typeThousands',
-		typeFormat: 'ab-new-equation-typeFormat',
+		var componentIds = {
+			editView: 'ab-new-equation',
+			name: 'ab-new-equation-name',
+			equationType: 'ab-new-equation-equationType',
+			dateType: 'ab-new-equation-dateType',
+			resultType: 'ab-new-equation-resultType',
+			equation: 'ab-new-equation-equation',
+			typeDecimals: 'ab-new-equation-typeDecimals',
+			typeDecimalPlaces: 'ab-new-equation-typeDecimalPlaces',
+			typeRounding: 'ab-new-equation-typeRounding',
+			typeThousands: 'ab-new-equation-typeThousands',
+			typeFormat: 'ab-new-equation-typeFormat',
 
+		};
 
-
-	};
-	
-	var formatList = [
+		var formatList = [
 		{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.number.none') || "None" },
 		{ id: 'dollar', value: AD.lang.label.getLabel('ab.dataField.number.format.dollar') || "$", sign: "$", position: "prefix" },
 		{ id: 'pound', value: AD.lang.label.getLabel('ab.dataField.number.format.pound') || "£", sign: "£", position: "prefix" },
 		{ id: 'euroBefore', value: AD.lang.label.getLabel('ab.dataField.number.format.euroBefore') || "€ (before)", sign: "€", position: "prefix" },
 		{ id: 'euroAfter', value: AD.lang.label.getLabel('ab.dataField.number.format.euroAfter') || "€ (after)", sign: "€", position: "postfix" },
 		{ id: 'percent', value: AD.lang.label.getLabel('ab.dataField.number.format.percent') || "%", sign: "%", position: "postfix" },
-	];
-	
-	var equationDataField = {
+		];
+
+		var equationDataField = {
 		name: 'equation', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
-	
+
 		menuName: AD.lang.label.getLabel('ab.dataField.equation.menuName') ||'Equation',  
 		includeHeader: true,
 		description: ''
@@ -87,13 +85,13 @@ steal(
 						labelWidth: "100",
 						id: componentIds.equation,
 						popup:"my_pop",
-						    on: {
-							    "onKeyPress" : function(code, e){ 
+						on: {
+							"onKeyPress" : function(code, e){ 
 								//var value = this.getValue().toLowerCase();
 								//$$("testkid").setValue("eiei");
 								//webix.message(code);
-								}
-						    }
+							}
+						}
 					},
 					]
 				},
@@ -196,8 +194,6 @@ steal(
 		
 		var resultType = getDataField(type);
 
-
-
 		var typeSettings = resultType.editDefinition;
 		webix.ui({
 			view:"popup",
@@ -233,7 +229,7 @@ steal(
 		addListEquation(type);
 
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
-	
+
 	}
 
 	function addListEquation(type){
@@ -256,13 +252,13 @@ steal(
 	equationDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
-			{
+			/*{
 				view: "text",
 				label: "Name",
 				labelWidth: "100",
 				id: componentIds.name,
 				placeholder: ''
-			},
+			},*/
 			{
 				view: "radio",
 				id: componentIds.equationType,
@@ -271,9 +267,9 @@ steal(
 				value: 'none',
 				vertical: true,
 				options: [
-					{ id: 'numeric',value: "Numeric" },
-					{ id: 'date',value:  "Date" },
-					
+				{ id: 'numeric',value: "Numeric" },
+				{ id: 'date',value:  "Date" },
+
 				],
 				on: {
 					'onChange': function (newValue, oldValue) {
@@ -283,141 +279,141 @@ steal(
 				}
 			},
 			{ 
-					
-					label: 'choose a type',
-				 	id:'typeSettings',
+
+				label: 'choose a type',
+				id:'typeSettings',
 			},
 			{
-			    view:"popup",
-			    id:"my_popup",
-			    body:{
-			        template:"Some text" 
-			    }
+				view:"popup",
+				id:"my_popup",
+				body:{
+					template:"Some text" 
+				}
 			},
 			{
 				cols: [
-					{
-						view: "richselect",
-						id: componentIds.typeDecimals,
-						label: "Decimals",
-						value: 'none',
-						options: [
-							{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
-							{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
-							{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" }
-						],
-						on: {
-							'onChange': function (newValue, oldValue) {
-								if (newValue == 'none') {
-									$$(componentIds.typeDecimalPlaces).disable();
-									$$(componentIds.typeRounding).disable();
-								}
-								else {
-									$$(componentIds.typeDecimalPlaces).enable();
-									$$(componentIds.typeRounding).enable();
-								}
+				{
+					view: "richselect",
+					id: componentIds.typeDecimals,
+					label: "Decimals",
+					value: 'none',
+					options: [
+					{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
+					{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
+					{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" }
+					],
+					on: {
+						'onChange': function (newValue, oldValue) {
+							if (newValue == 'none') {
+								$$(componentIds.typeDecimalPlaces).disable();
+								$$(componentIds.typeRounding).disable();
+							}
+							else {
+								$$(componentIds.typeDecimalPlaces).enable();
+								$$(componentIds.typeRounding).enable();
 							}
 						}
-					},
-					{
-						view: "richselect",
-						id: componentIds.typeDecimalPlaces,
-						label: "Decimal Places",
-						value: 'none',
-						disabled: true,
-						options: [
-							 { id: 'none', value: "0" },
-							 { id: 1, value: "1" },
-							 { id: 2, value: "2" },
-							 { id: 3, value: "3" },
-							 { id: 4, value: "4" },
-							 { id: 5, value: "5" },
-							 { id: 10, value: "10" }
-						]
-					},
-				 ]
-			},
-			{
-					view: "radio",
-					id: componentIds.typeRounding,
-					label: "Rounding",
-					value: 'none',
-					vertical: true,
-					options: [
-						{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.default') || "Default" },
-					{ id: 'roundUp', value: AD.lang.label.getLabel('ab.dataField.equation.roundUp') || "Round Up" },
-					{ id: 'roundDown', value: AD.lang.label.getLabel('ab.dataField.equation.roundDown') || "Round Down" }
-					]
-			},
-			{
-					view: "radio",
-					id: componentIds.typeThousands,
-					label: "Thousands",
-					value: 'none',
-					vertical: true,
-					options: [
-						{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
-						{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" },
-						{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
-						{ id: 'space', value: AD.lang.label.getLabel('ab.dataField.equation.space') || "Space" }
-					]
-			},
-			{
+					}
+				},
+				{
 					view: "richselect",
-					id: componentIds.typeFormat,
-					label: "Format",
+					id: componentIds.typeDecimalPlaces,
+					label: "Decimal Places",
 					value: 'none',
-					options: formatList
+					disabled: true,
+					options: [
+					{ id: 'none', value: "0" },
+					{ id: 1, value: "1" },
+					{ id: 2, value: "2" },
+					{ id: 3, value: "3" },
+					{ id: 4, value: "4" },
+					{ id: 5, value: "5" },
+					{ id: 10, value: "10" }
+					]
+				},
+				]
+			},
+			{
+				view: "radio",
+				id: componentIds.typeRounding,
+				label: "Rounding",
+				value: 'none',
+				vertical: true,
+				options: [
+				{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.default') || "Default" },
+				{ id: 'roundUp', value: AD.lang.label.getLabel('ab.dataField.equation.roundUp') || "Round Up" },
+				{ id: 'roundDown', value: AD.lang.label.getLabel('ab.dataField.equation.roundDown') || "Round Down" }
+				]
+			},
+			{
+				view: "radio",
+				id: componentIds.typeThousands,
+				label: "Thousands",
+				value: 'none',
+				vertical: true,
+				options: [
+				{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
+				{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" },
+				{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
+				{ id: 'space', value: AD.lang.label.getLabel('ab.dataField.equation.space') || "Space" }
+				]
+			},
+			{
+				view: "richselect",
+				id: componentIds.typeFormat,
+				label: "Format",
+				value: 'none',
+				options: formatList
 			}
 			
 
-					
-		]
-	};
 
-	equationDataField.populateSettings = function (application, data) {
-		
-		if (!data.type || !data.setting) return;
-	
-		$$(componentIds.equationType).setValue(data.setting.equationType);
-		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
-		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
-		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
-		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
-		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
-		$$(componentIds.equation).setValue(data.setting.equation);
-	
-
-	};
-
-
-
-	equationDataField.getSettings = function () {
-
-		var type = 'integer';
-		console.log("getSettingssna");	
-		return {
-			fieldName: equationDataField.name,
-			type: type,
-			setting: {	
-				template:'<div class="ab-equation-data-field"></div>',
-				equationType :  $$(componentIds.equationType).getValue(),
-				typeDecimals : $$(componentIds.typeDecimals).getValue(),
-				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
-				typeRounding : $$(componentIds.typeRounding).getValue(),
-				typeThousands : $$(componentIds.typeThousands).getValue(),
-				typeFormat : $$(componentIds.typeFormat).getValue(),
-				equation : $$(componentIds.equation).getValue(),
-				
-
-			}
+			]
 		};
 
-		
-	};
+		equationDataField.populateSettings = function (application, data) {
+
+			if (!data.type || !data.setting) return;
+
+			$$(componentIds.equationType).setValue(data.setting.equationType);
+			$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
+			$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
+			$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
+			$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
+			$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
+			$$(componentIds.equation).setValue(data.setting.equation);
 
 
-	equationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
+		};
+
+
+
+		equationDataField.getSettings = function () {
+
+			var type = 'integer';
+			console.log("getSettingssna");	
+			return {
+				fieldName: equationDataField.name,
+				type: type,
+				setting: {	
+					template:'<div class="ab-equation-data-field"></div>',
+					equationType :  $$(componentIds.equationType).getValue(),
+					typeDecimals : $$(componentIds.typeDecimals).getValue(),
+					typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
+					typeRounding : $$(componentIds.typeRounding).getValue(),
+					typeThousands : $$(componentIds.typeThousands).getValue(),
+					typeFormat : $$(componentIds.typeFormat).getValue(),
+					equation : $$(componentIds.equation).getValue(),
+
+
+				}
+			};
+
+
+		};
+
+
+		equationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		/*
 		if (rowData == null) {
 			$(itemNode).find('.ab-equation-data-field').html('');
@@ -504,18 +500,18 @@ steal(
 		console.log("EList : " + EquationManager.getDescriptions());
 		
 		try {
-		var parser = EquationManager.parse(fieldData.setting.equation);
+			var parser = EquationManager.parse(fieldData.setting.equation);
 			console.log("parser: " + parser);
-		if (parser) {
-			$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
-		} else {
-			console.log("parser:false");
-			$(itemNode).find('.ab-equation-data-field').html('invalid equation:'+fieldData.setting.equation);
-		}
+			if (parser) {
+				$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
+			} else {
+				console.log("parser:false");
+				$(itemNode).find('.ab-equation-data-field').html('invalid equation:'+fieldData.setting.equation);
+			}
 
-		return true;
-		
-			} catch(e) {
+			return true;
+
+		} catch(e) {
 		// handle error
 	}
 
@@ -523,7 +519,7 @@ steal(
 
 
 
-	};
+};
 	/**
 	 * @function resetState
 	 *
@@ -531,11 +527,11 @@ steal(
 	 * fields.
 	 *
 	 */
-	equationDataField.resetState = function () {
+	 equationDataField.resetState = function () {
 
 
-	};
+	 };
 
 
-	return equationDataField;
-});
+	 return equationDataField;
+	});
