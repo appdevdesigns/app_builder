@@ -37,25 +37,6 @@ steal(
 		includeHeader: true,
 		description: ''
 	};
-	
-	// datepart: 'y', 'm', 'w', 'd', 'h', 'n', 's'
-	function caldateDiff(datepart, fromdate, todate){
-		
-		  datepart = datepart.toLowerCase();	
-			  var diff = todate - fromdate;	
-			  var divideBy = { weeks:604800000, 
-				days:86400000, 
-				hours:3600000, 
-				years:31557600000};	
-
-			return Math.floor( diff/divideBy[datepart]);
-
-	}
-	
-	
-	function equationValidate(text){
-		//{currentdate} - {birthdate} 
-	}
 
 
 	function getDataField(type){
@@ -190,7 +171,7 @@ steal(
 					settings.setting.resultSettings = resultType.getSettings();
 
 					return settings;
-					if (!data.setting) return;
+					
 				},
 				populateSettings : function (application, data) {
 					if (!data.setting) return;
@@ -252,8 +233,6 @@ steal(
 		addListEquation(type);
 
 		webix.ui(typeSettings, $$('typeSettings'));  //<<——— update section with the webix definition of the component
-		//webix.ui(resultType.getSettings, $$('typeSettings')); 
-		//webix.ui(resultType.populateSettings, $$('typeSettings')); 
 	
 	}
 
@@ -468,16 +447,14 @@ steal(
 		
 		if (!data.setting) return;
 	
-			$$(componentIds.equationType).setValue(data.setting.equationType);
-			$$(componentIds.equation).setValue(data.setting.equation);
-
-			var resultSettings = {
-				setting: data.setting.resultSettings
-			}
-
-			var resultType = getDataField(data.setting.equationType);
-
-			resultType.populateSettings(application, resultSettings);
+		$$(componentIds.equationType).setValue(data.setting.equationType);
+		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
+		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
+		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
+		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
+		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
+		$$(componentIds.equation).setValue(data.setting.equation);
+		
 		
 		
 
@@ -486,7 +463,7 @@ steal(
 
 
 	equationDataField.getSettings = function () {
-		/*var type = 'integer';
+		var type = 'integer';
 		console.log("getSettingssna");	
 		return {
 			fieldName: equationDataField.name,
@@ -499,30 +476,12 @@ steal(
 				typeRounding : $$(componentIds.typeRounding).getValue(),
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
-				//equation : $$(componentIds.equation).getValue(),
+				equation : $$(componentIds.equation).getValue(),
 				
-				
-				
-				
+
 			}
-		};*/
-			var type = 'integer';
-	
-			var settings = {
-				fieldName: equationDataField.name,
-				type: type,
-				setting: {
-					equationType : $$(componentIds.equationType).getValue(),
-					equation : $$(componentIds.equation).getValue(),
-					template:'<div class="ab-equation-data-field"></div>',
-				}
-			};
+		};
 
-			var resultType = getDataField(settings.setting.equationType);
-
-			settings.setting.resultSettings = resultType.getSettings();
-
-			return settings;
 		
 	};
 
