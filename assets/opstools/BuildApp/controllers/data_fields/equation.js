@@ -377,7 +377,7 @@ steal(
 
 	equationDataField.populateSettings = function (application, data) {
 		
-		if (!data.setting) return;
+		if (!data.type || !data.setting) return;
 	
 		$$(componentIds.equationType).setValue(data.setting.equationType);
 		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
@@ -386,15 +386,14 @@ steal(
 		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
 		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
 		$$(componentIds.equation).setValue(data.setting.equation);
-		
-		
-		
+	
 
 	};
 
 
 
 	equationDataField.getSettings = function () {
+
 		var type = 'integer';
 		console.log("getSettingssna");	
 		return {
