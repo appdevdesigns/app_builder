@@ -295,54 +295,6 @@ steal(
 			    }
 			},
 			{
-				
-			/*	cols: [
-					{
-						view: "richselect",
-						id: componentIds.dateType,
-						label: "Date Type",
-						labelWidth: "110",
-						value: 'none',
-						options: [
-							{ id: 'hours', value:  "Hours" },
-							{ id: 'days', value:  "Days" },
-							{ id: 'weeks', value: "Weeks" },
-							{ id: 'years', value: "Years" },
-						]
-					},
-					{
-						view: "richselect",
-						id: componentIds.resultType,
-						label: "Result Type",
-						labelWidth: "110",
-						value: 'none',
-						//disabled: true,
-						options: [
-							{ id: 'number', value: "Number" },
-							{ id: 'date', value: "Date" },
-							
-						]
-					}
-				 
-				]*/
-				
-			},
-			{
-				/*view: "label",
-				label: "Example Output"*/
-			},	
-			{
-				/*view: "combo",
-				label: "Equation",
-				labelWidth: "100",
-				id: componentIds.equation,
-				on: {
-					'onChange': function (newValue, oldValue) {
-						
-					}
-				}*/
-			},
-			{
 				cols: [
 					{
 						view: "richselect",
@@ -350,16 +302,29 @@ steal(
 						label: "Decimals",
 						value: 'none',
 						options: [
-							{ id: 'none', value: "None" },
-							{ id: 'period', value: "Period" },
-							{ id: 'comma', value: "Comma" }
+							{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
+							{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
+							{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" }
 						],
+						on: {
+							'onChange': function (newValue, oldValue) {
+								if (newValue == 'none') {
+									$$(componentIds.typeDecimalPlaces).disable();
+									$$(componentIds.typeRounding).disable();
+								}
+								else {
+									$$(componentIds.typeDecimalPlaces).enable();
+									$$(componentIds.typeRounding).enable();
+								}
+							}
+						}
 					},
 					{
 						view: "richselect",
 						id: componentIds.typeDecimalPlaces,
 						label: "Decimal Places",
 						value: 'none',
+						disabled: true,
 						options: [
 							 { id: 'none', value: "0" },
 							 { id: 1, value: "1" },
@@ -379,9 +344,9 @@ steal(
 					value: 'none',
 					vertical: true,
 					options: [
-						{ id: 'none', value:  "Default" },
-						{ id: 'roundUp', value:  "Round Up" },
-						{ id: 'roundDown', value:  "Round Down" }
+						{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.default') || "Default" },
+					{ id: 'roundUp', value: AD.lang.label.getLabel('ab.dataField.equation.roundUp') || "Round Up" },
+					{ id: 'roundDown', value: AD.lang.label.getLabel('ab.dataField.equation.roundDown') || "Round Down" }
 					]
 			},
 			{
@@ -391,10 +356,10 @@ steal(
 					value: 'none',
 					vertical: true,
 					options: [
-						{ id: 'none', value:  "None" },
-						{ id: 'comma', value: "Comma" },
-						{ id: 'period', value:  "Period" },
-						{ id: 'space', value: "Space" }
+						{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
+						{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" },
+						{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
+						{ id: 'space', value: AD.lang.label.getLabel('ab.dataField.equation.space') || "Space" }
 					]
 			},
 			{
@@ -411,39 +376,6 @@ steal(
 	};
 
 	equationDataField.populateSettings = function (application, data) {
-		/*var list = $$(componentIds.equation).getPopup().getList();;
-		list.clearAll(); 
-		application.currObj.getColumns().then(function(columns) {
-				columns.forEach(function(col) {
-					//if (col.translate) col.translate();
-					list.parse([{ id:col.name, value:col.name}]); 
-				});
-				//$$(componentIds.equation).setValue(list);
-			
-				//var list = $$(componentIds.equation).getPopup().getList();
-				//list.clearAll(); 
-				//list.parse([{ id:1, value:"C"}, {id:2, value:"D"}]); 
-				//list.parse([{ id:3, value:"3"}, {id:4, value:"4"}]); 
-				//$$(componentIds.equation).setValue(list.getFirstId());
-			
-				
-				console.log("col:" + columns[0].name);
-			});*/
-		/*if (!data.setting){
-			
-			
-			return;
-		}
-		
-		console.log("populateSettingsna");
-		
-		$$(componentIds.equationType).setValue(data.setting.equationType);
-		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
-		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
-		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
-		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
-		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
-		//$$(componentIds.equation).setValue(data.setting.equation);*/
 		
 		if (!data.setting) return;
 	
