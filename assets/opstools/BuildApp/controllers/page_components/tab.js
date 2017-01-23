@@ -499,15 +499,15 @@ steal(
             this.resize = function TabResize(width, height) {
                 var _this = this;
 
-                // in case this is somehow called from the OPsPortal directly:
-                if (!height) {
-                    if (width.height) {
-                        // width parameter looks like the OPsPortal 
-                        // { height:value, width:value }
-                        height = width.height;
-                        width = width.width;
-                    }
-                }
+                // // in case this is somehow called from the OPsPortal directly:
+                // if (!height) {
+                //     if (width.height) {
+                //         // width parameter looks like the OPsPortal 
+                //         // { height:value, width:value }
+                //         height = width.height;
+                //         width = width.width;
+                //     }
+                // }
 
                 // .resize() can get spammed numerous times in a row.
                 // let's not .adjust() each time to increase performance.
@@ -517,7 +517,18 @@ steal(
                     
                     setTimeout(function(){
 
-                        $$(_this.viewId).adjust();
+                        var myTabComponent = $$(_this.viewId);
+                        if (myTabComponent) {
+                            myTabComponent.adjust();
+
+                            // make sure any of our Tab Views are resized()
+                            if (myTabComponent._pageTabs) {
+                                myTabComponent._pageTabs.forEach(function(tab){
+                                    tab.resize(width, height);
+                                })
+                            }
+                        }
+                        
                         _this.resizeDebounce = false;
                     }, 10);
 

@@ -233,7 +233,26 @@ steal(
 								});
 
 							return q;
-						}
+						},
+						
+// REFACTOR NOTE:
+// This is a Model Class.  We really should keep this only focused on Data Operations, and
+// have another Object Class to manage the actual ABView operations.  But until then:
+resize:function(width, height) {
+
+	// adjust my container if it is currently displayed:
+	var myView = $$(this.domID);
+	if ((myView) && (myView.adjust)) myView.adjust();
+
+	// make sure any of my components are resize()d
+	if (this.comInstances) {
+		for (var key in this.comInstances) {
+			if (this.comInstances[key].resize)
+				this.comInstances[key].resize(width, height);
+		}
+	}
+}
+
 
 					});
 			});
