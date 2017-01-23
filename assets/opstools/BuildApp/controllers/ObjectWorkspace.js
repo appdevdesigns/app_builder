@@ -776,7 +776,7 @@ steal(
 								$$(self.webixUiId.addNewRowButton).show();
 
 								// Register add new column callback
-								$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (columnInfo) {
+								$$(self.webixUiId.addFieldsPopup).registerSaveFieldEvent(function (fieldType, columnInfo) {
 
 									$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
@@ -804,86 +804,105 @@ steal(
 													});
 											}
 											else { // Create
-												AD.classes.AppBuilder.currApp.currObj.createColumn(columnInfo)
-													.fail(next)
-													.then(function (result) {
-														var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.name);
+												if (fieldType === 'connectObject') {
+													AD.classes.AppBuilder.currApp.currObj.createLink(
+														columnInfo.name,
+														columnInfo.setting.linkObject,
+														columnInfo.setting.linkType,
+														columnInfo.setting.linkViaType)
+														.fail(next)
+														.done(function (result) {
+															var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.name);
 
-														objectModel.Cached.columns.push(result);
+															objectModel.Cached.columns.push(result);
 
-														// Add new describe to object model
-														objectModel.describe()[result.name] = result.type;
+															updateColumn = result;
 
-														// Add multilingual field to object model
-														if (result.setting.supportMultilingual)
-															objectModel.multilingualFields.push(result.name);
-
-														updateColumn = result;
-
-														next();
-													});
-											}
-										},
-										// Set up linkVia column
-										function (next) {
-											if (!updateColumn.setting.linkType) return next();
-
-											var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == updateColumn.setting.linkObject; });
-											if (linkObj && linkObj[0])
-												linkObj = linkObj[0]
-											else
-												return next();
-
-											// Update link column
-											if (updateColumn.setting.linkVia) {
-												linkObj.getColumn(updateColumn.setting.linkVia).fail(next)
-													.then(function (linkViaCol) {
-														linkViaCol.attr('setting.linkType', updateColumn.setting.linkViaType);
-														linkViaCol.attr('setting.linkViaType', updateColumn.setting.linkType);
-														linkViaCol.save().fail(next).then(function () {
 															next();
 														});
-													});
-											}
-											// Need to create the link back from the target object
-											else {
-												linkObj.createColumn({
-													name: updateColumn.name + '_Link',
-													label: updateColumn.label + ' Link',
-													fieldName: 'connectObject',
-													type: 'connectObject',
-													weight: linkObj.columns.length + 1,
-													setting: {
-														appName: AD.classes.AppBuilder.currApp.name,
-														linkType: updateColumn.setting.linkViaType || 'model',
-														linkObject: updateColumn.object.id, // ABObject id
-														linkViaType: updateColumn.setting.linkType,
-														linkVia: updateColumn.id, // ABColumn id
-														icon: 'external-link',
-														editor: 'selectivity',
-														template: '<div class="connect-data-values"></div>',
-														filter_type: 'multiselect'
-													}
-												})
-													.fail(next)
-													.then(function (result) {
-														updateTargetColumn = result;
-														next();
-													});
+												}
+												else {
+													AD.classes.AppBuilder.currApp.currObj.createColumn(fieldType, columnInfo)
+														.fail(next)
+														.then(function (result) {
+															var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.name);
+
+															objectModel.Cached.columns.push(result);
+
+															// Add new describe to object model
+															objectModel.describe()[result.name] = result.type;
+
+															// Add multilingual field to object model
+															if (result.setting.supportMultilingual)
+																objectModel.multilingualFields.push(result.name);
+
+															updateColumn = result;
+
+															next();
+														});
+												}
 											}
 										},
-										// Update the link column
-										function (next) {
-											if (updateTargetColumn && !updateColumn.setting.linkVia) {
-												updateColumn.attr('setting.linkVia', updateTargetColumn.id);
-												updateColumn.save().fail(next).then(function () {
-													next();
-												});
-											}
-											else {
-												next();
-											}
-										},
+										// // Set up linkVia column
+										// function (next) {
+										// 	if (!updateColumn.setting.linkType) return next();
+
+										// 	var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == updateColumn.setting.linkObject; });
+										// 	if (linkObj && linkObj[0])
+										// 		linkObj = linkObj[0]
+										// 	else
+										// 		return next();
+
+										// 	// Update link column
+										// 	if (updateColumn.setting.linkVia) {
+										// 		linkObj.getColumn(updateColumn.setting.linkVia).fail(next)
+										// 			.then(function (linkViaCol) {
+										// 				linkViaCol.attr('setting.linkType', updateColumn.setting.linkViaType);
+										// 				linkViaCol.attr('setting.linkViaType', updateColumn.setting.linkType);
+										// 				linkViaCol.save().fail(next).then(function () {
+										// 					next();
+										// 				});
+										// 			});
+										// 	}
+										// 	// Need to create the link back from the target object
+										// 	else {
+										// 		linkObj.createColumn({
+										// 			name: updateColumn.name + '_Link',
+										// 			label: updateColumn.label + ' Link',
+										// 			fieldName: 'connectObject',
+										// 			type: 'connectObject',
+										// 			weight: linkObj.columns.length + 1,
+										// 			setting: {
+										// 				appName: AD.classes.AppBuilder.currApp.name,
+										// 				linkType: updateColumn.setting.linkViaType || 'model',
+										// 				linkObject: updateColumn.object.id, // ABObject id
+										// 				linkViaType: updateColumn.setting.linkType,
+										// 				linkVia: updateColumn.id, // ABColumn id
+										// 				icon: 'external-link',
+										// 				editor: 'selectivity',
+										// 				template: '<div class="connect-data-values"></div>',
+										// 				filter_type: 'multiselect'
+										// 			}
+										// 		})
+										// 			.fail(next)
+										// 			.then(function (result) {
+										// 				updateTargetColumn = result;
+										// 				next();
+										// 			});
+										// 	}
+										// },
+										// // Update the link column
+										// function (next) {
+										// 	if (updateTargetColumn && !updateColumn.setting.linkVia) {
+										// 		updateColumn.attr('setting.linkVia', updateTargetColumn.id);
+										// 		updateColumn.save().fail(next).then(function () {
+										// 			next();
+										// 		});
+										// 	}
+										// 	else {
+										// 		next();
+										// 	}
+										// },
 										// Create list option of select column
 										function (next) {
 											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
