@@ -449,7 +449,7 @@ module.exports = {
                 if (!data.sourceRelation) return next();
                 
                 ABColumn.createColumn('connectObject', {
-                    name: data.targetName || data.name + 'Link',
+                    name: data.targetName || data.name + ' Link',
                     object: data.targetObjectID,
                     language_code: data.language_code,
                     setting: targetSetting
@@ -474,7 +474,7 @@ module.exports = {
                 .exec(function(err, col) {
                     if (err) next(err);
                     else {
-                        sourceColumn = col;
+                        sourceColumn = col[0];
                         next();
                     }
                 });
