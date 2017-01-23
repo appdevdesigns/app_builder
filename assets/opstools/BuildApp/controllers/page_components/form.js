@@ -26,6 +26,7 @@ steal(
 
 			clearOnLoad: 'ab-form-clear-on-load',
 			clearOnSave: 'ab-form-clear-on-save',
+			whenByGroup: 'ab-from-when-by-group',
 
 			addConnectObjectDataPopup: 'ab-form-connected-data-popup'
 		},
@@ -55,22 +56,11 @@ steal(
 				}, 50);
 			}
 
-			function saveModelData(dataCollection, object, columns, setting, linkedToDataCollection) {
+			function getNewModelData(dataCollection, columns) {
 				var self = this,
-					q = $.Deferred(),
-					modelData = dataCollection.AD.currModel(),
-					isAdd;
-
-				$$(self.viewId).showProgress({ type: "icon" });
-
-				// Create
-				if (modelData === null) {
-					modelData = new dataCollection.AD.getModelObject()();
-					isAdd = true;
-				}
-
-				var editValues = $$(self.viewId).getValues();
-				var keys = Object.keys(editValues);
+					modelData = new dataCollection.AD.getModelObject()(), // Create new model data
+					editValues = $$(self.viewId).getValues(),
+					keys = Object.keys(editValues);
 
 				// Populate values to model
 				columns.forEach(function (col) {
@@ -92,23 +82,82 @@ steal(
 					}
 				});
 
-				modelData.save()
-					.fail(function (err) {
-						console.error(err);
-						$$(self.viewId).hideProgress();
-						q.reject(err);
-					})
-					.then(function (result) {
-						$$(self.viewId).hideProgress();
+				return modelData;
+			}
 
+			function saveModelData(dataCollection, object, columns, setting, linkedToDataCollection) {
+				var self = this,
+					q = $.Deferred();
+
+				$$(self.viewId).showProgress({ type: "icon" });
+
+				// Group app
+				if (linkedToDataCollection && linkedToDataCollection.getCheckedItems().length > 0) {
+					var linkField = self.data.columns.filter(function (col) { return col.id == setting.linkField })[0];
+					addTasks = [];
+
+					linkedToDataCollection.getCheckedItems().forEach(function (linkRowId) {
+						var modelData = getNewModelData.call(self, dataCollection, columns);
+
+						// Set link row id to field
+						modelData.attr(linkField.name, linkRowId);
+
+						addTasks.push(function (next) {
+							callSaveModelData.call(self, modelData, dataCollection, true)
+								.fail(next)
+								.done(function () {
+									next();
+								});
+						});
+					});
+
+					async.parallel(addTasks, function (err) {
+						if (err) q.reject(err);
+						else {
+							finishSave.call(self, dataCollection);
+
+							q.resolve();
+						}
+					});
+				}
+				// Save without link data (Single row)
+				else {
+					var modelData = dataCollection.AD.currModel(),
+						isAdd;
+
+					// Create
+					if (modelData === null) {
+						modelData = getNewModelData.call(self, dataCollection, columns);
+						isAdd = true;
+					}
+
+					callSaveModelData.call(self, modelData, dataCollection, isAdd)
+						.fail(function (err) {
+							console.error(err);
+							$$(self.viewId).hideProgress();
+							q.reject(err);
+						})
+						.done(function () {
+							finishSave.call(self, dataCollection);
+
+							q.resolve();
+						});
+				}
+
+				return q;
+			}
+
+			function callSaveModelData(modelData, dataCollection, isAdd) {
+				var q = $.Deferred();
+
+				modelData.save()
+					.fail(q.reject)
+					.done(function (result) {
 						if (result.translate) result.translate();
 
 						// Add to data collection
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
-
-						if (setting.clearOnSave == 'yes')
-							dataCollection.setCursor(null);
 
 						// Show success message
 						webix.message({
@@ -116,14 +165,23 @@ steal(
 							text: labels.common.saveSuccessMessage.replace('{0}', result._dataLabel ? result._dataLabel : 'This data')
 						});
 
-						$(self).trigger('changePage', {
-							previousPage: true
-						});
-
 						q.resolve();
 					});
 
 				return q;
+			}
+
+			function finishSave(setting, dataCollection) {
+				var self = this;
+
+				$$(self.viewId).hideProgress();
+
+				if (setting.clearOnSave == 'yes')
+					dataCollection.setCursor(null);
+
+				$(self).trigger('changePage', {
+					previousPage: true
+				});
 			}
 
 			function showCustomFields(object, columns, rowId, rowData) {
@@ -589,6 +647,7 @@ steal(
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
 					clearOnLoad: propertyValues[componentIds.clearOnLoad],
 					clearOnSave: propertyValues[componentIds.clearOnSave],
+					whenByGroup: propertyValues[componentIds.whenByGroup]
 				};
 
 				return settings;
@@ -714,6 +773,7 @@ steal(
 					propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
 					propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
 					propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
+					propValues[componentIds.whenByGroup] = setting.whenByGroup || 'add';
 
 					$$(componentIds.propertyView).setValues(propValues);
 					$$(componentIds.propertyView).refresh();
@@ -809,6 +869,7 @@ steal(
 			return {
 				view: "property",
 				id: componentIds.propertyView,
+				nameWidth: 110,
 				elements: [
 					{ label: "Header", type: "label" },
 					{
@@ -917,6 +978,16 @@ steal(
 						options: [
 							{ id: 'yes', value: "Yes" },
 							{ id: 'no', value: "No" },
+						]
+					},
+					{
+						id: componentIds.whenByGroup,
+						name: 'whenByGroup',
+						type: 'richselect',
+						label: 'When by Group',
+						options: [
+							{ id: 'add', value: "Add" }
+							// ,{ id: 'update', value: "Update" },
 						]
 					}
 				],

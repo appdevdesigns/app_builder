@@ -115,8 +115,8 @@ console.log('DC onBeforeDelete - objectId:', objectId, ' dataId: ', id, $.extend
 											}
 										};
 
-										dataCollections[objectId].uncheckItem = function(rowId, index) {
-											dataCollections[objectId].checkedItems.forEach(function(item) {
+										dataCollections[objectId].uncheckItem = function(rowId) {
+											dataCollections[objectId].checkedItems.forEach(function(item, index) {
 												if (item == rowId) {
 													dataCollections[objectId].checkedItems.splice(index, 1);
 													dataCollections[objectId].callEvent('onCheckItemsChange');
