@@ -170,8 +170,7 @@ steal(
 								.always(function () {
 								})
 								.fail(function (err) {
-									console.log(err);
-									webix.message(err);
+									console.error(err);
 
 									// Show retry screen
 									$$(self.webixUiId.loadingScreen).showErrorScreen(
