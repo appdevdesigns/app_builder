@@ -65,7 +65,7 @@ steal(
 								.then(function (result) {
 									if (!dataCollections[objectId] || isRefresh) {
 										dataCollections[objectId] = AD.op.WebixDataCollection(result);
-										dataCollections[objectId].checkedItems = {}; // { rowId: boolean }
+										dataCollections[objectId].checkedItems = []; // [rowId1, rowId2, ..., rowIdn]
 										dataCollections[objectId].updateDataTimeout = {}; // { dataId: timeoutId }
 
 										// Listen change data event
@@ -107,6 +107,27 @@ console.log('DC onBeforeDelete - objectId:', objectId, ' dataId: ', id, $.extend
 
 											return true;
 										});
+
+										dataCollections[objectId].checkItem = function(rowId) {
+											if (dataCollections[objectId].checkedItems.filter(function(item) { return item == rowId}).length < 1) {
+												dataCollections[objectId].checkedItems.push(rowId);
+												dataCollections[objectId].callEvent('onCheckItemsChange');
+											}
+										};
+
+										dataCollections[objectId].uncheckItem = function(rowId, index) {
+											dataCollections[objectId].checkedItems.forEach(function(item) {
+												if (item == rowId) {
+													dataCollections[objectId].checkedItems.splice(index, 1);
+													dataCollections[objectId].callEvent('onCheckItemsChange');
+													return;
+												}
+											});
+										};
+
+										dataCollections[objectId].getCheckedItems = function() {
+											return dataCollections[objectId].checkedItems;
+										};
 									}
 
 									next();

@@ -395,7 +395,7 @@ steal(
 							$$(self.viewId).prependView(header);
 					}
 
-					if (self.data.dataCollection.checkedItems && Object.keys(self.data.dataCollection.checkedItems).length > 0) {
+					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
 						if ($$(self.viewId + '-update-items-button'))
 							$$(self.viewId + '-update-items-button').enable();
 
@@ -445,21 +445,25 @@ steal(
 
 					// Select column by checkbox
 					$$(self.viewId).attachEvent("onCheck", function (row, col, state) {
+						if (!self.data.dataCollection) return;
+
 						if (col == 'select_column') {
 							if (state)
-								self.data.dataCollection.checkedItems[row] = true;
+								self.data.dataCollection.checkItem(row);
 							else
-								delete self.data.dataCollection.checkedItems[row];
+								self.data.dataCollection.uncheckItem(row);
 
 							// Enable Update/Delete buttons
-							if (Object.keys(self.data.dataCollection.checkedItems).length > 0) {
-								$$(self.viewId + '-update-items-button').enable();
+							if (self.data.dataCollection.getCheckedItems().length > 0) {
+								if ($$(self.viewId + '-update-items-button'))
+									$$(self.viewId + '-update-items-button').enable();
 								if ($$(self.viewId + '-delete-items-button'))
 									$$(self.viewId + '-delete-items-button').enable();
 							}
 							// Disable Update/Delete buttons
 							else {
-								$$(self.viewId + '-update-items-button').disable();
+								if ($$(self.viewId + '-update-items-button'))
+									$$(self.viewId + '-update-items-button').disable();
 								if ($$(self.viewId + '-delete-items-button'))
 									$$(self.viewId + '-delete-items-button').disable();
 							}
@@ -501,8 +505,8 @@ steal(
 
 						// Delete checked item when a record is deleted
 						dataCollection.attachEvent("onAfterDelete", function (rowId) {
-							if (self.data.dataCollection.checkedItems && self.data.dataCollection.checkedItems[rowId])
-								delete self.data.dataCollection.checkedItems[rowId];
+							if (self.data.dataCollection)
+								delete self.data.dataCollection.uncheckItem(rowId);
 						});
 					}
 
@@ -700,8 +704,8 @@ steal(
 						// 19 Jan 2017
 						// Make sure we return all possible pages that can be selected, even if we are embedded 
 						// in a buried Tab component.
-							// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
-							// application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
+						// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
+						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
 						application.getApplicationPages(application.currPage)
 							.fail(function (err) { next(err); })
 							.then(function (pages) {

@@ -149,6 +149,24 @@ steal(
 				});
 			}
 
+			function refreshLinkedData() {
+				var self = this;
+
+				if (data.linkedToDataCollection) {
+					var checkedItems = [];
+					data.linkedToDataCollection.getCheckedItems().forEach(function (rowId) {
+						var rowData = data.linkedToDataCollection.getItem(rowId);
+
+						checkedItems.push({
+							id: rowId,
+							text: rowData._dataLabel
+						});
+					});
+					selectivityHelper.renderSelectivity($$(self.viewId).$view, 'ab-component-form-add-group', true);
+					selectivityHelper.setData($($$(self.viewId).$view).find('.ab-component-form-add-group'), checkedItems);
+				}
+			}
+
 			function getChildView(columnName) {
 				var childView = columnizerHelper.getColumns($$(componentIds.columns.replace('#viewId#', this.viewId))).find(function (view) {
 					return view.config && view.config.name == columnName;
@@ -234,6 +252,12 @@ steal(
 						showCustomFields.call(self, data.object, self.data.columns, id, currModel);
 
 						setElementHeights.call(self, self.data.columns, currModel);
+					});
+				}
+
+				if (data.linkedToDataCollection) {
+					data.linkedToDataCollection.attachEvent('onCheckItemsChange', function () {
+						refreshLinkedData.call(self);
 					});
 				}
 
@@ -428,8 +452,7 @@ steal(
 							});
 						}
 
-						var checkedItemIds = Object.keys(linkedToDataCollection.checkedItems);
-						if (linkedToDataCollection && checkedItemIds.length > 0) {
+						if (linkedToDataCollection) {
 							header.rows.push({
 								cols: [
 									{
@@ -449,19 +472,7 @@ steal(
 						$$(self.viewId).addView(header, 0);
 
 						// Show checked items in selectivity
-						if (linkedToDataCollection && checkedItemIds.length > 0) {
-							var checkedItems = [];
-							checkedItemIds.forEach(function (rowId) {
-								var rowData = linkedToDataCollection.getItem(rowId);
-
-								checkedItems.push({
-									id: rowId,
-									text: rowData._dataLabel
-								});
-							});
-							selectivityHelper.renderSelectivity($$(self.viewId).$view, 'ab-component-form-add-group', true);
-							selectivityHelper.setData($($$(self.viewId).$view).find('.ab-component-form-add-group'), checkedItems);
-						}
+						refreshLinkedData.call(self);
 
 						// Save/Cancel buttons
 						var actionButtons = {
