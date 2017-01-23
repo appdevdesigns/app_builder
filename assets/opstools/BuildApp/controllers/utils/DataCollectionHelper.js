@@ -65,6 +65,7 @@ steal(
 								.then(function (result) {
 									if (!dataCollections[objectId] || isRefresh) {
 										dataCollections[objectId] = AD.op.WebixDataCollection(result);
+										dataCollections[objectId].checkedItems = {}; // { rowId: boolean }
 										dataCollections[objectId].updateDataTimeout = {}; // { dataId: timeoutId }
 
 										// Listen change data event

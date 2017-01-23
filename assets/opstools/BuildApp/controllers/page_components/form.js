@@ -3,8 +3,9 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/ColumnizerHelper.js',
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
-	function (dataFieldsManager, dataCollectionHelper, columnizerHelper) {
+	function (dataFieldsManager, dataCollectionHelper, columnizerHelper, selectivityHelper) {
 		var componentIds = {
 			editView: 'ab-form-edit-view',
 			editForm: 'ab-form-edit-mode',
@@ -54,7 +55,7 @@ steal(
 				}, 50);
 			}
 
-			function saveModelData(dataCollection, object, columns, setting) {
+			function saveModelData(dataCollection, object, columns, setting, linkedToDataCollection) {
 				var self = this,
 					q = $.Deferred(),
 					modelData = dataCollection.AD.currModel(),
@@ -195,7 +196,7 @@ steal(
 			this.data = {};
 
 			// Instance functions
-			this.render = function (setting, editable, showAll, dataCollection) {
+			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
 					q = $.Deferred(),
 					elementViews = [],
@@ -205,6 +206,7 @@ steal(
 				self.data.columns = [];
 				data.setting = setting;
 				data.dataCollection = dataCollection;
+				data.linkedToDataCollection = linkedToDataCollection;
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
 
@@ -334,6 +336,8 @@ steal(
 							}
 
 							if (editable) { // Show/Hide options
+								var isLinkField = setting.linkField && setting.linkField == col.id;
+
 								element = {
 									css: 'ab-form-component-item',
 									cols: [
@@ -344,7 +348,8 @@ steal(
 											maxWidth: 120,
 											inputWidth: 100,
 											inputHeight: 35,
-											value: isVisible ? "show" : "hide",
+											value: isVisible && !isLinkField ? "show" : "hide",
+											disabled: isLinkField,
 											options: [
 												{ id: "show", value: "Show" },
 												{ id: "hide", value: "Hide" },
@@ -423,7 +428,40 @@ steal(
 							});
 						}
 
+						var checkedItemIds = Object.keys(linkedToDataCollection.checkedItems);
+						if (linkedToDataCollection && checkedItemIds.length > 0) {
+							header.rows.push({
+								cols: [
+									{
+										view: 'label',
+										label: 'Add to...',
+										width: 100
+									},
+									{
+										view: 'template',
+										borderless: true,
+										template: '<div class="ab-component-form-add-group"></div>'
+									}
+								]
+							});
+						}
+
 						$$(self.viewId).addView(header, 0);
+
+						// Show checked items in selectivity
+						if (linkedToDataCollection && checkedItemIds.length > 0) {
+							var checkedItems = [];
+							checkedItemIds.forEach(function (rowId) {
+								var rowData = linkedToDataCollection.getItem(rowId);
+
+								checkedItems.push({
+									id: rowId,
+									text: rowData._dataLabel
+								});
+							});
+							selectivityHelper.renderSelectivity($$(self.viewId).$view, 'ab-component-form-add-group', true);
+							selectivityHelper.setData($($$(self.viewId).$view).find('.ab-component-form-add-group'), checkedItems);
+						}
 
 						// Save/Cancel buttons
 						var actionButtons = {
@@ -446,7 +484,7 @@ steal(
 									if ($$(saveButton))
 										$$(saveButton).disable();
 
-									saveModelData.call(self, dataCollection, data.object, self.data.columns, setting)
+									saveModelData.call(self, dataCollection, data.object, self.data.columns, setting, linkedToDataCollection)
 										.fail(function (err) {
 											console.error(err);
 
@@ -887,8 +925,10 @@ steal(
 								if ($$(componentIds.description))
 									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
+							case componentIds.selectObject:
+								propertyValues[componentIds.linkedTo] = null;
 							case componentIds.linkedTo:
-								var linkedTo = propertyValues.linkedTo,
+								var linkedTo = propertyValues[componentIds.linkedTo],
 									linkedField = $$(componentIds.propertyView).getItem(componentIds.linkField);
 
 								if (linkedTo && linkedTo != 'none') {
@@ -908,7 +948,7 @@ steal(
 									propertyValues[componentIds.linkField] = null;
 								}
 								$$(componentIds.propertyView).setValues(propertyValues);
-							case componentIds.selectObject:
+							case componentIds.linkField:
 							case componentIds.selectColCount:
 							case componentIds.isSaveVisible:
 							case componentIds.isCancelVisible:

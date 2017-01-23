@@ -395,7 +395,7 @@ steal(
 							$$(self.viewId).prependView(header);
 					}
 
-					if ($$(self.viewId).checkedItems && Object.keys($$(self.viewId).checkedItems).length > 0) {
+					if (self.data.dataCollection.checkedItems && Object.keys(self.data.dataCollection.checkedItems).length > 0) {
 						if ($$(self.viewId + '-update-items-button'))
 							$$(self.viewId + '-update-items-button').enable();
 
@@ -446,15 +446,13 @@ steal(
 					// Select column by checkbox
 					$$(self.viewId).attachEvent("onCheck", function (row, col, state) {
 						if (col == 'select_column') {
-							if ($$(self.viewId).checkedItems == null) $$(self.viewId).checkedItems = {};
-
 							if (state)
-								$$(self.viewId).checkedItems[row] = true;
+								self.data.dataCollection.checkedItems[row] = true;
 							else
-								delete $$(self.viewId).checkedItems[row];
+								delete self.data.dataCollection.checkedItems[row];
 
 							// Enable Update/Delete buttons
-							if (Object.keys($$(self.viewId).checkedItems).length > 0) {
+							if (Object.keys(self.data.dataCollection.checkedItems).length > 0) {
 								$$(self.viewId + '-update-items-button').enable();
 								if ($$(self.viewId + '-delete-items-button'))
 									$$(self.viewId + '-delete-items-button').enable();
@@ -503,8 +501,8 @@ steal(
 
 						// Delete checked item when a record is deleted
 						dataCollection.attachEvent("onAfterDelete", function (rowId) {
-							if ($$(self.viewId).checkedItems && $$(self.viewId).checkedItems[rowId])
-								delete $$(self.viewId).checkedItems[rowId];
+							if (self.data.dataCollection.checkedItems && self.data.dataCollection.checkedItems[rowId])
+								delete self.data.dataCollection.checkedItems[rowId];
 						});
 					}
 

@@ -64,7 +64,7 @@ steal(
 
 										var updateTasks = [];
 
-										Object.keys(update_records_popup.dataTable.checkedItems).forEach(function (rowId) {
+										Object.keys(update_records_popup.dataCollection.checkedItems).forEach(function (rowId) {
 											var modelData = update_records_popup.dataCollection.AD.getModel(rowId);
 
 											update_items.forEach(function (item) {
@@ -122,7 +122,7 @@ steal(
 
 						// Show checked items in selectivity
 						var checkedItems = [];
-						Object.keys(update_records_popup.dataTable.checkedItems).forEach(function (rowId) {
+						Object.keys(update_records_popup.dataCollection.checkedItems).forEach(function (rowId) {
 							var rowData = update_records_popup.dataTable.getItem(rowId);
 
 							checkedItems.push({
