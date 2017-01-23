@@ -48,6 +48,26 @@ steal(
 					this.data.objectDataTable.setReadOnly(true);
 				}
 
+
+//// Refactor Note:
+// 
+// Here we are in a Grid Component.  And in many places we access the objects in our application by:
+// application.objects.filter()
+//
+// It is a good assumption that the Grid Component knows it needs to get Objects from the Application
+// object.  
+//
+// However, a Grid Component should not have any understanding of HOW the Application Object is internally
+// storing it's data.
+//
+// Now, if we ever decide to change how the Application object stores it's data, we have broken code 
+// all over the place.
+//
+// Whenever we want to get data that is managed by another Object, we should ask the Object for it:
+// 		application.getObjects(filterFn());   // returns an {array} of objects
+// 		application.getObjectById(objectId);  // return an object directly
+// 
+// 
 				var object = application.objects.filter(function (obj) { return obj.id == objectId });
 				if (object && object[0]) object = object[0];
 
@@ -660,7 +680,7 @@ steal(
 						});
 
 						// Data source - Linked to
-						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject }),
+						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject.toString() }),
 							linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; }),
 							linkedToItem = $$(componentIds.propertyView).getItem('linkedTo');
 						linkedToItem.options = $.map(linkedObjs, function (o) {
