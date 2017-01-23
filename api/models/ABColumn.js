@@ -435,10 +435,10 @@ module.exports = {
                 .done(function(col) {
                     sourceColumn = col;
                     sourceSetting = col.setting;
-                    if (data.sourceRelation == 'many') {
-                        // This will be created in the next step
-                        targetSetting.linkVia = col.id;
-                    }
+
+                    // This will be created in the next step
+                    targetSetting.linkVia = col.id;
+
                     next();
                 });
             },
@@ -457,10 +457,10 @@ module.exports = {
                 .fail(next)
                 .done(function(col) {
                     targetColumn = col;
-                    if (data.targetRelation == 'many') {
-                        // This will be updated in the next step
-                        sourceSetting.linkVia = col.id;
-                    }
+
+                    // This will be updated in the next step
+                    sourceSetting.linkVia = col.id;
+
                     next();
                 });
             },
