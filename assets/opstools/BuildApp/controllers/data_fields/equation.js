@@ -45,7 +45,7 @@ steal(
 					rows: [
 					{
 						
-						cols: [
+						/*cols: [
 						{
 							view: "richselect",
 							id: componentIds.dateType,
@@ -71,7 +71,7 @@ steal(
 							{ id: 'date', value: "Date" },
 
 							]
-						},
+						},*/
 						]
 
 					},
@@ -139,7 +139,7 @@ steal(
 					rows: [
 					{
 						view: "label",
-						label: "Example Output"
+						label: "Example Output    4*3=12"
 					},	
 					{
 						view: "text",
