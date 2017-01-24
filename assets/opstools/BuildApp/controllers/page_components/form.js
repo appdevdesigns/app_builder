@@ -113,6 +113,8 @@ steal(
 					async.parallel(addTasks, function (err) {
 						if (err) q.reject(err);
 						else {
+							clearForm.call(self, object, columns, dataCollection);
+
 							finishSave.call(self, dataCollection);
 
 							q.resolve();
