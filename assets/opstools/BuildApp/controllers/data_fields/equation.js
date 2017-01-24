@@ -64,11 +64,11 @@ steal(
 							id: componentIds.resultType,
 							label: "Result Type",
 							labelWidth: "110",
-							value: 'number',
-							//disabled: true,
+							value: 'none',
+							disabled: true,
 							options: [
 							{ id: 'number', value: "Number" },
-							//{ id: 'date', value: "Date" },
+							{ id: 'date', value: "Date" },
 
 							]/*
 						},
@@ -326,11 +326,11 @@ steal(
 			id: componentIds.equationType,
 			label: "Equation Type",
 			labelWidth: "110",
-			value: 'none',
+			value: 'numeric',
 			vertical: true,
 			options: [
 			{ id: 'numeric',value: "Numeric" },
-			{ id: 'date',value:  "Date" },
+			//{ id: 'date',value:  "Date" },
 
 			],
 			on: {
