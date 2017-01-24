@@ -149,6 +149,81 @@ steal(
 						id: componentIds.equation,
 
 					},
+					{
+						cols: [
+						{
+							view: "richselect",
+							id: componentIds.typeDecimals,
+							label: "Decimals",
+							value: 'none',
+							options: [
+							{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
+							{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
+							{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" }
+							],
+							on: {
+								'onChange': function (newValue, oldValue) {
+									if (newValue == 'none') {
+										$$(componentIds.typeDecimalPlaces).disable();
+										$$(componentIds.typeRounding).disable();
+									}
+									else {
+										$$(componentIds.typeDecimalPlaces).enable();
+										$$(componentIds.typeRounding).enable();
+									}
+								}
+							}
+						},
+						{
+							view: "richselect",
+							id: componentIds.typeDecimalPlaces,
+							label: "Decimal Places",
+							value: 'none',
+							disabled: true,
+							options: [
+							{ id: 'none', value: "0" },
+							{ id: 1, value: "1" },
+							{ id: 2, value: "2" },
+							{ id: 3, value: "3" },
+							{ id: 4, value: "4" },
+							{ id: 5, value: "5" },
+							{ id: 10, value: "10" }
+							]
+						},
+						]
+					},
+					{
+						view: "radio",
+						id: componentIds.typeRounding,
+						label: "Rounding",
+						value: 'none',
+						vertical: true,
+						options: [
+						{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.default') || "Default" },
+						{ id: 'roundUp', value: AD.lang.label.getLabel('ab.dataField.equation.roundUp') || "Round Up" },
+						{ id: 'roundDown', value: AD.lang.label.getLabel('ab.dataField.equation.roundDown') || "Round Down" }
+						]
+					},
+					{
+						view: "radio",
+						id: componentIds.typeThousands,
+						label: "Thousands",
+						value: 'none',
+						vertical: true,
+						options: [
+						{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
+						{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" },
+						{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
+						{ id: 'space', value: AD.lang.label.getLabel('ab.dataField.equation.space') || "Space" }
+						]
+					},
+					{
+						view: "richselect",
+						id: componentIds.typeFormat,
+						label: "Format",
+						value: 'none',
+						options: formatList
+					}
 					]
 				},
 				getSettings : function () {
@@ -252,13 +327,6 @@ steal(
 	equationDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
-			/*{
-				view: "text",
-				label: "Name",
-				labelWidth: "100",
-				id: componentIds.name,
-				placeholder: ''
-			},*/
 			{
 				view: "radio",
 				id: componentIds.equationType,
@@ -290,84 +358,6 @@ steal(
 					template:"Some text" 
 				}
 			},
-			{
-				cols: [
-				{
-					view: "richselect",
-					id: componentIds.typeDecimals,
-					label: "Decimals",
-					value: 'none',
-					options: [
-					{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
-					{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
-					{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" }
-					],
-					on: {
-						'onChange': function (newValue, oldValue) {
-							if (newValue == 'none') {
-								$$(componentIds.typeDecimalPlaces).disable();
-								$$(componentIds.typeRounding).disable();
-							}
-							else {
-								$$(componentIds.typeDecimalPlaces).enable();
-								$$(componentIds.typeRounding).enable();
-							}
-						}
-					}
-				},
-				{
-					view: "richselect",
-					id: componentIds.typeDecimalPlaces,
-					label: "Decimal Places",
-					value: 'none',
-					disabled: true,
-					options: [
-					{ id: 'none', value: "0" },
-					{ id: 1, value: "1" },
-					{ id: 2, value: "2" },
-					{ id: 3, value: "3" },
-					{ id: 4, value: "4" },
-					{ id: 5, value: "5" },
-					{ id: 10, value: "10" }
-					]
-				},
-				]
-			},
-			{
-				view: "radio",
-				id: componentIds.typeRounding,
-				label: "Rounding",
-				value: 'none',
-				vertical: true,
-				options: [
-				{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.default') || "Default" },
-				{ id: 'roundUp', value: AD.lang.label.getLabel('ab.dataField.equation.roundUp') || "Round Up" },
-				{ id: 'roundDown', value: AD.lang.label.getLabel('ab.dataField.equation.roundDown') || "Round Down" }
-				]
-			},
-			{
-				view: "radio",
-				id: componentIds.typeThousands,
-				label: "Thousands",
-				value: 'none',
-				vertical: true,
-				options: [
-				{ id: 'none', value: AD.lang.label.getLabel('ab.dataField.equation.none') || "None" },
-				{ id: 'comma', value: AD.lang.label.getLabel('ab.dataField.equation.comma') || "Comma" },
-				{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.equation.period') || "Period" },
-				{ id: 'space', value: AD.lang.label.getLabel('ab.dataField.equation.space') || "Space" }
-				]
-			},
-			{
-				view: "richselect",
-				id: componentIds.typeFormat,
-				label: "Format",
-				value: 'none',
-				options: formatList
-			}
-			
-
-
 			]
 		};
 
