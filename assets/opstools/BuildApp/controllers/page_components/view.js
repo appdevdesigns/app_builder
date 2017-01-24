@@ -71,6 +71,11 @@ steal(
 						return;
 					}
 
+// There are cases where this happens.  Prevent the error:
+// Question for Pong: is this an acceptable case, or do we need to track down
+// where this is being called without .columns  and fix that?
+if (!data.columns) return;
+
 					var fieldData = currModel[child.config.name],
 						column = data.columns.filter(function (col) { return col.name == child.config.name; });
 

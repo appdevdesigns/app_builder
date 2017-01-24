@@ -41,6 +41,9 @@ steal(
 
 							self.containerDomID = self.unique('ab_live_tool', self.options.app, self.options.page);
 
+							self.debounceResize = false;
+							self.resizeValues = { height:0, width:0};
+
 							self.initDOM();
 							self.initModels();
 
@@ -437,11 +440,19 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 							self.previousPage = self.activePage;
 							self.activePage = page;
 
+// Question: should we do a resize() after all the components are rendered?
+// var numDone = 0;
+
 							self.activePage.components.forEach(function (item) {
 
 								self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
 									self.bindComponentEvents(page.comInstances[item.id], item);
 									self.bindComponentEventsInTab(item);
+// numDone++;
+// if (numDone >= self.activePage.components.length) {
+//	// Now resize after all components are rendered
+// 	self.resize();
+// }
 								});
 
 							});
@@ -503,12 +514,12 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 						},
 
 						resize: function (height) {
+							var _this = this;
 
 							// NOTE: resize() calls from the OpsPortal OPView element 
 							// .resize({ height:value });
 							if (height) height = height.height || height;
-
-							if (!$$(this.rootPage.domID) || !$(this.element).is(":visible")) return;
+							if (!$$(this.containerDomID) || !$(this.element).is(":visible")) return;
 
 							var width = this.element.width();
 							if (!width) {
@@ -518,24 +529,88 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 								});
 							}
 
+// QUESTION: where does self.height come from?  is this a webix setting?
 							if (height == null) height = self.height;
 
-							if (width > 0)
-								$$(this.rootPage.domID).define('width', width);
+							// track the last set of height/width values:
+							this.resizeValues.height = height;
+							this.resizeValues.width = width;
+// console.log('ABLiveTool.resize()');
 
-							if (height > 0)
-								$$(this.rootPage.domID).define('height', height);
+							// this debounce method seems to cut down our resize()
+							// operations to 1/3
+							if (!this.debounceResize) {
 
-							$$(this.rootPage.domID).adjust();
-							$$(this.activePage.domID).adjust();
+								_this.debounceResize = true;
 
-							// Resize components
-							if (this.activePage && this.activePage.comInstances) {
-								for (var key in this.activePage.comInstances) {
-									if (this.activePage.comInstances[key].resize)
-										this.activePage.comInstances[key].resize(width, height);
-								}
+								setTimeout(function() {
+// console.log('ABLiveTool.debouncedResize()');
+									if (_this.resizeValues.width > 0)
+										$$(_this.containerDomID).define('width', width);
+
+									if (_this.resizeValues.height > 0)
+										$$(_this.containerDomID).define('height', height);
+
+									$$(_this.containerDomID).resize();
+									// $$(_this.activePage.domID).adjust(); // should be part of activePage.resize()
+
+
+/// REFACTOR NOTES:
+// here is an example where we are not keeping strict boundries about which
+// object is supposed to know and do what.
+//
+// here we have a UI Object (ABLiveTool), that is trying to update the display
+// of a current Page (a View).
+//
+// This UI Object knows all the details about how a Page (View) should display
+// itself:  which .domID  it is attached to, that it needs to .adjust() itself, 
+// and most importantly, that a page consists of components, and how it must
+// step through each component and .resize() each one of them.
+//
+// The problem is, now that we have a TabComponent that also has Pages(Views) as
+// components, this code must also be reduplicated there.  That is a bad design
+// pattern.
+// 
+// Instead, our Page object should be responsible for itself.  It knows that it is
+// comprised of components, and that when a Page.resize() is requested, the Page
+// should be calling it's components to .resize() themselves.
+//
+// A UI Object like this, should only know that it is displaying a Page object.
+// We can call: 
+// 		Page.show(divID);
+// 		Page.resize();
+// 		Page.remove();  
+//
+// And that's all a UI object should be allowed to know. 
+//
+// This UI Object can also know about it's outer Container, and do the resizing
+// of that object.  But to display and update a Page, we should only be limited
+// to the above interface.
+//
+// If this were the case, the TabComponent would also be able to reuse those same
+// methods on the Pages that it is managing.
+//
+
+									// I went ahead and refactored ABPage to have a .resize()
+									// it is not exactly the right solution, but it is close
+									// see notes on ABPage.js .resize()
+									_this.activePage.resize();
+////  OLD Logic:
+//
+// // Resize components
+// if (_this.activePage && _this.activePage.comInstances) {
+// 	for (var key in _this.activePage.comInstances) {
+// 		if (_this.activePage.comInstances[key].resize)
+// 			_this.activePage.comInstances[key].resize(width, height);
+// 	}
+// }
+
+									_this.debounceResize = false;
+
+								}, 5);
+
 							}
+
 						},
 
 						unique: function () {
