@@ -285,7 +285,7 @@ steal(
 						text: data._dataLabel,
 						objectId: object.id,
 						columnName: fieldData.name,
-						rowId: rowData.id
+						rowId: rowData ? rowData.id : null
 					});
 				}
 				else if (data.each || data.forEach) {
@@ -295,7 +295,7 @@ steal(
 							text: item._dataLabel,
 							objectId: object.id,
 							columnName: fieldData.name,
-							rowId: rowData.id
+							rowId: rowData ? rowData.id : null
 						};
 					});
 				}
