@@ -326,7 +326,7 @@ steal(
 			id: componentIds.equationType,
 			label: "Equation Type",
 			labelWidth: "110",
-			value: 'numeric',
+			value: 'none',
 			vertical: true,
 			options: [
 			{ id: 'numeric',value: "Numeric" },
