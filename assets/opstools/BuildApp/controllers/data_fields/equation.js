@@ -311,9 +311,9 @@ steal(
 
 		var listItem = EquationManager.getDescriptions(type);
 		//console.log(listItem);
-			for(i = 0 ; i < listItem.length ; i++){
-				$$("popuplist").add({ id:listItem[i].split(":")[0], title: listItem[i]});
-			}
+		for(i = 0 ; i < listItem.length ; i++){
+			$$("popuplist").add({ id:listItem[i].split(":")[0], title: listItem[i]});
+		}
 
 	}
 
@@ -321,182 +321,184 @@ steal(
 	equationDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
-			{
-				view: "radio",
-				id: componentIds.equationType,
-				label: "Equation Type",
-				labelWidth: "110",
-				value: 'none',
-				vertical: true,
-				options: [
-				{ id: 'numeric',value: "Numeric" },
-				{ id: 'date',value:  "Date" },
+		{
+			view: "radio",
+			id: componentIds.equationType,
+			label: "Equation Type",
+			labelWidth: "110",
+			value: 'none',
+			vertical: true,
+			options: [
+			{ id: 'numeric',value: "Numeric" },
+			{ id: 'date',value:  "Date" },
 
-				],
-				on: {
-					'onChange': function (newValue, oldValue) {
-						showSettings(newValue);
-
-					}
-				}
-			},
-			{ 
-
-				label: 'choose a type',
-				id:'typeSettings',
-			},
-			{
-				view:"popup",
-				id:"my_popup",
-				body:{
-					template:"Some text" 
-				}
-			},
-			]
-		};
-
-		equationDataField.populateSettings = function (application, data) {
-
-			if (!data.type || !data.setting) return;
-
-			$$(componentIds.equationType).setValue(data.setting.equationType);
-			$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
-			$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
-			$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
-			$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
-			$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
-			$$(componentIds.equation).setValue(data.setting.equation);
-
-
-		};
-
-
-
-		equationDataField.getSettings = function () {
-
-			var type = 'integer';
-			console.log("getSettingssna");	
-			return {
-				fieldName: equationDataField.name,
-				type: type,
-				setting: {	
-					template:'<div class="ab-equation-data-field"></div>',
-					equationType :  $$(componentIds.equationType).getValue(),
-					typeDecimals : $$(componentIds.typeDecimals).getValue(),
-					typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
-					typeRounding : $$(componentIds.typeRounding).getValue(),
-					typeThousands : $$(componentIds.typeThousands).getValue(),
-					typeFormat : $$(componentIds.typeFormat).getValue(),
-					equation : $$(componentIds.equation).getValue(),
-
+			],
+			on: {
+				'onChange': function (newValue, oldValue) {
+					showSettings(newValue);
 
 				}
-			};
+			}
+		},
+		{ 
+
+			label: 'choose a type',
+			id:'typeSettings',
+		},
+		{
+			view:"popup",
+			id:"my_popup",
+			body:{
+				template:"Some text" 
+			}
+		},
+		]
+	};
+
+	equationDataField.populateSettings = function (application, data) {
+
+		if (!data.type || !data.setting) return;
+
+		$$(componentIds.equationType).setValue(data.setting.equationType);
+		$$(componentIds.typeDecimals).setValue(data.setting.typeDecimals);
+		$$(componentIds.typeDecimalPlaces).setValue(data.setting.typeDecimalPlaces);
+		$$(componentIds.typeRounding).setValue(data.setting.typeRounding);
+		$$(componentIds.typeThousands).setValue(data.setting.typeThousands);
+		$$(componentIds.typeFormat).setValue(data.setting.typeFormat);
+		$$(componentIds.equation).setValue(data.setting.equation);
 
 
+	};
+
+
+
+	equationDataField.getSettings = function () {
+
+		var type = 'integer';
+		console.log("getSettingssna");	
+		return {
+			fieldName: equationDataField.name,
+			type: type,
+			setting: {	
+				template:'<div class="ab-equation-data-field"></div>',
+				equationType :  $$(componentIds.equationType).getValue(),
+				typeDecimals : $$(componentIds.typeDecimals).getValue(),
+				typeDecimalPlaces : $$(componentIds.typeDecimalPlaces).getValue(),
+				typeRounding : $$(componentIds.typeRounding).getValue(),
+				typeThousands : $$(componentIds.typeThousands).getValue(),
+				typeFormat : $$(componentIds.typeFormat).getValue(),
+				equation : $$(componentIds.equation).getValue(),
+
+
+			}
 		};
 
 
-		equationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
+	};
+
+
+	equationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 		
 		if (rowData == null) {
 			$(itemNode).find('.ab-equation-data-field').html('');
 			return true;
 		}
-				try {
+
+		try {
 			var parser = EquationManager.parse(fieldData.setting.equation);
 			//console.log("parser: " + parser);
 			if (parser) {
-			var data = parser(rowData);
-				
-		var decimalSizeNum = 0,
-			decimalDelimiters = ".",
-			groupDelimiters = "";
-		
-		if (fieldData.setting.typeDecimals && fieldData.setting.typeDecimals != 'none') {
-			if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
-				decimalSizeNum = fieldData.setting.typeDecimalPlaces;
-			}
-			if (fieldData.setting.typeDecimals != undefined) {
-				switch (fieldData.setting.typeDecimals) {
-					case 'period':
-						decimalDelimiters = ".";
-						break;
-					case 'comma':
-						decimalDelimiters = ",";
-						break;
-				}
-			}
 
-			if (fieldData.setting.typeRounding != undefined) {
-				switch (fieldData.setting.typeRounding) {
-					case 'roundUp':
-						var num = data;
-						var precision = -decimalSizeNum;
-						var div = Math.pow(10, precision);
-						data = Math.ceil(num / div) * div;
-						break;
-					case 'roundDown':
-						var num = data;
-						var precision = -decimalSizeNum;
-						var div = Math.pow(10, precision);
-						data = Math.floor(num / div) * div;
-						break;
+				var data = parser(rowData);
+				
+				var decimalSizeNum = 0,
+				decimalDelimiters = ".",
+				groupDelimiters = "";
+
+				if (fieldData.setting.typeDecimals && fieldData.setting.typeDecimals != 'none') {
+					if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
+						decimalSizeNum = fieldData.setting.typeDecimalPlaces;
+					}
+					if (fieldData.setting.typeDecimals != undefined) {
+						switch (fieldData.setting.typeDecimals) {
+							case 'period':
+							decimalDelimiters = ".";
+							break;
+							case 'comma':
+							decimalDelimiters = ",";
+							break;
+						}
+					}
+
+					if (fieldData.setting.typeRounding != undefined) {
+						switch (fieldData.setting.typeRounding) {
+							case 'roundUp':
+							var num = data;
+							var precision = -decimalSizeNum;
+							var div = Math.pow(10, precision);
+							data = Math.ceil(num / div) * div;
+							break;
+							case 'roundDown':
+							var num = data;
+							var precision = -decimalSizeNum;
+							var div = Math.pow(10, precision);
+							data = Math.floor(num / div) * div;
+							break;
+						}
+					}
 				}
-			}
-		//}
+
+				if (fieldData.setting.typeThousands != undefined) {
+					switch (fieldData.setting.typeThousands) {
+						case 'comma':
+						groupDelimiters = ",";
+						break;
+						case 'period':
+						groupDelimiters = ".";
+						break;
+						case 'space':
+						groupDelimiters = " ";
+						break;
+					}
+				}
+
+				var numberFormat = webix.Number.format(data, {
+					groupDelimiter: groupDelimiters,
+					groupSize: 3,
+					decimalDelimiter: decimalDelimiters,
+					decimalSize: decimalSizeNum
+				});
+
+				//console.log("numberFormatkid: "+ numberFormat);
+				if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
+					var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
+					if (formatItem) {
+						numberFormat = (formatItem.position == 'prefix' ? formatItem.sign + ' ' + numberFormat : numberFormat + ' ' + formatItem.sign);
+					}
+				}
 		
-		if (fieldData.setting.typeThousands != undefined) {
-			switch (fieldData.setting.typeThousands) {
-				case 'comma':
-					groupDelimiters = ",";
-					break;
-				case 'period':
-					groupDelimiters = ".";
-					break;
-				case 'space':
-					groupDelimiters = " ";
-					break;
-			}
-		}
-		
-		var numberFormat = webix.Number.format(data, {
-			groupDelimiter: groupDelimiters,
-			groupSize: 3,
-			decimalDelimiter: decimalDelimiters,
-			decimalSize: decimalSizeNum
-		});
-		
-		//console.log("numberFormatkid: "+ numberFormat);
-		if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
-			var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
-			if (formatItem) {
-				numberFormat = (formatItem.position == 'prefix' ? formatItem.sign + ' ' + numberFormat : numberFormat + ' ' + formatItem.sign);
-			}
-		}
-		
-		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
-		
-		if (fieldData == null) {
-			$(itemNode).find('.ab-equation-data-field').html('');
-			return true;
-		}
+				//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
+				
+				if (fieldData == null) {
+					$(itemNode).find('.ab-equation-data-field').html('');
+					return true;
+				}
 		
 
 				$(itemNode).find('.ab-equation-data-field').html(data);
-			} else {
+			} 
+			else {
 				console.log("parser:false");
 				$(itemNode).find('.ab-equation-data-field').html('invalid equation:'+fieldData.setting.equation);
 			}
 
 			return true;
 
-		} catch(e) {
-		// handle error
-	}
-
-
-
+		} 
+		catch(e) {
+				// handle error
+			
+		}
 
 
 };
