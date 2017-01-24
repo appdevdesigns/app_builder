@@ -3,7 +3,8 @@ steal(
 	function () {
 		var componentIds = {
 			loadingMessage: 'ab-loading-screen-message',
-			buttonText: 'ab-loading-screen-button-message'
+			buttonText: 'ab-loading-screen-button-message',
+			cancelButton: 'ab-loading-screen-cancel-button'
 		};
 
 		webix.protoUI({
@@ -27,6 +28,20 @@ steal(
 							id: componentIds.buttonText,
 							view: 'button',
 							css: 'ab-loading-button'
+						},
+						{
+							id: componentIds.cancelButton,
+							view: "template",
+							borderless: true,
+							autoheight: true,
+							hidden: true,
+							css: 'ab-loading-cancel-button',
+							template: "<a class='ab-loading-cancel-item'>#CancelText#</a>".replace('#CancelText#', 'Cancel'),
+							onClick: {
+								'ab-loading-cancel-item': function () {
+									this.getTopParentView().hide();
+								}
+							}
 						}
 					]
 				}
@@ -49,6 +64,7 @@ steal(
 				this.setMessage();
 
 				$$(componentIds.buttonText).hide();
+				$$(componentIds.cancelButton).hide();
 				this.show();
 			},
 
@@ -61,6 +77,8 @@ steal(
 				$$(componentIds.buttonText).setValue('');
 				$$(componentIds.buttonText).refresh();
 				$$(componentIds.buttonText).hide();
+
+				$$(componentIds.cancelButton).hide();
 			},
 
 			showFinishScreen: function (message, button_text) {
@@ -71,6 +89,8 @@ steal(
 				$$(componentIds.buttonText).setValue(button_text);
 				$$(componentIds.buttonText).define('click', function () { _this.stop(); });
 				$$(componentIds.buttonText).refresh();
+
+				$$(componentIds.cancelButton).hide();
 			},
 
 			showErrorScreen: function (message, button_text, retry) {
@@ -79,6 +99,8 @@ steal(
 				$$(componentIds.buttonText).setValue(button_text);
 				$$(componentIds.buttonText).define('click', retry);
 				$$(componentIds.buttonText).refresh();
+
+				$$(componentIds.cancelButton).show();
 			}
 		}, webix.ui.popup);
 
