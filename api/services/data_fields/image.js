@@ -21,7 +21,6 @@ module.exports = {
         fieldName: 'image',
         setting: {
             icon: 'file-image-o',
-            editor: 'imageDataField',
             template: '<div class="ab-image-data-field"></div>',
             filter_type: 'text',
             /*

@@ -245,7 +245,6 @@ steal(
 					icon: connectObjectField.icon,
 // choose something that isn't a Webix standard data editor
 // then add a .template field. (use a class definition that you can lookup in .customDisplay)
-					editor: 'selectivity',
 					template: '<div class="connect-data-values"></div>',
 					filter_type: 'multiselect'
 				}

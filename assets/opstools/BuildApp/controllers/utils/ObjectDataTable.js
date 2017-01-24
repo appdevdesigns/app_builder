@@ -222,7 +222,7 @@ steal(
 								label = col.label || '';
 
 							// Show connect object name in header
-							if (col.setting.editor === 'selectivity') {
+							if (col.type === 'connectObject') {
 								// Find label of connect object
 								var connectObj = application.objects.filter(function (o) {
 									return o.id == col.setting.linkObject;
