@@ -47,9 +47,15 @@ steal(
          *
          * @return {array}
          */
-        self.getDescriptions = function() {
+        self.getDescriptions = function(type) {
             return $.map(functions.filter(function(fn){ return !fn.isHidden; }), function(fn, indx){
-                return [fn.description];
+                if(fn=='numeric'){
+                    return [fn.description];
+                }
+                else{
+                     return [fn.description];
+                }
+               
             });
         }
 
