@@ -71,8 +71,8 @@ steal(
 							{ id: 'date', value: "Date" },
 
 							]
-						},*/
-						]
+						},
+						]*/
 
 					},
 					{
