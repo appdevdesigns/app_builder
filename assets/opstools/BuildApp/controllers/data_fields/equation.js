@@ -309,7 +309,7 @@ steal(
 
 	function addListEquation(type){
 
-		var listItem = EquationManager.getDescriptions();
+		var listItem = EquationManager.getDescriptions(type);
 		//console.log(listItem);
 		if(type == 'date'){
 			for(i = 0 ; i < listItem.length ; i++){
