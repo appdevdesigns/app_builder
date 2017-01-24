@@ -70,7 +70,7 @@ steal(
 							{ id: 'number', value: "Number" },
 							{ id: 'date', value: "Date" },
 
-							/*]
+							]/*
 						},
 						]*/
 
