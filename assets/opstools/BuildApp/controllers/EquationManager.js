@@ -49,7 +49,8 @@ steal(
          */
         self.getDescriptions = function(type) {
             return $.map(functions.filter(function(fn){ return !fn.isHidden; }), function(fn, indx){
-                if(fn=='numeric'){
+                console.log("fn:"+fn);
+                if(fn == 'numeric'){
                     return [fn.description];
                 }
                 else{
