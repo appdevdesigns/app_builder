@@ -47,10 +47,12 @@ steal(
          *
          * @return {array}
          */
-        self.getDescriptions = function(type) {
+        self.getDescriptions = function(equationType) {
             return $.map(functions.filter(function(fn){ return !fn.isHidden; }), function(fn, indx){
-                //console.log("fn:"+fn.returns);
-                if(fn.returns == type){
+                console.log("fn:"+fn.returns);
+                 console.log("equationType:"+equationType);
+                if(fn.returns == equationType){
+                    console.log("description:" + equationType);
                     return [fn.description];
                 }
   
