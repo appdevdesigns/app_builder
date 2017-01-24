@@ -56,9 +56,8 @@ steal(
 				}, 50);
 			}
 
-			function getNewModelData(dataCollection, columns) {
+			function populateValuesToModelData(modelData, dataCollection, columns) {
 				var self = this,
-					modelData = new dataCollection.AD.getModelObject()(), // Create new model data
 					editValues = $$(self.viewId).getValues(),
 					keys = Object.keys(editValues);
 
@@ -81,8 +80,6 @@ steal(
 							modelData.removeAttr(col.name);
 					}
 				});
-
-				return modelData;
 			}
 
 			function saveModelData(dataCollection, object, columns, setting, linkedToDataCollection) {
@@ -97,7 +94,9 @@ steal(
 					addTasks = [];
 
 					linkedToDataCollection.getCheckedItems().forEach(function (linkRowId) {
-						var modelData = getNewModelData.call(self, dataCollection, columns);
+						var modelData = new dataCollection.AD.getModelObject()(); // Create new model data
+
+						populateValuesToModelData.call(self, modelData, dataCollection, columns);
 
 						// Set link row id to field
 						modelData.attr(linkField.name, linkRowId);
@@ -127,9 +126,11 @@ steal(
 
 					// Create
 					if (modelData === null) {
-						modelData = getNewModelData.call(self, dataCollection, columns);
+						modelData = new dataCollection.AD.getModelObject()(); // Create new model data
 						isAdd = true;
 					}
+
+					populateValuesToModelData.call(self, modelData, dataCollection, columns);
 
 					callSaveModelData.call(self, modelData, dataCollection, isAdd)
 						.fail(function (err) {
