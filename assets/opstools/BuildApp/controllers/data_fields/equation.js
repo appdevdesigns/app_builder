@@ -403,6 +403,7 @@ steal(
 			$(itemNode).find('.ab-equation-data-field').html('');
 			return true;
 		}
+		
 
 		try {
 			var parser = EquationManager.parse(fieldData.setting.equation);
@@ -485,7 +486,7 @@ steal(
 				}
 		
 
-				$(itemNode).find('.ab-equation-data-field').html(data);
+				$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 			} 
 			else {
 				console.log("parser:false");
