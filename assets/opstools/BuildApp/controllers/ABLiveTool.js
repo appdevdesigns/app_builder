@@ -464,11 +464,15 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 							var self = this;
 
 							// Listen component events
+							$(comInstance).off('renderComplete');
 							$(comInstance).on('renderComplete', function (event, data) {
 								$$(self.rootPage.domID).adjust();
-								$$(itemInfo.domID).adjust();
+
+								if($$(itemInfo.domID))
+									$$(itemInfo.domID).adjust();
 							});
 
+							$(comInstance).off('changePage');
 							$(comInstance).on('changePage', function (event, data) {
 								// Redirect to another page
 								if (data.previousPage)
@@ -489,6 +493,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 
 								// when the tab changes, be sure to rebind it's current
 								// components:
+								$(comInstance).off('changeTab');
 								$(comInstance).on('changeTab', function (event, data) {
 									self.bindComponentEventsInTab(itemInfo);
 								});
