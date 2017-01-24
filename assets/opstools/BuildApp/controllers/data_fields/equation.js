@@ -77,7 +77,7 @@ steal(
 					},
 					{
 						view: "label",
-						label: "Example Output"
+						label: "Example Output year()-year(birthdate)"
 					},	
 					{
 						view: "text",
