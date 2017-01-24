@@ -59,7 +59,7 @@ steal(
 							{ id: 'years', value: "Years" },
 							]
 						},
-						{
+						{*/
 							view: "richselect",
 							id: componentIds.resultType,
 							label: "Result Type",
@@ -70,7 +70,7 @@ steal(
 							{ id: 'number', value: "Number" },
 							{ id: 'date', value: "Date" },
 
-							]
+							/*]
 						},
 						]*/
 
