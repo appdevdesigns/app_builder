@@ -64,11 +64,11 @@ steal(
 							id: componentIds.resultType,
 							label: "Result Type",
 							labelWidth: "110",
-							value: 'none',
+							value: 'number',
 							//disabled: true,
 							options: [
 							{ id: 'number', value: "Number" },
-							{ id: 'date', value: "Date" },
+							//{ id: 'date', value: "Date" },
 
 							]/*
 						},
@@ -96,7 +96,7 @@ steal(
 					]
 				},
 				getSettings : function () {
-					console.log("setting equation 22222");
+					
 					var type = 'integer';
 
 					var settings = {
@@ -398,12 +398,17 @@ steal(
 
 
 		equationDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
-		/*
+		
 		if (rowData == null) {
 			$(itemNode).find('.ab-equation-data-field').html('');
 			return true;
 		}
-		
+				try {
+			var parser = EquationManager.parse(fieldData.setting.equation);
+			//console.log("parser: " + parser);
+			if (parser) {
+			var data = parser(rowData);
+				
 		var decimalSizeNum = 0,
 			decimalDelimiters = ".",
 			groupDelimiters = "";
@@ -421,9 +426,9 @@ steal(
 						decimalDelimiters = ",";
 						break;
 				}
-			}*/
+			}
 
-			/*if (fieldData.setting.typeRounding != undefined) {
+			if (fieldData.setting.typeRounding != undefined) {
 				switch (fieldData.setting.typeRounding) {
 					case 'roundUp':
 						var num = data;
@@ -438,10 +443,10 @@ steal(
 						data = Math.floor(num / div) * div;
 						break;
 				}
-			}*/
+			}
 		//}
 		
-		/*if (fieldData.setting.typeThousands != undefined) {
+		if (fieldData.setting.typeThousands != undefined) {
 			switch (fieldData.setting.typeThousands) {
 				case 'comma':
 					groupDelimiters = ",";
@@ -453,26 +458,22 @@ steal(
 					groupDelimiters = " ";
 					break;
 			}
-		}*/
-		
-		/*var data = caldateDiff(fieldData.setting.dateType,rowData[fieldData.setting.equation],new Date());
-		
-		console.log("datakid: "+ data);
+		}
 		
 		var numberFormat = webix.Number.format(data, {
 			groupDelimiter: groupDelimiters,
 			groupSize: 3,
 			decimalDelimiter: decimalDelimiters,
 			decimalSize: decimalSizeNum
-		});*/
+		});
 		
 		//console.log("numberFormatkid: "+ numberFormat);
-		/*if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
+		if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
 			var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
 			if (formatItem) {
 				numberFormat = (formatItem.position == 'prefix' ? formatItem.sign + ' ' + numberFormat : numberFormat + ' ' + formatItem.sign);
 			}
-		}*/
+		}
 		
 		//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 		
@@ -481,13 +482,8 @@ steal(
 			return true;
 		}
 		
-		console.log("EList : " + EquationManager.getDescriptions());
-		
-		try {
-			var parser = EquationManager.parse(fieldData.setting.equation);
-			console.log("parser: " + parser);
-			if (parser) {
-				$(itemNode).find('.ab-equation-data-field').html(parser(rowData));
+
+				$(itemNode).find('.ab-equation-data-field').html(data);
 			} else {
 				console.log("parser:false");
 				$(itemNode).find('.ab-equation-data-field').html('invalid equation:'+fieldData.setting.equation);
