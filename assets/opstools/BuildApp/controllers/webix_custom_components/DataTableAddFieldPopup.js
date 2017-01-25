@@ -232,7 +232,7 @@ steal(
 				var runningNumber = 1;
 
 				if (this.dataTable)
-					runningNumber = this.dataTable.config.columns.length;
+					runningNumber = this.dataTable.config.columns.length + 1;
 
 				return 'Field ' + runningNumber;
 			}
