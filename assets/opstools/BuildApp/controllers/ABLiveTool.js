@@ -177,7 +177,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 
 												// Refresh components of root page
 												if (self.activePage && data.page == self.activePage.id)
-													self.showPage(newPage.attr());
+													self.showPage(newPage);
 											}
 										});
 								}
