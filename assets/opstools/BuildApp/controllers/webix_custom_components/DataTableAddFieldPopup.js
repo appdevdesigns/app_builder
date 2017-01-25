@@ -77,6 +77,8 @@ steal(
 							cols: [
 								{
 									view: "button", id: componentIds.saveButton, label: labels.add_fields.addNewField, type: "form", width: 120, click: function () {
+										this.disable();
+
 										var base = this.getTopParentView(),
 											dataTable = base.dataTable,
 											fieldInfo = dataFieldsManager.getSettings(base.fieldName);
@@ -232,7 +234,7 @@ steal(
 				var runningNumber = 1;
 
 				if (this.dataTable)
-					runningNumber = this.dataTable.config.columns.length + 1;
+					runningNumber = this.dataTable.config.columns.length || 1;
 
 				return 'Field ' + runningNumber;
 			}
