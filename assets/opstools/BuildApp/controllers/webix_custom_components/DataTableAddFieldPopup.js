@@ -77,14 +77,17 @@ steal(
 							cols: [
 								{
 									view: "button", id: componentIds.saveButton, label: labels.add_fields.addNewField, type: "form", width: 120, click: function () {
-										this.disable();
+										var self = this;
 
-										var base = this.getTopParentView(),
+										self.disable();
+
+										var base = self.getTopParentView(),
 											dataTable = base.dataTable,
 											fieldInfo = dataFieldsManager.getSettings(base.fieldName);
 
 										if (!dataTable) {
 											webix.message({ type: "error", text: labels.add_fields.registerTableWarning });
+											self.enable();
 											return;
 										}
 
@@ -94,6 +97,7 @@ steal(
 												text: 'System could not get this field information ',
 												ok: labels.common.ok
 											});
+											self.enable();
 											return;
 										}
 
@@ -104,6 +108,7 @@ steal(
 												text: labels.add_fields.invalidFieldDescription,
 												ok: labels.common.ok
 											});
+											self.enable();
 											return;
 										}
 
@@ -115,6 +120,7 @@ steal(
 												text: labels.add_fields.duplicateFieldDescription,
 												ok: labels.common.ok
 											});
+											this.enable();
 											return;
 										}
 
@@ -125,6 +131,7 @@ steal(
 										if (base.saveFieldCallback && base.fieldName) {
 											base.saveFieldCallback(base.fieldName, fieldInfo)
 												.then(function () {
+													self.enable();
 													base.resetState();
 													base.hide();
 												});

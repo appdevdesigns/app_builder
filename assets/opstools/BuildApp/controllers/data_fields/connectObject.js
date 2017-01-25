@@ -185,12 +185,13 @@ steal(
 			$$(componentIds.editView).appName = application.name;
 
 			var objectList = AD.op.WebixDataCollection(application.objects);
-			objectList.attachEvent('onAfterAdd', function (id, index) {
-				$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
-			});
-			objectList.attachEvent('onAfterDelete', function () {
-				$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
-			});
+			// Allow linking to self
+			// objectList.attachEvent('onAfterAdd', function (id, index) {
+			// 	$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
+			// });
+			// objectList.attachEvent('onAfterDelete', function () {
+			// 	$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
+			// });
 			$$(componentIds.objectList).clearAll();
 			$$(componentIds.objectList).data.unsync();
 			$$(componentIds.objectList).data.sync(objectList);
@@ -337,7 +338,7 @@ steal(
 				linkVia = linkVia[0];
 
 			// Open popup
-			$$(componentIds.connectDataPopup).open(application, linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
+			$$(componentIds.connectDataPopup).open(application, linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType, !fieldData.isSynced);
 
 			return false;
 		};

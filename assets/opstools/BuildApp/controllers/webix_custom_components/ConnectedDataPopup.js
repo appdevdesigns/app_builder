@@ -72,7 +72,7 @@ steal(
 										this.unselectAll();
 								},
 								onItemClick: function (id, e, node) {
-									if (isNaN(id)) {
+									if (isNaN(id) || data.unsync) {
 										webix.alert({
 											title: labels.object.cannotConnectedDataTitle,
 											text: labels.object.cannotConnectedDataDescription,
@@ -92,7 +92,7 @@ steal(
 
 										var selectedIds = this.getSelectedId();
 
-										if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
+										if (typeof selectedIds === 'string' || !isNaN(selectedIds) || !data.unsync) {
 											if (selectedIds)
 												selectedIds = [selectedIds];
 											else
@@ -177,13 +177,14 @@ steal(
 				}
 			},
 
-			open: function (application, object, rowId, selectedIds, linkType, linkColName, linkViaType) {
+			open: function (application, object, rowId, selectedIds, linkType, linkColName, linkViaType, unsync) {
 				var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
 				dataList.clearAll();
 				if (dataList.hideOverlay) dataList.hideOverlay();
 
 				data.selectedIds = selectedIds;
+				data.unsync = unsync;
 
 				this.getTopParentView().show();
 				webix.extend(dataList, webix.ProgressBar);
@@ -203,7 +204,7 @@ steal(
 						}
 					}
 
-					templateText += isNaN(item.id) ? " (Unsynchronized)" : "";
+					templateText += isNaN(item.id) || data.unsync ? " (Unsynchronized)" : "";
 					templateText += "</div>";
 					templateText = templateText.replace(/[{]/g, '#').replace(/[}]/g, '#'); // Replace label format
 

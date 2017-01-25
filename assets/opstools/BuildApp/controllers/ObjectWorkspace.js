@@ -822,6 +822,9 @@ steal(
 
 															objectModel.Cached.columns.push(result);
 
+															// Add new describe to object model
+															objectModel.describe()[result.name] = result.type;
+
 															updateColumn = result;
 
 															next();
