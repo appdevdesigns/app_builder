@@ -6,6 +6,7 @@ steal(
 			componentIds = {
 				editHeaderItems: 'ab-edit-header-items'
 			},
+			eventIds = {}, // { eventName: eventId }
 			labels = {
 				hideField: AD.lang.label.getLabel('ab.object.hideField') || "Hide field",
 				filterField: AD.lang.label.getLabel('ab.object.filterField') || "Filter field",
@@ -51,7 +52,15 @@ steal(
 
 				dataTable = dt;
 				if (dataTable) {
-					dataTable.attachEvent('onHeaderClick', function (id, e, trg) {
+					// Unsubscribe old event
+					if (eventIds['onHeaderClick']) {
+						dataTable.detachEvent(eventIds['onHeaderClick']);
+						delete eventIds['onHeaderClick'];
+					}
+
+					eventIds['onHeaderClick'] = dataTable.attachEvent('onHeaderClick', function (id, e, trg) {
+						if (id.column == 'appbuilder_trash') return; // Ignore trash column
+
 						var columnConfig = dataTable.getColumnConfig(id.column);
 
 						data.headerId = columnConfig.dataId;
