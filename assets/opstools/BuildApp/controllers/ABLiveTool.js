@@ -42,7 +42,7 @@ steal(
 							self.containerDomID = self.unique('ab_live_tool', self.options.app, self.options.page);
 
 							self.debounceResize = false;
-							self.resizeValues = { height:0, width:0};
+							self.resizeValues = { height: 0, width: 0 };
 
 							self.initDOM();
 							self.initModels();
@@ -52,8 +52,8 @@ steal(
 								self.initEvents();
 
 								// Store the root page
-								self.rootPage = self.data.pages.filter(function (page) { 
-									return page.id == self.options.page 
+								self.rootPage = self.data.application.pages.filter(function (page) {
+									return page.id == self.options.page
 								})[0];
 
 								self.renderPageContainer();
@@ -119,17 +119,17 @@ steal(
 									// 	]
 									// }).then(function (result) {
 									self.data.application.getAllApplicationPages()
-									.then(function(result) { 
-										result.forEach(function (page) {
-											if (page.translate) page.translate();
+										.then(function (result) {
+											result.forEach(function (page) {
+												if (page.translate) page.translate();
 
-											page.attr('domID', self.unique('ab_live_page', self.options.app, page.id));
-										});
+												page.attr('domID', self.unique('ab_live_page', self.options.app, page.id));
+											});
 
-										self.data.pages = result;
+											// self.data.application.pages = result;
 
-										next();
-									}, next);
+											next();
+										}, next);
 								}
 							], function (err) {
 								if (err) q.reject(err);
@@ -155,18 +155,17 @@ steal(
 
 											var exists = false;
 
-											self.data.pages.forEach(function (page, index) {
+											self.data.application.pages.forEach(function (page, index) {
 												// Update exists page
 												if (page.id == data.page) {
-													self.data.pages.attr(index, newPage.attr());
-// #Hack! Fix the ModelUpdate() syncing
-if (self.data.application) self.data.application.pages = self.data.pages;
+													// #Hack! Fix the ModelUpdate() syncing
+													self.data.application.pages.attr(index, newPage.attr());
 													exists = true;
 												}
 											});
 
 											// Add new page to list
-											if (!exists) self.data.pages.push(newPage);
+											if (!exists) self.data.application.pages.push(newPage);
 
 											// Render the new page
 											self.renderPage(newPage);
@@ -186,7 +185,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 
 							AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
 
-								var page = self.data.pages.filter(function (p) { return p.id == data.page });
+								var page = self.data.application.pages.filter(function (p) { return p.id == data.page });
 
 								if ((data.app == self.options.app) && (page.length > 0)) {
 
@@ -198,12 +197,10 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 											updatePage.attr('domID', self.unique('ab_live_page', self.options.app, updatePage.id));
 
 											// Update page in list
-											self.data.pages.forEach(function (page, index) {
+											self.data.application.pages.forEach(function (page, index) {
 												if (page.id == updatePage.id)
-													self.data.pages.attr(index, updatePage.attr());
-// #Hack! Fix the ModelUpdate() syncing
-if (self.data.application) self.data.application.pages = self.data.pages;
-
+													// #Hack! Fix the ModelUpdate() syncing
+													self.data.application.pages.attr(index, updatePage.attr());
 											});
 
 											// rebuild our display
@@ -223,13 +220,13 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 
 							AD.comm.hub.subscribe('ab.interface.remove', function (msg, data) {
 
-								if ((data.app == self.options.app) && (self.data.pages.filter(function (p) { return p.id == data.page }).length > 0)) {
+								if ((data.app == self.options.app) && (self.data.application.pages.filter(function (p) { return p.id == data.page }).length > 0)) {
 
 									// If the deleted page is showing, then switch to previous page.
 									if (self.activePage && self.activePage.id == data.page && self.previousPage)
 										self.showPage(self.previousPage);
 
-									self.data.pages.slice(0).forEach(function (page, index) {
+									self.data.application.pages.slice(0).forEach(function (page, index) {
 										if (data.page != page.id) return;
 
 										// Remove sub-page
@@ -244,8 +241,8 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 											}
 										}
 
-										// Remove from self.data.pages
-										self.data.pages.splice(index, 1);
+										// Remove from self.data.application.pages
+										self.data.application.pages.splice(index, 1);
 
 										// TODO: Update menu and link components
 									});
@@ -267,7 +264,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 
 						renderPageContainer: function () {
 							var self = this,
-								pages = self.data.pages;
+								pages = self.data.application.pages;
 
 							// Clear UI content
 							if ($$(self.rootPage.domID))
@@ -301,7 +298,8 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 
 							// Render pages
 							pages.forEach(function (page) {
-								self.renderPage(page);
+								if (page.id == self.rootPage.id || (page.parent && page.parent.id == self.rootPage.id))
+									self.renderPage(page);
 							});
 
 						},
@@ -360,7 +358,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 									// don't render tabs.  The component will do that.
 
 									// refresh tab view when update
-									var parentPage = self.data.pages.filter(function (p) { return p.id == page.parent.id })[0];
+									var parentPage = self.data.application.pages.filter(function (p) { return p.id == page.parent.id })[0];
 									if (parentPage == null) break;
 
 									parentPage.components.forEach(function (com) {
@@ -468,7 +466,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 							$(comInstance).on('renderComplete', function (event, data) {
 								$$(self.rootPage.domID).adjust();
 
-								if($$(itemInfo.domID))
+								if ($$(itemInfo.domID))
 									$$(itemInfo.domID).adjust();
 							});
 
@@ -479,7 +477,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 									self.showPage(self.previousPage);
 								else if (self.activePage.id != data.pageId && data.pageId) {
 
-									var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
+									var redirectPage = self.data.application.pages.filter(function (p) { return p.id == data.pageId; });
 
 									if (redirectPage && redirectPage.length > 0)
 										self.showPage(redirectPage[0]);
@@ -489,7 +487,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 							if (itemInfo.component === 'tab') {
 
 								// make sure an embedded tab's component gets bound now.
-								self.bindComponentEventsInTab(itemInfo); 
+								self.bindComponentEventsInTab(itemInfo);
 
 								// when the tab changes, be sure to rebind it's current
 								// components:
@@ -506,7 +504,7 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 							// Bind events of components in tab
 							if (item.component == 'tab' && item.setting && item.setting.tabs) {
 								item.setting.tabs.forEach(function (tab) {
-									var tabPage = self.data.pages.filter(function (p) { return p.name == tab.uuid; })[0];
+									var tabPage = self.data.application.pages.filter(function (p) { return p.name == tab.uuid; })[0];
 
 									if (tabPage == null || tabPage.components == null || tabPage.comInstances == null) return;
 
@@ -548,8 +546,8 @@ if (self.data.application) self.data.application.pages = self.data.pages;
 
 								_this.debounceResize = true;
 
-								setTimeout(function() {
-// console.log('ABLiveTool.debouncedResize()');
+								setTimeout(function () {
+									// console.log('ABLiveTool.debouncedResize()');
 									if (_this.resizeValues.width > 0)
 										$$(_this.containerDomID).define('width', width);
 
