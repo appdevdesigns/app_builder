@@ -29,7 +29,7 @@ steal(
 		var equationDataField = {
 		name: 'equation', // unique key to reference this specific DataField
 		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-		icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+		icon: 'calculator',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 		menuName: AD.lang.label.getLabel('ab.dataField.equation.menuName') ||'Equation',  
 		includeHeader: true,
@@ -388,6 +388,7 @@ steal(
 				typeThousands : $$(componentIds.typeThousands).getValue(),
 				typeFormat : $$(componentIds.typeFormat).getValue(),
 				equation : $$(componentIds.equation).getValue(),
+				icon: equationDataField.icon,
 
 
 			}
