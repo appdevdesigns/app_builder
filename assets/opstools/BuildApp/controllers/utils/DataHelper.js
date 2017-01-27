@@ -60,6 +60,9 @@ steal(
 									var linkObj = application.objects.filter(function (obj) { return obj.id == linkCol.setting.linkObject; })[0],
 										linkedData = [];
 
+									// Check Linked object is deleted
+									if (linkObj == null) return ok();
+
 									// Get linked object model
 									var linkObjModel = modelCreator.getModel(application, linkObj.name);
 

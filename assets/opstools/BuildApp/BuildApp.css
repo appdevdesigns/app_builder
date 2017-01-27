@@ -40,7 +40,18 @@
 	overflow: auto !important;
 }
 
-/* Webix datatable */
+/* == Webix datatable == */
+/* Checkbox column */
+.ab-main-container .webix_hcell.center input[type=checkbox] {
+	width:20px;
+	height:20px;
+	margin-top:12px;
+  }
+.ab-main-container .webix_table_checkbox {
+	width:20px;
+	height:20px;
+	margin-top:5px;
+}
 /* Last column */
 .ab-main-container .webix_column.webix_last > div,
 .ab-main-container .webix_hs_center td.webix_last,
@@ -101,6 +112,12 @@
 .ab-component-view-edit-field .webix_segment_N {
 	color: #3498db;
 	background: #fff;
+}
+
+/* Add new columns popup */
+.ab-add-fields-popup {
+	max-height: 450px; 
+	overflow-y: auto;
 }
 
 /* Application list */
@@ -272,6 +289,12 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 
 /* Interface new page popup */
+.ab-interface-new-quick-page {
+    overflow: scroll !important;
+	overflow-x: hidden !important;
+	overflow-y: auto !important;
+}
+
 .ab-interface-new-quick-page label {
 	font-weight: normal; /* Override bootstrap*/
 }
@@ -407,6 +430,13 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-loading-button button {
 	background-color: #003B7E;
 	width: 200px;
+}
+.ab-loading-cancel-button {
+	text-align: center;
+	background: transparent;
+}
+.ab-loading-cancel-button a {
+	color: #fff !important;
 }
 .ab-loading-screen .webix_progress_bottom {
 	height: 40px !important;

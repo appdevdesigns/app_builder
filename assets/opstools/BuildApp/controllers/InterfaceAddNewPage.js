@@ -21,7 +21,8 @@ steal(
 
 								this.componentId = {
 									addNewPopup: 'ab-interface-add-new-popup',
-									selectTab: 'ab-interface-add-new-tab'
+									selectTab: 'ab-interface-add-new-tab',
+									saveButton: 'ab-interface-save-button'
 								};
 
 								this.data = {};
@@ -81,6 +82,7 @@ steal(
 												margin: 5,
 												cols: [
 													{
+														id: self.componentId.saveButton,
 														view: "button",
 														value: self.labels.common.add,
 														type: "form",
@@ -127,20 +129,39 @@ steal(
 							addNewPage: function () {
 								var self = this;
 
+								$$(self.componentId.saveButton).disable();
+
 								switch ($$(self.componentId.selectTab).getValue()) {
 									case 'QuickPage':
 										quickPage.save(AD.classes.AppBuilder.currApp)
-											.then(function (newPage) {
-												self.callAddNewPageEvent(newPage);
+											.fail(function (err) {
+												// TODO : Error message 
+												$$(self.componentId.saveButton).enable();
+											})
+											.done(function (newPages) {
+												if (newPages.forEach) {
+													newPages.forEach(function (nPage) {
+														self.callAddNewPageEvent(nPage);
+													});
+												}
+												else {
+													self.callAddNewPageEvent(newPages);
+												}
 
+												$$(self.componentId.saveButton).enable();
 												$$(self.componentId.addNewPopup).hide();
 											});
 										break;
 									case 'BlankPage':
 										blankPage.save(AD.classes.AppBuilder.currApp)
-											.then(function (newPage) {
+											.fail(function (err) {
+												// TODO : Error message 
+												$$(self.componentId.saveButton).enable();
+											})
+											.done(function (newPage) {
 												self.callAddNewPageEvent(newPage);
 
+												$$(self.componentId.saveButton).enable();
 												$$(self.componentId.addNewPopup).hide();
 											});
 										break;

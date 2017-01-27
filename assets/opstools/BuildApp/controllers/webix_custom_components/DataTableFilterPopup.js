@@ -58,6 +58,45 @@ steal(
                     }
                 }
             },
+
+            dataTable_setter: function (dataTable) {
+                var filter_popup = this;
+
+                if (filter_popup.dataTable && filter_popup.dataTable.config.id == dataTable.config.id) return;
+
+                // Reset form
+                var filter_form = filter_popup.getChildViews()[0];
+                filter_form.clear();
+                filter_form.clearValidation();
+
+                filter_popup.dataTable = dataTable;
+
+                // Get all filter conditions to remove
+                var cViews = [];
+                var childViews = filter_form.getChildViews();
+                for (var i = 0; i < childViews.length; i++) {
+                    if (i >= childViews.length - 1) // Ignore 'Add a filter' button
+                        break;
+
+                    cViews.push(childViews[i]);
+                }
+
+                // Remove all filter conditions
+                cViews.forEach(function (v) {
+                    filter_form.removeView(v);
+                });
+            },
+
+            columns_setter: function (columns) {
+                var filter_popup = this;
+
+                // We can remove it when we can get all column from webix datatable (include hidden fields)
+                filter_popup.fieldList = columns;
+
+                filter_popup.refreshFieldList();
+            },
+
+
             addNewFilter: function (fieldId) {
                 var filter_popup = this,
                     filter_form = filter_popup.getChildViews()[0],
@@ -187,7 +226,7 @@ steal(
                         // Value
                         {},
                         {
-                            view: "button", value: "X", width: 30, click: function () {
+                            view: "button", icon: "trash", type: "icon", width: 30, click: function () {
                                 var filter_item = this.getParentView();
                                 filter_form.removeView(filter_item);
                                 filter_popup.filter();
@@ -205,39 +244,7 @@ steal(
 
                 this.getTopParentView().callChangeEvent();
             },
-            registerDataTable: function (dataTable) {
-                var filter_popup = this,
-                    filter_form = filter_popup.getChildViews()[0];
 
-                filter_popup.dataTable = dataTable;
-
-                // Reset form
-                filter_form.clear();
-                filter_form.clearValidation();
-
-                // Get all filter conditions to remove
-                var cViews = [];
-                var childViews = filter_form.getChildViews();
-                for (var i = 0; i < childViews.length; i++) {
-                    if (i >= childViews.length - 1) // Ignore 'Add a filter' button
-                        break;
-
-                    cViews.push(childViews[i]);
-                }
-
-                // Remove all filter conditions
-                cViews.forEach(function (v) {
-                    filter_form.removeView(v);
-                });
-            },
-            setFieldList: function (fieldList) {
-                var filter_popup = this;
-
-                // We can remove it when we can get all column from webix datatable (include hidden fields)
-                filter_popup.fieldList = fieldList;
-
-                filter_popup.refreshFieldList();
-            },
             getFieldList: function () {
                 var filter_popup = this,
                     fieldList = [];
@@ -425,9 +432,18 @@ steal(
                         conditionNumber++;
                 });
 
-                this.getTopParentView().callEvent('onChange', [conditionNumber]);
+                this.getTopParentView().callEvent('onChange', [filter_popup.dataTable.config.id, conditionNumber]);
             }
         }, webix.ui.popup);
+
+
+        // Create instance of popup
+        if ($$('ab-filter-popup') == null) {
+            webix.ui({
+                id: 'ab-filter-popup',
+                view: 'filter_popup'
+            }).hide();
+        }
 
 
     }

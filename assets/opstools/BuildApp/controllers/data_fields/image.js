@@ -58,7 +58,7 @@ steal(function () {
 	 *					->  imageDataField.editDefinition.id
 	 */
 	var componentIds = {
-		editView: 'ab-new-image',
+		editView	: 'ab-new-image',
 
 		useWidth	: 'useWidth',
 		imageWidth	: 'imageWidth', 
@@ -247,7 +247,7 @@ steal(function () {
 	imageDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 
 	
-		var keyField = this.keyField( application, object, fieldData, rowData.id);
+		var keyField = this.keyField( application, object, fieldData, rowData ? rowData.id : null);
 
 		////
 		//// Prepare the Display
@@ -394,7 +394,7 @@ steal(function () {
 					var updatePacket = {
 						objectId : object.id,
 						columnName : fieldData.name,
-						rowId : rowData.id,
+						rowId : rowData ? rowData.id : null,
 						data : response.data.uuid
 					};
 					$(imageDataField).trigger('update', updatePacket);

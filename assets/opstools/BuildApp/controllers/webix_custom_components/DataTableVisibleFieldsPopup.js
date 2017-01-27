@@ -2,7 +2,6 @@ steal(
     // List your Controller's dependencies here:
     function () {
         var data = {},
-            dataTable,
             componentIds = {
                 fieldsList: 'ab-visible-fields-list'
             },
@@ -26,29 +25,32 @@ steal(
                                     view: 'button',
                                     value: labels.visible_fields.showAll,
                                     click: function () {
-                                        dataTable.eachColumn(function (cId) {
-                                            dataTable.showColumn(cId);
+                                        var visible_popup = this.getTopParentView();
+
+                                        visible_popup.dataTable.eachColumn(function (cId) {
+                                            visible_popup.dataTable.showColumn(cId);
                                         }, true);
 
-                                        this.getTopParentView().callChangeEvent();
+                                        visible_popup.callChangeEvent();
                                     }
                                 },
                                 {
                                     view: 'button',
                                     value: labels.visible_fields.hideAll,
                                     click: function () {
-                                        var columns = [];
+                                        var visible_popup = this.getTopParentView(),
+                                            columns = [];
 
-                                        dataTable.config.columns.forEach(function (c) {
+                                        visible_popup.dataTable.config.columns.forEach(function (c) {
                                             if (c.id != 'appbuilder_trash')
                                                 columns.push(c.id);
                                         });
 
                                         columns.forEach(function (c) {
-                                            dataTable.hideColumn(c);
+                                            visible_popup.dataTable.hideColumn(c);
                                         });
 
-                                        this.getTopParentView().callChangeEvent();
+                                        visible_popup.callChangeEvent();
                                     }
                                 }
                             ]
@@ -61,15 +63,15 @@ steal(
                             template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
                             on: {
                                 onItemClick: function (id, e, node) {
-                                    var item = this.getItem(id),
-                                        dataTable = dataTable;
+                                    var visible_popup = this.getTopParentView(),
+                                        item = this.getItem(id);
 
-                                    if (dataTable.isColumnVisible(id))
-                                        dataTable.hideColumn(id);
+                                    if (visible_popup.dataTable.isColumnVisible(id))
+                                        visible_popup.dataTable.hideColumn(id);
                                     else
-                                        dataTable.showColumn(id);
+                                        visible_popup.dataTable.showColumn(id);
 
-                                    this.getTopParentView().callChangeEvent();
+                                    visible_popup.callChangeEvent();
                                 }
                             }
                         }
@@ -80,8 +82,8 @@ steal(
                         // Initial show/hide icon
                         $('.ab-visible-field-icon').hide();
 
-                        for (key in dataTable.config.columns) {
-                            var c = dataTable.config.columns[key];
+                        for (key in this.dataTable.config.columns) {
+                            var c = this.dataTable.config.columns[key];
                             $($$(componentIds.fieldsList).getItemNode(c.id)).find('.ab-visible-field-icon').show();
                         };
                     }
@@ -89,7 +91,7 @@ steal(
             },
 
             registerDataTable: function (dt) {
-                dataTable = dt;
+                this.dataTable = dt;
             },
 
             setFieldList: function (fieldList) {
@@ -121,30 +123,35 @@ steal(
             },
 
             callChangeEvent: function () {
-                var hiddenNumber = 0;
+                var visible_popup = this.getTopParentView(),
+                    hiddenNumber = 0;
 
-                dataTable.eachColumn(function (cId) {
-                    if (!dataTable.isColumnVisible(cId))
+                visible_popup.dataTable.eachColumn(function (cId) {
+                    if (!visible_popup.dataTable.isColumnVisible(cId))
                         hiddenNumber++;
                 }, true);
 
-                this.getTopParentView().callEvent('onChange', [hiddenNumber]);
+                visible_popup.callEvent('onChange', [hiddenNumber]);
             },
 
             showField: function (id) {
-                dataTable.showColumn(id);
+                var visible_popup = this.getTopParentView();
+
+                visible_popup.dataTable.showColumn(id);
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
 
-                this.getTopParentView().callChangeEvent();
+                visible_popup.callChangeEvent();
             },
 
             hideField: function (id) {
-                dataTable.hideColumn(id);
+                var visible_popup = this.getTopParentView();
+
+                visible_popup.dataTable.hideColumn(id);
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
 
-                this.getTopParentView().callChangeEvent();
+                visible_popup.callChangeEvent();
             }
 
         }, webix.ui.popup);

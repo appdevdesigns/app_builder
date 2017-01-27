@@ -3,7 +3,7 @@ steal(
 	'opstools/BuildApp/controllers/utils/ModelCached.js',
 	function () {
 
-		function defineBaseModel(application, objectName, describe, multilingualFields, associations) {
+		function defineBaseModel(application, objectName, describe, multilingualFields, associations, urlPath) {
 			if (!objectName || !describe || !multilingualFields) throw new Error('Invalid parameters');
 
 			var formatAppName = application.name.replace(/_/g, ''),
@@ -24,6 +24,14 @@ steal(
 				fieldId: 'id',
 				// fieldLabel: 'label'
 			};
+			if (urlPath) {
+				// Some models may have non-standard REST URL paths
+				modelDefinition.findAll ='GET /' + urlPath;
+				modelDefinition.findOne = 'GET /' + urlPath + '/{id}';
+				modelDefinition.create = 'POST /' + urlPath;
+				modelDefinition.update = 'PUT /' + urlPath + '/{id}';
+				modelDefinition.destroy = 'DELETE /' + urlPath + '/{id}';
+			}
 
 			for (var key in modelDefinition) {
 				if (typeof modelDefinition[key] == 'string')
@@ -72,11 +80,17 @@ steal(
 				var objectData = application.objects.filter(function (obj) { return obj.name == objectName; });
 
 				if (!objectData || objectData.length < 1) {
-					console.error('System could not found this object.');
+					AD.error.log('System could not found this object.', {
+						objectName:objectName,
+						application:application,
+						modelName:modelName
+					});
 					return null;
 				}
 
 				objectData = objectData[0];
+				
+				var urlPath = objectData.urlPath || null;
 
 				// Set Describe
 				var describe = {};
@@ -85,7 +99,7 @@ steal(
 				});
 
 				// Set multilingual fields
-				var multilingualFields = objectData.columns.filter(function (col) { return col.setting && col.setting.supportMultilingual; });
+				var multilingualFields = objectData.columns.filter(function (col) { return col.setting && (col.setting.supportMultilingual == 1 || col.setting.supportMultilingual == true); });
 				multilingualFields = $.map(multilingualFields.attr(), function (f) { return f.name; });
 
 				// Set associations
@@ -105,7 +119,7 @@ steal(
 
 				// Define base model
 				try {
-					defineBaseModel(application, objectName, describe, multilingualFields, associations);
+					defineBaseModel(application, objectName, describe, multilingualFields, associations, urlPath);
 				}
 				catch (err) {
 					console.error(err);

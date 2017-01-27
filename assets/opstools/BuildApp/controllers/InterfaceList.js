@@ -18,7 +18,8 @@ steal(
 							options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
 								createdPageEvent: 'AB_Page.Created',
-								updatedPageEvent: 'AB_Page.Updated',
+								addedPageEvent: 'AB_Page.Added',
+								renamePageEvent: 'AB_Page.Rename',
 								deletedPageEvent: 'AB_Page.Deleted'
 							}, options);
 							this.options = options;
@@ -34,6 +35,7 @@ steal(
 
 							self.initMultilingualLabels();
 							self.initControllers();
+							self.initEvents();
 							self.initWebixUI();
 						},
 
@@ -66,6 +68,14 @@ steal(
 							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
 						},
 
+						initEvents: function () {
+							var self = this;
+
+							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
+								self.addPage(data.newPage, true);
+							});
+						},
+
 						initWebixUI: function () {
 							var self = this;
 
@@ -82,11 +92,14 @@ steal(
 										editValue: "label",
 										template: function (item, common) {
 											var template = "<div class='ab-page-list-item'>" +
-												"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label#" +
-												"<div class='ab-page-list-edit'>" +
-												"{common.iconGear}" +
-												"</div>" +
+												"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#" +
 												"</div>";
+											
+											// Disallow rename/delete on Tabs
+											if (item.type !== 'tab')
+												template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
+											else
+												template = template.replace("#iconGear#", "");
 
 											switch (item.type) {
 												case 'modal':
@@ -186,13 +199,9 @@ steal(
 															// Show gear icon
 															self.showGear(result.id);
 
-															self.element.trigger(self.options.updatedPageEvent, { updatedPageId: result.id });
+															self.element.trigger(self.options.renamePageEvent, { page: result.id });
 														});
 												}
-											},
-											onAfterDelete: function (id) {
-												// Fire unselect page event
-												self.element.trigger(self.options.deletedPageEvent, {});
 											}
 										},
 										onClick: {
@@ -344,10 +353,13 @@ steal(
 									case 'remove':
 										if (oldVals.forEach) {
 											oldVals.forEach(function (deletedPage) {
-												if (deletedPage && $$(self.webixUiId.interfaceTree).exists(deletedPage.id))
-													$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
+												if (deletedPage) {
+													if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id))
+														$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
+
+													self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
+												}
 											});
-											self.element.trigger(self.options.updatedPageEvent, {});
 										}
 										break;
 								}
@@ -381,6 +393,15 @@ steal(
 
 						addPage: function (page, noSelect) {
 							var self = this;
+
+							self.element.trigger(self.options.addedPageEvent, {
+								parentId: page.parent ? page.parent.id : null,
+								page: page.id
+							});
+
+							// Exists
+							if ($$(self.webixUiId.interfaceTree).getIndexById(page.id) > -1
+								|| !page.label) return;
 
 							$$(self.webixUiId.interfaceTree).add({
 								id: page.id,

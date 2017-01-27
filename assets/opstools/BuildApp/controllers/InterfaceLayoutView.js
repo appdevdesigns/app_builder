@@ -20,7 +20,11 @@ steal(
 							self.options = AD.defaults({
 								editComponentEvent: 'AB_Page.EditComponent',
 								savedComponentEvent: 'AB_Page.SavedComponent',
-								cancelComponentEvent: 'AB_Page.CancelComponent'
+								deletedComponentEvent: 'AB_Page.DeletedComponent',
+								sortComponentEvent: 'AB_Page.SortComponent',
+								cancelComponentEvent: 'AB_Page.CancelComponent',
+
+								changeTypeEvent: 'AB_Page.ChangeType'
 							}, options);
 
 							// Call parent init
@@ -69,59 +73,6 @@ steal(
 							self.labels.interface.component.confirmDeleteMessage = AD.lang.label.getLabel('ab.interface.component.confirmDeleteMessage') || "Do you want to delete <b>{0}</b>?";
 						},
 
-						initEvents: function () {
-							// TODO : Listen component events
-
-							// var self = this,
-							// 	event_aggregator = $(self);
-
-							// for (var key in self.data.components) {
-							// 	var comInstance = self.data.components[key];
-							// 	if (comInstance.registerEventAggregator)
-							// 		comInstance.registerEventAggregator(event_aggregator);
-							// }
-
-							// event_aggregator.on('save', function (sender, data) {
-							// 	if (!AD.classes.AppBuilder.currApp.currPage) return;
-
-							// 	switch (data.component_name) {
-							// 		case 'Form':
-							// 			var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
-							// 				return c.component === 'Grid' && c.setting.editForm == data.id;
-							// 			});
-
-							// 			objectGridDatas.forEach(function (grid) {
-							// 				var gridId = self.getComponentId(grid.id);
-							// 				if ($$(gridId)) $$(gridId).unselectAll();
-							// 			});
-
-							// 			$$(data.viewId).setValues({});
-							// 			break;
-							// 	}
-							// });
-
-							// event_aggregator.on('cancel', function (sender, data) {
-							// 	if (!AD.classes.AppBuilder.currApp.currPage) return;
-
-							// 	switch (data.component_name) {
-							// 		case 'Form':
-							// 			var objectGridDatas = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) {
-							// 				return c.component === 'Grid' && c.setting.editForm == data.id;
-							// 			});
-
-							// 			objectGridDatas.forEach(function (grid) {
-							// 				var gridId = self.getComponentId(grid.id);
-							// 				if ($$(gridId) && $$(gridId).unselectAll)
-							// 					$$(gridId).unselectAll();
-							// 			});
-
-							// 			$$(data.viewId).setValues({});
-							// 			break;
-							// 	}
-							// });
-
-						},
-
 						initWebixUI: function () {
 							var self = this;
 
@@ -154,7 +105,11 @@ steal(
 														// Call server to change page type
 														AD.classes.AppBuilder.currApp.currPage.changeType(newValue)
 															.fail(function (err) { console.error(err) })
-															.then(function () { });
+															.then(function () {
+																self.element.trigger(self.options.changeTypeEvent, {
+																	page: AD.classes.AppBuilder.currApp.currPage
+																});
+															});
 													}
 												}
 											},
@@ -197,10 +152,9 @@ steal(
 																});
 														},
 														function (next) {
-															if (componentManager.editInstance.afterSaveSetting) {
-																componentManager.editInstance.afterSaveSetting(AD.classes.AppBuilder.currApp.currPage, savedComponent)
-																	.fail(next)
-																	.then(function () { next() });
+															// Call .afterUpdate to updated instance
+															if (componentManager.editInstance && componentManager.editInstance.afterUpdate) {
+																componentManager.editInstance.afterUpdate(next);
 															}
 															else {
 																next();
@@ -337,7 +291,7 @@ steal(
 
 																AD.error.log('Add Component : Error add component', { error: err });
 															})
-															.then(function (result) {
+															.done(function (result) {
 																$$(self.componentIds.componentList).data.changeId(id, result.id);
 																$$(self.componentIds.componentList).updateItem(result.id, result);
 
@@ -356,12 +310,22 @@ steal(
 
 																self.generateComponentsInList();
 
-																webix.message({
-																	type: "success",
-																	text: self.labels.common.createSuccessMessage.replace('{0}', data.name)
-																});
+																function finishCreate() {
+																	webix.message({
+																		type: "success",
+																		text: self.labels.common.createSuccessMessage.replace('{0}', data.name)
+																	});
 
-																$$(self.componentIds.componentList).hideProgress();
+																	$$(self.componentIds.componentList).hideProgress();
+																}
+
+																// Call .afterCreate to new instance
+																if (self.data.components[result.id] && self.data.components[result.id].afterCreate) {
+																	self.data.components[result.id].afterCreate(finishCreate);
+																}
+																else {
+																	finishCreate();
+																}
 															});
 
 													}
@@ -413,6 +377,11 @@ steal(
 																if (err) {
 																	// TODO : show error message
 																}
+																else {
+																	self.element.trigger(self.options.sortComponentEvent, {
+																		page: AD.classes.AppBuilder.currApp.currPage
+																	});
+																}
 															});
 														}
 													}
@@ -440,9 +409,56 @@ steal(
 																		return;
 																	}
 
-																	// Call server to delete object data
-																	deletedCom[0].destroy()
-																		.fail(function (err) {
+																	async.series([
+
+																		// beforeDestroy()
+																		function(next) {
+																			if (self.data.components[id] && self.data.components[id].beforeDestroy) {
+																				self.data.components[id].beforeDestroy(next);
+																			} else {
+																				next();
+																			}
+																		},
+
+																		// destroy
+																		function(next) {
+
+																			// Call server to delete object data
+																			deletedCom[0].destroy()
+																				.fail(function (err) {
+																					next(err);
+																				})
+																				.done(function (result) {
+
+																					$$(self.componentIds.componentList).remove(id);
+
+																					webix.message({
+																						type: "success",
+																						text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
+																					});
+																					
+																					next();
+																				});
+
+																		},
+
+																		// afterDestroy()
+																		function(next) {
+
+																			// Call .afterDestroy to deleted instance
+																			if (self.data.components[id] && self.data.components[id].afterDestroy) {
+																				self.data.components[id].afterDestroy(next);
+																			}
+																			else {
+																				next();
+																			}
+
+																		}
+
+																	],function(err, results){
+
+																		if (err) {
+
 																			$$(self.componentIds.componentList).hideProgress();
 
 																			webix.message({
@@ -451,18 +467,19 @@ steal(
 																			});
 
 																			AD.error.log('Component : Error delete component', { error: err });
-																		})
-																		.then(function (result) {
-																			$$(self.componentIds.componentList).remove(id);
 
-																			webix.message({
-																				type: "success",
-																				text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
+																		} else {
+
+																			self.element.trigger(self.options.deletedComponentEvent, {
+																				page: AD.classes.AppBuilder.currApp.currPage,
+																				component: deletedCom[0]
 																			});
 
 																			$$(self.componentIds.componentList).hideProgress();
-
-																		});
+																		}
+																		
+																	});
+																	
 																}
 
 															}
@@ -531,8 +548,6 @@ steal(
 									components.sort(function (a, b) { return a.weight - b.weight });
 									$$(self.componentIds.componentList).parse(components);
 
-									self.initEvents();
-
 									$$(self.componentIds.componentList).hideProgress();
 								});
 						},
@@ -598,17 +613,21 @@ steal(
 							var self = this,
 								q = $.Deferred(),
 								componentInstance = componentManager.getComponent(com.attr('component')),
-								view = componentInstance.getView(),
+								view = componentInstance ? componentInstance.getView() : null,
 								viewId = self.getComponentId(com.attr('id')),
 								setting = com.attr('setting'),
 								dataCollection, linkedDataCollection;
 
 							// Create component instance
-							self.data.components[com.attr('id')] = new componentInstance(
-								AD.classes.AppBuilder.currApp, // Current application
-								viewId, // the view id
-								com.id // the component data id
-							);
+							if (componentInstance) {
+								self.data.components[com.attr('id')] = new componentInstance(
+									AD.classes.AppBuilder.currApp, // Current application
+									viewId, // the view id
+									com.id // the component data id
+								);
+							} else {
+								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for [' + com.attr('component') + ']');
+							}
 
 							if (view && setting) {
 								var setting = setting.attr ? setting.attr() : setting,

@@ -7,6 +7,7 @@
 
 var AD = require('ad-utils');
 var fs = require('fs');
+var _ = require('lodash');
 var reloading = null;
 
 module.exports = {
@@ -156,20 +157,6 @@ module.exports = {
                 });
             },
             
-            // Create the application folders
-            function(next) {
-                async.eachSeries(appIDs, function(id, ok) {
-                    AppBuilder.buildApplication(id)
-                    .fail(ok)
-                    .done(function() {
-                        ok();
-                    });
-                }, function(err) {
-                    if (err) next(err);
-                    else next();
-                });
-            },
-            
             // Create model definitions for each AB Object
             function(next) {
                 async.eachSeries(objIDs, function(id, ok) {
@@ -225,20 +212,6 @@ module.exports = {
 
                         async.parallel(updateTasks, next);
                     });
-            },
-
-            // Generate all client side page controllers
-            function(next) {
-                async.eachSeries(pageIDs, function(id, ok) {
-                    AppBuilder.buildPage(id)
-                    .fail(ok)
-                    .done(function() {
-                        ok();
-                    });
-                }, function(err) {
-                    if (err) next(err);
-                    else next();
-                });
             },
             
             
@@ -323,7 +296,84 @@ module.exports = {
                 });
             }
         });
+    },
+    
+    
+    // GET /app_builder/application/:appID/findModels
+    findModels: function (req, res) {
+        var appID = req.param('appID');
+        var result = [];
+        var application, appName;
+        var appModels = [];
+        
+        async.series([
+            // Find application
+            function(next) {
+                ABApplication.find({ id: appID })
+                .exec(function(err, list) {
+                    if (err) next(err);
+                    else if (!list || !list[0]) {
+                        next(new Error('Application not found: ' + appID));
+                    }
+                    else {
+                        application = list[0];
+                        appName = AppBuilder.rules.toApplicationNameFormat(application.name);
+                        next();
+                    }
+                });
+            },
+            
+            // Find all objects within this application
+            function(next) {
+                ABObject.find()
+                .where({ application: appID })
+                .exec(function(err, list) {
+                    if (err) next(err);
+                    else {
+                        list = list || [];
+                        // Make a list of model names from objects within
+                        // this application.
+                        appModels = _.map(list, function(o) {
+                            var name;
+                            if (o.isImported) name = o.name;
+                            else name = AppBuilder.rules.toObjectNameFormat(appName, o.name);
+                            return name.toLowerCase();
+                        });
+                        next();
+                    }
+                });
+            },
+            
+            function(next) {
+                // Result is all the sails models that are not currently in
+                // this application.
+                var sailsModels = Object.keys(sails.models);
+                result = _.difference(sailsModels, appModels);
+                next();
+            }
+        
+        ], function(err) {
+            if (err) res.AD.error(err);
+            else res.AD.success(result);
+        });
+    },
+    
+    
+    // POST /app_builder/application/:appID/importModel
+    importModel: function (req, res) {
+        var appID = req.param('appID');
+        var modelName = req.param('model') || '';
+        
+        AppBuilder.modelToObject(appID, modelName)
+        .fail(function(err) {
+            res.AD.error(err);
+        })
+        .done(function(object) {
+            res.AD.success(object);
+        });
+    
     }
+    
 	
 };
 

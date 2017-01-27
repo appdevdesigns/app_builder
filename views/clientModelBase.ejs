@@ -14,19 +14,19 @@ steal(function() {
 				    return {
 				        <% columns.forEach(function(c) { %>
 				            '<%= c.name %>': '<%= c.type %>',
-				        <% } %>
+				        <% }) %>
 				    };
 				},
 				associations: {
 				    <% associations.forEach(function(a) { %>
 				        '<%= a.name %>': 'opstools.<%= appName %>.<%= a.model %>',
-				    <% } %>
+				    <% }) %>
 				},
 				multilingualFields: [
 				    <% multilingualFields.forEach(function(f) { %>
 				        '<%= f.name %>',
-				    <% } %>
-				]
+				    <% }) %>
+				],
 				// validations: {
 				//     "role_label" : [ 'notEmpty' ],
 				//     "role_description" : [ 'notEmpty' ]
@@ -35,7 +35,7 @@ steal(function() {
 				fieldLabel: '<%= fieldLabel %>'
 			}, {
 				// model: function() {
-				//     return AD.Model.get('<%= "opstools.<%= appName %>.<%= objectName %>" %>'); //AD.models.<%= appName %>.<%= objectName %>;
+				//     return AD.Model.get('opstools.<%= appName %>.<%= objectName %>'); //AD.models.<%= appName %>.<%= objectName %>;
 				// },
 				// getID: function() {
 				//     return this.attr(this.model().fieldId) || 'unknown id field';

@@ -26,20 +26,32 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 var DataFields = {};
 
 
-function importDataFields() {
+function importDataFields( next ) {
     var dataFieldPath = path.join(__dirname, 'data_fields');
 
     DataFields = {};
- 
+
     var ignoreFiles = ['.DS_Store', 'dataFieldTemplate.js'];
 
-     fs.readdirSync(dataFieldPath).forEach(function (file) {
-                         
-        // if not one of our ignored files:      
-        if ( ignoreFiles.indexOf(file) == -1) {
-             DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
-         }
-     });
+    fs.readdir(dataFieldPath, function(err, files) {
+
+        if (err) {
+            ADCore.error.log('Service:AppBuilder:Error reading in Data Fields.', { error:err, path:dataFieldPath } );
+            next(err);
+            return;
+        }
+
+        files.forEach(function (file) {
+
+            // if not one of our ignored files:      
+            if (ignoreFiles.indexOf(file) == -1) {
+                DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
+            }
+        });
+
+        next();
+
+    })
 
 }
 
@@ -65,6 +77,10 @@ function getObjectModel(objectId) {
         .then(function (result) { dfd.resolve(result); });
 
     return dfd;
+}
+
+function getPageKey(appName, pageName) {
+    return ['opstools', appName, pageName.toLowerCase()].join('.'); // appName.pageName
 }
 
 module.exports = {
@@ -448,9 +464,12 @@ module.exports = {
         var fullPath, fullPathTrans, clientPath, baseClientPath;
         var cwd = process.cwd();
 
-        importDataFields();
-
         async.series([
+
+            // make sure our dataFields have been imported:
+            importDataFields,
+
+
             // Find object info
             function (next) {
                 ABObject.find({ id: objectID })
@@ -459,6 +478,11 @@ module.exports = {
                     .then(function (list) {
                         var obj = list[0];
                         if (!obj) throw new Error('invalid object id');
+                        if (obj.isImported) {
+                            // Imported objects should not be synced to the server
+                            next('IMPORTED OBJECT');
+                            return null;
+                        }
 
                         // Only numbers and alphabets will be used
                         appName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
@@ -613,7 +637,13 @@ module.exports = {
 
         ], function (err) {
             process.chdir(cwd);
-            if (err) dfd.reject(err);
+            if (err) {
+                if (err == 'IMPORTED OBJECT') {
+                    // Build was skipped because object was imported.
+                    dfd.resolve();
+                }
+                else dfd.reject(err);
+            }
             else dfd.resolve();
         });
 
@@ -628,6 +658,423 @@ module.exports = {
      * @return Deferred
      */
     buildPage: function (pageID) {
+        var dfd = AD.sal.Deferred();
+        var cwd = process.cwd();
+
+
+        var appID, appName, pageName, pageKey, pagePerms, toolLabel;
+        var roles = [];
+        var objectIncludes = [];
+        var controllerIncludes = [];
+
+        var Application = null;
+
+        var pages = {};
+        var modelNames = [];
+
+        async.series([
+            // Find basic page info
+            function (next) {
+                ABPage.findOne({ id: pageID })
+                    .populate('application')
+                    .populate('components')
+                    .populate('translations')
+                    .then(function (page) {
+                        if (!page) return next(new Error('invalid page id'));
+
+                        if (page.parent > 0) throw new Error('not a root page');
+
+                        appID = page.application.id;
+                        appName = AppBuilder.rules.toApplicationNameFormat(page.application.name);
+                        pageName = AppBuilder.rules.nameFilter(page.name);
+                        toolLabel = pageName;
+                        page.translations.some(function (trans) {
+                            if (toolLabel == pageName) {
+                                toolLabel = trans.label;
+                                return true;
+                            }
+                        })
+
+                        // Only numbers and alphabets will be used
+                        Application = page.application;
+
+                        pageKey = getPageKey(appName, pageName);
+                        pagePerms = 'adcore.admin,' + pageKey + '.view';
+
+                        // controllerIncludes.push({
+                        //     key: 'opstools.' + appName + '.' + pageName,
+                        //     path: 'opstools/' + appName + '/controllers/'
+                        //     + pageName + '.js'
+                        // });
+
+                        // Switching to the new ABLiveTool controller:
+                        controllerIncludes.push({
+                            key: 'opstools.BuildApp.ABLiveTool',
+                            path: 'opstools/BuildApp/controllers/ABLiveTool.js',
+                            init: {
+                                app: appID,
+                                page: pageID
+                            }
+                        });
+
+                        pages[pageID] = page;
+
+                        next();
+                        return null;
+                    })
+                    .catch(function (err) {
+                        next(err);
+                        return null;
+                    });
+            },
+
+            // Find assign roles
+            function (next) {
+                var action_key = Application.actionKeyName(); // 'opstools.' + appName + '.view';
+
+                Permissions.getRolesByActionKey(action_key)
+                    .then(function (result) {
+                        roles = result;
+
+                        next();
+                    }, next);
+            },
+
+            // Find all sub-pages
+            function (next) {
+                var pageQueue = [pageID];
+                var completed = [];
+
+                async.whilst(
+                    function () { return (pageQueue.length > 0) },
+                    function (ok) {
+                        var pID = pageQueue.pop();
+                        ABPage.find()
+                            .where({ parent: pID })
+                            .populate('components')
+                            .then(function (list) {
+                                completed.push(pID);
+                                if (list && list[0]) {
+                                    list.forEach(function (page) {
+                                        if (completed.indexOf(page.id) < 0) {
+                                            pageQueue.push(page.id);
+                                        }
+                                        pages[page.id] = page;
+                                    });
+                                }
+                                ok();
+                                return null;
+                            })
+                            .catch(function (err) {
+                                ok(err);
+                                return null;
+                            });
+                    },
+                    function (err) {
+                        if (err) next(err);
+                        else next();
+                    }
+                );
+
+            },
+
+            // // Find related objects
+            // function (next) {
+            //     ABObject.find({ application: appID })
+            //         .then(function (list) {
+            //             for (var i = 0; i < list.length; i++) {
+            //                 var obj = list[i];
+            //                 objectIncludes.push({
+            //                     key: 'opstools.' + appName + '.'
+            //                     + appName + '_' + AppBuilder.rules.nameFilter(obj.name),
+            //                     path: 'opstools/' + appName + '/models/'
+            //                     + appName + '_' + AppBuilder.rules.nameFilter(obj.name) + '.js'
+            //                 });
+
+            //                 modelNames.push(AppBuilder.rules.nameFilter(obj.name));
+            //             }
+            //             next();
+            //             return null;
+            //         })
+            //         .catch(function (err) {
+            //             next(err);
+            //             return null;
+            //         });
+            // },
+
+            // // Generate the client side controller for the app page
+            // function (next) {
+            //     sails.renderView(path.join('app_builder', 'page_controller'), {
+            //         layout: false,
+            //         appId: appID,
+            //         appName: appName,
+            //         pageName: pageName,
+            //         pages: pages,
+            //         models: modelNames,
+            //         rootPageID: pageID,
+            //         domID: function (pid) {
+            //             pid = pid || '';
+            //             return 'abpage-' + appName + '-' + pageName + '-' + pid;
+            //         }
+            //     }, function (err, output) {
+            //         if (err) next(err);
+            //         else {
+            //             fs.writeFile(
+            //                 path.join(
+            //                     'assets', 'opstools', appName,
+            //                     'controllers', pageName + '.js'
+            //                 ),
+            //                 output,
+            //                 function (err) {
+            //                     if (err) next(err);
+            //                     else next();
+            //                 }
+            //             );
+            //         }
+            //     });
+            //     /*
+            //     AD.spawn.command({
+            //         command: cliCommand,
+            //         options: [
+            //             'controllerUI',
+            //             path.join('opstools', appName),
+            //             pageName
+            //         ],
+            //         shouldEcho: true
+            //     })
+            //     .fail(next)
+            //     .done(function() {
+            //         next();
+            //     });
+            //     */
+            // },
+
+            // Create Page's permission action
+            function (next) {
+                var page = pages[pageID];
+                page.permissionActionKey = pageKey + '.view';
+                Permissions.action.create({
+                    key: page.permissionActionKey,
+                    description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
+                    language_code: 'en'
+                })
+                    .always(function () {
+                        // If permission action already exists, that's fine.
+                        next();
+                    });
+            },
+
+            // Assign permission actions to assign roles
+            function (next) {
+                var assignActionTasks = [];
+
+                roles.forEach(function (r) {
+                    assignActionTasks.push(function (callback) {
+                        Permissions.assignAction(r.id, pageKey + '.view')
+                            .fail(function (err) { callback(err); })
+                            .then(function () { callback(); });
+                    });
+                });
+
+                async.parallel(assignActionTasks, function (err) {
+                    if (err) {
+                        next(err);
+                        return null;
+                    }
+
+                    next();
+                });
+            },
+
+            // Create OPView entry
+            function (next) {
+                OPSPortal.View.createOrUpdate(
+                    pageKey,
+                    objectIncludes,
+                    controllerIncludes
+                )
+                    .fail(next)
+                    .done(function () {
+                        next();
+                    });
+            },
+
+            // create a Tool Definition for the OP Portal Navigation
+            function (next) {
+                // sails.log('create tool definition')
+                var areaName = Application.name;
+                var areaKey = Application.areaKey();
+
+                var def = {
+                    key: _.kebabCase(pageKey),
+                    permissions: pagePerms,
+                    icon: 'fa-lock', // TODO: get this from Page Definition.
+                    label: toolLabel,
+                    // context: pageKey,
+                    controller: 'OPView',
+                    isController: false,
+                    options: { url: '/opsportal/view/' + pageKey },
+                    version: '0'
+                }
+                OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
+
+                    next(err);
+                })
+            },
+
+
+            // make sure our ToolDefinition is linked to our Area Definition.
+            function (next) {
+                // sails.log('... todo: link tooldef to area');
+
+                OPSPortal.NavBar.Area.link({
+                    keyArea: Application.areaKey(),
+                    keyTool: _.kebabCase(pageKey),
+                    instance: {
+                        icon: 'fa-cube',
+                        permissions: pagePerms,
+                        options: {
+                            is: 'there'
+                        }
+                    }
+                }, function (err) {
+                    if (err) {
+                        if (err.code == 'E_AREANOTFOUND') {
+                            console.log('... Area[' + Application.areaKey() + '] not found.  Move along ... ');
+                            // this probably means that they deleted this default area 
+                            // using the Navigation Editor.
+                            // no problem here:
+                            next();
+                            return;
+                        }
+                    }
+                    next(err);
+                });
+
+            }
+
+
+        ], function (err) {
+            if (err) dfd.reject(err);
+            else {
+                var page = pages[pageID];
+
+                // save any updates to our page instance.
+                page.save(function (err) {
+                    // should we pay attention to this error?
+
+                    dfd.resolve({});
+                })
+
+            }
+        });
+
+        return dfd;
+    },
+
+
+    /**
+     * Remove pages
+     *
+     * @param [ABPage] deleted pages
+     * @return Deferred
+     */
+    removePages: function (deletedPages) {
+        var dfd = AD.sal.Deferred(),
+            applications = {}, // { appId: application }
+            removeTasks = [];
+
+        if (!deletedPages || deletedPages.length < 1) {
+            dfd.resolve();
+            return dfd
+        }
+
+        deletedPages.forEach(function (page) {
+            removeTasks.push(function (ok) {
+                var appName, pageKey;
+
+                async.series(
+                    [
+                        // Get application info
+                        function (next) {
+
+                            function pullData() {
+                                appName = AppBuilder.rules.toApplicationNameFormat(applications[page.application].name);
+                                pageKey = _.kebabCase(getPageKey(appName, page.name));
+
+                                next();
+                            }
+                            if (applications[page.application]) {
+                                pullData();
+                            }
+                            else {
+                                ABApplication.findOne({ id: page.application })
+                                    .then(function (result) {
+                                        if (result) {
+                                            applications[page.application] = result;
+
+                                            pullData();
+                                        }
+                                        else {
+                                            var err = new Error('Could not find application ( id:'+page.application+')');
+                                            next(err);
+                                        }
+                                    }, next);
+                            }
+                        },
+
+                        function (next) {
+                            OPConfigTool.destroy({ key: pageKey })
+                                .then(function () {
+                                    next();
+                                }, next);
+                        },
+
+                        // // Remove OPView entry
+                        // function (next) {
+                        //     OPSPortal.View.remove(pageKey)
+                        //         .then(function () {
+                        //             next();
+                        //         }, next);
+                        // },
+
+                        // // Remove a Tool Definition for the OP Portal Navigation
+                        // function (next) {
+                        //     OPSPortal.NavBar.ToolDefinition.remove(pageKey)
+                        //         .then(function () {
+                        //             next();
+                        //         }, next);
+                        // },
+
+                        // Remove permissions of pages
+                        function ABPage_AfterDelete_RemovePermissions(next) {
+                            Permissions.action.destroyKeys([page.permissionActionKey])
+                                .then(function (data) {
+                                    next();
+                                }, next);
+                        }
+                    ], ok);
+            });
+        });
+
+        async.parallel(removeTasks, function (err) {
+            if (err)
+                dfd.reject(err);
+            else
+                dfd.resolve();
+        });
+
+        return dfd;
+    },
+
+
+    /**
+     * Generate the client side controller for a root page
+     *
+     * @param integer pageID
+     * @return Deferred
+     */
+    exportPage: function (pageID) {
         var dfd = AD.sal.Deferred();
         var cwd = process.cwd();
 
@@ -672,7 +1119,7 @@ module.exports = {
                         // Only numbers and alphabets will be used
                         Application = page.application;
 
-                        pageKey = ['opstools', appName, pageName].join('.'); // appName.pageName
+                        pageKey = getPageKey(appName, pageName);
                         pagePerms = 'adcore.admin,' + pageKey + '.view';
 
                         controllerIncludes.push({
@@ -1015,27 +1462,30 @@ module.exports = {
     
     /**
      * Imports an existing Sails model for use in an AB application.
-     * New client side model files will be generated for that application.
+     * An AB object will be created for that model.
+     * New client side model files will be generated for that object.
      *
      * @param integer appID
      * @param string modelName
      * @return Deferred
+     *     Resolves with the data of the new imported object
      */
     modelToObject: function (appID, modelName) {
         var dfd = AD.sal.Deferred();
         var model = sails.models[modelName.toLowerCase()];
        
         if (!model || !model.definition) {
-            dfd.reject(new Error('unrecognized model'));
+            dfd.reject(new Error('unrecognized model: ' + modelName));
         }
         else {
-            //var modelName = model.identity.replace(/^AB_\w+/i, '');
             var application, object;
-            var appName, moduleName, clientPath;
-            var languages = [];
+            var appName, moduleName, clientPath, appPath;
             var columns = [];
             var associations = [];
             var multilingualFields = [];
+            var controllerInfo;
+            var modelURL = '';
+            var modelFileName = ''; // client side model file
             
             async.series([
                 // Find app in database
@@ -1052,59 +1502,45 @@ module.exports = {
                             application = list[0];
                             appName = AppBuilder.rules.toApplicationNameFormat(application.name);
                             moduleName = appName.toLowerCase();
-                            modelFileName = AppBuilder.rules.toObjectNameFormat(appName, modelName);
                             clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
+                            appPath = path.join('node_modules', moduleName);
+                            modelFileName = `${appName}_${modelName}`;
                             next();
                         }
+                    });
+                },
+                
+                // Make sure application directory exists
+                // (it needs to have been synced at least once before a model
+                //  can be imported into it)
+                function(next) {
+                    fs.stat(appPath, function(err, status) {
+                        if (err) {
+                            sails.log(`${appPath} not found`);
+                            next(new Error("The application directory could not be accessed. Have you synchronized it yet?"));
+                        }
+                        else next();
                     });
                 },
                 
                 // Create Object in database
                 function(next) {
-                    ABObject.create({
-                           application: appID,
-                           name: modelName,
-                           isImported: true
+                    Multilingual.model.create({
+                        model: ABObject,
+                        data: {
+                            application: appID,
+                            name: modelName,
+                            label: modelName,
+                            isImported: true
+                        }
                     })
-                    .exec(function(err, result) {
-                        if (err) next(err);
-                        else {
-                            object = result;
-                            next();
-                        }
+                    .fail(next)
+                    .done(function(result) {
+                        object = result;
+                        next();
                     });
                 },
                 
-                // Get site languages
-                function(next) {
-                    SiteMultilingualLanguage.find()
-                    .exec(function(err, list) {
-                        if (err) next(err);
-                        else {
-                            languages = _.pluck(list, 'language_code');
-                            next();
-                        }
-                    });
-                },
-                
-                // Create object translations
-                function (next) {
-                    async.forEach(languages, function(langCode, langDone) {
-                        ABObjectTrans.create({
-                            language_code: langCode,
-                            abobject: object.id,
-                            label: modelName
-                        })
-                        .exec(function(err, result) {
-                            if (err) langDone(err);
-                            else langDone();
-                        });
-                    }, function(err) {
-                        if (err) next(err);
-                        else next();
-                    });
-                },
-               
                 // Create Columns in database
                 function(next) {
                     async.forEachOfSeries(model.definition, function(col, colName, colDone) {
@@ -1112,7 +1548,7 @@ module.exports = {
                         // Skip these columns
                         var ignore = ['id', 'createdAt', 'updatedAt'];
                         if (ignore.indexOf(colName) >= 0) {
-                            return ok();
+                            return colDone();
                         }
                        
                         var defaultValue = col.default;
@@ -1126,42 +1562,31 @@ module.exports = {
                             type: col.type
                         });
                         
-                        ABColumn.create({
-                            object: object.id,
+                        var colData = {
                             name: colName,
-                            fieldName: col.type,
-                            type: col.type,
+                            object: object.id,
                             required: col.required,
-                            unique: col.unique,
-                            default: defaultValue,
-                            setting: {
-                                appName: application.name,
-                                icon: 'font',
-                                editor: 'text',
-                                filter_type: 'text',
-                                supportMultilingual: '0'
-                            }
-                        })
-                        .exec(function(err, result) {
-                            if (err) colDone(err);
-                            else {
-                                // Create column translations
-                                async.forEach(languages, function(langCode, transDone) {
-                                    ABColumnTrans.create({
-                                        abcolumn: result.id,
-                                        //label: '[' + langCode + '] ' + colName),
-                                        label: colName,
-                                        language_code: langCode
-                                    })
-                                    .exec(function(err, result) {
-                                        if (err) transDone(err);
-                                        else transDone();
-                                    });
-                                }, function(err) {
-                                    if (err) colDone(err);
-                                    else colDone();
-                                });
-                            }
+                            unique: col.unique
+                        };
+                        
+                        var typeMap = {
+                            integer: 'number',
+                            float: 'number',
+                            datetime: 'date',
+                            json: 'text',
+                        };
+                        var fieldType = typeMap[col.type] || col.type;
+                        
+                        // Special case for float type
+                        if (col.type == 'float') {
+                            fieldType = 'number';
+                            colData.type = 'float';
+                        }
+                        
+                        ABColumn.createColumn(fieldType, colData)
+                        .fail(colDone)
+                        .done(function(column) {
+                            colDone();
                         });
                        
                     }, function(err) {
@@ -1170,31 +1595,35 @@ module.exports = {
                     });
                 },
                 
-                // Create associations in database
+                // Create column associations in database
                 function(next) {
-                    async.foreEach(model.associations, function(assoc, assocDone) {
-                        /*
-                            assoc: [
-                                {
-                                    alias: 'assoc name 1',
-                                    type: 'collection',
-                                    collection: 'model name',
-                                    via: 'column name'
-                                },
-                                {
-                                    alias: 'assoc name 2',
-                                    type: 'object',
-                                    model: 'model name'
-                                }
-                            ]
-                        */
+                    /*
+                        model.associations == [
+                            {
+                                alias: 'assoc name 1',
+                                type: 'collection',
+                                collection: 'model name',
+                                via: 'column name'
+                            },
+                            {
+                                alias: 'assoc name 2',
+                                type: 'object',
+                                model: 'model name'
+                            }
+                        ]
+                    */
+                    
+                    async.forEach(model.associations, function(assoc, assocDone) {
                         
+                        // Multilingual translations aren't treated like normal
+                        // associations. The associated text fields will be
+                        // created as local multilingual columns later.
                         if (assoc.alias == 'translations' && assoc.type == 'collection') {
                             var transModelName = assoc.collection.toLowerCase();
                             var transModel = sails.models[transModelName];
                             for (var colName in transModel.definition) {
                                 var col = transModel.definition[colName];
-                                if (_.contains(['string', 'text'], col.type)) {
+                                if (col.type == 'string' || col.type == 'text') {
                                     // For later steps
                                     multilingualFields.push({
                                         name: colName,
@@ -1212,45 +1641,61 @@ module.exports = {
                             model: assoc.collection || assoc.model
                         });
                         
-                        ABColumn.create({
-                            object: object.id,
-                            name: assoc.alias,
-                            fieldName: 'connectObject',
-                            type: 'connectObject',
-                            required: null,
-                            unique: null,
-                            default: null,
-                            setting: {
-                                appName: application.name,
-                                linkType: assoc.type,
-                                linkVia: assoc.via, // change to column id
-                                linkModel: assoc.model, // change to object id
-                                icon: 'eternal-link',
-                                editor: 'selectivity',
-                                template: '<div class="connect-data-values"></div>',
-                                'filter-type': 'multiselect'
+                        var targetLinkName, targetRelation, targetModelName;
+                        
+                        if (assoc.type == 'model') {
+                            targetRelation = 'one';
+                            targetModelName = assoc.model;
+                        } else {
+                            targetRelation = 'many';
+                            targetModelName = assoc.collection;
+                        }
+                        
+                        var targetModel = sails.models[targetModelName];
+                        var sourceRelation = 'one';
+                        if (Array.isArray(targetModel.associations)) {
+                            targetModel.associations.forEach(function(targetModelAssoc) {
+                                if (targetModelAssoc.collection == modelName.toLowerCase()) {
+                                    sourceRelation = 'many';
+                                    targetLinkName = targetModelAssoc.alias;
+                                }
+                                else if (targetModelAssoc.model == modelName.toLowerCase()) {
+                                    targetLinkName = targetModelAssoc.alias;
+                                }
+                            });
+                        }
+                        
+                        // Look for target object within AppBuilder
+                        ABObject.find()
+                        .where({ name: targetModelName })
+                        .where({ application: appID })
+                        .exec(function(err, list) {
+                            if (err) {
+                                assocDone(err);
                             }
-                        })
-                        .exec(function(err, result) {
-                            if (err) assocDone(err);
+                            else if (!list || !list[0]) {
+                                // Target model has not been imported into 
+                                // this AppBuilder app
+                                return assocDone();
+                            }
                             else {
-                                // Create translations
-                                async.forEach(languages, function(langCode, transDone) {
-                                    ABColumnTrans.create({
-                                        abcolumn: result.id,
-                                        label: assoc.alias,
-                                        language_code: langCode
-                                    })
-                                    .exec(function(err, result) {
-                                        if (err) transDone(err);
-                                        else transDone();
-                                    });
-                                }, function(err) {
-                                    if (err) assocDone(err);
-                                    else assocDone();
+                                // Target model already in AppBuilder.
+                                // Create connection links now.
+                                ABColumn.createLink({
+                                    name: assoc.alias,
+                                    sourceObjectID: object.id,
+                                    targetObjectID: list[0].id,
+                                    sourceRelation: sourceRelation,
+                                    targetRelation: targetRelation,
+                                    targetName: targetLinkName
+                                })
+                                .fail(assocDone)
+                                .done(function(sourceColumn, targetColumn) {
+                                    assocDone();
                                 });
                             }
                         });
+                            
                     }, function(err) {
                         if (err) next(err);
                         else next();
@@ -1258,38 +1703,19 @@ module.exports = {
                 },
                 
                 // Create multilingual columns
+                // (these were from the 'translations' association earlier)
                 function(next) {
                     async.forEach(multilingualFields, function(col, colDone) {
-                        ABColumn.create({
-                            object: object.id,
+                        ABColumn.createColumn(col.type, {
                             name: col.name,
-                            fieldName: col.type,
-                            type: col.type,
-                            required: col.required,
-                            unique: col.unique,
-                            default: defaultValue,
+                            object: object.id,
                             setting: {
-                                appName: application.name,
-                                icon: 'font',
-                                editor: 'text',
-                                filter_type: 'text',
                                 supportMultilingual: '1'
                             }
                         })
-                        .exec(function(result, err) {
-                            if (err) colDone(err);
-                            else {
-                                async.forEach(languages, function(langCode, transDone) {
-                                    ABColumnTrans.create({
-                                        abcolumn: result.id,
-                                        label: col.name,
-                                        language_code: langCode
-                                    });
-                                }, function(err, result) {
-                                    if (err) transDone(err);
-                                    else transDone();
-                                });
-                            }
+                        .fail(colDone)
+                        .done(function(result) {
+                            colDone();
                         });
                     }, function(err) {
                         if (err) next(err);
@@ -1297,38 +1723,95 @@ module.exports = {
                     });
                 },
                 
-                // Create client side models
+                // Find server side controller
                 function(next) {
-                    var columns = []; // used for the `describe` function
-                    var fieldLabel = 'id';
-                    for (var colName in model.definition) {
-                        var column = model.definition[colName];
-                        if (fieldLabel != 'id') continue;
-                        if (_.contains(['string', 'text'], column.type)) {
-                            fieldLabel = colName;
-                        }
-                    }
-                    
-                    // Determine the blueprints modelURL
-                    var controllerInfo = _.find(sails.controllers, function(c) {
+                    controllerInfo = _.find(sails.controllers, function(c) {
                         // 1st try: look for `model` config in the controllers
-                        if (c._config.model == modelName.toLowerCase()) return true;
+                        if (c._config && c._config.model == modelName.toLowerCase()) return true;
                         return false;
                     });
                     if (!controllerInfo) {
                         // 2nd try: look for matching controller-model name
                         controllerInfo = _.find(sails.controllers, function(c) {
-                            var nameParts = c.identitiy.split('/');
+                            if (!c.identity) return false;
+                            var nameParts = c.identity.split('/');
                             var finalName = nameParts[ nameParts.length-1 ];
                             if (finalName == modelName.toLowerCase()) return true;
                             return false;
                         });                    
                     }
-                    var modelURL = '/' + controllerInfo.identity;
+                    
+                    // Determine the model blueprints base URL
+                    modelURL = controllerInfo && controllerInfo.identity || '';
+                    
+                    next();
+                },
+                
+                // Create server side controller if needed
+                function(next) {
+                    if (modelURL) return next();
+                    
+                    AD.spawn.command({
+                        command: 'sails',
+                        options: [ 'generate', 'controller', modelName ],
+                        spawnOpts: { cwd: appPath }
+                    })
+                    .fail(next)
+                    .done(function () {
+                        next();
+                    });
+                },
+                function(next) {
+                    if (modelURL) return next();
+                    
+                    // Patch the newly created controller file to add 
+                    // the _config property.
+                    var controllerFile = path.join(appPath, 'api', 'controllers', _.upperFirst(modelName) + 'Controller.js');
+                    fs.readFile(controllerFile, 'utf8', function(err, data) {
+                        if (err) next(err);
+                        else {
+                            var lcModelName = modelName.toLowerCase();
+                            var patchData = `
+    
+    _config: {
+        model: "${lcModelName}", // all lowercase model name
+        actions: false,
+        shortcuts: false,
+        rest: true
+    }
+`;
+                            data = data.replace(/^module\.exports = \{$/m, '$&' + patchData);
+                            modelURL = `${moduleName}/${lcModelName}`;
+                            fs.writeFile(controllerFile, data, next);
+                        }
+                    });
+                },
+                
+                // Save the model's blueprints base URL
+                function(next) {
+                    if (!modelURL) return next();
+                    ABObject.update({ id: object.id }, { urlPath: modelURL })
+                    .exec(function(err, results) {
+                        if (err) next(err);
+                        else next();
+                    });
+                },
+                
+                // Create client side models
+                function(next) {
+                    // Find fieldLabel field
+                    var fieldLabel = 'id';
+                    for (var colName in model.definition) {
+                        var column = model.definition[colName];
+                        if (fieldLabel != 'id') continue;
+                        if (column.type == 'string' || column.type == 'text') {
+                            fieldLabel = colName;
+                        }
+                    }
                     
                     sails.renderView(path.join('app_builder', 'clientModelBase'), {
                         layout: false,
-                        appName: application.name,
+                        appName: appName,
                         objectName: modelName,
                         fieldLabel: fieldLabel,
                         modelURL: modelURL,
@@ -1339,7 +1822,7 @@ module.exports = {
                     }, function (err, output) {
                         if (err) next(err);
                         else {
-                            var dest = path.join(clientPath, 'models', 'base', modelName) + '.js';
+                            var dest = path.join(clientPath, 'models', 'base', modelFileName) + '.js';
                             fs.writeFile(dest, output, function(err) {
                                 if (err) next(err);
                                 else next();
@@ -1350,13 +1833,13 @@ module.exports = {
                 function(next) {
                     sails.renderView(path.join('app_builder', 'clientModel'), {
                         layout: false,
-                        appName: appName,
+                        appName,
                         objectName: modelName,
-                        
+                        modelFileName
                     }, function (err, output) {
                         if (err) next(err);
                         else {
-                            var dest = path.join(clientPath, 'models', modelName) + '.js';
+                            var dest = path.join(clientPath, 'models', modelFileName) + '.js';
                             fs.writeFile(dest, output, function(err) {
                                 if (err) next(err);
                                 else next();
@@ -1365,11 +1848,10 @@ module.exports = {
                     });
                 }
                
-               
             ], function(err) {
                 if (err) dfd.reject(err);
                 else {
-                    dfd.resolve();
+                    dfd.resolve(object);
                 }
             });
         }

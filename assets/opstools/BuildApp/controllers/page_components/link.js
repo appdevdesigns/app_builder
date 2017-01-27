@@ -36,7 +36,9 @@ steal(
 
 				webix.ui(view, $$(self.viewId));
 
-				$(self).trigger('renderComplete', {});
+				setTimeout(function () {
+					$(self).trigger('renderComplete', {});
+				}, 100);
 
 				data.isRendered = true;
 
@@ -62,16 +64,21 @@ steal(
 				if (!$$(componentIds.propertyView)) return;
 
 				if (application.currPage) {
-					var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 
-					// Get pages
-					application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					// 19 Jan 2017
+					// Make sure pages don't get lost on embedded Tab pages:
+						// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
+						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					application.getApplicationPages(application.currPage)
 						.fail(function (err) { })
 						.then(function (pages) {
 							pages.forEach(function (p) {
 								if (p.translate)
 									p.translate();
 							});
+
+							// Disallow select tabs to Link component
+							pages = pages.filter(function (p) { return p.type != 'tab'; });
 
 							// Populate pages data to list
 							var linkToList = $$(componentIds.propertyView).getItem('linkTo');
@@ -106,6 +113,10 @@ steal(
 
 			this.isRendered = function () {
 				return data.isRendered === true;
+			};
+
+			this.resize = function (width, height) {
+				$$(this.viewId).adjust();
 			};
 
 		};

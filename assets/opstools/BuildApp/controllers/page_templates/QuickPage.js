@@ -39,13 +39,13 @@ steal(
 		}
 
 		function hasAddConnectPage() {
-			var self = this;
+			var self = this,
+				connectFields = {};
 
-			if (!$$(componentIds.connectedData))
-				return false;
+			if ($$(componentIds.connectedData))
+				connectFields = $$(componentIds.connectedData).getValues();
 
-			var connectFields = $$(componentIds.connectedData).getValues(),
-				connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
+			var connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
 
 			return connectValues.indexOf(1) > -1;
 		}
@@ -56,6 +56,8 @@ steal(
 				selectedObj = self.application.objects.filter(function (obj) {
 					return obj.id == $$(componentIds.selectObjects).getValue();
 				})[0];
+
+			if (!selectedObj) return;
 
 			// Rename object name to template
 			uiDefinition.rows.forEach(function (r) {
@@ -147,7 +149,8 @@ steal(
 					id: 'QuickPage',
 					view: 'layout',
 					css: 'ab-interface-new-quick-page',
-					autoheight: true,
+					height: 350,
+					scroll: 'y',
 					rows: [
 						{
 							id: componentIds.selectObjects,
@@ -230,13 +233,12 @@ steal(
 						application.createPage({
 							name: selectedObj.name,
 							label: selectedObj.label
-						})
-							.fail(next)
-							.then(function (result) {
-								if (result.translate) result.translate();
-								mainPage = result;
-								next();
-							});
+						}).then(function (result) {
+							if (result.translate) result.translate();
+							mainPage = result;
+
+							next();
+						}, next);
 					},
 
 					// Create the add object form page
@@ -250,13 +252,11 @@ steal(
 							name: 'Add ' + selectedObj.name,
 							label: 'Add ' + selectedObj.label,
 							type: 'modal'
-						})
-							.fail(next)
-							.then(function (result) {
-								if (result.translate) result.translate();
-								addFormPage = result;
-								next();
-							});
+						}).then(function (result) {
+							if (result.translate) result.translate();
+							addFormPage = result;
+							next();
+						}, next);
 					},
 
 					// Create the edit object form page
@@ -270,191 +270,28 @@ steal(
 							name: 'Edit ' + selectedObj.name,
 							label: 'Edit ' + selectedObj.label,
 							type: 'modal'
-						})
-							.fail(next)
-							.then(function (result) {
-								if (result.translate) result.translate();
-								editFormPage = result;
-								next();
-							});
+						}).then(function (result) {
+							if (result.translate) result.translate();
+							editFormPage = result;
+							next();
+						}, next);
 					},
 
 					// Create the view & connected data page
 					function (next) {
-						if (!$$(componentIds.viewData).getValue() || !hasAddConnectPage.call(self) || !application) return next();
+						if (!$$(componentIds.viewData).getValue() || !application) return next();
 
 						// Create the view page
 						application.createPage({
 							parent: mainPage.id,
 							name: 'View ' + selectedObj.name,
 							label: 'View ' + selectedObj.label
-						})
-							.fail(next)
-							.then(function (result) {
-								if (result.translate) result.translate();
+						}).then(function (result) {
+							if (result.translate) result.translate();
 
-								viewPage = result;
-								next();
-							});
-					},
-
-					// Insert 'Add new object' to the main page
-					function (next) {
-						if (!$$(componentIds.addNewButton).getValue() || !mainPage) return next();
-
-						// Create 'Menu' component
-						mainPage.createComponent({
-							component: 'menu',
-							weight: 0,
-							setting: {
-								layout: "x",
-								pageIds: [addFormPage.id]
-							}
-						})
-							.fail(next)
-							.then(function () { next() });
-					},
-
-					// Insert 'Object form' to the main page
-					function (next) {
-						if (!$$(componentIds.addNewForm).getValue() || !mainPage) return next();
-
-						mainPage.createComponent({
-							component: 'form',
-							weight: 2,
-							setting: {
-								object: $$(componentIds.selectObjects).getValue(),
-								title: 'Add ' + selectedObj.label,
-								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
-								saveVisible: "show",
-								cancelVisible: "show",
-							}
-						})
-							.fail(next)
-							.then(function (result) { next(); });
-					},
-
-					// Insert 'Add Object form' to the add object page
-					function (next) {
-						if (!addFormPage) return next();
-
-						addFormPage.createComponent({
-							component: 'form',
-							weight: 0,
-							setting: {
-								object: $$(componentIds.selectObjects).getValue(),
-								title: 'Add ' + selectedObj.label,
-								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
-								saveVisible: "show",
-								cancelVisible: "show",
-								clearOnLoad: "yes"
-							}
-						})
-							.fail(next)
-							.then(function (result) {
-								editForm = result;
-								next();
-							});
-					},
-
-					// Insert 'Link' to the add object page
-					function (next) {
-						if (!addFormPage) return next();
-
-						addFormPage.createComponent({
-							component: 'link',
-							weight: 1,
-							setting: {
-								title: 'Back to #pageName#'.replace(/#pageName#/g, mainPage.label),
-								linkTo: mainPage.id
-							}
-						})
-							.fail(next)
-							.then(function (result) {
-								next();
-							});
-					},
-
-					// Insert 'Edit Object form' to the edit object page
-					function (next) {
-						if (!editFormPage) return next();
-
-						editFormPage.createComponent({
-							component: 'form',
-							weight: 0,
-							setting: {
-								object: $$(componentIds.selectObjects).getValue(),
-								title: 'Edit ' + selectedObj.label,
-								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
-								saveVisible: "show",
-								cancelVisible: "show"
-							}
-						})
-							.fail(next)
-							.then(function (result) {
-								editForm = result;
-								next();
-							});
-					},
-
-					// Insert 'Link'  to the edit object page
-					function (next) {
-						if (!editFormPage) return next();
-
-						editFormPage.createComponent({
-							component: 'link',
-							weight: 1,
-							setting: {
-								title: 'Back to #pageName#'.replace(/#pageName#/g, mainPage.label),
-								linkTo: mainPage.id
-							}
-						})
-							.fail(next)
-							.then(function (result) {
-								next();
-							});
-					},
-
-					// Insert 'View' component to the view page
-					function (next) {
-						if (!$$(componentIds.viewData).getValue() || !viewPage) return next();
-
-						viewPage.createComponent({
-							component: 'view',
-							weight: 0,
-							setting: {
-								title: selectedObj.label,
-								object: $$(componentIds.selectObjects).getValue(),
-								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; })
-							}
-						})
-							.fail(next)
-							.then(function (result) {
-								viewDetail = result;
-								next();
-							});
-					},
-
-					// Insert 'Object grid' to the main page
-					function (next) {
-						if (!$$(componentIds.displayGrid).getValue() || !mainPage) return next();
-
-						mainPage.createComponent({
-							component: 'grid',
-							weight: 1,
-							setting: {
-								title: selectedObj.label,
-								object: $$(componentIds.selectObjects).getValue(),
-								viewPage: viewPage ? viewPage.id : null,
-								viewId: viewDetail ? viewDetail.id : null,
-								editPage: editFormPage ? editFormPage.id : null,
-								editForm: editForm ? editForm.id : null,
-								columns: $.map(selectedObj.columns, function (col) { return col.id; }),
-								removable: "disable"
-							}
-						})
-							.fail(next)
-							.then(function () { next(); });
+							viewPage = result;
+							next();
+						}, next);
 					},
 
 					// Create 'Add connect data' page
@@ -477,19 +314,160 @@ steal(
 										name: 'Add ' + object.name,
 										label: 'Add ' + object.label,
 										type: 'modal'
-									})
-										.fail(ok)
-										.then(function (result) {
-											connectPages[columnId] = result;
-											ok();
-										});
+									}).then(function (result) {
+										connectPages[columnId] = result;
+										ok();
+									}, ok);
 								});
 							}
 						});
 
-
 						async.parallel(createPageTask, next);
 					},
+
+
+
+					// Insert 'Add new object' to the main page
+					function (next) {
+						if (!$$(componentIds.addNewButton).getValue() || !mainPage) return next();
+
+						// Create 'Menu' component
+						mainPage.createComponent({
+							component: 'menu',
+							weight: 0,
+							setting: {
+								layout: "x",
+								pageIds: [addFormPage.id]
+							}
+						}).then(function () { next() }, next);
+					},
+
+					// Insert 'Object form' to the main page
+					function (next) {
+						if (!$$(componentIds.addNewForm).getValue() || !mainPage) return next();
+
+						mainPage.createComponent({
+							component: 'form',
+							weight: 2,
+							setting: {
+								object: $$(componentIds.selectObjects).getValue(),
+								title: 'Add ' + selectedObj.label,
+								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
+								saveVisible: "show",
+								cancelVisible: "show",
+							}
+						}).then(function (result) { next(); }, next);
+					},
+
+					// Insert 'Add Object form' to the add object page
+					function (next) {
+						if (!addFormPage) return next();
+
+						addFormPage.createComponent({
+							component: 'form',
+							weight: 0,
+							setting: {
+								object: $$(componentIds.selectObjects).getValue(),
+								title: 'Add ' + selectedObj.label,
+								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
+								saveVisible: "show",
+								cancelVisible: "show",
+								clearOnLoad: "yes"
+							}
+						}).then(function (result) {
+							editForm = result;
+							next();
+						}, next);
+					},
+
+					// Insert 'Link' to the add object page
+					function (next) {
+						if (!addFormPage) return next();
+
+						addFormPage.createComponent({
+							component: 'link',
+							weight: 1,
+							setting: {
+								title: 'Back to #pageName#'.replace(/#pageName#/g, mainPage.label),
+								linkTo: mainPage.id
+							}
+						}).then(function (result) {
+							next();
+						}, next);
+					},
+
+					// Insert 'Edit Object form' to the edit object page
+					function (next) {
+						if (!editFormPage) return next();
+
+						editFormPage.createComponent({
+							component: 'form',
+							weight: 0,
+							setting: {
+								object: $$(componentIds.selectObjects).getValue(),
+								title: 'Edit ' + selectedObj.label,
+								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; }),
+								saveVisible: "show",
+								cancelVisible: "show"
+							}
+						}).then(function (result) {
+							editForm = result;
+							next();
+						}, next);
+					},
+
+					// Insert 'Link'  to the edit object page
+					function (next) {
+						if (!editFormPage) return next();
+
+						editFormPage.createComponent({
+							component: 'link',
+							weight: 1,
+							setting: {
+								title: 'Back to #pageName#'.replace(/#pageName#/g, mainPage.label),
+								linkTo: mainPage.id
+							}
+						}).then(function (result) { next(); }, next);
+					},
+
+					// Insert 'View' component to the view page
+					function (next) {
+						if (!$$(componentIds.viewData).getValue() || !viewPage) return next();
+
+						viewPage.createComponent({
+							component: 'view',
+							weight: 0,
+							setting: {
+								title: selectedObj.label,
+								object: $$(componentIds.selectObjects).getValue(),
+								visibleFieldIds: $.map(selectedObj.columns, function (col) { return col.id; })
+							}
+						}).then(function (result) {
+							viewDetail = result;
+							next();
+						}, next);
+					},
+
+					// Insert 'Object grid' to the main page
+					function (next) {
+						if (!$$(componentIds.displayGrid).getValue() || !mainPage) return next();
+
+						mainPage.createComponent({
+							component: 'grid',
+							weight: 1,
+							setting: {
+								title: selectedObj.label,
+								object: $$(componentIds.selectObjects).getValue(),
+								viewPage: viewPage ? viewPage.id : null,
+								viewId: viewDetail ? viewDetail.id : null,
+								editPage: editFormPage ? editFormPage.id : null,
+								editForm: editForm ? editForm.id : null,
+								columns: $.map(selectedObj.columns, function (col) { return col.id; }),
+								removable: "disable"
+							}
+						}).then(function () { next(); }, next);
+					},
+
 
 					// Add 'Form' to the connect pages
 					function (next) {
@@ -514,9 +492,7 @@ steal(
 										cancelVisible: 'show',
 										clearOnLoad: 'yes'
 									}
-								})
-									.fail(ok)
-									.then(function () { ok(); });
+								}).then(function () { ok(); }, ok);
 							});
 						});
 
@@ -539,9 +515,7 @@ steal(
 										title: 'Back to ' + viewPage.label,
 										linkTo: viewPage.id
 									}
-								})
-									.fail(ok)
-									.then(function () { ok(); });
+								}).then(function () { ok(); }, ok);
 							});
 						});
 
@@ -572,9 +546,7 @@ steal(
 								layout: 'x',
 								pageIds: menuData
 							}
-						})
-							.fail(next)
-							.then(function () { next(); });
+						}).then(function () { next(); }, next);
 					},
 
 					// Add 'Grid' to the view page
@@ -605,9 +577,7 @@ steal(
 											linkedField: linkedField[0].id || '',
 											columns: visibleFieldIds
 										}
-									})
-										.fail(ok)
-										.then(function () { ok(); });
+									}).then(function () { ok(); }, ok);
 								});
 							}
 						});
@@ -626,9 +596,7 @@ steal(
 								title: "Back to #pageName#".replace(/#pageName#/g, mainPage.label),
 								linkTo: mainPage.id
 							}
-						})
-							.fail(next)
-							.then(function () { next(); });
+						}).then(function () { next(); }, next);
 					},
 
 					// Finish - Get pages to return

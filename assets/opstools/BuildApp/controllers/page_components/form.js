@@ -3,8 +3,9 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/ColumnizerHelper.js',
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
-	function (dataFieldsManager, dataCollectionHelper, columnizerHelper) {
+	function (dataFieldsManager, dataCollectionHelper, columnizerHelper, selectivityHelper) {
 		var componentIds = {
 			editView: 'ab-form-edit-view',
 			editForm: 'ab-form-edit-mode',
@@ -17,12 +18,15 @@ steal(
 			editTitle: 'ab-form-edit-title',
 			editDescription: 'ab-form-edit-description',
 			selectObject: 'ab-form-select-object',
+			linkedTo: 'ab-form-linked-to',
+			linkField: 'ab-form-link-field',
 			selectColCount: 'ab-form-select-column-count',
 			isSaveVisible: 'ab-form-save-visible',
 			isCancelVisible: 'ab-form-cancel-visible',
 
 			clearOnLoad: 'ab-form-clear-on-load',
 			clearOnSave: 'ab-form-clear-on-save',
+			whenByGroup: 'ab-from-when-by-group',
 
 			addConnectObjectDataPopup: 'ab-form-connected-data-popup'
 		},
@@ -52,22 +56,10 @@ steal(
 				}, 50);
 			}
 
-			function saveModelData(dataCollection, object, columns, setting) {
+			function populateValuesToModelData(modelData, dataCollection, columns) {
 				var self = this,
-					q = $.Deferred(),
-					modelData = dataCollection.AD.currModel(),
-					isAdd;
-
-				$$(self.viewId).showProgress({ type: "icon" });
-
-				// Create
-				if (modelData === null) {
-					modelData = new dataCollection.AD.getModelObject()();
-					isAdd = true;
-				}
-
-				var editValues = $$(self.viewId).getValues();
-				var keys = Object.keys(editValues);
+					editValues = $$(self.viewId).getValues(),
+					keys = Object.keys(editValues);
 
 				// Populate values to model
 				columns.forEach(function (col) {
@@ -88,24 +80,87 @@ steal(
 							modelData.removeAttr(col.name);
 					}
 				});
+			}
+
+			function saveModelData(dataCollection, object, columns, setting, linkedToDataCollection) {
+				var self = this,
+					q = $.Deferred();
+
+				$$(self.viewId).showProgress({ type: "icon" });
+
+				// Group app
+				if (linkedToDataCollection && linkedToDataCollection.getCheckedItems().length > 0) {
+					var linkField = self.data.columns.filter(function (col) { return col.id == setting.linkField })[0];
+					addTasks = [];
+
+					linkedToDataCollection.getCheckedItems().forEach(function (linkRowId) {
+						var modelData = new dataCollection.AD.getModelObject()(); // Create new model data
+
+						populateValuesToModelData.call(self, modelData, dataCollection, columns);
+
+						// Set link row id to field
+						modelData.attr(linkField.name, linkRowId);
+
+						addTasks.push(function (next) {
+							callSaveModelData.call(self, modelData, dataCollection, true)
+								.fail(next)
+								.done(function () {
+									next();
+								});
+						});
+					});
+
+					async.parallel(addTasks, function (err) {
+						if (err) q.reject(err);
+						else {
+							clearForm.call(self, object, columns, dataCollection);
+
+							finishSave.call(self, dataCollection);
+
+							q.resolve();
+						}
+					});
+				}
+				// Save without link data (Single row)
+				else {
+					var modelData = dataCollection.AD.currModel(),
+						isAdd;
+
+					// Create
+					if (modelData === null) {
+						modelData = new dataCollection.AD.getModelObject()(); // Create new model data
+						isAdd = true;
+					}
+
+					populateValuesToModelData.call(self, modelData, dataCollection, columns);
+
+					callSaveModelData.call(self, modelData, dataCollection, isAdd)
+						.fail(function (err) {
+							console.error(err);
+							$$(self.viewId).hideProgress();
+							q.reject(err);
+						})
+						.done(function () {
+							finishSave.call(self, dataCollection);
+
+							q.resolve();
+						});
+				}
+
+				return q;
+			}
+
+			function callSaveModelData(modelData, dataCollection, isAdd) {
+				var q = $.Deferred();
 
 				modelData.save()
-					.fail(function (err) {
-						console.error(err);
-						$$(self.viewId).hideProgress();
-						q.reject(err);
-					})
-					.then(function (result) {
-						$$(self.viewId).hideProgress();
-
+					.fail(q.reject)
+					.done(function (result) {
 						if (result.translate) result.translate();
 
 						// Add to data collection
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
-
-						if (setting.clearOnSave == 'yes')
-							dataCollection.setCursor(null);
 
 						// Show success message
 						webix.message({
@@ -113,14 +168,23 @@ steal(
 							text: labels.common.saveSuccessMessage.replace('{0}', result._dataLabel ? result._dataLabel : 'This data')
 						});
 
-						$(self).trigger('changePage', {
-							previousPage: true
-						});
-
 						q.resolve();
 					});
 
 				return q;
+			}
+
+			function finishSave(setting, dataCollection) {
+				var self = this;
+
+				$$(self.viewId).hideProgress();
+
+				if (setting.clearOnSave == 'yes')
+					dataCollection.setCursor(null);
+
+				$(self).trigger('changePage', {
+					previousPage: true
+				});
 			}
 
 			function showCustomFields(object, columns, rowId, rowData) {
@@ -144,6 +208,24 @@ steal(
 
 					}
 				});
+			}
+
+			function refreshLinkedData() {
+				var self = this;
+
+				if (data.linkedToDataCollection) {
+					var checkedItems = [];
+					data.linkedToDataCollection.getCheckedItems().forEach(function (rowId) {
+						var rowData = data.linkedToDataCollection.getItem(rowId);
+
+						checkedItems.push({
+							id: rowId,
+							text: rowData._dataLabel
+						});
+					});
+					selectivityHelper.renderSelectivity($$(self.viewId).$view, 'ab-component-form-add-group', true);
+					selectivityHelper.setData($($$(self.viewId).$view).find('.ab-component-form-add-group'), checkedItems);
+				}
 			}
 
 			function getChildView(columnName) {
@@ -190,17 +272,20 @@ steal(
 			// Set viewId to public
 			this.viewId = viewId;
 			this.editViewId = componentIds.editForm;
+			this.data = {};
 
 			// Instance functions
-			this.render = function (setting, editable, showAll, dataCollection) {
+			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
 					q = $.Deferred(),
 					elementViews = [],
 					header = { rows: [] },
 					listOptions = {}; // { columnId: [{}, ..., {}] }
 
+				self.data.columns = [];
 				data.setting = setting;
 				data.dataCollection = dataCollection;
+				data.linkedToDataCollection = linkedToDataCollection;
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];
 
@@ -208,7 +293,10 @@ steal(
 				$$(self.viewId).clearValidation();
 
 				$$(self.viewId).hide();
-				if (!setting.object) return;
+				if (!setting.object) {
+					q.resolve();
+					return q;
+				}
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
 				$$(self.viewId).showProgress({ type: "icon" });
@@ -222,9 +310,15 @@ steal(
 					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 						var currModel = data.dataCollection.AD.currModel();
 						// Show custom display
-						showCustomFields.call(self, data.object, data.columns, id, currModel);
+						showCustomFields.call(self, data.object, self.data.columns, id, currModel);
 
-						setElementHeights.call(self, data.columns, currModel);
+						setElementHeights.call(self, self.data.columns, currModel);
+					});
+				}
+
+				if (data.linkedToDataCollection) {
+					data.linkedToDataCollection.attachEvent('onCheckItemsChange', function () {
+						refreshLinkedData.call(self);
 					});
 				}
 
@@ -239,7 +333,7 @@ steal(
 									if (d.translate) d.translate();
 								});
 
-								data.columns = result;
+								self.data.columns = result;
 								next();
 							});
 					},
@@ -247,7 +341,7 @@ steal(
 					function (next) {
 						var getOptionsTasks = [];
 
-						data.columns.filter(function (col) { return col.setting.editor === 'richselect'; })
+						self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; })
 							.forEach(function (col) {
 								getOptionsTasks.push(function (callback) {
 									col.getList()
@@ -272,7 +366,7 @@ steal(
 					},
 					// Add form elements
 					function (next) {
-						async.eachSeries(data.columns, function (col, callback) {
+						async.eachSeries(self.data.columns, function (col, callback) {
 							var isVisible = setting.visibleFieldIds.indexOf(col.id.toString()) > -1 || showAll;
 
 							if (!editable && !isVisible) { // Hidden
@@ -327,6 +421,8 @@ steal(
 							}
 
 							if (editable) { // Show/Hide options
+								var isLinkField = setting.linkField && setting.linkField == col.id;
+
 								element = {
 									css: 'ab-form-component-item',
 									cols: [
@@ -337,7 +433,8 @@ steal(
 											maxWidth: 120,
 											inputWidth: 100,
 											inputHeight: 35,
-											value: isVisible ? "show" : "hide",
+											value: isVisible && !isLinkField ? "show" : "hide",
+											disabled: isLinkField,
 											options: [
 												{ id: "show", value: "Show" },
 												{ id: "hide", value: "Hide" },
@@ -416,7 +513,27 @@ steal(
 							});
 						}
 
+						if (linkedToDataCollection) {
+							header.rows.push({
+								cols: [
+									{
+										view: 'label',
+										label: 'Add to...',
+										width: 100
+									},
+									{
+										view: 'template',
+										borderless: true,
+										template: '<div class="ab-component-form-add-group"></div>'
+									}
+								]
+							});
+						}
+
 						$$(self.viewId).addView(header, 0);
+
+						// Show checked items in selectivity
+						refreshLinkedData.call(self);
 
 						// Save/Cancel buttons
 						var actionButtons = {
@@ -439,7 +556,7 @@ steal(
 									if ($$(saveButton))
 										$$(saveButton).disable();
 
-									saveModelData.call(self, dataCollection, data.object, data.columns, setting)
+									saveModelData.call(self, dataCollection, data.object, self.data.columns, setting, linkedToDataCollection)
 										.fail(function (err) {
 											console.error(err);
 
@@ -466,7 +583,7 @@ steal(
 								click: function () {
 									data.dataCollection.setCursor(null);
 
-									clearForm.call(self, data.object, data.columns, data.dataCollection);
+									clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 
 									$(self).trigger('changePage', {
 										previousPage: true
@@ -488,14 +605,14 @@ steal(
 						}
 
 						// Show data of current select data
-						showCustomFields.call(self, data.object, data.columns, currData ? currData.id : null, currData);
+						showCustomFields.call(self, data.object, self.data.columns, currData ? currData.id : null, currData);
 
 						next();
 					}
 				], function (err) {
 					if (err) {
 						q.reject();
-						return;
+						return q;
 					}
 
 					$$(self.viewId).adjust();
@@ -525,12 +642,15 @@ steal(
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
+					linkedTo: propertyValues[componentIds.linkedTo] || '', // ABObject.id
+					linkField: propertyValues[componentIds.linkField] || '', // ABColumn.id
 					colCount: propertyValues[componentIds.selectColCount] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
 					clearOnLoad: propertyValues[componentIds.clearOnLoad],
 					clearOnSave: propertyValues[componentIds.clearOnSave],
+					whenByGroup: propertyValues[componentIds.whenByGroup]
 				};
 
 				return settings;
@@ -538,7 +658,8 @@ steal(
 
 			this.populateSettings = function (setting, showAll) {
 				var self = this,
-					dataCollection;
+					dataCollection,
+					linkedToDataCollection;
 
 				async.series([
 					// Get data collection
@@ -550,40 +671,87 @@ steal(
 								next();
 							});
 					},
+					// Get linked data colllection
+					function (next) {
+						if (setting.linkedTo && setting.linkedTo !== 'none') {
+							dataCollectionHelper.getDataCollection(application, setting.linkedTo)
+								.fail(next)
+								.then(function (result) {
+									linkedToDataCollection = result;
+									next();
+								});
+						}
+						else {
+							next();
+						}
+					},
 					// Render form component
 					function (next) {
-						self.render(setting, true, showAll, dataCollection);
-					}
-				]);
-
-
-				// Get object list
-				var objects = null;
-				application.getObjects()
-					.fail(function (err) {
-						// TODO : Error message
-						console.error(err)
-					})
-					.then(function (result) {
-						result.forEach(function (o) {
-							if (o.translate)
-								o.translate();
-						});
-
-						objects = result;
-
-						// Properties
+						self.render(setting, true, showAll, dataCollection, linkedToDataCollection)
+							.fail(next)
+							.then(function () { next(); });
+					},
+					// Properties
+					// Data source - Object
+					function (next) {
+						if (!application.objects)
+							return next();
 
 						// Data source - Object
-						var objSource = $$(componentIds.propertyView).getItem(componentIds.selectObject);
-						objSource.options = $.map(objects, function (o) {
+						var objectList = $$(componentIds.propertyView).getItem(componentIds.selectObject);
+						objectList.options = $.map(application.objects, function (o) {
 							return {
 								id: o.id,
 								value: o.label
 							};
 						});
 
-						//
+						// Data source - Linked to
+						var linkedObjIds = self.data.columns
+							.filter(function (col) {
+								return col.setting.linkObject != null && col.setting.linkType == 'model' && col.setting.linkViaType == 'collection';
+							})
+							.map(function (col) { return col.setting.linkObject });
+
+						var linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; });
+						var linkedToItem = $$(componentIds.propertyView).getItem(componentIds.linkedTo);
+
+						linkedToItem.options = $.map(linkedObjs, function (o) {
+							return {
+								id: o.id,
+								value: o.label
+							};
+						});
+						linkedToItem.options.splice(0, 0, {
+							id: 'none',
+							value: '[none]'
+						});
+
+						// Data source - Link field
+						var linkedFieldItem = $$(componentIds.propertyView).getItem(componentIds.linkField);
+						if (setting.linkedTo) {
+							linkedFieldItem.options = self.data.columns
+								.filter(function (col) { return col.setting.linkObject == setting.linkedTo; })
+								.map(function (col) {
+									return {
+										id: col.id,
+										value: col.label
+									};
+								}).attr();
+						}
+						else {
+							linkedFieldItem.options = [];
+						}
+
+						// Set default of link field
+						if (linkedFieldItem.options.length > 0 && linkedFieldItem.options.filter(function (opt) { return opt.id == setting.linkField; }).length < 1) {
+							setting.linkField = linkedFieldItem.options[0].id;
+						}
+
+						next();
+					},
+					// Misc - Column
+					function (next) {
 						var colCountOptions = [1, 2, 3];
 						var colCountSource = $$(componentIds.propertyView).getItem(componentIds.selectColCount);
 						colCountSource.options = $.map(colCountOptions, function (o) {
@@ -591,22 +759,28 @@ steal(
 								id: o,
 								value: o
 							};
-						})
+						});
 
-						// Set property values
-						var propValues = {};
-						propValues[componentIds.editTitle] = setting.title || '';
-						propValues[componentIds.editDescription] = setting.description || '';
-						propValues[componentIds.selectObject] = setting.object;
-						propValues[componentIds.selectColCount] = setting.colCount;
-						propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
-						propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
-						propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
-						propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
+						next();
+					}
+				], function () {
+					// Set property values
+					var propValues = {};
+					propValues[componentIds.editTitle] = setting.title || '';
+					propValues[componentIds.editDescription] = setting.description || '';
+					propValues[componentIds.selectObject] = setting.object;
+					propValues[componentIds.linkedTo] = setting.linkedTo;
+					propValues[componentIds.linkField] = setting.linkField;
+					propValues[componentIds.selectColCount] = setting.colCount;
+					propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
+					propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
+					propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
+					propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
+					propValues[componentIds.whenByGroup] = setting.whenByGroup || 'add';
 
-						$$(componentIds.propertyView).setValues(propValues);
-						$$(componentIds.propertyView).refresh();
-					});
+					$$(componentIds.propertyView).setValues(propValues);
+					$$(componentIds.propertyView).refresh();
+				});
 			};
 
 			this.isRendered = function () {
@@ -622,12 +796,12 @@ steal(
 
 				if (data.setting.clearOnLoad === 'yes') {
 					data.dataCollection.setCursor(null);
-					clearForm.call(self, data.object, data.columns, data.dataCollection);
+					clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 				}
 
-				setElementHeights.call(self, data.columns, currModel);
+				setElementHeights.call(self, self.data.columns, currModel);
 
-				data.columns.forEach(function (col) {
+				self.data.columns.forEach(function (col) {
 					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
@@ -698,6 +872,7 @@ steal(
 			return {
 				view: "property",
 				id: componentIds.propertyView,
+				nameWidth: 110,
 				elements: [
 					{ label: "Header", type: "label" },
 					{
@@ -724,6 +899,32 @@ steal(
 								return selectedData[0].value;
 							else
 								return "[Select]";
+						}
+					},
+					{
+						id: componentIds.linkedTo,
+						name: 'linkedTo',
+						type: 'richselect',
+						label: 'Linked to',
+						template: function (data, dataValue) {
+							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+							if (selectedData && selectedData.length > 0)
+								return selectedData[0].value;
+							else
+								return "[none]";
+						}
+					},
+					{
+						id: componentIds.linkField,
+						name: 'linkField',
+						type: 'richselect',
+						label: 'Link field',
+						template: function (data, dataValue) {
+							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+							if (selectedData && selectedData.length > 0)
+								return selectedData[0].value;
+							else
+								return "";
 						}
 					},
 					{ label: "Misc", type: "label" },
@@ -781,6 +982,16 @@ steal(
 							{ id: 'yes', value: "Yes" },
 							{ id: 'no', value: "No" },
 						]
+					},
+					{
+						id: componentIds.whenByGroup,
+						name: 'whenByGroup',
+						type: 'richselect',
+						label: 'When by Group',
+						options: [
+							{ id: 'add', value: "Add" }
+							// ,{ id: 'update', value: "Update" },
+						]
 					}
 				],
 				on: {
@@ -800,6 +1011,29 @@ steal(
 									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
+								propertyValues[componentIds.linkedTo] = null;
+							case componentIds.linkedTo:
+								var linkedTo = propertyValues[componentIds.linkedTo],
+									linkedField = $$(componentIds.propertyView).getItem(componentIds.linkField);
+
+								if (linkedTo && linkedTo != 'none') {
+									linkedField.options = componentManager.editInstance.data.columns
+										.filter(function (col) { return col.setting.linkObject == linkedTo; })
+										.map(function (col) {
+											return {
+												id: col.id,
+												value: col.label
+											}
+										}).attr();
+
+									propertyValues[componentIds.linkField] = linkedField.options[0].id; // Default selection
+								} else {
+									linkedField.options = [];
+									linkedField.hidden = true;
+									propertyValues[componentIds.linkField] = null;
+								}
+								$$(componentIds.propertyView).setValues(propertyValues);
+							case componentIds.linkField:
 							case componentIds.selectColCount:
 							case componentIds.isSaveVisible:
 							case componentIds.isCancelVisible:

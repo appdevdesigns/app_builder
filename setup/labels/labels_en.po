@@ -953,3 +953,32 @@ msgstr "%s:Returns the year of a given date"
 msgid "Do you want to delete <b>{0}</b>?"
 msgstr "Do you want to delete <b>{0}</b>?"
 
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.addPage
+msgid "Add a tab below"
+msgstr "Add a tab below"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.enterTabName
+msgid "Enter a tab name"
+msgstr "Enter a tab name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.invalidTabName
+msgid "Tab name cannot be empty"
+msgstr "Tab name cannot be empty"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.chooseIcon
+msgid "Choose an icon"
+msgstr "Choose an icon"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.tab.addTab
+msgid "Add Tab"
+msgstr "Add Tab"

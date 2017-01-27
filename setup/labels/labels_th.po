@@ -929,3 +929,33 @@ msgstr "[th] %s:Returns the year of a given date"
 msgid "Do you want to delete <b>{0}</b>?"
 msgstr "คุณต้องการลบ<b>{0}</b>หรือไม่"
 
+#. path: app_builder
+#. code: th
+#. key: ab.component.tab.addPage
+msgid "Add a tab below"
+msgstr "[th] Add a tab below"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.tab.enterTabName
+msgid "Enter a tab name"
+msgstr "[th] Enter a tab name"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.tab.invalidTabName
+msgid "Tab name cannot be empty"
+msgstr "[th] Tab name cannot be empty"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.tab.chooseIcon
+msgid "Choose an icon"
+msgstr "[th] Choose an icon"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.tab.addTab
+msgid "Add Tab"
+msgstr "[th] Add Tab"
+

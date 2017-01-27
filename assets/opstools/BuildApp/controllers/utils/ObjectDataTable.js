@@ -141,7 +141,7 @@ steal(
 							this.events.deleteRow = deleteRow;
 						},
 
-						bindColumns: function (application, columns, resetColumns, addTrashColumn) {
+						bindColumns: function (application, columns, resetColumns, showSelectCol, showTrashCol) {
 							var self = this;
 
 							if (resetColumns)
@@ -192,7 +192,19 @@ steal(
 
 							headers.sort(function (a, b) { return a.weight - b.weight; });
 
-							if (addTrashColumn) {
+							// Select column by checkbox
+							if (showSelectCol && columns.length > 0) {
+								headers.unshift({
+									id: "select_column",
+									header: { content: "masterCheckbox", css: "center" },
+									template: "{common.checkbox()}",
+									css: "center",
+									width: 50
+								});
+							}
+
+							// Removable
+							if (showTrashCol && columns.length > 0) {
 								headers.push({
 									id: "appbuilder_trash",
 									header: "",
@@ -210,7 +222,7 @@ steal(
 								label = col.label || '';
 
 							// Show connect object name in header
-							if (col.setting.editor === 'selectivity') {
+							if (col.type === 'connectObject') {
 								// Find label of connect object
 								var connectObj = application.objects.filter(function (o) {
 									return o.id == col.setting.linkObject;

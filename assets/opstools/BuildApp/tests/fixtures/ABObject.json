@@ -56,7 +56,6 @@
 					"linkViaType": "model",
 					"linkVia": "4",
 					"icon": "external-link",
-					"editor": "selectivity",
 					"template": "<div class=\"connect-data-values\"></div>",
 					"filter_type": "multiselect"
 				},
@@ -138,7 +137,6 @@
 					"linkViaType": "collection",
 					"linkVia": "2",
 					"icon": "external-link",
-					"editor": "selectivity",
 					"template": "<div class=\"connect-data-values\"></div>",
 					"filter_type": "multiselect",
 					"linkDefault": "false"

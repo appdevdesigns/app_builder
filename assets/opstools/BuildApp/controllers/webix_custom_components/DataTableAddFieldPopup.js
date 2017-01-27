@@ -49,6 +49,7 @@ steal(
 					this.resetState();
 				},
 				body: {
+					css: 'ab-add-fields-popup',
 					width: 380,
 					rows: [
 						{
@@ -76,12 +77,17 @@ steal(
 							cols: [
 								{
 									view: "button", id: componentIds.saveButton, label: labels.add_fields.addNewField, type: "form", width: 120, click: function () {
-										var base = this.getTopParentView(),
+										var self = this;
+
+										self.disable();
+
+										var base = self.getTopParentView(),
 											dataTable = base.dataTable,
 											fieldInfo = dataFieldsManager.getSettings(base.fieldName);
 
 										if (!dataTable) {
 											webix.message({ type: "error", text: labels.add_fields.registerTableWarning });
+											self.enable();
 											return;
 										}
 
@@ -91,6 +97,7 @@ steal(
 												text: 'System could not get this field information ',
 												ok: labels.common.ok
 											});
+											self.enable();
 											return;
 										}
 
@@ -101,6 +108,7 @@ steal(
 												text: labels.add_fields.invalidFieldDescription,
 												ok: labels.common.ok
 											});
+											self.enable();
 											return;
 										}
 
@@ -112,6 +120,7 @@ steal(
 												text: labels.add_fields.duplicateFieldDescription,
 												ok: labels.common.ok
 											});
+											this.enable();
 											return;
 										}
 
@@ -120,8 +129,9 @@ steal(
 
 										// Call callback function
 										if (base.saveFieldCallback && base.fieldName) {
-											base.saveFieldCallback(fieldInfo)
+											base.saveFieldCallback(base.fieldName, fieldInfo)
 												.then(function () {
+													self.enable();
 													base.resetState();
 													base.hide();
 												});
@@ -231,7 +241,7 @@ steal(
 				var runningNumber = 1;
 
 				if (this.dataTable)
-					runningNumber = this.dataTable.config.columns.length;
+					runningNumber = this.dataTable.config.columns.length || 1;
 
 				return 'Field ' + runningNumber;
 			}

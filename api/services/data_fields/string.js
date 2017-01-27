@@ -23,6 +23,16 @@ module.exports = {
 		dfd.resolve(colString);
 
 		return dfd;
-	}
-
+	},
+    
+    defaults: {
+        type: 'string',
+        fieldName: 'string',
+        setting: {
+            icon: 'font',
+            editor: 'text',
+            filter_type: 'text',
+            supportMultilingual: '0',
+        }
+    }
 };

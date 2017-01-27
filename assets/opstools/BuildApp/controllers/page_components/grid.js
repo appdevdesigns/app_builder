@@ -5,6 +5,8 @@ steal(
 
 	'opstools/BuildApp/controllers/webix_custom_components/DynamicDataTable.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ActiveList.js',
+	'opstools/BuildApp/controllers/webix_custom_components/UpdateRecordsPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DeleteRecordsPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFilterPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableSortFieldsPopup.js',
 
@@ -28,7 +30,8 @@ steal(
 
 		// Instance functions
 		var gridComponent = function (application, viewId, componentId) {
-			var data = {};
+			var data = {},
+				events = {}; // { eventName: eventId, ..., eventNameN: eventIdN }
 
 			function getMaxWeight(columns) {
 				if (!columns) return 0;
@@ -45,6 +48,26 @@ steal(
 					this.data.objectDataTable.setReadOnly(true);
 				}
 
+
+//// Refactor Note:
+// 
+// Here we are in a Grid Component.  And in many places we access the objects in our application by:
+// application.objects.filter()
+//
+// It is a good assumption that the Grid Component knows it needs to get Objects from the Application
+// object.  
+//
+// However, a Grid Component should not have any understanding of HOW the Application Object is internally
+// storing it's data.
+//
+// Now, if we ever decide to change how the Application object stores it's data, we have broken code 
+// all over the place.
+//
+// Whenever we want to get data that is managed by another Object, we should ask the Object for it:
+// 		application.getObjects(filterFn());   // returns an {array} of objects
+// 		application.getObjectById(objectId);  // return an object directly
+// 
+// 
 				var object = application.objects.filter(function (obj) { return obj.id == objectId });
 				if (object && object[0]) object = object[0];
 
@@ -62,7 +85,7 @@ steal(
 
 				// Select this object at first time
 				var visibleColumns = this.data.visibleColumns ? this.data.visibleColumns.slice(0) : [];
-				if (selectAll && $.grep(columns, function (d) { return visibleColumns.indexOf(d.id.toString()) > -1; }).length < 1) {
+				if ($.grep(columns, function (d) { return visibleColumns.indexOf(d.id.toString()) > -1; }).length < 1) {
 					visibleColumns = visibleColumns.concat($.map(columns, function (d) { return d.id.toString(); }));
 				}
 
@@ -126,6 +149,7 @@ steal(
 
 			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
 				var self = this,
+					columns = [],
 					q = $.Deferred();
 
 				webix.extend($$(self.viewId), webix.ProgressBar);
@@ -166,12 +190,25 @@ steal(
 
 								self.data.columns = result;
 
+								if (self.data.columns) {
+									if (!self.data.visibleColumns) self.data.visibleColumns = [];
+
+									if (showAll && self.data.visibleColumns.length === 0) { // Show all
+										columns = self.data.columns.slice(0);
+										self.data.visibleColumns = $.map(columns, function (col) { return col.id; });
+									}
+									else
+										columns = self.data.columns.filter(function (c) {
+											return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
+										}).slice(0);
+								}
+
 								next();
 							});
 					},
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
-						dataTableController.bindColumns(application, [], true, setting.removable);
+						dataTableController.bindColumns(application, columns, true, setting.selectable === 'enable', setting.removable === 'enable');
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
 							$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -202,6 +239,7 @@ steal(
 							editPage: setting.editPage,
 							editForm: setting.editForm
 						},
+						setting.selectable,
 						setting.removable,
 						setting.linkedField);
 
@@ -279,12 +317,83 @@ steal(
 
 					var action_buttons = [];
 
+					if (setting.massUpdate === 'enable') {
+						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
+
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', icon: "pencil", type: "icon", width: 140,
+							click: function () {
+								if ($$('ab-update-records-popup')) {
+									$$('ab-update-records-popup').define('application', application);
+									$$('ab-update-records-popup').define('objectModel', object[0]);
+									$$('ab-update-records-popup').define('dataTable', $$(self.viewId));
+									$$('ab-update-records-popup').define('dataCollection', self.data.dataCollection);
+									$$('ab-update-records-popup').define('columns', columns);
+									$$('ab-update-records-popup').show(this.$view);
+								}
+							}
+						});
+					}
+
+					if (setting.selectable == 'enable' && setting.removable === 'enable') {
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', icon: "trash", type: "icon", width: 140,
+							click: function () {
+								if ($$('ab-delete-records-popup')) {
+									$$('ab-delete-records-popup').define('objectModel', object[0]);
+									$$('ab-delete-records-popup').define('dataTable', $$(self.viewId));
+									$$('ab-delete-records-popup').define('dataCollection', self.data.dataCollection);
+									$$('ab-delete-records-popup').define('columns', columns);
+									$$('ab-delete-records-popup').show(this.$view);
+								}
+							}
+						});
+					}
+
 					if (setting.filter === 'enable') {
-						action_buttons.push({ view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', popup: self.viewId + '-filter-popup', icon: "filter", type: "icon", width: 120, badge: 0 });
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', icon: "filter", type: "icon", width: 120, badge: 0,
+							click: function () {
+								if ($$('ab-filter-popup')) {
+									$$('ab-filter-popup').define('dataTable', $$(self.viewId));
+									$$('ab-filter-popup').define('columns', columns);
+
+									if (!events['filterPopupOnChange']) {
+										events['filterPopupOnChange'] = $$('ab-filter-popup').attachEvent('onChange', function (dataTableId, num) {
+											if (self.viewId == dataTableId) {
+												$$(self.viewId + '-filter-button').define('badge', num);
+												$$(self.viewId + '-filter-button').refresh();
+											}
+										});
+									}
+
+									$$('ab-filter-popup').show(this.$view);
+								}
+							}
+						});
 					}
 
 					if (setting.sort === 'enable') {
-						action_buttons.push({ view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', popup: self.viewId + '-sort-popup', icon: "sort", type: "icon", width: 120, badge: 0 });
+						action_buttons.push({
+							view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', icon: "sort", type: "icon", width: 120, badge: 0,
+							click: function () {
+								if ($$('ab-sort-popup')) {
+									$$('ab-sort-popup').define('dataTable', $$(self.viewId));
+									$$('ab-sort-popup').define('columns', columns);
+
+									if (!events['sortPopupOnChange']) {
+										events['sortPopupOnChange'] = $$('ab-sort-popup').attachEvent('onChange', function (dataTableId, num) {
+											if (self.viewId == dataTableId) {
+												$$(self.viewId + '-sort-button').define('badge', num);
+												$$(self.viewId + '-sort-button').refresh();
+											}
+										});
+									}
+
+									$$('ab-sort-popup').show(this.$view);
+								}
+							}
+						});
 					}
 
 					if (action_buttons.length > 0) {
@@ -306,85 +415,100 @@ steal(
 							$$(self.viewId).prependView(header);
 					}
 
-					var columns = [];
-					if (self.data.columns) {
-						if (!self.data.visibleColumns) self.data.visibleColumns = [];
+					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
+						if ($$(self.viewId + '-update-items-button'))
+							$$(self.viewId + '-update-items-button').enable();
 
-						columns = self.data.columns.filter(function (c) {
-							return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
-						}).slice(0);
+						if ($$(self.viewId + '-delete-items-button'))
+							$$(self.viewId + '-delete-items-button').enable();
 					}
+					else {
+						if ($$(self.viewId + '-update-items-button'))
+							$$(self.viewId + '-update-items-button').disable();
 
-					// Create filter popup
-					if (setting.filter === 'enable') {
-						webix.ui({
-							id: self.viewId + '-filter-popup',
-							view: "filter_popup",
-						}).hide();
-
-						$$(self.viewId + '-filter-popup').registerDataTable($$(self.viewId));
-						$$(self.viewId + '-filter-popup').setFieldList(columns);
-						$$(self.viewId + '-filter-popup').attachEvent('onChange', function (num) {
-							$$(self.viewId + '-filter-button').define('badge', num);
-							$$(self.viewId + '-filter-button').refresh();
-						});
-					}
-
-					// Create sort popup
-					if (setting.sort === 'enable') {
-						webix.ui({
-							id: self.viewId + '-sort-popup',
-							view: "sort_popup",
-						}).hide();
-
-						$$(self.viewId + '-sort-popup').registerDataTable($$(self.viewId));
-						$$(self.viewId + '-sort-popup').setFieldList(columns);
-						$$(self.viewId + '-sort-popup').attachEvent('onChange', function (num) {
-							$$(self.viewId + '-sort-button').define('badge', num);
-							$$(self.viewId + '-sort-button').refresh();
-						});
+						if ($$(self.viewId + '-delete-items-button'))
+							$$(self.viewId + '-delete-items-button').disable();
 					}
 
 					// Select edit item
-					getObjectDataTable.call(self, application, setting.object, self.data.columns).registerItemClick(function (id, e, node) {
-						if (id.column === 'view_detail') {
-							$(self).trigger('changePage', {
-								pageId: setting.viewPage
-							});
+					getObjectDataTable.call(self, application, setting.object, self.data.columns)
+						.registerItemClick(function (id, e, node) {
+							switch (id.column) {
+								case 'view_detail':
+									$(self).trigger('changePage', {
+										pageId: setting.viewPage
+									});
 
-							$$(self.viewId).define('select', true);
-							if (dataCollection)
-								dataCollection.setCursor((id.row || id));
-						}
-						else if (id.column === 'edit_form') {
-							$(self).trigger('changePage', {
-								pageId: setting.editPage
-							});
+									if (!$$(self.viewId).config.multiselect || !$$(self.viewId).config.select)
+										$$(self.viewId).define('select', true);
 
-							$$(self.viewId).define('select', true);
-							if (dataCollection)
-								dataCollection.setCursor((id.row || id));
-						}
-					});
+									if (dataCollection)
+										dataCollection.setCursor((id.row || id));
+									break;
+								case 'edit_form':
+									$(self).trigger('changePage', {
+										pageId: setting.editPage
+									});
+
+									if (!$$(self.viewId).config.multiselect || !$$(self.viewId).config.select)
+										$$(self.viewId).define('select', true);
+
+									if (dataCollection)
+										dataCollection.setCursor((id.row || id));
+									break;
+							}
+						});
 
 					$$(self.viewId).attachEvent('onAfterRender', function (data) {
 						$(self).trigger('renderComplete', {});
 					});
 
+					// Select column by checkbox
+					$$(self.viewId).attachEvent("onCheck", function (row, col, state) {
+						if (!self.data.dataCollection) return;
+
+						if (col == 'select_column') {
+							if (state)
+								self.data.dataCollection.checkItem(row);
+							else
+								self.data.dataCollection.uncheckItem(row);
+
+							// Enable Update/Delete buttons
+							if (self.data.dataCollection.getCheckedItems().length > 0) {
+								if ($$(self.viewId + '-update-items-button'))
+									$$(self.viewId + '-update-items-button').enable();
+								if ($$(self.viewId + '-delete-items-button'))
+									$$(self.viewId + '-delete-items-button').enable();
+							}
+							// Disable Update/Delete buttons
+							else {
+								if ($$(self.viewId + '-update-items-button'))
+									$$(self.viewId + '-update-items-button').disable();
+								if ($$(self.viewId + '-delete-items-button'))
+									$$(self.viewId + '-delete-items-button').disable();
+							}
+						}
+					});
+
 					if (dataCollection) {
 						$$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
+							var rowId = data.id || data;
+
+							// Set cursor of data collection
 							var currModel = dataCollection.AD.currModel();
-							if (!currModel || currModel.id != (data.id || data))
-								dataCollection.setCursor((data.id || data));
+							if (!currModel || currModel.id != rowId)
+								dataCollection.setCursor(rowId);
 						});
 
 						dataCollection.attachEvent("onAfterCursorChange", function (id) {
-							var selectedItem = $$(self.viewId).getSelectedId(false);
+							var selectedItem = $$(self.viewId).getSelectedId(false),
+								preserve = $$(self.viewId).config.multiselect;
 
 							if (!id && $$(self.viewId).unselectAll)
 								$$(self.viewId).unselectAll();
-							else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select)
-								$$(self.viewId).select(id);
+							else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
+								$$(self.viewId).select(id, preserve);
+							}
 						});
 
 						dataCollection.attachEvent("onDataUpdate", function (id, data) {
@@ -399,6 +523,11 @@ steal(
 							filterLinkedData.call(self, setting.linkedField);
 						});
 
+						// Delete checked item when a record is deleted
+						dataCollection.attachEvent("onAfterDelete", function (rowId) {
+							if (self.data.dataCollection)
+								delete self.data.dataCollection.uncheckItem(rowId);
+						});
 					}
 
 					q.resolve();
@@ -407,7 +536,7 @@ steal(
 				return q;
 			};
 
-			this.renderDataTable = function (dataCollection, extraColumns, isTrashVisible, linkedField) {
+			this.renderDataTable = function (dataCollection, extraColumns, selectable, isTrashVisible, linkedField) {
 				var self = this;
 
 				if (!self.data.columns) return;
@@ -417,7 +546,8 @@ steal(
 				var columns = self.data.columns.filter(function (c) {
 					return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
 				}).slice(0);
-				if (columns.length < 1) columns = self.data.columns.slice(0); // Show all
+
+				// if (columns.length < 1 && showAll) columns = self.data.columns.slice(0); // Show all
 
 				// View column
 				if (extraColumns.viewPage && extraColumns.viewId) {
@@ -449,9 +579,10 @@ steal(
 					});
 				}
 
+				selectable = selectable == 'enable';
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, selectable, isTrashVisible);
 
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
@@ -480,6 +611,8 @@ steal(
 					editPage: editPageId, // ABPage.id
 					editForm: editFormId, // ABPageComponent.id
 					columns: columns.filter(function (c) { return c; }), // [ABColumn.id]
+					selectable: propertyValues.selectable,
+					massUpdate: propertyValues.massUpdate,
 					removable: propertyValues.removable,
 					filter: propertyValues.filter,
 					sort: propertyValues.sort
@@ -529,7 +662,7 @@ steal(
 					},
 					// Render dataTable component
 					function (next) {
-						self.render(setting, true, false, dataCollection, linkedToDataCollection).then(function () {
+						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection).then(function () {
 							// Columns list
 							bindColumnList.call(self, setting.object, selectAll);
 							$$(componentIds.columnList).hideProgress();
@@ -553,7 +686,7 @@ steal(
 						});
 
 						// Data source - Linked to
-						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject }),
+						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject.toString() }),
 							linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; }),
 							linkedToItem = $$(componentIds.propertyView).getItem('linkedTo');
 						linkedToItem.options = $.map(linkedObjs, function (o) {
@@ -587,9 +720,13 @@ steal(
 					},
 					// Data table - Detail view & Edit form
 					function (next) {
-						var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 
-						application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
+						// 19 Jan 2017
+						// Make sure we return all possible pages that can be selected, even if we are embedded 
+						// in a buried Tab component.
+						// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
+						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
+						application.getApplicationPages(application.currPage)
 							.fail(function (err) { next(err); })
 							.then(function (pages) {
 								var viewComponents = [],
@@ -662,6 +799,8 @@ steal(
 							linkedField: setting.linkedField,
 							detailView: detailView,
 							editForm: editForm,
+							selectable: setting.selectable || 'disable',
+							massUpdate: setting.massUpdate || 'disable',
 							removable: setting.removable || 'disable',
 							filter: setting.filter || 'disable',
 							sort: setting.sort || 'disable'
@@ -674,8 +813,11 @@ steal(
 			};
 
 			this.onDisplay = function () {
-				if (this.data.setting.linkedField)
+
+				if ((this.data.settings) && (this.data.setting.linkedField)) {
 					filterLinkedData.call(this, this.data.setting.linkedField);
+				}
+
 			}
 
 		};
@@ -742,9 +884,12 @@ steal(
 											editInstance.data.visibleColumns.push(item_id);
 										else // Uncheck
 										{
-											var index = editInstance.data.visibleColumns.indexOf(item_id);
-											if (index > -1)
-												editInstance.data.visibleColumns.splice(index, 1);
+											editInstance.data.visibleColumns.forEach(function (colId, index) {
+												if (colId == item_id) {
+													editInstance.data.visibleColumns.splice(index, 1);
+													return;
+												}
+											});
 										}
 
 										editInstance.renderDataTable(editInstance.data.dataCollection, {
@@ -752,7 +897,10 @@ steal(
 											viewId: detailView ? detailView[1] : null,
 											editPage: editValue ? editValue[0] : null,
 											editForm: editValue ? editValue[1] : null
-										}, propertyValues.removable, propertyValues.linkedField);
+										},
+											propertyValues.selectable,
+											propertyValues.removable,
+											propertyValues.linkedField);
 									}
 								}
 							}
@@ -768,6 +916,7 @@ steal(
 			return {
 				view: "property",
 				id: componentIds.propertyView,
+				nameWidth: 110,
 				elements: [
 					{ label: "Header", type: "label" },
 					{
@@ -849,16 +998,6 @@ steal(
 								return "[none]";
 						}
 					},
-					{
-						id: 'removable',
-						name: 'removable',
-						type: 'richselect',
-						label: 'Removable',
-						options: [
-							{ id: 'enable', value: "Yes" },
-							{ id: 'disable', value: "No" },
-						]
-					},
 					{ label: "Options", type: "label" },
 					{
 						id: 'filter',
@@ -875,6 +1014,36 @@ steal(
 						name: 'sort',
 						type: 'richselect',
 						label: 'Sort',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
+						id: 'selectable',
+						name: 'selectable',
+						type: 'richselect',
+						label: 'Selectable',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
+						id: 'massUpdate',
+						name: 'massUpdate',
+						type: 'richselect',
+						label: 'Mass update',
+						options: [
+							{ id: 'enable', value: "Yes" },
+							{ id: 'disable', value: "No" },
+						]
+					},
+					{
+						id: 'removable',
+						name: 'removable',
+						type: 'richselect',
+						label: 'Removable',
 						options: [
 							{ id: 'enable', value: "Yes" },
 							{ id: 'disable', value: "No" },
@@ -920,6 +1089,9 @@ steal(
 							case 'object':
 							case 'filter':
 							case 'sort':
+							case 'selectable':
+							case 'massUpdate':
+							case 'removable':
 								var setting = editInstance.getSettings();
 								setting.columns = editInstance.data.visibleColumns;
 
@@ -927,7 +1099,6 @@ steal(
 								break;
 							case 'detailView':
 							case 'editForm':
-							case 'removable':
 								var detailView = propertyValues.detailView && propertyValues.detailView.indexOf('|') > -1 ? propertyValues.detailView.split('|') : null,
 									editValue = propertyValues.editForm && propertyValues.editForm.indexOf('|') > -1 ? propertyValues.editForm.split('|') : null;
 
@@ -936,7 +1107,10 @@ steal(
 									viewId: detailView ? detailView[1] : null,
 									editPage: editValue ? editValue[0] : null,
 									editForm: editValue ? editValue[1] : null
-								}, propertyValues.removable, propertyValues.linkedField);
+								},
+									propertyValues.selectable,
+									propertyValues.removable,
+									propertyValues.linkedField);
 								break;
 						}
 					}

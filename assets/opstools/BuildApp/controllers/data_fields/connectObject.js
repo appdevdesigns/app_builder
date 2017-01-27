@@ -185,12 +185,13 @@ steal(
 			$$(componentIds.editView).appName = application.name;
 
 			var objectList = AD.op.WebixDataCollection(application.objects);
-			objectList.attachEvent('onAfterAdd', function (id, index) {
-				$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
-			});
-			objectList.attachEvent('onAfterDelete', function () {
-				$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
-			});
+			// Allow linking to self
+			// objectList.attachEvent('onAfterAdd', function (id, index) {
+			// 	$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
+			// });
+			// objectList.attachEvent('onAfterDelete', function () {
+			// 	$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
+			// });
 			$$(componentIds.objectList).clearAll();
 			$$(componentIds.objectList).data.unsync();
 			$$(componentIds.objectList).data.sync(objectList);
@@ -245,7 +246,6 @@ steal(
 					icon: connectObjectField.icon,
 // choose something that isn't a Webix standard data editor
 // then add a .template field. (use a class definition that you can lookup in .customDisplay)
-					editor: 'selectivity',
 					template: '<div class="connect-data-values"></div>',
 					filter_type: 'multiselect'
 				}
@@ -285,7 +285,7 @@ steal(
 						text: data._dataLabel,
 						objectId: object.id,
 						columnName: fieldData.name,
-						rowId: rowData.id
+						rowId: rowData ? rowData.id : null
 					});
 				}
 				else if (data.each || data.forEach) {
@@ -295,7 +295,7 @@ steal(
 							text: item._dataLabel,
 							objectId: object.id,
 							columnName: fieldData.name,
-							rowId: rowData.id
+							rowId: rowData ? rowData.id : null
 						};
 					});
 				}
@@ -338,7 +338,7 @@ steal(
 				linkVia = linkVia[0];
 
 			// Open popup
-			$$(componentIds.connectDataPopup).open(application, linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType);
+			$$(componentIds.connectDataPopup).open(application, linkObject, dataId, selectedIds, fieldData.setting.linkType, linkVia.name, linkVia.setting.linkType, !fieldData.isSynced);
 
 			return false;
 		};

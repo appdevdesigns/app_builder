@@ -18,6 +18,16 @@ module.exports = {
 		dfd.resolve(colString);
 
 		return dfd;
-	}
-
+	},
+    
+    defaults: {
+        type: 'integer',
+        fieldName: 'number',
+        setting: {
+            icon: 'slack',
+            editor: 'number',
+            filter_type: 'number',
+            format: 'numberFormat',
+        }
+    }
 };

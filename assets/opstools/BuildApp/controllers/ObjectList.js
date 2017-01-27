@@ -34,7 +34,9 @@ steal(
 								objectListMenuPopup: 'ab-object-list-menu-popup',
 								objectListMenu: 'ab-object-list-menu',
 								addNewPopup: 'ab-object-add-new-popup',
-								addNewForm: 'ab-object-add-new-form'
+								addNewForm: 'ab-object-add-new-form',
+								importModelList: 'ab-object-import-model-list',
+								importModelListFilter: 'ab-object-import-model-list-filter'
 							};
 
 							this.rules = {};
@@ -73,6 +75,8 @@ steal(
 							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
 							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
 							self.labels.common.add = AD.lang.label.getLabel('ab.common.add') || "Add";
+							self.labels.common.create = AD.lang.label.getLabel('ab.common.create') || "Create";
+							self.labels.common.import = AD.lang.label.getLabel('ab.common.import') || "Import";
 							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
 							self.labels.common.formName = AD.lang.label.getLabel('ab.common.form.name') || "Name";
 							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
@@ -307,73 +311,183 @@ steal(
 							webix.ui({
 								view: "window",
 								id: self.webixUiId.addNewPopup,
-								width: 300,
+								width: 400,
 								position: "center",
 								modal: true,
 								head: self.labels.object.addNew,
 								selectNewObject: true,
 								on: {
 									"onBeforeShow": function () {
+									    // for Create
 										$$(self.webixUiId.addNewForm).clearValidation();
 										$$(self.webixUiId.addNewForm).clear();
+										
+										// for Import
+										$$(self.webixUiId.importModelListFilter).setValue('');
+										AD.comm.service.get({ url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/findModels'})
+										.fail(function(err) {
+                                            webix.message({
+                                                type: "error",
+                                                text: err
+                                            });
+										})
+										.done(function(list) {
+                                            var listData = [];
+                                            for (var i=0; i<list.length; i++) {
+                                                listData.push({
+                                                    id: list[i]
+                                                });
+                                            }
+                                            $$(self.webixUiId.importModelList).clearAll();
+                                            $$(self.webixUiId.importModelList).parse(listData, 'json');
+										});
 									}
 								},
 								body: {
-									view: "form",
-									id: self.webixUiId.addNewForm,
-									width: 300,
-									elements: [
-										{ view: "text", label: self.labels.common.formName, name: "name", required: true, placeholder: self.labels.object.placeholderName, labelWidth: 70 },
-										{
-											margin: 5, cols: [
-												{
-													view: "button", value: self.labels.common.add, type: "form", click: function () {
-														if (!$$(self.webixUiId.addNewForm).validate())
-															return false;
-
-														var newObjectName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
-
-														$$(self.webixUiId.objectList).showProgress({ type: 'icon' });
-
-														var newObject = {
-															name: newObjectName,
-															label: newObjectName
-														};
-
-														// Add new object to server
-														AD.classes.AppBuilder.currApp.createObject(newObject).fail(function (err) {
-															$$(self.webixUiId.objectList).hideProgress();
-
-															AD.error.log('Object : Error create object data', { error: err });
-
-														}).then(function (result) {
-															$$(self.webixUiId.addNewPopup).hide();
-
-															if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
-																$$(self.webixUiId.objectList).unselectAll();
-																$$(self.webixUiId.objectList).select(result.id);
-															}
-
-															$$(self.webixUiId.objectList).hideProgress();
-
-															// Show success message
-															webix.message({
-																type: "success",
-																text: self.labels.common.createSuccessMessage.replace('{0}', newObject.label)
-															});
-														});
-
-													}
-												},
-												{ view: "button", value: self.labels.common.cancel, click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
-											]
-										}
-									],
-									rules: {
-										name: self.rules.preventDuplicateName
-									}
-
-								}
+								    view: "tabview",
+								    cells: [
+								        {
+								            header: self.labels.common.create, //"Create"
+                                            body: {
+                                                view: "form",
+                                                id: self.webixUiId.addNewForm,
+                                                width: 400,
+                                                elements: [
+                                                    { view: "text", label: self.labels.common.formName, name: "name", required: true, placeholder: self.labels.object.placeholderName, labelWidth: 70 },
+                                                    {
+                                                        margin: 5, cols: [
+                                                            {
+                                                                view: "button", value: self.labels.common.add, type: "form", click: function () {
+                                                                    if (!$$(self.webixUiId.addNewForm).validate())
+                                                                        return false;
+            
+                                                                    var newObjectName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
+            
+                                                                    $$(self.webixUiId.objectList).showProgress({ type: 'icon' });
+            
+                                                                    var newObject = {
+                                                                        name: newObjectName,
+                                                                        label: newObjectName
+                                                                    };
+            
+                                                                    // Add new object to server
+                                                                    AD.classes.AppBuilder.currApp.createObject(newObject).fail(function (err) {
+                                                                        $$(self.webixUiId.objectList).hideProgress();
+            
+                                                                        AD.error.log('Object : Error create object data', { error: err });
+            
+                                                                    }).then(function (result) {
+                                                                        $$(self.webixUiId.addNewPopup).hide();
+            
+                                                                        if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
+                                                                            $$(self.webixUiId.objectList).unselectAll();
+                                                                            $$(self.webixUiId.objectList).select(result.id);
+                                                                        }
+            
+                                                                        $$(self.webixUiId.objectList).hideProgress();
+            
+                                                                        // Show success message
+                                                                        webix.message({
+                                                                            type: "success",
+                                                                            text: self.labels.common.createSuccessMessage.replace('{0}', newObject.label)
+                                                                        });
+                                                                    });
+            
+                                                                }
+                                                            },
+                                                            { view: "button", value: self.labels.common.cancel, click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
+                                                        ]
+                                                    }
+                                                ],
+                                                rules: {
+                                                    name: self.rules.preventDuplicateName
+                                                }
+            
+                                            }
+                                        },
+                                        {
+                                            header: self.labels.common.import, //"Import"
+                                            body: {
+                                                view: "form",
+                                                elements: [
+                                                    {
+                                                        cols: [
+                                                            {
+                                                                view: 'icon',
+                                                                icon: 'filter',
+                                                                align: 'left'
+                                                            },
+                                                            {
+                                                                view: 'text',
+                                                                id: self.webixUiId.importModelListFilter,
+                                                                on: {
+                                                                    onTimedKeyPress: function() {
+                                                                        var filterText = this.getValue();
+                                                                        $$(self.webixUiId.importModelList).filter('#id#', filterText);
+                                                                    }
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    { 
+                                                        view: 'list',
+                                                        id: self.webixUiId.importModelList,
+                                                        select: true, 
+                                                        minHeight: 400,
+                                                        data: [],
+                                                        template: '<div>#id#</div>',
+                                                    },
+                                                    {
+                                                        cols: [
+                                                            { view: 'button', value: self.labels.common.import, type: 'form', click: function() {
+                                                                var button = this;
+                                                                var list = $$(self.webixUiId.importModelList);
+                                                                var selectedModel = list.getSelectedItem();
+                                                                if (!selectedModel) return;
+                                                                
+                                                                button.disable();
+                                                                $$(self.webixUiId.objectList).showProgress({ type: 'icon' });
+                                                                
+                                                                AD.comm.service.post({
+                                                                    url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/importModel',
+                                                                    data: {
+                                                                        model: selectedModel.id
+                                                                    }
+                                                                })
+                                                                .fail(function(err) {
+                                                                    webix.message({
+                                                                        type: 'error',
+                                                                        text: err
+                                                                    });
+                                                                })
+                                                                .done(function(objData) {
+                                                                    var ABObject = AD.Model.get('opstools.BuildApp.ABObject');
+                                                                    ABObject.findOne({ id: objData.id })
+                                                                    .done(function(result) {
+                                                                        result.translate();
+                                                                        AD.classes.AppBuilder.currApp.objects.push(result);
+                                                                        self.refreshObjectList();
+                                                                    })
+                                                                    .always(function() {
+                                                                        $$(self.webixUiId.addNewPopup).hide();
+                                                                    });
+                                                                    
+                                                                })
+                                                                .always(function() {
+                                                                    $$(self.webixUiId.objectList).hideProgress();
+                                                                    button.enable();
+                                                                });
+                                                            }},
+                                                            { view: "button", value: self.labels.common.cancel, click: function() { 
+                                                                $$(self.webixUiId.addNewPopup).hide(); 
+                                                            }}
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
 							}).hide();
 						},
 
@@ -415,7 +529,7 @@ steal(
 
 							objects.forEach(function (obj) {
 								var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
-									unsyncNumber = objectModel.Cached.count(),
+									unsyncNumber = (objectModel && objectModel.Cached ? objectModel.Cached.count() : 0),
 									htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
 
 								if (unsyncNumber > 0) {

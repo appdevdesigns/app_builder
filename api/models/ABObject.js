@@ -28,6 +28,18 @@ module.exports = {
 
         application: { model: 'ABApplication' },
 
+        isImported: {
+            type: 'boolean',
+            defaultsTo: false
+        },
+        
+        urlPath: {
+            type: 'string',
+            size: 80,
+            defaultsTo: '',
+            required: false
+        },
+
 
         // this will pull in the translations using .populate('translations')
         translations: {

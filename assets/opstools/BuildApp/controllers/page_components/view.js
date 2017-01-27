@@ -43,10 +43,15 @@ steal(
 
 			function updateData(setting, newData) {
 				var self = this,
-					currModel = newData ? newData : data.dataCollection.AD.currModel(),
+					currModel = null,
 					object = application.objects.filter(function (obj) { return obj.id == setting.object; })[0];
 
 				if (!object) return;
+
+				if (newData)
+					currModel = newData;
+				else if (data.dataCollection)
+					currModel = data.dataCollection.AD.currModel();
 
 				currModel = currModel && currModel.attr ? currModel.attr() : currModel;
 				data.currDataId = currModel ? currModel.id : null;
@@ -65,6 +70,11 @@ steal(
 
 						return;
 					}
+
+// There are cases where this happens.  Prevent the error:
+// Question for Pong: is this an acceptable case, or do we need to track down
+// where this is being called without .columns  and fix that?
+if (!data.columns) return;
 
 					var fieldData = currModel[child.config.name],
 						column = data.columns.filter(function (col) { return col.name == child.config.name; });
@@ -513,11 +523,13 @@ steal(
 
 						switch (editor.id) {
 							case componentIds.editTitle:
-								$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
+								if ($$(componentIds.title))
+									$$(componentIds.title).setValue(propertyValues[componentIds.editTitle]);
 								break;
 							case componentIds.editDescription:
 								console.log('***DESCRIPTION', state, editor, ignoreUpdate);
-								$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
+								if ($$(componentIds.description))
+									$$(componentIds.description).setValue(propertyValues[componentIds.editDescription]);
 								break;
 							case componentIds.selectObject:
 								console.log('***SELECT OBJECT', state, editor, ignoreUpdate);
@@ -526,10 +538,6 @@ steal(
 								break;
 							case componentIds.selectColumns:
 								console.log('***SELECT COLUMN', state, editor, ignoreUpdate);
-								var setting = componentManager.editInstance.getSettings();
-								componentManager.editInstance.populateSettings(setting, true);
-								break;
-							case componentIds.selectColumns:
 								var setting = componentManager.editInstance.getSettings();
 								componentManager.editInstance.populateSettings(setting, true);
 								break;

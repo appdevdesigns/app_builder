@@ -54,15 +54,108 @@ steal(
 							return q;
 						},
 
+
+
+						/**
+						 * @function getApplicationPages
+						 * return all ABPages (Root + 1st Child) of the current application
+						 * useful for when components need to offer these as selection options.
+						 * @param {ABPage} currPage  We need to contextualize this for the
+						 *					branch of pages under a RootPage. This page can
+						 *					be any page that can be resolved to a Root Page.
+						 * @return {deferred}
+						 */
+						getApplicationPages: function( currPage ) {
+							var _this = this;
+							var err = null;
+
+							if (typeof currPage == 'undefined') {
+								currPage = this.currPage;
+							}
+
+							// if our .pages looks like a proper array
+							if ((this.pages) && (this.pages.filter)) {
+
+								function findParent(page) {
+									var parent = null;
+									if ((page)&&(page.parent)) {
+										parent = _this.pages.filter(function(p){ return ((p.id == page.parent) || (p.id == page.parent.id)); })[0];
+									}
+									return parent;
+								}
+
+								var currPageParent = findParent(currPage);
+								while(currPageParent) {
+									currPage = currPageParent;
+									currPageParent = findParent(currPage);
+								}
+								// var currPage = this.pages.filter(function(p){ return !p.parent })[0];
+								if (currPage) {
+									return this.getPages({ or: [{ id: currPage.id }, { parent: currPage.id }] });
+								} else {
+									err = new Error('application.getApplicationPages(): no root page found!');
+								}
+							} else {
+								err = new Error('application.getApplicationPages() called with no pages defined.');
+							}
+
+							// if we get here, then we have an error:
+							var dfd = AD.sal.Deferred();
+							dfd.reject(err);
+							return dfd;
+							
+						},
+
+
+
+						/**
+						 * @function getAllApplicationPages
+						 * return all the ABPages in the current application.
+						 * This will include all pages, not just the Root + 1st Child.
+						 * @return {deferred}
+						 */
+						getAllApplicationPages:function() {
+							var _this = this;
+
+							var dfd = AD.sal.Deferred();
+
+							this.getPages()
+							.fail(dfd.reject)
+							.done(function(pages){
+
+								_this.pages = pages;  // replace our copy with proper ABPage instances
+								dfd.resolve(pages);
+							})
+
+							return dfd;
+						},
+
+
 						// Page
 						getPages: function (cond) {
 							if (!cond) cond = {};
 							cond.application = this.id;
 
+//// TODO: refactor this to make sure appdev-core/assets/appdev/model.js  .modelUpdate() properly 
+////       updates our model instances.  This will cause an error with other code trying to pull
+////       from ABPage.findAll() and getting models that our out of sync with any ABPages returned
+////       using this method.
+
+							Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
+								var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+
+								if (cond.application == storePage.application.id || storePage.application)
+									delete AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+							});
+
 							return AD.Model.get('opstools.BuildApp.ABPage').findAll(cond);
 						},
 
 						getPage: function (pageId) {
+//// TODO: refactor this too.
+							if (AD.Model.get('opstools.BuildApp.ABPage').store[pageId])
+								delete AD.Model.get('opstools.BuildApp.ABPage').store[pageId];
+
 							return AD.Model.get('opstools.BuildApp.ABPage').findOne({ application: this.id, id: pageId });
 						},
 
@@ -107,8 +200,6 @@ steal(
 								}
 							})
 						}
-
-
 
 					}
 				);

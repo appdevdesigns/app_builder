@@ -20,7 +20,11 @@ steal(
 								startDragEvent: 'AB_Page.StartDragComponent',
 								editComponentEvent: 'AB_Page.EditComponent',
 								savedComponentEvent: 'AB_Page.SavedComponent',
-								cancelComponentEvent: 'AB_Page.CancelComponent'
+								deletedComponentEvent: 'AB_Page.DeletedComponent',
+								sortComponentEvent: 'AB_Page.SortComponent',
+								cancelComponentEvent: 'AB_Page.CancelComponent',
+
+								changeTypeEvent: 'AB_Page.ChangeType'
 							}, options);
 
 							// Call parent init
@@ -86,16 +90,32 @@ steal(
 								self.controllers.ComponentList.openComponentPropertyView(obj.item);
 							});
 
-							self.controllers.LayoutView.on(self.options.savedComponentEvent, function (event) {
+							self.controllers.LayoutView.on(self.options.savedComponentEvent, function (event, data) {
 								self.controllers.ComponentList.closeComponentPropertyView();
+
+								self.element.trigger(self.options.updatedPageEvent, { page: data.page });
+							});
+
+							self.controllers.LayoutView.on(self.options.deletedComponentEvent, function (event, data) {
+								self.element.trigger(self.options.updatedPageEvent, { page: data.page });
+							});
+
+							self.controllers.LayoutView.on(self.options.sortComponentEvent, function (event, data) {
+								self.element.trigger(self.options.updatedPageEvent, { page: data.page });
 							});
 
 							self.controllers.LayoutView.on(self.options.cancelComponentEvent, function (event) {
 								self.controllers.ComponentList.closeComponentPropertyView();
 							});
 
+							self.controllers.LayoutView.on(self.options.changeTypeEvent, function (event, data) {
+								self.element.trigger(self.options.updatedPageEvent, { page: data.page });
+							});
+
 							self.controllers.ComponentList.on(self.options.startDragEvent, function (event) {
 								self.controllers.LayoutView.startDragComponent();
+
+								self.element.trigger(self.options.updatedPageEvent, { page: AD.classes.AppBuilder.currApp.currPage.id });
 							});
 						},
 
