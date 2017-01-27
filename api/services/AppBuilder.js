@@ -442,6 +442,65 @@ module.exports = {
     },
 
 
+    /**
+     * Update NavBar.area label
+     */
+    updateApplication: function(appID) {
+        var dfd = AD.sal.Deferred(),
+            Application;
+
+        async.series([
+            function (next) {
+                ABApplication.find({ id: appID })
+                    .populate('translations')
+                    .then(function (list) {
+                        if (!list || !list[0]) {
+                            throw new Error('Application not found');
+                        }
+                        var obj = list[0];
+                        // Only numbers and alphabets will be used
+                        Application = obj;
+                        appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
+
+                        next();
+                        return null;
+                    })
+                    .catch(function (err) {
+                        next(err);
+                        return null;
+                    });
+
+            },
+            function (next) {
+                var areaName = Application.name;
+                var areaKey = Application.areaKey();
+                var label = areaName;  // default if no translations provided
+                Application.translations.some(function (trans) {
+                    if (label == areaName) {
+                        label = trans.label;
+                        return true;  // stops the looping.
+                    }
+                })
+                var updateArea = {
+                    key: areaKey,
+                    label: label,
+                }
+
+                OPSPortal.NavBar.Area.update(updateArea, function (err) {
+
+                    next(err);
+                })
+
+            }
+        ], function (err) {
+            if (err) dfd.reject(err);
+            else dfd.resolve();
+        });
+
+        return dfd;
+    },
+
+
 
     /**
      * Generate the models and controllers for a given AB Object.
