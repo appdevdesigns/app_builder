@@ -251,23 +251,23 @@ steal(
 											case 'menu':
 												if (item.setting &&
 													item.setting.pageIds &&
-													item.setting.pageIds.filter(function(pId) { return pId == data.page; }).length > 0) {
-														delete self.activePage.comInstances[item.id];
+													item.setting.pageIds.filter(function (pId) { return pId == data.page; }).length > 0) {
+													delete self.activePage.comInstances[item.id];
 
-														self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
-															self.bindComponentEvents(self.activePage.comInstances[item.id], item);
-														});
+													self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
+														self.bindComponentEvents(self.activePage.comInstances[item.id], item);
+													});
 												}
 												break;
 											case 'link':
 												if (item.setting &&
 													item.setting.linkTo &&
 													item.setting.linkTo == data.page) {
-														delete self.activePage.comInstances[item.id];
+													delete self.activePage.comInstances[item.id];
 
-														self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
-															self.bindComponentEvents(self.activePage.comInstances[item.id], item);
-														});
+													self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
+														self.bindComponentEvents(self.activePage.comInstances[item.id], item);
+													});
 												}
 												break;
 										}

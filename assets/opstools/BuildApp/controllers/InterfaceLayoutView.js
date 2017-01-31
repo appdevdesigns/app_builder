@@ -521,9 +521,10 @@ steal(
 
 							self.resetState();
 
+							$$(self.componentIds.componentList).clearAll();
+
 							if (!AD.classes.AppBuilder.currApp.currPage) return;
 
-							$$(self.componentIds.componentList).clearAll();
 							$$(self.componentIds.componentList).showProgress({ type: 'icon' });
 							$$(self.componentIds.layoutToolbar).show();
 
