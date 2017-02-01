@@ -6,24 +6,24 @@ var AD = require('ad-utils');
 
 module.exports = {
 
-	getFieldString: function (column) {
-		var dfd = AD.sal.Deferred();
+    getFieldString: function (column) {
+        var dfd = AD.sal.Deferred();
 
-		var colString = column.name + ':' + column.type;
+        var colString = column.name + ':' + column.type;
 
 
-		if (column.setting.supportMultilingual == true) {
-			colString += ':multilingual';
-		}
+        if (column.setting.supportMultilingual == true) {
+            colString += ':multilingual';
+        }
 
-		if (column.setting.default) {
-			// TODO: Default value
-		}
+        if (column.setting.default) {
+            // TODO: Default value
+        }
 
-		dfd.resolve(colString);
+        dfd.resolve(colString);
 
-		return dfd;
-	},
+        return dfd;
+    },
     
     defaults: {
         type: 'string',

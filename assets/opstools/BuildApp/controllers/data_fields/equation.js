@@ -27,14 +27,14 @@ steal(
 		];
 
 		var equationDataField = {
-		name: 'equation', // unique key to reference this specific DataField
-		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-		icon: 'calculator',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+			name: 'equation', // unique key to reference this specific DataField
+			type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+			icon: 'calculator',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
-		menuName: AD.lang.label.getLabel('ab.dataField.equation.menuName') ||'Equation',  
-		includeHeader: true,
-		description: ''
-	};
+			menuName: AD.lang.label.getLabel('ab.dataField.equation.menuName') ||'Equation',  
+			includeHeader: true,
+			description: ''
+		};
 
 
 	function getDataField(type){

@@ -1,5 +1,4 @@
 steal(
-    'site/labels/app_builder',
     function () {
 
     // [Equation]Function
