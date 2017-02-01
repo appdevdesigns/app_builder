@@ -7,6 +7,7 @@ steal(
 	'opstools/BuildApp/controllers/data_fields/boolean.js',
 	'opstools/BuildApp/controllers/data_fields/list.js',
 	'opstools/BuildApp/controllers/data_fields/attachment.js',
+	'opstools/BuildApp/controllers/data_fields/equation.js',
 	'opstools/BuildApp/controllers/data_fields/image.js',
 	function () {
 		var self = {};
