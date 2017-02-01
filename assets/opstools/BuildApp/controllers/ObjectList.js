@@ -33,6 +33,7 @@ steal(
 								objectList: 'ab-object-list',
 								objectListMenuPopup: 'ab-object-list-menu-popup',
 								objectListMenu: 'ab-object-list-menu',
+								addNewButton: 'ab-object-add-new-button',
 								addNewPopup: 'ab-object-add-new-popup',
 								addNewForm: 'ab-object-add-new-form',
 								importModelList: 'ab-object-import-model-list',
@@ -220,6 +221,7 @@ steal(
 									},
 									{
 										view: 'button',
+										id: self.webixUiId.addNewButton,
 										value: self.labels.object.addNew,
 										click: function () {
 											$$(self.webixUiId.addNewPopup).define('selectNewObject', true);
