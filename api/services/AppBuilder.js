@@ -240,7 +240,7 @@ module.exports = {
 
                 // Temporarily set environment to development so Waterline will
                 // respect the migrate:alter setting
-                sails.config.evnironment = 'development';
+                sails.config.environment = 'development';
                 process.env.NODE_ENV = 'developement';
 
                 sails.hooks.orm.reload();
