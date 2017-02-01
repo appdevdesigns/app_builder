@@ -185,7 +185,7 @@ steal(
 				this.createNewObjectEvent = createNewObjectEvent;
 			},
 
-			showFieldData(fieldName) {
+			showFieldData: function(fieldName) {
 				var viewName = dataFieldsManager.getEditViewId(fieldName);
 
 				if (viewName) {
