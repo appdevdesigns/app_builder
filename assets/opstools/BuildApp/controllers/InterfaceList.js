@@ -280,10 +280,8 @@ steal(
 																		$$(self.webixUiId.interfaceTree).unselectAll();
 
 																		// // FIX : remove deleted page in list
-																		// AD.classes.AppBuilder.currApp.pages.forEach(function (page, index) {
-																		// 	if (page.id == result.id)
-																		// 		AD.classes.AppBuilder.currApp.pages.attr(index).destroy();
-																		// });
+																		if (AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == result.id }).length > 0)
+																			can.event.dispatch.call(AD.classes.AppBuilder.currApp, "change", ['pages', 'remove', null, [result]]);
 
 																		// Remove sub-pages
 																		AD.classes.AppBuilder.currApp.pages = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return !p.parent || p.parent.id != result.id; });
