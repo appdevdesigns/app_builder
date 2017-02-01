@@ -401,7 +401,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 }
 
 .ab-main-container .webix_layout_form {
-	background-color: #fff;
+	background-color: #fff !important;
 }
 
 /* Loading Screen */
