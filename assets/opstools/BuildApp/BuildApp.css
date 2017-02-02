@@ -115,8 +115,7 @@
 }
 
 /* Add new columns popup */
-.ab-add-fields-popup {
-	max-height: 450px; 
+.ab-add-fields-popup { 
 	overflow-y: auto;
 }
 
