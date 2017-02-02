@@ -111,6 +111,17 @@ module.exports = {
         cb();
     },
 
+    afterUpdate: function (updatedRecord, cb) {
+         // if we have a proper ABApplication.id given:
+        if ((updatedRecord)
+            && (updatedRecord.id)) {
+console.log('... update application: ', updatedRecord);
+            AppBuilder.updateApplication(updatedRecord.id);
+        }
+
+        cb();
+    },
+
     afterDestroy: function (destroyedApplications, cb) {
 
         var ids = _.map(destroyedApplications, 'id');

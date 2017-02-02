@@ -35,7 +35,6 @@ steal(
 
 							self.initMultilingualLabels();
 							self.initControllers();
-							self.initEvents();
 							self.initWebixUI();
 						},
 
@@ -68,14 +67,6 @@ steal(
 							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
 						},
 
-						initEvents: function () {
-							var self = this;
-
-							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
-								self.addPage(data.newPage, true);
-							});
-						},
-
 						initWebixUI: function () {
 							var self = this;
 
@@ -94,7 +85,7 @@ steal(
 											var template = "<div class='ab-page-list-item'>" +
 												"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#" +
 												"</div>";
-											
+
 											// Disallow rename/delete on Tabs
 											if (item.type !== 'tab')
 												template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
@@ -260,14 +251,21 @@ steal(
 															if (result) {
 																$$(self.webixUiId.interfaceTree).showProgress({ type: "icon" });
 
-																var deletedPages = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == selectedPage.id; });
+																var delIndex = -1;
+																var deletedPages = AD.classes.AppBuilder.currApp.pages.filter(function (p, index) {
+																	var found = p.id == selectedPage.id;
+																	if (found) delIndex = index;
+
+																	return found;
+																});
+
 																if (!deletedPages || deletedPages.length < 1) {
 																	console.error('Could not found the page.');
 																	return;
 																}
 
 																// Call server to delete object data
-																deletedPages[0].destroy()
+																AD.classes.AppBuilder.currApp.pages.attr(delIndex).destroy()
 																	.fail(function (err) {
 																		$$(self.webixUiId.interfaceTree).hideProgress();
 
@@ -280,6 +278,10 @@ steal(
 																	})
 																	.then(function (result) {
 																		$$(self.webixUiId.interfaceTree).unselectAll();
+
+																		// // FIX : remove deleted page in list
+																		if (AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == result.id }).length > 0)
+																			can.event.dispatch.call(AD.classes.AppBuilder.currApp, "change", ['pages', 'remove', null, [result]]);
 
 																		// Remove sub-pages
 																		AD.classes.AppBuilder.currApp.pages = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return !p.parent || p.parent.id != result.id; });
@@ -325,8 +327,8 @@ steal(
 							$$(self.webixUiId.interfaceTree).clearAll();
 							$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
-							AD.classes.AppBuilder.currApp.unbind('change');
-							AD.classes.AppBuilder.currApp.bind('change', function (ev, attr, how, newVals, oldVals) {
+							AD.classes.AppBuilder.currApp.off('change');
+							AD.classes.AppBuilder.currApp.on('change', function (ev, attr, how, newVals, oldVals) {
 								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
 
 								console.log('InterfaceList: change ', ev, attr, how, newVals, oldVals);
@@ -400,30 +402,54 @@ steal(
 							});
 
 							// Exists
-							if ($$(self.webixUiId.interfaceTree).getIndexById(page.id) > -1
-								|| !page.label) return;
+							if ($$(self.webixUiId.interfaceTree).getIndexById(page.id) > -1) return;
 
-							$$(self.webixUiId.interfaceTree).add({
-								id: page.id,
-								value: page.name,
-								label: page.label,
-								type: page.type
-								// weight: page.weight
-							}, -1, page.parent ? page.parent.id : null);
+							async.series([
+								function (next) {
+									if (!page.label) {
+										// Get label
+										AD.classes.AppBuilder.currApp.getPage(page.id)
+											.fail(next)
+											.done(function (data) {
+												if (data.translate) data.translate();
+												page = data;
 
-							if (page.parent)
-								$$(self.webixUiId.interfaceTree).open(page.parent.id, true);
+												AD.classes.AppBuilder.currApp.pages.forEach(function (p, index) {
+													if (p.id == page.id) {
+														AD.classes.AppBuilder.currApp.pages.attr(index, page);
+													}
+												});
 
-							if (!noSelect) {
-								$$(self.webixUiId.interfaceTree).unselectAll();
-								$$(self.webixUiId.interfaceTree).select(page.id);
-							}
+												next();
+											});
+									}
+									else
+										next();
+								},
+								function (next) {
+									$$(self.webixUiId.interfaceTree).add({
+										id: page.id,
+										value: page.name,
+										label: page.label,
+										type: page.type
+										// weight: page.weight
+									}, -1, page.parent ? page.parent.id : null);
 
-							// Show success message
-							webix.message({
-								type: "success",
-								text: self.labels.common.createSuccessMessage.replace('{0}', page.label)
-							});
+									if (page.parent)
+										$$(self.webixUiId.interfaceTree).open(page.parent.id, true);
+
+									if (!noSelect) {
+										$$(self.webixUiId.interfaceTree).unselectAll();
+										$$(self.webixUiId.interfaceTree).select(page.id);
+									}
+
+									// Show success message
+									webix.message({
+										type: "success",
+										text: self.labels.common.createSuccessMessage.replace('{0}', page.label)
+									});
+								}
+							]);
 						},
 
 						resize: function (height) {

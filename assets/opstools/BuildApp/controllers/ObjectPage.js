@@ -120,7 +120,7 @@ steal(
 							var q = $.Deferred(),
 								self = this;
 
-							if (!AD.classes.AppBuilder.currApp.objects || AD.classes.AppBuilder.currApp.objects.length < 1) {
+							if (!AD.classes.AppBuilder.currApp || !AD.classes.AppBuilder.currApp.objects || AD.classes.AppBuilder.currApp.objects.length < 1) {
 								q.resolve();
 								return q;
 							}

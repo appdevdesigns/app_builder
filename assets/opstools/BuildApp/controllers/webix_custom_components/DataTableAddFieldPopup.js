@@ -45,6 +45,7 @@ steal(
 			},
 			defaults: {
 				modal: true,
+				maxHeight: 420,
 				ready: function () {
 					this.resetState();
 				},
