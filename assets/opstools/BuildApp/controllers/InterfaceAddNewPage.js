@@ -57,10 +57,10 @@ steal(
 									view: "window",
 									id: self.componentId.addNewPopup,
 									width: 650,
+									maxHeight: 500,
 									position: "center",
 									modal: true,
 									head: self.labels.interface.addNewPage,
-									css: 'ab-main-container',
 									body: {
 										rows: [
 											{
