@@ -361,7 +361,11 @@ if (!data.columns) return;
 					function (next) {
 						if (setting && setting.object) {
 							dataCollectionHelper.getDataCollection(application, setting.object)
-								.fail(next)
+								.fail(function (err) {
+									// This object is deleted
+									delete setting.object;
+									next(null, null);
+								})
 								.then(function (dataCollection) {
 									next(null, dataCollection);
 								});
