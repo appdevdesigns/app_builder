@@ -122,8 +122,6 @@ steal(
 										.then(function (result) {
 											result.forEach(function (page) {
 												if (page.translate) page.translate();
-
-												page.attr('domID', self.unique('ab_live_page', self.options.app, page.id));
 											});
 
 											// self.data.application.pages = result;
@@ -150,8 +148,6 @@ steal(
 									self.data.application.getPage(data.page)
 										.then(function (newPage) {
 											if (newPage.translate) newPage.translate();
-
-											newPage.attr('domID', self.unique('ab_live_page', self.options.app, newPage.id));
 
 											var exists = false;
 
@@ -185,16 +181,42 @@ steal(
 
 							AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
 
-								var page = self.data.application.pages.filter(function (p) { return p.id == data.page });
+								var page = self.data.application.pages.filter(function (p) {
+									if (p.id == data.page) {
+										// Check sub-pages or tabs
+										if (p.id != self.options.page) {
+											var isChildPage = false,
+												parentPage = p.parent;
 
-								if ((data.app == self.options.app) && (page.length > 0)) {
+											if (parentPage == null) return false;
 
-									// Get the new page data
+											// Recursive to get the root page
+											do {
+												parentPage = parentPage.parent;
+
+												if ((parentPage.id || parentPage) == self.options.page && !isChildPage)
+													isChildPage = true;
+
+											} while (parentPage == null || isChildPage)
+
+											return isChildPage;
+										}
+										// a root page is updated
+										else {
+											return true;
+										}
+									}
+									else {
+										return false;
+									}
+								})[0];
+
+								if ((data.app == self.options.app) && (page != null)) {
+
+									// Get the page data
 									self.data.application.getPage(data.page)
 										.then(function (updatePage) {
 											if (updatePage.translate) updatePage.translate();
-
-											updatePage.attr('domID', self.unique('ab_live_page', self.options.app, updatePage.id));
 
 											// Update page in list
 											self.data.application.pages.forEach(function (page, index) {
@@ -229,15 +251,17 @@ steal(
 									self.data.application.pages.slice(0).forEach(function (page, index) {
 										if (data.page != page.id) return;
 
+										var pageDomId = self.getPageDomID(page);
+
 										// Remove sub-page
-										if ($$(page.domID)) {
+										if ($$(pageDomId)) {
 											// View type
-											if ($$(self.containerDomID).getChildViews().filter(function (view) { return view.config.id == page.domID }).length > 0) {
-												$$(self.containerDomID).removeView(page.domID);
+											if ($$(self.containerDomID).getChildViews().filter(function (view) { return view.config.id == pageDomId }).length > 0) {
+												$$(self.containerDomID).removeView(pageDomId);
 											}
 											// Popup type
 											else {
-												$$(page.domID).destructor();
+												$$(pageDomId).destructor();
 											}
 										}
 
@@ -292,8 +316,9 @@ steal(
 								pages = self.data.application.pages;
 
 							// Clear UI content
-							if ($$(self.rootPage.domID))
-								webix.ui({}, $$(self.rootPage.domID));
+							var rootDomId = self.getPageDomID(self.rootPage);
+							if ($$(rootDomId))
+								webix.ui({}, $$(rootDomId));
 
 							// Create sub pages
 							webix.ui({
@@ -330,13 +355,14 @@ steal(
 						},
 
 						renderPage: function (page) {
-							var self = this;
+							var self = this,
+								pageDomId = this.getPageDomID(page);
 
 							switch (page.type) {
 								case 'modal':
 									var popupTemplate = {
 										view: "window",
-										id: page.domID,
+										id: pageDomId,
 										modal: true,
 										position: "center",
 										resize: true,
@@ -364,14 +390,14 @@ steal(
 										}
 									};
 
-									if ($$(page.domID)) {
+									if ($$(pageDomId)) {
 										// Destroy old popup
-										if ($$(page.domID).config.view == 'window') {
-											$$(page.domID).destructor();
+										if ($$(pageDomId).config.view == 'window') {
+											$$(pageDomId).destructor();
 										}
 										// Change page type (Page -> Popup)
 										else if ($$(self.containerDomID)) {
-											$$(self.containerDomID).removeView(page.domID);
+											$$(self.containerDomID).removeView(pageDomId);
 										}
 									}
 
@@ -420,23 +446,23 @@ steal(
 								default:
 									var pageTemplate = {
 										view: "template",
-										id: page.domID,
+										id: pageDomId,
 										template: page.getItemTemplate(),
 										minWidth: 700,
 										autoheight: true,
 										scroll: true
 									};
 
-									if ($$(page.domID)) {
+									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
-										if ($$(page.domID).config.view == 'window') {
-											$$(page.domID).destructor();
+										if ($$(pageDomId).config.view == 'window') {
+											$$(pageDomId).destructor();
 
 											$$(self.containerDomID).addView(pageTemplate);
 										}
 										// Rebuild
 										else {
-											webix.ui(pageTemplate, $$(page.domID));
+											webix.ui(pageTemplate, $$(pageDomId));
 										}
 									}
 									// Add to multi-view
@@ -456,10 +482,12 @@ steal(
 							page = page || self.rootPage;
 
 							// Hide page popup
-							if (self.activePage && $$(self.activePage.domID) && $$(self.activePage.domID).hide)
-								$$(self.activePage.domID).hide();
+							var activePageDomId = self.getPageDomID(self.activePage);
+							if (self.activePage && $$(activePageDomId) && $$(activePageDomId).hide)
+								$$(activePageDomId).hide();
 
-							$$(page.domID).show();
+							var pageDomId = self.getPageDomID(page);
+							$$(pageDomId).show();
 							self.previousPage = self.activePage;
 							self.activePage = page;
 
@@ -489,7 +517,8 @@ steal(
 							// Listen component events
 							$(comInstance).off('renderComplete');
 							$(comInstance).on('renderComplete', function (event, data) {
-								$$(self.rootPage.domID).adjust();
+								var rootPageDomId = self.getPageDomID(self.rootPage);
+								$$(rootPageDomId).adjust();
 
 								if ($$(itemInfo.domID))
 									$$(itemInfo.domID).adjust();
@@ -639,6 +668,13 @@ steal(
 
 							}
 
+						},
+
+						getPageDomID: function (page) {
+							if (page)
+								return this.unique('ab_live_page', this.options.app, page.id);
+							else
+								return '';
 						},
 
 						unique: function () {

@@ -81,7 +81,7 @@ steal(
 								dataCollection,
 								linkedDataCollection;
 
-							if (!page.comInstances) page.comInstances = {};
+							if (!page.comInstances) page.attr('comInstances', {});
 
 							if (page.comInstances[item.id]) {
 								if (page.comInstances[item.id].onDisplay)
@@ -92,11 +92,11 @@ steal(
 							}
 
 							// Create component instance
-							page.comInstances[item.id] = new componentInstance(
+							page.attr('comInstances.' + item.id, new componentInstance(
 								application, // Current application
 								viewId, // the view id
 								item.id // the component data id
-							);
+							));
 
 							if (view && setting && $('#' + viewId).length > 0) {
 								var setting = setting.attr ? setting.attr() : setting,
