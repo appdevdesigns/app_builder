@@ -1078,6 +1078,7 @@ module.exports = {
                                             var err = new Error('Could not find application ( id:'+page.application+')');
                                             next(err);
                                         }
+                                        return null;
                                     }, next);
                             }
                         },
@@ -1609,6 +1610,12 @@ module.exports = {
                         if (ignore.indexOf(colName) >= 0) {
                             return colDone();
                         }
+                        
+                        // Skip foreign keys. 
+                        // They will be handled as associations later.
+                        if (col.foreignKey) {
+                            return colDone();
+                        }
                        
                         var defaultValue = col.default;
                         if (typeof col.default == 'function') {
@@ -1666,7 +1673,7 @@ module.exports = {
                             },
                             {
                                 alias: 'assoc name 2',
-                                type: 'object',
+                                type: 'model',
                                 model: 'model name'
                             }
                         ]
@@ -1849,6 +1856,8 @@ module.exports = {
                 // Save the model's blueprints base URL
                 function(next) {
                     if (!modelURL) return next();
+                    
+                    object.urlPath = modelURL;
                     ABObject.update({ id: object.id }, { urlPath: modelURL })
                     .exec(function(err, results) {
                         if (err) next(err);
