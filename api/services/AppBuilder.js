@@ -1606,7 +1606,7 @@ module.exports = {
                     async.forEachOfSeries(model.attributes, function(col, colName, colDone) {
                         
                         // In Sails models, there is a `definition` object and 
-                        // an `attributes` object. The `attributes` uses the
+                        // an `attributes` object. The `definition` uses the
                         // real column names and has additional properties.
                         var realName = col.columnName || colName;
                         var def = model.definition[realName];
