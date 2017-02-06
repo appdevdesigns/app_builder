@@ -185,7 +185,7 @@ steal(
 										columnConfig = update_records_popup.dataTable.getColumnConfig(columnId),
 										columnData = update_records_popup.columns.filter(function (col) { return col.name == columnId; })[0];
 
-									if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName)) {
+									if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, columnData)) {
 										var htmlTemplate = columnData.setting.template || '<div></div>',
 											editHeight = dataFieldsManager.getRowHeight(columnData, null);
 

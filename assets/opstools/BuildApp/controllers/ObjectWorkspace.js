@@ -221,8 +221,16 @@ steal(
 												return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
 											},
 											onAfterSelect: function (data, prevent) {
-												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column);
-												if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName))
+												var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
+													fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+
+												if (!fieldData || fieldData.length < 1) {
+													console.log('System could not found this column data');
+													return false;
+												} else
+													fieldData = fieldData[0];
+
+												if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
 													return false;
 
 												this.editCell(data.row, data.column);
@@ -436,7 +444,7 @@ steal(
 							// It's a known regression in Webix 4.1 GPL (in Pro it works as expected). The fix will be included in the next build.
 							// As a temporary workaround, please try to manually patch the missing method (it will be unnecessary in 4.2):
 							// http://forum.webix.com/discussion/30381/bug-not-working-editnext
-							$$(self.webixUiId.objectDatatable).QD = function() { return false; };
+							$$(self.webixUiId.objectDatatable).QD = function () { return false; };
 
 							// DataTable header
 							$$(self.webixUiId.editHeaderPopup).registerHeaderClick(function (clickedItem, headerField) {
