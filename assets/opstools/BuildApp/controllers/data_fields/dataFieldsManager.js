@@ -269,6 +269,21 @@ steal(
 				return false;
 		};
 
+
+		/**
+		 * customEdit
+		 *
+		 * Allow a DataField to manually create a custom editor for it's data.
+		 *
+		 * @param {obj} application : The current ABApplication instance 
+		 * @param {obj} object  : The ABObject that contains this DataField
+		 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+		 * @param {int} dataId  : the .id of the current entry
+		 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+		 * 						  the display of this DataField
+		 * @return {bool}		: true to allow editing
+		 *						: false to disable editing
+		 */
 		self.customEdit = function (application, object, fieldData, dataId, itemNode) {
 			var field = getField(fieldData.fieldName);
 
@@ -278,11 +293,25 @@ steal(
 				return true;
 		};
 
-		self.hasCustomEdit = function (fieldName) {
+
+		/**
+		 * hasCustomEdit
+		 *
+		 * Verify that a dataField want's to display a custom editor.
+		 *
+		 * @param {string} fieldName  Which DataField to work with.	
+		 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+		 * @return {bool}		: true if we want a custom editor
+		 *						: false if we don't
+		 */
+		self.hasCustomEdit = function (fieldName, fieldData) {
 			var field = getField(fieldName);
 
 			if (field && field.customEdit)
-				return true;
+				if (field.hasCustomEdit) 
+					return field.hasCustomEdit(fieldData);
+				else
+					return true;
 			else
 				return false;
 		};
