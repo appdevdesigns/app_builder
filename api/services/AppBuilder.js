@@ -1603,8 +1603,14 @@ module.exports = {
                 
                 // Create Columns in database
                 function(next) {
-                    async.forEachOfSeries(model.definition, function(col, colName, colDone) {
-                       
+                    async.forEachOfSeries(model.attributes, function(col, colName, colDone) {
+                        
+                        // In Sails models, there is a `definition` object and 
+                        // an `attributes` object. The `attributes` uses the
+                        // real column names and has additional properties.
+                        var realName = col.columnName || colName;
+                        var def = model.definition[realName];
+                        
                         // Skip these columns
                         var ignore = ['id', 'createdAt', 'updatedAt'];
                         if (ignore.indexOf(colName) >= 0) {
@@ -1613,7 +1619,7 @@ module.exports = {
                         
                         // Skip foreign keys. 
                         // They will be handled as associations later.
-                        if (col.foreignKey) {
+                        if (!def || col.model || col.collection || def.foreignKey) {
                             return colDone();
                         }
                        
@@ -1631,8 +1637,8 @@ module.exports = {
                         var colData = {
                             name: colName,
                             object: object.id,
-                            required: col.required,
-                            unique: col.unique
+                            required: def.required || col.required,
+                            unique: def.unique || col.unique
                         };
                         
                         var typeMap = {
@@ -1688,6 +1694,7 @@ module.exports = {
                             var transModelName = assoc.collection.toLowerCase();
                             var transModel = sails.models[transModelName];
                             for (var colName in transModel.definition) {
+                                if (colName == 'language_code') continue;
                                 var col = transModel.definition[colName];
                                 if (col.type == 'string' || col.type == 'text') {
                                     // For later steps
