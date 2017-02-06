@@ -81,7 +81,14 @@ steal(
 												});
 											}
 											else if (typeof row[linkCol.name]._dataLabel == 'undefined' || row[linkCol.name]._dataLabel == null) {
-												connectIds.push({ id: row[linkCol.name].id || row[linkCol.name] });
+												var keyName = 'id';
+												var keyValue = row[linkCol.name][keyName] || row[linkCol.name];
+												if (typeof keyValue == 'number' || typeof keyValue == 'string') {
+													connectIds.push({ id: keyValue });
+												} else {
+													console.log('Non-standard key name for ' + linkCol.name);
+													console.log(row[linkCol.name]);
+												}
 											}
 
 											if (!connectIds || connectIds.length < 1) return next();
