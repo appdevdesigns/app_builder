@@ -1872,6 +1872,14 @@ module.exports = {
                     });
                 },
                 
+                // Create client side model base directory if needed
+                function(next) {
+                    fs.mkdir(path.join(clientPath, 'models', 'base'), function(err) {
+                        if (!err || err.code == 'EEXIST') next();
+                        else next(err);
+                    });
+                },
+                
                 // Create client side models
                 function(next) {
                     // Find fieldLabel field
