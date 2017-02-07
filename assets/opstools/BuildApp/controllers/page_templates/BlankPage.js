@@ -50,7 +50,7 @@ steal(
 					var selected_page_id = selectedPage.id;
 
 					if (selectedPage.parent)
-						selected_page_id = selectedPage.parent;
+						selected_page_id = selectedPage.parent.id || selectedPage.parent;
 
 					$$(componentId.addNewParentList).setValue(selected_page_id);
 				}

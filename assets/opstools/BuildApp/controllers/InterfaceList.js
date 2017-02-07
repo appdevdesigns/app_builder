@@ -327,43 +327,41 @@ steal(
 							$$(self.webixUiId.interfaceTree).clearAll();
 							$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
-							AD.classes.AppBuilder.currApp.off('change');
-							AD.classes.AppBuilder.currApp.on('change', function (ev, attr, how, newVals, oldVals) {
-								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
+							AD.classes.AppBuilder.currApp.pages.unbind('add');
+							AD.classes.AppBuilder.currApp.pages.bind('add', function (ev, newVals, newId) {
+								if (newVals.forEach) {
+									newVals.forEach(function (newPage) {
+										if (newPage)
+											self.addPage(newPage, true);
+									});
+								}
+							});
 
-								console.log('InterfaceList: change ', ev, attr, how, newVals, oldVals);
+							AD.classes.AppBuilder.currApp.pages.unbind('set');
+							AD.classes.AppBuilder.currApp.pages.bind('set', function (ev, newVals, updateId) {
+								// Update label or page type
+								if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) {
+									$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
 
-								switch (how) {
-									case 'add':
-										if (newVals.forEach) {
-											newVals.forEach(function (newPage) {
-												if (newPage)
-													self.addPage(newPage, true);
-											});
+									// Show gear
+									if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+										self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+								}
+
+								// TODO: weight -> reorder
+							});
+
+							AD.classes.AppBuilder.currApp.pages.unbind('remove');
+							AD.classes.AppBuilder.currApp.pages.bind('remove', function (ev, oldVals, removeId) {
+								if (oldVals.forEach) {
+									oldVals.forEach(function (deletedPage) {
+										if (deletedPage) {
+											if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id))
+												$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
+
+											self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
 										}
-										break;
-									case 'set':
-										if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) { // Update label or page type
-											$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
-
-											// Show gear
-											if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
-												self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
-										}
-										// TODO: weight -> reorder
-										break;
-									case 'remove':
-										if (oldVals.forEach) {
-											oldVals.forEach(function (deletedPage) {
-												if (deletedPage) {
-													if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id))
-														$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
-
-													self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
-												}
-											});
-										}
-										break;
+									});
 								}
 							});
 

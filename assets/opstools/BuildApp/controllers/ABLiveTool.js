@@ -188,16 +188,15 @@ steal(
 											var isChildPage = false,
 												parentPage = p.parent;
 
-											if (parentPage == null) return false;
-
 											// Recursive to get the root page
 											do {
-												if (parentPage && (parentPage.id || parentPage) == self.options.page && !isChildPage)
-													isChildPage = true;
+												if (parentPage) {
+													if ((parentPage.id || parentPage) == self.options.page && !isChildPage)
+														isChildPage = true;
 
-												parentPage = parentPage.parent;
-
-											} while (parentPage == null || isChildPage)
+													parentPage = parentPage.parent;
+												}
+											} while (parentPage != null && !isChildPage)
 
 											return isChildPage;
 										}
