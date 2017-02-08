@@ -1078,6 +1078,7 @@ module.exports = {
                                             var err = new Error('Could not find application ( id:'+page.application+')');
                                             next(err);
                                         }
+                                        return null;
                                     }, next);
                             }
                         },
@@ -1547,6 +1548,14 @@ module.exports = {
             var modelFileName = ''; // client side model file
             
             async.series([
+                // Make sure model has an 'id' primary key field
+                function(next) {
+                    if (!model.attributes.id) {
+                        next(new Error('Model ' + modelName + ' does not have an "id" column'));
+                    }
+                    else next();
+                },
+                
                 // Find app in database
                 function(next) {
                     ABApplication.find({ id: appID })
@@ -1602,11 +1611,23 @@ module.exports = {
                 
                 // Create Columns in database
                 function(next) {
-                    async.forEachOfSeries(model.definition, function(col, colName, colDone) {
-                       
+                    async.forEachOfSeries(model.attributes, function(col, colName, colDone) {
+                        
+                        // In Sails models, there is a `definition` object and 
+                        // an `attributes` object. The `definition` uses the
+                        // real column names and has additional properties.
+                        var realName = col.columnName || colName;
+                        var def = model.definition[realName];
+                        
                         // Skip these columns
                         var ignore = ['id', 'createdAt', 'updatedAt'];
                         if (ignore.indexOf(colName) >= 0) {
+                            return colDone();
+                        }
+                        
+                        // Skip foreign keys. 
+                        // They will be handled as associations later.
+                        if (!def || col.model || col.collection || def.foreignKey) {
                             return colDone();
                         }
                        
@@ -1624,8 +1645,8 @@ module.exports = {
                         var colData = {
                             name: colName,
                             object: object.id,
-                            required: col.required,
-                            unique: col.unique
+                            required: def.required || col.required,
+                            unique: def.unique || col.unique
                         };
                         
                         var typeMap = {
@@ -1666,7 +1687,7 @@ module.exports = {
                             },
                             {
                                 alias: 'assoc name 2',
-                                type: 'object',
+                                type: 'model',
                                 model: 'model name'
                             }
                         ]
@@ -1681,6 +1702,7 @@ module.exports = {
                             var transModelName = assoc.collection.toLowerCase();
                             var transModel = sails.models[transModelName];
                             for (var colName in transModel.definition) {
+                                if (colName == 'language_code') continue;
                                 var col = transModel.definition[colName];
                                 if (col.type == 'string' || col.type == 'text') {
                                     // For later steps
@@ -1849,10 +1871,20 @@ module.exports = {
                 // Save the model's blueprints base URL
                 function(next) {
                     if (!modelURL) return next();
+                    
+                    object.urlPath = modelURL;
                     ABObject.update({ id: object.id }, { urlPath: modelURL })
                     .exec(function(err, results) {
                         if (err) next(err);
                         else next();
+                    });
+                },
+                
+                // Create client side model base directory if needed
+                function(next) {
+                    fs.mkdir(path.join(clientPath, 'models', 'base'), function(err) {
+                        if (!err || err.code == 'EEXIST') next();
+                        else next(err);
                     });
                 },
                 

@@ -35,6 +35,7 @@ steal(
 
 							self.initMultilingualLabels();
 							self.initControllers();
+							self.initEvents();
 							self.initWebixUI();
 						},
 
@@ -65,6 +66,15 @@ steal(
 							var AddNewPage = AD.Control.get('opstools.BuildApp.InterfaceAddNewPage');
 
 							this.controllers.AddNewPage = new AddNewPage(this.element, { data: this.data });
+						},
+
+						initEvents: function () {
+							var self = this;
+
+							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
+								var shouldSelect = (data.newPage.parent != null);
+								self.addPage(data.newPage, shouldSelect);
+							});
 						},
 
 						initWebixUI: function () {
@@ -327,6 +337,34 @@ steal(
 							$$(self.webixUiId.interfaceTree).clearAll();
 							$$(self.webixUiId.interfaceTree).showProgress({ type: 'icon' });
 
+							// AD.classes.AppBuilder.currApp.pages.unbind('set');
+							// AD.classes.AppBuilder.currApp.pages.bind('set', function (ev, newVals, updateId) {
+							// 	// Update label or page type
+							// 	if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) {
+							// 		$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
+
+							// 		// Show gear
+							// 		if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+							// 			self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+							// 	}
+
+							// 	// TODO: weight -> reorder
+							// });
+
+							// AD.classes.AppBuilder.currApp.pages.unbind('remove');
+							// AD.classes.AppBuilder.currApp.pages.bind('remove', function (ev, oldVals, removeId) {
+							// 	if (oldVals.forEach) {
+							// 		oldVals.forEach(function (deletedPage) {
+							// 			if (deletedPage) {
+							// 				if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id))
+							// 					$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
+
+							// 				self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
+							// 			}
+							// 		});
+							// 	}
+							// });
+
 							AD.classes.AppBuilder.currApp.off('change');
 							AD.classes.AppBuilder.currApp.on('change', function (ev, attr, how, newVals, oldVals) {
 								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
@@ -334,14 +372,6 @@ steal(
 								console.log('InterfaceList: change ', ev, attr, how, newVals, oldVals);
 
 								switch (how) {
-									case 'add':
-										if (newVals.forEach) {
-											newVals.forEach(function (newPage) {
-												if (newPage)
-													self.addPage(newPage, true);
-											});
-										}
-										break;
 									case 'set':
 										if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) { // Update label or page type
 											$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
@@ -435,7 +465,7 @@ steal(
 										// weight: page.weight
 									}, -1, page.parent ? page.parent.id : null);
 
-									if (page.parent)
+									if (page.parent && $$(self.webixUiId.interfaceTree).exists(page.parent.id))
 										$$(self.webixUiId.interfaceTree).open(page.parent.id, true);
 
 									if (!noSelect) {

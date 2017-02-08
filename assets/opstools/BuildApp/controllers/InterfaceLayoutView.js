@@ -317,6 +317,11 @@ steal(
 																	});
 
 																	$$(self.componentIds.componentList).hideProgress();
+
+																	self.element.trigger(self.options.savedComponentEvent, {
+																		page: AD.classes.AppBuilder.currApp.currPage,
+																		component: result
+																	});
 																}
 
 																// Call .afterCreate to new instance
@@ -412,7 +417,7 @@ steal(
 																	async.series([
 
 																		// beforeDestroy()
-																		function(next) {
+																		function (next) {
 																			if (self.data.components[id] && self.data.components[id].beforeDestroy) {
 																				self.data.components[id].beforeDestroy(next);
 																			} else {
@@ -421,7 +426,7 @@ steal(
 																		},
 
 																		// destroy
-																		function(next) {
+																		function (next) {
 
 																			// Call server to delete object data
 																			deletedCom[0].destroy()
@@ -436,14 +441,14 @@ steal(
 																						type: "success",
 																						text: self.labels.common.deleteSuccessMessage.replace('{0}', deletedComponent.component)
 																					});
-																					
+
 																					next();
 																				});
 
 																		},
 
 																		// afterDestroy()
-																		function(next) {
+																		function (next) {
 
 																			// Call .afterDestroy to deleted instance
 																			if (self.data.components[id] && self.data.components[id].afterDestroy) {
@@ -455,7 +460,7 @@ steal(
 
 																		}
 
-																	],function(err, results){
+																	], function (err, results) {
 
 																		if (err) {
 
@@ -477,9 +482,9 @@ steal(
 
 																			$$(self.componentIds.componentList).hideProgress();
 																		}
-																		
+
 																	});
-																	
+
 																}
 
 															}

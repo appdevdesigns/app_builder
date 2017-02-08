@@ -665,8 +665,11 @@ steal(
 					// Get data collection
 					function (next) {
 						dataCollectionHelper.getDataCollection(application, setting.object)
-							.fail(function (err) { next(); })
-							.then(function (result) {
+							.fail(function (err) {
+								delete setting.object;
+								next();
+							})
+							.done(function (result) {
 								dataCollection = result;
 								next();
 							});
@@ -675,8 +678,11 @@ steal(
 					function (next) {
 						if (setting.linkedTo && setting.linkedTo !== 'none') {
 							dataCollectionHelper.getDataCollection(application, setting.linkedTo)
-								.fail(next)
-								.then(function (result) {
+								.fail(function (err) {
+									delete setting.linkedTo;
+									next();
+								})
+								.done(function (result) {
 									linkedToDataCollection = result;
 									next();
 								});
@@ -689,7 +695,7 @@ steal(
 					function (next) {
 						self.render(setting, true, showAll, dataCollection, linkedToDataCollection)
 							.fail(next)
-							.then(function () { next(); });
+							.done(function () { next(); });
 					},
 					// Properties
 					// Data source - Object
@@ -763,7 +769,9 @@ steal(
 
 						next();
 					}
-				], function () {
+				], function (err) {
+					if (err) return;
+
 					// Set property values
 					var propValues = {};
 					propValues[componentIds.editTitle] = setting.title || '';

@@ -116,6 +116,7 @@ steal(
                                   header: "<i class='fa "+tab.icon+"'></i> "+tab.label,
                                   body: {
                                     view: "template", 
+                                    css: 'ab-scroll-y',
                                     template:"<div id=\""+tab.uuid+"\" > </div>",
                                     height:500
                                   }

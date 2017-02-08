@@ -304,8 +304,13 @@ steal(function () {
 	};
 
 	numberDataField.resetState = function () {
-		// TODO
+		$$(componentIds.allowRequired).setValue('');
 		$$(componentIds.numberDefault).setValue('');
+		$$(componentIds.typeFormat).setValue('none');
+		$$(componentIds.typeDecimals).setValue('none');
+		$$(componentIds.typeDecimalPlaces).setValue('none');
+		$$(componentIds.typeRounding).setValue('none');
+		$$(componentIds.typeThousands).setValue('none');
 	};
 
 	return numberDataField;

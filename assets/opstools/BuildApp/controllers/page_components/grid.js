@@ -49,25 +49,25 @@ steal(
 				}
 
 
-//// Refactor Note:
-// 
-// Here we are in a Grid Component.  And in many places we access the objects in our application by:
-// application.objects.filter()
-//
-// It is a good assumption that the Grid Component knows it needs to get Objects from the Application
-// object.  
-//
-// However, a Grid Component should not have any understanding of HOW the Application Object is internally
-// storing it's data.
-//
-// Now, if we ever decide to change how the Application object stores it's data, we have broken code 
-// all over the place.
-//
-// Whenever we want to get data that is managed by another Object, we should ask the Object for it:
-// 		application.getObjects(filterFn());   // returns an {array} of objects
-// 		application.getObjectById(objectId);  // return an object directly
-// 
-// 
+				//// Refactor Note:
+				// 
+				// Here we are in a Grid Component.  And in many places we access the objects in our application by:
+				// application.objects.filter()
+				//
+				// It is a good assumption that the Grid Component knows it needs to get Objects from the Application
+				// object.  
+				//
+				// However, a Grid Component should not have any understanding of HOW the Application Object is internally
+				// storing it's data.
+				//
+				// Now, if we ever decide to change how the Application object stores it's data, we have broken code 
+				// all over the place.
+				//
+				// Whenever we want to get data that is managed by another Object, we should ask the Object for it:
+				// 		application.getObjects(filterFn());   // returns an {array} of objects
+				// 		application.getObjectById(objectId);  // return an object directly
+				// 
+				// 
 				var object = application.objects.filter(function (obj) { return obj.id == objectId });
 				if (object && object[0]) object = object[0];
 
@@ -193,12 +193,14 @@ steal(
 								if (self.data.columns) {
 									if (!self.data.visibleColumns) self.data.visibleColumns = [];
 
-									if (showAll && self.data.visibleColumns.length === 0) { // Show all
-										columns = self.data.columns.slice(0);
+									columns = self.data.columns.slice(0);
+
+									// Show all
+									if (showAll && $.grep(columns, function (d) { return self.data.visibleColumns.indexOf(d.id.toString()) > -1; }).length < 1) {
 										self.data.visibleColumns = $.map(columns, function (col) { return col.id; });
 									}
 									else
-										columns = self.data.columns.filter(function (c) {
+										columns = columns.filter(function (c) {
 											return self.data.visibleColumns.filter(function (v) { return v == c.id }).length > 0;
 										}).slice(0);
 								}
@@ -624,8 +626,6 @@ steal(
 			this.populateSettings = function (setting, selectAll) {
 				webix.extend($$(componentIds.columnList), webix.ProgressBar);
 
-				$$(componentIds.columnList).showProgress({ type: 'icon' });
-
 				var self = this,
 					viewId = componentIds.editDataTable,
 					dataCollection,
@@ -636,8 +636,12 @@ steal(
 					function (next) {
 						if (setting.object) {
 							dataCollectionHelper.getDataCollection(application, setting.object)
-								.fail(next)
-								.then(function (result) {
+								.fail(function (err) {
+									// This object is deleted
+									delete setting.object;
+									next();
+								})
+								.done(function (result) {
 									dataCollection = result;
 									next();
 								});
@@ -650,8 +654,12 @@ steal(
 					function (next) {
 						if (setting.linkedTo) {
 							dataCollectionHelper.getDataCollection(application, setting.linkedTo)
-								.fail(next)
-								.then(function (result) {
+								.fail(function (err) {
+									// This linkedTo object is deleted
+									delete setting.linkedTo;
+									next();
+								})
+								.done(function (result) {
 									linkedToDataCollection = result;
 									next();
 								});
@@ -662,8 +670,9 @@ steal(
 					},
 					// Render dataTable component
 					function (next) {
-						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection).then(function () {
+						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection).done(function () {
 							// Columns list
+							$$(componentIds.columnList).showProgress({ type: 'icon' });
 							bindColumnList.call(self, setting.object, selectAll);
 							$$(componentIds.columnList).hideProgress();
 

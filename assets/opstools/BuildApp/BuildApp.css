@@ -18,7 +18,7 @@
 .ab-main-container .right {
 	text-align: right;
 }
-.ab-main-container .bold {
+.ab-text-bold {
 	font-weight: bold !important;
 }
 .ab-scroll-y {
@@ -294,7 +294,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	overflow-y: auto !important;
 }
 
-.ab-interface-new-quick-page label {
+.ab-interface-new-quick-page .webix_inp_checkbox_border label {
 	font-weight: normal; /* Override bootstrap*/
 }
 

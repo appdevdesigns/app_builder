@@ -18,7 +18,7 @@ steal(
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 				AD.Model.extend('opstools.BuildApp.ABPage',
 					{
-						// useSockets: true
+						useSockets: true
 						/*
 							findAll: 'GET /app_builder/abpage',
 							findOne: 'GET /app_builder/abpage/{id}',
@@ -81,7 +81,7 @@ steal(
 								dataCollection,
 								linkedDataCollection;
 
-							if (!page.comInstances) page.comInstances = {};
+							if (!page.comInstances) page.attr('comInstances', {});
 
 							if (page.comInstances[item.id]) {
 								if (page.comInstances[item.id].onDisplay)
@@ -92,11 +92,11 @@ steal(
 							}
 
 							// Create component instance
-							page.comInstances[item.id] = new componentInstance(
+							page.attr('comInstances.' + item.id, new componentInstance(
 								application, // Current application
 								viewId, // the view id
 								item.id // the component data id
-							);
+							));
 
 							if (view && setting && $('#' + viewId).length > 0) {
 								var setting = setting.attr ? setting.attr() : setting,
@@ -182,6 +182,34 @@ steal(
 						createComponent: function (component) {
 							component.page = this.id;
 							return AD.Model.get('opstools.BuildApp.ABPageComponent').create(component);
+						},
+						updateComponent: function (id, updateAttrs) {
+							var q = $.Deferred(),
+								self = this;
+
+							async.waterfall([
+								function (next) {
+									AD.Model.get('opstools.BuildApp.ABPageComponent')
+										.findOne({ page: self.id, id: id })
+										.then(function (result) {
+											if (result.translate) result.translate();
+
+											next(null, result);
+										}, next);
+								},
+								function (com, next) {
+									Object.keys(updateAttrs).forEach(function (key) {
+										com.attr(key, updateAttrs[key]);
+									})
+
+									com.save().then(function () { next(); }, next);
+								}
+							], function (err) {
+								if (err) q.reject(err);
+								else q.resolve();
+							});
+
+							return q;
 						},
 						sortComponents: function (data, cb) {
 							return AD.comm.service.put({

@@ -3,6 +3,7 @@ steal(
 	function () {
 		var componentIds = {
 			selectObjects: 'ab-quickpage-select-object',
+			parentPage: 'ab-quickpage-parent-page',
 
 			displayGrid: 'ab-quickpage-display-grid',
 			addNewButton: 'ab-quickpage-add-new-button',
@@ -14,6 +15,19 @@ steal(
 			connectedData: 'ab-quick-connected-data'
 		};
 
+		function populateParentPages(selectedPage) {
+			var self = this;
+
+			var options = [{ id: '', value: '[Create a new page]' }];
+			self.application.pages.forEach(function (d) {
+				if (!d.parent) { // Get only root pages
+					options.push({ id: d.id, value: d.label });
+				}
+			});
+
+			$$(componentIds.parentPage).define('options', options);
+			$$(componentIds.parentPage).render();
+		}
 
 		function populateObjects() {
 			var self = this;
@@ -48,6 +62,23 @@ steal(
 			var connectValues = Object.keys(connectFields).map(function (d) { return d.indexOf('|add') && connectFields[d] });
 
 			return connectValues.indexOf(1) > -1;
+		}
+
+		function selectParentPage() {
+			var self = this,
+				selectedPageId = $$(componentIds.parentPage).getValue(),
+				selectedPage = self.application.pages.filter(function (p) { return p.id == selectedPageId; })[0];
+
+			if (!selectedPage) return;
+
+			var grid = selectedPage.components.filter(function (com) { return com.component == 'grid'; })[0];
+
+			if (!grid) return;
+
+			// Set default object
+			$$(componentIds.selectObjects).setValue(grid.setting.object);
+
+
 		}
 
 		function selectObject() {
@@ -87,7 +118,7 @@ steal(
 				connectedLayout.elements.push({
 					view: 'label',
 					label: 'Do you want to add other options?',
-					css: 'bold'
+					css: 'ab-text-bold'
 				});
 
 				async.waterfall([
@@ -105,6 +136,7 @@ steal(
 							})
 					},
 
+					// Connect objects
 					function (columns, next) {
 						columns.forEach(function (col) {
 							if (!col.setting.linkObject) return;
@@ -153,11 +185,18 @@ steal(
 					scroll: 'y',
 					rows: [
 						{
+							id: componentIds.parentPage,
+							view: 'select',
+							label: 'Parent page',
+							labelWidth: 120,
+							options: [],
+							on: { onChange: selectParentPage.bind(self) }
+						},
+						{
 							id: componentIds.selectObjects,
 							view: 'select',
 							label: 'Select an object',
 							labelWidth: 120,
-							css: 'bold',
 							options: [],
 							on: { onChange: selectObject.bind(self) }
 						},
@@ -184,7 +223,7 @@ steal(
 						{
 							view: 'label',
 							label: 'Each record in the Grid can be linked to a page that shows on Edit form or a page to View Details',
-							css: 'bold'
+							css: 'ab-text-bold'
 						},
 						{
 							id: componentIds.editData,
@@ -204,6 +243,7 @@ steal(
 
 			show: function (application, page) {
 				this.application = application;
+				populateParentPages.call(this, page);
 				populateObjects.call(this);
 			},
 
@@ -221,30 +261,34 @@ steal(
 
 				$$('QuickPage').showProgress({ type: 'icon' });
 
-				var selectedObj = application.objects.filter(function (obj) {
-					return obj.id == $$(componentIds.selectObjects).getValue();
-				})[0];
+				var selectedObj = application.objects.filter(function (obj) { return obj.id == $$(componentIds.selectObjects).getValue(); })[0],
+					selectedPage = self.application.pages.filter(function (p) { return p.id == $$(componentIds.parentPage).getValue(); })[0];
 
 				async.series([
 					// Create the main page
 					function (next) {
 						if (!application) return next();
 
-						application.createPage({
-							name: selectedObj.name,
-							label: selectedObj.label
-						}).then(function (result) {
-							if (result.translate) result.translate();
-							mainPage = result;
+						if (selectedPage == null) {
+							application.createPage({
+								name: selectedObj.name,
+								label: selectedObj.label
+							}).then(function (result) {
+								if (result.translate) result.translate();
+								mainPage = result;
 
+								next();
+							}, next);
+						}
+						else {
 							next();
-						}, next);
+						}
 					},
 
 					// Create the add object form page
 					function (next) {
 						// Check 'Add new object'
-						if (!$$(componentIds.addNewButton).getValue() || !application) return next();
+						if (!$$(componentIds.addNewButton).getValue() || !application || !mainPage) return next();
 
 						// Create the add form page
 						application.createPage({
@@ -262,7 +306,7 @@ steal(
 					// Create the edit object form page
 					function (next) {
 						// Check 'Edit object'
-						if (!$$(componentIds.editData).getValue() || !application) return next();
+						if (!$$(componentIds.editData).getValue() || !application || !mainPage) return next();
 
 						// Create the edit form page
 						application.createPage({
@@ -279,7 +323,18 @@ steal(
 
 					// Create the view & connected data page
 					function (next) {
-						if (!$$(componentIds.viewData).getValue() || !application) return next();
+						// Get viewPage in the root page
+						if (selectedPage) {
+							var grids = selectedPage.components.filter(function (com) { return com.component == 'grid'; });
+							grids.forEach(function (grid) {
+								if (viewPage == null)
+									viewPage = application.pages.filter(function (p) { return p.id == grid.setting.viewPage; })[0];
+							});
+
+							return next();
+						}
+
+						if (!$$(componentIds.viewData).getValue() || !application || !mainPage) return next();
 
 						// Create the view page
 						application.createPage({
@@ -290,13 +345,14 @@ steal(
 							if (result.translate) result.translate();
 
 							viewPage = result;
+
 							next();
 						}, next);
 					},
 
 					// Create 'Add connect data' page
 					function (next) {
-						if (!$$(componentIds.connectedData) || !application) return next();
+						if (!$$(componentIds.connectedData) || !application || (!mainPage && !selectedPage)) return next();
 
 						var connectFields = $$(componentIds.connectedData).getValues(),
 							createPageTask = [];
@@ -310,12 +366,13 @@ steal(
 
 									// Create the connected form page
 									application.createPage({
-										parent: mainPage.id,
+										parent: mainPage ? mainPage.id : selectedPage.id,
 										name: 'Add ' + object.name,
 										label: 'Add ' + object.label,
 										type: 'modal'
 									}).then(function (result) {
 										connectPages[columnId] = result;
+
 										ok();
 									}, ok);
 								});
@@ -501,6 +558,8 @@ steal(
 
 					// Add 'Link' to the connect pages
 					function (next) {
+						if (!viewPage) return next();
+
 						var addLinkTasks = [];
 
 						Object.keys(connectPages).forEach(function (key) {
@@ -524,29 +583,51 @@ steal(
 
 					// Insert 'Menu' to the view page
 					function (next) {
-						if (!viewPage || !$$(componentIds.connectedData) || !$$(componentIds.viewData).getValue() || !hasAddConnectPage.call(self)) return next();
+						if (!viewPage || !$$(componentIds.connectedData) || !hasAddConnectPage.call(self)) return next();
+
+						var menu = viewPage.components.filter(function (com) { return com.component == 'menu' })[0];
+
+						if (!$$(componentIds.viewData).getValue() && menu == null) return next();
 
 						var menuData = [],
 							connectFields = $$(componentIds.connectedData).getValues();
 
-						if ($$(componentIds.viewData).getValue())
+						if ($$(componentIds.viewData).getValue() && editFormPage)
 							menuData.push(editFormPage.id);
 
 						for (var key in connectFields) {
-							if (key.indexOf('|add') > -1 && connectFields[key]) { // Select add connect data
+							// Select add connect data
+							if (key.indexOf('|add') > -1 && connectFields[key]) {
 								var columnId = parseInt(key.replace('|add', ''));
 								menuData.push(connectPages[columnId].id);
 							}
 						}
 
-						viewPage.createComponent({
-							component: 'menu',
-							weight: 1,
-							setting: {
-								layout: 'x',
-								pageIds: menuData
-							}
-						}).then(function () { next(); }, next);
+						// Update menu in view page
+						if (menu) {
+							var updateSetting = menu.setting;
+							if (updateSetting.pageIds == null) updateSetting.pageIds = [];
+
+							updateSetting.pageIds = updateSetting.pageIds.concat(menuData);
+
+							viewPage.updateComponent(menu.id, { setting: updateSetting }).then(function () {
+								menu.attr('setting', updateSetting);
+
+								next();
+							}, next);
+						}
+						// Create new menu in view page
+						else {
+							viewPage.createComponent({
+								component: 'menu',
+								weight: 1,
+								setting: {
+									layout: 'x',
+									pageIds: menuData
+								}
+							}).then(function () { next(); }, next);
+
+						}
 					},
 
 					// Add 'Grid' to the view page
@@ -587,7 +668,7 @@ steal(
 
 					// Add 'Link' to the view page
 					function (next) {
-						if (!viewPage) return next();
+						if (!viewPage || !mainPage) return next();
 
 						viewPage.createComponent({
 							component: 'link',
@@ -601,12 +682,14 @@ steal(
 
 					// Finish - Get pages to return
 					function (next) {
-						application.getPages({ or: [{ id: mainPage.id }, { parent: mainPage.id }] })
+						var mainPageId = mainPage ? mainPage.id : selectedPage.id;
+
+						application.getPages({ or: [{ id: mainPageId }, { parent: mainPageId }] })
 							.fail(function (err) {
 								q.reject(err);
 								next(err);
 							})
-							.then(function (result) {
+							.done(function (result) {
 								result.forEach(function (r) {
 									if (r.translate) r.translate();
 								});
