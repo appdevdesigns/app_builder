@@ -486,7 +486,8 @@ steal(
 								$$(activePageDomId).hide();
 
 							var pageDomId = self.getPageDomID(page);
-							$$(pageDomId).show();
+							if ($$(pageDomId))
+								$$(pageDomId).show();
 							self.previousPage = self.activePage;
 							self.activePage = page;
 

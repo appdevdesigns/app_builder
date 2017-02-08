@@ -183,6 +183,34 @@ steal(
 							component.page = this.id;
 							return AD.Model.get('opstools.BuildApp.ABPageComponent').create(component);
 						},
+						updateComponent: function (id, updateAttrs) {
+							var q = $.Deferred(),
+								self = this;
+
+							async.waterfall([
+								function (next) {
+									AD.Model.get('opstools.BuildApp.ABPageComponent')
+										.findOne({ page: self.id, id: id })
+										.then(function (result) {
+											if (result.translate) result.translate();
+
+											next(null, result);
+										}, next);
+								},
+								function (com, next) {
+									Object.keys(updateAttrs).forEach(function (key) {
+										com.attr(key, updateAttrs[key]);
+									})
+
+									com.save().then(function () { next(); }, next);
+								}
+							], function (err) {
+								if (err) q.reject(err);
+								else q.resolve();
+							});
+
+							return q;
+						},
 						sortComponents: function (data, cb) {
 							return AD.comm.service.put({
 								url: '/app_builder/page/sortComponents/' + this.id,

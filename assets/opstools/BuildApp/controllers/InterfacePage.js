@@ -91,7 +91,7 @@ steal(
 							self.controllers.InterfaceList.on(self.options.deletedPageEvent, function (event, data) {
 								var pageId = data.page.id || data.page; // ABPage.id
 
-								if (pageId == AD.classes.AppBuilder.currApp.currPage.id)
+								if (AD.classes.AppBuilder.currApp.currPage && pageId == AD.classes.AppBuilder.currApp.currPage.id)
 									AD.classes.AppBuilder.currApp.currPage = null;
 
 								self.controllers.InterfaceWorkspace.showPage();

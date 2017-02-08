@@ -323,7 +323,7 @@ steal(
 
 					// Create the view & connected data page
 					function (next) {
-						// TODO
+						// Get viewPage in the root page
 						if (selectedPage) {
 							var grids = selectedPage.components.filter(function (com) { return com.component == 'grid'; });
 							grids.forEach(function (grid) {
@@ -345,6 +345,7 @@ steal(
 							if (result.translate) result.translate();
 
 							viewPage = result;
+
 							next();
 						}, next);
 					},
@@ -371,6 +372,7 @@ steal(
 										type: 'modal'
 									}).then(function (result) {
 										connectPages[columnId] = result;
+
 										ok();
 									}, ok);
 								});
@@ -581,29 +583,51 @@ steal(
 
 					// Insert 'Menu' to the view page
 					function (next) {
-						if (!viewPage || !editFormPage || !$$(componentIds.connectedData) || !$$(componentIds.viewData).getValue() || !hasAddConnectPage.call(self)) return next();
+						if (!viewPage || !$$(componentIds.connectedData) || !hasAddConnectPage.call(self)) return next();
+
+						var menu = viewPage.components.filter(function (com) { return com.component == 'menu' })[0];
+
+						if (!$$(componentIds.viewData).getValue() && menu == null) return next();
 
 						var menuData = [],
 							connectFields = $$(componentIds.connectedData).getValues();
 
-						if ($$(componentIds.viewData).getValue())
+						if ($$(componentIds.viewData).getValue() && editFormPage)
 							menuData.push(editFormPage.id);
 
 						for (var key in connectFields) {
-							if (key.indexOf('|add') > -1 && connectFields[key]) { // Select add connect data
+							// Select add connect data
+							if (key.indexOf('|add') > -1 && connectFields[key]) {
 								var columnId = parseInt(key.replace('|add', ''));
 								menuData.push(connectPages[columnId].id);
 							}
 						}
 
-						viewPage.createComponent({
-							component: 'menu',
-							weight: 1,
-							setting: {
-								layout: 'x',
-								pageIds: menuData
-							}
-						}).then(function () { next(); }, next);
+						// Update menu in view page
+						if (menu) {
+							var updateSetting = menu.setting;
+							if (updateSetting.pageIds == null) updateSetting.pageIds = [];
+
+							updateSetting.pageIds = updateSetting.pageIds.concat(menuData);
+
+							viewPage.updateComponent(menu.id, { setting: updateSetting }).then(function () {
+								menu.attr('setting', updateSetting);
+
+								next();
+							}, next);
+						}
+						// Create new menu in view page
+						else {
+							viewPage.createComponent({
+								component: 'menu',
+								weight: 1,
+								setting: {
+									layout: 'x',
+									pageIds: menuData
+								}
+							}).then(function () { next(); }, next);
+
+						}
 					},
 
 					// Add 'Grid' to the view page
