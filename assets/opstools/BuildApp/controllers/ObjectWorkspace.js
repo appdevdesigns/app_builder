@@ -661,7 +661,7 @@ steal(
 										$$(self.webixUiId.addFieldsButton).hide();
 										$$(self.webixUiId.editHeaderPopup).setMenuGroup('imported');
 									} else {
-										$$(self.webixUiId.addFielsButton).show();
+										$$(self.webixUiId.addFieldsButton).show();
 										$$(self.webixUiId.editHeaderPopup).setMenuGroup('default');
 									}
 									
