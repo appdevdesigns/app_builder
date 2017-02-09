@@ -122,6 +122,8 @@ steal(
 												click: function () {
 													if (!self.data.editedComponentId || !AD.classes.AppBuilder.currApp.currPage) return;
 
+													$$(self.componentIds.saveComponentInfo).disable();
+
 													var editedComponent = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == self.data.editedComponentId; })[0],
 														componentName = editedComponent.attr('component'),
 														componentInstance = componentManager.getComponent(componentName),
@@ -163,6 +165,8 @@ steal(
 													], function (err) {
 														if ($$(editViewId).hideProgress)
 															$$(editViewId).hideProgress();
+
+														$$(self.componentIds.saveComponentInfo).enable();
 
 														if (err) {
 															console.error(err);

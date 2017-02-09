@@ -27,6 +27,9 @@ steal(
 
 					registerTableWarning: AD.lang.label.getLabel('ab.add_fields.registerTableWarning') || "Please register the datatable to add.",
 
+					overFieldTitleMaxLength: AD.lang.label.getLabel('ab.add_fields.overFieldTitleMaxLength') || "Your field name is invalid",
+					overFieldTitleMaxLengthDescription: AD.lang.label.getLabel('ab.add_fields.overFieldTitleMaxLengthDescription') || "Field name should not have number of character more than #maxLength#.",
+
 					invalidFieldTitle: AD.lang.label.getLabel('ab.add_fields.invalidFieldTitle') || "Your field name is invalid format",
 					invalidFieldDescription: AD.lang.label.getLabel('ab.add_fields.invalidFieldDescription') || "System disallow enter special character to field name.",
 
@@ -96,6 +99,18 @@ steal(
 											webix.alert({
 												title: 'Field info error',
 												text: 'System could not get this field information ',
+												ok: labels.common.ok
+											});
+											self.enable();
+											return;
+										}
+
+										// Validate maximum length of field name
+										var maxNameLength = 20;
+										if (fieldInfo.name && fieldInfo.name.length > maxNameLength) {
+											webix.alert({
+												title: labels.add_fields.overFieldTitleMaxLength,
+												text: labels.add_fields.overFieldTitleMaxLengthDescription.replace('#maxLength#', maxNameLength),
 												ok: labels.common.ok
 											});
 											self.enable();
@@ -186,7 +201,7 @@ steal(
 				this.createNewObjectEvent = createNewObjectEvent;
 			},
 
-			showFieldData: function(fieldName) {
+			showFieldData: function (fieldName) {
 				var viewName = dataFieldsManager.getEditViewId(fieldName);
 
 				if (viewName) {

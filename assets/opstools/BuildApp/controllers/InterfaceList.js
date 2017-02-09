@@ -18,6 +18,7 @@ steal(
 							options = AD.defaults({
 								selectedPageEvent: 'AB_Page.Selected',
 								createdPageEvent: 'AB_Page.Created',
+								updatedPageEvent: 'AB_Page.Updated',
 								addedPageEvent: 'AB_Page.Added',
 								renamePageEvent: 'AB_Page.Rename',
 								deletedPageEvent: 'AB_Page.Deleted'
@@ -74,6 +75,18 @@ steal(
 							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
 								var shouldSelect = (data.newPage.parent != null);
 								self.addPage(data.newPage, shouldSelect);
+							});
+
+							self.controllers.AddNewPage.on(self.options.updatedPageEvent, function (event, data) {
+								// Update label or page type
+								if ($$(self.webixUiId.interfaceTree).exists(data.page.id)) {
+									$$(self.webixUiId.interfaceTree).updateItem(data.page.id, data.page.attr());
+
+									// Show gear
+									if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+										self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+								}
+								// TODO: weight -> reorder
 							});
 						},
 
@@ -369,19 +382,17 @@ steal(
 							AD.classes.AppBuilder.currApp.on('change', function (ev, attr, how, newVals, oldVals) {
 								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
 
-								console.log('InterfaceList: change ', ev, attr, how, newVals, oldVals);
-
 								switch (how) {
-									case 'set':
-										if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) { // Update label or page type
-											$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
+									// case 'set':
+									// 	if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) { // Update label or page type
+									// 		$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
 
-											// Show gear
-											if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
-												self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
-										}
-										// TODO: weight -> reorder
-										break;
+									// 		// Show gear
+									// 		if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+									// 			self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+									// 	}
+									// 	// TODO: weight -> reorder
+									// 	break;
 									case 'remove':
 										if (oldVals.forEach) {
 											oldVals.forEach(function (deletedPage) {
