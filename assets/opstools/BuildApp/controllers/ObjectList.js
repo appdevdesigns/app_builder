@@ -412,6 +412,7 @@ steal(
                                             body: {
                                                 view: "form",
                                                 elements: [
+                                                    // Models list filter
                                                     {
                                                         cols: [
                                                             {
@@ -431,6 +432,7 @@ steal(
                                                             }
                                                         ]
                                                     },
+                                                    // Models list
                                                     { 
                                                         view: 'list',
                                                         id: self.webixUiId.importModelList,
@@ -439,6 +441,7 @@ steal(
                                                         data: [],
                                                         template: '<div>#id#</div>',
                                                     },
+                                                    // Import & Cancel buttons
                                                     {
                                                         cols: [
                                                             { view: 'button', value: self.labels.common.import, type: 'form', click: function() {
@@ -450,6 +453,7 @@ steal(
                                                                 button.disable();
                                                                 $$(self.webixUiId.objectList).showProgress({ type: 'icon' });
                                                                 
+                                                                // Tell the server to import the model
                                                                 AD.comm.service.post({
                                                                     url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/importModel',
                                                                     data: {
@@ -459,14 +463,17 @@ steal(
                                                                 .fail(function(err) {
                                                                     webix.message({
                                                                         type: 'error',
-                                                                        text: err
+                                                                        text: err.message || err
                                                                     });
                                                                 })
                                                                 .done(function(objData) {
                                                                     var ABObject = AD.Model.get('opstools.BuildApp.ABObject');
+                                                                    // Already have the object data in `objData` but call
+                                                                    // findOne() so that the framework will be updated.
                                                                     ABObject.findOne({ id: objData.id })
                                                                     .done(function(result) {
                                                                         result.translate();
+                                                                        // Add the new object to the list on the page
                                                                         AD.classes.AppBuilder.currApp.objects.push(result);
                                                                         self.refreshObjectList();
                                                                     })
