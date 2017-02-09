@@ -55,6 +55,7 @@ steal(
 								sortButton: 'ab-sort-fields-toolbar',
 								frozenButton: 'ab-frozen-columns-toolbar',
 								defineLabelButton: 'ab-define-label-toolbar',
+								addFieldsButton: 'ab-add-fields-button',
 
 								addNewRowButton: 'ab-add-new-row-button',
 
@@ -193,7 +194,7 @@ steal(
 											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton, icon: "table", type: "icon", width: 150, badge: 0 },
 											{ view: 'button', label: self.labels.object.toolbar.defineLabel, popup: self.webixUiId.defineLabelPopup, id: self.webixUiId.defineLabelButton, icon: "newspaper-o", type: "icon", width: 130 },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
-											{ view: 'button', label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 }
+											{ view: 'button', id: self.webixUiId.addFieldsButton, label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 }
 										]
 									},
 									{
@@ -654,6 +655,16 @@ steal(
 								// Get columns data from server
 								function (next) {
 									$$(self.webixUiId.objectDatatable).clearAll();
+									
+									// Hide the edit/delete operations for imported models
+									if (AD.classes.AppBuilder.currApp.currObj.attr('isImported')) {
+										$$(self.webixUiId.addFieldsButton).hide();
+										$$(self.webixUiId.editHeaderPopup).setMenuGroup('imported');
+									} else {
+										$$(self.webixUiId.addFieldsButton).show();
+										$$(self.webixUiId.editHeaderPopup).setMenuGroup('default');
+									}
+									
 
 									AD.classes.AppBuilder.currApp.currObj.getColumns()
 										.fail(function (err) {

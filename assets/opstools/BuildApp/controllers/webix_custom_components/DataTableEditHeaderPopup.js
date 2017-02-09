@@ -14,6 +14,24 @@ steal(
 				editField: AD.lang.label.getLabel('ab.object.editField') || "Edit field",
 				deleteField: AD.lang.label.getLabel('ab.object.deleteField') || "Delete field"
 			};
+		
+		var menuItems = {
+			// Normally all items are available
+			'default': [
+				{ command: labels.hideField, icon: "fa-columns" },
+				{ command: labels.filterField, icon: "fa-filter" },
+				{ command: labels.sortField, icon: "fa-sort" },
+				{ command: labels.editField, icon: "fa-pencil-square-o" },
+				{ command: labels.deleteField, icon: "fa-trash" }
+			],
+			// But for imported objects, edit & delete are disabled
+			'imported': [
+				{ command: labels.hideField, icon: "fa-columns" },
+				{ command: labels.filterField, icon: "fa-filter" },
+				{ command: labels.sortField, icon: "fa-sort" },
+				//{ command: labels.editField, icon: "fa-pencil-square-o" },
+			]
+		};
 
 		webix.protoUI({
 			name: 'edit_header_popup',
@@ -26,13 +44,7 @@ steal(
 					autoheight: true,
 					select: false,
 					template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
-					data: [
-						{ command: labels.hideField, icon: "fa-columns" },
-						{ command: labels.filterField, icon: "fa-filter" },
-						{ command: labels.sortField, icon: "fa-sort" },
-						{ command: labels.editField, icon: "fa-pencil-square-o" },
-						{ command: labels.deleteField, icon: "fa-trash" }
-					],
+					data: menuItems['default'],
 					on: {
 						'onItemClick': function (timestamp, e, trg) {
 							var columns = webix.toArray(dataTable.config.columns),
@@ -72,7 +84,19 @@ steal(
 
 			registerHeaderClick: function (headerClickHandler) {
 				data.headerClickHandler = headerClickHandler;
+			},
+			
+			/**
+			 * Select the menu items from one of the defined groups.
+			 * @param {string} [groupName]
+			 *		'default' or 'imported'
+			 */
+			setMenuGroup: function (groupName) {
+				groupName = groupName || 'default';
+				$$(componentIds.editHeaderItems).clearAll();
+				$$(componentIds.editHeaderItems).parse(menuItems[groupName]);
 			}
+			
 		}, webix.ui.popup);
 
 

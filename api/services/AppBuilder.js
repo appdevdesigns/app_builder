@@ -1548,6 +1548,14 @@ module.exports = {
             var modelFileName = ''; // client side model file
             
             async.series([
+                // Make sure model has an 'id' primary key field
+                function(next) {
+                    if (!model.attributes.id) {
+                        next(new Error('Model ' + modelName + ' does not have an "id" column'));
+                    }
+                    else next();
+                },
+                
                 // Find app in database
                 function(next) {
                     ABApplication.find({ id: appID })
