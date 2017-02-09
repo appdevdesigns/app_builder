@@ -281,6 +281,8 @@ steal(
 							}, next);
 						}
 						else {
+							mainPage = selectedPage;
+
 							next();
 						}
 					},
@@ -325,13 +327,16 @@ steal(
 					function (next) {
 						// Get viewPage in the root page
 						if (selectedPage) {
-							var grids = selectedPage.components.filter(function (com) { return com.component == 'grid'; });
+							var grids = selectedPage.components.filter(function (com) {
+								return com.component == 'grid' && com.setting && com.setting.object == selectedObj.id;
+							});
 							grids.forEach(function (grid) {
 								if (viewPage == null)
 									viewPage = application.pages.filter(function (p) { return p.id == grid.setting.viewPage; })[0];
 							});
 
-							return next();
+							if (viewPage)
+								return next();
 						}
 
 						if (!$$(componentIds.viewData).getValue() || !application || !mainPage) return next();
