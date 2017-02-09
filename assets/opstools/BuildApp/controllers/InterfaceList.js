@@ -73,8 +73,8 @@ steal(
 							var self = this;
 
 							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
-								var shouldSelect = (data.newPage.parent != null);
-								self.addPage(data.newPage, shouldSelect);
+								var noSelect = (data.newPage.parent != null);
+								self.addPage(data.newPage, noSelect);
 							});
 
 							self.controllers.AddNewPage.on(self.options.updatedPageEvent, function (event, data) {
@@ -435,28 +435,37 @@ steal(
 						},
 
 						addPage: function (page, noSelect) {
-							var self = this;
+							var self = this,
+								pageId = page.id;
 
 							self.element.trigger(self.options.addedPageEvent, {
 								parentId: page.parent ? page.parent.id : null,
-								page: page.id
+								page: pageId
 							});
 
 							// Exists
-							if ($$(self.webixUiId.interfaceTree).getIndexById(page.id) > -1) return;
+							if ($$(self.webixUiId.interfaceTree).getIndexById(pageId) > -1) {
+								// Refresh
+								if (page.parent == null) {
+									$$(self.webixUiId.interfaceTree).unselectAll();
+									$$(self.webixUiId.interfaceTree).select(pageId);
+								}
+
+								return;
+							}
 
 							async.series([
 								function (next) {
 									if (!page.label) {
 										// Get label
-										AD.classes.AppBuilder.currApp.getPage(page.id)
+										AD.classes.AppBuilder.currApp.getPage(pageId)
 											.fail(next)
 											.done(function (data) {
 												if (data.translate) data.translate();
 												page = data;
 
 												AD.classes.AppBuilder.currApp.pages.forEach(function (p, index) {
-													if (p.id == page.id) {
+													if (p.id == pageId) {
 														AD.classes.AppBuilder.currApp.pages.attr(index, page);
 													}
 												});
@@ -469,7 +478,7 @@ steal(
 								},
 								function (next) {
 									$$(self.webixUiId.interfaceTree).add({
-										id: page.id,
+										id: pageId,
 										value: page.name,
 										label: page.label,
 										type: page.type
@@ -481,7 +490,7 @@ steal(
 
 									if (!noSelect) {
 										$$(self.webixUiId.interfaceTree).unselectAll();
-										$$(self.webixUiId.interfaceTree).select(page.id);
+										$$(self.webixUiId.interfaceTree).select(pageId);
 									}
 
 									// Show success message
