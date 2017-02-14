@@ -45,6 +45,7 @@ steal(
 							};
 
 							this.data = {};
+							this.eventIds = {};
 
 							this.webixUiId = {
 								objectToolbar: 'ab-object-toolbar',
@@ -1199,6 +1200,7 @@ steal(
 
 							if (self.data.columns) {
 								var columns = self.data.columns.attr ? self.data.columns.attr() : self.data.columns;
+								columns = columns.sort(function (a, b) { return a.weight - b.weight; });
 
 								$$(self.webixUiId.visibleFieldsPopup).setFieldList(columns);
 								$$(self.webixUiId.filterFieldsPopup).define('dataTable', $$(self.webixUiId.objectDatatable));
@@ -1229,23 +1231,31 @@ steal(
 						attachPopupEvents: function () {
 							var self = this;
 
-							$$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (num) {
+							$$(self.webixUiId.visibleFieldsPopup).detachEvent(self.eventIds.visiblePopupChange);
+							$$(self.webixUiId.filterFieldsPopup).detachEvent(self.eventIds.filterPopupChange);
+							$$(self.webixUiId.filterFieldsPopup).detachEvent(self.eventIds.sortPopupChange);
+							$$(self.webixUiId.frozenColumnsPopup).detachEvent(self.eventIds.frozenPopupChange);
+
+							self.eventIds.visiblePopupChange = $$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (num) {
 								$$(self.webixUiId.visibleButton).define('badge', num);
 								$$(self.webixUiId.visibleButton).refresh();
 							});
-							$$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+
+							self.eventIds.filterPopupChange = $$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
 								if (self.webixUiId.objectDatatable == dataTableId) {
 									$$(self.webixUiId.filterButton).define('badge', num);
 									$$(self.webixUiId.filterButton).refresh();
 								}
 							});
-							$$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+
+							self.eventIds.sortPopupChange = $$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
 								if (self.webixUiId.objectDatatable == dataTableId) {
 									$$(self.webixUiId.sortButton).define('badge', num);
 									$$(self.webixUiId.sortButton).refresh();
 								}
 							});
-							$$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
+
+							self.eventIds.frozenPopupChange = $$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
 								$$(self.webixUiId.frozenButton).define('badge', num);
 								$$(self.webixUiId.frozenButton).refresh();
 							});
