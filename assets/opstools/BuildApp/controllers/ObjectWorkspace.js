@@ -1207,6 +1207,16 @@ steal(
 								$$(self.webixUiId.sortFieldsPopup).define('columns', columns);
 								$$(self.webixUiId.frozenColumnsPopup).setFieldList(columns);
 								$$(self.webixUiId.defineLabelPopup).setFieldList(columns);
+
+								if (self.data.columns.length > 0) {
+									$$(self.webixUiId.addNewRowButton).enable();
+								}
+								else {
+									$$(self.webixUiId.addNewRowButton).disable();
+								}
+							}
+							else {
+								$$(self.webixUiId.addNewRowButton).disable();
 							}
 
 							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
