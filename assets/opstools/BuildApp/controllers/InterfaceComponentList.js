@@ -68,7 +68,7 @@ steal(
 									},
 									{
 										id: self.componentIds.componentSpace,
-										width: 200,
+										width: 220,
 										cells: [
 											{
 												id: self.componentIds.componentList,
@@ -115,7 +115,13 @@ steal(
 								}
 
 								if (component.getPropertyView) {
-									componentSpaceDefinition.cells.push(component.getPropertyView());
+									var propertyView = component.getPropertyView();
+
+									// Set auto scroll bar to the property view
+									if (propertyView.scroll == null)
+										propertyView.scroll = 'y';
+
+									componentSpaceDefinition.cells.push(propertyView);
 								}
 							});
 						},
