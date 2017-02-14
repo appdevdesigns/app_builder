@@ -1132,7 +1132,7 @@ steal(
 								}
 
 								if (columnInfo.setting.width)
-									addColumnHeader.width = columnInfo.setting.width;
+									addColumnHeader.width = parseInt(columnInfo.setting.width);
 								else
 									addColumnHeader.width = self.controllers.ObjectDataTable.calculateColumnWidth(AD.classes.AppBuilder.currApp, columnInfo);
 
