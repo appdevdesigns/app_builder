@@ -204,7 +204,7 @@ steal(
 							}
 
 							// Removable
-							if (showTrashCol && columns.length > 0) {
+							if (showTrashCol) {
 								headers.push({
 									id: "appbuilder_trash",
 									header: "",

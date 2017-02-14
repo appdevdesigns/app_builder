@@ -655,7 +655,7 @@ steal(
 								// Get columns data from server
 								function (next) {
 									$$(self.webixUiId.objectDatatable).clearAll();
-									
+
 									// Hide the edit/delete operations for imported models
 									if (AD.classes.AppBuilder.currApp.currObj.attr('isImported')) {
 										$$(self.webixUiId.addFieldsButton).hide();
@@ -664,7 +664,7 @@ steal(
 										$$(self.webixUiId.addFieldsButton).show();
 										$$(self.webixUiId.editHeaderPopup).setMenuGroup('default');
 									}
-									
+
 
 									AD.classes.AppBuilder.currApp.currObj.getColumns()
 										.fail(function (err) {
@@ -871,65 +871,6 @@ steal(
 												}
 											}
 										},
-										// // Set up linkVia column
-										// function (next) {
-										// 	if (!updateColumn.setting.linkType) return next();
-
-										// 	var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == updateColumn.setting.linkObject; });
-										// 	if (linkObj && linkObj[0])
-										// 		linkObj = linkObj[0]
-										// 	else
-										// 		return next();
-
-										// 	// Update link column
-										// 	if (updateColumn.setting.linkVia) {
-										// 		linkObj.getColumn(updateColumn.setting.linkVia).fail(next)
-										// 			.then(function (linkViaCol) {
-										// 				linkViaCol.attr('setting.linkType', updateColumn.setting.linkViaType);
-										// 				linkViaCol.attr('setting.linkViaType', updateColumn.setting.linkType);
-										// 				linkViaCol.save().fail(next).then(function () {
-										// 					next();
-										// 				});
-										// 			});
-										// 	}
-										// 	// Need to create the link back from the target object
-										// 	else {
-										// 		linkObj.createColumn({
-										// 			name: updateColumn.name + '_Link',
-										// 			label: updateColumn.label + ' Link',
-										// 			fieldName: 'connectObject',
-										// 			type: 'connectObject',
-										// 			weight: linkObj.columns.length + 1,
-										// 			setting: {
-										// 				appName: AD.classes.AppBuilder.currApp.name,
-										// 				linkType: updateColumn.setting.linkViaType || 'model',
-										// 				linkObject: updateColumn.object.id, // ABObject id
-										// 				linkViaType: updateColumn.setting.linkType,
-										// 				linkVia: updateColumn.id, // ABColumn id
-										// 				icon: 'external-link',
-										// 				template: '<div class="connect-data-values"></div>',
-										// 				filter_type: 'multiselect'
-										// 			}
-										// 		})
-										// 			.fail(next)
-										// 			.then(function (result) {
-										// 				updateTargetColumn = result;
-										// 				next();
-										// 			});
-										// 	}
-										// },
-										// // Update the link column
-										// function (next) {
-										// 	if (updateTargetColumn && !updateColumn.setting.linkVia) {
-										// 		updateColumn.attr('setting.linkVia', updateTargetColumn.id);
-										// 		updateColumn.save().fail(next).then(function () {
-										// 			next();
-										// 		});
-										// 	}
-										// 	else {
-										// 		next();
-										// 	}
-										// },
 										// Create list option of select column
 										function (next) {
 											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
@@ -1230,7 +1171,7 @@ steal(
 											columns[i] = addColumnHeader;
 										}
 									}
-								} else { // Add 
+								} else { // Add
 									var index = columns.length > 0 ? columns.length - 1 : 0; // Before trash column
 									columns.splice(index, 0, addColumnHeader);
 								}
@@ -1266,6 +1207,16 @@ steal(
 								$$(self.webixUiId.sortFieldsPopup).define('columns', columns);
 								$$(self.webixUiId.frozenColumnsPopup).setFieldList(columns);
 								$$(self.webixUiId.defineLabelPopup).setFieldList(columns);
+
+								if (self.data.columns.length > 0) {
+									$$(self.webixUiId.addNewRowButton).enable();
+								}
+								else {
+									$$(self.webixUiId.addNewRowButton).disable();
+								}
+							}
+							else {
+								$$(self.webixUiId.addNewRowButton).disable();
 							}
 
 							$$(self.webixUiId.visibleFieldsPopup).bindFieldList();
