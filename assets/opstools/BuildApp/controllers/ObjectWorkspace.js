@@ -1231,34 +1231,37 @@ steal(
 						attachPopupEvents: function () {
 							var self = this;
 
-							$$(self.webixUiId.visibleFieldsPopup).detachEvent(self.eventIds.visiblePopupChange);
-							$$(self.webixUiId.filterFieldsPopup).detachEvent(self.eventIds.filterPopupChange);
-							$$(self.webixUiId.filterFieldsPopup).detachEvent(self.eventIds.sortPopupChange);
-							$$(self.webixUiId.frozenColumnsPopup).detachEvent(self.eventIds.frozenPopupChange);
+							if (self.eventIds['visiblePopupOnChange'] == null) {
+								self.eventIds['visiblePopupOnChange'] = $$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (num) {
+									$$(self.webixUiId.visibleButton).define('badge', num);
+									$$(self.webixUiId.visibleButton).refresh();
+								});
+							}
 
-							self.eventIds.visiblePopupChange = $$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (num) {
-								$$(self.webixUiId.visibleButton).define('badge', num);
-								$$(self.webixUiId.visibleButton).refresh();
-							});
+							if (self.eventIds['filterPopupOnChange'] == null) {
+								self.eventIds['filterPopupOnChange'] = $$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+									if (self.webixUiId.objectDatatable == dataTableId) {
+										$$(self.webixUiId.filterButton).define('badge', num);
+										$$(self.webixUiId.filterButton).refresh();
+									}
+								});
+							}
 
-							self.eventIds.filterPopupChange = $$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
-								if (self.webixUiId.objectDatatable == dataTableId) {
-									$$(self.webixUiId.filterButton).define('badge', num);
-									$$(self.webixUiId.filterButton).refresh();
-								}
-							});
+							if (self.eventIds['sortPopupOnChange'] == null) {
+								self.eventIds['sortPopupOnChange'] = $$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+									if (self.webixUiId.objectDatatable == dataTableId) {
+										$$(self.webixUiId.sortButton).define('badge', num);
+										$$(self.webixUiId.sortButton).refresh();
+									}
+								});
+							}
 
-							self.eventIds.sortPopupChange = $$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
-								if (self.webixUiId.objectDatatable == dataTableId) {
-									$$(self.webixUiId.sortButton).define('badge', num);
-									$$(self.webixUiId.sortButton).refresh();
-								}
-							});
-
-							self.eventIds.frozenPopupChange = $$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
-								$$(self.webixUiId.frozenButton).define('badge', num);
-								$$(self.webixUiId.frozenButton).refresh();
-							});
+							if (self.eventIds['frozenPopupOnChange'] == null) {
+								self.eventIds['frozenPopupOnChange'] = $$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
+									$$(self.webixUiId.frozenButton).define('badge', num);
+									$$(self.webixUiId.frozenButton).refresh();
+								});
+							}
 						},
 
 						reorderColumns: function () {

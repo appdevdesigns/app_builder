@@ -22,6 +22,7 @@ steal(
 		// Instance functions
 		var viewComponent = function (application, viewId, componentId) {
 			var data = {},
+				eventIds = {},
 				objectModels = {};
 
 			// Private functions
@@ -121,15 +122,20 @@ if (!data.columns) return;
 
 				// Initial events
 				if (data.dataCollection) {
-					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
-						updateData.call(self, setting);
-					});
-					data.dataCollection.attachEvent('onDataUpdate', function (id, newData) {
-						if (data.currDataId == id)
-							updateData.call(self, setting, newData);
+					if (eventIds['onAfterCursorChange'] == null) {
+						eventIds['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+							updateData.call(self, setting);
+						});
+					}
 
-						return true;
-					});
+					if (eventIds['onDataUpdate'] == null) {
+						eventIds['onDataUpdate'] = data.dataCollection.attachEvent('onDataUpdate', function (id, newData) {
+							if (data.currDataId == id)
+								updateData.call(self, setting, newData);
+
+							return true;
+						});
+					}
 				}
 
 				setting.visibleFieldIds = setting.visibleFieldIds || [];

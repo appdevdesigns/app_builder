@@ -14,7 +14,7 @@ steal(
 				editField: AD.lang.label.getLabel('ab.object.editField') || "Edit field",
 				deleteField: AD.lang.label.getLabel('ab.object.deleteField') || "Delete field"
 			};
-		
+
 		var menuItems = {
 			// Normally all items are available
 			'default': [
@@ -63,13 +63,8 @@ steal(
 				var base = this;
 
 				dataTable = dt;
-				if (dataTable) {
-					// Unsubscribe old event
-					if (eventIds['onHeaderClick']) {
-						dataTable.detachEvent(eventIds['onHeaderClick']);
-						delete eventIds['onHeaderClick'];
-					}
 
+				if (eventIds['onHeaderClick'] == null && dataTable) {
 					eventIds['onHeaderClick'] = dataTable.attachEvent('onHeaderClick', function (id, e, trg) {
 						if (id.column == 'appbuilder_trash') return; // Ignore trash column
 
@@ -85,7 +80,7 @@ steal(
 			registerHeaderClick: function (headerClickHandler) {
 				data.headerClickHandler = headerClickHandler;
 			},
-			
+
 			/**
 			 * Select the menu items from one of the defined groups.
 			 * @param {string} [groupName]
@@ -96,7 +91,7 @@ steal(
 				$$(componentIds.editHeaderItems).clearAll();
 				$$(componentIds.editHeaderItems).parse(menuItems[groupName]);
 			}
-			
+
 		}, webix.ui.popup);
 
 
