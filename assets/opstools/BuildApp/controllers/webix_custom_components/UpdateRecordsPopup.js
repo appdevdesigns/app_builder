@@ -46,16 +46,21 @@ steal(
 									view: "button", label: "Update", type: "form", width: 120,
 									click: function () {
 										// Update values to records
-										var update_records_popup = this.getTopParentView(),
+										var update_button = this,
+											update_records_popup = this.getTopParentView(),
 											update_panel = update_records_popup.getChildViews()[0].getChildViews()[3],
 											update_items = update_panel.getChildViews();
 
+										update_button.disable();
+
 										if (!update_records_popup.dataCollection) {
 											// TODO : Message
+											update_button.enable();
 											return;
 										}
 										else if (update_items.length < 1) {
 											// TODO : Message
+											update_button.enable();
 											return;
 										}
 
@@ -64,7 +69,7 @@ steal(
 
 										var updateTasks = [];
 
-										Object.keys(update_records_popup.dataCollection.checkedItems).forEach(function (rowId) {
+										update_records_popup.dataCollection.getCheckedItems().forEach(function (rowId) {
 											var modelData = update_records_popup.dataCollection.AD.getModel(rowId);
 
 											update_items.forEach(function (item) {
@@ -92,6 +97,8 @@ steal(
 										async.parallel(updateTasks, function (err) {
 											// Hide loading cursor
 											update_records_popup.hideProgress({ type: "icon" });
+
+											update_button.enable();
 
 											if (err) {
 												// TODO : Error message
@@ -122,7 +129,7 @@ steal(
 
 						// Show checked items in selectivity
 						var checkedItems = [];
-						Object.keys(update_records_popup.dataCollection.checkedItems).forEach(function (rowId) {
+						update_records_popup.dataCollection.getCheckedItems().forEach(function (rowId) {
 							var rowData = update_records_popup.dataTable.getItem(rowId);
 
 							checkedItems.push({
@@ -202,33 +209,58 @@ steal(
 										};
 									}
 									else {
-										switch (columnConfig.filter_type) {
+										switch (columnConfig.editor) {
 											case "text":
+											case "inline-text":
 												inputView = { view: "text" };
 												break;
-											case "multiselect":
-												inputView = { view: "text" };
+											case "password":
+												inputView = { view: "text", type: "password" };
 												break;
-											case "date":
-												inputView = { view: "datepicker" };
-
-												if (columnConfig.format)
-													inputView.format = columnConfig.format;
-
+											case "checkbox":
+											case "inline-checkbox":
+												inputView = {
+													view: "checkbox"
+												};
 												break;
-											case "number":
-												inputView = { view: "counter", validate: webix.rules.isNumber };
+											case "select":
+												inputView = {
+													view: "select",
+													options: columnConfig.filter_options
+												};
 												break;
-											case "list":
+											case "combo":
 												inputView = {
 													view: "combo",
 													options: columnConfig.filter_options
 												};
 												break;
-											case "boolean":
+											case "richselect":
 												inputView = {
-													view: "checkbox"
+													view: "richselect",
+													options: columnConfig.filter_options
 												};
+												break;
+											case "multiselect":
+												break;
+											case "date":
+											case "datetime":
+												inputView = { view: "datepicker" };
+
+												if (columnConfig.format)
+													inputView.format = columnConfig.format;
+
+												if (columnConfig.editor === 'datetime')
+													inputView.timepicker = true;
+												break;
+											case "color":
+												inputView = { view: "colorpicker" };
+												break;
+											case "popup":
+												inputView = { view: "text" }; // Data field: text
+												break;
+											case "number":
+												inputView = { view: "counter", validate: webix.rules.isNumber };
 												break;
 										}
 									}

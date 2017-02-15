@@ -81,7 +81,7 @@ steal(
 
 						// Show checked items in selectivity
 						var checkedItems = [];
-						Object.keys(delete_records_popup.dataCollection.checkedItems).forEach(function (rowId) {
+						delete_records_popup.dataCollection.getCheckedItems().forEach(function (rowId) {
 							var rowData = delete_records_popup.dataTable.getItem(rowId);
 
 							checkedItems.push({
