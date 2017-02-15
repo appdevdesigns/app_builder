@@ -63,7 +63,7 @@ steal(
 							dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, objectData)
 								.fail(next)
 								.then(function (result) {
-									if (!dataCollections[objectId] || isRefresh) {
+									if (dataCollections[objectId] == null || isRefresh) {
 										dataCollections[objectId] = AD.op.WebixDataCollection(result);
 										dataCollections[objectId].checkedItems = []; // [rowId1, rowId2, ..., rowIdn]
 										dataCollections[objectId].updateDataTimeout = {}; // { dataId: timeoutId }

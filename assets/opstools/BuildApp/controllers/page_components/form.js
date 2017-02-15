@@ -39,6 +39,7 @@ steal(
 		//Constructor
 		var formComponent = function (application, viewId, componentId) {
 			var data = {},
+				events = {}, // { eventName: eventId, ..., eventNameN: eventIdN }
 				customEditTimeout = {}; // { colId: timeoutId }
 
 			// Private methods
@@ -306,8 +307,8 @@ steal(
 				if (!data.object || data.object.length < 1) return;
 				data.object = data.object[0];
 
-				if (data.dataCollection) {
-					data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+				if (events['onAfterCursorChange'] == null && data.dataCollection) {
+					events['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 						var currModel = data.dataCollection.AD.currModel();
 						// Show custom display
 						showCustomFields.call(self, data.object, self.data.columns, id, currModel);
@@ -316,8 +317,8 @@ steal(
 					});
 				}
 
-				if (data.linkedToDataCollection) {
-					data.linkedToDataCollection.attachEvent('onCheckItemsChange', function () {
+				if (events['onCheckItemsChange'] == null && data.linkedToDataCollection) {
+					events['onCheckItemsChange'] = data.linkedToDataCollection.attachEvent('onCheckItemsChange', function () {
 						refreshLinkedData.call(self);
 					});
 				}

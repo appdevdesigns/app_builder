@@ -99,6 +99,7 @@ steal(
 										id: self.webixUiId.interfaceTree,
 										view: 'edittree',
 										width: 250,
+										scroll: 'y',
 										select: true,
 										editaction: 'custom',
 										editable: true,

@@ -18,6 +18,7 @@ steal(
 
 							self.data = {};
 							self.events = {};
+							self.eventIds = {};
 
 							self.initMultilingualLabels();
 						},
@@ -47,49 +48,52 @@ steal(
 							self.dataTable = dataTable;
 
 							// Trash
-							if (self.data.onItemClickId) self.dataTable.detachEvent(self.data.onItemClickId);
-							self.data.onItemClickId = self.dataTable.attachEvent("onItemClick", function (id, e, node) {
-								if (e.target.className.indexOf('trash') > -1) {
-									webix.confirm({
-										title: self.labels.confirmDeleteRowTitle,
-										ok: self.labels.common.yes,
-										cancel: self.labels.common.no,
-										text: self.labels.confirmDeleteRowMessage,
-										callback: function (result) {
-											if (result) {
-												if (self.events.deleteRow)
-													self.events.deleteRow(id);
+							if (self.eventIds['onItemClick'] == null) {
+								self.eventIds['onItemClick'] = self.dataTable.attachEvent("onItemClick", function (id, e, node) {
+									if (e.target.className.indexOf('trash') > -1) {
+										webix.confirm({
+											title: self.labels.confirmDeleteRowTitle,
+											ok: self.labels.common.yes,
+											cancel: self.labels.common.no,
+											text: self.labels.confirmDeleteRowMessage,
+											callback: function (result) {
+												if (result) {
+													if (self.events.deleteRow)
+														self.events.deleteRow(id);
+												}
+
+												if (self.dataTable.unselectAll)
+													self.dataTable.unselectAll();
+
+												return true;
 											}
+										});
+									}
+									else {
+										if (self.events.itemClick)
+											self.events.itemClick(id, e, node);
+									}
+								});
+							}
 
-											if (self.dataTable.unselectAll)
-												self.dataTable.unselectAll();
-
-											return true;
-										}
-									});
-								}
-								else {
-									if (self.events.itemClick)
-										self.events.itemClick(id, e, node);
-								}
-							});
-
-							if (self.data.onAfterRenderId) self.dataTable.detachEvent(self.data.onAfterRenderId);
-							self.data.onAfterRenderId = self.dataTable.attachEvent("onAfterRender", function (data) {
-								self.showCustomDisplay.call(self, this);
-							});
+							if (self.eventIds['onAfterRender'] == null) {
+								self.eventIds['onAfterRender'] = self.dataTable.attachEvent("onAfterRender", function (data) {
+									self.showCustomDisplay.call(self, this);
+								});
+							}
 
 							var scrollTimeoutId;
-							if (self.data.onAfterScrollId) self.dataTable.detachEvent(self.data.onAfterScrollId);
-							self.data.onAfterScrollId = self.dataTable.attachEvent("onAfterScroll", function () {
-								var dataTable = this;
+							if (self.eventIds['onAfterScroll'] == null) {
+								self.eventIds['onAfterScroll'] = self.dataTable.attachEvent("onAfterScroll", function () {
+									var dataTable = this;
 
-								if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
-								scrollTimeoutId = setTimeout(function () {
-									self.showCustomDisplay.call(self, dataTable);
-								}, 200);
+									if (scrollTimeoutId) clearTimeout(scrollTimeoutId);
+									scrollTimeoutId = setTimeout(function () {
+										self.showCustomDisplay.call(self, dataTable);
+									}, 200);
 
-							});
+								});
+							}
 
 						},
 

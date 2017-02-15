@@ -161,9 +161,11 @@ steal(
 				// Initial linked dataCollection events
 				if (linkedToDataCollection) {
 					self.data.linkedToDataCollection = linkedToDataCollection;
-					self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
-						filterLinkedData.call(self, setting.linkedField);
-					});
+					if (events['onAfterCursorChange'] == null) {
+						events['onAfterCursorChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
+							filterLinkedData.call(self, setting.linkedField);
+						});
+					}
 				}
 
 				if (setting.columns)
@@ -360,7 +362,7 @@ steal(
 									$$('ab-filter-popup').define('dataTable', $$(self.viewId));
 									$$('ab-filter-popup').define('columns', columns);
 
-									if (!events['filterPopupOnChange']) {
+									if (events['filterPopupOnChange'] == null) {
 										events['filterPopupOnChange'] = $$('ab-filter-popup').attachEvent('onChange', function (dataTableId, num) {
 											if (self.viewId == dataTableId) {
 												$$(self.viewId + '-filter-button').define('badge', num);
@@ -383,7 +385,7 @@ steal(
 									$$('ab-sort-popup').define('dataTable', $$(self.viewId));
 									$$('ab-sort-popup').define('columns', columns);
 
-									if (!events['sortPopupOnChange']) {
+									if (events['sortPopupOnChange'] == null) {
 										events['sortPopupOnChange'] = $$('ab-sort-popup').attachEvent('onChange', function (dataTableId, num) {
 											if (self.viewId == dataTableId) {
 												$$(self.viewId + '-sort-button').define('badge', num);
@@ -461,75 +463,92 @@ steal(
 							}
 						});
 
-					$$(self.viewId).attachEvent('onAfterRender', function (data) {
-						$(self).trigger('renderComplete', {});
-					});
+
+					if (events['onAfterRender'] == null) {
+						events['onAfterRender'] = $$(self.viewId).attachEvent('onAfterRender', function (data) {
+							$(self).trigger('renderComplete', {});
+						});
+					}
 
 					// Select column by checkbox
-					$$(self.viewId).attachEvent("onCheck", function (row, col, state) {
-						if (!self.data.dataCollection) return;
+					if (events['onCheck'] == null) {
+						events['onCheck'] = $$(self.viewId).attachEvent('onCheck', function (row, col, state) {
+							if (!self.data.dataCollection) return;
 
-						if (col == 'select_column') {
-							if (state)
-								self.data.dataCollection.checkItem(row);
-							else
-								self.data.dataCollection.uncheckItem(row);
+							if (col == 'select_column') {
+								if (state)
+									self.data.dataCollection.checkItem(row);
+								else
+									self.data.dataCollection.uncheckItem(row);
 
-							// Enable Update/Delete buttons
-							if (self.data.dataCollection.getCheckedItems().length > 0) {
-								if ($$(self.viewId + '-update-items-button'))
-									$$(self.viewId + '-update-items-button').enable();
-								if ($$(self.viewId + '-delete-items-button'))
-									$$(self.viewId + '-delete-items-button').enable();
+								// Enable Update/Delete buttons
+								if (self.data.dataCollection.getCheckedItems().length > 0) {
+									if ($$(self.viewId + '-update-items-button'))
+										$$(self.viewId + '-update-items-button').enable();
+									if ($$(self.viewId + '-delete-items-button'))
+										$$(self.viewId + '-delete-items-button').enable();
+								}
+								// Disable Update/Delete buttons
+								else {
+									if ($$(self.viewId + '-update-items-button'))
+										$$(self.viewId + '-update-items-button').disable();
+									if ($$(self.viewId + '-delete-items-button'))
+										$$(self.viewId + '-delete-items-button').disable();
+								}
 							}
-							// Disable Update/Delete buttons
-							else {
-								if ($$(self.viewId + '-update-items-button'))
-									$$(self.viewId + '-update-items-button').disable();
-								if ($$(self.viewId + '-delete-items-button'))
-									$$(self.viewId + '-delete-items-button').disable();
-							}
-						}
-					});
+						});
+					}
 
 					if (dataCollection) {
-						$$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
-							var rowId = data.id || data;
+						if (events['onAfterSelect'] == null) {
+							events['onAfterSelect'] = $$(self.viewId).attachEvent("onAfterSelect", function (data, preserve) {
+								var rowId = data.id || data;
 
-							// Set cursor of data collection
-							var currModel = dataCollection.AD.currModel();
-							if (!currModel || currModel.id != rowId)
-								dataCollection.setCursor(rowId);
-						});
+								// Set cursor of data collection
+								var currModel = dataCollection.AD.currModel();
+								if (!currModel || currModel.id != rowId)
+									dataCollection.setCursor(rowId);
+							});
+						}
 
-						dataCollection.attachEvent("onAfterCursorChange", function (id) {
-							var selectedItem = $$(self.viewId).getSelectedId(false),
-								preserve = $$(self.viewId).config.multiselect;
+						if (events['onAfterCursorChange'] == null) {
+							events['onAfterCursorChange'] = dataCollection.attachEvent("onAfterCursorChange", function (id) {
+								var selectedItem = $$(self.viewId).getSelectedId(false),
+									preserve = $$(self.viewId).config.multiselect;
 
-							if (!id && $$(self.viewId).unselectAll)
-								$$(self.viewId).unselectAll();
-							else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
-								$$(self.viewId).select(id, preserve);
-							}
-						});
+								if (!id && $$(self.viewId).unselectAll)
+									$$(self.viewId).unselectAll();
+								else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
+									$$(self.viewId).select(id, preserve);
+								}
+							});
+						}
 
-						dataCollection.attachEvent("onDataUpdate", function (id, data) {
-							filterLinkedData.call(self, setting.linkedField);
-						});
+						if (events['onDataUpdate'] == null) {
+							events['onDataUpdate'] = dataCollection.attachEvent("onDataUpdate", function (id, data) {
+								filterLinkedData.call(self, setting.linkedField);
+							});
+						}
 
-						dataCollection.attachEvent("onAfterAdd", function (id, index) {
-							filterLinkedData.call(self, setting.linkedField);
-						});
+						if (events['onAfterAdd'] == null) {
+							events['onAfterAdd'] = dataCollection.attachEvent("onAfterAdd", function (id, index) {
+								filterLinkedData.call(self, setting.linkedField);
+							});
+						}
 
-						dataCollection.attachEvent('onBindUpdate', function (data, key) {
-							filterLinkedData.call(self, setting.linkedField);
-						});
+						if (events['onBindUpdate'] == null) {
+							events['onBindUpdate'] = dataCollection.attachEvent('onBindUpdate', function (data, key) {
+								filterLinkedData.call(self, setting.linkedField);
+							});
+						}
 
 						// Delete checked item when a record is deleted
-						dataCollection.attachEvent("onAfterDelete", function (rowId) {
-							if (self.data.dataCollection)
-								delete self.data.dataCollection.uncheckItem(rowId);
-						});
+						if (events['onAfterDelete'] == null) {
+							events['onAfterDelete'] = dataCollection.attachEvent("onAfterDelete", function (rowId) {
+								if (self.data.dataCollection)
+									delete self.data.dataCollection.uncheckItem(rowId);
+							});
+						}
 					}
 
 					q.resolve();

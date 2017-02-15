@@ -45,6 +45,7 @@ steal(
 							};
 
 							this.data = {};
+							this.eventIds = {};
 
 							this.webixUiId = {
 								objectToolbar: 'ab-object-toolbar',
@@ -1132,7 +1133,7 @@ steal(
 								}
 
 								if (columnInfo.setting.width)
-									addColumnHeader.width = columnInfo.setting.width;
+									addColumnHeader.width = parseInt(columnInfo.setting.width);
 								else
 									addColumnHeader.width = self.controllers.ObjectDataTable.calculateColumnWidth(AD.classes.AppBuilder.currApp, columnInfo);
 
@@ -1199,6 +1200,7 @@ steal(
 
 							if (self.data.columns) {
 								var columns = self.data.columns.attr ? self.data.columns.attr() : self.data.columns;
+								columns = columns.sort(function (a, b) { return a.weight - b.weight; });
 
 								$$(self.webixUiId.visibleFieldsPopup).setFieldList(columns);
 								$$(self.webixUiId.filterFieldsPopup).define('dataTable', $$(self.webixUiId.objectDatatable));
@@ -1229,26 +1231,37 @@ steal(
 						attachPopupEvents: function () {
 							var self = this;
 
-							$$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (num) {
-								$$(self.webixUiId.visibleButton).define('badge', num);
-								$$(self.webixUiId.visibleButton).refresh();
-							});
-							$$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
-								if (self.webixUiId.objectDatatable == dataTableId) {
-									$$(self.webixUiId.filterButton).define('badge', num);
-									$$(self.webixUiId.filterButton).refresh();
-								}
-							});
-							$$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
-								if (self.webixUiId.objectDatatable == dataTableId) {
-									$$(self.webixUiId.sortButton).define('badge', num);
-									$$(self.webixUiId.sortButton).refresh();
-								}
-							});
-							$$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
-								$$(self.webixUiId.frozenButton).define('badge', num);
-								$$(self.webixUiId.frozenButton).refresh();
-							});
+							if (self.eventIds['visiblePopupOnChange'] == null) {
+								self.eventIds['visiblePopupOnChange'] = $$(self.webixUiId.visibleFieldsPopup).attachEvent('onChange', function (num) {
+									$$(self.webixUiId.visibleButton).define('badge', num);
+									$$(self.webixUiId.visibleButton).refresh();
+								});
+							}
+
+							if (self.eventIds['filterPopupOnChange'] == null) {
+								self.eventIds['filterPopupOnChange'] = $$(self.webixUiId.filterFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+									if (self.webixUiId.objectDatatable == dataTableId) {
+										$$(self.webixUiId.filterButton).define('badge', num);
+										$$(self.webixUiId.filterButton).refresh();
+									}
+								});
+							}
+
+							if (self.eventIds['sortPopupOnChange'] == null) {
+								self.eventIds['sortPopupOnChange'] = $$(self.webixUiId.sortFieldsPopup).attachEvent('onChange', function (dataTableId, num) {
+									if (self.webixUiId.objectDatatable == dataTableId) {
+										$$(self.webixUiId.sortButton).define('badge', num);
+										$$(self.webixUiId.sortButton).refresh();
+									}
+								});
+							}
+
+							if (self.eventIds['frozenPopupOnChange'] == null) {
+								self.eventIds['frozenPopupOnChange'] = $$(self.webixUiId.frozenColumnsPopup).attachEvent('onChange', function (num) {
+									$$(self.webixUiId.frozenButton).define('badge', num);
+									$$(self.webixUiId.frozenButton).refresh();
+								});
+							}
 						},
 
 						reorderColumns: function () {
