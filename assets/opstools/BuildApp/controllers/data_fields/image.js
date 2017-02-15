@@ -180,10 +180,7 @@ steal(function () {
 		var setting = {
 				icon: imageDataField.icon,
 
-				editor: 'imageDataField',
 				template:'<div class="ab-image-data-field"></div>',
-
-				filter_type: 'text', // DataTableFilterPopup - filter type
 
 				useWidth	: $$(componentIds.useWidth).getValue(),	
 				imageWidth	: $$(componentIds.imageWidth).getValue(),		

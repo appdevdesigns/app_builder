@@ -22,7 +22,6 @@ module.exports = {
         setting: {
             icon: 'file-image-o',
             template: '<div class="ab-image-data-field"></div>',
-            filter_type: 'text',
             /*
             useWidth: '1',
             imageWidth: '100',

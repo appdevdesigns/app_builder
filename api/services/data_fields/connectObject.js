@@ -89,8 +89,7 @@ module.exports = {
             //linkViaType: 'model' or 'collection',
             //linkVia: {integer},
             icon: 'external-link',
-            template: '<div class="connect-data-values"></div>',
-            filter_type: 'multiselect'
+            template: '<div class="connect-data-values"></div>'
         }
     }
 };
