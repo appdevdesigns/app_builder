@@ -1050,7 +1050,7 @@ module.exports = {
 
         deletedPages.forEach(function (page) {
             removeTasks.push(function (ok) {
-                var appName, pageKey;
+                var appName, pageName, pageKey;
 
                 async.series(
                     [
@@ -1059,7 +1059,8 @@ module.exports = {
 
                             function pullData() {
                                 appName = AppBuilder.rules.toApplicationNameFormat(applications[page.application].name);
-                                pageKey = _.kebabCase(getPageKey(appName, page.name));
+                                pageName = AppBuilder.rules.nameFilter(page.name);
+                                pageKey = _.kebabCase(getPageKey(appName, pageName));
 
                                 next();
                             }
@@ -1085,7 +1086,7 @@ module.exports = {
 
                         function (next) {
                             OPConfigTool.destroy({ key: pageKey })
-                                .then(function () {
+                                .then(function (result) {
                                     next();
                                 }, next);
                         },
