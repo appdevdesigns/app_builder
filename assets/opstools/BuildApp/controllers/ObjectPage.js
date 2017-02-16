@@ -86,8 +86,13 @@ steal(
 							});
 
 							self.controllers.ObjectList.on(self.options.deletedObjectEvent, function (event, data) {
+								if (AD.classes.AppBuilder.currApp.currObj.id == data.object.id)
+									AD.classes.AppBuilder.currApp.currObj = null;
+
 								// Clear cache
 								self.controllers.ObjectWorkspace.deleteObject(data.object);
+
+								self.controllers.ObjectWorkspace.showTable();
 							});
 						},
 
