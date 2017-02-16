@@ -480,21 +480,6 @@ steal(
 									self.data.dataCollection.checkItem(row);
 								else
 									self.data.dataCollection.uncheckItem(row);
-
-								// Enable Update/Delete buttons
-								if (self.data.dataCollection.getCheckedItems().length > 0) {
-									if ($$(self.viewId + '-update-items-button'))
-										$$(self.viewId + '-update-items-button').enable();
-									if ($$(self.viewId + '-delete-items-button'))
-										$$(self.viewId + '-delete-items-button').enable();
-								}
-								// Disable Update/Delete buttons
-								else {
-									if ($$(self.viewId + '-update-items-button'))
-										$$(self.viewId + '-update-items-button').disable();
-									if ($$(self.viewId + '-delete-items-button'))
-										$$(self.viewId + '-delete-items-button').disable();
-								}
 							}
 						});
 					}
@@ -520,6 +505,25 @@ steal(
 									$$(self.viewId).unselectAll();
 								else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
 									$$(self.viewId).select(id, preserve);
+								}
+							});
+						}
+
+						if (events['onCheckItemsChange'] == null) {
+							events['onCheckItemsChange'] = dataCollection.attachEvent("onCheckItemsChange", function () {
+								// Enable Update/Delete buttons
+								if (dataCollection.getCheckedItems().length > 0) {
+									if ($$(self.viewId + '-update-items-button'))
+										$$(self.viewId + '-update-items-button').enable();
+									if ($$(self.viewId + '-delete-items-button'))
+										$$(self.viewId + '-delete-items-button').enable();
+								}
+								// Disable Update/Delete buttons
+								else {
+									if ($$(self.viewId + '-update-items-button'))
+										$$(self.viewId + '-update-items-button').disable();
+									if ($$(self.viewId + '-delete-items-button'))
+										$$(self.viewId + '-delete-items-button').disable();
 								}
 							});
 						}

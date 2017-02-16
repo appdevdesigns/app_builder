@@ -39,7 +39,7 @@ steal(
 
 										var deleteTasks = [];
 
-										Object.keys(delete_records_popup.dataCollection.checkedItems).forEach(function (rowId) {
+										delete_records_popup.dataCollection.getCheckedItems().forEach(function (rowId) {
 											var modelData = delete_records_popup.dataCollection.AD.getModel(rowId);
 
 											deleteTasks.push(function (next) {
