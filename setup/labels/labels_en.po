@@ -982,4 +982,3 @@ msgstr "Choose an icon"
 #. key: ab.component.tab.addTab
 msgid "Add Tab"
 msgstr "Add Tab"
-

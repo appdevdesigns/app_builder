@@ -11,28 +11,21 @@ module.exports = {
 
         var colString = column.name + ':' + column.type;
 
-
-        if (column.setting.supportMultilingual == true) {
-            colString += ':multilingual';
-        }
-
-        if (column.setting.default) {
-            // TODO: Default value
-        }
-
         dfd.resolve(colString);
 
         return dfd;
     },
     
     defaults: {
-        type: 'string',
-        fieldName: 'string',
+        type: 'integer',
+        fieldName: 'equation',
         setting: {
-            icon: 'font',
+            icon: 'calculator',
             editor: 'text',
             filter_type: 'text',
-            supportMultilingual: '0',
+            equationType : '',
+            equation : ''
         }
     }
+
 };
