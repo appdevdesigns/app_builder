@@ -116,7 +116,7 @@ steal(
 						else {
 							clearForm.call(self, object, columns, dataCollection);
 
-							finishSave.call(self, dataCollection);
+							finishSave.call(self, setting, object, dataCollection);
 
 							q.resolve();
 						}
@@ -142,7 +142,7 @@ steal(
 							q.reject(err);
 						})
 						.done(function () {
-							finishSave.call(self, dataCollection);
+							finishSave.call(self, setting, object, dataCollection);
 
 							q.resolve();
 						});
@@ -175,13 +175,16 @@ steal(
 				return q;
 			}
 
-			function finishSave(setting, dataCollection) {
+			function finishSave(setting, object, dataCollection) {
 				var self = this;
 
 				$$(self.viewId).hideProgress();
 
 				if (setting.clearOnSave == 'yes')
 					dataCollection.setCursor(null);
+				else if (dataCollection.getCursor() == null) {
+					clearForm.call(self, object, self.data.columns, dataCollection);
+				}
 
 				$(self).trigger('changePage', {
 					previousPage: true
@@ -323,6 +326,24 @@ steal(
 					});
 				}
 
+				if (events['onAfterValidation'] == null) {
+					$$(viewId).attachEvent('onAfterValidation', function (result, value) {
+						if (!result) {
+							var colNames = [];
+							Object.keys(value).forEach(function (colName) {
+								var col = self.data.columns.filter(function (c) { return c.name == colName; })[0];
+								if (col) colNames.push(col.label);
+							});
+
+							webix.alert({
+								title: "Form data is invalid",
+								text: "Values of " + colNames.join(', '),
+								ok: "Ok"
+							});
+						}
+					});
+				}
+
 				$$(self.viewId).show();
 				async.series([
 					// Get columns data
@@ -391,6 +412,7 @@ steal(
 								// element.view = 'counter';
 								// element.pattern = { mask: "##############", allow: /[0-9]/g }; // Available in webix PRO edition
 								element.view = 'text';
+								element.required = false;
 								element.validate = webix.rules.isNumber;
 								element.validateEvent = 'key';
 							}
@@ -553,6 +575,8 @@ steal(
 								inputWidth: 80,
 								click: function () {
 									var saveButton = this;
+
+									if (!$$(self.viewId).validate()) return;
 
 									if ($$(saveButton))
 										$$(saveButton).disable();
@@ -853,6 +877,8 @@ steal(
 		};
 
 		formComponent.getView = function () {
+			var self = this;
+
 			return {
 				view: "form",
 				autoheight: true,
