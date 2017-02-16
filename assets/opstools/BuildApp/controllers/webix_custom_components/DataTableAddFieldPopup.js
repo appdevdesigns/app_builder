@@ -118,7 +118,7 @@ steal(
 										}
 
 										// Validate format field name
-										if (!/^[a-zA-Z0-9\s]+$/.test(fieldInfo.name)) {
+										if (!/^[a-zA-Z]{1}[a-zA-Z0-9\s]*$/.test(fieldInfo.name)) {
 											webix.alert({
 												title: labels.add_fields.invalidFieldTitle,
 												text: labels.add_fields.invalidFieldDescription,
