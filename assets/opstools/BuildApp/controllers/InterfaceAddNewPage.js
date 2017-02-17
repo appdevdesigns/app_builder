@@ -3,7 +3,6 @@ steal(
 
 	'opstools/BuildApp/controllers/page_templates/BlankPage.js',
 	'opstools/BuildApp/controllers/page_templates/QuickPage.js',
-
 	function (blankPage, quickPage) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',

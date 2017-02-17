@@ -1,7 +1,8 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/data_fields/dataFieldsManager.js',
-	function (dataFieldsManager) {
+	'opstools/BuildApp/controllers/utils/InputValidator.js',
+	function (dataFieldsManager, inputValidator) {
 		var data = {},
 			componentIds = {
 				chooseTypeMenu: 'ab-new-type-menu',
@@ -26,12 +27,6 @@ steal(
 					addNewField: AD.lang.label.getLabel('ab.add_fields.addNewField') || "Add Column",
 
 					registerTableWarning: AD.lang.label.getLabel('ab.add_fields.registerTableWarning') || "Please register the datatable to add.",
-
-					overFieldTitleMaxLength: AD.lang.label.getLabel('ab.add_fields.overFieldTitleMaxLength') || "Your field name is invalid",
-					overFieldTitleMaxLengthDescription: AD.lang.label.getLabel('ab.add_fields.overFieldTitleMaxLengthDescription') || "Field name should not have number of character more than #maxLength#.",
-
-					invalidFieldTitle: AD.lang.label.getLabel('ab.add_fields.invalidFieldTitle') || "Your field name is invalid format",
-					invalidFieldDescription: AD.lang.label.getLabel('ab.add_fields.invalidFieldDescription') || "System disallow enter special character to field name.",
 
 					duplicateFieldTitle: AD.lang.label.getLabel('ab.add_fields.duplicateFieldTitle') || "Your field name is duplicate",
 					duplicateFieldDescription: AD.lang.label.getLabel('ab.add_fields.duplicateFieldDescription') || "Please change your column name",
@@ -105,30 +100,12 @@ steal(
 											return;
 										}
 
-										// Validate maximum length of field name
-										var maxNameLength = 20;
-										if (fieldInfo.name && fieldInfo.name.length > maxNameLength) {
-											webix.alert({
-												title: labels.add_fields.overFieldTitleMaxLength,
-												text: labels.add_fields.overFieldTitleMaxLengthDescription.replace('#maxLength#', maxNameLength),
-												ok: labels.common.ok
-											});
+										if (!inputValidator.validate(fieldInfo.name)) {
 											self.enable();
 											return;
 										}
 
-										// Validate format field name
-										if (!/^[a-zA-Z]{1}[a-zA-Z0-9\s]*$/.test(fieldInfo.name)) {
-											webix.alert({
-												title: labels.add_fields.invalidFieldTitle,
-												text: labels.add_fields.invalidFieldDescription,
-												ok: labels.common.ok
-											});
-											self.enable();
-											return;
-										}
-
-										// Validate duplicate field name
+  										// Validate duplicate field name
 										var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
 										if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
 											webix.alert({

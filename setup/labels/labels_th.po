@@ -157,6 +157,30 @@ msgstr "<b>{0}</b> ถูกลบแล้ว"
 
 #. path: app_builder
 #. code: th
+#. key: ab.validate.overMaxLength
+msgid "This input value is invalid"
+msgstr "ข้อมูลนี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.overMaxLengthDescription
+msgid "Should not have number of character more than #maxLength#."
+msgstr "ข้อมูลไม่สามารถมีจำนวนอักขระมากกว่า #maxLength#"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.invalidFormat
+msgid "This input value is invalid format"
+msgstr "ข้อมูลนี้มีรูปแบบไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.invalidFormatDescription
+msgid "System disallow enter special character."
+msgstr "ระบบไม่อนุญาตให้กรอกข้อมูลที่มีสัญลักษณ์อื่นๆ"
+
+#. path: app_builder
+#. code: th
 #. key: ab.application.application
 msgid "Application"
 msgstr "แอปพลิเคชั่น"

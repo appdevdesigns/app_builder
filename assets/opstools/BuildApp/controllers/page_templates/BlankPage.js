@@ -1,6 +1,8 @@
 steal(
 	// List your Controller's dependencies here:
-	function () {
+	'opstools/BuildApp/controllers/utils/InputValidator.js',
+
+	function (inputValidator) {
 		var componentId = {
 			addNewForm: 'BlankPage',
 			addNewParentList: 'ab-interface-add-new-parent-list'
@@ -72,6 +74,11 @@ steal(
 
 				var parentPageId = $$(componentId.addNewForm).elements['parent'].getValue(),
 					newPageName = $$(componentId.addNewForm).elements['name'].getValue().trim();
+
+				if (!inputValidator.validate(newPageName)) {
+					q.reject();
+					return q;
+				}
 
 				$$(componentId.addNewForm).showProgress({ type: 'icon' });
 

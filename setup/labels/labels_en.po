@@ -157,6 +157,30 @@ msgstr "<b>{0}</b> is deleted."
 
 #. path: app_builder
 #. code: en
+#. key: ab.validate.overMaxLength
+msgid "This input value is invalid"
+msgstr "This input value is invalid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.validate.overMaxLengthDescription
+msgid "Should not have number of character more than #maxLength#."
+msgstr "Should not have number of character more than #maxLength#."
+
+#. path: app_builder
+#. code: en
+#. key: ab.validate.invalidFormat
+msgid "This input value is invalid format"
+msgstr "This input value is invalid format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.validate.invalidFormatDescription
+msgid "System disallow enter special character."
+msgstr "System disallow enter special character."
+
+#. path: app_builder
+#. code: en
 #. key: ab.application.application
 msgid "Application"
 msgstr "Application"
@@ -628,18 +652,6 @@ msgstr "Add Column"
 #. key: ab.add_fields.registerTableWarning
 msgid "Please register the datatable to add."
 msgstr "Please register the datatable to add."
-
-#. path: app_builder
-#. code: en
-#. key: ab.add_fields.invalidFieldTitle
-msgid "Your field name is invalid format"
-msgstr "Your field name is invalid format"
-
-#. path: app_builder
-#. code: en
-#. key: ab.add_fields.invalidFieldDescription
-msgid "System disallow enter special character to field name."
-msgstr "System disallow enter special character to field name."
 
 #. path: app_builder
 #. code: en

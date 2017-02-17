@@ -2,9 +2,10 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/controllers/utils/InputValidator.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
-	function (modelCreator) {
+	function (modelCreator, inputValidator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -161,6 +162,10 @@ steal(
 												self.element.trigger(self.options.selectedObjectEvent, null);
 											},
 											onBeforeEditStop: function (state, editor) {
+												if (!inputValidator.validate(state.value)) {
+													return false;
+												}
+
 												// Validation - check duplicate
 												if (!self.rules.preventDuplicateName(state.value, editor.id) && state.value != state.old) {
 													webix.alert({
@@ -320,36 +325,36 @@ steal(
 								selectNewObject: true,
 								on: {
 									"onBeforeShow": function () {
-									    // for Create
+										// for Create
 										$$(self.webixUiId.addNewForm).clearValidation();
 										$$(self.webixUiId.addNewForm).clear();
-										
+
 										// for Import
 										$$(self.webixUiId.importModelListFilter).setValue('');
-										AD.comm.service.get({ url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/findModels'})
-										.fail(function(err) {
-                                            webix.message({
-                                                type: "error",
-                                                text: err
-                                            });
-										})
-										.done(function(list) {
-                                            var listData = [];
-                                            for (var i=0; i<list.length; i++) {
-                                                listData.push({
-                                                    id: list[i]
-                                                });
-                                            }
-                                            $$(self.webixUiId.importModelList).clearAll();
-                                            $$(self.webixUiId.importModelList).parse(listData, 'json');
-										});
+										AD.comm.service.get({ url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/findModels' })
+											.fail(function (err) {
+												webix.message({
+													type: "error",
+													text: err
+												});
+											})
+											.done(function (list) {
+												var listData = [];
+												for (var i = 0; i < list.length; i++) {
+													listData.push({
+														id: list[i]
+													});
+												}
+												$$(self.webixUiId.importModelList).clearAll();
+												$$(self.webixUiId.importModelList).parse(listData, 'json');
+											});
 									}
 								},
 								body: {
-								    view: "tabview",
-								    cells: [
-								        {
-								            header: self.labels.common.create, //"Create"
+									view: "tabview",
+									cells: [
+										{
+											header: self.labels.common.create, //"Create"
                                             body: {
                                                 view: "form",
                                                 id: self.webixUiId.addNewForm,
@@ -360,41 +365,55 @@ steal(
                                                         margin: 5, cols: [
                                                             {
                                                                 view: "button", value: self.labels.common.add, type: "form", click: function () {
-                                                                    if (!$$(self.webixUiId.addNewForm).validate())
+																	var saveButton = this;
+																	saveButton.disable();
+
+                                                                    if (!$$(self.webixUiId.addNewForm).validate()) {
+																		saveButton.enable();
                                                                         return false;
-            
+																	}
+
                                                                     var newObjectName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
-            
+
+																	if (!inputValidator.validate(newObjectName)) {
+																		saveButton.enable();
+																		return false;
+																	}
+
                                                                     $$(self.webixUiId.objectList).showProgress({ type: 'icon' });
-            
+
                                                                     var newObject = {
                                                                         name: newObjectName,
                                                                         label: newObjectName
                                                                     };
-            
+
                                                                     // Add new object to server
                                                                     AD.classes.AppBuilder.currApp.createObject(newObject).fail(function (err) {
                                                                         $$(self.webixUiId.objectList).hideProgress();
-            
+
+																		saveButton.enable();
+
                                                                         AD.error.log('Object : Error create object data', { error: err });
-            
+
                                                                     }).then(function (result) {
                                                                         $$(self.webixUiId.addNewPopup).hide();
-            
+
                                                                         if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
                                                                             $$(self.webixUiId.objectList).unselectAll();
                                                                             $$(self.webixUiId.objectList).select(result.id);
                                                                         }
-            
+
                                                                         $$(self.webixUiId.objectList).hideProgress();
-            
+
                                                                         // Show success message
                                                                         webix.message({
                                                                             type: "success",
                                                                             text: self.labels.common.createSuccessMessage.replace('{0}', newObject.label)
                                                                         });
+
+																		saveButton.enable();
                                                                     });
-            
+
                                                                 }
                                                             },
                                                             { view: "button", value: self.labels.common.cancel, click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
@@ -404,7 +423,7 @@ steal(
                                                 rules: {
                                                     name: self.rules.preventDuplicateName
                                                 }
-            
+
                                             }
                                         },
                                         {
@@ -424,7 +443,7 @@ steal(
                                                                 view: 'text',
                                                                 id: self.webixUiId.importModelListFilter,
                                                                 on: {
-                                                                    onTimedKeyPress: function() {
+                                                                    onTimedKeyPress: function () {
                                                                         var filterText = this.getValue();
                                                                         $$(self.webixUiId.importModelList).filter('#id#', filterText);
                                                                     }
@@ -433,10 +452,10 @@ steal(
                                                         ]
                                                     },
                                                     // Models list
-                                                    { 
+                                                    {
                                                         view: 'list',
                                                         id: self.webixUiId.importModelList,
-                                                        select: true, 
+                                                        select: true,
                                                         minHeight: 400,
                                                         data: [],
                                                         template: '<div>#id#</div>',
@@ -444,52 +463,56 @@ steal(
                                                     // Import & Cancel buttons
                                                     {
                                                         cols: [
-                                                            { view: 'button', value: self.labels.common.import, type: 'form', click: function() {
-                                                                var button = this;
-                                                                var list = $$(self.webixUiId.importModelList);
-                                                                var selectedModel = list.getSelectedItem();
-                                                                if (!selectedModel) return;
-                                                                
-                                                                button.disable();
-                                                                $$(self.webixUiId.objectList).showProgress({ type: 'icon' });
-                                                                
-                                                                // Tell the server to import the model
-                                                                AD.comm.service.post({
-                                                                    url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/importModel',
-                                                                    data: {
-                                                                        model: selectedModel.id
-                                                                    }
-                                                                })
-                                                                .fail(function(err) {
-                                                                    webix.message({
-                                                                        type: 'error',
-                                                                        text: err.message || err
-                                                                    });
-                                                                })
-                                                                .done(function(objData) {
-                                                                    var ABObject = AD.Model.get('opstools.BuildApp.ABObject');
-                                                                    // Already have the object data in `objData` but call
-                                                                    // findOne() so that the framework will be updated.
-                                                                    ABObject.findOne({ id: objData.id })
-                                                                    .done(function(result) {
-                                                                        result.translate();
-                                                                        // Add the new object to the list on the page
-                                                                        AD.classes.AppBuilder.currApp.objects.push(result);
-                                                                        self.refreshObjectList();
-                                                                    })
-                                                                    .always(function() {
-                                                                        $$(self.webixUiId.addNewPopup).hide();
-                                                                    });
-                                                                    
-                                                                })
-                                                                .always(function() {
-                                                                    $$(self.webixUiId.objectList).hideProgress();
-                                                                    button.enable();
-                                                                });
-                                                            }},
-                                                            { view: "button", value: self.labels.common.cancel, click: function() { 
-                                                                $$(self.webixUiId.addNewPopup).hide(); 
-                                                            }}
+                                                            {
+																view: 'button', value: self.labels.common.import, type: 'form', click: function () {
+																	var button = this;
+																	var list = $$(self.webixUiId.importModelList);
+																	var selectedModel = list.getSelectedItem();
+																	if (!selectedModel) return;
+
+																	button.disable();
+																	$$(self.webixUiId.objectList).showProgress({ type: 'icon' });
+
+																	// Tell the server to import the model
+																	AD.comm.service.post({
+																		url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/importModel',
+																		data: {
+																			model: selectedModel.id
+																		}
+																	})
+																		.fail(function (err) {
+																			webix.message({
+																				type: 'error',
+																				text: err.message || err
+																			});
+																		})
+																		.done(function (objData) {
+																			var ABObject = AD.Model.get('opstools.BuildApp.ABObject');
+																			// Already have the object data in `objData` but call
+																			// findOne() so that the framework will be updated.
+																			ABObject.findOne({ id: objData.id })
+																				.done(function (result) {
+																					result.translate();
+																					// Add the new object to the list on the page
+																					AD.classes.AppBuilder.currApp.objects.push(result);
+																					self.refreshObjectList();
+																				})
+																				.always(function () {
+																					$$(self.webixUiId.addNewPopup).hide();
+																				});
+
+																		})
+																		.always(function () {
+																			$$(self.webixUiId.objectList).hideProgress();
+																			button.enable();
+																		});
+																}
+															},
+                                                            {
+																view: "button", value: self.labels.common.cancel, click: function () {
+																	$$(self.webixUiId.addNewPopup).hide();
+																}
+															}
                                                         ]
                                                     }
                                                 ]

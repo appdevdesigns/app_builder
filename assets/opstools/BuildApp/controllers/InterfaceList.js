@@ -1,9 +1,11 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/InputValidator.js',
+
 	'opstools/BuildApp/controllers/InterfaceAddNewPage.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/EditTree.js',
-	function () {
+	function (inputValidator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -167,6 +169,11 @@ steal(
 												ids.forEach(function (id) {
 													self.showGear(id);
 												});
+											},
+											onBeforeEditStop: function (state, editor) {
+												if (!inputValidator.validate(state.value)) {
+													return false;
+												}
 											},
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
 												if (state.value != state.old) {
