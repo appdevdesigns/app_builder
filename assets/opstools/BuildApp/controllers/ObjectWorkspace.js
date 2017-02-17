@@ -278,8 +278,8 @@ steal(
 														if (item) {
 															item[editor.column] = state.value;
 
-															// if (result.constructor.name === 'Cached' && result.isUnsync())
-															// 	item.isUnsync = true;
+															if (result.constructor.name === 'Cached' && result.isUnsync())
+																item.isUnsync = true;
 
 															$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
 														}
@@ -774,6 +774,15 @@ steal(
 
 											next();
 										});
+								},
+								// Define unsync row data
+								function (next) {
+									objectData.forEach(function (data) {
+										if (data.isUnsync)
+											data.attr('isUnsync', data.isUnsync());
+									});
+
+									next();
 								},
 								// Populate date to Grid
 								function (next) {

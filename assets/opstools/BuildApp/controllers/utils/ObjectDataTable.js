@@ -122,14 +122,12 @@ steal(
 										{
 											readOnly: self.data.readOnly
 										});
-								});
 
-								// if (d.isUnsync) { // TODO: Highlight unsync data
-								// 	self.dataTable.config.columns.forEach(function (col) {
-								// 		var rowNode = self.dataTable.getItemNode({ row: d.id, column: col.id });
-								// 		rowNode.classList.add('ab-object-unsync-data');
-								// 	});
-								// }
+									if (itemData.isUnsync) { // Highlight unsync data
+										itemNode.classList.add('ab-object-unsync-data');
+									}
+
+								});
 							});
 						},
 
