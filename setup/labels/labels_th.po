@@ -229,6 +229,18 @@ msgstr "กลับไปหน้าแอปพลิเคชั่น"
 
 #. path: app_builder
 #. code: th
+#. key: ab.application.invalidName
+msgid "This application name is invalid"
+msgstr "แอปพลิเคชั่นนี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.duplicateName
+msgid "#appName# is duplicate."
+msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั่นอื่น"
+
+#. path: app_builder
+#. code: th
 #. key: ab.application.delete.title
 msgid "Delete application"
 msgstr "ลบแอปพลิเคชั่น"

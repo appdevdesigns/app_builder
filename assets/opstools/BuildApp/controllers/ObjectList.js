@@ -172,7 +172,7 @@ steal(
 														title: self.labels.object.invalidName,
 														ok: self.labels.common.ok,
 														text: self.labels.object.duplicateName.replace("{0}", state.value)
-													})
+													});
 
 													return false;
 												}

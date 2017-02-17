@@ -229,6 +229,18 @@ msgstr "Back to Applications page"
 
 #. path: app_builder
 #. code: en
+#. key: ab.application.invalidName
+msgid "This application name is invalid"
+msgstr "This application name is invalid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.duplicateName
+msgid "#appName# is duplicate."
+msgstr "#appName# is duplicate."
+
+#. path: app_builder
+#. code: en
 #. key: ab.application.delete.title
 msgid "Delete application"
 msgstr "Delete application"

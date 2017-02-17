@@ -1,7 +1,9 @@
 steal(
 	// List your Controller's dependencies here:
+	'opstools/BuildApp/controllers/utils/InputValidator.js',
+
 	'opstools/BuildApp/models/ABApplication.js',
-	function () {
+	function (inputValidator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -9,7 +11,6 @@ steal(
 					// Namespacing conventions:
 					// AD.Control.extend('[application].[controller]', [{ static },] {instance} );
 					AD.Control.extend('opstools.BuildApp.AppList', {
-
 
 						init: function (element, options) {
 							var self = this;
@@ -45,6 +46,7 @@ steal(
 							self.labels.common.delete = AD.lang.label.getLabel('ab.common.delete') || "Delete";
 							self.labels.common.import = AD.lang.label.getLabel('ab.common.import') || "Import";
 							self.labels.common.export = AD.lang.label.getLabel('ab.common.export') || "Export";
+							self.labels.common.ok = AD.lang.label.getLabel('ab.common.ok') || "Ok";
 							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
 							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
 							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
@@ -62,6 +64,8 @@ steal(
 							self.labels.application.createNew = AD.lang.label.getLabel('ab.application.createNew') || "Add new application";
 							self.labels.application.menu = AD.lang.label.getLabel('ab.application.menu') || "Application Menu";
 							self.labels.application.noApplication = AD.lang.label.getLabel('ab.application.noApplication') || "There is no application data";
+							self.labels.application.invalidName = AD.lang.label.getLabel('ab.application.invalidName') || "This application name is invalid";
+							self.labels.application.duplicateName = AD.lang.label.getLabel('ab.application.duplicateName') || "#appName# is duplicate.";
 
 							// Delete
 							self.labels.application.confirmDeleteTitle = AD.lang.label.getLabel('ab.application.delete.title') || "Delete application";
@@ -439,8 +443,29 @@ steal(
 													{ fillspace: true },
 													{
 														view: "button", label: self.labels.common.save, type: "form", width: 100, click: function () {
-															if (!$$(self.webixUiId.appListForm).validate())
+															if (!$$(self.webixUiId.appListForm).validate()) {
+																// TODO : Error message
 																return false;
+															}
+
+															var appName = $$(self.webixUiId.appListForm).elements['label'].getValue(),
+																appDescription = $$(self.webixUiId.appListForm).elements['description'].getValue();
+
+															if (!inputValidator.validate(appName)) {
+																return false;
+															}
+
+															// Prevent duplicate application name
+															if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
+																webix.alert({
+																	title: self.labels.application.invalidName,
+																	text: self.labels.application.duplicateName.replace("#appName#", appName),
+																	ok: self.labels.common.ok
+																});
+
+																$$(self.webixUiId.appListForm).elements['label'].focus();
+																return false;
+															}
 
 															$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
 
@@ -456,8 +481,8 @@ steal(
 																	},
 																	function (app_role, next) {
 																		// Update application data
-																		updateApp.attr('label', $$(self.webixUiId.appListForm).elements['label'].getValue());
-																		updateApp.attr('description', $$(self.webixUiId.appListForm).elements['description'].getValue());
+																		updateApp.attr('label', appName);
+																		updateApp.attr('description', appDescription);
 
 																		if (app_role && app_role.id)
 																			updateApp.attr('role', app_role.id);
@@ -504,9 +529,9 @@ steal(
 																});
 															} else { // Create
 																var newApp = {
-																	name: $$(self.webixUiId.appListForm).elements['label'].getValue(),
-																	label: $$(self.webixUiId.appListForm).elements['label'].getValue(),
-																	description: $$(self.webixUiId.appListForm).elements['description'].getValue()
+																	name: appName,
+																	label: appName,
+																	description: appDescription
 																};
 
 																async.waterfall([
