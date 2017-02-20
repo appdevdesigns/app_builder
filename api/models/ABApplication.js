@@ -122,61 +122,71 @@ console.log('... update application: ', updatedRecord);
         cb();
     },
 
-    afterDestroy: function (destroyedApplications, cb) {
+    beforeDestroy: function (criteria, cb) {
 
-        var ids = _.map(destroyedApplications, 'id');
+        var applications = [],
+            appIds = [];
 
-        if (ids && ids.length) {
-            async.parallel([
-                function (callback) {
-                    ABApplicationTrans.destroy({ abapplication: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
-                        .then(function () {
+        async.series([
+            function (callback) {
+                ABApplication.find(criteria)
+                    .then(function (apps) {
+                        if (apps) {
+                            applications = apps;
+                            applications.forEach(function (app) {
+                                appIds.push(app.id);
+                            });
+
                             callback();
-                        });
-                },
-                function (callback) {
-                    ABObject.destroy({ application: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
-                        .then(function () {
+                        }
+                        else {
                             callback();
-                        });
-                },
-                function (callback) {
-                    ABPage.destroy({ application: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
-                        .then(function () {
-                            callback();
-                        });
-                },
+                        }
+                    }, callback);
+            },
+            function (callback) {
+                ABApplicationTrans.destroy({ abapplication: appIds })
+                    .then(function () {
+                        callback();
+                    }, callback);
+            },
+            function (callback) {
+                ABObject.destroy({ application: appIds })
+                    .then(function () {
+                        callback();
+                    }, callback);
+            },
+            function (callback) {
+                ABPage.destroy({ application: appIds })
+                    .then(function () {
+                        callback();
+                    }, callback);
+            },
 
-                function ABApplication_AfterDelete_RemovePermissions(callback) {
+            function ABApplication_AfterDelete_RemovePermissions(callback) {
 
-                    var actionKeys = [];
-                    destroyedApplications.forEach(function (deletedApp) {
-                        actionKeys.push(actionKeyName(validAppName(deletedApp.name)));
-                    })
+                var actionKeys = [];
+                applications.forEach(function (deletedApp) {
+                    actionKeys.push(actionKeyName(validAppName(deletedApp.name)));
+                })
 
-                    Permissions.action.destroyKeys(actionKeys)
-                        .fail(function (err) {
-                            callback(err);
-                        })
-                        .then(function (data) {
-                            callback();
-                        })
+                Permissions.action.destroyKeys(actionKeys)
+                    .then(function (data) {
+                        callback();
+                    }, callback);
 
-                }
-            ], cb);
-        }
-        else {
-            cb();
-        }
+            },
+
+            function (callback) {
+                var appKeys = _.map(applications, function(app) { return app.areaKey(); });
+
+                OPSPortal.NavBar.Area.remove(appKeys)
+                    .then(function () {
+                        callback();
+                    }, callback);
+            }
+
+        ], cb);
 
     }
 
