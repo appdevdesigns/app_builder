@@ -443,8 +443,13 @@ steal(
 													{ fillspace: true },
 													{
 														view: "button", label: self.labels.common.save, type: "form", width: 100, click: function () {
+															var saveButton = this;
+															saveButton.disable();
+
 															if (!$$(self.webixUiId.appListForm).validate()) {
 																// TODO : Error message
+
+																saveButton.enable();
 																return false;
 															}
 
@@ -452,6 +457,7 @@ steal(
 																appDescription = $$(self.webixUiId.appListForm).elements['description'].getValue();
 
 															if (!inputValidator.validate(appName)) {
+																saveButton.enable();
 																return false;
 															}
 
@@ -464,6 +470,7 @@ steal(
 																});
 
 																$$(self.webixUiId.appListForm).elements['label'].focus();
+																saveButton.enable();
 																return false;
 															}
 
@@ -516,7 +523,8 @@ steal(
 
 																		AD.error.log('App Builder : Error update application data', { error: err });
 
-																		return;
+																		saveButton.enable();
+																		return false;
 																	}
 
 																	$$(self.webixUiId.appListRow).show();
@@ -525,6 +533,8 @@ steal(
 																		type: "success",
 																		text: self.labels.common.updateSucessMessage.replace('{0}', updateApp.attr('label'))
 																	});
+
+																	saveButton.enable();
 
 																});
 															} else { // Create
@@ -563,6 +573,8 @@ steal(
 
 																		AD.error.log('App Builder : Error create application data', { error: err });
 
+																		saveButton.enable();
+
 																		return;
 																	}
 
@@ -575,6 +587,8 @@ steal(
 																		type: "success",
 																		text: self.labels.common.createSuccessMessage.replace('{0}', newApp.label)
 																	});
+
+																	saveButton.enable();
 
 																});
 															}
