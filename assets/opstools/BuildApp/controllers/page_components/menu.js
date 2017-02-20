@@ -130,8 +130,8 @@ steal(
 					// Ric says we should always offer the pages from our current Root page and under it.
 					// when a menu is placed on a tab, we need to search upwards to find the tab's parent page:
 					// get the root page:
-						// var parentId = currPage.parent ?  currPage.parent.attr('id') : currPage.attr('id');
-						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
+					// var parentId = currPage.parent ?  currPage.parent.attr('id') : currPage.attr('id');
+					// application.getPages({ or: [{ id: parentId }, { parent: parentId }] }) // Get children
 					application.getApplicationPages()
 						.fail(function (err) {
 							$$(componentIds.pageTree).hideProgress();
@@ -237,9 +237,22 @@ steal(
 					{
 						id: componentIds.pageTree,
 						view: 'tree',
-						template: "<div class='ab-page-list-item'>" +
-						"{common.icon()} {common.checkbox()} {common.folder()} #label#" +
-						"</div>",
+						template: function (item, common) {
+							return ("<div class='ab-page-list-item'>" +
+								"{common.icon()} " +
+
+								// Hide checkbox at own page
+								(item.id == AD.classes.AppBuilder.currApp.currPage.id ?
+									'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
+									"{common.checkbox()} ") +
+
+								"{common.folder()} #label#" +
+								"</div>")
+								.replace('{common.icon()}', common.icon(item))
+								.replace('{common.checkbox()}', common.checkbox(item, false))
+								.replace('{common.folder()}', common.folder(item))
+								.replace('#label#', item.label);
+						},
 						on: {
 							onItemCheck: function () {
 								$$(componentIds.editMenu).clearAll();

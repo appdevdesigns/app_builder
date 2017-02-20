@@ -77,8 +77,8 @@ steal(
 									p.translate();
 							});
 
-							// Disallow select tabs to Link component
-							pages = pages.filter(function (p) { return p.type != 'tab'; });
+							// Disallow select tabs to Link component & Filter the current page
+							pages = pages.filter(function (p) { return p.type != 'tab' && p.id != AD.classes.AppBuilder.currApp.currPage.id; });
 
 							// Populate pages data to list
 							var linkToList = $$(componentIds.propertyView).getItem('linkTo');
