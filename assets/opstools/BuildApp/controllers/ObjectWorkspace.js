@@ -278,7 +278,7 @@ steal(
 														if (item) {
 															item[editor.column] = state.value;
 
-															if (result.constructor.name === 'Cached' && result.isUnsync())
+															if (result && result.constructor.name === 'Cached' && result.isUnsync())
 																item.isUnsync = true;
 
 															$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
@@ -390,16 +390,25 @@ steal(
 											$$(self.webixUiId.objectDatatable).eachRow(function (row) {
 												if (row != result.rowId) {
 													var otherRow = $$(self.webixUiId.objectDatatable).getItem(row);
+													// Filter difference values
 													if (otherRow[result.columnName]) {
-														// Filter difference values
-														otherRow[result.columnName] = otherRow[result.columnName].filter(function (i) {
-															if (typeof result.data == 'undefined' || result.data == null) return false;
+														// 1:M
+														if (otherRow[result.columnName].filter) {
+															otherRow[result.columnName] = otherRow[result.columnName].filter(function (i) {
+																if (typeof result.data == 'undefined' || result.data == null) return false;
 
-															if (result.data.filter)
-																return result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
-															else
-																return i.id != result.data;
-														});
+																if (result.data.filter) {
+																	return result.data.filter(function (itemId) { return i.id == itemId; }).length < 1;
+																}
+																else {
+																	return i.id != result.data;
+																}
+															});
+														}
+														// 1:1
+														else if ((otherRow[result.columnName].id || otherRow[result.columnName]) == result.data) {
+															otherRow[result.columnName] = null;
+														}
 
 														$$(self.webixUiId.objectDatatable).updateItem(row, otherRow);
 													}
@@ -999,44 +1008,65 @@ steal(
 
 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
-							var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+							var item = $$(self.webixUiId.objectDatatable).getItem(editor.row),
+								rowData;
 
-							self.Model.ObjectModel.Cached.findOne({ id: item.id })
-								.fail(q.reject)
-								.then(function (result) {
-									result.attr(editor.column, state.value, true);
-
-									// Fix update translates of model that have connect object values
-									// By convert connect objects to id
-									result.each(function (val, propName) {
-										var linkedCol = self.data.columns.filter(function (col) { return col.fieldName == 'connectObject' && col.name == propName });
-										if (!linkedCol || linkedCol.length < 1) return;
-
-										var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: editor.row, column: propName });
-
-										var connectValue = dataFieldsManager.getValue(
-											AD.classes.AppBuilder.currApp,
-											AD.classes.AppBuilder.currApp.currObj,
-											linkedCol[0],
-											itemNode
-										);
-
-										result.attr(propName, connectValue);
-									});
-
-									// Update data
-									result.save()
-										.fail(q.reject)
+							async.series([
+								function (next) {
+									self.Model.ObjectModel.Cached.findOne({ id: item.id })
 										.then(function (result) {
-											dataHelper.normalizeData(
-												AD.classes.AppBuilder.currApp,
-												AD.classes.AppBuilder.currApp.currObj.id,
-												self.data.columns,
-												result)
-												.fail(q.reject)
-												.then(q.resolve);
-										});
-								});
+											result.attr(editor.column, state.value, true);
+
+											// Fix update translates of model that have connect object values
+											// By convert connect objects to id
+											result.each(function (val, propName) {
+												var linkedCol = self.data.columns.filter(function (col) { return col.fieldName == 'connectObject' && col.name == propName });
+												if (!linkedCol || linkedCol.length < 1) return;
+
+												var itemNode = $$(self.webixUiId.objectDatatable).getItemNode({ row: editor.row, column: propName });
+
+												var connectValue = dataFieldsManager.getValue(
+													AD.classes.AppBuilder.currApp,
+													AD.classes.AppBuilder.currApp.currObj,
+													linkedCol[0],
+													itemNode
+												);
+
+												result.attr(propName, connectValue);
+											});
+
+											rowData = result;
+
+											next();
+										}, next);
+								},
+								// Update data
+								function (next) {
+									rowData.save().then(function (result) {
+										rowData = result;
+
+										next();
+									}, next);
+								},
+								// Normalize data
+								function (next) {
+									dataHelper.normalizeData(
+										AD.classes.AppBuilder.currApp,
+										AD.classes.AppBuilder.currApp.currObj.id,
+										self.data.columns,
+										rowData)
+										.then(function () {
+											next();
+										}, next);
+								}
+							], function (err) {
+								if (err) {
+									q.reject(err);
+								}
+								else {
+									q.resolve(rowData);
+								}
+							});
 
 							return q;
 						},
