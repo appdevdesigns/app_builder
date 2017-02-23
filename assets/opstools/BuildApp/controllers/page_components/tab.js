@@ -1,7 +1,8 @@
 steal(
+    'opstools/BuildApp/controllers/utils/InputValidator.js',
     'opstools/BuildApp/controllers/webix_custom_components/EditTree.js',
     // List your Controller's dependencies here:
-    function () {
+    function (inputValidator) {
         var componentIds = {
             editView: 'ab-tab-edit-view',
             editMenu: 'ab-tab-edit-mode',
@@ -737,6 +738,9 @@ steal(
                                     
                                     var values = $$(componentIds.addTabForm).getValues();
 
+                                    if (!inputValidator.validate(values['Name'])) {
+                                        return false;
+                                    }
 
                                     values.uuid = AD.util.uuid('tabs-');
 
