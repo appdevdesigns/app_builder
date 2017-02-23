@@ -77,8 +77,10 @@ steal(
 							cols: [
 								{
 									view: "button", id: componentIds.saveButton, label: labels.common.save, type: "form", width: 120, click: function () {
-										var base = this,
+										var saveButton = this,
 											labelFormat = $$(componentIds.labelFormat).getValue();
+
+										saveButton.disable();
 
 										if (!$$(componentIds.fieldsList).showProgress)
 											webix.extend($$(componentIds.fieldsList), webix.ProgressBar);
@@ -93,12 +95,15 @@ steal(
 										AD.classes.AppBuilder.currApp.currObj.save()
 											.fail(function (err) {
 												$$(componentIds.fieldsList).hideProgress();
+
+												saveButton.enable();
 												// TODO : Error message
 											})
 											.then(function () {
 												$$(componentIds.fieldsList).hideProgress();
 
-												base.getTopParentView().hide();
+												saveButton.enable();
+												saveButton.getTopParentView().hide();
 											});
 
 									}
@@ -142,7 +147,9 @@ steal(
 
 			setFieldList: function (fieldList) {
 				// We can remove it when we can get all column from webix datatable (include hidden fields)
-				data.fieldList = fieldList;
+				data.fieldList = fieldList.filter(function (col) {
+					return col.type == 'string' || col.type == 'text' || col.type == 'integer' || col.type == 'float';
+				});
 
 				this.bindFieldList();
 			},
