@@ -127,7 +127,7 @@ steal(
                     hiddenNumber = 0;
 
                 visible_popup.dataTable.eachColumn(function (cId) {
-                    if (!visible_popup.dataTable.isColumnVisible(cId))
+                    if (!visible_popup.dataTable.isColumnVisible(cId) && cId != 'appbuilder_trash')
                         hiddenNumber++;
                 }, true);
 
@@ -141,6 +141,10 @@ steal(
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
 
+                if (visible_popup.dataTable.config.columns.length > 0 && visible_popup.dataTable.config.columns[0].id != 'appbuilder_trash') {
+                    visible_popup.dataTable.showColumn('appbuilder_trash');
+                }
+
                 visible_popup.callChangeEvent();
             },
 
@@ -150,6 +154,10 @@ steal(
                 visible_popup.dataTable.hideColumn(id);
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
+
+                if (visible_popup.dataTable.config.columns.length == 1 && visible_popup.dataTable.config.columns[0].id == 'appbuilder_trash') {
+                    visible_popup.dataTable.hideColumn('appbuilder_trash');
+                }
 
                 visible_popup.callChangeEvent();
             }
