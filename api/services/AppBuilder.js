@@ -760,12 +760,6 @@ module.exports = {
                         pageKey = getPageKey(appName, pageName);
                         pagePerms = 'adcore.admin,' + pageKey + '.view';
 
-                        // controllerIncludes.push({
-                        //     key: 'opstools.' + appName + '.' + pageName,
-                        //     path: 'opstools/' + appName + '/controllers/'
-                        //     + pageName + '.js'
-                        // });
-
                         // Switching to the new ABLiveTool controller:
                         controllerIncludes.push({
                             key: 'opstools.BuildApp.ABLiveTool',
@@ -836,77 +830,6 @@ module.exports = {
                 );
 
             },
-
-            // // Find related objects
-            // function (next) {
-            //     ABObject.find({ application: appID })
-            //         .then(function (list) {
-            //             for (var i = 0; i < list.length; i++) {
-            //                 var obj = list[i];
-            //                 objectIncludes.push({
-            //                     key: 'opstools.' + appName + '.'
-            //                     + appName + '_' + AppBuilder.rules.nameFilter(obj.name),
-            //                     path: 'opstools/' + appName + '/models/'
-            //                     + appName + '_' + AppBuilder.rules.nameFilter(obj.name) + '.js'
-            //                 });
-
-            //                 modelNames.push(AppBuilder.rules.nameFilter(obj.name));
-            //             }
-            //             next();
-            //             return null;
-            //         })
-            //         .catch(function (err) {
-            //             next(err);
-            //             return null;
-            //         });
-            // },
-
-            // // Generate the client side controller for the app page
-            // function (next) {
-            //     sails.renderView(path.join('app_builder', 'page_controller'), {
-            //         layout: false,
-            //         appId: appID,
-            //         appName: appName,
-            //         pageName: pageName,
-            //         pages: pages,
-            //         models: modelNames,
-            //         rootPageID: pageID,
-            //         domID: function (pid) {
-            //             pid = pid || '';
-            //             return 'abpage-' + appName + '-' + pageName + '-' + pid;
-            //         }
-            //     }, function (err, output) {
-            //         if (err) next(err);
-            //         else {
-            //             fs.writeFile(
-            //                 path.join(
-            //                     'assets', 'opstools', appName,
-            //                     'controllers', pageName + '.js'
-            //                 ),
-            //                 output,
-            //                 function (err) {
-            //                     if (err) next(err);
-            //                     else next();
-            //                 }
-            //             );
-            //         }
-            //     });
-            //     /*
-            //     AD.spawn.command({
-            //         command: cliCommand,
-            //         options: [
-            //             'controllerUI',
-            //             path.join('opstools', appName),
-            //             pageName
-            //         ],
-            //         shouldEcho: true
-            //     })
-            //     .fail(next)
-            //     .done(function() {
-            //         next();
-            //     });
-            //     */
-            // },
 
             // Create Page's permission action
             function (next) {
@@ -980,7 +903,6 @@ module.exports = {
                     next(err);
                 })
             },
-
 
             // make sure our ToolDefinition is linked to our Area Definition.
             function (next) {
