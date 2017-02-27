@@ -326,7 +326,7 @@ steal(
 					});
 				}
 
-				if (events['onAfterValidation'] == null) {
+				if (events['onAfterValidation'] == null && $$(viewId)) {
 					$$(viewId).attachEvent('onAfterValidation', function (result, value) {
 						if (!result) {
 							var colNames = [];
