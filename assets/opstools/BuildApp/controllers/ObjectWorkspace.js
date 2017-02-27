@@ -1216,7 +1216,8 @@ steal(
 									columns.splice(index, 0, addColumnHeader);
 								}
 
-								$$(self.webixUiId.objectDatatable).refreshColumns(columns);
+								// $$(self.webixUiId.objectDatatable).refreshColumns(columns);
+								self.bindColumns(false, false, true);
 
 								self.refreshPopupData();
 
