@@ -765,6 +765,8 @@ steal(
 									formComponents = [];
 
 								pages.forEach(function (p) {
+									if (p.translate) p.translate();
+
 									// Details view components
 									var detailsViews = p.components.filter(function (c) {
 										return c.component === "view" && c.setting && c.setting.object === setting.object;
@@ -774,7 +776,7 @@ steal(
 										viewComponents = viewComponents.concat($.map(detailsViews, function (v) {
 											return [{
 												id: p.id + '|' + v.id,
-												value: p.name + ' - ' + v.component
+												value: p.label + ' - ' + v.component
 											}];
 										}));
 									}
@@ -788,7 +790,7 @@ steal(
 										formComponents = formComponents.concat($.map(forms, function (f) {
 											return [{
 												id: p.id + '|' + f.id,
-												value: p.name + ' - ' + f.component
+												value: p.label + ' - ' + f.component
 											}];
 										}));
 									}
