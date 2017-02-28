@@ -40,15 +40,20 @@ steal(
 								keyPressTimeout: 140,
 								on: {
 									onTimedKeyPress: function () {
-										var searchText = this.getValue(),
+										var searchText = this.getValue().toLowerCase(),
 											dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
 										dataList.filter(function (obj) {
 											var result = false;
 
 											for (var key in obj) {
-												if (key != 'id' && obj[key])
-													result = obj[key].indexOf(searchText) > -1 || result;
+												if (key != 'id' && obj[key]) {
+													var val = obj[key]; 
+
+													if (val.toLowerCase) val = val.toLowerCase();
+													
+													result = val.indexOf(searchText) > -1 || result;
+												}
 											}
 
 											return result;
