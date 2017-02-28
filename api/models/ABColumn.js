@@ -452,7 +452,7 @@ module.exports = {
                             var enObj = srcObj.translations.filter(function (trans) { return trans.language_code == 'en'; })[0];
 
                             if (enObj == null) {
-                                data.targetName = data.name + ' Link';
+                                data.targetName = data.name +  ' Link';
                             }
                             else {
                                 data.targetName = enObj.label
