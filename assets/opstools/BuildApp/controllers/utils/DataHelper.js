@@ -69,37 +69,39 @@ steal(
 									async.series([
 										// Find labels of linked fields
 										function (next) {
-											var connectIds = [];
+											var connectDataIds = [];
 
-											if (!row[linkCol.name]) {
+											if (row[linkCol.name] == null) {
 												return next();
 											}
 											else if (row[linkCol.name].forEach) {
 												row[linkCol.name].forEach(function (val) {
-													if (typeof val._dataLabel == 'undefined' || val._dataLabel == null)
-														connectIds.push({ id: val.id || val });
+													if (val._dataLabel == null)
+														connectDataIds.push({ id: val.id || val });
 												});
 											}
-											else if (typeof row[linkCol.name]._dataLabel == 'undefined' || row[linkCol.name]._dataLabel == null) {
+											else if (row[linkCol.name]._dataLabel == null) {
 												var keyName = 'id';
 												var keyValue = row[linkCol.name][keyName] || row[linkCol.name];
 												if (typeof keyValue == 'number' || typeof keyValue == 'string') {
-													connectIds.push({ id: keyValue });
+													connectDataIds.push({ id: keyValue });
 												} else {
 													console.log('Non-standard key name for ' + linkCol.name);
 													console.log(row[linkCol.name]);
 												}
 											}
 
-											if (!connectIds || connectIds.length < 1) return next();
+											if (!connectDataIds || connectDataIds.length < 1) return next();
 
-											linkObjModel.findAll({ or: connectIds })
+											linkObjModel.findAll({ or: connectDataIds })
 												.fail(next)
 												.then(function (result) {
 													result.forEach(function (linkVal) {
-														if (linkVal.translate) linkVal.translate();
 
-														linkVal.attr('_dataLabel', linkObj.getDataLabel(linkVal.attr()));
+														if (linkVal._dataLabel == null) {
+															if (linkVal.translate) linkVal.translate();
+															linkVal.attr('_dataLabel', linkObj.getDataLabel(linkVal.attr()));
+														}
 													});
 
 													linkedData = result;
