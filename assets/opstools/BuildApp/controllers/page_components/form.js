@@ -413,8 +413,8 @@ steal(
 								// element.pattern = { mask: "##############", allow: /[0-9]/g }; // Available in webix PRO edition
 								element.view = 'text';
 								element.required = false;
-								element.validate = webix.rules.isNumber;
-								element.validateEvent = 'key';
+								element.validate = function (val) { return !isNaN(val * 1); };
+								element.attributes = { type: "number" };
 							}
 							else if (col.setting.editor === 'date') {
 								element.view = 'datepicker';
