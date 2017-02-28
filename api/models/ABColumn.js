@@ -443,13 +443,36 @@ module.exports = {
                 });
             },
             
+            // Set default of target link column
+            function(next) {
+                if (data.targetName == null) {
+                    ABObject.findOne({ id: data.sourceObjectID })
+                        .populate('translations')
+                        .then(function(srcObj) {
+                            var enObj = srcObj.translations.filter(function (trans) { return trans.language_code == 'en'; })[0];
+
+                            if (enObj == null) {
+                                data.targetName = data.name + ' Link';
+                            }
+                            else {
+                                data.targetName = enObj.label
+                            }
+
+                            next();
+                        }, next);
+                }
+                else {
+                    next();
+                }
+            },
+
             // Create target connection column
             function(next) {
                 // Skip if the source relation was not given.
                 if (!data.sourceRelation) return next();
                 
                 ABColumn.createColumn('connectObject', {
-                    name: data.targetName || data.name + ' Link',
+                    name: data.targetName,
                     object: data.targetObjectID,
                     language_code: data.language_code,
                     setting: targetSetting
