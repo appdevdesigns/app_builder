@@ -116,8 +116,8 @@ steal(
 										name: name,
 										sourceObjectID: self.id,
 										targetObjectID: targetObjectID,
-										sourceRelation: sourceRelation != 'collection' ? 'many' : 'one',
-										targetRelation: targetRelation != 'collection' ? 'many' : 'one'
+										sourceRelation: ((sourceRelation == 'collection' || sourceRelation == 'many') ? 'many' : 'one'),
+										targetRelation: ((targetRelation == 'collection' || targetRelation == 'many') ? 'many' : 'one')
 									})
 										.fail(next)
 										.done(function (cols) {

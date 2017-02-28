@@ -391,14 +391,14 @@ module.exports = {
         var targetSetting = {
             linkObject: data.sourceObjectID,
         };
-        if (data.targetRelation != 'many') {
+        if (data.sourceRelation != 'many') {
             sourceSetting.linkType = 'model';
             targetSetting.linkViaType = 'model';
         } else {
             sourceSetting.linkType = 'collection';
             targetSetting.linkViaType = 'collection';
         }
-        if (data.sourceRelation != 'many') {
+        if (data.targetRelation != 'many') {
             targetSetting.linkType = 'model';
             sourceSetting.linkViaType = 'model';
         } else {
