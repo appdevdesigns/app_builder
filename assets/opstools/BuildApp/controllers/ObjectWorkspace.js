@@ -836,7 +836,7 @@ steal(
 												updateColumn = $.grep(self.data.columns, function (col) { return col.id == columnInfo.id; })[0];
 
 												for (var key in columnInfo) {
-													if (key != 'id')
+													if (key != 'id' && key != 'name')
 														updateColumn.attr(key, columnInfo[key]);
 												}
 
