@@ -310,9 +310,8 @@ steal(
 																	.then(function (result) {
 																		$$(self.webixUiId.interfaceTree).unselectAll();
 
-																		// // FIX : remove deleted page in list
-																		if (AD.classes.AppBuilder.currApp.pages.filter(function (p) { return p.id == result.id }).length > 0)
-																			can.event.dispatch.call(AD.classes.AppBuilder.currApp, "change", ['pages', 'remove', null, [result]]);
+																		// FIX : remove deleted page in list
+																		can.event.dispatch.call(AD.classes.AppBuilder.currApp, "change", ['pages', 'remove', null, [result]]);
 
 																		// Remove sub-pages
 																		AD.classes.AppBuilder.currApp.pages = AD.classes.AppBuilder.currApp.pages.filter(function (p) { return !p.parent || p.parent.id != result.id; });
@@ -405,10 +404,11 @@ steal(
 										if (oldVals.forEach) {
 											oldVals.forEach(function (deletedPage) {
 												if (deletedPage) {
-													if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id))
+													if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id)) {
 														$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
 
-													self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
+														self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
+													}
 												}
 											});
 										}
