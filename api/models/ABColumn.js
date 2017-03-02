@@ -14,31 +14,31 @@ var async = require('async'),
 // This will be populated from the exported `defaults` properties of .js files
 // found in /api/services/data_fields
 var typeDefaults = {
-/*
-    number: {
-        type: 'integer',
-        fieldName: 'number',
-        setting: {
-            icon: 'slack',
-            editor: 'number',
-            filter_type: 'number',
-            format: 'numberFormat'
-        }
-    },
-    string: {...},
-    boolean: {...},
-    ...
-*/
+    /*
+        number: {
+            type: 'integer',
+            fieldName: 'number',
+            setting: {
+                icon: 'slack',
+                editor: 'number',
+                filter_type: 'number',
+                format: 'numberFormat'
+            }
+        },
+        string: {...},
+        boolean: {...},
+        ...
+    */
 };
 
 var pathToFieldFiles = path.join(process.cwd(), 'api', 'services', 'data_fields');
 var fieldFiles = fs.readdirSync(pathToFieldFiles);
-fieldFiles.forEach(function(fieldFile) {
+fieldFiles.forEach(function (fieldFile) {
     var match = fieldFile.match(/^(\w+)\.js$/);
     if (match) {
         var name = match[1];
         var def = require(path.join(pathToFieldFiles, fieldFile));
-        typeDefaults[ name ] = def.defaults;
+        typeDefaults[name] = def.defaults;
     }
 });
 
@@ -112,11 +112,11 @@ module.exports = {
 
 
     },
-    
+
     ////
     // Lifecycle callbacks
     ////
-    
+
     beforeValidate: function (values, cb) {
         for (var key in values) {
             if (values[key] == null || typeof values[key] == 'undefined' || values[key] != values[key] /* NaN */)
@@ -153,28 +153,51 @@ module.exports = {
     },
 
     afterDestroy: function (destroyedColumns, cb) {
-
-        var ids = _.map(destroyedColumns, 'id');
+        var ids = _.map(destroyedColumns, 'id'),
+            connectCols = _.filter(destroyedColumns, function (col) {
+                if (col.fieldName == 'connectObject' && col.setting) {
+                    var colSetting = JSON.parse(col.setting);
+                    if (colSetting.linkVia != null)
+                        return true;
+                    else
+                        return false;
+                }
+                else {
+                    return false;
+                }
+            }),
+            connectedColIds = _.map(connectCols, function (col) {
+                var colSetting = JSON.parse(col.setting);
+                return colSetting.linkVia;
+            });
 
         if (ids && ids.length) {
             async.parallel([
+                // Delete column translations
                 function (callback) {
                     ABColumnTrans.destroy({ abcolumn: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
                         .then(function () {
                             callback();
-                        });
+                        }, callback);
                 },
+                // Delete select list options
                 function (callback) {
                     ABList.destroy({ column: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
                         .then(function () {
                             callback();
-                        });
+                        }, callback);
+                },
+                // Remove linked column
+                function (callback) {
+                    if (connectedColIds && connectedColIds.length > 0) {
+                        ABColumn.destroy({ id: connectedColIds })
+                            .then(function () {
+                                callback();
+                            }, callback);
+                    }
+                    else {
+                        callback();
+                    }
                 }
             ], cb);
         }
@@ -183,12 +206,12 @@ module.exports = {
         }
 
     },
-    
-    
+
+
     ////
     // Model class methods
     ////
-    
+
     /**
      * Create an AppBuilder column entry. This is separate from building the
      * generated app's model.
@@ -258,9 +281,9 @@ module.exports = {
      */
     createColumn: function (type, data) {
         var dfd = AD.sal.Deferred();
-        
+
         var defaultData = typeDefaults[type] || {};
-        
+
         var columnData = data || {};
         _.defaults(data, {
             type: defaultData.type,
@@ -268,87 +291,87 @@ module.exports = {
             setting: {}
         });
         _.defaults(columnData.setting, defaultData.setting);
-        
+
         var column;
         var appID;
-        
+
         async.series([
             // Preliminary checks
-            function(next) {
+            function (next) {
                 if (!typeDefaults[type]) return next(new Error('Type is not recognized: ' + type));
                 if (!columnData.object) return next(new Error('data.object is required'));
                 if (!columnData.name) return next(new Error('data.name is required'));
                 next();
             },
-            
+
             // Check ABObject
-            function(next) {
+            function (next) {
                 ABObject.find({ id: columnData.object })
-                .exec(function(err, list) {
-                    if (err) next(err);
-                    else if (!list || !list[0]) next(new Error('Object not found: ' + columnData.object));
-                    else {
-                        appID = list[0].application;
-                        next();
-                    }
-                });
+                    .exec(function (err, list) {
+                        if (err) next(err);
+                        else if (!list || !list[0]) next(new Error('Object not found: ' + columnData.object));
+                        else {
+                            appID = list[0].application;
+                            next();
+                        }
+                    });
             },
-            
+
             // Determine column weight if needed
-            function(next) {
+            function (next) {
                 if (typeof columnData.weight == 'number') return next();
                 ABColumn.count({ object: columnData.object })
-                .exec(function(err, found) {
-                    if (err) next(err);
-                    else {
-                        // Put the new column at the end
-                        columnData.weight = found;
-                        next();
-                    }
-                });
+                    .exec(function (err, found) {
+                        if (err) next(err);
+                        else {
+                            // Put the new column at the end
+                            columnData.weight = found;
+                            next();
+                        }
+                    });
             },
-            
+
             // The `setting` field needs to have the app name for some reason
-            function(next) {
+            function (next) {
                 // Skip if app name is already given
                 if (columnData.setting.appName) return next();
-                
+
                 ABApplication.find({ id: appID })
-                .exec(function(err, list) {
-                    if (err) next(err);
-                    else if (!list || !list[0]) {
-                        next(new Error('Application not found: ' + appID));
-                    }
-                    else {
-                        columnData.setting.appName = list[0].name;
-                        next();
-                    }
-                });
+                    .exec(function (err, list) {
+                        if (err) next(err);
+                        else if (!list || !list[0]) {
+                            next(new Error('Application not found: ' + appID));
+                        }
+                        else {
+                            columnData.setting.appName = list[0].name;
+                            next();
+                        }
+                    });
             },
-            
+
             // Create column entry & multilingual labels
-            function(next) {
+            function (next) {
                 columnData.label = columnData.label || columnData.name;
                 Multilingual.model.create({
                     model: ABColumn,
                     data: columnData
                 })
-                .fail(next)
-                .done(function(newColumn) {
-                    column = newColumn;
-                    next();
-                });
+                    .fail(next)
+                    .done(function (newColumn) {
+                        column = newColumn;
+                        next();
+                    });
             }
-            
-        ], function(err) {
+
+        ], function (err) {
             if (err) dfd.reject(err);
             dfd.resolve(column);
         });
-        
+
         return dfd;
     },
-    
-    
+
+
     /**
      * Create a connection column, together with the optional return connection
      * column.
@@ -382,9 +405,9 @@ module.exports = {
      * @return Deferred
      *     Resolves with (sourceObjectColumn, targetObjectColumn)
      */
-    createLink: function(data) {
+    createLink: function (data) {
         var dfd = AD.sal.Deferred();
-        
+
         var sourceSetting = {
             linkObject: data.targetObjectID,
         };
@@ -405,54 +428,54 @@ module.exports = {
             targetSetting.linkType = 'collection';
             sourceSetting.linkViaType = 'collection';
         }
-        
+
         var sourceColumn, targetColumn;
         var sourceObjectName;
-        
+
         async.series([
             // Preliminary checks
-            function(next) {
+            function (next) {
                 var msg = null;
                 [
                     'name', 'sourceObjectID', 'targetObjectID', 'targetRelation'
-                ].forEach(function(paramName) {
+                ].forEach(function (paramName) {
                     if (!data[paramName]) msg = `data.${paramName} is required`;
                 });
-                
+
                 if (msg) next(new Error(msg));
                 else next();
             },
-            
+
             // Create source connection column
-            function(next) {
+            function (next) {
                 ABColumn.createColumn('connectObject', {
                     name: data.name,
                     object: data.sourceObjectID,
                     language_code: data.language_code,
                     setting: sourceSetting
                 })
-                .fail(next)
-                .done(function(col) {
-                    sourceColumn = col;
-                    sourceSetting = col.setting;
+                    .fail(next)
+                    .done(function (col) {
+                        sourceColumn = col;
+                        sourceSetting = col.setting;
 
-                    // This will be created in the next step
-                    targetSetting.linkVia = col.id;
+                        // This will be created in the next step
+                        targetSetting.linkVia = col.id;
 
-                    next();
-                });
+                        next();
+                    });
             },
-            
+
             // Set default of target link column
-            function(next) {
+            function (next) {
                 if (data.targetName == null) {
                     ABObject.findOne({ id: data.sourceObjectID })
                         .populate('translations')
-                        .then(function(srcObj) {
+                        .then(function (srcObj) {
                             var enObj = srcObj.translations.filter(function (trans) { return trans.language_code == 'en'; })[0];
 
                             if (enObj == null) {
-                                data.targetName = data.name +  ' Link';
+                                data.targetName = data.name + ' Link';
                             }
                             else {
                                 data.targetName = enObj.label
@@ -467,49 +490,49 @@ module.exports = {
             },
 
             // Create target connection column
-            function(next) {
+            function (next) {
                 // Skip if the source relation was not given.
                 if (!data.sourceRelation) return next();
-                
+
                 ABColumn.createColumn('connectObject', {
                     name: data.targetName,
                     object: data.targetObjectID,
                     language_code: data.language_code,
                     setting: targetSetting
                 })
-                .fail(next)
-                .done(function(col) {
-                    targetColumn = col;
+                    .fail(next)
+                    .done(function (col) {
+                        targetColumn = col;
 
-                    // This will be updated in the next step
-                    sourceSetting.linkVia = col.id;
+                        // This will be updated in the next step
+                        sourceSetting.linkVia = col.id;
 
-                    next();
-                });
+                        next();
+                    });
             },
-            
+
             // Update the source connection column that was just created earlier
-            function(next) {
+            function (next) {
                 // Skip this step if not needed
                 if (!sourceSetting.linkVia) return next();
-                
+
                 ABColumn.update(sourceColumn.id, { setting: sourceSetting })
-                .exec(function(err, col) {
-                    if (err) next(err);
-                    else {
-                        sourceColumn = col[0];
-                        next();
-                    }
-                });
+                    .exec(function (err, col) {
+                        if (err) next(err);
+                        else {
+                            sourceColumn = col[0];
+                            next();
+                        }
+                    });
             },
-                    
-        ], function(err) {
+
+        ], function (err) {
             if (err) dfd.reject(err);
             else dfd.resolve(sourceColumn, targetColumn);
         });
-        
+
         return dfd;
     },
-    
-    
+
+
 };

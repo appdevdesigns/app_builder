@@ -562,30 +562,6 @@ steal(
 															function (ok) {
 																selectedColumn.destroy().fail(ok)
 																	.then(function (data) { ok(); });
-															},
-															// Call server to delete link field data
-															function (ok) {
-																if (selectedColumn.setting.linkObject && selectedColumn.setting.linkVia) {
-																	var linkObj = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == selectedColumn.setting.linkObject; });
-																	if (linkObj && linkObj[0])
-																		linkObj = linkObj[0]
-																	else
-																		return ok();
-
-																	linkObj.getColumn(selectedColumn.setting.linkVia).fail(ok)
-																		.then(function (linkCol) {
-																			if (linkCol) {
-																				linkCol.destroy().fail(ok).then(function () { ok(); });
-																			}
-																			else {
-																				ok();
-																			}
-																		});
-
-																}
-																else {
-																	ok();
-																}
 															}
 														], function (err) {
 															if (err) {
