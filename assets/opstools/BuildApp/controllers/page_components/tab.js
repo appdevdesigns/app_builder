@@ -245,7 +245,10 @@ steal(
                         uuid: obj.uuid
                     })
                     return true
-                })
+                });
+
+                if (tabs == null || tabs.length == 0) tabs = '';
+
                 return {
                     tabs: tabs
                 };
