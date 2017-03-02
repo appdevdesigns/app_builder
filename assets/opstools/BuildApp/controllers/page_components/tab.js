@@ -7,6 +7,7 @@ steal(
             editView: 'ab-tab-edit-view',
             editMenu: 'ab-tab-edit-mode',
             addTabForm: 'ab-tab-create-form',
+            iconPicker: 'ab-tab-icon-picker',
             propertyView: 'ab-tab-property-view',
             pageTree: 'ab-tab-page-tree'
         };
@@ -711,12 +712,28 @@ steal(
                             {
                                 "rows": [
                                     {
-                                        "view": "text",
-                                        "name": "Icon",
-                                        "label": "Icon",
-                                        "labelWidth": "50",
-                                        "placeholder": AD.lang.label.getLabel('ab.component.tab.chooseIcon') || "*Choose an icon",
-                                        "width": 200
+                                        "id": componentIds.iconPicker,
+                                        "view": "template",
+                                        // "name": "Icon",
+                                        // "label": "Icon",
+                                        // "labelWidth": "50",
+                                        // "placeholder": AD.lang.label.getLabel('ab.component.tab.chooseIcon') || "*Choose an icon",
+                                        "width": 90,
+                                        "borderless": true,
+                                        "template": '<div class="btn-group">' +
+                                                        '<button type="button" class="btn btn-primary iconpicker-component"><i class="fa fa-fw fa-heart"></i></button>' +
+                                                        '<button type="button" class="icp icp-dd btn btn-primary dropdown-toggle" style="height: 28px" data-selected="fa-car" data-toggle="dropdown">' +
+                                                        '<span class="caret"></span>' +
+                                                        '<span class="sr-only">Toggle Dropdown</span>' +
+                                                        '</button>' +
+                                                        '<div class="dropdown-menu"></div>' +
+                                                        '</div>',
+                                        "on": {
+                                            "onAfterRender": function() {
+                                                var chooseIcon = $(this.$view).find('.icp-dd');
+                                                chooseIcon.iconpicker({ hideOnSelect: true });
+                                            }
+                                        }
                                     }
                                 ]
                             },
@@ -772,12 +789,14 @@ steal(
                                     var currentTab = componentManager.editInstance;
                                     currentTab.transaction('add', values);
 
+                                    var chooseIcon = $($$(componentIds.iconPicker).$view).find('.icp-dd');
+                                    var icon = chooseIcon.data('iconpicker').iconpickerValue;
 
                                     // clear our form
                                     $$(componentIds.addTabForm).clear();
 
                                     // new tab definition value
-                                    var currentValue = {label:values.Name, icon:values.Icon, checked:true, uuid:values.uuid};
+                                    var currentValue = {label:values.Name, icon: icon, checked:true, uuid:values.uuid};
 
                                     // update the display of our pageTree
                                     $$(componentIds.pageTree).add(currentValue, $$(componentIds.pageTree).count());
