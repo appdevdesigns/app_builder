@@ -390,16 +390,23 @@ steal(
 								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
 
 								switch (how) {
-									// case 'set':
-									// 	if (ev.target && $$(self.webixUiId.interfaceTree).exists(ev.target.id)) { // Update label or page type
-									// 		$$(self.webixUiId.interfaceTree).updateItem(ev.target.id, ev.target.attr());
+									case 'set':
+										if (ev.target && ev.target.forEach) { // Update label or page type
+											ev.target.forEach(function (page) {
+												if ($$(self.webixUiId.interfaceTree).exists(page.id)) {
+													$$(self.webixUiId.interfaceTree).updateItem(page.id, page.attr());
 
-									// 		// Show gear
-									// 		if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
-									// 			self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
-									// 	}
-									// 	// TODO: weight -> reorder
-									// 	break;
+													// Show gear
+													if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+														self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+												}
+												else {
+													self.addPage(page, true);
+												}
+											});
+										}
+										// TODO: weight -> reorder
+										break;
 									case 'remove':
 										if (oldVals.forEach) {
 											oldVals.forEach(function (deletedPage) {
