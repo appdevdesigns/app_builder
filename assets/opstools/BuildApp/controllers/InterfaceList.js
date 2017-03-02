@@ -75,8 +75,8 @@ steal(
 							var self = this;
 
 							self.controllers.AddNewPage.on(self.options.createdPageEvent, function (event, data) {
-								var noSelect = (data.newPage.parent != null);
-								self.addPage(data.newPage, noSelect);
+								// FIX : call add event to tell CanJS list
+								can.event.dispatch.call(AD.classes.AppBuilder.currApp, "change", ['pages', 'add', [data.newPage]]);
 							});
 
 							self.controllers.AddNewPage.on(self.options.updatedPageEvent, function (event, data) {
@@ -371,42 +371,33 @@ steal(
 							// 	// TODO: weight -> reorder
 							// });
 
-							// AD.classes.AppBuilder.currApp.pages.unbind('remove');
-							// AD.classes.AppBuilder.currApp.pages.bind('remove', function (ev, oldVals, removeId) {
-							// 	if (oldVals.forEach) {
-							// 		oldVals.forEach(function (deletedPage) {
-							// 			if (deletedPage) {
-							// 				if ($$(self.webixUiId.interfaceTree).exists(deletedPage.id))
-							// 					$$(self.webixUiId.interfaceTree).remove(deletedPage.id);
-
-							// 				self.element.trigger(self.options.deletedPageEvent, { page: deletedPage.id });
-							// 			}
-							// 		});
-							// 	}
-							// });
-
 							AD.classes.AppBuilder.currApp.off('change');
 							AD.classes.AppBuilder.currApp.on('change', function (ev, attr, how, newVals, oldVals) {
 								if (attr.indexOf('pages') !== 0 || (attr.indexOf('label') === -1 && attr.indexOf('type') === -1 && (attr.match(/\./g) || []).length > 1)) return;
 
 								switch (how) {
-									case 'set':
-										if (ev.target && ev.target.forEach) { // Update label or page type
-											ev.target.forEach(function (page) {
-												if ($$(self.webixUiId.interfaceTree).exists(page.id)) {
-													$$(self.webixUiId.interfaceTree).updateItem(page.id, page.attr());
-
-													// Show gear
-													if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
-														self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
-												}
-												else {
-													self.addPage(page, true);
-												}
+									case 'add':
+										if (newVals.forEach) {
+											newVals.forEach(function (newPage) {
+												var noSelect = (newPage.parent != null);
+												self.addPage(newPage, noSelect);
 											});
 										}
-										// TODO: weight -> reorder
 										break;
+									// case 'set':
+									// 	if (ev.target && ev.target.forEach) { // Update label or page type
+									// 		ev.target.forEach(function (page) {
+									// 			if ($$(self.webixUiId.interfaceTree).exists(page.id)) {
+									// 				$$(self.webixUiId.interfaceTree).updateItem(page.id, page.attr());
+
+									// 				// Show gear
+									// 				if ($$(self.webixUiId.interfaceTree).getSelectedId(true).length > 0)
+									// 					self.showGear($$(self.webixUiId.interfaceTree).getSelectedId(false));
+									// 			}
+									// 		});
+									// 	}
+									// 	// TODO: weight -> reorder
+									// 	break;
 									case 'remove':
 										if (oldVals.forEach) {
 											oldVals.forEach(function (deletedPage) {

@@ -444,14 +444,20 @@ steal(
                                 switch(trans.op) {
                                     case 'add':
                                         // name the page with our uuid, so we can manage it later.
-                                        actions.push(page.createTab({ name: trans.values.uuid, label:trans.values.Name }));
+                                        actions.push(page.createTab({ name: trans.values.uuid, label:trans.values.Name }).done(function(result) {
+                                            // FIX : call add event to tell CanJS list
+                                            can.event.dispatch.call(AD.classes.AppBuilder.currApp, "change", ['pages', 'add', [result]]);
+                                        }));
                                         break;
 
 
                                     case 'delete':
                                         var targetPage = application.pages.filter(function(p) { return p.name == trans.values.uuid })[0];
                                         if (targetPage) {
-                                            actions.push(targetPage.destroy());
+                                            actions.push(targetPage.destroy().done(function(result) {
+                                                // FIX : remove deleted tab in list
+                                                can.event.dispatch.call(AD.classes.AppBuilder.currApp, "change", ['pages', 'remove', null, [result]]);
+                                            }));
                                         } else {
                                             AD.error.log("Could not find target page to delete", { uuid: trans.values.uuid});                                            
                                         }
