@@ -51,12 +51,13 @@ module.exports = {
 					return;
 				}
                 
-                if (!parseInt(column.setting.linkVia)) {
+                var linkViaColID = parseInt(column.setting.linkVia);
+                if (!linkViaColID || linkViaColID != column.setting.linkVia) {
                     AD.log.error('Warning! `setting.linkVia` is invalid!');
                     AD.log.error('in connectObject.js :: getFieldString()');
                 }
                 
-				ABColumn.findOne({ id: column.setting.linkVia })
+				ABColumn.findOne({ id: linkViaColID })
 					.then(function (linkVia) {
 						if (linkVia)
 							colString += ':' + linkVia.name; // viaReference

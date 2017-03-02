@@ -762,7 +762,7 @@ module.exports = {
                     .exec(function(err, result) {
                         if (err) compDone(err);
                         else {
-                            var newCompID = compData.id
+                            var newCompID = result.id;
                             reference.components.map[ oldCompID ] = newCompID;
                             // Some settings reference other components.
                             // These will be remapped later.
