@@ -342,7 +342,8 @@ steal(
 												var listData = [];
 												for (var i = 0; i < list.length; i++) {
 													listData.push({
-														id: list[i]
+														id: list[i].objectId || list[i].modelName,
+														modelName: list[i].modelName
 													});
 												}
 												$$(self.webixUiId.importModelList).clearAll();
@@ -458,7 +459,7 @@ steal(
                                                         select: true,
                                                         minHeight: 400,
                                                         data: [],
-                                                        template: '<div>#id#</div>',
+                                                        template: '<div>#modelName#</div>',
                                                     },
                                                     // Import & Cancel buttons
                                                     {
@@ -477,7 +478,8 @@ steal(
 																	AD.comm.service.post({
 																		url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/importModel',
 																		data: {
-																			model: selectedModel.id
+																			objectID: (typeof selectedModel.id == 'number' ? selectedModel.id : null), // If id is not number, then it is model name.
+																			model: selectedModel.modelName
 																		}
 																	})
 																		.fail(function (err) {

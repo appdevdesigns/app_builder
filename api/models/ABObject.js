@@ -40,6 +40,10 @@ module.exports = {
             required: false
         },
 
+        importFromObject: {
+            model: 'ABObject',
+            required: false
+        },
 
         // this will pull in the translations using .populate('translations')
         translations: {
@@ -108,6 +112,5 @@ module.exports = {
         }
 
     }
-
 
 };

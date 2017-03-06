@@ -184,7 +184,9 @@ steal(
 		connectObjectField.populateSettings = function (application, fieldData) {
 			$$(componentIds.editView).appName = application.name;
 
-			var objectList = AD.op.WebixDataCollection(application.objects);
+			var objectList = AD.op.WebixDataCollection(application.objects.filter(function(obj) {
+				return !obj.isImported || (obj.isImported && obj.importFromObject);
+			}));
 			// Allow linking to self
 			// objectList.attachEvent('onAfterAdd', function (id, index) {
 			// 	$$(componentIds.objectList).filter(function (obj) { return obj.id != application.currObj.id; });
