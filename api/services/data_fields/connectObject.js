@@ -18,6 +18,7 @@ module.exports = {
 		}
 
 		var formatAppName = AppBuilder.rules.toApplicationNameFormat(column.setting.appName);
+		var object;
 
 		// fieldName:[model|collection]:linkObjectName:[viaReference]
 		var colString = '';
@@ -28,19 +29,48 @@ module.exports = {
 			function (next) {
 				ABObject.findOne({ id: column.setting.linkObject })
 					.fail(next)
-					.then(function (object) {
-					    if (!object) {
+					.then(function (obj) {
+					    if (!obj) {
 					        console.log('Object not found');
 					        console.log('id: ' + column.setting.linkObject);
 					        console.log(column.setting);
 					        next(new Error('object not found'));
 					        return;
 					    }
-						colString += ':' + AppBuilder.rules.toObjectNameFormat(formatAppName, object.name) // model name
+
+						object = obj;
 
 						next();
 						return null;
 					});
+			},
+			// Get base of import object
+			function (next) {
+				if (object.isImported && object.importFromObject) {
+					ABObject.findOne({ id: object.importFromObject })
+						.populate('application')
+						.then(function (obj) {
+							if (!obj) {
+								console.log('Base object not found');
+								console.log('id: ' + object.importFromObject);
+								next(new Error('base object not found'));
+								return;
+							}
+
+							formatAppName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
+							object = obj;
+
+							next();
+
+						}, next);
+				}
+				else {
+					next();
+				}
+			},
+			function (next) {
+				colString += ':' + AppBuilder.rules.toObjectNameFormat(formatAppName, object.name) // model name
+				next();
 			},
 			function (next) {
 				if (!column.setting.linkVia) {

@@ -583,7 +583,7 @@ module.exports = {
                         list.forEach(function(childObj) {
                             childObj.columns.forEach(function(col) {
 
-                                if (obj.columns.filter(function(c) { return c.id == col.id }).length > 0) {
+                                if (obj.columns.filter(function(c) { return c.id == col.id }).length < 1) {
                                     obj.columns.push(col);
                                 }
 
@@ -604,7 +604,6 @@ module.exports = {
                 moduleName = appName.toLowerCase();
 
                 objName = AppBuilder.rules.nameFilter(obj.name);
-console.log('** columns: ', obj.columns);
                 columns = obj.columns;
                 fullName = AppBuilder.rules.toObjectNameFormat(appName, objName);
 
