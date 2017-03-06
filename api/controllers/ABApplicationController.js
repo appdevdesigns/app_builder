@@ -281,7 +281,11 @@ module.exports = {
                             AppBuilderExport.appFromJSON(jsonData)
                             .fail(function(err) {
                                 console.log('jsonImport import error', err);
-                                res.send({ status: 'error' });
+                                res.send({ 
+                                    status: 'error',
+                                    message: err.message,
+                                    error: err
+                                });
                                 //res.AD.error(err);
                             })
                             .done(function() {
@@ -289,7 +293,11 @@ module.exports = {
                             });
                         } catch (err) {
                             console.log('jsonImport parse error', err);
-                            res.send({ status: 'error' });
+                            res.send({ 
+                                status: 'error',
+                                message: 'json parse error',
+                                error: err,
+                            });
                             //res.AD.error(err);
                         }
                     }
