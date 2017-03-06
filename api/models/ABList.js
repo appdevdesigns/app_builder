@@ -5,6 +5,8 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
+var _ = require('lodash');
+
 module.exports = {
 
   tableName: 'appbuilder_list',
