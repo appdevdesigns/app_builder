@@ -145,8 +145,13 @@ steal(
 									},
 									// Update state on load
 									function (next) {
-										if (page.comInstances[item.id].onDisplay)
-											page.comInstances[item.id].onDisplay();
+										if (page.comInstances[item.id]) {
+											if (page.comInstances[item.id].onDisplay) {
+												page.comInstances[item.id].onDisplay();
+											}
+										} else {
+											console.warning('page.comInstances could not find:'+item.id);
+										}
 
 										next();
 									}
