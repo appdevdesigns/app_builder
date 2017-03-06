@@ -131,18 +131,19 @@ steal(
 													onAfterFileAdd: function () {
 														this.disable();
                                                         $$(self.webixUiId.appList).showProgress({ type: "icon" });
-											            /*
-											            this.send(function() {
-											                console.log('after send');
-											            });
-											            */
 													},
 													onFileUpload: function (item, response) {
 														self.loadData(); // refresh app list
 														this.enable();
                                                         $$(self.webixUiId.appList).hideProgress();
 													},
-													onFileUploadError: function () {
+													onFileUploadError: function (details, response) {
+														var errorMessage = 'Error: ' + (response && response.message);
+														webix.message({
+															type: 'error',
+															text: errorMessage
+														});
+														self.loadData(); // refresh app list
 														this.enable();
                                                         $$(self.webixUiId.appList).hideProgress();
 													}

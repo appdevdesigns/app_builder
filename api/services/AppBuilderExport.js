@@ -143,12 +143,25 @@ var remap = function(obj, settingKey, objType, reference) {
     if (Array.isArray(value)) {
         for (var i=0; i<value.length; i++) {
             var oldID = value[i];
-            obj.setting[settingKey][i] = reference[objType].map[oldID] || (oldID + '!!');
+            var newID = reference[objType].map[oldID];
+            if (newID) {
+                obj.setting[settingKey][i] = newID;
+            } else {
+                //obj.setting[settingKey][i] = oldID + '!!';
+                throw new Error(`Unable to remap ${settingKey} ${objType}: ${oldID}`);
+            }
+            
         }
     } else {
         var oldID = parseInt(obj.setting[settingKey]);
         if (oldID) {
-            obj.setting[settingKey] = reference[objType].map[oldID] || (oldID + '!!');
+            var newID = reference[objType].map[oldID];
+            if (newID) {
+                obj.setting[settingKey] = newID;
+            } else {
+                //obj.setting[settingKey] = oldID + '!!';
+                throw new Error(`Unable to remap ${settingKey} ${objType}: ${oldID}`);
+            }
         }
     }
 };
@@ -360,7 +373,11 @@ module.exports = {
                 dfd.reject(err);
             } else {
                 removeTimestamps(data);
-                normalizeIDs(data);
+                try {
+                    normalizeIDs(data);
+                } catch(normalizeErr) {
+                    dfd.reject(normalizeErr);
+                }
                 
                 dfd.resolve(data);
             }
@@ -516,7 +533,12 @@ module.exports = {
                         col.setting.appName = appName;
                         
                         // Remap the linked object IDs
-                        remap(col, 'linkObject', 'objects', reference);
+                        try {
+                            remap(col, 'linkObject', 'objects', reference);
+                        } catch (remapErr) {
+                            colDone(remapErr);
+                            return;
+                        }
                     }
                     
                     var colData = {
@@ -588,7 +610,12 @@ module.exports = {
                             colDone(new Error('Column not found: ' + colID));
                         }
                         else {
-                            remap(result, 'linkVia', 'columns', reference);
+                            try {
+                                remap(result, 'linkVia', 'columns', reference);
+                            } catch (remapErr) {
+                                colDone(remapErr);
+                                return;
+                            }
                             ABColumn.update(
                                 { id: colID }, 
                                 { setting: result.setting }
@@ -737,20 +764,25 @@ module.exports = {
                 async.each(data.components, function(comp, compDone) {
                     var oldCompID = comp.id;
                     if (comp.setting) {
-                        if (comp.component == 'link') {
-                            remap(comp, 'linkTo', 'pages', reference);
-                        } else {
-                            remap(comp, 'linkTo', 'objects', reference);
+                        try {
+                            if (comp.component == 'link') {
+                                remap(comp, 'linkTo', 'pages', reference);
+                            } else {
+                                remap(comp, 'linkTo', 'objects', reference);
+                            }
+                            ['object', 'linkedTo'].forEach(function(key) {
+                                remap(comp, key, 'objects', reference);
+                            });
+                            ['pageIds', 'pages', 'viewPage', 'editPage'].forEach(function(key) {
+                                remap(comp, key, 'pages', reference);
+                            });
+                            ['linkedField', 'linkField', 'columns', 'visibleFieldIds'].forEach(function(key) {
+                                remap(comp, key, 'columns', reference);
+                            });
+                        } catch (remapErr) {
+                            compDone(remapErr);
+                            return;
                         }
-                        ['object', 'linkedTo'].forEach(function(key) {
-                            remap(comp, key, 'objects', reference);
-                        });
-                        ['pageIds', 'pages', 'viewPage', 'editPage'].forEach(function(key) {
-                            remap(comp, key, 'pages', reference);
-                        });
-                        ['linkedField', 'linkField', 'columns', 'visibleFieldIds'].forEach(function(key) {
-                            remap(comp, key, 'columns', reference);
-                        });
                     }
                     var compData = {
                         page: reference.pages.map[ parseInt(comp.page) ],
@@ -793,9 +825,14 @@ module.exports = {
                             compDone(new Error('component not found: ' + compID));
                         }
                         else {
-                            ['viewId', 'editForm'].forEach(function(key) {
-                                remap(result, key, 'components', reference);
-                            });
+                            try {
+                                ['viewId', 'editForm'].forEach(function(key) {
+                                    remap(result, key, 'components', reference);
+                                });
+                            } catch (remapErr) {
+                                compDone(remapErr);
+                                return;
+                            }
                             ABPageComponent.update(
                                 { id: compID }, 
                                 { setting: result.setting }
