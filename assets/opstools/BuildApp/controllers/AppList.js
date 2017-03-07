@@ -462,8 +462,14 @@ steal(
 																return false;
 															}
 
+															var selectedId = $$(self.webixUiId.appList).getSelectedId();
+															var updateApp = self.data.filter(function (d) { return d.id == selectedId })[0];
+
 															// Prevent duplicate application name
-															if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
+															if (self.data.filter(function (app) {
+																return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase()
+																		&& (updateApp == null || app.id != updateApp.id);
+															}).length > 0) {
 																webix.alert({
 																	title: self.labels.application.invalidName,
 																	text: self.labels.application.duplicateName.replace("#appName#", appName),
@@ -476,9 +482,6 @@ steal(
 															}
 
 															$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
-
-															var selectedId = $$(self.webixUiId.appList).getSelectedId();
-															var updateApp = self.data.filter(function (d) { return d.id == selectedId })[0];
 
 															if (updateApp) { // Update
 																async.waterfall([
@@ -804,11 +807,11 @@ steal(
 								},
 								function (available_roles, selected_role_ids, next) {
 									// Sort permission list
-									if (selectedApp && selectedApp.role && selectedApp.role.id) {
+									if (selectedApp && selectedApp.role) {
 										available_roles.forEach(function (r) {
 											var perm = [];
 
-											if (r.id == selectedApp.role.id)
+											if (r.id == (selectedApp.role.id || selectedApp.role))
 												r.isApplicationRole = true;
 										});
 									}
