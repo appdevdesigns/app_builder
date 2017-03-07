@@ -17,6 +17,7 @@ steal(
 			editDescription: 'ab-view-edit-description',
 			selectObject: 'ab-view-select-object',
 			selectColumns: 'ab-view-select-columns',
+			recordFilter: 'ab-view-record-filter'
 		};
 
 		// Instance functions
@@ -49,7 +50,12 @@ steal(
 
 				if (!object) return;
 
-				if (newData)
+				if (setting.recordFilter) {
+					if (data.dataCollection) {
+						currModel = data.dataCollection.find({ id: setting.recordFilter })[0];
+					}
+				}
+				else if (newData)
 					currModel = newData;
 				else if (data.dataCollection)
 					currModel = data.dataCollection.AD.currModel();
@@ -105,7 +111,7 @@ if (!data.columns) return;
 
 				setTimeout(function () { // Wait animate of change page event
 					$$(self.viewId).adjust();
-				}, 700);
+				}, 1200);
 			}
 
 			this.viewId = viewId;
@@ -352,7 +358,8 @@ if (!data.columns) return;
 					description: propertyValues[componentIds.editDescription] || '',
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
 					columns: propertyValues[componentIds.selectColumns] || '',
-					visibleFieldIds: visibleFieldIds // [ABColumn.id]
+					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
+					recordFilter: propertyValues[componentIds.recordFilter] || ''
 				};
 
 				return settings;
@@ -385,8 +392,29 @@ if (!data.columns) return;
 						self.render(setting, editable, showAll, dataCollection)
 							.fail(next)
 							.then(function () {
-								next(null);
+								next(null, dataCollection);
 							});
+					},
+					// Get row data to show in list
+					function (dataCollection, next) {
+						if (dataCollection) {
+							// Properties
+							// Filter - Row
+							var rowData = dataCollection.find({});
+
+							var recordFilter = $$(componentIds.propertyView).getItem(componentIds.recordFilter);
+							recordFilter.options = rowData.map(function(row) {
+								return {
+									id: row.id,
+									value: 'ID: #id# - #label#'.replace('#id#', row.id).replace('#label#', row._dataLabel)
+								};
+							});
+
+							next();
+						}
+						else {
+							next();
+						}
 					}
 				]);
 
@@ -430,6 +458,7 @@ if (!data.columns) return;
 						propValues[componentIds.editDescription] = setting.description || '';
 						propValues[componentIds.selectObject] = setting.object;
 						propValues[componentIds.selectColumns] = setting.columns;
+						propValues[componentIds.recordFilter] = setting.recordFilter || '';
 
 						$$(componentIds.propertyView).setValues(propValues);
 						$$(componentIds.propertyView).refresh();
@@ -520,7 +549,19 @@ if (!data.columns) return;
 						label: 'Columns',
 						template: function (data, dataValue) {
 							var selectedData = $.grep(data.options, function (opt) { return opt.value == dataValue; });
-							console.log('*****HEY', data, dataValue, selectedData);
+
+							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
+						}
+					},
+					{ label: "Filter", type: "label" },
+					{
+						id: componentIds.recordFilter,
+						name: 'filter',
+						type: 'richselect',
+						label: 'Row',
+						template: function (data, dataValue) {
+							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+
 							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
 						}
 					}
