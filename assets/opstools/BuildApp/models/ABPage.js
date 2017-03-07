@@ -150,7 +150,7 @@ steal(
 												page.comInstances[item.id].onDisplay();
 											}
 										} else {
-											console.warning('page.comInstances could not find:'+item.id);
+											console.warn('page.comInstances could not find:'+item.id);
 										}
 
 										next();
