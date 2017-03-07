@@ -52,7 +52,7 @@ steal(
 								self.initEvents();
 
 								// Store the root page
-								self.rootPage = self.data.application.pages.filter(function (page) {
+								self.rootPage = self.data.pages.filter(function (page) {
 									return page.id == self.options.page
 								})[0];
 
@@ -124,7 +124,7 @@ steal(
 												if (page.translate) page.translate();
 											});
 
-											// self.data.application.pages = result;
+											self.data.pages = result;
 
 											next();
 										}, next);
@@ -151,17 +151,17 @@ steal(
 
 											var exists = false;
 
-											self.data.application.pages.forEach(function (page, index) {
+											self.data.pages.forEach(function (page, index) {
 												// Update exists page
 												if (page.id == data.page) {
 													// #Hack! Fix the ModelUpdate() syncing
-													self.data.application.pages.attr(index, newPage.attr());
+													self.data.pages.attr(index, newPage.attr());
 													exists = true;
 												}
 											});
 
 											// Add new page to list
-											if (!exists) self.data.application.pages.push(newPage);
+											if (!exists) self.data.pages.push(newPage);
 
 											// Render the new page
 											self.renderPage(newPage);
@@ -180,8 +180,7 @@ steal(
 
 
 							AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
-
-								var page = self.data.application.pages.filter(function (p) {
+								var page = self.data.pages.filter(function (p) {
 									if (p.id == data.page) {
 										// Check sub-pages or tabs
 										if (p.id != self.options.page) {
@@ -214,15 +213,23 @@ steal(
 
 									// Get the page data
 									self.data.application.getPage(data.page)
-										.then(function (updatePage) {
-											if (updatePage.translate) updatePage.translate();
+										.then(function (page) {
+											var updatePage;
+
+											if (page.translate) page.translate();
 
 											// Update page in list
-											self.data.application.pages.forEach(function (page, index) {
-												if (page.id == updatePage.id)
+											self.data.pages.forEach(function (p, index) {
+												if (p.id == page.id) {
 													// #Hack! Fix the ModelUpdate() syncing
-													self.data.application.pages.attr(index, updatePage.attr());
+													self.data.pages.attr(index, page.attr());
+
+													// Find the updated page in list
+													updatePage = self.data.pages[index];
+												}
 											});
+
+											if (updatePage == null) return;
 
 											// rebuild our display
 											self.renderPage(updatePage);
@@ -247,7 +254,7 @@ steal(
 									if (self.activePage && self.activePage.id == data.page && self.previousPage)
 										self.showPage(self.previousPage);
 
-									self.data.application.pages.slice(0).forEach(function (page, index) {
+									self.data.pages.slice(0).forEach(function (page, index) {
 										if (data.page != page.id) return;
 
 										var pageDomId = self.getPageDomID(page);
@@ -264,8 +271,8 @@ steal(
 											}
 										}
 
-										// Remove from self.data.application.pages
-										self.data.application.pages.splice(index, 1);
+										// Remove from self.data.pages
+										self.data.pages.splice(index, 1);
 									});
 
 									// Re-render menu and link components
@@ -312,7 +319,7 @@ steal(
 
 						renderPageContainer: function () {
 							var self = this,
-								pages = self.data.application.pages;
+								pages = self.data.pages;
 
 							// Clear UI content
 							var rootDomId = self.getPageDomID(self.rootPage);
@@ -408,7 +415,7 @@ steal(
 									// don't render tabs.  The component will do that.
 
 									// refresh tab view when update
-									var parentPage = self.data.application.pages.filter(function (p) { return p.id == page.parent.id })[0];
+									var parentPage = self.data.pages.filter(function (p) { return p.id == page.parent.id })[0];
 									if (parentPage == null) break;
 
 									parentPage.components.forEach(function (com) {
@@ -426,7 +433,7 @@ steal(
 										var selectedIndex = $$(tabViewId).getTabbar().optionIndex($$(tabViewId).getValue());
 
 										// force a refresh on component
-										parentPage.comInstances[com.id] = null;
+										parentPage.removeAttr('comInstances.' + com.id);
 
 										// Rerender the tab component
 										parentPage.renderComponent(self.data.application, com)
@@ -531,7 +538,7 @@ steal(
 									self.showPage(self.previousPage);
 								else if (self.activePage.id != data.pageId && data.pageId) {
 
-									var redirectPage = self.data.application.pages.filter(function (p) { return p.id == data.pageId; });
+									var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
 
 									if (redirectPage && redirectPage.length > 0)
 										self.showPage(redirectPage[0]);
@@ -558,7 +565,7 @@ steal(
 							// Bind events of components in tab
 							if (item.component == 'tab' && item.setting && item.setting.tabs) {
 								item.setting.tabs.forEach(function (tab) {
-									var tabPage = self.data.application.pages.filter(function (p) { return p.name == tab.uuid; })[0];
+									var tabPage = self.data.pages.filter(function (p) { return p.name == tab.uuid; })[0];
 
 									if (tabPage == null || tabPage.components == null || tabPage.comInstances == null) return;
 
