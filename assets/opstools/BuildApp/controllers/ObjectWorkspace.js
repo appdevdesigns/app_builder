@@ -451,12 +451,6 @@ steal(
 									});
 							});
 
-							// WORKAROUND : Remove it when upgrade webix to 4.2 (It is not release yet)
-							// It's a known regression in Webix 4.1 GPL (in Pro it works as expected). The fix will be included in the next build.
-							// As a temporary workaround, please try to manually patch the missing method (it will be unnecessary in 4.2):
-							// http://forum.webix.com/discussion/30381/bug-not-working-editnext
-							$$(self.webixUiId.objectDatatable).QD = function () { return false; };
-
 							// DataTable header
 							$$(self.webixUiId.editHeaderPopup).registerHeaderClick(function (clickedItem, headerField) {
 								switch (clickedItem) {
