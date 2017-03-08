@@ -139,9 +139,12 @@ steal(
 									},
 									// Render component
 									function (next) {
-										page.attr('comInstances.' + item.id).render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
-											.then(function () { next(); }, next);
-
+										if (page.attr('comInstances.' + item.id)) {
+											page.attr('comInstances.' + item.id).render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
+												.then(function () { next(); }, next);
+										}
+										else
+											next();
 									},
 									// Update state on load
 									function (next) {
