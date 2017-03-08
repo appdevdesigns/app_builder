@@ -756,7 +756,9 @@ steal(
                                         "on": {
                                             "onAfterRender": function() {
                                                 var chooseIcon = $(this.$view).find('.icp-dd');
-                                                chooseIcon.iconpicker({ hideOnSelect: true });
+                                                if (chooseIcon.iconpicker) {
+                                                    chooseIcon.iconpicker({ hideOnSelect: true });
+                                                }
                                             }
                                         }
                                     }
@@ -815,7 +817,12 @@ steal(
                                     currentTab.transaction('add', values);
 
                                     var chooseIcon = $($$(componentIds.iconPicker).$view).find('.icp-dd');
-                                    var icon = chooseIcon.data('iconpicker').iconpickerValue;
+                                    var iconData = chooseIcon.data('iconpicker');
+                                    var icon = null;
+                                    if (iconData) {
+                                        icon = iconData.iconpickerValue;
+                                    }
+                                    
 
                                     // clear our form
                                     $$(componentIds.addTabForm).clear();
