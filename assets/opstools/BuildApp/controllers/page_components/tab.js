@@ -91,7 +91,6 @@ steal(
                     // updating our display
                     $(self).trigger('renderComplete', {});
 
-                    var tabView = $$(self.viewId);
                     if (tabView && tabView.hideProgress) {
                         tabView.hideProgress();
                     }
@@ -320,6 +319,20 @@ steal(
             this.isRendered = function () {
                 return data.isRendered === true;
             };
+
+
+            this.onDisplay = function () {
+                var tabView = $$(this.viewId);
+
+                if (tabView && tabView._pageTabs) {
+                    tabView._pageTabs.forEach(function (page) {
+                        page.components.forEach(function (com) {
+                            if (page.comInstances && page.comInstances[com.id] && page.comInstances[com.id].onDisplay)
+                                page.comInstances[com.id].onDisplay();
+                        });
+                    });
+                }
+            }
 
 
             /**

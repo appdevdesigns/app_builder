@@ -108,10 +108,6 @@ if (!data.columns) return;
 							displayField.setValue('');
 					}
 				});
-
-				setTimeout(function () { // Wait animate of change page event
-					$$(self.viewId).adjust();
-				}, 1200);
 			}
 
 			this.viewId = viewId;

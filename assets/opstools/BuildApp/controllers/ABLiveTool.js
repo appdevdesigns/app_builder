@@ -447,6 +447,7 @@ steal(
 												$$(tabViewId).setValue(selectedTabView.id);
 											});
 									});
+
 									break;
 								case 'page':
 								default:
@@ -474,6 +475,8 @@ steal(
 									// Add to multi-view
 									else if ($$(self.containerDomID))
 										$$(self.containerDomID).addView(pageTemplate);
+
+									break;
 							}
 						},
 
@@ -529,6 +532,14 @@ steal(
 
 								if ($$(itemInfo.domID))
 									$$(itemInfo.domID).adjust();
+
+								// if (_this.activePage.comInstances) {
+								// 	_this.activePage.components.forEach(function (item) {
+								// 		if (_this.activePage.comInstances[item.id] && _this.activePage.comInstances[item.id].onDisplay)
+								// 			_this.activePage.comInstances[item.id].onDisplay();
+								// 	});
+								// }
+
 							});
 
 							$(comInstance).off('changePage');

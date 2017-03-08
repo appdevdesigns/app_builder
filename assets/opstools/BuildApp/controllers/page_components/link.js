@@ -36,13 +36,13 @@ steal(
 
 				webix.ui(view, $$(self.viewId));
 
-				setTimeout(function () {
-					$(self).trigger('renderComplete', {});
-				}, 100);
-
 				data.isRendered = true;
 
 				q.resolve();
+
+				setTimeout(function () {
+					$(self).trigger('renderComplete', {});
+				}, 100);
 
 				return q;
 			};

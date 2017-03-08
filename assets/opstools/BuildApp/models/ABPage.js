@@ -139,7 +139,7 @@ steal(
 									},
 									// Render component
 									function (next) {
-										page.comInstances[item.id].render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
+										page.attr('comInstances.' + item.id).render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
 											.then(function () { next(); }, next);
 
 									},
