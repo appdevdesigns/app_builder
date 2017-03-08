@@ -165,7 +165,10 @@ steal(
                                         // this should have all the <div>s for 
                                         // it's components to attach to.
                                         $(id).html(page.getItemTemplate());
-                                        page.comInstances = null; // force a refresh on components
+
+                                        // force a refresh on components
+                                        // page.comInstances = null;
+                                        page.removeAttr('comInstances');
 
                                         // cause the page to insert it's components:
                                         page.display(application)

@@ -398,6 +398,8 @@ steal(
                                                                     }).then(function (result) {
                                                                         $$(self.webixUiId.addNewPopup).hide();
 
+																		self.refreshObjectList();
+
                                                                         if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
                                                                             $$(self.webixUiId.objectList).unselectAll();
                                                                             $$(self.webixUiId.objectList).select(result.id);
