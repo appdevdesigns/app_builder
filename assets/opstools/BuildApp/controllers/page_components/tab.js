@@ -756,7 +756,9 @@ steal(
                                         "on": {
                                             "onAfterRender": function() {
                                                 var chooseIcon = $(this.$view).find('.icp-dd');
-                                                chooseIcon.iconpicker({ hideOnSelect: true });
+                                                if (chooseIcon.iconpicker) {
+                                                    chooseIcon.iconpicker({ hideOnSelect: true });
+                                                }
                                             }
                                         }
                                     }
