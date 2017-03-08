@@ -465,7 +465,7 @@ if (!data.columns) return;
 				return data.isRendered === true;
 			};
 
-			this.onDisplay = function () {
+			this.resize = function () {
 				$$(this.viewId).adjust();
 			};
 
