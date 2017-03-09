@@ -68,12 +68,21 @@ steal(
 										dataCollections[objectId].checkedItems = []; // [rowId1, rowId2, ..., rowIdn]
 										dataCollections[objectId].updateDataTimeout = {}; // { dataId: timeoutId }
 
+										dataCollections[objectId].attachEvent('onAfterCursorChange', function (id) {
+
+											// TEMPORARY FEATURE :
+											if (dataCollections[objectId].recordFilter != null && 
+												dataCollections[objectId].recordFilter != id) {
+												setTimeout(function() {
+													dataCollections[objectId].setCursor(dataCollections[objectId].recordFilter);
+												}, 10);
+											}
+										});
+
 										// Listen change data event
 										dataCollections[objectId].attachEvent('onAfterAdd', function (id, index) {
 											var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
 											if (!rowData || !rowData[0]) return;
-
-console.log('DC onAfterAdd - objectId:', objectId, ' dataId: ', id, $.extend({}, rowData[0]));
 
 											dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
 										});
@@ -86,8 +95,6 @@ console.log('DC onAfterAdd - objectId:', objectId, ' dataId: ', id, $.extend({},
 
 												var oldData = dataCollections[objectId].getItem(id);
 
-console.log('DC onDataUpdate - objectId:', objectId, ' dataId: ', id, $.extend({}, rowData[0]));
-
 												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
 
 												delete dataCollections[objectId].updateDataTimeout[id];
@@ -99,8 +106,6 @@ console.log('DC onDataUpdate - objectId:', objectId, ' dataId: ', id, $.extend({
 										dataCollections[objectId].attachEvent('onBeforeDelete', function (id) {
 											var rowData = dataCollections[objectId].getItem(id);
 											if (!rowData) return true;
-
-console.log('DC onBeforeDelete - objectId:', objectId, ' dataId: ', id, $.extend({}, rowData));
 
 											return true;
 										});

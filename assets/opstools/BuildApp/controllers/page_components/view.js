@@ -50,12 +50,7 @@ steal(
 
 				if (!object) return;
 
-				if (setting.recordFilter) {
-					if (data.dataCollection) {
-						currModel = data.dataCollection.find({ id: setting.recordFilter })[0];
-					}
-				}
-				else if (newData)
+				if (newData)
 					currModel = newData;
 				else if (data.dataCollection)
 					currModel = data.dataCollection.AD.currModel();
@@ -68,7 +63,7 @@ steal(
 
 					var displayField = child.getChildViews()[1];
 
-					if (!currModel) {
+					if (currModel == null) {
 						// Clear display
 						if (displayField.setValue)
 							displayField.setValue('');
@@ -124,6 +119,12 @@ if (!data.columns) return;
 
 				// Initial events
 				if (data.dataCollection) {
+					// TEMPORARY FEATURE :
+					if (setting.recordFilter != null) {
+						data.dataCollection.setCursor(setting.recordFilter) 
+						data.dataCollection.recordFilter = setting.recordFilter;
+					}
+
 					if (eventIds['onAfterCursorChange'] == null) {
 						eventIds['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 							updateData.call(self, setting);
