@@ -25,17 +25,34 @@ steal(function () {
 						template: '#label#',
 						on: {
 							onItemClick: function (id, e, node) {
+								var columnsConfig = {};
+
+								dataTable.config.columns.forEach(function (col) {
+									if (col.id == 'appbuilder_trash') return;
+
+									if (col.template) {
+										columnsConfig[col.id] = {
+											template: function (obj) { return obj[col.id]; }
+										};
+									}
+									else {
+										columnsConfig[col.id] = true;
+									}
+								});
+
 								switch (id) {
 									case 'excel':
 										// Set path of xls.core.min.js and xlsx.core.min.js
 										webix.cdn = "../js/webix";
 										webix.toExcel(dataTable, {
+											columns: columnsConfig,
 											filterHTML: true
 										});
 										break;
 									case 'csv':
 										webix.csv.delimiter.cols = ",";
 										webix.toCSV(dataTable, {
+											columns: columnsConfig,
 											filterHTML: true
 										});
 										break;

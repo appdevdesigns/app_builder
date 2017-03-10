@@ -7,6 +7,7 @@ steal(
 			importCsvForm: 'ab-object-csv-import-form',
 			headerOnFirstLine: 'ab-object-csv-import-header-first-check-box',
 			uploadFileList: 'ab-object-csv-import-upload-list',
+			separatedBy: 'ab-object-csv-import-separated-by',
 			columnList: 'ab-object-csv-import-column-list',
 			importButton: 'ab-object-csv-import-button'
 		},
@@ -15,6 +16,7 @@ steal(
 					importCsvHeader: AD.lang.label.getLabel('ab.common.importCsvHeader') || "Import CSV",
 					formName: AD.lang.label.getLabel('ab.common.form.name') || "Name",
 					import: AD.lang.label.getLabel('ab.common.import') || "Import",
+					ok: AD.lang.label.getLabel('ab.common.ok') || "Ok",
 					cancel: AD.lang.label.getLabel('ab.common.cancel') || "Cancel"
 				},
 				object: {
@@ -22,13 +24,78 @@ steal(
 				}
 			};
 
+		function populateColumnList() {
+			$$(componentIds.columnList).clearAll();
+
+			var firstLine = instance.dataRows[0];
+
+			if (firstLine == null) return;
+
+			var columnList = [];
+
+			if ($$(componentIds.headerOnFirstLine).getValue()) {
+				columnList = firstLine.split(getSeparatedBy()).map(function (colName, index) {
+					return {
+						columnName: colName.trim(),
+						dataType: getGuessDataType(index)
+					};
+				});
+			}
+			else {
+				for (var i = 0; i < firstLine.split(getSeparatedBy()).length; i++) {
+					columnList.push({
+						columnName: 'Field ' + (i + 1),
+						dataType: getGuessDataType(i)
+					});
+				}
+			}
+
+			$$(componentIds.columnList).parse(columnList);
+		}
+
+		function getGuessDataType(colIndex) {
+			var secondLine = instance.dataRows[1],
+				dataCols = secondLine.split(getSeparatedBy()),
+				data = dataCols[colIndex];
+
+			if (data == null || data == "") {
+				return 'string'
+			}
+			else if (data == 0 || data == 1 || data == true || data == false || data == 'checked' || data == 'unchecked') {
+				return 'boolean';
+			}
+			else if (!isNaN(data)) {
+				return 'number';
+			}
+			else if (Date.parse(data)) {
+				return 'date';
+			}
+			else {
+				if (data.length > 10)
+					return 'text';
+				else
+					return 'string';
+			}
+		}
+
+		function getSeparatedBy() {
+			return $$(componentIds.separatedBy).getValue();
+		}
+
+		function resetState() {
+			instance.dataRows = [];
+
+			$$(componentIds.columnList).clearAll();
+			$$(componentIds.uploadFileList).clearAll();
+
+			$$(componentIds.headerOnFirstLine).disable();
+			$$(componentIds.columnList).disable();
+			$$(componentIds.importButton).disable();
+		}
+
 		var instance = {
 			onInit: function () {
-				$$(componentIds.columnList).clearAll();
-
-				$$(componentIds.headerOnFirstLine).disable();
-				$$(componentIds.columnList).disable();
-				$$(componentIds.importButton).disable();
+				resetState();
 			},
 
 			getCreateView: function () {
@@ -43,28 +110,33 @@ steal(
 							{
 								view: "uploader",
 								name: "csvFile",
-								value: "Upload a CSV file",
+								value: "Choose a CSV file",
 								accept: "text/csv",
 								multiple: false,
 								autosend: false,
 								link: componentIds.uploadFileList,
 								on: {
 									onBeforeFileAdd: function (item) {
+										if (item.file.type.toLowerCase() != "text/csv") {
+											webix.alert({
+												title: "This file extension is disallow",
+												text: "Please only upload CSV file",
+												ok: labels.common.ok
+											});
+
+											return false;
+										}
+
 										var reader = new FileReader();
 
 										reader.onload = function (e) {
-											alert(reader.result);
+											instance.dataRows = reader.result.split('\n');
 
 											$$(componentIds.headerOnFirstLine).enable();
 											$$(componentIds.columnList).enable();
 											$$(componentIds.importButton).enable();
 
-											$$(componentIds.columnList).parse([
-												{ columnName: "Test One" },
-												{ columnName: "Test Two" },
-												{ columnName: "Test Three" },
-												{ columnName: "Test Four" }
-											]);
+											populateColumnList();
 										}
 
 										reader.readAsText(item.file);
@@ -76,19 +148,52 @@ steal(
 								view: "list",
 								type: "uploader",
 								autoheight: true,
-								borderless: true
+								borderless: true,
+								onClick: {
+									webix_remove_upload: function (e, id, trg) {
+										this.remove(id);
+										resetState();
+										return true;
+									}
+								}
+							},
+							{
+								id: componentIds.separatedBy,
+								view: "richselect",
+								label: "Separated by",
+								labelWidth: 100,
+								options: [
+									{ id: ",", value: "Comma (,)" },
+									{ id: "\t", value: "Tab (&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)" },
+									{ id: ";", value: "Semicolon (;)" },
+									{ id: "\s", value: "Space ( )" }
+								],
+								value: ',',
+								on: {
+									onChange: function () {
+										populateColumnList();
+									}
+								}
 							},
 							{
 								id: componentIds.headerOnFirstLine,
 								view: "checkbox",
 								labelRight: "Header on first line",
-								labelWidth: 0
+								labelWidth: 0,
+								value: true,
+								on: {
+									onChange: function (newVal, oldVal) {
+										populateColumnList();
+									}
+								}
 							},
 							{
 								id: componentIds.columnList,
 								view: 'activelist',
 								css: 'ab-main-container',
 								datatype: "json",
+								multiselect: false,
+								select: false,
 								height: 280,
 								type: {
 									height: 40
@@ -99,29 +204,26 @@ steal(
 										width: 30,
 										value: true
 									},
+									columnName: {
+										view: 'text',
+										width: 170
+									},
 									dataType: {
 										view: "select",
 										options: [
 											{ id: 'string', value: 'Single text' },
 											{ id: 'text', value: 'Long text' },
 											{ id: 'number', value: 'Number' },
-											{ id: 'date', value: 'Date' },
+											{ id: 'datetime', value: 'Date' },
 											{ id: 'boolean', value: 'Checkbox' },
 										],
 										width: 120
 									},
-									editType: {
-										view: "button",
-										type: "icon",
-										icon: "cog",
-										width: 25
-									}
 								},
 								template:
 								'<span class="float-left">{common.include()}</span>' +
-								'<span class="float-left" style="width: 140px; overflow: hidden;">#columnName#</span>' +
-								'<span class="float-left">{common.dataType()}</span>' +
-								'<span class="float-left">{common.editType()}</span>'
+								'<span class="float-left">{common.columnName()}</span>' +
+								'<span class="float-left">{common.dataType()}</span>'
 							},
 							{
 								margin: 5,
@@ -146,6 +248,52 @@ steal(
 											}
 
 											$(instance).trigger('startCreate');
+
+											var newObject;
+
+											async.series([
+												// Create new object
+												function (next) {
+													var newObjectInfo = {
+														name: newObjectName,
+														label: newObjectName
+													};
+
+													AD.classes.AppBuilder.currApp.createObject(newObjectInfo)
+														.then(function (result) {
+															if (result.translate) result.translate();
+
+															newObject = result;
+
+															next();
+														}, next);
+												},
+												// Create columns to object
+												function (next) {
+													var createColumnTasks = [];
+
+													$$(componentIds.columnList).data.find({}).forEach(function (item, index) {
+														// item.columnName
+														createColumnTasks.push(function (ok) {
+															newObject.createColumn(
+																item.dataType,
+																{
+																	name: item.columnName
+																})
+																.then(function () {
+																	ok()
+																}, ok);
+														});
+													});
+
+													async.parallel(createColumnTasks, next);
+												}
+											], function (err) {
+												if (err)
+													$(instance).trigger('createFail', { error: err });
+												else
+													$(instance).trigger('createDone', { newObject: newObject });
+											});
 										}
 									},
 									{
