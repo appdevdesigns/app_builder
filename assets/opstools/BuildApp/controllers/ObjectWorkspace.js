@@ -15,6 +15,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFrozenColumnPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableDefineLabelPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/ExportDataPopup.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditHeaderPopup.js',
 
@@ -57,6 +58,7 @@ steal(
 								frozenButton: 'ab-frozen-columns-toolbar',
 								defineLabelButton: 'ab-define-label-toolbar',
 								addFieldsButton: 'ab-add-fields-button',
+								exportButton: 'ab-add-export-button',
 
 								addNewRowButton: 'ab-add-new-row-button',
 
@@ -67,7 +69,8 @@ steal(
 								sortFieldsPopup: 'ab-sort-popup',
 								frozenColumnsPopup: 'ab-frozen-popup',
 								defineLabelPopup: 'ab-define-label-popup',
-								addFieldsPopup: 'ab-add-fields-popup'
+								addFieldsPopup: 'ab-add-fields-popup',
+								exportDataPopup: 'ab-export-data-popup'
 							};
 
 							this.initMultilingualLabels();
@@ -128,6 +131,7 @@ steal(
 							self.labels.object.toolbar.defineLabel = AD.lang.label.getLabel('ab.object.toolbar.defineLabel') || "Define label";
 							self.labels.object.toolbar.permission = AD.lang.label.getLabel('ab.object.toolbar.permission') || "Permission";
 							self.labels.object.toolbar.addFields = AD.lang.label.getLabel('ab.object.toolbar.addFields') || "Add new column";
+							self.labels.object.toolbar.export = AD.lang.label.getLabel('ab.object.toolbar.export') || "Export";
 						},
 
 						initControllers: function () {
@@ -170,6 +174,11 @@ steal(
 								view: "edit_header_popup",
 							});
 
+							webix.ui({
+								id: self.webixUiId.exportDataPopup,
+								view: "export_data_popup",
+							});
+
 							self.data.definition = {
 								rows: [
 									{
@@ -195,7 +204,8 @@ steal(
 											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton, icon: "table", type: "icon", width: 150, badge: 0 },
 											{ view: 'button', label: self.labels.object.toolbar.defineLabel, popup: self.webixUiId.defineLabelPopup, id: self.webixUiId.defineLabelButton, icon: "newspaper-o", type: "icon", width: 130 },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
-											{ view: 'button', id: self.webixUiId.addFieldsButton, label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 }
+											{ view: 'button', id: self.webixUiId.addFieldsButton, label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 },
+											{ view: 'button', id: self.webixUiId.exportButton, label: self.labels.object.toolbar.export, popup: self.webixUiId.exportDataPopup, icon: "file-o", type: "icon", width: 90 }
 										]
 									},
 									{
@@ -779,6 +789,7 @@ steal(
 								$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.editHeaderPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.exportDataPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 
 								// Listen popup events
 								self.attachPopupEvents();
