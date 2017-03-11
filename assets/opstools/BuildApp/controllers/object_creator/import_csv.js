@@ -5,6 +5,7 @@ steal(
 	function (inputValidator) {
 		var componentIds = {
 			importCsvForm: 'ab-object-csv-import-form',
+			objectName: 'ab-object-csv-import-object-name',
 			headerOnFirstLine: 'ab-object-csv-import-header-first-check-box',
 			uploadFileList: 'ab-object-csv-import-upload-list',
 			separatedBy: 'ab-object-csv-import-separated-by',
@@ -36,6 +37,7 @@ steal(
 			if ($$(componentIds.headerOnFirstLine).getValue()) {
 				columnList = firstLine.split(getSeparatedBy()).map(function (colName, index) {
 					return {
+						include: true,
 						columnName: colName.trim(),
 						dataType: getGuessDataType(index)
 					};
@@ -44,6 +46,7 @@ steal(
 			else {
 				for (var i = 0; i < firstLine.split(getSeparatedBy()).length; i++) {
 					columnList.push({
+						include: true,
 						columnName: 'Field ' + (i + 1),
 						dataType: getGuessDataType(i)
 					});
@@ -85,6 +88,8 @@ steal(
 		function resetState() {
 			instance.dataRows = [];
 
+			$$(componentIds.objectName).setValue('');
+
 			$$(componentIds.columnList).clearAll();
 			$$(componentIds.uploadFileList).clearAll();
 
@@ -106,7 +111,7 @@ steal(
 						id: componentIds.importCsvForm,
 						width: 400,
 						elements: [
-							{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.object.placeholderName, labelWidth: 70 },
+							{ view: "text", id: componentIds.objectName, label: labels.common.formName, name: "name", required: true, placeholder: labels.object.placeholderName, labelWidth: 70 },
 							{
 								view: "uploader",
 								name: "csvFile",
@@ -195,14 +200,14 @@ steal(
 								multiselect: false,
 								select: false,
 								height: 280,
+								maxHeight: 280,
 								type: {
 									height: 40
 								},
 								activeContent: {
 									include: {
 										view: "checkbox",
-										width: 30,
-										value: true
+										width: 30
 									},
 									columnName: {
 										view: 'text',
@@ -242,7 +247,23 @@ steal(
 
 											var newObjectName = $$(componentIds.importCsvForm).elements['name'].getValue().trim();
 
+											// Validate required object name
 											if (!inputValidator.validate(newObjectName)) {
+												saveButton.enable();
+												return false;
+											}
+
+											// Validate required column names
+											var emptyColNames = $$(componentIds.columnList).data.find({}).filter(function (col) {
+												return col.include && col.columnName.trim().length == 0;
+											});
+											if (emptyColNames.length > 0) {
+												webix.alert({
+													title: "Column name is required",
+													text: "Please enter column name",
+													ok: labels.common.ok
+												});
+
 												saveButton.enable();
 												return false;
 											}
@@ -273,17 +294,18 @@ steal(
 													var createColumnTasks = [];
 
 													$$(componentIds.columnList).data.find({}).forEach(function (item, index) {
-														// item.columnName
-														createColumnTasks.push(function (ok) {
-															newObject.createColumn(
-																item.dataType,
-																{
-																	name: item.columnName
-																})
-																.then(function () {
-																	ok()
-																}, ok);
-														});
+														if (item.include) {
+															createColumnTasks.push(function (ok) {
+																newObject.createColumn(
+																	item.dataType,
+																	{
+																		name: item.columnName
+																	})
+																	.then(function () {
+																		ok()
+																	}, ok);
+															});
+														}
 													});
 
 													async.parallel(createColumnTasks, next);
