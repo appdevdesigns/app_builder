@@ -201,7 +201,7 @@ steal(
 					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
-					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, viewId, childView.$view);
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowData, rowData ? rowData[col.name] : null, viewId, childView.$view);
 
 					if (childView.config && childView.config.view === 'template') {
 
