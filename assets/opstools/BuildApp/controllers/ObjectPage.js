@@ -24,7 +24,9 @@ steal(
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
 								updatedObjectEvent: 'AB_Object.Updated',
-								deletedObjectEvent: 'AB_Object.Deleted'
+								deletedObjectEvent: 'AB_Object.Deleted',
+
+								addNewRowEvent: 'AB_Object.AddNewRow'
 							}, options);
 							this.options = options;
 
@@ -93,6 +95,10 @@ steal(
 								self.controllers.ObjectWorkspace.deleteObject(data.object);
 
 								self.controllers.ObjectWorkspace.showTable();
+							});
+
+							self.controllers.ObjectWorkspace.on(self.options.addNewRowEvent, function (event, data) {
+								self.controllers.ObjectWorkspace.addNewRow(data.newRow);
 							});
 						},
 

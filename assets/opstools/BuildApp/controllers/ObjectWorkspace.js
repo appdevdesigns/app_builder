@@ -347,24 +347,7 @@ steal(
 												width: 150,
 												align: 'right',
 												click: function () {
-													$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-													var newModel = self.Model.ObjectModel.Cached.newInstance();
-
-													newModel.save()
-														.fail(function (err) {
-															console.error(err);
-															// TODO message
-
-															$$(self.webixUiId.objectDatatable).hideProgress();
-														})
-														.then(function (result) {
-															if (result.translate) result.translate();
-
-															$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
-
-															$$(self.webixUiId.objectDatatable).hideProgress();
-														})
+													self.addNewRow({});
 												}
 											}
 										]
@@ -974,6 +957,33 @@ steal(
 								// Clear cache data
 								objectModel.Cached.cacheClear();
 							}
+						},
+
+						addNewRow: function (newRow) {
+							var self = this;
+
+							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+							var newModel = self.Model.ObjectModel.Cached.newInstance();
+
+							Object.keys(newRow).forEach(function (key) {
+								newModel.attr(key, newRow[key]);
+							});
+
+							newModel.save()
+								.fail(function (err) {
+									console.error(err);
+									// TODO message
+
+									$$(self.webixUiId.objectDatatable).hideProgress();
+								})
+								.then(function (result) {
+									if (result.translate) result.translate();
+
+									$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
+
+									$$(self.webixUiId.objectDatatable).hideProgress();
+								})
 						},
 
 						updateRowData: function (state, editor, ignoreUpdate) {

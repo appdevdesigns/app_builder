@@ -71,7 +71,7 @@ steal(
 				return 'number';
 			}
 			else if (Date.parse(data)) {
-				return 'date';
+				return 'datetime';
 			}
 			else {
 				if (data.length > 10)
@@ -270,7 +270,8 @@ steal(
 
 											$(instance).trigger('startCreate');
 
-											var newObject;
+											var newObject,
+												columnList = [];
 
 											async.series([
 												// Create new object
@@ -295,11 +296,40 @@ steal(
 
 													$$(componentIds.columnList).data.find({}).forEach(function (item, index) {
 														if (item.include) {
+															columnList.push(item.columnName);
+
 															createColumnTasks.push(function (ok) {
+																var setting = {};
+
+																switch (item.dataType) {
+																	case 'string':
+																	case 'text':
+																		setting = {
+																			supportMultilingual: 1,
+																			default: ''
+																		};
+																		break;
+																	case 'number':
+																		break;
+																	case 'datetime':
+																		setting = {
+																			format: "fullDateFormatStr"
+																		};
+																		break;
+																	case 'boolean':
+																		setting = {
+																			"css": "center",
+																			"template": "<div class=\"ab-boolean-display\">{common.checkbox()}</div>"
+																		};
+																		break;
+																}
+
 																newObject.createColumn(
 																	item.dataType,
 																	{
-																		name: item.columnName
+																		name: item.columnName,
+																		weight: index,
+																		setting: setting
 																	})
 																	.then(function () {
 																		ok()
@@ -308,14 +338,38 @@ steal(
 														}
 													});
 
-													async.parallel(createColumnTasks, next);
+													async.parallel(createColumnTasks, function (err) {
+														if (err)
+															$(instance).trigger('createFail', { error: err });
+														else
+															$(instance).trigger('createDone', { newObject: newObject });
+
+														next(err);
+													});
+												},
+												// Add data
+												function (next) {
+													setTimeout(function () {
+
+														instance.dataRows.forEach(function (data, index) {
+															if ($$(componentIds.headerOnFirstLine).getValue() && index == 0) return;
+
+															var rowData = {};
+															var colValues = data.split(getSeparatedBy());
+															colValues.forEach(function (cVal, index) {
+																if (cVal != null)
+																	rowData[columnList[index]] = cVal;
+															})
+
+															// Add row data
+															$(instance).trigger('addNewRow', { newRow: rowData });
+
+														});
+
+														next();
+													}, 1500);
 												}
-											], function (err) {
-												if (err)
-													$(instance).trigger('createFail', { error: err });
-												else
-													$(instance).trigger('createDone', { newObject: newObject });
-											});
+											]);
 										}
 									},
 									{

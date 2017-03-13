@@ -24,6 +24,7 @@ steal(
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
 								deletedObjectEvent: 'AB_Object.Deleted',
+								addNewRowEvent: 'AB_Object.AddNewRow',
 
 								countCachedItemEvent: 'AB_Cached.Count'
 							}, options);
@@ -132,6 +133,10 @@ steal(
 							$(blankObjectCreator).on('cancel', function (event, data) { $$(self.webixUiId.addNewPopup).hide(); });
 							$(importObjectCreator).on('cancel', function (event, data) { $$(self.webixUiId.addNewPopup).hide(); });
 							$(importCsvCreator).on('cancel', function (event, data) { $$(self.webixUiId.addNewPopup).hide(); });
+
+							$(importCsvCreator).on('addNewRow', function (event, data) {
+								self.element.trigger(self.options.addNewRowEvent, { newRow: data.newRow });
+							});
 						},
 
 						initWebixUI: function () {
