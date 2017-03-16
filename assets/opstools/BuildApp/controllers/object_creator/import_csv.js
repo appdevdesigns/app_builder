@@ -10,7 +10,8 @@ steal(
 			uploadFileList: 'ab-object-csv-import-upload-list',
 			separatedBy: 'ab-object-csv-import-separated-by',
 			columnList: 'ab-object-csv-import-column-list',
-			importButton: 'ab-object-csv-import-button'
+			importButton: 'ab-object-csv-import-save',
+			cancelButton: 'ab-object-csv-import-cancel'
 		},
 			labels = {
 				common: {
@@ -110,6 +111,9 @@ steal(
 						view: "form",
 						id: componentIds.importCsvForm,
 						width: 400,
+						rules: {
+							name: inputValidator.rules.preventDuplicateObjectName
+						},
 						elements: [
 							{ view: "text", id: componentIds.objectName, label: labels.common.formName, name: "name", required: true, placeholder: labels.object.placeholderName, labelWidth: 70 },
 							{
@@ -271,7 +275,8 @@ steal(
 											$(instance).trigger('startCreate');
 
 											var newObject,
-												columnList = [];
+												columnList = [],
+												columnResults = [];
 
 											async.series([
 												// Create new object
@@ -331,7 +336,9 @@ steal(
 																		weight: index,
 																		setting: setting
 																	})
-																	.then(function () {
+																	.then(function (result) {
+																		columnResults.push(result);
+
 																		ok()
 																	}, ok);
 															});
@@ -356,9 +363,9 @@ steal(
 
 															var rowData = {};
 															var colValues = data.split(getSeparatedBy());
-															colValues.forEach(function (cVal, index) {
-																if (cVal != null)
-																	rowData[columnList[index]] = cVal;
+															columnResults.forEach(function (col, colIndex) {
+																if (colValues[colIndex] != null)
+																	rowData[col.name] = colValues[colIndex];
 															})
 
 															// Add row data
@@ -373,7 +380,7 @@ steal(
 										}
 									},
 									{
-										view: "button", value: labels.common.cancel, click: function () {
+										view: "button", id: componentIds.cancelButton, value: labels.common.cancel, click: function () {
 											$(instance).trigger('cancel');
 										}
 									}
