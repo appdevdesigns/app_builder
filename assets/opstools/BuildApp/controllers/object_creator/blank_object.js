@@ -4,7 +4,9 @@ steal(
 	function (inputValidator) {
 
 		var componentIds = {
-			addNewForm: 'ab-object-add-new-form'
+			addNewForm: 'ab-object-blank-object-form',
+			saveButton: 'ab-object-blank-object-save',
+			cancelButton: 'ab-object-blank-object-cancel'
 		},
 			labels = {
 				common: {
@@ -32,13 +34,16 @@ steal(
 						view: "form",
 						id: componentIds.addNewForm,
 						width: 400,
+						rules: {
+							name: inputValidator.rules.preventDuplicateObjectName
+						},
 						elements: [
 							{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.object.placeholderName, labelWidth: 70 },
 							{
 								margin: 5,
 								cols: [
 									{
-										view: "button", value: labels.common.add, type: "form", click: function () {
+										view: "button", id: componentIds.saveButton, value: labels.common.add, type: "form", click: function () {
 											var saveButton = this;
 											saveButton.disable();
 
@@ -80,16 +85,13 @@ steal(
 										}
 									},
 									{
-										view: "button", value: labels.common.cancel, click: function () {
+										view: "button", id: componentIds.cancelButton, value: labels.common.cancel, click: function () {
 											$(instance).trigger('cancel');
 										}
 									}
 								]
 							}
-						],
-						rules: {
-							name: inputValidator.rules.preventDuplicateObjectName
-						}
+						]
 
 					}
 				};

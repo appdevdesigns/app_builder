@@ -1,8 +1,11 @@
 steal(function () {
 
 	var componentIds = {
+		importModelForm: 'ab-object-import-model-form',
 		importModelList: 'ab-object-import-model-list',
-		importModelListFilter: 'ab-object-import-model-list-filter'
+		importModelListFilter: 'ab-object-import-model-list-filter',
+		saveButton: 'ab-object-import-model-save',
+		cancelButton: 'ab-object-import-model-cancel'
 	},
 		labels = {
 			common: {
@@ -40,6 +43,7 @@ steal(function () {
 			return {
 				header: labels.common.import, //"Import"
 				body: {
+					id: componentIds.importModelForm,
 					view: "form",
 					elements: [
 						// Models list filter
@@ -75,7 +79,7 @@ steal(function () {
 						{
 							cols: [
 								{
-									view: 'button', value: labels.common.import, type: 'form', click: function () {
+									view: 'button', id: componentIds.saveButton, value: labels.common.import, type: 'form', click: function () {
 										var button = this;
 										var list = $$(componentIds.importModelList);
 										var selectedModel = list.getSelectedItem();
@@ -114,7 +118,7 @@ steal(function () {
 									}
 								},
 								{
-									view: "button", value: labels.common.cancel, click: function () {
+									view: "button", id: componentIds.cancelButton, value: labels.common.cancel, click: function () {
 										$(instance).trigger('cancel');
 									}
 								}

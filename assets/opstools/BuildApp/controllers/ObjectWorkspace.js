@@ -836,17 +836,6 @@ steal(
 													AD.classes.AppBuilder.currApp.currObj.createColumn(fieldType, columnInfo)
 														.fail(next)
 														.then(function (result) {
-															var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.name);
-
-															objectModel.Cached.columns.push(result);
-
-															// Add new describe to object model
-															objectModel.describe()[result.name] = result.type;
-
-															// Add multilingual field to object model
-															if (result.setting.supportMultilingual)
-																objectModel.multilingualFields.push(result.name);
-
 															updateColumn = result;
 
 															next();
