@@ -483,6 +483,8 @@ steal(
                                         var targetPage = application.pages.filter(function(p) { return p.name == trans.values.uuid })[0];
                                         if (targetPage) {
                                             targetPage.attr('label', trans.values.label);
+                                            // FIX: prevent comInstances from generating an ajax parameter building error:
+                                            targetPage.removeAttr('comInstances');
                                             actions.push(targetPage.save());
                                         } else {
                                             AD.error.log("Could not find target page to update", { uuid: trans.values.uuid});
