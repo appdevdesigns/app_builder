@@ -121,7 +121,8 @@ steal(
 					var currModel = self.data.linkedToDataCollection.AD.currModel();
 
 					if (currModel) {
-						$$(self.viewId).filter(function (item) {
+						$$(self.viewId).custom_filters = $$(self.viewId).custom_filters || {};
+						$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
 							var itemValues = item[field.name];
 
 							if (!itemValues) {
@@ -132,11 +133,10 @@ steal(
 							}
 
 							return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
-						});
+						};
 					}
-					else {
-						$$(self.viewId).filter(function (item) { return true; });
-					}
+
+					$$(self.viewId).refresh();
 				}
 			};
 
@@ -462,26 +462,6 @@ steal(
 									break;
 							}
 						});
-
-
-					if (events['onBeforeRender'] == null) {
-						var isFiltered = false,
-							filterTimeoutId;
-
-						events['onBeforeRender'] = $$(self.viewId).attachEvent('onBeforeRender', function (data) {
-							// FILTER : Should register this filter to Webix datatable
-							if (filterTimeoutId) clearTimeout(filterTimeoutId);
-
-							filterTimeoutId = setTimeout(function () {
-								if (isFiltered == false) {
-									filterLinkedData.call(self, setting.linkedField);
-									isFiltered = true;
-
-									setTimeout(function () { isFiltered = false }, 1300);
-								}
-							}, 800);
-						});
-					}
 
 					if (events['onAfterRender'] == null) {
 						events['onAfterRender'] = $$(self.viewId).attachEvent('onAfterRender', function (data) {

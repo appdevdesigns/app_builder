@@ -76,6 +76,38 @@ steal(
 								});
 							}
 
+							if (self.eventIds['onBeforeRender'] == null) {
+								var isFiltered = false,
+									filterTimeoutId;
+
+								self.eventIds['onBeforeRender'] = self.dataTable.attachEvent('onBeforeRender', function (data) {
+									// FILTER : Should register this filter to Webix datatable
+									if (filterTimeoutId) clearTimeout(filterTimeoutId);
+
+									filterTimeoutId = setTimeout(function () {
+										// Prevent repeat filter
+										if (isFiltered == false) {
+											isFiltered = true;
+
+											if (self.dataTable.custom_filters && Object.keys(self.dataTable.custom_filters).length > 0) {
+												self.dataTable.filter(function (item) {
+													var isVisible = true;
+													Object.keys(self.dataTable.custom_filters).forEach(function (filter_key) {
+														if (isVisible == false) return;
+
+														isVisible = isVisible && self.dataTable.custom_filters[filter_key](item);
+													});
+
+													return isVisible;
+												});
+											}
+
+											setTimeout(function () { isFiltered = false }, 400);
+										}
+									}, 300);
+								});
+							}
+
 							if (self.eventIds['onAfterRender'] == null) {
 								self.eventIds['onAfterRender'] = self.dataTable.attachEvent("onAfterRender", function (data) {
 									self.showCustomDisplay.call(self, this);
