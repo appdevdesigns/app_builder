@@ -28,10 +28,12 @@
     "lodash": "^4.13.1"
   },
   "devDependencies": {
+    "babel-loader": "^6.4.0",
     "barrels": "^1.6.4",
     "chai": "^3.5.0",
     "mocha": "^3.1.0",
     "sinon": "^1.17.6",
-    "supertest": "^1.2.0"
+    "supertest": "^1.2.0",
+    "webpack": "^2.2.1"
   }
 }
