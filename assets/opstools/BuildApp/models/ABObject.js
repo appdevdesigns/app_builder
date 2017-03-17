@@ -1,8 +1,10 @@
 steal(
+	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+
 	'opstools/BuildApp/models/base/ABObject.js',
 
 	'opstools/BuildApp/models/ABColumn.js',
-	function () {
+	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/model/model').then(function () {
 				var ABColumn = AD.Model.get('opstools.BuildApp.ABColumn');
@@ -97,6 +99,21 @@ steal(
 											next();
 										});
 
+								},
+								// Update column info to model
+								function (next) {
+									var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, self.name);
+
+									objectModel.Cached.columns.push(column);
+
+									// Add new describe to object model
+									objectModel.describe()[column.name] = column.type;
+
+									// Add multilingual field to object model
+									if (column.setting.supportMultilingual)
+										objectModel.multilingualFields.push(column.name);
+
+									next();
 								}
 							], function (err) {
 								if (err) q.reject(err);

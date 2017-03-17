@@ -15,6 +15,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableFrozenColumnPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableDefineLabelPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/ExportDataPopup.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditHeaderPopup.js',
 
@@ -57,6 +58,7 @@ steal(
 								frozenButton: 'ab-frozen-columns-toolbar',
 								defineLabelButton: 'ab-define-label-toolbar',
 								addFieldsButton: 'ab-add-fields-button',
+								exportButton: 'ab-add-export-button',
 
 								addNewRowButton: 'ab-add-new-row-button',
 
@@ -67,7 +69,8 @@ steal(
 								sortFieldsPopup: 'ab-sort-popup',
 								frozenColumnsPopup: 'ab-frozen-popup',
 								defineLabelPopup: 'ab-define-label-popup',
-								addFieldsPopup: 'ab-add-fields-popup'
+								addFieldsPopup: 'ab-add-fields-popup',
+								exportDataPopup: 'ab-export-data-popup'
 							};
 
 							this.initMultilingualLabels();
@@ -128,6 +131,7 @@ steal(
 							self.labels.object.toolbar.defineLabel = AD.lang.label.getLabel('ab.object.toolbar.defineLabel') || "Define label";
 							self.labels.object.toolbar.permission = AD.lang.label.getLabel('ab.object.toolbar.permission') || "Permission";
 							self.labels.object.toolbar.addFields = AD.lang.label.getLabel('ab.object.toolbar.addFields') || "Add new column";
+							self.labels.object.toolbar.export = AD.lang.label.getLabel('ab.object.toolbar.export') || "Export";
 						},
 
 						initControllers: function () {
@@ -170,6 +174,11 @@ steal(
 								view: "edit_header_popup",
 							});
 
+							webix.ui({
+								id: self.webixUiId.exportDataPopup,
+								view: "export_data_popup",
+							});
+
 							self.data.definition = {
 								rows: [
 									{
@@ -195,7 +204,8 @@ steal(
 											{ view: 'button', label: self.labels.object.toolbar.frozenColumns, popup: self.webixUiId.frozenColumnsPopup, id: self.webixUiId.frozenButton, icon: "table", type: "icon", width: 150, badge: 0 },
 											{ view: 'button', label: self.labels.object.toolbar.defineLabel, popup: self.webixUiId.defineLabelPopup, id: self.webixUiId.defineLabelButton, icon: "newspaper-o", type: "icon", width: 130 },
 											{ view: 'button', label: self.labels.object.toolbar.permission, icon: "lock", type: "icon", width: 120 },
-											{ view: 'button', id: self.webixUiId.addFieldsButton, label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 }
+											{ view: 'button', id: self.webixUiId.addFieldsButton, label: self.labels.object.toolbar.addFields, popup: self.webixUiId.addFieldsPopup, icon: "plus", type: "icon", width: 150 },
+											{ view: 'button', id: self.webixUiId.exportButton, label: self.labels.object.toolbar.export, popup: self.webixUiId.exportDataPopup, icon: "file-o", type: "icon", width: 90 }
 										]
 									},
 									{
@@ -337,24 +347,7 @@ steal(
 												width: 150,
 												align: 'right',
 												click: function () {
-													$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
-
-													var newModel = self.Model.ObjectModel.Cached.newInstance();
-
-													newModel.save()
-														.fail(function (err) {
-															console.error(err);
-															// TODO message
-
-															$$(self.webixUiId.objectDatatable).hideProgress();
-														})
-														.then(function (result) {
-															if (result.translate) result.translate();
-
-															$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
-
-															$$(self.webixUiId.objectDatatable).hideProgress();
-														})
+													self.addNewRow({});
 												}
 											}
 										]
@@ -450,12 +443,6 @@ steal(
 										$$(self.webixUiId.objectDatatable).hideProgress();
 									});
 							});
-
-							// WORKAROUND : Remove it when upgrade webix to 4.2 (It is not release yet)
-							// It's a known regression in Webix 4.1 GPL (in Pro it works as expected). The fix will be included in the next build.
-							// As a temporary workaround, please try to manually patch the missing method (it will be unnecessary in 4.2):
-							// http://forum.webix.com/discussion/30381/bug-not-working-editnext
-							$$(self.webixUiId.objectDatatable).QD = function () { return false; };
 
 							// DataTable header
 							$$(self.webixUiId.editHeaderPopup).registerHeaderClick(function (clickedItem, headerField) {
@@ -785,6 +772,7 @@ steal(
 								$$(self.webixUiId.frozenColumnsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.addFieldsPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 								$$(self.webixUiId.editHeaderPopup).registerDataTable($$(self.webixUiId.objectDatatable));
+								$$(self.webixUiId.exportDataPopup).registerDataTable($$(self.webixUiId.objectDatatable));
 
 								// Listen popup events
 								self.attachPopupEvents();
@@ -848,17 +836,6 @@ steal(
 													AD.classes.AppBuilder.currApp.currObj.createColumn(fieldType, columnInfo)
 														.fail(next)
 														.then(function (result) {
-															var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.name);
-
-															objectModel.Cached.columns.push(result);
-
-															// Add new describe to object model
-															objectModel.describe()[result.name] = result.type;
-
-															// Add multilingual field to object model
-															if (result.setting.supportMultilingual)
-																objectModel.multilingualFields.push(result.name);
-
 															updateColumn = result;
 
 															next();
@@ -969,6 +946,33 @@ steal(
 								// Clear cache data
 								objectModel.Cached.cacheClear();
 							}
+						},
+
+						addNewRow: function (newRow) {
+							var self = this;
+
+							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
+
+							var newModel = self.Model.ObjectModel.Cached.newInstance();
+
+							Object.keys(newRow).forEach(function (key) {
+								newModel.attr(key, newRow[key]);
+							});
+
+							newModel.save()
+								.fail(function (err) {
+									console.error(err);
+									// TODO message
+
+									$$(self.webixUiId.objectDatatable).hideProgress();
+								})
+								.then(function (result) {
+									if (result.translate) result.translate();
+
+									$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
+
+									$$(self.webixUiId.objectDatatable).hideProgress();
+								})
 						},
 
 						updateRowData: function (state, editor, ignoreUpdate) {

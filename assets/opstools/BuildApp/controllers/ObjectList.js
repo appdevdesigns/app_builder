@@ -4,8 +4,12 @@ steal(
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/InputValidator.js',
 
+	'opstools/BuildApp/controllers/object_creator/blank_object.js',
+	'opstools/BuildApp/controllers/object_creator/import_exists_object.js',
+	'opstools/BuildApp/controllers/object_creator/import_csv.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
-	function (modelCreator, inputValidator) {
+	function (modelCreator, inputValidator, blankObjectCreator, importObjectCreator, importCsvCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
 				'appdev/control/control').then(function () {
@@ -20,6 +24,7 @@ steal(
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
 								deletedObjectEvent: 'AB_Object.Deleted',
+								addNewRowEvent: 'AB_Object.AddNewRow',
 
 								countCachedItemEvent: 'AB_Cached.Count'
 							}, options);
@@ -34,28 +39,8 @@ steal(
 								objectList: 'ab-object-list',
 								objectListMenuPopup: 'ab-object-list-menu-popup',
 								objectListMenu: 'ab-object-list-menu',
-								addNewButton: 'ab-object-add-new-button',
 								addNewPopup: 'ab-object-add-new-popup',
-								addNewForm: 'ab-object-add-new-form',
-								importModelList: 'ab-object-import-model-list',
-								importModelListFilter: 'ab-object-import-model-list-filter'
-							};
-
-							this.rules = {};
-							this.rules.preventDuplicateName = function (value, id) {
-								// Check duplicate
-								var duplicateObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
-									return obj.id != id &&
-										(obj.name.toLowerCase().trim() == value.toLowerCase().trim() ||
-											obj.label.toLowerCase().trim() == value.toLowerCase().trim());
-								});
-
-								if (duplicateObject && duplicateObject.length > 0) {
-									return false;
-								}
-								else {
-									return true;
-								}
+								addNewButton: 'ab-object-add-new-button'
 							};
 
 							this.initMultilingualLabels();
@@ -76,11 +61,6 @@ steal(
 							self.labels.common.delete = AD.lang.label.getLabel('ab.common.delete') || "Delete";
 							self.labels.common.yes = AD.lang.label.getLabel('ab.common.yes') || "Yes";
 							self.labels.common.no = AD.lang.label.getLabel('ab.common.no') || "No";
-							self.labels.common.add = AD.lang.label.getLabel('ab.common.add') || "Add";
-							self.labels.common.create = AD.lang.label.getLabel('ab.common.create') || "Create";
-							self.labels.common.import = AD.lang.label.getLabel('ab.common.import') || "Import";
-							self.labels.common.cancel = AD.lang.label.getLabel('ab.common.cancel') || "Cancel";
-							self.labels.common.formName = AD.lang.label.getLabel('ab.common.form.name') || "Name";
 							self.labels.common.rename = AD.lang.label.getLabel('ab.common.rename') || "Rename";
 							self.labels.common.renameErrorMessage = AD.lang.label.getLabel('ab.common.rename.error') || "System could not rename <b>{0}</b>.";
 							self.labels.common.renameSuccessMessage = AD.lang.label.getLabel('ab.common.rename.success') || "Rename to <b>{0}</b>.";
@@ -97,9 +77,6 @@ steal(
 							self.labels.object.duplicateName = AD.lang.label.getLabel('ab.object.duplicateName') || "<b>{0}</b> is duplicate";
 							self.labels.object.addNew = AD.lang.label.getLabel('ab.object.addNew') || 'Add new object';
 							self.labels.object.menu = AD.lang.label.getLabel('ab.object.menu') || "Object Menu";
-
-							// Form
-							self.labels.object.placeholderName = AD.lang.label.getLabel('ab.object.form.placeholderName') || "Object name";
 						},
 
 						initEvents: function () {
@@ -107,6 +84,58 @@ steal(
 
 							$(modelCreator).on(self.options.countCachedItemEvent, function (event, data) {
 								self.refreshUnsyncNumber(data.objectName);
+							});
+
+							$(blankObjectCreator).on('startCreate', function (event, data) { $$(self.webixUiId.objectList).showProgress({ type: 'icon' }); });
+							$(importObjectCreator).on('startCreate', function (event, data) { $$(self.webixUiId.objectList).showProgress({ type: 'icon' }); });
+							$(importCsvCreator).on('startCreate', function (event, data) { $$(self.webixUiId.objectList).showProgress({ type: 'icon' }); });
+
+							function createDone(event, data) {
+								$$(self.webixUiId.addNewPopup).hide();
+
+								// Add the new object to the list on the page
+								if (AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return obj.id == data.newObject.id }).length < 1)
+									AD.classes.AppBuilder.currApp.objects.push(data.newObject);
+
+								self.refreshObjectList();
+
+								if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
+									$$(self.webixUiId.objectList).unselectAll();
+									$$(self.webixUiId.objectList).select(data.newObject.id);
+								}
+
+								$$(self.webixUiId.objectList).hideProgress();
+
+								// Show success message
+								webix.message({
+									type: "success",
+									text: self.labels.common.createSuccessMessage.replace('{0}', data.newObject.label)
+								});
+							}
+							$(blankObjectCreator).on('createDone', createDone);
+							$(importObjectCreator).on('createDone', createDone);
+							$(importCsvCreator).on('createDone', createDone);
+
+							function createFail(event, data) {
+								$$(self.webixUiId.objectList).hideProgress();
+
+								webix.message({
+									type: 'error',
+									text: data.error.message || data.error
+								});
+
+								AD.error.log('Object : Error create object data', { error: data.error });
+							}
+							$(blankObjectCreator).on('createFail', createFail);
+							$(importObjectCreator).on('createFail', createFail);
+							$(importCsvCreator).on('createFail', createFail);
+
+							$(blankObjectCreator).on('cancel', function (event, data) { $$(self.webixUiId.addNewPopup).hide(); });
+							$(importObjectCreator).on('cancel', function (event, data) { $$(self.webixUiId.addNewPopup).hide(); });
+							$(importCsvCreator).on('cancel', function (event, data) { $$(self.webixUiId.addNewPopup).hide(); });
+
+							$(importCsvCreator).on('addNewRow', function (event, data) {
+								self.element.trigger(self.options.addNewRowEvent, { newRow: data.newRow });
 							});
 						},
 
@@ -167,7 +196,7 @@ steal(
 												}
 
 												// Validation - check duplicate
-												if (!self.rules.preventDuplicateName(state.value, editor.id) && state.value != state.old) {
+												if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
 													webix.alert({
 														title: self.labels.object.invalidName,
 														ok: self.labels.common.ok,
@@ -325,203 +354,19 @@ steal(
 								selectNewObject: true,
 								on: {
 									"onBeforeShow": function () {
-										// for Create
-										$$(self.webixUiId.addNewForm).clearValidation();
-										$$(self.webixUiId.addNewForm).clear();
-
-										// for Import
-										$$(self.webixUiId.importModelListFilter).setValue('');
-										AD.comm.service.get({ url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/findModels' })
-											.fail(function (err) {
-												webix.message({
-													type: "error",
-													text: err
-												});
-											})
-											.done(function (list) {
-												var listData = [];
-												for (var i = 0; i < list.length; i++) {
-													listData.push({
-														id: list[i]
-													});
-												}
-												$$(self.webixUiId.importModelList).clearAll();
-												$$(self.webixUiId.importModelList).parse(listData, 'json');
-											});
+										blankObjectCreator.onInit();
+										importObjectCreator.onInit();
+										importCsvCreator.onInit();
 									}
 								},
 								body: {
 									view: "tabview",
 									cells: [
-										{
-											header: self.labels.common.create, //"Create"
-                                            body: {
-                                                view: "form",
-                                                id: self.webixUiId.addNewForm,
-                                                width: 400,
-                                                elements: [
-                                                    { view: "text", label: self.labels.common.formName, name: "name", required: true, placeholder: self.labels.object.placeholderName, labelWidth: 70 },
-                                                    {
-                                                        margin: 5, cols: [
-                                                            {
-                                                                view: "button", value: self.labels.common.add, type: "form", click: function () {
-																	var saveButton = this;
-																	saveButton.disable();
-
-                                                                    if (!$$(self.webixUiId.addNewForm).validate()) {
-																		saveButton.enable();
-                                                                        return false;
-																	}
-
-                                                                    var newObjectName = $$(self.webixUiId.addNewForm).elements['name'].getValue().trim();
-
-																	if (!inputValidator.validate(newObjectName)) {
-																		saveButton.enable();
-																		return false;
-																	}
-
-                                                                    $$(self.webixUiId.objectList).showProgress({ type: 'icon' });
-
-                                                                    var newObject = {
-                                                                        name: newObjectName,
-                                                                        label: newObjectName
-                                                                    };
-
-                                                                    // Add new object to server
-                                                                    AD.classes.AppBuilder.currApp.createObject(newObject).fail(function (err) {
-                                                                        $$(self.webixUiId.objectList).hideProgress();
-
-																		saveButton.enable();
-
-                                                                        AD.error.log('Object : Error create object data', { error: err });
-
-                                                                    }).then(function (result) {
-                                                                        $$(self.webixUiId.addNewPopup).hide();
-
-																		self.refreshObjectList();
-
-                                                                        if ($$(self.webixUiId.addNewPopup).config.selectNewObject) {
-                                                                            $$(self.webixUiId.objectList).unselectAll();
-                                                                            $$(self.webixUiId.objectList).select(result.id);
-                                                                        }
-
-                                                                        $$(self.webixUiId.objectList).hideProgress();
-
-                                                                        // Show success message
-                                                                        webix.message({
-                                                                            type: "success",
-                                                                            text: self.labels.common.createSuccessMessage.replace('{0}', newObject.label)
-                                                                        });
-
-																		saveButton.enable();
-                                                                    });
-
-                                                                }
-                                                            },
-                                                            { view: "button", value: self.labels.common.cancel, click: function () { $$(self.webixUiId.addNewPopup).hide(); } }
-                                                        ]
-                                                    }
-                                                ],
-                                                rules: {
-                                                    name: self.rules.preventDuplicateName
-                                                }
-
-                                            }
-                                        },
-                                        {
-                                            header: self.labels.common.import, //"Import"
-                                            body: {
-                                                view: "form",
-                                                elements: [
-                                                    // Models list filter
-                                                    {
-                                                        cols: [
-                                                            {
-                                                                view: 'icon',
-                                                                icon: 'filter',
-                                                                align: 'left'
-                                                            },
-                                                            {
-                                                                view: 'text',
-                                                                id: self.webixUiId.importModelListFilter,
-                                                                on: {
-                                                                    onTimedKeyPress: function () {
-                                                                        var filterText = this.getValue();
-                                                                        $$(self.webixUiId.importModelList).filter('#id#', filterText);
-                                                                    }
-                                                                }
-                                                            }
-                                                        ]
-                                                    },
-                                                    // Models list
-                                                    {
-                                                        view: 'list',
-                                                        id: self.webixUiId.importModelList,
-                                                        select: true,
-                                                        minHeight: 400,
-                                                        data: [],
-                                                        template: '<div>#id#</div>',
-                                                    },
-                                                    // Import & Cancel buttons
-                                                    {
-                                                        cols: [
-                                                            {
-																view: 'button', value: self.labels.common.import, type: 'form', click: function () {
-																	var button = this;
-																	var list = $$(self.webixUiId.importModelList);
-																	var selectedModel = list.getSelectedItem();
-																	if (!selectedModel) return;
-
-																	button.disable();
-																	$$(self.webixUiId.objectList).showProgress({ type: 'icon' });
-
-																	// Tell the server to import the model
-																	AD.comm.service.post({
-																		url: '/app_builder/application/' + AD.classes.AppBuilder.currApp.id + '/importModel',
-																		data: {
-																			model: selectedModel.id
-																		}
-																	})
-																		.fail(function (err) {
-																			webix.message({
-																				type: 'error',
-																				text: err.message || err
-																			});
-																		})
-																		.done(function (objData) {
-																			var ABObject = AD.Model.get('opstools.BuildApp.ABObject');
-																			// Already have the object data in `objData` but call
-																			// findOne() so that the framework will be updated.
-																			ABObject.findOne({ id: objData.id })
-																				.done(function (result) {
-																					result.translate();
-																					// Add the new object to the list on the page
-																					AD.classes.AppBuilder.currApp.objects.push(result);
-																					self.refreshObjectList();
-																				})
-																				.always(function () {
-																					$$(self.webixUiId.addNewPopup).hide();
-																				});
-
-																		})
-																		.always(function () {
-																			$$(self.webixUiId.objectList).hideProgress();
-																			button.enable();
-																		});
-																}
-															},
-                                                            {
-																view: "button", value: self.labels.common.cancel, click: function () {
-																	$$(self.webixUiId.addNewPopup).hide();
-																}
-															}
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    ]
-                                }
+										blankObjectCreator.getCreateView(),
+										importObjectCreator.getCreateView(),
+										importCsvCreator.getCreateView()
+									]
+								}
 							}).hide();
 						},
 

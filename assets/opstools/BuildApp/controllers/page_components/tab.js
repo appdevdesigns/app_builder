@@ -91,7 +91,6 @@ steal(
                     // updating our display
                     $(self).trigger('renderComplete', {});
 
-                    var tabView = $$(self.viewId);
                     if (tabView && tabView.hideProgress) {
                         tabView.hideProgress();
                     }
@@ -322,6 +321,20 @@ steal(
             };
 
 
+            this.onDisplay = function () {
+                var tabView = $$(this.viewId);
+
+                if (tabView && tabView._pageTabs) {
+                    tabView._pageTabs.forEach(function (page) {
+                        page.components.forEach(function (com) {
+                            if (page.comInstances && page.comInstances[com.id] && page.comInstances[com.id].onDisplay)
+                                page.comInstances[com.id].onDisplay();
+                        });
+                    });
+                }
+            }
+
+
             /**
              * @function beforeDestroy
              *
@@ -470,6 +483,8 @@ steal(
                                         var targetPage = application.pages.filter(function(p) { return p.name == trans.values.uuid })[0];
                                         if (targetPage) {
                                             targetPage.attr('label', trans.values.label);
+                                            // FIX: prevent comInstances from generating an ajax parameter building error:
+                                            targetPage.removeAttr('comInstances');
                                             actions.push(targetPage.save());
                                         } else {
                                             AD.error.log("Could not find target page to update", { uuid: trans.values.uuid});

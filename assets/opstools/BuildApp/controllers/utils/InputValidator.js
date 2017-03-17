@@ -11,6 +11,23 @@ steal(
 		};
 
 		return {
+			rules: {
+				preventDuplicateObjectName: function (value, id) {
+					// Check duplicate
+					var duplicateObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
+						return obj.id != id &&
+							(obj.name.toLowerCase().trim() == value.toLowerCase().trim() ||
+								obj.label.toLowerCase().trim() == value.toLowerCase().trim());
+					});
+
+					if (duplicateObject && duplicateObject.length > 0) {
+						return false;
+					}
+					else {
+						return true;
+					}
+				}
+			},
 
 			validate: function (input) {
 				// Validate maximum length of field name

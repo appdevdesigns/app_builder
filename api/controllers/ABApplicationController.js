@@ -293,7 +293,7 @@ module.exports = {
                             });
                         } catch (err) {
                             console.log('jsonImport parse error', err);
-                            res.send({ 
+                             res.send({ 
                                 status: 'error',
                                 message: 'json parse error',
                                 error: err,
@@ -357,7 +357,36 @@ module.exports = {
                 // this application.
                 var sailsModels = Object.keys(sails.models);
                 result = _.difference(sailsModels, appModels);
+                result = _.map(result, function(r) {
+                    return { 
+                        objectId: null,
+                        modelName: r
+                    };
+                });
+
                 next();
+            },
+
+            // Get object id to model
+            function (next) {
+                ABObject.find({ application: { '!': appID }, isImported: { '!': 1 } })
+                    .populate('application')
+                    .exec(function (err, list) {
+                        list.forEach(function (obj) {
+                            var appName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
+                            var objModelName = AppBuilder.rules.toObjectNameFormat(appName, obj.name).toLowerCase();
+
+                            // Populate object id to models
+                            for (var i = 0; i < result.length; i++) {
+                                if (result[i].modelName == objModelName) {
+                                    result[i].objectId = obj.id;
+                                }
+                            }
+
+                        });
+
+                        next();
+                    });
             }
         
         ], function(err) {
@@ -370,9 +399,10 @@ module.exports = {
     // POST /app_builder/application/:appID/importModel
     importModel: function (req, res) {
         var appID = req.param('appID');
+        var modelObjectId = req.param('objectID') || '';
         var modelName = req.param('model') || '';
         
-        AppBuilder.modelToObject(appID, modelName)
+        AppBuilder.modelToObject(appID, modelObjectId, modelName)
         .fail(function(err) {
             res.AD.error(err);
         })

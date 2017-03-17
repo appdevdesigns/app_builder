@@ -127,7 +127,7 @@ steal(
 									},
 									// Get data collection of connected data
 									function (next) {
-										if (setting.linkedTo) {
+										if (setting.linkedTo && !isNaN(setting.linkedTo)) {
 											dataCollectionHelper.getDataCollection(application, setting.linkedTo)
 												.then(function (result) {
 													linkedDataCollection = result;
@@ -139,9 +139,12 @@ steal(
 									},
 									// Render component
 									function (next) {
-										page.comInstances[item.id].render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
-											.then(function () { next(); }, next);
-
+										if (page.attr('comInstances.' + item.id)) {
+											page.attr('comInstances.' + item.id).render(item.setting, editable, showAll, dataCollection, linkedDataCollection)
+												.then(function () { next(); }, next);
+										}
+										else
+											next();
 									},
 									// Update state on load
 									function (next) {

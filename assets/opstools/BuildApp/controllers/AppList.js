@@ -94,12 +94,22 @@ steal(
 								appListToolbar: 'ab-app-list-toolbar',
 								appList: 'ab-app-list',
 								appListMenu: 'ab-app-list-menu',
-								appListFormView: 'ab-app-list-form-view',
-								appListForm: 'ab-app-list-form',
 								appListLoading: 'ab-app-list-loading',
 
+								appFormView: 'ab-app-list-form-view',
+								appForm: 'ab-app-list-form',
+								appName: 'ab-app-list-name',
+								appDescription: 'ab-app-list-description',
+
+								appSave: 'ab-app-list-form-save',
+								appCancel: 'ab-app-list-form-cancel',
+
 								appFormPermissionList: 'ab-app-form-permission',
-								appFormCreateRoleButton: 'ab-app-form-create-role'
+								appFormCreateRoleButton: 'ab-app-form-create-role',
+
+								createNew: 'ab-app-new-create',
+
+								confirmDeletePopup: 'ab-app-confirm-delete-popup'
 							};
 
 							// Application list
@@ -114,7 +124,10 @@ steal(
 										cols: [
 											{ view: "label", label: self.labels.application.title, fillspace: true },
 											{
-												view: "button", value: self.labels.application.createNew, width: 200,
+												view: "button",
+												id: self.webixUiId.createNew,
+												value: self.labels.application.createNew,
+												width: 200,
 												click: function () {
 													self.resetState();
 													self.populateForm();
@@ -270,6 +283,7 @@ steal(
 													break;
 												case self.labels.common.delete:
 													webix.confirm({
+														id: self.webixUiId.confirmDeletePopup,
 														title: self.labels.application.confirmDeleteTitle,
 														ok: self.labels.common.yes,
 														cancel: self.labels.common.no,
@@ -322,7 +336,7 @@ steal(
 
 							// Application form
 							var appFormControl = {
-								id: self.webixUiId.appListFormView,
+								id: self.webixUiId.appFormView,
 								scroll: true,
 								rows: [
 									{
@@ -331,12 +345,13 @@ steal(
 									},
 									{
 										view: "form",
-										id: self.webixUiId.appListForm,
+										id: self.webixUiId.appForm,
 										autoheight: true,
 										margin: 0,
 										elements: [
 											{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
 											{
+												id: self.webixUiId.appName,
 												name: "label",
 												view: "text",
 												label: self.labels.common.formName,
@@ -356,7 +371,7 @@ steal(
 													}
 												}
 											},
-											{ name: "description", view: "textarea", label: self.labels.common.formDescription, placeholder: self.labels.application.placeholderDescription, labelWidth: 100, height: 100 },
+											{ id: self.webixUiId.appDescription, name: "description", view: "textarea", label: self.labels.common.formDescription, placeholder: self.labels.application.placeholderDescription, labelWidth: 100, height: 100 },
 											{ type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>Permission' },
 											{
 												view: "toolbar",
@@ -378,7 +393,7 @@ steal(
 														on: {
 															onItemClick: function (id, e) {
 																if (this.getValue()) {// Add new app role
-																	var newRoleName = $$(self.webixUiId.appListForm).elements["label"].getValue() + ' Application Role';
+																	var newRoleName = $$(self.webixUiId.appForm).elements["label"].getValue() + ' Application Role';
 																	$$(self.webixUiId.appFormPermissionList).add({
 																		id: 'newRole',
 																		name: newRoleName,
@@ -443,42 +458,45 @@ steal(
 												margin: 5, cols: [
 													{ fillspace: true },
 													{
-														view: "button", label: self.labels.common.save, type: "form", width: 100, click: function () {
+														view: "button", id: self.webixUiId.appSave, label: self.labels.common.save, type: "form", width: 100, click: function () {
 															var saveButton = this;
 															saveButton.disable();
 
-															if (!$$(self.webixUiId.appListForm).validate()) {
+															if (!$$(self.webixUiId.appForm).validate()) {
 																// TODO : Error message
 
 																saveButton.enable();
 																return false;
 															}
 
-															var appName = $$(self.webixUiId.appListForm).elements['label'].getValue(),
-																appDescription = $$(self.webixUiId.appListForm).elements['description'].getValue();
+															var appName = $$(self.webixUiId.appForm).elements['label'].getValue(),
+																appDescription = $$(self.webixUiId.appForm).elements['description'].getValue();
 
 															if (!inputValidator.validate(appName)) {
 																saveButton.enable();
 																return false;
 															}
 
+															var selectedId = $$(self.webixUiId.appList).getSelectedId();
+															var updateApp = self.data.filter(function (d) { return d.id == selectedId })[0];
+
 															// Prevent duplicate application name
-															if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
+															if (self.data.filter(function (app) {
+																return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase()
+																		&& (updateApp == null || app.id != updateApp.id);
+															}).length > 0) {
 																webix.alert({
 																	title: self.labels.application.invalidName,
 																	text: self.labels.application.duplicateName.replace("#appName#", appName),
 																	ok: self.labels.common.ok
 																});
 
-																$$(self.webixUiId.appListForm).elements['label'].focus();
+																$$(self.webixUiId.appForm).elements['label'].focus();
 																saveButton.enable();
 																return false;
 															}
 
-															$$(self.webixUiId.appListForm).showProgress({ type: 'icon' });
-
-															var selectedId = $$(self.webixUiId.appList).getSelectedId();
-															var updateApp = self.data.filter(function (d) { return d.id == selectedId })[0];
+															$$(self.webixUiId.appForm).showProgress({ type: 'icon' });
 
 															if (updateApp) { // Update
 																async.waterfall([
@@ -514,7 +532,7 @@ steal(
 																			});
 																	}
 																], function (err) {
-																	$$(self.webixUiId.appListForm).hideProgress();
+																	$$(self.webixUiId.appForm).hideProgress();
 
 																	if (err) {
 																		webix.message({
@@ -564,7 +582,7 @@ steal(
 																			.then(function () { cb(); });
 																	}
 																], function (err) {
-																	$$(self.webixUiId.appListForm).hideProgress();
+																	$$(self.webixUiId.appForm).hideProgress();
 
 																	if (err) {
 																		webix.message({
@@ -596,7 +614,7 @@ steal(
 														}
 													},
 													{
-														view: "button", value: self.labels.common.cancel, width: 100, click: function () {
+														view: "button", id: self.webixUiId.appCancel, value: self.labels.common.cancel, width: 100, click: function () {
 															self.resetState();
 															$$(self.webixUiId.appListRow).show();
 														}
@@ -622,7 +640,7 @@ steal(
 							// Define loading cursor & overlay
 							webix.extend($$(self.webixUiId.appList), webix.ProgressBar);
 							webix.extend($$(self.webixUiId.appList), webix.OverlayBox);
-							webix.extend($$(self.webixUiId.appListForm), webix.ProgressBar);
+							webix.extend($$(self.webixUiId.appForm), webix.ProgressBar);
 							webix.extend($$(self.webixUiId.appFormPermissionList), webix.ProgressBar);
 						},
 
@@ -732,8 +750,8 @@ steal(
 							var self = this;
 
 							$$(self.webixUiId.appList).unselectAll();
-							$$(self.webixUiId.appListForm).clear();
-							$$(self.webixUiId.appListForm).clearValidation();
+							$$(self.webixUiId.appForm).clear();
+							$$(self.webixUiId.appForm).clearValidation();
 							$$(self.webixUiId.appFormPermissionList).clearValidation();
 							$$(self.webixUiId.appFormPermissionList).clearAll();
 							$$(self.webixUiId.appFormCreateRoleButton).setValue(0);
@@ -761,7 +779,7 @@ steal(
 							var self = this,
 								selectedApp;
 
-							$$(self.webixUiId.appListFormView).show();
+							$$(self.webixUiId.appFormView).show();
 
 							// Populate data to form
 							if (appId) {
@@ -770,8 +788,8 @@ steal(
 								if (selectedApp && selectedApp.length > 0) {
 									selectedApp = selectedApp[0];
 									selectedApp.each(function (item, attr) {
-										if ($$(self.webixUiId.appListForm).elements[attr])
-											$$(self.webixUiId.appListForm).elements[attr].setValue(selectedApp.attr(attr));
+										if ($$(self.webixUiId.appForm).elements[attr])
+											$$(self.webixUiId.appForm).elements[attr].setValue(selectedApp.attr(attr));
 									});
 								}
 								else {
@@ -804,11 +822,11 @@ steal(
 								},
 								function (available_roles, selected_role_ids, next) {
 									// Sort permission list
-									if (selectedApp && selectedApp.role && selectedApp.role.id) {
+									if (selectedApp && selectedApp.role) {
 										available_roles.forEach(function (r) {
 											var perm = [];
 
-											if (r.id == selectedApp.role.id)
+											if (r.id == (selectedApp.role.id || selectedApp.role))
 												r.isApplicationRole = true;
 										});
 									}

@@ -7,7 +7,7 @@ var path = require('path');
 var AD = require('ad-utils');
 var _ = require('lodash');
 
-var reloadTimeLimit = 3 * 1000 * 60; // 3 minutes
+var reloadTimeLimit = 10 * 1000 * 60; // 10 minutes
 
 // var cliCommand = path.join(
 //     process.cwd(),
@@ -512,6 +512,7 @@ module.exports = {
     buildObject: function (objectID) {
         var dfd = AD.sal.Deferred();
 
+        var obj;
         var appName, moduleName;
         var objName, fullName;
         var pages = [];
@@ -535,33 +536,83 @@ module.exports = {
                     .populate('columns')
                     .populate('application')
                     .then(function (list) {
-                        var obj = list[0];
+                        obj = list[0];
                         if (!obj) throw new Error('invalid object id');
-                        if (obj.isImported) {
-                            // Imported objects should not be synced to the server
-                            next('IMPORTED OBJECT');
-                            return null;
-                        }
-
-                        // Only numbers and alphabets will be used
-                        appName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
-                        moduleName = appName.toLowerCase();
-
-                        objName = AppBuilder.rules.nameFilter(obj.name);
-                        columns = obj.columns;
-                        fullName = AppBuilder.rules.toObjectNameFormat(appName, objName);
-
-                        fullPath = path.join(modelsPath, fullName) + '.js';
-                        fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
-                        clientPath = path.join('assets', 'opstools', appName, 'models', fullName + '.js');
-                        baseClientPath = path.join('assets', 'opstools', appName, 'models', 'base', fullName + '.js');
 
                         next();
-                        return null;
                     })
                     .catch(function (err) {
                         next(err);
                     });
+            },
+
+            // Get base of import object
+            function (next) {
+                // Ignore if object is not imported object.
+                if (!obj.isImported) {
+                    next();
+                    return null;
+                }
+
+                if (obj.importFromObject) {
+                    // Get base of import object
+                    ABObject.find({ id: obj.importFromObject })
+                        .populate('columns')
+                        .populate('application')
+                        .then(function (list) {
+                            // Use import object to sync
+                            obj = list[0];
+                            if (!obj) throw new Error('invalid import object id');
+                            else next();
+                        })
+                        .catch(function (err) {
+                            next(err);
+                        });
+                }
+                else {
+                    // Imported objects should not be synced to the server
+                    next('IMPORTED OBJECT');
+                }
+            },
+
+            // Get all associated columns of object
+            function (next) {
+                ABObject.find({ importFromObject: obj.id })
+                    .populate('columns', { type: 'connectObject' })
+                    .then(function(list) {
+                        list.forEach(function(childObj) {
+                            childObj.columns.forEach(function(col) {
+
+                                if (obj.columns.filter(function(c) { return c.id == col.id }).length < 1) {
+                                    obj.columns.push(col);
+                                }
+
+                            });
+                        });
+
+                        next();
+                    })
+                    .catch(function (err) {
+                        next(err);
+                    });
+            },
+
+            // Populate object info
+            function (next) {
+                // Only numbers and alphabets will be used
+                appName = AppBuilder.rules.toApplicationNameFormat(obj.application.name);
+                moduleName = appName.toLowerCase();
+
+                objName = AppBuilder.rules.nameFilter(obj.name);
+                columns = obj.columns;
+                fullName = AppBuilder.rules.toObjectNameFormat(appName, objName);
+
+                fullPath = path.join(modelsPath, fullName) + '.js';
+                fullPathTrans = path.join(modelsPath, fullName) + 'Trans.js';
+                clientPath = path.join('assets', 'opstools', appName, 'models', fullName + '.js');
+                baseClientPath = path.join('assets', 'opstools', appName, 'models', 'base', fullName + '.js');
+
+                next();
             },
 
             // Delete old model definition files
@@ -619,41 +670,7 @@ module.exports = {
                                     cliParams.push(colString);
 
                                     ok();
-                                })
-
-                            // if (col.linkObject && col.linkVia) {
-                            //     ABColumn.findOne({ id: col.id })
-                            //         .populate('linkObject')
-                            //         .populate('linkVia')
-                            //         .fail(ok)
-                            //         .then(function (linkedCol) {
-                            //             colString += linkedCol.name;
-                            //             colString += ':' + linkedCol.linkType; // model, collection
-                            //             colString += ':' + AppBuilder.rules.toObjectNameFormat(appName, linkedCol.linkObject.name) // model name
-
-                            //             if (linkedCol.linkVia)
-                            //                 colString += ':' + linkedCol.linkVia.name; // viaReference
-
-                            //             cliParams.push(colString);
-
-                            //             ok();
-                            //         });
-                            // }
-                            // else {
-                            //     colString += col.name + ':' + col.type;
-
-                            //     if (col.supportMultilingual) {
-                            //         colString += ':multilingual';
-                            //     }
-                            //     // if this field is the Label, then:
-                            //     if (!isDefinedLabel && (col.type === 'string' || col.type === 'text')) {
-                            //         colString += ':label';
-                            //         isDefinedLabel = true;
-                            //     }
-                            //     cliParams.push(colString);
-
-                            //     ok();
-                            // }
+                                });
                         }, callback);
                     }
                 ], function (err) {
@@ -1450,11 +1467,12 @@ module.exports = {
      * New client side model files will be generated for that object.
      *
      * @param integer appID
+     * @param integer modelObjectId
      * @param string modelName
      * @return Deferred
      *     Resolves with the data of the new imported object
      */
-    modelToObject: function (appID, modelName) {
+    modelToObject: function (appID, modelObjectId, modelName) {
         var dfd = AD.sal.Deferred();
         var model = sails.models[modelName.toLowerCase()];
        
@@ -1517,14 +1535,19 @@ module.exports = {
                 
                 // Create Object in database
                 function(next) {
+                    var objData = {
+                        application: appID,
+                        name: modelName,
+                        label: modelName,
+                        isImported: true
+                    };
+
+                    if (modelObjectId)
+                        objData.importFromObject = modelObjectId;
+
                     Multilingual.model.create({
                         model: ABObject,
-                        data: {
-                            application: appID,
-                            name: modelName,
-                            label: modelName,
-                            isImported: true
-                        }
+                        data: objData
                     })
                     .fail(next)
                     .done(function(result) {
@@ -1570,7 +1593,8 @@ module.exports = {
                             name: colName,
                             object: object.id,
                             required: def.required || col.required,
-                            unique: def.unique || col.unique
+                            unique: def.unique || col.unique,
+                            isSynced: true // Import object has synced columns by default
                         };
                         
                         var typeMap = {
@@ -1716,7 +1740,8 @@ module.exports = {
                             object: object.id,
                             setting: {
                                 supportMultilingual: '1'
-                            }
+                            },
+                            isSynced: true
                         })
                         .fail(colDone)
                         .done(function(result) {
