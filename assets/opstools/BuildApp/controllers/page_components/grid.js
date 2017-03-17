@@ -163,7 +163,7 @@ steal(
 					self.data.linkedToDataCollection = linkedToDataCollection;
 					if (events['onAfterCursorChange'] == null) {
 						events['onAfterCursorChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
-							filterLinkedData.call(self, setting.linkedField);
+							$$(self.viewId).refresh();
 						});
 					}
 				}
@@ -464,11 +464,32 @@ steal(
 						});
 
 
+					if (events['onBeforeRender'] == null) {
+						var isFiltered = false,
+							filterTimeoutId;
+
+						events['onBeforeRender'] = $$(self.viewId).attachEvent('onBeforeRender', function (data) {
+							// FILTER : Should register this filter to Webix datatable
+							if (filterTimeoutId) clearTimeout(filterTimeoutId);
+
+							filterTimeoutId = setTimeout(function () {
+								if (isFiltered == false) {
+									filterLinkedData.call(self, setting.linkedField);
+									isFiltered = true;
+
+									setTimeout(function () { isFiltered = false }, 1300);
+								}
+							}, 800);
+						});
+					}
+
 					if (events['onAfterRender'] == null) {
 						events['onAfterRender'] = $$(self.viewId).attachEvent('onAfterRender', function (data) {
 							$(self).trigger('renderComplete', {});
 						});
 					}
+
+
 
 					// Select column by checkbox
 					if (events['onCheck'] == null) {
@@ -525,32 +546,6 @@ steal(
 									if ($$(self.viewId + '-delete-items-button'))
 										$$(self.viewId + '-delete-items-button').disable();
 								}
-							});
-						}
-
-						if (events['onDataUpdate'] == null) {
-							events['onDataUpdate'] = dataCollection.attachEvent("onDataUpdate", function (id, data) {
-								filterLinkedData.call(self, setting.linkedField);
-							});
-						}
-
-						if (events['onAfterAdd'] == null) {
-							events['onAfterAdd'] = dataCollection.attachEvent("onAfterAdd", function (id, index) {
-								filterLinkedData.call(self, setting.linkedField);
-							});
-						}
-
-						if (events['onBindUpdate'] == null) {
-							events['onBindUpdate'] = dataCollection.attachEvent('onBindUpdate', function (data, key) {
-								filterLinkedData.call(self, setting.linkedField);
-							});
-						}
-
-						// Delete checked item when a record is deleted
-						if (events['onAfterDelete'] == null) {
-							events['onAfterDelete'] = dataCollection.attachEvent("onAfterDelete", function (rowId) {
-								if (self.data.dataCollection)
-									delete self.data.dataCollection.uncheckItem(rowId);
 							});
 						}
 					}
@@ -848,9 +843,9 @@ steal(
 
 			this.onDisplay = function () {
 
-				if ((this.data.settings) && (this.data.setting.linkedField)) {
-					filterLinkedData.call(this, this.data.setting.linkedField);
-				}
+				// if ((this.data.settings) && (this.data.setting.linkedField)) {
+				// 	filterLinkedData.call(this, this.data.setting.linkedField);
+				// }
 
 			}
 

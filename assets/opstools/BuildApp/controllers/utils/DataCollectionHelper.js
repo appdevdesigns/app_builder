@@ -71,9 +71,9 @@ steal(
 										dataCollections[objectId].attachEvent('onAfterCursorChange', function (id) {
 
 											// TEMPORARY FEATURE :
-											if (dataCollections[objectId].recordFilter != null && 
+											if (dataCollections[objectId].recordFilter != null &&
 												dataCollections[objectId].recordFilter != id) {
-												setTimeout(function() {
+												setTimeout(function () {
 													dataCollections[objectId].setCursor(dataCollections[objectId].recordFilter);
 												}, 10);
 											}
@@ -103,22 +103,20 @@ steal(
 											return true;
 										});
 
-										dataCollections[objectId].attachEvent('onBeforeDelete', function (id) {
-											var rowData = dataCollections[objectId].getItem(id);
-											if (!rowData) return true;
-
-											return true;
+										// Delete checked item when a record is deleted
+										dataCollections[objectId].attachEvent('onAfterDelete', function (id) {
+											dataCollections[objectId].uncheckItem(id);
 										});
 
-										dataCollections[objectId].checkItem = function(rowId) {
-											if (dataCollections[objectId].checkedItems.filter(function(item) { return item == rowId}).length < 1) {
+										dataCollections[objectId].checkItem = function (rowId) {
+											if (dataCollections[objectId].checkedItems.filter(function (item) { return item == rowId }).length < 1) {
 												dataCollections[objectId].checkedItems.push(rowId);
 												dataCollections[objectId].callEvent('onCheckItemsChange');
 											}
 										};
 
-										dataCollections[objectId].uncheckItem = function(rowId) {
-											dataCollections[objectId].checkedItems.forEach(function(item, index) {
+										dataCollections[objectId].uncheckItem = function (rowId) {
+											dataCollections[objectId].checkedItems.forEach(function (item, index) {
 												if (item == rowId) {
 													dataCollections[objectId].checkedItems.splice(index, 1);
 													dataCollections[objectId].callEvent('onCheckItemsChange');
@@ -127,7 +125,7 @@ steal(
 											});
 										};
 
-										dataCollections[objectId].getCheckedItems = function() {
+										dataCollections[objectId].getCheckedItems = function () {
 											return dataCollections[objectId].checkedItems;
 										};
 									}
