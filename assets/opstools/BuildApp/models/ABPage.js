@@ -262,8 +262,17 @@ steal(
 								.then(function (result) {
 									if (result.translate) result.translate();
 
-									if (AD.classes.AppBuilder.currApp)
-										AD.classes.AppBuilder.currApp.pages.push(result);
+									if (AD.classes.AppBuilder.currApp) {
+										// Update list
+										if (AD.classes.AppBuilder.currApp.pages.filter(function (page) { return (page.id || page) == result.id; }).length > 0)
+											AD.classes.AppBuilder.currApp.pages.forEach(function (page, index) {
+												if ((page.id || page) == result.id)
+													AD.classes.AppBuilder.currApp.pages.attr(index, result);
+											});
+										// Insert
+										else
+											AD.classes.AppBuilder.currApp.pages.push(result);
+									}
 
 									q.resolve(result);
 								});
