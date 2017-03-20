@@ -16,7 +16,8 @@ steal(
 		// as parameters to this function().
 
 		var componentIds = {
-			labelName: 'ab-new-{0}-label'
+			labelName: 'ab-new-{0}-label',
+			columnName: 'ab-new-{0}-name'
 		};
 
 		// convert the provided objects into a [fields]
@@ -27,6 +28,10 @@ steal(
 
 			return [dataField];
 		});
+
+		var maxColNameLength = 30;
+		var remainColNameLength = maxColNameLength;
+
 
 		// Listen save event
 		fields.forEach(function (field) {
@@ -98,7 +103,32 @@ steal(
 					label: 'Label',
 					placeholder: 'Header name',
 					labelWidth: 50,
-					css: 'ab-new-label-name'
+					css: 'ab-new-label-name',
+					on: {
+						onChange: function (newVal, oldVal) {
+							// Update Column name text box
+							if (newVal != oldVal &&
+								oldVal == $$(componentIds.columnName.replace('{0}', field.name)).getValue()) {
+								$$(componentIds.columnName.replace('{0}', field.name)).setValue(newVal);
+							}
+						}
+					}
+				});
+
+				// Column name
+				headerDefinition.push({
+					view: "text",
+					id: componentIds.columnName.replace('{0}', field.name),
+					label: 'Name',
+					placeholder: 'Column name',
+					labelWidth: 50,
+					on: {
+						onChange: function (newVal, oldVal) {
+							if (newVal != oldVal) {
+								$$(componentIds.columnName.replace('{0}', field.name)).setValue(newVal.substring(0, remainColNameLength));
+							}
+						}
+					}
 				});
 
 				// Description
@@ -193,8 +223,8 @@ steal(
 			if (field != null) {
 				var fieldInfo = field.getSettings();
 				if (fieldInfo) {
-					fieldInfo.name = $$(componentIds.labelName.replace('{0}', name)).getValue();
 					fieldInfo.label = $$(componentIds.labelName.replace('{0}', name)).getValue();
+					fieldInfo.name = $$(componentIds.columnName.replace('{0}', name)).getValue();
 					fieldInfo.id = $$(componentIds.labelName.replace('{0}', name)).columnId;
 					fieldInfo.weight = $$(componentIds.labelName.replace('{0}', name)).weight;
 				}
@@ -228,10 +258,21 @@ steal(
 
 			if (!field) return;
 
+			remainColNameLength = maxColNameLength - (AD.classes.AppBuilder.currApp.currObj.name.length + 1);
+
 			if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
 				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
 			else
 				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue('');
+
+			if ($$(componentIds.columnName.replace('{0}', data.fieldName)))
+				$$(componentIds.columnName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
+			else
+				$$(componentIds.columnName.replace('{0}', data.fieldName)).setValue('');
+
+			// Disable edit column name
+			if (data.id != null)
+				$$(componentIds.columnName.replace('{0}', data.fieldName)).disable();
 
 			$$(componentIds.labelName.replace('{0}', data.fieldName)).columnId = data.id;
 			$$(componentIds.labelName.replace('{0}', data.fieldName)).weight = data.weight;
@@ -309,7 +350,7 @@ steal(
 			var field = getField(fieldName);
 
 			if (field && field.customEdit)
-				if (field.hasCustomEdit) 
+				if (field.hasCustomEdit)
 					return field.hasCustomEdit(fieldData);
 				else
 					return true;
@@ -366,9 +407,15 @@ steal(
 		 */
 		self.resetState = function () {
 			fields.forEach(function (f) {
-				var elLabel = $$(componentIds.labelName.replace('{0}', f.name));
-				if (elLabel)
-					elLabel.setValue('');
+				var txtLabel = $$(componentIds.labelName.replace('{0}', f.name));
+				if (txtLabel)
+					txtLabel.setValue('');
+
+				var txtColName = $$(componentIds.columnName.replace('{0}', f.name));
+				if (txtColName) {
+					txtColName.enable();
+					txtColName.setValue('');
+				}
 
 				if (f.resetState)
 					f.resetState();
