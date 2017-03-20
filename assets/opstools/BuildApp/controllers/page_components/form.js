@@ -59,28 +59,66 @@ steal(
 
 			function populateValuesToModelData(modelData, dataCollection, columns) {
 				var self = this,
+					q = $.Deferred(),
 					editValues = $$(self.viewId).getValues(),
-					keys = Object.keys(editValues);
+					keys = Object.keys(editValues),
+					colVal;
 
 				// Populate values to model
 				columns.forEach(function (col) {
-					if (col.type == "boolean") {
-						modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
-					}
-					else {
-						var childView = getChildView.call(self, col.name);
-						if (!childView) return;
+					async.series([
+						function (next) {
+							if (col.type == "boolean") {
+								modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
+								next();
+							}
+							else {
+								var childView = getChildView.call(self, col.name);
+								if (childView == null && modelData.attr(col.name) == null) {
+									// If link column is hidden, then select cursor item of linked data collection
+									if (col.type == 'connectObject') {
+										dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
+											.done(function (linkDC) {
+												if (col.setting.linkType == 'collection')
+													colVal = [linkDC.getCursor()];
+												else
+													colVal = linkDC.getCursor();
 
-						// Get value in custom data field
-						var val = dataFieldsManager.getValue(application, null, col, childView.$view);
-						if (typeof val != 'undefined' && val != null)
-							modelData.attr(col.name, val);
-						else if (typeof editValues[col.name] != 'undefined')
-							modelData.attr(col.name, editValues[col.name]);
+												next();
+											});
+									}
+									else {
+										return next();
+									}
+								}
+								else {
+									// Get value in custom data field
+									colVal = dataFieldsManager.getValue(application, null, col, childView.$view);
+
+									next();
+								}
+							}
+						},
+						function (next) {
+							if (typeof colVal != 'undefined' && colVal != null)
+								modelData.attr(col.name, colVal);
+							else if (typeof editValues[col.name] != 'undefined')
+								modelData.attr(col.name, editValues[col.name]);
+							else
+								modelData.removeAttr(col.name);
+
+							next();
+						}
+					], function (err) {
+						if (err)
+							q.reject(err);
 						else
-							modelData.removeAttr(col.name);
-					}
+							q.resolve();
+					});
+
 				});
+
+				return q;
 			}
 
 			function saveModelData(dataCollection, object, columns, setting, linkedToDataCollection) {
@@ -92,35 +130,46 @@ steal(
 				// Group app
 				if (linkedToDataCollection && linkedToDataCollection.getCheckedItems().length > 0) {
 					var linkField = self.data.columns.filter(function (col) { return col.id == setting.linkField })[0];
-					addTasks = [];
+					var addTasks = [];
 
-					linkedToDataCollection.getCheckedItems().forEach(function (linkRowId) {
-						var modelData = new dataCollection.AD.getModelObject()(); // Create new model data
+					async.eachSeries(linkedToDataCollection.getCheckedItems(), function (linkRowId) {
+						async.series([
+							function (next) {
+								var modelData = new dataCollection.AD.getModelObject()(); // Create new model data
 
-						populateValuesToModelData.call(self, modelData, dataCollection, columns);
+								populateValuesToModelData.call(self, modelData, dataCollection, columns)
+									.fail(next)
+									.done(function () { next() });
+							},
+							function (next) {
+								// Set link row id to field
+								modelData.attr(linkField.name, linkRowId);
 
-						// Set link row id to field
-						modelData.attr(linkField.name, linkRowId);
-
-						addTasks.push(function (next) {
-							callSaveModelData.call(self, modelData, dataCollection, true)
-								.fail(next)
-								.done(function () {
-									next();
+								addTasks.push(function (ok) {
+									callSaveModelData.call(self, modelData, dataCollection, true)
+										.fail(ok)
+										.done(function () { ok(); });
 								});
-						});
-					});
-
-					async.parallel(addTasks, function (err) {
-						if (err) q.reject(err);
+							}
+						]);
+					}, function (error) {
+						if (error) {
+							q.reject(error);
+						}
 						else {
-							clearForm.call(self, object, columns, dataCollection);
+							async.parallel(addTasks, function (err) {
+								if (err) q.reject(err);
+								else {
+									clearForm.call(self, object, columns, dataCollection);
 
-							finishSave.call(self, setting, object, dataCollection);
+									finishSave.call(self, setting, object, dataCollection);
 
-							q.resolve();
+									q.resolve();
+								}
+							});
 						}
 					});
+
 				}
 				// Save without link data (Single row)
 				else {
@@ -133,19 +182,30 @@ steal(
 						isAdd = true;
 					}
 
-					populateValuesToModelData.call(self, modelData, dataCollection, columns);
-
-					callSaveModelData.call(self, modelData, dataCollection, isAdd)
-						.fail(function (err) {
+					async.series([
+						function (next) {
+							populateValuesToModelData.call(self, modelData, dataCollection, columns)
+								.fail(next)
+								.done(function () { next(); });
+						},
+						function (next) {
+							callSaveModelData.call(self, modelData, dataCollection, isAdd)
+								.fail(next)
+								.done(function () { next(); });
+						}
+					], function (err) {
+						if (err) {
 							console.error(err);
 							$$(self.viewId).hideProgress();
 							q.reject(err);
-						})
-						.done(function () {
+						}
+						else {
 							finishSave.call(self, setting, object, dataCollection);
 
 							q.resolve();
-						});
+						}
+					});
+
 				}
 
 				return q;

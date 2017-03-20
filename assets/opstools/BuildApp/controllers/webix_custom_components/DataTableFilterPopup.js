@@ -315,7 +315,8 @@ steal(
                 });
 
                 if (filter_popup.dataTable) {
-                    filter_popup.dataTable.filter(function (obj) {
+                    filter_popup.dataTable.custom_filters = filter_popup.dataTable.custom_filters || {};
+                    filter_popup.dataTable.custom_filters['filter_popup'] = function (obj) {
                         var combineCond = (filterCondition && filterCondition.length > 0 ? filterCondition[0].combineCondtion : labels.filter_fields.and);
                         var isValid = (combineCond === labels.filter_fields.and ? true : false);
 
@@ -415,7 +416,10 @@ steal(
                         });
 
                         return isValid;
-                    });
+                    };
+
+                    // Refresh webix data table
+                    filter_popup.dataTable.refresh();
                 }
             },
 

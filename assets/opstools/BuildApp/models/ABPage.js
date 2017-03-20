@@ -127,7 +127,7 @@ steal(
 									},
 									// Get data collection of connected data
 									function (next) {
-										if (setting.linkedTo) {
+										if (setting.linkedTo && !isNaN(setting.linkedTo)) {
 											dataCollectionHelper.getDataCollection(application, setting.linkedTo)
 												.then(function (result) {
 													linkedDataCollection = result;
