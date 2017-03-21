@@ -401,8 +401,9 @@ module.exports = {
         var appID = req.param('appID');
         var modelObjectId = req.param('objectID') || '';
         var modelName = req.param('model') || '';
+        var columns = req.param('columns') || [];
         
-        AppBuilder.modelToObject(appID, modelObjectId, modelName)
+        AppBuilder.modelToObject(appID, modelObjectId, modelName, columns)
         .fail(function(err) {
             res.AD.error(err);
         })
@@ -410,6 +411,19 @@ module.exports = {
             res.AD.success(object);
         });
     
+    },
+
+    // GET /app_builder/application/findModelAttributes
+    findModelAttributes: function(req, res) {
+        var modelName = req.param('model') || '';
+
+        AppBuilder.findModelAttributes(modelName)
+        .fail(function(err) {
+            res.AD.error(err);
+        })
+        .done(function(columns) {
+            res.AD.success(columns);
+        });
     }
     
 	

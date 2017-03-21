@@ -199,11 +199,11 @@ steal(
 							{
 								id: componentIds.columnList,
 								view: 'activelist',
-								css: 'ab-main-container',
 								datatype: "json",
 								multiselect: false,
 								select: false,
 								height: 280,
+								minHeight: 280,
 								maxHeight: 280,
 								type: {
 									height: 40

@@ -452,7 +452,8 @@ module.exports = {
                     name: data.name,
                     object: data.sourceObjectID,
                     language_code: data.language_code,
-                    setting: sourceSetting
+                    setting: sourceSetting,
+                    isSynced: data.isSynced || false
                 })
                     .fail(next)
                     .done(function (col) {
@@ -498,7 +499,8 @@ module.exports = {
                     name: data.targetName,
                     object: data.targetObjectID,
                     language_code: data.language_code,
-                    setting: targetSetting
+                    setting: targetSetting,
+                    isSynced: data.isSynced || false
                 })
                     .fail(next)
                     .done(function (col) {

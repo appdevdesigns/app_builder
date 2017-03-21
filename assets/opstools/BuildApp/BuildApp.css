@@ -29,10 +29,10 @@
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
-.ab-main-container .float-left {
+.float-left {
 	float: left;
 }
-.ab-main-container .float-right {
+.float-right {
 	float: right;
 }
 

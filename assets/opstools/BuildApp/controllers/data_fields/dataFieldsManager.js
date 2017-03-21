@@ -258,7 +258,7 @@ steal(
 
 			if (!field) return;
 
-			remainColNameLength = maxColNameLength - (AD.classes.AppBuilder.currApp.currObj.name.length + 1);
+			remainColNameLength = maxColNameLength - (AD.classes.AppBuilder.currApp.currObj.name.length + 2);
 
 			if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
 				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
