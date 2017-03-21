@@ -17,7 +17,7 @@ steal(function () {
 	};
 
 	// Edit definition
-	 .editDefinition = {
+	attachmentDataField.editDefinition = {
 		id: componentIds.editView,
 		rows: [
 			{
@@ -112,7 +112,8 @@ steal(function () {
 		var $container = $(itemNode).find('.ab-attachment-data-field');
 
 		// if our contents are already generated:
-		if ($container.find('.attachment-data-field-attachment').attr('href').length > 0) {
+		if ($container.find('.attachment-data-field-attachment').length > 0) {
+
 			// let's not update the contents:
 			return true;
 		}
@@ -127,12 +128,18 @@ steal(function () {
 		var keyUploader = this.keyUploader(itemNode); // keyField+'-uploader';
 
 
-		// the display of our link to download the attachement:
-		// .attachment-data-field-icon : for an attachement icon when no data is present
-		// .attachment-data-field-attachment: for download button that links to the attachement
+		// the display of our attachment:
+		// .attachment-data-field-icon : for an attachment icon when no data is present
+		// .attachment-data-field-attachment: for a download button
 		var attachmentDiv = [
-			'<div class="attachment-data-field-icon" style="text-align: center;display:none;"><i class="fa fa-file fa-2x"></i></div>',
-			'<a class="attachment-data-field-attachment" target="_new" style="display:none" href="">Download File</a>'
+			'<div class="attachment-data-field-icon" style="text-align: center;display:none;">',
+			'<i style="font-size: 1.5em;" class="fa fa-file"></i>',
+			'</div>',
+			'<div class="attachment-data-field-attachment" style="text-align: center;display:none">',
+			'<a target="_new" href="">',
+			'<i style="font-size: 1.5em;" class="fa fa-download"></i>',
+			'</a>',
+			'</div>'
 		].join('\n');
 
 
@@ -147,10 +154,10 @@ steal(function () {
 			view: 'template',
 			id: keyContainer,
 			container: $container[0],
-
 			template: attachmentDiv,
-
-			borderless: true
+			borderless: true,
+			minWidth: 50,
+			minHeight: 70
 		});
 
 		webix.extend(webixContainer, webix.ProgressBar);
@@ -173,7 +180,7 @@ steal(function () {
 		if (!data || data == '') {
 			$container.showIcon();
 		} else {
-			// else display the image:
+			// else display the attachment:
 			$container.showAttachment(data);
 		}
 
@@ -286,7 +293,7 @@ steal(function () {
     if (!data || data == '') {
       $container.showIcon();
     } else {
-      // else display the image:
+      // else display the attachment:
       $container.showAttachment(data);
     }
 
