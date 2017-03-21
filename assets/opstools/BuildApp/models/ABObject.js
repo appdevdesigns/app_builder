@@ -93,7 +93,16 @@ steal(
 										.done(function (result) {
 											if (result.translate) result.translate();
 
-											self.columns.push(result);
+											// Update list
+											if (self.columns.filter(function (col) { return (col.id || col) == result.id; }).length > 0)
+												self.columns.forEach(function (col, index) {
+													if ((col.id || col) == result.id)
+														self.columns.attr(index, result);
+												});
+											// Insert
+											else
+												self.columns.push(result);
+
 											column = result;
 
 											next();
