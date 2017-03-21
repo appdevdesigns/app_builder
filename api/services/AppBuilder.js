@@ -56,7 +56,7 @@ function importDataFields(next) {
 }
 
 
-function notifyToClients(reloading, step, action) {
+function notifyToClients(reloading, step, action, options) {
     var data = {
         reloading: reloading
     };
@@ -66,6 +66,9 @@ function notifyToClients(reloading, step, action) {
 
     if (action)
         data.action = action;
+
+    if (options)
+        data.options = options;
 
     sails.sockets.blast('server-reload', data);
 }
@@ -198,10 +201,11 @@ module.exports = {
                 }, function (err) {
                     process.chdir(cwd);
 
-                    notifyToClients(true, 'prepareFolder', 'done');
-
                     if (err) next(err);
-                    else next();
+                    else {
+                        notifyToClients(true, 'prepareFolder', 'done');
+                        next();
+                    }
                 });
             }],
 
@@ -271,10 +275,19 @@ module.exports = {
         }, function (err) {
             sails.log('End reload');
 
-            notifyToClients(false);
+            if (err) {
+                notifyToClients(true, '', 'fail', {
+                    error: err,
+                    requestData: { appID: appID }
+                });
 
-            if (err) dfd.reject(err);
-            else dfd.resolve();
+                dfd.reject(err);
+            }
+            else {
+                notifyToClients(false, '', 'finish');
+
+                dfd.resolve();
+            }
         });
 
         return dfd;
