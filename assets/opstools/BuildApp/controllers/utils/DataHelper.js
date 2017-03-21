@@ -76,7 +76,7 @@ steal(
 											}
 											else if (row[linkCol.name].forEach) {
 												row[linkCol.name].forEach(function (val) {
-													if (val._dataLabel == null)
+													if (val && val._dataLabel == null)
 														connectDataIds.push({ id: val.id || val });
 												});
 											}

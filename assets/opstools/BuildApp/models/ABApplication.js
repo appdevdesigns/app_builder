@@ -46,7 +46,15 @@ steal(
 								.then(function (result) {
 									if (result.translate) result.translate();
 
-									self.objects.push(result);
+									// Update list
+									if (self.objects.filter(function (obj) { return (obj.id || obj) == result.id; }).length > 0)
+										self.objects.forEach(function (obj, index) {
+											if ((obj.id || obj) == result.id)
+												self.objects.attr(index, result);
+										});
+									// Insert
+									else
+										self.objects.push(result);
 
 									q.resolve(result);
 								});
@@ -65,7 +73,7 @@ steal(
 						 *					be any page that can be resolved to a Root Page.
 						 * @return {deferred}
 						 */
-						getApplicationPages: function( currPage ) {
+						getApplicationPages: function (currPage) {
 							var _this = this;
 							var err = null;
 
@@ -78,14 +86,14 @@ steal(
 
 								function findParent(page) {
 									var parent = null;
-									if ((page)&&(page.parent)) {
-										parent = _this.pages.filter(function(p){ return ((p.id == page.parent) || (p.id == page.parent.id)); })[0];
+									if ((page) && (page.parent)) {
+										parent = _this.pages.filter(function (p) { return ((p.id == page.parent) || (p.id == page.parent.id)); })[0];
 									}
 									return parent;
 								}
 
 								var currPageParent = findParent(currPage);
-								while(currPageParent) {
+								while (currPageParent) {
 									currPage = currPageParent;
 									currPageParent = findParent(currPage);
 								}
@@ -103,7 +111,7 @@ steal(
 							var dfd = AD.sal.Deferred();
 							dfd.reject(err);
 							return dfd;
-							
+
 						},
 
 
@@ -114,18 +122,18 @@ steal(
 						 * This will include all pages, not just the Root + 1st Child.
 						 * @return {deferred}
 						 */
-						getAllApplicationPages:function() {
+						getAllApplicationPages: function () {
 							var _this = this;
 
 							var dfd = AD.sal.Deferred();
 
 							this.getPages()
-							.fail(dfd.reject)
-							.done(function(pages){
+								.fail(dfd.reject)
+								.done(function (pages) {
 
-								_this.pages = pages;  // replace our copy with proper ABPage instances
-								dfd.resolve(pages);
-							})
+									_this.pages = pages;  // replace our copy with proper ABPage instances
+									dfd.resolve(pages);
+								})
 
 							return dfd;
 						},
@@ -136,10 +144,10 @@ steal(
 							if (!cond) cond = {};
 							cond.application = this.id;
 
-//// TODO: refactor this to make sure appdev-core/assets/appdev/model.js  .modelUpdate() properly 
-////       updates our model instances.  This will cause an error with other code trying to pull
-////       from ABPage.findAll() and getting models that our out of sync with any ABPages returned
-////       using this method.
+							//// TODO: refactor this to make sure appdev-core/assets/appdev/model.js  .modelUpdate() properly 
+							////       updates our model instances.  This will cause an error with other code trying to pull
+							////       from ABPage.findAll() and getting models that our out of sync with any ABPages returned
+							////       using this method.
 
 							Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
 								var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
@@ -152,7 +160,7 @@ steal(
 						},
 
 						getPage: function (pageId) {
-//// TODO: refactor this too.
+							//// TODO: refactor this too.
 							if (AD.Model.get('opstools.BuildApp.ABPage').store[pageId])
 								delete AD.Model.get('opstools.BuildApp.ABPage').store[pageId];
 
@@ -169,7 +177,15 @@ steal(
 								.then(function (result) {
 									if (result.translate) result.translate();
 
-									self.pages.push(result);
+									// Update list
+									if (self.pages.filter(function (obj) { return (obj.id || obj) == result.id; }).length > 0)
+										self.pages.forEach(function (obj, index) {
+											if ((obj.id || obj) == result.id)
+												self.pages.attr(index, result);
+										});
+									// Insert
+									else
+										self.pages.push(result);
 
 									q.resolve(result);
 								});
