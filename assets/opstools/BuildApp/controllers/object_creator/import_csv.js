@@ -112,7 +112,7 @@ steal(
 						id: componentIds.importCsvForm,
 						width: 400,
 						rules: {
-							name: inputValidator.rules.preventDuplicateObjectName
+							name: inputValidator.rules.validateObjectName
 						},
 						elements: [
 							{ view: "text", id: componentIds.objectName, label: labels.common.formName, name: "name", required: true, placeholder: labels.object.placeholderName, labelWidth: 70 },
@@ -252,7 +252,7 @@ steal(
 											var newObjectName = $$(componentIds.importCsvForm).elements['name'].getValue().trim();
 
 											// Validate required object name
-											if (!inputValidator.validate(newObjectName)) {
+											if (!inputValidator.validateFormat(newObjectName)) {
 												saveButton.enable();
 												return false;
 											}

@@ -57,7 +57,8 @@ module.exports = {
 
         name: {
             type: 'string',
-            required: true
+            required: true,
+            maxLength: 20
         },
 
         fieldName: {
@@ -292,8 +293,8 @@ module.exports = {
         });
         _.defaults(columnData.setting, defaultData.setting);
 
-        var column;
-        var appID;
+        var obj,
+            column;
 
         async.series([
             // Preliminary checks
@@ -311,7 +312,7 @@ module.exports = {
                         if (err) next(err);
                         else if (!list || !list[0]) next(new Error('Object not found: ' + columnData.object));
                         else {
-                            appID = list[0].application;
+                            obj = list[0];
                             next();
                         }
                     });
@@ -336,7 +337,7 @@ module.exports = {
                 // Skip if app name is already given
                 if (columnData.setting.appName) return next();
 
-                ABApplication.find({ id: appID })
+                ABApplication.find({ id: obj.application })
                     .exec(function (err, list) {
                         if (err) next(err);
                         else if (!list || !list[0]) {
@@ -351,6 +352,7 @@ module.exports = {
 
             // Create column entry & multilingual labels
             function (next) {
+
                 columnData.label = columnData.label || columnData.name;
                 Multilingual.model.create({
                     model: ABColumn,
@@ -429,8 +431,8 @@ module.exports = {
             sourceSetting.linkViaType = 'collection';
         }
 
+        var sourceObject, targetObject;
         var sourceColumn, targetColumn;
-        var sourceObjectName;
 
         async.series([
             // Preliminary checks
@@ -446,10 +448,76 @@ module.exports = {
                 else next();
             },
 
+            // Find source object
+            function (next) {
+                ABObject.findOne({ id: data.sourceObjectID })
+                    .populate('application')
+                    .populate('translations')
+                    .then(function (srcObj) {
+                        sourceObject = srcObj;
+
+                        next();
+                    }, next);
+            },
+
+            // Find target object
+            function (next) {
+                ABObject.findOne({ id: data.targetObjectID })
+                    .populate('application')
+                    .populate('translations')
+                    .then(function (trgObj) {
+                        targetObject = trgObj;
+
+                        next();
+                    }, next);
+            },
+
+            // Set default of target link column
+            function (next) {
+                if (data.targetName == null) {
+                    var srcObjTrans = sourceObject.translations.filter(function (trans) { return trans.language_code == 'en'; })[0];
+
+                    if (srcObjTrans == null) {
+                        data.targetName = data.name + ' Link';
+                    }
+                    else {
+                        data.targetName = srcObjTrans.label
+                    }
+                }
+
+                next();
+            },
+
+            function (next) {
+                data.label = data.name;
+                data.targetLabel = data.targetName;
+
+                // Validate M:N table name should not more than 64 characters
+                // M:N table name format: ab_APPNAME_OBJNAME_COLNAME__ab_APPNAME_OBJNAME_COLNAME
+                if (sourceSetting.linkType == 'collection' && targetSetting.linkType == 'collection') {
+
+                    if ((sourceObject.application.name + sourceObject.name + data.name).length + 6 > 32) {
+                        data.name = data.name.substring(0, (32 - ((sourceObject.application.name + sourceObject.name).length + 5)));
+                    }
+
+                    if ((targetObject.application.name + targetObject.name + data.targetName).length + 6 > 32) {
+                        data.targetName = data.targetName.substring(0, (32 - ((targetObject.application.name + targetObject.name).length + 5)));
+                    }
+
+                    // TODO : Check duplicate column names
+
+                    next();
+                }
+                else {
+                    next();
+                }
+            },
+
             // Create source connection column
             function (next) {
                 ABColumn.createColumn('connectObject', {
                     name: data.name,
+                    label: data.label,
                     object: data.sourceObjectID,
                     language_code: data.language_code,
                     setting: sourceSetting,
@@ -467,29 +535,6 @@ module.exports = {
                     });
             },
 
-            // Set default of target link column
-            function (next) {
-                if (data.targetName == null) {
-                    ABObject.findOne({ id: data.sourceObjectID })
-                        .populate('translations')
-                        .then(function (srcObj) {
-                            var enObj = srcObj.translations.filter(function (trans) { return trans.language_code == 'en'; })[0];
-
-                            if (enObj == null) {
-                                data.targetName = data.name + ' Link';
-                            }
-                            else {
-                                data.targetName = enObj.label
-                            }
-
-                            next();
-                        }, next);
-                }
-                else {
-                    next();
-                }
-            },
-
             // Create target connection column
             function (next) {
                 // Skip if the source relation was not given.
@@ -497,6 +542,7 @@ module.exports = {
 
                 ABColumn.createColumn('connectObject', {
                     name: data.targetName,
+                    label: data.targetLabel,
                     object: data.targetObjectID,
                     language_code: data.language_code,
                     setting: targetSetting,

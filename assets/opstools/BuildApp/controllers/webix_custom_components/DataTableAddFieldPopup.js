@@ -100,7 +100,7 @@ steal(
 											return;
 										}
 
-										if (!inputValidator.validate(fieldInfo.name)) {
+										if (!inputValidator.validateFormat(fieldInfo.name)) {
 											self.enable();
 											return;
 										}

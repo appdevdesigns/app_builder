@@ -26,7 +26,8 @@ module.exports = {
         name: {
             type: 'string',
             required: true,
-            unique: true
+            unique: true,
+            maxLength: 20
         },
 
         //// TODO: This should change.  Can be in multiple roles.

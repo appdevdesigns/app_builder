@@ -35,7 +35,7 @@ steal(
 						id: componentIds.addNewForm,
 						width: 400,
 						rules: {
-							name: inputValidator.rules.preventDuplicateObjectName
+							name: inputValidator.rules.validateObjectName
 						},
 						elements: [
 							{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.object.placeholderName, labelWidth: 70 },
@@ -54,7 +54,7 @@ steal(
 
 											var newObjectName = $$(componentIds.addNewForm).elements['name'].getValue().trim();
 
-											if (!inputValidator.validate(newObjectName)) {
+											if (!inputValidator.validateFormat(newObjectName)) {
 												saveButton.enable();
 												return false;
 											}

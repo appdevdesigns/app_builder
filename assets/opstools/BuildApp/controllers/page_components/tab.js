@@ -784,7 +784,7 @@ steal(
                                     
                                     var values = $$(componentIds.addTabForm).getValues();
 
-                                    if (!inputValidator.validate(values['Name'])) {
+                                    if (!inputValidator.validateFormat(values['Name'])) {
                                         return false;
                                     }
 

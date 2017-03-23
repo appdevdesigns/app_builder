@@ -29,10 +29,6 @@ steal(
 			return [dataField];
 		});
 
-		var maxColNameLength = 30;
-		var remainColNameLength = maxColNameLength;
-
-
 		// Listen save event
 		fields.forEach(function (field) {
 			$(field).on('update', function (event, data) {
@@ -121,14 +117,7 @@ steal(
 					id: componentIds.columnName.replace('{0}', field.name),
 					label: 'Name',
 					placeholder: 'Column name',
-					labelWidth: 50,
-					on: {
-						onChange: function (newVal, oldVal) {
-							if (newVal != oldVal) {
-								$$(componentIds.columnName.replace('{0}', field.name)).setValue(newVal.substring(0, remainColNameLength));
-							}
-						}
-					}
+					labelWidth: 50
 				});
 
 				// Description
@@ -257,8 +246,6 @@ steal(
 			var field = getField(data.fieldName);
 
 			if (!field) return;
-
-			remainColNameLength = maxColNameLength - (AD.classes.AppBuilder.currApp.currObj.name.length + 2);
 
 			if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
 				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
