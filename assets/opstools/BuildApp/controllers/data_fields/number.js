@@ -70,7 +70,7 @@ steal(function () {
 				id: componentIds.numberDefault,
 				placeholder: AD.lang.label.getLabel('ab.dataField.number.defaultNumber') || 'Default number',
 				on: {
-					onChange: function(newVal, oldVal) {
+					onChange: function (newVal, oldVal) {
 						// Validate number
 						if (!new RegExp('^[0-9.]*$').test(newVal)) {
 							$$(componentIds.numberDefault).setValue(oldVal);
@@ -203,14 +203,9 @@ steal(function () {
 	};
 
 	numberDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
-		if (data == null || isNaN(data)) {
-			if (fieldData.setting.default) {
-				data = fieldData.setting.default;
-			}
-			else {
-				$(itemNode).find('.ab-number-format-show').html('');
-				return true;
-			}
+		if (data == null) {
+			$(itemNode).find('.ab-number-format-show').html('');
+			return true;
 		}
 
 		var decimalSizeNum = 0,

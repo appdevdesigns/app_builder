@@ -269,8 +269,14 @@ steal(
 							showCustomEdit(col, childView.$view);
 						});
 					}
-					else if ((rowData == null || rowData[col.name] == null) && childView.setValue && col.setting.default) {
-						childView.setValue(col.setting.default);
+					// Set default value
+					else if ((rowData == null || rowData[col.name] == null) && rowId == null && childView.setValue && col.setting.default) {
+						var defaultValue = col.setting.default;
+
+						if (col.type == 'date' || col.type == 'datetime')
+							defaultValue = new Date(col.setting.default);
+
+						childView.setValue(defaultValue);
 					}
 				});
 			}

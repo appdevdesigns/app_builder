@@ -959,6 +959,18 @@ steal(
 								newModel.attr(key, newRow[key]);
 							});
 
+							// Set default of data
+							AD.classes.AppBuilder.currApp.currObj.columns.forEach(function (col) {
+								if (newModel[col.name] == null && col.setting.default) {
+									var defaultValue = col.setting.default;
+
+									if (col.type == 'date' || col.type == 'datetime')
+										defaultValue = new Date(col.setting.default);
+
+									newModel.attr(col.name, defaultValue);
+								}
+							});
+
 							newModel.save()
 								.fail(function (err) {
 									console.error(err);
