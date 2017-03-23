@@ -16,9 +16,9 @@ steal(
 			editTitle: 'ab-grid-edit-title',
 			editDescription: 'ab-grid-edit-description',
 			editDataTable: 'ab-grid-edit-mode',
-			editHeader: 'ab-grid-edit-header',
+			editHeader: 'ab-grid-edit-header-{id}',
 
-			header: 'ab-grid-header',
+			header: 'ab-grid-header-{id}',
 
 			columnList: 'ab-grid-columns-list',
 
@@ -252,11 +252,12 @@ steal(
 					var header = {
 						view: 'layout',
 						autoheight: true,
+						width: 600,
 						rows: []
 					};
 
 					if (editable) {
-						header.id = componentIds.editHeader;
+						header.id = componentIds.editHeader.replace('{id}', viewId);
 
 						$$(componentIds.editView).removeView(componentIds.editHeader);
 
@@ -300,12 +301,13 @@ steal(
 
 					}
 					else { // Label
-						header.id = componentIds.header;
+						header.id = componentIds.header.replace('{id}', viewId);
 
 						if (setting.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header ab-ellipses-text',
+								minWidth: 600,
 								label: setting.title || ''
 							});
 						}
@@ -404,7 +406,7 @@ steal(
 						header.rows.push({
 							view: 'toolbar',
 							autoheight: true,
-							autowidth: true,
+							width: 200,
 							cols: action_buttons
 						});
 					}
