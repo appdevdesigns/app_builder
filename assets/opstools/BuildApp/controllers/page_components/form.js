@@ -264,12 +264,13 @@ steal(
 					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, viewId, childView.$view);
 
 					if (childView.config && childView.config.view === 'template') {
-
 						if (childView.customEditEventId) webix.eventRemove(childView.customEditEventId);
 						childView.customEditEventId = webix.event(childView.$view, "click", function (e) {
 							showCustomEdit(col, childView.$view);
 						});
-
+					}
+					else if ((rowData == null || rowData[col.name] == null) && childView.setValue && col.setting.default) {
+						childView.setValue(col.setting.default);
 					}
 				});
 			}
@@ -475,6 +476,7 @@ steal(
 								element.required = false;
 								element.validate = function (val) { return !isNaN(val * 1); };
 								element.attributes = { type: "number" };
+								element.value = col.setting.default;
 							}
 							else if (col.setting.editor === 'date') {
 								element.view = 'datepicker';
