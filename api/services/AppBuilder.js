@@ -550,7 +550,7 @@ module.exports = {
                     .populate('application')
                     .then(function (list) {
                         obj = list[0];
-                        if (!obj) throw new Error('invalid object id');
+                        if (!obj) throw new Error('invalid object id: ' + objectID);
 
                         next();
                     })
@@ -567,15 +567,17 @@ module.exports = {
                     return null;
                 }
 
-                if (obj.importFromObject) {
+                var importFromObjectId = obj.importFromObject;
+
+                if (importFromObjectId) {
                     // Get base of import object
-                    ABObject.find({ id: obj.importFromObject })
+                    ABObject.find({ id: importFromObjectId })
                         .populate('columns')
                         .populate('application')
                         .then(function (list) {
                             // Use import object to sync
                             obj = list[0];
-                            if (!obj) throw new Error('invalid import object id');
+                            if (!obj) throw new Error('invalid import object id: ' + importFromObjectId);
                             else next();
                         })
                         .catch(function (err) {

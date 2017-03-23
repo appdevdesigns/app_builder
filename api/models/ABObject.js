@@ -33,7 +33,7 @@ module.exports = {
             type: 'boolean',
             defaultsTo: false
         },
-        
+
         urlPath: {
             type: 'string',
             size: 80,
@@ -66,7 +66,7 @@ module.exports = {
     },
 
 
-   beforeValidate: function (values, cb) {
+    beforeValidate: function (values, cb) {
         for (var key in values) {
             if (values[key] == null || typeof values[key] == 'undefined' || values[key] != values[key] /* NaN */)
                 delete values[key];
@@ -101,21 +101,21 @@ module.exports = {
             async.parallel([
                 function (callback) {
                     ABObjectTrans.destroy({ abobject: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
                         .then(function () {
                             callback();
-                        });
+                        }, callback);
                 },
                 function (callback) {
                     ABColumn.destroy({ object: ids })
-                        .fail(function (err) {
-                            callback(err)
-                        })
                         .then(function () {
                             callback();
-                        });
+                        }, callback);
+                },
+                function (callback) {
+                    ABObject.destroy({ importFromObject: ids })
+                        .then(function () {
+                            callback();
+                        }, callback);
                 }
             ], cb);
         }
