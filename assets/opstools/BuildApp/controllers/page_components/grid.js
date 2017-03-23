@@ -19,6 +19,7 @@ steal(
 			editHeader: 'ab-grid-edit-header-{id}',
 
 			header: 'ab-grid-header-{id}',
+			toolbar: 'ab-grid-toolbar-{id}',
 
 			columnList: 'ab-grid-columns-list',
 
@@ -307,7 +308,6 @@ steal(
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header ab-ellipses-text',
-								minWidth: 600,
 								label: setting.title || ''
 							});
 						}
@@ -405,8 +405,8 @@ steal(
 					if (action_buttons.length > 0) {
 						header.rows.push({
 							view: 'toolbar',
+							id: componentIds.toolbar.replace('{id}', viewId),
 							autoheight: true,
-							width: 200,
 							cols: action_buttons
 						});
 					}
@@ -419,6 +419,10 @@ steal(
 						$$(self.viewId).clearAdditionalView();
 						if (header.rows.length > 0)
 							$$(self.viewId).prependView(header);
+					}
+
+					if ($$(componentIds.toolbar.replace('{id}', viewId))) {
+						$$(componentIds.toolbar.replace('{id}', viewId)).$setSize($$(viewId).config.width + 3);
 					}
 
 					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
@@ -824,10 +828,6 @@ steal(
 			};
 
 			this.onDisplay = function () {
-
-				// if ((this.data.settings) && (this.data.setting.linkedField)) {
-				// 	filterLinkedData.call(this, this.data.setting.linkedField);
-				// }
 
 			}
 
