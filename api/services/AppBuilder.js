@@ -1842,7 +1842,7 @@ module.exports = {
         actions: false,
         shortcuts: false,
         rest: true
-    }
+    },
 `;
                             data = data.replace(/^module\.exports = \{$/m, '$&' + patchData);
                             modelURL = `${moduleName}/${lcModelName}`;
