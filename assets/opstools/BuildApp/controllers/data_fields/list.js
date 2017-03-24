@@ -1,11 +1,16 @@
 steal(
     'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
+
+    'opstools/BuildApp/controllers/webix_custom_components/EditList.js',
     function(selectivityHelper) {
         var componentIds = {
             editView: 'ab-new-select-list',
             listOptions: 'ab-new-select-option',
             newOption: 'ab-new-select-new',
-            multiSelectOption: 'ab-new-select-multiselect'
+            multiSelectOption: 'ab-new-select-multiselect',
+
+            singleDefault: 'ab-new-select-single-default',
+            multipleDefault: 'ab-new-select-multiple-default'
         };
 
         // General settings
@@ -20,6 +25,26 @@ steal(
 
         var removedOptionIds = [];
 
+        function updateDefaultList(application, object, fieldData, rowData, data, viewId, itemNode, options) {
+            var optList = $$(componentIds.listOptions).find({}).map(function (opt) {
+                return {
+                    id: opt.dataId,
+                    value: opt.label
+                }
+            });
+
+            optList.unshift({
+                id: 'none',
+                value: '[No Default]'
+            });
+
+            $$(componentIds.singleDefault).define('options', optList);
+            $$(componentIds.singleDefault).setValue('none');
+
+//          $$(componentIds.multipleDefault)
+//          listDataField.customDisplay(application, object, fieldData, rowData, data, viewId, itemNode, options)
+        }
+
         // Edit definition
         listDataField.editDefinition = {
             id: componentIds.editView,
@@ -28,7 +53,19 @@ steal(
                     id: componentIds.multiSelectOption,
                     labelRight: AD.lang.label.getLabel('ab.dataField.list.multiSelectOption') || 'Multiselect',
                     labelWidth: 0,
-                    value: false
+                    value: false,
+                    on: {
+                        onChange: function () {
+                            if (this.getValue() == true) {
+                                $$(componentIds.singleDefault).hide();
+                                $$(componentIds.multipleDefault).show();
+                            }
+                            else {
+                                $$(componentIds.singleDefault).show();
+                                $$(componentIds.multipleDefault).hide();
+                            }
+                        }
+                    }
                 },
                 { view: "label", label: "<b>{0}</b>".replace('{0}', "Options") },
                 {
@@ -50,6 +87,17 @@ steal(
 
                             $$(componentIds.listOptions).remove(id);
                         }
+                    },
+                    on: {
+                        onAfterAdd: function() {
+                            updateDefaultList();
+                        },
+                        onAfterEditStop: function() {
+                            updateDefaultList();
+                        },
+                        onAfterDelete: function() {
+                            updateDefaultList();
+                        }
                     }
                 },
                 {
@@ -60,6 +108,20 @@ steal(
                         var itemId = $$(componentIds.listOptions).add({ id: temp_id, dataId: temp_id, label: '' }, $$(componentIds.listOptions).count());
                         $$(componentIds.listOptions).edit(itemId);
                     }
+                },
+                {
+                    id: componentIds.singleDefault,
+                    view: 'richselect',
+                    label: 'Default',
+                    value: 0
+                },
+                {
+                    id: componentIds.multipleDefault,
+                    view: 'template',
+                    label: 'Default',
+                    borderless: true,
+                    hidden: true,
+                    template: '<div class="list-data-values"></div>'
                 }
             ]
         };
@@ -138,6 +200,23 @@ steal(
                 value: (data || '').split(','),
                 placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected"
             });
+
+            $(itemNode).off('change');
+            $(itemNode).on('change', function() {
+                // Wait until selectivity populate data completely
+                setTimeout(function () {
+
+                    var selectedData = {
+                        objectId: object.id,
+                        columnName: fieldData.name,
+                        rowId: rowData.id,
+                        data: listDataField.getValue(application, object, fieldData, itemNode)
+                    };
+
+                    $(listDataField).trigger('update', selectedData);
+                }, 600);
+            });
+ 
             return true;
         };
         listDataField.hasCustomEdit = function(fieldData) {
