@@ -84,7 +84,7 @@ if (!data.columns) return;
 					if (column && column.length > 0) column = column[0];
 					else return;
 
-					if (dataFieldsManager.customDisplay(child.config.fieldName, application, object, column, currModel.id, fieldData, viewId, child.$view, { readOnly: true }))
+					if (dataFieldsManager.customDisplay(child.config.fieldName, application, object, column, currModel, fieldData, viewId, child.$view, { readOnly: true }))
 						return;
 
 					if (column.setting.format && webix.i18n[column.setting.format] && displayField.setValue) {
