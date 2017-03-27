@@ -22,7 +22,9 @@ steal(
 			linkField: 'ab-form-link-field',
 			selectColCount: 'ab-form-select-column-count',
 			isSaveVisible: 'ab-form-save-visible',
+			saveLabel: 'ab-form-save-text',
 			isCancelVisible: 'ab-form-cancel-visible',
+			cancelLabel: 'ab-form-cancel-text',
 
 			clearOnLoad: 'ab-form-clear-on-load',
 			clearOnSave: 'ab-form-clear-on-save',
@@ -638,7 +640,7 @@ steal(
 								id: saveButtonId,
 								view: "button",
 								type: "form",
-								value: "Save",
+								value: setting.saveLabel || "Save",
 								width: 90,
 								inputWidth: 80,
 								click: function () {
@@ -670,7 +672,7 @@ steal(
 							actionButtons.cols.push({
 								id: cancelButtonId,
 								view: "button",
-								value: "Cancel",
+								value: setting.cancelLabel || "Cancel",
 								width: 90,
 								inputWidth: 80,
 								click: function () {
@@ -740,7 +742,9 @@ steal(
 					colCount: propertyValues[componentIds.selectColCount] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
+					saveLabel: propertyValues[componentIds.saveLabel] || 'Save',
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
+					cancelLabel: propertyValues[componentIds.cancelLabel] || 'Cancel',
 					clearOnLoad: propertyValues[componentIds.clearOnLoad],
 					clearOnSave: propertyValues[componentIds.clearOnSave],
 					whenByGroup: propertyValues[componentIds.whenByGroup]
@@ -874,7 +878,9 @@ steal(
 					propValues[componentIds.linkField] = setting.linkField;
 					propValues[componentIds.selectColCount] = setting.colCount;
 					propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
+					propValues[componentIds.saveLabel] = setting.saveLabel || 'Save';
 					propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
+					propValues[componentIds.cancelLabel] = setting.cancelLabel || 'Cancel';
 					propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
 					propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
 					propValues[componentIds.whenByGroup] = setting.whenByGroup || 'add';
@@ -1056,6 +1062,12 @@ steal(
 						]
 					},
 					{
+						id: componentIds.saveLabel,
+						name: 'saveLabel',
+						type: 'text',
+						label: 'Save label'
+					},
+					{
 						id: componentIds.isCancelVisible,
 						name: 'cancel',
 						type: 'richselect',
@@ -1064,6 +1076,12 @@ steal(
 							{ id: 'show', value: "Yes" },
 							{ id: 'hide', value: "No" },
 						]
+					},
+					{
+						id: componentIds.cancelLabel,
+						name: 'cancelLabel',
+						type: 'text',
+						label: 'Cancel label'
 					},
 					{ label: "Data selection", type: "label" },
 					{
