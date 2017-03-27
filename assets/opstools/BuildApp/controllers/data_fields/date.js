@@ -2,6 +2,7 @@ steal(function () {
 	var componentIds = {
 		editView: 'ab-new-date',
 		includeTime: 'ab-new-date-include-time',
+		currentToDefault: 'ab-new-current-date-default',
 		default: 'ab-new-date-default',
 		dateDisplay: 'ab-new-date-date-display',
 
@@ -147,6 +148,22 @@ steal(function () {
 							id: componentIds.default,
 							timepicker: newVal ? true : false
 						}, $$(componentIds.default));
+					}
+				}
+			},
+			{
+				view: 'checkbox',
+				id: componentIds.currentToDefault,
+				labelRight: 'Set current date to default value',
+				labelWidth: 0,
+				on: {
+					onChange: function(newVal, oldVal) {
+						if (newVal) {
+							$$(componentIds.default).disable();
+						}
+						else {
+							$$(componentIds.default).enable();
+						}
 					}
 				}
 			},
@@ -367,6 +384,8 @@ steal(function () {
 		$$(componentIds.includeTime).setValue(data.type == 'datetime');
 		$$(componentIds.includeTime).disable();
 
+		$$(componentIds.currentToDefault).setValue(data.setting.currentDateDefault);
+
 		if (data.setting && data.setting.default) {
 			$$(componentIds.default).setValue(new Date(data.setting.default));
 		}
@@ -393,6 +412,7 @@ steal(function () {
 				filter_type: 'date', // DataTableFilterPopup - filter type
 				template: '<div class="ab-date-data-field"></div>',
 				includeDayFormat: $$(componentIds.includeDayFormat).getValue().split("-")[1],
+				currentDateDefault: $$(componentIds.currentToDefault).getValue(),
 				default: $$(componentIds.default).getValue() ? $$(componentIds.default).getValue().toString() : null,
 				typeDayFormatDelimiters: $$(componentIds.typeDayFormatDelimiters).getValue(),
 				includeMonthFormat: $$(componentIds.includeMonthFormat).getValue().split("-")[1],
@@ -490,6 +510,8 @@ steal(function () {
 	dateDataField.resetState = function () {
 		$$(componentIds.includeTime).setValue(false);
 		$$(componentIds.includeTime).enable();
+
+		$$(componentIds.currentToDefault).setValue(false);
 	};
 
 	return dateDataField;

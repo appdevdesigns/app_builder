@@ -22,6 +22,7 @@ steal(
 			linkField: 'ab-form-link-field',
 			selectColCount: 'ab-form-select-column-count',
 			isSaveVisible: 'ab-form-save-visible',
+			afterSave: 'ab-form-save-go-to',
 			saveLabel: 'ab-form-save-text',
 			isCancelVisible: 'ab-form-cancel-visible',
 			cancelLabel: 'ab-form-cancel-text',
@@ -248,9 +249,16 @@ steal(
 					clearForm.call(self, object, self.data.columns, dataCollection);
 				}
 
-				$(self).trigger('changePage', {
-					previousPage: true
-				});
+				if (setting.afterSave && !isNaN(setting.afterSave)) {
+					$(self).trigger('changePage', {
+						pageId: setting.afterSave
+					});
+				}
+				else {
+					$(self).trigger('changePage', {
+						previousPage: true
+					});
+				}
 			}
 
 			function showCustomFields(object, columns, rowId, rowData) {
@@ -742,6 +750,7 @@ steal(
 					colCount: propertyValues[componentIds.selectColCount] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
+					afterSave: propertyValues[componentIds.afterSave],
 					saveLabel: propertyValues[componentIds.saveLabel] || 'Save',
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
 					cancelLabel: propertyValues[componentIds.cancelLabel] || 'Cancel',
@@ -787,6 +796,29 @@ steal(
 						else {
 							next();
 						}
+					},
+					function (next) {
+						application.getApplicationPages(application.currPage)
+							.fail(function (err) { next(err); })
+							.then(function (pages) {
+
+								var afterSave = $$(componentIds.propertyView).getItem(componentIds.afterSave);
+								afterSave.options = pages.map(function(p) {
+									if (p.translate) p.translate();
+
+									return {
+										id: p.id,
+										value: p.label
+									};
+								}).attr();
+
+								afterSave.options.splice(0, 0, {
+									id: null,
+									value: '[Go To]'
+								});
+
+								next();
+							});
 					},
 					// Render form component
 					function (next) {
@@ -878,6 +910,7 @@ steal(
 					propValues[componentIds.linkField] = setting.linkField;
 					propValues[componentIds.selectColCount] = setting.colCount;
 					propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
+					propValues[componentIds.afterSave] = setting.afterSave;
 					propValues[componentIds.saveLabel] = setting.saveLabel || 'Save';
 					propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
 					propValues[componentIds.cancelLabel] = setting.cancelLabel || 'Cancel';
@@ -1060,6 +1093,19 @@ steal(
 							{ id: 'show', value: "Yes" },
 							{ id: 'hide', value: "No" },
 						]
+					},
+					{
+						id: componentIds.afterSave,
+						name: 'afterSave',
+						type: 'richselect',
+						label: 'After save',
+						template: function (data, dataValue) {
+							var goToPage = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+							if (goToPage && goToPage.length > 0)
+								return goToPage[0].value;
+							else
+								return "[Go To]";
+						}
 					},
 					{
 						id: componentIds.saveLabel,

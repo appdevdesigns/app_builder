@@ -986,8 +986,12 @@ steal(
 								if (newModel[col.name] == null && col.setting.default) {
 									var defaultValue = col.setting.default;
 
-									if (col.type == 'date' || col.type == 'datetime')
-										defaultValue = new Date(col.setting.default);
+									if (col.type == 'date' || col.type == 'datetime') {
+										if (col.setting.currentDateDefault == true)
+											defaultValue = new Date(); 
+										else if (col.setting.default)
+											defaultValue = new Date(col.setting.default);
+									}
 
 									newModel.attr(col.name, defaultValue);
 								}
