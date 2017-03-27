@@ -25,24 +25,37 @@ steal(
 
         var removedOptionIds = [];
 
-        function updateDefaultList(application, object, fieldData, rowData, data, viewId, itemNode, options) {
+        function renderMultipleSelector(itemNode, options, data, readOnly) {
+            $(itemNode).find('.list-data-values').selectivity({
+                allowClear: true,
+                multiple: true,
+                readOnly: !!readOnly,
+                items: $.makeArray(options),
+                value: (data || '').split(','),
+                placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected"
+            });
+        }
+
+        function updateDefaultList() {
             var optList = $$(componentIds.listOptions).find({}).map(function (opt) {
                 return {
-                    id: opt.dataId,
-                    value: opt.label
+                    id: opt.id,
+                    value: opt.value
                 }
             });
+
+            renderMultipleSelector(
+                $$(componentIds.multipleDefault).$view,
+                optList.map(function (opt) { return opt.value; }),
+                null,
+                false);
 
             optList.unshift({
                 id: 'none',
                 value: '[No Default]'
             });
-
             $$(componentIds.singleDefault).define('options', optList);
             $$(componentIds.singleDefault).setValue('none');
-
-//          $$(componentIds.multipleDefault)
-//          listDataField.customDisplay(application, object, fieldData, rowData, data, viewId, itemNode, options)
         }
 
         // Edit definition
@@ -64,6 +77,8 @@ steal(
                                 $$(componentIds.singleDefault).show();
                                 $$(componentIds.multipleDefault).hide();
                             }
+
+                            updateDefaultList();
                         }
                     }
                 },
@@ -71,21 +86,21 @@ steal(
                 {
                     view: "editlist",
                     id: componentIds.listOptions,
-                    template: "<div style='position: relative;'>#label#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
+                    template: "<div style='position: relative;'>#value#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
                     autoheight: true,
                     drag: true,
                     editable: true,
                     editor: "text",
-                    editValue: "label",
+                    editValue: "value",
                     onClick: {
-                        "ab-new-field-remove": function(e, id, trg) {
-                            var dataId = $$(componentIds.listOptions).getItem(id).dataId;
+                        "ab-new-field-remove": function(e, itemId, trg) {
+                            var id = $$(componentIds.listOptions).getItem(itemId).id;
 
                             // Store removed id to array
-                            if (typeof dataId === 'number')
-                                removedOptionIds.push(dataId);
+                            if (typeof id === 'number')
+                                removedOptionIds.push(id);
 
-                            $$(componentIds.listOptions).remove(id);
+                            $$(componentIds.listOptions).remove(itemId);
                         }
                     },
                     on: {
@@ -105,7 +120,7 @@ steal(
                     value: "Add new option",
                     click: function() {
                         var temp_id = 'temp_' + webix.uid();
-                        var itemId = $$(componentIds.listOptions).add({ id: temp_id, dataId: temp_id, label: '' }, $$(componentIds.listOptions).count());
+                        var itemId = $$(componentIds.listOptions).add({ id: temp_id, value: '' }, $$(componentIds.listOptions).count());
                         $$(componentIds.listOptions).edit(itemId);
                     }
                 },
@@ -113,15 +128,19 @@ steal(
                     id: componentIds.singleDefault,
                     view: 'richselect',
                     label: 'Default',
-                    value: 0
+                    value: 'none'
                 },
                 {
                     id: componentIds.multipleDefault,
                     view: 'template',
                     label: 'Default',
+                    height: 50,
                     borderless: true,
                     hidden: true,
-                    template: '<div class="list-data-values"></div>'
+                    css: 'ab-main-container',
+                    template:
+                    '<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">Default</label>' + 
+                    '<div class="list-data-values"></div>'
                 }
             ]
         };
@@ -133,14 +152,34 @@ steal(
             var options = [];
             data.setting.options.forEach(function(opt) {
                 options.push({
-                    dataId: opt.dataId,
                     id: opt.id,
-                    label: opt.label
+                    value: opt.value
                 });
             });
-            $$(componentIds.multiSelectOption).setValue(data.setting.multiSelect);
             $$(componentIds.listOptions).parse(options);
             $$(componentIds.listOptions).refresh();
+            $$(componentIds.multiSelectOption).setValue(data.setting.multiSelect);
+
+            // Wait until selectivity render complately
+            setTimeout(function () {
+
+                updateDefaultList();
+
+                if (data.setting && data.setting.default) {
+                    if (data.setting.multiSelect == true) {
+                        listDataField.setValue(
+                            null,
+                            $$(componentIds.multipleDefault).$view,
+                            data.setting.default
+                        );
+                    }
+                    else {
+                        $$(componentIds.singleDefault).setValue(data.setting.default);
+                        $$(componentIds.singleDefault).refresh();
+                    }
+                }
+
+            }, 100);
         };
 
         // For save field
@@ -150,11 +189,14 @@ steal(
 
             $$(componentIds.listOptions).editStop(); // Close edit mode
             $$(componentIds.listOptions).data.each(function(opt) {
-                var optId = typeof opt.dataId == 'string' && opt.dataId.startsWith('temp') ? null : opt.dataId;
+                var optId = typeof opt.id == 'string' && opt.id.startsWith('temp') ? null : opt.id;
 
-                options.push({ dataId: optId, id: opt.label.replace(/ /g, '_'), value: opt.label });
+                options.push({
+                    id: optId || opt.value.replace(/ /g, '_'),
+                    value: opt.value
+                });
 
-                filter_options.push(opt.label);
+                filter_options.push(opt.value);
             });
 
             // Filter value is not empty
@@ -173,6 +215,24 @@ steal(
 
             //isMultiselect will be a number, 1 or 0 for true or false
             var isMultiselect = $$(componentIds.multiSelectOption).getValue();
+            var defaultValue;
+
+            if (isMultiselect) {
+                defaultValue = listDataField.getValue(
+                    AD.classes.AppBuilder.currApp,
+                    AD.classes.AppBuilder.currApp.currObj,
+                    {
+                        setting: {
+                            multiSelect: true
+                        }
+                    },
+                    $$(componentIds.multipleDefault).$view
+                );
+            }
+            else {
+                defaultValue = $$(componentIds.singleDefault).getText();
+                if (defaultValue == 'none') defaultValue = null;
+            }
 
             return {
                 fieldName: listDataField.name,
@@ -181,25 +241,22 @@ steal(
                     icon: listDataField.icon,
                     filter_type: 'list',
                     editor: isMultiselect ? 'template' : 'richselect',
-                    options: options, // [{"dataId":"ABList.id","id":"STRING","label":"STRING"}]
+                    options: options, // [{"id":"ABList.id","value":"STRING"}]
                     filter_options: filter_options,
                     multiSelect: isMultiselect,
-                    template: isMultiselect ? '<div class="list-data-values"></div>' : undefined
+                    template: isMultiselect ? '<div class="list-data-values"></div>' : undefined,
+                    default: defaultValue
                 },
                 removedOptionIds: removedOptionIds
             };
         };
 
         listDataField.customDisplay = function(application, object, fieldData, rowData, data, viewId, itemNode, options) {
+            // Single selector
             if (!fieldData.setting.multiSelect || fieldData.setting.multiSelect === '0') return false;
-            $(itemNode).find('.list-data-values').selectivity({
-                allowClear: true,
-                multiple: true,
-                readOnly: !!options.readOnly,
-                items: $.makeArray(fieldData.setting.filter_options),
-                value: (data || '').split(','),
-                placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected"
-            });
+
+            // Multiple selector
+            renderMultipleSelector(itemNode, fieldData.setting.filter_options, data, options.readOnly);
 
             $(itemNode).off('change');
             $(itemNode).on('change', function() {

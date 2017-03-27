@@ -682,9 +682,8 @@ steal(
 																var sortedList = listResult.attr().sort(function (a, b) { return a.weight - b.weight; });
 																column.setting.attr('options', $.map(sortedList, function (list) {
 																	return {
-																		dataId: list.id,
-																		id: list.value,
-																		label: list.label
+																		id: list.id,
+																		value: list.label
 																	}
 																}));
 
@@ -849,39 +848,31 @@ steal(
 												var createOptionEvents = [];
 
 												columnInfo.setting.options.forEach(function (opt, index) {
-													createOptionEvents.push(function (createOk) {
-														var list_key = self.Model.ABList.getKey(
-															AD.classes.AppBuilder.currApp.name,
-															AD.classes.AppBuilder.currApp.currObj.name,
-															columnInfo.name);
+													if (isNaN(opt.id)) {
+														createOptionEvents.push(function (createOk) {
+															var list_key = self.Model.ABList.getKey(
+																AD.classes.AppBuilder.currApp.name,
+																AD.classes.AppBuilder.currApp.currObj.name,
+																columnInfo.name);
 
-														self.Model.ABList.create({
-															key: list_key,
-															weight: index + 1,
-															column: updateColumn.id,
-															label: opt.value,
-															value: opt.value
-														})
-															.fail(createOk)
-															.then(function (createdCol) {
-																// set dataId to option
-																opt.dataId = createdCol.id;
-																createOk();
-															});
-													});
-												});
+															self.Model.ABList.create({
+																key: list_key,
+																weight: index + 1,
+																column: updateColumn.id,
+																label: opt.value,
+																value: opt.value
+															})
+																.fail(createOk)
+																.then(function (createdCol) {
+																	opt.id = createdCol.id;
 
-												async.parallel(createOptionEvents, function (err) {
-													if (err) return next(err);
-
-													// Save dataId to options
-													updateColumn.setting.attr('options', columnInfo.setting.options);
-													updateColumn.save()
-														.fail(next)
-														.then(function () {
-															next();
+																	createOk();
+																});
 														});
+													}
 												});
+
+												async.parallel(createOptionEvents, next);
 											}
 											else {
 												next();
@@ -914,6 +905,35 @@ steal(
 												next();
 											}
 										},
+										// Update options of list data type
+										function (next) {
+											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+
+												// Refresh options
+												updateColumn.setting.attr('options', columnInfo.setting.options.filter(function (opt) {
+													return  columnInfo.removedOptionIds == null || columnInfo.removedOptionIds.indexOf(opt.id) < 0;
+												}));
+
+												// Update default ABList id
+												if (updateColumn.setting.default) {
+													var defaultOpt = columnInfo.setting.options.filter(function (opt) { return opt.value == updateColumn.setting.default; })[0];
+													if (defaultOpt)
+														updateColumn.setting.attr('default', defaultOpt.id);
+												}
+												else {
+													updateColumn.setting.removeAttr('default');
+												}
+
+												updateColumn.save()
+													.fail(next)
+													.then(function () {
+														next();
+													});
+											}
+											else {
+												next();
+											}
+										}
 									], function (err) {
 										if (err) {
 											q.reject(err);
@@ -1091,8 +1111,9 @@ steal(
 										columnInfo.setting.options.forEach(function (opt, index) {
 											createListEvents.push(function (next) {
 
-												if (opt.dataId && !opt.dataId.toString().startsWith('temp')) { // Update
-													self.Model.ABList.findOne({ id: opt.dataId })
+												// Update
+												if (opt.id && !isNaN(opt.id) && !opt.id.toString().startsWith('temp')) {
+													self.Model.ABList.findOne({ id: opt.id })
 														.fail(function (err) { next(err) })
 														.then(function (li) {
 															li.attr('weight', index + 1);
@@ -1114,8 +1135,7 @@ steal(
 													if (columnInfo.setting.options && columnInfo.setting.options.length > 0) {
 														list_options = $.map(columnInfo.setting.options, function (opt) {
 															return {
-																id: opt.dataId,
-																value: opt.id,
+																id: opt.id,
 																label: opt.value
 															};
 														});
@@ -1156,8 +1176,7 @@ steal(
 
 									addColumnHeader.options = $.map(list_options, function (opt) {
 										return {
-											dataId: opt.id,
-											id: opt.value,
+											id: opt.id,
 											value: opt.label
 										};
 									});
