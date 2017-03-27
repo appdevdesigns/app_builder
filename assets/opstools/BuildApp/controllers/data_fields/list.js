@@ -32,7 +32,7 @@ steal(
                 readOnly: !!readOnly,
                 items: $.makeArray(options),
                 value: (data || '').split(','),
-                placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected"
+                placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || ""
             });
         }
 
