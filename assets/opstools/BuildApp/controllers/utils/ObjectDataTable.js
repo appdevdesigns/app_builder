@@ -266,8 +266,8 @@ steal(
 							// 		label += ' ' + self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
 							// }
 
-							var headerTemplate = '<div class="ab-object-data-header"><span class="webix_icon {0}"></span>{1}{2}</div>'
-								.replace('{0}', col.setting.icon ? 'fa-' + col.setting.icon : '')
+							var headerTemplate = '<div class="ab-object-data-header">{0}{1}{2}</div>'
+								.replace('{0}', col.setting.icon ? '<span class="webix_icon fa-' + col.setting.icon + '"></span>' : '')
 								.replace('{1}', label)
 								.replace('{2}', readOnly ? '' : '<i class="ab-object-data-header-edit fa fa-angle-down"></i>');
 

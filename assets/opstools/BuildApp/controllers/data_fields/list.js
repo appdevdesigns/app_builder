@@ -128,6 +128,10 @@ steal(
                     id: componentIds.singleDefault,
                     view: 'richselect',
                     label: 'Default',
+                    options: [{
+                        id: 'none',
+                        value: '[No Default]'
+                    }],
                     value: 'none'
                 },
                 {

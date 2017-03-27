@@ -117,7 +117,7 @@ steal(
 											return;
 										}
 
-										if (!fieldInfo.weight)
+										if (fieldInfo.weight == null)
 											fieldInfo.weight = dataTable.config.columns.length;
 
 										// Call callback function

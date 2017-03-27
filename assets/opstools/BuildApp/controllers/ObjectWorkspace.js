@@ -654,7 +654,9 @@ steal(
 										})
 										.then(function (data) {
 
-											data.forEach(function (d) { if (d.translate) d.translate(); });
+											data.forEach(function (d) { 
+												if (d.translate) d.translate();
+											});
 
 											self.data.columns = data;
 											AD.classes.AppBuilder.currApp.currObj.attr('columns', data);

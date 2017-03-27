@@ -17,7 +17,8 @@ steal(
 
 		var componentIds = {
 			labelName: 'ab-new-{0}-label',
-			columnName: 'ab-new-{0}-name'
+			columnName: 'ab-new-{0}-name',
+			showIcon: 'ab-new-{0}-show-icon'
 		};
 
 		// convert the provided objects into a [fields]
@@ -128,6 +129,13 @@ steal(
 					});
 				}
 
+				headerDefinition.push({
+					view: 'checkbox',
+					id: componentIds.showIcon.replace('{0}', field.name),
+					labelRight: 'Show icon',
+					labelWidth: 0
+				});
+
 				field.editDefinition.rows = headerDefinition.concat(field.editDefinition.rows);
 			}
 		}
@@ -216,6 +224,11 @@ steal(
 					fieldInfo.name = $$(componentIds.columnName.replace('{0}', name)).getValue();
 					fieldInfo.id = $$(componentIds.labelName.replace('{0}', name)).columnId;
 					fieldInfo.weight = $$(componentIds.labelName.replace('{0}', name)).weight;
+
+					// Remove icon setting
+					if (!$$(componentIds.showIcon.replace('{0}', name)).getValue()) {
+						delete fieldInfo.setting.icon;
+					}
 				}
 
 				return fieldInfo;
@@ -247,15 +260,8 @@ steal(
 
 			if (!field) return;
 
-			if ($$(componentIds.labelName.replace('{0}', data.fieldName)))
-				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
-			else
-				$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue('');
-
-			if ($$(componentIds.columnName.replace('{0}', data.fieldName)))
-				$$(componentIds.columnName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
-			else
-				$$(componentIds.columnName.replace('{0}', data.fieldName)).setValue('');
+			$$(componentIds.labelName.replace('{0}', data.fieldName)).setValue(data.label);
+			$$(componentIds.columnName.replace('{0}', data.fieldName)).setValue(data.name.replace(/_/g, ' '));
 
 			// Disable edit column name
 			if (data.id != null)
@@ -263,6 +269,11 @@ steal(
 
 			$$(componentIds.labelName.replace('{0}', data.fieldName)).columnId = data.id;
 			$$(componentIds.labelName.replace('{0}', data.fieldName)).weight = data.weight;
+
+			if (data.setting && data.setting.icon)
+				$$(componentIds.showIcon.replace('{0}', data.fieldName)).setValue(true);
+			else 
+				$$(componentIds.showIcon.replace('{0}', data.fieldName)).setValue(false);
 
 			field.populateSettings(application, data);
 		};
@@ -402,6 +413,11 @@ steal(
 				if (txtColName) {
 					txtColName.enable();
 					txtColName.setValue('');
+				}
+
+				var showIcon = $$(componentIds.showIcon.replace('{0}', f.name));
+				if (showIcon) {
+					showIcon.setValue(true);
 				}
 
 				if (f.resetState)
