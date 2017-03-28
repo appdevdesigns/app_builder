@@ -68,7 +68,15 @@ steal(function () {
 				label: "Default Value",
 				labelWidth: "100",
 				id: componentIds.numberDefault,
-				placeholder: AD.lang.label.getLabel('ab.dataField.number.defaultNumber') || 'Default number'
+				placeholder: AD.lang.label.getLabel('ab.dataField.number.defaultNumber') || 'Default number',
+				on: {
+					onChange: function (newVal, oldVal) {
+						// Validate number
+						if (!new RegExp('^[0-9.]*$').test(newVal)) {
+							$$(componentIds.numberDefault).setValue(oldVal);
+						}
+					}
+				}
 			},
 			{
 				view: "richselect",

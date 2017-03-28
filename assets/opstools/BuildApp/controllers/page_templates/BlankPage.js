@@ -75,7 +75,7 @@ steal(
 				var parentPageId = $$(componentId.addNewForm).elements['parent'].getValue(),
 					newPageName = $$(componentId.addNewForm).elements['name'].getValue().trim();
 
-				if (!inputValidator.validate(newPageName)) {
+				if (!inputValidator.validateFormat(newPageName)) {
 					q.reject();
 					return q;
 				}

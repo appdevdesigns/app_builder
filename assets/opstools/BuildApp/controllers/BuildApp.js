@@ -168,20 +168,6 @@ steal(
 								url: '/app_builder/fullReload/' + data.appID
 							})
 								.always(function () {
-								})
-								.fail(function (err) {
-									console.error(err);
-
-									// Show retry screen
-									$$(self.webixUiId.loadingScreen).showErrorScreen(
-										AD.lang.label.getLabel('ab.sync.syncError') || 'There are errors',
-										AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
-										function () {
-											$$(self.webixUiId.loadingScreen).start();
-
-											self.callReload(data);
-										});
-									$$(self.webixUiId.syncButton).enable();
 								});
 						},
 
@@ -239,6 +225,21 @@ steal(
 											break;
 									}
 									$$(self.webixUiId.loadingScreen).setPercentage(self.data.curLoadProgress);
+									break;
+								case 'fail':
+									console.error(data.options.error);
+
+									// Show retry screen
+									$$(self.webixUiId.loadingScreen).showErrorScreen(
+										AD.lang.label.getLabel('ab.sync.syncError') || 'There are errors',
+										AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
+										function () {
+											$$(self.webixUiId.loadingScreen).start();
+
+											self.callReload(data.options.requestData);
+										});
+									$$(self.webixUiId.syncButton).enable();
+
 									break;
 							}
 						},

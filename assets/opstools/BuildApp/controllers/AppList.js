@@ -472,7 +472,7 @@ steal(
 															var appName = $$(self.webixUiId.appForm).elements['label'].getValue(),
 																appDescription = $$(self.webixUiId.appForm).elements['description'].getValue();
 
-															if (!inputValidator.validate(appName)) {
+															if (!inputValidator.validateFormat(appName)) {
 																saveButton.enable();
 																return false;
 															}

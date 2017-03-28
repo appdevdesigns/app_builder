@@ -10,8 +10,11 @@ steal(
 			invalidFormatDescription: AD.lang.label.getLabel('ab.validate.invalidFormatDescription') || "System disallow enter special character.",
 		};
 
-		return {
+		var instance = {
 			rules: {
+				validateObjectName: function (value, id) {
+					return instance.validateFormat(value) && instance.rules.preventDuplicateObjectName(value, id);
+				},
 				preventDuplicateObjectName: function (value, id) {
 					// Check duplicate
 					var duplicateObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) {
@@ -29,7 +32,7 @@ steal(
 				}
 			},
 
-			validate: function (input) {
+			validateFormat: function (input) {
 				// Validate maximum length of field name
 				var maxNameLength = 20;
 				if (input && input.length > maxNameLength) {
@@ -53,8 +56,8 @@ steal(
 
 				return true;
 			}
-
-
 		};
+
+		return instance;
 	}
 );

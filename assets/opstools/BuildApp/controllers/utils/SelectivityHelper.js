@@ -14,7 +14,7 @@ steal(function () {
 				readOnly: readOnly || false,
 				showDropdown: false,
 				showSearchInputInDropdown: false,
-				placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || "No data selected"
+				placeholder: AD.lang.label.getLabel('ab.object.noConnectedData') || ""
 			}).on('change', function (ev) {
 				// Trigger event
 				$(self).trigger('change', {

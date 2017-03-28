@@ -16,9 +16,10 @@ steal(
 			editTitle: 'ab-grid-edit-title',
 			editDescription: 'ab-grid-edit-description',
 			editDataTable: 'ab-grid-edit-mode',
-			editHeader: 'ab-grid-edit-header',
+			editHeader: 'ab-grid-edit-header-{id}',
 
-			header: 'ab-grid-header',
+			header: 'ab-grid-header-{id}',
+			toolbar: 'ab-grid-toolbar-{id}',
 
 			columnList: 'ab-grid-columns-list',
 
@@ -252,11 +253,12 @@ steal(
 					var header = {
 						view: 'layout',
 						autoheight: true,
+						width: 600,
 						rows: []
 					};
 
 					if (editable) {
-						header.id = componentIds.editHeader;
+						header.id = componentIds.editHeader.replace('{id}', viewId);
 
 						$$(componentIds.editView).removeView(componentIds.editHeader);
 
@@ -300,7 +302,7 @@ steal(
 
 					}
 					else { // Label
-						header.id = componentIds.header;
+						header.id = componentIds.header.replace('{id}', viewId);
 
 						if (setting.title) {
 							header.rows.push({
@@ -403,8 +405,8 @@ steal(
 					if (action_buttons.length > 0) {
 						header.rows.push({
 							view: 'toolbar',
+							id: componentIds.toolbar.replace('{id}', viewId),
 							autoheight: true,
-							autowidth: true,
 							cols: action_buttons
 						});
 					}
@@ -417,6 +419,10 @@ steal(
 						$$(self.viewId).clearAdditionalView();
 						if (header.rows.length > 0)
 							$$(self.viewId).prependView(header);
+					}
+
+					if ($$(componentIds.toolbar.replace('{id}', viewId))) {
+						$$(componentIds.toolbar.replace('{id}', viewId)).$setSize($$(viewId).config.width + 3);
 					}
 
 					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
@@ -822,10 +828,6 @@ steal(
 			};
 
 			this.onDisplay = function () {
-
-				// if ((this.data.settings) && (this.data.setting.linkedField)) {
-				// 	filterLinkedData.call(this, this.data.setting.linkedField);
-				// }
 
 			}
 
