@@ -49,7 +49,9 @@ steal(
 				},
 				body: {
 					css: 'ab-add-fields-popup',
+					borderless: true,
 					width: 380,
+					paddingX: 14,
 					rows: [
 						{
 							view: "menu",
