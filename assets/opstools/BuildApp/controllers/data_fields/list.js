@@ -299,6 +299,21 @@ steal(
             return values.join(",");
         };
 
+        listDataField.getRowHeight = function (fieldData, data) {
+            var dataArray = (data || '').split(',').filter(function (val) {
+                // Remove empty value
+                return val;
+            }),
+                dataNumber = dataArray && dataArray.length ? dataArray.length : 1,
+                rowHeight = 20,
+                calHeight = dataNumber * rowHeight;
+
+            if (calHeight < 36)
+                calHeight = 36;
+
+            return calHeight;
+        };
+
         // Reset state
         listDataField.resetState = function() {
             $$(componentIds.listOptions).editCancel();
