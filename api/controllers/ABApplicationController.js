@@ -8,6 +8,10 @@
 var AD = require('ad-utils');
 var fs = require('fs');
 var _ = require('lodash');
+var path = require('path');
+var async = require('async');
+
+
 var reloading = null;
 
 module.exports = {
@@ -156,7 +160,50 @@ module.exports = {
                     return null;
                 });
             },
-            
+
+
+            // Make sure our build directory is ready: 
+            function(next) {
+              
+                AppBuilder.buildDirectory.ready()
+                .fail(next)
+                .done(function(){
+                    next();
+                })
+
+            },
+
+
+            // Remove any current Model links in our new sails build directory
+            function(next) {
+
+                // fs.readdir() for each target:
+                var pathModelDir = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models');
+                fs.readdir(pathModelDir, function(err, files){
+                    if (err) {
+                        ADCore.error.log('Unable to read from sailsBuildDir.api.models directory:', {error:err});
+                        next(err);
+                    } else {
+
+                        function unlinkIt(list, ok) {
+                            if (list.length == 0) {
+                                ok();
+                            } else {
+                                var target = list.shift();
+                                fs.unlink(path.join(pathModelDir, target), function (err) {
+                                    // Ignore errors. If file does not exist, that's fine.
+                                    unlinkIt(list, ok);
+                                });
+                            }
+                        }
+                        unlinkIt(files, next);
+                    }
+                })
+                    
+
+            },
+                
+
             // Create model definitions for each AB Object
             function(next) {
                 async.eachSeries(objIDs, function(id, ok) {
@@ -414,4 +461,6 @@ module.exports = {
     
 	
 };
+
+
 

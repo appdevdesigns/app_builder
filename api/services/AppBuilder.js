@@ -22,6 +22,8 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 // {  ABApplication.id : dfd }
 
 
+var __dfdBuildDirectoryCreated = null;
+
 
 var DataFields = {};
 
@@ -85,8 +87,53 @@ function getPageKey(appName, pageName) {
 
 module.exports = {
 
+
+    buildDirectory:{
+
+        init:function(){
+            if (!__dfdBuildDirectoryCreated) {
+                __dfdBuildDirectoryCreated = AD.sal.Deferred();
+            }
+
+
+            var bd = require('./build_directory/build_directory.js');
+            bd(function(err){
+console.log('... buildDirectory.init().cb() called:');
+                if (err) {
+console.log('... rejected!');
+                    __dfdBuildDirectoryCreated.reject(err);
+                } else {
+console.log('... resolved.');
+                    __dfdBuildDirectoryCreated.resolve();
+                }
+            })
+
+
+        },
+
+        ready:function(){
+            if (!__dfdBuildDirectoryCreated) {
+                __dfdBuildDirectoryCreated = AD.sal.Deferred();
+            }
+            return __dfdBuildDirectoryCreated;
+        }
+    },
+
     /**
-     * AppBuilder.util
+     * AppBuilder.paths
+     *
+     * methods to return specific paths for common items:
+     */
+    paths: {
+
+        sailsBuildDir:function(){
+            return path.join(sails.config.appPath, 'data', 'app_builder', 'sailsAlter');
+        }
+    },
+
+
+    /**
+     * AppBuilder.rules
      *
      * A set of rules for AppBuilder objects.
      */
@@ -149,6 +196,15 @@ module.exports = {
         notifyToClients(true);
 
         async.auto({
+
+
+//// lift sails in our new build directory:
+            alterModels: function(next) {
+console.log('.... alter models():');
+next();
+            },
+
+
             find: function (next) {
                 notifyToClients(true, 'findApplication', 'start');
 
@@ -233,21 +289,23 @@ module.exports = {
             }],
             */
 
-            orm: ['setup', function (next) {
+            orm: ['setup', 'alterModels', function (next) {
                 sails.log('Reloading ORM');
 
                 notifyToClients(true, 'reloadORM', 'start');
 
                 // Temporarily set environment to development so Waterline will
                 // respect the migrate:alter setting
-                sails.config.environment = 'development';
-                process.env.NODE_ENV = 'developement';
+
+// NOTE: now we manuall lift sails in another process to do this:                
+                // sails.config.environment = 'development';
+                // process.env.NODE_ENV = 'developement';
 
                 sails.hooks.orm.reload();
                 sails.once('hook:orm:reloaded', function () {
                     // Restore original environment
-                    sails.config.environment = env1;
-                    process.env.NODE_ENV = env2;
+                    // sails.config.environment = env1;
+                    // process.env.NODE_ENV = env2;
 
                     notifyToClients(true, 'reloadORM', 'done');
 
@@ -709,7 +767,192 @@ module.exports = {
                 }, function (err) {
                     next();
                 });
+            },
+
+
+            // add build links for this and any connected models:
+            function(next) {
+
+                // hash of currently existing models:  'modelName' => modelDescription
+                var hashCurrModels = {};
+
+                var pathModelDir = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models');
+
+
+                // given a model filename, read in the model and store in our hashCurrModels
+                function importModel(file) {
+                    var modelRef = file.replace('.js', '');
+                    hashCurrModels[modelRef] = require(path.join(pathModelDir, file));
+                }
+
+
+                // create the symlink for a given model name (not file name)
+                function linkModel(name, cb) {
+
+                    // find the build destination path for this model:
+                    var destPath = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models', name+'.js')
+console.log('... symlink for: '+ destPath);
+
+
+                    ////  calculate the relative offset for our original (live) model file:
+                    var offsetDir = destPath.replace(sails.config.appPath+path.sep, '');
+console.log('... offsetDir:'+offsetDir);
+
+                    var parts = offsetDir.split(path.sep);
+                    parts.pop(); // remove the final model name and have only the path now.
+                    // for each path directory, add a '..' offset
+                    var offsets = [];
+                    parts.forEach(function(){
+                        offsets.push('..');
+                    })
+
+                    // add the actual path to the model.
+                    offsets.push(path.join(modelsPath, name) + '.js');
+                    var livePath = offsets.join(path.sep);
+console.log('... livePath:'+livePath);
+
+
+                    // now make the symlink:
+                    fs.symlink(livePath, destPath, function(err){
+                        cb(err);
+                    });
+                }
+
+
+
+//// LEFT OFF HERE:
+// - fill in the alter Models step
+// - test it all out.
+
+
+//// TODO:
+// sails is lowercase ing all our models info in .collection and .model references.
+// we need to be able to revert to the proper upper case for our FileNames.
+// the current lowercase versions work on MacOS, but not on Linux.
+
+// until it is fixed:  just attempt model and modelTrans:
+linkModel(fullName, function(err){
+    linkModel(fullName+'Trans', function(err){
+        next();
+    })
+});
+
+
+//// This should work once we fix the fileNames and be able to handle 
+//// any embedded model associations:
+
+//                 async.series([
+
+//                     // find the current models in the directory:
+//                     function(ok){
+
+//                         // scan this directory:
+//                         fs.readdir(pathModelDir, function(err, files){
+
+//                             if (err) {
+//                                 ok(err);
+//                                 return;
+//                             } 
+
+//                             files.forEach(function(file){
+
+//                                 importModel(file);
+
+//                             })
+// console.log('... hashCurrModels:', _.keys(hashCurrModels));
+
+//                             ok();
+//                         });
+//                     },
+
+//                     function(ok){
+
+
+//                         // check the current model name
+//                         // make sure it is linked, then find any associated models
+//                         // and make sure they are linked.  
+//                         // when the current model is fully processed, call cb().
+//                         function checkModel(name, cb) {
+
+//                             // if not already linked LINK IT and try again:
+//                             if (!hashCurrModels[name]) {
+
+//                                 // add link  
+//                                 linkModel(name, function(err){
+//                                     if (err) {
+//                                         cb(err);
+//                                     } else{
+
+//                                         importModel(name+'.js'); // <-- use file name
+
+//                                         // try it again.
+//                                         checkModel(name,cb); 
+//                                     }
+//                                 })
+
+//                             } else {
+
+//                                 // scan attributes for additional models to import:
+//                                 // each found model is .push() into associatedModels
+//                                 var model = hashCurrModels[name];
+//                                 var associatedModels = [];
+//                                 for(var a in model.attributes) {
+//                                     var field = model.attributes[a];
+//                                     if (field.collection) {
+//                                         associatedModels.push(field.collection);
+//                                     } 
+//                                     if (field.model) {
+//                                         associatedModels.push(field.model);
+//                                     }
+//                                 }
+
+
+//                                 // recursively process associatedModels and make sure
+//                                 // they are also linked.
+//                                 function processModel(models, pm_cb) {
+//                                     if (models.length == 0) {
+//                                         pm_cb();
+//                                     } else {
+
+//                                         var model = models.shift();
+//                                         if (hashCurrModels[model]) {
+//                                             // we can skip this one:
+//                                             processModel(models, pm_cb);
+//                                         } else {
+//                                             checkModel(model, function(err){
+
+//                                                 // that model is now done.  So try the next:
+//                                                 processModel(models, pm_cb);
+//                                             })
+//                                         }
+//                                     }
+//                                 }
+// console.log('... associatedModels:', associatedModels);
+//                                 processModel(associatedModels, function(err){
+
+//                                     // all our associated models have been checked:
+//                                     // we're done:
+//                                     cb(err);
+//                                 })
+
+
+//                             }
+
+//                         } // end checkModel()
+
+//                         // kick the process off with the current model :
+//                         // NOTE: lower case our model name for our build files.
+//                         checkModel(fullName, function(err){
+//                             ok(err);
+//                         })
+
+//                     }], function(err){
+//                     next(err);
+
+//                 }) // end async.series()
+
             }
+
 
         ], function (err) {
             process.chdir(cwd);
