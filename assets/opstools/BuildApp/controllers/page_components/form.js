@@ -68,57 +68,46 @@ steal(
 					colVal;
 
 				// Populate values to model
-				columns.forEach(function (col) {
+				async.each(columns, function (col, ok) {
 					async.series([
 						function (next) {
-							if (col.type == "boolean") {
-								modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
-								next();
+							var childView = getChildView.call(self, col.name);
+							if (childView == null && modelData.attr(col.name) == null) {
+								// If link column is hidden, then select cursor item of linked data collection
+								if (col.type == 'connectObject') {
+									dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
+										.done(function (linkDC) {
+											if (col.setting.linkType == 'collection')
+												colVal = [linkDC.getCursor()];
+											else
+												colVal = linkDC.getCursor();
+										});
+								}
 							}
 							else {
-								var childView = getChildView.call(self, col.name);
-								if (childView == null && modelData.attr(col.name) == null) {
-									// If link column is hidden, then select cursor item of linked data collection
-									if (col.type == 'connectObject') {
-										dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
-											.done(function (linkDC) {
-												if (col.setting.linkType == 'collection')
-													colVal = [linkDC.getCursor()];
-												else
-													colVal = linkDC.getCursor();
-
-												next();
-											});
-									}
-									else {
-										return next();
-									}
-								}
-								else {
-									// Get value in custom data field
-									colVal = dataFieldsManager.getValue(application, null, col, childView.$view);
-
-									next();
-								}
+								// Get value in custom data field
+								colVal = dataFieldsManager.getValue(application, null, col, childView.$view, editValues);
 							}
+
+							next();
 						},
 						function (next) {
-							if (typeof colVal != 'undefined' && colVal != null)
+							if (colVal != null)
 								modelData.attr(col.name, colVal);
-							else if (typeof editValues[col.name] != 'undefined')
+							else if (editValues[col.name] != null)
 								modelData.attr(col.name, editValues[col.name]);
 							else
 								modelData.removeAttr(col.name);
 
 							next();
 						}
-					], function (err) {
-						if (err)
-							q.reject(err);
-						else
-							q.resolve();
-					});
+					], ok);
 
+				}, function (err) {
+					if (err)
+						q.reject(err);
+					else
+						q.resolve();
 				});
 
 				return q;
@@ -450,8 +439,7 @@ steal(
 
 											listOptions[col.id] = $.map(result, function (opt, index) {
 												return {
-													dataId: opt.id,
-													id: opt.value,
+													id: opt.id,
 													value: opt.label
 												}
 											});
@@ -803,7 +791,7 @@ steal(
 							.then(function (pages) {
 
 								var afterSave = $$(componentIds.propertyView).getItem(componentIds.afterSave);
-								afterSave.options = pages.map(function(p) {
+								afterSave.options = pages.map(function (p) {
 									if (p.translate) p.translate();
 
 									return {
