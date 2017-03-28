@@ -872,7 +872,7 @@ steal(
                             return template;
                         },
                         type: {
-                            iconDelete: "<span class='webix_icon ab-tab-page-delete fa-trash pull-right'></span>"
+                            iconDelete: "<div class='webix_icon ab-tab-page-delete fa-trash pull-right'></div>"
                         },
                         on: {
 
