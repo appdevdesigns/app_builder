@@ -16,7 +16,7 @@ steal(
 			editTitle: 'ab-grid-edit-title',
 			editDescription: 'ab-grid-edit-description',
 			editDataTable: 'ab-grid-edit-mode',
-			editHeader: 'ab-grid-edit-header-{id}',
+			editHeader: 'ab-grid-edit-header',
 
 			header: 'ab-grid-header-{id}',
 			toolbar: 'ab-grid-toolbar-{id}',
@@ -258,7 +258,7 @@ steal(
 					};
 
 					if (editable) {
-						header.id = componentIds.editHeader.replace('{id}', viewId);
+						header.id = componentIds.editHeader;
 
 						$$(componentIds.editView).removeView(componentIds.editHeader);
 

@@ -356,11 +356,11 @@ steal(
 				return false;
 		};
 
-		self.getValue = function (application, object, fieldData, itemNode) {
+		self.getValue = function (application, object, fieldData, itemNode, rowData) {
 			var field = getField(fieldData.fieldName);
 
 			if (field && field.getValue)
-				return field.getValue(application, object, fieldData, itemNode);
+				return field.getValue(application, object, fieldData, itemNode, rowData);
 			else
 				return null;
 		};

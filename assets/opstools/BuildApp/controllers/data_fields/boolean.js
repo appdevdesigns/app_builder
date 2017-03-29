@@ -81,6 +81,10 @@ steal(function () {
 		return false;
 	};
 
+	boolDataField.getValue = function (application, object, fieldData, itemNode, rowData) {
+		return rowData[fieldData.name] == 1 ? true : false;
+	};
+
 	// Reset state
 	boolDataField.resetState = function () {
 		$$(componentIds.default).setValue(false);

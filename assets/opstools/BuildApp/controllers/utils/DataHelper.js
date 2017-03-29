@@ -34,6 +34,7 @@ steal(
 
 				if (list.forEach) {
 					list.forEach(function (row) {
+
 						normalizeDataTasks.push(function (callback) {
 							// Translate
 							if (!ignoreTranslate && row.translate) row.translate();
@@ -45,7 +46,6 @@ steal(
 							}
 
 							var linkTasks = [];
-
 							linkColumns.forEach(function (linkCol) {
 								if (row[linkCol.name] == null) {
 									if (linkCol.setting.linkType === 'collection')
@@ -94,7 +94,6 @@ steal(
 											if (!connectDataIds || connectDataIds.length < 1) return next();
 
 											linkObjModel.findAll({ or: connectDataIds })
-												.fail(next)
 												.then(function (result) {
 													result.forEach(function (linkVal) {
 
@@ -105,8 +104,9 @@ steal(
 													});
 
 													linkedData = result;
+
 													next();
-												});
+												}, next);
 										},
 										// Set label to linked fields
 										function (next) {
@@ -146,22 +146,26 @@ steal(
 								});
 							});
 
-							async.parallel(linkTasks, callback);
-						});
+							async.parallel(linkTasks, function (err) {
 
-						// Convert string to Date object
-						if (dateColumns && dateColumns.length > 0) {
-							dateColumns.forEach(function (dateCol) {
-								if (row[dateCol.name] && !(row[dateCol.name] instanceof Date))
-									row.attr(dateCol.name, new Date(row[dateCol.name]));
+								// Convert string to Date object
+								if (dateColumns && dateColumns.length > 0) {
+									dateColumns.forEach(function (dateCol) {
+										if (row[dateCol.name] && !(row[dateCol.name] instanceof Date)) {
+											row.attr(dateCol.name, new Date(row[dateCol.name]));
+										}
+									});
+								}
+
+								// Set height of row ($height)
+								columns.forEach(function (col) {
+									var rowHeight = dataFieldsManager.getRowHeight(col, row[col.name]);
+									if (rowHeight && (!row.$height || row.$height < rowHeight))
+										row.attr('$height', rowHeight);
+								});
+
+								callback(err);
 							});
-						}
-
-						// Set height of row ($height)
-						columns.forEach(function (col) {
-							var rowHeight = dataFieldsManager.getRowHeight(col, row[col.name]);
-							if (rowHeight && (!row.$height || row.$height < rowHeight))
-								row.attr('$height', rowHeight);
 						});
 
 					});

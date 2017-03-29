@@ -26,6 +26,7 @@ steal(
         var removedOptionIds = [];
 
         function renderMultipleSelector(itemNode, options, data, readOnly) {
+            $(itemNode).find('.list-data-values').selectivity('destroy');
             $(itemNode).find('.list-data-values').selectivity({
                 allowClear: true,
                 multiple: true,
@@ -292,10 +293,25 @@ steal(
         listDataField.setValue = function(fieldData, itemNode, data) {
             $(itemNode).find('.list-data-values').selectivity("value", (data).split(','));
         };
-        listDataField.getValue = function getValue(application, object, fieldData, itemNode) {
+        listDataField.getValue = function getValue(application, object, fieldData, itemNode, rowData) {
             if (!fieldData.setting.multiSelect || fieldData.setting.multiSelect === '0') return undefined;
             var values = $(itemNode).find('.list-data-values').selectivity("value");
             return values.join(",");
+        };
+
+        listDataField.getRowHeight = function (fieldData, data) {
+            var dataArray = (data || '').split(',').filter(function (val) {
+                // Remove empty value
+                return val;
+            }),
+                dataNumber = dataArray && dataArray.length ? dataArray.length : 1,
+                rowHeight = 20,
+                calHeight = dataNumber * rowHeight;
+
+            if (calHeight < 36)
+                calHeight = 36;
+
+            return calHeight;
         };
 
         // Reset state
