@@ -201,10 +201,31 @@ console.log('... resolved.');
         async.auto({
 
 
-//// lift sails in our new build directory:
+            // lift sails in our new build directory:
             alterModels: function(next) {
 console.log('.... alter models():');
-next();
+
+                var cwd = process.cwd();
+                process.chdir(AppBuilder.paths.sailsBuildDir());
+
+                AD.spawn.command({
+                    command:'sails',
+                    options:[ 'lift'],
+                    shouldEcho:false,
+                    exitTrigger:'Server lifted'
+                })
+                .fail(function(err){
+                    AD.log.error('<red> sails lift exited with an error</red>');
+                    AD.log(err);
+                    process.chdir(cwd);
+                    next(err);
+                })
+                .then(function(code){
+                    process.chdir(cwd);
+                    next();
+                });
+
+
             },
 
 
@@ -806,12 +827,12 @@ next();
 
                     // find the build destination path for this model:
                     var destPath = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models', name+'.js')
-console.log('... symlink for: '+ destPath);
+// console.log('... symlink for: '+ destPath);
 
 
                     ////  calculate the relative offset for our original (live) model file:
                     var offsetDir = destPath.replace(sails.config.appPath+path.sep, '');
-console.log('... offsetDir:'+offsetDir);
+// console.log('... offsetDir:'+offsetDir);
 
                     var parts = offsetDir.split(path.sep);
                     parts.pop(); // remove the final model name and have only the path now.
@@ -824,7 +845,7 @@ console.log('... offsetDir:'+offsetDir);
                     // add the actual path to the model.
                     offsets.push(path.join(modelsPath, name) + '.js');
                     var livePath = offsets.join(path.sep);
-console.log('... livePath:'+livePath);
+// console.log('... livePath:'+livePath);
 
 
                     // now make the symlink:
@@ -834,14 +855,8 @@ console.log('... livePath:'+livePath);
                 }
 
 
-
-//// LEFT OFF HERE:
-// - fill in the alter Models step
-// - test it all out.
-
-
 //// TODO:
-// sails is lowercase ing all our models info in .collection and .model references.
+// sails is lowercasing all our models info in .collection and .model references.
 // we need to be able to revert to the proper upper case for our FileNames.
 // the current lowercase versions work on MacOS, but not on Linux.
 

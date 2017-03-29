@@ -257,6 +257,7 @@ console.log('::: setupSails() error:', err);
                     "responses": false,
                     "session": false,
                     "sockets": false,
+                    "services": false,
                     "views": false
                 }
             };
@@ -299,6 +300,25 @@ console.log('::: setupSails() error:', err);
                 })
 
             });
+        },
+
+
+        // copy over our exit early hook
+        function(next) {
+            var code = [
+                'module.exports = function(sails) {',
+                '    return {',
+                '        initialize: function(cb) {',
+                '            sails.on("hook:orm:loaded", function() {',
+                '                console.log("!!!! exitAfterORM:  can exit here:");',
+                '                sails.lower(cb)',
+                '            });',
+                '        }',
+                '    }',
+                '};'
+            ].join('\n');
+            var pathHook = destSails(path.join('api', 'hooks', 'exitAfterORM.js'));
+            fs.writeFile(pathHook, code, next);
         }
 
     ],function(err, results){
