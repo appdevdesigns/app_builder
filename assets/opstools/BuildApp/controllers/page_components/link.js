@@ -1,6 +1,8 @@
 steal(
 	// List your Controller's dependencies here:
-	function () {
+	'opstools/BuildApp/controllers/utils/InputValidator.js',
+
+	function (inputValidator) {
 		var componentIds = {
 			editLink: 'ab-link-edit-view',
 			propertyView: 'ab-link-property-view'
@@ -176,6 +178,14 @@ steal(
 					}
 				],
 				on: {
+					onBeforeEditStop: function (state, editor) {
+						if (editor.id == 'title') {
+							return inputValidator.validateFormat(state.value);
+						}
+						else {
+							return true;
+						}
+					},
 					onAfterEditStop: function (state, editor, ignoreUpdate) {
 						if (state.old === state.value) return true;
 

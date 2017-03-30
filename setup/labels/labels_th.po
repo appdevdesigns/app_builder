@@ -387,7 +387,7 @@ msgstr "ข้อมูลนี้ยังไม่ได้บันทึก
 #. code: th
 #. key: ab.object.noConnectedData
 msgid "No data selected"
-msgstr "ไม่มีข้อมูลที่ถูกเลือก"
+msgstr ""
 
 #. path: app_builder
 #. code: th

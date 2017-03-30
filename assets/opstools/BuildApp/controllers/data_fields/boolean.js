@@ -1,6 +1,7 @@
 steal(function () {
 	var componentIds = {
-		editView: 'ab-new-boolean'
+		editView: 'ab-new-boolean',
+		default: 'ab-new-boolean-default',
 	};
 
 	// General settings
@@ -16,11 +17,31 @@ steal(function () {
 	// Edit definition
 	boolDataField.editDefinition = {
 		id: componentIds.editView,
-		rows: []
+		rows: [
+			{
+				id: componentIds.default,
+				view: "checkbox",
+				label: "Default",
+				labelPosition: "left",
+				labelWidth: 70,
+				labelRight: 'Uncheck',
+				css: "webix_table_checkbox",
+				on: {
+					onChange: function (newVal, oldVal) {
+						this.define('labelRight', newVal ? 'Check' : 'Uncheck');
+						this.refresh();
+					}
+				}
+			}
+		]
 	};
 
 	// Populate settings (when Edit field)
 	boolDataField.populateSettings = function (application, data) {
+		if (data.setting && data.setting.default != null) {
+			$$(componentIds.default).setValue(data.setting.default);
+			$$(componentIds.default).refresh();
+		}
 	};
 
 	// For save field
@@ -32,7 +53,8 @@ steal(function () {
 				icon: boolDataField.icon,
 				filter_type: 'boolean',
 				css: 'center',
-				template: '<div class="ab-boolean-display">{common.checkbox()}</div>'
+				template: '<div class="ab-boolean-display">{common.checkbox()}</div>',
+				default: $$(componentIds.default).getValue() ? true : false
 			}
 		};
 	};
@@ -59,8 +81,13 @@ steal(function () {
 		return false;
 	};
 
+	boolDataField.getValue = function (application, object, fieldData, itemNode, rowData) {
+		return rowData[fieldData.name] == 1 ? true : false;
+	};
+
 	// Reset state
 	boolDataField.resetState = function () {
+		$$(componentIds.default).setValue(false);
 	};
 
 	return boolDataField;

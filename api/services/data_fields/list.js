@@ -6,15 +6,15 @@ var AD = require('ad-utils');
 
 module.exports = {
 
-	getFieldString: function (column) {
-		var dfd = AD.sal.Deferred();
+    getFieldString: function(column) {
+        var dfd = AD.sal.Deferred();
 
-		var colString = column.name + ':' + column.type;
+        var colString = column.name + ':' + column.type;
 
-		dfd.resolve(colString);
+        dfd.resolve(colString);
 
-		return dfd;
-	},
+        return dfd;
+    },
 
     defaults: {
         type: 'string',
@@ -24,6 +24,7 @@ module.exports = {
             filter_type: 'list',
             editor: 'richselect',
             options: [],
+            multiSelect: 0
         }
-    }    
+    }
 };

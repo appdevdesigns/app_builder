@@ -116,6 +116,7 @@ module.exports = {
         }
 
         if (reloading && reloading.state() == 'pending') {
+console.log('*** !!! Run full reload again');
             reloading.always(function() {
                 // Wait until current reload is finished before starting
                 self.fullReload(req, res);
@@ -125,8 +126,7 @@ module.exports = {
         reloading = AD.sal.Deferred();
         
         var appIDs = [],
-            objIDs = [],
-            pageIDs = [];
+            objIDs = [];
 
         async.series([
             // Find the application info
@@ -170,25 +170,7 @@ module.exports = {
                     else next();
                 });
             },
-            
-            // Find all AB root Pages
-            function(next) {
-                ABPage.find({ parent: null, application: appID })
-                .then(function(list) {
-                    if (list && list[0]) {
-                        for (var i=0; i<list.length; i++) {
-                            pageIDs.push( list[i].id );
-                        }
-                    }
-                    next();
-                    return null;
-                })
-                .catch(function(err) {
-                    next(err);
-                    return null;
-                });
-            },
-            
+
             // Reload ORM
             function(next) {
                 AppBuilder.reload(appID)
@@ -198,7 +180,7 @@ module.exports = {
                 });
             },
 
-            // Set columns are synced
+            // Update columns are synced
             function(next) {
                 ABObject.find({ application : appID })
                     .then(function(list) {
@@ -218,13 +200,13 @@ module.exports = {
         ], function(err) {
             if (err) {
                 console.error(err);
-                res.AD.error(err);
                 reloading.reject(err);
             } else {
-                res.AD.success({});
                 reloading.resolve();
             }
         });
+
+        res.AD.success({});
     },
     
     
@@ -401,8 +383,9 @@ module.exports = {
         var appID = req.param('appID');
         var modelObjectId = req.param('objectID') || '';
         var modelName = req.param('model') || '';
+        var columns = req.param('columns') || [];
         
-        AppBuilder.modelToObject(appID, modelObjectId, modelName)
+        AppBuilder.modelToObject(appID, modelObjectId, modelName, columns)
         .fail(function(err) {
             res.AD.error(err);
         })
@@ -410,6 +393,19 @@ module.exports = {
             res.AD.success(object);
         });
     
+    },
+
+    // GET /app_builder/application/findModelAttributes
+    findModelAttributes: function(req, res) {
+        var modelName = req.param('model') || '';
+
+        AppBuilder.findModelAttributes(modelName)
+        .fail(function(err) {
+            res.AD.error(err);
+        })
+        .done(function(columns) {
+            res.AD.success(columns);
+        });
     }
     
 	

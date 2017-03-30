@@ -171,7 +171,7 @@ steal(
 												});
 											},
 											onBeforeEditStop: function (state, editor) {
-												if (!inputValidator.validate(state.value)) {
+												if (!inputValidator.validateFormat(state.value)) {
 													return false;
 												}
 											},
