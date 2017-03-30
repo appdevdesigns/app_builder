@@ -228,10 +228,15 @@ steal(
 									break;
 								case 'fail':
 									console.error(data.options.error);
+									var errorMessage = [
+										(AD.lang.label.getLabel('ab.sync.syncError') || 'There are errors')+":",
+										'',
+										data.options.error
+									].join('\n')
 
 									// Show retry screen
 									$$(self.webixUiId.loadingScreen).showErrorScreen(
-										AD.lang.label.getLabel('ab.sync.syncError') || 'There are errors',
+										errorMessage,
 										AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
 										function () {
 											$$(self.webixUiId.loadingScreen).start();

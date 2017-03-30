@@ -221,7 +221,18 @@ console.log('*** !!! Run full reload again');
             // Reload ORM
             function(next) {
                 AppBuilder.reload(appID)
-                .fail(next)
+                .fail(function(err){
+
+                    ADCore.error.log("Error during the Reload Process", { 
+                        error: err, 
+                        appID:appID,
+                        message:err.message, 
+                        stack:err.stack,
+                        user:req.AD.user().GUID()
+                    });
+
+                    next(err);
+                })
                 .done(function() {
                     next();
                 });

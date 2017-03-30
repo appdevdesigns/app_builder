@@ -101,12 +101,18 @@ module.exports = {
 
             var bd = require('./build_directory/build_directory.js');
             bd(function(err){
-console.log('... buildDirectory.init().cb() called:');
+                sails.log.info('AppBuilder:buildDirectory:init()   started.');
                 if (err) {
-console.log('... rejected!');
+// console.log('... rejected!');
+                    ADCore.error.log('AppBuilder:buildDirectory.init(): exited with an error', {
+                        error:err,
+                        message: err.message || 'no message provided',
+                        stack: err.stack || [ 'no stack trace ']
+                    });
                     __dfdBuildDirectoryCreated.reject(err);
                 } else {
-console.log('... resolved.');
+// console.log('... resolved.');
+                    sails.log.info('AppBuilder:buildDirectory:init()  completed.');
                     __dfdBuildDirectoryCreated.resolve();
                 }
             })
@@ -202,17 +208,32 @@ console.log('... resolved.');
 
 
             // lift sails in our new build directory:
-            alterModels: function(next) {
-console.log('.... alter models():');
+            alterModels: [ 'setup', function(next) {
+
 
                 var cwd = process.cwd();
                 process.chdir(AppBuilder.paths.sailsBuildDir());
+
+                // collect any errors that might be posted in the process:
+                var errors = [];
+
 
                 AD.spawn.command({
                     command:'sails',
                     options:[ 'lift'],
                     shouldEcho:false,
-                    exitTrigger:'Server lifted'
+                    onStdErr:function(data){
+
+                        if (data.indexOf('Error:') != -1) {
+                            var lines = data.split('\n');
+                            lines.forEach(function(line){
+                                if (line.indexOf('Error:') != -1) {
+                                    errors.push(line);
+                                }
+                            })
+                        }
+                    }
+                    // exitTrigger:'Server lifted'
                 })
                 .fail(function(err){
                     AD.log.error('<red> sails lift exited with an error</red>');
@@ -221,12 +242,18 @@ console.log('.... alter models():');
                     next(err);
                 })
                 .then(function(code){
+// console.log('... exited with code:', code);
+                    var error = undefined;
+
+                    if (code > 0) {
+                        error = new Error(errors.join(''));
+                    }
                     process.chdir(cwd);
-                    next();
+                    next(error);
                 });
 
 
-            },
+            }],
 
 
             find: function (next) {
@@ -286,7 +313,7 @@ console.log('.... alter models():');
                 });
             }],
 
-            controllers: ['setup', function (next) {
+            controllers: ['setup',  function (next) {
                 sails.log('Reloading controllers');
 
                 notifyToClients(true, 'reloadControllers', 'start');
@@ -355,8 +382,9 @@ console.log('.... alter models():');
             sails.log('End reload');
 
             if (err) {
+
                 notifyToClients(true, '', 'fail', {
-                    error: err,
+                    error: err.message.replace('Error:','').replace('error:',''),
                     requestData: { appID: appID }
                 });
 
@@ -822,6 +850,32 @@ console.log('.... alter models():');
                 }
 
 
+                ////  calculate the relative offset for our original (live) model file:
+                function calcOffsetPath(fileName, currPath) {
+
+                   ////  calculate the relative offset for our original (live) model file:
+                    var offsetDir = currPath.replace(sails.config.appPath+path.sep, '');
+// console.log('... offsetDir:'+offsetDir);
+
+                    var parts = offsetDir.split(path.sep);
+
+                    // remove the final model name and have only the path now.
+                    if (parts[parts.length-1].indexOf('.js') != -1) {
+                        parts.pop(); 
+                    }
+
+                    // for each path directory, add a '..' offset
+                    var offsets = [];
+                    parts.forEach(function(){
+                        offsets.push('..');
+                    })
+
+                    // add the actual path to the model.
+                    offsets.push(fileName);
+                    return offsets.join(path.sep);
+
+                }
+
                 // create the symlink for a given model name (not file name)
                 function linkModel(name, cb) {
 
@@ -830,30 +884,51 @@ console.log('.... alter models():');
 // console.log('... symlink for: '+ destPath);
 
 
-                    ////  calculate the relative offset for our original (live) model file:
-                    var offsetDir = destPath.replace(sails.config.appPath+path.sep, '');
-// console.log('... offsetDir:'+offsetDir);
-
-                    var parts = offsetDir.split(path.sep);
-                    parts.pop(); // remove the final model name and have only the path now.
-                    // for each path directory, add a '..' offset
-                    var offsets = [];
-                    parts.forEach(function(){
-                        offsets.push('..');
-                    })
-
-                    // add the actual path to the model.
-                    offsets.push(path.join(modelsPath, name) + '.js');
-                    var livePath = offsets.join(path.sep);
+                    var livePath = calcOffsetPath(path.join(modelsPath, name) + '.js', destPath);
 // console.log('... livePath:'+livePath);
+// console.log('... cwd:', process.cwd() );
 
+                    var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
+// console.log('... currLivePath:'+currLivePath);
 
-                    // now make the symlink:
-                    fs.symlink(livePath, destPath, function(err){
-                        cb(err);
-                    });
+                    
+                    // if livePath Exists:
+                    fs.readFile(currLivePath,function(err, data){
+                        if (!err) {
+// console.log('    +++ making symlink!');
+                            // now make the symlink:
+                            fs.symlink(livePath, destPath, function(err){
+                                cb(err);
+                            });
+                        } else {
+// console.log('... no symlink.  err:', err);
+                            cb();
+                        }
+                    })
+                    
                 }
 
+// function forceCrash(name, cb) {
+
+//     var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
+
+//     fs.readFile(currLivePath, 'utf8', function(err, data){
+//         if (!err) {
+//             var code = [
+//                 "attributes: {",
+//                 "something:{ model:'notThere' },"    
+//             ].join('\n');
+
+//             data = data.replace(/attributes\s*:\s*{/g, code);
+//             // now make the symlink:
+//             fs.writeFile(currLivePath, data, function(err){
+//                 cb(err);
+//             });
+//         } else {
+//             cb();
+//         }
+//     })
+// }
 
 //// TODO:
 // sails is lowercasing all our models info in .collection and .model references.
@@ -863,7 +938,11 @@ console.log('.... alter models():');
 // until it is fixed:  just attempt model and modelTrans:
 linkModel(fullName, function(err){
     linkModel(fullName+'Trans', function(err){
+
+// forceCrash(fullName, function(err){ 
         next();
+// })
+
     })
 });
 

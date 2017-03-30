@@ -25,7 +25,7 @@ module.exports = function(cb) {
 
             createPath(parts, sails.config.appPath, function(err){
                 if (err) {
-                    ADCore.error.log('Unable to create our sails build directory', err);
+                    ADCore.error.log('AppBuilder:buildDirectory.init:build_directory.js Unable to create our sails build directory', err);
                     next(err);
                 } else {
 
@@ -81,7 +81,7 @@ function createPath (parts, base, cb) {
             if (err && err.code === 'ENOENT') {
 
         // create the directory!
-console.log('--- making sails build path:'+base);
+                sails.log.info('--- making sails build path:'+base);
 
                 fs.mkdir(base, function(err){
 
@@ -103,7 +103,7 @@ console.log('--- making sails build path:'+base);
 
 function setupSails(sailsDir, cb) {
 
-console.log('... setting up sails buiild directory:');
+    sails.log.info('... setting up sails buiild directory:');
 
     function liveSails(file) {
         return path.join(sails.config.appPath, file);
@@ -122,7 +122,8 @@ console.log('... setting up sails buiild directory:');
             var basePath = sailsBuildDir.split(path.sep);
             basePath.pop();
             basePath = basePath.join(path.sep);
-console.log('... basePath:', basePath);
+
+            sails.log.info('... basePath:', basePath);
             process.chdir(basePath);
 
             AD.spawn.command({
@@ -220,7 +221,7 @@ console.log('... basePath:', basePath);
                     ], function(err, results){
 
                         if (err) {
-console.log('::: setupSails() error:', err);
+sails.log.error('::: setupSails() error:', err);
                             cb(err);
                         } else {
                             linkIt(files, cb);
@@ -308,6 +309,10 @@ console.log('::: setupSails() error:', err);
             var code = [
                 'module.exports = function(sails) {',
                 '    return {',
+                '        configure: function() {',
+                '            sails.config.environment = "development";',
+                '            process.env.NODE_ENV = "developement";',
+                '        },',
                 '        initialize: function(cb) {',
                 '            sails.on("hook:orm:loaded", function() {',
                 '                console.log("!!!! exitAfterORM:  can exit here:");',
