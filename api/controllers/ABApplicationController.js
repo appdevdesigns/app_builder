@@ -102,6 +102,17 @@ module.exports = {
             reloading.resolve();
         });
     },
+
+
+    // get /app_builder/reloadStatus 
+    reloadStatus: function(req, res) {
+
+        if (reloading && reloading.state() == 'pending') {
+            res.AD.success({state:'pending'});
+        } else {
+            res.AD.success({state:'done'});
+        }
+    },
     
     
     /**

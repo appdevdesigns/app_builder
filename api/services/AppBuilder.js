@@ -391,7 +391,16 @@ module.exports = {
                 dfd.reject(err);
             }
             else {
-                notifyToClients(false, '', 'finish');
+
+                //// FIX: somewhere in the process of reloading controllers or blueprints, 
+                //// our client's socket looses connection with the server.  It is possible
+                //// that this notification is sent during that disconnected state and the 
+                //// Client remains unaware of the updated status.
+                //// Here we set a timeout to give the client a chance to reconnect before 
+                //// we send the message.
+                setTimeout(function(){ 
+                    notifyToClients(false, '', 'finish');
+                }, 3000);
 
                 dfd.resolve();
             }
