@@ -272,6 +272,7 @@ steal(
 												return dataFieldsManager.validate(column, state.value);
 											},
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
+
 												var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
 
 												self.updateRowData(state, editor, ignoreUpdate)
