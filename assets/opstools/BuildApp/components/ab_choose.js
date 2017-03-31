@@ -42,14 +42,21 @@ OP.Component.extend('ab_choose', function(App) {
 	var _logic = {
 
 		init: function() {
+
 			AppList.logic.init();
+
 		},
 
-		// initiate a request to create a new Application
-		createApplicationRequest:function(){
-			AppList.logic.reset();
-			// AppForm.logic.reset();
-			// switch to the AppForm
+		// Expose any globally accessible Actions:
+		actions: {
+
+			// initiate a request to create a new Application
+			createApplicationRequest:function(){
+				AppList.logic.reset();
+				// AppForm.logic.reset();
+				// switch to the AppForm
+			}
+
 		}
 	}
 

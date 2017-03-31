@@ -62,12 +62,38 @@ AD.Control.OpsTool.extend('BuildApp', {
 		var appUUID = webix.uid();
 
 		var options = {
+
+			/*
+			 * actions:
+			 * a hash of exposed application methods that are shared among our 
+			 * components, so One component can invoke an action that updates 
+			 * another component.
+			 */
+			actions:{
+				selectApplication:function(Application) {
+					// AppWorkspace.logic.loadApplication(Application);
+// show AppWorkspace					
+				}
+			},
+
+			/*
+			 * unique()
+			 * A function that returns a globally unique Key.
+			 * @param {string} key   The key to modify and return.
+			 * @return {string} 
+			 */
 			unique: function(key) { return key+appUUID; },
+
+			/*
+			 * labels
+			 * a collection of labels that are common for the Application.
+			 */
 			labels:{
 				common:{
 					import: L('ab.common.import', '*Import')
 				}
 			}
+
 		}
 
 		var AppChooser = OP.Component['ab_choose'](options);

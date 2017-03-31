@@ -34,7 +34,22 @@
 	// }
 
 	OP.Component.extend = function(key, fn) {
-		OP.Component[key] = fn;
+		OP.Component[key] = function(App){
+
+//// TODO: verify App has proper structure:
+
+			// make an instance of the component.
+			var component = fn(App);
+
+			// transfer to App, any actions in the component:
+			if (component.logic.actions){
+				for(var a in component.logic.actions) {
+					App.actions[a] = component.logic.actions[a];
+				}
+			}
+
+			return component;
+		};
 	}
 
 	// OP.Logic.extend = function(key, fnLogic) {
