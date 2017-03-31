@@ -11,31 +11,54 @@
 
 import './ab_choose_list'
 
+OP.Component.extend('ab_choose', function(App) {
 
 
-
-// Application multi-views
-var ab_choose_ui = {
-	id: 'self.webixUiId.appView',
-	autoheight: true,
-	cells: [
-		OP.UI['ab_choose_list'],
-		// appFormControl
-	]
-};
-
-OP.UI.extend('ab_choose', ab_choose_ui);
-
-
-
-
-
-var ab_choose_logic = {
-
-	init: function() {
-		OP.Logic['ab_choose_list'].init();
+	var ids = {
+		choose:App.unique('ab_choose')
 	}
-}
-OP.Logic.extend('ab_choose', ab_choose_logic);
 
 
+
+	// Define the external components used in this Component:
+	var AppList = OP.Component['ab_choose_list'](App);
+
+
+
+	// This component's UI definition:
+	// Application multi-views
+	var _ui = {
+		id: ids.choose,
+		autoheight: true,
+		cells: [
+			AppList.ui,
+			// appFormControl
+		]
+	};
+
+
+
+	// This component's Logic definition:
+	var _logic = {
+
+		init: function() {
+			AppList.logic.init();
+		},
+
+		// initiate a request to create a new Application
+		createApplicationRequest:function(){
+			AppList.logic.reset();
+			// AppForm.logic.reset();
+			// switch to the AppForm
+		}
+	}
+
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,
+		logic:_logic
+	}
+
+});

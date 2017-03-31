@@ -55,20 +55,37 @@ AD.Control.OpsTool.extend('BuildApp', {
 	initWebixUI: function () {
 
 
+		function L(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
+
+		var appUUID = webix.uid();
+
+		var options = {
+			unique: function(key) { return key+appUUID; },
+			labels:{
+				common:{
+					import: L('ab.common.import', '*Import')
+				}
+			}
+		}
+
+		var AppChooser = OP.Component['ab_choose'](options);
+
 		this.AppBuilder = webix.ui({
-			id: 'buld_app_loading_screen',
+			id: options.unique('buld_app_loading_screen'),
 			container:'ab-main-container',
 			autoheight:true,
     		autowidth:true,
 			rows:[
-				OP.UI['ab_choose']
+				AppChooser.ui
 			]
 		});
 		this.AppBuilder.adjust();
 
 
 
-		OP.Logic['ab_choose'].init();
+		AppChooser.logic.init();
 
 	},
 

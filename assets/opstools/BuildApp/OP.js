@@ -22,17 +22,22 @@
 
     // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
     //              for our loaded projects.
-    OP.UI = {};    		// webix UI definitions
-    OP.Logic = {}; 		// logic references for webix application
+    // OP.UI = {};    		// webix UI definitions
+    // OP.Logic = {}; 		// logic references for webix application
+    OP.Component = {};  // our defined components
 	OP.Models = {};     // Models and data access
 
 
 
-	OP.UI.extend = function(key, definition) {
-		OP.UI[key] = definition;
+	// OP.UI.extend = function(key, definition) {
+	// 	OP.UI[key] = definition;
+	// }
+
+	OP.Component.extend = function(key, fn) {
+		OP.Component[key] = fn;
 	}
 
-	OP.Logic.extend = function(key, fnLogic) {
-		OP.Logic[key] = fnLogic;
-	}
+	// OP.Logic.extend = function(key, fnLogic) {
+	// 	OP.Logic[key] = fnLogic;
+	// }
 // }
