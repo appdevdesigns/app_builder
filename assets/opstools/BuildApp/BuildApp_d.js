@@ -1,5 +1,5 @@
 
-import './OP';
+import './OP/OP';
 // import '../../../../../assets/js/webix/webix'
 
 import './components/ab_choose'
@@ -90,7 +90,19 @@ AD.Control.OpsTool.extend('BuildApp', {
 			 */
 			labels:{
 				common:{
-					import: L('ab.common.import', '*Import')
+					"import": L('ab.common.import', "*Import"),
+					edit: 	  L('ab.common.edit', "*Edit"),
+					save: 	  L('ab.common.save', "*Save"),
+					"delete": L('ab.common.delete', "*Delete"),
+					"export": L('ab.common.export', "*Export"),
+					ok: 	  L('ab.common.ok', "*Ok"),
+					cancel:   L('ab.common.cancel', "*Cancel"),
+					yes: 	  L('ab.common.yes', "*Yes"),
+					no: 	  L('ab.common.no', "*No"),
+
+					deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
+					deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+
 				}
 			}
 

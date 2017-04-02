@@ -5,7 +5,8 @@
  * Display a list of Applications for the user to select.
  *
  */
-
+import "../data/ABApplication"
+import "./ab_choose_list_menu"
 
 
 function L(key, altText) {
@@ -18,7 +19,9 @@ var labels = {
 
 	application: {
 		title: L('ab.application.application', '*Application'),
-		createNew: L('ab.application.createNew', '*Add new application')
+		createNew: L('ab.application.createNew', '*Add new application'),
+		noApplication: L('ab.application.noApplication', "*There is no application data")
+							
 	}
 }
 
@@ -34,6 +37,10 @@ OP.Component.extend('ab_choose_list', function(App) {
 		toolBar:App.unique('ab_choose_list_toolbar'),
 		buttonCreateNewApplication: App.unique('ab_choose_list_buttonNewApp')
 	}
+
+	var MenuComponent = OP.Component['ab_choose_list_menu'](App);
+	var PopupMenu = webix.ui(MenuComponent.ui);
+	PopupMenu.hide();
 
 	var _ui = {
 
@@ -134,7 +141,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 								this.select(id);
 
-								var selectedApp = data.filter(function (app) { return app.id == id })
+								var selectedApp = _data.listApplications.filter(function (app) { return app.id == id })
 
 								if (selectedApp && selectedApp.length > 0) {
 		
@@ -151,7 +158,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 							},
 							"ab-app-list-edit": function (e, id, trg) {
 								// Show menu
-$$(self.webixUiId.appListMenu).show(trg);
+								PopupMenu.show(trg);
 								this.select(id);
 
 								return false; // block default behavior
@@ -170,6 +177,7 @@ $$(self.webixUiId.appListMenu).show(trg);
 
 
 
+	var _data={};
 
 
 	var _logic = {
@@ -179,8 +187,51 @@ $$(self.webixUiId.appListMenu).show(trg);
 			webix.extend($$(ids.list), webix.ProgressBar);
 			webix.extend($$(ids.list), webix.OverlayBox);
 
+			MenuComponent.logic.init();
+
+			_data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
 			// start things off by loading the current list of Applications
 			this.loadData();
+		},
+
+
+		actions:{
+
+			getSelectedApplication:function() {
+				return $$(ids.list).getSelectedItem();
+			},
+
+
+			deleteApplication: function(app) {
+
+				if (!app) return;
+
+				// Delete application data
+				_logic.busy();
+
+				
+				app.destroy()
+					.fail(function (err) {
+						_logic.ready()
+
+						webix.message({
+							type: "error",
+							text: labels.common.deleteErrorMessage.replace("{0}", app.label)
+						});
+
+						AD.error.log('App Builder : Error delete application data', { error: err });
+					})
+					.then(function (result) {
+						_logic.ready();
+
+						webix.message({
+							type: "success",
+							text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
+						});
+					});
+
+				_logic.reset();
+			}
 		},
 
 
@@ -199,12 +250,53 @@ $$(self.webixUiId.appListMenu).show(trg);
 		},
 
 		loadData:function(){
-			// var Model = AD.Model.get('opstools.BuildApp.ABApplication');
+
+			// Get applications data from the server
+			_logic.busy();
+			_data.Applications.findAll()
+				.fail(function (err) {
+					_logic.ready();
+					webix.message({
+						type: "error",
+						text: err
+					});
+					AD.error.log('App Builder : Error loading application data', { error: err });
+				})
+				.then(function (data) {
+
+					_logic.ready();
+
+					// Popupate translate properties to object
+					data.forEach(function (d) {
+						if (d.translate) d.translate();
+
+						if (!d.description) d.attr('description', '');
+					});
+
+					_data.listApplications = data;
+
+					_logic.refreshList();
+				});
 		},
 
 
 		refreshList: function() {
+			var self = this,
+				appListData = AD.op.WebixDataCollection(_data.listApplications);
 
+			var appList = $$(ids.list);
+			appList.clearAll();
+			appList.data.unsync();
+			appList.data.sync(appListData);
+
+			if (!appList.count()) //if no data is available
+				appList.showOverlay(labels.application.noApplication);
+			else
+				appList.hideOverlay();
+
+			appList.refresh();
+
+			_logic.ready();
 		},
 
 

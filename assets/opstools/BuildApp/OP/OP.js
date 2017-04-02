@@ -52,7 +52,13 @@
 		};
 	}
 
-	// OP.Logic.extend = function(key, fnLogic) {
-	// 	OP.Logic[key] = fnLogic;
-	// }
+
+
+
+	OP.Dialog = AD.op.Dialog;
+
+	
 // }
+
+
+// import "./model.js"
