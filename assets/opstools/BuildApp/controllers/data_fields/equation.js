@@ -499,7 +499,7 @@ steal(
 		} 
 		catch(e) {
 				// handle error
-			
+			console.error(e);			
 		}
 
 
