@@ -69,6 +69,9 @@
 	padding: 0px !important;
 	margin: 0px !important;
 }
+.ab-main-container .ab-cell-warn {
+	background-color: #F5AE0F !important;
+}
 
 /* Webix selected item */
 .webix_list_item.webix_selected,

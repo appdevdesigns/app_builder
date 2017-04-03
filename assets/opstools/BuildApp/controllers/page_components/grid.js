@@ -253,7 +253,6 @@ steal(
 					var header = {
 						view: 'layout',
 						autoheight: true,
-						width: 600,
 						rows: []
 					};
 
@@ -303,6 +302,7 @@ steal(
 					}
 					else { // Label
 						header.id = componentIds.header.replace('{id}', viewId);
+						header.width = 800;
 
 						if (setting.title) {
 							header.rows.push({

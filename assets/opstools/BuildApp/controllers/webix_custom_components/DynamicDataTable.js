@@ -9,7 +9,7 @@ steal(
 			prependView: function (view) {
 				var generatedView = webix.ui(view);
 				if (this.config.width > generatedView.config.width)
-					generatedView.define('width', this.config.width + 2);
+					generatedView.define('minWidth', this.config.width + 2);
 
 				if (!this.additionViews) this.additionViews = [];
 				this.additionViews.push(generatedView);
@@ -24,7 +24,7 @@ steal(
 			appendView: function (view) {
 				var generatedView = webix.ui(view);
 				if (this.config.width > generatedView.config.width)
-					generatedView.define('width', this.config.width + 2);
+					generatedView.define('minWidth', this.config.width + 2);
 
 				if (!this.additionViews) this.additionViews = [];
 				this.additionViews.push(generatedView);
