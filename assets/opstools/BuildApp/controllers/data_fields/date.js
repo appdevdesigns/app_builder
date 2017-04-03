@@ -621,9 +621,10 @@ steal(function () {
 		var $container = $(itemNode).find('.ab-date-data-field');
 		$container.html('');
 
-		if (!dateDataField.validate(fieldData, data, true)) 
-			$container.parent('.webix_cell').addClass('ab-cell-warn');
-		// $container.parent('.webix_cell').removeClass('ab-cell-warn');
+		// if (!dateDataField.validate(fieldData, data, true))
+		// 	$container.parent('.webix_cell').addClass('ab-cell-warn');
+		// else
+		// 	$container.parent('.webix_cell').removeClass('ab-cell-warn');
 
 		//var datadateFormat = "mm/dd/YYYY";
 
@@ -689,9 +690,8 @@ steal(function () {
 		if (fieldData.setting && fieldData.setting.validateCondition) {
 			switch (fieldData.setting.validateCondition) {
 				case 'dateRange':
-					var currDate = moment(new Date()),
-						minDate = currDate.subtract(fieldData.setting.validateRangeBefore, fieldData.setting.validateRangeUnit),
-						maxDate = currDate.add(fieldData.setting.validateRangeAfter, fieldData.setting.validateRangeUnit);
+					var minDate = moment().subtract(fieldData.setting.validateRangeBefore, fieldData.setting.validateRangeUnit).toDate();
+					var maxDate = moment().add(fieldData.setting.validateRangeAfter, fieldData.setting.validateRangeUnit).toDate();
 
 					if (minDate < dateValue && dateValue < maxDate)
 						return true;

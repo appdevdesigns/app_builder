@@ -269,7 +269,13 @@ steal(
 												if (!column || column.length < 1) return true;
 												column = column[0];
 
-												return dataFieldsManager.validate(column, state.value);
+												var passValidate = dataFieldsManager.validate(column, state.value);
+
+												if (!passValidate) {
+													$$(self.webixUiId.objectDatatable).editCancel();
+												}
+
+												return passValidate;
 											},
 											onAfterEditStop: function (state, editor, ignoreUpdate) {
 
