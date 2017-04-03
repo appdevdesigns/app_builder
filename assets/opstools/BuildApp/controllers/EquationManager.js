@@ -11,6 +11,7 @@ steal(
     // Add any equation function definitions here:
     'opstools/BuildApp/controllers/equation_functions/_noArgs.js',
     'opstools/BuildApp/controllers/equation_functions/date_year.js',
+    'opstools/BuildApp/controllers/equation_functions/age.js',
 
     function (filtrex) {
         var self = {};
