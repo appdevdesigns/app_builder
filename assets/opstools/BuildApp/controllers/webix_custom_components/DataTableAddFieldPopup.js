@@ -51,7 +51,7 @@ steal(
 					css: 'ab-add-fields-popup',
 					borderless: true,
 					width: 380,
-					paddingX: 14,
+					paddingX: 17,
 					rows: [
 						{
 							view: "menu",
