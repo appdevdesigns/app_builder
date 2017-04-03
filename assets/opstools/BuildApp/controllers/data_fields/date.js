@@ -621,10 +621,10 @@ steal(function () {
 		var $container = $(itemNode).find('.ab-date-data-field');
 		$container.html('');
 
-		// if (!dateDataField.validate(fieldData, data, true))
-		// 	$container.parent('.webix_cell').addClass('ab-cell-warn');
-		// else
-		// 	$container.parent('.webix_cell').removeClass('ab-cell-warn');
+		if (!validateDateRange(fieldData, data, true))
+			$container.parent('.webix_cell').addClass('ab-cell-warn');
+		else
+			$container.parent('.webix_cell').removeClass('ab-cell-warn');
 
 		//var datadateFormat = "mm/dd/YYYY";
 
@@ -682,7 +682,10 @@ steal(function () {
 		return true;
 	};
 
-	dateDataField.validate = function (fieldData, value) {
+	// When webix datePicker is invalid in datatable,then datepicker is not show up again.
+	// http://webix.com/snippet/5008adcc
+	// dateDataField.validate = function(fieldData, value) {
+	function validateDateRange(fieldData, value) {
 		var dateValue = (value instanceof Date) ? value : new Date(value); 
 		var startDate = fieldData.setting.validateLeft ? new Date(fieldData.setting.validateLeft) : null;
 		var endDate = fieldData.setting.validateRight ? new Date(fieldData.setting.validateRight) : null;

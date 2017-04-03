@@ -9,7 +9,11 @@ steal(function () {
 		typeDecimals: 'ab-new-number-type-decimals',
 		typeDecimalPlaces: 'ab-new-number-type-decimal-places',
 		typeRounding: 'ab-new-number-type-rounding',
-		typeThousands: 'ab-new-number-type-thousands'
+		typeThousands: 'ab-new-number-type-thousands',
+
+		validate: 'ab-new-number-validate-enable',
+		validateMinimum: 'ab-new-number-validate-minimum',
+		validateMaximum: 'ab-new-number-validate-maximum'
 	};
 
 	var formatList = [
@@ -153,6 +157,50 @@ steal(function () {
 					{ id: 'period', value: AD.lang.label.getLabel('ab.dataField.number.period') || "Period" },
 					{ id: 'space', value: AD.lang.label.getLabel('ab.dataField.number.space') || "Space" }
 				]
+			},
+			{
+				view: 'checkbox',
+				id: componentIds.validate,
+				labelWidth: 0,
+				labelRight: 'Validation',
+				on: {
+					onChange: function (newVal) {
+						if (newVal) {
+							$$(componentIds.validateMinimum).enable();
+							$$(componentIds.validateMaximum).enable();
+						}
+						else {
+							$$(componentIds.validateMinimum).disable();
+							$$(componentIds.validateMaximum).disable();
+						}
+					}
+				}
+			},
+			{
+				view: 'text',
+				id: componentIds.validateMinimum,
+				label: 'Minimum',
+				on: {
+					onChange: function(newVal, oldVal) {
+						// Validate number
+						if (!new RegExp('^[0-9.]*$').test(newVal)) {
+							$$(componentIds.validateMinimum).setValue(oldVal || '');
+						}
+					}
+				}
+			},
+			{
+				view: 'text',
+				id: componentIds.validateMaximum,
+				label: 'Maximum',
+				on: {
+					onChange: function (newVal, oldVal) {
+						// Validate number
+						if (!new RegExp('^[0-9.]*$').test(newVal)) {
+							$$(componentIds.validateMaximum).setValue(oldVal || '');
+						}
+					}
+				}
 			}
 		]
 	};
@@ -169,6 +217,26 @@ steal(function () {
 
 		if (data.setting.default)
 			$$(componentIds.numberDefault).setValue(data.setting.default);
+
+		$$(componentIds.validate).setValue(data.setting.validateMinValue != null || data.setting.validateMaxValue != null);
+
+		if (data.setting.validateMinValue != null) {
+			$$(componentIds.validateMinimum).setValue(data.setting.validateMinValue);
+			$$(componentIds.validateMinimum).enable();
+		}
+		else {
+			$$(componentIds.validateMinimum).setValue(null);
+			$$(componentIds.validateMinimum).disable();
+		}
+
+		if (data.setting.validateMaxValue != null) {
+			$$(componentIds.validateMaximum).setValue(data.setting.validateMaxValue);
+			$$(componentIds.validateMaximum).enable();
+		}
+		else {
+			$$(componentIds.validateMaximum).setValue(null);
+			$$(componentIds.validateMaximum).disable();
+		}
 	};
 
 	numberDataField.getSettings = function () {
@@ -197,7 +265,10 @@ steal(function () {
 				editor: 'number',
 				filter_type: 'number',
 				template: '<div class="ab-number-format-show"></div>',
-				default: $$(componentIds.numberDefault).getValue()
+				default: $$(componentIds.numberDefault).getValue(),
+
+				validateMinValue: $$(componentIds.validateMinimum).getValue(),
+				validateMaxValue: $$(componentIds.validateMaximum).getValue(),
 			}
 		};
 	};
@@ -290,7 +361,7 @@ steal(function () {
 			return false;
 		}
 
-		if (!new RegExp('^[0-9.]*$').test(value)) {
+		if (!new RegExp('^[\-0-9.]*$').test(value)) {
 			webix.alert({
 				title: AD.lang.label.getLabel('ab.dataField.number.notNumberTitle') || "This value is invalid",
 				text: AD.lang.label.getLabel('ab.dataField.number.notNumberDescription') || "Please enter number",
@@ -308,6 +379,24 @@ steal(function () {
 			return false;
 		}
 
+		if (fieldData.setting.validateMinValue != null && parseFloat(fieldData.setting.validateMinValue) > parseFloat(value)) {
+			webix.alert({
+				title: AD.lang.label.getLabel('ab.dataField.number.validateMinValueTitle') || "This value is invalid",
+				text: (AD.lang.label.getLabel('ab.dataField.number.validateMinValueDescription') || "Please enter a value is greater than #minValue#").replace('#minValue#', fieldData.setting.validateMinValue),
+				ok: AD.lang.label.getLabel('ab.common.ok') || "OK"
+			});
+			return false;
+		}
+
+		if (fieldData.setting.validateMaxValue != null && parseFloat(fieldData.setting.validateMaxValue) < parseFloat(value)) {
+			webix.alert({
+				title: AD.lang.label.getLabel('ab.dataField.number.validateMaxValueTitle') || "This value is invalid",
+				text: (AD.lang.label.getLabel('ab.dataField.number.validateMaxValueDescription') || "Please enter a value is lower than #minValue#").replace('#minValue#', fieldData.setting.validateMaxValue),
+				ok: AD.lang.label.getLabel('ab.common.ok') || "OK"
+			});
+			return false;
+		}
+
 		return true;
 	};
 
@@ -319,6 +408,10 @@ steal(function () {
 		$$(componentIds.typeDecimalPlaces).setValue('none');
 		$$(componentIds.typeRounding).setValue('none');
 		$$(componentIds.typeThousands).setValue('none');
+
+		$$(componentIds.validate).setValue(false);
+		$$(componentIds.validateMinimum).disable();
+		$$(componentIds.validateMaximum).disable();
 	};
 
 	return numberDataField;
