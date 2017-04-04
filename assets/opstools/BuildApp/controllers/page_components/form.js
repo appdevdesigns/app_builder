@@ -72,7 +72,7 @@ steal(
 					async.series([
 						function (next) {
 							var childView = getChildView.call(self, col.name);
-							if (childView == null && modelData.attr(col.name) == null) {
+							if (childView == null) {
 								// If link column is hidden, then select cursor item of linked data collection
 								if (col.type == 'connectObject') {
 									dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
