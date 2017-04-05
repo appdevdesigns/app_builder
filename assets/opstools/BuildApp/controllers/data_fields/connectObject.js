@@ -290,6 +290,7 @@ steal(
 					});
 				}
 				else if (data.each || data.forEach) {
+					data = data.filter(function (item) { return item != null; });
 					selectedItems = $.map(data.attr ? data.attr() : data, function (item) {
 						return {
 							id: item.id,

@@ -18,6 +18,17 @@ steal(function () {
 		includeMonthOrder: 'ab-new-date-includemonthOrder',
 		includeYearOrder: 'ab-new-date-includeyearOrder',
 
+		validateCondition: 'ab-new-date-validate-condition',
+		validateRange: 'ab-new-date-validate-range', 
+		validateLeft: 'ab-new-date-left-comparer',
+		validateRight: 'ab-new-date-right-comparer',
+
+		validateRangeUnit: 'ab-new-date-range-unit',
+		validateRangeBeforeLabel: 'ab-new-date-range-before-label',
+		validateRangeBefore: 'ab-new-date-range-before',
+		validateRangeAfterLabel: 'ab-new-date-range-after-label',
+		validateRangeAfter: 'ab-new-date-range-after'
+
 	};
 
 	// General settings
@@ -157,7 +168,7 @@ steal(function () {
 				labelRight: 'Set current date to default value',
 				labelWidth: 0,
 				on: {
-					onChange: function(newVal, oldVal) {
+					onChange: function (newVal, oldVal) {
 						if (newVal) {
 							$$(componentIds.default).disable();
 						}
@@ -359,6 +370,156 @@ steal(function () {
 						showDateDisplay();
 					}
 				}
+			},
+
+			// Validator
+			{
+				view: 'label',
+				label: 'Validation criteria',
+				css: 'ab-text-bold'
+			},
+			{
+				id: componentIds.validateCondition,
+				view: "select",
+				label: "Condition",
+				value: 'none',
+				options: [
+					{ id: 'none', value: '[Condition]' },
+					{ id: 'dateRange', value: 'Range' },
+					{ id: 'between', value: 'Between' },
+					{ id: 'notBetween', value: 'Not between' },
+					{ id: '=', value: 'Equal to' },
+					{ id: '<>', value: 'Not equal to' },
+					{ id: '>', value: 'Greater than' },
+					{ id: '<', value: 'Less than' },
+					{ id: '>=', value: 'Greater than or Equal to' },
+					{ id: '<=', value: 'Less than or Equal to' }
+				],
+				on: {
+					onChange: function (newVal, oldVal) {
+						switch (newVal) {
+							case 'none':
+								$$(componentIds.validateRange).hide();
+								$$(componentIds.validateLeft).hide();
+								$$(componentIds.validateRight).hide();
+								break;
+							case 'dateRange':
+								$$(componentIds.validateRange).show();
+								$$(componentIds.validateLeft).hide();
+								$$(componentIds.validateRight).hide();
+								break;
+							case 'between':
+							case 'notBetween':
+								$$(componentIds.validateRange).hide();
+								$$(componentIds.validateLeft).define('label', 'Start Date');
+								$$(componentIds.validateLeft).refresh();
+								$$(componentIds.validateLeft).show();
+								$$(componentIds.validateRight).show();
+								break;
+							case '=':
+							case '<>':
+							case '>':
+							case '<':
+							case '>=':
+							case '<=':
+								$$(componentIds.validateRange).hide();
+								$$(componentIds.validateLeft).define('label', 'Date');
+								$$(componentIds.validateLeft).refresh();
+								$$(componentIds.validateLeft).show();
+								$$(componentIds.validateRight).hide();
+								break;
+						}
+					}
+				}
+			},
+			{
+				id: componentIds.validateRange,
+				rows: [
+					{
+						id: componentIds.validateRangeUnit,
+						view: "select",
+						label: 'Unit',
+						options: [
+							{ id: 'days', value: 'Days' },
+							{ id: 'months', value: 'Months' },
+							{ id: 'years', value: 'Years' }
+						],
+						on: {
+							onChange: function(newVal) {
+								$$(componentIds.validateRangeBeforeLabel).refresh();
+								$$(componentIds.validateRangeAfterLabel).refresh();
+							}
+						}
+					},
+					{
+						cols: [
+							{
+								id: componentIds.validateRangeBeforeLabel,
+								view: 'template',
+								align: 'left',
+								width: 125,
+								borderless: true,
+								template: function() {
+									var beforeLabel = 'Before #number# #unit#'
+										.replace('#number#', $$(componentIds.validateRangeBefore).getValue())
+										.replace('#unit#', $$(componentIds.validateRangeUnit).getValue());
+
+									return beforeLabel;
+								}
+							},
+							{
+								view: 'label',
+								label: '[Current date]',
+								align: 'center'
+							},
+							{
+								id: componentIds.validateRangeAfterLabel,
+								view: 'template',
+								align: 'right',
+								borderless: true,
+								template: function() {
+									var afterLabel = 'After #number# #unit#'
+											.replace('#number#', $$(componentIds.validateRangeAfter).getValue())
+											.replace('#unit#', $$(componentIds.validateRangeUnit).getValue());
+
+									return afterLabel;
+								}
+							}
+						]
+					},
+					{
+						cols: [
+							{
+								id: componentIds.validateRangeBefore,
+								view: 'slider',
+								on: {
+									onChange: function (newVal, oldValue) {
+										$$(componentIds.validateRangeBeforeLabel).refresh();
+									}
+								}
+							},
+							{
+								id: componentIds.validateRangeAfter,
+								view: 'slider',
+								on: {
+									onChange: function (newVal, oldValue) {
+										$$(componentIds.validateRangeAfterLabel).refresh();
+									}
+								}
+							}
+						]
+					}
+				]
+			},
+			{
+				id: componentIds.validateLeft,
+				view: 'datepicker',
+				label: 'Start Date',
+			},
+			{
+				id: componentIds.validateRight,
+				view: 'datepicker',
+				label: 'End Date'
 			}
 
 		]
@@ -389,6 +550,20 @@ steal(function () {
 		if (data.setting && data.setting.default) {
 			$$(componentIds.default).setValue(new Date(data.setting.default));
 		}
+
+		$$(componentIds.validateCondition).setValue(data.setting.validateCondition);
+
+		$$(componentIds.validateRangeUnit).setValue(data.setting.validateRangeUnit);
+		if (data.setting && data.setting.validateRangeBefore)
+			$$(componentIds.validateRangeBefore).setValue(parseInt(data.setting.validateRangeBefore));
+		if (data.setting && data.setting.validateRangeAfter)
+			$$(componentIds.validateRangeAfter).setValue(parseInt(data.setting.validateRangeAfter));
+
+		if (data.setting && data.setting.validateLeft)
+			$$(componentIds.validateLeft).setValue(new Date(data.setting.validateLeft));
+
+		if (data.setting && data.setting.validateRight)
+			$$(componentIds.validateRight).setValue(new Date(data.setting.validateRight));
 	};
 
 	// For save field
@@ -422,6 +597,15 @@ steal(function () {
 				includeDayOrder: $$(componentIds.includeDayOrder).getValue(),
 				includeMonthOrder: $$(componentIds.includeMonthOrder).getValue(),
 				includeYearOrder: $$(componentIds.includeYearOrder).getValue(),
+
+				validateCondition: $$(componentIds.validateCondition).getValue(),
+
+				validateRangeUnit: $$(componentIds.validateRangeUnit).getValue(),
+				validateRangeBefore: $$(componentIds.validateRangeBefore).getValue(),
+				validateRangeAfter: $$(componentIds.validateRangeAfter).getValue(),
+
+				validateLeft: $$(componentIds.validateLeft).getValue(),
+				validateRight: $$(componentIds.validateRight).getValue()
 			}
 		};
 	};
@@ -436,6 +620,11 @@ steal(function () {
 		console.log("startdisplay2 : notnull");
 		var $container = $(itemNode).find('.ab-date-data-field');
 		$container.html('');
+
+		if (!validateDateRange(fieldData, data, true))
+			$container.parent('.webix_cell').addClass('ab-cell-warn');
+		else
+			$container.parent('.webix_cell').removeClass('ab-cell-warn');
 
 		//var datadateFormat = "mm/dd/YYYY";
 
@@ -493,17 +682,58 @@ steal(function () {
 		return true;
 	};
 
-	/*dateDataField.validate = function (fieldData, value) {
-		
-		if(orderday == ordermonth){
-		   webix.alert({
-				title: "testtitle",
-				text: "testtitle",
-				ok: "testtitle ok"
-			});
-			return false;
+	// When webix datePicker is invalid in datatable,then datepicker is not show up again.
+	// http://webix.com/snippet/5008adcc
+	// dateDataField.validate = function(fieldData, value) {
+	function validateDateRange(fieldData, value) {
+		var dateValue = (value instanceof Date) ? value : new Date(value); 
+		var startDate = fieldData.setting.validateLeft ? new Date(fieldData.setting.validateLeft) : null;
+		var endDate = fieldData.setting.validateRight ? new Date(fieldData.setting.validateRight) : null;
+
+		if (fieldData.setting && fieldData.setting.validateCondition) {
+			switch (fieldData.setting.validateCondition) {
+				case 'dateRange':
+					var minDate = moment().subtract(fieldData.setting.validateRangeBefore, fieldData.setting.validateRangeUnit).toDate();
+					var maxDate = moment().add(fieldData.setting.validateRangeAfter, fieldData.setting.validateRangeUnit).toDate();
+
+					if (minDate < dateValue && dateValue < maxDate)
+						return true;
+					else
+						return false;
+				case 'between':
+				case 'notBetween':
+					if (fieldData.setting.validateCondition == 'between' && startDate < dateValue && dateValue < endDate)
+						return true;
+					else if (fieldData.setting.validateCondition == 'notBetween' && dateValue < startDate && endDate < dateValue)
+						return true;
+					else
+						return false;
+				case '=':
+					return dateValue == startDate;
+				case '<>':
+					return dateValue != startDate;
+				case '>':
+					return dateValue > startDate;
+				case '<':
+					return dateValue < startDate;
+				case '>=':
+					return dateValue >= startDate;
+				case '<=':
+					return dateValue <= startDate;
+			}
 		}
-	};*/
+
+		return true;
+
+		// if(orderday == ordermonth){
+		//    webix.alert({
+		// 		title: "testtitle",
+		// 		text: "testtitle",
+		// 		ok: "testtitle ok"
+		// 	});
+		// 	return false;
+		// }
+	};
 
 
 
@@ -512,6 +742,11 @@ steal(function () {
 		$$(componentIds.includeTime).enable();
 
 		$$(componentIds.currentToDefault).setValue(false);
+
+		$$(componentIds.validateCondition).setValue('none');
+		$$(componentIds.validateRange).hide();
+		$$(componentIds.validateLeft).hide();
+		$$(componentIds.validateRight).hide();
 	};
 
 	return dateDataField;
