@@ -5,7 +5,7 @@
  * Display a list of Applications for the user to select.
  *
  */
-import "../data/ABApplication"
+import ABApplication from "../classes/ABApplication"
 import "./ab_choose_list_menu"
 
 
@@ -189,7 +189,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 			MenuComponent.logic.init();
 
-			_data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
+			// _data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
 			// start things off by loading the current list of Applications
 			this.loadData();
 		},
@@ -253,8 +253,16 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 			// Get applications data from the server
 			_logic.busy();
-			_data.Applications.findAll()
-				.fail(function (err) {
+			ABApplication.allApplications()
+				.then(function (data) {
+
+					_logic.ready();
+
+					_data.listApplications = data;
+
+					_logic.refreshList();
+				})
+				.catch(function (err) {
 					_logic.ready();
 					webix.message({
 						type: "error",
@@ -262,21 +270,6 @@ OP.Component.extend('ab_choose_list', function(App) {
 					});
 					AD.error.log('App Builder : Error loading application data', { error: err });
 				})
-				.then(function (data) {
-
-					_logic.ready();
-
-					// Popupate translate properties to object
-					data.forEach(function (d) {
-						if (d.translate) d.translate();
-
-						if (!d.description) d.attr('description', '');
-					});
-
-					_data.listApplications = data;
-
-					_logic.refreshList();
-				});
 		},
 
 
