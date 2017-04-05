@@ -18,8 +18,7 @@ var labels = {
 	application: {
 		menu : L('ab.application.menu', "*Application Menu"),
 		confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
-		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
-				
+		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")		
 	}
 }
 
@@ -92,17 +91,13 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 	var _logic = {
 
-
 		init: function() {
 			
 		}
-
 		
 	}
 
-
 							
-
 
 	return {
 		ui: _ui,
