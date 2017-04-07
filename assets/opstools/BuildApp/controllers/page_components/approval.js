@@ -49,7 +49,10 @@ steal(
 				var dfd = $.Deferred(),
 					selectedObj = application.objects.filter(function (obj) { return obj.id == objectId; })[0];
 
-				if (selectedObj == null) return;
+				if (selectedObj == null) {
+					dfd.resolve(new can.List([]));
+					return dfd;
+				}
 
 				selectedObj.getColumns()
 					.fail(dfd.reject)

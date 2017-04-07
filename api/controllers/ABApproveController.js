@@ -34,12 +34,12 @@ module.exports = {
 					object: objectId,
 					rowId: itemIds
 				}).then(function (result) {
-					var existsItemID = result.map(function (item) { return item.id; });
-
+					var existsRowIds = result.map(function (item) { return item.rowId; });
+console.log('Exists ID: ', existsRowIds);
 					itemIds = itemIds.filter(function (id) {
-						return existsItemID.indexOf(id) < 0;
+						return existsRowIds.indexOf(parseInt(id)) < 0;
 					});
-
+console.log('Item Ids: ', itemIds);
 					next();
 				}, next);
 			},
@@ -128,14 +128,17 @@ module.exports = {
 			function (next) {
 				var createTasks = [];
 
-				createTasks.push(function (ok) {
-					ABApprovalStatus.create({
-						object: object.id,
-						rowId: requestData.id,
-						status: 'requesting'
-					}).then(function () {
-						ok();
-					}, ok);
+				requestData.forEach(function (item) {
+					createTasks.push(function (ok) {
+
+						ABApprovalStatus.create({
+							object: object.id,
+							rowId: item.id,
+							status: 'requesting'
+						}).then(function () {
+							ok();
+						}, ok);
+					});
 				});
 
 				async.parallel(createTasks, next);
