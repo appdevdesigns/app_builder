@@ -46,6 +46,8 @@ module.exports = {
             required: false
         },
 
+        approveItems: { collection: 'ABApprovalStatus', via: 'object' },
+
         // this will pull in the translations using .populate('translations')
         translations: {
             collection: 'ABObjectTrans',

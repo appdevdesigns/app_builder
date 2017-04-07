@@ -636,7 +636,7 @@ steal(
 									com.id // the component data id
 								);
 							} else {
-								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for [' + com.attr('component') + ']');
+								AD.error.log('AppBuilder:InterfaceLayoutView: no component found for [' + com.attr('component') + ']', com);
 							}
 
 							if (view && setting) {
