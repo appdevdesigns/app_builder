@@ -6,6 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
 var _ = require('lodash');
+var approval = require(path.join(process.cwd(), 'api', 'services', 'bridges', 'ProcessApproval'));
 
 var reloadTimeLimit = 10 * 1000 * 60; // 10 minutes
 
@@ -87,6 +88,8 @@ function getPageKey(appName, pageName) {
 }
 
 module.exports = {
+
+    approval: approval,
 
     /**
      * AppBuilder.util
