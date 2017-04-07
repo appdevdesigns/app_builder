@@ -56,7 +56,7 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 					switch (trg.textContent.trim()) {
 						case labels.common.edit:
 // TODO:
-							App.actions.editApplication(selectedApp);
+							App.actions.transitionApplicationForm(selectedApp);
 							break;
 
 						case labels.common.delete:

@@ -44,6 +44,8 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 	var _ui = {
 
+		id: ids.component,
+
 		cols: [
 
 			//
@@ -56,7 +58,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 			// Center column Content:
 			// 
 			{
-				id: ids.component,
+				
 				autoheight: true,
 				autowidth: true,
 				rows: [
@@ -82,7 +84,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 								click: function() { 
 
 									// Inform our Chooser we have a request to create an Application:
-									App.actions.createApplicationRequest();
+									App.actions.transitionApplicationForm();
 								}
 							},
 							{
@@ -290,6 +292,11 @@ OP.Component.extend('ab_choose_list', function(App) {
 			appList.refresh();
 
 			_logic.ready();
+		},
+
+
+		show:function() {
+			$$(ids.component).show();
 		},
 
 

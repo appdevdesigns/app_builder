@@ -6,7 +6,7 @@
  *
  */
 
-
+import ABApplication from "../classes/ABApplication"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -17,13 +17,17 @@ var labels = {
 
 	application: {
 
-		formHeader : L('ab.application.form.header', "*Application Info"),
-		placeholderName : L('ab.application.form.placeholderName', "*Application name"),
-		placeholderDescription : L('ab.application.form.placeholderDescription', "*Application description"),
+		formHeader: L('ab.application.form.header', "*Application Info"),
+		placeholderName: L('ab.application.form.placeholderName', "*Application name"),
+		placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
 
-		sectionPermission : L('ab.application.form.sectionPermission', "*Permission"),
-		permissionHeader : L('ab.application.form.headerPermission',  "*Assign one or more roles to set permissions for user to view this app"),
-		createNewRole : L('ab.application.form.createNewRoleButton', "*Create a new role to view this app"),
+		sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
+		permissionHeader: L('ab.application.form.headerPermission',  "*Assign one or more roles to set permissions for user to view this app"),
+		createNewRole: L('ab.application.form.createNewRoleButton', "*Create a new role to view this app"),
+
+		invalidName: L('ab.application.invalidName', "*This application name is invalid"),
+		duplicateName: L('ab.application.duplicateName', "*Name must be unique."),
+
 	}
 }
 
@@ -33,7 +37,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 	labels.common = App.labels.common;
 
-	var id = {
+	var ids = {
 		formComponent: App.unique('ab-app-list-form-view'),
 		form: App.unique('ab-app-list-form'),
 		appFormPermissionList: App.unique('ab-app-form-permission'),
@@ -44,7 +48,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 	var _ui = {
-		id: id.formComponent,
+		id: ids.formComponent,
 		scroll: true,
 		rows: [
 			{
@@ -53,7 +57,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 			},
 			{
 				view: "form",
-				id: id.form,
+				id: ids.form,
 				autoheight: true,
 				margin: 0,
 				elements: [
@@ -83,7 +87,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 							},
 							{
 								view: "toggle",
-								id: id.appFormCreateRoleButton,
+								id: ids.appFormCreateRoleButton,
 								type: "iconButton",
 								width: 300,
 								align: "right",
@@ -96,7 +100,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 // TODO: if not called from anywhere else, then move the name gathering into .roleListAddNew()
 											// Add new app role
-											var appName = $$(id.form).elements["label"].getValue();
+											var appName = $$(ids.form).elements["label"].getValue();
 											_logic.roleListAddNew(appName);
 
 										}
@@ -113,7 +117,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 					},
 					{
 						name: "permissions",
-						id: id.appFormPermissionList,
+						id: ids.appFormPermissionList,
 						view: "list",
 						height: 130,
 						autowidth: true,
@@ -153,31 +157,125 @@ OP.Component.extend('ab_choose_form', function(App) {
 						margin: 5, cols: [
 							{ fillspace: true },
 							{
-								id: id.saveButton,
-								view: "button", label: labels.common.save, type: "form", width: 100, click: function () {
+								id: ids.saveButton,
+								view: "button", label: labels.common.save, type: "form", width: 100, 
+								click: function () {
 									
-// TODO: 
 									_logic.buttonSaveDisable();
-									if (_logic.formValidate()) {
-
-									// 	if (updateApp) {
-									// 		_logic.applicationUpdate();
-									// 	} else {
-									// 		_logic.applicationCreate();
-									// 	}
-									}
-
-
-
-									
-
 									_logic.formBusy();
 
-									var selectedId = $$(self.webixUiId.appList).getSelectedId();
-									var updateApp = self.data.filter(function (d) { return d.id == selectedId })[0];
+									// if there is a selected Application, then this is an UPDATE
+									var updateApp = App.actions.getSelectedApplication();
+									if (updateApp) { 
 
-									if (updateApp) { // Update
-										async.waterfall([
+										if (_logic.formValidate('update')) {
+
+											_logic.applicationUpdate(updateApp);
+
+										}
+										
+									} else { 
+
+										// else this is a Create
+										if (_logic.formValidate('add')) {
+
+											_logic.applicationCreate();
+
+										}
+
+									}
+									
+	
+								} // end click()
+							},
+							{
+								view: "button", value: labels.common.cancel, width: 100, 
+								click: function () {
+									_logic.cancel();
+								}
+							}
+						]
+					}
+				]
+			}
+		]
+	};
+
+	const FormFields = ['label', 'description'];
+
+
+	var _logic = {
+
+		init: function() {
+			webix.extend($$(ids.form), webix.ProgressBar);
+			webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
+		},
+
+// TODO:
+buttonCreateNewApplication: function() {
+	self.resetState();
+	self.populateForm();
+},
+
+		applicationCreate: function(Application) {
+
+			var newApp = {
+				name: appName,
+				label: appName,
+				description: appDescription
+			};
+
+			async.waterfall([
+				function (cb) {
+					// Create application data
+					self.Model.create(newApp)
+						.fail(function (err) { cb(err); })
+						.then(function (result) {
+							if (result.translate) result.translate();
+
+							self.data.push(result);
+
+							cb(null, result);
+						});
+				},
+				function (createdApp, cb) {
+					self.savePermissions(createdApp)
+						.fail(function (err) { cb(err); })
+						.then(function () { cb(); });
+				}
+			], function (err) {
+				_logic.formReady();
+
+				if (err) {
+					webix.message({
+						type: "error",
+						text: self.labels.common.createErrorMessage.replace('{0}', newApp.label)
+					});
+
+					AD.error.log('App Builder : Error create application data', { error: err });
+
+					saveButton.enable();
+
+					return;
+				}
+
+				$$(self.webixUiids.appListRow).show();
+
+				if ($$(self.webixUiids.appList).hideOverlay)
+					$$(self.webixUiids.appList).hideOverlay();
+
+				webix.message({
+					type: "success",
+					text: self.labels.common.createSuccessMessage.replace('{0}', newApp.label)
+				});
+
+				saveButton.enable();
+
+			});
+		},
+
+		applicationUpdate: function(Application) {
+			async.waterfall([
 											function (next) {
 												self.savePermissions(updateApp)
 													.fail(function (err) { next(err); })
@@ -210,7 +308,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 													});
 											}
 										], function (err) {
-											$$(self.webixUiId.appListForm).hideProgress();
+											$$(self.webixUiids.appListForm).hideProgress();
 
 											if (err) {
 												webix.message({
@@ -224,7 +322,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 												return false;
 											}
 
-											$$(self.webixUiId.appListRow).show();
+											$$(self.webixUiids.appListRow).show();
 
 											webix.message({
 												type: "success",
@@ -234,140 +332,175 @@ OP.Component.extend('ab_choose_form', function(App) {
 											saveButton.enable();
 
 										});
-									} else { // Create
-										var newApp = {
-											name: appName,
-											label: appName,
-											description: appDescription
-										};
-
-										async.waterfall([
-											function (cb) {
-												// Create application data
-												self.Model.create(newApp)
-													.fail(function (err) { cb(err); })
-													.then(function (result) {
-														if (result.translate) result.translate();
-
-														self.data.push(result);
-
-														cb(null, result);
-													});
-											},
-											function (createdApp, cb) {
-												self.savePermissions(createdApp)
-													.fail(function (err) { cb(err); })
-													.then(function () { cb(); });
-											}
-										], function (err) {
-											_logic.formReady();
-
-											if (err) {
-												webix.message({
-													type: "error",
-													text: self.labels.common.createErrorMessage.replace('{0}', newApp.label)
-												});
-
-												AD.error.log('App Builder : Error create application data', { error: err });
-
-												saveButton.enable();
-
-												return;
-											}
-
-											$$(self.webixUiId.appListRow).show();
-
-											if ($$(self.webixUiId.appList).hideOverlay)
-												$$(self.webixUiId.appList).hideOverlay();
-
-											webix.message({
-												type: "success",
-												text: self.labels.common.createSuccessMessage.replace('{0}', newApp.label)
-											});
-
-											saveButton.enable();
-
-										});
-									}
-								}
-							},
-							{
-								view: "button", value: self.labels.common.cancel, width: 100, click: function () {
-									self.resetState();
-									$$(self.webixUiId.appListRow).show();
-								}
-							}
-						]
-					}
-				]
-			}
-		]
-	};
-
-
-
-
-	var _logic = {
-
-		init: function() {
-			webix.extend($$(id.form), webix.ProgressBar);
-			webix.extend($$(id.appFormPermissionList), webix.ProgressBar);
 		},
-
-// TODO:
-buttonCreateNewApplication: function() {
-	self.resetState();
-	self.populateForm();
-},
 
 
 		buttonSaveDisable:function() {
-			$$(id.saveButton).disable();
+			$$(ids.saveButton).disable();
 		},
 
 
 		buttonSaveEnable:function() {
-			$$(id.saveButton).enable();
+			$$(ids.saveButton).enable();
+		},
+
+
+		cancel: function() {
+									
+			_logic.formReset();
+			App.actions.transitionApplicationList();
 		},
 
 		formBusy: function() {
-			$$(id.form).showProgress({ type: 'icon' });
+			$$(ids.form).showProgress({ type: 'icon' });
+		},
+
+		formPopulate: function(App) {
+
+			var Form = $$(ids.form);
+
+			// Populate data to form
+			if (App) {
+				FormFields.forEach(function(f){
+					if (Form.elements[f]) {
+						Form.elements[f].setValue(App[f]);
+					}
+				})
+			}
+			
+
+			var PermForm = $$(ids.appFormPermissionList);
+			// Get user's roles
+			PermForm.showProgress({ type: 'icon' });
+			async.waterfall([
+				function (next) {
+					AD.comm.service.get({ url: '/app_builder/user/roles' })
+						.fail(function (err) { next(err); })
+						.done(function (roles) {
+							next(null, roles);
+						});
+				},
+				function (available_roles, next) {
+					if (App && App.id) {
+						App.getPermissions()
+							.then(function (selected_role_ids) {
+								next(null, available_roles, selected_role_ids);
+							})
+							.catch(function (err) { next(err); });
+					}
+					else {
+						next(null, available_roles, []);
+					}
+
+				},
+				function (available_roles, selected_role_ids, next) {
+					// Sort permission list
+					if (App && App.role) {
+						available_roles.forEach(function (r) {
+							var perm = [];
+
+							if (r.id == (App.role.id || App.role))
+								r.isApplicationRole = true;
+						});
+					}
+					available_roles.sort(function (a, b) {
+						return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+					});
+
+					PermForm.clearAll();
+					PermForm.parse(available_roles);
+
+					if (selected_role_ids && selected_role_ids.length > 0) {
+						// Select permissions
+						PermForm.select(selected_role_ids);
+
+						// Select create role application button
+						var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
+						$$(ids.appFormCreateRoleButton).setValue(markCreateButton);
+					}
+
+					PermForm.hideProgress();
+					next();
+				}
+			], function (err) {
+				if (err) {
+					webix.message(err.message);
+					PermForm.hideProgress();
+					return;
+				}
+
+			});
+
 		},
 
 		formReady: function() {
-			$$(id.form).hideProgress();
-		}
+			$$(ids.form).hideProgress();
+		},
 
-		formValidate:function() {
-			if (!$$(id.form).validate()) {
+
+		formReset: function() {
+			$$(ids.form).clear();
+			$$(ids.form).clearValidation();
+			// $$(self.webixUiids.appFormPermissionList).clearValidation();
+			// $$(self.webixUiids.appFormPermissionList).clearAll();
+			// $$(self.webixUiids.appFormCreateRoleButton).setValue(0);
+		},
+
+		formValidate:function(op) {
+			// op : ['add', 'update', 'destroy']
+
+			var Form = $$(ids.form);
+			if (!Form.validate()) {
 				// TODO : Error message
 
 				_logic.buttonSaveEnable();
 				return false;
 			}
 
-			var appName = $$(id.appListForm).elements['label'].getValue(),
-				appDescription = $$(id.appListForm).elements['description'].getValue();
 
-			if (!inputValidator.validate(appName)) {
+			var errors = ABApplication.isValid(op, Form.getValues());
+			if (errors.length > 0) {
+				var hasFocused = false;
+				errors.forEach(function(err){
+					Form.markInvalid(err.name, labels.application[err.mlKey] || err.defaultText );
+					if (!hasFocused && Form.elements[err.name]) {
+						Form.elements[err.name].focus();
+						hasFocused = true;
+					}
+				})
 				_logic.buttonSaveEnable();
 				return false;
 			}
 
-			// Prevent duplicate application name
-			if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
-				OP.Dialog.Alert({
-					title: labels.application.invalidName,
-					text: labels.application.duplicateName.replace("#appName#", appName),
-					ok: labels.common.ok
-				});
+			// var appName = $$(ids.form).elements['label'].getValue(),
+			// 	appDescription = $$(ids.form).elements['description'].getValue();
 
-				$$(id.form).elements['label'].focus();
-				_logic.buttonSaveEnable();
-				return false;
-			}
+			// if (!inputValidator.validate(appName)) {
+			// 	_logic.buttonSaveEnable();
+			// 	return false;
+			// }
+
+			// // Prevent duplicate application name
+			// if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
+			// 	OP.Dialog.Alert({
+			// 		title: labels.application.invalidName,
+			// 		text: labels.application.duplicateName.replace("#appName#", appName),
+			// 		ok: labels.common.ok
+			// 	});
+
+			// 	$$(ids.form).elements['label'].focus();
+			// 	_logic.buttonSaveEnable();
+			// 	return false;
+			// }
 
 			return true;
+		},
+
+
+		formValues: function() {
+			// return the current values of the Form elements.
+			return $$(ids.form).getValues();
+
 		},
 
 
@@ -381,13 +514,13 @@ buttonCreateNewApplication: function() {
 		 */
 		renameApplicationRole:function( newValue, oldValue) {
 
-			var editRole = $$(id.appFormPermissionList).find(function (d) { return d.name === _logic.permissionName(oldValue); });
+			var editRole = $$(ids.appFormPermissionList).find(function (d) { return d.name === _logic.permissionName(oldValue); });
 
 			editRole.forEach(function (r) {
-				var editItem = $$(id.appFormPermissionList).getItem(r.id);
+				var editItem = $$(ids.appFormPermissionList).getItem(r.id);
 				editItem.name = _logic.permissionName(newValue);
 
-				$$(id.appFormPermissionList).updateItem(editItem.id, editItem);
+				$$(ids.appFormPermissionList).updateItem(editItem.id, editItem);
 			});
 		},
 
@@ -395,7 +528,7 @@ buttonCreateNewApplication: function() {
 		roleListAddNew: function(appName) {
 
 			// add new role entry
-			$$(id.appFormPermissionList).add({
+			$$(ids.appFormPermissionList).add({
 				id: 'newRole',
 				name: _logic.permissionName(appName),
 				isApplicationRole: true
@@ -403,9 +536,9 @@ buttonCreateNewApplication: function() {
 
 
 			// Select new role
-			var selectedIds = $$(id.appFormPermissionList).getSelectedId(true);
+			var selectedIds = $$(ids.appFormPermissionList).getSelectedId(true);
 			selectedIds.push('newRole');
-			$$(id.appFormPermissionList).select(selectedIds);
+			$$(ids.appFormPermissionList).select(selectedIds);
 
 		},
 
@@ -413,16 +546,21 @@ buttonCreateNewApplication: function() {
 		roleListRemoveNew: function() {
 
 			// find any roles that are put here from our application form:
-			var appRoles = $$(id.appFormPermissionList).find(function (perm) { return perm.isApplicationRole; });
+			var appRoles = $$(ids.appFormPermissionList).find(function (perm) { return perm.isApplicationRole; });
 			
 			// remove them:
 			appRoles.forEach(function (r) {
-				$$(id.appFormPermissionList).remove(r.id);
+				$$(ids.appFormPermissionList).remove(r.id);
 			});
-		}
+		},
 
 
-		permisionName: function(appName) {
+		show:function() {
+			$$(ids.formComponent).show();
+		},
+
+
+		permissionName: function(appName) {
 			return appName  + " Application Role"; 
 		}
 	}

@@ -10,6 +10,7 @@
 
 
 import './ab_choose_list'
+import './ab_choose_form'
 
 OP.Component.extend('ab_choose', function(App) {
 
@@ -18,21 +19,25 @@ OP.Component.extend('ab_choose', function(App) {
 		choose:App.unique('ab_choose')
 	}
 
+//// LEFT OFF HERE:
+// [] implement AppForm
+// [] ab_choose_list_menu :> App.actions.editApplication()
 
 
 	// Define the external components used in this Component:
 	var AppList = OP.Component['ab_choose_list'](App);
-
+	var AppForm = OP.Component['ab_choose_form'](App);
 
 
 	// This component's UI definition:
 	// Application multi-views
 	var _ui = {
+		view:"multiview",
 		id: ids.choose,
 		autoheight: true,
 		cells: [
 			AppList.ui,
-			// appFormControl
+			AppForm.ui
 		]
 	};
 
@@ -44,17 +49,26 @@ OP.Component.extend('ab_choose', function(App) {
 		init: function() {
 
 			AppList.logic.init();
-
+			AppForm.logic.init();
 		},
 
 		// Expose any globally accessible Actions:
 		actions: {
 
 			// initiate a request to create a new Application
-			createApplicationRequest:function(){
+			transitionApplicationForm:function(App){
 				AppList.logic.reset();
-				// AppForm.logic.reset();
-				// switch to the AppForm
+				AppForm.logic.formReset();
+				if (App) {
+					// populate Form here:
+					AppForm.logic.formPopulate(App);
+				}
+				AppForm.logic.show();
+			},
+
+			transitionApplicationList:function() {
+				$$(ids.choose).back();
+				// AppList.logic.show();
 			}
 
 		}
