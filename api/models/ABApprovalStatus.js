@@ -21,7 +21,7 @@ module.exports = {
    },
 
     rowId: {
-      type: 'number'
+      type: 'integer'
     },
 
     status : { type: 'string',

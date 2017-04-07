@@ -603,7 +603,7 @@ steal(
 							// Generate component in list
 							$$(self.componentIds.componentList).find({}).forEach(function (item) {
 								renderTasks.push(function (next) {
-									var comp = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == item.id; });
+									var comp = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == item.id && c.component != null; });
 									if (!comp || comp.length < 1) return next();
 									self.renderComponent(comp[0])
 										.fail(next)
