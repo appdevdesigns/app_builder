@@ -165,12 +165,12 @@ steal(function () {
 
 		$container.showIcon = function() {
 			$container.find('.attachment-data-field-attachment').attr('attachment-uuid', '');
-			$container.find('.attachment-data-field-attachment').attr('href', '');
+			$container.find('.attachment-data-field-attachment').find('a').attr('href', '');
 			$container.find('.attachment-data-field-attachment').hide();
 			$container.find('.attachment-data-field-icon').show();
 		}
 		$container.showAttachment = function(uuid) {
-			$container.find('.attachment-data-field-attachment').attr('href', '/opsportal/file/' + application.name + '/' + uuid);
+			$container.find('.attachment-data-field-attachment').find('a').attr('href', '/opsportal/file/' + application.name + '/' + uuid);
 			$container.find('.attachment-data-field-attachment').attr('attachment-uuid', uuid);
 			$container.find('.attachment-data-field-icon').hide();
 			$container.find('.attachment-data-field-attachment').show();
