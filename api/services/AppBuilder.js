@@ -26,17 +26,17 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 var DataFields = {};
 
 
-function importDataFields( next ) {
+function importDataFields(next) {
     var dataFieldPath = path.join(__dirname, 'data_fields');
 
     DataFields = {};
 
     var ignoreFiles = ['.DS_Store', 'dataFieldTemplate.js'];
 
-    fs.readdir(dataFieldPath, function(err, files) {
+    fs.readdir(dataFieldPath, function (err, files) {
 
         if (err) {
-            ADCore.error.log('Service:AppBuilder:Error reading in Data Fields.', { error:err, path:dataFieldPath } );
+            ADCore.error.log('Service:AppBuilder:Error reading in Data Fields.', { error: err, path: dataFieldPath });
             next(err);
             return;
         }
@@ -56,7 +56,7 @@ function importDataFields( next ) {
 }
 
 
-function notifyToClients(reloading, step, action) {
+function notifyToClients(reloading, step, action, options) {
     var data = {
         reloading: reloading
     };
@@ -66,6 +66,9 @@ function notifyToClients(reloading, step, action) {
 
     if (action)
         data.action = action;
+
+    if (options)
+        data.options = options;
 
     sails.sockets.blast('server-reload', data);
 }
@@ -198,10 +201,11 @@ module.exports = {
                 }, function (err) {
                     process.chdir(cwd);
 
-                    notifyToClients(true, 'prepareFolder', 'done');
-
                     if (err) next(err);
-                    else next();
+                    else {
+                        notifyToClients(true, 'prepareFolder', 'done');
+                        next();
+                    }
                 });
             }],
 
@@ -271,10 +275,19 @@ module.exports = {
         }, function (err) {
             sails.log('End reload');
 
-            notifyToClients(false);
+            if (err) {
+                notifyToClients(true, '', 'fail', {
+                    error: err,
+                    requestData: { appID: appID }
+                });
 
-            if (err) dfd.reject(err);
-            else dfd.resolve();
+                dfd.reject(err);
+            }
+            else {
+                notifyToClients(false, '', 'finish');
+
+                dfd.resolve();
+            }
         });
 
         return dfd;
@@ -445,7 +458,7 @@ module.exports = {
     /**
      * Update NavBar.area label
      */
-    updateApplication: function(appID) {
+    updateApplication: function (appID) {
         var dfd = AD.sal.Deferred(),
             Application;
 
@@ -537,7 +550,7 @@ module.exports = {
                     .populate('application')
                     .then(function (list) {
                         obj = list[0];
-                        if (!obj) throw new Error('invalid object id');
+                        if (!obj) throw new Error('invalid object id: ' + objectID);
 
                         next();
                     })
@@ -554,15 +567,17 @@ module.exports = {
                     return null;
                 }
 
-                if (obj.importFromObject) {
+                var importFromObjectId = obj.importFromObject;
+
+                if (importFromObjectId) {
                     // Get base of import object
-                    ABObject.find({ id: obj.importFromObject })
+                    ABObject.find({ id: importFromObjectId })
                         .populate('columns')
                         .populate('application')
                         .then(function (list) {
                             // Use import object to sync
                             obj = list[0];
-                            if (!obj) throw new Error('invalid import object id');
+                            if (!obj) throw new Error('invalid import object id: ' + importFromObjectId);
                             else next();
                         })
                         .catch(function (err) {
@@ -579,11 +594,11 @@ module.exports = {
             function (next) {
                 ABObject.find({ importFromObject: obj.id })
                     .populate('columns', { type: 'connectObject' })
-                    .then(function(list) {
-                        list.forEach(function(childObj) {
-                            childObj.columns.forEach(function(col) {
+                    .then(function (list) {
+                        list.forEach(function (childObj) {
+                            childObj.columns.forEach(function (col) {
 
-                                if (obj.columns.filter(function(c) { return c.id == col.id }).length < 1) {
+                                if (obj.columns.filter(function (c) { return c.id == col.id }).length < 1) {
                                     obj.columns.push(col);
                                 }
 
@@ -1015,7 +1030,7 @@ module.exports = {
                                             pullData();
                                         }
                                         else {
-                                            var err = new Error('Could not find application ( id:'+page.application+')');
+                                            var err = new Error('Could not find application ( id:' + page.application + ')');
                                             next(err);
                                         }
                                         return null;
@@ -1458,9 +1473,9 @@ module.exports = {
 
         return dfd;
     },
-    
-    
-    
+
+
+
     /**
      * Imports an existing Sails model for use in an AB application.
      * An AB object will be created for that model.
@@ -1469,13 +1484,17 @@ module.exports = {
      * @param integer appID
      * @param integer modelObjectId
      * @param string modelName
+     * @param [{
+     *      name: string,
+     *      label: string
+     * }] columnList
      * @return Deferred
      *     Resolves with the data of the new imported object
      */
-    modelToObject: function (appID, modelObjectId, modelName) {
+    modelToObject: function (appID, modelObjectId, modelName, columnList) {
         var dfd = AD.sal.Deferred();
         var model = sails.models[modelName.toLowerCase()];
-       
+
         if (!model || !model.definition) {
             dfd.reject(new Error('unrecognized model: ' + modelName));
         }
@@ -1488,43 +1507,43 @@ module.exports = {
             var controllerInfo;
             var modelURL = '';
             var modelFileName = ''; // client side model file
-            
+
             async.series([
                 // Make sure model has an 'id' primary key field
-                function(next) {
+                function (next) {
                     if (!model.attributes.id) {
                         next(new Error('Model ' + modelName + ' does not have an "id" column'));
                     }
                     else next();
                 },
-                
+
                 // Find app in database
-                function(next) {
+                function (next) {
                     ABApplication.find({ id: appID })
-                    .exec(function(err, list) {
-                        if (err) {
-                            next(err);
-                        }
-                        else if (!list || !list[0]) {
-                            next(new Error('application not found: ' + appID));
-                        }
-                        else {
-                            application = list[0];
-                            appName = AppBuilder.rules.toApplicationNameFormat(application.name);
-                            moduleName = appName.toLowerCase();
-                            clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
-                            appPath = path.join('node_modules', moduleName);
-                            modelFileName = `${appName}_${modelName}`;
-                            next();
-                        }
-                    });
+                        .exec(function (err, list) {
+                            if (err) {
+                                next(err);
+                            }
+                            else if (!list || !list[0]) {
+                                next(new Error('application not found: ' + appID));
+                            }
+                            else {
+                                application = list[0];
+                                appName = AppBuilder.rules.toApplicationNameFormat(application.name);
+                                moduleName = appName.toLowerCase();
+                                clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
+                                appPath = path.join('node_modules', moduleName);
+                                modelFileName = `${appName}_${modelName}`;
+                                next();
+                            }
+                        });
                 },
-                
+
                 // Make sure application directory exists
                 // (it needs to have been synced at least once before a model
                 //  can be imported into it)
-                function(next) {
-                    fs.stat(appPath, function(err, status) {
+                function (next) {
+                    fs.stat(appPath, function (err, status) {
                         if (err) {
                             sails.log(`${appPath} not found`);
                             next(new Error("The application directory could not be accessed. Have you synchronized it yet?"));
@@ -1532,9 +1551,9 @@ module.exports = {
                         else next();
                     });
                 },
-                
+
                 // Create Object in database
-                function(next) {
+                function (next) {
                     var objData = {
                         application: appID,
                         name: modelName,
@@ -1549,54 +1568,61 @@ module.exports = {
                         model: ABObject,
                         data: objData
                     })
-                    .fail(next)
-                    .done(function(result) {
-                        object = result;
-                        next();
-                    });
+                        .fail(next)
+                        .done(function (result) {
+                            object = result;
+                            next();
+                        });
                 },
-                
+
                 // Create Columns in database
-                function(next) {
-                    async.forEachOfSeries(model.attributes, function(col, colName, colDone) {
-                        
+                function (next) {
+                    async.forEachOfSeries(model.attributes, function (col, colName, colDone) {
+
                         // In Sails models, there is a `definition` object and 
                         // an `attributes` object. The `definition` uses the
                         // real column names and has additional properties.
                         var realName = col.columnName || colName;
                         var def = model.definition[realName];
-                        
+
                         // Skip these columns
                         var ignore = ['id', 'createdAt', 'updatedAt'];
                         if (ignore.indexOf(colName) >= 0) {
                             return colDone();
                         }
-                        
+
                         // Skip foreign keys. 
                         // They will be handled as associations later.
                         if (!def || col.model || col.collection || def.foreignKey) {
                             return colDone();
                         }
-                       
+
+                        // Skip if column name is not match in list
+                        var allowCol = columnList.filter(function (c) { return c.name == realName })[0];
+                        if (allowCol == null) {
+                            return colDone();
+                        }
+
                         var defaultValue = col.default;
                         if (typeof col.default == 'function') {
                             defaultValue = col.default();
                         }
-                        
+
                         // For the client side model
                         columns.push({
                             name: colName,
                             type: col.type
                         });
-                        
+
                         var colData = {
                             name: colName,
+                            label: allowCol.label,
                             object: object.id,
                             required: def.required || col.required,
                             unique: def.unique || col.unique,
                             isSynced: true // Import object has synced columns by default
                         };
-                        
+
                         var typeMap = {
                             integer: 'number',
                             float: 'number',
@@ -1604,27 +1630,27 @@ module.exports = {
                             json: 'text',
                         };
                         var fieldType = typeMap[col.type] || col.type;
-                        
+
                         // Special case for float type
                         if (col.type == 'float') {
                             fieldType = 'number';
                             colData.type = 'float';
                         }
-                        
+
                         ABColumn.createColumn(fieldType, colData)
-                        .fail(colDone)
-                        .done(function(column) {
-                            colDone();
-                        });
-                       
-                    }, function(err) {
+                            .fail(colDone)
+                            .done(function (column) {
+                                colDone();
+                            });
+
+                    }, function (err) {
                         if (err) next(err);
                         else next();
                     });
                 },
-                
+
                 // Create column associations in database
-                function(next) {
+                function (next) {
                     /*
                         model.associations == [
                             {
@@ -1640,9 +1666,9 @@ module.exports = {
                             }
                         ]
                     */
-                    
-                    async.forEach(model.associations, function(assoc, assocDone) {
-                        
+
+                    async.forEach(model.associations, function (assoc, assocDone) {
+
                         // Multilingual translations aren't treated like normal
                         // associations. The associated text fields will be
                         // created as local multilingual columns later.
@@ -1663,15 +1689,15 @@ module.exports = {
                             assocDone();
                             return;
                         }
-                        
+
                         // For the client side model
                         associations.push({
                             name: assoc.alias,
                             model: assoc.collection || assoc.model
                         });
-                        
+
                         var targetLinkName, targetRelation, targetModelName;
-                        
+
                         if (assoc.type == 'model') {
                             targetRelation = 'one';
                             targetModelName = assoc.model;
@@ -1679,11 +1705,11 @@ module.exports = {
                             targetRelation = 'many';
                             targetModelName = assoc.collection;
                         }
-                        
+
                         var targetModel = sails.models[targetModelName];
                         var sourceRelation = 'one';
                         if (Array.isArray(targetModel.associations)) {
-                            targetModel.associations.forEach(function(targetModelAssoc) {
+                            targetModel.associations.forEach(function (targetModelAssoc) {
                                 if (targetModelAssoc.collection == modelName.toLowerCase()) {
                                     sourceRelation = 'many';
                                     targetLinkName = targetModelAssoc.alias;
@@ -1693,111 +1719,119 @@ module.exports = {
                                 }
                             });
                         }
-                        
+
                         // Look for target object within AppBuilder
                         ABObject.find()
-                        .where({ name: targetModelName })
-                        .where({ application: appID })
-                        .exec(function(err, list) {
-                            if (err) {
-                                assocDone(err);
-                            }
-                            else if (!list || !list[0]) {
-                                // Target model has not been imported into 
-                                // this AppBuilder app
-                                return assocDone();
-                            }
-                            else {
-                                // Target model already in AppBuilder.
-                                // Create connection links now.
-                                ABColumn.createLink({
-                                    name: assoc.alias,
-                                    sourceObjectID: object.id,
-                                    targetObjectID: list[0].id,
-                                    sourceRelation: sourceRelation,
-                                    targetRelation: targetRelation,
-                                    targetName: targetLinkName
-                                })
-                                .fail(assocDone)
-                                .done(function(sourceColumn, targetColumn) {
-                                    assocDone();
-                                });
-                            }
-                        });
-                            
-                    }, function(err) {
+                            .where({ name: targetModelName })
+                            .where({ application: appID })
+                            .exec(function (err, list) {
+                                if (err) {
+                                    assocDone(err);
+                                }
+                                else if (!list || !list[0]) {
+                                    // Target model has not been imported into 
+                                    // this AppBuilder app
+                                    return assocDone();
+                                }
+                                else {
+                                    // Target model already in AppBuilder.
+                                    // Create connection links now.
+                                    ABColumn.createLink({
+                                        name: assoc.alias,
+                                        sourceObjectID: object.id,
+                                        targetObjectID: list[0].id,
+                                        sourceRelation: sourceRelation,
+                                        targetRelation: targetRelation,
+                                        targetName: targetLinkName,
+                                        isSynced: true
+                                    })
+                                        .fail(assocDone)
+                                        .done(function (sourceColumn, targetColumn) {
+                                            assocDone();
+                                        });
+                                }
+                            });
+
+                    }, function (err) {
                         if (err) next(err);
                         else next();
                     });
                 },
-                
+
                 // Create multilingual columns
                 // (these were from the 'translations' association earlier)
-                function(next) {
-                    async.forEach(multilingualFields, function(col, colDone) {
+                function (next) {
+                    async.forEach(multilingualFields, function (col, colDone) {
+                        // Skip if column name is not match in list
+                        var allowCol = columnList.filter(function (c) { return c.name == col.name; })[0];
+                        if (allowCol == null) {
+                            return colDone();
+                        }
+
                         ABColumn.createColumn(col.type, {
                             name: col.name,
+                            label: allowCol.label,
                             object: object.id,
                             setting: {
                                 supportMultilingual: '1'
                             },
                             isSynced: true
                         })
-                        .fail(colDone)
-                        .done(function(result) {
-                            colDone();
-                        });
-                    }, function(err) {
+                            .fail(colDone)
+                            .done(function (result) {
+                                colDone();
+                            });
+                    }, function (err) {
                         if (err) next(err);
                         else next();
                     });
                 },
-                
+
                 // Find server side controller
-                function(next) {
-                    controllerInfo = _.find(sails.controllers, function(c) {
+                function (next) {
+                    controllerInfo = _.find(sails.controllers, function (c) {
                         // 1st try: look for `model` config in the controllers
                         if (c._config && c._config.model == modelName.toLowerCase()) return true;
                         return false;
                     });
                     if (!controllerInfo) {
                         // 2nd try: look for matching controller-model name
-                        controllerInfo = _.find(sails.controllers, function(c) {
+                        controllerInfo = _.find(sails.controllers, function (c) {
                             if (!c.identity) return false;
                             var nameParts = c.identity.split('/');
-                            var finalName = nameParts[ nameParts.length-1 ];
+                            var finalName = nameParts[nameParts.length - 1];
                             if (finalName == modelName.toLowerCase()) return true;
                             return false;
-                        });                    
+                        });
                     }
-                    
+
                     // Determine the model blueprints base URL
                     modelURL = controllerInfo && controllerInfo.identity || '';
-                    
+
                     next();
                 },
-                
+
                 // Create server side controller if needed
-                function(next) {
+                function (next) {
                     if (modelURL) return next();
-                    
+
                     AD.spawn.command({
                         command: 'sails',
-                        options: [ 'generate', 'controller', modelName ],
+                        options: ['generate', 'controller', modelName],
                         spawnOpts: { cwd: appPath }
                     })
-                    .fail(next)
-                    .done(function () {
-                        next();
-                    });
+                        .fail(next)
+                        .done(function () {
+                            next();
+                        });
                 },
-                function(next) {
+                function (next) {
                     if (modelURL) return next();
-                    
+
                     // Patch the newly created controller file to add 
                     // the _config property.
                     var controllerFile = path.join(appPath, 'api', 'controllers', _.upperFirst(modelName) + 'Controller.js');
-                    fs.readFile(controllerFile, 'utf8', function(err, data) {
+                    fs.readFile(controllerFile, 'utf8', function (err, data) {
                         if (err) next(err);
                         else {
                             var lcModelName = modelName.toLowerCase();
@@ -1808,7 +1842,7 @@ module.exports = {
         actions: false,
         shortcuts: false,
         rest: true
-    }
+    },
 `;
                             data = data.replace(/^module\.exports = \{$/m, '$&' + patchData);
                             modelURL = `${moduleName}/${lcModelName}`;
@@ -1816,29 +1850,29 @@ module.exports = {
                         }
                     });
                 },
-                
+
                 // Save the model's blueprints base URL
-                function(next) {
+                function (next) {
                     if (!modelURL) return next();
-                    
+
                     object.urlPath = modelURL;
                     ABObject.update({ id: object.id }, { urlPath: modelURL })
-                    .exec(function(err, results) {
-                        if (err) next(err);
-                        else next();
-                    });
+                        .exec(function (err, results) {
+                            if (err) next(err);
+                            else next();
+                        });
                 },
-                
+
                 // Create client side model base directory if needed
-                function(next) {
-                    fs.mkdir(path.join(clientPath, 'models', 'base'), function(err) {
+                function (next) {
+                    fs.mkdir(path.join(clientPath, 'models', 'base'), function (err) {
                         if (!err || err.code == 'EEXIST') next();
                         else next(err);
                     });
                 },
-                
+
                 // Create client side models
-                function(next) {
+                function (next) {
                     // Find fieldLabel field
                     var fieldLabel = 'id';
                     for (var colName in model.definition) {
@@ -1848,7 +1882,7 @@ module.exports = {
                             fieldLabel = colName;
                         }
                     }
-                    
+
                     sails.renderView(path.join('app_builder', 'clientModelBase'), {
                         layout: false,
                         appName: appName,
@@ -1858,19 +1892,19 @@ module.exports = {
                         columns: columns,
                         associations: associations,
                         multilingualFields: multilingualFields,
-                        
+
                     }, function (err, output) {
                         if (err) next(err);
                         else {
                             var dest = path.join(clientPath, 'models', 'base', modelFileName) + '.js';
-                            fs.writeFile(dest, output, function(err) {
+                            fs.writeFile(dest, output, function (err) {
                                 if (err) next(err);
                                 else next();
                             });
                         }
                     });
                 },
-                function(next) {
+                function (next) {
                     sails.renderView(path.join('app_builder', 'clientModel'), {
                         layout: false,
                         appName,
@@ -1880,24 +1914,56 @@ module.exports = {
                         if (err) next(err);
                         else {
                             var dest = path.join(clientPath, 'models', modelFileName) + '.js';
-                            fs.writeFile(dest, output, function(err) {
+                            fs.writeFile(dest, output, function (err) {
                                 if (err) next(err);
                                 else next();
                             });
                         }
                     });
                 }
-               
-            ], function(err) {
+
+            ], function (err) {
                 if (err) dfd.reject(err);
                 else {
                     dfd.resolve(object);
                 }
             });
         }
-        
+
         return dfd;
     },
+
+    findModelAttributes: function (modelName) {
+        var dfd = AD.sal.Deferred();
+        var model = sails.models[modelName.toLowerCase()];
+
+        if (!modelName) {
+            dfd.reject(new Error('unrecognized model: ' + modelName));
+            return dfd;
+        }
+
+        var columns = model.attributes;
+
+        var transAssoc = model.associations.filter(function (assoc) { return assoc.alias == 'translations' && assoc.type == 'collection'; })[0];
+        if (transAssoc) {
+            var transModelName = transAssoc.collection.toLowerCase(),
+                transModel = sails.models[transModelName];
+
+            for (var colName in transModel.definition) {
+                if (colName == 'language_code') continue;
+                var col = transModel.definition[colName];
+                if (col.type == 'string' || col.type == 'text') {
+                    columns[colName] = {
+                        type: col.type
+                    };
+                }
+            }
+        }
+
+        dfd.resolve(columns);
+
+        return dfd;
+    }
 
 
 };

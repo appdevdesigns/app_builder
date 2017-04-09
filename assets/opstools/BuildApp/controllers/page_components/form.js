@@ -22,7 +22,10 @@ steal(
 			linkField: 'ab-form-link-field',
 			selectColCount: 'ab-form-select-column-count',
 			isSaveVisible: 'ab-form-save-visible',
+			afterSave: 'ab-form-save-go-to',
+			saveLabel: 'ab-form-save-text',
 			isCancelVisible: 'ab-form-cancel-visible',
+			cancelLabel: 'ab-form-cancel-text',
 
 			clearOnLoad: 'ab-form-clear-on-load',
 			clearOnSave: 'ab-form-clear-on-save',
@@ -65,57 +68,46 @@ steal(
 					colVal;
 
 				// Populate values to model
-				columns.forEach(function (col) {
+				async.each(columns, function (col, ok) {
 					async.series([
 						function (next) {
-							if (col.type == "boolean") {
-								modelData.attr(col.name, editValues[col.name] === 1 ? true : false);
-								next();
+							var childView = getChildView.call(self, col.name);
+							if (childView == null) {
+								// If link column is hidden, then select cursor item of linked data collection
+								if (col.type == 'connectObject') {
+									dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
+										.done(function (linkDC) {
+											if (col.setting.linkType == 'collection')
+												colVal = [linkDC.getCursor()];
+											else
+												colVal = linkDC.getCursor();
+										});
+								}
 							}
 							else {
-								var childView = getChildView.call(self, col.name);
-								if (childView == null && modelData.attr(col.name) == null) {
-									// If link column is hidden, then select cursor item of linked data collection
-									if (col.type == 'connectObject') {
-										dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
-											.done(function (linkDC) {
-												if (col.setting.linkType == 'collection')
-													colVal = [linkDC.getCursor()];
-												else
-													colVal = linkDC.getCursor();
-
-												next();
-											});
-									}
-									else {
-										return next();
-									}
-								}
-								else {
-									// Get value in custom data field
-									colVal = dataFieldsManager.getValue(application, null, col, childView.$view);
-
-									next();
-								}
+								// Get value in custom data field
+								colVal = dataFieldsManager.getValue(application, null, col, childView.$view, editValues);
 							}
+
+							next();
 						},
 						function (next) {
-							if (typeof colVal != 'undefined' && colVal != null)
+							if (colVal != null)
 								modelData.attr(col.name, colVal);
-							else if (typeof editValues[col.name] != 'undefined')
+							else if (editValues[col.name] != null)
 								modelData.attr(col.name, editValues[col.name]);
 							else
 								modelData.removeAttr(col.name);
 
 							next();
 						}
-					], function (err) {
-						if (err)
-							q.reject(err);
-						else
-							q.resolve();
-					});
+					], ok);
 
+				}, function (err) {
+					if (err)
+						q.reject(err);
+					else
+						q.resolve();
 				});
 
 				return q;
@@ -246,9 +238,16 @@ steal(
 					clearForm.call(self, object, self.data.columns, dataCollection);
 				}
 
-				$(self).trigger('changePage', {
-					previousPage: true
-				});
+				if (setting.afterSave && !isNaN(setting.afterSave)) {
+					$(self).trigger('changePage', {
+						pageId: setting.afterSave
+					});
+				}
+				else {
+					$(self).trigger('changePage', {
+						previousPage: true
+					});
+				}
 			}
 
 			function showCustomFields(object, columns, rowId, rowData) {
@@ -261,15 +260,22 @@ steal(
 					var childView = getChildView.call(self, col.name);
 					if (!childView) return;
 
-					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowId, rowData ? rowData[col.name] : null, viewId, childView.$view);
+					dataFieldsManager.customDisplay(col.fieldName, application, object, col, rowData, rowData ? rowData[col.name] : null, viewId, childView.$view);
 
 					if (childView.config && childView.config.view === 'template') {
-
 						if (childView.customEditEventId) webix.eventRemove(childView.customEditEventId);
 						childView.customEditEventId = webix.event(childView.$view, "click", function (e) {
 							showCustomEdit(col, childView.$view);
 						});
+					}
+					// Set default value
+					else if ((rowData == null || rowData[col.name] == null) && rowId == null && childView.setValue && col.setting.default) {
+						var defaultValue = col.setting.default;
 
+						if (col.type == 'date' || col.type == 'datetime')
+							defaultValue = new Date(col.setting.default);
+
+						childView.setValue(defaultValue);
 					}
 				});
 			}
@@ -433,8 +439,7 @@ steal(
 
 											listOptions[col.id] = $.map(result, function (opt, index) {
 												return {
-													dataId: opt.id,
-													id: opt.value,
+													id: opt.id,
 													value: opt.label
 												}
 											});
@@ -475,6 +480,7 @@ steal(
 								element.required = false;
 								element.validate = function (val) { return !isNaN(val * 1); };
 								element.attributes = { type: "number" };
+								element.value = col.setting.default;
 							}
 							else if (col.setting.editor === 'date') {
 								element.view = 'datepicker';
@@ -630,7 +636,7 @@ steal(
 								id: saveButtonId,
 								view: "button",
 								type: "form",
-								value: "Save",
+								value: setting.saveLabel || "Save",
 								width: 90,
 								inputWidth: 80,
 								click: function () {
@@ -662,7 +668,7 @@ steal(
 							actionButtons.cols.push({
 								id: cancelButtonId,
 								view: "button",
-								value: "Cancel",
+								value: setting.cancelLabel || "Cancel",
 								width: 90,
 								inputWidth: 80,
 								click: function () {
@@ -732,7 +738,10 @@ steal(
 					colCount: propertyValues[componentIds.selectColCount] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
 					saveVisible: propertyValues[componentIds.isSaveVisible],
+					afterSave: propertyValues[componentIds.afterSave],
+					saveLabel: propertyValues[componentIds.saveLabel] || 'Save',
 					cancelVisible: propertyValues[componentIds.isCancelVisible],
+					cancelLabel: propertyValues[componentIds.cancelLabel] || 'Cancel',
 					clearOnLoad: propertyValues[componentIds.clearOnLoad],
 					clearOnSave: propertyValues[componentIds.clearOnSave],
 					whenByGroup: propertyValues[componentIds.whenByGroup]
@@ -775,6 +784,29 @@ steal(
 						else {
 							next();
 						}
+					},
+					function (next) {
+						application.getApplicationPages(application.currPage)
+							.fail(function (err) { next(err); })
+							.then(function (pages) {
+
+								var afterSave = $$(componentIds.propertyView).getItem(componentIds.afterSave);
+								afterSave.options = pages.map(function (p) {
+									if (p.translate) p.translate();
+
+									return {
+										id: p.id,
+										value: p.label
+									};
+								}).attr();
+
+								afterSave.options.splice(0, 0, {
+									id: null,
+									value: '[Go To]'
+								});
+
+								next();
+							});
 					},
 					// Render form component
 					function (next) {
@@ -866,7 +898,10 @@ steal(
 					propValues[componentIds.linkField] = setting.linkField;
 					propValues[componentIds.selectColCount] = setting.colCount;
 					propValues[componentIds.isSaveVisible] = setting.saveVisible || 'hide';
+					propValues[componentIds.afterSave] = setting.afterSave;
+					propValues[componentIds.saveLabel] = setting.saveLabel || 'Save';
 					propValues[componentIds.isCancelVisible] = setting.cancelVisible || 'hide';
+					propValues[componentIds.cancelLabel] = setting.cancelLabel || 'Cancel';
 					propValues[componentIds.clearOnLoad] = setting.clearOnLoad || 'no';
 					propValues[componentIds.clearOnSave] = setting.clearOnSave || 'no';
 					propValues[componentIds.whenByGroup] = setting.whenByGroup || 'add';
@@ -1048,6 +1083,25 @@ steal(
 						]
 					},
 					{
+						id: componentIds.afterSave,
+						name: 'afterSave',
+						type: 'richselect',
+						label: 'After save',
+						template: function (data, dataValue) {
+							var goToPage = $.grep(data.options, function (opt) { return opt.id == dataValue; });
+							if (goToPage && goToPage.length > 0)
+								return goToPage[0].value;
+							else
+								return "[Go To]";
+						}
+					},
+					{
+						id: componentIds.saveLabel,
+						name: 'saveLabel',
+						type: 'text',
+						label: 'Save label'
+					},
+					{
 						id: componentIds.isCancelVisible,
 						name: 'cancel',
 						type: 'richselect',
@@ -1056,6 +1110,12 @@ steal(
 							{ id: 'show', value: "Yes" },
 							{ id: 'hide', value: "No" },
 						]
+					},
+					{
+						id: componentIds.cancelLabel,
+						name: 'cancelLabel',
+						type: 'text',
+						label: 'Cancel label'
 					},
 					{ label: "Data selection", type: "label" },
 					{

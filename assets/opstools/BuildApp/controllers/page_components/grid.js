@@ -18,7 +18,8 @@ steal(
 			editDataTable: 'ab-grid-edit-mode',
 			editHeader: 'ab-grid-edit-header',
 
-			header: 'ab-grid-header',
+			header: 'ab-grid-header-{id}',
+			toolbar: 'ab-grid-toolbar-{id}',
 
 			columnList: 'ab-grid-columns-list',
 
@@ -300,7 +301,8 @@ steal(
 
 					}
 					else { // Label
-						header.id = componentIds.header;
+						header.id = componentIds.header.replace('{id}', viewId);
+						header.width = 800;
 
 						if (setting.title) {
 							header.rows.push({
@@ -403,8 +405,8 @@ steal(
 					if (action_buttons.length > 0) {
 						header.rows.push({
 							view: 'toolbar',
+							id: componentIds.toolbar.replace('{id}', viewId),
 							autoheight: true,
-							autowidth: true,
 							cols: action_buttons
 						});
 					}
@@ -417,6 +419,10 @@ steal(
 						$$(self.viewId).clearAdditionalView();
 						if (header.rows.length > 0)
 							$$(self.viewId).prependView(header);
+					}
+
+					if ($$(componentIds.toolbar.replace('{id}', viewId))) {
+						$$(componentIds.toolbar.replace('{id}', viewId)).$setSize($$(viewId).config.width + 3);
 					}
 
 					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
@@ -822,10 +828,6 @@ steal(
 			};
 
 			this.onDisplay = function () {
-
-				// if ((this.data.settings) && (this.data.setting.linkedField)) {
-				// 	filterLinkedData.call(this, this.data.setting.linkedField);
-				// }
 
 			}
 

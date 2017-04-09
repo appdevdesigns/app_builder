@@ -29,10 +29,10 @@
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
-.ab-main-container .float-left {
+.float-left {
 	float: left;
 }
-.ab-main-container .float-right {
+.float-right {
 	float: right;
 }
 
@@ -68,6 +68,9 @@
 .ab-column-no-padding div {
 	padding: 0px !important;
 	margin: 0px !important;
+}
+.ab-main-container .ab-cell-warn {
+	background-color: #F5AE0F !important;
 }
 
 /* Webix selected item */

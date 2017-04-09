@@ -483,19 +483,21 @@ steal(function() {
   };
 
 
-  /*
-   * @function getValue
-   *
-   * Form Processing: allow a form to request the current value of your Data Field.
-   *
-   * @param {obj} application : The current ABApplication instance
-   * @param {obj} object  : The ABObject that contains this DataField
-   * @param {obj} fieldData : The ABColumn instance that defines this DataField
-   * @param {el} itemNode : the DOM element of the Webix Cell that contains
-   * 						  the display of this DataField
-   */
-  imageDataField.getValue = function(application, object, fieldData, itemNode) {
-    var image = $(itemNode).find('.image-data-field-image');
+	/*
+	 * @function getValue
+	 *
+	 * Form Processing: allow a form to request the current value of your Data Field. 
+	 *
+	 * @param {obj} application : The current ABApplication instance 
+	 * @param {obj} object  : The ABObject that contains this DataField
+	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
+	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
+	 * 						  the display of this DataField
+	 * @param {obj} rowData : the data of the Model instance from which we are 
+	 *						  	getting the data for this DataField
+	 */
+	imageDataField.getValue = function (application, object, fieldData, itemNode, rowData) {
+		var image = $(itemNode).find('.image-data-field-image');
 
     return image.attr('image-uuid');
   };

@@ -302,8 +302,10 @@ steal(function () {
 	 * @param {obj} fieldData : The ABColumn instance that defines this DataField
 	 * @param {el} itemNode : the DOM element of the Webix Cell that contains
 	 * 						  the display of this DataField
+	 * @param {obj} rowData : the data of the Model instance from which we are 
+	 *						  	getting the data for this DataField
 	 */
-	[DataFieldType]DataField.getValue = function (application, object, fieldData, itemNode) {
+	[DataFieldType]DataField.getValue = function (application, object, fieldData, itemNode, rowData) {
 		var result;
 
 		// figure out how to return your value here:

@@ -7,7 +7,8 @@ steal(
 
 	function (modelCreator, dataHelper) {
 
-		var dataCollections = {};
+		var dataCollections = {},
+			normalizedObjectIds = [];
 
 		function isSame(newVal, oldVal) {
 			return oldVal == newVal ||
@@ -29,14 +30,19 @@ steal(
 					return q;
 				}
 
-				if (dataCollections[objectId] == null || isRefresh) {
-					// Get object info
-					var objInfo = application.objects.filter(function (obj) { return obj.id == objectId });
+				// Get object info
+				var objInfo = application.objects.filter(function (obj) { return obj.id == objectId });
 
-					if (!objInfo || objInfo.length < 1) {
-						q.reject('System could not found this object.');
-						return q;
-					}
+				if (!objInfo || objInfo.length < 1) {
+					q.reject('System could not found this object.');
+					return q;
+				}
+
+				if (normalizedObjectIds.indexOf(objectId) < 0 || isRefresh) {
+
+					if (normalizedObjectIds.indexOf(objectId) < 0)
+						normalizedObjectIds.push(objectId);
+
 					objInfo = objInfo[0];
 
 					// Get object model
@@ -143,7 +149,22 @@ steal(
 					});
 				}
 				else {
-					q.resolve(dataCollections[objectId]);
+					if (dataCollections[objectId] == null) {
+						// Wait until data collection is complete
+						function returnDC() {
+							setTimeout(function () {
+								if (dataCollections[objectId])
+									q.resolve(dataCollections[objectId]);
+								else
+									returnDC();
+							}, 500);
+						}
+
+						returnDC();
+					}
+					else {
+						q.resolve(dataCollections[objectId]);
+					}
 				}
 
 				return q;

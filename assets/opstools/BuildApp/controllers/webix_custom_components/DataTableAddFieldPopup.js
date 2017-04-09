@@ -49,7 +49,9 @@ steal(
 				},
 				body: {
 					css: 'ab-add-fields-popup',
+					borderless: true,
 					width: 380,
+					paddingX: 17,
 					rows: [
 						{
 							view: "menu",
@@ -100,7 +102,7 @@ steal(
 											return;
 										}
 
-										if (!inputValidator.validate(fieldInfo.name)) {
+										if (!inputValidator.validateFormat(fieldInfo.name)) {
 											self.enable();
 											return;
 										}
@@ -117,7 +119,7 @@ steal(
 											return;
 										}
 
-										if (!fieldInfo.weight)
+										if (fieldInfo.weight == null)
 											fieldInfo.weight = dataTable.config.columns.length;
 
 										// Call callback function

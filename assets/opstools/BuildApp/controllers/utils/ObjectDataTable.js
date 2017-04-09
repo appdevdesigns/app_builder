@@ -255,19 +255,19 @@ steal(
 							var self = this,
 								label = col.label || '';
 
-							// Show connect object name in header
-							if (col.type === 'connectObject') {
-								// Find label of connect object
-								var connectObj = application.objects.filter(function (o) {
-									return o.id == col.setting.linkObject;
-								});
+							// // Show connect object name in header
+							// if (col.type === 'connectObject') {
+							// 	// Find label of connect object
+							// 	var connectObj = application.objects.filter(function (o) {
+							// 		return o.id == col.setting.linkObject;
+							// 	});
 
-								if (connectObj && connectObj.length > 0)
-									label += ' ' + self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
-							}
+							// 	if (connectObj && connectObj.length > 0)
+							// 		label += ' ' + self.labels.connectToObjectName.replace('{0}', connectObj[0].label);
+							// }
 
-							var headerTemplate = '<div class="ab-object-data-header"><span class="webix_icon {0}"></span>{1}{2}</div>'
-								.replace('{0}', col.setting.icon ? 'fa-' + col.setting.icon : '')
+							var headerTemplate = '<div class="ab-object-data-header">{0}{1}{2}</div>'
+								.replace('{0}', col.setting.icon ? '<span class="webix_icon fa-' + col.setting.icon + '"></span>' : '')
 								.replace('{1}', label)
 								.replace('{2}', readOnly ? '' : '<i class="ab-object-data-header-edit fa fa-angle-down"></i>');
 
@@ -285,14 +285,14 @@ steal(
 								charLength = column.label ? column.label.length : 0,
 								width = (charLength * charWidth) + 80;
 
-							if (column.setting.linkObject) {// Connect to... label
-								var object = application.objects.filter(function (o) {
-									return o.id === column.setting.linkObject;
-								});
+							// if (column.setting.linkObject) {// Connect to... label
+							// 	var object = application.objects.filter(function (o) {
+							// 		return o.id === column.setting.linkObject;
+							// 	});
 
-								if (object && object.length > 0)
-									width += object[0].label.length * charWidth + 55;
-							}
+							// 	if (object && object.length > 0)
+							// 		width += object[0].label.length * charWidth + 55;
+							// }
 
 							return width;
 						},

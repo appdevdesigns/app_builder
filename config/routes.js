@@ -69,6 +69,8 @@ module.exports = {
     'post /app_builder/application/:appID/importModel':
         'app_builder/ABApplicationController.importModel',
     
+    'get /app_builder/application/findModelAttributes':
+        'app_builder/ABApplicationController.findModelAttributes',
   /*
 
   '/': {
