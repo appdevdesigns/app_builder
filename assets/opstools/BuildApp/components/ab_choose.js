@@ -50,36 +50,43 @@ OP.Component.extend('ab_choose', function(App) {
 
 			AppList.logic.init();
 			AppForm.logic.init();
-		},
-
-		// Expose any globally accessible Actions:
-		actions: {
-
-			// initiate a request to create a new Application
-			transitionApplicationForm:function(App){
-				AppList.logic.reset();
-				AppForm.logic.formReset();
-				if (App) {
-					// populate Form here:
-					AppForm.logic.formPopulate(App);
-				}
-				AppForm.logic.show();
-			},
-
-			transitionApplicationList:function() {
-				$$(ids.choose).back();
-				// AppList.logic.show();
-			}
-
 		}
+		
 	}
 
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		// initiate a request to create a new Application
+		transitionApplicationForm:function(App){
+			
+			AppForm.logic.formReset();
+			if (App) {
+				// populate Form here:
+				AppForm.logic.formPopulate(App);
+			} else {
+
+				// this is a create operation and we should
+				// clear our AppList
+				AppList.logic.reset();
+			}
+			AppForm.logic.show();
+		},
+
+		transitionApplicationList:function() {
+			$$(ids.choose).back();
+			// AppList.logic.show();
+		}
+
+	}
 
 
 	// return the current instance of this component:
 	return {
 		ui:_ui,
-		logic:_logic
+		logic:_logic,
+		actions:_actions
 	}
 
 });

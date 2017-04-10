@@ -197,46 +197,6 @@ OP.Component.extend('ab_choose_list', function(App) {
 		},
 
 
-		actions:{
-
-			getSelectedApplication:function() {
-				return $$(ids.list).getSelectedItem();
-			},
-
-
-			deleteApplication: function(app) {
-
-				if (!app) return;
-
-				// Delete application data
-				_logic.busy();
-
-				
-				app.destroy()
-					.fail(function (err) {
-						_logic.ready()
-
-						webix.message({
-							type: "error",
-							text: labels.common.deleteErrorMessage.replace("{0}", app.label)
-						});
-
-						AD.error.log('App Builder : Error delete application data', { error: err });
-					})
-					.then(function (result) {
-						_logic.ready();
-
-						webix.message({
-							type: "success",
-							text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
-						});
-					});
-
-				_logic.reset();
-			}
-		},
-
-
 		busy: function() {
 			if ($$(ids.list).showProgress)
 				$$(ids.list).showProgress({ icon: 'cursor' });
@@ -321,11 +281,52 @@ OP.Component.extend('ab_choose_list', function(App) {
 		"</div>"
 	].join('');
 
-							
+			
+
+
+	var _actions = {
+
+		getSelectedApplication:function() {
+			return $$(ids.list).getSelectedItem();
+		},
+
+
+		deleteApplication: function(app) {
+
+			if (!app) return;
+
+			// Delete application data
+			_logic.busy();
+
+			
+			app.destroy()
+				.fail(function (err) {
+					_logic.ready()
+
+					webix.message({
+						type: "error",
+						text: labels.common.deleteErrorMessage.replace("{0}", app.label)
+					});
+
+					AD.error.log('App Builder : Error delete application data', { error: err });
+				})
+				.then(function (result) {
+					_logic.ready();
+
+					webix.message({
+						type: "success",
+						text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
+					});
+				});
+
+			_logic.reset();
+		}
+	}			
 
 
 	return {
 		ui: _ui,
-		logic: _logic
+		logic: _logic,
+		actions:_actions
 	}
 })

@@ -2,8 +2,7 @@
 import './OP/OP';
 // import '../../../../../assets/js/webix/webix'
 
-import './components/ab_choose'
-// import './components/applicationWorkspace'
+import './components/ab'
 
 
 
@@ -54,78 +53,21 @@ AD.Control.OpsTool.extend('BuildApp', {
 
 	initWebixUI: function () {
 
+		// get the AppBuilder (AB) Webix Component
+		var AppBuilder = OP.Component['ab']();
+		var ui = AppBuilder.ui;
 
-		function L(key, altText) {
-			return AD.lang.label.getLabel(key) || altText;
-		}
+		// tell the AppBuilder where to attach
+		ui.container = 'ab-main-container'
 
-		var appUUID = webix.uid();
+		// instantiate the UI first
+		this.AppBuilder = webix.ui(ui);
 
-		var options = {
-
-			/*
-			 * actions:
-			 * a hash of exposed application methods that are shared among our 
-			 * components, so One component can invoke an action that updates 
-			 * another component.
-			 */
-			actions:{
-				selectApplication:function(Application) {
-					// AppWorkspace.logic.loadApplication(Application);
-// show AppWorkspace					
-				}
-			},
-
-			/*
-			 * unique()
-			 * A function that returns a globally unique Key.
-			 * @param {string} key   The key to modify and return.
-			 * @return {string} 
-			 */
-			unique: function(key) { return key+appUUID; },
-
-			/*
-			 * labels
-			 * a collection of labels that are common for the Application.
-			 */
-			labels:{
-				common:{
-					"import": L('ab.common.import', "*Import"),
-					edit: 	  L('ab.common.edit', "*Edit"),
-					save: 	  L('ab.common.save', "*Save"),
-					"delete": L('ab.common.delete', "*Delete"),
-					"export": L('ab.common.export', "*Export"),
-					ok: 	  L('ab.common.ok', "*Ok"),
-					cancel:   L('ab.common.cancel', "*Cancel"),
-					yes: 	  L('ab.common.yes', "*Yes"),
-					no: 	  L('ab.common.no', "*No"),
-
-					deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
-					deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
-
-				}
-			}
-
-		}
-
-		var AppChooser = OP.Component['ab_choose'](options);
-
-		this.AppBuilder = webix.ui({
-			id: options.unique('buld_app_loading_screen'),
-			container:'ab-main-container',
-			autoheight:true,
-    		autowidth:true,
-			rows:[
-				AppChooser.ui
-			]
-		});
-		this.AppBuilder.adjust();
-
-
-
-		AppChooser.logic.init();
+		// then perform the init()
+		AppBuilder.logic.init();
 
 	},
+
 
 	resize: function (height) {
 		var self = this;

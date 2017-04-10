@@ -23,9 +23,7 @@ export default class ABApplication {
 				var ModelApplication = AD.Model.get('opstools.BuildApp.ABApplication');
 
 				ModelApplication.findAll()
-					.fail(function(err){
-						reject(err);
-					})
+					.fail(reject)
 					.then(function(data){
 						var allApplications = [];
 
@@ -89,7 +87,22 @@ export default class ABApplication {
 	/// Instance Methods
 	///
 
-	// Permission
+	assignPermissions (permItems) {
+		return new Promise(
+			(resolve, reject) => {
+				AD.comm.service.put({
+					url: '/app_builder/' + this.id + '/role/assign',
+					data: {
+						roles: permItems
+					}
+				})
+				.fail(reject)
+				.done(resolve);
+			}
+		)
+	}
+
+	// Permissions
 	getPermissions () {
 
 		return new Promise( 

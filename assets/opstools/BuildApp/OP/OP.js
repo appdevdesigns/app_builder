@@ -37,14 +37,48 @@
 		OP.Component[key] = function(App){
 
 //// TODO: verify App has proper structure:
+			if (!App) {
+
+				App = {
+
+					uuid: webix.uid(),
+
+					/*
+					 * actions:
+					 * a hash of exposed application methods that are shared among our 
+					 * components, so one component can invoke an action that updates 
+					 * another component.
+					 */
+					actions:{
+						
+					},
+
+					/*
+					 * unique()
+					 * A function that returns a globally unique Key.
+					 * @param {string} key   The key to modify and return.
+					 * @return {string} 
+					 */
+					unique: function(key) { return key+this.uuid; },
+
+					/*
+					 * labels
+					 * a collection of labels that are common for the Application.
+					 */
+					labels:{
+				
+					}
+
+				}
+			}
 
 			// make an instance of the component.
 			var component = fn(App);
 
 			// transfer to App, any actions in the component:
-			if (component.logic.actions){
-				for(var a in component.logic.actions) {
-					App.actions[a] = component.logic.actions[a];
+			if (component.actions){
+				for(var a in component.actions) {
+					App.actions[a] = component.actions[a];
 				}
 			}
 

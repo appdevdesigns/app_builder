@@ -71,7 +71,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 						labelWidth: 100,
 						on: {
 							onChange: function (newValue, oldValue) {
-								_logic.renameApplicationRole(newValue, oldValue);
+								_logic.permissionRenameRole(newValue, oldValue);
 							}
 						}
 					},
@@ -98,16 +98,16 @@ OP.Component.extend('ab_choose_form', function(App) {
 									onItemClick: function (id, e) {
 										if (this.getValue()) {
 
-// TODO: if not called from anywhere else, then move the name gathering into .roleListAddNew()
+// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
 											// Add new app role
 											var appName = $$(ids.form).elements["label"].getValue();
-											_logic.roleListAddNew(appName);
+											_logic.permissionAddNew(appName);
 
 										}
 										else { 
 
 											// Remove app role
-											_logic.roleListRemoveNew();
+											_logic.permissionRemoveNew();
 											
 										}
 									}
@@ -179,7 +179,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 										// else this is a Create
 										if (_logic.formValidate('add')) {
 
-											_logic.applicationCreate();
+											_logic.applicationCreate(_logic.formValues());
 
 										}
 
@@ -211,24 +211,19 @@ OP.Component.extend('ab_choose_form', function(App) {
 			webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
 		},
 
-// TODO:
-buttonCreateNewApplication: function() {
-	self.resetState();
-	self.populateForm();
-},
 
-		applicationCreate: function(Application) {
+		applicationCreate: function(values) {
 
 			var newApp = {
-				name: appName,
-				label: appName,
-				description: appDescription
+				name: values.label,
+				label: values.label,
+				description: values.description
 			};
 
 			async.waterfall([
 				function (cb) {
 					// Create application data
-					self.Model.create(newApp)
+					ABApplication.create(newApp)
 						.fail(function (err) { cb(err); })
 						.then(function (result) {
 							if (result.translate) result.translate();
@@ -276,11 +271,11 @@ buttonCreateNewApplication: function() {
 
 		applicationUpdate: function(Application) {
 			async.waterfall([
-											function (next) {
-												self.savePermissions(updateApp)
-													.fail(function (err) { next(err); })
-													.then(function (result) { next(null, result); });
-											},
+				function (next) {
+					self.savePermissions(updateApp)
+						.fail(function (err) { next(err); })
+						.then(function (result) { next(null, result); });
+				},
 											function (app_role, next) {
 												// Update application data
 												updateApp.attr('label', appName);
@@ -394,22 +389,27 @@ buttonCreateNewApplication: function() {
 
 				},
 				function (available_roles, selected_role_ids, next) {
-					// Sort permission list
+					
+					// mark the role(s) in available_roles that is tied 
+					// this application:
 					if (App && App.role) {
 						available_roles.forEach(function (r) {
-							var perm = [];
-
+		
 							if (r.id == (App.role.id || App.role))
 								r.isApplicationRole = true;
 						});
 					}
+
+					// Sort permission list
 					available_roles.sort(function (a, b) {
 						return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
 					});
 
+					// reload list from our available_roles
 					PermForm.clearAll();
 					PermForm.parse(available_roles);
 
+					// mark which roles have already been selected
 					if (selected_role_ids && selected_role_ids.length > 0) {
 						// Select permissions
 						PermForm.select(selected_role_ids);
@@ -419,15 +419,14 @@ buttonCreateNewApplication: function() {
 						$$(ids.appFormCreateRoleButton).setValue(markCreateButton);
 					}
 
-					PermForm.hideProgress();
 					next();
 				}
 			], function (err) {
 				if (err) {
 					webix.message(err.message);
-					PermForm.hideProgress();
-					return;
 				}
+
+				PermForm.hideProgress();
 
 			});
 
@@ -504,28 +503,7 @@ buttonCreateNewApplication: function() {
 		},
 
 
-		/*
-		 * renameApplicationRole
-		 *
-		 * When the name of the Appliction changes, change the Name of the Permission as well.
-		 *
-		 * @param {string} newValue  the current name of the application
-		 * @param {string} oldValue  the previous name of the application
-		 */
-		renameApplicationRole:function( newValue, oldValue) {
-
-			var editRole = $$(ids.appFormPermissionList).find(function (d) { return d.name === _logic.permissionName(oldValue); });
-
-			editRole.forEach(function (r) {
-				var editItem = $$(ids.appFormPermissionList).getItem(r.id);
-				editItem.name = _logic.permissionName(newValue);
-
-				$$(ids.appFormPermissionList).updateItem(editItem.id, editItem);
-			});
-		},
-
-
-		roleListAddNew: function(appName) {
+		permissionAddNew: function(appName) {
 
 			// add new role entry
 			$$(ids.appFormPermissionList).add({
@@ -543,7 +521,12 @@ buttonCreateNewApplication: function() {
 		},
 
 
-		roleListRemoveNew: function() {
+		permissionName: function(appName) {
+			return appName  + " Application Role"; 
+		},
+
+
+		permissionRemoveNew: function() {
 
 			// find any roles that are put here from our application form:
 			var appRoles = $$(ids.appFormPermissionList).find(function (perm) { return perm.isApplicationRole; });
@@ -555,13 +538,139 @@ buttonCreateNewApplication: function() {
 		},
 
 
-		show:function() {
-			$$(ids.formComponent).show();
+		/*
+		 * permissionRenameRole
+		 *
+		 * When the name of the Appliction changes, change the Name of the Permission as well.
+		 *
+		 * @param {string} newValue  the current name of the application
+		 * @param {string} oldValue  the previous name of the application
+		 */
+		permissionRenameRole:function( newValue, oldValue) {
+
+			var editRole = $$(ids.appFormPermissionList).find(function (d) { return d.name === _logic.permissionName(oldValue); });
+
+			editRole.forEach(function (r) {
+				var editItem = $$(ids.appFormPermissionList).getItem(r.id);
+				editItem.name = _logic.permissionName(newValue);
+
+				$$(ids.appFormPermissionList).updateItem(editItem.id, editItem);
+			});
 		},
 
 
-		permissionName: function(appName) {
-			return appName  + " Application Role"; 
+		permissionSave: function (App) {
+//// REFACTOR:
+// this step implies that ab_choose_form understands the intracies of how
+// ABApplication and Permissions work.  
+			return new Promise(
+				(resolve, reject) => {
+
+					var saveRoleTasks = []
+						appRole;
+
+					//// Process the option to create a newRole For this Application:
+
+					// if the button is set
+					if ($$(ids.appFormCreateRoleButton).getValue()) {
+
+						// Create new role for application
+						saveRoleTasks.push(function (cb) {
+							App.createPermission()
+								.then(function (result) {
+
+									// remember the Role we just created
+									appRole = result;	
+									cb();
+								})
+								.catch(cb)
+						});
+					}
+					else {
+						// Delete any existing application roles
+						saveRoleTasks.push(function (cb) {
+							App.deletePermission()
+								.then(function () { cb(); })
+								.catch(cb)
+								
+						});
+					}
+
+					//// Now process any additional roles:
+
+					// get array of selected permissions that are not our newRole
+					var permItems = $$(ids.appFormPermissionList).getSelectedItem(true);
+					permItems = permItems.filter( function (item) { return item.id !== 'newRole'; }); // Remove new role item
+
+
+					// Make sure Application is linked to selected permission items:
+					saveRoleTasks.push(function (cb) {
+
+						// ok, so we removed the 'newRole' entry, but we might 
+						// have created an entry for it earlier, if so, add in  
+						// the created one here:
+						if ($$(ids.appFormCreateRoleButton).getValue() && appRole) {
+
+							// make sure it isn't already in there:
+							var appRoleItem = permItems.filter( function (item) { return item.id == appRole.id; });
+							if (!appRoleItem || appRoleItem.length < 1) {
+
+								// if not, add it :
+								permItems.push({
+									id: appRole.id,
+									isApplicationRole: true
+								});
+							}
+						}
+
+
+						// Assign Role Permissions
+						App.assignPermissions(permItems)
+							.then(function () { cb(); })
+							.catch(cb)
+					});
+
+
+
+					async.series(saveRoleTasks, function(err, results) {
+						if (err) {
+							reject(err);
+						} else {
+							resolve();  // we don't return anything.
+						}
+					});
+				}
+			);
+
+
+//// REFACTOR QUESTION:
+// why are we updating the app.permissions with this data structure?
+// where is this data structure being used?
+// Earlier we are using another structure (permissionAddNew()) ... how is that related to this?
+
+							// // Final task
+							// saveRoleTasks.push(function (cb) {
+							// 	// Update store app data
+							// 	var applicationData = self.data.filter(function (d) { return d.id == app.id; });
+							// 	applicationData.forEach(function (app) {
+							// 		app.attr('permissions', $.map(permItems, function (item) {
+							// 			return {
+							// 				application: app.id,
+							// 				permission: item.id,
+							// 				isApplicationRole: item.isApplicationRole
+							// 			}
+							// 		}));
+							// 	});
+
+							// 	q.resolve(appRole);
+							// 	cb();
+							// })
+
+		},
+
+
+		show:function() {
+			$$(ids.formComponent).show();
 		}
 	}
 
