@@ -133,14 +133,20 @@ steal(
 							var self = this;
 							dataTable.eachRow(function (rowId) {
 								dataTable.eachColumn(function (columnId) {
-									var col = self.columns.filter(function (col) { return col.name == columnId });
-									if (col && col.length > 0) col = col[0];
-									else return;
-
-									var itemNode = dataTable.getItemNode({ row: rowId, column: columnId }),
-										itemData = dataTable.getItem(rowId);
+									var itemData = dataTable.getItem(rowId),
+										itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
 
 									if (!itemNode || !itemData) return;
+
+									if (itemData.isUnsync) { // Highlight unsync data
+										itemNode.classList.add('ab-object-unsync-data');
+									}
+									else if (itemData._approveStatus != null) { // Hightlight approve data
+										itemNode.classList.add('ab-object-approve-data');
+									}
+
+									var col = self.columns.filter(function (col) { return col.name == columnId })[0];
+									if (col == null) return;
 
 									dataFieldsManager.customDisplay(
 										col.fieldName,
@@ -152,12 +158,8 @@ steal(
 										dataTable.config.id,
 										itemNode,
 										{
-											readOnly: self.data.readOnly
+											readOnly: self.data.readOnly || itemData._approveStatus != null
 										});
-
-									if (itemData.isUnsync) { // Highlight unsync data
-										itemNode.classList.add('ab-object-unsync-data');
-									}
 
 								});
 							});
@@ -175,7 +177,7 @@ steal(
 							this.events.deleteRow = deleteRow;
 						},
 
-						bindColumns: function (application, columns, resetColumns, showSelectCol, showTrashCol) {
+						bindColumns: function (application, columns, resetColumns, showSelectCol, showApproveStatusCol, showTrashCol) {
 							var self = this;
 
 							if (resetColumns)
@@ -237,15 +239,31 @@ steal(
 								});
 							}
 
-							// Removable
-							if (showTrashCol && columns.length > 0) {
-								headers.push({
-									id: "appbuilder_trash",
-									header: "",
-									width: 40,
-									template: "<span class='trash'>{common.trashIcon()}</span>",
-									css: { 'text-align': 'center' }
-								});
+							if (columns.length > 0) {
+								// Approval status
+								if (showApproveStatusCol) {
+									headers.push({
+										id: "appbuilder_approval_status",
+										header: "Approve Status",
+										width: 120,
+										template: function (obj) {
+											return "#approveStatus#"
+												.replace('#approveStatus#', obj._approveStatus ? obj._approveStatus.capitalize() : '');
+										},
+										css: { 'text-align': 'center' }
+									});
+								}
+
+								// Removable
+								if (showTrashCol) {
+									headers.push({
+										id: "appbuilder_trash",
+										header: "",
+										width: 40,
+										template: "<span class='trash'>{common.trashIcon()}</span>",
+										css: { 'text-align': 'center' }
+									});
+								}
 							}
 
 							self.dataTable.refreshColumns(headers, resetColumns || false);

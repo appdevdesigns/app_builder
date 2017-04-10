@@ -42,7 +42,7 @@ steal(
                                             columns = [];
 
                                         visible_popup.dataTable.config.columns.forEach(function (c) {
-                                            if (c.id != 'appbuilder_trash')
+                                            if (c.id != 'appbuilder_approval_status' && c.id != 'appbuilder_trash')
                                                 columns.push(c.id);
                                         });
 
@@ -127,7 +127,7 @@ steal(
                     hiddenNumber = 0;
 
                 visible_popup.dataTable.eachColumn(function (cId) {
-                    if (!visible_popup.dataTable.isColumnVisible(cId) && cId != 'appbuilder_trash')
+                    if (!visible_popup.dataTable.isColumnVisible(cId) && cId != 'appbuilder_approval_status' && cId != 'appbuilder_trash')
                         hiddenNumber++;
                 }, true);
 
@@ -141,8 +141,13 @@ steal(
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
 
-                if (visible_popup.dataTable.config.columns.length > 0 && visible_popup.dataTable.config.columns[0].id != 'appbuilder_trash') {
-                    visible_popup.dataTable.showColumn('appbuilder_trash');
+                if (visible_popup.dataTable.config.columns.length > 0) {
+                    var colId = visible_popup.dataTable.config.columns[0].id;
+
+                    if (colId != 'appbuilder_approval_status' && colId != 'appbuilder_trash') {
+                        visible_popup.dataTable.showColumn('appbuilder_approval_status');
+                        visible_popup.dataTable.showColumn('appbuilder_trash');
+                    }
                 }
 
                 visible_popup.callChangeEvent();
@@ -155,8 +160,19 @@ steal(
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
 
-                if (visible_popup.dataTable.config.columns.length == 1 && visible_popup.dataTable.config.columns[0].id == 'appbuilder_trash') {
-                    visible_popup.dataTable.hideColumn('appbuilder_trash');
+                switch (visible_popup.dataTable.config.columns.length) {
+                    case 1:
+                        if (visible_popup.dataTable.config.columns[0].id == 'appbuilder_trash') {
+                            visible_popup.dataTable.hideColumn('appbuilder_trash');
+                        }
+                        break;
+                    case 2:
+                        if (visible_popup.dataTable.config.columns[0].id == 'appbuilder_approval_status' &&
+                            visible_popup.dataTable.config.columns[1].id == 'appbuilder_trash') {
+                            visible_popup.dataTable.hideColumn('appbuilder_approval_status');
+                            visible_popup.dataTable.hideColumn('appbuilder_trash');
+                        }
+                        break;
                 }
 
                 visible_popup.callChangeEvent();

@@ -74,7 +74,7 @@ module.exports = {
 
     /* Approval */
     'post /app_builder/object/:objectId/requestApprove':
-        'app_builder/ABApproveController.requestApprove',
+        'app_builder/ABApprovalStatusController.requestApprove',
     
   /*
 

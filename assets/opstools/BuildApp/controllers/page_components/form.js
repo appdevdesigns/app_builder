@@ -24,6 +24,7 @@ steal(
 			isSaveVisible: 'ab-form-save-visible',
 			afterSave: 'ab-form-save-go-to',
 			saveLabel: 'ab-form-save-text',
+			saveButton: 'ab-form-save-button-#viewId#',
 			isCancelVisible: 'ab-form-cancel-visible',
 			cancelLabel: 'ab-form-cancel-text',
 
@@ -378,11 +379,25 @@ steal(
 
 				if (events['onAfterCursorChange'] == null && data.dataCollection) {
 					events['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
-						var currModel = data.dataCollection.AD.currModel();
-						// Show custom display
-						showCustomFields.call(self, data.object, self.data.columns, id, currModel);
+						data.object.getApprovalItem(id).then(function (approveItem) {
 
-						setElementHeights.call(self, self.data.columns, currModel);
+							var currModel = data.dataCollection.AD.currModel(),
+								saveButton = $$(componentIds.saveButton.replace('#viewId', self.viewId));
+
+							// If this data is approve item, then disallow to edit
+							if (approveItem != null && approveItem.length > 0) {
+								saveButton.disable();
+							}
+							else {
+								saveButton.enable();
+							}
+
+							// Show custom display
+							showCustomFields.call(self, data.object, self.data.columns, id, currModel);
+
+							setElementHeights.call(self, self.data.columns, currModel);
+
+						});
 					});
 				}
 
@@ -630,7 +645,7 @@ steal(
 						};
 
 						if (setting.saveVisible === 'show') {
-							var saveButtonId = self.viewId + '-form-save-button';
+							var saveButtonId = componentIds.saveButton.replace('#viewId', self.viewId);
 
 							actionButtons.cols.push({
 								id: saveButtonId,

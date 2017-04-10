@@ -31,6 +31,11 @@ module.exports = {
         'approved',     // Admin has approved the request
         'rejected'      // Admin has rejected the request
       ] 
+    },
+
+    note: {
+      type: 'string',
+      required: false
     }
 
   }

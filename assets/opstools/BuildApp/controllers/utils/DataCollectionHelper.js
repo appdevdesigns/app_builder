@@ -59,6 +59,22 @@ steal(
 									next();
 								});
 						},
+						// Get approve items
+						function (next) {
+							objInfo.getApprovalItems()
+								.then(function (data) {
+									data.forEach(function (item) {
+										var objRow = objectData.filter(function (obj) { return obj.id == item.rowId; })[0];
+
+										if (objRow != null) {
+											objRow.attr('_approveStatus', item.status.capitalize());
+										}
+
+									});
+
+									next();
+								}, next);
+						},
 						// Populate labels & Convert string to Date object
 						function (next) {
 							if (objectData == null) return next();
