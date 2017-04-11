@@ -126,9 +126,6 @@ steal(function () {
 			var fullDatetime = moment(new Date()).format(formatDateOrder);
 			var $container = $$(componentIds.dateDisplay).setValue(fullDatetime);
 
-
-			//console.log("fulldate:" + fulldate);
-
 		}
 
 	}
@@ -157,7 +154,8 @@ steal(function () {
 							view: 'datepicker',
 							label: "Default",
 							id: componentIds.default,
-							timepicker: newVal ? true : false
+							timepicker: newVal ? true : false,
+							disabled: $$(componentIds.currentToDefault).getValue() == true
 						}, $$(componentIds.default));
 					}
 				}
@@ -611,13 +609,11 @@ steal(function () {
 	};
 
 	dateDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
-		console.log("startdisplay");
 		if (data == null) {
-			console.log("startdisplay : null");
 			$(itemNode).find('.ab-date-data-field').html('');
 			return true;
 		}
-		console.log("startdisplay2 : notnull");
+
 		var $container = $(itemNode).find('.ab-date-data-field');
 		$container.html('');
 
@@ -662,7 +658,6 @@ steal(function () {
 
 
 		var dateDiv = null;
-		console.log("startdisplay2 : " + data);
 		if (!data || data == '') {
 			dateDiv = "no data";
 		} else {
@@ -675,8 +670,6 @@ steal(function () {
 		}
 
 		// insert the image to display
-		//$container.html(dateDiv);
-		console.log("startdisplay4 : dateDiv " + dateDiv);
 		$container.html(dateDiv);
 
 		return true;
