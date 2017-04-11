@@ -130,14 +130,14 @@ module.exports = {
                 try {
                     var currUser = req.user;
 
-                    // remove ignore properties
                     requestData.forEach(function (item) {
+                        // remove ignore properties
                         delete item['translations'];
                         delete item['createdAt'];
                         delete item['updatedAt'];
-                    });
 
-                    AppBuilder.approval.postApproval(currUser, object, requestData, title);
+                        AppBuilder.approval.postApproval(currUser, object, item, title);
+                    });
 
                     next();
                 }

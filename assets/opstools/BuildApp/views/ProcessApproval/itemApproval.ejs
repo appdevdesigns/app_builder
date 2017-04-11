@@ -27,15 +27,13 @@
 			<% } %>
 				<div class="panel-body">
 					<ul class="list-group row" style="-webkit-box-shadow: 0 0px; box-shadow: 0 0px;">
-						<% data.forEach(function(item) { %>
-							<% Object.keys(item.attr()).forEach(function(key) { %>
-								<% if (key == 'id') return; %>
-									<li class="list-group-item col-xs-6" style="border: 0 none;">
-										<b><%= key %></b> :
-										<%= item[key] %>
-									</li>
-									<% }); %>
-										<% }); %>
+						<% Object.keys(data.attr()).forEach(function(key) { %>
+							<% if (key == 'id') return; %>
+								<li class="list-group-item col-xs-6" style="border: 0 none;">
+									<b><%= key %></b> :
+									<%= data[key] %>
+								</li>
+								<% }); %>
 					</ul>
 				</div>
 	</div>
