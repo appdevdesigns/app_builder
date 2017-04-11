@@ -1,9 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/utils/InputValidator.js',
 
-	function (dataCollectionHelper, inputValidator) {
+	function (dataCollectionHelper, selectivityHelper, inputValidator) {
 		var componentIds = {
 			editRequestApproval: 'ab-approval-edit-view',
 			displayPage: 'ab-approval-display-page',
@@ -37,6 +38,7 @@ steal(
 		//Constructor
 		var requestApprovalComponent = function (application, viewId, componentId) {
 			var self = this,
+				events = {}, // { eventName: eventId, ..., eventNameN: eventIdN }
 				data = {
 					visibleColumns: []
 				};
@@ -112,7 +114,7 @@ steal(
 					function (next) {
 						var view = $.extend(true, {}, requestApprovalComponent.getView());
 						view.id = self.viewId;
-						view.click = function () {
+						view.rows[1].click = function () {
 							// TODO : POPUP
 
 							if (dataCollection == null) return;
@@ -149,10 +151,35 @@ steal(
 
 						webix.ui(view, $$(self.viewId));
 
+						selectivityHelper.renderSelectivity($$(self.viewId).$view, 'ab-checked-items', true);
+
 						data.isRendered = true;
 
 						next();
+					},
+					// Create a listener to update selectivity of checked items
+					function (next) {
+						if (events['onCheckItemsChange'] == null && dataCollection != null) {
+							events['onCheckItemsChange'] = dataCollection.attachEvent("onCheckItemsChange", function () {
+								var checkItems = [];
+
+								dataCollection.getCheckedItems().forEach(function (rowId) {
+									var checkedItem = dataCollection.getItem(rowId);
+
+									checkItems.push({
+										id: checkedItem.id,
+										text: checkedItem._dataLabel
+									});
+								});
+
+								selectivityHelper.setData($($$(self.viewId).$view).find('.ab-checked-items'), checkItems);
+
+							});
+						}
+
+						next();
 					}
+
 				], function (err) {
 					if (err)
 						q.reject(err);
@@ -257,9 +284,20 @@ steal(
 
 		requestApprovalComponent.getView = function () {
 			return {
-				view: "button",
-				value: "Request Approve",
-				width: 200
+				rows: [
+					{
+						view: 'template',
+						borderless: true,
+						width: 700,
+						height: 50,
+						template: '<div class="ab-checked-items"></div>',
+					},
+					{
+						view: "button",
+						value: "Request Approve",
+						width: 200
+					}
+				]
 			};
 		};
 
