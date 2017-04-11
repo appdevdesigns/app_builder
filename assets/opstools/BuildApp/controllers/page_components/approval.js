@@ -95,6 +95,21 @@ steal(
 					dataCollection,
 					self = this;
 
+				function updateCheckedItems() {
+					var checkItems = [];
+
+					dataCollection.getCheckedItems().forEach(function (rowId) {
+						var checkedItem = dataCollection.getItem(rowId);
+
+						checkItems.push({
+							id: checkedItem.id,
+							text: checkedItem._dataLabel
+						});
+					});
+
+					selectivityHelper.setData($($$(self.viewId).$view).find('.ab-checked-items'), checkItems);
+				}
+
 				async.series([
 					// Get data collection
 					function (next) {
@@ -168,6 +183,8 @@ steal(
 
 						selectivityHelper.renderSelectivity($$(self.viewId).$view, 'ab-checked-items', true);
 
+						updateCheckedItems();
+
 						data.isRendered = true;
 
 						next();
@@ -176,19 +193,7 @@ steal(
 					function (next) {
 						if (events['onCheckItemsChange'] == null && dataCollection != null) {
 							events['onCheckItemsChange'] = dataCollection.attachEvent("onCheckItemsChange", function () {
-								var checkItems = [];
-
-								dataCollection.getCheckedItems().forEach(function (rowId) {
-									var checkedItem = dataCollection.getItem(rowId);
-
-									checkItems.push({
-										id: checkedItem.id,
-										text: checkedItem._dataLabel
-									});
-								});
-
-								selectivityHelper.setData($($$(self.viewId).$view).find('.ab-checked-items'), checkItems);
-
+								updateCheckedItems();
 							});
 						}
 
