@@ -213,7 +213,9 @@ steal(
 					},
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
-						dataTableController.bindColumns(application, columns, true, setting.selectable === 'enable', true, setting.removable === 'enable');
+						var isApproveStatusVisible = dataCollection.find({}).filter(function (row) { return row._approveStatus != null; }).length > 0;
+
+						dataTableController.bindColumns(application, columns, true, setting.selectable === 'enable', isApproveStatusVisible, setting.removable === 'enable');
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
 							$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -587,8 +589,9 @@ steal(
 
 				selectable = selectable == 'enable';
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
+				isApproveStatusVisible = dataCollection.find({}).filter(function (row) { return row._approveStatus != null; }).length > 0;
 
-				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, selectable, true, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, selectable, isApproveStatusVisible, isTrashVisible);
 
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
