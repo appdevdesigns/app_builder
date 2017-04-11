@@ -1,5 +1,7 @@
 steal(function () {
 
+	var MAX_FILE_SIZE = 20.00;
+
 	var file_types = [
 		{
 			"ext": "DOC",
@@ -89,6 +91,7 @@ steal(function () {
 		editView: 'ab-new-attachment',
 		useMaxFileSize: 'useMaxFileSize',
 		maxFileSize: 'maxFileSize',
+		validateFileSize: 'validateFileSize',
 		anyFileType: 'anyFileType',
 		fileTypeField: 'fileTypeField',
 		fileTypeFieldVal: 'fileTypeFieldVal'
@@ -180,9 +183,39 @@ steal(function () {
 					{
 						view: 'text',
 						id: componentIds.maxFileSize,
-						fillspace:true
+						fillspace:true,
+						on: {
+							'onChange': function(newv, oldv) {
+								if($$(componentIds.useMaxFileSize).getValue()){
+									if(!isNaN(newv)){
+										// is a valid number
+										if(newv != ''){
+											let newVal = parseFloat(newv).toFixed(2)
+											if(newVal <= 0){
+												newVal = "1.00";
+											}
+											if(newVal > MAX_FILE_SIZE){
+												newVal = ""+MAX_FILE_SIZE
+											}
+											this.setValue(newVal);
+										}else{
+											this.setValue("1.00");
+										}
+										$$(componentIds.validateFileSize).hide()
+									}else{
+										$$(componentIds.validateFileSize).show()
+									}
+								}
+							}
+						}
 					}
 				]
+			},
+			{
+				view: "label",
+				label: "Must be a numeric value",
+				css: 'ab-validation-text',
+				id: componentIds.validateFileSize
 			},
 			{
 				cols: [
@@ -214,7 +247,18 @@ steal(function () {
 
 	attachmentDataField.changeFieldsStates = function () {
 		if($$(componentIds.anyFileType).getValue()){ $$(componentIds.fileTypeField).hide() }else{ $$(componentIds.fileTypeField).show() }
-		if($$(componentIds.useMaxFileSize).getValue()){ $$(componentIds.maxFileSize).enable(); }else{ $$(componentIds.maxFileSize).disable() }
+
+		if($$(componentIds.useMaxFileSize).getValue()){
+			$$(componentIds.maxFileSize).enable();
+			if(!isNaN($$(componentIds.maxFileSize).getValue())){
+				$$(componentIds.validateFileSize).hide()
+			}else{
+				$$(componentIds.validateFileSize).show()
+			}
+		}else{
+			$$(componentIds.maxFileSize).disable()
+			$$(componentIds.validateFileSize).hide()
+		}
 
 	}
 
@@ -274,27 +318,44 @@ steal(function () {
 
 		attachmentDataField.changeFieldsStates()
 
-		// Do Some Field Validation Here:
-		// If the settings object contains the VALIDATION_ERROR property then the field will not get saved
-		if( !$$(componentIds.anyFileType).getValue() && $$(componentIds.fileTypeFieldVal).getValue() == ''){
-			setting.VALIDATION_ERROR = {
-				title: 'File Type',
-				text: 'Youe must select a minimum of one file type'
-			}
-		}
-
-    return {
+		var response = {
       fieldName: attachmentDataField.name,
       type: attachmentDataField.type,
       setting: setting
-    };
+    }
+
+		// Do Some Field Validation Here:
+		// If the settings object contains the VALIDATION_ERROR property then the field will not get saved
+		if( !$$(componentIds.anyFileType).getValue() && $$(componentIds.fileTypeFieldVal).getValue() == ''){
+			response.setting.VALIDATION_ERROR = {
+				title: 'File Type',
+				text: 'You must select a minimum of one file type'
+			}
+			return response;
+		}
+
+		let maxFileSize = $$(componentIds.maxFileSize).getValue()
+		if($$(componentIds.useMaxFileSize).getValue()){
+			if(!isNaN(maxFileSize)){
+				maxFileSize = parseFloat(maxFileSize)
+				if(maxFileSize < 0 || maxFileSize > MAX_FILE_SIZE){
+					response.setting.VALIDATION_NO_ALERT = true
+					return response;
+				}
+			}else{
+				response.setting.VALIDATION_NO_ALERT = true
+				return response;
+			}
+		}
+
+    return response;
 
 	};
 
 	// Reset state
 	attachmentDataField.resetState = function () {
 		$$(componentIds.useMaxFileSize).setValue(0);
-    $$(componentIds.maxFileSize).setValue('');
+    $$(componentIds.maxFileSize).setValue('1.00');
 
 		$$(componentIds.anyFileType).setValue(1);
 
@@ -351,12 +412,6 @@ steal(function () {
 			'</div>'
 		].join('\n');
 
-
-		var maxFileSize = 1;
-		if (fieldData.setting.useMaxFileSize) {
-			maxFileSize = parseInt(fieldData.setting.maxFileSize);
-		}
-
 		// use a webix component for displaying the content.
 		// do this so I can use the progress spinner
 		var webixContainer = webix.ui({
@@ -403,6 +458,13 @@ steal(function () {
 		var actionKey = 'opstool.AB_' + application.name.replace('_', '') + '.view';
 		var url = '/' + ['opsportal', 'file', application.name, actionKey, '1'].join('/');
 
+
+		// MAXIMUM FILE SIZE ALLOWED
+		var maxFileSize = MAX_FILE_SIZE; // MB
+		if (fieldData.setting.useMaxFileSize) {
+			maxFileSize = parseFloat(fieldData.setting.maxFileSize);
+		}
+
 		var uploader = webix.ui({
 			view: "uploader",
 			id: keyUploader,
@@ -416,8 +478,15 @@ steal(function () {
 				// when a file is added to the uploader
 				onBeforeFileAdd: function(item) {
 
+					// Check the file size
+					let incomingFileSize = (item.size / (1024*1024)).toFixed(2);
+					if(incomingFileSize > maxFileSize){
+						var message = "The maximum file size for this field is " + maxFileSize + " MB";
+						webix.alert(message);
+						return false;
+					}
+
 					// verify file type
-					// var acceptableTypes = attachmentDataField.getSelectedFileTypes
 					if(fieldData.setting.anyFileType == 0){
 						var acceptableTypes = fieldData.setting.fileTypeFieldVal
 						if(acceptableTypes.includes(',')){

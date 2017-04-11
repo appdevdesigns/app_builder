@@ -102,6 +102,11 @@ steal(
 											return;
 										}
 
+										if (fieldInfo.setting.VALIDATION_NO_ALERT) {
+											self.enable();
+											return;
+										}
+
 										if (fieldInfo.setting.VALIDATION_ERROR) {
 											webix.alert({
 												title: fieldInfo.setting.VALIDATION_ERROR.title,
