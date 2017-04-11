@@ -26,6 +26,11 @@ steal(
 				}
 			};
 
+		function reformat(str) {
+			// return str.trim().replace(/^"(.+)"$/, '$1');
+			return str.trim().replace(/"/g, '');
+		}
+
 		function populateColumnList() {
 			$$(componentIds.columnList).clearAll();
 
@@ -39,7 +44,7 @@ steal(
 				columnList = firstLine.split(getSeparatedBy()).map(function (colName, index) {
 					return {
 						include: true,
-						columnName: colName.trim(),
+						columnName: reformat(colName),
 						dataType: getGuessDataType(index)
 					};
 				});
@@ -58,9 +63,17 @@ steal(
 		}
 
 		function getGuessDataType(colIndex) {
-			var secondLine = instance.dataRows[1],
-				dataCols = secondLine.split(getSeparatedBy()),
-				data = dataCols[colIndex];
+			var data,
+				repeatNum = 10;
+
+			// Loop to find a value
+			for (var i = 1; i <= repeatNum; i++) {
+				var line = instance.dataRows[i],
+					dataCols = line.split(getSeparatedBy()),
+					data = reformat(dataCols[colIndex]);
+
+				if (data != null && data.replace(/"/g, '').replace(/'/g, '').length > 0) break;
+			}
 
 			if (data == null || data == "") {
 				return 'string'
@@ -72,7 +85,7 @@ steal(
 				return 'number';
 			}
 			else if (Date.parse(data)) {
-				return 'datetime';
+				return 'date';
 			}
 			else {
 				if (data.length > 10)
@@ -223,7 +236,7 @@ steal(
 											{ id: 'string', value: 'Single text' },
 											{ id: 'text', value: 'Long text' },
 											{ id: 'number', value: 'Number' },
-											{ id: 'datetime', value: 'Date' },
+											{ id: 'date', value: 'Date' },
 											{ id: 'boolean', value: 'Checkbox' },
 										],
 										width: 120
@@ -258,7 +271,7 @@ steal(
 											}
 
 											// Validate required column names
-											var emptyColNames = $$(componentIds.columnList).data.find({}).filter(function (col) {
+											var emptyColNames = $$(componentIds.columnList).data.find(function (col) {
 												return col.include && col.columnName.trim().length == 0;
 											});
 											if (emptyColNames.length > 0) {
@@ -316,9 +329,22 @@ steal(
 																		break;
 																	case 'number':
 																		break;
-																	case 'datetime':
+																	case 'date':
 																		setting = {
-																			format: "fullDateFormatStr"
+																			icon: "calendar",
+																			editor: "date",
+																			filter_type: "date",
+																			template: "<div class=\"ab-date-data-field\"></div>",
+																			includeDayFormat: "DD",
+																			currentDateDefault: "0",
+																			typeDayFormatDelimiters: "slash",
+																			includeMonthFormat: "MMM",
+																			typeMonthFormatDelimiters: "slash",
+																			includeYearFormat: "YYYY",
+																			typeYearFormatDelimiters: "slash",
+																			includeDayOrder: "1",
+																			includeMonthOrder: "2",
+																			includeYearOrder: "3"
 																		};
 																		break;
 																	case 'boolean':
@@ -363,9 +389,9 @@ steal(
 
 															var rowData = {};
 															var colValues = data.split(getSeparatedBy());
-															columnResults.forEach(function (col, colIndex) {
-																if (colValues[colIndex] != null)
-																	rowData[col.name] = colValues[colIndex];
+															columnResults.forEach(function (col) {
+																if (colValues[col.weight] != null)
+																	rowData[col.name] = reformat(colValues[col.weight]);
 															})
 
 															// Add row data
