@@ -213,7 +213,7 @@ steal(
 					},
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
-						dataTableController.bindColumns(application, columns, true, setting.selectable === 'enable', setting.removable === 'enable');
+						dataTableController.bindColumns(application, columns, true, setting.selectable === 'enable', true, setting.removable === 'enable');
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
 							$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -588,7 +588,7 @@ steal(
 				selectable = selectable == 'enable';
 				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
 
-				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, selectable, isTrashVisible);
+				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, selectable, true, isTrashVisible);
 
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 

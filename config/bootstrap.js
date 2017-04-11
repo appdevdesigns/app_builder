@@ -14,4 +14,7 @@ module.exports = function (cb) {
     AD.module.bootstrap(__dirname, cb);
     AppBuilder.buildDirectory.init();		// start the build directory re creation
 
+    // create a listner for when our entries are approved
+    AppBuilder.approval.init();
+
 };

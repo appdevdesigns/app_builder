@@ -1,9 +1,10 @@
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
+	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
 	'opstools/BuildApp/controllers/utils/InputValidator.js',
 
-	function (dataCollectionHelper, inputValidator) {
+	function (dataCollectionHelper, selectivityHelper, inputValidator) {
 		var componentIds = {
 			editRequestApproval: 'ab-approval-edit-view',
 			displayPage: 'ab-approval-display-page',
@@ -21,7 +22,7 @@ steal(
 			});
 
 			var domItem = can.view('/opstools/BuildApp/views/ProcessApproval/itemApproval.ejs', new can.Map({
-				data: [approveItem],
+				data: approveItem,
 				title: {
 					header: setting.headerTitle || '',
 					detail: setting.title || ''
@@ -37,6 +38,7 @@ steal(
 		//Constructor
 		var requestApprovalComponent = function (application, viewId, componentId) {
 			var self = this,
+				events = {}, // { eventName: eventId, ..., eventNameN: eventIdN }
 				data = {
 					visibleColumns: []
 				};
@@ -112,7 +114,9 @@ steal(
 					function (next) {
 						var view = $.extend(true, {}, requestApprovalComponent.getView());
 						view.id = self.viewId;
-						view.click = function () {
+						view.rows[1].click = function () {
+							var requestButton = this;
+
 							// TODO : POPUP
 
 							if (dataCollection == null) return;
@@ -121,27 +125,40 @@ steal(
 
 							// Call server to request approve
 							if (checkedItems.length > 0) {
-								$$(self.viewId).disable();
+								requestButton.disable();
+
+								var columnIds = [];
+								columnIds = setting.columns.attr ? setting.columns.attr() : setting.columns;
 
 								AD.comm.service.post({
 									url: '/app_builder/object/#objectId#/requestApprove'.replace('#objectId#', setting.object),
 									data: {
 										title: setting.title,
-										itemIds: checkedItems
+										itemIds: checkedItems,
+										columns: columnIds
 									}
 								})
 									.fail(function (err) {
 										console.error(err);
 										$$(self.viewId).enable();
 									})
-									.done(function () {
+									.done(function (requestIds) {
+
+										// Update approve status to Data collection
+										requestIds.forEach(function (itemId) {
+											var item = dataCollection.getItem(itemId);
+											item['_approveStatus'] = 'requesting';
+
+											dataCollection.updateItem(itemId, item);
+										});
+
 										// Show success message
 										webix.message({
 											type: "success",
-											text: "They are requested approve"
+											text: "Approve requesting is done"
 										});
 
-										$$(self.viewId).enable();
+										requestButton.enable();
 									});
 							}
 
@@ -149,10 +166,35 @@ steal(
 
 						webix.ui(view, $$(self.viewId));
 
+						selectivityHelper.renderSelectivity($$(self.viewId).$view, 'ab-checked-items', true);
+
 						data.isRendered = true;
 
 						next();
+					},
+					// Create a listener to update selectivity of checked items
+					function (next) {
+						if (events['onCheckItemsChange'] == null && dataCollection != null) {
+							events['onCheckItemsChange'] = dataCollection.attachEvent("onCheckItemsChange", function () {
+								var checkItems = [];
+
+								dataCollection.getCheckedItems().forEach(function (rowId) {
+									var checkedItem = dataCollection.getItem(rowId);
+
+									checkItems.push({
+										id: checkedItem.id,
+										text: checkedItem._dataLabel
+									});
+								});
+
+								selectivityHelper.setData($($$(self.viewId).$view).find('.ab-checked-items'), checkItems);
+
+							});
+						}
+
+						next();
 					}
+
 				], function (err) {
 					if (err)
 						q.reject(err);
@@ -257,9 +299,20 @@ steal(
 
 		requestApprovalComponent.getView = function () {
 			return {
-				view: "button",
-				value: "Request Approve",
-				width: 200
+				rows: [
+					{
+						view: 'template',
+						borderless: true,
+						width: 700,
+						height: 50,
+						template: '<div class="ab-checked-items"></div>'
+					},
+					{
+						view: "button",
+						value: "Request Approve",
+						width: 200
+					}
+				]
 			};
 		};
 
@@ -271,7 +324,8 @@ steal(
 						{
 							id: componentIds.displayPage,
 							view: 'template',
-							template: '<div></div>'
+							template: '<div></div>',
+							css: 'ab-scroll-y'
 						},
 						// {
 						// 	view: 'label',

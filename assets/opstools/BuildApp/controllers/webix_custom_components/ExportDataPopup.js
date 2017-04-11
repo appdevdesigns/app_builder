@@ -28,7 +28,8 @@ steal(function () {
 								var columnsConfig = {};
 
 								dataTable.config.columns.forEach(function (col) {
-									if (col.id == 'appbuilder_trash') return;
+									if (col.id == 'appbuilder_approval_status' || col.id == 'appbuilder_trash')
+										return;
 
 									if (col.template) {
 										columnsConfig[col.id] = {

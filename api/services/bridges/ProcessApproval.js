@@ -1,4 +1,24 @@
+var async = require('async');
+
 module.exports = {
+
+	init: function () {
+		// create a listner for when our entries are approved
+		ADCore.queue.subscribe('appbuilder.approved', function (message, data) {
+
+			// Update approve status
+			ABApprovalStatus.update(
+				{
+					object: data.reference.objectId,
+					rowId: data.reference.rowId
+				},
+				{
+					status: data.status
+				})
+				.exec(function () { });
+
+		});
+	},
 
 	postApproval: function (user, object, rowData, detailTitle, headerData, headerTitle) {
 		if (object == null) {

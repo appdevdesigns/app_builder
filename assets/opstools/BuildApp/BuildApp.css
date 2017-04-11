@@ -257,6 +257,9 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .ab-object-unsync-data {
 	background-color: #dae6fb;
 }
+.ab-object-approve-data {
+	background-color: #fdd886;
+}
 .ab-object-view-column {
 	color: #3498db;
 	font-weight: bold;

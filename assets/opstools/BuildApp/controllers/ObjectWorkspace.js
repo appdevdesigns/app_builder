@@ -221,8 +221,21 @@ steal(
 										dragColumn: true,
 										on: {
 											onBeforeSelect: function (data, preserve) {
-												var itemNode = this.getItemNode({ row: data.row, column: data.column });
 
+												// If data was approve data, then disallow to update
+												if (self.data.approveItems.filter(function (item) { return item.rowId == data.row; }).length > 0) {
+
+													webix.alert({
+														title: "This data could not be edited",
+														text: "Could not edit request approve data",
+														ok: self.labels.common.ok
+													});
+
+													return false;
+												}
+
+												var itemNode = this.getItemNode({ row: data.row, column: data.column });	
+					
 												var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
 												if (!column || column.length < 1) {
 													console.log('System could not found this column data');
@@ -242,9 +255,11 @@ steal(
 												} else
 													fieldData = fieldData[0];
 
+												// Custom update data
 												if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
 													return false;
 
+												// Normal update data
 												this.editCell(data.row, data.column);
 											},
 											onCheck: function (row, col, val) { // Update checkbox data
@@ -317,8 +332,14 @@ steal(
 												// 	$$(self.webixUiId.objectDatatable).render();
 												// }
 											},
+											onBeforeColumnDrag: function (sourceId, event) {
+												if (sourceId === 'appbuilder_approval_status' || sourceId === 'appbuilder_trash') // Remove column
+													return false;
+												else
+													return true;
+											},
 											onBeforeColumnDrop: function (sourceId, targetId, event) {
-												if (targetId === 'appbuilder_trash') // Remove column
+												if (targetId === 'appbuilder_approval_status' || targetId === 'appbuilder_trash') // Remove column
 													return false;
 
 												if ($$(self.webixUiId.visibleButton).config.badge > 0) {
@@ -368,6 +389,18 @@ steal(
 
 							$(dataFieldsManager).on('update', function (event, result) {
 								if (!AD.classes.AppBuilder.currApp || !AD.classes.AppBuilder.currApp.currObj || result.objectId != AD.classes.AppBuilder.currApp.currObj.id || !result.rowId || !result.columnName) return;
+
+								// If data was approve data, then disallow to update
+								if (self.data.approveItems.filter(function (item) { return item.rowId == data.row; }).length > 0) {
+
+									webix.alert({
+										title: "This data could not be edited",
+										text: "System disallow edit request approve data",
+										ok: self.labels.common.ok
+									});
+
+									return false;
+								}
 
 								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
@@ -579,7 +612,9 @@ steal(
 																}
 															});
 
-															self.bindColumns(false, false, true);
+															var showApproveStatusCol = self.data.approveItems.length > 0;
+
+															self.bindColumns(false, false, showApproveStatusCol, true);
 
 															self.reorderColumns();
 
@@ -661,7 +696,7 @@ steal(
 										})
 										.then(function (data) {
 
-											data.forEach(function (d) { 
+											data.forEach(function (d) {
 												if (d.translate) d.translate();
 											});
 
@@ -718,17 +753,30 @@ steal(
 
 									next();
 								},
-								// Bind columns to DataTable
-								function (next) {
-									self.bindColumns(true, false, true);
-									next();
-								},
 								// Get object model
 								function (next) {
 									if (!AD.classes.AppBuilder.currApp.currObj)
 										return next();
 
 									self.Model.ObjectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'));
+									next();
+								},
+								// Get approve items
+								function (next) {
+									self.data.approveItems = [];
+
+									AD.classes.AppBuilder.currApp.currObj.getApprovalItems()
+										.then(function (data) {
+											self.data.approveItems = data;
+
+											next();
+										}, next);
+								},
+								// Bind columns to DataTable
+								function (next) {
+									var showApproveStatusCol = self.data.approveItems.length > 0;
+
+									self.bindColumns(true, false, showApproveStatusCol, true);
 									next();
 								},
 								// Get data from server
@@ -755,11 +803,16 @@ steal(
 											next();
 										});
 								},
-								// Define unsync row data
+								// Define unsync row data & approve status
 								function (next) {
 									objectData.forEach(function (data) {
 										if (data.isUnsync)
 											data.attr('isUnsync', data.isUnsync());
+
+										var approveItem = self.data.approveItems.filter(function (item) { return item.rowId == data.id; })[0];
+										if (approveItem != null) {
+											data.attr('_approveStatus', approveItem.status);
+										}
 									});
 
 									next();
@@ -920,7 +973,7 @@ steal(
 
 												// Refresh options
 												updateColumn.setting.attr('options', columnInfo.setting.options.filter(function (opt) {
-													return  columnInfo.removedOptionIds == null || columnInfo.removedOptionIds.indexOf(opt.id) < 0;
+													return columnInfo.removedOptionIds == null || columnInfo.removedOptionIds.indexOf(opt.id) < 0;
 												}));
 
 												// Update default ABList id
@@ -995,7 +1048,7 @@ steal(
 
 									if (col.type == 'date' || col.type == 'datetime') {
 										if (col.setting.currentDateDefault == true)
-											defaultValue = new Date(); 
+											defaultValue = new Date();
 										else if (col.setting.default)
 											defaultValue = new Date(col.setting.default);
 									}
@@ -1096,7 +1149,7 @@ steal(
 							return q;
 						},
 
-						bindColumns: function (resetColumns, showSelectCol, showTrashCol) {
+						bindColumns: function (resetColumns, showSelectCol, showApproveStatusCol, showTrashCol) {
 							if (!AD.classes.AppBuilder.currApp.currObj)
 								return;
 
@@ -1104,7 +1157,7 @@ steal(
 								objectName = AD.classes.AppBuilder.currApp.currObj.attr('name'),
 								objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, objectName);
 
-							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, showSelectCol, showTrashCol);
+							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, showSelectCol, showApproveStatusCol, showTrashCol);
 						},
 
 						refreshColumns: function (columnInfo) {
@@ -1241,7 +1294,9 @@ steal(
 								}
 
 								// $$(self.webixUiId.objectDatatable).refreshColumns(columns);
-								self.bindColumns(false, false, true);
+								var showApproveStatusCol = self.data.approveItems.length > 0;
+
+								self.bindColumns(false, false, showApproveStatusCol, true);
 
 								self.refreshPopupData();
 
