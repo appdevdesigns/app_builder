@@ -22,7 +22,7 @@ steal(
 			});
 
 			var domItem = can.view('/opstools/BuildApp/views/ProcessApproval/itemApproval.ejs', new can.Map({
-				data: [approveItem],
+				data: approveItem,
 				title: {
 					header: setting.headerTitle || '',
 					detail: setting.title || ''
@@ -115,6 +115,8 @@ steal(
 						var view = $.extend(true, {}, requestApprovalComponent.getView());
 						view.id = self.viewId;
 						view.rows[1].click = function () {
+							var requestButton = this;
+
 							// TODO : POPUP
 
 							if (dataCollection == null) return;
@@ -123,27 +125,40 @@ steal(
 
 							// Call server to request approve
 							if (checkedItems.length > 0) {
-								$$(self.viewId).disable();
+								requestButton.disable();
+
+								var columnIds = [];
+								columnIds = setting.columns.attr ? setting.columns.attr() : setting.columns;
 
 								AD.comm.service.post({
 									url: '/app_builder/object/#objectId#/requestApprove'.replace('#objectId#', setting.object),
 									data: {
 										title: setting.title,
-										itemIds: checkedItems
+										itemIds: checkedItems,
+										columns: columnIds
 									}
 								})
 									.fail(function (err) {
 										console.error(err);
 										$$(self.viewId).enable();
 									})
-									.done(function () {
+									.done(function (requestIds) {
+
+										// Update approve status to Data collection
+										requestIds.forEach(function (itemId) {
+											var item = dataCollection.getItem(itemId);
+											item['_approveStatus'] = 'requesting';
+
+											dataCollection.updateItem(itemId, item);
+										});
+
 										// Show success message
 										webix.message({
 											type: "success",
-											text: "They are requested approve"
+											text: "Approve requesting is done"
 										});
 
-										$$(self.viewId).enable();
+										requestButton.enable();
 									});
 							}
 
@@ -290,7 +305,7 @@ steal(
 						borderless: true,
 						width: 700,
 						height: 50,
-						template: '<div class="ab-checked-items"></div>',
+						template: '<div class="ab-checked-items"></div>'
 					},
 					{
 						view: "button",
@@ -309,7 +324,8 @@ steal(
 						{
 							id: componentIds.displayPage,
 							view: 'template',
-							template: '<div></div>'
+							template: '<div></div>',
+							css: 'ab-scroll-y'
 						},
 						// {
 						// 	view: 'label',

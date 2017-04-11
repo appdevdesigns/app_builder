@@ -7,6 +7,7 @@ function() {
 			// Namespacing conventions:
 			// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
 			AD.Model.extend('opstools.BuildApp.ABApprovalStatus', {
+				useSockets: true
 				/*
 					findAll: 'GET /app_builder/abapprovalstatus',
 					findOne: 'GET /app_builder/abapprovalstatus/{id}',

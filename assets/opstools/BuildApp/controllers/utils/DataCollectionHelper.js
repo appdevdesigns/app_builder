@@ -3,12 +3,33 @@ steal(
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 
+	'opstools/BuildApp/models/ABApprovalStatus.js',
+
 	'OpsPortal/classes/OpsWebixDataCollection.js',
 
 	function (modelCreator, dataHelper) {
 
 		var dataCollections = {},
 			normalizedObjectIds = [];
+
+		System.import('appdev').then(function () {
+			steal.import('appdev/model/model').then(function () {
+
+				var ABApprovalStatus = AD.Model.get('opstools.BuildApp.ABApprovalStatus');
+
+				ABApprovalStatus.on('messaged', function (ev, value) {
+
+					if (dataCollections[value.data.objectId] != null) {
+						var item = dataCollections[value.data.objectId].getItem(value.data.rowId);
+						item['_approveStatus'] = value.data.status;
+
+						dataCollections[value.data.objectId].updateItem(value.data.rowId, item);
+					}
+
+				});
+
+			});
+		});
 
 		function isSame(newVal, oldVal) {
 			return oldVal == newVal ||

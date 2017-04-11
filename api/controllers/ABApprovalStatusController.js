@@ -35,9 +35,10 @@ module.exports = {
 
     // POST /app_builder/object/:objectId/requestApprove
     requestApprove: function (req, res) {
-        var objectId = req.param('objectId');
-        var itemIds = req.param('itemIds');
-        var title = req.param('title');
+        var objectId = req.param('objectId'),
+            itemIds = req.param('itemIds'),
+            title = req.param('title'),
+            columnIds = req.param('columns') || [];
 
         if (objectId == null || itemIds == null) {
             res.AD.error('Bad request.');
@@ -69,6 +70,7 @@ module.exports = {
             function (next) {
                 ABObject.findOne({ id: objectId })
                     .populate('application')
+                    .populate('columns')
                     .then(function (obj) {
                         if (obj == null)
                             return next(new Error('Could not found this object'));
@@ -128,13 +130,21 @@ module.exports = {
             // post reqeust approve to ProcessApproval tool
             function (next) {
                 try {
-                    var currUser = req.user;
+                    var currUser = req.user,
+                        allowProperties = ['id'];
 
-                    requestData.forEach(function (item) {
-                        // remove ignore properties
-                        delete item['translations'];
-                        delete item['createdAt'];
-                        delete item['updatedAt'];
+                    // Pull allow column names
+                    allowProperties = allowProperties.concat(object.columns
+                        .filter(function (col) { return columnIds.indexOf(col.id.toString()) > -1; })
+                        .sort(function (a, b) { return a.weight - b.weight; })
+                        .map(function (col) { return col.name }));
+
+                    requestData.forEach(function (data) {
+                        var item = {};
+
+                        allowProperties.forEach(function (prop) {
+                            item[prop] = data[prop];
+                        });
 
                         AppBuilder.approval.postApproval(currUser, object, item, title);
                     });
@@ -168,8 +178,13 @@ module.exports = {
         ], function (err) {
             if (err)
                 res.AD.error(err);
-            else
-                res.send(true);
+            else {
+                var requestRowIds = requestData.map(function (item) {
+                    return item.id;
+                });
+
+                res.send(requestRowIds);
+            }
         });
     }
 

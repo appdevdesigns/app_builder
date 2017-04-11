@@ -227,7 +227,7 @@ steal(
 
 													webix.alert({
 														title: "This data could not be edited",
-														text: "System disallow edit request approve data",
+														text: "Could not edit request approve data",
 														ok: self.labels.common.ok
 													});
 

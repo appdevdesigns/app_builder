@@ -7,37 +7,65 @@
 
 module.exports = {
 
-  tableName:'appbuilder_approval_status',
+	tableName: 'appbuilder_approval_status',
 
-  connection:'appdev_default',
+	connection: 'appdev_default',
 
 
 
-  attributes: {
+	attributes: {
 
-    object: { 
-      model: 'ABObject',
-      required: true
-   },
+		object: {
+			model: 'ABObject',
+			required: true
+		},
 
-    rowId: {
-      type: 'integer'
-    },
+		rowId: {
+			type: 'integer'
+		},
 
-    status : { type: 'string',
-      in:[
-        'pending',      // waiting for an admin to approve the request
-        'requesting',   // requesting more information (comments)
-        'approved',     // Admin has approved the request
-        'rejected'      // Admin has rejected the request
-      ] 
-    },
+		status: {
+			type: 'string',
+			in: [
+				'pending',      // waiting for an admin to approve the request
+				'requesting',   // requesting more information (comments)
+				'approved',     // Admin has approved the request
+				'rejected'      // Admin has rejected the request
+			]
+		},
 
-    note: {
-      type: 'string',
-      required: false
-    }
+		note: {
+			type: 'string',
+			required: false
+		}
 
-  }
+	},
+
+	afterCreate: function (newlyInsertedRecord, cb) {
+
+		ABApprovalStatus.message(newlyInsertedRecord.id,
+			{
+				objectId: newlyInsertedRecord.object,
+				rowId: newlyInsertedRecord.rowId,
+				status: newlyInsertedRecord.status
+			},
+			{});
+
+		cb();
+	},
+
+	afterUpdate: function (updatedRecord, cb) {
+
+		ABApprovalStatus.message(updatedRecord.id,
+			{
+				objectId: updatedRecord.object,
+				rowId: updatedRecord.rowId,
+				status: updatedRecord.status
+			},
+			{});
+
+		cb();
+	},
+
 };
 
