@@ -84,7 +84,7 @@ steal(
 					col.attr('markCheckbox', visibleColumns.filter(function (c) { return c == col.id; }).length > 0);
 				});
 
-				$$(componentIds.detailColumnList).parse(columns.attr());
+				$$(componentIds.detailColumnList).parse(columns.attr ? columns.attr() : columns);
 				$$(componentIds.detailColumnList).refresh();
 			}
 
