@@ -391,7 +391,7 @@ steal(
 								if (!AD.classes.AppBuilder.currApp || !AD.classes.AppBuilder.currApp.currObj || result.objectId != AD.classes.AppBuilder.currApp.currObj.id || !result.rowId || !result.columnName) return;
 
 								// If data was approve data, then disallow to update
-								if (self.data.approveItems.filter(function (item) { return item.rowId == data.row; }).length > 0) {
+								if (self.data.approveItems.filter(function (item) { return item.rowId == result.rowId; }).length > 0) {
 
 									webix.alert({
 										title: "This data could not be edited",
@@ -1157,7 +1157,11 @@ steal(
 								objectName = AD.classes.AppBuilder.currApp.currObj.attr('name'),
 								objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, objectName);
 
-							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, showSelectCol, showApproveStatusCol, showTrashCol);
+							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, {
+								isSelectVisible: showSelectCol,
+								isApproveStatusVisible: showApproveStatusCol,
+								isTrashVisible: showTrashCol
+							});
 						},
 
 						refreshColumns: function (columnInfo) {
