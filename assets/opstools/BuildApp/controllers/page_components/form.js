@@ -331,6 +331,39 @@ steal(
 				});
 			}
 
+			function updateSaveButton(id) {
+				var dfd = $.Deferred(),
+					saveButton = $$(componentIds.saveButton.replace('#viewId', viewId));
+
+				if (saveButton == null) {
+					dfd.resolve();
+					return dfd;
+				}
+
+				if (id == null) {
+					saveButton.enable();
+					dfd.resolve();
+					return dfd;
+				}
+
+				data.object.getApprovalItem(id)
+					.fail(dfd.reject)
+					.done(function (approveItem) {
+
+						// If this data is approve item, then disallow to edit
+						if (approveItem != null && approveItem.length > 0) {
+							saveButton.disable();
+						}
+						else {
+							saveButton.enable();
+						}
+
+						dfd.resolve();
+					});
+
+				return dfd;
+			}
+
 			function clearForm(object, columns, dataCollection) {
 				var self = this;
 
@@ -379,25 +412,23 @@ steal(
 
 				if (events['onAfterCursorChange'] == null && data.dataCollection) {
 					events['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
-						data.object.getApprovalItem(id).then(function (approveItem) {
+						async.series([
+							function (next) {
+								updateSaveButton(id).then(function () {
+									next();
+								}, next);
+							},
+							function (next) {
+								var currModel = data.dataCollection.AD.currModel();
 
-							var currModel = data.dataCollection.AD.currModel(),
-								saveButton = $$(componentIds.saveButton.replace('#viewId', self.viewId));
+								// Show custom display
+								showCustomFields.call(self, data.object, self.data.columns, id, currModel);
 
-							// If this data is approve item, then disallow to edit
-							if (approveItem != null && approveItem.length > 0) {
-								saveButton.disable();
+								setElementHeights.call(self, self.data.columns, currModel);
+
+								next();
 							}
-							else {
-								saveButton.enable();
-							}
-
-							// Show custom display
-							showCustomFields.call(self, data.object, self.data.columns, id, currModel);
-
-							setElementHeights.call(self, self.data.columns, currModel);
-
-						});
+						])
 					});
 				}
 
@@ -714,6 +745,16 @@ steal(
 						showCustomFields.call(self, data.object, self.data.columns, currData ? currData.id : null, currData);
 
 						next();
+					},
+					// Enable/Disable save button
+					function (next) {
+						var cursorId;
+						if (dataCollection && dataCollection.getCursor() != null) {
+							cursorId = dataCollection.getCursor();
+						}
+						updateSaveButton(cursorId).then(function () {
+							next();
+						}, next);
 					}
 				], function (err) {
 					if (err) {
