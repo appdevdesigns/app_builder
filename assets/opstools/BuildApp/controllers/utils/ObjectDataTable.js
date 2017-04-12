@@ -177,8 +177,9 @@ steal(
 							this.events.deleteRow = deleteRow;
 						},
 
-						bindColumns: function (application, columns, resetColumns, showSelectCol, showApproveStatusCol, showTrashCol) {
-							var self = this;
+						bindColumns: function (application, columns, resetColumns, extraColumns) {
+							var self = this,
+								extraColumns = extraColumns || {};
 
 							if (resetColumns)
 								self.dataTable.clearAll();
@@ -228,20 +229,21 @@ steal(
 
 							headers.sort(function (a, b) { return a.weight - b.weight; });
 
-							// Select column by checkbox
-							if (showSelectCol && columns.length > 0) {
-								headers.unshift({
-									id: "select_column",
-									header: { content: "masterCheckbox", css: "center" },
-									template: "{common.checkbox()}",
-									css: "center",
-									width: 50
-								});
-							}
-
 							if (columns.length > 0) {
+
+								// Select column by checkbox
+								if (extraColumns.isSelectVisible && extraColumns.isSelectVisible != false) {
+									headers.unshift({
+										id: "select_column",
+										header: { content: "masterCheckbox", css: "center" },
+										template: "{common.checkbox()}",
+										css: "center",
+										width: 50
+									});
+								}
+
 								// Approval status
-								if (showApproveStatusCol) {
+								if (extraColumns.isApproveStatusVisible && extraColumns.isApproveStatusVisible != false) {
 									headers.push({
 										id: "appbuilder_approval_status",
 										header: "Approve Status",
@@ -254,8 +256,32 @@ steal(
 									});
 								}
 
+								// View column
+								if (extraColumns.isViewVisible && extraColumns.isViewVisible != false) {
+									headers.push({
+										id: "appbuilder_view_detail",
+										header: "",
+										label: "",
+										template: "<span class='go-to-view-detail'>View</span>",
+										css: 'ab-object-view-column',
+										width: 60
+									});
+								}
+
+								// Edit column
+								if (extraColumns.isEditVisible && extraColumns.isEditVisible != false) {
+									headers.push({
+										id: "appbuilder_edit_form",
+										header: "",
+										label: "",
+										template: "<span class='go-to-edit-form'>{common.editIcon()}</span>",
+										css: { 'text-align': 'center' },
+										width: 45
+									});
+								}
+
 								// Removable
-								if (showTrashCol) {
+								if (extraColumns.isTrashVisible && extraColumns.isTrashVisible != false) {
 									headers.push({
 										id: "appbuilder_trash",
 										header: "",
