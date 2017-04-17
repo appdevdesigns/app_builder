@@ -97,13 +97,25 @@ module.exports = {
 
             // pull data to request approve
             function (next) {
-                modelData.find({ id: itemIds })
-                    .populate('translations')
-                    .then(function (result) {
-                        requestData = result
+                // If model object has 'translations' attribute
+                if (modelData.attributes.translations != null) {
+                    modelData.find({ id: itemIds })
+                        .populate('translations')
+                        .then(function (result) {
+                            requestData = result
 
-                        next();
-                    }, next);
+                            next();
+                        }, next);
+                }
+                // If model object does not have 'translations' attribute
+                else {
+                    modelData.find({ id: itemIds })
+                        .then(function (result) {
+                            requestData = result
+
+                            next();
+                        }, next);
+                }
             },
 
             // translate row data
