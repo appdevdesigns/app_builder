@@ -1639,6 +1639,11 @@ module.exports = {
                             fieldType = 'number';
                             colData.type = 'float';
                         }
+                        
+                        var validTypes = ABColumn.getValidTypes();
+                        if (validTypes.indexOf(fieldType) < 0) {
+                            return colDone(new Error(`${modelName} contains a column "${colName}" that is of an unsupported type: ${fieldType}`));
+                        }
 
                         ABColumn.createColumn(fieldType, colData)
                             .fail(colDone)

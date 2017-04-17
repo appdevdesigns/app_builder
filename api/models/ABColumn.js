@@ -212,6 +212,16 @@ module.exports = {
     ////
     // Model class methods
     ////
+    
+    
+    /**
+     * Get the list of supported AB column types.
+     *
+     * @return {Array}
+     */
+    getValidTypes: function() {
+        return Object.keys(typeDefaults);
+    },
 
     /**
      * Create an AppBuilder column entry. This is separate from building the
