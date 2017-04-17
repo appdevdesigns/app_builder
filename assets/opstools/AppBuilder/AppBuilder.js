@@ -64,7 +64,7 @@ AD.Control.OpsTool.extend('BuildApp', {
 		this.AppBuilder = webix.ui(ui);
 
 		// then perform the init()
-		AppBuilder.logic.init();
+		AppBuilder.init();
 
 	},
 

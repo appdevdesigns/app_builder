@@ -212,6 +212,12 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+
+//// LEFT OFF HERE:
+//// filling out applicationCreate() with new ABApplication object format.
+// next: 
+// [] applicationUpdate()
+
 		applicationCreate: function(values) {
 
 			var newApp = {
@@ -224,19 +230,18 @@ OP.Component.extend('ab_choose_form', function(App) {
 				function (cb) {
 					// Create application data
 					ABApplication.create(newApp)
-						.fail(function (err) { cb(err); })
 						.then(function (result) {
-							if (result.translate) result.translate();
-
-							self.data.push(result);
+	
+// self.data.push(result);
 
 							cb(null, result);
-						});
+						})
+						.catch(cb);
 				},
 				function (createdApp, cb) {
-					self.savePermissions(createdApp)
-						.fail(function (err) { cb(err); })
-						.then(function () { cb(); });
+					_logic.permissionSave(createdApp)
+						.then(function () { cb(); })
+						.catch(cb)
 				}
 			], function (err) {
 				_logic.formReady();
@@ -244,64 +249,68 @@ OP.Component.extend('ab_choose_form', function(App) {
 				if (err) {
 					webix.message({
 						type: "error",
-						text: self.labels.common.createErrorMessage.replace('{0}', newApp.label)
+						text: labels.common.createErrorMessage.replace('{0}', values.label)
 					});
 
 					AD.error.log('App Builder : Error create application data', { error: err });
 
-					saveButton.enable();
+					_logic.buttonSaveEnable();
 
 					return;
 				}
 
-				$$(self.webixUiids.appListRow).show();
+// TODO: alert of a Data Refresh
 
-				if ($$(self.webixUiids.appList).hideOverlay)
-					$$(self.webixUiids.appList).hideOverlay();
+				App.actions.transitionApplicationList();
+
+// if ($$(self.webixUiids.appList).hideOverlay)
+// 	$$(self.webixUiids.appList).hideOverlay();
 
 				webix.message({
 					type: "success",
-					text: self.labels.common.createSuccessMessage.replace('{0}', newApp.label)
+					text: labels.common.createSuccessMessage.replace('{0}', values.label)
 				});
 
-				saveButton.enable();
+				_logic.buttonSaveEnable();
 
 			});
 		},
 
 		applicationUpdate: function(Application) {
+			var values = _logic.formValues();
+
 			async.waterfall([
 				function (next) {
-					self.savePermissions(updateApp)
-						.fail(function (err) { next(err); })
-						.then(function (result) { next(null, result); });
+					_logic.permissionSave(Application)
+						.then(function (result) { next(null, result); })
+						.catch(next);
 				},
-											function (app_role, next) {
-												// Update application data
-												updateApp.attr('label', appName);
-												updateApp.attr('description', appDescription);
+				function (app_role, next) {
+					// Update application data
+					Application.label = values.label;
+					Application.description = values.description;
 
-												if (app_role && app_role.id)
-													updateApp.attr('role', app_role.id);
-												else
-													updateApp.attr('role', null);
+					if (app_role && app_role.id)
+						updateApp.attr('role', app_role.id);
+					else
+						updateApp.attr('role', null);
 
-												updateApp.save()
-													.fail(function (err) { next(err); })
-													.then(function (result) {
-														var existApp = self.data.filter(function (item, index, list) {
-															return item.id === result.id;
-														})[0];
+					updateApp.save()
+						.fail(function (err) { next(err); })
+						.then(function (result) {
+							var existApp = self.data.filter(function (item, index, list) {
+								return item.id === result.id;
+							})[0];
 
-														if (result.translate) result.translate();
+							if (result.translate) result.translate();
 
-														existApp.attr('name', result.name);
-														existApp.attr('label', result.label);
-														existApp.attr('description', result.description);
+							existApp.attr('name', result.name);
+							existApp.attr('label', result.label);
+							existApp.attr('description', result.description);
 
-														next(null, result.id);
-													});
-											}
+							next(null, result.id);
+						});
+				}
 										], function (err) {
 											$$(self.webixUiids.appListForm).hideProgress();
 
@@ -350,85 +359,20 @@ OP.Component.extend('ab_choose_form', function(App) {
 			$$(ids.form).showProgress({ type: 'icon' });
 		},
 
-		formPopulate: function(App) {
+		formPopulate: function(application) {
 
 			var Form = $$(ids.form);
 
 			// Populate data to form
-			if (App) {
+			if (application) {
 				FormFields.forEach(function(f){
 					if (Form.elements[f]) {
-						Form.elements[f].setValue(App[f]);
+						Form.elements[f].setValue(application[f]);
 					}
 				})
 			}
 			
-
-			var PermForm = $$(ids.appFormPermissionList);
-			// Get user's roles
-			PermForm.showProgress({ type: 'icon' });
-			async.waterfall([
-				function (next) {
-					AD.comm.service.get({ url: '/app_builder/user/roles' })
-						.fail(function (err) { next(err); })
-						.done(function (roles) {
-							next(null, roles);
-						});
-				},
-				function (available_roles, next) {
-					if (App && App.id) {
-						App.getPermissions()
-							.then(function (selected_role_ids) {
-								next(null, available_roles, selected_role_ids);
-							})
-							.catch(function (err) { next(err); });
-					}
-					else {
-						next(null, available_roles, []);
-					}
-
-				},
-				function (available_roles, selected_role_ids, next) {
-					
-					// mark the role(s) in available_roles that is tied 
-					// this application:
-					if (App && App.role) {
-						available_roles.forEach(function (r) {
-		
-							if (r.id == (App.role.id || App.role))
-								r.isApplicationRole = true;
-						});
-					}
-
-					// Sort permission list
-					available_roles.sort(function (a, b) {
-						return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
-					});
-
-					// reload list from our available_roles
-					PermForm.clearAll();
-					PermForm.parse(available_roles);
-
-					// mark which roles have already been selected
-					if (selected_role_ids && selected_role_ids.length > 0) {
-						// Select permissions
-						PermForm.select(selected_role_ids);
-
-						// Select create role application button
-						var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
-						$$(ids.appFormCreateRoleButton).setValue(markCreateButton);
-					}
-
-					next();
-				}
-			], function (err) {
-				if (err) {
-					webix.message(err.message);
-				}
-
-				PermForm.hideProgress();
-
-			});
+			// _logic.permissionPopulate(application);
 
 		},
 
@@ -444,6 +388,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 			// $$(self.webixUiids.appFormPermissionList).clearAll();
 			// $$(self.webixUiids.appFormCreateRoleButton).setValue(0);
 		},
+
+
 
 		formValidate:function(op) {
 			// op : ['add', 'update', 'destroy']
@@ -496,6 +442,13 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+		/**
+		 * @function formValues()
+		 *
+		 * return an object hash of name:value pairs of the current Form.
+		 *
+		 * @return {obj} 
+		 */
 		formValues: function() {
 			// return the current values of the Form elements.
 			return $$(ids.form).getValues();
@@ -503,6 +456,15 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+		/**
+		 * @function permissionAddNew
+		 *
+		 * create a new permission entry based upon the current Application.label
+		 *
+		 * This not only adds it to our Permission List, but also selects it.
+		 *
+		 * @param {string} appName	The Application.label of the current Application
+		 */
 		permissionAddNew: function(appName) {
 
 			// add new role entry
@@ -521,11 +483,106 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+		/**
+		 * @function permissionName
+		 *
+		 * returns a formatted name for a Permission Role based upon the provided Application.label
+		 *
+		 * @param {string} appName	the current value of the Application.label
+		 * @return {string} 	Permission Role Name.
+		 */
 		permissionName: function(appName) {
 			return appName  + " Application Role"; 
 		},
 
 
+		/**
+		 * @function permissionPopulate
+		 *
+		 * fill out the Permission list
+		 *
+		 * @param {ABApplication} application	the current ABApplication we are editing
+		 */
+		permissionPopulate: function(application) {
+
+			var PermForm = $$(ids.appFormPermissionList);
+			// Get user's roles
+			PermForm.showProgress({ type: 'icon' });
+			async.waterfall([
+				function (next) {
+					AD.comm.service.get({ url: '/app_builder/user/roles' })
+						.fail(function (err) { next(err); })
+						.done(function (roles) {
+							next(null, roles);
+						});
+				},
+				function (available_roles, next) {
+					if (application && application.id) {
+						application.getPermissions()
+							.then(function (selected_role_ids) {
+								next(null, available_roles, selected_role_ids);
+							})
+							.catch(function (err) { next(err); });
+					}
+					else {
+						next(null, available_roles, []);
+					}
+
+				},
+				function (available_roles, selected_role_ids, next) {
+					
+					// mark the role(s) in available_roles that is tied 
+					// this application:
+					if (application && application.role) {
+						available_roles.forEach(function (r) {
+		
+							if (r.id == (application.role.id || application.role))
+								r.isApplicationRole = true;
+						});
+					}
+
+					// Sort permission list
+					available_roles.sort(function (a, b) {
+						return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+					});
+
+					// reload list from our available_roles
+					PermForm.clearAll();
+					PermForm.parse(available_roles);
+
+					// mark which roles have already been selected
+					if (selected_role_ids && selected_role_ids.length > 0) {
+						// Select permissions
+						PermForm.select(selected_role_ids);
+
+						// Select create role application button
+						var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
+						$$(ids.appFormCreateRoleButton).setValue(markCreateButton);
+					}
+
+					next();
+				}
+			], function (err) {
+				if (err) {
+					webix.message(err.message);
+				}
+
+				PermForm.hideProgress();
+
+			});
+
+			// return appName  + " Application Role"; 
+		},
+
+
+		/**
+		 * @function permissionRemoveNew()
+		 *
+		 * Intended to be called when the USER unselects the option to create a Permission
+		 * for this Application.
+		 *
+		 * We remove any Permission Role created for this Application.
+		 */
 		permissionRemoveNew: function() {
 
 			// find any roles that are put here from our application form:
@@ -559,6 +616,15 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+		/**
+		 * @function permissionSave()
+		 *
+		 * step through saving the current Permission Settings and associating
+		 * them with the current Application.
+		 *
+		 * @param {ABApplication} App  	The current Application we are working with.
+		 * @return {Promise}			.resolve( {Permission} ) if one is created for this App
+		 */
 		permissionSave: function (App) {
 //// REFACTOR:
 // this step implies that ab_choose_form understands the intracies of how
@@ -636,7 +702,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 						if (err) {
 							reject(err);
 						} else {
-							resolve();  // we don't return anything.
+							// we return the instance of the newly created Permission.
+							resolve(appRole);  
 						}
 					});
 				}
@@ -669,14 +736,43 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+		/**
+		 * @function show()
+		 *
+		 * Show the Form Component.
+		 */
 		show:function() {
 			$$(ids.formComponent).show();
 		}
 	}
 
 
+
+
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		// initiate a request to create a new Application
+		populateApplicationForm:function(Application){
+			
+			_logic.formReset();
+			if (Application) {
+				// populate Form here:
+				_logic.formPopulate(Application);
+			}
+			_logic.permissionPopulate(Application);
+			_logic.show();
+		}
+
+	}
+
+
 	return {
 		ui: _ui,
-		logic: _logic
+		init: _logic.init,
+		actions:_actions
 	}
 })

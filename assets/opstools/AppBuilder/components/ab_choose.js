@@ -48,8 +48,8 @@ OP.Component.extend('ab_choose', function(App) {
 
 		init: function() {
 
-			AppList.logic.init();
-			AppForm.logic.init();
+			AppList.init();
+			AppForm.init();
 		}
 		
 	}
@@ -59,19 +59,28 @@ OP.Component.extend('ab_choose', function(App) {
 	var _actions = {
 
 		// initiate a request to create a new Application
-		transitionApplicationForm:function(App){
+		transitionApplicationForm:function(Application){
 			
-			AppForm.logic.formReset();
-			if (App) {
-				// populate Form here:
-				AppForm.logic.formPopulate(App);
-			} else {
 
-				// this is a create operation and we should
-				// clear our AppList
-				AppList.logic.reset();
+			App.actions.populateApplicationForm(Application);
+
+			// if no Application is given, then this should be a [create] operation,
+			// so clear our AppList
+			if ('undefined' == typeof Application) {
+				App.actions.unselectApplication();
 			}
-			AppForm.logic.show();
+
+			// AppForm.logic.formReset();
+			// if (App) {
+			// 	// populate Form here:
+			// 	AppForm.logic.formPopulate(App);
+			// } else {
+
+			// 	// this is a create operation and we should
+			// 	// clear our AppList
+			// 	AppList.logic.reset();
+			// }
+			// AppForm.logic.show();
 		},
 
 		transitionApplicationList:function() {
@@ -85,7 +94,7 @@ OP.Component.extend('ab_choose', function(App) {
 	// return the current instance of this component:
 	return {
 		ui:_ui,
-		logic:_logic,
+		init:_logic.init,
 		actions:_actions
 	}
 

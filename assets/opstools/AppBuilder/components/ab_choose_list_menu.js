@@ -28,13 +28,13 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 	labels.common = App.labels.common;
 
-	var id = {
+	var ids = {
 		menu:App.unique('ab-app-list-menu')
 	}
 
 	var _ui = {
 		view: "popup",
-		id: id.menu,
+		id: ids.menu,
 		head: labels.application.menu,
 		width: 100,
 		body: {
@@ -55,7 +55,6 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 					switch (trg.textContent.trim()) {
 						case labels.common.edit:
-// TODO:
 							App.actions.transitionApplicationForm(selectedApp);
 							break;
 
@@ -78,7 +77,7 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 							break;
 					}
 
-					$$(id.menu).hide();
+					$$(ids.menu).hide();
 				}
 			}
 		}
@@ -101,6 +100,6 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 	return {
 		ui: _ui,
-		logic: _logic
+		init: _logic.init
 	}
 })

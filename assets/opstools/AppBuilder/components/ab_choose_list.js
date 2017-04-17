@@ -151,8 +151,8 @@ OP.Component.extend('ab_choose_list', function(App) {
 									_logic.ready();
 									
 
-									// Trigger select app event
-									App.actions.selectApplication( selectedApp[0] );
+									// We've selected an Application to work with
+									App.actions.transitionWorkspace( selectedApp[0] );
 									
 								}
 
@@ -183,18 +183,6 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 
 	var _logic = {
-
-
-		init: function() {
-			webix.extend($$(ids.list), webix.ProgressBar);
-			webix.extend($$(ids.list), webix.OverlayBox);
-
-			MenuComponent.logic.init();
-
-			// _data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
-			// start things off by loading the current list of Applications
-			this.loadData();
-		},
 
 
 		busy: function() {
@@ -283,8 +271,22 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 			
 
+	var _init = function() {
+		webix.extend($$(ids.list), webix.ProgressBar);
+		webix.extend($$(ids.list), webix.OverlayBox);
+
+		MenuComponent.init();
+
+		// _data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
+		// start things off by loading the current list of Applications
+		_logic.loadData();
+	}
 
 	var _actions = {
+
+		unselectApplication:function() {
+			_logic.reset();
+		},
 
 		getSelectedApplication:function() {
 			return $$(ids.list).getSelectedItem();
@@ -326,7 +328,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 	return {
 		ui: _ui,
-		logic: _logic,
+		init: _init,
 		actions:_actions
 	}
 })

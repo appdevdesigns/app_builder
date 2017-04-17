@@ -70,8 +70,8 @@ OP.Component.extend('ab', function(App) {
 
 		init: function() {
 
-			AppChooser.logic.init();
-			// AppWorkspace.logic.init();
+			AppChooser.init();
+			// AppWorkspace.init();
 
 			$$(ids.appbuilder).adjust();
 		}
@@ -97,9 +97,9 @@ console.error('TODO: transitionApplicationChooser()');
 
 	// return the current instance of this component:
 	return {
-		ui:_ui,
-		logic:_logic,
-		actions:_actions
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_logic.init,		// {fn} 	init() to setup this component  
+		actions:_actions		// {ob}		hash of fn() to expose so other components can access.
 	}
 
 });

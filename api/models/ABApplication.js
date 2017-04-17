@@ -18,6 +18,8 @@ module.exports = {
 
     attributes: {
 
+        json : 'json', 
+        
         objects: { collection: 'ABObject', via: 'application' },
 
         pages: { collection: 'ABPage', via: 'application' },

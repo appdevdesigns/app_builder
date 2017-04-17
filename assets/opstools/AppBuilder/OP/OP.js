@@ -15,7 +15,7 @@
 //// in 'use strict' ?
 
 // if (!window.OP) {
-
+import Multilingual from "./multilingual"
 
     window.OP = {};
 
@@ -91,7 +91,11 @@
 
 	OP.Dialog = AD.op.Dialog;
 
+
+	OP.Multilingual = Multilingual;
 	
+
+	export default OP;
 // }
 
 
