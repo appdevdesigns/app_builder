@@ -33,7 +33,13 @@ OP.Component.extend('ab', function(App) {
 		yes: 	  L('ab.common.yes', "*Yes"),
 		no: 	  L('ab.common.no', "*No"),
 
-		deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
+		createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
+		createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
+
+		updateErrorMessage:  L('ab.common.update.error', "*System could not update <b>{0}</b>."),
+		updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
+
+		deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
 		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
 	}
 		

@@ -1,1 +1,2718 @@
-!function(e){function i(o){if(t[o])return t[o].exports;var n=t[o]={i:o,l:!1,exports:{}};return e[o].call(n.exports,n,n.exports,i),n.l=!0,n.exports}var t={};i.m=e,i.c=t,i.i=function(e){return e},i.d=function(e,t,o){i.o(e,t)||Object.defineProperty(e,t,{configurable:!1,enumerable:!0,get:o})},i.n=function(e){var t=e&&e.__esModule?function(){return e.default}:function(){return e};return i.d(t,"a",t),t},i.o=function(e,i){return Object.prototype.hasOwnProperty.call(e,i)},i.p="",i(i.s=9)}([function(e,i,t){"use strict";window.OP={},OP.Component={},OP.Models={},OP.Component.extend=function(e,i){OP.Component[e]=function(e){e||(e={uuid:webix.uid(),actions:{},unique:function(e){return e+this.uuid},labels:{}});var t=i(e);if(t.actions)for(var o in t.actions)e.actions[o]=t.actions[o];return t}},OP.Dialog=AD.op.Dialog},function(e,i,t){"use strict";function o(e,i){if(!(e instanceof i))throw new TypeError("Cannot call a class as a function")}Object.defineProperty(i,"__esModule",{value:!0});var n=function(){function e(e,i){for(var t=0;t<i.length;t++){var o=i[t];o.enumerable=o.enumerable||!1,o.configurable=!0,"value"in o&&(o.writable=!0),Object.defineProperty(e,o.key,o)}}return function(i,t,o){return t&&e(i.prototype,t),o&&e(i,o),i}}();t(7);var a=[],r=function(){function e(i){o(this,e),this.id=i.id,this.name=i.attr("name"),this.label=i.attr("label"),this.description=i.attr("description"),this.role=i.attr("role")}return n(e,[{key:"assignPermissions",value:function(e){var i=this;return new Promise(function(t,o){AD.comm.service.put({url:"/app_builder/"+i.id+"/role/assign",data:{roles:e}}).fail(o).done(t)})}},{key:"getPermissions",value:function(){var e=this;return new Promise(function(i,t){AD.comm.service.get({url:"/app_builder/"+e.id+"/role"}).fail(t).done(i)})}},{key:"createPermission",value:function(){var e=this;return new Promise(function(i,t){AD.comm.service.post({url:"/app_builder/"+e.id+"/role"}).fail(t).done(i)})}},{key:"deletePermission",value:function(){var e=this;return new Promise(function(i,t){AD.comm.service.delete({url:"/app_builder/"+e.id+"/role"}).fail(t).done(i)})}}],[{key:"allApplications",value:function(){return new Promise(function(i,t){var o=AD.Model.get("opstools.BuildApp.ABApplication");o.findAll().fail(t).then(function(t){var n=[];t.forEach(function(i){i.translate&&i.translate(),i.description||i.attr("description",""),n.push(new e(i))}),a=new o.List(n),i(a)})})}},{key:"isValid",value:function(e,i){var t=[];return"add"==e&&a.filter(function(e){return e.name.trim().toLowerCase()==i.label.trim().replace(/ /g,"_").toLowerCase()}).length>0&&t.push({name:"label",mlKey:"duplicateName",defaultText:"**Name must be Unique."}),t}}]),e}();i.default=r,e.exports=i.default},function(e,i,t){"use strict";t(0),t(3),OP.Component.extend("ab",function(e){function i(e,i){return AD.lang.label.getLabel(e)||i}e.labels.common={import:i("ab.common.import","*Import"),edit:i("ab.common.edit","*Edit"),save:i("ab.common.save","*Save"),delete:i("ab.common.delete","*Delete"),export:i("ab.common.export","*Export"),ok:i("ab.common.ok","*Ok"),cancel:i("ab.common.cancel","*Cancel"),yes:i("ab.common.yes","*Yes"),no:i("ab.common.no","*No"),deleteErrorMessage:i("ab.common.delete.error","*System could not delete <b>{0}</b>."),deleteSuccessMessage:i("ab.common.delete.success","*<b>{0}</b> is deleted.")};var t={appbuilder:e.unique("buld_app_loading_screen")},o=OP.Component.ab_choose(e);return{ui:{id:t.appbuilder,container:"ab-main-container",autoheight:!0,autowidth:!0,rows:[o.ui]},logic:{init:function(){o.logic.init(),$$(t.appbuilder).adjust()}},actions:{transitionWorkspace:function(e){console.error("TODO: transitionWorkspace()")},transitionApplicationChooser:function(){console.error("TODO: transitionApplicationChooser()")}}}})},function(e,i,t){"use strict";t(5),t(4),OP.Component.extend("ab_choose",function(e){var i={choose:e.unique("ab_choose")},t=OP.Component.ab_choose_list(e),o=OP.Component.ab_choose_form(e);return{ui:{view:"multiview",id:i.choose,autoheight:!0,cells:[t.ui,o.ui]},logic:{init:function(){t.logic.init(),o.logic.init()}},actions:{transitionApplicationForm:function(e){o.logic.formReset(),e?o.logic.formPopulate(e):t.logic.reset(),o.logic.show()},transitionApplicationList:function(){$$(i.choose).back()}}}})},function(e,i,t){"use strict";function o(e){return e&&e.__esModule?e:{default:e}}function n(e,i){return AD.lang.label.getLabel(e)||i}var a=t(1),r=o(a),l={application:{formHeader:n("ab.application.form.header","*Application Info"),placeholderName:n("ab.application.form.placeholderName","*Application name"),placeholderDescription:n("ab.application.form.placeholderDescription","*Application description"),sectionPermission:n("ab.application.form.sectionPermission","*Permission"),permissionHeader:n("ab.application.form.headerPermission","*Assign one or more roles to set permissions for user to view this app"),createNewRole:n("ab.application.form.createNewRoleButton","*Create a new role to view this app"),invalidName:n("ab.application.invalidName","*This application name is invalid"),duplicateName:n("ab.application.duplicateName","*Name must be unique.")}};OP.Component.extend("ab_choose_form",function(e){l.common=e.labels.common;var i={formComponent:e.unique("ab-app-list-form-view"),form:e.unique("ab-app-list-form"),appFormPermissionList:e.unique("ab-app-form-permission"),appFormCreateRoleButton:e.unique("ab-app-form-create-role"),saveButton:e.unique("ab-app-form-button-save")},t={id:i.formComponent,scroll:!0,rows:[{view:"toolbar",cols:[{view:"label",label:l.application.formHeader,fillspace:!0}]},{view:"form",id:i.form,autoheight:!0,margin:0,elements:[{type:"section",template:'<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information',margin:0},{name:"label",view:"text",label:l.common.formName,required:!0,placeholder:l.application.placeholderName,labelWidth:100,on:{onChange:function(e,i){n.permissionRenameRole(e,i)}}},{name:"description",view:"textarea",label:l.common.formDescription,placeholder:l.application.placeholderDescription,labelWidth:100,height:100},{type:"section",template:'<span class="webix_icon fa-lock" style="max-width:32px;"></span>'+l.application.sectionPermission},{view:"toolbar",cols:[{template:l.application.permissionHeader,type:"header",borderless:!0},{view:"toggle",id:i.appFormCreateRoleButton,type:"iconButton",width:300,align:"right",offIcon:"square-o",onIcon:"check-square-o",label:l.application.createNewRole,on:{onItemClick:function(e,t){if(this.getValue()){var o=$$(i.form).elements.label.getValue();n.permissionAddNew(o)}else n.permissionRemoveNew()}}}]},{name:"permissions",id:i.appFormPermissionList,view:"list",height:130,autowidth:!0,borderless:!0,margin:0,css:"ab-app-form-permission",scroll:"y",template:"#name#",on:{onItemClick:function(e,i,t){if(!this.getItem(e).isApplicationRole)if(this.isSelected(e))this.unselect(e);else{var o=this.getSelectedId();"string"!=typeof o&&isNaN(o)||(o=o?[o]:[]),o.push(e),this.select(o)}}}},{height:5},{margin:5,cols:[{fillspace:!0},{id:i.saveButton,view:"button",label:l.common.save,type:"form",width:100,click:function(){n.buttonSaveDisable(),n.formBusy();var i=e.actions.getSelectedApplication();i?n.formValidate("update")&&n.applicationUpdate(i):n.formValidate("add")&&n.applicationCreate(n.formValues())}},{view:"button",value:l.common.cancel,width:100,click:function(){n.cancel()}}]}]}]},o=["label","description"],n={init:function(){webix.extend($$(i.form),webix.ProgressBar),webix.extend($$(i.appFormPermissionList),webix.ProgressBar)},applicationCreate:function(e){var i={name:e.label,label:e.label,description:e.description};async.waterfall([function(e){r.default.create(i).fail(function(i){e(i)}).then(function(i){i.translate&&i.translate(),self.data.push(i),e(null,i)})},function(e,i){self.savePermissions(e).fail(function(e){i(e)}).then(function(){i()})}],function(e){if(n.formReady(),e)return webix.message({type:"error",text:self.labels.common.createErrorMessage.replace("{0}",i.label)}),AD.error.log("App Builder : Error create application data",{error:e}),void saveButton.enable();$$(self.webixUiids.appListRow).show(),$$(self.webixUiids.appList).hideOverlay&&$$(self.webixUiids.appList).hideOverlay(),webix.message({type:"success",text:self.labels.common.createSuccessMessage.replace("{0}",i.label)}),saveButton.enable()})},applicationUpdate:function(e){async.waterfall([function(e){self.savePermissions(updateApp).fail(function(i){e(i)}).then(function(i){e(null,i)})},function(e,i){updateApp.attr("label",appName),updateApp.attr("description",appDescription),e&&e.id?updateApp.attr("role",e.id):updateApp.attr("role",null),updateApp.save().fail(function(e){i(e)}).then(function(e){var t=self.data.filter(function(i,t,o){return i.id===e.id})[0];e.translate&&e.translate(),t.attr("name",e.name),t.attr("label",e.label),t.attr("description",e.description),i(null,e.id)})}],function(e){if($$(self.webixUiids.appListForm).hideProgress(),e)return webix.message({type:"error",text:self.labels.common.updateErrorMessage.replace("{0}",updateApp.attr("label"))}),AD.error.log("App Builder : Error update application data",{error:e}),saveButton.enable(),!1;$$(self.webixUiids.appListRow).show(),webix.message({type:"success",text:self.labels.common.updateSucessMessage.replace("{0}",updateApp.attr("label"))}),saveButton.enable()})},buttonSaveDisable:function(){$$(i.saveButton).disable()},buttonSaveEnable:function(){$$(i.saveButton).enable()},cancel:function(){n.formReset(),e.actions.transitionApplicationList()},formBusy:function(){$$(i.form).showProgress({type:"icon"})},formPopulate:function(e){var t=$$(i.form);e&&o.forEach(function(i){t.elements[i]&&t.elements[i].setValue(e[i])});var n=$$(i.appFormPermissionList);n.showProgress({type:"icon"}),async.waterfall([function(e){AD.comm.service.get({url:"/app_builder/user/roles"}).fail(function(i){e(i)}).done(function(i){e(null,i)})},function(i,t){e&&e.id?e.getPermissions().then(function(e){t(null,i,e)}).catch(function(e){t(e)}):t(null,i,[])},function(t,o,a){if(e&&e.role&&t.forEach(function(i){i.id==(e.role.id||e.role)&&(i.isApplicationRole=!0)}),t.sort(function(e,i){return e.isApplicationRole===i.isApplicationRole?0:e.isApplicationRole?-1:1}),n.clearAll(),n.parse(t),o&&o.length>0){n.select(o);var r=t.filter(function(e){return e.isApplicationRole}).length>0?1:0;$$(i.appFormCreateRoleButton).setValue(r)}a()}],function(e){e&&webix.message(e.message),n.hideProgress()})},formReady:function(){$$(i.form).hideProgress()},formReset:function(){$$(i.form).clear(),$$(i.form).clearValidation()},formValidate:function(e){var t=$$(i.form);if(!t.validate())return n.buttonSaveEnable(),!1;var o=r.default.isValid(e,t.getValues());if(o.length>0){var a=!1;return o.forEach(function(e){t.markInvalid(e.name,l.application[e.mlKey]||e.defaultText),!a&&t.elements[e.name]&&(t.elements[e.name].focus(),a=!0)}),n.buttonSaveEnable(),!1}return!0},formValues:function(){return $$(i.form).getValues()},permissionAddNew:function(e){$$(i.appFormPermissionList).add({id:"newRole",name:n.permissionName(e),isApplicationRole:!0},0);var t=$$(i.appFormPermissionList).getSelectedId(!0);t.push("newRole"),$$(i.appFormPermissionList).select(t)},permissionName:function(e){return e+" Application Role"},permissionRemoveNew:function(){$$(i.appFormPermissionList).find(function(e){return e.isApplicationRole}).forEach(function(e){$$(i.appFormPermissionList).remove(e.id)})},permissionRenameRole:function(e,t){$$(i.appFormPermissionList).find(function(e){return e.name===n.permissionName(t)}).forEach(function(t){var o=$$(i.appFormPermissionList).getItem(t.id);o.name=n.permissionName(e),$$(i.appFormPermissionList).updateItem(o.id,o)})},permissionSave:function(e){return new Promise(function(t,o){var n=[];appRole,$$(i.appFormCreateRoleButton).getValue()?n.push(function(i){e.createPermission().then(function(e){appRole=e,i()}).catch(i)}):n.push(function(i){e.deletePermission().then(function(){i()}).catch(i)});var a=$$(i.appFormPermissionList).getSelectedItem(!0);a=a.filter(function(e){return"newRole"!==e.id}),n.push(function(t){if($$(i.appFormCreateRoleButton).getValue()&&appRole){var o=a.filter(function(e){return e.id==appRole.id});(!o||o.length<1)&&a.push({id:appRole.id,isApplicationRole:!0})}e.assignPermissions(a).then(function(){t()}).catch(t)}),async.series(n,function(e,i){e?o(e):t()})})},show:function(){$$(i.formComponent).show()}};return{ui:t,logic:n}})},function(e,i,t){"use strict";function o(e){return e&&e.__esModule?e:{default:e}}function n(e,i){return AD.lang.label.getLabel(e)||i}var a=t(1),r=o(a);t(6);var l={application:{title:n("ab.application.application","*Application"),createNew:n("ab.application.createNew","*Add new application"),noApplication:n("ab.application.noApplication","*There is no application data")}};OP.Component.extend("ab_choose_list",function(e){l.common=e.labels.common;var i={component:e.unique("ab_choose_listcomponent"),list:e.unique("ab_choose_list"),toolBar:e.unique("ab_choose_list_toolbar"),buttonCreateNewApplication:e.unique("ab_choose_list_buttonNewApp")},t=OP.Component.ab_choose_list_menu(e),o=webix.ui(t.ui);o.hide();var n={id:i.component,cols:[{width:100},{autoheight:!0,autowidth:!0,rows:[{height:30},{view:"toolbar",id:i.toolBar,cols:[{view:"label",label:l.application.title,fillspace:!0},{id:i.buttonCreateNewApplication,view:"button",value:l.application.createNew,width:200,click:function(){e.actions.transitionApplicationForm()}},{view:"uploader",value:l.common.import,width:200,upload:"/app_builder/appJSON",multiple:!1,autosend:!0,on:{onAfterFileAdd:function(){this.disable(),s.busy()},onFileUpload:function(e,i){s.loadData(),this.enable(),s.ready()},onFileUploadError:function(e,i){var t="Error: "+(i&&i.message);webix.message({type:"error",text:t}),s.loadData(),this.enable(),s.ready()}}}]},{id:i.list,view:"list",minHeight:227,autowidth:!0,css:"ab-app-select-list",template:function(e,i){return s.templateListItem(e,i)},type:{height:100,iconGear:"<span class='webix_icon fa-cog'></span>"},select:!1,onClick:{"ab-app-list-item":function(i,t,o){s.busy(),this.select(t);var n=a.listApplications.filter(function(e){return e.id==t});return n&&n.length>0&&(s.ready(),e.actions.selectApplication(n[0])),!1},"ab-app-list-edit":function(e,i,t){return o.show(t),this.select(i),!1}}}]},{width:100}]},a={},s={init:function(){webix.extend($$(i.list),webix.ProgressBar),webix.extend($$(i.list),webix.OverlayBox),t.logic.init(),this.loadData()},busy:function(){$$(i.list).showProgress&&$$(i.list).showProgress({icon:"cursor"})},ready:function(){$$(i.list).hideProgress&&$$(i.list).hideProgress()},reset:function(){$$(i.list).unselectAll()},loadData:function(){s.busy(),r.default.allApplications().then(function(e){s.ready(),a.listApplications=e,s.refreshList()}).catch(function(e){s.ready(),webix.message({type:"error",text:e}),AD.error.log("App Builder : Error loading application data",{error:e})})},refreshList:function(){var e=AD.op.WebixDataCollection(a.listApplications),t=$$(i.list);t.clearAll(),t.data.unsync(),t.data.sync(e),t.count()?t.hideOverlay():t.showOverlay(l.application.noApplication),t.refresh(),s.ready()},show:function(){$$(i.component).show()},templateListItem:function(e,i){return c.replace("#label#",e.label||"").replace("#description#",e.description||"").replace("{common.iconGear}",i.iconGear)}},c=["<div class='ab-app-list-item'>","<div class='ab-app-list-info'>","<div class='ab-app-list-name'>#label#</div>","<div class='ab-app-list-description'>#description#</div>","</div>","<div class='ab-app-list-edit'>","{common.iconGear}","</div>","</div>"].join("");return{ui:n,logic:s,actions:{getSelectedApplication:function(){return $$(i.list).getSelectedItem()},deleteApplication:function(e){e&&(s.busy(),e.destroy().fail(function(i){s.ready(),webix.message({type:"error",text:l.common.deleteErrorMessage.replace("{0}",e.label)}),AD.error.log("App Builder : Error delete application data",{error:i})}).then(function(i){s.ready(),webix.message({type:"success",text:l.common.deleteSuccessMessage.replace("{0}",e.label)})}),s.reset())}}}})},function(e,i,t){"use strict";function o(e,i){return AD.lang.label.getLabel(e)||i}var n={application:{menu:o("ab.application.menu","*Application Menu"),confirmDeleteTitle:o("ab.application.delete.title","*Delete application"),confirmDeleteMessage:o("ab.application.delete.message","*Do you want to delete <b>{0}</b>?")}};OP.Component.extend("ab_choose_list_menu",function(e){n.common=e.labels.common;var i={menu:e.unique("ab-app-list-menu")},t={view:"popup",id:i.menu,head:n.application.menu,width:100,body:{view:"list",data:[{command:n.common.edit,icon:"fa-pencil-square-o"},{command:n.common.delete,icon:"fa-trash"},{command:n.common.export,icon:"fa-download"}],datatype:"json",template:"<i class='fa #icon#' aria-hidden='true'></i> #command#",autoheight:!0,select:!1,on:{onItemClick:function(t,o,a){var r=e.actions.getSelectedApplication();switch(a.textContent.trim()){case n.common.edit:e.actions.transitionApplicationForm(r);break;case n.common.delete:OP.Dialog.ConfirmDelete({title:n.application.confirmDeleteTitle,text:n.application.confirmDeleteMessage.replace("{0}",r.label),callback:function(i){i&&e.actions.deleteApplication(r)}});break;case n.common.export:window.location.assign("/app_builder/appJSON/"+r.id+"?download=1")}$$(i.menu).hide()}}}};return{ui:t,logic:{init:function(){}}}})},function(e,i,t){"use strict";t(8),AD.Model.extend("opstools.BuildApp.ABApplication",{useSockets:!0},{getObjects:function(e){return e||(e={}),e.application=this.id,AD.Model.get("opstools.BuildApp.ABObject").findAll(e)},getObject:function(e){return AD.Model.get("opstools.BuildApp.ABObject").findOne({application:this.id,id:e})},createObject:function(e){var i=$.Deferred(),t=this;return e.application=this.id,AD.Model.get("opstools.BuildApp.ABObject").create(e).fail(i.reject).then(function(e){e.translate&&e.translate(),t.objects.filter(function(i){return(i.id||i)==e.id}).length>0?t.objects.forEach(function(i,o){(i.id||i)==e.id&&t.objects.attr(o,e)}):t.objects.push(e),i.resolve(e)}),i},getApplicationPages:function(e){var i=this,t=null;if(void 0===e&&(e=this.currPage),this.pages&&this.pages.filter){for(var o=function(e){var t=null;return e&&e.parent&&(t=i.pages.filter(function(i){return i.id==e.parent||i.id==e.parent.id})[0]),t},n=o(e);n;)e=n,n=o(e);if(e)return this.getPages({or:[{id:e.id},{parent:e.id}]});t=new Error("application.getApplicationPages(): no root page found!")}else t=new Error("application.getApplicationPages() called with no pages defined.");var a=AD.sal.Deferred();return a.reject(t),a},getAllApplicationPages:function(){var e=this,i=AD.sal.Deferred();return this.getPages().fail(i.reject).done(function(t){e.pages=t,i.resolve(t)}),i},getPages:function(e){return e||(e={}),e.application=this.id,Object.keys(AD.Model.get("opstools.BuildApp.ABPage").store).forEach(function(i){var t=AD.Model.get("opstools.BuildApp.ABPage").store[i];(e.application==t.application.id||t.application)&&delete AD.Model.get("opstools.BuildApp.ABPage").store[i]}),AD.Model.get("opstools.BuildApp.ABPage").findAll(e)},getPage:function(e){return AD.Model.get("opstools.BuildApp.ABPage").store[e]&&delete AD.Model.get("opstools.BuildApp.ABPage").store[e],AD.Model.get("opstools.BuildApp.ABPage").findOne({application:this.id,id:e})},createPage:function(e){var i=$.Deferred(),t=this;return e.application=t.id,AD.Model.get("opstools.BuildApp.ABPage").create(e).fail(i.reject).then(function(e){e.translate&&e.translate(),t.pages.filter(function(i){return(i.id||i)==e.id}).length>0?t.pages.forEach(function(i,o){(i.id||i)==e.id&&t.pages.attr(o,e)}):t.pages.push(e),i.resolve(e)}),i},getPermissions:function(){return AD.comm.service.get({url:"/app_builder/"+this.id+"/role"})},createPermission:function(){return AD.comm.service.post({url:"/app_builder/"+this.id+"/role"})},deletePermission:function(){return AD.comm.service.delete({url:"/app_builder/"+this.id+"/role"})},assignPermissions:function(e){return AD.comm.service.put({url:"/app_builder/"+this.id+"/role/assign",data:{roles:e}})}})},function(e,i,t){"use strict";AD.Model.Base.extend("opstools.BuildApp.ABApplication",{findAll:"GET /app_builder/abapplication",findOne:"GET /app_builder/abapplication/{id}",create:"POST /app_builder/abapplication",update:"PUT /app_builder/abapplication/{id}",destroy:"DELETE /app_builder/abapplication/{id}",describe:function(){return{name:"string",description:"text",permissions:"PermissionRole"}},multilingualFields:["label","description"],fieldId:"id",fieldLabel:"label"},{})},function(e,i,t){"use strict";t(0),t(2),AD.Control.OpsTool.extend("BuildApp",{init:function(e,i){var t=this;i=AD.defaults({templateDOM:"/opstools/BuildApp/views/BuildApp/BuildApp.ejs",resize_notification:"BuildApp.resize",tool:null},i),t.options=i,t._super(e,i),t.data={},t.webixUiId={loadingScreen:"ab-loading-screen",syncButton:"ab-sync-button"},t.initDOM(function(){t.initWebixUI()})},initDOM:function(e){var i=this;can.view(this.options.templateDOM,{},function(t){i.element.html(t),e()})},initWebixUI:function(){var e=OP.Component.ab(),i=e.ui;i.container="ab-main-container",this.AppBuilder=webix.ui(i),e.logic.init()},resize:function(e){var i=this;e=e.height||e;var t=$(i.element);if(t){var o=t.parent().css("width");o&&(o=parseInt(o.replace("px",""))),t.width(o);var n=e-140,a=parseInt(t.css("min-height").replace("px",""));a<n?(t.height(n),$("#ab-main-container").height(n)):(t.height(a),$("#ab-main-container").height(a)),this.AppBuilder&&this.AppBuilder.adjust()}}})}]);
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+/******/
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// identity function for calling harmony imports with the correct context
+/******/ 	__webpack_require__.i = function(value) { return value; };
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__multilingual__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model__ = __webpack_require__(3);
+
+/**
+ * @class AD_Client
+ * @parent index 4
+ *
+ * ###Client side global OpsPortal (OP) namespace.
+ *
+ * This file defines standard functions and calls for OpsPortal
+ * objects on the client side.
+ */
+
+// Create our OP  Namespace only if it hasn't been created already
+
+//// TODO: how to disable 'use strict'?  or perform this check without an error
+//// in 'use strict' ?
+
+// if (!window.OP) {
+
+
+
+
+    window.OP = {};
+
+
+    // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
+    //              for our loaded projects.
+    // OP.UI = {};    		// webix UI definitions
+    // OP.Logic = {}; 		// logic references for webix application
+    OP.Component = {};  // our defined components
+
+
+
+
+	// OP.UI.extend = function(key, definition) {
+	// 	OP.UI[key] = definition;
+	// }
+
+	OP.Component.extend = function(key, fn) {
+		OP.Component[key] = function(App){
+
+//// TODO: verify App has proper structure:
+			if (!App) {
+
+				App = {
+
+					uuid: webix.uid(),
+
+					/*
+					 * actions:
+					 * a hash of exposed application methods that are shared among our 
+					 * components, so one component can invoke an action that updates 
+					 * another component.
+					 */
+					actions:{
+						
+					},
+
+					/*
+					 * unique()
+					 * A function that returns a globally unique Key.
+					 * @param {string} key   The key to modify and return.
+					 * @return {string} 
+					 */
+					unique: function(key) { return key+this.uuid; },
+
+					/*
+					 * labels
+					 * a collection of labels that are common for the Application.
+					 */
+					labels:{
+				
+					}
+
+				}
+			}
+
+			// make an instance of the component.
+			var component = fn(App);
+
+			// transfer to App, any actions in the component:
+			if (component.actions){
+				for(var a in component.actions) {
+					App.actions[a] = component.actions[a];
+				}
+			}
+
+			return component;
+		};
+	}
+
+
+	
+	OP.Dialog = AD.op.Dialog;
+
+
+	OP.Multilingual = __WEBPACK_IMPORTED_MODULE_0__multilingual__["a" /* default */];
+	OP.Model = __WEBPACK_IMPORTED_MODULE_1__model__["a" /* default */];
+	
+
+	/* harmony default export */ __webpack_exports__["a"] = OP;
+// }
+
+
+// import "./model.js"
+
+/***/ }),
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(9);
+
+
+
+
+
+var _AllApplications = [];
+
+class ABApplication {
+
+    constructor(attributes) {
+    	this.id    = attributes.id;
+
+    	this.json = attributes.json;
+
+    	this.name  = attributes.name || this.json.name || "";
+
+    	// multilingual fields: label, description
+    	__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
+
+	  	this.role  = attributes.role;
+  	}
+
+  	///
+  	/// Static Methods
+  	///
+	static allApplications() {
+		return new Promise( 
+			(resolve, reject) => {
+
+				var ModelApplication = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.Models(ABApplication); // set the Models  setting.
+
+				ModelApplication.findAll()
+					.then(function(data){
+						
+						_AllApplications = data;
+
+						resolve(data);
+					})
+					.catch(reject);
+
+			}
+		)
+
+	}
+
+
+	static create(values) {
+		return new Promise(
+			function(resolve, reject) {
+
+
+				var ModelApplication = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
+
+				var newApp = {}
+				__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
+				values.json = newApp;
+				newApp.name = values.name;
+
+				ModelApplication.create(values)
+				.then(function(app){
+
+					// return an instance of ABApplication
+					var App = new ABApplication(app);
+
+					_AllApplications.add(App,0);
+					resolve(App);
+				})
+				.catch(reject)
+			}
+		)
+	}
+
+
+	/**
+	 * @method fieldsMultilingual()
+	 *
+	 * return an array of fields that are considered Multilingual labels
+	 * 
+	 * @return {array} 
+	 */
+	static fieldsMultilingual() {
+		return ['label', 'description'];
+	} 
+
+
+	static isValid(op, values) {
+
+// var appName = $$(id.form).elements['label'].getValue(),
+// 				appDescription = $$(id.form).elements['description'].getValue();
+
+			var errors = [];
+
+			// during an ADD operation
+			if (op == 'add') {
+
+				// label/name must be unique:
+				var matchingApps = _AllApplications._toArray().filter(function (app) { 
+					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
+				})
+				if (matchingApps && matchingApps.length > 0) {
+					
+					errors.push({
+						name:'label',
+						mlKey:'duplicateName',
+						defaultText: '**Name must be Unique.'
+					})
+				}
+
+			}
+
+
+			// Check the common validations:
+// TODO:
+// if (!inputValidator.validate(values.label)) {
+// 	_logic.buttonSaveEnable();
+// 	return false;
+// }
+
+
+			return errors;
+	} 
+
+
+
+	///
+	/// Instance Methods
+	///
+
+	save () {
+
+		var values = this.toObj();
+
+		var ModelApplication = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
+
+		// we already have an .id, so this must be an UPDATE
+		if (values.id) {
+			
+			return ModelApplication.update(values.id, values)
+					.then(() => {
+						_AllApplications.updateItem(values.id, this);
+					});
+				
+		} else {
+
+			// must be a CREATE:
+			return ModelApplication.create(values)
+					.then((data) => {
+						this.id = data.id;
+						_AllApplications.add(this, 0);
+					});
+		}
+	
+	}
+
+
+
+	assignPermissions (permItems) {
+		return new Promise(
+			(resolve, reject) => {
+				AD.comm.service.put({
+					url: '/app_builder/' + this.id + '/role/assign',
+					data: {
+						roles: permItems
+					}
+				})
+				.fail(reject)
+				.done(resolve);
+			}
+		)
+	}
+
+	// Permissions
+	getPermissions () {
+
+		return new Promise( 
+			(resolve, reject) => {
+
+				AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' })
+				.fail(reject)
+				.done(resolve)
+
+			}
+		);
+	}
+
+	createPermission () {
+		return new Promise( 
+			(resolve, reject) => {
+
+				AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' })
+				.fail(reject)
+				.done(resolve)
+
+			}
+		);
+	}
+
+	deletePermission () {
+		return new Promise( 
+			(resolve, reject) => {
+
+				AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' })
+				.fail(reject)
+				.done(resolve)
+
+			}
+		);
+	}
+
+
+	toObj () {
+
+		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
+		this.json.name = this.name;
+
+		// for each Object: compile to json
+
+		return {
+			id:this.id,
+			name:this.name,
+			json:this.json,
+			role:this.role
+		}
+
+
+
+	}
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = ABApplication;
+
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(5);
+
+/*
+ * AB 
+ *
+ * The base AppBuilder component.  It manages these components:
+ *   - ab_choose :  choose an application to work with
+ *   - ab_work   :  load an application into the work area
+ *
+ */
+
+
+
+
+// import './ab_work'
+
+OP.Component.extend('ab', function(App) {
+
+
+	function L(key, altText) {
+		return AD.lang.label.getLabel(key) || altText;
+	}
+
+	
+	// setup the common labels for our AppBuilder Application.
+	App.labels.common = {
+		"import": L('ab.common.import', "*Import"),
+		edit: 	  L('ab.common.edit', "*Edit"),
+		save: 	  L('ab.common.save', "*Save"),
+		"delete": L('ab.common.delete', "*Delete"),
+		"export": L('ab.common.export', "*Export"),
+		ok: 	  L('ab.common.ok', "*Ok"),
+		cancel:   L('ab.common.cancel', "*Cancel"),
+		yes: 	  L('ab.common.yes', "*Yes"),
+		no: 	  L('ab.common.no', "*No"),
+
+		createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
+		createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
+
+		updateErrorMessage:  L('ab.common.update.error', "*System could not update <b>{0}</b>."),
+		updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
+
+		deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
+		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+	}
+		
+
+
+	var ids = {
+		appbuilder:App.unique('buld_app_loading_screen')
+	}
+
+
+
+	// Define the external components used in this Component:
+	var AppChooser = OP.Component['ab_choose'](App);
+	// var AppWorkspace = OP.Component['ab_work'](App);
+
+
+	// This component's UI definition:
+	// Application multi-views
+	var _ui = {
+		id: ids.appbuilder,
+		container:'ab-main-container',
+		autoheight:true,
+		autowidth:true,
+		rows:[
+			AppChooser.ui,
+			// AppWorkspace.ui
+		]
+	};
+
+
+
+	// This component's Logic definition:
+	var _logic = {
+
+		init: function() {
+
+			AppChooser.init();
+			// AppWorkspace.init();
+
+			$$(ids.appbuilder).adjust();
+		}
+		
+	}
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		// transition to the Appbuilder workspace with given App
+		transitionWorkspace:function(App){
+console.error('TODO: transitionWorkspace()');			
+			
+		},
+
+		transitionApplicationChooser:function() {
+console.error('TODO: transitionApplicationChooser()');		
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_logic.init,		// {fn} 	init() to setup this component  
+		actions:_actions		// {ob}		hash of fn() to expose so other components can access.
+	}
+
+});
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+
+var _restURLs = {
+	findAll: 'GET #url#',
+	findOne: 'GET #url#/{id}',
+	create:  'POST #url#',
+	update:  'PUT #url#/{id}',
+	destroy: 'DELETE #url#/{id}',
+}
+
+
+var _Models = {};
+
+
+class OPModel {
+
+	constructor(key, staticData, instanceData) {
+
+		this.key = key;
+		this.staticData = staticData;
+		this.instanceData = instanceData;
+		this.Model = staticData.Model;
+
+	}
+
+	Models(Model) {
+		this.Model = Model;
+	}
+
+	findAll(cond ) {
+		return new Promise( 
+			(resolve, reject) => {
+
+// NOTE: currently reusing AD.Model
+
+				var Model = AD.Model.get(this.key);
+				Model.findAll(cond)
+				.fail(reject)
+				.done((list) => {
+
+					if (this.Model) {
+						var newList = Model.List();
+						list.forEach((l) => {
+							newList.push( new this.Model(l) );
+						})
+
+						list = newList;
+
+					}
+
+					var dc = AD.op.WebixDataCollection(list);
+
+					dc._toArray = function() {
+						var data = [];
+						var id = this.getFirstId();
+						while(id) {
+							data.push(this.getItem(id));
+							id = this.getNextId(id);
+						}
+						return data;
+					}
+
+					resolve(dc);
+
+				});
+			}
+		);
+	}
+
+	findOne(cond ) {
+		return new Promise( 
+			(resolve, reject) => {
+
+				var Model = AD.Model.get(this.key);
+				Model.findOne(cond)
+				.fail(reject)
+				.done(function(item){
+					if (item.translate) item.translate();
+
+					resolve(item.attr?item.attr():item);
+				});
+			}
+		);
+	}
+
+	create(attr) {
+		return new Promise( 
+			(resolve, reject) => {
+
+				var Model = AD.Model.get(this.key);
+				Model.create(attr)
+				.fail(reject)
+				.done(function(item){
+					if (item.translate) item.translate();
+
+					resolve(item.attr?item.attr():item);
+				});
+			}
+		);
+	}
+
+	update(id, attr) {
+		return new Promise( 
+			(resolve, reject) => {
+
+				var Model = AD.Model.get(this.key);
+				Model.update(id, attr)
+				.fail(reject)
+				.done(resolve);
+			}
+		);
+	}
+
+	destroy(id) {
+		return new Promise( 
+			(resolve, reject) => {
+
+				var Model = AD.Model.get(this.key);
+				Model.destroy(id)
+				.fail(reject)
+				.done(resolve);
+			}
+		);
+	}
+}
+
+
+/* harmony default export */ __webpack_exports__["a"] = {
+
+	extend:function(key, staticData, instance) {
+
+
+		//
+		// Create the AD.Model from this definition
+		//
+
+		var alreadyThere = AD.Model.get(key);
+		if (!alreadyThere) {
+
+			if (staticData.restURL) {
+				for (var u in _restURLs) {
+					staticData[u] = _restURLs[u].replace('#url#', staticData.restURL);
+				}
+				
+			}
+
+			AD.Model.Base.extend(key, staticData, instance);
+			AD.Model.extend(key, staticData, instance);
+		}
+		
+		//
+		// Now create our OP.Model:
+		//
+		var curr = nameSpace(_Models, key);
+		var modelName = objectName(key);
+
+		curr[modelName] = new OPModel(key, staticData, instance);
+
+	},
+
+	get: function(key) {
+		return findObject(_Models, key);
+	}
+};
+
+
+
+
+
+
+
+
+            /*
+             * @function findObject
+             *
+             * Return the object specified by the given name space:
+             *
+             * @param {object} baseObj  The base object to search on
+             *                          usually AD.models or AD.models_base
+             *
+             * @param {string} name   The provided namespace to parse and search for
+             *                        The name can be spaced using '.' 
+             *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
+             *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
+             *
+             * @returns {object}  the object resolved by the namespaced base 
+             *                    eg:  findObject(AD.models, 'Resource') => return AD.models.Resource
+             *                         findObject(AD.models, 'coolTool.Resource1') => AD.models.coolTool.Resource1
+             *
+             *                    if an object is not found, null is returned.
+             */
+            var findObject = function (baseObj, name) {
+
+                // first lets figure out our namespacing:
+                var nameList = name.split('.');
+
+                // for each remaining name segments, make sure we have a 
+                // namespace container for it:
+                var curr = baseObj;
+                nameList.forEach(function (name) {
+
+                    if (curr == null) {
+                        var whoops = true;
+                        console.error('! current name segment is null.  Check your given name to make sure it is properly given: ', name);
+                    }
+                    if (curr) {
+                        if (typeof curr[name] == 'undefined') {
+                            curr = null;
+                        }
+                        if (curr) curr = curr[name];
+                    }
+                })
+
+                return curr;
+            }
+
+
+
+            /*
+             * @function objectName
+             *
+             * parse the name and return the name of the object we will create.
+             *
+             * @param {string} name   The provided namespace to parse 
+             *                        The name can be spaced using '.' 
+             *
+             * @returns {string}  the name of the model object 
+             *                    eg:  objectName('Resource') => return 'Resource'
+             *                         objectName('coolTool.Resource1') => 'Resource1'
+             */
+            var objectName = function (name) {
+
+                // first lets figure out our namespacing:
+                var nameList = name.split('.');
+                var objName = nameList.pop(); // remove the last one.
+
+                return objName;
+            }
+
+
+
+            /*
+             * @function nameSpace
+             *
+             * Make sure the proper name space is created on the given base.
+             *
+             * @param {object} baseObj  The base object to create the namespace on
+             *                          usually AD.models or AD.models_base
+             *
+             * @param {string} name   The provided namespace to parse and create
+             *                        The name can be spaced using '.' 
+             *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
+             *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
+             *
+             * @returns {object}  the object that represents the namespaced base 
+             *                    that the Model is to be created on.
+             *                    eg:  nameSpace(AD.models, 'Resource') => return AD.models
+             *                         nameSpace(AD.models, 'coolTool.Resource1') => AD.models.coolTool
+             */
+            var nameSpace = function (baseObj, name) {
+
+                // first lets figure out our namespacing:
+                var nameList = name.split('.');
+                var controlName = nameList.pop(); // remove the last one.
+
+                // for each remaining name segments, make sure we have a 
+                // namespace container for it:
+                var curr = baseObj;
+                nameList.forEach(function (name) {
+
+                    if (typeof curr[name] == 'undefined') {
+                        curr[name] = {};
+                    }
+                    curr = curr[name];
+                })
+
+                return curr;
+            }
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/*
+ * OP.Multilingual
+ *
+ * A set of helpers for Multilingual Data.
+ *
+ */
+
+/* harmony default export */ __webpack_exports__["a"] = {
+
+	/**
+	 * @function OP.Multilingual.translate
+	 *
+	 * Given a set of json data, pull out any multilingual translations
+	 * and flatten those values to the base object.
+	 *
+	 * @param {obj} obj  The instance of the object being translated
+	 * @param {json} json The json data being used for translation.
+	 *						There should be json.translations = [ {transEntry}, ...]
+	 *						where transEntry = {
+	 *							language_code:'en',
+	 *							field1:'value',
+	 *							...
+	 *						}
+	 * @param {array} fields an Array of multilingual fields to pull to 
+	 *						 the obj[field] value.
+	 *
+	 */
+	translate:function(obj, json, fields) {
+
+		if (!json.translations) {
+			json.translations = [];
+		}
+
+		var currLanguage = AD.lang.currentLanguage || 'en';
+
+		if (fields && fields.length > 0) {
+
+			json.translations.forEach(function(t){
+				// find the translation for the current language code
+				if (t.language_code == currLanguage) {
+
+					// copy each field to the root object
+					fields.forEach(function(f){
+						obj[f] = t[f] || '';  // default to '' if not found. 
+					})
+				}
+			})
+
+
+		}
+	},
+
+
+	/**
+	 * @function OP.Multilingual.unTranslate
+	 *
+	 * Take the multilingual information in the base obj, and push that 
+	 * down into the json.translations data.
+	 *
+	 * @param {obj} obj  The instance of the object with the translation
+	 * @param {json} json The json data being used for translation.
+	 *						There should be json.translations = [ {transEntry}, ...]
+	 *						where transEntry = {
+	 *							language_code:'en',
+	 *							field1:'value',
+	 *							...
+	 *						}
+	 * @param {array} fields an Array of multilingual fields to pull from 
+	 *						 the obj[field] value.
+	 *
+	 */
+	unTranslate: function( obj, json, fields) {
+
+		json = json || {};
+		fields = fields || [];
+
+		if (!json.translations) {
+			json.translations = [];
+		}
+
+		var currLanguage = AD.lang.currentLanguage || 'en';
+
+
+		if (fields && fields.length > 0) {
+
+			var foundOne = false;
+
+			json.translations.forEach(function(t){
+				// find the translation for the current language code
+				if (t.language_code == currLanguage) {
+
+					// copy each field to the root object
+					fields.forEach(function(f){
+						t[f] = obj[f];
+					})
+
+					foundOne = true;
+				}
+			})
+
+			// if we didn't update an existing translation
+			if (!foundOne) {
+
+				// create a translation entry:
+	            var trans = {};
+
+	            // assume current languageCode:
+	            trans.language_code = currLanguage;
+
+	            fields.forEach(function (field) {
+	                if (obj[field] != null) {
+	                    trans[field] = obj[field];
+	                }
+	            })
+
+	            json.translations.push(trans);
+			}
+
+		}
+	}
+};
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_choose_list__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_form__ = __webpack_require__(6);
+
+/*
+ * AB Choose
+ *
+ * When choosing an initial application to work with, we can
+ *   - select an application from a list  :  ab_choose_list
+ *   - create an application from a form  :  ab_choose_form
+ *
+ */
+
+
+
+
+
+OP.Component.extend('ab_choose', function(App) {
+
+
+	var ids = {
+		choose:App.unique('ab_choose')
+	}
+
+//// LEFT OFF HERE:
+// [] implement AppForm
+// [] ab_choose_list_menu :> App.actions.editApplication()
+
+
+	// Define the external components used in this Component:
+	var AppList = OP.Component['ab_choose_list'](App);
+	var AppForm = OP.Component['ab_choose_form'](App);
+
+
+	// This component's UI definition:
+	// Application multi-views
+	var _ui = {
+		view:"multiview",
+		id: ids.choose,
+		autoheight: true,
+		cells: [
+			AppList.ui,
+			AppForm.ui
+		]
+	};
+
+
+
+	// This component's Logic definition:
+	var _logic = {
+
+		init: function() {
+
+			AppList.init();
+			AppForm.init();
+		}
+		
+	}
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		// initiate a request to create a new Application
+		transitionApplicationForm:function(Application){
+			
+
+			App.actions.populateApplicationForm(Application);
+
+			// if no Application is given, then this should be a [create] operation,
+			// so clear our AppList
+			if ('undefined' == typeof Application) {
+				App.actions.unselectApplication();
+			}
+
+		},
+
+		transitionApplicationList:function() {
+			$$(ids.choose).back();
+			// AppList.logic.show();
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,
+		init:_logic.init,
+		actions:_actions
+	}
+
+});
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(1);
+
+/*
+ * AB Choose Form
+ *
+ * Display the form for creating a new Application.
+ *
+ */
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	application: {
+
+		formHeader: L('ab.application.form.header', "*Application Info"),
+		placeholderName: L('ab.application.form.placeholderName', "*Application name"),
+		placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
+
+		sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
+		permissionHeader: L('ab.application.form.headerPermission',  "*Assign one or more roles to set permissions for user to view this app"),
+		createNewRole: L('ab.application.form.createNewRoleButton', "*Create a new role to view this app"),
+
+		invalidName: L('ab.application.invalidName', "*This application name is invalid"),
+		duplicateName: L('ab.application.duplicateName', "*Name must be unique."),
+
+	}
+}
+
+
+
+OP.Component.extend('ab_choose_form', function(App) {
+
+	labels.common = App.labels.common;
+
+	var ids = {
+		formComponent: App.unique('ab-app-list-form-view'),
+		form: App.unique('ab-app-list-form'),
+		appFormPermissionList: App.unique('ab-app-form-permission'),
+		appFormCreateRoleButton: App.unique('ab-app-form-create-role'),
+
+		saveButton: App.unique('ab-app-form-button-save')
+	}
+
+
+	var _ui = {
+		id: ids.formComponent,
+		scroll: true,
+		rows: [
+			{
+				view: "toolbar",
+				cols: [{ view: "label", label: labels.application.formHeader, fillspace: true }]
+			},
+			{
+				view: "form",
+				id: ids.form,
+				autoheight: true,
+				margin: 0,
+				elements: [
+					{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
+					{
+						name: "label",
+						view: "text",
+						label: labels.common.formName,
+						required: true,
+						placeholder: labels.application.placeholderName,
+						labelWidth: 100,
+						on: {
+							onChange: function (newValue, oldValue) {
+								_logic.permissionRenameRole(newValue, oldValue);
+							}
+						}
+					},
+					{ name: "description", view: "textarea", label: labels.common.formDescription, placeholder: labels.application.placeholderDescription, labelWidth: 100, height: 100 },
+					{ type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>'+labels.application.sectionPermission },
+					{
+						view: "toolbar",
+						cols: [
+							{
+								template: labels.application.permissionHeader, 
+								type: 'header',
+								borderless: true
+							},
+							{
+								view: "toggle",
+								id: ids.appFormCreateRoleButton,
+								type: "iconButton",
+								width: 300,
+								align: "right",
+								offIcon: "square-o",
+								onIcon: "check-square-o",
+								label: labels.application.createNewRole, 
+								on: {
+									onItemClick: function (id, e) {
+										if (this.getValue()) {
+
+// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
+											// Add new app role
+											var appName = $$(ids.form).elements["label"].getValue();
+											_logic.permissionAddNew(appName);
+
+										}
+										else { 
+
+											// Remove app role
+											_logic.permissionRemoveNew();
+											
+										}
+									}
+								}
+							}
+						]
+					},
+					{
+						name: "permissions",
+						id: ids.appFormPermissionList,
+						view: "list",
+						height: 130,
+						autowidth: true,
+						borderless: true,
+						margin: 0,
+						css: "ab-app-form-permission",
+						scroll: "y",
+						template: "#name#",
+						on: {
+							onItemClick: function (id, e, node) {
+								if (this.getItem(id).isApplicationRole) {
+									return;
+								}
+
+								if (this.isSelected(id)) {
+									this.unselect(id);
+								}
+								else {
+									var selectedIds = this.getSelectedId();
+
+									if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
+										if (selectedIds)
+											selectedIds = [selectedIds];
+										else
+											selectedIds = [];
+									}
+
+									selectedIds.push(id);
+
+									this.select(selectedIds);
+								}
+							}
+						}
+					},
+					{ height: 5 },
+					{
+						margin: 5, cols: [
+							{ fillspace: true },
+							{
+								id: ids.saveButton,
+								view: "button", label: labels.common.save, type: "form", width: 100, 
+								click: function () {
+									
+									_logic.buttonSaveDisable();
+									_logic.formBusy();
+
+									// if there is a selected Application, then this is an UPDATE
+									var updateApp = App.actions.getSelectedApplication();
+									if (updateApp) { 
+
+										if (_logic.formValidate('update')) {
+
+											_logic.applicationUpdate(updateApp);
+
+										}
+										
+									} else { 
+
+										// else this is a Create
+										if (_logic.formValidate('add')) {
+
+											_logic.applicationCreate(_logic.formValues());
+
+										}
+
+									}
+									
+	
+								} // end click()
+							},
+							{
+								view: "button", value: labels.common.cancel, width: 100, 
+								click: function () {
+									_logic.cancel();
+								}
+							}
+						]
+					}
+				]
+			}
+		]
+	};
+
+	const FormFields = ['label', 'description'];
+
+
+	var _logic = {
+
+		init: function() {
+			webix.extend($$(ids.form), webix.ProgressBar);
+			webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
+		},
+
+
+
+//// LEFT OFF HERE:
+//// filling out applicationCreate() with new ABApplication object format.
+// next: 
+// [] applicationUpdate()
+
+		applicationCreate: function(values) {
+
+			var newApp = {
+				name: values.label,
+				label: values.label,
+				description: values.description
+			};
+
+			async.waterfall([
+				function (cb) {
+					// Create application data
+					__WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__["a" /* default */].create(newApp)
+						.then(function (result) {
+	
+// self.data.push(result);
+
+							cb(null, result);
+						})
+						.catch(cb);
+				},
+				function (createdApp, cb) {
+					_logic.permissionSave(createdApp)
+						.then(function () { cb(); })
+						.catch(cb)
+				}
+			], function (err) {
+				_logic.formReady();
+
+				if (err) {
+					webix.message({
+						type: "error",
+						text: labels.common.createErrorMessage.replace('{0}', values.label)
+					});
+
+					AD.error.log('App Builder : Error create application data', { error: err });
+
+					_logic.buttonSaveEnable();
+
+					return;
+				}
+
+// TODO: alert of a Data Refresh
+
+				App.actions.transitionApplicationList();
+
+// if ($$(self.webixUiids.appList).hideOverlay)
+// 	$$(self.webixUiids.appList).hideOverlay();
+
+				webix.message({
+					type: "success",
+					text: labels.common.createSuccessMessage.replace('{0}', values.label)
+				});
+
+				_logic.buttonSaveEnable();
+
+			});
+		},
+
+		applicationUpdate: function(Application) {
+			var values = _logic.formValues();
+
+			async.waterfall([
+				function (next) {
+					_logic.permissionSave(Application)
+						.then(function (result) { next(null, result); })
+						.catch(next);
+				},
+				function (app_role, next) {
+					// Update application data
+					Application.label = values.label;
+					Application.description = values.description;
+
+					if (app_role && app_role.id)
+						Application.role = app_role.id;
+					else
+						Application.role = null;
+
+					Application.save()
+						.then(function (result) {
+
+							// var existApp = self.data.filter(function (item, index, list) {
+							// 	return item.id === result.id;
+							// })[0];
+
+							// if (result.translate) result.translate();
+
+							// existApp.attr('name', result.name);
+							// existApp.attr('label', result.label);
+							// existApp.attr('description', result.description);
+
+							next(null, result.id);
+						})
+						.catch(next)
+						
+				}
+			], function (err) {
+
+				_logic.formReady();
+				_logic.buttonSaveEnable();
+				if (err) {
+					webix.message({
+						type: "error",
+						text: labels.common.updateErrorMessage.replace('{0}', Application.label)
+					});
+					AD.error.log('App Builder : Error update application data', { error: err });
+					return false;
+				}
+
+				App.actions.transitionApplicationList();
+
+				webix.message({
+					type: "success",
+					text: labels.common.updateSucessMessage.replace('{0}', Application.label)
+				});
+
+			});
+		},
+
+
+		buttonSaveDisable:function() {
+			$$(ids.saveButton).disable();
+		},
+
+
+		buttonSaveEnable:function() {
+			$$(ids.saveButton).enable();
+		},
+
+
+		cancel: function() {
+									
+			_logic.formReset();
+			App.actions.transitionApplicationList();
+		},
+
+		formBusy: function() {
+			$$(ids.form).showProgress({ type: 'icon' });
+		},
+
+		formPopulate: function(application) {
+
+			var Form = $$(ids.form);
+
+			// Populate data to form
+			if (application) {
+				FormFields.forEach(function(f){
+					if (Form.elements[f]) {
+						Form.elements[f].setValue(application[f]);
+					}
+				})
+			}
+			
+			// _logic.permissionPopulate(application);
+
+		},
+
+		formReady: function() {
+			$$(ids.form).hideProgress();
+		},
+
+
+		formReset: function() {
+			$$(ids.form).clear();
+			$$(ids.form).clearValidation();
+			// $$(self.webixUiids.appFormPermissionList).clearValidation();
+			// $$(self.webixUiids.appFormPermissionList).clearAll();
+			// $$(self.webixUiids.appFormCreateRoleButton).setValue(0);
+		},
+
+
+
+		formValidate:function(op) {
+			// op : ['add', 'update', 'destroy']
+
+			var Form = $$(ids.form);
+			if (!Form.validate()) {
+				// TODO : Error message
+
+				_logic.buttonSaveEnable();
+				return false;
+			}
+
+
+			var errors = __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__["a" /* default */].isValid(op, Form.getValues());
+			if (errors.length > 0) {
+				var hasFocused = false;
+				errors.forEach(function(err){
+					Form.markInvalid(err.name, labels.application[err.mlKey] || err.defaultText );
+					if (!hasFocused && Form.elements[err.name]) {
+						Form.elements[err.name].focus();
+						hasFocused = true;
+					}
+				})
+				_logic.buttonSaveEnable();
+				return false;
+			}
+
+			// var appName = $$(ids.form).elements['label'].getValue(),
+			// 	appDescription = $$(ids.form).elements['description'].getValue();
+
+			// if (!inputValidator.validate(appName)) {
+			// 	_logic.buttonSaveEnable();
+			// 	return false;
+			// }
+
+			// // Prevent duplicate application name
+			// if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
+			// 	OP.Dialog.Alert({
+			// 		title: labels.application.invalidName,
+			// 		text: labels.application.duplicateName.replace("#appName#", appName),
+			// 		ok: labels.common.ok
+			// 	});
+
+			// 	$$(ids.form).elements['label'].focus();
+			// 	_logic.buttonSaveEnable();
+			// 	return false;
+			// }
+
+			return true;
+		},
+
+
+		/**
+		 * @function formValues()
+		 *
+		 * return an object hash of name:value pairs of the current Form.
+		 *
+		 * @return {obj} 
+		 */
+		formValues: function() {
+			// return the current values of the Form elements.
+			return $$(ids.form).getValues();
+
+		},
+
+
+		/**
+		 * @function permissionAddNew
+		 *
+		 * create a new permission entry based upon the current Application.label
+		 *
+		 * This not only adds it to our Permission List, but also selects it.
+		 *
+		 * @param {string} appName	The Application.label of the current Application
+		 */
+		permissionAddNew: function(appName) {
+
+			// add new role entry
+			$$(ids.appFormPermissionList).add({
+				id: 'newRole',
+				name: _logic.permissionName(appName),
+				isApplicationRole: true
+			}, 0);
+
+
+			// Select new role
+			var selectedIds = $$(ids.appFormPermissionList).getSelectedId(true);
+			selectedIds.push('newRole');
+			$$(ids.appFormPermissionList).select(selectedIds);
+
+		},
+
+
+		/**
+		 * @function permissionName
+		 *
+		 * returns a formatted name for a Permission Role based upon the provided Application.label
+		 *
+		 * @param {string} appName	the current value of the Application.label
+		 * @return {string} 	Permission Role Name.
+		 */
+		permissionName: function(appName) {
+			return appName  + " Application Role"; 
+		},
+
+
+		/**
+		 * @function permissionPopulate
+		 *
+		 * fill out the Permission list
+		 *
+		 * @param {ABApplication} application	the current ABApplication we are editing
+		 */
+		permissionPopulate: function(application) {
+
+			var PermForm = $$(ids.appFormPermissionList);
+			// Get user's roles
+			PermForm.showProgress({ type: 'icon' });
+			async.waterfall([
+				function (next) {
+					AD.comm.service.get({ url: '/app_builder/user/roles' })
+						.fail(function (err) { next(err); })
+						.done(function (roles) {
+							next(null, roles);
+						});
+				},
+				function (available_roles, next) {
+					if (application && application.id) {
+						application.getPermissions()
+							.then(function (selected_role_ids) {
+								next(null, available_roles, selected_role_ids);
+							})
+							.catch(function (err) { next(err); });
+					}
+					else {
+						next(null, available_roles, []);
+					}
+
+				},
+				function (available_roles, selected_role_ids, next) {
+					
+					// mark the role(s) in available_roles that is tied 
+					// this application:
+					if (application && application.role) {
+						available_roles.forEach(function (r) {
+		
+							if (r.id == (application.role.id || application.role))
+								r.isApplicationRole = true;
+						});
+					}
+
+					// Sort permission list
+					available_roles.sort(function (a, b) {
+						return (a.isApplicationRole === b.isApplicationRole) ? 0 : a.isApplicationRole ? -1 : 1;
+					});
+
+					// reload list from our available_roles
+					PermForm.clearAll();
+					PermForm.parse(available_roles);
+
+					// mark which roles have already been selected
+					if (selected_role_ids && selected_role_ids.length > 0) {
+						// Select permissions
+						PermForm.select(selected_role_ids);
+
+						// Select create role application button
+						var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
+						$$(ids.appFormCreateRoleButton).setValue(markCreateButton);
+					}
+
+					next();
+				}
+			], function (err) {
+				if (err) {
+					webix.message(err.message);
+				}
+
+				PermForm.hideProgress();
+
+			});
+
+			// return appName  + " Application Role"; 
+		},
+
+
+		/**
+		 * @function permissionRemoveNew()
+		 *
+		 * Intended to be called when the USER unselects the option to create a Permission
+		 * for this Application.
+		 *
+		 * We remove any Permission Role created for this Application.
+		 */
+		permissionRemoveNew: function() {
+
+			// find any roles that are put here from our application form:
+			var appRoles = $$(ids.appFormPermissionList).find(function (perm) { return perm.isApplicationRole; });
+			
+			// remove them:
+			appRoles.forEach(function (r) {
+				$$(ids.appFormPermissionList).remove(r.id);
+			});
+		},
+
+
+		/*
+		 * permissionRenameRole
+		 *
+		 * When the name of the Appliction changes, change the Name of the Permission as well.
+		 *
+		 * @param {string} newValue  the current name of the application
+		 * @param {string} oldValue  the previous name of the application
+		 */
+		permissionRenameRole:function( newValue, oldValue) {
+
+			var editRole = $$(ids.appFormPermissionList).find(function (d) { return d.name === _logic.permissionName(oldValue); });
+
+			editRole.forEach(function (r) {
+				var editItem = $$(ids.appFormPermissionList).getItem(r.id);
+				editItem.name = _logic.permissionName(newValue);
+
+				$$(ids.appFormPermissionList).updateItem(editItem.id, editItem);
+			});
+		},
+
+
+		/**
+		 * @function permissionSave()
+		 *
+		 * step through saving the current Permission Settings and associating
+		 * them with the current Application.
+		 *
+		 * @param {ABApplication} App  	The current Application we are working with.
+		 * @return {Promise}			.resolve( {Permission} ) if one is created for this App
+		 */
+		permissionSave: function (App) {
+//// REFACTOR:
+// this step implies that ab_choose_form understands the intracies of how
+// ABApplication and Permissions work.  
+			return new Promise(
+				(resolve, reject) => {
+
+					var saveRoleTasks = [],
+						appRole = null;
+
+					//// Process the option to create a newRole For this Application:
+
+					// if the button is set
+					if ($$(ids.appFormCreateRoleButton).getValue()) {
+
+						// Create new role for application
+						saveRoleTasks.push(function (cb) {
+							App.createPermission()
+								.then(function (result) {
+
+									// remember the Role we just created
+									appRole = result;	
+									cb();
+								})
+								.catch(cb)
+						});
+					}
+					else {
+						// Delete any existing application roles
+						saveRoleTasks.push(function (cb) {
+							App.deletePermission()
+								.then(function () { cb(); })
+								.catch(cb)
+								
+						});
+					}
+
+					//// Now process any additional roles:
+
+					// get array of selected permissions that are not our newRole
+					var permItems = $$(ids.appFormPermissionList).getSelectedItem(true);
+					permItems = permItems.filter( function (item) { return item.id !== 'newRole'; }); // Remove new role item
+
+
+					// Make sure Application is linked to selected permission items:
+					saveRoleTasks.push(function (cb) {
+
+						// ok, so we removed the 'newRole' entry, but we might 
+						// have created an entry for it earlier, if so, add in  
+						// the created one here:
+						if ($$(ids.appFormCreateRoleButton).getValue() && appRole) {
+
+							// make sure it isn't already in there:
+							var appRoleItem = permItems.filter( function (item) { return item.id == appRole.id; });
+							if (!appRoleItem || appRoleItem.length < 1) {
+
+								// if not, add it :
+								permItems.push({
+									id: appRole.id,
+									isApplicationRole: true
+								});
+							}
+						}
+
+
+						// Assign Role Permissions
+						App.assignPermissions(permItems)
+							.then(function () { cb(); })
+							.catch(cb)
+					});
+
+
+
+					async.series(saveRoleTasks, function(err, results) {
+						if (err) {
+							reject(err);
+						} else {
+							// we return the instance of the newly created Permission.
+							resolve(appRole);  
+						}
+					});
+				}
+			);
+
+
+//// REFACTOR QUESTION:
+// why are we updating the app.permissions with this data structure?
+// where is this data structure being used?
+// Earlier we are using another structure (permissionAddNew()) ... how is that related to this?
+
+							// // Final task
+							// saveRoleTasks.push(function (cb) {
+							// 	// Update store app data
+							// 	var applicationData = self.data.filter(function (d) { return d.id == app.id; });
+							// 	applicationData.forEach(function (app) {
+							// 		app.attr('permissions', $.map(permItems, function (item) {
+							// 			return {
+							// 				application: app.id,
+							// 				permission: item.id,
+							// 				isApplicationRole: item.isApplicationRole
+							// 			}
+							// 		}));
+							// 	});
+
+							// 	q.resolve(appRole);
+							// 	cb();
+							// })
+
+		},
+
+
+		/**
+		 * @function show()
+		 *
+		 * Show the Form Component.
+		 */
+		show:function() {
+			$$(ids.formComponent).show();
+		}
+	}
+
+
+
+
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		// initiate a request to create a new Application
+		populateApplicationForm:function(Application){
+			
+			_logic.formReset();
+			if (Application) {
+				// populate Form here:
+				_logic.formPopulate(Application);
+			}
+			_logic.permissionPopulate(Application);
+			_logic.show();
+		}
+
+	}
+
+
+	return {
+		ui: _ui,
+		init: _logic.init,
+		actions:_actions
+	}
+})
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__);
+
+/*
+ * AB Choose List
+ *
+ * Display a list of Applications for the user to select.
+ *
+ */
+
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+
+var labels = {
+
+	application: {
+		title: L('ab.application.application', '*Application'),
+		createNew: L('ab.application.createNew', '*Add new application'),
+		noApplication: L('ab.application.noApplication', "*There is no application data")
+							
+	}
+}
+
+
+
+OP.Component.extend('ab_choose_list', function(App) {
+
+	labels.common = App.labels.common;
+
+	var ids = {
+		component:App.unique('ab_choose_listcomponent'),
+		list:App.unique('ab_choose_list'),
+		toolBar:App.unique('ab_choose_list_toolbar'),
+		buttonCreateNewApplication: App.unique('ab_choose_list_buttonNewApp')
+	}
+
+	var MenuComponent = OP.Component['ab_choose_list_menu'](App);
+	var PopupMenu = webix.ui(MenuComponent.ui);
+	PopupMenu.hide();
+
+	var _ui = {
+
+		id: ids.component,
+
+		cols: [
+
+			//
+			// Left Column Spacer
+			//
+			{ width:100 },
+
+
+			//
+			// Center column Content:
+			// 
+			{
+				
+				autoheight: true,
+				autowidth: true,
+				rows: [
+
+					// 
+					// Top Spacer
+					//
+					{ height: 30 },
+
+					//
+					// ToolBar
+					// 
+					{
+						view: "toolbar",
+						id: ids.toolBar,
+						cols: [
+							{ view: "label", label:labels.application.title, fillspace: true },
+							{
+								id: ids.buttonCreateNewApplication,
+								view: "button", 
+								value: labels.application.createNew, 
+								width: 200,
+								click: function() { 
+
+									// Inform our Chooser we have a request to create an Application:
+									App.actions.transitionApplicationForm();
+								}
+							},
+							{
+								view: "uploader",
+								value: labels.common.import,
+								width: 200,
+								upload: '/app_builder/appJSON',
+								multiple: false,
+								autosend: true,
+								on: {
+									onAfterFileAdd: function () {
+										this.disable();
+										_logic.busy();
+									},
+									onFileUpload: function (item, response) {
+										_logic.loadData(); // refresh app list
+										this.enable();
+			                            _logic.ready();
+									},
+									onFileUploadError: function (details, response) {
+										var errorMessage = 'Error: ' + (response && response.message);
+										webix.message({
+											type: 'error',
+											text: errorMessage
+										});
+										_logic.loadData(); // refresh app list
+										this.enable();
+			                            _logic.ready();
+									}
+								}
+							}
+						]
+					},
+
+
+					//
+					// The List of Applications
+					// 
+					{
+						id: ids.list,
+						view: "list",
+						minHeight: 227,
+						autowidth: true,
+						css: 'ab-app-select-list',
+						template: function (obj, common) {
+							return _logic.templateListItem(obj, common);
+						},
+						type: {
+							height: 100, // Defines item height
+							iconGear: "<span class='webix_icon fa-cog'></span>"
+						},
+						select: false,
+						onClick: {
+							"ab-app-list-item": function (e, id, trg) {
+								_logic.busy();
+
+								this.select(id);
+
+								var selectedApp = _data.listApplications.filter(function (app) { return app.id == id })
+
+								if (selectedApp && selectedApp.length > 0) {
+		
+
+									_logic.ready();
+									
+
+									// We've selected an Application to work with
+									App.actions.transitionWorkspace( selectedApp[0] );
+									
+								}
+
+								return false; // block default behavior
+							},
+							"ab-app-list-edit": function (e, id, trg) {
+								// Show menu
+								PopupMenu.show(trg);
+								this.select(id);
+
+								return false; // block default behavior
+							}
+						}
+					}
+				]
+			},
+
+			// 
+			// Right Column Spacer
+			// 
+			{ width:100 }
+		]
+	}
+
+
+
+	var _data={};
+
+
+	var _logic = {
+
+
+		busy: function() {
+			if ($$(ids.list).showProgress)
+				$$(ids.list).showProgress({ icon: 'cursor' });
+		},
+
+		ready: function() {
+			if ($$(ids.list).hideProgress)
+				$$(ids.list).hideProgress();
+		},
+
+		reset:function() {
+			$$(ids.list).unselectAll();
+		},
+
+		loadData:function(){
+
+			// Get applications data from the server
+			_logic.busy();
+			__WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__["a" /* default */].allApplications()
+				.then(function (data) {
+
+					_logic.ready();
+
+					_data.listApplications = data;
+
+					_logic.refreshList();
+				})
+				.catch(function (err) {
+					_logic.ready();
+					webix.message({
+						type: "error",
+						text: err
+					});
+					AD.error.log('App Builder : Error loading application data', { error: err });
+				})
+		},
+
+
+		refreshList: function() {
+
+			var appList = $$(ids.list);
+			
+			appList.clearAll();
+			appList.data.unsync();
+			appList.data.sync(_data.listApplications);
+
+			if (!appList.count()) //if no data is available
+				appList.showOverlay(labels.application.noApplication);
+			else
+				appList.hideOverlay();
+
+			appList.refresh();
+
+			_logic.ready();
+		},
+
+
+		show:function() {
+			$$(ids.component).show();
+		},
+
+
+		templateListItem: function(obj, common) {
+			return _templateListItem
+				.replace('#label#', obj.label || '')
+				.replace('#description#', obj.description || '')
+				.replace('{common.iconGear}', common.iconGear);
+		}
+	}
+
+
+	var _templateListItem = [
+		"<div class='ab-app-list-item'>",
+			"<div class='ab-app-list-info'>",
+				"<div class='ab-app-list-name'>#label#</div>",
+				"<div class='ab-app-list-description'>#description#</div>",
+			"</div>",
+			"<div class='ab-app-list-edit'>",
+				"{common.iconGear}",
+			"</div>",
+		"</div>"
+	].join('');
+
+			
+
+	var _init = function() {
+		webix.extend($$(ids.list), webix.ProgressBar);
+		webix.extend($$(ids.list), webix.OverlayBox);
+
+		MenuComponent.init();
+
+		// _data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
+		// start things off by loading the current list of Applications
+		_logic.loadData();
+	}
+
+	var _actions = {
+
+		unselectApplication:function() {
+			_logic.reset();
+		},
+
+		getSelectedApplication:function() {
+			return $$(ids.list).getSelectedItem();
+		},
+
+
+		deleteApplication: function(app) {
+
+			if (!app) return;
+
+			// Delete application data
+			_logic.busy();
+
+			
+			app.destroy()
+				.fail(function (err) {
+					_logic.ready()
+
+					webix.message({
+						type: "error",
+						text: labels.common.deleteErrorMessage.replace("{0}", app.label)
+					});
+
+					AD.error.log('App Builder : Error delete application data', { error: err });
+				})
+				.then(function (result) {
+					_logic.ready();
+
+					webix.message({
+						type: "success",
+						text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
+					});
+				});
+
+			_logic.reset();
+		}
+	}			
+
+
+	return {
+		ui: _ui,
+		init: _init,
+		actions:_actions
+	}
+})
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
+
+
+/*
+ * AB Choose List
+ *
+ * Display a list of Applications for the user to select.
+ *
+ */
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+
+var labels = {
+
+	application: {
+		menu : L('ab.application.menu', "*Application Menu"),
+		confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
+		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")		
+	}
+}
+
+
+
+OP.Component.extend('ab_choose_list_menu', function(App) {
+
+	labels.common = App.labels.common;
+
+	var ids = {
+		menu:App.unique('ab-app-list-menu')
+	}
+
+	var _ui = {
+		view: "popup",
+		id: ids.menu,
+		head: labels.application.menu,
+		width: 100,
+		body: {
+			view: "list",
+			data: [
+				{ command: labels.common.edit, icon: "fa-pencil-square-o" },
+				{ command: labels.common.delete, icon: "fa-trash" },
+				{ command: labels.common.export, icon: "fa-download" }
+			],
+			datatype: "json",
+
+			template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
+			autoheight: true,
+			select: false,
+			on: {
+				'onItemClick': function (timestamp, e, trg) {
+					var selectedApp = App.actions.getSelectedApplication();
+
+					switch (trg.textContent.trim()) {
+						case labels.common.edit:
+							App.actions.transitionApplicationForm(selectedApp);
+							break;
+
+						case labels.common.delete:
+							OP.Dialog.ConfirmDelete({
+								title: labels.application.confirmDeleteTitle,
+								text: labels.application.confirmDeleteMessage.replace('{0}', selectedApp.label),
+								callback: function (result) {
+
+									if (!result) return;
+
+									App.actions.deleteApplication(selectedApp);									
+								}
+							})
+							break;
+
+						case labels.common.export:
+							// Download the JSON file to disk
+							window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
+							break;
+					}
+
+					$$(ids.menu).hide();
+				}
+			}
+		}
+	}
+
+
+
+	var _data={};
+
+
+	var _logic = {
+
+		init: function() {
+			
+		}
+		
+	}
+
+							
+
+	return {
+		ui: _ui,
+		init: _logic.init
+	}
+})
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ABApplication_rf__ = __webpack_require__(10);
+//
+// REFACTORING:
+//
+// Our goal here is to create a Model object that will interact with Sails' blueprints and 
+// return native Webix DataCollections.
+//
+// We also want to listen for updates on Sails Sockets and notify the DataCollections.
+//
+// Until we have the refactoring in place, we will reuse the AD.Model.extent() objects,
+// and convert the results to DataCollections.
+//
+
+
+
+
+
+// Namespacing conventions:
+// OP.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
+OP.Model.extend('opstools.BuildApp.ABApplication',
+	{
+		useSockets: true,
+		restURL: '/app_builder/abapplication'
+	},
+	{
+		// instance Methods
+	}
+);
+		
+		
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__base_ABApplication__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__base_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__base_ABApplication__);
+//
+// REFACTORING:
+//
+// For now, we need a copy of our previous Model to work with using the WebPack builds.
+//
+// 
+
+
+
+
+
+
+
+
+// Namespacing conventions:
+// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
+AD.Model.extend('opstools.BuildApp.ABApplication',
+	{
+		useSockets: true
+		/*
+			findAll: 'GET /app_builder/abapplication',
+			findOne: 'GET /app_builder/abapplication/{id}',
+			create:  'POST /app_builder/abapplication',
+			update:  'PUT /app_builder/abapplication/{id}',
+			destroy: 'DELETE /app_builder/abapplication/{id}',
+			describe: function() {},   // returns an object describing the Model definition
+			fieldId: 'id',             // which field is the ID
+			fieldLabel:'name'      // which field is considered the Label
+		*/
+	},
+	{
+		// Object
+		getObjects: function (cond) {
+			if (!cond) cond = {};
+			cond.application = this.id;
+
+			return AD.Model.get('opstools.BuildApp.ABObject').findAll(cond);
+		},
+
+		getObject: function (objId) {
+			return AD.Model.get('opstools.BuildApp.ABObject').findOne({ application: this.id, id: objId });
+		},
+
+		createObject: function (obj) {
+			var q = $.Deferred(),
+				self = this;
+
+			obj.application = this.id;
+			AD.Model.get('opstools.BuildApp.ABObject').create(obj)
+				.fail(q.reject)
+				.then(function (result) {
+					if (result.translate) result.translate();
+
+					// Update list
+					if (self.objects.filter(function (obj) { return (obj.id || obj) == result.id; }).length > 0)
+						self.objects.forEach(function (obj, index) {
+							if ((obj.id || obj) == result.id)
+								self.objects.attr(index, result);
+						});
+					// Insert
+					else
+						self.objects.push(result);
+
+					q.resolve(result);
+				});
+
+			return q;
+		},
+
+
+
+		/**
+		 * @function getApplicationPages
+		 * return all ABPages (Root + 1st Child) of the current application
+		 * useful for when components need to offer these as selection options.
+		 * @param {ABPage} currPage  We need to contextualize this for the
+		 *					branch of pages under a RootPage. This page can
+		 *					be any page that can be resolved to a Root Page.
+		 * @return {deferred}
+		 */
+		getApplicationPages: function (currPage) {
+			var _this = this;
+			var err = null;
+
+			if (typeof currPage == 'undefined') {
+				currPage = this.currPage;
+			}
+
+			// if our .pages looks like a proper array
+			if ((this.pages) && (this.pages.filter)) {
+
+				function findParent(page) {
+					var parent = null;
+					if ((page) && (page.parent)) {
+						parent = _this.pages.filter(function (p) { return ((p.id == page.parent) || (p.id == page.parent.id)); })[0];
+					}
+					return parent;
+				}
+
+				var currPageParent = findParent(currPage);
+				while (currPageParent) {
+					currPage = currPageParent;
+					currPageParent = findParent(currPage);
+				}
+				// var currPage = this.pages.filter(function(p){ return !p.parent })[0];
+				if (currPage) {
+					return this.getPages({ or: [{ id: currPage.id }, { parent: currPage.id }] });
+				} else {
+					err = new Error('application.getApplicationPages(): no root page found!');
+				}
+			} else {
+				err = new Error('application.getApplicationPages() called with no pages defined.');
+			}
+
+			// if we get here, then we have an error:
+			var dfd = AD.sal.Deferred();
+			dfd.reject(err);
+			return dfd;
+
+		},
+
+
+
+		/**
+		 * @function getAllApplicationPages
+		 * return all the ABPages in the current application.
+		 * This will include all pages, not just the Root + 1st Child.
+		 * @return {deferred}
+		 */
+		getAllApplicationPages: function () {
+			var _this = this;
+
+			var dfd = AD.sal.Deferred();
+
+			this.getPages()
+				.fail(dfd.reject)
+				.done(function (pages) {
+
+					_this.pages = pages;  // replace our copy with proper ABPage instances
+					dfd.resolve(pages);
+				})
+
+			return dfd;
+		},
+
+
+		// Page
+		getPages: function (cond) {
+			if (!cond) cond = {};
+			cond.application = this.id;
+
+			//// TODO: refactor this to make sure appdev-core/assets/appdev/model.js  .modelUpdate() properly 
+			////       updates our model instances.  This will cause an error with other code trying to pull
+			////       from ABPage.findAll() and getting models that our out of sync with any ABPages returned
+			////       using this method.
+
+			Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
+				var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+
+				if (cond.application == storePage.application.id || storePage.application)
+					delete AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
+			});
+
+			return AD.Model.get('opstools.BuildApp.ABPage').findAll(cond);
+		},
+
+		getPage: function (pageId) {
+			//// TODO: refactor this too.
+			if (AD.Model.get('opstools.BuildApp.ABPage').store[pageId])
+				delete AD.Model.get('opstools.BuildApp.ABPage').store[pageId];
+
+			return AD.Model.get('opstools.BuildApp.ABPage').findOne({ application: this.id, id: pageId });
+		},
+
+		createPage: function (page) {
+			var q = $.Deferred(),
+				self = this;
+
+			page.application = self.id;
+			AD.Model.get('opstools.BuildApp.ABPage').create(page)
+				.fail(q.reject)
+				.then(function (result) {
+					if (result.translate) result.translate();
+
+					// Update list
+					if (self.pages.filter(function (obj) { return (obj.id || obj) == result.id; }).length > 0)
+						self.pages.forEach(function (obj, index) {
+							if ((obj.id || obj) == result.id)
+								self.pages.attr(index, result);
+						});
+					// Insert
+					else
+						self.pages.push(result);
+
+					q.resolve(result);
+				});
+
+			return q;
+		},
+
+		// Permission
+		getPermissions: function () {
+			return AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' });
+		},
+
+		createPermission: function () {
+			return AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' });
+		},
+
+		deletePermission: function () {
+			return AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' });
+		},
+
+		// id: appId,
+		// isApplicationRole: true
+		assignPermissions: function (permItems) {
+			return AD.comm.service.put({
+				url: '/app_builder/' + this.id + '/role/assign',
+				data: {
+					roles: permItems
+				}
+			})
+		}
+
+	}
+);
+		
+		
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports) {
+
+
+				// var ABPage = AD.Model.get('opstools.BuildApp.ABPage');
+				// var ABObject = AD.Model.get('opstools.BuildApp.ABObject');
+
+				// Namespacing conventions:
+				// AD.Model.Base.extend("[application].[Model]" , { static }, {instance} );  --> Object
+				AD.Model.Base.extend("opstools.BuildApp.ABApplication", {
+					findAll: 'GET /app_builder/abapplication',
+					findOne: 'GET /app_builder/abapplication/{id}',
+					create: 'POST /app_builder/abapplication',
+					update: 'PUT /app_builder/abapplication/{id}',
+					destroy: 'DELETE /app_builder/abapplication/{id}',
+					// define: {
+     //                    objects: {
+     //                        Type: ABObject
+     //                    },
+     //                    pages: {
+     //                        Type: ABPage
+     //                    }
+     //                },
+					describe: function() { return { 'name':'string', 'description':'text', 'permissions':'PermissionRole' };  },
+					// associations:['field1', 'field2', ..., 'fieldN'],
+					multilingualFields:['label', 'description'], 
+					// validations: {
+					//     "role_label" : [ 'notEmpty' ],
+					//     "role_description" : [ 'notEmpty' ]
+					// },
+					fieldId: 'id',
+					fieldLabel: 'label'
+				}, {
+					// model: function() {
+					//     return AD.Model.get('opstools.BuildApp.ABApplication'); //AD.models.opstools.BuildApp.ABApplication;
+					// },
+					// getID: function() {
+					//     return this.attr(this.model().fieldId) || 'unknown id field';
+					// },
+					// getLabel: function() {
+					//     return this.attr(this.model().fieldLabel) || 'unknown label field';
+					// }
+				});
+			
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_ab__ = __webpack_require__(2);
+
+
+// import '../../../../../assets/js/webix/webix'
+
+
+
+
+
+
+AD.Control.OpsTool.extend('BuildApp', {
+
+	init: function (element, options) {
+		var self = this;
+
+		options = AD.defaults({
+			templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',
+			resize_notification: 'BuildApp.resize',
+			tool: null   // the parent opsPortal Tool() object
+		}, options);
+		self.options = options;
+
+		// Call parent init
+		self._super(element, options);
+
+		self.data = {};
+
+		self.webixUiId = {
+			loadingScreen: 'ab-loading-screen',
+			syncButton: 'ab-sync-button'
+		};
+
+		self.initDOM(function(){
+			self.initWebixUI();
+		});
+		
+
+	},
+
+
+	initDOM: function (cb) {
+		var _this = this;
+
+		can.view(this.options.templateDOM, {}, function(fragment){
+			_this.element.html(fragment);
+
+			// _this.element.find(".ab-app-list").show();
+			// _this.element.find(".ab-app-workspace").hide();
+
+			cb();
+		});
+	},
+	
+
+	initWebixUI: function () {
+
+		// get the AppBuilder (AB) Webix Component
+		var AppBuilder = OP.Component['ab']();
+		var ui = AppBuilder.ui;
+
+		// tell the AppBuilder where to attach
+		ui.container = 'ab-main-container'
+
+		// instantiate the UI first
+		this.AppBuilder = webix.ui(ui);
+
+		// then perform the init()
+		AppBuilder.init();
+
+	},
+
+
+	resize: function (height) {
+		var self = this;
+
+		height = height.height || height;
+
+		var appListDom = $(self.element);
+
+		if (appListDom) {
+			var width = appListDom.parent().css('width');
+			if (width) {
+				width = parseInt(width.replace('px', ''));
+			}
+			appListDom.width(width);
+
+			var computedHeight = height - 140;
+			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
+			if (mh < computedHeight) {
+				appListDom.height(computedHeight);
+				$('#ab-main-container').height(computedHeight);
+			} else {
+				appListDom.height(mh);
+				$('#ab-main-container').height(mh);
+			}
+
+			if (this.AppBuilder) {
+				// this.AppBuilder.define('height', height - 140);
+				this.AppBuilder.adjust();
+			}
+			
+		}
+	}
+
+});
+
+/***/ })
+/******/ ]);

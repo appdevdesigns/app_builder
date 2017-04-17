@@ -70,17 +70,6 @@ OP.Component.extend('ab_choose', function(App) {
 				App.actions.unselectApplication();
 			}
 
-			// AppForm.logic.formReset();
-			// if (App) {
-			// 	// populate Form here:
-			// 	AppForm.logic.formPopulate(App);
-			// } else {
-
-			// 	// this is a create operation and we should
-			// 	// clear our AppList
-			// 	AppList.logic.reset();
-			// }
-			// AppForm.logic.show();
 		},
 
 		transitionApplicationList:function() {

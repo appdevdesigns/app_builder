@@ -10,14 +10,14 @@ export default class ABApplication {
     constructor(attributes) {
     	this.id    = attributes.id;
 
-    	var json = attributes.attr('json');
+    	this.json = attributes.json;
 
-    	this.name  = json.name || "";
+    	this.name  = attributes.name || this.json.name || "";
 
-    	OP.Multilingual.translate(this, json, ABApplication.fieldsMultilingual());
-	  	// this.label = attributes.attr('label');
-	  	// this.description = attributes.attr('description');
-	  	this.role  = attributes.attr('role');
+    	// multilingual fields: label, description
+    	OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
+
+	  	this.role  = attributes.role;
   	}
 
   	///
@@ -25,40 +25,19 @@ export default class ABApplication {
   	///
 	static allApplications() {
 		return new Promise( 
-			function(resolve, reject) {
+			(resolve, reject) => {
 
-				var ModelApplication = AD.Model.get('opstools.BuildApp.ABApplication');
-
-
-// goal, to Async pull data from sails,
-// auto listen for updates
-// return a webix DataCollection
-//
-// OP.Model.findAll(ModelApplication, cond)
-// .then(function(DataCollection){
-
-// })
-// .catch(err);
-
-// OP.Model.serverSync(ArrayObjects, ModelApplication)
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.Models(ABApplication); // set the Models  setting.
 
 				ModelApplication.findAll()
-					.fail(reject)
 					.then(function(data){
-						var allApplications = [];
-
-					    data.forEach(function (d) {
-							if (d.translate) d.translate();
-
-							if (!d.description) d.attr('description', '');
-
-							// 
-							allApplications.push( new ABApplication(d) );
-						});
 						
-						_AllApplications = new ModelApplication.List(allApplications);
-						resolve(_AllApplications);
+						_AllApplications = data;
+
+						resolve(data);
 					})
+					.catch(reject);
 
 			}
 		)
@@ -71,7 +50,7 @@ export default class ABApplication {
 			function(resolve, reject) {
 
 
-				var ModelApplication = AD.Model.get('opstools.BuildApp.ABApplication');
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 
 				var newApp = {}
 				OP.Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
@@ -79,24 +58,15 @@ export default class ABApplication {
 				newApp.name = values.name;
 
 				ModelApplication.create(values)
-				.fail(reject)
-				.done(function(app){
+				.then(function(app){
 
 					// return an instance of ABApplication
 					var App = new ABApplication(app);
-//// LEFT OFF HERE:
-// _AllApplications is a Can.List() that expectes model instances (with .attr() values)
-// it will get called to AD.op.webixDataCollection() where the problem happens.
-// solve this!
-// get returned App to mimic Can.Model() definition
-//  -> attr()
-//  -> getID()
-//  .destroy()
-//
 
-					_AllApplications.push(App);
+					_AllApplications.add(App,0);
 					resolve(App);
 				})
+				.catch(reject)
 			}
 		)
 	}
@@ -125,8 +95,10 @@ export default class ABApplication {
 			if (op == 'add') {
 
 				// label/name must be unique:
-
-				if (_AllApplications.filter(function (app) { return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
+				var matchingApps = _AllApplications._toArray().filter(function (app) { 
+					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
+				})
+				if (matchingApps && matchingApps.length > 0) {
 					
 					errors.push({
 						name:'label',
@@ -154,6 +126,34 @@ export default class ABApplication {
 	///
 	/// Instance Methods
 	///
+
+	save () {
+
+		var values = this.toObj();
+
+		var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+
+		// we already have an .id, so this must be an UPDATE
+		if (values.id) {
+			
+			return ModelApplication.update(values.id, values)
+					.then(() => {
+						_AllApplications.updateItem(values.id, this);
+					});
+				
+		} else {
+
+			// must be a CREATE:
+			return ModelApplication.create(values)
+					.then((data) => {
+						this.id = data.id;
+						_AllApplications.add(this, 0);
+					});
+		}
+	
+	}
+
+
 
 	assignPermissions (permItems) {
 		return new Promise(
@@ -208,4 +208,22 @@ export default class ABApplication {
 		);
 	}
 
+
+	toObj () {
+
+		OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
+		this.json.name = this.name;
+
+		// for each Object: compile to json
+
+		return {
+			id:this.id,
+			name:this.name,
+			json:this.json,
+			role:this.role
+		}
+
+
+
+	}
 }

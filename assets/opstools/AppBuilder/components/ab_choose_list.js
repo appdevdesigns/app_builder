@@ -224,13 +224,12 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 
 		refreshList: function() {
-			var self = this,
-				appListData = AD.op.WebixDataCollection(_data.listApplications);
 
 			var appList = $$(ids.list);
+			
 			appList.clearAll();
 			appList.data.unsync();
-			appList.data.sync(appListData);
+			appList.data.sync(_data.listApplications);
 
 			if (!appList.count()) //if no data is available
 				appList.showOverlay(labels.application.noApplication);

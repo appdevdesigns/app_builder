@@ -291,51 +291,54 @@ OP.Component.extend('ab_choose_form', function(App) {
 					Application.description = values.description;
 
 					if (app_role && app_role.id)
-						updateApp.attr('role', app_role.id);
+						Application.role = app_role.id;
 					else
-						updateApp.attr('role', null);
+						Application.role = null;
+/////
+//// LEFT OFF HERE:
+// .update() .create() is having issues with missing Can data on our values.
+// let's try to remove CanJS altogether and just work with our data directly.
+//
 
-					updateApp.save()
-						.fail(function (err) { next(err); })
+					Application.save()
 						.then(function (result) {
-							var existApp = self.data.filter(function (item, index, list) {
-								return item.id === result.id;
-							})[0];
 
-							if (result.translate) result.translate();
+							// var existApp = self.data.filter(function (item, index, list) {
+							// 	return item.id === result.id;
+							// })[0];
 
-							existApp.attr('name', result.name);
-							existApp.attr('label', result.label);
-							existApp.attr('description', result.description);
+							// if (result.translate) result.translate();
+
+							// existApp.attr('name', result.name);
+							// existApp.attr('label', result.label);
+							// existApp.attr('description', result.description);
 
 							next(null, result.id);
-						});
+						})
+						.catch(next)
+						
 				}
-										], function (err) {
-											$$(self.webixUiids.appListForm).hideProgress();
+			], function (err) {
 
-											if (err) {
-												webix.message({
-													type: "error",
-													text: self.labels.common.updateErrorMessage.replace('{0}', updateApp.attr('label'))
-												});
+				_logic.formReady();
+				_logic.buttonSaveEnable();
+				if (err) {
+					webix.message({
+						type: "error",
+						text: labels.common.updateErrorMessage.replace('{0}', Application.label)
+					});
+					AD.error.log('App Builder : Error update application data', { error: err });
+					return false;
+				}
 
-												AD.error.log('App Builder : Error update application data', { error: err });
+				App.actions.transitionApplicationList();
 
-												saveButton.enable();
-												return false;
-											}
+				webix.message({
+					type: "success",
+					text: labels.common.updateSucessMessage.replace('{0}', Application.label)
+				});
 
-											$$(self.webixUiids.appListRow).show();
-
-											webix.message({
-												type: "success",
-												text: self.labels.common.updateSucessMessage.replace('{0}', updateApp.attr('label'))
-											});
-
-											saveButton.enable();
-
-										});
+			});
 		},
 
 
@@ -632,8 +635,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 			return new Promise(
 				(resolve, reject) => {
 
-					var saveRoleTasks = []
-						appRole;
+					var saveRoleTasks = [],
+						appRole = null;
 
 					//// Process the option to create a newRole For this Application:
 

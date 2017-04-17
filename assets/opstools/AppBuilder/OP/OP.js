@@ -16,6 +16,8 @@
 
 // if (!window.OP) {
 import Multilingual from "./multilingual"
+import Model from "./model"
+
 
     window.OP = {};
 
@@ -25,7 +27,7 @@ import Multilingual from "./multilingual"
     // OP.UI = {};    		// webix UI definitions
     // OP.Logic = {}; 		// logic references for webix application
     OP.Component = {};  // our defined components
-	OP.Models = {};     // Models and data access
+
 
 
 
@@ -87,12 +89,12 @@ import Multilingual from "./multilingual"
 	}
 
 
-
-
+	
 	OP.Dialog = AD.op.Dialog;
 
 
 	OP.Multilingual = Multilingual;
+	OP.Model = Model;
 	
 
 	export default OP;
