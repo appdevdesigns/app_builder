@@ -22,18 +22,10 @@ var appsBuildInProgress = {};  // a hash of deferreds for apps currently being b
 // {  ABApplication.id : dfd }
 
 
+var __dfdBuildDirectoryCreated = null;
+
 
 var DataFields = {};
-
-// Sometimes, the column data types in AB & Sails have different names.
-// This will map Sails model column type to the AppBuilder object type.
-// For example, a Sails 'integer' column is an AB 'number' column.
-var typeMap = {
-    integer: 'number',
-    float: 'number',
-    datetime: 'date',
-    json: 'text',
-};
 
 
 function importDataFields(next) {
@@ -98,8 +90,58 @@ function getPageKey(appName, pageName) {
 
 module.exports = {
 
+    buildDirectory:{
+
+        init:function(){
+            if (!__dfdBuildDirectoryCreated) {
+                __dfdBuildDirectoryCreated = AD.sal.Deferred();
+            }
+
+
+            var bd = require('./build_directory/build_directory.js');
+            bd(function(err){
+                sails.log.info('AppBuilder:buildDirectory:init()   started.');
+                if (err) {
+// console.log('... rejected!');
+                    ADCore.error.log('AppBuilder:buildDirectory.init(): exited with an error', {
+                        error:err,
+                        message: err.message || 'no message provided',
+                        stack: err.stack || [ 'no stack trace ']
+                    });
+                    __dfdBuildDirectoryCreated.reject(err);
+                } else {
+// console.log('... resolved.');
+                    sails.log.info('AppBuilder:buildDirectory:init()  completed.');
+                    __dfdBuildDirectoryCreated.resolve();
+                }
+            })
+
+
+        },
+
+        ready:function(){
+            if (!__dfdBuildDirectoryCreated) {
+                __dfdBuildDirectoryCreated = AD.sal.Deferred();
+            }
+            return __dfdBuildDirectoryCreated;
+        }
+    },
+
     /**
-     * AppBuilder.util
+     * AppBuilder.paths
+     *
+     * methods to return specific paths for common items:
+     */
+    paths: {
+
+        sailsBuildDir:function(){
+            return path.join(sails.config.appPath, 'data', 'app_builder', 'sailsAlter');
+        }
+    },
+
+
+    /**
+     * AppBuilder.rules
      *
      * A set of rules for AppBuilder objects.
      */
@@ -162,6 +204,57 @@ module.exports = {
         notifyToClients(true);
 
         async.auto({
+
+
+            // lift sails in our new build directory:
+            alterModels: [ 'setup', function(next) {
+
+
+                var cwd = process.cwd();
+                process.chdir(AppBuilder.paths.sailsBuildDir());
+
+                // collect any errors that might be posted in the process:
+                var errors = [];
+
+
+                AD.spawn.command({
+                    command:'sails',
+                    options:[ 'lift'],
+                    shouldEcho:false,
+                    onStdErr:function(data){
+
+                        if (data.indexOf('Error:') != -1) {
+                            var lines = data.split('\n');
+                            lines.forEach(function(line){
+                                if (line.indexOf('Error:') != -1) {
+                                    errors.push(line);
+                                }
+                            })
+                        }
+                    }
+                    // exitTrigger:'Server lifted'
+                })
+                .fail(function(err){
+                    AD.log.error('<red> sails lift exited with an error</red>');
+                    AD.log(err);
+                    process.chdir(cwd);
+                    next(err);
+                })
+                .then(function(code){
+// console.log('... exited with code:', code);
+                    var error = undefined;
+
+                    if (code > 0) {
+                        error = new Error(errors.join(''));
+                    }
+                    process.chdir(cwd);
+                    next(error);
+                });
+
+
+            }],
+
+
             find: function (next) {
                 notifyToClients(true, 'findApplication', 'start');
 
@@ -219,7 +312,7 @@ module.exports = {
                 });
             }],
 
-            controllers: ['setup', function (next) {
+            controllers: ['setup',  function (next) {
                 sails.log('Reloading controllers');
 
                 notifyToClients(true, 'reloadControllers', 'start');
@@ -247,21 +340,23 @@ module.exports = {
             }],
             */
 
-            orm: ['setup', function (next) {
+            orm: ['setup', 'alterModels', function (next) {
                 sails.log('Reloading ORM');
 
                 notifyToClients(true, 'reloadORM', 'start');
 
                 // Temporarily set environment to development so Waterline will
                 // respect the migrate:alter setting
-                sails.config.environment = 'development';
-                process.env.NODE_ENV = 'developement';
+
+// NOTE: now we manuall lift sails in another process to do this:                
+                // sails.config.environment = 'development';
+                // process.env.NODE_ENV = 'developement';
 
                 sails.hooks.orm.reload();
                 sails.once('hook:orm:reloaded', function () {
                     // Restore original environment
-                    sails.config.environment = env1;
-                    process.env.NODE_ENV = env2;
+                    // sails.config.environment = env1;
+                    // process.env.NODE_ENV = env2;
 
                     notifyToClients(true, 'reloadORM', 'done');
 
@@ -286,15 +381,25 @@ module.exports = {
             sails.log('End reload');
 
             if (err) {
+
                 notifyToClients(true, '', 'fail', {
-                    error: err,
+                    error: err.message.replace('Error:','').replace('error:',''),
                     requestData: { appID: appID }
                 });
 
                 dfd.reject(err);
             }
             else {
-                notifyToClients(false, '', 'finish');
+
+                //// FIX: somewhere in the process of reloading controllers or blueprints, 
+                //// our client's socket looses connection with the server.  It is possible
+                //// that this notification is sent during that disconnected state and the 
+                //// Client remains unaware of the updated status.
+                //// Here we set a timeout to give the client a chance to reconnect before 
+                //// we send the message.
+                setTimeout(function(){ 
+                    notifyToClients(false, '', 'finish');
+                }, 3000);
 
                 dfd.resolve();
             }
@@ -734,7 +839,237 @@ module.exports = {
                 }, function (err) {
                     next();
                 });
+            },
+
+
+            // add build links for this and any connected models:
+            function(next) {
+
+                // hash of currently existing models:  'modelName' => modelDescription
+                var hashCurrModels = {};
+
+                var pathModelDir = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models');
+
+
+                // given a model filename, read in the model and store in our hashCurrModels
+                function importModel(file) {
+                    var modelRef = file.replace('.js', '');
+                    hashCurrModels[modelRef] = require(path.join(pathModelDir, file));
+                }
+
+
+                ////  calculate the relative offset for our original (live) model file:
+                function calcOffsetPath(fileName, currPath) {
+
+                   ////  calculate the relative offset for our original (live) model file:
+                    var offsetDir = currPath.replace(sails.config.appPath+path.sep, '');
+// console.log('... offsetDir:'+offsetDir);
+
+                    var parts = offsetDir.split(path.sep);
+
+                    // remove the final model name and have only the path now.
+                    if (parts[parts.length-1].indexOf('.js') != -1) {
+                        parts.pop(); 
+                    }
+
+                    // for each path directory, add a '..' offset
+                    var offsets = [];
+                    parts.forEach(function(){
+                        offsets.push('..');
+                    })
+
+                    // add the actual path to the model.
+                    offsets.push(fileName);
+                    return offsets.join(path.sep);
+
+                }
+
+                // create the symlink for a given model name (not file name)
+                function linkModel(name, cb) {
+
+                    // find the build destination path for this model:
+                    var destPath = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models', name+'.js')
+// console.log('... symlink for: '+ destPath);
+
+
+                    var livePath = calcOffsetPath(path.join(modelsPath, name) + '.js', destPath);
+// console.log('... livePath:'+livePath);
+// console.log('... cwd:', process.cwd() );
+
+                    var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
+// console.log('... currLivePath:'+currLivePath);
+
+                    
+                    // if livePath Exists:
+                    fs.readFile(currLivePath,function(err, data){
+                        if (!err) {
+// console.log('    +++ making symlink!');
+                            // now make the symlink:
+                            fs.symlink(livePath, destPath, function(err){
+                                cb(err);
+                            });
+                        } else {
+// console.log('... no symlink.  err:', err);
+                            cb();
+                        }
+                    })
+                    
+                }
+
+// function forceCrash(name, cb) {
+
+//     var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
+
+//     fs.readFile(currLivePath, 'utf8', function(err, data){
+//         if (!err) {
+//             var code = [
+//                 "attributes: {",
+//                 "something:{ model:'notThere' },"    
+//             ].join('\n');
+
+//             data = data.replace(/attributes\s*:\s*{/g, code);
+//             // now make the symlink:
+//             fs.writeFile(currLivePath, data, function(err){
+//                 cb(err);
+//             });
+//         } else {
+//             cb();
+//         }
+//     })
+// }
+
+//// TODO:
+// sails is lowercasing all our models info in .collection and .model references.
+// we need to be able to revert to the proper upper case for our FileNames.
+// the current lowercase versions work on MacOS, but not on Linux.
+
+// until it is fixed:  just attempt model and modelTrans:
+linkModel(fullName, function(err){
+    linkModel(fullName+'Trans', function(err){
+
+// forceCrash(fullName, function(err){ 
+        next();
+// })
+
+    })
+});
+
+
+//// This should work once we fix the fileNames and be able to handle 
+//// any embedded model associations:
+
+//                 async.series([
+
+//                     // find the current models in the directory:
+//                     function(ok){
+
+//                         // scan this directory:
+//                         fs.readdir(pathModelDir, function(err, files){
+
+//                             if (err) {
+//                                 ok(err);
+//                                 return;
+//                             } 
+
+//                             files.forEach(function(file){
+
+//                                 importModel(file);
+
+//                             })
+// console.log('... hashCurrModels:', _.keys(hashCurrModels));
+
+//                             ok();
+//                         });
+//                     },
+
+//                     function(ok){
+
+
+//                         // check the current model name
+//                         // make sure it is linked, then find any associated models
+//                         // and make sure they are linked.  
+//                         // when the current model is fully processed, call cb().
+//                         function checkModel(name, cb) {
+
+//                             // if not already linked LINK IT and try again:
+//                             if (!hashCurrModels[name]) {
+
+//                                 // add link  
+//                                 linkModel(name, function(err){
+//                                     if (err) {
+//                                         cb(err);
+//                                     } else{
+
+//                                         importModel(name+'.js'); // <-- use file name
+
+//                                         // try it again.
+//                                         checkModel(name,cb); 
+//                                     }
+//                                 })
+
+//                             } else {
+
+//                                 // scan attributes for additional models to import:
+//                                 // each found model is .push() into associatedModels
+//                                 var model = hashCurrModels[name];
+//                                 var associatedModels = [];
+//                                 for(var a in model.attributes) {
+//                                     var field = model.attributes[a];
+//                                     if (field.collection) {
+//                                         associatedModels.push(field.collection);
+//                                     } 
+//                                     if (field.model) {
+//                                         associatedModels.push(field.model);
+//                                     }
+//                                 }
+
+
+//                                 // recursively process associatedModels and make sure
+//                                 // they are also linked.
+//                                 function processModel(models, pm_cb) {
+//                                     if (models.length == 0) {
+//                                         pm_cb();
+//                                     } else {
+
+//                                         var model = models.shift();
+//                                         if (hashCurrModels[model]) {
+//                                             // we can skip this one:
+//                                             processModel(models, pm_cb);
+//                                         } else {
+//                                             checkModel(model, function(err){
+
+//                                                 // that model is now done.  So try the next:
+//                                                 processModel(models, pm_cb);
+//                                             })
+//                                         }
+//                                     }
+//                                 }
+// console.log('... associatedModels:', associatedModels);
+//                                 processModel(associatedModels, function(err){
+
+//                                     // all our associated models have been checked:
+//                                     // we're done:
+//                                     cb(err);
+//                                 })
+
+
+//                             }
+
+//                         } // end checkModel()
+
+//                         // kick the process off with the current model :
+//                         // NOTE: lower case our model name for our build files.
+//                         checkModel(fullName, function(err){
+//                             ok(err);
+//                         })
+
+//                     }], function(err){
+//                     next(err);
+
+//                 }) // end async.series()
+
             }
+
 
         ], function (err) {
             process.chdir(cwd);
@@ -1633,6 +1968,12 @@ module.exports = {
                             isSynced: true // Import object has synced columns by default
                         };
 
+                        var typeMap = {
+                            integer: 'number',
+                            float: 'number',
+                            datetime: 'date',
+                            json: 'text',
+                        };
                         var fieldType = typeMap[col.type] || col.type;
 
                         // Special case for float type
@@ -1966,18 +2307,6 @@ module.exports = {
                         type: col.type
                     };
                 }
-            }
-        }
-        
-        // Check if column types are supported by AppBuilder
-        var validTypes = ABColumn.getValidTypes();
-        for (var colName in columns) {
-            var type = columns[colName].type;
-            type = typeMap[type] || type;
-            if (validTypes.indexOf(type) >= 0) {
-                columns[colName].supported = true;
-            } else {
-                columns[colName].supported = false;
             }
         }
 

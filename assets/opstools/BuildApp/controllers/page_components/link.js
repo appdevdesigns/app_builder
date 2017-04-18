@@ -179,7 +179,7 @@ steal(
 				],
 				on: {
 					onBeforeEditStop: function (state, editor) {
-						if (editor.id == 'title') {
+						if (editor.id == 'title' && state.value.length > 0) {
 							return inputValidator.validateFormat(state.value);
 						}
 						else {

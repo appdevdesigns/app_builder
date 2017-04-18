@@ -8,6 +8,10 @@
 var AD = require('ad-utils');
 var fs = require('fs');
 var _ = require('lodash');
+var path = require('path');
+var async = require('async');
+
+
 var reloading = null;
 
 module.exports = {
@@ -98,6 +102,17 @@ module.exports = {
             reloading.resolve();
         });
     },
+
+
+    // get /app_builder/reloadStatus 
+    reloadStatus: function(req, res) {
+
+        if (reloading && reloading.state() == 'pending') {
+            res.AD.success({state:'pending'});
+        } else {
+            res.AD.success({state:'done'});
+        }
+    },
     
     
     /**
@@ -156,7 +171,50 @@ console.log('*** !!! Run full reload again');
                     return null;
                 });
             },
-            
+
+
+            // Make sure our build directory is ready: 
+            function(next) {
+              
+                AppBuilder.buildDirectory.ready()
+                .fail(next)
+                .done(function(){
+                    next();
+                })
+
+            },
+
+
+            // Remove any current Model links in our new sails build directory
+            function(next) {
+
+                // fs.readdir() for each target:
+                var pathModelDir = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models');
+                fs.readdir(pathModelDir, function(err, files){
+                    if (err) {
+                        ADCore.error.log('Unable to read from sailsBuildDir.api.models directory:', {error:err});
+                        next(err);
+                    } else {
+
+                        function unlinkIt(list, ok) {
+                            if (list.length == 0) {
+                                ok();
+                            } else {
+                                var target = list.shift();
+                                fs.unlink(path.join(pathModelDir, target), function (err) {
+                                    // Ignore errors. If file does not exist, that's fine.
+                                    unlinkIt(list, ok);
+                                });
+                            }
+                        }
+                        unlinkIt(files, next);
+                    }
+                })
+                    
+
+            },
+                
+
             // Create model definitions for each AB Object
             function(next) {
                 async.eachSeries(objIDs, function(id, ok) {
@@ -174,7 +232,18 @@ console.log('*** !!! Run full reload again');
             // Reload ORM
             function(next) {
                 AppBuilder.reload(appID)
-                .fail(next)
+                .fail(function(err){
+
+                    ADCore.error.log("Error during the Reload Process", { 
+                        error: err, 
+                        appID:appID,
+                        message:err.message, 
+                        stack:err.stack,
+                        user:req.AD.user().GUID()
+                    });
+
+                    next(err);
+                })
                 .done(function() {
                     next();
                 });
@@ -410,4 +479,6 @@ console.log('*** !!! Run full reload again');
     
 	
 };
+
+
 

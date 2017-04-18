@@ -213,7 +213,13 @@ steal(
 					},
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
-						dataTableController.bindColumns(application, columns, true, setting.selectable === 'enable', setting.removable === 'enable');
+
+						dataTableController.bindColumns(application, columns, true, {
+							isSelectVisible: setting.selectable === 'enable',
+							isViewVisible: setting.viewPage && setting.viewId,
+							isEditVisible: setting.editPage && setting.editForm,
+							isTrashVisible: setting.removable === 'enable'
+						});
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
 							$$(self.viewId).showProgress({ type: 'icon' });
 
@@ -302,7 +308,7 @@ steal(
 					}
 					else { // Label
 						header.id = componentIds.header.replace('{id}', viewId);
-						header.width = 800;
+						header.width = 2100;
 
 						if (setting.title) {
 							header.rows.push({
@@ -444,7 +450,7 @@ steal(
 					getObjectDataTable.call(self, application, setting.object, self.data.columns)
 						.registerItemClick(function (id, e, node) {
 							switch (id.column) {
-								case 'view_detail':
+								case 'appbuilder_view_detail':
 									$(self).trigger('changePage', {
 										pageId: setting.viewPage
 									});
@@ -455,7 +461,7 @@ steal(
 									if (dataCollection)
 										dataCollection.setCursor((id.row || id));
 									break;
-								case 'edit_form':
+								case 'appbuilder_edit_form':
 									$(self).trigger('changePage', {
 										pageId: setting.editPage
 									});
@@ -559,40 +565,14 @@ steal(
 
 				// if (columns.length < 1 && showAll) columns = self.data.columns.slice(0); // Show all
 
-				// View column
-				if (extraColumns.viewPage && extraColumns.viewId) {
-					columns.push({
-						width: 60,
-						weight: getMaxWeight(columns) + 1,
-						setting: {
-							id: "view_detail",
-							header: "",
-							label: "",
-							template: "<span class='go-to-view-detail'>View</span>",
-							css: 'ab-object-view-column'
-						}
+				getObjectDataTable
+					.call(self, application, self.data.setting.object, self.data.columns)
+					.bindColumns(application, columns, true, {
+						isSelectVisible: selectable == 'enable',
+						isViewVisible: extraColumns.viewPage && extraColumns.viewId,
+						isEditVisible: extraColumns.editPage && extraColumns.editForm,
+						isTrashVisible: isTrashVisible === 'enable'
 					});
-				}
-
-				// Edit column
-				if (extraColumns.editPage && extraColumns.editForm) {
-					columns.push({
-						width: 45,
-						weight: getMaxWeight(columns) + 1,
-						setting: {
-							id: "edit_form",
-							header: "",
-							label: "",
-							template: "<span class='go-to-edit-form'>{common.editIcon()}</span>",
-							css: { 'text-align': 'center' }
-						}
-					});
-				}
-
-				selectable = selectable == 'enable';
-				isTrashVisible = isTrashVisible === 'enable'; // Convert to boolean
-
-				getObjectDataTable.call(self, application, self.data.setting.object, self.data.columns).bindColumns(application, columns, true, selectable, isTrashVisible);
 
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
