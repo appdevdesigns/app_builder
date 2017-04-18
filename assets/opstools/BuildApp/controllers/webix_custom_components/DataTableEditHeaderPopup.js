@@ -66,7 +66,9 @@ steal(
 
 				if (eventIds['onHeaderClick'] == null && dataTable) {
 					eventIds['onHeaderClick'] = dataTable.attachEvent('onHeaderClick', function (id, e, trg) {
-						if (id.column == 'appbuilder_trash') return; // Ignore trash column
+						// Ignore system columns
+						if (id.column == 'appbuilder_trash')
+							return;
 
 						var columnConfig = dataTable.getColumnConfig(id.column);
 

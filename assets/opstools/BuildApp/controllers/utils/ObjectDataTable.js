@@ -78,10 +78,10 @@ steal(
 
 							if (self.eventIds['onBeforeRender'] == null) {
 								var isFiltered = false,
+									waitMilliseconds = 650,
 									filterTimeoutId;
 
 								self.eventIds['onBeforeRender'] = self.dataTable.attachEvent('onBeforeRender', function (data) {
-									// FILTER : Should register this filter to Webix datatable
 									if (filterTimeoutId) clearTimeout(filterTimeoutId);
 
 									filterTimeoutId = setTimeout(function () {
@@ -101,10 +101,15 @@ steal(
 													return isVisible;
 												});
 											}
+											else {
+												self.dataTable.filter(function (item) { return true });
+											}
 
-											setTimeout(function () { isFiltered = false }, 400);
+											setTimeout(function () { isFiltered = false }, waitMilliseconds + 100);
 										}
-									}, 300);
+									}, waitMilliseconds);
+
+									return isFiltered;
 								});
 							}
 
@@ -133,14 +138,17 @@ steal(
 							var self = this;
 							dataTable.eachRow(function (rowId) {
 								dataTable.eachColumn(function (columnId) {
-									var col = self.columns.filter(function (col) { return col.name == columnId });
-									if (col && col.length > 0) col = col[0];
-									else return;
-
-									var itemNode = dataTable.getItemNode({ row: rowId, column: columnId }),
-										itemData = dataTable.getItem(rowId);
+									var itemData = dataTable.getItem(rowId),
+										itemNode = dataTable.getItemNode({ row: rowId, column: columnId });
 
 									if (!itemNode || !itemData) return;
+
+									if (itemData.isUnsync) { // Highlight unsync data
+										itemNode.classList.add('ab-object-unsync-data');
+									}
+
+									var col = self.columns.filter(function (col) { return col.name == columnId })[0];
+									if (col == null) return;
 
 									dataFieldsManager.customDisplay(
 										col.fieldName,
@@ -154,10 +162,6 @@ steal(
 										{
 											readOnly: self.data.readOnly
 										});
-
-									if (itemData.isUnsync) { // Highlight unsync data
-										itemNode.classList.add('ab-object-unsync-data');
-									}
 
 								});
 							});
@@ -175,8 +179,9 @@ steal(
 							this.events.deleteRow = deleteRow;
 						},
 
-						bindColumns: function (application, columns, resetColumns, showSelectCol, showTrashCol) {
-							var self = this;
+						bindColumns: function (application, columns, resetColumns, extraColumns) {
+							var self = this,
+								extraColumns = extraColumns || {};
 
 							if (resetColumns)
 								self.dataTable.clearAll();
@@ -226,26 +231,53 @@ steal(
 
 							headers.sort(function (a, b) { return a.weight - b.weight; });
 
-							// Select column by checkbox
-							if (showSelectCol && columns.length > 0) {
-								headers.unshift({
-									id: "select_column",
-									header: { content: "masterCheckbox", css: "center" },
-									template: "{common.checkbox()}",
-									css: "center",
-									width: 50
-								});
-							}
+							if (columns.length > 0) {
 
-							// Removable
-							if (showTrashCol && columns.length > 0) {
-								headers.push({
-									id: "appbuilder_trash",
-									header: "",
-									width: 40,
-									template: "<span class='trash'>{common.trashIcon()}</span>",
-									css: { 'text-align': 'center' }
-								});
+								// Select column by checkbox
+								if (extraColumns.isSelectVisible && extraColumns.isSelectVisible != false) {
+									headers.unshift({
+										id: "select_column",
+										header: { content: "masterCheckbox", css: "center" },
+										template: "{common.checkbox()}",
+										css: "center",
+										width: 50
+									});
+								}
+
+								// View column
+								if (extraColumns.isViewVisible && extraColumns.isViewVisible != false) {
+									headers.push({
+										id: "appbuilder_view_detail",
+										header: "",
+										label: "",
+										template: "<span class='go-to-view-detail'>View</span>",
+										css: 'ab-object-view-column',
+										width: 60
+									});
+								}
+
+								// Edit column
+								if (extraColumns.isEditVisible && extraColumns.isEditVisible != false) {
+									headers.push({
+										id: "appbuilder_edit_form",
+										header: "",
+										label: "",
+										template: "<span class='go-to-edit-form'>{common.editIcon()}</span>",
+										css: { 'text-align': 'center' },
+										width: 45
+									});
+								}
+
+								// Removable
+								if (extraColumns.isTrashVisible && extraColumns.isTrashVisible != false) {
+									headers.push({
+										id: "appbuilder_trash",
+										header: "",
+										width: 40,
+										template: "<span class='trash'>{common.trashIcon()}</span>",
+										css: { 'text-align': 'center' }
+									});
+								}
 							}
 
 							self.dataTable.refreshColumns(headers, resetColumns || false);

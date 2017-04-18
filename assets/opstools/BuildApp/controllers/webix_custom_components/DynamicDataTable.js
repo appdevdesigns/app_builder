@@ -6,9 +6,9 @@ steal(
 		webix.protoUI({
 			name: "dynamicdatatable",
 
-			prependView: function (view) {
+			prependView: function (view, ignoreAutoWidth) {
 				var generatedView = webix.ui(view);
-				if (this.config.width > generatedView.config.width)
+				if (this.config.width > generatedView.config.width && !ignoreAutoWidth)
 					generatedView.define('minWidth', this.config.width + 2);
 
 				if (!this.additionViews) this.additionViews = [];
@@ -21,9 +21,9 @@ steal(
 				generatedView.resize();
 			},
 
-			appendView: function (view) {
+			appendView: function (view, ignoreAutoWidth) {
 				var generatedView = webix.ui(view);
-				if (this.config.width > generatedView.config.width)
+				if (this.config.width > generatedView.config.width && !ignoreAutoWidth)
 					generatedView.define('minWidth', this.config.width + 2);
 
 				if (!this.additionViews) this.additionViews = [];

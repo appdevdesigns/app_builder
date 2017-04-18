@@ -221,6 +221,7 @@ steal(
 										dragColumn: true,
 										on: {
 											onBeforeSelect: function (data, preserve) {
+
 												var itemNode = this.getItemNode({ row: data.row, column: data.column });
 
 												var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
@@ -242,9 +243,11 @@ steal(
 												} else
 													fieldData = fieldData[0];
 
+												// Custom update data
 												if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
 													return false;
 
+												// Normal update data
 												this.editCell(data.row, data.column);
 											},
 											onCheck: function (row, col, val) { // Update checkbox data
@@ -316,6 +319,12 @@ steal(
 												// 	// For calculate/refresh row height
 												// 	$$(self.webixUiId.objectDatatable).render();
 												// }
+											},
+											onBeforeColumnDrag: function (sourceId, event) {
+												if (sourceId === 'appbuilder_trash') // Remove column
+													return false;
+												else
+													return true;
 											},
 											onBeforeColumnDrop: function (sourceId, targetId, event) {
 												if (targetId === 'appbuilder_trash') // Remove column
@@ -661,7 +670,7 @@ steal(
 										})
 										.then(function (data) {
 
-											data.forEach(function (d) { 
+											data.forEach(function (d) {
 												if (d.translate) d.translate();
 											});
 
@@ -669,9 +678,9 @@ steal(
 											AD.classes.AppBuilder.currApp.currObj.attr('columns', data);
 
 											// Find option list
-											var listColIds = $.map(self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; }), function (c) {
-												return c.id;
-											});
+											var listColIds = self.data.columns
+												.filter(function (col) { return col.fieldName === 'list'; })
+												.map(function (col) { return col.id; });
 
 											if (listColIds && listColIds.length > 0) {
 												var getListEvents = [];
@@ -718,17 +727,17 @@ steal(
 
 									next();
 								},
-								// Bind columns to DataTable
-								function (next) {
-									self.bindColumns(true, false, true);
-									next();
-								},
 								// Get object model
 								function (next) {
 									if (!AD.classes.AppBuilder.currApp.currObj)
 										return next();
 
 									self.Model.ObjectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'));
+									next();
+								},
+								// Bind columns to DataTable
+								function (next) {
+									self.bindColumns(true, false, true);
 									next();
 								},
 								// Get data from server
@@ -853,7 +862,7 @@ steal(
 										},
 										// Create list option of select column
 										function (next) {
-											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+											if (columnInfo.fieldName === 'list' && columnInfo.setting.options) {
 												var createOptionEvents = [];
 
 												columnInfo.setting.options.forEach(function (opt, index) {
@@ -873,6 +882,15 @@ steal(
 															})
 																.fail(createOk)
 																.then(function (createdCol) {
+																	// Update default value
+																	if (updateColumn.setting.multiSelect && updateColumn.setting.default && updateColumn.setting.default.indexOf(opt.id) > -1) {
+																		var updateDefaultValue = updateColumn.setting.attr('default').replace(opt.id, createdCol.id);
+																		updateColumn.setting.attr('default', updateDefaultValue);
+																	}
+																	else if (!updateColumn.setting.multiSelect && updateColumn.setting.default == opt.id) {
+																		updateColumn.setting.attr('default', createdCol.id);
+																	}
+
 																	opt.id = createdCol.id;
 
 																	createOk();
@@ -916,22 +934,22 @@ steal(
 										},
 										// Update options of list data type
 										function (next) {
-											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+											if (columnInfo.fieldName === 'list' && columnInfo.setting.options) {
 
 												// Refresh options
 												updateColumn.setting.attr('options', columnInfo.setting.options.filter(function (opt) {
-													return  columnInfo.removedOptionIds == null || columnInfo.removedOptionIds.indexOf(opt.id) < 0;
+													return columnInfo.removedOptionIds == null || columnInfo.removedOptionIds.indexOf(opt.id) < 0;
 												}));
 
-												// Update default ABList id
-												if (updateColumn.setting.default) {
-													var defaultOpt = columnInfo.setting.options.filter(function (opt) { return opt.value == updateColumn.setting.default; })[0];
-													if (defaultOpt)
-														updateColumn.setting.attr('default', defaultOpt.id);
-												}
-												else {
-													updateColumn.setting.removeAttr('default');
-												}
+												// // Update default ABList id
+												// if (updateColumn.setting.default) {
+												// 	var defaultOpt = columnInfo.setting.options.filter(function (opt) { return opt.value == updateColumn.setting.default; })[0];
+												// 	if (defaultOpt)
+												// 		updateColumn.setting.attr('default', defaultOpt.id);
+												// }
+												// else {
+												// 	updateColumn.setting.removeAttr('default');
+												// }
 
 												updateColumn.save()
 													.fail(next)
@@ -995,7 +1013,7 @@ steal(
 
 									if (col.type == 'date' || col.type == 'datetime') {
 										if (col.setting.currentDateDefault == true)
-											defaultValue = new Date(); 
+											defaultValue = new Date();
 										else if (col.setting.default)
 											defaultValue = new Date(col.setting.default);
 									}
@@ -1104,7 +1122,10 @@ steal(
 								objectName = AD.classes.AppBuilder.currApp.currObj.attr('name'),
 								objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, objectName);
 
-							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, showSelectCol, showTrashCol);
+							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, {
+								isSelectVisible: showSelectCol,
+								isTrashVisible: showTrashCol
+							});
 						},
 
 						refreshColumns: function (columnInfo) {
@@ -1241,6 +1262,7 @@ steal(
 								}
 
 								// $$(self.webixUiId.objectDatatable).refreshColumns(columns);
+
 								self.bindColumns(false, false, true);
 
 								self.refreshPopupData();

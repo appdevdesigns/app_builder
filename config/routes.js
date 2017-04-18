@@ -14,6 +14,9 @@ module.exports = {
         
     'post /app_builder/reloadORM/:id': 
         'app_builder/ABApplicationController.reloadORM',
+
+    'get /app_builder/reloadStatus': 
+        'app_builder/ABApplicationController.reloadStatus',
     
     'post /app_builder/prepareObject/:id': 
         'app_builder/ABObjectController.prepare',
@@ -71,6 +74,7 @@ module.exports = {
     
     'get /app_builder/application/findModelAttributes':
         'app_builder/ABApplicationController.findModelAttributes',
+
   /*
 
   '/': {
