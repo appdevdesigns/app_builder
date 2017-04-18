@@ -78,10 +78,10 @@ steal(
 
 							if (self.eventIds['onBeforeRender'] == null) {
 								var isFiltered = false,
+									waitMilliseconds = 650,
 									filterTimeoutId;
 
 								self.eventIds['onBeforeRender'] = self.dataTable.attachEvent('onBeforeRender', function (data) {
-									// FILTER : Should register this filter to Webix datatable
 									if (filterTimeoutId) clearTimeout(filterTimeoutId);
 
 									filterTimeoutId = setTimeout(function () {
@@ -101,10 +101,15 @@ steal(
 													return isVisible;
 												});
 											}
+											else {
+												self.dataTable.filter(function (item) { return true });
+											}
 
-											setTimeout(function () { isFiltered = false }, 400);
+											setTimeout(function () { isFiltered = false }, waitMilliseconds + 100);
 										}
-									}, 300);
+									}, waitMilliseconds);
+
+									return isFiltered;
 								});
 							}
 

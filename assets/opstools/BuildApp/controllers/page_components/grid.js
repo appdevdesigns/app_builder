@@ -418,7 +418,7 @@ steal(
 					else {
 						$$(self.viewId).clearAdditionalView();
 						if (header.rows.length > 0)
-							$$(self.viewId).prependView(header);
+							$$(self.viewId).prependView(header, true);
 					}
 
 					if ($$(componentIds.toolbar.replace('{id}', viewId))) {
@@ -471,6 +471,10 @@ steal(
 
 					if (events['onAfterRender'] == null) {
 						events['onAfterRender'] = $$(self.viewId).attachEvent('onAfterRender', function (data) {
+							if ($$(componentIds.toolbar.replace('{id}', viewId))) {
+								$$(componentIds.toolbar.replace('{id}', viewId)).$setSize($$(viewId).config.width + 3);
+							}
+
 							$(self).trigger('renderComplete', {});
 						});
 					}
