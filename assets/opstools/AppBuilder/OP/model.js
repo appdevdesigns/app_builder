@@ -21,6 +21,11 @@ class OPModel {
 		this.instanceData = instanceData;
 		this.Model = staticData.Model;
 
+		this.url = {};
+		for(var r in _restURLs) {
+			this.url[r] = staticData[r]
+		}
+
 	}
 
 	Models(Model) {
@@ -33,22 +38,47 @@ class OPModel {
 
 // NOTE: currently reusing AD.Model
 
-				var Model = AD.Model.get(this.key);
-				Model.findAll(cond)
+				// var Model = AD.Model.get(this.key);
+				// Model.findAll(cond)
+
+				var service = this.service('findAll');
+
+				AD.comm.service[service.verb]({ url:service.url, params: cond })
 				.fail(reject)
-				.done((list) => {
+				.done((data) => {
 
-					if (this.Model) {
-						var newList = Model.List();
-						list.forEach((l) => {
-							newList.push( new this.Model(l) );
-						})
+					data = data.data || data;
 
-						list = newList;
-
+					// our findAll() should return an array of items.
+					if (!Array.isArray(data)) {
+						data = [data];
 					}
 
-					var dc = AD.op.WebixDataCollection(list);
+
+					// return instances of this.Model if provided:
+					if (this.Model) {
+						var newList = []; // Model.List();
+						data.forEach((l) => {
+							if (l) {
+								newList.push( new this.Model(l) );
+							}
+						})
+
+						data = newList;
+					}
+
+
+					// convert to a WebixDataCollection:
+					var dc = new webix.DataCollection({
+						data: data,
+
+						on: {
+							onAfterDelete: function(id) {
+
+							}
+						}
+					});
+
 
 					dc._toArray = function() {
 						var data = [];
@@ -60,6 +90,8 @@ class OPModel {
 						return data;
 					}
 
+
+
 					resolve(dc);
 
 				});
@@ -67,12 +99,25 @@ class OPModel {
 		);
 	}
 
-	findOne(cond ) {
+	findOne(cond) {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.findOne(cond)
+				var service = this.service('findOne');
+
+				var nURI = service.url;
+                for (var k in cond) {
+                    var oURI = nURI;
+                    nURI = AD.util.string.replaceAll(nURI, "{" + k + "}", cond[k]);
+
+                    // if there was a change, remove k from cond:
+                    if (oURI != nURI) {
+                        delete cond[k];
+                    }
+                }
+                service.url = nURI;
+
+				AD.comm.service[service.verb]({ url:service.url, params: cond })
 				.fail(reject)
 				.done(function(item){
 					if (item.translate) item.translate();
@@ -87,8 +132,9 @@ class OPModel {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.create(attr)
+				var service = this.service('create');
+
+				AD.comm.service[service.verb]({ url:service.url, params: attr })
 				.fail(reject)
 				.done(function(item){
 					if (item.translate) item.translate();
@@ -103,8 +149,9 @@ class OPModel {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.update(id, attr)
+				var service = this.service('update', id);
+
+				AD.comm.service[service.verb]({ url:service.url, params: attr })
 				.fail(reject)
 				.done(resolve);
 			}
@@ -115,12 +162,30 @@ class OPModel {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.destroy(id)
+				var service = this.service('destroy', id);
+
+				AD.comm.service[service.verb]({ url:service.url, params: {} })
 				.fail(reject)
 				.done(resolve);
 			}
 		);
+	}
+
+
+	service(key, id) {
+		var parts = this.url[key].split(' ');
+		var verb = parts[0].toLowerCase();
+		var uri = parts.pop(); 
+
+		if (id) {
+			var key = '{id}';
+	        uri = AD.util.string.replaceAll(uri, key, id);
+	    }
+
+        return {
+        	verb:verb,
+        	url:uri
+        }
 	}
 }
 
@@ -134,15 +199,15 @@ export default {
 		// Create the AD.Model from this definition
 		//
 
+		if (staticData.restURL) {
+			for (var u in _restURLs) {
+				staticData[u] = _restURLs[u].replace('#url#', staticData.restURL);
+			}
+			
+		}
+
 		var alreadyThere = AD.Model.get(key);
 		if (!alreadyThere) {
-
-			if (staticData.restURL) {
-				for (var u in _restURLs) {
-					staticData[u] = _restURLs[u].replace('#url#', staticData.restURL);
-				}
-				
-			}
 
 			AD.Model.Base.extend(key, staticData, instance);
 			AD.Model.extend(key, staticData, instance);

@@ -18,6 +18,10 @@ export default class ABApplication {
     	OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
 	  	this.role  = attributes.role;
+
+	  	// instance keeps a link to our Model for .save() and .destroy();
+	  	this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
+	  	this.Model.Models(ABApplication);
   	}
 
   	///
@@ -49,14 +53,12 @@ export default class ABApplication {
 		return new Promise(
 			function(resolve, reject) {
 
-
-				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
-
 				var newApp = {}
 				OP.Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
 				values.json = newApp;
 				newApp.name = values.name;
 
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 				ModelApplication.create(values)
 				.then(function(app){
 
@@ -84,10 +86,10 @@ export default class ABApplication {
 	} 
 
 
-	static isValid(op, values) {
+//// TODO: 
+//// Refactor isValid() to ignore op and not error if duplicateName is own .id
 
-// var appName = $$(id.form).elements['label'].getValue(),
-// 				appDescription = $$(id.form).elements['description'].getValue();
+	static isValid(op, values) {
 
 			var errors = [];
 
@@ -127,16 +129,24 @@ export default class ABApplication {
 	/// Instance Methods
 	///
 
+
+	destroy () {
+		if (this.id) {
+			return this.Model.destroy(this.id)
+				.then(()=>{
+					_AllApplications.remove(this.id);
+				});
+		}
+	}
+
 	save () {
 
 		var values = this.toObj();
 
-		var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
-
 		// we already have an .id, so this must be an UPDATE
 		if (values.id) {
-			
-			return ModelApplication.update(values.id, values)
+
+			return this.Model.update(values.id, values)
 					.then(() => {
 						_AllApplications.updateItem(values.id, this);
 					});
@@ -144,7 +154,7 @@ export default class ABApplication {
 		} else {
 
 			// must be a CREATE:
-			return ModelApplication.create(values)
+			return this.Model.create(values)
 					.then((data) => {
 						this.id = data.id;
 						_AllApplications.add(this, 0);

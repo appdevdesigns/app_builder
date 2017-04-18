@@ -294,26 +294,10 @@ OP.Component.extend('ab_choose_form', function(App) {
 						Application.role = app_role.id;
 					else
 						Application.role = null;
-/////
-//// LEFT OFF HERE:
-// .update() .create() is having issues with missing Can data on our values.
-// let's try to remove CanJS altogether and just work with our data directly.
-//
 
 					Application.save()
-						.then(function (result) {
-
-							// var existApp = self.data.filter(function (item, index, list) {
-							// 	return item.id === result.id;
-							// })[0];
-
-							// if (result.translate) result.translate();
-
-							// existApp.attr('name', result.name);
-							// existApp.attr('label', result.label);
-							// existApp.attr('description', result.description);
-
-							next(null, result.id);
+						.then(function () {
+							next();
 						})
 						.catch(next)
 						
@@ -516,9 +500,21 @@ OP.Component.extend('ab_choose_form', function(App) {
 					AD.comm.service.get({ url: '/app_builder/user/roles' })
 						.fail(function (err) { next(err); })
 						.done(function (roles) {
-							next(null, roles);
+
+							// scan the roles and determine if any of them have been created
+							// after the current Application.name:
+							var parsedRoles = roles.map((r) => { 
+								if (application) {
+									if (r.name == _logic.permissionName(application.name.split('_').join(' '))) {
+										r.isApplicationRole = true;
+									}
+								}
+								return r;
+							})
+							next(null, parsedRoles);
 						});
 				},
+
 				function (available_roles, next) {
 					if (application && application.id) {
 						application.getPermissions()

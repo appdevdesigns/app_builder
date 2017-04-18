@@ -205,6 +205,9 @@ class ABApplication {
     	__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
 	  	this.role  = attributes.role;
+
+	  	this.Model = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
+	  	this.Model.Models(ABApplication);
   	}
 
   	///
@@ -237,13 +240,14 @@ class ABApplication {
 			function(resolve, reject) {
 
 
-				var ModelApplication = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
+// var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 
 				var newApp = {}
 				__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
 				values.json = newApp;
 				newApp.name = values.name;
 
+				var ModelApplication = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
 				ModelApplication.create(values)
 				.then(function(app){
 
@@ -314,16 +318,26 @@ class ABApplication {
 	/// Instance Methods
 	///
 
+
+	destroy () {
+		if (this.id) {
+			return this.Model.destroy(this.id)
+				.then(()=>{
+					_AllApplications.remove(this.id);
+				});
+		}
+	}
+
 	save () {
 
 		var values = this.toObj();
 
-		var ModelApplication = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
+// var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 
 		// we already have an .id, so this must be an UPDATE
 		if (values.id) {
-			
-			return ModelApplication.update(values.id, values)
+
+			return this.Model.update(values.id, values)
 					.then(() => {
 						_AllApplications.updateItem(values.id, this);
 					});
@@ -331,7 +345,7 @@ class ABApplication {
 		} else {
 
 			// must be a CREATE:
-			return ModelApplication.create(values)
+			return this.Model.create(values)
 					.then((data) => {
 						this.id = data.id;
 						_AllApplications.add(this, 0);
@@ -565,6 +579,11 @@ class OPModel {
 		this.instanceData = instanceData;
 		this.Model = staticData.Model;
 
+		this.url = {};
+		for(var r in _restURLs) {
+			this.url[r] = staticData[r]
+		}
+
 	}
 
 	Models(Model) {
@@ -577,22 +596,47 @@ class OPModel {
 
 // NOTE: currently reusing AD.Model
 
-				var Model = AD.Model.get(this.key);
-				Model.findAll(cond)
+				// var Model = AD.Model.get(this.key);
+				// Model.findAll(cond)
+
+				var service = this.service('findAll');
+
+				AD.comm.service[service.verb]({ url:service.url, params: cond })
 				.fail(reject)
-				.done((list) => {
+				.done((data) => {
 
-					if (this.Model) {
-						var newList = Model.List();
-						list.forEach((l) => {
-							newList.push( new this.Model(l) );
-						})
+					data = data.data || data;
 
-						list = newList;
-
+					// our findAll() should return an array of items.
+					if (!Array.isArray(data)) {
+						data = [data];
 					}
 
-					var dc = AD.op.WebixDataCollection(list);
+
+					// return instances of this.Model if provided:
+					if (this.Model) {
+						var newList = []; // Model.List();
+						data.forEach((l) => {
+							if (l) {
+								newList.push( new this.Model(l) );
+							}
+						})
+
+						data = newList;
+					}
+
+
+					// convert to a WebixDataCollection:
+					var dc = new webix.DataCollection({
+						data: data,
+
+						on: {
+							onAfterDelete: function(id) {
+
+							}
+						}
+					});
+
 
 					dc._toArray = function() {
 						var data = [];
@@ -604,6 +648,8 @@ class OPModel {
 						return data;
 					}
 
+
+
 					resolve(dc);
 
 				});
@@ -611,12 +657,25 @@ class OPModel {
 		);
 	}
 
-	findOne(cond ) {
+	findOne(cond) {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.findOne(cond)
+				var service = this.service('findOne');
+
+				var nURI = service.url;
+                for (var k in cond) {
+                    var oURI = nURI;
+                    nURI = AD.util.string.replaceAll(nURI, "{" + k + "}", cond[k]);
+
+                    // if there was a change, remove k from cond:
+                    if (oURI != nURI) {
+                        delete cond[k];
+                    }
+                }
+                service.url = nURI;
+
+				AD.comm.service[service.verb]({ url:service.url, params: cond })
 				.fail(reject)
 				.done(function(item){
 					if (item.translate) item.translate();
@@ -631,8 +690,9 @@ class OPModel {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.create(attr)
+				var service = this.service('create');
+
+				AD.comm.service[service.verb]({ url:service.url, params: attr })
 				.fail(reject)
 				.done(function(item){
 					if (item.translate) item.translate();
@@ -647,8 +707,9 @@ class OPModel {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.update(id, attr)
+				var service = this.service('update', id);
+
+				AD.comm.service[service.verb]({ url:service.url, params: attr })
 				.fail(reject)
 				.done(resolve);
 			}
@@ -659,12 +720,30 @@ class OPModel {
 		return new Promise( 
 			(resolve, reject) => {
 
-				var Model = AD.Model.get(this.key);
-				Model.destroy(id)
+				var service = this.service('destroy', id);
+
+				AD.comm.service[service.verb]({ url:service.url, params: {} })
 				.fail(reject)
 				.done(resolve);
 			}
 		);
+	}
+
+
+	service(key, id) {
+		var parts = this.url[key].split(' ');
+		var verb = parts[0].toLowerCase();
+		var uri = parts.pop(); 
+
+		if (id) {
+			var key = '{id}';
+	        uri = AD.util.string.replaceAll(uri, key, id);
+	    }
+
+        return {
+        	verb:verb,
+        	url:uri
+        }
 	}
 }
 
@@ -678,15 +757,15 @@ class OPModel {
 		// Create the AD.Model from this definition
 		//
 
+		if (staticData.restURL) {
+			for (var u in _restURLs) {
+				staticData[u] = _restURLs[u].replace('#url#', staticData.restURL);
+			}
+			
+		}
+
 		var alreadyThere = AD.Model.get(key);
 		if (!alreadyThere) {
-
-			if (staticData.restURL) {
-				for (var u in _restURLs) {
-					staticData[u] = _restURLs[u].replace('#url#', staticData.restURL);
-				}
-				
-			}
 
 			AD.Model.Base.extend(key, staticData, instance);
 			AD.Model.extend(key, staticData, instance);
@@ -1350,19 +1429,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 						Application.role = null;
 
 					Application.save()
-						.then(function (result) {
-
-							// var existApp = self.data.filter(function (item, index, list) {
-							// 	return item.id === result.id;
-							// })[0];
-
-							// if (result.translate) result.translate();
-
-							// existApp.attr('name', result.name);
-							// existApp.attr('label', result.label);
-							// existApp.attr('description', result.description);
-
-							next(null, result.id);
+						.then(function () {
+							next();
 						})
 						.catch(next)
 						
@@ -1565,9 +1633,21 @@ OP.Component.extend('ab_choose_form', function(App) {
 					AD.comm.service.get({ url: '/app_builder/user/roles' })
 						.fail(function (err) { next(err); })
 						.done(function (roles) {
-							next(null, roles);
+
+							// scan the roles and determine if any of them have been created
+							// after the current Application.name:
+							var parsedRoles = roles.map((r) => { 
+								if (application) {
+									if (r.name == _logic.permissionName(application.name.split('_').join(' '))) {
+										r.isApplicationRole = true;
+									}
+								}
+								return r;
+							})
+							next(null, parsedRoles);
 						});
 				},
+
 				function (available_roles, next) {
 					if (application && application.id) {
 						application.getPermissions()
@@ -1982,9 +2062,9 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 								this.select(id);
 
-								var selectedApp = _data.listApplications.filter(function (app) { return app.id == id })
+								var selectedApp = this.getItem(id);
 
-								if (selectedApp && selectedApp.length > 0) {
+								if (selectedApp) {
 		
 
 									_logic.ready();
@@ -2029,6 +2109,15 @@ OP.Component.extend('ab_choose_list', function(App) {
 				$$(ids.list).showProgress({ icon: 'cursor' });
 		},
 
+		refreshOverlay: function() {
+			var appList = $$(ids.list);
+
+			if (!appList.count()) //if no data is available
+				appList.showOverlay(labels.application.noApplication);
+			else
+				appList.hideOverlay();
+		},
+
 		ready: function() {
 			if ($$(ids.list).hideProgress)
 				$$(ids.list).hideProgress();
@@ -2046,6 +2135,16 @@ OP.Component.extend('ab_choose_list', function(App) {
 				.then(function (data) {
 
 					_logic.ready();
+
+					// make sure our overlay is updated when items are added/removed 
+					// from our data list.
+					data.attachEvent("onAfterAdd", function(id, index){
+					    _logic.refreshOverlay();
+					});
+
+					data.attachEvent("onAfterDelete", function(id){
+						_logic.refreshOverlay();
+					})
 
 					_data.listApplications = data;
 
@@ -2065,15 +2164,12 @@ OP.Component.extend('ab_choose_list', function(App) {
 		refreshList: function() {
 
 			var appList = $$(ids.list);
-			
+
 			appList.clearAll();
 			appList.data.unsync();
 			appList.data.sync(_data.listApplications);
 
-			if (!appList.count()) //if no data is available
-				appList.showOverlay(labels.application.noApplication);
-			else
-				appList.hideOverlay();
+			_logic.refreshOverlay();
 
 			appList.refresh();
 
@@ -2140,7 +2236,17 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 			
 			app.destroy()
-				.fail(function (err) {
+				.then(function (result) {
+					_logic.reset();
+					_logic.ready();
+
+					webix.message({
+						type: "success",
+						text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
+					});
+				})
+				.catch(function (err) {
+					_logic.reset();
 					_logic.ready()
 
 					webix.message({
@@ -2150,16 +2256,8 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 					AD.error.log('App Builder : Error delete application data', { error: err });
 				})
-				.then(function (result) {
-					_logic.ready();
 
-					webix.message({
-						type: "success",
-						text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
-					});
-				});
-
-			_logic.reset();
+			
 		}
 	}			
 
