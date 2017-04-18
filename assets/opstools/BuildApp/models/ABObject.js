@@ -4,12 +4,10 @@ steal(
 	'opstools/BuildApp/models/base/ABObject.js',
 
 	'opstools/BuildApp/models/ABColumn.js',
-	'opstools/BuildApp/models/ABApprovalStatus.js',
 	function (modelCreator) {
 		System.import('appdev').then(function () {
 			steal.import('appdev/model/model').then(function () {
 				var ABColumn = AD.Model.get('opstools.BuildApp.ABColumn');
-				var ABApprovalStatus = AD.Model.get('opstools.BuildApp.ABApprovalStatus');
 
 				// Namespacing conventions:
 				// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
@@ -190,20 +188,6 @@ steal(
 							});
 
 							return q;
-						},
-
-						getApprovalItems: function () {
-							return ABApprovalStatus.findAll({ object: this.id });
-						},
-
-						getApprovalItem: function (rowId) {
-							var getUrl = '/app_builder/abapprovalstatus?object=#objectId#&rowId=#rowId#'
-								.replace('#objectId#', this.id)
-								.replace('#rowId#', rowId);
-
-							return AD.comm.service.get({
-								url: getUrl
-							});
 						}
 
 					});

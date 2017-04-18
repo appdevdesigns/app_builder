@@ -13,7 +13,4 @@ module.exports = function (cb) {
 
     AD.module.bootstrap(__dirname, cb);
 
-    // create a listner for when our entries are approved
-    AppBuilder.approval.init();
-
 };

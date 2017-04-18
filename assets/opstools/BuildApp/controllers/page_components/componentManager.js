@@ -5,7 +5,6 @@ steal(
 	'opstools/BuildApp/controllers/page_components/view.js',
 	'opstools/BuildApp/controllers/page_components/link.js',
 	'opstools/BuildApp/controllers/page_components/tab.js',
-	'opstools/BuildApp/controllers/page_components/approval.js',
 	function (dataCollectionHelper) {
 		var componentManager = function () { };
 

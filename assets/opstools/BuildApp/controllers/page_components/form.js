@@ -346,20 +346,7 @@ steal(
 					return dfd;
 				}
 
-				data.object.getApprovalItem(id)
-					.fail(dfd.reject)
-					.done(function (approveItem) {
-
-						// If this data is approve item, then disallow to edit
-						if (approveItem != null && approveItem.length > 0) {
-							saveButton.disable();
-						}
-						else {
-							saveButton.enable();
-						}
-
-						dfd.resolve();
-					});
+				dfd.resolve();
 
 				return dfd;
 			}

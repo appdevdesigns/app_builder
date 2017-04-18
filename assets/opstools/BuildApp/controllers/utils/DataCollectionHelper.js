@@ -3,33 +3,12 @@ steal(
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 
-	'opstools/BuildApp/models/ABApprovalStatus.js',
-
 	'OpsPortal/classes/OpsWebixDataCollection.js',
 
 	function (modelCreator, dataHelper) {
 
 		var dataCollections = {},
 			normalizedObjectIds = [];
-
-		System.import('appdev').then(function () {
-			steal.import('appdev/model/model').then(function () {
-
-				var ABApprovalStatus = AD.Model.get('opstools.BuildApp.ABApprovalStatus');
-
-				ABApprovalStatus.on('messaged', function (ev, value) {
-
-					if (dataCollections[value.data.objectId] != null) {
-						var item = dataCollections[value.data.objectId].getItem(value.data.rowId);
-						item['_approveStatus'] = value.data.status;
-
-						dataCollections[value.data.objectId].updateItem(value.data.rowId, item);
-					}
-
-				});
-
-			});
-		});
 
 		function isSame(newVal, oldVal) {
 			return oldVal == newVal ||
@@ -79,22 +58,6 @@ steal(
 									objectData = data;
 									next();
 								});
-						},
-						// Get approve items
-						function (next) {
-							objInfo.getApprovalItems()
-								.then(function (data) {
-									data.forEach(function (item) {
-										var objRow = objectData.filter(function (obj) { return obj.id == item.rowId; })[0];
-
-										if (objRow != null) {
-											objRow.attr('_approveStatus', item.status.capitalize());
-										}
-
-									});
-
-									next();
-								}, next);
 						},
 						// Populate labels & Convert string to Date object
 						function (next) {
