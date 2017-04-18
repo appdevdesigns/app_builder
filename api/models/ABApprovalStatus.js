@@ -1,0 +1,71 @@
+/**
+ * ABApprovalStatus.js
+ *
+ * @description :: TODO: You might write a short summary of how this model works and what it represents here.
+ * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
+ */
+
+module.exports = {
+
+	tableName: 'appbuilder_approval_status',
+
+	connection: 'appdev_default',
+
+
+
+	attributes: {
+
+		object: {
+			model: 'ABObject',
+			required: true
+		},
+
+		rowId: {
+			type: 'integer'
+		},
+
+		status: {
+			type: 'string',
+			in: [
+				'pending',      // waiting for an admin to approve the request
+				'requesting',   // requesting more information (comments)
+				'approved',     // Admin has approved the request
+				'rejected'      // Admin has rejected the request
+			]
+		},
+
+		note: {
+			type: 'string',
+			required: false
+		}
+
+	},
+
+	afterCreate: function (newlyInsertedRecord, cb) {
+
+		ABApprovalStatus.message(newlyInsertedRecord.id,
+			{
+				objectId: newlyInsertedRecord.object,
+				rowId: newlyInsertedRecord.rowId,
+				status: newlyInsertedRecord.status
+			},
+			{});
+
+		cb();
+	},
+
+	afterUpdate: function (updatedRecord, cb) {
+
+		ABApprovalStatus.message(updatedRecord.id,
+			{
+				objectId: updatedRecord.object,
+				rowId: updatedRecord.rowId,
+				status: updatedRecord.status
+			},
+			{});
+
+		cb();
+	},
+
+};
+

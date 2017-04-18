@@ -214,10 +214,16 @@ steal(
 					function (next) {
 						var dataTableController = getObjectDataTable.call(self, application, setting.object, self.data.columns);
 
+						var isApproveStatusVisible = false;
+						if (dataCollection && dataCollection.find) {
+							isApproveStatusVisible = dataCollection.find(function (row) { return row._approveStatus != null; }).length > 0;
+						}
+
 						dataTableController.bindColumns(application, columns, true, {
 							isSelectVisible: setting.selectable === 'enable',
 							isViewVisible: setting.viewPage && setting.viewId,
 							isEditVisible: setting.editPage && setting.editForm,
+							isApproveStatusVisible: isApproveStatusVisible,
 							isTrashVisible: setting.removable === 'enable'
 						});
 						dataTableController.registerDeleteRowHandler(function (deletedId) {
@@ -561,12 +567,18 @@ steal(
 
 				// if (columns.length < 1 && showAll) columns = self.data.columns.slice(0); // Show all
 
+				var isApproveStatusVisible = false;
+				if (dataCollection && dataCollection.find) {
+					isApproveStatusVisible = dataCollection.find(function (row) { return row._approveStatus != null; }).length > 0;
+				}
+
 				getObjectDataTable
 					.call(self, application, self.data.setting.object, self.data.columns)
 					.bindColumns(application, columns, true, {
 						isSelectVisible: selectable == 'enable',
 						isViewVisible: extraColumns.viewPage && extraColumns.viewId,
 						isEditVisible: extraColumns.editPage && extraColumns.editForm,
+						isApproveStatusVisible: isApproveStatusVisible,
 						isTrashVisible: isTrashVisible === 'enable'
 					});
 
