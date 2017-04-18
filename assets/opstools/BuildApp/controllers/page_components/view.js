@@ -203,7 +203,7 @@ if (!data.columns) return;
 									dataId: col.id,
 									borderless: true,
 									template: col.setting.template,
-									css: col.setting.css
+									css: (col.setting.css || '') + ' left'
 								};
 							}
 							else {
