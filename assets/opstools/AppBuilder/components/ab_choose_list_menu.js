@@ -29,7 +29,7 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 	labels.common = App.labels.common;
 
 	var ids = {
-		menu:App.unique('ab-app-list-menu')
+		menu:App.unique('ab_choose_list_menu')
 	}
 
 	var _ui = {
@@ -51,6 +51,8 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 			select: false,
 			on: {
 				'onItemClick': function (timestamp, e, trg) {
+					$$(ids.menu).hide();
+
 					var selectedApp = App.actions.getSelectedApplication();
 
 					switch (trg.textContent.trim()) {
@@ -77,7 +79,8 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 							break;
 					}
 
-					$$(ids.menu).hide();
+					
+					return false;
 				}
 			}
 		}

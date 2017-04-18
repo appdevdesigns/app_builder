@@ -16,12 +16,9 @@ OP.Component.extend('ab_choose', function(App) {
 
 
 	var ids = {
-		choose:App.unique('ab_choose')
+		chooseComponent:App.unique('ab_choose')
 	}
 
-//// LEFT OFF HERE:
-// [] implement AppForm
-// [] ab_choose_list_menu :> App.actions.editApplication()
 
 
 	// Define the external components used in this Component:
@@ -33,7 +30,7 @@ OP.Component.extend('ab_choose', function(App) {
 	// Application multi-views
 	var _ui = {
 		view:"multiview",
-		id: ids.choose,
+		id: ids.chooseComponent,
 		autoheight: true,
 		cells: [
 			AppList.ui,
@@ -43,16 +40,14 @@ OP.Component.extend('ab_choose', function(App) {
 
 
 
-	// This component's Logic definition:
-	var _logic = {
+	// This component's Init definition:
+	var _init = function() {
 
-		init: function() {
-
-			AppList.init();
-			AppForm.init();
-		}
+		AppList.init();
+		AppForm.init();
 		
 	}
+
 
 
 	// Expose any globally accessible Actions:
@@ -61,30 +56,39 @@ OP.Component.extend('ab_choose', function(App) {
 		// initiate a request to create a new Application
 		transitionApplicationForm:function(Application){
 			
-
-			App.actions.populateApplicationForm(Application);
-
 			// if no Application is given, then this should be a [create] operation,
 			// so clear our AppList
 			if ('undefined' == typeof Application) {
 				App.actions.unselectApplication();
 			}
 
+
+			App.actions.populateApplicationForm(Application);
 		},
 
 		transitionApplicationList:function() {
-			$$(ids.choose).back();
+
+			$$(ids.chooseComponent).back();
 			// AppList.logic.show();
 		}
 
 	}
 
 
+
+	var _logic = {
+
+	}
+
+
+
 	// return the current instance of this component:
 	return {
 		ui:_ui,
-		init:_logic.init,
-		actions:_actions
+		init:_init,
+		actions:_actions,
+
+		_logic:_logic		// Unit Testing
 	}
 
 });

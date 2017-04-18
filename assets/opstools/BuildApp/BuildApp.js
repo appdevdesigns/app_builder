@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -185,6 +185,7 @@
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__data_ABApplication__);
 
 
 
@@ -206,6 +207,7 @@ class ABApplication {
 
 	  	this.role  = attributes.role;
 
+	  	// instance keeps a link to our Model for .save() and .destroy();
 	  	this.Model = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
 	  	this.Model.Models(ABApplication);
   	}
@@ -238,9 +240,6 @@ class ABApplication {
 	static create(values) {
 		return new Promise(
 			function(resolve, reject) {
-
-
-// var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 
 				var newApp = {}
 				__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
@@ -275,10 +274,10 @@ class ABApplication {
 	} 
 
 
-	static isValid(op, values) {
+//// TODO: 
+//// Refactor isValid() to ignore op and not error if duplicateName is own .id
 
-// var appName = $$(id.form).elements['label'].getValue(),
-// 				appDescription = $$(id.form).elements['description'].getValue();
+	static isValid(op, values) {
 
 			var errors = [];
 
@@ -331,8 +330,6 @@ class ABApplication {
 	save () {
 
 		var values = this.toObj();
-
-// var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 
 		// we already have an .id, so this must be an UPDATE
 		if (values.id) {
@@ -490,6 +487,12 @@ OP.Component.extend('ab', function(App) {
 		appbuilder:App.unique('buld_app_loading_screen')
 	}
 
+
+//// LEFT OFF HERE:
+//// OP.Error.isValidation() to handle validation errors returned from Sails
+//// Debug AppList -> AppForm transitions
+//// reduce App.labels.common ->  App.labels
+//// Implement AppWorkspace
 
 
 	// Define the external components used in this Component:
@@ -764,12 +767,12 @@ class OPModel {
 			
 		}
 
-		var alreadyThere = AD.Model.get(key);
-		if (!alreadyThere) {
+		// var alreadyThere = AD.Model.get(key);
+		// if (!alreadyThere) {
 
-			AD.Model.Base.extend(key, staticData, instance);
-			AD.Model.extend(key, staticData, instance);
-		}
+		// 	AD.Model.Base.extend(key, staticData, instance);
+		// 	AD.Model.extend(key, staticData, instance);
+		// }
 		
 		//
 		// Now create our OP.Model:
@@ -1052,12 +1055,9 @@ OP.Component.extend('ab_choose', function(App) {
 
 
 	var ids = {
-		choose:App.unique('ab_choose')
+		chooseComponent:App.unique('ab_choose')
 	}
 
-//// LEFT OFF HERE:
-// [] implement AppForm
-// [] ab_choose_list_menu :> App.actions.editApplication()
 
 
 	// Define the external components used in this Component:
@@ -1069,7 +1069,7 @@ OP.Component.extend('ab_choose', function(App) {
 	// Application multi-views
 	var _ui = {
 		view:"multiview",
-		id: ids.choose,
+		id: ids.chooseComponent,
 		autoheight: true,
 		cells: [
 			AppList.ui,
@@ -1079,16 +1079,14 @@ OP.Component.extend('ab_choose', function(App) {
 
 
 
-	// This component's Logic definition:
-	var _logic = {
+	// This component's Init definition:
+	var _init = function() {
 
-		init: function() {
-
-			AppList.init();
-			AppForm.init();
-		}
+		AppList.init();
+		AppForm.init();
 		
 	}
+
 
 
 	// Expose any globally accessible Actions:
@@ -1097,30 +1095,39 @@ OP.Component.extend('ab_choose', function(App) {
 		// initiate a request to create a new Application
 		transitionApplicationForm:function(Application){
 			
-
-			App.actions.populateApplicationForm(Application);
-
 			// if no Application is given, then this should be a [create] operation,
 			// so clear our AppList
 			if ('undefined' == typeof Application) {
 				App.actions.unselectApplication();
 			}
 
+
+			App.actions.populateApplicationForm(Application);
 		},
 
 		transitionApplicationList:function() {
-			$$(ids.choose).back();
+
+			$$(ids.chooseComponent).back();
 			// AppList.logic.show();
 		}
 
 	}
 
 
+
+	var _logic = {
+
+	}
+
+
+
 	// return the current instance of this component:
 	return {
 		ui:_ui,
-		init:_logic.init,
-		actions:_actions
+		init:_init,
+		actions:_actions,
+
+		_logic:_logic		// Unit Testing
 	}
 
 });
@@ -1171,7 +1178,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 	labels.common = App.labels.common;
 
 	var ids = {
-		formComponent: App.unique('ab-app-list-form-view'),
+		formComponent: App.unique('ab_choose_form_component'),
 		form: App.unique('ab-app-list-form'),
 		appFormPermissionList: App.unique('ab-app-form-permission'),
 		appFormCreateRoleButton: App.unique('ab-app-form-create-role'),
@@ -1345,12 +1352,6 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
-
-//// LEFT OFF HERE:
-//// filling out applicationCreate() with new ABApplication object format.
-// next: 
-// [] applicationUpdate()
-
 		applicationCreate: function(values) {
 
 			var newApp = {
@@ -1364,9 +1365,6 @@ OP.Component.extend('ab_choose_form', function(App) {
 					// Create application data
 					__WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__["a" /* default */].create(newApp)
 						.then(function (result) {
-	
-// self.data.push(result);
-
 							cb(null, result);
 						})
 						.catch(cb);
@@ -1392,12 +1390,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 					return;
 				}
 
-// TODO: alert of a Data Refresh
-
 				App.actions.transitionApplicationList();
-
-// if ($$(self.webixUiids.appList).hideOverlay)
-// 	$$(self.webixUiids.appList).hideOverlay();
 
 				webix.message({
 					type: "success",
@@ -1476,6 +1469,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 		formBusy: function() {
+
 			$$(ids.form).showProgress({ type: 'icon' });
 		},
 
@@ -1502,6 +1496,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 		formReset: function() {
+
 			$$(ids.form).clear();
 			$$(ids.form).clearValidation();
 			// $$(self.webixUiids.appFormPermissionList).clearValidation();
@@ -1757,7 +1752,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 * @param {ABApplication} App  	The current Application we are working with.
 		 * @return {Promise}			.resolve( {Permission} ) if one is created for this App
 		 */
-		permissionSave: function (App) {
+		permissionSave: function (app) {
 //// REFACTOR:
 // this step implies that ab_choose_form understands the intracies of how
 // ABApplication and Permissions work.  
@@ -1772,22 +1767,30 @@ OP.Component.extend('ab_choose_form', function(App) {
 					// if the button is set
 					if ($$(ids.appFormCreateRoleButton).getValue()) {
 
-						// Create new role for application
-						saveRoleTasks.push(function (cb) {
-							App.createPermission()
-								.then(function (result) {
+						// check to see if we already have a permission that isApplicationRole
+						var selectedPerms = $$(ids.appFormPermissionList).getSelectedItem(true);
+						selectedPerms = selectedPerms.filter((perm) => { return perm.isApplicationRole; })
+						
+						// if not, then create one:
+						if (selectedPerms.length == 0) {
 
-									// remember the Role we just created
-									appRole = result;	
-									cb();
-								})
-								.catch(cb)
-						});
+							// Create new role for application
+							saveRoleTasks.push(function (cb) {
+								app.createPermission()
+									.then(function (result) {
+
+										// remember the Role we just created
+										appRole = result;	
+										cb();
+									})
+									.catch(cb)
+							});
+						}
 					}
 					else {
 						// Delete any existing application roles
 						saveRoleTasks.push(function (cb) {
-							App.deletePermission()
+							app.deletePermission()
 								.then(function () { cb(); })
 								.catch(cb)
 								
@@ -1823,7 +1826,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 						// Assign Role Permissions
-						App.assignPermissions(permItems)
+						app.assignPermissions(permItems)
 							.then(function () { cb(); })
 							.catch(cb)
 					});
@@ -1874,6 +1877,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 * Show the Form Component.
 		 */
 		show:function() {
+
 			$$(ids.formComponent).show();
 		}
 	}
@@ -2003,7 +2007,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 								click: function() { 
 
 									// Inform our Chooser we have a request to create an Application:
-									App.actions.transitionApplicationForm();
+									App.actions.transitionApplicationForm( /* leave empty for a create */ );
 								}
 							},
 							{
@@ -2103,30 +2107,22 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 	var _logic = {
 
-
+		/**
+		 * @function busy
+		 *
+		 * show a busy indicator on our App List
+		 */
 		busy: function() {
 			if ($$(ids.list).showProgress)
 				$$(ids.list).showProgress({ icon: 'cursor' });
 		},
 
-		refreshOverlay: function() {
-			var appList = $$(ids.list);
 
-			if (!appList.count()) //if no data is available
-				appList.showOverlay(labels.application.noApplication);
-			else
-				appList.hideOverlay();
-		},
-
-		ready: function() {
-			if ($$(ids.list).hideProgress)
-				$$(ids.list).hideProgress();
-		},
-
-		reset:function() {
-			$$(ids.list).unselectAll();
-		},
-
+		/**
+		 * @function loadData
+		 *
+		 * Load all the ABApplications and display them in our App List
+		 */
 		loadData:function(){
 
 			// Get applications data from the server
@@ -2161,6 +2157,47 @@ OP.Component.extend('ab_choose_list', function(App) {
 		},
 
 
+		/**
+		 * @function refreshOverlay
+		 *
+		 * If we have no items in our list, display a Message.
+		 */
+		refreshOverlay: function() {
+			var appList = $$(ids.list);
+
+			if (!appList.count()) //if no data is available
+				appList.showOverlay(labels.application.noApplication);
+			else
+				appList.hideOverlay();
+		},
+
+
+		/**
+		 * @function ready
+		 *
+		 * remove the busy indicator on our App List
+		 */
+		ready: function() {
+			if ($$(ids.list).hideProgress)
+				$$(ids.list).hideProgress();
+		},
+
+
+		/**
+		 * @function reset
+		 *
+		 * Return our App List to an unselected state.
+		 */
+		reset:function() {
+			$$(ids.list).unselectAll();
+		},
+
+
+		/**
+		 * @function refreshList
+		 *
+		 * Apply our list of ABApplication data to our AppList
+		 */
 		refreshList: function() {
 
 			var appList = $$(ids.list);
@@ -2177,11 +2214,25 @@ OP.Component.extend('ab_choose_list', function(App) {
 		},
 
 
+		/**
+		 * @function show
+		 *
+		 * Trigger our List component to show
+		 */
 		show:function() {
 			$$(ids.component).show();
 		},
 
 
+		/**
+		 * @function templateListItem
+		 *
+		 * Defines the template for each row of our AppList.
+		 *
+		 * @param {obj} obj the current instance of ABApplication for the row.
+		 * @param {?} common the webix.common icon data structure
+		 * @return {string}
+		 */
 		templateListItem: function(obj, common) {
 			return _templateListItem
 				.replace('#label#', obj.label || '')
@@ -2191,6 +2242,12 @@ OP.Component.extend('ab_choose_list', function(App) {
 	}
 
 
+
+	/*
+	 * _templateListItem
+	 * 
+	 * The AppList Row template definition.
+	 */
 	var _templateListItem = [
 		"<div class='ab-app-list-item'>",
 			"<div class='ab-app-list-info'>",
@@ -2205,6 +2262,11 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 			
 
+	/*
+	 * @function _init
+	 * 
+	 * The init() that performs the necessary setup for our AppList chooser.
+	 */
 	var _init = function() {
 		webix.extend($$(ids.list), webix.ProgressBar);
 		webix.extend($$(ids.list), webix.OverlayBox);
@@ -2216,17 +2278,47 @@ OP.Component.extend('ab_choose_list', function(App) {
 		_logic.loadData();
 	}
 
+
+
+	/*
+	 * {json} _actions
+	 *
+	 * The exported methods available to other Components.
+	 */
 	var _actions = {
 
+
+		/**
+		 * @function unselectApplication
+		 *
+		 * resets the AppList to an unselected state.
+		 */
 		unselectApplication:function() {
 			_logic.reset();
 		},
 
+
+		/**
+		 * @function getSelectedApplication
+		 *
+		 * returns which ABApplication is currently selected.
+		 * @return {ABApplication}  or {null} if nothing selected.
+		 */
 		getSelectedApplication:function() {
 			return $$(ids.list).getSelectedItem();
 		},
 
 
+		/**
+		 * @function deleteApplication
+		 *
+		 * deletes the given ABAppliction.
+		 *
+		 * NOTE: this assumes the component using this method has already
+		 * provided the delete confirmation.
+		 *
+		 * @param {ABApplication} app  the ABAppliction to delete.
+		 */
 		deleteApplication: function(app) {
 
 			if (!app) return;
@@ -2258,14 +2350,23 @@ OP.Component.extend('ab_choose_list', function(App) {
 				})
 
 			
-		}
+		},
+
+
+		// transitionApplicationList:function() {
+		// 	$$(ids.component).show();
+		// }
 	}			
+
 
 
 	return {
 		ui: _ui,
 		init: _init,
-		actions:_actions
+		actions:_actions,
+
+
+		_logic:_logic	// exposed for Unit Testing
 	}
 })
 
@@ -2305,7 +2406,7 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 	labels.common = App.labels.common;
 
 	var ids = {
-		menu:App.unique('ab-app-list-menu')
+		menu:App.unique('ab_choose_list_menu')
 	}
 
 	var _ui = {
@@ -2327,6 +2428,8 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 			select: false,
 			on: {
 				'onItemClick': function (timestamp, e, trg) {
+					$$(ids.menu).hide();
+
 					var selectedApp = App.actions.getSelectedApplication();
 
 					switch (trg.textContent.trim()) {
@@ -2353,7 +2456,8 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 							break;
 					}
 
-					$$(ids.menu).hide();
+					
+					return false;
 				}
 			}
 		}
@@ -2383,10 +2487,8 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 /***/ }),
 /* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ABApplication_rf__ = __webpack_require__(10);
 //
 // REFACTORING:
 //
@@ -2398,8 +2500,6 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 // Until we have the refactoring in place, we will reuse the AD.Model.extent() objects,
 // and convert the results to DataCollections.
 //
-
-
 
 
 
@@ -2419,288 +2519,6 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 /***/ }),
 /* 10 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__base_ABApplication__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__base_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__base_ABApplication__);
-//
-// REFACTORING:
-//
-// For now, we need a copy of our previous Model to work with using the WebPack builds.
-//
-// 
-
-
-
-
-
-
-
-
-// Namespacing conventions:
-// AD.Model.extend('[application].[Model]', {static}, {instance} );  --> Object
-AD.Model.extend('opstools.BuildApp.ABApplication',
-	{
-		useSockets: true
-		/*
-			findAll: 'GET /app_builder/abapplication',
-			findOne: 'GET /app_builder/abapplication/{id}',
-			create:  'POST /app_builder/abapplication',
-			update:  'PUT /app_builder/abapplication/{id}',
-			destroy: 'DELETE /app_builder/abapplication/{id}',
-			describe: function() {},   // returns an object describing the Model definition
-			fieldId: 'id',             // which field is the ID
-			fieldLabel:'name'      // which field is considered the Label
-		*/
-	},
-	{
-		// Object
-		getObjects: function (cond) {
-			if (!cond) cond = {};
-			cond.application = this.id;
-
-			return AD.Model.get('opstools.BuildApp.ABObject').findAll(cond);
-		},
-
-		getObject: function (objId) {
-			return AD.Model.get('opstools.BuildApp.ABObject').findOne({ application: this.id, id: objId });
-		},
-
-		createObject: function (obj) {
-			var q = $.Deferred(),
-				self = this;
-
-			obj.application = this.id;
-			AD.Model.get('opstools.BuildApp.ABObject').create(obj)
-				.fail(q.reject)
-				.then(function (result) {
-					if (result.translate) result.translate();
-
-					// Update list
-					if (self.objects.filter(function (obj) { return (obj.id || obj) == result.id; }).length > 0)
-						self.objects.forEach(function (obj, index) {
-							if ((obj.id || obj) == result.id)
-								self.objects.attr(index, result);
-						});
-					// Insert
-					else
-						self.objects.push(result);
-
-					q.resolve(result);
-				});
-
-			return q;
-		},
-
-
-
-		/**
-		 * @function getApplicationPages
-		 * return all ABPages (Root + 1st Child) of the current application
-		 * useful for when components need to offer these as selection options.
-		 * @param {ABPage} currPage  We need to contextualize this for the
-		 *					branch of pages under a RootPage. This page can
-		 *					be any page that can be resolved to a Root Page.
-		 * @return {deferred}
-		 */
-		getApplicationPages: function (currPage) {
-			var _this = this;
-			var err = null;
-
-			if (typeof currPage == 'undefined') {
-				currPage = this.currPage;
-			}
-
-			// if our .pages looks like a proper array
-			if ((this.pages) && (this.pages.filter)) {
-
-				function findParent(page) {
-					var parent = null;
-					if ((page) && (page.parent)) {
-						parent = _this.pages.filter(function (p) { return ((p.id == page.parent) || (p.id == page.parent.id)); })[0];
-					}
-					return parent;
-				}
-
-				var currPageParent = findParent(currPage);
-				while (currPageParent) {
-					currPage = currPageParent;
-					currPageParent = findParent(currPage);
-				}
-				// var currPage = this.pages.filter(function(p){ return !p.parent })[0];
-				if (currPage) {
-					return this.getPages({ or: [{ id: currPage.id }, { parent: currPage.id }] });
-				} else {
-					err = new Error('application.getApplicationPages(): no root page found!');
-				}
-			} else {
-				err = new Error('application.getApplicationPages() called with no pages defined.');
-			}
-
-			// if we get here, then we have an error:
-			var dfd = AD.sal.Deferred();
-			dfd.reject(err);
-			return dfd;
-
-		},
-
-
-
-		/**
-		 * @function getAllApplicationPages
-		 * return all the ABPages in the current application.
-		 * This will include all pages, not just the Root + 1st Child.
-		 * @return {deferred}
-		 */
-		getAllApplicationPages: function () {
-			var _this = this;
-
-			var dfd = AD.sal.Deferred();
-
-			this.getPages()
-				.fail(dfd.reject)
-				.done(function (pages) {
-
-					_this.pages = pages;  // replace our copy with proper ABPage instances
-					dfd.resolve(pages);
-				})
-
-			return dfd;
-		},
-
-
-		// Page
-		getPages: function (cond) {
-			if (!cond) cond = {};
-			cond.application = this.id;
-
-			//// TODO: refactor this to make sure appdev-core/assets/appdev/model.js  .modelUpdate() properly 
-			////       updates our model instances.  This will cause an error with other code trying to pull
-			////       from ABPage.findAll() and getting models that our out of sync with any ABPages returned
-			////       using this method.
-
-			Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
-				var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
-
-				if (cond.application == storePage.application.id || storePage.application)
-					delete AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
-			});
-
-			return AD.Model.get('opstools.BuildApp.ABPage').findAll(cond);
-		},
-
-		getPage: function (pageId) {
-			//// TODO: refactor this too.
-			if (AD.Model.get('opstools.BuildApp.ABPage').store[pageId])
-				delete AD.Model.get('opstools.BuildApp.ABPage').store[pageId];
-
-			return AD.Model.get('opstools.BuildApp.ABPage').findOne({ application: this.id, id: pageId });
-		},
-
-		createPage: function (page) {
-			var q = $.Deferred(),
-				self = this;
-
-			page.application = self.id;
-			AD.Model.get('opstools.BuildApp.ABPage').create(page)
-				.fail(q.reject)
-				.then(function (result) {
-					if (result.translate) result.translate();
-
-					// Update list
-					if (self.pages.filter(function (obj) { return (obj.id || obj) == result.id; }).length > 0)
-						self.pages.forEach(function (obj, index) {
-							if ((obj.id || obj) == result.id)
-								self.pages.attr(index, result);
-						});
-					// Insert
-					else
-						self.pages.push(result);
-
-					q.resolve(result);
-				});
-
-			return q;
-		},
-
-		// Permission
-		getPermissions: function () {
-			return AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' });
-		},
-
-		createPermission: function () {
-			return AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' });
-		},
-
-		deletePermission: function () {
-			return AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' });
-		},
-
-		// id: appId,
-		// isApplicationRole: true
-		assignPermissions: function (permItems) {
-			return AD.comm.service.put({
-				url: '/app_builder/' + this.id + '/role/assign',
-				data: {
-					roles: permItems
-				}
-			})
-		}
-
-	}
-);
-		
-		
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports) {
-
-
-				// var ABPage = AD.Model.get('opstools.BuildApp.ABPage');
-				// var ABObject = AD.Model.get('opstools.BuildApp.ABObject');
-
-				// Namespacing conventions:
-				// AD.Model.Base.extend("[application].[Model]" , { static }, {instance} );  --> Object
-				AD.Model.Base.extend("opstools.BuildApp.ABApplication", {
-					findAll: 'GET /app_builder/abapplication',
-					findOne: 'GET /app_builder/abapplication/{id}',
-					create: 'POST /app_builder/abapplication',
-					update: 'PUT /app_builder/abapplication/{id}',
-					destroy: 'DELETE /app_builder/abapplication/{id}',
-					// define: {
-     //                    objects: {
-     //                        Type: ABObject
-     //                    },
-     //                    pages: {
-     //                        Type: ABPage
-     //                    }
-     //                },
-					describe: function() { return { 'name':'string', 'description':'text', 'permissions':'PermissionRole' };  },
-					// associations:['field1', 'field2', ..., 'fieldN'],
-					multilingualFields:['label', 'description'], 
-					// validations: {
-					//     "role_label" : [ 'notEmpty' ],
-					//     "role_description" : [ 'notEmpty' ]
-					// },
-					fieldId: 'id',
-					fieldLabel: 'label'
-				}, {
-					// model: function() {
-					//     return AD.Model.get('opstools.BuildApp.ABApplication'); //AD.models.opstools.BuildApp.ABApplication;
-					// },
-					// getID: function() {
-					//     return this.attr(this.model().fieldId) || 'unknown id field';
-					// },
-					// getLabel: function() {
-					//     return this.attr(this.model().fieldLabel) || 'unknown label field';
-					// }
-				});
-			
-
-/***/ }),
-/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

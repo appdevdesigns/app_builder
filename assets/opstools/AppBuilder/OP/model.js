@@ -206,12 +206,12 @@ export default {
 			
 		}
 
-		var alreadyThere = AD.Model.get(key);
-		if (!alreadyThere) {
+		// var alreadyThere = AD.Model.get(key);
+		// if (!alreadyThere) {
 
-			AD.Model.Base.extend(key, staticData, instance);
-			AD.Model.extend(key, staticData, instance);
-		}
+		// 	AD.Model.Base.extend(key, staticData, instance);
+		// 	AD.Model.extend(key, staticData, instance);
+		// }
 		
 		//
 		// Now create our OP.Model:

@@ -10,8 +10,6 @@
 // and convert the results to DataCollections.
 //
 
-import "./ABApplication_rf"
-
 
 
 // Namespacing conventions:

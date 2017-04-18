@@ -38,7 +38,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 	labels.common = App.labels.common;
 
 	var ids = {
-		formComponent: App.unique('ab-app-list-form-view'),
+		formComponent: App.unique('ab_choose_form_component'),
 		form: App.unique('ab-app-list-form'),
 		appFormPermissionList: App.unique('ab-app-form-permission'),
 		appFormCreateRoleButton: App.unique('ab-app-form-create-role'),
@@ -212,12 +212,6 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
-
-//// LEFT OFF HERE:
-//// filling out applicationCreate() with new ABApplication object format.
-// next: 
-// [] applicationUpdate()
-
 		applicationCreate: function(values) {
 
 			var newApp = {
@@ -231,9 +225,6 @@ OP.Component.extend('ab_choose_form', function(App) {
 					// Create application data
 					ABApplication.create(newApp)
 						.then(function (result) {
-	
-// self.data.push(result);
-
 							cb(null, result);
 						})
 						.catch(cb);
@@ -259,12 +250,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 					return;
 				}
 
-// TODO: alert of a Data Refresh
-
 				App.actions.transitionApplicationList();
-
-// if ($$(self.webixUiids.appList).hideOverlay)
-// 	$$(self.webixUiids.appList).hideOverlay();
 
 				webix.message({
 					type: "success",
@@ -343,6 +329,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 		formBusy: function() {
+
 			$$(ids.form).showProgress({ type: 'icon' });
 		},
 
@@ -369,6 +356,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 		formReset: function() {
+
 			$$(ids.form).clear();
 			$$(ids.form).clearValidation();
 			// $$(self.webixUiids.appFormPermissionList).clearValidation();
@@ -624,7 +612,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 * @param {ABApplication} App  	The current Application we are working with.
 		 * @return {Promise}			.resolve( {Permission} ) if one is created for this App
 		 */
-		permissionSave: function (App) {
+		permissionSave: function (app) {
 //// REFACTOR:
 // this step implies that ab_choose_form understands the intracies of how
 // ABApplication and Permissions work.  
@@ -639,22 +627,30 @@ OP.Component.extend('ab_choose_form', function(App) {
 					// if the button is set
 					if ($$(ids.appFormCreateRoleButton).getValue()) {
 
-						// Create new role for application
-						saveRoleTasks.push(function (cb) {
-							App.createPermission()
-								.then(function (result) {
+						// check to see if we already have a permission that isApplicationRole
+						var selectedPerms = $$(ids.appFormPermissionList).getSelectedItem(true);
+						selectedPerms = selectedPerms.filter((perm) => { return perm.isApplicationRole; })
+						
+						// if not, then create one:
+						if (selectedPerms.length == 0) {
 
-									// remember the Role we just created
-									appRole = result;	
-									cb();
-								})
-								.catch(cb)
-						});
+							// Create new role for application
+							saveRoleTasks.push(function (cb) {
+								app.createPermission()
+									.then(function (result) {
+
+										// remember the Role we just created
+										appRole = result;	
+										cb();
+									})
+									.catch(cb)
+							});
+						}
 					}
 					else {
 						// Delete any existing application roles
 						saveRoleTasks.push(function (cb) {
-							App.deletePermission()
+							app.deletePermission()
 								.then(function () { cb(); })
 								.catch(cb)
 								
@@ -690,7 +686,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 						// Assign Role Permissions
-						App.assignPermissions(permItems)
+						app.assignPermissions(permItems)
 							.then(function () { cb(); })
 							.catch(cb)
 					});
@@ -741,6 +737,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 * Show the Form Component.
 		 */
 		show:function() {
+
 			$$(ids.formComponent).show();
 		}
 	}
