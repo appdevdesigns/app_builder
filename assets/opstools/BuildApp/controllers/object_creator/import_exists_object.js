@@ -103,16 +103,23 @@ steal(
 											})
 												.fail(function (err) { $$(componentIds.columnList).hideProgress(); })
 												.done(function (cols) {
-
-													var colNames = Object.keys(cols).filter(function (colName) {
-														return ignore.indexOf(colName) < 0 && cols[colName].model == null && cols[colName].collection == null;
-													}).map(function (colName) {
-														return {
-															include: true,
+													
+													var colNames = [];
+													for (var colName in cols) {
+														var col = cols[colName];
+														
+														// Skip these columns
+														if (ignore.indexOf(colName) >= 0) continue;
+														if (col.model) continue;
+														if (col.collection) continue;
+														
+														colNames.push({
+															include: col.supported,
 															id: colName,
-															label: colName
-														}
-													});
+															label: colName,
+															disabled: !col.supported,
+														});
+													}
 
 													$$(componentIds.columnList).parse(colNames);
 													$$(componentIds.columnList).hideProgress();
@@ -156,8 +163,16 @@ steal(
 										width: 280
 									}
 								},
-								template: '<span class="float-left">{common.include()}</span>' +
-								'<span class="float-left">{common.label()}</span>'
+								template: function(obj, common) {
+									if (obj.disabled) {
+										obj.include = false;
+										return '<span class="float-left"><span class="glyphicon glyphicon-remove-circle"></span></span>' +
+											'<span class="float-left" style="padding-left: 1em; text-decoration: line-through">' + obj.label + '</span>';
+									} else {
+										return '<span class="float-left">' + common.include(obj, common) + '</span>' +
+											'<span class="float-left">' + common.label(obj, common) + '</span>';
+									}
+								}
 							},
 							// Import & Cancel buttons
 							{
