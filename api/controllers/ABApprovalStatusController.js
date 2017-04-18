@@ -149,13 +149,28 @@ module.exports = {
                     allowProperties = allowProperties.concat(object.columns
                         .filter(function (col) { return columnIds.indexOf(col.id.toString()) > -1; })
                         .sort(function (a, b) { return a.weight - b.weight; })
-                        .map(function (col) { return col.name }));
+                        .map(function (col) { return col }));
 
                     requestData.forEach(function (data) {
                         var item = {};
 
                         allowProperties.forEach(function (prop) {
-                            item[prop] = data[prop];
+                            switch (prop.fieldName) {
+                                case 'connectObject':
+                                    break;
+                                case 'list':
+                                    // Remove empty items
+                                    item[prop.name] = data[prop.name]
+                                        .split(',')
+                                        .filter(function (item) { return item && item.length > 0; })
+                                        .map(function (item) { return item.trim(); })
+                                        .join(', ');
+
+                                    break;
+                                default:
+                                    item[prop.name] = data[prop.name];
+                                    break;
+                            }
                         });
 
                         AppBuilder.approval.postApproval(currUser, object, item, title);

@@ -234,8 +234,8 @@ steal(
 													return false;
 												}
 
-												var itemNode = this.getItemNode({ row: data.row, column: data.column });	
-					
+												var itemNode = this.getItemNode({ row: data.row, column: data.column });
+
 												var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
 												if (!column || column.length < 1) {
 													console.log('System could not found this column data');
@@ -704,9 +704,9 @@ steal(
 											AD.classes.AppBuilder.currApp.currObj.attr('columns', data);
 
 											// Find option list
-											var listColIds = $.map(self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; }), function (c) {
-												return c.id;
-											});
+											var listColIds = self.data.columns
+												.filter(function (col) { return col.fieldName === 'list'; })
+												.map(function (col) { return col.id; });
 
 											if (listColIds && listColIds.length > 0) {
 												var getListEvents = [];
@@ -906,7 +906,7 @@ steal(
 										},
 										// Create list option of select column
 										function (next) {
-											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+											if (columnInfo.fieldName === 'list' && columnInfo.setting.options) {
 												var createOptionEvents = [];
 
 												columnInfo.setting.options.forEach(function (opt, index) {
@@ -926,6 +926,15 @@ steal(
 															})
 																.fail(createOk)
 																.then(function (createdCol) {
+																	// Update default value
+																	if (updateColumn.setting.multiSelect && updateColumn.setting.default && updateColumn.setting.default.indexOf(opt.id) > -1) {
+																		var updateDefaultValue = updateColumn.setting.attr('default').replace(opt.id, createdCol.id);
+																		updateColumn.setting.attr('default', updateDefaultValue);
+																	}
+																	else if (!updateColumn.setting.multiSelect && updateColumn.setting.default == opt.id) {
+																		updateColumn.setting.attr('default', createdCol.id);
+																	}
+
 																	opt.id = createdCol.id;
 
 																	createOk();
@@ -969,22 +978,22 @@ steal(
 										},
 										// Update options of list data type
 										function (next) {
-											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+											if (columnInfo.fieldName === 'list' && columnInfo.setting.options) {
 
 												// Refresh options
 												updateColumn.setting.attr('options', columnInfo.setting.options.filter(function (opt) {
 													return columnInfo.removedOptionIds == null || columnInfo.removedOptionIds.indexOf(opt.id) < 0;
 												}));
 
-												// Update default ABList id
-												if (updateColumn.setting.default) {
-													var defaultOpt = columnInfo.setting.options.filter(function (opt) { return opt.value == updateColumn.setting.default; })[0];
-													if (defaultOpt)
-														updateColumn.setting.attr('default', defaultOpt.id);
-												}
-												else {
-													updateColumn.setting.removeAttr('default');
-												}
+												// // Update default ABList id
+												// if (updateColumn.setting.default) {
+												// 	var defaultOpt = columnInfo.setting.options.filter(function (opt) { return opt.value == updateColumn.setting.default; })[0];
+												// 	if (defaultOpt)
+												// 		updateColumn.setting.attr('default', defaultOpt.id);
+												// }
+												// else {
+												// 	updateColumn.setting.removeAttr('default');
+												// }
 
 												updateColumn.save()
 													.fail(next)

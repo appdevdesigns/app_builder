@@ -73,10 +73,10 @@ steal(
 						return;
 					}
 
-// There are cases where this happens.  Prevent the error:
-// Question for Pong: is this an acceptable case, or do we need to track down
-// where this is being called without .columns  and fix that?
-if (!data.columns) return;
+					// There are cases where this happens.  Prevent the error:
+					// Question for Pong: is this an acceptable case, or do we need to track down
+					// where this is being called without .columns  and fix that?
+					if (!data.columns) return;
 
 					var fieldData = currModel[child.config.name],
 						column = data.columns.filter(function (col) { return col.name == child.config.name; });
@@ -95,6 +95,15 @@ if (!data.columns) return;
 						else {
 							displayField.setValue(fieldData);
 						}
+					}
+					// list data field
+					else if (column.fieldName == 'list' && (column.setting.multiSelect == null || column.setting.multiSelect != true)) {
+						var selectOpt = column.setting.options.filter(function (opt) { return opt.id == fieldData; })[0];
+
+						if (selectOpt)
+							displayField.setValue(selectOpt.value);
+						else
+							displayField.setValue(fieldData);
 					}
 					else if (column.setting.editor && displayField.setValue) {
 						if (fieldData)
@@ -121,7 +130,7 @@ if (!data.columns) return;
 				if (data.dataCollection) {
 					// TEMPORARY FEATURE :
 					if (setting.recordFilter != null) {
-						data.dataCollection.setCursor(setting.recordFilter) 
+						data.dataCollection.setCursor(setting.recordFilter)
 						data.dataCollection.recordFilter = setting.recordFilter;
 					}
 
@@ -400,7 +409,7 @@ if (!data.columns) return;
 							var rowData = dataCollection.find({});
 
 							var recordFilter = $$(componentIds.propertyView).getItem(componentIds.recordFilter);
-							recordFilter.options = rowData.map(function(row) {
+							recordFilter.options = rowData.map(function (row) {
 								return {
 									id: row.id,
 									value: 'ID: #id# - #label#'.replace('#id#', row.id).replace('#label#', row._dataLabel)
