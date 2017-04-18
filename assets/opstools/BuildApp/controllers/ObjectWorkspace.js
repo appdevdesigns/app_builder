@@ -222,20 +222,8 @@ steal(
 										on: {
 											onBeforeSelect: function (data, preserve) {
 
-												// If data was approve data, then disallow to update
-												if (self.data.approveItems.filter(function (item) { return item.rowId == data.row; }).length > 0) {
+												var itemNode = this.getItemNode({ row: data.row, column: data.column });
 
-													webix.alert({
-														title: "This data could not be edited",
-														text: "Could not edit request approve data",
-														ok: self.labels.common.ok
-													});
-
-													return false;
-												}
-
-												var itemNode = this.getItemNode({ row: data.row, column: data.column });	
-					
 												var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
 												if (!column || column.length < 1) {
 													console.log('System could not found this column data');
@@ -333,13 +321,13 @@ steal(
 												// }
 											},
 											onBeforeColumnDrag: function (sourceId, event) {
-												if (sourceId === 'appbuilder_approval_status' || sourceId === 'appbuilder_trash') // Remove column
+												if (sourceId === 'appbuilder_trash') // Remove column
 													return false;
 												else
 													return true;
 											},
 											onBeforeColumnDrop: function (sourceId, targetId, event) {
-												if (targetId === 'appbuilder_approval_status' || targetId === 'appbuilder_trash') // Remove column
+												if (targetId === 'appbuilder_trash') // Remove column
 													return false;
 
 												if ($$(self.webixUiId.visibleButton).config.badge > 0) {
@@ -389,18 +377,6 @@ steal(
 
 							$(dataFieldsManager).on('update', function (event, result) {
 								if (!AD.classes.AppBuilder.currApp || !AD.classes.AppBuilder.currApp.currObj || result.objectId != AD.classes.AppBuilder.currApp.currObj.id || !result.rowId || !result.columnName) return;
-
-								// If data was approve data, then disallow to update
-								if (self.data.approveItems.filter(function (item) { return item.rowId == result.rowId; }).length > 0) {
-
-									webix.alert({
-										title: "This data could not be edited",
-										text: "System disallow edit request approve data",
-										ok: self.labels.common.ok
-									});
-
-									return false;
-								}
 
 								$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
 
@@ -612,9 +588,7 @@ steal(
 																}
 															});
 
-															var showApproveStatusCol = self.data.approveItems.length > 0;
-
-															self.bindColumns(false, false, showApproveStatusCol, true);
+															self.bindColumns(false, false, true);
 
 															self.reorderColumns();
 
@@ -704,9 +678,9 @@ steal(
 											AD.classes.AppBuilder.currApp.currObj.attr('columns', data);
 
 											// Find option list
-											var listColIds = $.map(self.data.columns.filter(function (col) { return col.setting.editor === 'richselect'; }), function (c) {
-												return c.id;
-											});
+											var listColIds = self.data.columns
+												.filter(function (col) { return col.fieldName === 'list'; })
+												.map(function (col) { return col.id; });
 
 											if (listColIds && listColIds.length > 0) {
 												var getListEvents = [];
@@ -761,22 +735,9 @@ steal(
 									self.Model.ObjectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj.attr('name'));
 									next();
 								},
-								// Get approve items
-								function (next) {
-									self.data.approveItems = [];
-
-									AD.classes.AppBuilder.currApp.currObj.getApprovalItems()
-										.then(function (data) {
-											self.data.approveItems = data;
-
-											next();
-										}, next);
-								},
 								// Bind columns to DataTable
 								function (next) {
-									var showApproveStatusCol = self.data.approveItems.length > 0;
-
-									self.bindColumns(true, false, showApproveStatusCol, true);
+									self.bindColumns(true, false, true);
 									next();
 								},
 								// Get data from server
@@ -803,16 +764,11 @@ steal(
 											next();
 										});
 								},
-								// Define unsync row data & approve status
+								// Define unsync row data
 								function (next) {
 									objectData.forEach(function (data) {
 										if (data.isUnsync)
 											data.attr('isUnsync', data.isUnsync());
-
-										var approveItem = self.data.approveItems.filter(function (item) { return item.rowId == data.id; })[0];
-										if (approveItem != null) {
-											data.attr('_approveStatus', approveItem.status);
-										}
 									});
 
 									next();
@@ -906,7 +862,7 @@ steal(
 										},
 										// Create list option of select column
 										function (next) {
-											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+											if (columnInfo.fieldName === 'list' && columnInfo.setting.options) {
 												var createOptionEvents = [];
 
 												columnInfo.setting.options.forEach(function (opt, index) {
@@ -926,6 +882,15 @@ steal(
 															})
 																.fail(createOk)
 																.then(function (createdCol) {
+																	// Update default value
+																	if (updateColumn.setting.multiSelect && updateColumn.setting.default && updateColumn.setting.default.indexOf(opt.id) > -1) {
+																		var updateDefaultValue = updateColumn.setting.attr('default').replace(opt.id, createdCol.id);
+																		updateColumn.setting.attr('default', updateDefaultValue);
+																	}
+																	else if (!updateColumn.setting.multiSelect && updateColumn.setting.default == opt.id) {
+																		updateColumn.setting.attr('default', createdCol.id);
+																	}
+
 																	opt.id = createdCol.id;
 
 																	createOk();
@@ -969,22 +934,22 @@ steal(
 										},
 										// Update options of list data type
 										function (next) {
-											if (columnInfo.setting.editor === 'richselect' && columnInfo.setting.options) {
+											if (columnInfo.fieldName === 'list' && columnInfo.setting.options) {
 
 												// Refresh options
 												updateColumn.setting.attr('options', columnInfo.setting.options.filter(function (opt) {
 													return columnInfo.removedOptionIds == null || columnInfo.removedOptionIds.indexOf(opt.id) < 0;
 												}));
 
-												// Update default ABList id
-												if (updateColumn.setting.default) {
-													var defaultOpt = columnInfo.setting.options.filter(function (opt) { return opt.value == updateColumn.setting.default; })[0];
-													if (defaultOpt)
-														updateColumn.setting.attr('default', defaultOpt.id);
-												}
-												else {
-													updateColumn.setting.removeAttr('default');
-												}
+												// // Update default ABList id
+												// if (updateColumn.setting.default) {
+												// 	var defaultOpt = columnInfo.setting.options.filter(function (opt) { return opt.value == updateColumn.setting.default; })[0];
+												// 	if (defaultOpt)
+												// 		updateColumn.setting.attr('default', defaultOpt.id);
+												// }
+												// else {
+												// 	updateColumn.setting.removeAttr('default');
+												// }
 
 												updateColumn.save()
 													.fail(next)
@@ -1149,7 +1114,7 @@ steal(
 							return q;
 						},
 
-						bindColumns: function (resetColumns, showSelectCol, showApproveStatusCol, showTrashCol) {
+						bindColumns: function (resetColumns, showSelectCol, showTrashCol) {
 							if (!AD.classes.AppBuilder.currApp.currObj)
 								return;
 
@@ -1159,7 +1124,6 @@ steal(
 
 							self.controllers.ObjectDataTable.bindColumns(AD.classes.AppBuilder.currApp, self.data.columns.attr(), resetColumns, {
 								isSelectVisible: showSelectCol,
-								isApproveStatusVisible: showApproveStatusCol,
 								isTrashVisible: showTrashCol
 							});
 						},
@@ -1298,9 +1262,8 @@ steal(
 								}
 
 								// $$(self.webixUiId.objectDatatable).refreshColumns(columns);
-								var showApproveStatusCol = self.data.approveItems.length > 0;
 
-								self.bindColumns(false, false, showApproveStatusCol, true);
+								self.bindColumns(false, false, true);
 
 								self.refreshPopupData();
 

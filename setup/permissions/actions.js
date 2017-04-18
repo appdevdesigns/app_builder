@@ -31,10 +31,6 @@ module.exports = {
         { 
             action_key:'appbuilder.designer.view', 
             action_description:'Allows the user to access the AppBuilder Designer tool.' 
-        },
-        {
-            action_key:'appbuilder.approval', 
-            action_description:"Allows the user to approve data that's created from the AppBuilder tool." 
         }
     ]
 

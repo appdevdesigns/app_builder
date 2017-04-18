@@ -75,10 +75,6 @@ module.exports = {
     'get /app_builder/application/findModelAttributes':
         'app_builder/ABApplicationController.findModelAttributes',
 
-    /* Approval */
-    'post /app_builder/object/:objectId/requestApprove':
-        'app_builder/ABApprovalStatusController.requestApprove',
-    
   /*
 
   '/': {

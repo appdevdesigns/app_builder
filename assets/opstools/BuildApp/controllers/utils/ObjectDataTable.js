@@ -141,9 +141,6 @@ steal(
 									if (itemData.isUnsync) { // Highlight unsync data
 										itemNode.classList.add('ab-object-unsync-data');
 									}
-									else if (itemData._approveStatus != null) { // Hightlight approve data
-										itemNode.classList.add('ab-object-approve-data');
-									}
 
 									var col = self.columns.filter(function (col) { return col.name == columnId })[0];
 									if (col == null) return;
@@ -158,7 +155,7 @@ steal(
 										dataTable.config.id,
 										itemNode,
 										{
-											readOnly: self.data.readOnly || itemData._approveStatus != null
+											readOnly: self.data.readOnly
 										});
 
 								});
@@ -239,20 +236,6 @@ steal(
 										template: "{common.checkbox()}",
 										css: "center",
 										width: 50
-									});
-								}
-
-								// Approval status
-								if (extraColumns.isApproveStatusVisible && extraColumns.isApproveStatusVisible != false) {
-									headers.push({
-										id: "appbuilder_approval_status",
-										header: "Approve Status",
-										width: 120,
-										template: function (obj) {
-											return "#approveStatus#"
-												.replace('#approveStatus#', obj._approveStatus ? obj._approveStatus.capitalize() : '');
-										},
-										css: { 'text-align': 'center' }
 									});
 								}
 
