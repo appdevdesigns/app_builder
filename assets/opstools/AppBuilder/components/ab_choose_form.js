@@ -35,7 +35,7 @@ var labels = {
 
 OP.Component.extend('ab_choose_form', function(App) {
 
-	labels.common = App.labels.common;
+	labels.common = App.labels;
 
 	var ids = {
 		formComponent: App.unique('ab_choose_form_component'),
@@ -45,6 +45,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 		saveButton: App.unique('ab-app-form-button-save')
 	}
+
 
 
 	var _ui = {
@@ -204,14 +205,25 @@ OP.Component.extend('ab_choose_form', function(App) {
 	const FormFields = ['label', 'description'];
 
 
+
+	var _init = function() {
+		webix.extend($$(ids.form), webix.ProgressBar);
+		webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
+	}
+
+
+
 	var _logic = {
 
-		init: function() {
-			webix.extend($$(ids.form), webix.ProgressBar);
-			webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
-		},
 
-
+		/**
+		 * @function applicationCreate
+		 *
+		 * Step through the process of creating an ABApplication with the 
+		 * current state of the Form.
+		 *
+		 * @param {obj} values 	current value hash of the form values.
+		 */
 		applicationCreate: function(values) {
 
 			var newApp = {
@@ -262,6 +274,15 @@ OP.Component.extend('ab_choose_form', function(App) {
 			});
 		},
 
+
+		/**
+		 * @function applicationUpdate
+		 *
+		 * Step through the process of updating an ABApplication with the 
+		 * current state of the Form.
+		 *
+		 * @param {ABApplication} application 
+		 */
 		applicationUpdate: function(Application) {
 			var values = _logic.formValues();
 
@@ -312,27 +333,57 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+		/**
+		 * @function buttonSaveDisable
+		 *
+		 * Disable the save button.
+		 */
 		buttonSaveDisable:function() {
 			$$(ids.saveButton).disable();
 		},
 
 
+		/**
+		 * @function buttonSaveEnable
+		 *
+		 * Re-enable the save button.
+		 */
 		buttonSaveEnable:function() {
 			$$(ids.saveButton).enable();
 		},
 
 
+		/**
+		 * @function cancel
+		 *
+		 * Cancel the current Form Operation and return us to the AppList.
+		 */
 		cancel: function() {
 									
 			_logic.formReset();
 			App.actions.transitionApplicationList();
 		},
 
+
+		/**
+		 * @function formBusy
+		 *
+		 * Show the progress indicator to indicate a Form operation is in 
+		 * progress.
+		 */
 		formBusy: function() {
 
 			$$(ids.form).showProgress({ type: 'icon' });
 		},
 
+
+		/**
+		 * @function formPopulate()
+		 *
+		 * populate the form values from the given ABApplication
+		 *
+		 * @param {ABApplication} application  instance of the ABApplication
+		 */
 		formPopulate: function(application) {
 
 			var Form = $$(ids.form);
@@ -350,11 +401,22 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 		},
 
+
+		/**
+		 * @function formReady()
+		 *
+		 * remove the busy indicator from the form.
+		 */
 		formReady: function() {
 			$$(ids.form).hideProgress();
 		},
 
 
+		/**
+		 * @function formReset()
+		 *
+		 * return the form to an empty state.
+		 */
 		formReset: function() {
 
 			$$(ids.form).clear();
@@ -365,7 +427,13 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
-
+		/**
+		 * @function formValidate()
+		 *
+		 * validate the form values.
+		 *
+		 * @return {bool}  true if all values pass validation.  false otherwise.
+		 */
 		formValidate:function(op) {
 			// op : ['add', 'update', 'destroy']
 
@@ -744,16 +812,36 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 
-
-
-
-
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		// initiate a request to create a new Application
-		populateApplicationForm:function(Application){
+
+		/**
+		 * @function populateApplicationForm()
+		 *
+		 * Initialze the Form with the values from the provided ABApplication.
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 *										we are working with.
+		 */
+		// populateApplicationForm:function(Application){
 			
+
+		// },
+
+
+		// initiate a request to create a new Application
+		transitionApplicationForm:function(Application){
+			
+			// if no Application is given, then this should be a [create] operation,
+			// so clear our AppList
+			if ('undefined' == typeof Application) {
+				App.actions.unselectApplication();
+			}
+
+			// now prepare our form:
 			_logic.formReset();
 			if (Application) {
 				// populate Form here:
@@ -761,14 +849,16 @@ OP.Component.extend('ab_choose_form', function(App) {
 			}
 			_logic.permissionPopulate(Application);
 			_logic.show();
-		}
+		},
 
 	}
 
 
 	return {
 		ui: _ui,
-		init: _logic.init,
-		actions:_actions
+		init: _init,
+		actions:_actions,
+
+		_logic: _logic
 	}
 })

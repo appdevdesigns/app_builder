@@ -11,7 +11,7 @@
 import '../OP/OP'
 
 import './ab_choose'
-// import './ab_work'
+import './ab_work'
 
 OP.Component.extend('ab', function(App) {
 
@@ -22,7 +22,7 @@ OP.Component.extend('ab', function(App) {
 
 	
 	// setup the common labels for our AppBuilder Application.
-	App.labels.common = {
+	App.labels = {
 		"import": L('ab.common.import', "*Import"),
 		edit: 	  L('ab.common.edit', "*Edit"),
 		save: 	  L('ab.common.save', "*Save"),
@@ -46,57 +46,54 @@ OP.Component.extend('ab', function(App) {
 
 
 	var ids = {
-		appbuilder:App.unique('buld_app_loading_screen')
+		component:App.unique('app_builder_root')
 	}
 
+
+//// LEFT OFF HERE:
+//// OP.Error.isValidation() to handle validation errors returned from Sails
+//// AppForm-> Permissions : refresh permission list, remove AppRole permission on delete.
+//// Implement AppWorkspace
 
 
 	// Define the external components used in this Component:
 	var AppChooser = OP.Component['ab_choose'](App);
-	// var AppWorkspace = OP.Component['ab_work'](App);
+	var AppWorkspace = OP.Component['ab_work'](App);
 
 
 	// This component's UI definition:
 	// Application multi-views
 	var _ui = {
-		id: ids.appbuilder,
-		container:'ab-main-container',
+		id: ids.component,
+		view:"multiview",
 		autoheight:true,
 		autowidth:true,
 		rows:[
 			AppChooser.ui,
-			// AppWorkspace.ui
+			AppWorkspace.ui
 		]
 	};
 
 
 
-	// This component's Logic definition:
-	var _logic = {
+	// This component's init() definition:
+	var _init = function() {
 
-		init: function() {
+		AppChooser.init();
+		AppWorkspace.init();
 
-			AppChooser.init();
-			// AppWorkspace.init();
+		// start off only showing the App Chooser:
+		App.actions.transitionApplicationChooser();
 
-			$$(ids.appbuilder).adjust();
-		}
-		
+		// perform an initial resize adjustment
+		$$(ids.component).adjust();
 	}
 
 
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		// transition to the Appbuilder workspace with given App
-		transitionWorkspace:function(App){
-console.error('TODO: transitionWorkspace()');			
-			
-		},
 
-		transitionApplicationChooser:function() {
-console.error('TODO: transitionApplicationChooser()');		
-		}
 
 	}
 
@@ -104,7 +101,7 @@ console.error('TODO: transitionApplicationChooser()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_logic.init,		// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component  
 		actions:_actions		// {ob}		hash of fn() to expose so other components can access.
 	}
 

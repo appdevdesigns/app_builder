@@ -29,7 +29,7 @@ var labels = {
 
 OP.Component.extend('ab_choose_list', function(App) {
 
-	labels.common = App.labels.common;
+	labels.common = App.labels;
 
 	var ids = {
 		component:App.unique('ab_choose_listcomponent'),
@@ -152,7 +152,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 									
 
 									// We've selected an Application to work with
-									App.actions.transitionWorkspace( selectedApp[0] );
+									App.actions.transitionWorkspace( selectedApp );
 									
 								}
 
@@ -350,7 +350,6 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 		MenuComponent.init();
 
-		// _data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
 		// start things off by loading the current list of Applications
 		_logic.loadData();
 	}
@@ -425,8 +424,16 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 					AD.error.log('App Builder : Error delete application data', { error: err });
 				})
+		},
 
-			
+
+		/**
+		 * @function transitionApplicationList
+		 *
+		 * Trigger our List component to show
+		 */
+		transitionApplicationList:function() {
+			$$(ids.component).show();
 		}
 	}			
 

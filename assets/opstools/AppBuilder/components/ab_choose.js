@@ -16,7 +16,7 @@ OP.Component.extend('ab_choose', function(App) {
 
 
 	var ids = {
-		chooseComponent:App.unique('ab_choose')
+		component:App.unique('ab_choose')
 	}
 
 
@@ -30,7 +30,7 @@ OP.Component.extend('ab_choose', function(App) {
 	// Application multi-views
 	var _ui = {
 		view:"multiview",
-		id: ids.chooseComponent,
+		id: ids.component,
 		autoheight: true,
 		cells: [
 			AppList.ui,
@@ -53,23 +53,14 @@ OP.Component.extend('ab_choose', function(App) {
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		// initiate a request to create a new Application
-		transitionApplicationForm:function(Application){
-			
-			// if no Application is given, then this should be a [create] operation,
-			// so clear our AppList
-			if ('undefined' == typeof Application) {
-				App.actions.unselectApplication();
-			}
 
-
-			App.actions.populateApplicationForm(Application);
-		},
-
-		transitionApplicationList:function() {
-
-			$$(ids.chooseComponent).back();
-			// AppList.logic.show();
+		/**
+		 * @function transitionApplicationChooser
+		 *
+		 * Switch the AppBuilder UI to show the Application Chooser component.
+		 */
+		transitionApplicationChooser:function() {
+			$$(ids.component).show();	
 		}
 
 	}

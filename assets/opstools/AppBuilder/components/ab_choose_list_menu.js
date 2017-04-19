@@ -26,11 +26,15 @@ var labels = {
 
 OP.Component.extend('ab_choose_list_menu', function(App) {
 
-	labels.common = App.labels.common;
+	labels.common = App.labels;
+
+
 
 	var ids = {
 		menu:App.unique('ab_choose_list_menu')
 	}
+
+
 
 	var _ui = {
 		view: "popup",
@@ -51,6 +55,10 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 			select: false,
 			on: {
 				'onItemClick': function (timestamp, e, trg) {
+
+					// hide our popup before we trigger any other possible UI animation: (like .edit)
+					// NOTE: if the UI is animating another component, and we do .hide()
+					// while it is in progress, the UI will glitch and give the user whiplash.
 					$$(ids.menu).hide();
 
 					var selectedApp = App.actions.getSelectedApplication();
@@ -91,11 +99,9 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 	var _data={};
 
 
-	var _logic = {
 
-		init: function() {
+	var _init = function() {
 			
-		}
 		
 	}
 
@@ -103,6 +109,6 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 	return {
 		ui: _ui,
-		init: _logic.init
+		init: _init
 	}
 })

@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 10);
+/******/ 	return __webpack_require__(__webpack_require__.s = 15);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -71,120 +71,8 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__multilingual__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model__ = __webpack_require__(3);
-
-/**
- * @class AD_Client
- * @parent index 4
- *
- * ###Client side global OpsPortal (OP) namespace.
- *
- * This file defines standard functions and calls for OpsPortal
- * objects on the client side.
- */
-
-// Create our OP  Namespace only if it hasn't been created already
-
-//// TODO: how to disable 'use strict'?  or perform this check without an error
-//// in 'use strict' ?
-
-// if (!window.OP) {
-
-
-
-
-    window.OP = {};
-
-
-    // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
-    //              for our loaded projects.
-    // OP.UI = {};    		// webix UI definitions
-    // OP.Logic = {}; 		// logic references for webix application
-    OP.Component = {};  // our defined components
-
-
-
-
-	// OP.UI.extend = function(key, definition) {
-	// 	OP.UI[key] = definition;
-	// }
-
-	OP.Component.extend = function(key, fn) {
-		OP.Component[key] = function(App){
-
-//// TODO: verify App has proper structure:
-			if (!App) {
-
-				App = {
-
-					uuid: webix.uid(),
-
-					/*
-					 * actions:
-					 * a hash of exposed application methods that are shared among our 
-					 * components, so one component can invoke an action that updates 
-					 * another component.
-					 */
-					actions:{
-						
-					},
-
-					/*
-					 * unique()
-					 * A function that returns a globally unique Key.
-					 * @param {string} key   The key to modify and return.
-					 * @return {string} 
-					 */
-					unique: function(key) { return key+this.uuid; },
-
-					/*
-					 * labels
-					 * a collection of labels that are common for the Application.
-					 */
-					labels:{
-				
-					}
-
-				}
-			}
-
-			// make an instance of the component.
-			var component = fn(App);
-
-			// transfer to App, any actions in the component:
-			if (component.actions){
-				for(var a in component.actions) {
-					App.actions[a] = component.actions[a];
-				}
-			}
-
-			return component;
-		};
-	}
-
-
-	
-	OP.Dialog = AD.op.Dialog;
-
-
-	OP.Multilingual = __WEBPACK_IMPORTED_MODULE_0__multilingual__["a" /* default */];
-	OP.Model = __WEBPACK_IMPORTED_MODULE_1__model__["a" /* default */];
-	
-
-	/* harmony default export */ __webpack_exports__["a"] = OP;
-// }
-
-
-// import "./model.js"
-
-/***/ }),
-/* 1 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(14);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__data_ABApplication__);
 
 
@@ -430,12 +318,125 @@ class ABApplication {
 
 
 /***/ }),
+/* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__multilingual__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model__ = __webpack_require__(3);
+
+/**
+ * @class AD_Client
+ * @parent index 4
+ *
+ * ###Client side global OpsPortal (OP) namespace.
+ *
+ * This file defines standard functions and calls for OpsPortal
+ * objects on the client side.
+ */
+
+// Create our OP  Namespace only if it hasn't been created already
+
+//// TODO: how to disable 'use strict'?  or perform this check without an error
+//// in 'use strict' ?
+
+// if (!window.OP) {
+
+
+
+
+    window.OP = {};
+
+
+    // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
+    //              for our loaded projects.
+    // OP.UI = {};    		// webix UI definitions
+    // OP.Logic = {}; 		// logic references for webix application
+    OP.Component = {};  // our defined components
+
+
+
+
+	// OP.UI.extend = function(key, definition) {
+	// 	OP.UI[key] = definition;
+	// }
+
+	OP.Component.extend = function(key, fn) {
+		OP.Component[key] = function(App){
+
+//// TODO: verify App has proper structure:
+			if (!App) {
+
+				App = {
+
+					uuid: webix.uid(),
+
+					/*
+					 * actions:
+					 * a hash of exposed application methods that are shared among our 
+					 * components, so one component can invoke an action that updates 
+					 * another component.
+					 */
+					actions:{
+						
+					},
+
+					/*
+					 * unique()
+					 * A function that returns a globally unique Key.
+					 * @param {string} key   The key to modify and return.
+					 * @return {string} 
+					 */
+					unique: function(key) { return key+this.uuid; },
+
+					/*
+					 * labels
+					 * a collection of labels that are common for the Application.
+					 */
+					labels:{
+				
+					}
+
+				}
+			}
+
+			// make an instance of the component.
+			var component = fn(App);
+
+			// transfer to App, any actions in the component:
+			if (component.actions){
+				for(var a in component.actions) {
+					App.actions[a] = component.actions[a];
+				}
+			}
+
+			return component;
+		};
+	}
+
+
+	
+	OP.Dialog = AD.op.Dialog;
+
+
+	OP.Multilingual = __WEBPACK_IMPORTED_MODULE_0__multilingual__["a" /* default */];
+	OP.Model = __WEBPACK_IMPORTED_MODULE_1__model__["a" /* default */];
+	
+
+	/* harmony default export */ __webpack_exports__["a"] = OP;
+// }
+
+
+// import "./model.js"
+
+/***/ }),
 /* 2 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work__ = __webpack_require__(9);
 
 /*
  * AB 
@@ -449,7 +450,7 @@ class ABApplication {
 
 
 
-// import './ab_work'
+
 
 OP.Component.extend('ab', function(App) {
 
@@ -460,7 +461,7 @@ OP.Component.extend('ab', function(App) {
 
 	
 	// setup the common labels for our AppBuilder Application.
-	App.labels.common = {
+	App.labels = {
 		"import": L('ab.common.import', "*Import"),
 		edit: 	  L('ab.common.edit', "*Edit"),
 		save: 	  L('ab.common.save', "*Save"),
@@ -484,63 +485,54 @@ OP.Component.extend('ab', function(App) {
 
 
 	var ids = {
-		appbuilder:App.unique('buld_app_loading_screen')
+		component:App.unique('app_builder_root')
 	}
 
 
 //// LEFT OFF HERE:
 //// OP.Error.isValidation() to handle validation errors returned from Sails
-//// Debug AppList -> AppForm transitions
-//// reduce App.labels.common ->  App.labels
+//// AppForm-> Permissions : refresh permission list, remove AppRole permission on delete.
 //// Implement AppWorkspace
 
 
 	// Define the external components used in this Component:
 	var AppChooser = OP.Component['ab_choose'](App);
-	// var AppWorkspace = OP.Component['ab_work'](App);
+	var AppWorkspace = OP.Component['ab_work'](App);
 
 
 	// This component's UI definition:
 	// Application multi-views
 	var _ui = {
-		id: ids.appbuilder,
-		container:'ab-main-container',
+		id: ids.component,
+		view:"multiview",
 		autoheight:true,
 		autowidth:true,
 		rows:[
 			AppChooser.ui,
-			// AppWorkspace.ui
+			AppWorkspace.ui
 		]
 	};
 
 
 
-	// This component's Logic definition:
-	var _logic = {
+	// This component's init() definition:
+	var _init = function() {
 
-		init: function() {
+		AppChooser.init();
+		AppWorkspace.init();
 
-			AppChooser.init();
-			// AppWorkspace.init();
+		// start off only showing the App Chooser:
+		App.actions.transitionApplicationChooser();
 
-			$$(ids.appbuilder).adjust();
-		}
-		
+		// perform an initial resize adjustment
+		$$(ids.component).adjust();
 	}
 
 
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		// transition to the Appbuilder workspace with given App
-		transitionWorkspace:function(App){
-console.error('TODO: transitionWorkspace()');			
-			
-		},
 
-		transitionApplicationChooser:function() {
-console.error('TODO: transitionApplicationChooser()');		
-		}
 
 	}
 
@@ -548,7 +540,7 @@ console.error('TODO: transitionApplicationChooser()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_logic.init,		// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component  
 		actions:_actions		// {ob}		hash of fn() to expose so other components can access.
 	}
 
@@ -1055,7 +1047,7 @@ OP.Component.extend('ab_choose', function(App) {
 
 
 	var ids = {
-		chooseComponent:App.unique('ab_choose')
+		component:App.unique('ab_choose')
 	}
 
 
@@ -1069,7 +1061,7 @@ OP.Component.extend('ab_choose', function(App) {
 	// Application multi-views
 	var _ui = {
 		view:"multiview",
-		id: ids.chooseComponent,
+		id: ids.component,
 		autoheight: true,
 		cells: [
 			AppList.ui,
@@ -1092,23 +1084,14 @@ OP.Component.extend('ab_choose', function(App) {
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		// initiate a request to create a new Application
-		transitionApplicationForm:function(Application){
-			
-			// if no Application is given, then this should be a [create] operation,
-			// so clear our AppList
-			if ('undefined' == typeof Application) {
-				App.actions.unselectApplication();
-			}
 
-
-			App.actions.populateApplicationForm(Application);
-		},
-
-		transitionApplicationList:function() {
-
-			$$(ids.chooseComponent).back();
-			// AppList.logic.show();
+		/**
+		 * @function transitionApplicationChooser
+		 *
+		 * Switch the AppBuilder UI to show the Application Chooser component.
+		 */
+		transitionApplicationChooser:function() {
+			$$(ids.component).show();	
 		}
 
 	}
@@ -1137,7 +1120,7 @@ OP.Component.extend('ab_choose', function(App) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
 
 /*
  * AB Choose Form
@@ -1175,7 +1158,7 @@ var labels = {
 
 OP.Component.extend('ab_choose_form', function(App) {
 
-	labels.common = App.labels.common;
+	labels.common = App.labels;
 
 	var ids = {
 		formComponent: App.unique('ab_choose_form_component'),
@@ -1185,6 +1168,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 		saveButton: App.unique('ab-app-form-button-save')
 	}
+
 
 
 	var _ui = {
@@ -1344,14 +1328,25 @@ OP.Component.extend('ab_choose_form', function(App) {
 	const FormFields = ['label', 'description'];
 
 
+
+	var _init = function() {
+		webix.extend($$(ids.form), webix.ProgressBar);
+		webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
+	}
+
+
+
 	var _logic = {
 
-		init: function() {
-			webix.extend($$(ids.form), webix.ProgressBar);
-			webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
-		},
 
-
+		/**
+		 * @function applicationCreate
+		 *
+		 * Step through the process of creating an ABApplication with the 
+		 * current state of the Form.
+		 *
+		 * @param {obj} values 	current value hash of the form values.
+		 */
 		applicationCreate: function(values) {
 
 			var newApp = {
@@ -1402,6 +1397,15 @@ OP.Component.extend('ab_choose_form', function(App) {
 			});
 		},
 
+
+		/**
+		 * @function applicationUpdate
+		 *
+		 * Step through the process of updating an ABApplication with the 
+		 * current state of the Form.
+		 *
+		 * @param {ABApplication} application 
+		 */
 		applicationUpdate: function(Application) {
 			var values = _logic.formValues();
 
@@ -1452,27 +1456,57 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
+		/**
+		 * @function buttonSaveDisable
+		 *
+		 * Disable the save button.
+		 */
 		buttonSaveDisable:function() {
 			$$(ids.saveButton).disable();
 		},
 
 
+		/**
+		 * @function buttonSaveEnable
+		 *
+		 * Re-enable the save button.
+		 */
 		buttonSaveEnable:function() {
 			$$(ids.saveButton).enable();
 		},
 
 
+		/**
+		 * @function cancel
+		 *
+		 * Cancel the current Form Operation and return us to the AppList.
+		 */
 		cancel: function() {
 									
 			_logic.formReset();
 			App.actions.transitionApplicationList();
 		},
 
+
+		/**
+		 * @function formBusy
+		 *
+		 * Show the progress indicator to indicate a Form operation is in 
+		 * progress.
+		 */
 		formBusy: function() {
 
 			$$(ids.form).showProgress({ type: 'icon' });
 		},
 
+
+		/**
+		 * @function formPopulate()
+		 *
+		 * populate the form values from the given ABApplication
+		 *
+		 * @param {ABApplication} application  instance of the ABApplication
+		 */
 		formPopulate: function(application) {
 
 			var Form = $$(ids.form);
@@ -1490,11 +1524,22 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 		},
 
+
+		/**
+		 * @function formReady()
+		 *
+		 * remove the busy indicator from the form.
+		 */
 		formReady: function() {
 			$$(ids.form).hideProgress();
 		},
 
 
+		/**
+		 * @function formReset()
+		 *
+		 * return the form to an empty state.
+		 */
 		formReset: function() {
 
 			$$(ids.form).clear();
@@ -1505,7 +1550,13 @@ OP.Component.extend('ab_choose_form', function(App) {
 		},
 
 
-
+		/**
+		 * @function formValidate()
+		 *
+		 * validate the form values.
+		 *
+		 * @return {bool}  true if all values pass validation.  false otherwise.
+		 */
 		formValidate:function(op) {
 			// op : ['add', 'update', 'destroy']
 
@@ -1884,16 +1935,36 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 
-
-
-
-
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		// initiate a request to create a new Application
-		populateApplicationForm:function(Application){
+
+		/**
+		 * @function populateApplicationForm()
+		 *
+		 * Initialze the Form with the values from the provided ABApplication.
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 *										we are working with.
+		 */
+		// populateApplicationForm:function(Application){
 			
+
+		// },
+
+
+		// initiate a request to create a new Application
+		transitionApplicationForm:function(Application){
+			
+			// if no Application is given, then this should be a [create] operation,
+			// so clear our AppList
+			if ('undefined' == typeof Application) {
+				App.actions.unselectApplication();
+			}
+
+			// now prepare our form:
 			_logic.formReset();
 			if (Application) {
 				// populate Form here:
@@ -1901,15 +1972,17 @@ OP.Component.extend('ab_choose_form', function(App) {
 			}
 			_logic.permissionPopulate(Application);
 			_logic.show();
-		}
+		},
 
 	}
 
 
 	return {
 		ui: _ui,
-		init: _logic.init,
-		actions:_actions
+		init: _init,
+		actions:_actions,
+
+		_logic: _logic
 	}
 })
 
@@ -1918,7 +1991,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__);
 
@@ -1952,7 +2025,7 @@ var labels = {
 
 OP.Component.extend('ab_choose_list', function(App) {
 
-	labels.common = App.labels.common;
+	labels.common = App.labels;
 
 	var ids = {
 		component:App.unique('ab_choose_listcomponent'),
@@ -2075,7 +2148,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 									
 
 									// We've selected an Application to work with
-									App.actions.transitionWorkspace( selectedApp[0] );
+									App.actions.transitionWorkspace( selectedApp );
 									
 								}
 
@@ -2273,7 +2346,6 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 		MenuComponent.init();
 
-		// _data.Applications = AD.Model.get('opstools.BuildApp.ABApplication');
 		// start things off by loading the current list of Applications
 		_logic.loadData();
 	}
@@ -2348,14 +2420,17 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 					AD.error.log('App Builder : Error delete application data', { error: err });
 				})
-
-			
 		},
 
 
-		// transitionApplicationList:function() {
-		// 	$$(ids.component).show();
-		// }
+		/**
+		 * @function transitionApplicationList
+		 *
+		 * Trigger our List component to show
+		 */
+		transitionApplicationList:function() {
+			$$(ids.component).show();
+		}
 	}			
 
 
@@ -2403,11 +2478,15 @@ var labels = {
 
 OP.Component.extend('ab_choose_list_menu', function(App) {
 
-	labels.common = App.labels.common;
+	labels.common = App.labels;
+
+
 
 	var ids = {
 		menu:App.unique('ab_choose_list_menu')
 	}
+
+
 
 	var _ui = {
 		view: "popup",
@@ -2428,6 +2507,10 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 			select: false,
 			on: {
 				'onItemClick': function (timestamp, e, trg) {
+
+					// hide our popup before we trigger any other possible UI animation: (like .edit)
+					// NOTE: if the UI is animating another component, and we do .hide()
+					// while it is in progress, the UI will glitch and give the user whiplash.
 					$$(ids.menu).hide();
 
 					var selectedApp = App.actions.getSelectedApplication();
@@ -2468,11 +2551,9 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 	var _data={};
 
 
-	var _logic = {
 
-		init: function() {
+	var _init = function() {
 			
-		}
 		
 	}
 
@@ -2480,13 +2561,825 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 	return {
 		ui: _ui,
-		init: _logic.init
+		init: _init
 	}
 })
 
 
 /***/ }),
 /* 9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_interface__ = __webpack_require__(10);
+
+/*
+ * ab_work
+ *
+ * Display the component for working with an ABApplication.
+ *
+ */
+
+
+
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	application: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+		backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
+		synchronize: L('ab.application.synchronize', "*Synchronize"),
+		objectTitle: L('ab.object.title', "*Objects"),
+		interfaceTitle: L('ab.interface.title', "*Interface")
+	}
+}
+
+
+
+OP.Component.extend('ab_work', function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('ab_work_component'),
+		toolBar: App.unique('ab_work_toolbar'),
+		buttonSync: App.unique('ab_work_button_sync'),
+		labelAppName: App.unique('ab_work_label_appname'),
+		tabbar: App.unique('ab_work_tabbar'),
+		tab_object: App.unique('ab_work_tab_object'),
+		tab_interface: App.unique('ab_work_tab_interface'),
+		workspace: App.unique('ab_work_workspace'),
+	}
+
+
+	var AppObjectWorkspace = OP.Component['ab_work_object'](App);
+	var AppInterfaceWorkspace = OP.Component['ab_work_interface'](App);
+
+	// Our webix UI definition:
+	var _ui = {
+		id: ids.component,
+		autoheight: true,
+		autowidth: true,
+		rows: [
+			{
+				view: "toolbar",
+				id: ids.toolBar,
+				autowidth: true,
+				cols: [
+					{
+						view: "button", value: labels.application.backToApplication, width: 250, align: "right", click: function () {
+							App.actions.transitionApplicationChooser();
+						}
+					},
+					{
+						id: ids.buttonSync,
+						view: "button",
+						type: "iconButton",
+						icon: "refresh",
+						label: labels.application.synchronize,
+						width: 250,
+						//autowidth: true,
+						align: "right",
+						click: function () {
+							_logic.synchronize();
+						}
+					},
+					{ fillspace: true },
+					{ view: "label", id: ids.labelAppName, width: 400, align: "right" }
+				]
+			},
+			{ height: 10 },
+			{
+				view: "tabbar", 
+				id: ids.tabbar, 
+				value: ids.tab_object, 
+				multiview: true,
+				options: [
+					{ 
+						id: ids.tab_object, 
+						value: labels.application.objectTitle, 
+						width: 120 
+					},
+					{ 
+						id: ids.tab_interface, 
+						value: labels.application.interfaceTitle, 
+						width: 120 
+					}
+				],
+				on: {
+					onChange: function (idNew, idOld) {
+						if (idNew != idOld) {
+							_logic.tabSwitch(idNew, idOld);
+						}
+					}
+				}
+			},
+			{
+				id: ids.workspace,
+				cells: [
+					AppObjectWorkspace.ui,
+					AppInterfaceWorkspace.ui
+				]
+			}
+		]
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+		
+		AppObjectWorkspace.init();
+		AppInterfaceWorkspace.init();
+
+		// initialize the Object Workspace to show first.
+		_logic.tabSwitch(ids.tab_object);
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+		
+		applicationInit:function(application) {
+
+			// setup Application Label:
+			$$(ids.labelAppName).define('label', application.label);
+			$$(ids.labelAppName).refresh();
+
+		},
+
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		},
+
+
+		/**
+		 * @function synchronize
+		 *
+		 * Kick off the Synchronization process.
+		 */
+		synchronize:function() {
+
+// self.element.trigger(self.options.synchronizeEvent, {
+// 	appID: AD.classes.AppBuilder.currApp.id
+// });
+//// Question: where should this logic go?  Here or in ab.js ?
+
+console.error('TODO: ab_work.logic.synchronize()!');
+		},
+
+
+		/**
+		 * @function tabSwitch
+		 *
+		 * Every time a tab switch happens, decide which workspace to show.
+		 *
+		 * @param {string} idTab	the id of the tab that was changed to.
+		 * @param {string} idOld	the previous tab id  
+		 */
+		tabSwitch:function(idTab, idOld) {
+
+			switch( idTab ) {
+
+				// Object Workspace Tab
+				case ids.tab_object:
+					$$(ids.buttonSync).show();
+					App.actions.transitionObjectWorkspace();
+					break;
+
+				// Interface Workspace Tab
+				case ids.tab_interface:
+					$$(ids.buttonSync).hide();
+					App.actions.transitionInterfaceWorkspace();
+					break;
+			}
+
+		}
+	}
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+
+		/**
+		 * @function transitionWorkspace
+		 *
+		 * Switch the UI to view the App Workspace screen.
+		 *
+		 * @param {ABApplication} application 
+		 */
+		transitionWorkspace:function(application){
+
+			_logic.applicationInit(application);
+			App.actions.initObjectTab(application);
+			App.actions.initInterfaceTab(application);
+
+			_logic.show();			
+			
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+
+/*
+ * ab_work_interface
+ *
+ * Display the Interface for designing Pages and Views in the App Builder.
+ *
+ */
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	application: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+
+	}
+}
+
+
+
+OP.Component.extend('ab_work_interface', function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('ab_work_interface_component'),
+
+	}
+
+
+
+	// Our webix UI definition:
+	var _ui = {
+		id: ids.component,
+		scroll: true,
+		rows: [
+{ view: "label", label:"interface workspace", width: 400, align: "right" },				
+		]
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+		// webix.extend($$(ids.form), webix.ProgressBar);
+
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+		
+		// /**
+		//  * @function formBusy
+		//  *
+		//  * Show the progress indicator to indicate a Form operation is in 
+		//  * progress.
+		//  */
+		// formBusy: function() {
+
+		// 	$$(ids.form).showProgress({ type: 'icon' });
+		// },
+
+
+		// /**
+		//  * @function formReady()
+		//  *
+		//  * remove the busy indicator from the form.
+		//  */
+		// formReady: function() {
+		// 	$$(ids.form).hideProgress();
+		// },
+
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		}
+	}
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		
+		/**
+		 * @function initInterfaceTab
+		 *
+		 * Initialize the Object Workspace with the given ABApplication.
+		 *
+		 * @param {ABApplication} application 
+		 */
+		initInterfaceTab:function(application) {
+console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
+		},
+
+
+		/**
+		 * @function transitionInterfaceWorkspace
+		 *
+		 * Display the Interface Workspace UI
+		 */
+		transitionInterfaceWorkspace:function(){
+			_logic.show();
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_object_workspace__ = __webpack_require__(13);
+
+/*
+ * ab_work_object
+ *
+ * Display the form for creating a new Application.
+ *
+ */
+
+
+
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	application: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+
+	}
+}
+
+
+
+OP.Component.extend('ab_work_object', function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('ab_work_object_component'),
+
+	}
+
+	var ObjectList = OP.Component['ab_work_object_list'](App);
+	var ObjectWorkspace = OP.Component['ab_work_object_workspace'](App);
+
+
+	// Our webix UI definition:
+	var _ui = {
+		id: ids.component,
+		cols: [
+			ObjectList.ui,
+			{ view: "resizer", autoheight: true },
+			ObjectWorkspace.ui
+		]
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+		
+		ObjectWorkspace.init();
+		ObjectList.init();
+
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+		
+		// /**
+		//  * @function formBusy
+		//  *
+		//  * Show the progress indicator to indicate a Form operation is in 
+		//  * progress.
+		//  */
+		// formBusy: function() {
+
+		// 	$$(ids.form).showProgress({ type: 'icon' });
+		// },
+
+
+		// /**
+		//  * @function formReady()
+		//  *
+		//  * remove the busy indicator from the form.
+		//  */
+		// formReady: function() {
+		// 	$$(ids.form).hideProgress();
+		// },
+
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		}
+	}
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		
+		/**
+		 * @function initObjectTab
+		 *
+		 * Initialize the Object Workspace with the given ABApplication.
+		 *
+		 * @param {ABApplication} application 
+		 */
+		initObjectTab:function(application) {
+			App.actions.populateObjectList(application);
+			App.actions.clearObjectWorkspace();
+		},
+
+
+		/**
+		 * @function transitionObjectWorkspace
+		 *
+		 * Display the Object Workspace UI
+		 */
+		transitionObjectWorkspace:function(){
+			_logic.show();
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+
+/*
+ * ab_work_object_list
+ *
+ * Manage the Object List
+ *
+ */
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	application: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+
+	}
+}
+
+
+
+OP.Component.extend('ab_work_object_list', function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('ab_work_object_list_component'),
+
+	}
+
+
+
+	// Our webix UI definition:
+	var _ui = {
+		id: ids.component,
+		scroll: true,
+		rows: [
+{ view: "label", label:"ab_work_object_list row", width: 800, align: "right" },	
+		]
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+		// webix.extend($$(ids.form), webix.ProgressBar);
+
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+		
+		// /**
+		//  * @function formBusy
+		//  *
+		//  * Show the progress indicator to indicate a Form operation is in 
+		//  * progress.
+		//  */
+		// formBusy: function() {
+
+		// 	$$(ids.form).showProgress({ type: 'icon' });
+		// },
+
+
+		// /**
+		//  * @function formReady()
+		//  *
+		//  * remove the busy indicator from the form.
+		//  */
+		// formReady: function() {
+		// 	$$(ids.form).hideProgress();
+		// },
+
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		}
+	}
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+
+		/**
+		 * @function populateObjectList()
+		 *
+		 * Initialize the Object List from the provided ABApplication
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 *										we are working with.
+		 */
+		populateObjectList : function(Application){
+			
+console.error('TODO: ab_work_objet_list.actions.populateObjectList()');
+
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+
+/*
+ * ab_work_object_workspace
+ *
+ * Manage the Object Workspace area.
+ *
+ */
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	application: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+
+	}
+}
+
+
+
+OP.Component.extend('ab_work_object_workspace', function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('ab_work_object_workspace_component'),
+
+	}
+
+
+
+	// Our webix UI definition:
+	var _ui = {
+		id: ids.component,
+		scroll: true,
+		rows: [
+{ view: "label", label:"ab_work_object_workspace row", width: 800, align: "right" },	
+		]
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+		// webix.extend($$(ids.form), webix.ProgressBar);
+
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+		
+		// /**
+		//  * @function formBusy
+		//  *
+		//  * Show the progress indicator to indicate a Form operation is in 
+		//  * progress.
+		//  */
+		// formBusy: function() {
+
+		// 	$$(ids.form).showProgress({ type: 'icon' });
+		// },
+
+
+		// /**
+		//  * @function formReady()
+		//  *
+		//  * remove the busy indicator from the form.
+		//  */
+		// formReady: function() {
+		// 	$$(ids.form).hideProgress();
+		// },
+
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		}
+	}
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+
+		/**
+		 * @function populateApplicationForm()
+		 *
+		 * Initialze the Form with the values from the provided ABApplication.
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 *										we are working with.
+		 */
+		clearObjectWorkspace:function(){
+			
+console.error('TODO: clearObjectWorkspace()');
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 14 */
 /***/ (function(module, exports) {
 
 //
@@ -2518,12 +3411,12 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		
 
 /***/ }),
-/* 10 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_ab__ = __webpack_require__(2);
 
 
