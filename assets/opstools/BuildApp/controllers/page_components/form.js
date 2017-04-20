@@ -4,8 +4,15 @@ steal(
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/ColumnizerHelper.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
+
+	'opstools/BuildApp/controllers/page_components/form/fields.js',
+	'opstools/BuildApp/controllers/page_components/form/submit_rules.js',
+	'opstools/BuildApp/controllers/page_components/form/display_rules.js',
+	'opstools/BuildApp/controllers/page_components/form/record_rules.js',
+
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
-	function (dataFieldsManager, dataCollectionHelper, columnizerHelper, selectivityHelper) {
+	function (dataFieldsManager, dataCollectionHelper, columnizerHelper, selectivityHelper,
+		fields_tab, submit_rules_tab, display_rules_tab, record_rules_tab) {
 		var componentIds = {
 			editView: 'ab-form-edit-view',
 			editForm: 'ab-form-edit-mode',
@@ -38,6 +45,12 @@ steal(
 				common: {
 					saveSuccessMessage: AD.lang.label.getLabel('ab.common.save.success') || "<b>{0}</b> is saved."
 				}
+			},
+			tabs = {
+				fields: new fields_tab(),
+				submit_rules: new submit_rules_tab(),
+				display_rules: new display_rules_tab(),
+				record_rules: new record_rules_tab()
 			};
 
 		//Constructor
@@ -1000,7 +1013,7 @@ steal(
 			};
 
 			this.resize = function (width, height) {
-				$$(this.viewId).adjust();
+				// $$(this.viewId).adjust();
 			};
 
 		}
@@ -1028,13 +1041,49 @@ steal(
 			var form = $.extend(true, {}, formComponent.getView());
 			form.id = componentIds.editForm;
 
+			// var editView = {
+			// 	id: componentIds.editView,
+			// 	view: 'layout',
+			// 	padding: 10,
+			// 	css: 'ab-scroll-y',
+			// 	rows: [
+			// 		form
+			// 	]
+			// };
+
 			var editView = {
 				id: componentIds.editView,
-				view: 'layout',
-				padding: 10,
-				css: 'ab-scroll-y',
-				rows: [
-					form
+				view: "tabview",
+				padding: 5,
+				tabbar: {
+					on: {
+						onAfterRender: function () {
+							$$(componentIds.editForm).adjust();
+						},
+						onChange: function (newv, oldv) {
+							if ($$(newv)) {
+								$$(newv).adjust();
+							}
+						}
+					}
+				},
+				multiview: {
+					css: 'ab-scroll-y'
+				},
+				cells: [
+					{
+						header: "Fields",
+						body: tabs.fields.getEditView(form)
+					},
+					{
+						header: "Submit Rules"
+					},
+					{
+						header: "Display Rules"
+					},
+					{
+						header: "Record Rules"
+					}
 				]
 			};
 
@@ -1245,8 +1294,13 @@ steal(
 		};
 
 		formComponent.resize = function (height) {
-			$$(componentIds.editView).define('height', height - 150);
-			$$(componentIds.editView).resize();
+			if ($$(componentIds.editView)) {
+				$$(componentIds.editView).define('height', height - 140);
+				$$(componentIds.editView).resize();
+
+				$$(componentIds.editView).getMultiview().define('height', height - 200);
+				$$(componentIds.editView).getMultiview().resize();
+			}
 		};
 
 		return formComponent;
