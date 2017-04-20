@@ -2,7 +2,7 @@
 /*
  * ab_work_object
  *
- * Display the form for creating a new Application.
+ * Display the Object Tab UI:
  *
  */
 
@@ -66,28 +66,6 @@ OP.Component.extend('ab_work_object', function(App) {
 	// our internal business logic 
 	var _logic = {
 
-		
-		// /**
-		//  * @function formBusy
-		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
-		//  * progress.
-		//  */
-		// formBusy: function() {
-
-		// 	$$(ids.form).showProgress({ type: 'icon' });
-		// },
-
-
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
-
 
 		/**
 		 * @function show()
@@ -120,11 +98,11 @@ OP.Component.extend('ab_work_object', function(App) {
 
 
 		/**
-		 * @function transitionObjectWorkspace
+		 * @function transitionObjectTab
 		 *
-		 * Display the Object Workspace UI
+		 * Display the Object Tab UI
 		 */
-		transitionObjectWorkspace:function(){
+		transitionObjectTab:function(){
 			_logic.show();
 		}
 

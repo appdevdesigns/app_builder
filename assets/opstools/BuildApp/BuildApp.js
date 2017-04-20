@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -72,8 +72,11 @@
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__data_ABApplication__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ABObject__ = __webpack_require__(5);
+
+
 
 
 
@@ -81,28 +84,74 @@
 
 var _AllApplications = [];
 
+function toDC( data ) {
+	return new webix.DataCollection({
+		data: data,
+
+		// on: {
+		// 	onAfterDelete: function(id) {
+
+		// 	}
+		// }
+	});
+}
+
 class ABApplication {
 
     constructor(attributes) {
+
+    	// ABApplication Attributes
     	this.id    = attributes.id;
-
-    	this.json = attributes.json;
-
+    	this.json  = attributes.json;
     	this.name  = attributes.name || this.json.name || "";
+    	this.role  = attributes.role;
 
     	// multilingual fields: label, description
     	__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
-	  	this.role  = attributes.role;
+	  	
+	  	// import all our ABObjects
+	  	var newObjects = [];
+	  	(attributes.json.objects || []).forEach((obj) => {
+	  		newObjects.push( new __WEBPACK_IMPORTED_MODULE_2__ABObject__["a" /* default */](obj, this) );
+	  	})
+	  	this._objects = newObjects;
+
+
+	  	// import all our ABViews
+
+
 
 	  	// instance keeps a link to our Model for .save() and .destroy();
 	  	this.Model = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Model.get('opstools.BuildApp.ABApplication');
 	  	this.Model.Models(ABApplication);
   	}
 
+
+
   	///
   	/// Static Methods
   	///
+  	/// Available to the Class level object.  These methods are not dependent
+  	/// on the instance values of the Application.
+  	///
+
+
+  	/**
+  	 * @function allApplications
+  	 *
+  	 * return a DataCollection that contains all the ABApplications this user
+  	 * can see (based upon server side permissions);
+  	 * 
+  	 * NOTE: this manages the results in the _AllApplications dataCollection
+  	 * store.  Any future .create(), .destroy(), .updates() modify values in 
+  	 * that collection.
+  	 *
+  	 * Any webix ui components synced to that collection will be automatically 
+  	 * updated.
+  	 *
+  	 * @return {Promise} 
+  	 */
 	static allApplications() {
 		return new Promise( 
 			(resolve, reject) => {
@@ -113,6 +162,7 @@ class ABApplication {
 				ModelApplication.findAll()
 					.then(function(data){
 						
+						// NOTE: data is already a DataCollection from .findAll()
 						_AllApplications = data;
 
 						resolve(data);
@@ -121,10 +171,16 @@ class ABApplication {
 
 			}
 		)
-
 	}
 
 
+  	/**
+  	 * @function create
+  	 *
+  	 * take the initial values and create an instance of ABApplication.
+  	 * 
+  	 * @return {Promise} 
+  	 */
 	static create(values) {
 		return new Promise(
 			function(resolve, reject) {
@@ -153,7 +209,8 @@ class ABApplication {
 	/**
 	 * @method fieldsMultilingual()
 	 *
-	 * return an array of fields that are considered Multilingual labels
+	 * return an array of fields that are considered Multilingual labels for
+	 * an ABApplication
 	 * 
 	 * @return {array} 
 	 */
@@ -162,8 +219,8 @@ class ABApplication {
 	} 
 
 
-//// TODO: 
-//// Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
 
 	static isValid(op, values) {
 
@@ -173,7 +230,7 @@ class ABApplication {
 			if (op == 'add') {
 
 				// label/name must be unique:
-				var matchingApps = _AllApplications._toArray().filter(function (app) { 
+				var matchingApps = _AllApplications.data.filter(function (app) { 
 					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
 				})
 				if (matchingApps && matchingApps.length > 0) {
@@ -206,6 +263,18 @@ class ABApplication {
 	///
 
 
+	/// ABApplication data methods
+
+
+	/**
+	 * @method destroy()
+	 *
+	 * destroy the current instance of ABApplication
+	 *
+	 * also remove it from our _AllApplications
+	 * 
+	 * @return {Promise} 
+	 */
 	destroy () {
 		if (this.id) {
 			return this.Model.destroy(this.id)
@@ -215,6 +284,16 @@ class ABApplication {
 		}
 	}
 
+
+	/**
+	 * @method save()
+	 *
+	 * persist the current instance of ABApplication to the DB
+	 *
+	 * Also, keep the values in _AllApplications up to date.
+	 * 
+	 * @return {Promise} 
+	 */
 	save () {
 
 		var values = this.toObj();
@@ -240,7 +319,52 @@ class ABApplication {
 	}
 
 
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to 
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json} 
+	 */
+	toObj () {
 
+		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
+		this.json.name = this.name;
+
+		// for each Object: compile to json
+		var currObjects = [];
+		this._objects.forEach((obj) => {
+			currObjects.push(obj.toObj())
+		})
+		this.json.objects = currObjects;
+
+		return {
+			id:this.id,
+			name:this.name,
+			json:this.json,
+			role:this.role
+		}
+	}
+
+
+
+	/// ABApplication Permission methods
+
+
+	/**
+	 * @method assignPermissions()
+	 *
+	 * Make sure the current ABApplication permissions match the given 
+	 * array of permissions.
+	 *
+	 * @param {array} permItems	an array of role assignments that this 
+	 * 							ABApplication should match.
+	 * @return {Promise} 
+	 */
 	assignPermissions (permItems) {
 		return new Promise(
 			(resolve, reject) => {
@@ -256,7 +380,15 @@ class ABApplication {
 		)
 	}
 
-	// Permissions
+
+	/**
+	 * @method getPermissions()
+	 *
+	 * Return an array of role assignments that are currently assigned to this
+	 * ABApplication.
+	 *
+	 * @return {Promise} 	resolve(list) : list {array} Role assignments
+	 */
 	getPermissions () {
 
 		return new Promise( 
@@ -265,14 +397,23 @@ class ABApplication {
 				AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' })
 				.fail(reject)
 				.done(resolve)
-
 			}
 		);
 	}
 
+
+	/**
+	 * @method createPermission()
+	 *
+	 * Create a Role in the system after the name of the current ABApplication.
+	 *
+	 * @return {Promise} 	
+	 */
 	createPermission () {
 		return new Promise( 
 			(resolve, reject) => {
+
+// TODO: need to take created role and store as : .json.applicationRole = role.id
 
 				AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' })
 				.fail(reject)
@@ -282,10 +423,20 @@ class ABApplication {
 		);
 	}
 
+
+	/**
+	 * @method deletePermission()
+	 *
+	 * Remove the Role in the system of the current ABApplication.
+	 * (the one created by  .createPermission() )
+	 *
+	 * @return {Promise} 	
+	 */
 	deletePermission () {
 		return new Promise( 
 			(resolve, reject) => {
 
+// TODO: need to remove created role from : .json.applicationRole 
 				AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' })
 				.fail(reject)
 				.done(resolve)
@@ -295,23 +446,36 @@ class ABApplication {
 	}
 
 
-	toObj () {
 
-		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
-		this.json.name = this.name;
 
-		// for each Object: compile to json
-
-		return {
-			id:this.id,
-			name:this.name,
-			json:this.json,
-			role:this.role
-		}
+	///
+	/// Objects
+	///
 
 
 
+
+	/**
+	 * @method objects()
+	 *
+	 * return a DataCollection of all the ABObjects for this ABApplication.
+	 *
+	 * @return {Promise} 	
+	 */
+	objects (filter) {
+		filter = filter || function() {return true; };
+
+		return new Promise( 
+			(resolve, reject) => {
+
+
+				resolve(toDC(this._objects.filter(filter)));
+
+			}
+		);
 	}
+
+
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = ABApplication;
 
@@ -354,6 +518,7 @@ class ABApplication {
     // OP.Logic = {}; 		// logic references for webix application
     OP.Component = {};  // our defined components
 
+    OP.CustomComponent = {};  // separate holder for Webix Custom Components
 
 
 
@@ -366,38 +531,7 @@ class ABApplication {
 
 //// TODO: verify App has proper structure:
 			if (!App) {
-
-				App = {
-
-					uuid: webix.uid(),
-
-					/*
-					 * actions:
-					 * a hash of exposed application methods that are shared among our 
-					 * components, so one component can invoke an action that updates 
-					 * another component.
-					 */
-					actions:{
-						
-					},
-
-					/*
-					 * unique()
-					 * A function that returns a globally unique Key.
-					 * @param {string} key   The key to modify and return.
-					 * @return {string} 
-					 */
-					unique: function(key) { return key+this.uuid; },
-
-					/*
-					 * labels
-					 * a collection of labels that are common for the Application.
-					 */
-					labels:{
-				
-					}
-
-				}
+				App = OP.Component._newApp();
 			}
 
 			// make an instance of the component.
@@ -414,6 +548,60 @@ class ABApplication {
 		};
 	}
 
+	OP.Component._newApp = function () {
+		return {
+
+			uuid: webix.uid(),
+
+			/*
+			 * actions:
+			 * a hash of exposed application methods that are shared among our 
+			 * components, so one component can invoke an action that updates 
+			 * another component.
+			 */
+			actions:{
+				
+			},
+
+			/*
+			 * custom
+			 * a collection of custom components for this App Instance.
+			 */
+			custom:{
+		
+			},
+
+			/*
+			 * labels
+			 * a collection of labels that are common for the Application.
+			 */
+			labels:{
+		
+			},
+
+			/*
+			 * unique()
+			 * A function that returns a globally unique Key.
+			 * @param {string} key   The key to modify and return.
+			 * @return {string} 
+			 */
+			unique: function(key) { return key+this.uuid; },
+
+		}
+	}
+
+
+	OP.CustomComponent.extend = function(key, fn) {
+		OP.CustomComponent[key] = function(App, key){
+
+			if (!App) {
+				App = OP.Component._newApp();
+			}
+
+			// make an instance of the component.
+			return fn(App, key);
+		};
+	}
 
 	
 	OP.Dialog = AD.op.Dialog;
@@ -435,8 +623,9 @@ class ABApplication {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__webix_custom_components_edittree__ = __webpack_require__(18);
 
 /*
  * AB 
@@ -450,6 +639,9 @@ class ABApplication {
 
 
 
+
+
+// Import our Custom Components here:
 
 
 OP.Component.extend('ab', function(App) {
@@ -481,18 +673,18 @@ OP.Component.extend('ab', function(App) {
 		deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
 		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
 	}
-		
+
+
+	// make instances of our Custom Components:
+	OP.CustomComponent[__WEBPACK_IMPORTED_MODULE_3__webix_custom_components_edittree__["a" /* default */].key](App, 'edittree'); // ->  App.custom.edittree  now exists
+
+	
 
 
 	var ids = {
 		component:App.unique('app_builder_root')
 	}
 
-
-//// LEFT OFF HERE:
-//// OP.Error.isValidation() to handle validation errors returned from Sails
-//// AppForm-> Permissions : refresh permission list, remove AppRole permission on delete.
-//// Implement AppWorkspace
 
 
 	// Define the external components used in this Component:
@@ -545,6 +737,21 @@ OP.Component.extend('ab', function(App) {
 	}
 
 });
+
+
+
+
+
+
+//// REFACTORING TODOs:
+// TODO: OP.Error.isValidation() to handle validation errors returned from Sails
+// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
+
+
+
+
+
+
 
 /***/ }),
 /* 3 */
@@ -633,15 +840,15 @@ class OPModel {
 					});
 
 
-					dc._toArray = function() {
-						var data = [];
-						var id = this.getFirstId();
-						while(id) {
-							data.push(this.getItem(id));
-							id = this.getNextId(id);
-						}
-						return data;
-					}
+					// dc._toArray = function() {
+					// 	var data = [];
+					// 	var id = this.getFirstId();
+					// 	while(id) {
+					// 		data.push(this.getItem(id));
+					// 		id = this.getNextId(id);
+					// 	}
+					// 	return data;
+					// }
 
 
 
@@ -1027,8 +1234,259 @@ class OPModel {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_choose_list__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_form__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
+
+
+
+function toDC( data ) {
+	return new webix.DataCollection({
+		data: data,
+
+		// on: {
+		// 	onAfterDelete: function(id) {
+
+		// 	}
+		// }
+	});
+}
+
+class ABObject {
+
+    constructor(attributes, application) {
+/*
+{
+	id: uuid(), 
+	name: 'name',
+	labelFormat: 'xxxxx',
+	isImported: 1/0,
+	urlPath:'string',
+	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+	translations:[
+		{}
+	],
+	fields:[
+		{ABDataField}
+	]
+}
+*/
+
+
+
+    	// ABApplication Attributes
+    	this.id    = attributes.id;
+    	this.name  = attributes.name || "";
+    	this.labelFormat = attributes.labelFormat || "";
+    	this.isImported  = attributes.isImported  || 0;
+    	this.urlPath	 = attributes.urlPath     || "";
+    	this.importFromObject = attributes.importFromObject || "";
+    	this.translations = attributes.translations;
+
+
+    	// multilingual fields: label, description
+    	__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.translate(this, this, ['label']);
+
+	  	
+	  	// import all our ABObjects
+	  	// var newFields = [];
+	  	// (attributes.json.objects || []).forEach((obj) => {
+	  	// 	newObjects.push( new ABObject(obj) );
+	  	// })
+	  	// this.fields = newFields;
+
+
+	  	// link me to my parent ABApplication
+	  	this.application = application;
+  	}
+
+
+
+  	///
+  	/// Static Methods
+  	///
+  	/// Available to the Class level object.  These methods are not dependent
+  	/// on the instance values of the Application.
+  	///
+
+
+
+//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+	static isValid(op, values) {
+
+			var errors = [];
+
+			// during an ADD operation
+			if (op == 'add') {
+
+				// label/name must be unique:
+				var matchingApps = _AllApplications.data.filter(function (app) { 
+					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
+				})
+				if (matchingApps && matchingApps.length > 0) {
+					
+					errors.push({
+						name:'label',
+						mlKey:'duplicateName',
+						defaultText: '**Name must be Unique.'
+					})
+				}
+
+			}
+
+
+			// Check the common validations:
+// TODO:
+// if (!inputValidator.validate(values.label)) {
+// 	_logic.buttonSaveEnable();
+// 	return false;
+// }
+
+
+			return errors;
+	} 
+
+
+
+	///
+	/// Instance Methods
+	///
+
+
+	/// ABApplication data methods
+
+
+	/**
+	 * @method destroy()
+	 *
+	 * destroy the current instance of ABApplication
+	 *
+	 * also remove it from our _AllApplications
+	 * 
+	 * @return {Promise} 
+	 */
+	destroy () {
+		if (this.id) {
+console.error('TODO: ABObject.destroy()');
+			// return this.Model.destroy(this.id)
+			// 	.then(()=>{
+			// 		_AllApplications.remove(this.id);
+			// 	});
+		}
+	}
+
+
+	/**
+	 * @method save()
+	 *
+	 * persist the current instance of ABApplication to the DB
+	 *
+	 * Also, keep the values in _AllApplications up to date.
+	 * 
+	 * @return {Promise} 
+	 */
+	save () {
+console.error('TODO: ABObject.save()')
+		// var values = this.toObj();
+
+		// // we already have an .id, so this must be an UPDATE
+		// if (values.id) {
+
+		// 	return this.Model.update(values.id, values)
+		// 			.then(() => {
+		// 				_AllApplications.updateItem(values.id, this);
+		// 			});
+				
+		// } else {
+
+		// 	// must be a CREATE:
+		// 	return this.Model.create(values)
+		// 			.then((data) => {
+		// 				this.id = data.id;
+		// 				_AllApplications.add(this, 0);
+		// 			});
+		// }
+	
+	}
+
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to 
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json} 
+	 */
+	toObj () {
+
+		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this, ["label"]);
+
+		// // for each Object: compile to json
+		// var currObjects = [];
+		// this.objects.forEach((obj) => {
+		// 	currObjects.push(obj.toObj())
+		// })
+		// this.json.objects = currObjects;
+
+		return {
+			id: 			this.id,
+			name: 			this.name,
+    		labelFormat: 	this.labelFormat,
+    		isImported:  	this.isImported,
+    		urlPath: 		this.urlPath,
+    		importFromObject: this.importFromObject,
+    		translations: 	this.translations,
+    		fields: 	 	[] 
+		}
+	}
+
+
+
+
+
+
+	///
+	/// Fields
+	///
+
+
+
+
+	/**
+	 * @method fields()
+	 *
+	 * return a DataCollection of all the ABFields for this ABObject.
+	 *
+	 * @return {Promise} 	
+	 */
+	fields () {
+		return new Promise( 
+			(resolve, reject) => {
+
+
+				resolve(toDC(this.feilds));
+
+			}
+		);
+	}
+
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = ABObject;
+
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_choose_list__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_form__ = __webpack_require__(7);
 
 /*
  * AB Choose
@@ -1116,7 +1574,7 @@ OP.Component.extend('ab_choose', function(App) {
 });
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1987,12 +2445,12 @@ OP.Component.extend('ab_choose_form', function(App) {
 })
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(9);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__);
 
 /*
@@ -2447,7 +2905,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports) {
 
 
@@ -2567,13 +3025,13 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_interface__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_interface__ = __webpack_require__(11);
 
 /*
  * ab_work
@@ -2764,7 +3222,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 				// Object Workspace Tab
 				case ids.tab_object:
 					$$(ids.buttonSync).show();
-					App.actions.transitionObjectWorkspace();
+					App.actions.transitionObjectTab();
 					break;
 
 				// Interface Workspace Tab
@@ -2815,7 +3273,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 })
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2956,18 +3414,18 @@ console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
 })
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_object_workspace__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_object_workspace__ = __webpack_require__(16);
 
 /*
  * ab_work_object
  *
- * Display the form for creating a new Application.
+ * Display the Object Tab UI:
  *
  */
 
@@ -3031,6 +3489,461 @@ OP.Component.extend('ab_work_object', function(App) {
 	// our internal business logic 
 	var _logic = {
 
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		}
+	}
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+		
+		/**
+		 * @function initObjectTab
+		 *
+		 * Initialize the Object Workspace with the given ABApplication.
+		 *
+		 * @param {ABApplication} application 
+		 */
+		initObjectTab:function(application) {
+			App.actions.populateObjectList(application);
+			App.actions.clearObjectWorkspace();
+		},
+
+
+		/**
+		 * @function transitionObjectTab
+		 *
+		 * Display the Object Tab UI
+		 */
+		transitionObjectTab:function(){
+			_logic.show();
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list_newObject__ = __webpack_require__(14);
+
+/*
+ * ab_work_object_list
+ *
+ * Manage the Object List
+ *
+ */
+
+
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	application: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+		addNew: L('ab.object.addNew', '*Add new object'),
+
+	}
+}
+
+
+
+OP.Component.extend('ab_work_object_list', function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('ab_work_object_list_component'),
+
+		list: App.unique('ab_work_object_list_editlist'),
+		buttonNew: App.unique('ab_work_object_list_buttonNew'),
+
+	}
+
+
+	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
+	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
+	// PopupNewObject.hide();
+
+	// Our webix UI definition:
+	var _ui = {
+		id:ids.component,
+		rows: [
+			{
+				view: App.custom.edittree.view,  // "editlist",
+				id: ids.list,
+				width: 250,
+				select: true,
+				editaction: 'custom',
+				editable: true,
+				editor: "text",
+				editValue: "label",
+				template: function(obj, common) { 
+					return _logic.templateListItem(obj, common); 
+				},
+				type: {
+					unsyncNumber: "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
+				},
+				on: {
+					onAfterRender: function () {
+// webix.once(function () {
+// 	$$(self.webixUiId.objectList).data.each(function (d) {
+// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
+// 	});
+// });
+
+// // Show gear icon
+// if (this.getSelectedId(true).length > 0) {
+// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+// 	self.refreshUnsyncNumber();
+// }
+					},
+					onAfterSelect: function (id) {
+// // Fire select object event
+// self.element.trigger(self.options.selectedObjectEvent, id);
+
+// // Refresh unsync number
+// self.refreshUnsyncNumber();
+
+// // Show gear icon
+// $(this.getItemNode(id)).find('.ab-object-list-edit').show();
+					},
+					onAfterDelete: function (id) {
+// // Fire unselect event 
+// self.element.trigger(self.options.selectedObjectEvent, null);
+					},
+					onBeforeEditStop: function (state, editor) {
+// if (!inputValidator.validateFormat(state.value)) {
+// 	return false;
+// }
+
+// // Validation - check duplicate
+// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
+// 	webix.alert({
+// 		title: self.labels.object.invalidName,
+// 		ok: self.labels.common.ok,
+// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
+// 	});
+
+// 	return false;
+// }
+					},
+					onAfterEditStop: function (state, editor, ignoreUpdate) {
+// if (state.value != state.old) {
+// 	var _this = this;
+
+// 	this.showProgress({ type: 'icon' });
+
+// 	var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
+// 	selectedObject.attr('label', state.value);
+
+// 	// Call server to rename
+// 	selectedObject.save()
+// 		.fail(function () {
+// 			_this.hideProgress();
+
+// 			webix.message({
+// 				type: "error",
+// 				text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
+// 			});
+
+// 			AD.error.log('Object List : Error rename object data', { error: err });
+// 		})
+// 		.then(function () {
+// 			_this.hideProgress();
+
+// 			if (selectedObject.translate) selectedObject.translate();
+
+// 			// Show success message
+// 			webix.message({
+// 				type: "success",
+// 				text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
+// 			});
+
+// 			// Show gear icon
+// 			$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
+// 		});
+// }
+					}
+				},
+				onClick: {
+					"ab-object-list-edit": function (e, id, trg) {
+// // Show menu
+// $$(self.webixUiId.objectListMenuPopup).show(trg);
+
+// return false;
+					}
+				}
+			},
+			{
+				view: 'button',
+				id: ids.buttonNew,
+				value: labels.application.addNew,
+				click: function () {
+
+					App.actions.transitionNewObjectWindow();
+// $$(self.webixUiId.addNewPopup).define('selectNewObject', true);
+// $$(self.webixUiId.addNewPopup).show();
+				}
+			}
+		]
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+
+		webix.extend($$(ids.list), webix.ProgressBar);
+
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+		listBusy:function() {
+			$$(ids.list).showProgress({ type: "icon" });
+		},
+
+		listReady:function() {
+			$$(ids.list).hideProgress();
+		},
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		},
+
+
+		syncNumberRefresh:function() {
+console.error('TODO: syncNumRefresh()');
+// var self = this,
+// 	objects = [];
+
+// objects = $$(self.webixUiId.objectList).data.find(function (d) {
+// 	return objectName ? d.name == objectName : true;
+// }, false, true);
+
+// objects.forEach(function (obj) {
+// 	var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
+// 		unsyncNumber = (objectModel && objectModel.Cached ? objectModel.Cached.count() : 0),
+// 		htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
+
+// 	if (unsyncNumber > 0) {
+// 		htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
+// 		htmlItem.find('.ab-object-unsync').show();
+// 	}
+// 	else {
+// 		htmlItem.find('.ab-object-unsync').hide();
+// 	}
+// });
+		},
+
+
+		/**
+		 * @function templateListItem
+		 *
+		 * Defines the template for each row of our ObjectList.
+		 *
+		 * @param {obj} obj the current instance of ABObject for the row.
+		 * @param {?} common the webix.common icon data structure
+		 * @return {string}
+		 */
+		templateListItem: function(obj, common) {
+			return _templateListItem
+				.replace('#label#', obj.label || '??label??')
+				.replace('{common.iconGear}', common.iconGear);
+		}
+	}
+
+	/*
+	 * _templateListItem
+	 * 
+	 * The Object Row template definition.
+	 */
+	var _templateListItem = [
+		"<div class='ab-object-list-item'>",
+			"#label#",
+			"{common.unsyncNumber}",
+			"{common.iconGear}",
+		"</div>",
+	].join('');
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+
+		/**
+		 * @function populateObjectList()
+		 *
+		 * Initialize the Object List from the provided ABApplication
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} application  	[optional] The current ABApplication 
+		 *										we are working with.
+		 */
+		populateObjectList : function(application){
+			_logic.listBusy();
+
+			var objectList = application.objects();
+
+			var List = $$(ids.list);
+			List.clearAll();
+			List.data.unsync();
+			List.data.sync(objectList);
+			List.refresh();
+			List.unselectAll();
+
+			_logic.syncNumberRefresh();
+			_logic.listReady();
+
+		}
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_work_object_list_newObject_blank__ = __webpack_require__(15);
+
+/*
+ * ab_work_object_list_newObject
+ *
+ * Display the form for creating a new Application.
+ *
+ */
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	component: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+		addNew: L('ab.object.addNew', '*Add new object'),
+							
+	}
+}
+
+
+
+OP.Component.extend('ab_work_object_list_newObject', function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('ab_work_object_list_newObject_component'),
+
+	}
+
+
+	var BlankTab = OP.Component['ab_work_object_list_newObject_blank'](App);
+
+
+	// Our webix UI definition:
+	var _ui = {
+		view: "window",
+		id: ids.component,
+		width: 400,
+		position: "center",
+		modal: true,
+		head: labels.component.addNew,
+		selectNewObject: true,
+		on: {
+			"onBeforeShow": function () {
+				// blankObjectCreator.onInit();
+				// importObjectCreator.onInit();
+				// importCsvCreator.onInit();
+			}
+		},
+		body: {
+			view: "tabview",
+			cells: [
+				BlankTab.ui,
+				// importObjectCreator.getCreateView(),
+				// importCsvCreator.getCreateView()
+			]
+		}
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+		
+		BlankTab.init();
+		// webix.extend($$(ids.form), webix.ProgressBar);
+
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
 		
 		// /**
 		//  * @function formBusy
@@ -3070,26 +3983,19 @@ OP.Component.extend('ab_work_object', function(App) {
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		
-		/**
-		 * @function initObjectTab
-		 *
-		 * Initialize the Object Workspace with the given ABApplication.
-		 *
-		 * @param {ABApplication} application 
-		 */
-		initObjectTab:function(application) {
-			App.actions.populateObjectList(application);
-			App.actions.clearObjectWorkspace();
-		},
-
 
 		/**
-		 * @function transitionObjectWorkspace
+		 * @function transitionNewObjectWindow()
 		 *
-		 * Display the Object Workspace UI
+		 * Initialze the Form with the values from the provided ABApplication.
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 *										we are working with.
 		 */
-		transitionObjectWorkspace:function(){
+		transitionNewObjectWindow:function(){
+			
 			_logic.show();
 		}
 
@@ -3108,16 +4014,16 @@ OP.Component.extend('ab_work_object', function(App) {
 })
 
 /***/ }),
-/* 12 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
 
 /*
- * ab_work_object_list
+ * ab_work_object_list_newObject_blank
  *
- * Manage the Object List
+ * Display the form for creating a new Application.
  *
  */
 
@@ -3139,13 +4045,13 @@ var labels = {
 
 
 
-OP.Component.extend('ab_work_object_list', function(App) {
+OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_list_component'),
+		component: App.unique('ab_work_object_list_newObject_blank_component'),
 
 	}
 
@@ -3156,7 +4062,7 @@ OP.Component.extend('ab_work_object_list', function(App) {
 		id: ids.component,
 		scroll: true,
 		rows: [
-{ view: "label", label:"ab_work_object_list row", width: 800, align: "right" },	
+{ view: "label", label:"ab_work_object_list_newObject_blank row", width: 800, align: "right" },	
 		]
 	};
 
@@ -3214,20 +4120,25 @@ OP.Component.extend('ab_work_object_list', function(App) {
 
 
 		/**
-		 * @function populateObjectList()
+		 * @function populateApplicationForm()
 		 *
-		 * Initialize the Object List from the provided ABApplication
+		 * Initialze the Form with the values from the provided ABApplication.
 		 *
 		 * If no ABApplication is provided, then show an empty form. (create operation)
 		 *
 		 * @param {ABApplication} Application  	[optional] The current ABApplication 
 		 *										we are working with.
 		 */
-		populateObjectList : function(Application){
+		// populateApplicationForm:function(Application){
 			
-console.error('TODO: ab_work_objet_list.actions.populateObjectList()');
-
-		}
+		// 	_logic.formReset();
+		// 	if (Application) {
+		// 		// populate Form here:
+		// 		_logic.formPopulate(Application);
+		// 	}
+		// 	_logic.permissionPopulate(Application);
+		// 	_logic.show();
+		// }
 
 	}
 
@@ -3244,7 +4155,7 @@ console.error('TODO: ab_work_objet_list.actions.populateObjectList()');
 })
 
 /***/ }),
-/* 13 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3379,7 +4290,7 @@ console.error('TODO: clearObjectWorkspace()');
 })
 
 /***/ }),
-/* 14 */
+/* 17 */
 /***/ (function(module, exports) {
 
 //
@@ -3411,7 +4322,91 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		
 
 /***/ }),
-/* 15 */
+/* 18 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+/*
+ * custom_edittree
+ *
+ * Create a custom webix component.
+ *
+ */
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	component: {
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+	}
+}
+
+
+var ComponentKey = 'ab_custom_edittree';
+OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
+	// App 	{obj}	our application instance object.
+	// componentKey {string}	the destination key in App.custom[componentKey] for the instance of this component:
+
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('custom_edittree_component'),
+
+	}
+
+
+
+	// Our webix Prototype definition:
+	var _ui = {
+        name: App.unique("custom_edittree")	// keep this unique for this App instance.
+    };
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+	}
+
+
+
+	// Tell Webix to create an INSTANCE of our custom component:
+    webix.protoUI(_ui, webix.EditAbility, webix.ui.tree);
+
+
+    // current definition of our Component 
+    var Component = {
+		view: _ui.name,			// {string} the webix.view value for this custom component
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+
+	// Save our definition into App.custom.[key]
+    App.custom = App.custom || {};
+    App.custom[componentKey] = Component;
+
+
+	// return the current definition of this component:
+	return Component;
+
+})
+
+
+// After importing this custom component, you get back the .key to use to 
+// lookup the OP.Component[] to create an application instance of 
+/* harmony default export */ __webpack_exports__["a"] = { key: ComponentKey };
+
+/***/ }),
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

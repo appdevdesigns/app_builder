@@ -80,15 +80,15 @@ class OPModel {
 					});
 
 
-					dc._toArray = function() {
-						var data = [];
-						var id = this.getFirstId();
-						while(id) {
-							data.push(this.getItem(id));
-							id = this.getNextId(id);
-						}
-						return data;
-					}
+					// dc._toArray = function() {
+					// 	var data = [];
+					// 	var id = this.getFirstId();
+					// 	while(id) {
+					// 		data.push(this.getItem(id));
+					// 		id = this.getNextId(id);
+					// 	}
+					// 	return data;
+					// }
 
 
 

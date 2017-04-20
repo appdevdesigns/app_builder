@@ -28,6 +28,7 @@ import Model from "./model"
     // OP.Logic = {}; 		// logic references for webix application
     OP.Component = {};  // our defined components
 
+    OP.CustomComponent = {};  // separate holder for Webix Custom Components
 
 
 
@@ -40,38 +41,7 @@ import Model from "./model"
 
 //// TODO: verify App has proper structure:
 			if (!App) {
-
-				App = {
-
-					uuid: webix.uid(),
-
-					/*
-					 * actions:
-					 * a hash of exposed application methods that are shared among our 
-					 * components, so one component can invoke an action that updates 
-					 * another component.
-					 */
-					actions:{
-						
-					},
-
-					/*
-					 * unique()
-					 * A function that returns a globally unique Key.
-					 * @param {string} key   The key to modify and return.
-					 * @return {string} 
-					 */
-					unique: function(key) { return key+this.uuid; },
-
-					/*
-					 * labels
-					 * a collection of labels that are common for the Application.
-					 */
-					labels:{
-				
-					}
-
-				}
+				App = OP.Component._newApp();
 			}
 
 			// make an instance of the component.
@@ -88,6 +58,60 @@ import Model from "./model"
 		};
 	}
 
+	OP.Component._newApp = function () {
+		return {
+
+			uuid: webix.uid(),
+
+			/*
+			 * actions:
+			 * a hash of exposed application methods that are shared among our 
+			 * components, so one component can invoke an action that updates 
+			 * another component.
+			 */
+			actions:{
+				
+			},
+
+			/*
+			 * custom
+			 * a collection of custom components for this App Instance.
+			 */
+			custom:{
+		
+			},
+
+			/*
+			 * labels
+			 * a collection of labels that are common for the Application.
+			 */
+			labels:{
+		
+			},
+
+			/*
+			 * unique()
+			 * A function that returns a globally unique Key.
+			 * @param {string} key   The key to modify and return.
+			 * @return {string} 
+			 */
+			unique: function(key) { return key+this.uuid; },
+
+		}
+	}
+
+
+	OP.CustomComponent.extend = function(key, fn) {
+		OP.CustomComponent[key] = function(App, key){
+
+			if (!App) {
+				App = OP.Component._newApp();
+			}
+
+			// make an instance of the component.
+			return fn(App, key);
+		};
+	}
 
 	
 	OP.Dialog = AD.op.Dialog;

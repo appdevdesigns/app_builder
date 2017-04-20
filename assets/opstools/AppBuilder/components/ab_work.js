@@ -188,7 +188,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 				// Object Workspace Tab
 				case ids.tab_object:
 					$$(ids.buttonSync).show();
-					App.actions.transitionObjectWorkspace();
+					App.actions.transitionObjectTab();
 					break;
 
 				// Interface Workspace Tab
