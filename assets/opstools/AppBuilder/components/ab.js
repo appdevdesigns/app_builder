@@ -13,6 +13,9 @@ import '../OP/OP'
 import './ab_choose'
 import './ab_work'
 
+// Import our Custom Components here:
+import EditTree from '../webix_custom_components/edittree'
+
 OP.Component.extend('ab', function(App) {
 
 
@@ -42,18 +45,18 @@ OP.Component.extend('ab', function(App) {
 		deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
 		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
 	}
-		
+
+
+	// make instances of our Custom Components:
+	OP.CustomComponent[EditTree.key](App, 'edittree'); // ->  App.custom.edittree  now exists
+
+	
 
 
 	var ids = {
 		component:App.unique('app_builder_root')
 	}
 
-
-//// LEFT OFF HERE:
-//// OP.Error.isValidation() to handle validation errors returned from Sails
-//// AppForm-> Permissions : refresh permission list, remove AppRole permission on delete.
-//// Implement AppWorkspace
 
 
 	// Define the external components used in this Component:
@@ -106,3 +109,17 @@ OP.Component.extend('ab', function(App) {
 	}
 
 });
+
+
+
+
+
+
+//// REFACTORING TODOs:
+// TODO: OP.Error.isValidation() to handle validation errors returned from Sails
+// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
+
+
+
+
+
