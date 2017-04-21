@@ -15,8 +15,10 @@
 //// in 'use strict' ?
 
 // if (!window.OP) {
+import Form from "./form"
 import Multilingual from "./multilingual"
 import Model from "./model"
+import Util  from "./util"
 
 
     window.OP = {};
@@ -116,10 +118,15 @@ import Model from "./model"
 	
 	OP.Dialog = AD.op.Dialog;
 
+	OP.Form = Form;
 
 	OP.Multilingual = Multilingual;
 	OP.Model = Model;
 	
+
+	OP.Util = Util;
+
+
 
 	export default OP;
 // }
