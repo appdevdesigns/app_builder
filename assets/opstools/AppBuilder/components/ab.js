@@ -15,6 +15,7 @@ import './ab_work'
 
 // Import our Custom Components here:
 import EditTree from '../webix_custom_components/edittree'
+import EditList from '../webix_custom_components/editlist'
 
 OP.Component.extend('ab', function(App) {
 
@@ -26,13 +27,18 @@ OP.Component.extend('ab', function(App) {
 	
 	// setup the common labels for our AppBuilder Application.
 	App.labels = {
-		"import": L('ab.common.import', "*Import"),
-		edit: 	  L('ab.common.edit', "*Edit"),
-		save: 	  L('ab.common.save', "*Save"),
+		add: L('ab.common.add', "*Add"),
+		create: L('ab.common.create', "*Create"),
 		"delete": L('ab.common.delete', "*Delete"),
+		edit: 	  L('ab.common.edit', "*Edit"),
 		"export": L('ab.common.export', "*Export"),
+		formName: L('ab.common.form.name', "*Name"),
+		"import": L('ab.common.import', "*Import"),
 		ok: 	  L('ab.common.ok', "*Ok"),
+		
 		cancel:   L('ab.common.cancel', "*Cancel"),
+		save: 	  L('ab.common.save', "*Save"),
+		
 		yes: 	  L('ab.common.yes', "*Yes"),
 		no: 	  L('ab.common.no', "*No"),
 
@@ -49,6 +55,7 @@ OP.Component.extend('ab', function(App) {
 
 	// make instances of our Custom Components:
 	OP.CustomComponent[EditTree.key](App, 'edittree'); // ->  App.custom.edittree  now exists
+	OP.CustomComponent[EditList.key](App, 'editlist'); // ->  App.custom.editlist  now exists
 
 	
 

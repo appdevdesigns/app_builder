@@ -6,7 +6,7 @@
  *
  */
 
-import ABApplication from "../classes/ABApplication"
+import ABObject from "../classes/ABObject"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -18,10 +18,8 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
-
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-
+	component: {
+		placeholderName: L('ab.object.form.placeholderName', "*Object name"),
 	}
 }
 
@@ -35,6 +33,9 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 	var ids = {
 		component: App.unique('ab_work_object_list_newObject_blank_component'),
 
+		form: App.unique('ab_work_object_list_newObject_blank'),
+		buttonSave: App.unique('ab-object-blank-object-save'),
+		buttonCancel: App.unique('ab-object-blank-object-cancel')
 	}
 
 
@@ -42,17 +43,48 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
-		scroll: true,
-		rows: [
-{ view: "label", label:"ab_work_object_list_newObject_blank row", width: 800, align: "right" },	
-		]
+		header: labels.common.create,
+		body: {
+			view: "form",
+			id: ids.form,
+			width: 400,
+			rules: {
+
+// TODO:
+// name: inputValidator.rules.validateObjectName
+			},
+			elements: [
+				{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.component.placeholderName, labelWidth: 70 },
+				{
+					margin: 5,
+					cols: [
+						{
+							view: "button", id: ids.buttonSave, value: labels.common.add, type: "form", click: function () {
+								return _logic.save();
+							}
+						},
+						{
+							view: "button", id: ids.buttonCancel, value: labels.common.cancel, click: function () {
+								_logic.cancel();
+							}
+						}
+					]
+				}
+			]
+
+		}
 	};
 
 
 
 	// Our init() function for setting up our UI
-	var _init = function() {
+	var _init = function( options ) {
 		// webix.extend($$(ids.form), webix.ProgressBar);
+
+		// load up our callbacks.
+		for(var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
 
 	}
 
@@ -61,28 +93,78 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 	// our internal business logic 
 	var _logic = {
 
+		callbacks:{
+			onCancel: function() { console.warn('NO onCancel()!') },
+			onSave  : function(values, cb) { console.warn('NO onSave()!') },
+		},
+
 		
-		// /**
-		//  * @function formBusy
-		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
-		//  * progress.
-		//  */
-		// formBusy: function() {
+		cancel:function() {
 
-		// 	$$(ids.form).showProgress({ type: 'icon' });
-		// },
+			_logic.formClear();
+			_logic.callbacks.onCancel();
+		},
 
 
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+		formClear:function() {
+			$$(ids.form).clearValidation();
+			$$(ids.form).clear();
+		},
 
+
+		/**
+		 * @function hide()
+		 *
+		 * hide this component.
+		 */
+		hide:function() {
+
+			$$(ids.component).hide();
+		},
+
+		/**
+		 * @function save
+		 *
+		 * verify the current info is ok, package it, and return it to be 
+		 * added to the application.createModel() method.
+		 */
+		save:function() {
+			var saveButton = $$(ids.buttonSave);
+			saveButton.disable();
+
+			var Form = $$(ids.form);
+
+			Form.clearValidation();
+
+			// if it doesn't pass the basic form validation, return:
+			if (!Form.validate()) {
+				saveButton.enable();
+				return false;
+			}
+
+			var values = Form.getValues();
+
+
+			// now send data back to be added:
+			_logic.callbacks.onSave(values, function(err) {
+
+				if (err) {
+					if (OP.Form.isValidationError(err, Form)) {
+						// do I do anything else here?
+						// this auto updates the form
+					}
+
+					// get notified if there was an error saving.
+					saveButton.enable();
+					return false;
+				} 
+
+				// if there was no error, clear the form for the next
+				// entry:
+				_logic.formClear();
+			});
+
+		},
 
 		/**
 		 * @function show()

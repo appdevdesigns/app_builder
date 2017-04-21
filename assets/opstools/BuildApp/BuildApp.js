@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 22);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -72,9 +72,9 @@
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__data_ABApplication__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ABObject__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ABObject__ = __webpack_require__(2);
 
 
 
@@ -224,7 +224,7 @@ class ABApplication {
 
 	static isValid(op, values) {
 
-			var errors = [];
+			var errors = null;
 
 			// during an ADD operation
 			if (op == 'add') {
@@ -235,11 +235,10 @@ class ABApplication {
 				})
 				if (matchingApps && matchingApps.length > 0) {
 					
-					errors.push({
+					errors = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Form.validationError({
 						name:'label',
-						mlKey:'duplicateName',
-						defaultText: '**Name must be Unique.'
-					})
+						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', values.name),
+					}, errors);
 				}
 
 			}
@@ -458,23 +457,58 @@ class ABApplication {
 	/**
 	 * @method objects()
 	 *
-	 * return a DataCollection of all the ABObjects for this ABApplication.
+	 * return an array of all the ABObjects for this ABApplication.
 	 *
-	 * @return {Promise} 	
+	 * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn 
+	 *						returns true for.
+	 * @return {array} 	array of ABObject
 	 */
 	objects (filter) {
+
 		filter = filter || function() {return true; };
 
-		return new Promise( 
-			(resolve, reject) => {
+		return this._objects.filter(filter);
 
-
-				resolve(toDC(this._objects.filter(filter)));
-
-			}
-		);
 	}
 
+
+
+	/**
+	 * @method newObject()
+	 *
+	 * return an instance of a new (unsaved) ABObject that is tied to this 
+	 * ABApplication.
+	 *
+	 * NOTE: this new object is not included in our this.objects until a .save() 
+	 * is performed on the object.
+	 *
+	 * @return {ABObject} 	
+	 */
+	objectNew( values ) {
+		return new __WEBPACK_IMPORTED_MODULE_2__ABObject__["a" /* default */](values, this);
+	}
+
+
+
+	/**
+	 * @method saveObject()
+	 *
+	 * return an instance of a new (unsaved) ABObject that is tied to this 
+	 * ABApplication.
+	 *
+	 * NOTE: this new object is not included in our this.objects until a .save() 
+	 * is performed on the object.
+	 *
+	 * @return {ABObject} 	
+	 */
+	objectSave( object ) {
+		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
+		if (!isIncluded) {
+			this._objects.push(object);
+		}
+
+		return this.save();
+	}
 
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = ABApplication;
@@ -486,8 +520,10 @@ class ABApplication {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__multilingual__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__form__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__multilingual__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(7);
 
 /**
  * @class AD_Client
@@ -505,6 +541,8 @@ class ABApplication {
 //// in 'use strict' ?
 
 // if (!window.OP) {
+
+
 
 
 
@@ -606,10 +644,15 @@ class ABApplication {
 	
 	OP.Dialog = AD.op.Dialog;
 
+	OP.Form = __WEBPACK_IMPORTED_MODULE_0__form__["a" /* default */];
 
-	OP.Multilingual = __WEBPACK_IMPORTED_MODULE_0__multilingual__["a" /* default */];
-	OP.Model = __WEBPACK_IMPORTED_MODULE_1__model__["a" /* default */];
+	OP.Multilingual = __WEBPACK_IMPORTED_MODULE_1__multilingual__["a" /* default */];
+	OP.Model = __WEBPACK_IMPORTED_MODULE_2__model__["a" /* default */];
 	
+
+	OP.Util = __WEBPACK_IMPORTED_MODULE_3__util__["a" /* default */];
+
+
 
 	/* harmony default export */ __webpack_exports__["a"] = OP;
 // }
@@ -623,9 +666,257 @@ class ABApplication {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__webix_custom_components_edittree__ = __webpack_require__(18);
+
+
+
+function toDC( data ) {
+	return new webix.DataCollection({
+		data: data,
+
+		// on: {
+		// 	onAfterDelete: function(id) {
+
+		// 	}
+		// }
+	});
+}
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+class ABObject {
+
+    constructor(attributes, application) {
+/*
+{
+	id: uuid(), 
+	name: 'name',
+	labelFormat: 'xxxxx',
+	isImported: 1/0,
+	urlPath:'string',
+	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+	translations:[
+		{}
+	],
+	fields:[
+		{ABDataField}
+	]
+}
+*/
+
+
+
+    	// ABApplication Attributes
+    	this.id    = attributes.id;
+    	this.name  = attributes.name || "";
+    	this.labelFormat = attributes.labelFormat || "";
+    	this.isImported  = attributes.isImported  || 0;
+    	this.urlPath	 = attributes.urlPath     || "";
+    	this.importFromObject = attributes.importFromObject || "";
+    	this.translations = attributes.translations;
+
+
+    	// multilingual fields: label, description
+    	__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.translate(this, this, ['label']);
+
+	  	
+	  	// import all our ABObjects
+	  	// var newFields = [];
+	  	// (attributes.json.objects || []).forEach((obj) => {
+	  	// 	newObjects.push( new ABObject(obj) );
+	  	// })
+	  	// this.fields = newFields;
+
+
+	  	// link me to my parent ABApplication
+	  	this.application = application;
+  	}
+
+
+
+  	///
+  	/// Static Methods
+  	///
+  	/// Available to the Class level object.  These methods are not dependent
+  	/// on the instance values of the Application.
+  	///
+
+
+
+//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+	isValid() {
+
+		var errors = null;
+
+
+		// label/name must be unique:
+		var isNameUnique = (this.application.objects((o) => { return o.name.toLowerCase() == this.name.toLowerCase(); }).length == 0);
+		if (!isNameUnique) {
+			errors = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Form.validationError({
+					name:'name',
+					message:L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name),
+				}, errors);
+		}
+
+
+			// Check the common validations:
+// TODO:
+// if (!inputValidator.validate(values.label)) {
+// 	_logic.buttonSaveEnable();
+// 	return false;
+// }
+
+
+		return errors;
+	} 
+
+
+
+	///
+	/// Instance Methods
+	///
+
+
+	/// ABApplication data methods
+
+
+	/**
+	 * @method destroy()
+	 *
+	 * destroy the current instance of ABApplication
+	 *
+	 * also remove it from our _AllApplications
+	 * 
+	 * @return {Promise} 
+	 */
+	destroy () {
+		if (this.id) {
+console.error('TODO: ABObject.destroy()');
+			// return this.Model.destroy(this.id)
+			// 	.then(()=>{
+			// 		_AllApplications.remove(this.id);
+			// 	});
+		}
+	}
+
+
+	/**
+	 * @method save()
+	 *
+	 * persist this instance of ABObject with it's parent ABApplication
+	 *
+	 * 
+	 * @return {Promise} 	
+	 *						.resolve( {this} )
+	 */
+	save () {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				// if this is our initial save()
+				if (!this.id) {
+
+					this.id = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Util.uuid();	// setup default .id
+					this.label = this.label || this.name;
+					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
+				}
+
+				this.application.objectSave(this)
+				.then(() => {
+					resolve(this);
+				})
+				.catch(function(err){
+					reject(err);
+				})
+			}
+		)
+	}
+
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to 
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json} 
+	 */
+	toObj () {
+
+		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this, ["label"]);
+
+		// // for each Object: compile to json
+		// var currObjects = [];
+		// this.objects.forEach((obj) => {
+		// 	currObjects.push(obj.toObj())
+		// })
+		// this.json.objects = currObjects;
+
+		return {
+			id: 			this.id,
+			name: 			this.name,
+    		labelFormat: 	this.labelFormat,
+    		isImported:  	this.isImported,
+    		urlPath: 		this.urlPath,
+    		importFromObject: this.importFromObject,
+    		translations: 	this.translations,
+    		fields: 	 	[] 
+		}
+	}
+
+
+
+
+
+
+	///
+	/// Fields
+	///
+
+
+
+
+	/**
+	 * @method fields()
+	 *
+	 * return a DataCollection of all the ABFields for this ABObject.
+	 *
+	 * @return {Promise} 	
+	 */
+	fields () {
+		return new Promise( 
+			(resolve, reject) => {
+
+
+				resolve(toDC(this.feilds));
+
+			}
+		);
+	}
+
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = ABObject;
+
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__webix_custom_components_edittree__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__webix_custom_components_editlist__ = __webpack_require__(20);
 
 /*
  * AB 
@@ -644,6 +935,7 @@ class ABApplication {
 // Import our Custom Components here:
 
 
+
 OP.Component.extend('ab', function(App) {
 
 
@@ -654,13 +946,18 @@ OP.Component.extend('ab', function(App) {
 	
 	// setup the common labels for our AppBuilder Application.
 	App.labels = {
-		"import": L('ab.common.import', "*Import"),
-		edit: 	  L('ab.common.edit', "*Edit"),
-		save: 	  L('ab.common.save', "*Save"),
+		add: L('ab.common.add', "*Add"),
+		create: L('ab.common.create', "*Create"),
 		"delete": L('ab.common.delete', "*Delete"),
+		edit: 	  L('ab.common.edit', "*Edit"),
 		"export": L('ab.common.export', "*Export"),
+		formName: L('ab.common.form.name', "*Name"),
+		"import": L('ab.common.import', "*Import"),
 		ok: 	  L('ab.common.ok', "*Ok"),
+		
 		cancel:   L('ab.common.cancel', "*Cancel"),
+		save: 	  L('ab.common.save', "*Save"),
+		
 		yes: 	  L('ab.common.yes', "*Yes"),
 		no: 	  L('ab.common.no', "*No"),
 
@@ -677,6 +974,7 @@ OP.Component.extend('ab', function(App) {
 
 	// make instances of our Custom Components:
 	OP.CustomComponent[__WEBPACK_IMPORTED_MODULE_3__webix_custom_components_edittree__["a" /* default */].key](App, 'edittree'); // ->  App.custom.edittree  now exists
+	OP.CustomComponent[__WEBPACK_IMPORTED_MODULE_4__webix_custom_components_editlist__["a" /* default */].key](App, 'editlist'); // ->  App.custom.editlist  now exists
 
 	
 
@@ -754,7 +1052,152 @@ OP.Component.extend('ab', function(App) {
 
 
 /***/ }),
-/* 3 */
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+/* harmony default export */ __webpack_exports__["a"] = {
+
+	/**
+	 * @function OP.Form.validationError
+	 *
+	 * creates an error object that can be used in OP.Form.isValidationError()
+	 * to update a webix form with error validation messages.
+	 *
+	 * @param {json} error 	an error object
+	 *				error.name	{string} the attribute name (Form.element[error.name])
+	 *				error.message {string} the message to display for the error
+	 *
+	 * @return {obj} an error object.
+	 */
+	validationError: function(error, errorObj) {
+
+		errorObj = errorObj || {
+			error:'E_VALIDATION',
+			invalidAttributes:{
+
+			}
+		}
+
+		var attr = errorObj.invalidAttributes;
+		attr[error.name] = attr[error.name] || [];
+
+		attr[error.name].push(error);
+
+		return errorObj;
+	},
+
+
+	/**
+	 * @function OP.Form.isValidationError
+	 *
+	 * scans the given error to see if it is a sails' respone about an invalid
+	 * value from one of the form elements.
+	 *
+	 * @codestart
+	 * var form = $$('formID');
+	 * var values = form.getValues();
+	 * model.attr(values);
+	 * model.save()
+	 * .fail(function(err){
+	 *     if (!OP.Form.isValidationError(err, form)) {
+	 *         OP.error.log('Error saving current model ()', {error:err, values:values});
+	 *     }
+	 * })
+	 * .then(function(newData){
+	 * 
+	 * });
+	 * @codeend
+	 *
+	 * @param {obj} error  the error response object
+	 * @param {obj} form   the webix form instance (or reference)
+	 * @return {bool}      true if error was about a form element.  false otherwise.
+	 */
+	isValidationError: function(error, form) {
+
+		// {bool} have we set focus to form component?
+		var hasFocused = false;
+
+
+		// if we have an error object:
+		if (error) { 
+
+
+			//// if the error obj is provided by Sails response, 
+			//// do some clean up on the error object:
+
+
+			// dig down to sails provided error object:
+			if ((error.error)
+				&& (error.error == 'E_UNKNOWN')
+				&& (error.raw)
+				&& (error.raw.length > 0)) {
+
+				error = error.raw[0]
+			}
+
+			// drill down to the embedded .err object if it exists
+			if (error.err) {
+				error = error.err;
+			}
+
+
+			//// Now process the error object
+			//// 
+			if (((error.error)
+					&& (error.error == 'E_VALIDATION'))
+				|| ((error.code) && (error.code == 'E_VALIDATION'))) {
+
+				var attrs = error.invalidAttributes;
+				if (attrs) {
+
+					var wasForm = false;
+					for (var attr in attrs) {
+
+						// if this is a field in the form:
+						if (form.elements[attr]) {
+
+							var errors = attrs[attr];
+							var msg = [];
+							errors.forEach(function(err) {
+								msg.push(err.message);
+							})
+
+							// set the invalid error message
+							form.markInvalid(attr, msg.join(', '));
+
+							// set focus to the 1st form element we mark:
+							if (!hasFocused) {
+								form.elements[attr].focus();
+								hasFocused = true;
+							}
+
+							wasForm = true;
+						}
+
+					}
+
+					if (wasForm) {
+						return true;
+					}
+				}
+
+			}
+		}
+
+		// if we missed updating our form with an error
+		// this was not a validation error so return false
+		return false
+
+	}
+
+
+	
+};
+
+/***/ }),
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1103,7 +1546,7 @@ class OPModel {
             }
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1230,263 +1673,24 @@ class OPModel {
 };
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
 
-
-
-function toDC( data ) {
-	return new webix.DataCollection({
-		data: data,
-
-		// on: {
-		// 	onAfterDelete: function(id) {
-
-		// 	}
-		// }
-	});
-}
-
-class ABObject {
-
-    constructor(attributes, application) {
-/*
-{
-	id: uuid(), 
-	name: 'name',
-	labelFormat: 'xxxxx',
-	isImported: 1/0,
-	urlPath:'string',
-	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
-	translations:[
-		{}
-	],
-	fields:[
-		{ABDataField}
-	]
-}
-*/
-
-
-
-    	// ABApplication Attributes
-    	this.id    = attributes.id;
-    	this.name  = attributes.name || "";
-    	this.labelFormat = attributes.labelFormat || "";
-    	this.isImported  = attributes.isImported  || 0;
-    	this.urlPath	 = attributes.urlPath     || "";
-    	this.importFromObject = attributes.importFromObject || "";
-    	this.translations = attributes.translations;
-
-
-    	// multilingual fields: label, description
-    	__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.translate(this, this, ['label']);
-
-	  	
-	  	// import all our ABObjects
-	  	// var newFields = [];
-	  	// (attributes.json.objects || []).forEach((obj) => {
-	  	// 	newObjects.push( new ABObject(obj) );
-	  	// })
-	  	// this.fields = newFields;
-
-
-	  	// link me to my parent ABApplication
-	  	this.application = application;
-  	}
-
-
-
-  	///
-  	/// Static Methods
-  	///
-  	/// Available to the Class level object.  These methods are not dependent
-  	/// on the instance values of the Application.
-  	///
-
-
-
-//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
-
-	static isValid(op, values) {
-
-			var errors = [];
-
-			// during an ADD operation
-			if (op == 'add') {
-
-				// label/name must be unique:
-				var matchingApps = _AllApplications.data.filter(function (app) { 
-					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
-				})
-				if (matchingApps && matchingApps.length > 0) {
-					
-					errors.push({
-						name:'label',
-						mlKey:'duplicateName',
-						defaultText: '**Name must be Unique.'
-					})
-				}
-
-			}
-
-
-			// Check the common validations:
-// TODO:
-// if (!inputValidator.validate(values.label)) {
-// 	_logic.buttonSaveEnable();
-// 	return false;
-// }
-
-
-			return errors;
-	} 
-
-
-
-	///
-	/// Instance Methods
-	///
-
-
-	/// ABApplication data methods
-
-
-	/**
-	 * @method destroy()
-	 *
-	 * destroy the current instance of ABApplication
-	 *
-	 * also remove it from our _AllApplications
-	 * 
-	 * @return {Promise} 
-	 */
-	destroy () {
-		if (this.id) {
-console.error('TODO: ABObject.destroy()');
-			// return this.Model.destroy(this.id)
-			// 	.then(()=>{
-			// 		_AllApplications.remove(this.id);
-			// 	});
-		}
-	}
-
-
-	/**
-	 * @method save()
-	 *
-	 * persist the current instance of ABApplication to the DB
-	 *
-	 * Also, keep the values in _AllApplications up to date.
-	 * 
-	 * @return {Promise} 
-	 */
-	save () {
-console.error('TODO: ABObject.save()')
-		// var values = this.toObj();
-
-		// // we already have an .id, so this must be an UPDATE
-		// if (values.id) {
-
-		// 	return this.Model.update(values.id, values)
-		// 			.then(() => {
-		// 				_AllApplications.updateItem(values.id, this);
-		// 			});
-				
-		// } else {
-
-		// 	// must be a CREATE:
-		// 	return this.Model.create(values)
-		// 			.then((data) => {
-		// 				this.id = data.id;
-		// 				_AllApplications.add(this, 0);
-		// 			});
-		// }
+/* harmony default export */ __webpack_exports__["a"] = {
 	
-	}
-
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to 
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json} 
-	 */
-	toObj () {
-
-		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this, ["label"]);
-
-		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
-
-		return {
-			id: 			this.id,
-			name: 			this.name,
-    		labelFormat: 	this.labelFormat,
-    		isImported:  	this.isImported,
-    		urlPath: 		this.urlPath,
-    		importFromObject: this.importFromObject,
-    		translations: 	this.translations,
-    		fields: 	 	[] 
-		}
-	}
-
-
-
-
-
-
-	///
-	/// Fields
-	///
-
-
-
-
-	/**
-	 * @method fields()
-	 *
-	 * return a DataCollection of all the ABFields for this ABObject.
-	 *
-	 * @return {Promise} 	
-	 */
-	fields () {
-		return new Promise( 
-			(resolve, reject) => {
-
-
-				resolve(toDC(this.feilds));
-
-			}
-		);
-	}
-
-
-}
-/* harmony export (immutable) */ __webpack_exports__["a"] = ABObject;
-
-
+	uuid: AD.util.uuid
+	
+};
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_choose_list__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_form__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_choose_list__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_form__ = __webpack_require__(9);
 
 /*
  * AB Choose
@@ -1574,7 +1778,7 @@ OP.Component.extend('ab_choose', function(App) {
 });
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2028,15 +2232,15 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 			var errors = __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__["a" /* default */].isValid(op, Form.getValues());
-			if (errors.length > 0) {
-				var hasFocused = false;
-				errors.forEach(function(err){
-					Form.markInvalid(err.name, labels.application[err.mlKey] || err.defaultText );
-					if (!hasFocused && Form.elements[err.name]) {
-						Form.elements[err.name].focus();
-						hasFocused = true;
-					}
-				})
+			if (OP.Form.isValidationError(errors, Form)) {
+// var hasFocused = false;
+// errors.forEach(function(err){
+// 	Form.markInvalid(err.name, labels.application[err.mlKey] || err.defaultText );
+// 	if (!hasFocused && Form.elements[err.name]) {
+// 		Form.elements[err.name].focus();
+// 		hasFocused = true;
+// 	}
+// })
 				_logic.buttonSaveEnable();
 				return false;
 			}
@@ -2445,12 +2649,12 @@ OP.Component.extend('ab_choose_form', function(App) {
 })
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__);
 
 /*
@@ -2905,7 +3109,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports) {
 
 
@@ -3025,13 +3229,13 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_interface__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_interface__ = __webpack_require__(13);
 
 /*
  * ab_work
@@ -3273,7 +3477,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 })
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3414,13 +3618,13 @@ console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
 })
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_object_workspace__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_object_workspace__ = __webpack_require__(18);
 
 /*
  * ab_work_object
@@ -3544,12 +3748,12 @@ OP.Component.extend('ab_work_object', function(App) {
 })
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list_newObject__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list_newObject__ = __webpack_require__(16);
 
 /*
  * ab_work_object_list
@@ -3593,18 +3797,24 @@ OP.Component.extend('ab_work_object_list', function(App) {
 	}
 
 
+	// There is a Popup for adding a new Object:
 	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
 	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
-	// PopupNewObject.hide();
+	PopupNewObjectComponent.init();
+
 
 	// Our webix UI definition:
 	var _ui = {
 		id:ids.component,
 		rows: [
 			{
-				view: App.custom.edittree.view,  // "editlist",
+				view: App.custom.editlist.view,  // "editlist",
 				id: ids.list,
 				width: 250,
+				
+// TODO: make this dynamically fill the screen:
+height:800,
+autoheight:true,
 				select: true,
 				editaction: 'custom',
 				editable: true,
@@ -3714,7 +3924,8 @@ OP.Component.extend('ab_work_object_list', function(App) {
 				value: labels.application.addNew,
 				click: function () {
 
-					App.actions.transitionNewObjectWindow();
+					_logic.toNewObject();
+					
 // $$(self.webixUiId.addNewPopup).define('selectNewObject', true);
 // $$(self.webixUiId.addNewPopup).show();
 				}
@@ -3728,7 +3939,8 @@ OP.Component.extend('ab_work_object_list', function(App) {
 	var _init = function() {
 
 		webix.extend($$(ids.list), webix.ProgressBar);
-
+		$$(ids.component).adjust();
+		$$(ids.list).adjust();
 	}
 
 
@@ -3793,6 +4005,19 @@ console.error('TODO: syncNumRefresh()');
 			return _templateListItem
 				.replace('#label#', obj.label || '??label??')
 				.replace('{common.iconGear}', common.iconGear);
+		},
+
+
+		toNewObject:function() {
+			App.actions.transitionNewObjectWindow(CurrentApplication, function(err, newObject){
+
+				if (err) {
+					return false;
+				}
+
+				objectList.add(newObject,0);
+				$$(ids.list).select(newObject.id);
+			});
 		}
 	}
 
@@ -3810,6 +4035,8 @@ console.error('TODO: syncNumRefresh()');
 	].join('');
 
 
+	var CurrentApplication = null;
+	var objectList = null;
 
 	// Expose any globally accessible Actions:
 	var _actions = {
@@ -3828,7 +4055,11 @@ console.error('TODO: syncNumRefresh()');
 		populateObjectList : function(application){
 			_logic.listBusy();
 
-			var objectList = application.objects();
+			CurrentApplication = application;
+
+			objectList = new webix.DataCollection({
+				data: application.objects(),
+			});
 
 			var List = $$(ids.list);
 			List.clearAll();
@@ -3857,11 +4088,11 @@ console.error('TODO: syncNumRefresh()');
 })
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_work_object_list_newObject_blank__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_work_object_list_newObject_blank__ = __webpack_require__(17);
 
 /*
  * ab_work_object_list_newObject
@@ -3933,8 +4164,14 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 
 	// Our init() function for setting up our UI
 	var _init = function() {
-		
-		BlankTab.init();
+
+		var ourCBs = {
+			onCancel: _logic.hide,
+			onSave: _logic.save
+		}
+
+		BlankTab.init(ourCBs);
+
 		// webix.extend($$(ids.form), webix.ProgressBar);
 
 	}
@@ -3945,26 +4182,74 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 	var _logic = {
 
 		
-		// /**
-		//  * @function formBusy
+		// *
+		//  * @function cancel
 		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
-		//  * progress.
-		//  */
-		// formBusy: function() {
+		//  * The Model Creator was canceled.
+		 
+		// cancel: function() {
 
-		// 	$$(ids.form).showProgress({ type: 'icon' });
+		// 	_logic.hide();
 		// },
 
 
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+		/**
+		 * @function hide()
+		 *
+		 * remove the busy indicator from the form.
+		 */
+		hide: function() {
+			$$(ids.component).hide();
+		},
+
+
+		/**
+		 * @function save
+		 *
+		 * take the data gathered by our child creation tabs, and 
+		 * add it to our current application.
+		 *
+		 * @param {obj} values  key=>value hash of model values.
+		 * @param {fn}  cb 		node style callback to indicate success/failure
+		 */
+		save:function (values, cb) {
+
+			// must have an application set.
+			if (!currentApplication) {
+				OP.Dialog.Alert({
+					title:'Shoot!',
+					test:'No Application Set!  Why?'
+				});
+				cb(true);	// there was an error.
+				return false;
+			}
+
+
+			var newObject = currentApplication.objectNew(values);
+
+			var validationErrors = newObject.isValid();
+			if (validationErrors) {
+				cb(validationErrors);
+				return false;
+			}
+
+
+			// if we get here, save the new Object
+			newObject.save()
+				.then(function(obj){
+
+					// successfully done:
+					cb();
+					_logic.hide();
+					currentCallBack(null, obj);
+				})
+				.catch(function(err){
+
+					cb(err);				// the current Tab
+					// currentCallBack(err);	// the calling Component
+				})
+
+		},
 
 
 		/**
@@ -3979,6 +4264,9 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 	}
 
 
+	var currentApplication = null;
+	var currentCallBack = null;
+
 
 	// Expose any globally accessible Actions:
 	var _actions = {
@@ -3987,16 +4275,16 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 		/**
 		 * @function transitionNewObjectWindow()
 		 *
-		 * Initialze the Form with the values from the provided ABApplication.
+		 * Show our Create New Object window.
 		 *
-		 * If no ABApplication is provided, then show an empty form. (create operation)
-		 *
-		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 * @param {ABApplication} Application  	The current ABApplication 
 		 *										we are working with.
 		 */
-		transitionNewObjectWindow:function(){
+		transitionNewObjectWindow:function(Application, cb){
 			
 			_logic.show();
+			currentApplication = Application;	// remember our current Application.
+			currentCallBack = cb;
 		}
 
 	}
@@ -4014,11 +4302,11 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 })
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABObject__ = __webpack_require__(2);
 
 /*
  * ab_work_object_list_newObject_blank
@@ -4033,13 +4321,14 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
+///// LEFT OFF HERE:
+// implement the Create Blank Object interface.
+//
 
 var labels = {
 
-	application: {
-
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-
+	component: {
+		placeholderName: L('ab.object.form.placeholderName', "*Object name"),
 	}
 }
 
@@ -4053,6 +4342,9 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 	var ids = {
 		component: App.unique('ab_work_object_list_newObject_blank_component'),
 
+		form: App.unique('ab_work_object_list_newObject_blank'),
+		buttonSave: App.unique('ab-object-blank-object-save'),
+		buttonCancel: App.unique('ab-object-blank-object-cancel')
 	}
 
 
@@ -4060,17 +4352,48 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
-		scroll: true,
-		rows: [
-{ view: "label", label:"ab_work_object_list_newObject_blank row", width: 800, align: "right" },	
-		]
+		header: labels.common.create,
+		body: {
+			view: "form",
+			id: ids.form,
+			width: 400,
+			rules: {
+
+// TODO:
+// name: inputValidator.rules.validateObjectName
+			},
+			elements: [
+				{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.component.placeholderName, labelWidth: 70 },
+				{
+					margin: 5,
+					cols: [
+						{
+							view: "button", id: ids.buttonSave, value: labels.common.add, type: "form", click: function () {
+								return _logic.save();
+							}
+						},
+						{
+							view: "button", id: ids.buttonCancel, value: labels.common.cancel, click: function () {
+								_logic.cancel();
+							}
+						}
+					]
+				}
+			]
+
+		}
 	};
 
 
 
 	// Our init() function for setting up our UI
-	var _init = function() {
+	var _init = function( options ) {
 		// webix.extend($$(ids.form), webix.ProgressBar);
+
+		// load up our callbacks.
+		for(var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
 
 	}
 
@@ -4079,28 +4402,78 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 	// our internal business logic 
 	var _logic = {
 
+		callbacks:{
+			onCancel: function() { console.warn('NO onCancel()!') },
+			onSave  : function(values, cb) { console.warn('NO onSave()!') },
+		},
+
 		
-		// /**
-		//  * @function formBusy
-		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
-		//  * progress.
-		//  */
-		// formBusy: function() {
+		cancel:function() {
 
-		// 	$$(ids.form).showProgress({ type: 'icon' });
-		// },
+			_logic.formClear();
+			_logic.callbacks.onCancel();
+		},
 
 
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+		formClear:function() {
+			$$(ids.form).clearValidation();
+			$$(ids.form).clear();
+		},
 
+
+		/**
+		 * @function hide()
+		 *
+		 * hide this component.
+		 */
+		hide:function() {
+
+			$$(ids.component).hide();
+		},
+
+		/**
+		 * @function save
+		 *
+		 * verify the current info is ok, package it, and return it to be 
+		 * added to the application.createModel() method.
+		 */
+		save:function() {
+			var saveButton = $$(ids.buttonSave);
+			saveButton.disable();
+
+			var Form = $$(ids.form);
+
+			Form.clearValidation();
+
+			// if it doesn't pass the basic form validation, return:
+			if (!Form.validate()) {
+				saveButton.enable();
+				return false;
+			}
+
+			var values = Form.getValues();
+
+
+			// now send data back to be added:
+			_logic.callbacks.onSave(values, function(err) {
+
+				if (err) {
+					if (OP.Form.isValidationError(err, Form)) {
+						// do I do anything else here?
+						// this auto updates the form
+					}
+
+					// get notified if there was an error saving.
+					saveButton.enable();
+					return false;
+				} 
+
+				// if there was no error, clear the form for the next
+				// entry:
+				_logic.formClear();
+			});
+
+		},
 
 		/**
 		 * @function show()
@@ -4155,7 +4528,7 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 })
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4290,7 +4663,7 @@ console.error('TODO: clearObjectWorkspace()');
 })
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports) {
 
 //
@@ -4322,7 +4695,92 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		
 
 /***/ }),
-/* 18 */
+/* 20 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+/*
+ * custom_editlist
+ *
+ * Create a custom webix component.
+ *
+ */
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	component: {
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+	}
+}
+
+
+var ComponentKey = 'ab_custom_edittree';
+OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
+	// App 	{obj}	our application instance object.
+	// componentKey {string}	the destination key in App.custom[componentKey] for the instance of this component:
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique('custom_editlist_component'),
+
+	}
+
+
+
+	// Our webix UI definition:
+	var _ui = {
+        name: App.unique("custom_editlist")	// keep this unique for this App instance.
+    };
+
+
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+	}
+
+
+
+	// Tell Webix to create an INSTANCE of our custom component:
+    webix.protoUI(_ui, webix.EditAbility, webix.ui.list);
+
+
+    // current definition of our Component 
+    var Component = {
+		view: _ui.name,			// {string} the webix.view value for this custom component
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+
+	// Save our definition into App.custom.[key]
+    App.custom = App.custom || {};
+    App.custom[componentKey] = Component;
+
+
+	// return the current definition of this component:
+	return Component;
+
+})
+
+
+// After importing this custom component, you get back the .key to use to 
+// lookup the OP.Component[] to create an application instance of 
+/* harmony default export */ __webpack_exports__["a"] = { key: ComponentKey };
+
+/***/ }),
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4406,13 +4864,13 @@ OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
 /* harmony default export */ __webpack_exports__["a"] = { key: ComponentKey };
 
 /***/ }),
-/* 19 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_ab__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_ab__ = __webpack_require__(3);
 
 
 // import '../../../../../assets/js/webix/webix'

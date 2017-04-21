@@ -13,6 +13,10 @@ function toDC( data ) {
 	});
 }
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 export default class ABObject {
 
     constructor(attributes, application) {
@@ -75,27 +79,19 @@ export default class ABObject {
 
 //// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
 
-	static isValid(op, values) {
+	isValid() {
 
-			var errors = [];
+		var errors = null;
 
-			// during an ADD operation
-			if (op == 'add') {
 
-				// label/name must be unique:
-				var matchingApps = _AllApplications.data.filter(function (app) { 
-					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
-				})
-				if (matchingApps && matchingApps.length > 0) {
-					
-					errors.push({
-						name:'label',
-						mlKey:'duplicateName',
-						defaultText: '**Name must be Unique.'
-					})
-				}
-
-			}
+		// label/name must be unique:
+		var isNameUnique = (this.application.objects((o) => { return o.name.toLowerCase() == this.name.toLowerCase(); }).length == 0);
+		if (!isNameUnique) {
+			errors = OP.Form.validationError({
+					name:'name',
+					message:L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name),
+				}, errors);
+		}
 
 
 			// Check the common validations:
@@ -106,7 +102,7 @@ export default class ABObject {
 // }
 
 
-			return errors;
+		return errors;
 	} 
 
 
@@ -142,34 +138,34 @@ console.error('TODO: ABObject.destroy()');
 	/**
 	 * @method save()
 	 *
-	 * persist the current instance of ABApplication to the DB
+	 * persist this instance of ABObject with it's parent ABApplication
 	 *
-	 * Also, keep the values in _AllApplications up to date.
 	 * 
-	 * @return {Promise} 
+	 * @return {Promise} 	
+	 *						.resolve( {this} )
 	 */
 	save () {
-console.error('TODO: ABObject.save()')
-		// var values = this.toObj();
 
-		// // we already have an .id, so this must be an UPDATE
-		// if (values.id) {
+		return new Promise(
+			(resolve, reject) => {
 
-		// 	return this.Model.update(values.id, values)
-		// 			.then(() => {
-		// 				_AllApplications.updateItem(values.id, this);
-		// 			});
-				
-		// } else {
+				// if this is our initial save()
+				if (!this.id) {
 
-		// 	// must be a CREATE:
-		// 	return this.Model.create(values)
-		// 			.then((data) => {
-		// 				this.id = data.id;
-		// 				_AllApplications.add(this, 0);
-		// 			});
-		// }
-	
+					this.id = OP.Util.uuid();	// setup default .id
+					this.label = this.label || this.name;
+					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
+				}
+
+				this.application.objectSave(this)
+				.then(() => {
+					resolve(this);
+				})
+				.catch(function(err){
+					reject(err);
+				})
+			}
+		)
 	}
 
 

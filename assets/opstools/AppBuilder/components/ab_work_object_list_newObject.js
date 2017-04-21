@@ -69,8 +69,14 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 
 	// Our init() function for setting up our UI
 	var _init = function() {
-		
-		BlankTab.init();
+
+		var ourCBs = {
+			onCancel: _logic.hide,
+			onSave: _logic.save
+		}
+
+		BlankTab.init(ourCBs);
+
 		// webix.extend($$(ids.form), webix.ProgressBar);
 
 	}
@@ -81,26 +87,74 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 	var _logic = {
 
 		
-		// /**
-		//  * @function formBusy
+		// *
+		//  * @function cancel
 		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
-		//  * progress.
-		//  */
-		// formBusy: function() {
+		//  * The Model Creator was canceled.
+		 
+		// cancel: function() {
 
-		// 	$$(ids.form).showProgress({ type: 'icon' });
+		// 	_logic.hide();
 		// },
 
 
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+		/**
+		 * @function hide()
+		 *
+		 * remove the busy indicator from the form.
+		 */
+		hide: function() {
+			$$(ids.component).hide();
+		},
+
+
+		/**
+		 * @function save
+		 *
+		 * take the data gathered by our child creation tabs, and 
+		 * add it to our current application.
+		 *
+		 * @param {obj} values  key=>value hash of model values.
+		 * @param {fn}  cb 		node style callback to indicate success/failure
+		 */
+		save:function (values, cb) {
+
+			// must have an application set.
+			if (!currentApplication) {
+				OP.Dialog.Alert({
+					title:'Shoot!',
+					test:'No Application Set!  Why?'
+				});
+				cb(true);	// there was an error.
+				return false;
+			}
+
+
+			var newObject = currentApplication.objectNew(values);
+
+			var validationErrors = newObject.isValid();
+			if (validationErrors) {
+				cb(validationErrors);
+				return false;
+			}
+
+
+			// if we get here, save the new Object
+			newObject.save()
+				.then(function(obj){
+
+					// successfully done:
+					cb();
+					_logic.hide();
+					currentCallBack(null, obj);
+				})
+				.catch(function(err){
+
+					cb(err);				// the current Tab
+					// currentCallBack(err);	// the calling Component
+				})
+
+		},
 
 
 		/**
@@ -115,6 +169,9 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 	}
 
 
+	var currentApplication = null;
+	var currentCallBack = null;
+
 
 	// Expose any globally accessible Actions:
 	var _actions = {
@@ -123,16 +180,16 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 		/**
 		 * @function transitionNewObjectWindow()
 		 *
-		 * Initialze the Form with the values from the provided ABApplication.
+		 * Show our Create New Object window.
 		 *
-		 * If no ABApplication is provided, then show an empty form. (create operation)
-		 *
-		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 * @param {ABApplication} Application  	The current ABApplication 
 		 *										we are working with.
 		 */
-		transitionNewObjectWindow:function(){
+		transitionNewObjectWindow:function(Application, cb){
 			
 			_logic.show();
+			currentApplication = Application;	// remember our current Application.
+			currentCallBack = cb;
 		}
 
 	}

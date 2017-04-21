@@ -447,15 +447,15 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 			var errors = ABApplication.isValid(op, Form.getValues());
-			if (errors.length > 0) {
-				var hasFocused = false;
-				errors.forEach(function(err){
-					Form.markInvalid(err.name, labels.application[err.mlKey] || err.defaultText );
-					if (!hasFocused && Form.elements[err.name]) {
-						Form.elements[err.name].focus();
-						hasFocused = true;
-					}
-				})
+			if (OP.Form.isValidationError(errors, Form)) {
+// var hasFocused = false;
+// errors.forEach(function(err){
+// 	Form.markInvalid(err.name, labels.application[err.mlKey] || err.defaultText );
+// 	if (!hasFocused && Form.elements[err.name]) {
+// 		Form.elements[err.name].focus();
+// 		hasFocused = true;
+// 	}
+// })
 				_logic.buttonSaveEnable();
 				return false;
 			}

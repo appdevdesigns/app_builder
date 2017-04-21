@@ -41,18 +41,24 @@ OP.Component.extend('ab_work_object_list', function(App) {
 	}
 
 
+	// There is a Popup for adding a new Object:
 	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
 	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
-	// PopupNewObject.hide();
+	PopupNewObjectComponent.init();
+
 
 	// Our webix UI definition:
 	var _ui = {
 		id:ids.component,
 		rows: [
 			{
-				view: App.custom.edittree.view,  // "editlist",
+				view: App.custom.editlist.view,  // "editlist",
 				id: ids.list,
 				width: 250,
+
+// TODO: make this dynamically fill the screen:
+height:800,
+autoheight:true,
 				select: true,
 				editaction: 'custom',
 				editable: true,
@@ -162,7 +168,8 @@ OP.Component.extend('ab_work_object_list', function(App) {
 				value: labels.application.addNew,
 				click: function () {
 
-					App.actions.transitionNewObjectWindow();
+					_logic.toNewObject();
+					
 // $$(self.webixUiId.addNewPopup).define('selectNewObject', true);
 // $$(self.webixUiId.addNewPopup).show();
 				}
@@ -176,7 +183,8 @@ OP.Component.extend('ab_work_object_list', function(App) {
 	var _init = function() {
 
 		webix.extend($$(ids.list), webix.ProgressBar);
-
+		$$(ids.component).adjust();
+		$$(ids.list).adjust();
 	}
 
 
@@ -241,6 +249,19 @@ console.error('TODO: syncNumRefresh()');
 			return _templateListItem
 				.replace('#label#', obj.label || '??label??')
 				.replace('{common.iconGear}', common.iconGear);
+		},
+
+
+		toNewObject:function() {
+			App.actions.transitionNewObjectWindow(CurrentApplication, function(err, newObject){
+
+				if (err) {
+					return false;
+				}
+
+				objectList.add(newObject,0);
+				$$(ids.list).select(newObject.id);
+			});
 		}
 	}
 
@@ -258,6 +279,8 @@ console.error('TODO: syncNumRefresh()');
 	].join('');
 
 
+	var CurrentApplication = null;
+	var objectList = null;
 
 	// Expose any globally accessible Actions:
 	var _actions = {
@@ -276,7 +299,11 @@ console.error('TODO: syncNumRefresh()');
 		populateObjectList : function(application){
 			_logic.listBusy();
 
-			var objectList = application.objects();
+			CurrentApplication = application;
+
+			objectList = new webix.DataCollection({
+				data: application.objects(),
+			});
 
 			var List = $$(ids.list);
 			List.clearAll();
@@ -288,7 +315,18 @@ console.error('TODO: syncNumRefresh()');
 			_logic.syncNumberRefresh();
 			_logic.listReady();
 
-		}
+		},
+
+
+		/**
+		 * @function getSelectedObject
+		 *
+		 * returns which ABObject is currently selected.
+		 * @return {ABObject}  or {null} if nothing selected.
+		 */
+		getSelectedObject:function() {
+			return $$(ids.list).getSelectedItem();
+		},
 
 	}
 

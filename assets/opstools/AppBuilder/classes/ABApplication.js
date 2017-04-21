@@ -147,7 +147,7 @@ export default class ABApplication {
 
 	static isValid(op, values) {
 
-			var errors = [];
+			var errors = null;
 
 			// during an ADD operation
 			if (op == 'add') {
@@ -158,11 +158,10 @@ export default class ABApplication {
 				})
 				if (matchingApps && matchingApps.length > 0) {
 					
-					errors.push({
+					errors = OP.Form.validationError({
 						name:'label',
-						mlKey:'duplicateName',
-						defaultText: '**Name must be Unique.'
-					})
+						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', values.name),
+					}, errors);
 				}
 
 			}
@@ -381,22 +380,57 @@ export default class ABApplication {
 	/**
 	 * @method objects()
 	 *
-	 * return a DataCollection of all the ABObjects for this ABApplication.
+	 * return an array of all the ABObjects for this ABApplication.
 	 *
-	 * @return {Promise} 	
+	 * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn 
+	 *						returns true for.
+	 * @return {array} 	array of ABObject
 	 */
 	objects (filter) {
+
 		filter = filter || function() {return true; };
 
-		return new Promise( 
-			(resolve, reject) => {
+		return this._objects.filter(filter);
 
-
-				resolve(toDC(this._objects.filter(filter)));
-
-			}
-		);
 	}
 
+
+
+	/**
+	 * @method newObject()
+	 *
+	 * return an instance of a new (unsaved) ABObject that is tied to this 
+	 * ABApplication.
+	 *
+	 * NOTE: this new object is not included in our this.objects until a .save() 
+	 * is performed on the object.
+	 *
+	 * @return {ABObject} 	
+	 */
+	objectNew( values ) {
+		return new ABObject(values, this);
+	}
+
+
+
+	/**
+	 * @method saveObject()
+	 *
+	 * return an instance of a new (unsaved) ABObject that is tied to this 
+	 * ABApplication.
+	 *
+	 * NOTE: this new object is not included in our this.objects until a .save() 
+	 * is performed on the object.
+	 *
+	 * @return {ABObject} 	
+	 */
+	objectSave( object ) {
+		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
+		if (!isIncluded) {
+			this._objects.push(object);
+		}
+
+		return this.save();
+	}
 
 }
