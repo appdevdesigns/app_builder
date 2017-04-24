@@ -9,6 +9,9 @@
 .ab-main-container .pointer {
 	cursor: pointer;
 }
+.ab-main-container .white-bg {
+	background-color: #fff !important;
+}
 .ab-main-container .right {
 	text-align: right;
 }

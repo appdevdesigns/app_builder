@@ -1076,7 +1076,8 @@ steal(
 						body: tabs.fields.getEditView(form)
 					},
 					{
-						header: "Submit Rules"
+						header: "Submit Rules",
+						body: tabs.submit_rules.getEditView()
 					},
 					{
 						header: "Display Rules"
@@ -1301,6 +1302,8 @@ steal(
 				$$(componentIds.editView).getMultiview().define('height', height - 200);
 				$$(componentIds.editView).getMultiview().resize();
 			}
+
+			tabs.submit_rules.resize(height);
 		};
 
 		return formComponent;
