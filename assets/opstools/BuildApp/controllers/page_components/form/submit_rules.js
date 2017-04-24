@@ -3,25 +3,49 @@ steal(function () {
 		submitRuleList: 'ab-form-new-submit-rule'
 	};
 
-	function getNewRoleTemplate(name) {
+	function getNewRoleTemplate() {
 		return {
 			view: 'accordionitem',
-			header: name || 'Role',
+			header: "Rule - Show a confirmation message",
 			body: {
 				view: 'layout',
 				rows: [
-
 					{
 						label: 'Action',
 						labelWidth: 80,
 						view: 'select',
 						value: 1,
 						options: [
-							{ "id": 1, "value": "Show a confirmation message" },
-							{ "id": 2, "value": "Redirect to the parent page" },
-							{ "id": 3, "value": "Redirect to an existing page" },
-							{ "id": 4, "value": "Redirect to another website URL" }
-						]
+							{ "id": "confirm_message", "value": "Show a confirmation message" },
+							{ "id": "parent_page", "value": "Redirect to the parent page" },
+							{ "id": "exists_page", "value": "Redirect to an existing page" }
+						],
+						on: {
+							onChange: function (newVal, oldVal) {
+								var self = this;
+								var confirmText = self.getParentView().getChildViews()[2];
+								var existsPages = self.getParentView().getChildViews()[3];
+
+								switch (newVal) {
+									case "confirm_message":
+										confirmText.show();
+										existsPages.hide();
+										break;
+									case "parent_page":
+										confirmText.hide();
+										existsPages.hide();
+										break;
+									case "exists_page":
+										confirmText.hide();
+										existsPages.show();
+										break;
+								}
+
+								var selectedOpt = self.config.options.filter(function (opt) { return opt.id == newVal })[0];
+								self.getParentView().getParentView().define('header', function () { return 'Rule - {option}'.replace('{option}', selectedOpt.value); });
+								self.getParentView().getParentView().refresh();
+							}
+						}
 					},
 					{
 						cols: [
@@ -35,48 +59,10 @@ steal(function () {
 								}
 							},
 							{
-								css: { 'background-color': '#DDDDDD' },
-								rows: [
-									{
-										cols: [
-											{
-												view: 'richselect',
-												options: [
-													{ id: 1, value: 'Name' },
-													{ id: 2, value: 'Age' }
-												]
-											},
-											{
-												view: 'richselect',
-												options: [
-													{ value: 'contains' },
-													{ value: 'does not contain' },
-													{ value: 'is' },
-													{ value: 'is not' },
-													{ value: 'starts with' },
-													{ value: 'end with' },
-													{ value: 'is blank' },
-													{ value: 'is not blank' }
-												]
-											},
-											{
-												view: 'text'
-											},
-											{
-												view: "button",
-												type: "icon",
-												icon: "plus",
-												width: 30
-											},
-											{
-												view: "button",
-												type: "icon",
-												icon: "minus",
-												width: 30
-											}
-										]
-									}
-								]
+								css: {
+									'background-color': '#F0F1F3'
+								},
+								rows: [getWhenTemplate()]
 							}
 						]
 					},
@@ -84,26 +70,22 @@ steal(function () {
 					{
 						label: 'Message',
 						labelWidth: 80,
+						height: 60,
 						view: 'textarea'
 					},
-					// // Redirect to an existing page
-					// {
-					// 	view: 'richselect',
-					// 	label: 'Page',
-					// 	labelWidth: 80,
-					// 	options: [
-					// 		{
-					// 			id: 1,
-					// 			value: 'test'
-					// 		}
-					// 	]
-					// },
-					// // Redirect to website URL
-					// {
-					// 	view: 'text',
-					// 	label: 'Redirect',
-					// 	labelWidth: 80
-					// },
+					// Redirect to an existing page
+					{
+						view: 'richselect',
+						label: 'Page',
+						hidden: true,
+						labelWidth: 80,
+						options: [
+							{
+								id: 1,
+								value: 'test'
+							}
+						]
+					},
 
 					{
 						cols: [
@@ -111,7 +93,12 @@ steal(function () {
 							{
 								view: 'button',
 								width: 130,
-								label: 'Delete this role'
+								label: 'Delete this rule',
+								click: function () {
+									var ruleView = this.getParentView().getParentView().getParentView();
+
+									$$(componentIds.submitRuleList).removeView(ruleView.config.id);
+								}
 							}
 						]
 					}
@@ -120,7 +107,66 @@ steal(function () {
 		};
 	}
 
-	var submit_rules_tab = function () {
+	function getWhenTemplate() {
+		return {
+			cols: [
+				{
+					view: 'richselect',
+					options: [
+						{ id: 1, value: 'Name' },
+						{ id: 2, value: 'Age' }
+					]
+				},
+				{
+					view: 'richselect',
+					options: [
+						{ value: 'contains' },
+						{ value: 'does not contain' },
+						{ value: 'is' },
+						{ value: 'is not' },
+						{ value: 'starts with' },
+						{ value: 'end with' },
+						{ value: 'is blank' },
+						{ value: 'is not blank' }
+					]
+				},
+				{
+					view: 'text'
+				},
+				{
+					view: "button",
+					type: "icon",
+					icon: "plus",
+					width: 30,
+					click: function () {
+						var whenItem = this.getParentView(),
+							whenContainer = whenItem.getParentView();
+
+						whenContainer.addView(getWhenTemplate());
+					}
+				},
+				{
+					view: "button",
+					type: "icon",
+					icon: "minus",
+					width: 30,
+					click: function () {
+						var whenItem = this.getParentView(),
+							whenContainer = whenItem.getParentView();
+
+						whenContainer.removeView(whenItem.config.id);
+
+						// There has always 1 item 
+						if (whenContainer.getChildViews().length < 1) {
+							whenContainer.addView(getWhenTemplate());
+						}
+					}
+				}
+			]
+		};
+	}
+
+	var submit_rules_tab = function (formComponent) {
 		var self = this;
 
 		self.getEditView = function () {
@@ -151,6 +197,16 @@ steal(function () {
 					}
 				]
 			};
+		};
+
+		self.getPropertyView = function (componentManager) {
+			return {
+				view: 'property'
+			};
+		};
+
+		self.getSettings = function () {
+			return {};
 		};
 
 		self.resize = function (height) {
