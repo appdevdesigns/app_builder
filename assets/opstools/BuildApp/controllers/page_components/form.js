@@ -672,6 +672,7 @@ steal(
 								value: setting.saveLabel || "Save",
 								width: 90,
 								inputWidth: 80,
+								disabled: editable,
 								click: function () {
 									var saveButton = this;
 
@@ -704,6 +705,7 @@ steal(
 								value: setting.cancelLabel || "Cancel",
 								width: 90,
 								inputWidth: 80,
+								disabled: editable,
 								click: function () {
 									data.dataCollection.setCursor(null);
 
