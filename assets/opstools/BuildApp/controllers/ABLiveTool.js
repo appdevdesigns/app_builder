@@ -560,7 +560,13 @@ steal(
 							$(comInstance).off('changePage');
 							$(comInstance).on('changePage', function (event, data) {
 								// Redirect to another page
-								if (data.previousPage)
+
+								if (data.parentPage == true && self.activePage && self.activePage.parent) {
+									var parentId = self.activePage.parent.id || self.activePage.parent;
+									data.pageId = parentId;
+								}
+
+								if (data.previousPage == true)
 									self.showPage(self.previousPage);
 								else if (self.activePage.id != data.pageId && data.pageId) {
 

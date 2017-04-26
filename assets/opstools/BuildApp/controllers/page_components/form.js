@@ -4,6 +4,7 @@ steal(
 	'opstools/BuildApp/controllers/utils/DataCollectionHelper.js',
 	'opstools/BuildApp/controllers/utils/ColumnizerHelper.js',
 	'opstools/BuildApp/controllers/utils/SelectivityHelper.js',
+	'opstools/BuildApp/controllers/utils/FilterHelper.js',
 
 	'opstools/BuildApp/controllers/page_components/form/fields.js',
 	'opstools/BuildApp/controllers/page_components/form/submit_rules.js',
@@ -11,7 +12,7 @@ steal(
 	'opstools/BuildApp/controllers/page_components/form/record_rules.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/ConnectedDataPopup.js',
-	function (dataFieldsManager, dataCollectionHelper, columnizerHelper, selectivityHelper,
+	function (dataFieldsManager, dataCollectionHelper, columnizerHelper, selectivityHelper, filterHelper,
 		fields_tab, submit_rules_tab, display_rules_tab, record_rules_tab) {
 		var componentIds = {
 			editView: 'ab-form-edit-view',
@@ -252,26 +253,7 @@ steal(
 
 								var val = modelData[column.name].attr ? modelData[column.name].attr() : modelData[column.name];
 
-								switch (when.condition) {
-									case 'contains':
-										isCorrect = (val.indexOf(when.compareValue) > -1);
-										break;
-									case 'does not contain':
-										isCorrect = (val.indexOf(when.compareValue) < 0);
-										break;
-									case 'is':
-										isCorrect = (val == when.compareValue);
-										break;
-									case 'is not':
-										isCorrect = (val != when.compareValue);
-										break;
-									case 'starts with':
-										isCorrect = val.toString().startsWith(when.compareValue);
-										break;
-									case 'end with':
-										isCorrect = val.toString().endsWith(when.compareValue);
-										break;
-								}
+								isCorrect = filterHelper.filter(when.condition, val, when.compareValue);
 							});
 						}
 
@@ -287,7 +269,9 @@ steal(
 									});
 									break;
 								case "parent_page":
-									// TODO
+									$(self).trigger('changePage', {
+										parentPage: true
+									});
 									break;
 								case "exists_page":
 									$(self).trigger('changePage', {

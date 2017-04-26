@@ -1,34 +1,11 @@
 steal(
-    // List your Controller's dependencies here:
-    function () {
+    'opstools/BuildApp/controllers/utils/FilterHelper.js',
+    function (filterHelper) {
         var labels = {
             filter_fields: {
                 and: AD.lang.label.getLabel('ab.filter_fields.and') || "And",
                 or: AD.lang.label.getLabel('ab.filter_fields.or') || "Or",
                 addNewFilter: AD.lang.label.getLabel('ab.filter_fields.addNewFilter') || "Add a filter",
-
-                containsCondition: AD.lang.label.getLabel('ab.filter_fields.containsCondition') || "contains",
-                notContainCondition: AD.lang.label.getLabel('ab.filter_fields.notContainCondition') || "doesn't contain",
-                isCondition: AD.lang.label.getLabel('ab.filter_fields.isCondition') || "is",
-                isNotCondition: AD.lang.label.getLabel('ab.filter_fields.isNotCondition') || "is not",
-
-                beforeCondition: AD.lang.label.getLabel('ab.filter_fields.beforeCondition') || "is before",
-                afterCondition: AD.lang.label.getLabel('ab.filter_fields.afterCondition') || "is after",
-                onOrBeforeCondition: AD.lang.label.getLabel('ab.filter_fields.onOrBeforeCondition') || "is on or before",
-                onOrAfterCondition: AD.lang.label.getLabel('ab.filter_fields.onOrAfterCondition') || "is on or after",
-
-                equalCondition: AD.lang.label.getLabel('ab.filter_fields.equalCondition') || ":",
-                notEqualCondition: AD.lang.label.getLabel('ab.filter_fields.notEqualCondition') || "≠",
-                lessThanCondition: AD.lang.label.getLabel('ab.filter_fields.lessThanCondition') || "<",
-                moreThanCondition: AD.lang.label.getLabel('ab.filter_fields.moreThanCondition') || ">",
-                lessThanOrEqualCondition: AD.lang.label.getLabel('ab.filter_fields.lessThanOrEqualCondition') || "≤",
-                moreThanOrEqualCondition: AD.lang.label.getLabel('ab.filter_fields.moreThanOrEqualCondition') || "≥",
-
-                equalListCondition: AD.lang.label.getLabel('ab.filter_fields.equalListCondition') || "equals",
-                notEqualListCondition: AD.lang.label.getLabel('ab.filter_fields.notEqualListCondition') || "does not equal",
-
-                checkedCondition: AD.lang.label.getLabel('ab.filter_fields.checkedCondition') || "is checked",
-                notCheckedCondition: AD.lang.label.getLabel('ab.filter_fields.notCheckedCondition') || "is not checked"
             }
         };
 
@@ -136,63 +113,13 @@ steal(
 
                                     if (!columnConfig) return;
 
-                                    switch (columnConfig.filter_type) {
-                                        case "text":
-                                        case "multiselect":
-                                            conditionList = [
-                                                labels.filter_fields.containsCondition,
-                                                labels.filter_fields.notContainCondition,
-                                                labels.filter_fields.isCondition,
-                                                labels.filter_fields.isNotCondition
-                                            ];
-
-                                            inputView = { view: "text" };
-                                            break;
-                                        case "date":
-                                            conditionList = [
-                                                labels.filter_fields.beforeCondition,
-                                                labels.filter_fields.afterCondition,
-                                                labels.filter_fields.onOrBeforeCondition,
-                                                labels.filter_fields.onOrAfterCondition
-                                            ];
-
-                                            inputView = { view: "datepicker" };
-
-                                            if (columnConfig.format)
-                                                inputView.format = columnConfig.format;
-
-                                            break;
-                                        case "number":
-                                            conditionList = [
-                                                labels.filter_fields.equalCondition,
-                                                labels.filter_fields.notEqualCondition,
-                                                labels.filter_fields.lessThanCondition,
-                                                labels.filter_fields.moreThanCondition,
-                                                labels.filter_fields.lessThanOrEqualCondition,
-                                                labels.filter_fields.moreThanOrEqualCondition
-                                            ];
-
-                                            inputView = { view: "text", validate: webix.rules.isNumber };
-                                            break;
-                                        case "list":
-                                            conditionList = [
-                                                labels.filter_fields.equalListCondition,
-                                                labels.filter_fields.notEqualListCondition
-                                            ];
-
-                                            inputView = {
-                                                view: "combo",
-                                                options: columnConfig.filter_options
-                                            };
-                                            break;
-                                        case "boolean":
-                                            conditionList = [
-                                                labels.filter_fields.checkedCondition,
-                                                labels.filter_fields.notCheckedCondition
-                                            ];
-
-                                            break;
+                                    var selectList = [];
+                                    if (columnConfig.collection) {
+                                        selectList = columnConfig.collection.config.data;
                                     }
+
+                                    conditionList = filterHelper.getConditionList(columnConfig.filter_type);
+                                    inputView = filterHelper.getComparerView(columnConfig.filter_type, columnConfig.format, selectList);
 
                                     var filter_item = this.getParentView();
                                     var conditionCombo = filter_item.getChildViews()[2];
@@ -339,78 +266,12 @@ steal(
                             if (objValue.trim)
                                 objValue = objValue.trim().toLowerCase();
 
-                            switch (cond.operator) {
-                                // Text filter
-                                case labels.filter_fields.containsCondition:
-                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
-                                    break;
-                                case labels.filter_fields.notContainCondition:
-                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
-                                    break;
-                                case labels.filter_fields.isCondition:
-                                    condResult = objValue == cond.inputValue.trim().toLowerCase();
-                                    break;
-                                case labels.filter_fields.isNotCondition:
-                                    condResult = objValue != cond.inputValue.trim().toLowerCase();
-                                    break;
-                                // Date filter
-                                case labels.filter_fields.beforeCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue < cond.inputValue;
-                                    break;
-                                case labels.filter_fields.afterCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue > cond.inputValue;
-                                    break;
-                                case labels.filter_fields.onOrBeforeCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue <= cond.inputValue;
-                                    break;
-                                case labels.filter_fields.onOrAfterCondition:
-                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
-                                    condResult = objValue >= cond.inputValue;
-                                    break;
-                                // Number filter
-                                case labels.filter_fields.equalCondition:
-                                    condResult = Number(objValue) == Number(cond.inputValue);
-                                    break;
-                                case labels.filter_fields.notEqualCondition:
-                                    condResult = Number(objValue) != Number(cond.inputValue);
-                                    break;
-                                case labels.filter_fields.lessThanCondition:
-                                    condResult = Number(objValue) < Number(cond.inputValue);
-                                    break;
-                                case labels.filter_fields.moreThanCondition:
-                                    condResult = Number(objValue) > Number(cond.inputValue);
-                                    break;
-                                case labels.filter_fields.lessThanOrEqualCondition:
-                                    condResult = Number(objValue) <= Number(cond.inputValue);
-                                    break;
-                                case labels.filter_fields.moreThanOrEqualCondition:
-                                    condResult = Number(objValue) >= Number(cond.inputValue);
-                                    break;
-                                // List filter
-                                case labels.filter_fields.equalListCondition:
-                                    if (objValue)
-                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
-                                    break;
-                                case labels.filter_fields.notEqualListCondition:
-                                    if (objValue)
-                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
-                                    else
-                                        condResult = true;
-                                    break;
-                                // Boolean/Checkbox filter
-                                case labels.filter_fields.checkedCondition:
-                                    condResult = (objValue === true || objValue === 1);
-                                    break;
-                                case labels.filter_fields.notCheckedCondition:
-                                    condResult = !objValue;
-                                    break;
-                            }
+                            condResult = filterHelper.filter(cond.operator, objValue, cond.inputValue);
+
                             if (combineCond === labels.filter_fields.and) {
                                 isValid = isValid && condResult;
-                            } else {
+                            }
+                            else {
                                 isValid = isValid || condResult;
                             }
                         });
