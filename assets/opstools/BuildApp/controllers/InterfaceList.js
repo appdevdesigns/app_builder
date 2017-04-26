@@ -435,6 +435,11 @@ steal(
 
 							$$(self.webixUiId.interfaceTree).parse(treeData);
 							$$(self.webixUiId.interfaceTree).hideProgress();
+
+							// Select current page
+							if (AD.classes.AppBuilder.currApp.currPage != null) {
+								$$(self.webixUiId.interfaceTree).select(AD.classes.AppBuilder.currApp.currPage.id);
+							}
 						},
 
 						showGear: function (id) {

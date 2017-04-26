@@ -171,6 +171,16 @@ steal(
 											self.UIDefinitions.objectPage,
 											self.UIDefinitions.interfacePage
 										]
+									},
+									// Reload page button
+									{
+										view: 'template',
+										template: '<i class="fa fa-refresh ab-reload-page-button" aria-hidden="true" style="font-size: 2em; top: 55; right: 20;"></i>',
+										onClick: {
+											'ab-reload-page-button': function (id, e, trg) {
+												self.refresh();
+											}
+										}
 									}
 								]
 							});
