@@ -175,7 +175,7 @@ steal(
 									// Reload page button
 									{
 										view: 'template',
-										template: '<i class="fa fa-refresh ab-reload-page-button" aria-hidden="true" style="font-size: 2em; top: 55; right: 20;"></i>',
+										template: '<i class="fa fa-refresh ab-reload-page-button" aria-hidden="true" style="font-size: 2em; top: 55px; right: 20px;"></i>',
 										onClick: {
 											'ab-reload-page-button': function (id, e, trg) {
 												self.refresh();
