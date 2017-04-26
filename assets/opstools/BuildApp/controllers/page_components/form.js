@@ -23,7 +23,13 @@ steal(
 
 			propertyView: 'ab-form-property-view',
 
-			saveButton: 'ab-form-save-button-#viewId#'
+			saveButton: 'ab-form-save-button-#viewId#',
+
+			fieldPropertyView: 'ab-form-fields-property-view',
+			editTitle: 'ab-form-edit-title',
+			editDescription: 'ab-form-edit-description',
+
+			submitRulesPropertyView: 'ab-form-submit-rules-property-view',
 		},
 			labels = {
 				common: {
@@ -192,7 +198,7 @@ steal(
 							q.reject(err);
 						}
 						else {
-							finishSave.call(self, setting, object, dataCollection);
+							finishSave.call(self, setting, object, dataCollection, modelData);
 
 							q.resolve();
 						}
@@ -215,19 +221,13 @@ steal(
 						if (isAdd)
 							dataCollection.AD.__list.push(result);
 
-						// Show success message
-						webix.message({
-							type: "success",
-							text: labels.common.saveSuccessMessage.replace('{0}', result._dataLabel ? result._dataLabel : 'This data')
-						});
-
 						q.resolve();
 					});
 
 				return q;
 			}
 
-			function finishSave(setting, object, dataCollection) {
+			function finishSave(setting, object, dataCollection, modelData) {
 				var self = this;
 
 				$$(self.viewId).hideProgress();
@@ -238,16 +238,79 @@ steal(
 					clearForm.call(self, object, self.data.columns, dataCollection);
 				}
 
-				if (setting.afterSave && !isNaN(setting.afterSave)) {
-					$(self).trigger('changePage', {
-						pageId: setting.afterSave
+				// Submit rules
+				if (setting.submitRules && setting.submitRules.length > 0) {
+					setting.submitRules.forEach(function (rule) {
+						// Check conditions
+						var isCorrect = true;
+						if (rule.whens && rule.whens.length > 0) {
+							rule.whens.forEach(function (when) {
+								if (isCorrect == false) return;
+
+								var column = object.columns.filter(function (col) { return col.id == when.columnId })[0];
+								if (column == null) return;
+
+								var val = modelData[column.name].attr ? modelData[column.name].attr() : modelData[column.name];
+
+								switch (when.condition) {
+									case 'contains':
+										isCorrect = (val.indexOf(when.compareValue) > -1);
+										break;
+									case 'does not contain':
+										isCorrect = (val.indexOf(when.compareValue) < 0);
+										break;
+									case 'is':
+										isCorrect = (val == when.compareValue);
+										break;
+									case 'is not':
+										isCorrect = (val != when.compareValue);
+										break;
+									case 'starts with':
+										isCorrect = val.toString().startsWith(when.compareValue);
+										break;
+									case 'end with':
+										isCorrect = val.toString().endsWith(when.compareValue);
+										break;
+								}
+							});
+						}
+
+						// Action rule
+						if (isCorrect) {
+							switch (rule.action) {
+								case "confirm_message":
+									var confirmMessage = rule.confirmMessage || labels.common.saveSuccessMessage.replace('{0}', result._dataLabel ? result._dataLabel : 'This data');
+									// Show success message
+									webix.message({
+										type: "success",
+										text: confirmMessage
+									});
+									break;
+								case "parent_page":
+									// TODO
+									break;
+								case "exists_page":
+									$(self).trigger('changePage', {
+										pageId: rule.redirectPageId
+									});
+									break;
+							}
+						}
+
 					});
+
 				}
-				else {
-					$(self).trigger('changePage', {
-						previousPage: true
-					});
-				}
+
+				// if (setting.afterSave && !isNaN(setting.afterSave)) {
+				// 	$(self).trigger('changePage', {
+				// 		pageId: setting.afterSave
+				// 	});
+				// }
+				// else {
+				// 	$(self).trigger('changePage', {
+				// 		previousPage: true
+				// 	});
+				// }
 			}
 
 			function showCustomFields(object, columns, rowId, rowData) {
@@ -588,9 +651,9 @@ steal(
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
-											var propValues = $$(componentIds.propertyView).getValues();
+											var propValues = $$(componentIds.fieldPropertyView).getValues();
 											propValues[componentIds.editTitle] = newv;
-											$$(componentIds.propertyView).setValues(propValues);
+											$$(componentIds.fieldPropertyView).setValues(propValues);
 										}
 									}
 								}
@@ -617,9 +680,9 @@ steal(
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
-											var propValues = $$(componentIds.propertyView).getValues();
+											var propValues = $$(componentIds.fieldPropertyView).getValues();
 											propValues[componentIds.editDescription] = newv;
-											$$(componentIds.propertyView).setValues(propValues);
+											$$(componentIds.fieldPropertyView).setValues(propValues);
 										}
 									}
 								}
@@ -764,6 +827,7 @@ steal(
 				var settings = {};
 
 				setting = $.extend(
+					settings,
 					tabs.fields.getSettings(),
 					tabs.submit_rules.getSettings());
 
@@ -828,8 +892,18 @@ steal(
 				], function (err) {
 					if (err) return;
 
+					var additionalData = {
+						formInstance: self,
+						application: application,
+						dataCollection: dataCollection,
+						linkedToDataCollection: linkedToDataCollection,
+						columns: self.data.columns,
+						pages: pages
+					};
+
 					// Set property values
-					tabs.fields.populateSettings(setting, showAll, application, dataCollection, linkedToDataCollection, self.data.columns, pages);
+					tabs.fields.populateSettings(setting, showAll, additionalData);
+					tabs.submit_rules.populateSettings(setting, showAll, additionalData);
 				});
 			};
 
@@ -917,6 +991,19 @@ steal(
 							$$(componentIds.editForm).adjust();
 						},
 						onChange: function (newv, oldv) {
+							switch (this.optionIndex(this.getValue())) {
+								case 0: // fields
+									$$(componentIds.fieldPropertyView).show();
+									break;
+								case 1: // submit rules
+									$$(componentIds.submitRulesPropertyView).show();
+									break;
+								case 2: // display rules
+									break;
+								case 3: // record rules
+									break;
+							}
+
 							if ($$(newv)) {
 								$$(newv).adjust();
 							}
@@ -966,6 +1053,7 @@ steal(
 				$$(componentIds.editView).getMultiview().resize();
 			}
 
+			tabs.fields.resize(height);
 			tabs.submit_rules.resize(height);
 		};
 

@@ -288,7 +288,7 @@ steal(
                     var selectedData = {
                         objectId: object.id,
                         columnName: fieldData.name,
-                        rowId: rowData.id,
+                        rowId: rowData ? rowData.id : null,
                         data: listDataField.getValue(application, object, fieldData, itemNode)
                     };
 

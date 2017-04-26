@@ -2,6 +2,9 @@ steal(function () {
 	var componentIds = {
 		propertyView: 'ab-form-fields-property-view',
 
+		title: 'ab-form-title',
+		description: 'ab-form-description',
+
 		editTitle: 'ab-form-edit-title',
 		editDescription: 'ab-form-edit-description',
 		selectObject: 'ab-form-select-object',
@@ -21,9 +24,11 @@ steal(function () {
 	};
 
 	var fields_tab = function () {
-		var self = this;
+		var self = this,
+			data = {};
 
 		self.getEditView = function (form) {
+			data.form = form;
 			return form;
 		};
 
@@ -221,9 +226,8 @@ steal(function () {
 							case componentIds.selectColCount:
 							case componentIds.isSaveVisible:
 							case componentIds.isCancelVisible:
-								var setting = self.getSettings();
-								// TODO populate parameters
-								self.populateSettings(setting, true);
+								var setting = self.data.formInstance.getSettings();
+								self.data.formInstance.populateSettings(setting, true);
 								break;
 						}
 					}
@@ -235,12 +239,12 @@ steal(function () {
 			var propertyValues = $$(componentIds.propertyView).getValues(),
 				visibleFieldIds = [];
 
-			// var formValues = $$(componentIds.editForm).getValues();
-			// for (var key in formValues) {
-			// 	if (formValues[key] === 'show') {
-			// 		visibleFieldIds.push(key);
-			// 	}
-			// }
+			var formValues = $$(data.form.id).getValues();
+			for (var key in formValues) {
+				if (formValues[key] === 'show') {
+					visibleFieldIds.push(key);
+				}
+			}
 
 			var settings = {
 				title: propertyValues[componentIds.editTitle],
@@ -263,10 +267,12 @@ steal(function () {
 			return settings;
 		};
 
-		self.populateSettings = function (setting, showAll, application, dataCollection, linkedToDataCollection, columns, pages) {
-			if (pages) {
+		self.populateSettings = function (setting, showAll, additionalData) {
+			self.data = additionalData;
+
+			if (self.data.pages) {
 				var afterSave = $$(componentIds.propertyView).getItem(componentIds.afterSave);
-				afterSave.options = pages.map(function (p) {
+				afterSave.options = self.data.pages.map(function (p) {
 					return {
 						id: p.id,
 						value: p.label
@@ -289,11 +295,11 @@ steal(function () {
 				};
 			});
 
-			if (application != null && application.objects != null) {
+			if (self.data.application != null && self.data.application.objects != null) {
 
 				// Data source - Object
 				var objectList = $$(componentIds.propertyView).getItem(componentIds.selectObject);
-				objectList.options = $.map(application.objects, function (o) {
+				objectList.options = $.map(self.data.application.objects, function (o) {
 					return {
 						id: o.id,
 						value: o.label
@@ -301,13 +307,13 @@ steal(function () {
 				});
 
 				// Data source - Linked to
-				var linkedObjIds = columns
+				var linkedObjIds = self.data.columns
 					.filter(function (col) {
 						return col.setting.linkObject != null && col.setting.linkType == 'model' && col.setting.linkViaType == 'collection';
 					})
 					.map(function (col) { return col.setting.linkObject });
 
-				var linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; });
+				var linkedObjs = self.data.application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; });
 				var linkedToItem = $$(componentIds.propertyView).getItem(componentIds.linkedTo);
 
 				linkedToItem.options = $.map(linkedObjs, function (o) {
@@ -362,6 +368,10 @@ steal(function () {
 
 			$$(componentIds.propertyView).setValues(propValues);
 			$$(componentIds.propertyView).refresh();
+
+		};
+
+		self.resize = function (height) {
 
 		};
 
