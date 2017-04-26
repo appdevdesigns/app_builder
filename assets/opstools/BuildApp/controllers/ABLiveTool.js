@@ -46,6 +46,32 @@ steal(
 
 							self.initDOM();
 							self.initModels();
+							self.initPage();
+						},
+
+						invalidApp: function () {
+							AD.error.log('Application id is invalid.');
+						},
+
+						invalidPage: function () {
+							AD.error.log('Page id is invalid.');
+						},
+
+						initDOM: function () {
+							console.log('... creating ABLiveTool <div> ');
+							this.element.html(
+								('<div id="#domID#"></div>' +
+									'<i id="#domID#-reload-button" class="fa fa-refresh ab-reload-page-button" aria-hidden="true"></i>')
+									.replace(/#domID#/g, this.containerDomID));
+						},
+
+						initModels: function () {
+							this.Models = {};
+							this.Models.ABApplication = AD.Model.get('opstools.BuildApp.ABApplication');
+						},
+
+						initPage: function () {
+							var self = this;
 
 							self.getData().then(function () {
 
@@ -62,24 +88,6 @@ steal(
 									self.showPage();
 								});
 							});
-						},
-
-						invalidApp: function () {
-							AD.error.log('Application id is invalid.');
-						},
-
-						invalidPage: function () {
-							AD.error.log('Page id is invalid.');
-						},
-
-						initDOM: function () {
-							console.log('... creating ABLiveTool <div> ');
-							this.element.html('<div id="#domID#"></div>'.replace('#domID#', this.containerDomID));
-						},
-
-						initModels: function () {
-							this.Models = {};
-							this.Models.ABApplication = AD.Model.get('opstools.BuildApp.ABApplication');
 						},
 
 						getData: function () {
@@ -139,6 +147,13 @@ steal(
 
 						initEvents: function () {
 							var self = this;
+
+							$('#{domID}-reload-button'.replace('{domID}', self.containerDomID)).off('click');
+							$('#{domID}-reload-button'.replace('{domID}', self.containerDomID)).on('click', function () {
+								$('#' + self.containerDomID).html('');
+
+								self.initPage();
+							});
 
 							AD.comm.hub.subscribe('ab.interface.add', function (msg, data) {
 								if (data.app == self.options.app
