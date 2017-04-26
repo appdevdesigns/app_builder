@@ -33,7 +33,9 @@ steal(
 								interfaceTree: 'ab-interface-tree',
 
 								pageListMenuPopup: 'ab-page-menu-popup',
-								pageListMenu: 'ab-page-menu'
+								pageListMenu: 'ab-page-menu',
+
+								addNewPageButton: 'ab-page-new-page'
 							};
 
 							self.initMultilingualLabels();
@@ -236,6 +238,7 @@ steal(
 										}
 									},
 									{
+										id: self.webixUiId.addNewPageButton,
 										view: 'button',
 										value: self.labels.interface.addNewPage,
 										click: function () {
