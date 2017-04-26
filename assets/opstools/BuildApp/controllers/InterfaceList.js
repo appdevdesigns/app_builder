@@ -438,6 +438,13 @@ steal(
 
 							// Select current page
 							if (AD.classes.AppBuilder.currApp.currPage != null) {
+
+								// Open tree of parent page
+								if (AD.classes.AppBuilder.currApp.currPage.parent != null) {
+									var parentId = AD.classes.AppBuilder.currApp.currPage.parent.id || AD.classes.AppBuilder.currApp.currPage.parent;
+									$$(self.webixUiId.interfaceTree).open(parentId);
+								}
+
 								$$(self.webixUiId.interfaceTree).select(AD.classes.AppBuilder.currApp.currPage.id);
 							}
 						},
