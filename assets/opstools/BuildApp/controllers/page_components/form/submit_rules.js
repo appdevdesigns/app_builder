@@ -10,6 +10,15 @@ steal(function () {
 
 		function getRuleTemplate(rule) {
 			rule = rule || {};
+			rule.action = rule.action || "confirm_message";
+
+			var actionOptions = [
+				{ id: "confirm_message", value: "Show a confirmation message" },
+				{ id: "parent_page", value: "Redirect to the parent page" },
+				{ id: "exists_page", value: "Redirect to an existing page" }
+			];
+
+			var ruleName = actionOptions.filter(function (opt) { return opt.id == rule.action; })[0].value;
 
 			var pages = self.data.pages.attr ? self.data.pages.attr() : self.data.pages;
 			pages = pages.map(function (p) {
@@ -31,7 +40,7 @@ steal(function () {
 
 			var template = {
 				view: 'accordionitem',
-				header: "Rule",
+				header: "Rule - {ruleName}".replace('{ruleName}', ruleName),
 				body: {
 					view: 'layout',
 					rows: [
@@ -39,12 +48,8 @@ steal(function () {
 							label: 'Action',
 							labelWidth: 80,
 							view: 'select',
-							value: rule.action || "confirm_message",
-							options: [
-								{ "id": "confirm_message", "value": "Show a confirmation message" },
-								{ "id": "parent_page", "value": "Redirect to the parent page" },
-								{ "id": "exists_page", "value": "Redirect to an existing page" }
-							],
+							value: rule.action,
+							options: actionOptions,
 							on: {
 								onChange: function (newVal, oldVal) {
 									var self = this;
@@ -67,7 +72,7 @@ steal(function () {
 									}
 
 									var selectedOpt = self.config.options.filter(function (opt) { return opt.id == newVal })[0];
-									self.getParentView().getParentView().define('header', function () { return 'Rule - {option}'.replace('{option}', selectedOpt.value); });
+									self.getParentView().getParentView().define('header', function () { return 'Rule - {ruleName}'.replace('{ruleName}', selectedOpt.value); });
 									self.getParentView().getParentView().refresh();
 								}
 							}
@@ -207,6 +212,7 @@ steal(function () {
 						id: componentIds.submitRuleList,
 						view: "accordion",
 						css: 'ab-scroll-y white-bg',
+						multi: false,
 						paddingX: 12,
 						rows: [],
 						height: 230
@@ -277,9 +283,11 @@ steal(function () {
 
 			// Render submit rule items
 			if (setting && setting.submitRules && setting.submitRules.length > 0) {
-				setting.submitRules.forEach(function (rule) {
+				setting.submitRules.forEach(function (rule, index) {
 
 					var ruleTemplate = getRuleTemplate(rule);
+					// Open only first item
+					ruleTemplate.collapsed = (index > 0);
 
 					$$(componentIds.submitRuleList).addView(ruleTemplate);
 				});
