@@ -12,5 +12,6 @@ var AD = require('ad-utils');
 module.exports = function (cb) {
 
     AD.module.bootstrap(__dirname, cb);
+    AppBuilder.buildDirectory.init();		// start the build directory re creation
 
 };

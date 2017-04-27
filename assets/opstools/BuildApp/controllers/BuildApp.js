@@ -25,6 +25,9 @@ steal(
 						init: function (element, options) {
 							var self = this;
 
+							// Show message when user clicks back button
+							window.onbeforeunload = function () { return "Changes you made may not be saved."; };
+
 							AD.classes.AppBuilder = AD.classes.AppBuilder || {};
 
 							options = AD.defaults({
@@ -169,6 +172,59 @@ steal(
 							})
 								.always(function () {
 								});
+
+							// FIX:  sometimes we loose the socket connection and don't get the 
+							// update from the server about the status of the reload.
+							// Here we manually add it a check to see if the server is done 
+							// and close out the Sync Interface:
+							var _checking = false;
+							function checkIt(delay) {
+
+								_checking = true;
+
+								// check every {delay} seconds.
+								setTimeout(function(){
+
+									// if our loading process hasn't completed yet:
+									if (self.data.curLoadProgress < 1) {
+										console.log('....  Sync still not done!');
+										// manually request an update:
+										AD.comm.service.get({url:'/app_builder/reloadStatus'})
+										.fail(function(err){
+											checkIt(10000);
+										})
+										.then(function(data){
+
+											if (data && data.state == 'done') {
+
+												// mimic the final done call:
+												self.data.curLoadProgress = 0.9;
+												self.updateSyncStatus({action:'done', step:'reloadBlueprints'});
+
+												// remove this subscription.
+												AD.comm.socket.unsubscribe(subID);
+											} else {
+
+												// leave things alone and check again in 10s
+												checkIt(10000);
+											}
+										})
+										
+									} else {
+										console.log('... Sync Done!');
+										// remove this subscription.
+										AD.comm.socket.unsubscribe(subID);
+									}
+								}, delay);
+
+							}
+
+							// now kick things off once we get the server-reload  message:
+							var subID = AD.comm.socket.subscribe('server-reload', function(data) {
+								if (!_checking) { console.log('... starting checkIt!'); checkIt(30000); }
+							});
+							
+
 						},
 
 						updateSyncStatus: function (data) {
@@ -228,10 +284,15 @@ steal(
 									break;
 								case 'fail':
 									console.error(data.options.error);
+									var errorMessage = [
+										(AD.lang.label.getLabel('ab.sync.syncError') || 'There are errors')+":",
+										'',
+										data.options.error
+									].join('\n')
 
 									// Show retry screen
 									$$(self.webixUiId.loadingScreen).showErrorScreen(
-										AD.lang.label.getLabel('ab.sync.syncError') || 'There are errors',
+										errorMessage,
 										AD.lang.label.getLabel('ab.sync.Reload') || 'Reload',
 										function () {
 											$$(self.webixUiId.loadingScreen).start();

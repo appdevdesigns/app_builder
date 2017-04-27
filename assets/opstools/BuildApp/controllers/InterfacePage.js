@@ -127,8 +127,8 @@ steal(
 						},
 
 						refresh: function () {
-							this.controllers.InterfaceList.loadPages();
 							this.controllers.InterfaceWorkspace.resetState();
+							this.controllers.InterfaceList.loadPages();
 						},
 
 						resize: function (height) {

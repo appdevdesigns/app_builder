@@ -9,14 +9,14 @@
 .ab-main-container .pointer {
 	cursor: pointer;
 }
-.ab-main-container .left {
-	text-align: left;
+.ab-main-container .right {
+	text-align: right;
 }
 .ab-main-container .center {
 	text-align: center;
 }
-.ab-main-container .right {
-	text-align: right;
+.ab-main-container .left {
+	text-align: left;
 }
 .ab-text-bold {
 	font-weight: bold !important;
@@ -471,4 +471,16 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 
 .ab-validation-text{
 	color: #ed3d0e;
+}
+/*Live display*/
+.ab-reload-page-button {
+	font-size: 3em;
+	position: absolute;
+	right: 25px;
+	top: 10px;
+	cursor: pointer;
+	opacity: 0.25;
+}
+.ab-reload-page-button:hover {
+	opacity: 1;
 }

@@ -62,6 +62,19 @@ steal(
 								value: labels.add_fields.chooseType,
 								submenu: dataFieldsManager.getFieldMenuList()
 							}],
+							click: function () {
+								var subMenuId = $$(componentIds.chooseTypeMenu).config.data[0].submenu;
+
+								// #HACK Sub-menu popup does not render on initial
+								// Force it to render popup by use .getSubMenu()
+								if (typeof subMenuId != 'string') {
+									$$(componentIds.chooseTypeMenu).getSubMenu($$(componentIds.chooseTypeMenu).config.data[0].id);
+									subMenuId = $$(componentIds.chooseTypeMenu).config.data[0].submenu;
+								}
+
+								if ($$(subMenuId))
+									$$(subMenuId).show();
+							},
 							on: {
 								onMenuItemClick: function (id) {
 									var base = this.getTopParentView(),
@@ -122,7 +135,7 @@ steal(
 											return;
 										}
 
-  										// Validate duplicate field name
+										// Validate duplicate field name
 										var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
 										if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
 											webix.alert({

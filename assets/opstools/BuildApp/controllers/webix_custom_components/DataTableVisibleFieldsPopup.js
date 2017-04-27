@@ -141,8 +141,12 @@ steal(
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').show();
 
-                if (visible_popup.dataTable.config.columns.length > 0 && visible_popup.dataTable.config.columns[0].id != 'appbuilder_trash') {
-                    visible_popup.dataTable.showColumn('appbuilder_trash');
+                if (visible_popup.dataTable.config.columns.length > 0) {
+                    var colId = visible_popup.dataTable.config.columns[0].id;
+
+                    if (colId != 'appbuilder_trash') {
+                        visible_popup.dataTable.showColumn('appbuilder_trash');
+                    }
                 }
 
                 visible_popup.callChangeEvent();
@@ -155,7 +159,7 @@ steal(
 
                 $($$(componentIds.fieldsList).getItemNode(id)).find('.ab-visible-field-icon').hide();
 
-                if (visible_popup.dataTable.config.columns.length == 1 && visible_popup.dataTable.config.columns[0].id == 'appbuilder_trash') {
+                if (visible_popup.dataTable.config.columns[0].id == 'appbuilder_trash') {
                     visible_popup.dataTable.hideColumn('appbuilder_trash');
                 }
 

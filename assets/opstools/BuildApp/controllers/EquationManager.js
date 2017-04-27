@@ -7,11 +7,14 @@ steal(
     // $ git checkout npm-module
     // $ cp filtrex.js  /path/to/our/assets/js/filtrex.js
     'js/filtrex.js',
-
+ 
     // Add any equation function definitions here:
     'opstools/BuildApp/controllers/equation_functions/_noArgs.js',
     'opstools/BuildApp/controllers/equation_functions/date_year.js',
+    'opstools/BuildApp/controllers/equation_functions/date_month.js',
+    'opstools/BuildApp/controllers/equation_functions/date_format.js',
     'opstools/BuildApp/controllers/equation_functions/age.js',
+    'opstools/BuildApp/controllers/equation_functions/mean.js',
 
     function (filtrex) {
         var self = {};
@@ -35,6 +38,9 @@ steal(
 
         // Listen save event
         functions.forEach(function (fn) {
+            if (fn.token in hashFunctions) {
+                console.error("equation function token \"" + fn.token + "\" declared twice, overwriting");
+            }
             hashFunctions[fn.token] = fn.exec;
         });
 
