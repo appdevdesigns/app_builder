@@ -86,6 +86,7 @@ autoheight:true,
 // }
 					},
 					onAfterSelect: function (id) {
+						_logic.selectObject(id);
 // // Fire select object event
 // self.element.trigger(self.options.selectedObjectEvent, id);
 
@@ -200,6 +201,19 @@ autoheight:true,
 			$$(ids.list).hideProgress();
 		},
 
+
+		/**
+		 * @function selectObject()
+		 *
+		 * Perform these actions when an Object is selected in the List.
+		 */
+		selectObject: function (id) {
+
+			var object = $$(ids.list).getItem(id);
+			App.actions.populateObjectWorkspace(object);
+		},
+
+
 		/**
 		 * @function show()
 		 *
@@ -252,6 +266,16 @@ console.error('TODO: syncNumRefresh()');
 		},
 
 
+		/**
+		 * @function toNewObject
+		 *
+		 * Manages initiating the transition to the new Object Popup window, 
+		 * as well as managing the new object that was created.
+		 *
+		 * @param {obj} obj the current instance of ABObject for the row.
+		 * @param {?} common the webix.common icon data structure
+		 * @return {string}
+		 */
 		toNewObject:function() {
 			App.actions.transitionNewObjectWindow(CurrentApplication, function(err, newObject){
 
@@ -264,6 +288,7 @@ console.error('TODO: syncNumRefresh()');
 			});
 		}
 	}
+
 
 	/*
 	 * _templateListItem
@@ -279,8 +304,11 @@ console.error('TODO: syncNumRefresh()');
 	].join('');
 
 
+
 	var CurrentApplication = null;
 	var objectList = null;
+
+
 
 	// Expose any globally accessible Actions:
 	var _actions = {

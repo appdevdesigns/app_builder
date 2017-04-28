@@ -38,8 +38,6 @@ export default class ABObject {
 }
 */
 
-
-
     	// ABApplication Attributes
     	this.id    = attributes.id;
     	this.name  = attributes.name || "";
@@ -231,6 +229,13 @@ console.error('TODO: ABObject.destroy()');
 
 			}
 		);
+	}
+
+
+
+	fieldNew ( values ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, this );
 	}
 
 

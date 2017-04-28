@@ -12,9 +12,6 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-///// LEFT OFF HERE:
-// implement the Create Blank Object interface.
-//
 
 var labels = {
 
@@ -71,7 +68,6 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 					]
 				}
 			]
-
 		}
 	};
 
@@ -122,6 +118,7 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 			$$(ids.component).hide();
 		},
 
+
 		/**
 		 * @function save
 		 *
@@ -165,6 +162,7 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 			});
 
 		},
+
 
 		/**
 		 * @function show()

@@ -20,6 +20,8 @@ import Multilingual from "./multilingual"
 import Model from "./model"
 import Util  from "./util"
 
+import Config from "./config/config"
+
 
     window.OP = {};
 
@@ -75,6 +77,13 @@ import Util  from "./util"
 				
 			},
 
+
+			/*
+			 * config
+			 * webix configuration settings for our current browser
+			 */
+			config:Config.config(),
+
 			/*
 			 * custom
 			 * a collection of custom components for this App Instance.
@@ -117,6 +126,8 @@ import Util  from "./util"
 
 	
 	OP.Dialog = AD.op.Dialog;
+
+	OP.Error = AD.error;
 
 	OP.Form = Form;
 

@@ -50,6 +50,16 @@ OP.Component.extend('ab', function(App) {
 
 		deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
 		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+
+
+		// Data Field  common Property labels:
+		dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
+		dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
+
+		dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
+		dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
+
+		dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?')
 	}
 
 
@@ -123,7 +133,6 @@ OP.Component.extend('ab', function(App) {
 
 
 //// REFACTORING TODOs:
-// TODO: OP.Error.isValidation() to handle validation errors returned from Sails
 // TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
 
 

@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 22);
+/******/ 	return __webpack_require__(__webpack_require__.s = 29);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -72,7 +72,7 @@
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(19);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__data_ABApplication__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ABObject__ = __webpack_require__(2);
 
@@ -520,10 +520,11 @@ class ABApplication {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__form__ = __webpack_require__(4);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__multilingual__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__form__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__multilingual__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__config_config__ = __webpack_require__(4);
 
 /**
  * @class AD_Client
@@ -541,6 +542,8 @@ class ABApplication {
 //// in 'use strict' ?
 
 // if (!window.OP) {
+
+
 
 
 
@@ -601,6 +604,13 @@ class ABApplication {
 				
 			},
 
+
+			/*
+			 * config
+			 * webix configuration settings for our current browser
+			 */
+			config:__WEBPACK_IMPORTED_MODULE_4__config_config__["a" /* default */].config(),
+
 			/*
 			 * custom
 			 * a collection of custom components for this App Instance.
@@ -643,6 +653,8 @@ class ABApplication {
 
 	
 	OP.Dialog = AD.op.Dialog;
+
+	OP.Error = AD.error;
 
 	OP.Form = __WEBPACK_IMPORTED_MODULE_0__form__["a" /* default */];
 
@@ -705,8 +717,6 @@ class ABObject {
 	]
 }
 */
-
-
 
     	// ABApplication Attributes
     	this.id    = attributes.id;
@@ -902,6 +912,13 @@ console.error('TODO: ABObject.destroy()');
 	}
 
 
+
+	fieldNew ( values ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values );
+	}
+
+
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = ABObject;
 
@@ -913,10 +930,10 @@ console.error('TODO: ABObject.destroy()');
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__webix_custom_components_edittree__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__webix_custom_components_editlist__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__webix_custom_components_edittree__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__webix_custom_components_editlist__ = __webpack_require__(27);
 
 /*
  * AB 
@@ -969,6 +986,16 @@ OP.Component.extend('ab', function(App) {
 
 		deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
 		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+
+
+		// Data Field  common Property labels:
+		dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
+		dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
+
+		dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
+		dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
+
+		dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?')
 	}
 
 
@@ -1042,7 +1069,6 @@ OP.Component.extend('ab', function(App) {
 
 
 //// REFACTORING TODOs:
-// TODO: OP.Error.isValidation() to handle validation errors returned from Sails
 // TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
 
 
@@ -1053,6 +1079,88 @@ OP.Component.extend('ab', function(App) {
 
 /***/ }),
 /* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__configBrowser__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__configMobile__ = __webpack_require__(6);
+
+/**
+ * @class config
+ *
+ * Manage our configuration settings.
+ */
+
+
+
+
+
+/* harmony default export */ __webpack_exports__["a"] = {
+	config:function(){
+
+		// TODO: decide which config file to return here:
+		return __WEBPACK_IMPORTED_MODULE_0__configBrowser__["a" /* default */];
+	}
+};
+
+/***/ }),
+/* 5 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @class configBrower
+ *
+ * Manage our configuration settings for Web Browser styles.
+
+ */
+
+
+
+/* harmony default export */ __webpack_exports__["a"] = {
+	
+	// button types
+
+	// column types
+
+	// spacers
+
+
+	labelWidthSmall: 50
+
+};
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @class configBrower
+ *
+ * Manage our configuration settings for Web Browser styles.
+
+ */
+
+
+
+/* unused harmony default export */ var _unused_webpack_default_export = {
+	
+	// button types
+
+	// column types
+
+	// spacers
+
+
+	labelWidthSmall: 10
+
+};
+
+/***/ }),
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1197,7 +1305,7 @@ OP.Component.extend('ab', function(App) {
 };
 
 /***/ }),
-/* 5 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1546,7 +1654,7 @@ class OPModel {
             }
 
 /***/ }),
-/* 6 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1673,7 +1781,7 @@ class OPModel {
 };
 
 /***/ }),
-/* 7 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1685,12 +1793,737 @@ class OPModel {
 };
 
 /***/ }),
-/* 8 */
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_choose_list__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_form__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__ = __webpack_require__(13);
+/* 
+ * ABFieldManager
+ * 
+ * An interface for managing the different ABFields available in our AppBuilder.
+ *
+ */
+
+
+
+
+
+/* 
+ * Fields
+ * A type => ABField  hash of the different ABFields available.
+ */
+var Fields = {};
+Fields[__WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__["a" /* default */].type] = __WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__["a" /* default */];
+
+
+
+
+/* harmony default export */ __webpack_exports__["a"] = {
+
+
+	allFields: function() {
+		var fields = [];
+		for (var f in Fields) {
+			fields.push(Fields[f]);
+		}
+		return fields;
+	},
+
+
+	getField:function(type) {
+		return Fields[type];
+	},
+
+
+
+	fieldFromName:function(name) {
+		return this.allFields().filter(function(f){ return f.menuName() == name; })[0];
+	},
+
+
+///// LEFT OFF:
+// 
+
+	newField: function (values, object) {
+
+
+		if (values.type) {
+			return new Fields[values.type](values, object);
+		} else {
+
+//// TODO: what to do here?
+		}
+
+	}
+
+
+
+
+
+
+
+};
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
+/* 
+ * ABField
+ * 
+ * An ABField defines a single unique Field/Column in a ABObject.
+ *
+ */
+
+
+
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+class ABField {
+
+    constructor(attributes, application) {
+
+
+  	}
+
+
+
+  	///
+  	/// Static Methods
+  	///
+  	/// Available to the Class level object.  These methods are not dependent
+  	/// on the instance values of the Application.
+  	///
+
+  	static clearEditor( App, ids) {
+
+  		var defaultValues = {
+  			label: '',
+  			columnName:'',
+  			showIcon:1
+  		}
+
+  		for(var f in defaultValues) { 
+			var component = $$(ids[f]);
+			component.setValue(defaultValues[f]);
+		}
+  	}
+
+	/**
+	 * @function definitionEditor
+	 *
+	 * Many DataFields share some base information for their usage 
+	 * in the AppBuilder.  The UI Editors have a common header 
+	 * and footer format, and this function allows child DataFields
+	 * to not have to define those over and over.
+	 *
+	 * The common layout header contains:
+	 *		[Menu Label]
+	 *		[textBox: labelName]
+	 *		[text:    description]
+	 *
+	 * The defined DataField UI will be added at the end of this.
+	 *
+	 * This routine actually updated the live DataField definition
+	 * with the common header info.
+	 *
+	 * @param {DataField} field  The DataField object to work with.
+	 */
+  	static definitionEditor( App, ids, _logic, Field ) {
+
+
+  		// setup our default labelOnChange functionality:
+  		var onChange = function (newVal, oldVal) {
+
+			if (newVal != oldVal &&
+				oldVal == $$(ids.columnName).getValue()) {
+				$$(ids.columnName).setValue(newVal);
+			}
+		}
+
+		// if they provided a labelOnChange() override, use that:
+		if (_logic.labelOnChange) {
+			onChange = _logic.labelOnChange;
+		}
+
+
+  		var _ui = {
+			// id: ids.component,
+			rows: [
+				{
+					view: "label",
+					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon()).replace('{1}', Field.menuName())
+				},
+				{
+					view: "text",
+					id: ids.label,
+					label: App.labels.dataFieldHeaderLabel, 
+					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
+					labelWidth: 50,
+					css: 'ab-new-label-name',
+					on: {
+						onChange: function (newVal, oldVal) {
+							onChange(newVal, oldVal);
+						}
+					}
+				},
+				{
+					view: "text",
+					id: ids.columnName,
+					label: App.labels.dataFieldColumnName, // 'Name',
+					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
+					labelWidth: App.config.labelWidthSmall
+				},
+				{
+					view: "label",
+					id: ids.fieldDescription,
+					label: Field.description()
+				},
+				{
+					view: 'checkbox',
+					id: ids.showIcon, 
+					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
+					labelWidth: 0,
+					value:true
+				}
+			]
+		}
+
+  		return _ui;
+  	}
+
+
+//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+	isValid() {
+
+		var errors = null;
+
+
+		return errors;
+	} 
+
+
+
+	///
+	/// Instance Methods
+	///
+
+
+	/// ABApplication data methods
+
+
+	/**
+	 * @method destroy()
+	 *
+	 * destroy the current instance of ABApplication
+	 *
+	 * also remove it from our _AllApplications
+	 * 
+	 * @return {Promise} 
+	 */
+	destroy () {
+		if (this.id) {
+console.error('TODO: ABField.destroy()');
+
+		}
+	}
+
+
+	/**
+	 * @method save()
+	 *
+	 * persist this instance of ABObject with it's parent ABApplication
+	 *
+	 * 
+	 * @return {Promise} 	
+	 *						.resolve( {this} )
+	 */
+	save () {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				// if this is our initial save()
+				if (!this.id) {
+
+					this.id = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Util.uuid();	// setup default .id
+					this.label = this.label || this.name;
+					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
+				}
+
+				this.application.objectSave(this)
+				.then(() => {
+					resolve(this);
+				})
+				.catch(function(err){
+					reject(err);
+				})
+			}
+		)
+	}
+
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to 
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json} 
+	 */
+	toObj () {
+
+		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this, ["label"]);
+
+		// // for each Object: compile to json
+		// var currObjects = [];
+		// this.objects.forEach((obj) => {
+		// 	currObjects.push(obj.toObj())
+		// })
+		// this.json.objects = currObjects;
+
+		return {
+
+		}
+	}
+
+
+
+
+
+
+	///
+	/// Fields
+	///
+
+
+
+
+}
+/* harmony export (immutable) */ __webpack_exports__["a"] = ABField;
+
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ABField__ = __webpack_require__(12);
+/* 
+ * ABFieldString
+ * 
+ * An ABFieldString defines a string field type.
+ *
+ */
+
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var labels = {
+
+	component: {
+
+		defaultText: L('ab.dataField.string.default', '*Default text'),
+		supportMultilingual: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
+
+
+		// should be common?
+		headerLabel: L('ab.dataField.common.headerLabel', '*Label'),
+		headerLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
+
+		columnName: L('ab.dataField.common.columnName', '*Name'),
+		columnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
+
+		showIcon: L('ab.dataField.common.showIcon', '*show icon?')
+	}
+}
+
+
+/**
+ * ABFieldStringComponent
+ *
+ * Defines the UI Component for this Data Field.  The ui component is responsible
+ * for displaying the properties editor, populating existing data, retrieving 
+ * property values, etc.
+ *
+ * @param {obj} App  the current Component Application instance for the current UI.
+ * @return {obj} the Component object.
+ */
+var ABFieldStringComponent = function(App) {
+
+	labels.common = App.labels;
+
+	var idBase = 'ab_datafield_string';
+	var componentDefaults = {
+		textDefault: '', 
+		supportMultilingual:1
+	};
+	var ids = {
+
+		component: App.unique(idBase+'_component'),
+
+		textDefault: App.unique(idBase+'_textdefault'),
+		supportMultilingual: App.unique(idBase+'_supportMultilingual'),
+
+
+		// the common property fields
+		label: App.unique(idBase+'_label'),
+		columnName: App.unique(idBase+'_columnName'),
+		fieldDescription: App.unique(idBase+'_fieldDescription'),
+		showIcon: App.unique(idBase+'_showIcon'),
+	}
+
+
+	//// NOTE: we merge in the common headers below.
+	var _ui = {
+		id: ids.component,
+		rows: [
+			{
+				view: "text",
+				id: ids.textDefault,
+				placeholder: labels.component.defaultText
+			},
+			{
+				view: "checkbox",
+				id: ids.supportMultilingual,
+				labelRight: labels.component.supportMultilingual,
+				labelWidth: 0,
+				value: true
+			}
+		]
+	}
+
+
+
+	var _init = function() {
+
+		// perform any additional setup actions.
+		// for example, don't want to show the description, then .hide() it here:
+		// $$(ids.fieldDescription).hide();
+	}
+
+
+
+	var _logic = {
+
+		/*
+		 * @function clear
+		 *
+		 * clear the form.
+		 */
+		clear: function () {
+
+			__WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* default */].clearEditor(App, ids);
+			
+			for(var f in componentDefaults) { 
+				var component = $$(ids[f]);
+				component.setValue(componentDefaults[f]);
+			}
+
+		},
+
+
+		/*
+		 * @function isValid
+		 *
+		 * checks the current values on the componet to see if they are Valid
+		 */
+		isValid: function () {
+console.error('TODO: .isValid()');
+		},
+
+
+		/*
+		 * @function labelOnChange
+		 *
+		 * The ABField.definitionEditor implements a default operation
+		 * to update the value of the .columnName with the current value of 
+		 * label.
+		 * 
+		 * if you want to override that functionality, implement this fn()
+		 *
+		 * @param {string} newVal	The new value of label
+		 * @param {string} oldVal	The previous value
+		 */
+		labelOnChange: function (newVal, oldVal) {
+
+			// When the Label value changes, update our Column Name value 
+			// to match.
+
+			if (newVal != oldVal &&
+				oldVal == $$(ids.columnName).getValue()) {
+				$$(ids.columnName).setValue(newVal);
+			}
+		},
+
+
+		/*
+		 * @function populate
+		 *
+		 * populate the form with the given ABField instance provided.
+		 *
+		 * @param {ABFieldString} field
+		 */
+		populate: function (field) {
+console.error('TODO: .populate()');
+		},
+
+
+		/*
+		 * @function show
+		 *
+		 * show this component.
+		 */
+		show: function() {
+			$$(ids.component).show();
+		},
+
+
+		/*
+		 * @function values
+		 *
+		 * return the values for this form.
+Question: should this return an ABFieldString instance?
+		 */
+		values: function () {
+console.error('TODO: .values()');
+		},
+
+	}
+
+
+	// get the common UI headers entries, and insert them above ours here:
+	// NOTE: put this here so that _logic is defined.
+	var commonUI = __WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* default */].definitionEditor(App, ids, _logic, ABFieldString);
+	_ui.rows = commonUI.rows.concat(_ui.rows);
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+
+		// DataField exposed actions:
+		clear: _logic.clear,
+		isValid:_logic.isValid,
+		populate: _logic.populate,
+		show: _logic.show,
+		values: _logic.values,
+
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+}
+
+
+
+class ABFieldString extends __WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* default */] {
+
+    constructor(attributes, application) {
+    	super();
+
+  	}
+
+
+
+  	///
+  	/// Static Methods
+  	///
+  	/// Return the Definition related values for a String data field.
+  	///
+
+	// unique key to reference this specific DataField
+  	static name() {
+  		return 'string'
+  	}
+
+  	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+  	static type() {
+  		return 'string';
+  	}
+
+  	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+  	static icon() {
+  		return 'font'
+  	}
+
+  	// the multilingual text for the name of this data field.
+  	static  menuName() {
+  		return L('ab.dataField.string.menuName', '*Single line text');
+  	} 
+
+  	// the multilingual text for the name of this data field.
+  	static  description() {
+  		return L('ab.dataField.string.description', '*short string value');
+  	} 
+
+	/*
+	 * @function propertiesComponent
+	 *
+	 * return a UI Component that contains the property definitions for this Field.
+	 *
+	 * @param {App} App the UI App instance passed around the Components.
+	 * @return {Component}
+	 */
+  	static propertiesComponent(App) {
+  		return ABFieldStringComponent(App);
+  	}
+
+
+
+
+
+
+//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+	isValid() {
+
+		var errors = null;
+
+
+		return errors;
+	} 
+
+
+
+	///
+	/// Instance Methods
+	///
+
+
+	/// ABApplication data methods
+
+
+	/**
+	 * @method destroy()
+	 *
+	 * destroy the current instance of ABApplication
+	 *
+	 * also remove it from our _AllApplications
+	 * 
+	 * @return {Promise} 
+	 */
+	destroy () {
+		if (this.id) {
+console.error('TODO: ABField.destroy()');
+
+		}
+	}
+
+
+	/**
+	 * @method save()
+	 *
+	 * persist this instance of ABObject with it's parent ABApplication
+	 *
+	 * 
+	 * @return {Promise} 	
+	 *						.resolve( {this} )
+	 */
+	save () {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				// if this is our initial save()
+				if (!this.id) {
+
+					this.id = OP.Util.uuid();	// setup default .id
+					this.label = this.label || this.name;
+					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
+				}
+
+				this.application.objectSave(this)
+				.then(() => {
+					resolve(this);
+				})
+				.catch(function(err){
+					reject(err);
+				})
+			}
+		)
+	}
+
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABApplication instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * Most of the instance data is stored in .json field, so be sure to 
+	 * update that from all the current values of our child fields.
+	 *
+	 * @return {json} 
+	 */
+	toObj () {
+
+		OP.Multilingual.unTranslate(this, this, ["label"]);
+
+		// // for each Object: compile to json
+		// var currObjects = [];
+		// this.objects.forEach((obj) => {
+		// 	currObjects.push(obj.toObj())
+		// })
+		// this.json.objects = currObjects;
+
+		return {
+
+		}
+	}
+
+
+
+
+
+
+	///
+	/// Fields
+	///
+
+
+
+
+}
+
+
+// ABFieldString.name = 'string'; // unique key to reference this specific DataField
+// ABFieldString.type = 'string'; // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+// ABFieldString.icon = 'font';   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+// ABFieldString.menuName = L('ab.dataField.string.menuName', '*Single line text');  
+
+
+
+/* harmony default export */ __webpack_exports__["a"] = ABFieldString;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_choose_list__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_form__ = __webpack_require__(15);
 
 /*
  * AB Choose
@@ -1778,7 +2611,7 @@ OP.Component.extend('ab_choose', function(App) {
 });
 
 /***/ }),
-/* 9 */
+/* 15 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2649,12 +3482,12 @@ OP.Component.extend('ab_choose_form', function(App) {
 })
 
 /***/ }),
-/* 10 */
+/* 16 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__ = __webpack_require__(17);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__ab_choose_list_menu__);
 
 /*
@@ -2841,6 +3674,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 
 	var _logic = {
+
 
 		/**
 		 * @function busy
@@ -3109,7 +3943,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 
 /***/ }),
-/* 11 */
+/* 17 */
 /***/ (function(module, exports) {
 
 
@@ -3229,13 +4063,13 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 
 /***/ }),
-/* 12 */
+/* 18 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_interface__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object__ = __webpack_require__(20);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_interface__ = __webpack_require__(19);
 
 /*
  * ab_work
@@ -3477,7 +4311,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 })
 
 /***/ }),
-/* 13 */
+/* 19 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -3618,13 +4452,13 @@ console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
 })
 
 /***/ }),
-/* 14 */
+/* 20 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_object_workspace__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ab_work_object_workspace__ = __webpack_require__(24);
 
 /*
  * ab_work_object
@@ -3748,12 +4582,12 @@ OP.Component.extend('ab_work_object', function(App) {
 })
 
 /***/ }),
-/* 15 */
+/* 21 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list_newObject__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_list_newObject__ = __webpack_require__(22);
 
 /*
  * ab_work_object_list
@@ -3811,7 +4645,7 @@ OP.Component.extend('ab_work_object_list', function(App) {
 				view: App.custom.editlist.view,  // "editlist",
 				id: ids.list,
 				width: 250,
-				
+
 // TODO: make this dynamically fill the screen:
 height:800,
 autoheight:true,
@@ -3842,6 +4676,7 @@ autoheight:true,
 // }
 					},
 					onAfterSelect: function (id) {
+						_logic.selectObject(id);
 // // Fire select object event
 // self.element.trigger(self.options.selectedObjectEvent, id);
 
@@ -3956,6 +4791,19 @@ autoheight:true,
 			$$(ids.list).hideProgress();
 		},
 
+
+		/**
+		 * @function selectObject()
+		 *
+		 * Perform these actions when an Object is selected in the List.
+		 */
+		selectObject: function (id) {
+
+			var object = $$(ids.list).getItem(id);
+			App.actions.populateObjectWorkspace(object);
+		},
+
+
 		/**
 		 * @function show()
 		 *
@@ -4008,6 +4856,16 @@ console.error('TODO: syncNumRefresh()');
 		},
 
 
+		/**
+		 * @function toNewObject
+		 *
+		 * Manages initiating the transition to the new Object Popup window, 
+		 * as well as managing the new object that was created.
+		 *
+		 * @param {obj} obj the current instance of ABObject for the row.
+		 * @param {?} common the webix.common icon data structure
+		 * @return {string}
+		 */
 		toNewObject:function() {
 			App.actions.transitionNewObjectWindow(CurrentApplication, function(err, newObject){
 
@@ -4020,6 +4878,7 @@ console.error('TODO: syncNumRefresh()');
 			});
 		}
 	}
+
 
 	/*
 	 * _templateListItem
@@ -4035,8 +4894,11 @@ console.error('TODO: syncNumRefresh()');
 	].join('');
 
 
+
 	var CurrentApplication = null;
 	var objectList = null;
+
+
 
 	// Expose any globally accessible Actions:
 	var _actions = {
@@ -4071,7 +4933,18 @@ console.error('TODO: syncNumRefresh()');
 			_logic.syncNumberRefresh();
 			_logic.listReady();
 
-		}
+		},
+
+
+		/**
+		 * @function getSelectedObject
+		 *
+		 * returns which ABObject is currently selected.
+		 * @return {ABObject}  or {null} if nothing selected.
+		 */
+		getSelectedObject:function() {
+			return $$(ids.list).getSelectedItem();
+		},
 
 	}
 
@@ -4088,11 +4961,11 @@ console.error('TODO: syncNumRefresh()');
 })
 
 /***/ }),
-/* 16 */
+/* 22 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_work_object_list_newObject_blank__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ab_work_object_list_newObject_blank__ = __webpack_require__(23);
 
 /*
  * ab_work_object_list_newObject
@@ -4302,7 +5175,7 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 })
 
 /***/ }),
-/* 17 */
+/* 23 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4321,9 +5194,6 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-///// LEFT OFF HERE:
-// implement the Create Blank Object interface.
-//
 
 var labels = {
 
@@ -4380,7 +5250,6 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 					]
 				}
 			]
-
 		}
 	};
 
@@ -4431,6 +5300,7 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 			$$(ids.component).hide();
 		},
 
+
 		/**
 		 * @function save
 		 *
@@ -4474,6 +5344,7 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 			});
 
 		},
+
 
 		/**
 		 * @function show()
@@ -4528,11 +5399,12 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 })
 
 /***/ }),
-/* 18 */
+/* 24 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ab_work_object_workspace_popupNewDataField__ = __webpack_require__(25);
 
 /*
  * ab_work_object_workspace
@@ -4543,6 +5415,9 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 
 
 
+
+
+
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -4550,10 +5425,21 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
+
+		addNewRow: L('ab.object.addNewRow', "*Add new row"),
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 
+		// Toolbar:
+		hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
+		filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
+		sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
+		frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen columns"),
+		defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
+		permission: L('ab.object.toolbar.permission', "*Permission"),
+		addFields: L('ab.object.toolbar.addFields', "*Add new column"),
+		"export": L('ab.object.toolbar.export', "*Export")
 	}
 }
 
@@ -4563,22 +5449,324 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 
 	labels.common = App.labels;
 
+
+
+	
+
+
+
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
 		component: App.unique('ab_work_object_workspace_component'),
 
+		buttonAddField: App.unique('ab_work_object_workspace_buttonAddField'),
+		buttonExport: App.unique('ab_work_object_workspace_buttonExport'),
+		buttonFieldsVisible: App.unique('ab_work_object_workspace_buttonFieldsVisible'),
+		buttonFilter: App.unique('ab_work_object_workspace_buttonFilter'),
+		buttonFrozen: App.unique('ab_work_object_workspace_buttonFrozen'),
+		buttonLabel: App.unique('ab_work_object_workspace_buttonLabel'),
+		buttonRowNew: App.unique('ab_work_object_workspace_buttonRowNew'),
+		buttonSort: App.unique('ab_work_object_workspace_buttonSort'),
+
+
+		datatable: App.unique('ab_work_object_workspace_datatable'),
+
+
+		// Toolbar:
+		toolbar: App.unique('ab_work_object_workspace_toolbar'),
+
+
+
+		noSelection: App.unique('ab_work_object_workspace_noSelection'),
+		selectedObject: App.unique('ab_work_object_workspace_selectedObject'),
+		
 	}
+
+
+
+	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
+	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
+	PopupNewDataFieldComponent.init();
+
 
 
 
 	// Our webix UI definition:
 	var _ui = {
+		view:'multiview',
 		id: ids.component,
-		scroll: true,
-		rows: [
-{ view: "label", label:"ab_work_object_workspace row", width: 800, align: "right" },	
+		rows:[
+			{
+				// view:''
+				id: ids.noSelection,
+				rows:[
+					{ view:'label', label:'* Select an Object to work with' }
+				]
+			},
+
+
+			{
+				id: ids.selectedObject,
+				rows: [
+					{
+						view: 'toolbar',
+						id: ids.toolbar,
+						hidden: true,
+						cols: [
+							{ 
+								view: "button",
+								id: ids.buttonFieldsVisible, 
+								label: labels.component.hideFields, 
+		popup: 'self.webixUiId.visibleFieldsPopup', 
+								icon: "columns", 
+								type: "icon", 
+								width: 120, 
+								badge: 0 
+							},
+							{
+								view: 'button',
+								id: ids.buttonFilter, 
+								label: labels.component.filterFields, 
+								icon: "filter", 
+								type: "icon", 
+								width: 120, 
+								badge: 0,
+								click: function () {
+									_logic.toolbarFilter(this);
+								}
+							},
+							{
+								view: 'button', 
+								id: ids.buttonSort, 
+								label: labels.component.sortFields, 
+								icon: "sort", 
+								type: "icon", 
+								width: 120, 
+								badge: 0,
+								click: function () {
+									_logic.toolbarSort(this.$view);
+								}
+							},
+							{ 
+								view: 'button', 
+								id: ids.buttonFrozen, 
+								label: labels.component.frozenColumns, 
+		popup: 'self.webixUiId.frozenColumnsPopup', 
+								icon: "table", 
+								type: "icon", 
+								width: 150, 
+								badge: 0 
+							},
+							{ 
+								view: 'button', 
+								id: ids.buttonLabel,
+								label: labels.component.defineLabel, 
+		popup: 'self.webixUiId.defineLabelPopup', 
+								icon: "newspaper-o", 
+								type: "icon", 
+								width: 130 
+							},
+							{ 
+								view: 'button', 
+								label: labels.component.permission, 
+								icon: "lock", 
+								type: "icon", 
+								width: 120 
+							},
+							{ 
+								view: 'button', 
+								id: ids.buttonAddField, 
+								label: labels.component.addFields, 
+// popup: 'self.webixUiId.addFieldsPopup', 
+								icon: "plus", 
+								type: "icon", 
+								width: 150,
+								click:function() {
+									PopupNewDataField.show(this.$view);
+								}
+							},
+							{ 
+								view: 'button', 
+								id: ids.buttonExport, 
+								label: labels.component.export, 
+		popup: 'self.webixUiId.exportDataPopup', 
+								icon: "file-o", 
+								type: "icon", 
+								width: 90 
+							}
+						]
+					},
+											// {
+											// 	view: "datatable",
+											// 	id: ids.datatable,
+											// 	resizeColumn: true,
+											// 	resizeRow: true,
+											// 	prerender: false,
+											// 	editable: true,
+											// 	fixedRowHeight: false,
+											// 	editaction: "custom",
+											// 	select: "cell",
+											// 	dragColumn: true,
+											// 	on: {
+											// 		onBeforeSelect: function (data, preserve) {
+
+											// 			var itemNode = this.getItemNode({ row: data.row, column: data.column });
+
+											// 			var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+											// 			if (!column || column.length < 1) {
+											// 				console.log('System could not found this column data');
+											// 				return false;
+											// 			} else
+											// 				column = column[0];
+
+											// 			return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
+											// 		},
+											// 		onAfterSelect: function (data, prevent) {
+											// 			var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
+											// 				fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+
+											// 			if (!fieldData || fieldData.length < 1) {
+											// 				console.log('System could not found this column data');
+											// 				return false;
+											// 			} else
+											// 				fieldData = fieldData[0];
+
+											// 			// Custom update data
+											// 			if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
+											// 				return false;
+
+											// 			// Normal update data
+											// 			this.editCell(data.row, data.column);
+											// 		},
+											// 		onCheck: function (row, col, val) { // Update checkbox data
+											// 			var item = $$(self.webixUiId.objectDatatable).getItem(row);
+
+											// 			self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
+											// 				.fail(function (err) {
+											// 					// Rollback
+											// 					item[col] = !val;
+											// 					$$(self.webixUiId.objectDatatable).updateItem(row, item);
+											// 					$$(self.webixUiId.objectDatatable).refresh(row);
+
+											// 					$$(self.webixUiId.objectDatatable).hideProgress();
+											// 				})
+											// 				.then(function (result) {
+											// 					$$(self.webixUiId.objectDatatable).hideProgress();
+											// 				});
+											// 		},
+											// 		onBeforeEditStop: function (state, editor) {
+											// 			var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
+
+											// 			if (!column || column.length < 1) return true;
+											// 			column = column[0];
+
+											// 			var passValidate = dataFieldsManager.validate(column, state.value);
+
+											// 			if (!passValidate) {
+											// 				$$(self.webixUiId.objectDatatable).editCancel();
+											// 			}
+
+											// 			return passValidate;
+											// 		},
+											// 		onAfterEditStop: function (state, editor, ignoreUpdate) {
+
+											// 			var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+											// 			self.updateRowData(state, editor, ignoreUpdate)
+											// 				.fail(function (err) { // Cached
+											// 					item[editor.column] = state.old;
+											// 					$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+											// 					$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+											// 					// TODO : Message
+
+											// 					$$(self.webixUiId.objectDatatable).hideProgress();
+											// 				})
+											// 				.then(function (result) {
+											// 					if (item) {
+											// 						item[editor.column] = state.value;
+
+											// 						if (result && result.constructor.name === 'Cached' && result.isUnsync())
+											// 							item.isUnsync = true;
+
+											// 						$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+											// 					}
+
+											// 					// TODO : Message
+
+											// 					$$(self.webixUiId.objectDatatable).hideProgress();
+											// 				});
+											// 		},
+											// 		onColumnResize: function (id, newWidth, oldWidth, user_action) {
+											// 			var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
+											// 			var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
+											// 			if (column && column[0])
+											// 				column[0].setWidth(newWidth);
+
+											// 			// if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
+											// 			// 	// For calculate/refresh row height
+											// 			// 	$$(self.webixUiId.objectDatatable).render();
+											// 			// }
+											// 		},
+											// 		onBeforeColumnDrag: function (sourceId, event) {
+											// 			if (sourceId === 'appbuilder_trash') // Remove column
+											// 				return false;
+											// 			else
+											// 				return true;
+											// 		},
+											// 		onBeforeColumnDrop: function (sourceId, targetId, event) {
+											// 			if (targetId === 'appbuilder_trash') // Remove column
+											// 				return false;
+
+											// 			if ($$(self.webixUiId.visibleButton).config.badge > 0) {
+											// 				webix.alert({
+											// 					title: self.labels.object.couldNotReorderField,
+											// 					ok: self.labels.common.ok,
+											// 					text: self.labels.object.couldNotReorderFieldDetail
+											// 				});
+
+											// 				return false;
+											// 			}
+											// 		},
+											// 		onAfterColumnDrop: function (sourceId, targetId, event) {
+											// 			self.reorderColumns();
+											// 		},
+											// 		onAfterColumnShow: function (id) {
+											// 			$$(self.webixUiId.visibleFieldsPopup).showField(id);
+											// 		},
+											// 		onAfterColumnHide: function (id) {
+											// 			$$(self.webixUiId.visibleFieldsPopup).hideField(id);
+											// 		}
+											// 	}
+											// },
+					{
+						cols: [
+							{
+								autowidth: true
+							},
+							{
+								view: "button",
+								id: ids.buttonRowNew,
+								value: labels.component.addNewRow,
+								width: 150,
+								align: 'right',
+								click: function () {
+		// TODO:
+									_logic.rowAdd();
+									// self.addNewRow({});
+								}
+							}
+						]
+					}
+				]
+
+
+
+
+			}
 		]
-	};
+	}
+		
 
 
 
@@ -4586,6 +5774,9 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 	var _init = function() {
 		// webix.extend($$(ids.form), webix.ProgressBar);
 
+
+
+		$$(ids.noSelection).show();
 	}
 
 
@@ -4594,16 +5785,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 	var _logic = {
 
 		
-		// /**
-		//  * @function formBusy
-		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
-		//  * progress.
-		//  */
-		// formBusy: function() {
 
-		// 	$$(ids.form).showProgress({ type: 'icon' });
-		// },
 
 
 		// /**
@@ -4624,6 +5806,26 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 		show:function() {
 
 			$$(ids.component).show();
+		},
+
+
+		/**
+		 * @function toolbarFilter
+		 *
+		 * Show the progress indicator to indicate a Form operation is in 
+		 * progress.
+		 */
+		toolbarFilter: function($view) {
+// self.refreshPopupData();
+// $$(self.webixUiId.filterFieldsPopup).show($view);
+console.error('TODO: button filterFields()');
+		},
+
+
+		toolbarSort:function($view) {
+// self.refreshPopupData();
+// $$(self.webixUiId.sortFieldsPopup).show($view);
+console.error('TODO: toolbarSort()');
 		}
 	}
 
@@ -4645,7 +5847,23 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 		 */
 		clearObjectWorkspace:function(){
 			
+			$$(ids.noSelection).show();
 console.error('TODO: clearObjectWorkspace()');
+		},
+
+
+		/**
+		 * @function populateObjectWorkspace()
+		 *
+		 * Initialize the Object Workspace with the provided ABObject.
+		 *
+		 * @param {ABObject} object  	current ABObject instance we are working with.
+		 */
+		populateObjectWorkspace: function(object) {
+
+			$$(ids.toolbar).show();
+			$$(ids.selectedObject).show();
+console.error('TODO: populateObjectWorkspace()!');
 		}
 
 	}
@@ -4663,7 +5881,453 @@ console.error('TODO: clearObjectWorkspace()');
 })
 
 /***/ }),
-/* 19 */
+/* 25 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__classes_ABFieldManager__ = __webpack_require__(11);
+
+/*
+ * ab_work_object_workspace_popupNewDataField
+ *
+ * Manage the Add New Data Field popup.
+ *
+ */
+
+
+
+
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	component: {
+
+		chooseType: L('ab.add_fields.chooseType', "*Choose field type..."),
+		label: L('ab.add_fields.label', "*Label"),
+		addNewField: L('ab.add_fields.addNewField', "*Add Column"),
+
+
+	}
+}
+
+
+var idBase = 'ab_work_object_workspace_popupNewDataField';
+OP.Component.extend(idBase, function(App) {
+
+	labels.common = App.labels;
+
+
+	// internal list of Webix IDs to reference our UI components.
+	
+	var ids = {
+		component: App.unique(idBase + '_component'),
+		types: App.unique(idBase + '_types'),
+		editDefinitions: App.unique(idBase+'_editDefinitions'),
+
+		buttonSave: App.unique(idBase+'_buttonSave'),
+		buttonCancel: App.unique(idBase+'_buttonCancel')
+	}
+
+
+
+
+
+	// Our webix UI definition:
+	var _ui = {
+		view:"popup",
+		id: ids.component,
+		modal: true,
+		maxHeight: 420,
+ready: function () {
+	console.error('ready() called!!!')
+	_logic.resetState();
+},
+		body: {
+			css: 'ab-add-fields-popup',
+			borderless: true,
+			width: 380,
+			paddingX: 17,
+			rows: [
+				{
+					view: "menu",
+					id: ids.types,
+					minWidth: 500,
+					autowidth: true,
+					data: [{
+						value: labels.component.chooseType,
+submenu: ['dataFieldsManager', '.getFieldMenuList()']
+					}],
+					click: function (id, ev, node) {
+						_logic.typeClick();
+						ev.preventDefault();
+					},
+					on: {
+						onMenuItemClick: function (id, ev, node) {
+							_logic.onMenuItemClick(id);
+							ev.preventDefault();
+						}
+					}
+				},
+				{ height: 10 },
+				{ 
+					view:'multiview',
+					id: ids.editDefinitions,
+					// NOTE: can't leave this an empty []. We redefine this value later.
+					cells: [ { id:'del_me', view:'label', label:'edit definition here' } ] 
+				},
+				{ height: 10 },
+				{
+					cols: [
+						{
+							view: "button", 
+							id: ids.buttonSave, 
+							label: labels.component.addNewField, 
+							type: "form", width: 120, click: function () {
+								_logic.buttonSave();
+							}
+						},
+						{
+							view: "button", 
+							value: labels.common.cancel, 
+							width: 100, click: function () {
+								_logic.buttonCancel();
+							}
+						}
+					]
+				}
+			]
+		},
+		on: {
+			onBeforeShow: function () {
+				_logic.resetState();
+			},
+			onShow: function () {
+				_logic.onShow();
+			},
+			onHide: function () {
+				_logic.resetState();
+			}
+		}
+	}
+		
+
+	var _objectHash = {};		// 'name' => ABFieldXXX object
+	var _componentHash = {};	// 'name' => ABFieldXXX ui component
+	var _currentEditor = null;
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+		var Fields = __WEBPACK_IMPORTED_MODULE_1__classes_ABFieldManager__["a" /* default */].allFields();
+
+
+		//// we need to load a submenu entry and an editor definition for each 
+		//// of our Fields
+		
+
+		
+		var submenus = [];	// Create the submenus for our Data Fields:
+		var defaultEditorComponent = null;	// choose the 1st entry for the default editor.
+		var newEditorList = {
+			id:ids.editDefinitions,
+			rows:[]
+		}
+
+		Fields.forEach(function(F){
+
+			// add a submenu for the fields multilingual key
+			submenus.push( F.menuName() );
+
+
+			// Add the Field's definition editor here:
+			var editorComponent = F.propertiesComponent(App);
+			if (!defaultEditorComponent) {
+				defaultEditorComponent = editorComponent;
+			}
+			newEditorList.rows.push(editorComponent.ui);
+
+
+			_objectHash[F.menuName()] = F;
+			_componentHash[F.menuName()] = editorComponent;
+
+		})
+
+
+		// the submenu button has a placeholder we need to remove and update
+		// with one that has all our submenus in it.
+		var firstID = $$(ids.types).getFirstId();
+		$$(ids.types).updateItem(firstID, {
+			value: labels.component.chooseType,
+			submenu: submenus
+		}) 
+
+		// now remove the 'del_me' definition editor placeholder.
+		webix.ui(newEditorList, $$(ids.editDefinitions));
+
+
+		defaultEditorComponent.show(); // show the default editor
+		_currentEditor = defaultEditorComponent;
+		
+
+		// $$(ids.editDefinitions).show();
+
+// $$(ids.editDefinitions).cells() // define the edit Definitions here.
+	}
+
+
+
+	// our internal business logic 
+	var _logic = {
+
+		
+		buttonCancel:function() {
+
+			_logic.resetState();
+
+			// clear all editors:
+			for (var c in _componentHash) {
+				_componentHash[c].clear();
+			}
+
+			// hide this popup.
+			$$(ids.component).hide();
+		},
+
+
+		buttonSave:function() {
+
+// var self = this;
+
+			$$(ids.buttonSave).disable();
+
+// var base = self.getTopParentView(),
+// 	dataTable = base.dataTable,
+// 	fieldInfo = dataFieldsManager.getSettings(base.fieldName);
+
+// if (!dataTable) {
+// 	webix.message({ type: "error", text: labels.add_fields.registerTableWarning });
+// 	self.enable();
+// 	return;
+// }
+
+// if (!fieldInfo) {
+// 	webix.alert({
+// 		title: 'Field info error',
+// 		text: 'System could not get this field information ',
+// 		ok: labels.common.ok
+// 	});
+// 	self.enable();
+// 	return;
+// }
+
+
+///// LEFT OFF:
+// step through saving process and implement various methods along the way:
+
+			var editor = _currentEditor;
+			if (editor) {
+
+				// the editor can define some basic form validations.
+				if (editor.isValid()) {
+
+					var values = editor.values();
+					var newField = _currentObject.newField(values);
+
+
+					// newField can check for more validations:
+					if (newField.isValid()) {
+
+						newField.save()
+						.then(()=>{
+
+							$$(ids.buttonSave).enable();
+						})
+						.catch((err) => {
+
+							$$(ids.buttonSave).enable();
+						})
+					}
+				}
+
+			}  else {
+
+				OP.Dialog.Alert({
+					title: '! Could not find the current editor.',
+					text: 'go tell a developer about this.'
+				})
+				$$(ids.buttonSave).enable();
+			}
+			
+// if (!inputValidator.validateFormat(fieldInfo.name)) {
+// 	self.enable();
+// 	return;
+// }
+
+// // Validate duplicate field name
+// var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
+// if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
+// 	webix.alert({
+// 		title: labels.add_fields.duplicateFieldTitle,
+// 		text: labels.add_fields.duplicateFieldDescription,
+// 		ok: labels.common.ok
+// 	});
+// 	this.enable();
+// 	return;
+// }
+
+// if (fieldInfo.weight == null)
+// 	fieldInfo.weight = dataTable.config.columns.length;
+
+// // Call callback function
+// if (base.saveFieldCallback && base.fieldName) {
+// 	base.saveFieldCallback(base.fieldName, fieldInfo)
+// 		.then(function () {
+// 			self.enable();
+// 			base.resetState();
+// 			base.hide();
+// 		});
+// }
+
+
+		},
+
+
+
+		// /**
+		//  * @function formReady()
+		//  *
+		//  * remove the busy indicator from the form.
+		//  */
+		// formReady: function() {
+		// 	$$(ids.form).hideProgress();
+		// },
+
+
+		/**
+		 * @function onMenuItemClick
+		 * swap the editor view to match the data field selected in the menu.
+		 *
+		 * @param {string} name  the menuName() of the submenu that was selected.
+		 */ 
+		onMenuItemClick: function (name) {
+
+			// note, the submenu returns the Field.menuName() values.
+			// we use that to lookup the Field here:
+			var editor = _componentHash[name];
+			if (editor) {
+				editor.show();
+				_currentEditor = editor;
+			} else {
+
+				// most likely they clicked on the menu button itself.
+				// do nothing.
+
+				// OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
+			}
+
+		},
+
+
+
+		onShow: function() {
+// if (!AD.comm.isServerReady()) {
+// 	this.getTopParentView().hide();
+
+// 	webix.alert({
+// 		title: labels.add_fields.cannotUpdateFields,
+// 		text: labels.add_fields.waitRestructureObjects,
+// 		ok: labels.common.ok
+// 	});
+// }
+// else { // Set default field type
+// 	this.showFieldData('string');
+// }
+console.error('TODO: onShow();')
+		},
+
+
+
+		resetState: function() {
+
+			// add mode :  change button text to 'Add'
+			// show the default editor
+console.error('TODO: resetState()');
+		},
+
+
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		},
+
+
+		/**
+		 * @function toolbarFilter
+		 *
+		 * Show the progress indicator to indicate a Form operation is in 
+		 * progress.
+		 */
+		toolbarFilter: function($view) {
+// self.refreshPopupData();
+// $$(self.webixUiId.filterFieldsPopup).show($view);
+console.error('TODO: button filterFields()');
+		},
+
+
+
+		typeClick:function() {
+			// NOTE: for functional testing we need a way to display the submenu 
+			// (functional tests don't do .hover very well)
+			// so this routine is to enable .click() to show the submenu.
+
+			var subMenuId = $$(ids.types).config.data[0].submenu;
+
+			// #HACK Sub-menu popup does not render on initial
+			// Force it to render popup by use .getSubMenu()
+			if (typeof subMenuId != 'string') {
+				$$(ids.types).getSubMenu($$(ids.types).config.data[0].id);
+				subMenuId = $$(ids.types).config.data[0].submenu;
+			}
+
+			if ($$(subMenuId))
+				$$(subMenuId).show();
+		}
+	}
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component  
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})
+
+/***/ }),
+/* 26 */
 /***/ (function(module, exports) {
 
 //
@@ -4695,7 +6359,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 		
 
 /***/ }),
-/* 20 */
+/* 27 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4780,7 +6444,7 @@ OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
 /* harmony default export */ __webpack_exports__["a"] = { key: ComponentKey };
 
 /***/ }),
-/* 21 */
+/* 28 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4864,7 +6528,7 @@ OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
 /* harmony default export */ __webpack_exports__["a"] = { key: ComponentKey };
 
 /***/ }),
-/* 22 */
+/* 29 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
