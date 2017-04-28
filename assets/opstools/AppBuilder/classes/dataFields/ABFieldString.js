@@ -69,21 +69,31 @@ var ABFieldStringComponent = function(App) {
 
 	//// NOTE: we merge in the common headers below.
 	var _ui = {
+		view:'form',
 		id: ids.component,
-		rows: [
+		autoheight:true,
+		borderless:true,
+		elements: [
 			{
 				view: "text",
 				id: ids.textDefault,
+				name:'textDefault',
 				placeholder: labels.component.defaultText
 			},
 			{
 				view: "checkbox",
 				id: ids.supportMultilingual,
+				name:'multilingual',
 				labelRight: labels.component.supportMultilingual,
 				labelWidth: 0,
 				value: true
 			}
-		]
+		],
+
+		rules:{
+			'label':webix.rules.isNotEmpty,
+			'columnName':webix.rules.isNotEmpty
+		}
 	}
 
 
@@ -113,6 +123,7 @@ var ABFieldStringComponent = function(App) {
 				component.setValue(componentDefaults[f]);
 			}
 
+			$$(ids.component).clearValidation();
 		},
 
 
@@ -123,8 +134,8 @@ var ABFieldStringComponent = function(App) {
 		 */
 		isValid: function () {
 
-			
-console.error('TODO: .isValid()');
+			return $$(ids.component).validate();
+
 		},
 
 
@@ -140,16 +151,17 @@ console.error('TODO: .isValid()');
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		labelOnChange: function (newVal, oldVal) {
+		// labelOnChange: function (newVal, oldVal) {
 
-			// When the Label value changes, update our Column Name value 
-			// to match.
+		// 	// When the Label value changes, update our Column Name value 
+		// 	// to match.
 
-			if (newVal != oldVal &&
-				oldVal == $$(ids.columnName).getValue()) {
-				$$(ids.columnName).setValue(newVal);
-			}
-		},
+		// 	oldVal = oldVal || '';
+		// 	if (newVal != oldVal &&
+		// 		oldVal == $$(ids.columnName).getValue()) {
+		// 		$$(ids.columnName).setValue(newVal);
+		// 	}
+		// },
 
 
 		/*
@@ -170,6 +182,7 @@ console.error('TODO: .populate()');
 		 * show this component.
 		 */
 		show: function() {
+			$$(ids.component).clearValidation();
 			$$(ids.component).show();
 		},
 
@@ -178,10 +191,14 @@ console.error('TODO: .populate()');
 		 * @function values
 		 *
 		 * return the values for this form.
-Question: should this return an ABFieldString instance?
+		 * @return {obj}  
 		 */
 		values: function () {
-console.error('TODO: .values()');
+
+			var values = $$(ids.component).getValues();
+			values.type = ABFieldString.type();
+
+			return values;
 		},
 
 	}
@@ -190,7 +207,7 @@ console.error('TODO: .values()');
 	// get the common UI headers entries, and insert them above ours here:
 	// NOTE: put this here so that _logic is defined.
 	var commonUI = ABField.definitionEditor(App, ids, _logic, ABFieldString);
-	_ui.rows = commonUI.rows.concat(_ui.rows);
+	_ui.elements = commonUI.rows.concat(_ui.elements);
 
 
 	// return the current instance of this component:
@@ -216,9 +233,17 @@ console.error('TODO: .values()');
 
 class ABFieldString extends ABField {
 
-    constructor(attributes, application) {
-    	super();
+    constructor(values, object) {
+    	super(values, object);
 
+
+    	this.id = values.id;
+    	this.type = values.type || ABFieldString.type();
+    	
+    	this.textDefault = values.textDefault || '';
+    	this.supportMultilingual = values.supportMultilingual || true;
+
+ 		this.object  = object;
   	}
 
 
@@ -275,8 +300,12 @@ class ABFieldString extends ABField {
 
 	isValid() {
 
-		var errors = null;
+		var errors = super.isValid();
 
+		// errors = OP.Form.validationError({
+		// 	name:'columnName',
+		// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
+		// }, errors);
 
 		return errors;
 	} 
@@ -291,55 +320,6 @@ class ABFieldString extends ABField {
 	/// ABApplication data methods
 
 
-	/**
-	 * @method destroy()
-	 *
-	 * destroy the current instance of ABApplication
-	 *
-	 * also remove it from our _AllApplications
-	 * 
-	 * @return {Promise} 
-	 */
-	destroy () {
-		if (this.id) {
-console.error('TODO: ABField.destroy()');
-
-		}
-	}
-
-
-	/**
-	 * @method save()
-	 *
-	 * persist this instance of ABObject with it's parent ABApplication
-	 *
-	 * 
-	 * @return {Promise} 	
-	 *						.resolve( {this} )
-	 */
-	save () {
-
-		return new Promise(
-			(resolve, reject) => {
-
-				// if this is our initial save()
-				if (!this.id) {
-
-					this.id = OP.Util.uuid();	// setup default .id
-					this.label = this.label || this.name;
-					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
-				}
-
-				this.application.objectSave(this)
-				.then(() => {
-					resolve(this);
-				})
-				.catch(function(err){
-					reject(err);
-				})
-			}
-		)
-	}
 
 
 	/**
@@ -355,18 +335,15 @@ console.error('TODO: ABField.destroy()');
 	 */
 	toObj () {
 
-		OP.Multilingual.unTranslate(this, this, ["label"]);
+		var obj = super.toObj();
 
-		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
+		obj.id = this.id;
+		obj.type = this.type;
+		obj.textDefault = this.textDefault ;
+    	obj.supportMultilingual = this.supportMultilingual;
 
-		return {
 
-		}
+		return obj;
 	}
 
 

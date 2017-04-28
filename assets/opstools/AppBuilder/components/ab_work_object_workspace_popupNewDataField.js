@@ -55,7 +55,8 @@ OP.Component.extend(idBase, function(App) {
 		view:"popup",
 		id: ids.component,
 		modal: true,
-		maxHeight: 420,
+		autoheight:true,
+		// maxHeight: 420,
 ready: function () {
 	console.error('ready() called!!!')
 	_logic.resetState();
@@ -132,6 +133,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 	var _objectHash = {};		// 'name' => ABFieldXXX object
 	var _componentHash = {};	// 'name' => ABFieldXXX ui component
 	var _currentEditor = null;
+	var _currentObject = null;
 
 	// Our init() function for setting up our UI
 	var _init = function() {
@@ -238,8 +240,6 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 // }
 
 
-///// LEFT OFF:
-// step through saving process and implement various methods along the way:
 
 			var editor = _currentEditor;
 			if (editor) {
@@ -248,22 +248,30 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 				if (editor.isValid()) {
 
 					var values = editor.values();
-					var newField = _currentObject.newField(values);
+					var newField = _currentObject.fieldNew(values);
 
 
 					// newField can check for more validations:
-					if (newField.isValid()) {
+					var errors = newField.isValid();
+					if (errors) {
+						OP.Form.isValidationError(errors, $$(editor.ui.id));
+						$$(ids.buttonSave).enable();
+					} else {
 
 						newField.save()
 						.then(()=>{
 
 							$$(ids.buttonSave).enable();
+							_logic.hide();
+							_logic.callbacks.onSave(newField)
 						})
 						.catch((err) => {
-
 							$$(ids.buttonSave).enable();
 						})
 					}
+
+				} else {
+					$$(ids.buttonSave).enable();
 				}
 
 			}  else {
@@ -309,15 +317,16 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 		},
 
 
+		callbacks:{
+			onCancel: function() { console.warn('NO onCancel()!') },
+			onSave  : function(field) { console.warn('NO onSave()!') },
+		},
 
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+
+
+		hide:function() {
+			$$(ids.component).hide();
+		},
 
 
 		/**
@@ -377,23 +386,11 @@ console.error('TODO: resetState()');
 		 * @function show()
 		 *
 		 * Show this component.
+		 * @param {obj} $view  the webix.$view to hover the popup around.
 		 */
-		show:function() {
+		show:function($view) {
 
-			$$(ids.component).show();
-		},
-
-
-		/**
-		 * @function toolbarFilter
-		 *
-		 * Show the progress indicator to indicate a Form operation is in 
-		 * progress.
-		 */
-		toolbarFilter: function($view) {
-// self.refreshPopupData();
-// $$(self.webixUiId.filterFieldsPopup).show($view);
-console.error('TODO: button filterFields()');
+			$$(ids.component).show($view);
 		},
 
 
@@ -422,6 +419,9 @@ console.error('TODO: button filterFields()');
 	// Expose any globally accessible Actions:
 	var _actions = {
 
+		populateObjectPopupAddDataField: function(object) {
+			_currentObject = object;
+		}
 
 	}
 

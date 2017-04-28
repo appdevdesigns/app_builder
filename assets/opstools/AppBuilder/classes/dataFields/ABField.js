@@ -16,8 +16,15 @@ function L(key, altText) {
 
 export default class ABField {
 
-    constructor(attributes, application) {
+    constructor(values, object) {
 
+    	this.label = values.label || '';
+    	this.columnName = values.columnName || '';
+    	this.showIcon = values.showIcon || true;
+
+
+    	// label is a multilingual value:
+    	OP.Multilingual.translate(this, this, ['label']);
 
   	}
 
@@ -71,6 +78,8 @@ export default class ABField {
   		// setup our default labelOnChange functionality:
   		var onChange = function (newVal, oldVal) {
 
+  			oldVal = oldVal || '';
+
 			if (newVal != oldVal &&
 				oldVal == $$(ids.columnName).getValue()) {
 				$$(ids.columnName).setValue(newVal);
@@ -93,6 +102,7 @@ export default class ABField {
 				{
 					view: "text",
 					id: ids.label,
+					name:'label',
 					label: App.labels.dataFieldHeaderLabel, 
 					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
 					labelWidth: 50,
@@ -106,6 +116,7 @@ export default class ABField {
 				{
 					view: "text",
 					id: ids.columnName,
+					name:'columnName',
 					label: App.labels.dataFieldColumnName, // 'Name',
 					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
 					labelWidth: App.config.labelWidthSmall
@@ -118,6 +129,7 @@ export default class ABField {
 				{
 					view: 'checkbox',
 					id: ids.showIcon, 
+					name:'showIcon',
 					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
 					labelWidth: 0,
 					value:true
@@ -129,12 +141,27 @@ export default class ABField {
   	}
 
 
-//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
 
+
+  	/* 
+  	 * @method isValid
+  	 * check the current values to make sure they are valid.
+  	 * Here we check the default values provided by ABField.
+  	 *
+  	 * @return null or [{OP.Form.validationError()}] objects.
+  	 */
 	isValid() {
 
 		var errors = null;
 
+		// .columnName must be unique among fileds on the same object
+		var isNameUnique = (this.object.fields((f)=>{ return f.columnName.toLowerCase() == this.columnName.toLowerCase(); }).length == 0);
+		if (!isNameUnique) {
+			errors = OP.Form.validationError({
+				name:'columnName',
+				message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
+			}, errors);
+		}
 
 		return errors;
 	} 
@@ -169,26 +196,22 @@ console.error('TODO: ABField.destroy()');
 	/**
 	 * @method save()
 	 *
-	 * persist this instance of ABObject with it's parent ABApplication
+	 * persist this instance of ABField with it's parent ABObject
 	 *
 	 * 
 	 * @return {Promise} 	
 	 *						.resolve( {this} )
 	 */
 	save () {
-
 		return new Promise(
 			(resolve, reject) => {
 
 				// if this is our initial save()
 				if (!this.id) {
-
 					this.id = OP.Util.uuid();	// setup default .id
-					this.label = this.label || this.name;
-					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
 				}
 
-				this.application.objectSave(this)
+				this.object.fieldSave(this)
 				.then(() => {
 					resolve(this);
 				})
@@ -203,27 +226,20 @@ console.error('TODO: ABField.destroy()');
 	/**
 	 * @method toObj()
 	 *
-	 * properly compile the current state of this ABApplication instance
+	 * properly compile the current state of this ABField instance
 	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to 
-	 * update that from all the current values of our child fields.
 	 *
 	 * @return {json} 
 	 */
 	toObj () {
 
+		// store "label" in our translations
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
-
 		return {
-
+			columnName: this.columnName,
+			showIcon: this.showIcon,
+			translations: this.translations
 		}
 	}
 

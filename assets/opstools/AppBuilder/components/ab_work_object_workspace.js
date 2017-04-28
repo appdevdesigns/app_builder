@@ -77,9 +77,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 
 
 
-	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
-	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
-	PopupNewDataFieldComponent.init();
+
 
 
 
@@ -110,7 +108,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: "button",
 								id: ids.buttonFieldsVisible, 
 								label: labels.component.hideFields, 
-		popup: 'self.webixUiId.visibleFieldsPopup', 
+popup: 'self.webixUiId.visibleFieldsPopup', 
 								icon: "columns", 
 								type: "icon", 
 								width: 120, 
@@ -144,7 +142,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: 'button', 
 								id: ids.buttonFrozen, 
 								label: labels.component.frozenColumns, 
-		popup: 'self.webixUiId.frozenColumnsPopup', 
+popup: 'self.webixUiId.frozenColumnsPopup', 
 								icon: "table", 
 								type: "icon", 
 								width: 150, 
@@ -154,7 +152,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: 'button', 
 								id: ids.buttonLabel,
 								label: labels.component.defineLabel, 
-		popup: 'self.webixUiId.defineLabelPopup', 
+popup: 'self.webixUiId.defineLabelPopup', 
 								icon: "newspaper-o", 
 								type: "icon", 
 								width: 130 
@@ -170,19 +168,18 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: 'button', 
 								id: ids.buttonAddField, 
 								label: labels.component.addFields, 
-// popup: 'self.webixUiId.addFieldsPopup', 
 								icon: "plus", 
 								type: "icon", 
 								width: 150,
 								click:function() {
-									PopupNewDataField.show(this.$view);
+									_logic.toolbarAddFields(this.$view);
 								}
 							},
 							{ 
 								view: 'button', 
 								id: ids.buttonExport, 
 								label: labels.component.export, 
-		popup: 'self.webixUiId.exportDataPopup', 
+popup: 'self.webixUiId.exportDataPopup', 
 								icon: "file-o", 
 								type: "icon", 
 								width: 90 
@@ -353,9 +350,6 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 					}
 				]
 
-
-
-
 			}
 		]
 	}
@@ -402,6 +396,14 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 		},
 
 
+		fieldCreated:function(field) {
+console.error('TODO: !! ReREnder the dataTable with current Object!');
+		},
+
+		toolbarAddFields: function($view) {
+			PopupNewDataField.show($view);
+		},
+
 		/**
 		 * @function toolbarFilter
 		 *
@@ -421,6 +423,15 @@ console.error('TODO: button filterFields()');
 console.error('TODO: toolbarSort()');
 		}
 	}
+
+
+
+	// NOTE: declare this after _logic  for the callbacks:
+	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
+	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
+	PopupNewDataFieldComponent.init({
+		onSave:_logic.fieldCreated			// be notified when a new Field is created
+	});
 
 
 
@@ -456,7 +467,8 @@ console.error('TODO: clearObjectWorkspace()');
 
 			$$(ids.toolbar).show();
 			$$(ids.selectedObject).show();
-console.error('TODO: populateObjectWorkspace()!');
+
+			App.actions.populateObjectPopupAddDataField(object);
 		}
 
 	}

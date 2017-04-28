@@ -14,7 +14,7 @@ import ABFieldString from "./dataFields/ABFieldString"
  * A type => ABField  hash of the different ABFields available.
  */
 var Fields = {};
-Fields[ABFieldString.type] = ABFieldString;
+Fields[ABFieldString.type()] = ABFieldString;
 
 
 
@@ -22,6 +22,11 @@ Fields[ABFieldString.type] = ABFieldString;
 export default  {
 
 
+	/*
+	 * @function allFields
+	 * return all the currently defined ABFields in an array.
+	 * @return [{ABField},...]
+	 */
 	allFields: function() {
 		var fields = [];
 		for (var f in Fields) {
@@ -31,22 +36,12 @@ export default  {
 	},
 
 
-	getField:function(type) {
-		return Fields[type];
-	},
-
-
-
-	fieldFromName:function(name) {
-		return this.allFields().filter(function(f){ return f.menuName() == name; })[0];
-	},
-
-
-///// LEFT OFF:
-// 
-
+	/*
+	 * @function newField
+	 * return an instance of an ABField based upon the values.type value.
+	 * @return {ABField}
+	 */
 	newField: function (values, object) {
-
 
 		if (values.type) {
 			return new Fields[values.type](values, object);
@@ -56,11 +51,6 @@ export default  {
 		}
 
 	}
-
-
-
-
-
 
 
 }

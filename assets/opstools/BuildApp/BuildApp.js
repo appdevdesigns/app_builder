@@ -74,7 +74,7 @@
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication__ = __webpack_require__(26);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__data_ABApplication___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__data_ABApplication__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ABObject__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ABObject__ = __webpack_require__(3);
 
 
 
@@ -474,7 +474,7 @@ class ABApplication {
 
 
 	/**
-	 * @method newObject()
+	 * @method objectNew()
 	 *
 	 * return an instance of a new (unsaved) ABObject that is tied to this 
 	 * ABApplication.
@@ -491,15 +491,12 @@ class ABApplication {
 
 
 	/**
-	 * @method saveObject()
+	 * @method objectSave()
 	 *
-	 * return an instance of a new (unsaved) ABObject that is tied to this 
-	 * ABApplication.
+	 * persist the current ABObject in our list of ._objects.
 	 *
-	 * NOTE: this new object is not included in our this.objects until a .save() 
-	 * is performed on the object.
-	 *
-	 * @return {ABObject} 	
+	 * @param {ABObject} object 
+	 * @return {Promise} 	
 	 */
 	objectSave( object ) {
 		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
@@ -520,11 +517,11 @@ class ABApplication {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__form__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__multilingual__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__config_config__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__form__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__multilingual__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__util__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__config_config__ = __webpack_require__(5);
 
 /**
  * @class AD_Client
@@ -677,7 +674,74 @@ class ABApplication {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__ = __webpack_require__(13);
+/* 
+ * ABFieldManager
+ * 
+ * An interface for managing the different ABFields available in our AppBuilder.
+ *
+ */
+
+
+
+
+
+/* 
+ * Fields
+ * A type => ABField  hash of the different ABFields available.
+ */
+var Fields = {};
+Fields[__WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__["a" /* default */].type()] = __WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__["a" /* default */];
+
+
+
+
+/* harmony default export */ __webpack_exports__["a"] = {
+
+
+	/*
+	 * @function allFields
+	 * return all the currently defined ABFields in an array.
+	 * @return [{ABField},...]
+	 */
+	allFields: function() {
+		var fields = [];
+		for (var f in Fields) {
+			fields.push(Fields[f]);
+		}
+		return fields;
+	},
+
+
+	/*
+	 * @function newField
+	 * return an instance of an ABField based upon the values.type value.
+	 * @return {ABField}
+	 */
+	newField: function (values, object) {
+
+		if (values.type) {
+			return new Fields[values.type](values, object);
+		} else {
+
+//// TODO: what to do here?
+		}
+
+	}
+
+
+};
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ABFieldManager__ = __webpack_require__(2);
+
+
 
 
 
@@ -733,11 +797,11 @@ class ABObject {
 
 	  	
 	  	// import all our ABObjects
-	  	// var newFields = [];
-	  	// (attributes.json.objects || []).forEach((obj) => {
-	  	// 	newObjects.push( new ABObject(obj) );
-	  	// })
-	  	// this.fields = newFields;
+	  	var newFields = [];
+	  	(attributes.fields || []).forEach((field) => {
+	  		newFields.push( this.fieldNew(field) );
+	  	})
+	  	this._fields = newFields;
 
 
 	  	// link me to my parent ABApplication
@@ -863,11 +927,11 @@ console.error('TODO: ABObject.destroy()');
 		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this, ["label"]);
 
 		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
+		var currFields = [];
+		this._fields.forEach((obj) => {
+			currFields.push(obj.toObj())
+		})
+
 
 		return {
 			id: 			this.id,
@@ -877,7 +941,7 @@ console.error('TODO: ABObject.destroy()');
     		urlPath: 		this.urlPath,
     		importFromObject: this.importFromObject,
     		translations: 	this.translations,
-    		fields: 	 	[] 
+    		fields: 	 	currFields 
 		}
 	}
 
@@ -896,26 +960,53 @@ console.error('TODO: ABObject.destroy()');
 	/**
 	 * @method fields()
 	 *
-	 * return a DataCollection of all the ABFields for this ABObject.
+	 * return an array of all the ABFields for this ABObject.
 	 *
-	 * @return {Promise} 	
+	 * @return {array} 	
 	 */
-	fields () {
-		return new Promise( 
-			(resolve, reject) => {
+	fields (filter) {
 
+		filter = filter || function() {return true; };
 
-				resolve(toDC(this.feilds));
-
-			}
-		);
+		return this._fields.filter(filter);
 	}
 
 
 
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this 
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save() 
+	 * is performed on the field.
+	 *
+	 * @return {ABField} 	
+	 */
 	fieldNew ( values ) {
 		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
-		return ABFieldManager.newField( values );
+		return __WEBPACK_IMPORTED_MODULE_1__ABFieldManager__["a" /* default */].newField( values, this );
+	}
+
+
+
+	/**
+	 * @method fieldSave()
+	 *
+	 * save the given ABField in our ._fields array and persist the current 
+	 * values.
+	 *
+	 * @param {ABField} field The instance of the field to save.
+	 * @return {Promise} 	
+	 */
+	fieldSave( field ) {
+		var isIncluded = (this.fields(function(o){ return o.id == field.id }).length > 0);
+		if (!isIncluded) {
+			this._fields.push(field);
+		}
+
+		return this.save();
 	}
 
 
@@ -925,7 +1016,7 @@ console.error('TODO: ABObject.destroy()');
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1078,12 +1169,12 @@ OP.Component.extend('ab', function(App) {
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__configBrowser__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__configMobile__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__configBrowser__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__configMobile__ = __webpack_require__(7);
 
 /**
  * @class config
@@ -1104,7 +1195,7 @@ OP.Component.extend('ab', function(App) {
 };
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1132,7 +1223,7 @@ OP.Component.extend('ab', function(App) {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1160,7 +1251,7 @@ OP.Component.extend('ab', function(App) {
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1305,7 +1396,7 @@ OP.Component.extend('ab', function(App) {
 };
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1654,7 +1745,7 @@ class OPModel {
             }
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1781,7 +1872,7 @@ class OPModel {
 };
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1791,80 +1882,6 @@ class OPModel {
 	uuid: AD.util.uuid
 	
 };
-
-/***/ }),
-/* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__ = __webpack_require__(13);
-/* 
- * ABFieldManager
- * 
- * An interface for managing the different ABFields available in our AppBuilder.
- *
- */
-
-
-
-
-
-/* 
- * Fields
- * A type => ABField  hash of the different ABFields available.
- */
-var Fields = {};
-Fields[__WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__["a" /* default */].type] = __WEBPACK_IMPORTED_MODULE_0__dataFields_ABFieldString__["a" /* default */];
-
-
-
-
-/* harmony default export */ __webpack_exports__["a"] = {
-
-
-	allFields: function() {
-		var fields = [];
-		for (var f in Fields) {
-			fields.push(Fields[f]);
-		}
-		return fields;
-	},
-
-
-	getField:function(type) {
-		return Fields[type];
-	},
-
-
-
-	fieldFromName:function(name) {
-		return this.allFields().filter(function(f){ return f.menuName() == name; })[0];
-	},
-
-
-///// LEFT OFF:
-// 
-
-	newField: function (values, object) {
-
-
-		if (values.type) {
-			return new Fields[values.type](values, object);
-		} else {
-
-//// TODO: what to do here?
-		}
-
-	}
-
-
-
-
-
-
-
-};
-
 
 /***/ }),
 /* 12 */
@@ -1890,8 +1907,15 @@ function L(key, altText) {
 
 class ABField {
 
-    constructor(attributes, application) {
+    constructor(values, object) {
 
+    	this.label = values.label || '';
+    	this.columnName = values.columnName || '';
+    	this.showIcon = values.showIcon || true;
+
+
+    	// label is a multilingual value:
+    	__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.translate(this, this, ['label']);
 
   	}
 
@@ -1917,6 +1941,7 @@ class ABField {
 			component.setValue(defaultValues[f]);
 		}
   	}
+
 
 	/**
 	 * @function definitionEditor
@@ -1944,6 +1969,8 @@ class ABField {
   		// setup our default labelOnChange functionality:
   		var onChange = function (newVal, oldVal) {
 
+  			oldVal = oldVal || '';
+
 			if (newVal != oldVal &&
 				oldVal == $$(ids.columnName).getValue()) {
 				$$(ids.columnName).setValue(newVal);
@@ -1966,6 +1993,7 @@ class ABField {
 				{
 					view: "text",
 					id: ids.label,
+					name:'label',
 					label: App.labels.dataFieldHeaderLabel, 
 					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
 					labelWidth: 50,
@@ -1979,6 +2007,7 @@ class ABField {
 				{
 					view: "text",
 					id: ids.columnName,
+					name:'columnName',
 					label: App.labels.dataFieldColumnName, // 'Name',
 					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
 					labelWidth: App.config.labelWidthSmall
@@ -1991,6 +2020,7 @@ class ABField {
 				{
 					view: 'checkbox',
 					id: ids.showIcon, 
+					name:'showIcon',
 					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
 					labelWidth: 0,
 					value:true
@@ -2002,12 +2032,27 @@ class ABField {
   	}
 
 
-//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
 
+
+  	/* 
+  	 * @method isValid
+  	 * check the current values to make sure they are valid.
+  	 * Here we check the default values provided by ABField.
+  	 *
+  	 * @return null or [{OP.Form.validationError()}] objects.
+  	 */
 	isValid() {
 
 		var errors = null;
 
+		// .columnName must be unique among fileds on the same object
+		var isNameUnique = (this.object.fields((f)=>{ return f.columnName.toLowerCase() == this.columnName.toLowerCase(); }).length == 0);
+		if (!isNameUnique) {
+			errors = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Form.validationError({
+				name:'columnName',
+				message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
+			}, errors);
+		}
 
 		return errors;
 	} 
@@ -2042,26 +2087,22 @@ console.error('TODO: ABField.destroy()');
 	/**
 	 * @method save()
 	 *
-	 * persist this instance of ABObject with it's parent ABApplication
+	 * persist this instance of ABField with it's parent ABObject
 	 *
 	 * 
 	 * @return {Promise} 	
 	 *						.resolve( {this} )
 	 */
 	save () {
-
 		return new Promise(
 			(resolve, reject) => {
 
 				// if this is our initial save()
 				if (!this.id) {
-
 					this.id = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Util.uuid();	// setup default .id
-					this.label = this.label || this.name;
-					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
 				}
 
-				this.application.objectSave(this)
+				this.object.fieldSave(this)
 				.then(() => {
 					resolve(this);
 				})
@@ -2076,27 +2117,20 @@ console.error('TODO: ABField.destroy()');
 	/**
 	 * @method toObj()
 	 *
-	 * properly compile the current state of this ABApplication instance
+	 * properly compile the current state of this ABField instance
 	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to 
-	 * update that from all the current values of our child fields.
 	 *
 	 * @return {json} 
 	 */
 	toObj () {
 
+		// store "label" in our translations
 		__WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Multilingual.unTranslate(this, this, ["label"]);
 
-		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
-
 		return {
-
+			columnName: this.columnName,
+			showIcon: this.showIcon,
+			translations: this.translations
 		}
 	}
 
@@ -2194,21 +2228,31 @@ var ABFieldStringComponent = function(App) {
 
 	//// NOTE: we merge in the common headers below.
 	var _ui = {
+		view:'form',
 		id: ids.component,
-		rows: [
+		autoheight:true,
+		borderless:true,
+		elements: [
 			{
 				view: "text",
 				id: ids.textDefault,
+				name:'textDefault',
 				placeholder: labels.component.defaultText
 			},
 			{
 				view: "checkbox",
 				id: ids.supportMultilingual,
+				name:'multilingual',
 				labelRight: labels.component.supportMultilingual,
 				labelWidth: 0,
 				value: true
 			}
-		]
+		],
+
+		rules:{
+			'label':webix.rules.isNotEmpty,
+			'columnName':webix.rules.isNotEmpty
+		}
 	}
 
 
@@ -2232,12 +2276,13 @@ var ABFieldStringComponent = function(App) {
 		clear: function () {
 
 			__WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* default */].clearEditor(App, ids);
-			
+
 			for(var f in componentDefaults) { 
 				var component = $$(ids[f]);
 				component.setValue(componentDefaults[f]);
 			}
 
+			$$(ids.component).clearValidation();
 		},
 
 
@@ -2247,7 +2292,9 @@ var ABFieldStringComponent = function(App) {
 		 * checks the current values on the componet to see if they are Valid
 		 */
 		isValid: function () {
-console.error('TODO: .isValid()');
+
+			return $$(ids.component).validate();
+
 		},
 
 
@@ -2263,16 +2310,17 @@ console.error('TODO: .isValid()');
 		 * @param {string} newVal	The new value of label
 		 * @param {string} oldVal	The previous value
 		 */
-		labelOnChange: function (newVal, oldVal) {
+		// labelOnChange: function (newVal, oldVal) {
 
-			// When the Label value changes, update our Column Name value 
-			// to match.
+		// 	// When the Label value changes, update our Column Name value 
+		// 	// to match.
 
-			if (newVal != oldVal &&
-				oldVal == $$(ids.columnName).getValue()) {
-				$$(ids.columnName).setValue(newVal);
-			}
-		},
+		// 	oldVal = oldVal || '';
+		// 	if (newVal != oldVal &&
+		// 		oldVal == $$(ids.columnName).getValue()) {
+		// 		$$(ids.columnName).setValue(newVal);
+		// 	}
+		// },
 
 
 		/*
@@ -2293,6 +2341,7 @@ console.error('TODO: .populate()');
 		 * show this component.
 		 */
 		show: function() {
+			$$(ids.component).clearValidation();
 			$$(ids.component).show();
 		},
 
@@ -2301,10 +2350,14 @@ console.error('TODO: .populate()');
 		 * @function values
 		 *
 		 * return the values for this form.
-Question: should this return an ABFieldString instance?
+		 * @return {obj}  
 		 */
 		values: function () {
-console.error('TODO: .values()');
+
+			var values = $$(ids.component).getValues();
+			values.type = ABFieldString.type();
+
+			return values;
 		},
 
 	}
@@ -2313,7 +2366,7 @@ console.error('TODO: .values()');
 	// get the common UI headers entries, and insert them above ours here:
 	// NOTE: put this here so that _logic is defined.
 	var commonUI = __WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* default */].definitionEditor(App, ids, _logic, ABFieldString);
-	_ui.rows = commonUI.rows.concat(_ui.rows);
+	_ui.elements = commonUI.rows.concat(_ui.elements);
 
 
 	// return the current instance of this component:
@@ -2339,9 +2392,17 @@ console.error('TODO: .values()');
 
 class ABFieldString extends __WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* default */] {
 
-    constructor(attributes, application) {
-    	super();
+    constructor(values, object) {
+    	super(values, object);
 
+
+    	this.id = values.id;
+    	this.type = values.type || ABFieldString.type();
+    	
+    	this.textDefault = values.textDefault || '';
+    	this.supportMultilingual = values.supportMultilingual || true;
+
+ 		this.object  = object;
   	}
 
 
@@ -2398,8 +2459,12 @@ class ABFieldString extends __WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* defaul
 
 	isValid() {
 
-		var errors = null;
+		var errors = super.isValid();
 
+		// errors = OP.Form.validationError({
+		// 	name:'columnName',
+		// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
+		// }, errors);
 
 		return errors;
 	} 
@@ -2414,55 +2479,6 @@ class ABFieldString extends __WEBPACK_IMPORTED_MODULE_0__ABField__["a" /* defaul
 	/// ABApplication data methods
 
 
-	/**
-	 * @method destroy()
-	 *
-	 * destroy the current instance of ABApplication
-	 *
-	 * also remove it from our _AllApplications
-	 * 
-	 * @return {Promise} 
-	 */
-	destroy () {
-		if (this.id) {
-console.error('TODO: ABField.destroy()');
-
-		}
-	}
-
-
-	/**
-	 * @method save()
-	 *
-	 * persist this instance of ABObject with it's parent ABApplication
-	 *
-	 * 
-	 * @return {Promise} 	
-	 *						.resolve( {this} )
-	 */
-	save () {
-
-		return new Promise(
-			(resolve, reject) => {
-
-				// if this is our initial save()
-				if (!this.id) {
-
-					this.id = OP.Util.uuid();	// setup default .id
-					this.label = this.label || this.name;
-					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
-				}
-
-				this.application.objectSave(this)
-				.then(() => {
-					resolve(this);
-				})
-				.catch(function(err){
-					reject(err);
-				})
-			}
-		)
-	}
 
 
 	/**
@@ -2478,18 +2494,15 @@ console.error('TODO: ABField.destroy()');
 	 */
 	toObj () {
 
-		OP.Multilingual.unTranslate(this, this, ["label"]);
+		var obj = super.toObj();
 
-		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
+		obj.id = this.id;
+		obj.type = this.type;
+		obj.textDefault = this.textDefault ;
+    	obj.supportMultilingual = this.supportMultilingual;
 
-		return {
 
-		}
+		return obj;
 	}
 
 
@@ -5179,7 +5192,7 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABObject__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABObject__ = __webpack_require__(3);
 
 /*
  * ab_work_object_list_newObject_blank
@@ -5484,9 +5497,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 
 
 
-	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
-	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
-	PopupNewDataFieldComponent.init();
+
 
 
 
@@ -5517,7 +5528,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: "button",
 								id: ids.buttonFieldsVisible, 
 								label: labels.component.hideFields, 
-		popup: 'self.webixUiId.visibleFieldsPopup', 
+popup: 'self.webixUiId.visibleFieldsPopup', 
 								icon: "columns", 
 								type: "icon", 
 								width: 120, 
@@ -5551,7 +5562,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: 'button', 
 								id: ids.buttonFrozen, 
 								label: labels.component.frozenColumns, 
-		popup: 'self.webixUiId.frozenColumnsPopup', 
+popup: 'self.webixUiId.frozenColumnsPopup', 
 								icon: "table", 
 								type: "icon", 
 								width: 150, 
@@ -5561,7 +5572,7 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: 'button', 
 								id: ids.buttonLabel,
 								label: labels.component.defineLabel, 
-		popup: 'self.webixUiId.defineLabelPopup', 
+popup: 'self.webixUiId.defineLabelPopup', 
 								icon: "newspaper-o", 
 								type: "icon", 
 								width: 130 
@@ -5577,19 +5588,18 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: 'button', 
 								id: ids.buttonAddField, 
 								label: labels.component.addFields, 
-// popup: 'self.webixUiId.addFieldsPopup', 
 								icon: "plus", 
 								type: "icon", 
 								width: 150,
 								click:function() {
-									PopupNewDataField.show(this.$view);
+									_logic.toolbarAddFields(this.$view);
 								}
 							},
 							{ 
 								view: 'button', 
 								id: ids.buttonExport, 
 								label: labels.component.export, 
-		popup: 'self.webixUiId.exportDataPopup', 
+popup: 'self.webixUiId.exportDataPopup', 
 								icon: "file-o", 
 								type: "icon", 
 								width: 90 
@@ -5760,9 +5770,6 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 					}
 				]
 
-
-
-
 			}
 		]
 	}
@@ -5809,6 +5816,14 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 		},
 
 
+		fieldCreated:function(field) {
+console.error('TODO: !! ReREnder the dataTable with current Object!');
+		},
+
+		toolbarAddFields: function($view) {
+			PopupNewDataField.show($view);
+		},
+
 		/**
 		 * @function toolbarFilter
 		 *
@@ -5828,6 +5843,15 @@ console.error('TODO: button filterFields()');
 console.error('TODO: toolbarSort()');
 		}
 	}
+
+
+
+	// NOTE: declare this after _logic  for the callbacks:
+	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
+	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
+	PopupNewDataFieldComponent.init({
+		onSave:_logic.fieldCreated			// be notified when a new Field is created
+	});
 
 
 
@@ -5863,7 +5887,8 @@ console.error('TODO: clearObjectWorkspace()');
 
 			$$(ids.toolbar).show();
 			$$(ids.selectedObject).show();
-console.error('TODO: populateObjectWorkspace()!');
+
+			App.actions.populateObjectPopupAddDataField(object);
 		}
 
 	}
@@ -5886,7 +5911,7 @@ console.error('TODO: populateObjectWorkspace()!');
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_ABApplication__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__classes_ABFieldManager__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__classes_ABFieldManager__ = __webpack_require__(2);
 
 /*
  * ab_work_object_workspace_popupNewDataField
@@ -5944,7 +5969,8 @@ OP.Component.extend(idBase, function(App) {
 		view:"popup",
 		id: ids.component,
 		modal: true,
-		maxHeight: 420,
+		autoheight:true,
+		// maxHeight: 420,
 ready: function () {
 	console.error('ready() called!!!')
 	_logic.resetState();
@@ -6021,6 +6047,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 	var _objectHash = {};		// 'name' => ABFieldXXX object
 	var _componentHash = {};	// 'name' => ABFieldXXX ui component
 	var _currentEditor = null;
+	var _currentObject = null;
 
 	// Our init() function for setting up our UI
 	var _init = function() {
@@ -6127,8 +6154,6 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 // }
 
 
-///// LEFT OFF:
-// step through saving process and implement various methods along the way:
 
 			var editor = _currentEditor;
 			if (editor) {
@@ -6137,22 +6162,30 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 				if (editor.isValid()) {
 
 					var values = editor.values();
-					var newField = _currentObject.newField(values);
+					var newField = _currentObject.fieldNew(values);
 
 
 					// newField can check for more validations:
-					if (newField.isValid()) {
+					var errors = newField.isValid();
+					if (errors) {
+						OP.Form.isValidationError(errors, $$(editor.ui.id));
+						$$(ids.buttonSave).enable();
+					} else {
 
 						newField.save()
 						.then(()=>{
 
 							$$(ids.buttonSave).enable();
+							_logic.hide();
+							_logic.callbacks.onSave(newField)
 						})
 						.catch((err) => {
-
 							$$(ids.buttonSave).enable();
 						})
 					}
+
+				} else {
+					$$(ids.buttonSave).enable();
 				}
 
 			}  else {
@@ -6198,15 +6231,16 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 		},
 
 
+		callbacks:{
+			onCancel: function() { console.warn('NO onCancel()!') },
+			onSave  : function(field) { console.warn('NO onSave()!') },
+		},
 
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+
+
+		hide:function() {
+			$$(ids.component).hide();
+		},
 
 
 		/**
@@ -6266,23 +6300,11 @@ console.error('TODO: resetState()');
 		 * @function show()
 		 *
 		 * Show this component.
+		 * @param {obj} $view  the webix.$view to hover the popup around.
 		 */
-		show:function() {
+		show:function($view) {
 
-			$$(ids.component).show();
-		},
-
-
-		/**
-		 * @function toolbarFilter
-		 *
-		 * Show the progress indicator to indicate a Form operation is in 
-		 * progress.
-		 */
-		toolbarFilter: function($view) {
-// self.refreshPopupData();
-// $$(self.webixUiId.filterFieldsPopup).show($view);
-console.error('TODO: button filterFields()');
+			$$(ids.component).show($view);
 		},
 
 
@@ -6311,6 +6333,9 @@ console.error('TODO: button filterFields()');
 	// Expose any globally accessible Actions:
 	var _actions = {
 
+		populateObjectPopupAddDataField: function(object) {
+			_currentObject = object;
+		}
 
 	}
 
@@ -6534,7 +6559,7 @@ OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__OP_OP__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_ab__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__components_ab__ = __webpack_require__(4);
 
 
 // import '../../../../../assets/js/webix/webix'

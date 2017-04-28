@@ -397,7 +397,7 @@ export default class ABApplication {
 
 
 	/**
-	 * @method newObject()
+	 * @method objectNew()
 	 *
 	 * return an instance of a new (unsaved) ABObject that is tied to this 
 	 * ABApplication.
@@ -414,15 +414,12 @@ export default class ABApplication {
 
 
 	/**
-	 * @method saveObject()
+	 * @method objectSave()
 	 *
-	 * return an instance of a new (unsaved) ABObject that is tied to this 
-	 * ABApplication.
+	 * persist the current ABObject in our list of ._objects.
 	 *
-	 * NOTE: this new object is not included in our this.objects until a .save() 
-	 * is performed on the object.
-	 *
-	 * @return {ABObject} 	
+	 * @param {ABObject} object 
+	 * @return {Promise} 	
 	 */
 	objectSave( object ) {
 		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);

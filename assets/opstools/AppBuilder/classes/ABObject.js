@@ -1,5 +1,7 @@
 
 import OP from "../OP/OP"
+import ABFieldManager from "./ABFieldManager"
+
 
 function toDC( data ) {
 	return new webix.DataCollection({
@@ -53,11 +55,11 @@ export default class ABObject {
 
 	  	
 	  	// import all our ABObjects
-	  	// var newFields = [];
-	  	// (attributes.json.objects || []).forEach((obj) => {
-	  	// 	newObjects.push( new ABObject(obj) );
-	  	// })
-	  	// this.fields = newFields;
+	  	var newFields = [];
+	  	(attributes.fields || []).forEach((field) => {
+	  		newFields.push( this.fieldNew(field) );
+	  	})
+	  	this._fields = newFields;
 
 
 	  	// link me to my parent ABApplication
@@ -183,11 +185,11 @@ console.error('TODO: ABObject.destroy()');
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
 		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
+		var currFields = [];
+		this._fields.forEach((obj) => {
+			currFields.push(obj.toObj())
+		})
+
 
 		return {
 			id: 			this.id,
@@ -197,7 +199,7 @@ console.error('TODO: ABObject.destroy()');
     		urlPath: 		this.urlPath,
     		importFromObject: this.importFromObject,
     		translations: 	this.translations,
-    		fields: 	 	[] 
+    		fields: 	 	currFields 
 		}
 	}
 
@@ -216,26 +218,53 @@ console.error('TODO: ABObject.destroy()');
 	/**
 	 * @method fields()
 	 *
-	 * return a DataCollection of all the ABFields for this ABObject.
+	 * return an array of all the ABFields for this ABObject.
 	 *
-	 * @return {Promise} 	
+	 * @return {array} 	
 	 */
-	fields () {
-		return new Promise( 
-			(resolve, reject) => {
+	fields (filter) {
 
+		filter = filter || function() {return true; };
 
-				resolve(toDC(this.feilds));
-
-			}
-		);
+		return this._fields.filter(filter);
 	}
 
 
 
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this 
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save() 
+	 * is performed on the field.
+	 *
+	 * @return {ABField} 	
+	 */
 	fieldNew ( values ) {
 		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
 		return ABFieldManager.newField( values, this );
+	}
+
+
+
+	/**
+	 * @method fieldSave()
+	 *
+	 * save the given ABField in our ._fields array and persist the current 
+	 * values.
+	 *
+	 * @param {ABField} field The instance of the field to save.
+	 * @return {Promise} 	
+	 */
+	fieldSave( field ) {
+		var isIncluded = (this.fields(function(o){ return o.id == field.id }).length > 0);
+		if (!isIncluded) {
+			this._fields.push(field);
+		}
+
+		return this.save();
 	}
 
 
