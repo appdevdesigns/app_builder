@@ -57,8 +57,8 @@ module.exports = {
 
         name: {
             type: 'string',
-            required: true,
-            maxLength: 20
+            required: true
+            //maxLength: 20 // <-- some exceptions
         },
 
         fieldName: {
@@ -119,6 +119,14 @@ module.exports = {
     ////
 
     beforeValidate: function (values, cb) {
+        if (values.setting && values.setting.isImported) {
+            // `isImported` means the name length can exceed the normal limit.
+        } 
+        // If not imported, the name length must not be more than 20 characters
+        else if (values.name && values.name.length > 20) {
+            return cb(new Error(`Column name "${values.name}" is too long`));
+        }
+        
         for (var key in values) {
             if (values[key] == null || typeof values[key] == 'undefined' || values[key] != values[key] /* NaN */)
                 delete values[key];

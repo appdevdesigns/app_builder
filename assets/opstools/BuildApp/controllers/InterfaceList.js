@@ -33,7 +33,9 @@ steal(
 								interfaceTree: 'ab-interface-tree',
 
 								pageListMenuPopup: 'ab-page-menu-popup',
-								pageListMenu: 'ab-page-menu'
+								pageListMenu: 'ab-page-menu',
+
+								addNewPageButton: 'ab-page-new-page'
 							};
 
 							self.initMultilingualLabels();
@@ -236,6 +238,7 @@ steal(
 										}
 									},
 									{
+										id: self.webixUiId.addNewPageButton,
 										view: 'button',
 										value: self.labels.interface.addNewPage,
 										click: function () {
@@ -432,6 +435,18 @@ steal(
 
 							$$(self.webixUiId.interfaceTree).parse(treeData);
 							$$(self.webixUiId.interfaceTree).hideProgress();
+
+							// Select current page
+							if (AD.classes.AppBuilder.currApp.currPage != null) {
+
+								// Open tree of parent page
+								if (AD.classes.AppBuilder.currApp.currPage.parent != null) {
+									var parentId = AD.classes.AppBuilder.currApp.currPage.parent.id || AD.classes.AppBuilder.currApp.currPage.parent;
+									$$(self.webixUiId.interfaceTree).open(parentId);
+								}
+
+								$$(self.webixUiId.interfaceTree).select(AD.classes.AppBuilder.currApp.currPage.id);
+							}
 						},
 
 						showGear: function (id) {

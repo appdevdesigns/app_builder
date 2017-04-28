@@ -1986,6 +1986,10 @@ linkModel(fullName, function(err){
                         if (validTypes.indexOf(fieldType) < 0) {
                             return colDone(new Error(`${modelName} contains a column "${colName}" that is of an unsupported type: ${fieldType}`));
                         }
+                        
+                        // This will allow the column name to have > 20 characters
+                        colData.setting = colData.setting || {};
+                        colData.setting.isImported = 1;
 
                         ABColumn.createColumn(fieldType, colData)
                             .fail(colDone)
@@ -2123,7 +2127,8 @@ linkModel(fullName, function(err){
                             label: allowCol.label,
                             object: object.id,
                             setting: {
-                                supportMultilingual: '1'
+                                supportMultilingual: '1',
+                                isImported: 1 // allow longer column name
                             },
                             isSynced: true
                         })

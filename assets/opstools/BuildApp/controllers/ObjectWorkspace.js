@@ -627,7 +627,7 @@ steal(
 
 						showTable: function () {
 							var self = this,
-								objectData;
+								objectData = [];
 
 							$$(self.webixUiId.objectDatatable).show();
 							$$(self.webixUiId.objectDatatable).showProgress({ type: 'icon' });
@@ -744,11 +744,10 @@ steal(
 								function (next) {
 									self.Model.ObjectModel.store = {}; // Clear CanJS local repository
 									self.Model.ObjectModel.Cached.findAll({})
-										.fail(next)
 										.then(function (data) {
 											objectData = data;
 											next();
-										});
+										}, function (err) { next(); });
 								},
 								// Normalize data
 								function (next) {
