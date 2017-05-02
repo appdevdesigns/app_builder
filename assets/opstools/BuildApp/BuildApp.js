@@ -84,6 +84,11 @@
 
 var _AllApplications = [];
 
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 function toDC( data ) {
 	return new webix.DataCollection({
 		data: data,
@@ -94,6 +99,19 @@ function toDC( data ) {
 		// 	}
 		// }
 	});
+}
+
+function toArray(DC) {
+	var ary = [];
+
+	var id = DC.getFirstId();
+	while(id) {
+		var element = DC.getItem(id);
+		ary.push(element);
+		id = DC.getNextId(id);
+	}
+
+	return ary;
 }
 
 class ABApplication {
@@ -230,14 +248,17 @@ class ABApplication {
 			if (op == 'add') {
 
 				// label/name must be unique:
-				var matchingApps = _AllApplications.data.filter(function (app) { 
-					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
+				var arrayApplications = toArray(_AllApplications);
+
+				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
+				var matchingApps = arrayApplications.filter(function (app) { 
+					return app.name.trim().toLowerCase() == nameMatch; 
 				})
 				if (matchingApps && matchingApps.length > 0) {
 					
 					errors = __WEBPACK_IMPORTED_MODULE_0__OP_OP__["a" /* default */].Form.validationError({
 						name:'label',
-						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', values.name),
+						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
 					}, errors);
 				}
 
@@ -3086,7 +3107,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 // 		Form.elements[err.name].focus();
 // 		hasFocused = true;
 // 	}
-// })
+// })	
+				_logic.formReady();
 				_logic.buttonSaveEnable();
 				return false;
 			}

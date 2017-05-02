@@ -455,7 +455,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 // 		Form.elements[err.name].focus();
 // 		hasFocused = true;
 // 	}
-// })
+// })	
+				_logic.formReady();
 				_logic.buttonSaveEnable();
 				return false;
 			}
