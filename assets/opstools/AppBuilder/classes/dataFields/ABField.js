@@ -20,11 +20,15 @@ export default class ABField {
 
     	this.label = values.label || '';
     	this.columnName = values.columnName || '';
-    	this.showIcon = values.showIcon || true;
+    	this.showIcon = values.showIcon || "true";
+
+    	// convert from "true" => true
+    	this.showIcon = (this.showIcon === "true")? true:false;
+
 
 
     	// label is a multilingual value:
-    	OP.Multilingual.translate(this, this, ['label']);
+    	OP.Multilingual.translate(this, values, ['label']);
 
   	}
 
@@ -74,6 +78,8 @@ export default class ABField {
 	 */
   	static definitionEditor( App, ids, _logic, Field ) {
 
+/// TODO: maybe just pass in onChange instead of _logic
+/// if not onChange, then use our default:
 
   		// setup our default labelOnChange functionality:
   		var onChange = function (newVal, oldVal) {
@@ -249,10 +255,25 @@ console.error('TODO: ABField.destroy()');
 
 
 	///
-	/// Fields
+	/// Working with Actual Object Values:
 	///
 
+	columnHeader (isObjectWorkspace) {
+		
+		var config = {
+			id: this.columnName,
+			header: this.label,
+		}
 
+		if (isObjectWorkspace) {
+			if (this.showIcon) {
+				config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.icon) + config.header;
+			}
+		}
+
+
+		return config;
+	}
 
 
 }

@@ -49,6 +49,10 @@ export default class ABObject {
     	this.importFromObject = attributes.importFromObject || "";
     	this.translations = attributes.translations;
 
+    	this.objectWorkspace = attributes.objectWorkspace || { 
+    		hiddenFields:[], 	// array of [ids] to add hidden:true to
+    	};
+
 
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this, ['label']);
@@ -198,6 +202,7 @@ console.error('TODO: ABObject.destroy()');
     		isImported:  	this.isImported,
     		urlPath: 		this.urlPath,
     		importFromObject: this.importFromObject,
+    		objectWorkspace:  this.objectWorkspace,
     		translations: 	this.translations,
     		fields: 	 	currFields 
 		}
@@ -267,5 +272,62 @@ console.error('TODO: ABObject.destroy()');
 		return this.save();
 	}
 
+
+
+
+
+
+
+
+
+
+
+	///
+	/// Working with Actual Object Values:
+	///
+
+	// return the column headers for this object
+	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
+	columnHeaders (isObjectWorkspace) {
+
+		var headers = [];
+		var idLookup = {};
+
+		// get the header for each of our fields:
+		this._fields.forEach(function(f){
+			var header = f.columnHeader(isObjectWorkspace);
+			headers.push(header);
+			idLookup[header.id] = f.id;	// name => id
+		})
+
+
+		// update our headers with any settings applied in the Object Workspace
+		if (isObjectWorkspace) {
+
+			// set column width to adjust:true by default;
+			headers.forEach((h) => { h.adjust = true; });
+
+			// hide any hiddenfields
+			this.workspaceHiddenFields.forEach((hfID)=>{ 
+				headers.forEach((h)=> {
+					if (idLookup[h.id] == hfID){
+						h.hidden = true;
+					}
+				})
+			});
+			
+		}
+
+		return headers;
+	}
+
+
+	get workspaceHiddenFields() {
+		return this.objectWorkspace.hiddenFields;
+	}
+
+	set workspaceHiddenFields( fields ) {
+		this.objectWorkspace.hiddenFields = fields;
+	}
 
 }
