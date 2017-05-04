@@ -1,5 +1,5 @@
 
-import './OP/OP';
+// import './OP/OP';
 // import '../../../../../assets/js/webix/webix'
 
 import './components/ab'

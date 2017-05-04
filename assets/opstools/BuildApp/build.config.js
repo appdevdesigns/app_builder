@@ -1,8 +1,10 @@
 module.exports = {
 	"paths": {
+		"opstools/OP_Bundle": "opstools/BuildApp/OP/OP.js",
 		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js"
 	},
 	"bundle": [
+		"opstools/OP_Bundle",
 		"opstools/BuildApp"
 	],
 	"meta": {

@@ -5,8 +5,15 @@ module.exports = {
   entry: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'AppBuilder.js'),
   output: {
     path: path.resolve(__dirname, 'assets', 'opstools', 'BuildApp'),
-    filename: 'BuildApp.js'
+    filename: '[name].js'
   },
+
+  // entry: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'AppBuilder.js'),
+  // output: {
+  //   path: path.resolve(__dirname, 'assets', 'opstools', 'BuildApp'),
+  //   filename: 'BuildApp.js'
+  // },
+
   module: {
     rules: [{
         test: /\.(js|jsx)$/,
@@ -25,6 +32,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.optimize.UglifyJsPlugin()
+    // new webpack.optimize.UglifyJsPlugin()
   ]
 };
