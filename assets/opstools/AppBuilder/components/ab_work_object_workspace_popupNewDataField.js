@@ -136,7 +136,14 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 	var _currentObject = null;
 
 	// Our init() function for setting up our UI
-	var _init = function() {
+	var _init = function(options) {
+
+		// register our callbacks:
+		for(var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
+
+
 		var Fields = ABFieldManager.allFields();
 
 

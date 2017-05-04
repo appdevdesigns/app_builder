@@ -7,6 +7,8 @@
  */
 
 import ABApplication from "../classes/ABApplication"
+import "./ab_work_object_workspace_datatable"
+import "./ab_work_object_workspace_popupHideFields"
 import "./ab_work_object_workspace_popupNewDataField"
 
 
@@ -37,8 +39,8 @@ var labels = {
 }
 
 
-
-OP.Component.extend('ab_work_object_workspace', function(App) {
+var idBase = 'ab_work_object_workspace';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
@@ -50,34 +52,35 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_workspace_component'),
+		component: App.unique(idBase + '_component'),
 
-		buttonAddField: App.unique('ab_work_object_workspace_buttonAddField'),
-		buttonExport: App.unique('ab_work_object_workspace_buttonExport'),
-		buttonFieldsVisible: App.unique('ab_work_object_workspace_buttonFieldsVisible'),
-		buttonFilter: App.unique('ab_work_object_workspace_buttonFilter'),
-		buttonFrozen: App.unique('ab_work_object_workspace_buttonFrozen'),
-		buttonLabel: App.unique('ab_work_object_workspace_buttonLabel'),
-		buttonRowNew: App.unique('ab_work_object_workspace_buttonRowNew'),
-		buttonSort: App.unique('ab_work_object_workspace_buttonSort'),
+		buttonAddField: App.unique(idBase + '_buttonAddField'),
+		buttonExport: App.unique(idBase + '_buttonExport'),
+		buttonFieldsVisible: App.unique(idBase + '_buttonFieldsVisible'),
+		buttonFilter: App.unique(idBase + '_buttonFilter'),
+		buttonFrozen: App.unique(idBase + '_buttonFrozen'),
+		buttonLabel: App.unique(idBase + '_buttonLabel'),
+		buttonRowNew: App.unique(idBase + '_buttonRowNew'),
+		buttonSort: App.unique(idBase + '_buttonSort'),
 
 
-		datatable: App.unique('ab_work_object_workspace_datatable'),
+		datatable: App.unique(idBase + '_datatable'),
 
 
 		// Toolbar:
-		toolbar: App.unique('ab_work_object_workspace_toolbar'),
+		toolbar: App.unique(idBase + '_toolbar'),
 
 
 
-		noSelection: App.unique('ab_work_object_workspace_noSelection'),
-		selectedObject: App.unique('ab_work_object_workspace_selectedObject'),
+		noSelection: App.unique(idBase + '_noSelection'),
+		selectedObject: App.unique(idBase + '_selectedObject'),
 		
 	}
 
 
 
-
+	// The DataTable that displays our object:
+	var DataTable = OP.Component['ab_work_object_workspace_datatable'](App);
 
 
 
@@ -108,11 +111,14 @@ OP.Component.extend('ab_work_object_workspace', function(App) {
 								view: "button",
 								id: ids.buttonFieldsVisible, 
 								label: labels.component.hideFields, 
-popup: 'self.webixUiId.visibleFieldsPopup', 
+// popup: 'self.webixUiId.visibleFieldsPopup', 
 								icon: "columns", 
 								type: "icon", 
 								width: 120, 
-								badge: 0 
+								badge: 0,
+								click: function () {
+									_logic.toolbarFieldsVisible(this.$view);
+								}
 							},
 							{
 								view: 'button',
@@ -152,10 +158,12 @@ popup: 'self.webixUiId.frozenColumnsPopup',
 								view: 'button', 
 								id: ids.buttonLabel,
 								label: labels.component.defineLabel, 
-popup: 'self.webixUiId.defineLabelPopup', 
 								icon: "newspaper-o", 
 								type: "icon", 
-								width: 130 
+								width: 130,
+								click: function () {
+									_logic.toolbarDefineLabel(this.$view);
+								}
 							},
 							{ 
 								view: 'button', 
@@ -186,149 +194,7 @@ popup: 'self.webixUiId.exportDataPopup',
 							}
 						]
 					},
-											// {
-											// 	view: "datatable",
-											// 	id: ids.datatable,
-											// 	resizeColumn: true,
-											// 	resizeRow: true,
-											// 	prerender: false,
-											// 	editable: true,
-											// 	fixedRowHeight: false,
-											// 	editaction: "custom",
-											// 	select: "cell",
-											// 	dragColumn: true,
-											// 	on: {
-											// 		onBeforeSelect: function (data, preserve) {
-
-											// 			var itemNode = this.getItemNode({ row: data.row, column: data.column });
-
-											// 			var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-											// 			if (!column || column.length < 1) {
-											// 				console.log('System could not found this column data');
-											// 				return false;
-											// 			} else
-											// 				column = column[0];
-
-											// 			return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
-											// 		},
-											// 		onAfterSelect: function (data, prevent) {
-											// 			var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
-											// 				fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-
-											// 			if (!fieldData || fieldData.length < 1) {
-											// 				console.log('System could not found this column data');
-											// 				return false;
-											// 			} else
-											// 				fieldData = fieldData[0];
-
-											// 			// Custom update data
-											// 			if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
-											// 				return false;
-
-											// 			// Normal update data
-											// 			this.editCell(data.row, data.column);
-											// 		},
-											// 		onCheck: function (row, col, val) { // Update checkbox data
-											// 			var item = $$(self.webixUiId.objectDatatable).getItem(row);
-
-											// 			self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
-											// 				.fail(function (err) {
-											// 					// Rollback
-											// 					item[col] = !val;
-											// 					$$(self.webixUiId.objectDatatable).updateItem(row, item);
-											// 					$$(self.webixUiId.objectDatatable).refresh(row);
-
-											// 					$$(self.webixUiId.objectDatatable).hideProgress();
-											// 				})
-											// 				.then(function (result) {
-											// 					$$(self.webixUiId.objectDatatable).hideProgress();
-											// 				});
-											// 		},
-											// 		onBeforeEditStop: function (state, editor) {
-											// 			var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
-
-											// 			if (!column || column.length < 1) return true;
-											// 			column = column[0];
-
-											// 			var passValidate = dataFieldsManager.validate(column, state.value);
-
-											// 			if (!passValidate) {
-											// 				$$(self.webixUiId.objectDatatable).editCancel();
-											// 			}
-
-											// 			return passValidate;
-											// 		},
-											// 		onAfterEditStop: function (state, editor, ignoreUpdate) {
-
-											// 			var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
-
-											// 			self.updateRowData(state, editor, ignoreUpdate)
-											// 				.fail(function (err) { // Cached
-											// 					item[editor.column] = state.old;
-											// 					$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-											// 					$$(self.webixUiId.objectDatatable).refresh(editor.row);
-
-											// 					// TODO : Message
-
-											// 					$$(self.webixUiId.objectDatatable).hideProgress();
-											// 				})
-											// 				.then(function (result) {
-											// 					if (item) {
-											// 						item[editor.column] = state.value;
-
-											// 						if (result && result.constructor.name === 'Cached' && result.isUnsync())
-											// 							item.isUnsync = true;
-
-											// 						$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-											// 					}
-
-											// 					// TODO : Message
-
-											// 					$$(self.webixUiId.objectDatatable).hideProgress();
-											// 				});
-											// 		},
-											// 		onColumnResize: function (id, newWidth, oldWidth, user_action) {
-											// 			var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
-											// 			var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
-											// 			if (column && column[0])
-											// 				column[0].setWidth(newWidth);
-
-											// 			// if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
-											// 			// 	// For calculate/refresh row height
-											// 			// 	$$(self.webixUiId.objectDatatable).render();
-											// 			// }
-											// 		},
-											// 		onBeforeColumnDrag: function (sourceId, event) {
-											// 			if (sourceId === 'appbuilder_trash') // Remove column
-											// 				return false;
-											// 			else
-											// 				return true;
-											// 		},
-											// 		onBeforeColumnDrop: function (sourceId, targetId, event) {
-											// 			if (targetId === 'appbuilder_trash') // Remove column
-											// 				return false;
-
-											// 			if ($$(self.webixUiId.visibleButton).config.badge > 0) {
-											// 				webix.alert({
-											// 					title: self.labels.object.couldNotReorderField,
-											// 					ok: self.labels.common.ok,
-											// 					text: self.labels.object.couldNotReorderFieldDetail
-											// 				});
-
-											// 				return false;
-											// 			}
-											// 		},
-											// 		onAfterColumnDrop: function (sourceId, targetId, event) {
-											// 			self.reorderColumns();
-											// 		},
-											// 		onAfterColumnShow: function (id) {
-											// 			$$(self.webixUiId.visibleFieldsPopup).showField(id);
-											// 		},
-											// 		onAfterColumnHide: function (id) {
-											// 			$$(self.webixUiId.visibleFieldsPopup).hideField(id);
-											// 		}
-											// 	}
-											// },
+					DataTable.ui,
 					{
 						cols: [
 							{
@@ -361,28 +227,26 @@ popup: 'self.webixUiId.exportDataPopup',
 	var _init = function() {
 		// webix.extend($$(ids.form), webix.ProgressBar);
 
-
+		DataTable.init();
 
 		$$(ids.noSelection).show();
 	}
 
 
+	var CurrentObject = null;
 
 	// our internal business logic 
 	var _logic = {
 
-		
 
+		hideFieldChange: function() {
 
+			var hiddenFields = CurrentObject.workspaceHiddenFields;
+			$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+			$$(ids.buttonFieldsVisible).refresh();
 
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+			DataTable.refresh();
+		},
 
 
 		/**
@@ -397,12 +261,27 @@ popup: 'self.webixUiId.exportDataPopup',
 
 
 		fieldCreated:function(field) {
-console.error('TODO: !! ReREnder the dataTable with current Object!');
+			DataTable.refresh();
 		},
+
 
 		toolbarAddFields: function($view) {
 			PopupNewDataField.show($view);
 		},
+
+
+		toolbarDefineLabel: function($view) {
+
+///// LEFT OFF HERE:
+console.error('!! TODO: .toolbarDefineLabel()');
+
+		},
+
+
+		toolbarFieldsVisible: function($view) {
+			PopupHideField.show($view);
+		},
+
 
 		/**
 		 * @function toolbarFilter
@@ -434,20 +313,21 @@ console.error('TODO: toolbarSort()');
 	});
 
 
+	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
+	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
+	PopupHideFieldComponent.init({
+		onChange:_logic.hideFieldChange		// be notified when there is a change in the hidden fields
+	})
+
 
 	// Expose any globally accessible Actions:
 	var _actions = {
 
 
 		/**
-		 * @function populateApplicationForm()
+		 * @function clearObjectWorkspace()
 		 *
-		 * Initialze the Form with the values from the provided ABApplication.
-		 *
-		 * If no ABApplication is provided, then show an empty form. (create operation)
-		 *
-		 * @param {ABApplication} Application  	[optional] The current ABApplication 
-		 *										we are working with.
+		 * Clear the object workspace. 
 		 */
 		clearObjectWorkspace:function(){
 			
@@ -468,7 +348,15 @@ console.error('TODO: clearObjectWorkspace()');
 			$$(ids.toolbar).show();
 			$$(ids.selectedObject).show();
 
+			CurrentObject = object;
+
 			App.actions.populateObjectPopupAddDataField(object);
+
+			// update hiddenFields 
+			_logic.hideFieldChange();
+
+			PopupHideFieldComponent.objectLoad(object);
+			DataTable.objectLoad(object);
 		}
 
 	}

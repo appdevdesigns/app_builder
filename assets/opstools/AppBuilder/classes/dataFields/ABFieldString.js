@@ -239,9 +239,14 @@ class ABFieldString extends ABField {
 
     	this.id = values.id;
     	this.type = values.type || ABFieldString.type();
+    	this.icon = values.icon || ABFieldString.icon();
     	
     	this.textDefault = values.textDefault || '';
     	this.supportMultilingual = values.supportMultilingual || true;
+
+
+   		// add this if there are more multilingual labels than what our super() defines:
+    	// OP.Multilingual.translate(this, values, ['label']);
 
  		this.object  = object;
   	}
@@ -292,11 +297,20 @@ class ABFieldString extends ABField {
   	}
 
 
+  	//// 
+  	//// These refer to the Webix Component definitions for this data field:
+  	////
+
+  	// // 
+  	// static editor () {
+  	// 	return 'text'
+  	// }
+
+  	// static filterType () {
+  	// 	return 'text'
+  	// }
 
 
-
-
-//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
 
 	isValid() {
 
@@ -317,11 +331,6 @@ class ABFieldString extends ABField {
 	///
 
 
-	/// ABApplication data methods
-
-
-
-
 	/**
 	 * @method toObj()
 	 *
@@ -339,6 +348,7 @@ class ABFieldString extends ABField {
 
 		obj.id = this.id;
 		obj.type = this.type;
+		obj.icon = this.icon;
 		obj.textDefault = this.textDefault ;
     	obj.supportMultilingual = this.supportMultilingual;
 
@@ -352,9 +362,18 @@ class ABFieldString extends ABField {
 
 
 	///
-	/// Fields
+	/// Working with Actual Object Values:
 	///
 
+	// return the grid column header definition for this instance of ABFieldString
+	columnHeader (isObjectWorkspace) {
+		var config = super.columnHeader(isObjectWorkspace);
+
+		config.editor = 'text';
+		config.sort   = 'string'
+
+		return config;
+	}
 
 
 

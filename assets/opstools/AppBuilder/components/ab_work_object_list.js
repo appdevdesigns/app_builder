@@ -58,7 +58,7 @@ OP.Component.extend('ab_work_object_list', function(App) {
 
 // TODO: make this dynamically fill the screen:
 height:800,
-autoheight:true,
+
 				select: true,
 				editaction: 'custom',
 				editable: true,
@@ -68,6 +68,7 @@ autoheight:true,
 					return _logic.templateListItem(obj, common); 
 				},
 				type: {
+					height:"auto",
 					unsyncNumber: "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
