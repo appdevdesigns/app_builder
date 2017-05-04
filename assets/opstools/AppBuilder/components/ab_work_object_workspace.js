@@ -46,7 +46,7 @@ OP.Component.extend(idBase, function(App) {
 
 
 
-	
+
 
 
 
@@ -74,7 +74,7 @@ OP.Component.extend(idBase, function(App) {
 
 		noSelection: App.unique(idBase + '_noSelection'),
 		selectedObject: App.unique(idBase + '_selectedObject'),
-		
+
 	}
 
 
@@ -94,7 +94,10 @@ OP.Component.extend(idBase, function(App) {
 				// view:''
 				id: ids.noSelection,
 				rows:[
-					{ view:'label', label:'* Select an Object to work with' }
+					{
+						view:'label',
+						label:'* Select an Object to work with'
+					}
 				]
 			},
 
@@ -107,14 +110,14 @@ OP.Component.extend(idBase, function(App) {
 						id: ids.toolbar,
 						hidden: true,
 						cols: [
-							{ 
+							{
 								view: "button",
-								id: ids.buttonFieldsVisible, 
-								label: labels.component.hideFields, 
-// popup: 'self.webixUiId.visibleFieldsPopup', 
-								icon: "columns", 
-								type: "icon", 
-								width: 120, 
+								id: ids.buttonFieldsVisible,
+								label: labels.component.hideFields,
+// popup: 'self.webixUiId.visibleFieldsPopup',
+								icon: "columns",
+								type: "icon",
+								width: 120,
 								badge: 0,
 								click: function () {
 									_logic.toolbarFieldsVisible(this.$view);
@@ -122,75 +125,75 @@ OP.Component.extend(idBase, function(App) {
 							},
 							{
 								view: 'button',
-								id: ids.buttonFilter, 
-								label: labels.component.filterFields, 
-								icon: "filter", 
-								type: "icon", 
-								width: 120, 
+								id: ids.buttonFilter,
+								label: labels.component.filterFields,
+								icon: "filter",
+								type: "icon",
+								width: 120,
 								badge: 0,
 								click: function () {
 									_logic.toolbarFilter(this);
 								}
 							},
 							{
-								view: 'button', 
-								id: ids.buttonSort, 
-								label: labels.component.sortFields, 
-								icon: "sort", 
-								type: "icon", 
-								width: 120, 
+								view: 'button',
+								id: ids.buttonSort,
+								label: labels.component.sortFields,
+								icon: "sort",
+								type: "icon",
+								width: 120,
 								badge: 0,
 								click: function () {
 									_logic.toolbarSort(this.$view);
 								}
 							},
-							{ 
-								view: 'button', 
-								id: ids.buttonFrozen, 
-								label: labels.component.frozenColumns, 
-popup: 'self.webixUiId.frozenColumnsPopup', 
-								icon: "table", 
-								type: "icon", 
-								width: 150, 
-								badge: 0 
+							{
+								view: 'button',
+								id: ids.buttonFrozen,
+								label: labels.component.frozenColumns,
+popup: 'self.webixUiId.frozenColumnsPopup',
+								icon: "table",
+								type: "icon",
+								width: 150,
+								badge: 0
 							},
-							{ 
-								view: 'button', 
+							{
+								view: 'button',
 								id: ids.buttonLabel,
-								label: labels.component.defineLabel, 
-								icon: "newspaper-o", 
-								type: "icon", 
+								label: labels.component.defineLabel,
+								icon: "newspaper-o",
+								type: "icon",
 								width: 130,
 								click: function () {
 									_logic.toolbarDefineLabel(this.$view);
 								}
 							},
-							{ 
-								view: 'button', 
-								label: labels.component.permission, 
-								icon: "lock", 
-								type: "icon", 
-								width: 120 
+							{
+								view: 'button',
+								label: labels.component.permission,
+								icon: "lock",
+								type: "icon",
+								width: 120
 							},
-							{ 
-								view: 'button', 
-								id: ids.buttonAddField, 
-								label: labels.component.addFields, 
-								icon: "plus", 
-								type: "icon", 
+							{
+								view: 'button',
+								id: ids.buttonAddField,
+								label: labels.component.addFields,
+								icon: "plus",
+								type: "icon",
 								width: 150,
 								click:function() {
 									_logic.toolbarAddFields(this.$view);
 								}
 							},
-							{ 
-								view: 'button', 
-								id: ids.buttonExport, 
-								label: labels.component.export, 
-popup: 'self.webixUiId.exportDataPopup', 
-								icon: "file-o", 
-								type: "icon", 
-								width: 90 
+							{
+								view: 'button',
+								id: ids.buttonExport,
+								label: labels.component.export,
+popup: 'self.webixUiId.exportDataPopup',
+								icon: "file-o",
+								type: "icon",
+								width: 90
 							}
 						]
 					},
@@ -219,7 +222,7 @@ popup: 'self.webixUiId.exportDataPopup',
 			}
 		]
 	}
-		
+
 
 
 
@@ -235,7 +238,7 @@ popup: 'self.webixUiId.exportDataPopup',
 
 	var CurrentObject = null;
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 
@@ -286,7 +289,7 @@ console.error('!! TODO: .toolbarDefineLabel()');
 		/**
 		 * @function toolbarFilter
 		 *
-		 * Show the progress indicator to indicate a Form operation is in 
+		 * Show the progress indicator to indicate a Form operation is in
 		 * progress.
 		 */
 		toolbarFilter: function($view) {
@@ -327,10 +330,10 @@ console.error('TODO: toolbarSort()');
 		/**
 		 * @function clearObjectWorkspace()
 		 *
-		 * Clear the object workspace. 
+		 * Clear the object workspace.
 		 */
 		clearObjectWorkspace:function(){
-			
+
 			$$(ids.noSelection).show();
 console.error('TODO: clearObjectWorkspace()');
 		},
@@ -352,7 +355,7 @@ console.error('TODO: clearObjectWorkspace()');
 
 			App.actions.populateObjectPopupAddDataField(object);
 
-			// update hiddenFields 
+			// update hiddenFields
 			_logic.hideFieldChange();
 
 			PopupHideFieldComponent.objectLoad(object);
@@ -365,7 +368,7 @@ console.error('TODO: clearObjectWorkspace()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		_logic: _logic			// {obj} 	Unit Testing

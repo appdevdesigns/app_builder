@@ -20,6 +20,9 @@ export default {
 
 
 	// spacers
+	smallSpacer: 1,
+	mediumSpacer: 10,
+	largeSpacer: 20,
 	appListSpacerRowHeight: 10,
 	appListSpacerColMinWidth: 1,
 	appListSpacerColMaxWidth: 1,

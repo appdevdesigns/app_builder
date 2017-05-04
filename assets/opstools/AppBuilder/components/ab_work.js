@@ -60,28 +60,36 @@ OP.Component.extend('ab_work', function(App) {
 				autowidth: true,
 				cols: [
 					{
-						view: "button", value: labels.application.backToApplication, width: 250, align: "right", click: function () {
+						view: "button",
+						label: labels.application.backToApplication,
+						autowidth: true,
+						type: "icon",
+						icon: "arrow-left",
+						align: "left",
+						click: function () {
 							App.actions.transitionApplicationChooser();
 						}
 					},
 					{
+						view: "label",
+						id: ids.labelAppName,
+						align: "center"
+					},
+					{
 						id: ids.buttonSync,
 						view: "button",
-						type: "iconButton",
+						type: "icon",
 						icon: "refresh",
 						label: labels.application.synchronize,
-						width: 250,
-						//autowidth: true,
+						autowidth: true,
 						align: "right",
 						click: function () {
 							_logic.synchronize();
 						}
-					},
-					{ fillspace: true },
-					{ view: "label", id: ids.labelAppName, width: 400, align: "right" }
+					}
 				]
 			},
-			{ height: 10 },
+			{ height: App.config.mediumSpacer },
 			{
 				view: "tabbar",
 				id: ids.tabbar,
@@ -91,12 +99,12 @@ OP.Component.extend('ab_work', function(App) {
 					{
 						id: ids.tab_object,
 						value: labels.application.objectTitle,
-						width: 120
+						width: App.config.tabWidthMedium
 					},
 					{
 						id: ids.tab_interface,
 						value: labels.application.interfaceTitle,
-						width: 120
+						width: App.config.tabWidthMedium
 					}
 				],
 				on: {

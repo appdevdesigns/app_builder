@@ -19,10 +19,19 @@ export default {
 	buttonWidthSmall: 100,
 	buttonWidthExtraSmall: 50,
 
+	// tab types
+	tabWidthLarge: 200,
+	tabWidthMedium: 120,
+	tabWidthSmall: 100,
+	tabWidthExtraSmall: 50,
+
 	// column types
 
 
 	// spacers
+	smallSpacer: 10,
+	mediumSpacer: 25,
+	largeSpacer: 50,
 	appListSpacerRowHeight: 100,
 	appListSpacerColMinWidth: 100,
 	appListSpacerColMaxWidth: 200,

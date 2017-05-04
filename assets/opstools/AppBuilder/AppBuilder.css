@@ -99,8 +99,17 @@
 	background-color: #3498db !important;
 }
 .ab-app-form-permission .webix_selected {
-	color: #fff !important;
-	background-color: #3AB9CE !important;
+	color: #333 !important;
+	background-color: transparent !important;
+}
+
+/* Webix toolbar */
+.ab-toolbar-submenu, .ab-toolbar-submenu .webix_header>div {
+	background: #EEE !important;
+	color: #666 !important;
+	font-size: 15px !important;
+	font-weight: bold !important;
+	border-bottom: 0px !important;
 }
 
 /* Webix segmented */
@@ -415,6 +424,23 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 }
 
 /* Form component */
+.ab-standard-button button, .ab-standard-button button:hover, .ab-standard-button button:active, .ab-standard-button .webix_icon_btn {
+	background: transparent !important;
+	border-color: transparent !important;
+	color: #666 !important;
+	box-shadow: none !important;
+}
+.ab-cancel-button button {
+	background: transparent !important;
+	color: #AAA;
+	border-color: transparent;
+}
+.ab-cancel-button button:hover {
+	text-decoration: underline;
+}
+.ab-cancel-button button:active {
+	box-shadow: none;
+}
 .ab-form-connect-data {
 	float: left;
 	border: #CCC solid 1px;

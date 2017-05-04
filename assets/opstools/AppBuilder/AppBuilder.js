@@ -83,7 +83,9 @@ AD.Control.OpsTool.extend('BuildApp', {
 
 			// Removed this because the 140 pixels was causing the list to not scroll to the bottom of the page
 			// var computedHeight = height - 140;
+
 			var computedHeight = height;
+			console.log("computed height: " + computedHeight);
 			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
 			if (mh < computedHeight) {
 				appListDom.height(computedHeight);

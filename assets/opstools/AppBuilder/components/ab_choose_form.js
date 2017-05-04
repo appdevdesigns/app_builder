@@ -24,7 +24,7 @@ var labels = {
 
 		sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
 		permissionHeader: L('ab.application.form.headerPermission',  "*Who can use this app?"),
-		createNewRole: L('ab.application.form.createNewRoleButton', "*Create a new role"),
+		createNewRole: L('ab.application.form.createNewRoleButton', "*Create new roll"),
 
 		invalidName: L('ab.application.invalidName', "*This application name is invalid"),
 		duplicateName: L('ab.application.duplicateName', "*Name must be unique."),
@@ -90,6 +90,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 									}
 								}
 							},
+							{ height: App.config.smallSpacer },
 							{
 								name: "description",
 								view: "textarea",
@@ -100,9 +101,10 @@ OP.Component.extend('ab_choose_form', function(App) {
 								placeholder: labels.application.placeholderDescription,
 								height: 100
 							},
-							{ height: 10 },
+							{ height: App.config.smallSpacer },
 							{
 								view: "toolbar",
+								css: "ab-toolbar-submenu",
 								cols: [
 									{
 										template: labels.application.permissionHeader,
@@ -112,9 +114,10 @@ OP.Component.extend('ab_choose_form', function(App) {
 									{
 										view: "toggle",
 										id: ids.appFormCreateRoleButton,
-										type: "iconButton",
-										width: 300,
+										type: "icon",
 										align: "right",
+										autowidth: true,
+										css: "ab-standard-button",
 										offIcon: "square-o",
 										onIcon: "check-square-o",
 										label: labels.application.createNewRole,
@@ -143,22 +146,32 @@ OP.Component.extend('ab_choose_form', function(App) {
 								name: "permissions",
 								id: ids.appFormPermissionList,
 								view: "list",
-								height: 130,
+								//height: 130,
 								autowidth: true,
+								autoheight: true,
 								margin: 0,
 								css: "ab-app-form-permission",
-								scroll: "y",
-								template: "#name#",
+								template: "{common.markCheckbox()} #name#",
+								type:{
+									markCheckbox:function(obj ){
+										return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+									}
+								},
 								on: {
 									onItemClick: function (id, e, node) {
+										var item = this.getItem(id);
+
 										if (this.getItem(id).isApplicationRole) {
 											return;
 										}
 
 										if (this.isSelected(id)) {
+											item.markCheckbox = 0;
+
 											this.unselect(id);
-										}
-										else {
+										} else {
+											item.markCheckbox = 1;
+
 											var selectedIds = this.getSelectedId();
 
 											if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
@@ -172,17 +185,21 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 											this.select(selectedIds);
 										}
+
+										this.updateItem(id, item);
 									}
 								}
 							},
-							{ height: 5 },
+							{ height: App.config.smallSpacer },
 							{
-								margin: 5, cols: [
+								margin: 5,
+								cols: [
 									{ fillspace: true },
 									{
 										view: "button",
 										value: labels.common.cancel,
 										width: App.config.buttonWidthSmall,
+										css: "ab-cancel-button",
 										click: function () {
 											_logic.cancel();
 										}
@@ -554,7 +571,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 			$$(ids.appFormPermissionList).add({
 				id: 'newRole',
 				name: _logic.permissionName(appName),
-				isApplicationRole: true
+				isApplicationRole: true,
+				markCheckbox: 1
 			}, 0);
 
 
@@ -630,9 +648,10 @@ OP.Component.extend('ab_choose_form', function(App) {
 					// this application:
 					if (application && application.role) {
 						available_roles.forEach(function (r) {
-
-							if (r.id == (application.role.id || application.role))
+							if (r.id == (application.role.id || application.role)) {
 								r.isApplicationRole = true;
+								r.markCheckbox = 1;
+							}
 						});
 					}
 
@@ -649,6 +668,13 @@ OP.Component.extend('ab_choose_form', function(App) {
 					if (selected_role_ids && selected_role_ids.length > 0) {
 						// Select permissions
 						PermForm.select(selected_role_ids);
+						available_roles.forEach(function (r) {
+							if (selected_role_ids.indexOf(r.id) > -1) {
+								var item = $$(ids.appFormPermissionList).getItem(r.id);
+								item.markCheckbox = 1;
+								$$(ids.appFormPermissionList).updateItem(r.id, item);
+							}
+						});
 
 						// Select create role application button
 						var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;

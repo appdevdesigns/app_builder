@@ -39,9 +39,12 @@ OP.Component.extend('ab_work_interface', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
-		scroll: true,
+		//scroll: true,
 		rows: [
-{ view: "label", label:"interface workspace", width: 400, align: "right" },				
+			{
+				view: "label",
+				label:"interface workspace",
+			},
 		]
 	};
 
@@ -55,14 +58,14 @@ OP.Component.extend('ab_work_interface', function(App) {
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
-		
+
 		// /**
 		//  * @function formBusy
 		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
+		//  * Show the progress indicator to indicate a Form operation is in
 		//  * progress.
 		//  */
 		// formBusy: function() {
@@ -97,13 +100,13 @@ OP.Component.extend('ab_work_interface', function(App) {
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		
+
 		/**
 		 * @function initInterfaceTab
 		 *
 		 * Initialize the Object Workspace with the given ABApplication.
 		 *
-		 * @param {ABApplication} application 
+		 * @param {ABApplication} application
 		 */
 		initInterfaceTab:function(application) {
 console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
@@ -125,7 +128,7 @@ console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		_logic: _logic			// {obj} 	Unit Testing

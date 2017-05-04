@@ -44,9 +44,10 @@ OP.Component.extend('ab_work_object', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
+		autoheight: true,
 		cols: [
 			ObjectList.ui,
-			{ view: "resizer", autoheight: true },
+			{ view: "resizer"},
 			ObjectWorkspace.ui
 		]
 	};
@@ -55,7 +56,7 @@ OP.Component.extend('ab_work_object', function(App) {
 
 	// Our init() function for setting up our UI
 	var _init = function() {
-		
+
 		ObjectWorkspace.init();
 		ObjectList.init();
 
@@ -63,7 +64,7 @@ OP.Component.extend('ab_work_object', function(App) {
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 
@@ -83,13 +84,13 @@ OP.Component.extend('ab_work_object', function(App) {
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		
+
 		/**
 		 * @function initObjectTab
 		 *
 		 * Initialize the Object Workspace with the given ABApplication.
 		 *
-		 * @param {ABApplication} application 
+		 * @param {ABApplication} application
 		 */
 		initObjectTab:function(application) {
 			App.actions.populateObjectList(application);
@@ -112,7 +113,7 @@ OP.Component.extend('ab_work_object', function(App) {
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		_logic: _logic			// {obj} 	Unit Testing
