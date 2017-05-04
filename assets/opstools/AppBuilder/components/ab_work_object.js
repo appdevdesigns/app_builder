@@ -92,8 +92,8 @@ OP.Component.extend('ab_work_object', function(App) {
 		 * @param {ABApplication} application 
 		 */
 		initObjectTab:function(application) {
-			App.actions.populateObjectList(application);
-			App.actions.clearObjectWorkspace();
+			ObjectList.applicationLoad(application);
+			ObjectWorkspace.clearObjectWorkspace();
 		},
 
 

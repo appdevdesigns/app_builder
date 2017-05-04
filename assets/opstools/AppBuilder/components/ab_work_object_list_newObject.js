@@ -2,7 +2,16 @@
 /*
  * ab_work_object_list_newObject
  *
- * Display the form for creating a new Application.
+ * Display the form for creating a new Object.  This Popup will manage several 
+ * different sub components for gathering Object data for saving.
+ *
+ * The sub components will gather the data for the object and do basic form 
+ * validations on their interface.  
+ *
+ * when ready, the sub component will call onSave(values, cb)  to allow this 
+ * component to manage the actual final object validation, and saving to this
+ * application.  On success, cb(null) will be called.  on error cb(err) will
+ * be called.
  *
  */
 
@@ -24,15 +33,14 @@ var labels = {
 }
 
 
-
-OP.Component.extend('ab_work_object_list_newObject', function(App) {
+var idBase = 'ab_work_object_list_newObject';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_list_newObject_component'),
-
+		component: App.unique(idBase + '_component'),
 	}
 
 
@@ -48,13 +56,6 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 		modal: true,
 		head: labels.component.addNew,
 		selectNewObject: true,
-		on: {
-			"onBeforeShow": function () {
-				// blankObjectCreator.onInit();
-				// importObjectCreator.onInit();
-				// importCsvCreator.onInit();
-			}
-		},
 		body: {
 			view: "tabview",
 			cells: [
@@ -68,7 +69,13 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 
 
 	// Our init() function for setting up our UI
-	var _init = function() {
+	var _init = function(options) {
+
+		// register our callbacks:
+		for(var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
+
 
 		var ourCBs = {
 			onCancel: _logic.hide,
@@ -76,8 +83,6 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 		}
 
 		BlankTab.init(ourCBs);
-
-		// webix.extend($$(ids.form), webix.ProgressBar);
 
 	}
 
@@ -87,15 +92,22 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 	var _logic = {
 
 		
-		// *
-		//  * @function cancel
-		//  *
-		//  * The Model Creator was canceled.
-		 
-		// cancel: function() {
 
-		// 	_logic.hide();
-		// },
+
+		/**
+		 * @function applicationLoad()
+		 *
+		 * prepare ourself with the current application
+		 */
+		applicationLoad:function(application) {
+			// _logic.show();
+			currentApplication = application;	// remember our current Application.
+		},
+
+
+		callbacks:{
+			onDone:function(){}
+		},
 
 
 		/**
@@ -129,13 +141,15 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 				return false;
 			}
 
-
+			// create a new (unsaved) instance of our object:
 			var newObject = currentApplication.objectNew(values);
 
+
+			// have newObject validate it's values.
 			var validationErrors = newObject.isValid();
 			if (validationErrors) {
-				cb(validationErrors);
-				return false;
+				cb(validationErrors);						// tell current Tab component the errors
+				return false;								// stop here.
 			}
 
 
@@ -144,16 +158,13 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 				.then(function(obj){
 
 					// successfully done:
-					cb();
-					_logic.hide();
-					currentCallBack(null, obj);
+					cb();									// tell current tab component save successful
+					_logic.hide();							// hide our popup
+					_logic.callbacks.onDone(null, obj);		// tell parent component we're done
 				})
 				.catch(function(err){
-
-					cb(err);				// the current Tab
-					// currentCallBack(err);	// the calling Component
+					cb(err);								// tell current Tab component there was an error
 				})
-
 		},
 
 
@@ -170,27 +181,11 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 
 
 	var currentApplication = null;
-	var currentCallBack = null;
+	// var currentCallBack = null;
 
 
 	// Expose any globally accessible Actions:
 	var _actions = {
-
-
-		/**
-		 * @function transitionNewObjectWindow()
-		 *
-		 * Show our Create New Object window.
-		 *
-		 * @param {ABApplication} Application  	The current ABApplication 
-		 *										we are working with.
-		 */
-		transitionNewObjectWindow:function(Application, cb){
-			
-			_logic.show();
-			currentApplication = Application;	// remember our current Application.
-			currentCallBack = cb;
-		}
 
 	}
 
@@ -200,6 +195,9 @@ OP.Component.extend('ab_work_object_list_newObject', function(App) {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
 		init:_init,				// {fn} 	init() to setup this component  
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		// interface methods for parent component:
+		applicationLoad:_logic.applicationLoad,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

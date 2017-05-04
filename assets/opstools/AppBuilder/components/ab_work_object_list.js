@@ -26,25 +26,20 @@ var labels = {
 }
 
 
-
-OP.Component.extend('ab_work_object_list', function(App) {
+var idBase = 'ab_work_object_list';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_list_component'),
+		component: App.unique(idBase+ '_component'),
 
-		list: App.unique('ab_work_object_list_editlist'),
-		buttonNew: App.unique('ab_work_object_list_buttonNew'),
+		list: App.unique(idBase+ '_editlist'),
+		buttonNew: App.unique(idBase+ '_buttonNew'),
 
 	}
 
-
-	// There is a Popup for adding a new Object:
-	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
-	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
-	PopupNewObjectComponent.init();
 
 
 	// Our webix UI definition:
@@ -69,98 +64,29 @@ height:800,
 				},
 				type: {
 					height:"auto",
-					unsyncNumber: "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+					unsyncNumber: "",  // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
 				on: {
 					onAfterRender: function () {
-// webix.once(function () {
-// 	$$(self.webixUiId.objectList).data.each(function (d) {
-// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
-// 	});
-// });
-
-// // Show gear icon
-// if (this.getSelectedId(true).length > 0) {
-// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
-// 	self.refreshUnsyncNumber();
-// }
+						_logic.onAfterRender();
 					},
 					onAfterSelect: function (id) {
 						_logic.selectObject(id);
-// // Fire select object event
-// self.element.trigger(self.options.selectedObjectEvent, id);
-
-// // Refresh unsync number
-// self.refreshUnsyncNumber();
-
-// // Show gear icon
-// $(this.getItemNode(id)).find('.ab-object-list-edit').show();
 					},
 					onAfterDelete: function (id) {
-// // Fire unselect event 
-// self.element.trigger(self.options.selectedObjectEvent, null);
+						_logic.onAfterDelete(id);
 					},
 					onBeforeEditStop: function (state, editor) {
-// if (!inputValidator.validateFormat(state.value)) {
-// 	return false;
-// }
-
-// // Validation - check duplicate
-// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
-// 	webix.alert({
-// 		title: self.labels.object.invalidName,
-// 		ok: self.labels.common.ok,
-// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
-// 	});
-
-// 	return false;
-// }
+						_logic.onBeforeEditStop(state, editor);
 					},
 					onAfterEditStop: function (state, editor, ignoreUpdate) {
-// if (state.value != state.old) {
-// 	var _this = this;
-
-// 	this.showProgress({ type: 'icon' });
-
-// 	var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
-// 	selectedObject.attr('label', state.value);
-
-// 	// Call server to rename
-// 	selectedObject.save()
-// 		.fail(function () {
-// 			_this.hideProgress();
-
-// 			webix.message({
-// 				type: "error",
-// 				text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
-// 			});
-
-// 			AD.error.log('Object List : Error rename object data', { error: err });
-// 		})
-// 		.then(function () {
-// 			_this.hideProgress();
-
-// 			if (selectedObject.translate) selectedObject.translate();
-
-// 			// Show success message
-// 			webix.message({
-// 				type: "success",
-// 				text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
-// 			});
-
-// 			// Show gear icon
-// 			$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
-// 		});
-// }
+						_logic.onAfterEditStop(state, editor, ignoreUpdate);
 					}
 				},
 				onClick: {
 					"ab-object-list-edit": function (e, id, trg) {
-// // Show menu
-// $$(self.webixUiId.objectListMenuPopup).show(trg);
-
-// return false;
+						_logic.clickEditMenu(e, id, trg);
 					}
 				}
 			},
@@ -169,11 +95,7 @@ height:800,
 				id: ids.buttonNew,
 				value: labels.application.addNew,
 				click: function () {
-
-					_logic.toNewObject();
-					
-// $$(self.webixUiId.addNewPopup).define('selectNewObject', true);
-// $$(self.webixUiId.addNewPopup).show();
+					_logic.clickNewObject();
 				}
 			}
 		]
@@ -194,12 +116,141 @@ height:800,
 	// our internal business logic 
 	var _logic = {
 
+
+		/**
+		 * @function applicationLoad
+		 *
+		 * Initialize the Object List from the provided ABApplication
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} application  	[optional] The current ABApplication 
+		 *										we are working with.
+		 */
+		applicationLoad : function(application){
+			_logic.listBusy();
+
+			CurrentApplication = application;
+
+			// get a DataCollection of all our objects
+			objectList = new webix.DataCollection({
+				data: application.objects(),
+			});
+
+			// clear our list and display our objects:
+			var List = $$(ids.list);
+			List.clearAll();
+			List.data.unsync();
+			List.data.sync(objectList);
+			List.refresh();
+			List.unselectAll();
+
+			// 
+			_logic.syncNumberRefresh();
+			_logic.listReady();
+
+
+			// prepare our Popup with the current Application
+			PopupNewObjectComponent.applicationLoad(application);
+
+		},
+
+
+		clickEditMenu: function(e, id, trg) {
+
+console.error('!! TODO: clickEditMenu()');
+			// // Show menu
+			// $$(self.webixUiId.objectListMenuPopup).show(trg);
+
+			// return false;
+		},
+
+
 		listBusy:function() {
 			$$(ids.list).showProgress({ type: "icon" });
 		},
 
 		listReady:function() {
 			$$(ids.list).hideProgress();
+		},
+
+
+		onAfterDelete: function (id) {
+console.error('!! todo: onAfterDelete()');			
+		},
+
+
+		onAfterRender: function() {
+console.error('!! todo: onAfterRender() editing');
+			// webix.once(function () {
+			// 	$$(self.webixUiId.objectList).data.each(function (d) {
+			// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
+			// 	});
+			// });
+
+			// // Show gear icon
+			// if (this.getSelectedId(true).length > 0) {
+			// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+			// 	self.refreshUnsyncNumber();
+			// }
+		},
+
+		onAfterEditStop: function(state, editor, ignoreUpdate) {
+
+console.error('!! todo: onAfterEditStop() editing');
+			// if (state.value != state.old) {
+			// 	var _this = this;
+
+			// 	this.showProgress({ type: 'icon' });
+
+			// 	var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
+			// 	selectedObject.attr('label', state.value);
+
+			// 	// Call server to rename
+			// 	selectedObject.save()
+			// 		.fail(function () {
+			// 			_this.hideProgress();
+
+			// 			webix.message({
+			// 				type: "error",
+			// 				text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
+			// 			});
+
+			// 			AD.error.log('Object List : Error rename object data', { error: err });
+			// 		})
+			// 		.then(function () {
+			// 			_this.hideProgress();
+
+			// 			if (selectedObject.translate) selectedObject.translate();
+
+			// 			// Show success message
+			// 			webix.message({
+			// 				type: "success",
+			// 				text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
+			// 			});
+
+			// 			// Show gear icon
+			// 			$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
+			// 		});
+			// }
+		},
+
+		onBeforeEditStop: function(state, editor) {
+console.error('!! todo: onBeforeEditStop() editing');
+			// if (!inputValidator.validateFormat(state.value)) {
+			// 	return false;
+			// }
+
+			// // Validation - check duplicate
+			// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
+			// 	webix.alert({
+			// 		title: self.labels.object.invalidName,
+			// 		ok: self.labels.common.ok,
+			// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
+			// 	});
+
+			// 	return false;
+			// }
 		},
 
 
@@ -212,6 +263,14 @@ height:800,
 
 			var object = $$(ids.list).getItem(id);
 			App.actions.populateObjectWorkspace(object);
+
+//// TODO: do we need these?
+
+			// // Refresh unsync number
+			// self.refreshUnsyncNumber();
+
+			// // Show gear icon
+			// $(this.getItemNode(id)).find('.ab-object-list-edit').show();
 		},
 
 
@@ -227,27 +286,30 @@ height:800,
 
 
 		syncNumberRefresh:function() {
+
+//// NOTE: I think we are removing Sync Numbers with the refactor.
+//// probably wont need this.
 console.error('TODO: syncNumRefresh()');
-// var self = this,
-// 	objects = [];
+			// var self = this,
+			// 	objects = [];
 
-// objects = $$(self.webixUiId.objectList).data.find(function (d) {
-// 	return objectName ? d.name == objectName : true;
-// }, false, true);
+			// objects = $$(self.webixUiId.objectList).data.find(function (d) {
+			// 	return objectName ? d.name == objectName : true;
+			// }, false, true);
 
-// objects.forEach(function (obj) {
-// 	var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
-// 		unsyncNumber = (objectModel && objectModel.Cached ? objectModel.Cached.count() : 0),
-// 		htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
+			// objects.forEach(function (obj) {
+			// 	var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
+			// 		unsyncNumber = (objectModel && objectModel.Cached ? objectModel.Cached.count() : 0),
+			// 		htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
 
-// 	if (unsyncNumber > 0) {
-// 		htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
-// 		htmlItem.find('.ab-object-unsync').show();
-// 	}
-// 	else {
-// 		htmlItem.find('.ab-object-unsync').hide();
-// 	}
-// });
+			// 	if (unsyncNumber > 0) {
+			// 		htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
+			// 		htmlItem.find('.ab-object-unsync').show();
+			// 	}
+			// 	else {
+			// 		htmlItem.find('.ab-object-unsync').hide();
+			// 	}
+			// });
 		},
 
 
@@ -268,25 +330,31 @@ console.error('TODO: syncNumRefresh()');
 
 
 		/**
-		 * @function toNewObject
+		 * @function callbackNewObject
 		 *
-		 * Manages initiating the transition to the new Object Popup window, 
-		 * as well as managing the new object that was created.
-		 *
-		 * @param {obj} obj the current instance of ABObject for the row.
-		 * @param {?} common the webix.common icon data structure
-		 * @return {string}
+		 * Once a New Object was created in the Popup, follow up with it here.
 		 */
-		toNewObject:function() {
-			App.actions.transitionNewObjectWindow(CurrentApplication, function(err, newObject){
+		callbackNewObject:function(err, object){
 
-				if (err) {
-					return false;
-				}
+			if (err) {
+				OP.Error.log('Error creating New Object', {error: err});
+				return;
+			}
 
-				objectList.add(newObject,0);
-				$$(ids.list).select(newObject.id);
-			});
+			objectList.add(object,0);
+			$$(ids.list).select(newObject.id);
+		},
+
+
+		/**
+		 * @function clickNewObject
+		 *
+		 * Manages initiating the transition to the new Object Popup window
+		 */
+		clickNewObject:function() {
+
+			// show the new popup
+			PopupNewObject.show();
 		}
 	}
 
@@ -305,6 +373,15 @@ console.error('TODO: syncNumRefresh()');
 	].join('');
 
 
+	// Note: put these here so _logic is defined:
+	// There is a Popup for adding a new Object:
+	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
+	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
+	PopupNewObjectComponent.init({
+		onDone:_logic.callbackNewObject
+	});
+
+
 
 	var CurrentApplication = null;
 	var objectList = null;
@@ -313,38 +390,6 @@ console.error('TODO: syncNumRefresh()');
 
 	// Expose any globally accessible Actions:
 	var _actions = {
-
-
-		/**
-		 * @function populateObjectList()
-		 *
-		 * Initialize the Object List from the provided ABApplication
-		 *
-		 * If no ABApplication is provided, then show an empty form. (create operation)
-		 *
-		 * @param {ABApplication} application  	[optional] The current ABApplication 
-		 *										we are working with.
-		 */
-		populateObjectList : function(application){
-			_logic.listBusy();
-
-			CurrentApplication = application;
-
-			objectList = new webix.DataCollection({
-				data: application.objects(),
-			});
-
-			var List = $$(ids.list);
-			List.clearAll();
-			List.data.unsync();
-			List.data.sync(objectList);
-			List.refresh();
-			List.unselectAll();
-
-			_logic.syncNumberRefresh();
-			_logic.listReady();
-
-		},
 
 
 		/**
@@ -365,6 +410,9 @@ console.error('TODO: syncNumRefresh()');
 		ui:_ui,					// {obj} 	the webix ui definition for this component
 		init:_init,				// {fn} 	init() to setup this component  
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		// interface methods for parent component:
+		applicationLoad:_logic.applicationLoad,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

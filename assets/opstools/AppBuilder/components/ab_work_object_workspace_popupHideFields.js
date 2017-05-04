@@ -1,8 +1,8 @@
 
 /*
- * ab_work_object_workspace_popupNewDataField
+ * ab_work_object_workspace_popupHideFields
  *
- * Manage the Add New Data Field popup.
+ * Manage the Hide Fields popup.
  *
  */
 
@@ -31,15 +31,11 @@ OP.Component.extend(idBase, function(App) {
 	labels.common = App.labels;
 
 
-	// internal list of Webix IDs to reference our UI components.
-	
+	// internal list of Webix IDs to reference our UI components
 	var ids = {
 		component: App.unique(idBase + '_component'),
-
 		list: App.unique(idBase + "_list"),
-
 	}
-
 
 
 	// Our webix UI definition:
@@ -56,34 +52,14 @@ OP.Component.extend(idBase, function(App) {
                             view: 'button',
                             value: labels.component.showAll,
                             click: function () {
-_logic.showAll();
-                                // var visible_popup = this.getTopParentView();
-
-                                // visible_popup.dataTable.eachColumn(function (cId) {
-                                //     visible_popup.dataTable.showColumn(cId);
-                                // }, true);
-
-                                // visible_popup.callChangeEvent();
+								_logic.clickShowAll();
                             }
                         },
                         {
                             view: 'button',
                             value: labels.component.hideAll,
                             click: function () {
-_logic.hideAll()
-                                // var visible_popup = this.getTopParentView(),
-                                //     columns = [];
-
-                                // visible_popup.dataTable.config.columns.forEach(function (c) {
-                                //     if (c.id != 'appbuilder_trash')
-                                //         columns.push(c.id);
-                                // });
-
-                                // columns.forEach(function (c) {
-                                //     visible_popup.dataTable.hideColumn(c);
-                                // });
-
-                                // visible_popup.callChangeEvent();
+								_logic.clickHideAll()
                             }
                         }
                     ]
@@ -96,17 +72,7 @@ _logic.hideAll()
                     template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
                     on: {
                         onItemClick: function (id, e, node) {
-_logic.listItemClick(id, e, node);
-
-                            // var visible_popup = this.getTopParentView(),
-                            //     item = this.getItem(id);
-
-                            // if (visible_popup.dataTable.isColumnVisible(id))
-                            //     visible_popup.dataTable.hideColumn(id);
-                            // else
-                            //     visible_popup.dataTable.showColumn(id);
-
-                            // visible_popup.callChangeEvent();
+							_logic.listItemClick(id, e, node);
                         }
                     }
                 }
@@ -138,10 +104,68 @@ _logic.listItemClick(id, e, node);
 	var _logic = {
 
 		callbacks:{
+
+			/**
+			 * @function onChange
+			 * called when we have made changes to the hidden field settings 
+			 * of our Current Object.
+			 *
+			 * this is meant to alert our parent component to respond to the 
+			 * change.
+			 */
 			onChange:function(){}
 		},
 
 
+		/**
+		 * @function clickHideAll
+		 * the user clicked the [hide all] option.  So hide all our fields.
+		 */
+		clickHideAll: function () {
+
+			// create an array of all our field.id's:
+			var allFields = CurrentObject.fields();
+			var newHidden = [];
+			allFields.forEach(function(f){
+				newHidden.push(f.id);
+			})
+
+			// store that
+			CurrentObject.workspaceHiddenFields = newHidden;
+			CurrentObject.save()
+			.then(function(){
+				_logic.iconsReset()
+				_logic.callbacks.onChange()
+			})
+			.catch(function(err){
+				OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newHidden });
+			})
+		},
+
+
+		/**
+		 * @function clickShowAll
+		 * the user clicked the [show all] option.  So show all our fields.
+		 */
+		clickShowAll: function () {
+
+			// store an empty array of hidden fields
+			CurrentObject.workspaceHiddenFields = [];
+			CurrentObject.save()
+			.then(function(){
+				_logic.iconsReset();
+				_logic.callbacks.onChange()
+			})
+			.catch(function(err){
+				OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newHidden });
+			})
+		},
+
+
+		/**
+		 * @function listItemClick
+		 * update the clicked field setting.
+		 */
 		listItemClick: function(id, e, node) {
 			var newFields = [];
 			var isHidden = CurrentObject.workspaceHiddenFields.filter((fID) => { return fID == id;}).length>0;
@@ -168,24 +192,39 @@ _logic.listItemClick(id, e, node);
 				_logic.callbacks.onChange()
 			})
 			.catch(function(err){
-console.error('!!! TODO: catch this error:', err);
-
+				OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
 			})
 		},
 
 
+		/**
+		 * @function iconHide
+		 * Hide the icon for the given node
+		 * @param {DOM} node  the html dom node of the element that contains our icon
+		 */
 		iconHide: function(node) {
 			if (node) {
 				node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
 			}
 		}, 
 
+
+		/**
+		 * @function iconShow
+		 * Show the icon for the given node
+		 * @param {DOM} node  the html dom node of the element that contains our icon
+		 */
 		iconShow: function(node) {
 			if (node) {
 				node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
 			}
 		},
 
+
+		/**
+		 * @function iconsReset
+		 * Reset the icon displays according to the current values in our Object
+		 */
 		iconsReset: function() {
 
 			var List = $$(ids.list);
@@ -211,6 +250,12 @@ console.error('!!! TODO: catch this error:', err);
 
 		},
 
+
+		/**
+		 * @function objectLoad
+		 * Ready the Popup according to the current object
+		 * @param {ABObject} object  the currently selected object.
+		 */
 		objectLoad: function(object) {
 			CurrentObject = object;
 
@@ -223,7 +268,6 @@ console.error('!!! TODO: catch this error:', err);
 					label: f.label
 				})
 			})
-
 
 			$$(ids.list).parse(allFields);
 		}

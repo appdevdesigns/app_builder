@@ -48,8 +48,6 @@ OP.Component.extend(idBase, function(App) {
 
 
 
-
-
 	// Our webix UI definition:
 	var _ui = {
 		view:"popup",
@@ -57,10 +55,10 @@ OP.Component.extend(idBase, function(App) {
 		modal: true,
 		autoheight:true,
 		// maxHeight: 420,
-ready: function () {
-	console.error('ready() called!!!')
-	_logic.resetState();
-},
+// ready: function () {
+// 	console.error('ready() called!!!')
+// 	_logic.resetState();
+// },
 		body: {
 			css: 'ab-add-fields-popup',
 			borderless: true,

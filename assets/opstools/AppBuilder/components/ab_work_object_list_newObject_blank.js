@@ -6,8 +6,6 @@
  *
  */
 
-import ABObject from "../classes/ABObject"
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -21,18 +19,18 @@ var labels = {
 }
 
 
-
-OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
+var idBase = 'ab_work_object_list_newObject_blank';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_list_newObject_blank_component'),
+		component: App.unique(idBase + '_component'),
 
-		form: App.unique('ab_work_object_list_newObject_blank'),
-		buttonSave: App.unique('ab-object-blank-object-save'),
-		buttonCancel: App.unique('ab-object-blank-object-cancel')
+		form: App.unique(idBase + '_blank'),
+		buttonSave: App.unique(idBase + '_save'),
+		buttonCancel: App.unique(idBase + '_cancel')
 	}
 
 
@@ -56,13 +54,15 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function(App) {
 					margin: 5,
 					cols: [
 						{
-							view: "button", id: ids.buttonSave, value: labels.common.add, type: "form", click: function () {
-								return _logic.save();
+							view: "button", id: ids.buttonCancel, value: labels.common.cancel, 
+							click: function () {
+								_logic.cancel();
 							}
 						},
 						{
-							view: "button", id: ids.buttonCancel, value: labels.common.cancel, click: function () {
-								_logic.cancel();
+							view: "button", id: ids.buttonSave, value: labels.common.add, type: "form", 
+							click: function () {
+								return _logic.save();
 							}
 						}
 					]

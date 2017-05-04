@@ -89,7 +89,7 @@ var _OPOP2 = _interopRequireDefault(_OPOP);
 
 __webpack_require__(29);
 
-var _ABObject = __webpack_require__(10);
+var _ABObject = __webpack_require__(11);
 
 var _ABObject2 = _interopRequireDefault(_ABObject);
 
@@ -1460,6 +1460,131 @@ module.exports = exports["default"];
 
 "use strict";
 
+/*
+ * AB
+ *
+ * The base AppBuilder component.  It manages these components:
+ *   - ab_choose :  choose an application to work with
+ *   - ab_work   :  load an application into the work area
+ *
+ */
+
+// import '../OP/OP'
+
+
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+__webpack_require__(14);
+
+__webpack_require__(18);
+
+// Import our Custom Components here:
+var _webix_custom_componentsEdittree = __webpack_require__(31);
+
+var _webix_custom_componentsEdittree2 = _interopRequireDefault(_webix_custom_componentsEdittree);
+
+var _webix_custom_componentsEditlist = __webpack_require__(30);
+
+var _webix_custom_componentsEditlist2 = _interopRequireDefault(_webix_custom_componentsEditlist);
+
+OP.Component.extend('ab', function (App) {
+
+	function L(key, altText) {
+		return AD.lang.label.getLabel(key) || altText;
+	}
+
+	// setup the common labels for our AppBuilder Application.
+	App.labels = {
+		add: L('ab.common.add', "*Add"),
+		create: L('ab.common.create', "*Create"),
+		"delete": L('ab.common.delete', "*Delete"),
+		edit: L('ab.common.edit', "*Edit"),
+		"export": L('ab.common.export', "*Export"),
+		formName: L('ab.common.form.name', "*Name"),
+		"import": L('ab.common.import', "*Import"),
+		ok: L('ab.common.ok', "*Ok"),
+
+		cancel: L('ab.common.cancel', "*Cancel"),
+		save: L('ab.common.save', "*Save"),
+
+		yes: L('ab.common.yes', "*Yes"),
+		no: L('ab.common.no', "*No"),
+
+		createErrorMessage: L('ab.common.create.error', "*System could not create <b>{0}</b>."),
+		createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
+
+		updateErrorMessage: L('ab.common.update.error', "*System could not update <b>{0}</b>."),
+		updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
+
+		deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
+		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+
+		// Data Field  common Property labels:
+		dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
+		dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
+
+		dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
+		dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
+
+		dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?')
+	};
+
+	// make instances of our Custom Components:
+	OP.CustomComponent[_webix_custom_componentsEdittree2['default'].key](App, 'edittree'); // ->  App.custom.edittree  now exists
+	OP.CustomComponent[_webix_custom_componentsEditlist2['default'].key](App, 'editlist'); // ->  App.custom.editlist  now exists
+
+	var ids = {
+		component: App.unique('app_builder_root')
+	};
+
+	// Define the external components used in this Component:
+	var AppChooser = OP.Component['ab_choose'](App);
+	var AppWorkspace = OP.Component['ab_work'](App);
+
+	// This component's UI definition:
+	// Application multi-views
+	var _ui = {
+		id: ids.component,
+		view: "multiview",
+		autoheight: true,
+		autowidth: true,
+		rows: [AppChooser.ui, AppWorkspace.ui]
+	};
+
+	// This component's init() definition:
+	var _init = function _init() {
+
+		AppChooser.init();
+		AppWorkspace.init();
+
+		// start off only showing the App Chooser:
+		App.actions.transitionApplicationChooser();
+
+		// perform an initial resize adjustment
+		$$(ids.component).adjust();
+	};
+
+	// Expose any globally accessible Actions:
+	var _actions = {};
+
+	// return the current instance of this component:
+	return {
+		ui: _ui, // {obj} 	the webix ui definition for this component
+		init: _init, // {fn} 	init() to setup this component
+		actions: _actions // {ob}		hash of fn() to expose so other components can access.
+	};
+});
+
+//// REFACTORING TODOs:
+// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 
 Object.defineProperty(exports, "__esModule", {
 	value: true
@@ -1800,131 +1925,6 @@ var ABObject = (function () {
 
 exports["default"] = ABObject;
 module.exports = exports["default"];
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*
- * AB 
- *
- * The base AppBuilder component.  It manages these components:
- *   - ab_choose :  choose an application to work with
- *   - ab_work   :  load an application into the work area
- *
- */
-
-
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-__webpack_require__(1);
-
-__webpack_require__(14);
-
-__webpack_require__(18);
-
-// Import our Custom Components here:
-var _webix_custom_componentsEdittree = __webpack_require__(31);
-
-var _webix_custom_componentsEdittree2 = _interopRequireDefault(_webix_custom_componentsEdittree);
-
-var _webix_custom_componentsEditlist = __webpack_require__(30);
-
-var _webix_custom_componentsEditlist2 = _interopRequireDefault(_webix_custom_componentsEditlist);
-
-OP.Component.extend('ab', function (App) {
-
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
-
-	// setup the common labels for our AppBuilder Application.
-	App.labels = {
-		add: L('ab.common.add', "*Add"),
-		create: L('ab.common.create', "*Create"),
-		"delete": L('ab.common.delete', "*Delete"),
-		edit: L('ab.common.edit', "*Edit"),
-		"export": L('ab.common.export', "*Export"),
-		formName: L('ab.common.form.name', "*Name"),
-		"import": L('ab.common.import', "*Import"),
-		ok: L('ab.common.ok', "*Ok"),
-
-		cancel: L('ab.common.cancel', "*Cancel"),
-		save: L('ab.common.save', "*Save"),
-
-		yes: L('ab.common.yes', "*Yes"),
-		no: L('ab.common.no', "*No"),
-
-		createErrorMessage: L('ab.common.create.error', "*System could not create <b>{0}</b>."),
-		createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
-
-		updateErrorMessage: L('ab.common.update.error', "*System could not update <b>{0}</b>."),
-		updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
-
-		deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
-		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
-
-		// Data Field  common Property labels:
-		dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
-		dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
-
-		dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
-		dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
-
-		dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?')
-	};
-
-	// make instances of our Custom Components:
-	OP.CustomComponent[_webix_custom_componentsEdittree2['default'].key](App, 'edittree'); // ->  App.custom.edittree  now exists
-	OP.CustomComponent[_webix_custom_componentsEditlist2['default'].key](App, 'editlist'); // ->  App.custom.editlist  now exists
-
-	var ids = {
-		component: App.unique('app_builder_root')
-	};
-
-	// Define the external components used in this Component:
-	var AppChooser = OP.Component['ab_choose'](App);
-	var AppWorkspace = OP.Component['ab_work'](App);
-
-	// This component's UI definition:
-	// Application multi-views
-	var _ui = {
-		id: ids.component,
-		view: "multiview",
-		autoheight: true,
-		autowidth: true,
-		rows: [AppChooser.ui, AppWorkspace.ui]
-	};
-
-	// This component's init() definition:
-	var _init = function _init() {
-
-		AppChooser.init();
-		AppWorkspace.init();
-
-		// start off only showing the App Chooser:
-		App.actions.transitionApplicationChooser();
-
-		// perform an initial resize adjustment
-		$$(ids.component).adjust();
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component 
-		actions: _actions // {ob}		hash of fn() to expose so other components can access.
-	};
-});
-
-//// REFACTORING TODOs:
-// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
 
 /***/ }),
 /* 12 */
@@ -4389,8 +4389,8 @@ OP.Component.extend('ab_work_object', function (App) {
    * @param {ABApplication} application 
    */
 		initObjectTab: function initObjectTab(application) {
-			App.actions.populateObjectList(application);
-			App.actions.clearObjectWorkspace();
+			ObjectList.applicationLoad(application);
+			ObjectWorkspace.clearObjectWorkspace();
 		},
 
 		/**
@@ -4451,23 +4451,19 @@ var labels = {
 	}
 };
 
-OP.Component.extend('ab_work_object_list', function (App) {
+var idBase = 'ab_work_object_list';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_list_component'),
+		component: App.unique(idBase + '_component'),
 
-		list: App.unique('ab_work_object_list_editlist'),
-		buttonNew: App.unique('ab_work_object_list_buttonNew')
+		list: App.unique(idBase + '_editlist'),
+		buttonNew: App.unique(idBase + '_buttonNew')
 
 	};
-
-	// There is a Popup for adding a new Object:
-	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
-	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
-	PopupNewObjectComponent.init();
 
 	// Our webix UI definition:
 	var _ui = {
@@ -4490,98 +4486,29 @@ OP.Component.extend('ab_work_object_list', function (App) {
 			},
 			type: {
 				height: "auto",
-				unsyncNumber: "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+				unsyncNumber: "", // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 				iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 			},
 			on: {
 				onAfterRender: function onAfterRender() {
-					// webix.once(function () {
-					// 	$$(self.webixUiId.objectList).data.each(function (d) {
-					// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
-					// 	});
-					// });
-
-					// // Show gear icon
-					// if (this.getSelectedId(true).length > 0) {
-					// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
-					// 	self.refreshUnsyncNumber();
-					// }
+					_logic.onAfterRender();
 				},
 				onAfterSelect: function onAfterSelect(id) {
 					_logic.selectObject(id);
-					// // Fire select object event
-					// self.element.trigger(self.options.selectedObjectEvent, id);
-
-					// // Refresh unsync number
-					// self.refreshUnsyncNumber();
-
-					// // Show gear icon
-					// $(this.getItemNode(id)).find('.ab-object-list-edit').show();
 				},
 				onAfterDelete: function onAfterDelete(id) {
-					// // Fire unselect event
-					// self.element.trigger(self.options.selectedObjectEvent, null);
+					_logic.onAfterDelete(id);
 				},
 				onBeforeEditStop: function onBeforeEditStop(state, editor) {
-					// if (!inputValidator.validateFormat(state.value)) {
-					// 	return false;
-					// }
-
-					// // Validation - check duplicate
-					// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
-					// 	webix.alert({
-					// 		title: self.labels.object.invalidName,
-					// 		ok: self.labels.common.ok,
-					// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
-					// 	});
-
-					// 	return false;
-					// }
+					_logic.onBeforeEditStop(state, editor);
 				},
 				onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
-					// if (state.value != state.old) {
-					// 	var _this = this;
-
-					// 	this.showProgress({ type: 'icon' });
-
-					// 	var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
-					// 	selectedObject.attr('label', state.value);
-
-					// 	// Call server to rename
-					// 	selectedObject.save()
-					// 		.fail(function () {
-					// 			_this.hideProgress();
-
-					// 			webix.message({
-					// 				type: "error",
-					// 				text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
-					// 			});
-
-					// 			AD.error.log('Object List : Error rename object data', { error: err });
-					// 		})
-					// 		.then(function () {
-					// 			_this.hideProgress();
-
-					// 			if (selectedObject.translate) selectedObject.translate();
-
-					// 			// Show success message
-					// 			webix.message({
-					// 				type: "success",
-					// 				text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
-					// 			});
-
-					// 			// Show gear icon
-					// 			$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
-					// 		});
-					// }
+					_logic.onAfterEditStop(state, editor, ignoreUpdate);
 				}
 			},
 			onClick: {
 				"ab-object-list-edit": function abObjectListEdit(e, id, trg) {
-					// // Show menu
-					// $$(self.webixUiId.objectListMenuPopup).show(trg);
-
-					// return false;
+					_logic.clickEditMenu(e, id, trg);
 				}
 			}
 		}, {
@@ -4589,11 +4516,7 @@ OP.Component.extend('ab_work_object_list', function (App) {
 			id: ids.buttonNew,
 			value: labels.application.addNew,
 			click: function click() {
-
-				_logic.toNewObject();
-
-				// $$(self.webixUiId.addNewPopup).define('selectNewObject', true);
-				// $$(self.webixUiId.addNewPopup).show();
+				_logic.clickNewObject();
 			}
 		}]
 	};
@@ -4609,12 +4532,134 @@ OP.Component.extend('ab_work_object_list', function (App) {
 	// our internal business logic
 	var _logic = {
 
+		/**
+   * @function applicationLoad
+   *
+   * Initialize the Object List from the provided ABApplication
+   *
+   * If no ABApplication is provided, then show an empty form. (create operation)
+   *
+   * @param {ABApplication} application  	[optional] The current ABApplication 
+   *										we are working with.
+   */
+		applicationLoad: function applicationLoad(application) {
+			_logic.listBusy();
+
+			CurrentApplication = application;
+
+			// get a DataCollection of all our objects
+			objectList = new webix.DataCollection({
+				data: application.objects()
+			});
+
+			// clear our list and display our objects:
+			var List = $$(ids.list);
+			List.clearAll();
+			List.data.unsync();
+			List.data.sync(objectList);
+			List.refresh();
+			List.unselectAll();
+
+			//
+			_logic.syncNumberRefresh();
+			_logic.listReady();
+
+			// prepare our Popup with the current Application
+			PopupNewObjectComponent.applicationLoad(application);
+		},
+
+		clickEditMenu: function clickEditMenu(e, id, trg) {
+
+			console.error('!! TODO: clickEditMenu()');
+			// // Show menu
+			// $$(self.webixUiId.objectListMenuPopup).show(trg);
+
+			// return false;
+		},
+
 		listBusy: function listBusy() {
 			$$(ids.list).showProgress({ type: "icon" });
 		},
 
 		listReady: function listReady() {
 			$$(ids.list).hideProgress();
+		},
+
+		onAfterDelete: function onAfterDelete(id) {
+			console.error('!! todo: onAfterDelete()');
+		},
+
+		onAfterRender: function onAfterRender() {
+			console.error('!! todo: onAfterRender() editing');
+			// webix.once(function () {
+			// 	$$(self.webixUiId.objectList).data.each(function (d) {
+			// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
+			// 	});
+			// });
+
+			// // Show gear icon
+			// if (this.getSelectedId(true).length > 0) {
+			// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+			// 	self.refreshUnsyncNumber();
+			// }
+		},
+
+		onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+
+			console.error('!! todo: onAfterEditStop() editing');
+			// if (state.value != state.old) {
+			// 	var _this = this;
+
+			// 	this.showProgress({ type: 'icon' });
+
+			// 	var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
+			// 	selectedObject.attr('label', state.value);
+
+			// 	// Call server to rename
+			// 	selectedObject.save()
+			// 		.fail(function () {
+			// 			_this.hideProgress();
+
+			// 			webix.message({
+			// 				type: "error",
+			// 				text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
+			// 			});
+
+			// 			AD.error.log('Object List : Error rename object data', { error: err });
+			// 		})
+			// 		.then(function () {
+			// 			_this.hideProgress();
+
+			// 			if (selectedObject.translate) selectedObject.translate();
+
+			// 			// Show success message
+			// 			webix.message({
+			// 				type: "success",
+			// 				text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
+			// 			});
+
+			// 			// Show gear icon
+			// 			$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
+			// 		});
+			// }
+		},
+
+		onBeforeEditStop: function onBeforeEditStop(state, editor) {
+			console.error('!! todo: onBeforeEditStop() editing');
+			// if (!inputValidator.validateFormat(state.value)) {
+			// 	return false;
+			// }
+
+			// // Validation - check duplicate
+			// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
+			// 	webix.alert({
+			// 		title: self.labels.object.invalidName,
+			// 		ok: self.labels.common.ok,
+			// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
+			// 	});
+
+			// 	return false;
+			// }
 		},
 
 		/**
@@ -4626,6 +4671,14 @@ OP.Component.extend('ab_work_object_list', function (App) {
 
 			var object = $$(ids.list).getItem(id);
 			App.actions.populateObjectWorkspace(object);
+
+			//// TODO: do we need these?
+
+			// // Refresh unsync number
+			// self.refreshUnsyncNumber();
+
+			// // Show gear icon
+			// $(this.getItemNode(id)).find('.ab-object-list-edit').show();
 		},
 
 		/**
@@ -4639,6 +4692,9 @@ OP.Component.extend('ab_work_object_list', function (App) {
 		},
 
 		syncNumberRefresh: function syncNumberRefresh() {
+
+			//// NOTE: I think we are removing Sync Numbers with the refactor.
+			//// probably wont need this.
 			console.error('TODO: syncNumRefresh()');
 			// var self = this,
 			// 	objects = [];
@@ -4676,25 +4732,30 @@ OP.Component.extend('ab_work_object_list', function (App) {
 		},
 
 		/**
-   * @function toNewObject
+   * @function callbackNewObject
    *
-   * Manages initiating the transition to the new Object Popup window, 
-   * as well as managing the new object that was created.
-   *
-   * @param {obj} obj the current instance of ABObject for the row.
-   * @param {?} common the webix.common icon data structure
-   * @return {string}
+   * Once a New Object was created in the Popup, follow up with it here.
    */
-		toNewObject: function toNewObject() {
-			App.actions.transitionNewObjectWindow(CurrentApplication, function (err, newObject) {
+		callbackNewObject: function callbackNewObject(err, object) {
 
-				if (err) {
-					return false;
-				}
+			if (err) {
+				OP.Error.log('Error creating New Object', { error: err });
+				return;
+			}
 
-				objectList.add(newObject, 0);
-				$$(ids.list).select(newObject.id);
-			});
+			objectList.add(object, 0);
+			$$(ids.list).select(newObject.id);
+		},
+
+		/**
+   * @function clickNewObject
+   *
+   * Manages initiating the transition to the new Object Popup window
+   */
+		clickNewObject: function clickNewObject() {
+
+			// show the new popup
+			PopupNewObject.show();
 		}
 	};
 
@@ -4705,41 +4766,19 @@ OP.Component.extend('ab_work_object_list', function (App) {
   */
 	var _templateListItem = ["<div class='ab-object-list-item'>", "#label#", "{common.unsyncNumber}", "{common.iconGear}", "</div>"].join('');
 
+	// Note: put these here so _logic is defined:
+	// There is a Popup for adding a new Object:
+	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
+	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
+	PopupNewObjectComponent.init({
+		onDone: _logic.callbackNewObject
+	});
+
 	var CurrentApplication = null;
 	var objectList = null;
 
 	// Expose any globally accessible Actions:
 	var _actions = {
-
-		/**
-   * @function populateObjectList()
-   *
-   * Initialize the Object List from the provided ABApplication
-   *
-   * If no ABApplication is provided, then show an empty form. (create operation)
-   *
-   * @param {ABApplication} application  	[optional] The current ABApplication 
-   *										we are working with.
-   */
-		populateObjectList: function populateObjectList(application) {
-			_logic.listBusy();
-
-			CurrentApplication = application;
-
-			objectList = new webix.DataCollection({
-				data: application.objects()
-			});
-
-			var List = $$(ids.list);
-			List.clearAll();
-			List.data.unsync();
-			List.data.sync(objectList);
-			List.refresh();
-			List.unselectAll();
-
-			_logic.syncNumberRefresh();
-			_logic.listReady();
-		},
 
 		/**
    * @function getSelectedObject
@@ -4759,6 +4798,9 @@ OP.Component.extend('ab_work_object_list', function (App) {
 		init: _init, // {fn} 	init() to setup this component 
 		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
 
+		// interface methods for parent component:
+		applicationLoad: _logic.applicationLoad,
+
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
@@ -4772,7 +4814,16 @@ OP.Component.extend('ab_work_object_list', function (App) {
 /*
  * ab_work_object_list_newObject
  *
- * Display the form for creating a new Application.
+ * Display the form for creating a new Object.  This Popup will manage several 
+ * different sub components for gathering Object data for saving.
+ *
+ * The sub components will gather the data for the object and do basic form 
+ * validations on their interface.  
+ *
+ * when ready, the sub component will call onSave(values, cb)  to allow this 
+ * component to manage the actual final object validation, and saving to this
+ * application.  On success, cb(null) will be called.  on error cb(err) will
+ * be called.
  *
  */
 
@@ -4794,14 +4845,14 @@ var labels = {
 	}
 };
 
-OP.Component.extend('ab_work_object_list_newObject', function (App) {
+var idBase = 'ab_work_object_list_newObject';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_list_newObject_component')
-
+		component: App.unique(idBase + '_component')
 	};
 
 	var BlankTab = OP.Component['ab_work_object_list_newObject_blank'](App);
@@ -4815,13 +4866,6 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 		modal: true,
 		head: labels.component.addNew,
 		selectNewObject: true,
-		on: {
-			"onBeforeShow": function onBeforeShow() {
-				// blankObjectCreator.onInit();
-				// importObjectCreator.onInit();
-				// importCsvCreator.onInit();
-			}
-		},
 		body: {
 			view: "tabview",
 			cells: [BlankTab.ui]
@@ -4832,7 +4876,12 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 
 	// importObjectCreator.getCreateView(),
 	// importCsvCreator.getCreateView()
-	var _init = function _init() {
+	var _init = function _init(options) {
+
+		// register our callbacks:
+		for (var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
 
 		var ourCBs = {
 			onCancel: _logic.hide,
@@ -4840,22 +4889,24 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 		};
 
 		BlankTab.init(ourCBs);
-
-		// webix.extend($$(ids.form), webix.ProgressBar);
 	};
 
 	// our internal business logic
 	var _logic = {
 
-		// *
-		//  * @function cancel
-		//  *
-		//  * The Model Creator was canceled.
+		/**
+   * @function applicationLoad()
+   *
+   * prepare ourself with the current application
+   */
+		applicationLoad: function applicationLoad(application) {
+			// _logic.show();
+			currentApplication = application; // remember our current Application.
+		},
 
-		// cancel: function() {
-
-		// 	_logic.hide();
-		// },
+		callbacks: {
+			onDone: function onDone() {}
+		},
 
 		/**
    * @function hide()
@@ -4887,25 +4938,25 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 				return false;
 			}
 
+			// create a new (unsaved) instance of our object:
 			var newObject = currentApplication.objectNew(values);
 
+			// have newObject validate it's values.
 			var validationErrors = newObject.isValid();
 			if (validationErrors) {
-				cb(validationErrors);
-				return false;
+				cb(validationErrors); // tell current Tab component the errors
+				return false; // stop here.
 			}
 
 			// if we get here, save the new Object
 			newObject.save().then(function (obj) {
 
 				// successfully done:
-				cb();
-				_logic.hide();
-				currentCallBack(null, obj);
+				cb(); // tell current tab component save successful
+				_logic.hide(); // hide our popup
+				_logic.callbacks.onDone(null, obj); // tell parent component we're done
 			})['catch'](function (err) {
-
-				cb(err); // the current Tab
-				// currentCallBack(err);	// the calling Component
+				cb(err); // tell current Tab component there was an error
 			});
 		},
 
@@ -4921,33 +4972,19 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 	};
 
 	var currentApplication = null;
-	var currentCallBack = null;
+	// var currentCallBack = null;
 
 	// Expose any globally accessible Actions:
-	var _actions = {
-
-		/**
-   * @function transitionNewObjectWindow()
-   *
-   * Show our Create New Object window.
-   *
-   * @param {ABApplication} Application  	The current ABApplication 
-   *										we are working with.
-   */
-		transitionNewObjectWindow: function transitionNewObjectWindow(Application, cb) {
-
-			_logic.show();
-			currentApplication = Application; // remember our current Application.
-			currentCallBack = cb;
-		}
-
-	};
+	var _actions = {};
 
 	// return the current instance of this component:
 	return {
 		ui: _ui, // {obj} 	the webix ui definition for this component
 		init: _init, // {fn} 	init() to setup this component 
 		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+
+		// interface methods for parent component:
+		applicationLoad: _logic.applicationLoad,
 
 		_logic: _logic // {obj} 	Unit Testing
 	};
@@ -4968,12 +5005,6 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 
 
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-var _classesABObject = __webpack_require__(10);
-
-var _classesABObject2 = _interopRequireDefault(_classesABObject);
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -4985,17 +5016,18 @@ var labels = {
 	}
 };
 
-OP.Component.extend('ab_work_object_list_newObject_blank', function (App) {
+var idBase = 'ab_work_object_list_newObject_blank';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_list_newObject_blank_component'),
+		component: App.unique(idBase + '_component'),
 
-		form: App.unique('ab_work_object_list_newObject_blank'),
-		buttonSave: App.unique('ab-object-blank-object-save'),
-		buttonCancel: App.unique('ab-object-blank-object-cancel')
+		form: App.unique(idBase + '_blank'),
+		buttonSave: App.unique(idBase + '_save'),
+		buttonCancel: App.unique(idBase + '_cancel')
 	};
 
 	// Our webix UI definition:
@@ -5014,12 +5046,14 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function (App) {
 			elements: [{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.component.placeholderName, labelWidth: 70 }, {
 				margin: 5,
 				cols: [{
-					view: "button", id: ids.buttonSave, value: labels.common.add, type: "form", click: function click() {
-						return _logic.save();
+					view: "button", id: ids.buttonCancel, value: labels.common.cancel,
+					click: function click() {
+						_logic.cancel();
 					}
 				}, {
-					view: "button", id: ids.buttonCancel, value: labels.common.cancel, click: function click() {
-						_logic.cancel();
+					view: "button", id: ids.buttonSave, value: labels.common.add, type: "form",
+					click: function click() {
+						return _logic.save();
 					}
 				}]
 			}]
@@ -5291,11 +5325,13 @@ OP.Component.extend(idBase, function (App) {
 					view: 'button',
 					id: ids.buttonFrozen,
 					label: labels.component.frozenColumns,
-					popup: 'self.webixUiId.frozenColumnsPopup',
 					icon: "table",
 					type: "icon",
 					width: 150,
-					badge: 0
+					badge: 0,
+					click: function click() {
+						_logic.toolbarFrozen(this.$view);
+					}
 				}, {
 					view: 'button',
 					id: ids.buttonLabel,
@@ -5366,6 +5402,46 @@ OP.Component.extend(idBase, function (App) {
 	var _logic = {
 
 		/**
+   * @function callbackDefineLabel
+   *
+   * call back for when the Define Label popup is finished.
+   */
+		callbackAddFields: function callbackAddFields(field) {
+			DataTable.refresh();
+		},
+
+		/**
+   * @function callbackDefineLabel
+   *
+   * call back for when the Define Label popup is finished.
+   */
+		callbackDefineLabel: function callbackDefineLabel() {},
+
+		/**
+   * @function callbackFieldsVisible
+   *
+   * call back for when the hidden fields have changed.
+   */
+		callbackFieldsVisible: function callbackFieldsVisible() {
+
+			var hiddenFields = CurrentObject.workspaceHiddenFields;
+			$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+			$$(ids.buttonFieldsVisible).refresh();
+
+			DataTable.refresh();
+		},
+
+		/**
+   * @function clearObjectWorkspace()
+   *
+   * Clear the object workspace. 
+   */
+		clearObjectWorkspace: function clearObjectWorkspace() {
+
+			$$(ids.noSelection).show();
+		},
+
+		/**
    * @function show()
    *
    * Show this component.
@@ -5375,32 +5451,31 @@ OP.Component.extend(idBase, function (App) {
 			$$(ids.component).show();
 		},
 
-		onChangeAddFields: function onChangeAddFields(field) {
-			DataTable.refresh();
-		},
-
-		onChangeDefineLabel: function onChangeDefineLabel() {
-
-			console.error('!! TODO: .toolbarDefineLabelChange()');
-		},
-
-		onChangeFieldsVisible: function onChangeFieldsVisible() {
-
-			var hiddenFields = CurrentObject.workspaceHiddenFields;
-			$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
-			$$(ids.buttonFieldsVisible).refresh();
-
-			DataTable.refresh();
-		},
-
+		/**
+   * @function toolbarAddFields
+   *
+   * Show the popup to allow the user to create new fields for 
+   * this object.
+   */
 		toolbarAddFields: function toolbarAddFields($view) {
 			PopupNewDataField.show($view);
 		},
 
+		/**
+   * @function toolbarDefineLabel
+   *
+   * Show the popup to allow the user to define the default label for 
+   * this object.
+   */
 		toolbarDefineLabel: function toolbarDefineLabel($view) {
 			PopupDefineLabel.show($view);
 		},
 
+		/**
+   * @function toolbarFieldsVisible
+   *
+   * Show the popup to allow the user to hide columns for this view.
+   */
 		toolbarFieldsVisible: function toolbarFieldsVisible($view) {
 			PopupHideField.show($view);
 		},
@@ -5408,8 +5483,7 @@ OP.Component.extend(idBase, function (App) {
 		/**
    * @function toolbarFilter
    *
-   * Show the progress indicator to indicate a Form operation is in 
-   * progress.
+   * show the popup to add a filter to the datatable
    */
 		toolbarFilter: function toolbarFilter($view) {
 			// self.refreshPopupData();
@@ -5417,6 +5491,20 @@ OP.Component.extend(idBase, function (App) {
 			console.error('TODO: button filterFields()');
 		},
 
+		/**
+   * @function toolbarFrozen
+   *
+   * show the popup to freeze columns for the datatable
+   */
+		toolbarFrozen: function toolbarFrozen($view) {
+			console.error('TODO: toolbarFrozen()');
+		},
+
+		/**
+   * @function toolbarSort
+   *
+   * show the popup to sort the datatable
+   */
 		toolbarSort: function toolbarSort($view) {
 			// self.refreshPopupData();
 			// $$(self.webixUiId.sortFieldsPopup).show($view);
@@ -5428,34 +5516,23 @@ OP.Component.extend(idBase, function (App) {
 	var PopupDefineLabelComponent = OP.Component['ab_work_object_workspace_popupDefineLabel'](App);
 	var PopupDefineLabel = webix.ui(PopupDefineLabelComponent.ui);
 	PopupDefineLabelComponent.init({
-		onChange: _logic.toolbarDefinLabelChange // be notified when there is a change in the hidden fields
+		onChange: _logic.callbackDefineLabel // be notified when there is a change in the label
 	});
 
 	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
 	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
 	PopupNewDataFieldComponent.init({
-		onSave: _logic.onChangeAddFields // be notified when a new Field is created
+		onSave: _logic.callbackAddFields // be notified when a new Field is created & saved
 	});
 
 	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
 	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
 	PopupHideFieldComponent.init({
-		onChange: _logic.onChangeFieldsVisible // be notified when there is a change in the hidden fields
+		onChange: _logic.callbackFieldsVisible // be notified when there is a change in the hidden fields
 	});
 
 	// Expose any globally accessible Actions:
 	var _actions = {
-
-		/**
-   * @function clearObjectWorkspace()
-   *
-   * Clear the object workspace. 
-   */
-		clearObjectWorkspace: function clearObjectWorkspace() {
-
-			$$(ids.noSelection).show();
-			console.error('TODO: clearObjectWorkspace()');
-		},
 
 		/**
    * @function populateObjectWorkspace()
@@ -5474,7 +5551,7 @@ OP.Component.extend(idBase, function (App) {
 			App.actions.populateObjectPopupAddDataField(object);
 
 			// update hiddenFields
-			_logic.onChangeFieldsVisible();
+			_logic.callbackFieldsVisible();
 
 			PopupDefineLabelComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
@@ -5488,6 +5565,9 @@ OP.Component.extend(idBase, function (App) {
 		ui: _ui, // {obj} 	the webix ui definition for this component
 		init: _init, // {fn} 	init() to setup this component 
 		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+
+		// interface methods for parent component:
+		clearObjectWorkspace: _logic.clearObjectWorkspace,
 
 		_logic: _logic // {obj} 	Unit Testing
 	};
@@ -6021,9 +6101,9 @@ OP.Component.extend(idBase, function (App) {
 "use strict";
 
 /*
- * ab_work_object_workspace_popupNewDataField
+ * ab_work_object_workspace_popupHideFields
  *
- * Manage the Add New Data Field popup.
+ * Manage the Hide Fields popup.
  *
  */
 
@@ -6053,13 +6133,10 @@ OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
-	// internal list of Webix IDs to reference our UI components.
-
+	// internal list of Webix IDs to reference our UI components
 	var ids = {
 		component: App.unique(idBase + '_component'),
-
 		list: App.unique(idBase + "_list")
-
 	};
 
 	// Our webix UI definition:
@@ -6074,33 +6151,13 @@ OP.Component.extend(idBase, function (App) {
 					view: 'button',
 					value: labels.component.showAll,
 					click: function click() {
-						_logic.showAll();
-						// var visible_popup = this.getTopParentView();
-
-						// visible_popup.dataTable.eachColumn(function (cId) {
-						//     visible_popup.dataTable.showColumn(cId);
-						// }, true);
-
-						// visible_popup.callChangeEvent();
+						_logic.clickShowAll();
 					}
 				}, {
 					view: 'button',
 					value: labels.component.hideAll,
 					click: function click() {
-						_logic.hideAll();
-						// var visible_popup = this.getTopParentView(),
-						//     columns = [];
-
-						// visible_popup.dataTable.config.columns.forEach(function (c) {
-						//     if (c.id != 'appbuilder_trash')
-						//         columns.push(c.id);
-						// });
-
-						// columns.forEach(function (c) {
-						//     visible_popup.dataTable.hideColumn(c);
-						// });
-
-						// visible_popup.callChangeEvent();
+						_logic.clickHideAll();
 					}
 				}]
 			}, {
@@ -6112,16 +6169,6 @@ OP.Component.extend(idBase, function (App) {
 				on: {
 					onItemClick: function onItemClick(id, e, node) {
 						_logic.listItemClick(id, e, node);
-
-						// var visible_popup = this.getTopParentView(),
-						//     item = this.getItem(id);
-
-						// if (visible_popup.dataTable.isColumnVisible(id))
-						//     visible_popup.dataTable.hideColumn(id);
-						// else
-						//     visible_popup.dataTable.showColumn(id);
-
-						// visible_popup.callChangeEvent();
 					}
 				}
 			}]
@@ -6148,9 +6195,61 @@ OP.Component.extend(idBase, function (App) {
 	var _logic = {
 
 		callbacks: {
+
+			/**
+    * @function onChange
+    * called when we have made changes to the hidden field settings 
+    * of our Current Object.
+    *
+    * this is meant to alert our parent component to respond to the 
+    * change.
+    */
 			onChange: function onChange() {}
 		},
 
+		/**
+   * @function clickHideAll
+   * the user clicked the [hide all] option.  So hide all our fields.
+   */
+		clickHideAll: function clickHideAll() {
+
+			// create an array of all our field.id's:
+			var allFields = CurrentObject.fields();
+			var newHidden = [];
+			allFields.forEach(function (f) {
+				newHidden.push(f.id);
+			});
+
+			// store that
+			CurrentObject.workspaceHiddenFields = newHidden;
+			CurrentObject.save().then(function () {
+				_logic.iconsReset();
+				_logic.callbacks.onChange();
+			})["catch"](function (err) {
+				OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newHidden });
+			});
+		},
+
+		/**
+   * @function clickShowAll
+   * the user clicked the [show all] option.  So show all our fields.
+   */
+		clickShowAll: function clickShowAll() {
+
+			// store an empty array of hidden fields
+			CurrentObject.workspaceHiddenFields = [];
+			CurrentObject.save().then(function () {
+				_logic.iconsReset();
+				_logic.callbacks.onChange();
+			})["catch"](function (err) {
+				OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newHidden });
+			});
+		},
+
+		/**
+   * @function listItemClick
+   * update the clicked field setting.
+   */
 		listItemClick: function listItemClick(id, e, node) {
 			var newFields = [];
 			var isHidden = CurrentObject.workspaceHiddenFields.filter(function (fID) {
@@ -6178,22 +6277,36 @@ OP.Component.extend(idBase, function (App) {
 			CurrentObject.save().then(function () {
 				_logic.callbacks.onChange();
 			})["catch"](function (err) {
-				console.error('!!! TODO: catch this error:', err);
+				OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newFields });
 			});
 		},
 
+		/**
+   * @function iconHide
+   * Hide the icon for the given node
+   * @param {DOM} node  the html dom node of the element that contains our icon
+   */
 		iconHide: function iconHide(node) {
 			if (node) {
 				node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
 			}
 		},
 
+		/**
+   * @function iconShow
+   * Show the icon for the given node
+   * @param {DOM} node  the html dom node of the element that contains our icon
+   */
 		iconShow: function iconShow(node) {
 			if (node) {
 				node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
 			}
 		},
 
+		/**
+   * @function iconsReset
+   * Reset the icon displays according to the current values in our Object
+   */
 		iconsReset: function iconsReset() {
 
 			var List = $$(ids.list);
@@ -6218,6 +6331,11 @@ OP.Component.extend(idBase, function (App) {
 			}
 		},
 
+		/**
+   * @function objectLoad
+   * Ready the Popup according to the current object
+   * @param {ABObject} object  the currently selected object.
+   */
 		objectLoad: function objectLoad(object) {
 			CurrentObject = object;
 
@@ -6315,10 +6433,10 @@ OP.Component.extend(idBase, function (App) {
 		modal: true,
 		autoheight: true,
 		// maxHeight: 420,
-		ready: function ready() {
-			console.error('ready() called!!!');
-			_logic.resetState();
-		},
+		// ready: function () {
+		// 	console.error('ready() called!!!')
+		// 	_logic.resetState();
+		// },
 		body: {
 			css: 'ab-add-fields-popup',
 			borderless: true,
@@ -6840,7 +6958,7 @@ module.exports = exports['default'];
 
 
 
-__webpack_require__(11);
+__webpack_require__(10);
 
 AD.Control.OpsTool.extend('BuildApp', {
 
