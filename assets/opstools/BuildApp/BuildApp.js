@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 8);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -89,7 +89,7 @@ var _OPOP2 = _interopRequireDefault(_OPOP);
 
 __webpack_require__(20);
 
-var _ABObject = __webpack_require__(2);
+var _ABObject = __webpack_require__(6);
 
 var _ABObject2 = _interopRequireDefault(_ABObject);
 
@@ -535,19 +535,19 @@ Object.defineProperty(exports, "__esModule", {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _form = __webpack_require__(5);
+var _form = __webpack_require__(2);
 
 var _form2 = _interopRequireDefault(_form);
 
-var _multilingual = __webpack_require__(7);
+var _multilingual = __webpack_require__(4);
 
 var _multilingual2 = _interopRequireDefault(_multilingual);
 
-var _model = __webpack_require__(6);
+var _model = __webpack_require__(3);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(8);
+var _util = __webpack_require__(5);
 
 var _util2 = _interopRequireDefault(_util);
 
@@ -655,468 +655,6 @@ module.exports = exports["default"];
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var _OPOP = __webpack_require__(1);
-
-var _OPOP2 = _interopRequireDefault(_OPOP);
-
-function toDC(data) {
-	return new webix.DataCollection({
-		data: data
-
-	});
-}
-
-// on: {
-// 	onAfterDelete: function(id) {
-
-// 	}
-// }
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var ABObject = (function () {
-	function ABObject(attributes, application) {
-		_classCallCheck(this, ABObject);
-
-		/*
-  {
-  	id: uuid(), 
-  	name: 'name',
-  	labelFormat: 'xxxxx',
-  	isImported: 1/0,
-  	urlPath:'string',
-  	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
-  								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
-  	translations:[
-  		{}
-  	],
-  	fields:[
-  		{ABDataField}
-  	]
-  }
-  */
-
-		// ABApplication Attributes
-		this.id = attributes.id;
-		this.name = attributes.name || "";
-		this.labelFormat = attributes.labelFormat || "";
-		this.isImported = attributes.isImported || 0;
-		this.urlPath = attributes.urlPath || "";
-		this.importFromObject = attributes.importFromObject || "";
-		this.translations = attributes.translations;
-
-		// multilingual fields: label, description
-		_OPOP2["default"].Multilingual.translate(this, this, ['label']);
-
-		// import all our ABObjects
-		// var newFields = [];
-		// (attributes.json.objects || []).forEach((obj) => {
-		// 	newObjects.push( new ABObject(obj) );
-		// })
-		// this.fields = newFields;
-
-		// link me to my parent ABApplication
-		this.application = application;
-	}
-
-	///
-	/// Static Methods
-	///
-	/// Available to the Class level object.  These methods are not dependent
-	/// on the instance values of the Application.
-	///
-
-	//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
-
-	_createClass(ABObject, [{
-		key: "isValid",
-		value: function isValid() {
-			var _this = this;
-
-			var errors = null;
-
-			// label/name must be unique:
-			var isNameUnique = this.application.objects(function (o) {
-				return o.name.toLowerCase() == _this.name.toLowerCase();
-			}).length == 0;
-			if (!isNameUnique) {
-				errors = _OPOP2["default"].Form.validationError({
-					name: 'name',
-					message: L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name)
-				}, errors);
-			}
-
-			// Check the common validations:
-			// TODO:
-			// if (!inputValidator.validate(values.label)) {
-			// 	_logic.buttonSaveEnable();
-			// 	return false;
-			// }
-
-			return errors;
-		}
-
-		///
-		/// Instance Methods
-		///
-
-		/// ABApplication data methods
-
-		/**
-   * @method destroy()
-   *
-   * destroy the current instance of ABApplication
-   *
-   * also remove it from our _AllApplications
-   * 
-   * @return {Promise} 
-   */
-	}, {
-		key: "destroy",
-		value: function destroy() {
-			if (this.id) {
-				console.error('TODO: ABObject.destroy()');
-				// return this.Model.destroy(this.id)
-				// 	.then(()=>{
-				// 		_AllApplications.remove(this.id);
-				// 	});
-			}
-		}
-
-		/**
-   * @method save()
-   *
-   * persist this instance of ABObject with it's parent ABApplication
-   *
-   * 
-   * @return {Promise} 	
-   *						.resolve( {this} )
-   */
-	}, {
-		key: "save",
-		value: function save() {
-			var _this2 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				// if this is our initial save()
-				if (!_this2.id) {
-
-					_this2.id = _OPOP2["default"].Util.uuid(); // setup default .id
-					_this2.label = _this2.label || _this2.name;
-					_this2.urlPath = _this2.urlPath || _this2.application.name + '/' + _this2.name;
-				}
-
-				_this2.application.objectSave(_this2).then(function () {
-					resolve(_this2);
-				})["catch"](function (err) {
-					reject(err);
-				});
-			});
-		}
-
-		/**
-   * @method toObj()
-   *
-   * properly compile the current state of this ABApplication instance
-   * into the values needed for saving to the DB.
-   *
-   * Most of the instance data is stored in .json field, so be sure to 
-   * update that from all the current values of our child fields.
-   *
-   * @return {json} 
-   */
-	}, {
-		key: "toObj",
-		value: function toObj() {
-
-			_OPOP2["default"].Multilingual.unTranslate(this, this, ["label"]);
-
-			// // for each Object: compile to json
-			// var currObjects = [];
-			// this.objects.forEach((obj) => {
-			// 	currObjects.push(obj.toObj())
-			// })
-			// this.json.objects = currObjects;
-
-			return {
-				id: this.id,
-				name: this.name,
-				labelFormat: this.labelFormat,
-				isImported: this.isImported,
-				urlPath: this.urlPath,
-				importFromObject: this.importFromObject,
-				translations: this.translations,
-				fields: []
-			};
-		}
-
-		///
-		/// Fields
-		///
-
-		/**
-   * @method fields()
-   *
-   * return a DataCollection of all the ABFields for this ABObject.
-   *
-   * @return {Promise} 	
-   */
-	}, {
-		key: "fields",
-		value: function fields() {
-			var _this3 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				resolve(toDC(_this3.feilds));
-			});
-		}
-	}]);
-
-	return ABObject;
-})();
-
-exports["default"] = ABObject;
-module.exports = exports["default"];
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-/*
- * AB 
- *
- * The base AppBuilder component.  It manages these components:
- *   - ab_choose :  choose an application to work with
- *   - ab_work   :  load an application into the work area
- *
- */
-
-
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-__webpack_require__(1);
-
-__webpack_require__(9);
-
-__webpack_require__(13);
-
-// Import our Custom Components here:
-var _webix_custom_componentsEdittree = __webpack_require__(22);
-
-var _webix_custom_componentsEdittree2 = _interopRequireDefault(_webix_custom_componentsEdittree);
-
-var _webix_custom_componentsEditlist = __webpack_require__(21);
-
-var _webix_custom_componentsEditlist2 = _interopRequireDefault(_webix_custom_componentsEditlist);
-
-OP.Component.extend('ab', function (App) {
-
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
-
-	// setup the common labels for our AppBuilder Application.
-	App.labels = {
-		add: L('ab.common.add', "*Add"),
-		create: L('ab.common.create', "*Create"),
-		"delete": L('ab.common.delete', "*Delete"),
-		edit: L('ab.common.edit', "*Edit"),
-		"export": L('ab.common.export', "*Export"),
-		formName: L('ab.common.form.name', "*Name"),
-		"import": L('ab.common.import', "*Import"),
-		ok: L('ab.common.ok', "*Ok"),
-
-		cancel: L('ab.common.cancel', "*Cancel"),
-		save: L('ab.common.save', "*Save"),
-
-		yes: L('ab.common.yes', "*Yes"),
-		no: L('ab.common.no', "*No"),
-
-		createErrorMessage: L('ab.common.create.error', "*System could not create <b>{0}</b>."),
-		createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
-
-		updateErrorMessage: L('ab.common.update.error', "*System could not update <b>{0}</b>."),
-		updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
-
-		deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
-		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted.")
-	};
-
-	// make instances of our Custom Components:
-	OP.CustomComponent[_webix_custom_componentsEdittree2['default'].key](App, 'edittree'); // ->  App.custom.edittree  now exists
-	OP.CustomComponent[_webix_custom_componentsEditlist2['default'].key](App, 'editlist'); // ->  App.custom.editlist  now exists
-
-	var ids = {
-		component: App.unique('app_builder_root')
-	};
-
-	// Define the external components used in this Component:
-	var AppChooser = OP.Component['ab_choose'](App);
-	var AppWorkspace = OP.Component['ab_work'](App);
-
-	// This component's UI definition:
-	// Application multi-views
-	var _ui = {
-		id: ids.component,
-		view: "multiview",
-		autoheight: true,
-		autowidth: true,
-		rows: [AppChooser.ui, AppWorkspace.ui]
-	};
-
-	// This component's init() definition:
-	var _init = function _init() {
-
-		AppChooser.init();
-		AppWorkspace.init();
-
-		// start off only showing the App Chooser:
-		App.actions.transitionApplicationChooser();
-
-		// perform an initial resize adjustment
-		$$(ids.component).adjust();
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component 
-		actions: _actions // {ob}		hash of fn() to expose so other components can access.
-	};
-});
-
-//// REFACTORING TODOs:
-// TODO: OP.Error.isValidation() to handle validation errors returned from Sails
-// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-__webpack_require__(1);
-
-// import '../../../../../assets/js/webix/webix'
-
-__webpack_require__(3);
-
-AD.Control.OpsTool.extend('BuildApp', {
-
-	init: function init(element, options) {
-		var self = this;
-
-		options = AD.defaults({
-			templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',
-			resize_notification: 'BuildApp.resize',
-			tool: null // the parent opsPortal Tool() object
-		}, options);
-		self.options = options;
-
-		// Call parent init
-		self._super(element, options);
-
-		self.data = {};
-
-		self.webixUiId = {
-			loadingScreen: 'ab-loading-screen',
-			syncButton: 'ab-sync-button'
-		};
-
-		self.initDOM(function () {
-			self.initWebixUI();
-		});
-	},
-
-	initDOM: function initDOM(cb) {
-		var _this = this;
-
-		can.view(this.options.templateDOM, {}, function (fragment) {
-			_this.element.html(fragment);
-
-			// _this.element.find(".ab-app-list").show();
-			// _this.element.find(".ab-app-workspace").hide();
-
-			cb();
-		});
-	},
-
-	initWebixUI: function initWebixUI() {
-
-		// get the AppBuilder (AB) Webix Component
-		var AppBuilder = OP.Component['ab']();
-		var ui = AppBuilder.ui;
-
-		// tell the AppBuilder where to attach
-		ui.container = 'ab-main-container';
-
-		// instantiate the UI first
-		this.AppBuilder = webix.ui(ui);
-
-		// then perform the init()
-		AppBuilder.init();
-	},
-
-	resize: function resize(height) {
-		var self = this;
-
-		height = height.height || height;
-
-		var appListDom = $(self.element);
-
-		if (appListDom) {
-			var width = appListDom.parent().css('width');
-			if (width) {
-				width = parseInt(width.replace('px', ''));
-			}
-			appListDom.width(width);
-
-			var computedHeight = height - 140;
-			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
-			if (mh < computedHeight) {
-				appListDom.height(computedHeight);
-				$('#ab-main-container').height(computedHeight);
-			} else {
-				appListDom.height(mh);
-				$('#ab-main-container').height(mh);
-			}
-
-			if (this.AppBuilder) {
-				// this.AppBuilder.define('height', height - 140);
-				this.AppBuilder.adjust();
-			}
-		}
-	}
-
-});
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1249,7 +787,7 @@ exports['default'] = {
 module.exports = exports['default'];
 
 /***/ }),
-/* 6 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1581,7 +1119,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 module.exports = exports['default'];
 
 /***/ }),
-/* 7 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1709,7 +1247,7 @@ exports['default'] = {
 module.exports = exports['default'];
 
 /***/ }),
-/* 8 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1724,6 +1262,468 @@ exports["default"] = {
 
 };
 module.exports = exports["default"];
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _OPOP = __webpack_require__(1);
+
+var _OPOP2 = _interopRequireDefault(_OPOP);
+
+function toDC(data) {
+	return new webix.DataCollection({
+		data: data
+
+	});
+}
+
+// on: {
+// 	onAfterDelete: function(id) {
+
+// 	}
+// }
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var ABObject = (function () {
+	function ABObject(attributes, application) {
+		_classCallCheck(this, ABObject);
+
+		/*
+  {
+  	id: uuid(), 
+  	name: 'name',
+  	labelFormat: 'xxxxx',
+  	isImported: 1/0,
+  	urlPath:'string',
+  	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+  								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+  	translations:[
+  		{}
+  	],
+  	fields:[
+  		{ABDataField}
+  	]
+  }
+  */
+
+		// ABApplication Attributes
+		this.id = attributes.id;
+		this.name = attributes.name || "";
+		this.labelFormat = attributes.labelFormat || "";
+		this.isImported = attributes.isImported || 0;
+		this.urlPath = attributes.urlPath || "";
+		this.importFromObject = attributes.importFromObject || "";
+		this.translations = attributes.translations;
+
+		// multilingual fields: label, description
+		_OPOP2["default"].Multilingual.translate(this, this, ['label']);
+
+		// import all our ABObjects
+		// var newFields = [];
+		// (attributes.json.objects || []).forEach((obj) => {
+		// 	newObjects.push( new ABObject(obj) );
+		// })
+		// this.fields = newFields;
+
+		// link me to my parent ABApplication
+		this.application = application;
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+	//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+	_createClass(ABObject, [{
+		key: "isValid",
+		value: function isValid() {
+			var _this = this;
+
+			var errors = null;
+
+			// label/name must be unique:
+			var isNameUnique = this.application.objects(function (o) {
+				return o.name.toLowerCase() == _this.name.toLowerCase();
+			}).length == 0;
+			if (!isNameUnique) {
+				errors = _OPOP2["default"].Form.validationError({
+					name: 'name',
+					message: L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name)
+				}, errors);
+			}
+
+			// Check the common validations:
+			// TODO:
+			// if (!inputValidator.validate(values.label)) {
+			// 	_logic.buttonSaveEnable();
+			// 	return false;
+			// }
+
+			return errors;
+		}
+
+		///
+		/// Instance Methods
+		///
+
+		/// ABApplication data methods
+
+		/**
+   * @method destroy()
+   *
+   * destroy the current instance of ABApplication
+   *
+   * also remove it from our _AllApplications
+   * 
+   * @return {Promise} 
+   */
+	}, {
+		key: "destroy",
+		value: function destroy() {
+			if (this.id) {
+				console.error('TODO: ABObject.destroy()');
+				// return this.Model.destroy(this.id)
+				// 	.then(()=>{
+				// 		_AllApplications.remove(this.id);
+				// 	});
+			}
+		}
+
+		/**
+   * @method save()
+   *
+   * persist this instance of ABObject with it's parent ABApplication
+   *
+   * 
+   * @return {Promise} 	
+   *						.resolve( {this} )
+   */
+	}, {
+		key: "save",
+		value: function save() {
+			var _this2 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// if this is our initial save()
+				if (!_this2.id) {
+
+					_this2.id = _OPOP2["default"].Util.uuid(); // setup default .id
+					_this2.label = _this2.label || _this2.name;
+					_this2.urlPath = _this2.urlPath || _this2.application.name + '/' + _this2.name;
+				}
+
+				_this2.application.objectSave(_this2).then(function () {
+					resolve(_this2);
+				})["catch"](function (err) {
+					reject(err);
+				});
+			});
+		}
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABApplication instance
+   * into the values needed for saving to the DB.
+   *
+   * Most of the instance data is stored in .json field, so be sure to 
+   * update that from all the current values of our child fields.
+   *
+   * @return {json} 
+   */
+	}, {
+		key: "toObj",
+		value: function toObj() {
+
+			_OPOP2["default"].Multilingual.unTranslate(this, this, ["label"]);
+
+			// // for each Object: compile to json
+			// var currObjects = [];
+			// this.objects.forEach((obj) => {
+			// 	currObjects.push(obj.toObj())
+			// })
+			// this.json.objects = currObjects;
+
+			return {
+				id: this.id,
+				name: this.name,
+				labelFormat: this.labelFormat,
+				isImported: this.isImported,
+				urlPath: this.urlPath,
+				importFromObject: this.importFromObject,
+				translations: this.translations,
+				fields: []
+			};
+		}
+
+		///
+		/// Fields
+		///
+
+		/**
+   * @method fields()
+   *
+   * return a DataCollection of all the ABFields for this ABObject.
+   *
+   * @return {Promise} 	
+   */
+	}, {
+		key: "fields",
+		value: function fields() {
+			var _this3 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				resolve(toDC(_this3.feilds));
+			});
+		}
+	}]);
+
+	return ABObject;
+})();
+
+exports["default"] = ABObject;
+module.exports = exports["default"];
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/*
+ * AB 
+ *
+ * The base AppBuilder component.  It manages these components:
+ *   - ab_choose :  choose an application to work with
+ *   - ab_work   :  load an application into the work area
+ *
+ */
+
+
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+__webpack_require__(1);
+
+__webpack_require__(9);
+
+__webpack_require__(13);
+
+// Import our Custom Components here:
+var _webix_custom_componentsEdittree = __webpack_require__(22);
+
+var _webix_custom_componentsEdittree2 = _interopRequireDefault(_webix_custom_componentsEdittree);
+
+var _webix_custom_componentsEditlist = __webpack_require__(21);
+
+var _webix_custom_componentsEditlist2 = _interopRequireDefault(_webix_custom_componentsEditlist);
+
+OP.Component.extend('ab', function (App) {
+
+	function L(key, altText) {
+		return AD.lang.label.getLabel(key) || altText;
+	}
+
+	// setup the common labels for our AppBuilder Application.
+	App.labels = {
+		add: L('ab.common.add', "*Add"),
+		create: L('ab.common.create', "*Create"),
+		"delete": L('ab.common.delete', "*Delete"),
+		edit: L('ab.common.edit', "*Edit"),
+		"export": L('ab.common.export', "*Export"),
+		formName: L('ab.common.form.name', "*Name"),
+		"import": L('ab.common.import', "*Import"),
+		ok: L('ab.common.ok', "*Ok"),
+
+		cancel: L('ab.common.cancel', "*Cancel"),
+		save: L('ab.common.save', "*Save"),
+
+		yes: L('ab.common.yes', "*Yes"),
+		no: L('ab.common.no', "*No"),
+
+		createErrorMessage: L('ab.common.create.error', "*System could not create <b>{0}</b>."),
+		createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
+
+		updateErrorMessage: L('ab.common.update.error', "*System could not update <b>{0}</b>."),
+		updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
+
+		deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
+		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted.")
+	};
+
+	// make instances of our Custom Components:
+	OP.CustomComponent[_webix_custom_componentsEdittree2['default'].key](App, 'edittree'); // ->  App.custom.edittree  now exists
+	OP.CustomComponent[_webix_custom_componentsEditlist2['default'].key](App, 'editlist'); // ->  App.custom.editlist  now exists
+
+	var ids = {
+		component: App.unique('app_builder_root')
+	};
+
+	// Define the external components used in this Component:
+	var AppChooser = OP.Component['ab_choose'](App);
+	var AppWorkspace = OP.Component['ab_work'](App);
+
+	// This component's UI definition:
+	// Application multi-views
+	var _ui = {
+		id: ids.component,
+		view: "multiview",
+		autoheight: true,
+		autowidth: true,
+		rows: [AppChooser.ui, AppWorkspace.ui]
+	};
+
+	// This component's init() definition:
+	var _init = function _init() {
+
+		AppChooser.init();
+		AppWorkspace.init();
+
+		// start off only showing the App Chooser:
+		App.actions.transitionApplicationChooser();
+
+		// perform an initial resize adjustment
+		$$(ids.component).adjust();
+	};
+
+	// Expose any globally accessible Actions:
+	var _actions = {};
+
+	// return the current instance of this component:
+	return {
+		ui: _ui, // {obj} 	the webix ui definition for this component
+		init: _init, // {fn} 	init() to setup this component 
+		actions: _actions // {ob}		hash of fn() to expose so other components can access.
+	};
+});
+
+//// REFACTORING TODOs:
+// TODO: OP.Error.isValidation() to handle validation errors returned from Sails
+// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+// import './OP/OP';
+// import '../../../../../assets/js/webix/webix'
+
+
+
+__webpack_require__(7);
+
+AD.Control.OpsTool.extend('BuildApp', {
+
+	init: function init(element, options) {
+		var self = this;
+
+		options = AD.defaults({
+			templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',
+			resize_notification: 'BuildApp.resize',
+			tool: null // the parent opsPortal Tool() object
+		}, options);
+		self.options = options;
+
+		// Call parent init
+		self._super(element, options);
+
+		self.data = {};
+
+		self.webixUiId = {
+			loadingScreen: 'ab-loading-screen',
+			syncButton: 'ab-sync-button'
+		};
+
+		self.initDOM(function () {
+			self.initWebixUI();
+		});
+	},
+
+	initDOM: function initDOM(cb) {
+		var _this = this;
+
+		can.view(this.options.templateDOM, {}, function (fragment) {
+			_this.element.html(fragment);
+
+			// _this.element.find(".ab-app-list").show();
+			// _this.element.find(".ab-app-workspace").hide();
+
+			cb();
+		});
+	},
+
+	initWebixUI: function initWebixUI() {
+
+		// get the AppBuilder (AB) Webix Component
+		var AppBuilder = OP.Component['ab']();
+		var ui = AppBuilder.ui;
+
+		// tell the AppBuilder where to attach
+		ui.container = 'ab-main-container';
+
+		// instantiate the UI first
+		this.AppBuilder = webix.ui(ui);
+
+		// then perform the init()
+		AppBuilder.init();
+	},
+
+	resize: function resize(height) {
+		var self = this;
+
+		height = height.height || height;
+
+		var appListDom = $(self.element);
+
+		if (appListDom) {
+			var width = appListDom.parent().css('width');
+			if (width) {
+				width = parseInt(width.replace('px', ''));
+			}
+			appListDom.width(width);
+
+			var computedHeight = height - 140;
+			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
+			if (mh < computedHeight) {
+				appListDom.height(computedHeight);
+				$('#ab-main-container').height(computedHeight);
+			} else {
+				appListDom.height(mh);
+				$('#ab-main-container').height(mh);
+			}
+
+			if (this.AppBuilder) {
+				// this.AppBuilder.define('height', height - 140);
+				this.AppBuilder.adjust();
+			}
+		}
+	}
+
+});
 
 /***/ }),
 /* 9 */
@@ -4067,7 +4067,7 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABObject = __webpack_require__(2);
+var _classesABObject = __webpack_require__(6);
 
 var _classesABObject2 = _interopRequireDefault(_classesABObject);
 
