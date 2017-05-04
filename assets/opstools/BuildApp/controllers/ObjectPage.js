@@ -21,6 +21,8 @@ steal(
 						init: function (element, options) {
 							var self = this;
 							options = AD.defaults({
+								reloadPageEvent: 'AB_Page.Reload',
+
 								selectedObjectEvent: 'AB_Object.Selected',
 								createdObjectEvent: 'AB_Object.Created',
 								updatedObjectEvent: 'AB_Object.Updated',

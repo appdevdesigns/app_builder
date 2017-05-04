@@ -1,5 +1,7 @@
 
 import OP from "../OP/OP"
+import ABFieldManager from "./ABFieldManager"
+
 
 function toDC( data ) {
 	return new webix.DataCollection({
@@ -38,8 +40,6 @@ export default class ABObject {
 }
 */
 
-
-
     	// ABApplication Attributes
     	this.id    = attributes.id;
     	this.name  = attributes.name || "";
@@ -49,17 +49,21 @@ export default class ABObject {
     	this.importFromObject = attributes.importFromObject || "";
     	this.translations = attributes.translations;
 
+    	this.objectWorkspace = attributes.objectWorkspace || { 
+    		hiddenFields:[], 	// array of [ids] to add hidden:true to
+    	};
+
 
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this, ['label']);
 
 	  	
 	  	// import all our ABObjects
-	  	// var newFields = [];
-	  	// (attributes.json.objects || []).forEach((obj) => {
-	  	// 	newObjects.push( new ABObject(obj) );
-	  	// })
-	  	// this.fields = newFields;
+	  	var newFields = [];
+	  	(attributes.fields || []).forEach((field) => {
+	  		newFields.push( this.fieldNew(field) );
+	  	})
+	  	this._fields = newFields;
 
 
 	  	// link me to my parent ABApplication
@@ -185,11 +189,11 @@ console.error('TODO: ABObject.destroy()');
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
 		// // for each Object: compile to json
-		// var currObjects = [];
-		// this.objects.forEach((obj) => {
-		// 	currObjects.push(obj.toObj())
-		// })
-		// this.json.objects = currObjects;
+		var currFields = [];
+		this._fields.forEach((obj) => {
+			currFields.push(obj.toObj())
+		})
+
 
 		return {
 			id: 			this.id,
@@ -198,8 +202,9 @@ console.error('TODO: ABObject.destroy()');
     		isImported:  	this.isImported,
     		urlPath: 		this.urlPath,
     		importFromObject: this.importFromObject,
+    		objectWorkspace:  this.objectWorkspace,
     		translations: 	this.translations,
-    		fields: 	 	[] 
+    		fields: 	 	currFields 
 		}
 	}
 
@@ -218,20 +223,111 @@ console.error('TODO: ABObject.destroy()');
 	/**
 	 * @method fields()
 	 *
-	 * return a DataCollection of all the ABFields for this ABObject.
+	 * return an array of all the ABFields for this ABObject.
 	 *
-	 * @return {Promise} 	
+	 * @return {array} 	
 	 */
-	fields () {
-		return new Promise( 
-			(resolve, reject) => {
+	fields (filter) {
 
+		filter = filter || function() {return true; };
 
-				resolve(toDC(this.feilds));
-
-			}
-		);
+		return this._fields.filter(filter);
 	}
 
+
+
+	/**
+	 * @method fieldNew()
+	 *
+	 * return an instance of a new (unsaved) ABField that is tied to this 
+	 * ABObject.
+	 *
+	 * NOTE: this new field is not included in our this.fields until a .save() 
+	 * is performed on the field.
+	 *
+	 * @return {ABField} 	
+	 */
+	fieldNew ( values ) {
+		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		return ABFieldManager.newField( values, this );
+	}
+
+
+
+	/**
+	 * @method fieldSave()
+	 *
+	 * save the given ABField in our ._fields array and persist the current 
+	 * values.
+	 *
+	 * @param {ABField} field The instance of the field to save.
+	 * @return {Promise} 	
+	 */
+	fieldSave( field ) {
+		var isIncluded = (this.fields(function(o){ return o.id == field.id }).length > 0);
+		if (!isIncluded) {
+			this._fields.push(field);
+		}
+
+		return this.save();
+	}
+
+
+
+
+
+
+
+
+
+
+
+	///
+	/// Working with Actual Object Values:
+	///
+
+	// return the column headers for this object
+	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
+	columnHeaders (isObjectWorkspace) {
+
+		var headers = [];
+		var idLookup = {};
+
+		// get the header for each of our fields:
+		this._fields.forEach(function(f){
+			var header = f.columnHeader(isObjectWorkspace);
+			headers.push(header);
+			idLookup[header.id] = f.id;	// name => id
+		})
+
+
+		// update our headers with any settings applied in the Object Workspace
+		if (isObjectWorkspace) {
+
+			// set column width to adjust:true by default;
+			headers.forEach((h) => { h.adjust = true; });
+
+			// hide any hiddenfields
+			this.workspaceHiddenFields.forEach((hfID)=>{ 
+				headers.forEach((h)=> {
+					if (idLookup[h.id] == hfID){
+						h.hidden = true;
+					}
+				})
+			});
+			
+		}
+
+		return headers;
+	}
+
+
+	get workspaceHiddenFields() {
+		return this.objectWorkspace.hiddenFields;
+	}
+
+	set workspaceHiddenFields( fields ) {
+		this.objectWorkspace.hiddenFields = fields;
+	}
 
 }

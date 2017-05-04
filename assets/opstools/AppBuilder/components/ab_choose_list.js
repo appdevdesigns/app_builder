@@ -184,6 +184,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 	var _logic = {
 
+
 		/**
 		 * @function busy
 		 *

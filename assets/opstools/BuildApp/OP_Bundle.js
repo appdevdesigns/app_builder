@@ -97,21 +97,25 @@ Object.defineProperty(exports, "__esModule", {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _form = __webpack_require__(2);
+var _form = __webpack_require__(3);
 
 var _form2 = _interopRequireDefault(_form);
 
-var _multilingual = __webpack_require__(4);
+var _multilingual = __webpack_require__(5);
 
 var _multilingual2 = _interopRequireDefault(_multilingual);
 
-var _model = __webpack_require__(3);
+var _model = __webpack_require__(4);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(5);
+var _util = __webpack_require__(6);
 
 var _util2 = _interopRequireDefault(_util);
+
+var _configConfig = __webpack_require__(2);
+
+var _configConfig2 = _interopRequireDefault(_configConfig);
 
 window.OP = {};
 
@@ -163,6 +167,12 @@ OP.Component._newApp = function () {
 		actions: {},
 
 		/*
+   * config
+   * webix configuration settings for our current browser
+   */
+		config: _configConfig2["default"].config(),
+
+		/*
    * custom
    * a collection of custom components for this App Instance.
    */
@@ -201,6 +211,8 @@ OP.CustomComponent.extend = function (key, fn) {
 
 OP.Dialog = AD.op.Dialog;
 
+OP.Error = AD.error;
+
 OP.Form = _form2["default"];
 
 OP.Multilingual = _multilingual2["default"];
@@ -217,6 +229,43 @@ module.exports = exports["default"];
 
 /***/ }),
 /* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @class config
+ *
+ * Manage our configuration settings.
+ */
+
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var _configBrowser = __webpack_require__(7);
+
+var _configBrowser2 = _interopRequireDefault(_configBrowser);
+
+var _configMobile = __webpack_require__(8);
+
+var _configMobile2 = _interopRequireDefault(_configMobile);
+
+exports["default"] = {
+  config: function config() {
+
+    // TODO: decide which config file to return here:
+    return _configBrowser2["default"];
+  }
+};
+module.exports = exports["default"];
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -349,7 +398,7 @@ exports['default'] = {
 module.exports = exports['default'];
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -681,7 +730,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 module.exports = exports['default'];
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -809,7 +858,7 @@ exports['default'] = {
 module.exports = exports['default'];
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -821,6 +870,68 @@ Object.defineProperty(exports, "__esModule", {
 exports["default"] = {
 
 	uuid: AD.util.uuid
+
+};
+module.exports = exports["default"];
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @class configBrower
+ *
+ * Manage our configuration settings for Web Browser styles.
+
+ */
+
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports["default"] = {
+
+	// button types
+
+	// column types
+
+	// spacers
+
+	labelWidthSmall: 50
+
+};
+module.exports = exports["default"];
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+/**
+ * @class configBrower
+ *
+ * Manage our configuration settings for Web Browser styles.
+
+ */
+
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports["default"] = {
+
+	// button types
+
+	// column types
+
+	// spacers
+
+	labelWidthSmall: 10
 
 };
 module.exports = exports["default"];

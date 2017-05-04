@@ -58,7 +58,7 @@ OP.Component.extend('ab_work_object_list', function(App) {
 
 // TODO: make this dynamically fill the screen:
 height:800,
-autoheight:true,
+
 				select: true,
 				editaction: 'custom',
 				editable: true,
@@ -68,6 +68,7 @@ autoheight:true,
 					return _logic.templateListItem(obj, common); 
 				},
 				type: {
+					height:"auto",
 					unsyncNumber: "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
@@ -86,6 +87,7 @@ autoheight:true,
 // }
 					},
 					onAfterSelect: function (id) {
+						_logic.selectObject(id);
 // // Fire select object event
 // self.element.trigger(self.options.selectedObjectEvent, id);
 
@@ -200,6 +202,19 @@ autoheight:true,
 			$$(ids.list).hideProgress();
 		},
 
+
+		/**
+		 * @function selectObject()
+		 *
+		 * Perform these actions when an Object is selected in the List.
+		 */
+		selectObject: function (id) {
+
+			var object = $$(ids.list).getItem(id);
+			App.actions.populateObjectWorkspace(object);
+		},
+
+
 		/**
 		 * @function show()
 		 *
@@ -252,6 +267,16 @@ console.error('TODO: syncNumRefresh()');
 		},
 
 
+		/**
+		 * @function toNewObject
+		 *
+		 * Manages initiating the transition to the new Object Popup window, 
+		 * as well as managing the new object that was created.
+		 *
+		 * @param {obj} obj the current instance of ABObject for the row.
+		 * @param {?} common the webix.common icon data structure
+		 * @return {string}
+		 */
 		toNewObject:function() {
 			App.actions.transitionNewObjectWindow(CurrentApplication, function(err, newObject){
 
@@ -264,6 +289,7 @@ console.error('TODO: syncNumRefresh()');
 			});
 		}
 	}
+
 
 	/*
 	 * _templateListItem
@@ -279,8 +305,11 @@ console.error('TODO: syncNumRefresh()');
 	].join('');
 
 
+
 	var CurrentApplication = null;
 	var objectList = null;
+
+
 
 	// Expose any globally accessible Actions:
 	var _actions = {

@@ -7,6 +7,11 @@ import ABObject from "./ABObject"
 
 var _AllApplications = [];
 
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
 function toDC( data ) {
 	return new webix.DataCollection({
 		data: data,
@@ -17,6 +22,19 @@ function toDC( data ) {
 		// 	}
 		// }
 	});
+}
+
+function toArray(DC) {
+	var ary = [];
+
+	var id = DC.getFirstId();
+	while(id) {
+		var element = DC.getItem(id);
+		ary.push(element);
+		id = DC.getNextId(id);
+	}
+
+	return ary;
 }
 
 export default class ABApplication {
@@ -153,14 +171,17 @@ export default class ABApplication {
 			if (op == 'add') {
 
 				// label/name must be unique:
-				var matchingApps = _AllApplications.data.filter(function (app) { 
-					return app.name.trim().toLowerCase() == values.label.trim().replace(/ /g, '_').toLowerCase(); 
+				var arrayApplications = toArray(_AllApplications);
+
+				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
+				var matchingApps = arrayApplications.filter(function (app) { 
+					return app.name.trim().toLowerCase() == nameMatch; 
 				})
 				if (matchingApps && matchingApps.length > 0) {
 					
 					errors = OP.Form.validationError({
 						name:'label',
-						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', values.name),
+						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
 					}, errors);
 				}
 
@@ -397,7 +418,7 @@ export default class ABApplication {
 
 
 	/**
-	 * @method newObject()
+	 * @method objectNew()
 	 *
 	 * return an instance of a new (unsaved) ABObject that is tied to this 
 	 * ABApplication.
@@ -414,15 +435,12 @@ export default class ABApplication {
 
 
 	/**
-	 * @method saveObject()
+	 * @method objectSave()
 	 *
-	 * return an instance of a new (unsaved) ABObject that is tied to this 
-	 * ABApplication.
+	 * persist the current ABObject in our list of ._objects.
 	 *
-	 * NOTE: this new object is not included in our this.objects until a .save() 
-	 * is performed on the object.
-	 *
-	 * @return {ABObject} 	
+	 * @param {ABObject} object 
+	 * @return {Promise} 	
 	 */
 	objectSave( object ) {
 		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);

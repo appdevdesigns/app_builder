@@ -25,6 +25,9 @@ steal(
 						init: function (element, options) {
 							var self = this;
 
+							// Show message when user clicks back button
+							window.onbeforeunload = function () { return "Changes you made may not be saved."; };
+
 							AD.classes.AppBuilder = AD.classes.AppBuilder || {};
 
 							options = AD.defaults({
