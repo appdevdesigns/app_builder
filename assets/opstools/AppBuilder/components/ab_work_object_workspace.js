@@ -8,6 +8,7 @@
 
 import ABApplication from "../classes/ABApplication"
 import "./ab_work_object_workspace_datatable"
+import "./ab_work_object_workspace_popupDefineLabel"
 import "./ab_work_object_workspace_popupHideFields"
 import "./ab_work_object_workspace_popupNewDataField"
 
@@ -239,14 +240,7 @@ popup: 'self.webixUiId.exportDataPopup',
 	var _logic = {
 
 
-		hideFieldChange: function() {
 
-			var hiddenFields = CurrentObject.workspaceHiddenFields;
-			$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
-			$$(ids.buttonFieldsVisible).refresh();
-
-			DataTable.refresh();
-		},
 
 
 		/**
@@ -260,7 +254,26 @@ popup: 'self.webixUiId.exportDataPopup',
 		},
 
 
-		fieldCreated:function(field) {
+
+		onChangeAddFields:function(field) {
+			DataTable.refresh();
+		},
+
+
+		onChangeDefineLabel: function() {
+
+
+console.error('!! TODO: .toolbarDefineLabelChange()');
+
+		},
+
+
+		onChangeFieldsVisible: function() {
+
+			var hiddenFields = CurrentObject.workspaceHiddenFields;
+			$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+			$$(ids.buttonFieldsVisible).refresh();
+
 			DataTable.refresh();
 		},
 
@@ -271,10 +284,7 @@ popup: 'self.webixUiId.exportDataPopup',
 
 
 		toolbarDefineLabel: function($view) {
-
-///// LEFT OFF HERE:
-console.error('!! TODO: .toolbarDefineLabel()');
-
+			PopupDefineLabel.show($view);
 		},
 
 
@@ -305,18 +315,24 @@ console.error('TODO: toolbarSort()');
 
 
 
-	// NOTE: declare this after _logic  for the callbacks:
+	// NOTE: declare these after _logic  for the callbacks:
+	var PopupDefineLabelComponent = OP.Component['ab_work_object_workspace_popupDefineLabel'](App);
+	var PopupDefineLabel = webix.ui(PopupDefineLabelComponent.ui);
+	PopupDefineLabelComponent.init({
+		onChange:_logic.toolbarDefinLabelChange		// be notified when there is a change in the hidden fields
+	})
+
 	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
 	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
 	PopupNewDataFieldComponent.init({
-		onSave:_logic.fieldCreated			// be notified when a new Field is created
+		onSave:_logic.onChangeAddFields			// be notified when a new Field is created
 	});
 
 
 	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
 	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
 	PopupHideFieldComponent.init({
-		onChange:_logic.hideFieldChange		// be notified when there is a change in the hidden fields
+		onChange:_logic.onChangeFieldsVisible		// be notified when there is a change in the hidden fields
 	})
 
 
@@ -353,8 +369,9 @@ console.error('TODO: clearObjectWorkspace()');
 			App.actions.populateObjectPopupAddDataField(object);
 
 			// update hiddenFields 
-			_logic.hideFieldChange();
+			_logic.onChangeFieldsVisible();
 
+			PopupDefineLabelComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			DataTable.objectLoad(object);
 		}

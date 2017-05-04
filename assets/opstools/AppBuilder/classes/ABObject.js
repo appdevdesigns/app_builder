@@ -277,7 +277,18 @@ console.error('TODO: ABObject.destroy()');
 
 
 
+	///
+	///	Object Workspace Settings
+	///
 
+
+	get workspaceHiddenFields() {
+		return this.objectWorkspace.hiddenFields;
+	}
+
+	set workspaceHiddenFields( fields ) {
+		this.objectWorkspace.hiddenFields = fields;
+	}
 
 
 
@@ -321,13 +332,5 @@ console.error('TODO: ABObject.destroy()');
 		return headers;
 	}
 
-
-	get workspaceHiddenFields() {
-		return this.objectWorkspace.hiddenFields;
-	}
-
-	set workspaceHiddenFields( fields ) {
-		this.objectWorkspace.hiddenFields = fields;
-	}
 
 }
