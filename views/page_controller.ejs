@@ -38,7 +38,7 @@ steal(
 								this.rootPageID = this.activePageID = <%- rootPageID %>;
 								this.application;
 								this.pages = <%- JSON.stringify(pages) %>;
-								
+
 								for (var id in this.pages) {
 									this.pages[id].domID = '<%- domID() %>' + id;
 								}
@@ -98,7 +98,7 @@ steal(
 									self.resize();
 								});
 								*/
-								
+
 								AD.comm.hub.subscribe('opsportal.tool.show', function(message, data) {
 									self.resize(self.height);
 								});
@@ -356,8 +356,8 @@ steal(
 								}
 
 							},
-							
-							
+
+
 							/**
 							* @param integer pageID
 							*      Optional page ID number. Default is to show
@@ -381,8 +381,8 @@ steal(
 								this.resize();
 
 							},
-							
-							
+
+
 							getComponentId: function(pageId, itemId) {
 								return pageId + '-component-' + itemId;
 							}

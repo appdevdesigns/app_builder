@@ -18,7 +18,7 @@ var labels = {
 	application: {
 		menu : L('ab.application.menu', "*Application Menu"),
 		confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
-		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")		
+		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
 	}
 }
 
@@ -43,10 +43,11 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 		width: 100,
 		body: {
 			view: "list",
+			borderless: true,
 			data: [
 				{ command: labels.common.edit, icon: "fa-pencil-square-o" },
-				{ command: labels.common.delete, icon: "fa-trash" },
-				{ command: labels.common.export, icon: "fa-download" }
+				{ command: labels.common.export, icon: "fa-download" },
+				{ command: labels.common.delete, icon: "fa-trash" }
 			],
 			datatype: "json",
 
@@ -76,7 +77,7 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 									if (!result) return;
 
-									App.actions.deleteApplication(selectedApp);									
+									App.actions.deleteApplication(selectedApp);
 								}
 							})
 							break;
@@ -87,7 +88,7 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 							break;
 					}
 
-					
+
 					return false;
 				}
 			}
@@ -101,11 +102,11 @@ OP.Component.extend('ab_choose_list_menu', function(App) {
 
 
 	var _init = function() {
-			
-		
+
+
 	}
 
-							
+
 
 	return {
 		ui: _ui,

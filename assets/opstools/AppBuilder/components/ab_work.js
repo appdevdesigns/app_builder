@@ -53,8 +53,6 @@ OP.Component.extend('ab_work', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
-		autoheight: true,
-		autowidth: true,
 		rows: [
 			{
 				view: "toolbar",
@@ -85,20 +83,20 @@ OP.Component.extend('ab_work', function(App) {
 			},
 			{ height: 10 },
 			{
-				view: "tabbar", 
-				id: ids.tabbar, 
-				value: ids.tab_object, 
+				view: "tabbar",
+				id: ids.tabbar,
+				value: ids.tab_object,
 				multiview: true,
 				options: [
-					{ 
-						id: ids.tab_object, 
-						value: labels.application.objectTitle, 
-						width: 120 
+					{
+						id: ids.tab_object,
+						value: labels.application.objectTitle,
+						width: 120
 					},
-					{ 
-						id: ids.tab_interface, 
-						value: labels.application.interfaceTitle, 
-						width: 120 
+					{
+						id: ids.tab_interface,
+						value: labels.application.interfaceTitle,
+						width: 120
 					}
 				],
 				on: {
@@ -123,7 +121,7 @@ OP.Component.extend('ab_work', function(App) {
 
 	// Our init() function for setting up our UI
 	var _init = function() {
-		
+
 		AppObjectWorkspace.init();
 		AppInterfaceWorkspace.init();
 
@@ -133,10 +131,10 @@ OP.Component.extend('ab_work', function(App) {
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
-		
+
 		applicationInit:function(application) {
 
 			// setup Application Label:
@@ -179,7 +177,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 		 * Every time a tab switch happens, decide which workspace to show.
 		 *
 		 * @param {string} idTab	the id of the tab that was changed to.
-		 * @param {string} idOld	the previous tab id  
+		 * @param {string} idOld	the previous tab id
 		 */
 		tabSwitch:function(idTab, idOld) {
 
@@ -212,7 +210,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 		 *
 		 * Switch the UI to view the App Workspace screen.
 		 *
-		 * @param {ABApplication} application 
+		 * @param {ABApplication} application
 		 */
 		transitionWorkspace:function(application){
 
@@ -220,8 +218,8 @@ console.error('TODO: ab_work.logic.synchronize()!');
 			App.actions.initObjectTab(application);
 			App.actions.initInterfaceTab(application);
 
-			_logic.show();			
-			
+			_logic.show();
+
 		}
 
 	}
@@ -230,7 +228,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		_logic: _logic			// {obj} 	Unit Testing

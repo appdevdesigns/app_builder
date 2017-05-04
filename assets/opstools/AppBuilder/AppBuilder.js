@@ -5,8 +5,6 @@ import './OP/OP';
 import './components/ab'
 
 
-
-
 AD.Control.OpsTool.extend('BuildApp', {
 
 	init: function (element, options) {
@@ -32,7 +30,7 @@ AD.Control.OpsTool.extend('BuildApp', {
 		self.initDOM(function(){
 			self.initWebixUI();
 		});
-		
+
 
 	},
 
@@ -49,7 +47,7 @@ AD.Control.OpsTool.extend('BuildApp', {
 			cb();
 		});
 	},
-	
+
 
 	initWebixUI: function () {
 
@@ -83,7 +81,9 @@ AD.Control.OpsTool.extend('BuildApp', {
 			}
 			appListDom.width(width);
 
-			var computedHeight = height - 140;
+			// Removed this because the 140 pixels was causing the list to not scroll to the bottom of the page
+			// var computedHeight = height - 140;
+			var computedHeight = height;
 			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
 			if (mh < computedHeight) {
 				appListDom.height(computedHeight);
@@ -97,7 +97,7 @@ AD.Control.OpsTool.extend('BuildApp', {
 				// this.AppBuilder.define('height', height - 140);
 				this.AppBuilder.adjust();
 			}
-			
+
 		}
 	}
 

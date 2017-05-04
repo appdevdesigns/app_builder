@@ -20,10 +20,11 @@ var labels = {
 		formHeader: L('ab.application.form.header', "*Application Info"),
 		placeholderName: L('ab.application.form.placeholderName', "*Application name"),
 		placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
+		formDescription: L('ab.application.form.formDescription', "*Description"),
 
 		sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
-		permissionHeader: L('ab.application.form.headerPermission',  "*Assign one or more roles to set permissions for user to view this app"),
-		createNewRole: L('ab.application.form.createNewRoleButton', "*Create a new role to view this app"),
+		permissionHeader: L('ab.application.form.headerPermission',  "*Who can use this app?"),
+		createNewRole: L('ab.application.form.createNewRoleButton', "*Create a new role"),
 
 		invalidName: L('ab.application.invalidName', "*This application name is invalid"),
 		duplicateName: L('ab.application.duplicateName', "*Name must be unique."),
@@ -50,154 +51,192 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 	var _ui = {
 		id: ids.formComponent,
-		scroll: true,
-		rows: [
+		responsive:"hide",
+		cols: [
 			{
-				view: "toolbar",
-				cols: [{ view: "label", label: labels.application.formHeader, fillspace: true }]
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth,
+				hidden: App.config.hideMobile
 			},
 			{
-				view: "form",
-				id: ids.form,
-				autoheight: true,
-				margin: 0,
-				elements: [
-					{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
+				responsiveCell:false,
+				rows: [
 					{
-						name: "label",
-						view: "text",
-						label: labels.common.formName,
-						required: true,
-						placeholder: labels.application.placeholderName,
-						labelWidth: 100,
-						on: {
-							onChange: function (newValue, oldValue) {
-								_logic.permissionRenameRole(newValue, oldValue);
-							}
-						}
+						maxHeight: App.config.appListSpacerRowHeight,
+						hidden: App.config.hideMobile
 					},
-					{ name: "description", view: "textarea", label: labels.common.formDescription, placeholder: labels.application.placeholderDescription, labelWidth: 100, height: 100 },
-					{ type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>'+labels.application.sectionPermission },
 					{
 						view: "toolbar",
-						cols: [
-							{
-								template: labels.application.permissionHeader, 
-								type: 'header',
-								borderless: true
-							},
-							{
-								view: "toggle",
-								id: ids.appFormCreateRoleButton,
-								type: "iconButton",
-								width: 300,
-								align: "right",
-								offIcon: "square-o",
-								onIcon: "check-square-o",
-								label: labels.application.createNewRole, 
-								on: {
-									onItemClick: function (id, e) {
-										if (this.getValue()) {
-
-// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
-											// Add new app role
-											var appName = $$(ids.form).elements["label"].getValue();
-											_logic.permissionAddNew(appName);
-
-										}
-										else { 
-
-											// Remove app role
-											_logic.permissionRemoveNew();
-											
-										}
-									}
-								}
-							}
-						]
+						cols: [{ view: "label", label: labels.application.formHeader, fillspace: true }]
 					},
 					{
-						name: "permissions",
-						id: ids.appFormPermissionList,
-						view: "list",
-						height: 130,
-						autowidth: true,
-						borderless: true,
+						view: "form",
+						id: ids.form,
+						autoheight: true,
 						margin: 0,
-						css: "ab-app-form-permission",
-						scroll: "y",
-						template: "#name#",
-						on: {
-							onItemClick: function (id, e, node) {
-								if (this.getItem(id).isApplicationRole) {
-									return;
-								}
-
-								if (this.isSelected(id)) {
-									this.unselect(id);
-								}
-								else {
-									var selectedIds = this.getSelectedId();
-
-									if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
-										if (selectedIds)
-											selectedIds = [selectedIds];
-										else
-											selectedIds = [];
-									}
-
-									selectedIds.push(id);
-
-									this.select(selectedIds);
-								}
-							}
-						}
-					},
-					{ height: 5 },
-					{
-						margin: 5, cols: [
-							{ fillspace: true },
+						elements: [
+							//{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
 							{
-								id: ids.saveButton,
-								view: "button", label: labels.common.save, type: "form", width: 100, 
-								click: function () {
-									
-									_logic.buttonSaveDisable();
-									_logic.formBusy();
-
-									// if there is a selected Application, then this is an UPDATE
-									var updateApp = App.actions.getSelectedApplication();
-									if (updateApp) { 
-
-										if (_logic.formValidate('update')) {
-
-											_logic.applicationUpdate(updateApp);
-
-										}
-										
-									} else { 
-
-										// else this is a Create
-										if (_logic.formValidate('add')) {
-
-											_logic.applicationCreate(_logic.formValues());
-
-										}
-
+								name: "label",
+								view: "text",
+								label: labels.common.formName,
+								required: true,
+								placeholder: labels.application.placeholderName,
+								labelWidth: 100,
+								on: {
+									onChange: function (newValue, oldValue) {
+										_logic.permissionRenameRole(newValue, oldValue);
 									}
-									
-	
-								} // end click()
+								}
 							},
 							{
-								view: "button", value: labels.common.cancel, width: 100, 
-								click: function () {
-									_logic.cancel();
+								name: "description",
+								view: "textarea",
+								// label: labels.common.formDescription,
+								label: "Description",
+								labelAlign: "left",
+								labelWidth: 100,
+								placeholder: labels.application.placeholderDescription,
+								height: 100
+							},
+							{ height: 10 },
+							{
+								view: "toolbar",
+								cols: [
+									{
+										template: labels.application.permissionHeader,
+										type: 'header',
+										borderless: true
+									},
+									{
+										view: "toggle",
+										id: ids.appFormCreateRoleButton,
+										type: "iconButton",
+										width: 300,
+										align: "right",
+										offIcon: "square-o",
+										onIcon: "check-square-o",
+										label: labels.application.createNewRole,
+										on: {
+											onItemClick: function (id, e) {
+												if (this.getValue()) {
+
+		// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
+													// Add new app role
+													var appName = $$(ids.form).elements["label"].getValue();
+													_logic.permissionAddNew(appName);
+
+												}
+												else {
+
+													// Remove app role
+													_logic.permissionRemoveNew();
+
+												}
+											}
+										}
+									}
+								]
+							},
+							{
+								name: "permissions",
+								id: ids.appFormPermissionList,
+								view: "list",
+								height: 130,
+								autowidth: true,
+								margin: 0,
+								css: "ab-app-form-permission",
+								scroll: "y",
+								template: "#name#",
+								on: {
+									onItemClick: function (id, e, node) {
+										if (this.getItem(id).isApplicationRole) {
+											return;
+										}
+
+										if (this.isSelected(id)) {
+											this.unselect(id);
+										}
+										else {
+											var selectedIds = this.getSelectedId();
+
+											if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
+												if (selectedIds)
+													selectedIds = [selectedIds];
+												else
+													selectedIds = [];
+											}
+
+											selectedIds.push(id);
+
+											this.select(selectedIds);
+										}
+									}
 								}
+							},
+							{ height: 5 },
+							{
+								margin: 5, cols: [
+									{ fillspace: true },
+									{
+										view: "button",
+										value: labels.common.cancel,
+										width: App.config.buttonWidthSmall,
+										click: function () {
+											_logic.cancel();
+										}
+									},
+									{
+										id: ids.saveButton,
+										view: "button",
+										label: labels.common.save,
+										type: "form",
+										width: App.config.buttonWidthSmall,
+										click: function () {
+
+											_logic.buttonSaveDisable();
+											_logic.formBusy();
+
+											// if there is a selected Application, then this is an UPDATE
+											var updateApp = App.actions.getSelectedApplication();
+											if (updateApp) {
+
+												if (_logic.formValidate('update')) {
+
+													_logic.applicationUpdate(updateApp);
+
+												}
+
+											} else {
+
+												// else this is a Create
+												if (_logic.formValidate('add')) {
+
+													_logic.applicationCreate(_logic.formValues());
+
+												}
+
+											}
+
+
+										} // end click()
+									}
+								]
 							}
 						]
+					},
+					{
+						maxHeight: App.config.appListSpacerRowHeight,
+						hidden: App.config.hideMobile
 					}
 				]
+			},
+			{
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth,
+				hidden: App.config.hideMobile
 			}
 		]
 	};
@@ -219,7 +258,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		/**
 		 * @function applicationCreate
 		 *
-		 * Step through the process of creating an ABApplication with the 
+		 * Step through the process of creating an ABApplication with the
 		 * current state of the Form.
 		 *
 		 * @param {obj} values 	current value hash of the form values.
@@ -278,10 +317,10 @@ OP.Component.extend('ab_choose_form', function(App) {
 		/**
 		 * @function applicationUpdate
 		 *
-		 * Step through the process of updating an ABApplication with the 
+		 * Step through the process of updating an ABApplication with the
 		 * current state of the Form.
 		 *
-		 * @param {ABApplication} application 
+		 * @param {ABApplication} application
 		 */
 		applicationUpdate: function(Application) {
 			var values = _logic.formValues();
@@ -307,7 +346,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 							next();
 						})
 						.catch(next)
-						
+
 				}
 			], function (err) {
 
@@ -359,7 +398,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 * Cancel the current Form Operation and return us to the AppList.
 		 */
 		cancel: function() {
-									
+
 			_logic.formReset();
 			App.actions.transitionApplicationList();
 		},
@@ -368,7 +407,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		/**
 		 * @function formBusy
 		 *
-		 * Show the progress indicator to indicate a Form operation is in 
+		 * Show the progress indicator to indicate a Form operation is in
 		 * progress.
 		 */
 		formBusy: function() {
@@ -396,7 +435,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 					}
 				})
 			}
-			
+
 			// _logic.permissionPopulate(application);
 
 		},
@@ -455,7 +494,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 // 		Form.elements[err.name].focus();
 // 		hasFocused = true;
 // 	}
-// })	
+// })
 				_logic.formReady();
 				_logic.buttonSaveEnable();
 				return false;
@@ -491,7 +530,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 *
 		 * return an object hash of name:value pairs of the current Form.
 		 *
-		 * @return {obj} 
+		 * @return {obj}
 		 */
 		formValues: function() {
 			// return the current values of the Form elements.
@@ -536,7 +575,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 * @return {string} 	Permission Role Name.
 		 */
 		permissionName: function(appName) {
-			return appName  + " Application Role"; 
+			return appName  + " Application Role";
 		},
 
 
@@ -560,7 +599,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 							// scan the roles and determine if any of them have been created
 							// after the current Application.name:
-							var parsedRoles = roles.map((r) => { 
+							var parsedRoles = roles.map((r) => {
 								if (application) {
 									if (r.name == _logic.permissionName(application.name.split('_').join(' '))) {
 										r.isApplicationRole = true;
@@ -586,12 +625,12 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 				},
 				function (available_roles, selected_role_ids, next) {
-					
-					// mark the role(s) in available_roles that is tied 
+
+					// mark the role(s) in available_roles that is tied
 					// this application:
 					if (application && application.role) {
 						available_roles.forEach(function (r) {
-		
+
 							if (r.id == (application.role.id || application.role))
 								r.isApplicationRole = true;
 						});
@@ -627,7 +666,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 			});
 
-			// return appName  + " Application Role"; 
+			// return appName  + " Application Role";
 		},
 
 
@@ -643,7 +682,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 			// find any roles that are put here from our application form:
 			var appRoles = $$(ids.appFormPermissionList).find(function (perm) { return perm.isApplicationRole; });
-			
+
 			// remove them:
 			appRoles.forEach(function (r) {
 				$$(ids.appFormPermissionList).remove(r.id);
@@ -684,7 +723,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		permissionSave: function (app) {
 //// REFACTOR:
 // this step implies that ab_choose_form understands the intracies of how
-// ABApplication and Permissions work.  
+// ABApplication and Permissions work.
 			return new Promise(
 				(resolve, reject) => {
 
@@ -699,7 +738,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 						// check to see if we already have a permission that isApplicationRole
 						var selectedPerms = $$(ids.appFormPermissionList).getSelectedItem(true);
 						selectedPerms = selectedPerms.filter((perm) => { return perm.isApplicationRole; })
-						
+
 						// if not, then create one:
 						if (selectedPerms.length == 0) {
 
@@ -709,7 +748,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 									.then(function (result) {
 
 										// remember the Role we just created
-										appRole = result;	
+										appRole = result;
 										cb();
 									})
 									.catch(cb)
@@ -722,7 +761,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 							app.deletePermission()
 								.then(function () { cb(); })
 								.catch(cb)
-								
+
 						});
 					}
 
@@ -736,8 +775,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 					// Make sure Application is linked to selected permission items:
 					saveRoleTasks.push(function (cb) {
 
-						// ok, so we removed the 'newRole' entry, but we might 
-						// have created an entry for it earlier, if so, add in  
+						// ok, so we removed the 'newRole' entry, but we might
+						// have created an entry for it earlier, if so, add in
 						// the created one here:
 						if ($$(ids.appFormCreateRoleButton).getValue() && appRole) {
 
@@ -767,7 +806,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 							reject(err);
 						} else {
 							// we return the instance of the newly created Permission.
-							resolve(appRole);  
+							resolve(appRole);
 						}
 					});
 				}
@@ -824,18 +863,18 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 *
 		 * If no ABApplication is provided, then show an empty form. (create operation)
 		 *
-		 * @param {ABApplication} Application  	[optional] The current ABApplication 
+		 * @param {ABApplication} Application  	[optional] The current ABApplication
 		 *										we are working with.
 		 */
 		// populateApplicationForm:function(Application){
-			
+
 
 		// },
 
 
 		// initiate a request to create a new Application
 		transitionApplicationForm:function(Application){
-			
+
 			// if no Application is given, then this should be a [create] operation,
 			// so clear our AppList
 			if ('undefined' == typeof Application) {

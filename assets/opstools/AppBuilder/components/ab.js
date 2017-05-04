@@ -1,6 +1,6 @@
 
 /*
- * AB 
+ * AB
  *
  * The base AppBuilder component.  It manages these components:
  *   - ab_choose :  choose an application to work with
@@ -17,6 +17,8 @@ import './ab_work'
 import EditTree from '../webix_custom_components/edittree'
 import EditList from '../webix_custom_components/editlist'
 
+import style from "../AppBuilder.css"
+
 OP.Component.extend('ab', function(App) {
 
 
@@ -24,7 +26,7 @@ OP.Component.extend('ab', function(App) {
 		return AD.lang.label.getLabel(key) || altText;
 	}
 
-	
+
 	// setup the common labels for our AppBuilder Application.
 	App.labels = {
 		add: L('ab.common.add', "*Add"),
@@ -35,10 +37,10 @@ OP.Component.extend('ab', function(App) {
 		formName: L('ab.common.form.name', "*Name"),
 		"import": L('ab.common.import', "*Import"),
 		ok: 	  L('ab.common.ok', "*Ok"),
-		
+
 		cancel:   L('ab.common.cancel', "*Cancel"),
 		save: 	  L('ab.common.save', "*Save"),
-		
+
 		yes: 	  L('ab.common.yes', "*Yes"),
 		no: 	  L('ab.common.no', "*No"),
 
@@ -67,7 +69,7 @@ OP.Component.extend('ab', function(App) {
 	OP.CustomComponent[EditTree.key](App, 'edittree'); // ->  App.custom.edittree  now exists
 	OP.CustomComponent[EditList.key](App, 'editlist'); // ->  App.custom.editlist  now exists
 
-	
+
 
 
 	var ids = {
@@ -86,8 +88,8 @@ OP.Component.extend('ab', function(App) {
 	var _ui = {
 		id: ids.component,
 		view:"multiview",
-		autoheight:true,
-		autowidth:true,
+		borderless:true,
+		animate:false,
 		rows:[
 			AppChooser.ui,
 			AppWorkspace.ui
@@ -121,7 +123,7 @@ OP.Component.extend('ab', function(App) {
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions		// {ob}		hash of fn() to expose so other components can access.
 	}
 
@@ -134,8 +136,3 @@ OP.Component.extend('ab', function(App) {
 
 //// REFACTORING TODOs:
 // TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
-
-
-
-
-
