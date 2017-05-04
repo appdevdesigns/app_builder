@@ -2,7 +2,10 @@ const webpack = require('webpack'); //to access built-in plugins
 var path = require('path');
 
 module.exports = {
-  entry: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'AppBuilder.js'),
+  entry: {
+    OP_Bundle: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'OP', 'OP.js'),
+    BuildApp: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'AppBuilder.js')
+  },
   output: {
     path: path.resolve(__dirname, 'assets', 'opstools', 'BuildApp'),
     filename: '[name].js'
@@ -21,17 +24,11 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [{
-            loader: "style-loader"
-          },
-          {
-            loader: "css-loader"
-          }
-        ]
+        loader: 'style-loader!css-loader'
       }
     ]
   },
   plugins: [
-    // new webpack.optimize.UglifyJsPlugin()
+    new webpack.optimize.UglifyJsPlugin()
   ]
 };
