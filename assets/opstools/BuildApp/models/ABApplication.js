@@ -152,7 +152,8 @@ steal(
 							Object.keys(AD.Model.get('opstools.BuildApp.ABPage').store).forEach(function (storeKey) {
 								var storePage = AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
 
-								if (cond.application == storePage.application.id || storePage.application)
+								if (storePage.application == null ||
+									cond.application == (storePage.application.id || storePage.application))
 									delete AD.Model.get('opstools.BuildApp.ABPage').store[storeKey];
 							});
 

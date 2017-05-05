@@ -269,14 +269,33 @@ steal(
 							showCustomEdit(col, childView.$view);
 						});
 					}
+
 					// Set default value
-					else if ((rowData == null || rowData[col.name] == null) && rowId == null && childView.setValue && col.setting.default) {
-						var defaultValue = col.setting.default;
+					if ((rowData == null || rowData[col.name] == null) && rowId == null) {
+						if (childView.setValue && col.setting.default) {
+							var defaultValue = col.setting.default;
 
-						if (col.type == 'date' || col.type == 'datetime')
-							defaultValue = new Date(col.setting.default);
+							if (col.type == 'date' || col.type == 'datetime')
+								defaultValue = new Date(col.setting.default);
 
-						childView.setValue(defaultValue);
+							childView.setValue(defaultValue);
+						}
+						else if (col.fieldName == 'user' && col.setting.defaultCurrentUser == true) {
+
+							// Get current user as default
+							AD.comm.service.get({
+								url: '/site/user/data'
+							})
+								.fail(function (err) {
+									webix.message(err.message);
+								})
+								.done(function (data) {
+									dataFieldsManager.setValue(col, childView.$view, {
+										id: data.user.username,
+										text: data.user.username
+									});
+								});
+						}
 					}
 				});
 			}

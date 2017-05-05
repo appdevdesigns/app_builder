@@ -6,7 +6,9 @@ steal(
 		var componentIds = {
 			editView: 'ab-new-user',
 			default: 'ab-new-user-default',
+			editable: 'ab-new-user-editable',
 			multiSelect: 'ab-new-user-multiSelect',
+			defaultCurrentUser: 'ab-new-user-default-as-current-user',
 
 			userDataPopup: 'ab-user-data-popup'
 		};
@@ -55,16 +57,49 @@ steal(
 			});
 			userData.displayData = userData.data
 
+			if (userData.data.length === 0)
+				userData.data = '';
+			// Convert Array to string
+			else if (userData.data.length === 1)
+				userData.data = userData.data[0];
+
 			return userData;
 		}
+
+		// Listen change selectivity item event
+		$(selectivityHelper).off('change');
+		$(selectivityHelper).on('change', function (event, result) {
+			if (result.event && result.event.removed) {
+				var selectedItems = selectivityHelper.getData(result.itemNode),
+					userData = getReturnData(
+						result.event.removed.objectId,
+						result.event.removed.columnName,
+						result.event.removed.rowId,
+						selectedItems);
+
+				$(userDataField).trigger('update', userData);
+			}
+		});
 
 		userDataField.editDefinition = {
 			id: componentIds.editView,
 			rows: [
 				{
 					view: 'checkbox',
+					id: componentIds.editable,
+					labelRight: 'Editable',
+					labelWidth: 0
+				},
+				{
+					view: 'checkbox',
 					id: componentIds.multiSelect,
 					labelRight: 'Multiselect',
+					labelWidth: 0
+				},
+				{
+					view: 'checkbox',
+					id: componentIds.defaultCurrentUser,
+					labelRight: 'Default value as current user',
 					labelWidth: 0
 				}
 			]
@@ -73,7 +108,9 @@ steal(
 		userDataField.populateSettings = function (application, data) {
 			if (!data.setting) return;
 
+			$$(componentIds.editable).setValue(data.setting.editable);
 			$$(componentIds.multiSelect).setValue(data.setting.multiselect);
+			$$(componentIds.defaultCurrentUser).setValue(data.setting.defaultCurrentUser);
 		};
 
 		userDataField.getSettings = function () {
@@ -82,7 +119,9 @@ steal(
 				type: 'json',
 				setting: {
 					icon: userDataField.icon,
+					editable: $$(componentIds.editable).getValue(),
 					multiselect: $$(componentIds.multiSelect).getValue(),
+					defaultCurrentUser: $$(componentIds.defaultCurrentUser).getValue(),
 					template: '<div class="user-data-values"></div>'
 				}
 			};
@@ -90,7 +129,7 @@ steal(
 
 		userDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
 			// Initial selectivity
-			selectivityHelper.renderSelectivity(itemNode, 'user-data-values', options.readOnly);
+			selectivityHelper.renderSelectivity(itemNode, 'user-data-values', (options.readOnly || fieldData.setting.editable != "1"));
 
 			var selectedItems = [];
 			if (data) {
@@ -98,6 +137,9 @@ steal(
 					selectedItems.push({
 						id: data.id,
 						text: data.text,
+						objectId: object.id,
+						columnName: fieldData.name,
+						rowId: rowData.id
 					});
 				}
 				else if (data.each || data.forEach) {
@@ -106,6 +148,9 @@ steal(
 						return {
 							id: item.id,
 							text: item.text,
+							objectId: object.id,
+							columnName: fieldData.name,
+							rowId: rowData.id
 						};
 					});
 				}
@@ -119,13 +164,13 @@ steal(
 		};
 
 		userDataField.customEdit = function (application, object, fieldData, dataId, itemNode) {
-			if (!application || !fieldData) return false;
+			if (!application || !fieldData || fieldData.setting.editable != "1") return false;
 
 			var selectivityNode = $(itemNode).find('.user-data-values'),
 				selectedData = selectivityHelper.getData(selectivityNode),
 				selectedIds = $.map(selectedData, function (d) { return d.id; });
 
-			// Init connect data popup
+			// Initial user data popup
 			initUserDataPopup(object, fieldData.name, dataId, selectivityNode);
 
 			// Open popup
@@ -140,7 +185,12 @@ steal(
 				result;
 
 			if (selectedValues && selectedValues.length > 0)
-				result = $.map(selectedValues, function (selectedItem) { return selectedItem.id; });
+				result = $.map(selectedValues, function (selectedItem) {
+					return {
+						id: selectedItem.id,
+						text: selectedItem.id
+					};
+				});
 			else
 				result = [];
 
@@ -158,7 +208,9 @@ steal(
 
 
 		userDataField.resetState = function () {
+			$$(componentIds.editable).setValue(0);
 			$$(componentIds.multiSelect).setValue(0);
+			$$(componentIds.defaultCurrentUser).setValue(0);
 		};
 
 

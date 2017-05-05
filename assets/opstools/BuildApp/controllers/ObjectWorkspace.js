@@ -1005,36 +1005,77 @@ steal(
 								newModel.attr(key, newRow[key]);
 							});
 
-							// Set default of data
-							AD.classes.AppBuilder.currApp.currObj.columns.forEach(function (col) {
-								if (newModel[col.name] == null && col.setting.default) {
-									var defaultValue = col.setting.default;
+							async.series([
+								function (next) {
+									var columns = AD.classes.AppBuilder.currApp.currObj.columns.attr ?
+										AD.classes.AppBuilder.currApp.currObj.columns.attr() :
+										AD.classes.AppBuilder.currApp.currObj.columns;
 
-									if (col.type == 'date' || col.type == 'datetime') {
-										if (col.setting.currentDateDefault == true)
-											defaultValue = new Date();
-										else if (col.setting.default)
-											defaultValue = new Date(col.setting.default);
-									}
+									// Set default of data
+									async.eachSeries(columns, function (col, callback) {
+										if (newModel[col.name] == null) {
 
-									newModel.attr(col.name, defaultValue);
+											if (col.setting.default) {
+												var defaultValue = col.setting.default;
+
+												if (col.type == 'date' || col.type == 'datetime') {
+													if (col.setting.currentDateDefault == true)
+														defaultValue = new Date();
+													else if (col.setting.default)
+														defaultValue = new Date(col.setting.default);
+												}
+
+												newModel.attr(col.name, defaultValue);
+
+												callback();
+											}
+											// Get default value as the current user
+											else if (col.fieldName == 'user' && col.setting.defaultCurrentUser == true) {
+												AD.comm.service.get({
+													url: '/site/user/data'
+												})
+													.fail(function (err) {
+														webix.message(err.message);
+
+														callback();
+													})
+													.done(function (data) {
+														var defaultUser = {
+															id: data.user.username,
+															text: data.user.username
+														};
+
+														newModel.attr(col.name, defaultUser);
+
+														callback();
+													});
+
+											}
+											else {
+												callback();
+											}
+										}
+										else {
+											callback();
+										}
+									}, next);
+								},
+								function (next) {
+									newModel.save()
+										.fail(next)
+										.done(function (result) {
+											if (result.translate) result.translate();
+
+											$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
+
+											next();
+										});
 								}
+							], function (err) {
+								console.error(err);
+
+								$$(self.webixUiId.objectDatatable).hideProgress();
 							});
-
-							newModel.save()
-								.fail(function (err) {
-									console.error(err);
-									// TODO message
-
-									$$(self.webixUiId.objectDatatable).hideProgress();
-								})
-								.then(function (result) {
-									if (result.translate) result.translate();
-
-									$$(self.webixUiId.objectDatatable).data.add(result.attr(), $$(self.webixUiId.objectDatatable).data.count());
-
-									$$(self.webixUiId.objectDatatable).hideProgress();
-								})
 						},
 
 						updateRowData: function (state, editor, ignoreUpdate) {

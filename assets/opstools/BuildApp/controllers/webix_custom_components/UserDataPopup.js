@@ -93,13 +93,11 @@ steal(function () {
 												selectedIds = this.getSelectedId(true),
 												selectedItems = [];
 
-											selectedIds.forEach(function (guid) {
-												var htmlNode = dataList.getItemNode(guid);
+											selectedIds.forEach(function (username) {
+												var htmlNode = dataList.getItemNode(username);
 												if (!htmlNode) return;
 
-												var username = $(htmlNode).find('.ab-user-data')[0].innerText;
-
-												selectedItems.push({ id: guid, text: username });
+												selectedItems.push({ id: username, text: username });
 											});
 
 											if (events.selectChange)
@@ -125,13 +123,11 @@ steal(function () {
 												var dataList = this.getTopParentView().getChildViews()[1].getChildViews()[1];
 
 												// [{ id: id, text: '' }, ..., { id: idn, text: '' }]
-												var selectedItems = $.map(dataList.getSelectedId(true), function (guid) {
-													var htmlNode = dataList.getItemNode(guid);
+												var selectedItems = $.map(dataList.getSelectedId(true), function (username) {
+													var htmlNode = dataList.getItemNode(username);
 													if (!htmlNode) return;
 
-													var username = $(htmlNode).find('.ab-user-data')[0].innerText;
-
-													return [{ id: guid, text: username }];
+													return [{ id: username, text: username }];
 												});
 
 												if (!selectedItems || selectedItems.length < 1)
@@ -189,7 +185,7 @@ steal(function () {
 							.done(function (data) {
 								dataList.parse(data.attr().map(function (item) {
 									return {
-										id: item.guid,
+										id: item.username,
 										username: item.username
 									};
 								}));
