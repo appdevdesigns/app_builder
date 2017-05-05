@@ -409,12 +409,19 @@ steal(
 							var rowData = dataCollection.find({});
 
 							var recordFilter = $$(componentIds.propertyView).getItem(componentIds.recordFilter);
-							recordFilter.options = rowData.map(function (row) {
+							var recordOptions = rowData.map(function (row) {
 								return {
 									id: row.id,
 									value: 'ID: #id# - #label#'.replace('#id#', row.id).replace('#label#', row._dataLabel)
 								};
 							});
+
+							recordOptions.unshift({
+								id: '',
+								value: '[None]'
+							})
+
+							recordFilter.options = recordOptions;
 
 							next();
 						}
@@ -568,7 +575,12 @@ steal(
 						template: function (data, dataValue) {
 							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
 
-							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
+							if (selectedData && selectedData.length > 0) {
+								return selectedData[0].value;
+							}
+							else {
+								return '[None]';
+							}
 						}
 					}
 				],

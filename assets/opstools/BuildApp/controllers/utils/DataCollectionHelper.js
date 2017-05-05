@@ -78,6 +78,8 @@ steal(
 
 											// TEMPORARY FEATURE :
 											if (dataCollections[objectId].recordFilter != null &&
+												dataCollections[objectId].recordFilter != '' &&
+												dataCollections[objectId].recordFilter != 'none' &&
 												dataCollections[objectId].recordFilter != id) {
 												setTimeout(function () {
 													dataCollections[objectId].setCursor(dataCollections[objectId].recordFilter);
