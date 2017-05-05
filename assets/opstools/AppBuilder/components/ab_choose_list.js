@@ -17,25 +17,26 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 		title: L('ab.application.application', '*Application'),
 		createNew: L('ab.application.createNew', '*Add new application'),
-		noApplication: L('ab.application.noApplication', "*There is no application data")
-							
+		noApplication: L('ab.application.noApplication', "*There is no application data")					
 	}
 }
 
 
-
-OP.Component.extend('ab_choose_list', function(App) {
+var idBase = 'ab_choose_list';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
 	var ids = {
-		component:App.unique('ab_choose_listcomponent'),
-		list:App.unique('ab_choose_list'),
-		toolBar:App.unique('ab_choose_list_toolbar'),
-		buttonCreateNewApplication: App.unique('ab_choose_list_buttonNewApp')
+		component:App.unique(idBase + '_component'),
+
+		uploader:App.unique(idBase + '_uploader'),
+		list:App.unique(idBase + '_list'),
+		toolBar:App.unique(idBase + '_toolbar'),
+		buttonCreateNewApplication: App.unique(idBase + '_buttonNewApp')
 	}
 
 	var MenuComponent = OP.Component['ab_choose_list_menu'](App);
@@ -75,20 +76,20 @@ OP.Component.extend('ab_choose_list', function(App) {
 						view: "toolbar",
 						id: ids.toolBar,
 						cols: [
-							{ view: "label", label:labels.application.title, fillspace: true },
+							{ view: "label", label:labels.component.title, fillspace: true },
 							{
 								id: ids.buttonCreateNewApplication,
 								view: "button", 
-								value: labels.application.createNew, 
+								value: labels.component.createNew, 
 								width: 200,
 								click: function() { 
-
 									// Inform our Chooser we have a request to create an Application:
 									App.actions.transitionApplicationForm( /* leave empty for a create */ );
 								}
 							},
 							{
 								view: "uploader",
+								id: ids.uploader,
 								value: labels.common.import,
 								width: 200,
 								upload: '/app_builder/appJSON',
@@ -96,23 +97,13 @@ OP.Component.extend('ab_choose_list', function(App) {
 								autosend: true,
 								on: {
 									onAfterFileAdd: function () {
-										this.disable();
-										_logic.busy();
+										_logic.onAfterFileAdd();
 									},
 									onFileUpload: function (item, response) {
-										_logic.loadData(); // refresh app list
-										this.enable();
-			                            _logic.ready();
+										_logic.onFileUpload(item, response);
 									},
 									onFileUploadError: function (details, response) {
-										var errorMessage = 'Error: ' + (response && response.message);
-										webix.message({
-											type: 'error',
-											text: errorMessage
-										});
-										_logic.loadData(); // refresh app list
-										this.enable();
-			                            _logic.ready();
+										_logic.onFileUploadError(details, response);
 									}
 								}
 							}
@@ -138,32 +129,11 @@ OP.Component.extend('ab_choose_list', function(App) {
 						},
 						select: false,
 						onClick: {
-							"ab-app-list-item": function (e, id, trg) {
-								_logic.busy();
-
-								this.select(id);
-
-								var selectedApp = this.getItem(id);
-
-								if (selectedApp) {
-		
-
-									_logic.ready();
-									
-
-									// We've selected an Application to work with
-									App.actions.transitionWorkspace( selectedApp );
-									
-								}
-
-								return false; // block default behavior
+							"ab-app-list-item": function (ev, id, trg) {
+								return _logic.onClickListItem(ev, id, trg);
 							},
-							"ab-app-list-edit": function (e, id, trg) {
-								// Show menu
-								PopupMenu.show(trg);
-								this.select(id);
-
-								return false; // block default behavior
+							"ab-app-list-edit": function (ev, id, trg) {
+								return _logic.onClickListEdit(ev, id, trg);
 							}
 						}
 					}
@@ -236,6 +206,91 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 
 		/**
+		 * @function onAfterFileAdd
+		 *
+		 * UI updates for when a file upload is initiated
+		 */
+		onAfterFileAdd: function () {
+			$$(ids.uploader).disable();
+			_logic.busy();
+		},
+
+
+		/**
+		 * @function onClickListEdit
+		 *
+		 * UI updates for when the edit gear is clicked
+		 */
+		onClickListEdit: function(ev, id, trg) {
+
+			// Show menu
+			PopupMenu.show(trg);
+			$$(ids.list).select(id);
+
+			return false; // block default behavior
+		},
+
+
+		/**
+		 * @function onClickListItem
+		 *
+		 * An item in the list is selected. So update the workspace with that 
+		 * object.
+		 */
+		onClickListItem: function(ev, id, trg) {
+								
+			_logic.busy();
+
+			$$(ids.list).select(id);
+
+			var selectedApp = $$(ids.list).getItem(id);
+
+			if (selectedApp) {
+
+				_logic.ready();
+
+				// We've selected an Application to work with
+				App.actions.transitionWorkspace( selectedApp );
+			}
+
+			return false; // block default behavior
+		},
+
+
+		/**
+		 * @function onFileUpload
+		 *
+		 * The File Upload process finished.
+		 */
+		onFileUpload: function (item, response) {
+			_logic.loadData(); // refresh app list
+			$$(ids.uploader).enable();
+            _logic.ready();
+        },
+
+
+		/**
+		 * @function onFileUploadError
+		 *
+		 * The File Upload process exited with an error.
+		 */
+        onFileUploadError: function(details, response) {
+
+			var errorMessage = 'Error: ' + (response && response.message);
+			OP.Dialog.Alert({
+				text: errorMessage
+			});
+			// webix.message({
+			// 	type: 'error',
+			// 	text: errorMessage
+			// });
+			_logic.loadData(); // refresh app list
+			$$(ids.uploader).enable();
+            _logic.ready();
+        },
+
+
+		/**
 		 * @function refreshOverlay
 		 *
 		 * If we have no items in our list, display a Message.
@@ -244,7 +299,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 			var appList = $$(ids.list);
 
 			if (!appList.count()) //if no data is available
-				appList.showOverlay(labels.application.noApplication);
+				appList.showOverlay(labels.component.noApplication);
 			else
 				appList.hideOverlay();
 		},

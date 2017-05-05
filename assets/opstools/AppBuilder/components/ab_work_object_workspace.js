@@ -25,6 +25,8 @@ var labels = {
 
 		addNewRow: L('ab.object.addNewRow', "*Add new row"),
 
+		selectObject: L('ab.object.selectObject', "*Select an object to work with."),
+
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 
 		// Toolbar:
@@ -90,11 +92,9 @@ OP.Component.extend(idBase, function(App) {
 				// view:''
 				id: ids.noSelection,
 				rows:[
-					{ view:'label', label:'* Select an Object to work with' }
+					{ view:'label', label:labels.component.selectObject }
 				]
 			},
-
-
 			{
 				id: ids.selectedObject,
 				rows: [
@@ -168,7 +168,10 @@ OP.Component.extend(idBase, function(App) {
 								label: labels.component.permission, 
 								icon: "lock", 
 								type: "icon", 
-								width: 120 
+								width: 120,
+								click: function() {
+									_logic.toolbarPermission(this.$view);
+								}
 							},
 							{ 
 								view: 'button', 
@@ -185,10 +188,13 @@ OP.Component.extend(idBase, function(App) {
 								view: 'button', 
 								id: ids.buttonExport, 
 								label: labels.component.export, 
-popup: 'self.webixUiId.exportDataPopup', 
+// popup: 'self.webixUiId.exportDataPopup', 
 								icon: "file-o", 
 								type: "icon", 
-								width: 90 
+								width: 90,
+								click: function() {
+									_logic.toolbarButtonExport(this.$view);
+								}
 							}
 						]
 					},
@@ -205,7 +211,7 @@ popup: 'self.webixUiId.exportDataPopup',
 								width: 150,
 								align: 'right',
 								click: function () {
-		// TODO:
+// TODO:
 									_logic.rowAdd();
 									// self.addNewRow({});
 								}
@@ -279,7 +285,9 @@ popup: 'self.webixUiId.exportDataPopup',
 		 */
 		clearObjectWorkspace:function(){
 			
-			$$(ids.noSelection).show();
+			// NOTE: to clear a visual glitch when multiple views are updating
+			// at one time ... stop the animation on this one:
+			$$(ids.noSelection).show(false, false);
 		},
 
 
@@ -302,6 +310,11 @@ popup: 'self.webixUiId.exportDataPopup',
 		 */
 		toolbarAddFields: function($view) {
 			PopupNewDataField.show($view);
+		},
+
+
+		toolbarButtonExport: function($view) {
+console.error('TODO: Button Export()');
 		},
 
 
@@ -345,6 +358,11 @@ console.error('TODO: button filterFields()');
 		 */
 		toolbarFrozen: function ($view) {
 console.error('TODO: toolbarFrozen()');
+		},
+
+
+		toolbarPermission: function ($view) {
+console.error('TODO: toolbarPermission()');
 		},
 
 

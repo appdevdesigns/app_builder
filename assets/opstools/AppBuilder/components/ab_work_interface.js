@@ -15,7 +15,7 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 
@@ -23,14 +23,14 @@ var labels = {
 }
 
 
-
-OP.Component.extend('ab_work_interface', function(App) {
+var idBase = 'ab_work_interface';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_interface_component'),
+		component: App.unique(idBase + '_component'),
 
 	}
 
@@ -59,26 +59,16 @@ OP.Component.extend('ab_work_interface', function(App) {
 	var _logic = {
 
 		
-		// /**
-		//  * @function formBusy
-		//  *
-		//  * Show the progress indicator to indicate a Form operation is in 
-		//  * progress.
-		//  */
-		// formBusy: function() {
-
-		// 	$$(ids.form).showProgress({ type: 'icon' });
-		// },
-
-
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+		/**
+		 * @function applicationLoad
+		 *
+		 * Initialize the Object Workspace with the given ABApplication.
+		 *
+		 * @param {ABApplication} application 
+		 */
+		applicationLoad:function(application) {
+console.error('TODO: ab_work_interface.applicationLoad()');
+		},
 
 
 		/**
@@ -97,27 +87,6 @@ OP.Component.extend('ab_work_interface', function(App) {
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		
-		/**
-		 * @function initInterfaceTab
-		 *
-		 * Initialize the Object Workspace with the given ABApplication.
-		 *
-		 * @param {ABApplication} application 
-		 */
-		initInterfaceTab:function(application) {
-console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
-		},
-
-
-		/**
-		 * @function transitionInterfaceWorkspace
-		 *
-		 * Display the Interface Workspace UI
-		 */
-		transitionInterfaceWorkspace:function(){
-			_logic.show();
-		}
 
 	}
 
@@ -127,6 +96,9 @@ console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
 		ui:_ui,					// {obj} 	the webix ui definition for this component
 		init:_init,				// {fn} 	init() to setup this component  
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		applicationLoad:_logic.applicationLoad,
+		show: _logic.show,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

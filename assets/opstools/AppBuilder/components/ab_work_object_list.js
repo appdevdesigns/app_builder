@@ -17,7 +17,7 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 		addNew: L('ab.object.addNew', '*Add new object'),
@@ -93,7 +93,7 @@ height:800,
 			{
 				view: 'button',
 				id: ids.buttonNew,
-				value: labels.application.addNew,
+				value: labels.component.addNew,
 				click: function () {
 					_logic.clickNewObject();
 				}

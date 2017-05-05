@@ -62,7 +62,8 @@ OP.Component.extend('ab_work', function(App) {
 				autowidth: true,
 				cols: [
 					{
-						view: "button", value: labels.application.backToApplication, width: 250, align: "right", click: function () {
+						view: "button", value: labels.application.backToApplication, width: 250, align: "right", 
+						click: function () {
 							App.actions.transitionApplicationChooser();
 						}
 					},
@@ -188,13 +189,13 @@ console.error('TODO: ab_work.logic.synchronize()!');
 				// Object Workspace Tab
 				case ids.tab_object:
 					$$(ids.buttonSync).show();
-					App.actions.transitionObjectTab();
+					AppObjectWorkspace.show();
 					break;
 
 				// Interface Workspace Tab
 				case ids.tab_interface:
 					$$(ids.buttonSync).hide();
-					App.actions.transitionInterfaceWorkspace();
+					AppInterfaceWorkspace.show();
 					break;
 			}
 
@@ -217,11 +218,10 @@ console.error('TODO: ab_work.logic.synchronize()!');
 		transitionWorkspace:function(application){
 
 			_logic.applicationInit(application);
-			App.actions.initObjectTab(application);
-			App.actions.initInterfaceTab(application);
+			AppObjectWorkspace.applicationLoad(application);
+			AppInterfaceWorkspace.applicationLoad(application);
 
-			_logic.show();			
-			
+			_logic.show();	
 		}
 
 	}

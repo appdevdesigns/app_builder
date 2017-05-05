@@ -15,7 +15,7 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		formHeader: L('ab.application.form.header', "*Application Info"),
 		placeholderName: L('ab.application.form.placeholderName', "*Application name"),
@@ -32,29 +32,30 @@ var labels = {
 }
 
 
-
-OP.Component.extend('ab_choose_form', function(App) {
+var idBase = 'ab_choose_form';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
 	var ids = {
-		formComponent: App.unique('ab_choose_form_component'),
-		form: App.unique('ab-app-list-form'),
-		appFormPermissionList: App.unique('ab-app-form-permission'),
-		appFormCreateRoleButton: App.unique('ab-app-form-create-role'),
+		component: App.unique(idBase + '_component'),
 
-		saveButton: App.unique('ab-app-form-button-save')
+		form: App.unique(idBase + '_form'),
+		appFormPermissionList: App.unique(idBase + '_permission'),
+		appFormCreateRoleButton: App.unique(idBase + '_createRole'),
+
+		saveButton: App.unique(idBase + '_buttonSave')
 	}
 
 
 
 	var _ui = {
-		id: ids.formComponent,
+		id: ids.component,
 		scroll: true,
 		rows: [
 			{
 				view: "toolbar",
-				cols: [{ view: "label", label: labels.application.formHeader, fillspace: true }]
+				cols: [{ view: "label", label: labels.component.formHeader, fillspace: true }]
 			},
 			{
 				view: "form",
@@ -68,7 +69,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 						view: "text",
 						label: labels.common.formName,
 						required: true,
-						placeholder: labels.application.placeholderName,
+						placeholder: labels.component.placeholderName,
 						labelWidth: 100,
 						on: {
 							onChange: function (newValue, oldValue) {
@@ -76,13 +77,13 @@ OP.Component.extend('ab_choose_form', function(App) {
 							}
 						}
 					},
-					{ name: "description", view: "textarea", label: labels.common.formDescription, placeholder: labels.application.placeholderDescription, labelWidth: 100, height: 100 },
-					{ type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>'+labels.application.sectionPermission },
+					{ name: "description", view: "textarea", label: labels.common.formDescription, placeholder: labels.component.placeholderDescription, labelWidth: 100, height: 100 },
+					{ type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>'+labels.component.sectionPermission },
 					{
 						view: "toolbar",
 						cols: [
 							{
-								template: labels.application.permissionHeader, 
+								template: labels.component.permissionHeader, 
 								type: 'header',
 								borderless: true
 							},
@@ -94,23 +95,10 @@ OP.Component.extend('ab_choose_form', function(App) {
 								align: "right",
 								offIcon: "square-o",
 								onIcon: "check-square-o",
-								label: labels.application.createNewRole, 
+								label: labels.component.createNewRole, 
 								on: {
 									onItemClick: function (id, e) {
-										if (this.getValue()) {
-
-// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
-											// Add new app role
-											var appName = $$(ids.form).elements["label"].getValue();
-											_logic.permissionAddNew(appName);
-
-										}
-										else { 
-
-											// Remove app role
-											_logic.permissionRemoveNew();
-											
-										}
+										_logic.createRoleButtonClick();
 									}
 								}
 							}
@@ -129,27 +117,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 						template: "#name#",
 						on: {
 							onItemClick: function (id, e, node) {
-								if (this.getItem(id).isApplicationRole) {
-									return;
-								}
-
-								if (this.isSelected(id)) {
-									this.unselect(id);
-								}
-								else {
-									var selectedIds = this.getSelectedId();
-
-									if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
-										if (selectedIds)
-											selectedIds = [selectedIds];
-										else
-											selectedIds = [];
-									}
-
-									selectedIds.push(id);
-
-									this.select(selectedIds);
-								}
+								_logic.permissionClick(id, e, node);
 							}
 						}
 					},
@@ -161,32 +129,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 								id: ids.saveButton,
 								view: "button", label: labels.common.save, type: "form", width: 100, 
 								click: function () {
-									
-									_logic.buttonSaveDisable();
-									_logic.formBusy();
-
-									// if there is a selected Application, then this is an UPDATE
-									var updateApp = App.actions.getSelectedApplication();
-									if (updateApp) { 
-
-										if (_logic.formValidate('update')) {
-
-											_logic.applicationUpdate(updateApp);
-
-										}
-										
-									} else { 
-
-										// else this is a Create
-										if (_logic.formValidate('add')) {
-
-											_logic.applicationCreate(_logic.formValues());
-
-										}
-
-									}
-									
-	
+									_logic.buttonSaveClick();
 								} // end click()
 							},
 							{
@@ -334,6 +277,39 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 
 		/**
+		 * @function buttonSaveClick
+		 *
+		 * Process the user clicking on the [Save] button.
+		 */
+		buttonSaveClick: function() {
+
+			_logic.buttonSaveDisable();
+			_logic.formBusy();
+
+			// if there is a selected Application, then this is an UPDATE
+			var updateApp = App.actions.getSelectedApplication();
+			if (updateApp) { 
+
+				if (_logic.formValidate('update')) {
+
+					_logic.applicationUpdate(updateApp);
+
+				}
+				
+			} else { 
+
+				// else this is a Create
+				if (_logic.formValidate('add')) {
+
+					_logic.applicationCreate(_logic.formValues());
+
+				}
+
+			}
+			
+		},
+
+		/**
 		 * @function buttonSaveDisable
 		 *
 		 * Disable the save button.
@@ -362,6 +338,28 @@ OP.Component.extend('ab_choose_form', function(App) {
 									
 			_logic.formReset();
 			App.actions.transitionApplicationList();
+		},
+
+
+		/**
+		 * @function createRoleButtonClick
+		 *
+		 * The user clicked the [Create Role] button.  Update the UI and add a
+		 * unique Application permission to our list.
+		 */
+		createRoleButtonClick: function() {
+
+			if ($$(ids.appFormCreateRoleButton).getValue()) {
+
+// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
+				// Add new app role
+				var appName = $$(ids.form).elements["label"].getValue();
+				_logic.permissionAddNew(appName);
+			}
+			else { 
+				// Remove app role
+				_logic.permissionRemoveNew();
+			}
 		},
 
 
@@ -448,18 +446,19 @@ OP.Component.extend('ab_choose_form', function(App) {
 
 			var errors = ABApplication.isValid(op, Form.getValues());
 			if (OP.Form.isValidationError(errors, Form)) {
-// var hasFocused = false;
-// errors.forEach(function(err){
-// 	Form.markInvalid(err.name, labels.application[err.mlKey] || err.defaultText );
-// 	if (!hasFocused && Form.elements[err.name]) {
-// 		Form.elements[err.name].focus();
-// 		hasFocused = true;
-// 	}
-// })	
 				_logic.formReady();
 				_logic.buttonSaveEnable();
 				return false;
 			}
+
+
+///// TODO: 
+// Implement common Form Input Validations
+// convert this to:  
+// app = ABApplication.newApplication(Form.getValues())
+// errors = app.inValid()
+// if (OP.Form.isValidationError(errors, Form)) { }
+
 
 			// var appName = $$(ids.form).elements['label'].getValue(),
 			// 	appDescription = $$(ids.form).elements['description'].getValue();
@@ -472,8 +471,8 @@ OP.Component.extend('ab_choose_form', function(App) {
 			// // Prevent duplicate application name
 			// if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
 			// 	OP.Dialog.Alert({
-			// 		title: labels.application.invalidName,
-			// 		text: labels.application.duplicateName.replace("#appName#", appName),
+			// 		title: labels.component.invalidName,
+			// 		text: labels.component.duplicateName.replace("#appName#", appName),
 			// 		ok: labels.common.ok
 			// 	});
 
@@ -524,6 +523,37 @@ OP.Component.extend('ab_choose_form', function(App) {
 			selectedIds.push('newRole');
 			$$(ids.appFormPermissionList).select(selectedIds);
 
+		},
+
+
+		/**
+		 * @function permissionClick
+		 *
+		 * Process when a permission entry in the list is clicked.
+		 */
+		permissionClick: function (id, e, node) {
+			var List = $$(ids.appFormPermissionList);
+			if (List.getItem(id).isApplicationRole) {
+				return;
+			}
+
+			if (List.isSelected(id)) {
+				List.unselect(id);
+			}
+			else {
+				var selectedIds = List.getSelectedId();
+
+				if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
+					if (selectedIds)
+						selectedIds = [selectedIds];
+					else
+						selectedIds = [];
+				}
+
+				selectedIds.push(id);
+
+				List.select(selectedIds);
+			}
 		},
 
 
@@ -807,7 +837,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 		 */
 		show:function() {
 
-			$$(ids.formComponent).show();
+			$$(ids.component).show();
 		}
 	}
 
@@ -817,38 +847,22 @@ OP.Component.extend('ab_choose_form', function(App) {
 	var _actions = {
 
 
-		/**
-		 * @function populateApplicationForm()
-		 *
-		 * Initialze the Form with the values from the provided ABApplication.
-		 *
-		 * If no ABApplication is provided, then show an empty form. (create operation)
-		 *
-		 * @param {ABApplication} Application  	[optional] The current ABApplication 
-		 *										we are working with.
-		 */
-		// populateApplicationForm:function(Application){
-			
-
-		// },
-
-
 		// initiate a request to create a new Application
-		transitionApplicationForm:function(Application){
+		transitionApplicationForm:function(application){
 			
-			// if no Application is given, then this should be a [create] operation,
+			// if no application is given, then this should be a [create] operation,
 			// so clear our AppList
-			if ('undefined' == typeof Application) {
+			if ('undefined' == typeof application) {
 				App.actions.unselectApplication();
 			}
 
 			// now prepare our form:
 			_logic.formReset();
-			if (Application) {
+			if (application) {
 				// populate Form here:
-				_logic.formPopulate(Application);
+				_logic.formPopulate(application);
 			}
-			_logic.permissionPopulate(Application);
+			_logic.permissionPopulate(application);
 			_logic.show();
 		},
 

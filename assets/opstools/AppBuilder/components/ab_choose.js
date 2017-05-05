@@ -12,11 +12,12 @@
 import './ab_choose_list'
 import './ab_choose_form'
 
-OP.Component.extend('ab_choose', function(App) {
+var idBase = 'ab_choose';
+OP.Component.extend(idBase, function(App) {
 
 
 	var ids = {
-		component:App.unique('ab_choose')
+		component:App.unique(idBase + '_component')
 	}
 
 
