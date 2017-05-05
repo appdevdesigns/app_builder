@@ -515,11 +515,11 @@ module.exports = {
                 if (sourceSetting.linkType == 'collection' && targetSetting.linkType == 'collection') {
 
                     if ((sourceObject.application.name + sourceObject.name + data.name).length + 6 > 32) {
-                        data.name = data.name.substring(0, (32 - ((sourceObject.application.name + sourceObject.name).length + 5)));
+                        data.name = data.name.substring(0, (32 - ((sourceObject.application.name + sourceObject.name).length + 6)));
                     }
 
                     if ((targetObject.application.name + targetObject.name + data.targetName).length + 6 > 32) {
-                        data.targetName = data.targetName.substring(0, (32 - ((targetObject.application.name + targetObject.name).length + 5)));
+                        data.targetName = data.targetName.substring(0, (32 - ((targetObject.application.name + targetObject.name).length + 6)));
                     }
 
                     // TODO : Check duplicate column names
