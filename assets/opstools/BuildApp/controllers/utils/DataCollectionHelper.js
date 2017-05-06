@@ -77,12 +77,9 @@ steal(
 										dataCollections[objectId].attachEvent('onAfterCursorChange', function (id) {
 
 											// TEMPORARY FEATURE :
-											if (dataCollections[objectId].recordFilter != null &&
-												dataCollections[objectId].recordFilter != '' &&
-												dataCollections[objectId].recordFilter != 'none' &&
-												dataCollections[objectId].recordFilter != id) {
+											if (dataCollections[objectId].hasCurrentUserFilter == true) {
 												setTimeout(function () {
-													dataCollections[objectId].setCursor(dataCollections[objectId].recordFilter);
+													dataCollections[objectId].updateCursorToCurrentUser();
 												}, 10);
 											}
 										});
@@ -135,6 +132,70 @@ steal(
 
 										dataCollections[objectId].getCheckedItems = function () {
 											return dataCollections[objectId].checkedItems;
+										};
+
+										dataCollections[objectId].updateCursorToCurrentUser = function () {
+											var deferred = $.Deferred();
+
+											if (dataCollections[objectId].hasCurrentUserFilter != true) {
+												deferred.resolve();
+												return deferred;
+											}
+
+											async.series([
+												// Get default user name
+												function (next) {
+													if (dataCollections[objectId].currUsername == null) {
+														AD.comm.service.get({
+															url: '/site/user/data'
+														})
+															.fail(next)
+															.done(function (data) {
+																dataCollections[objectId].currUsername = data.user.username;
+
+																next();
+															});
+													}
+													else {
+														next();
+													}
+												},
+												// Set cursor to row that has a value as current user
+												function (next) {
+													var userCol = objInfo.columns.filter(function (col) { return col.fieldName == 'user'; })[0];
+
+													if (userCol) {
+														var selectRow = dataCollections[objectId].find(function (row) {
+															if (typeof row[userCol.name] == 'array') {
+																return row[userCol.name].filter(function (data) {
+																	return data.id == dataCollections[objectId].currUsername;
+																}).length > 0;
+															}
+															else if (row[userCol.name] && row[userCol.name].id) {
+																return row[userCol.name].id == dataCollections[objectId].currUsername;
+															}
+															else {
+																return false;
+															}
+														})[0];
+
+														if (selectRow != null)
+															dataCollections[objectId].setCursor(selectRow.id);
+
+														next();
+													}
+													else {
+														next();
+													}
+												}
+											], function (err) {
+												if (err)
+													deferred.reject(err);
+												else
+													deferred.resolve();
+											});
+
+											return deferred;
 										};
 									}
 

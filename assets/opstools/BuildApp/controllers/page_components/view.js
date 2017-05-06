@@ -17,7 +17,8 @@ steal(
 			editDescription: 'ab-view-edit-description',
 			selectObject: 'ab-view-select-object',
 			selectColumns: 'ab-view-select-columns',
-			recordFilter: 'ab-view-record-filter'
+			currentUserFilterTitle: 'ab-view-current-user-title',
+			currentUserFilter: 'ab-view-current-user-filter'
 		};
 
 		// Instance functions
@@ -129,9 +130,17 @@ steal(
 				// Initial events
 				if (data.dataCollection) {
 					// TEMPORARY FEATURE :
-					if (setting.recordFilter != null) {
-						data.dataCollection.setCursor(setting.recordFilter)
-						data.dataCollection.recordFilter = setting.recordFilter;
+					if (setting.currentUserFilter == true || setting.currentUserFilter == "true") {
+						data.dataCollection.hasCurrentUserFilter = true;
+						setTimeout(function () {
+							data.dataCollection.updateCursorToCurrentUser();
+						}, 100);
+					}
+					else {
+						data.dataCollection.hasCurrentUserFilter = false;
+						setTimeout(function () {
+							data.dataCollection.updateCursorToCurrentUser();
+						}, 100);
 					}
 
 					if (eventIds['onAfterCursorChange'] == null) {
@@ -365,7 +374,7 @@ steal(
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
 					columns: propertyValues[componentIds.selectColumns] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
-					recordFilter: propertyValues[componentIds.recordFilter] || ''
+					currentUserFilter: propertyValues[componentIds.currentUserFilter] == true
 				};
 
 				return settings;
@@ -401,27 +410,30 @@ steal(
 								next(null, dataCollection);
 							});
 					},
-					// Get row data to show in list
+					// Enable/Disable set current user filter
 					function (dataCollection, next) {
-						if (dataCollection) {
-							// Properties
-							// Filter - Row
-							var rowData = dataCollection.find({});
+						// Properties
+						// Filter - Current user
+						if (setting && setting.object) {
+							var selectedObject = application.objects.filter(function (obj) { return (obj.id || obj) == setting.object; })[0];
+							var userColumns = [];
 
-							var recordFilter = $$(componentIds.propertyView).getItem(componentIds.recordFilter);
-							var recordOptions = rowData.map(function (row) {
-								return {
-									id: row.id,
-									value: 'ID: #id# - #label#'.replace('#id#', row.id).replace('#label#', row._dataLabel)
-								};
-							});
+							if (selectedObject)
+								userColumns = selectedObject.columns.filter(function (col) { return col.fieldName == 'user'; });
 
-							recordOptions.unshift({
-								id: '',
-								value: '[None]'
-							})
+							var currUserTitle = $$(componentIds.propertyView).getItemNode(componentIds.currentUserFilterTitle),
+								currUserFilter = $$(componentIds.propertyView).getItemNode(componentIds.currentUserFilter);
 
-							recordFilter.options = recordOptions;
+							if (userColumns.length < 1) {
+								setting.currentUserFilter = '0';
+
+								$(currUserTitle).hide();
+								$(currUserFilter).hide();
+							}
+							else {
+								$(currUserTitle).show();
+								$(currUserFilter).show();
+							}
 
 							next();
 						}
@@ -471,7 +483,7 @@ steal(
 						propValues[componentIds.editDescription] = setting.description || '';
 						propValues[componentIds.selectObject] = setting.object;
 						propValues[componentIds.selectColumns] = setting.columns;
-						propValues[componentIds.recordFilter] = setting.recordFilter || '';
+						propValues[componentIds.currentUserFilter] = setting.currentUserFilter == 'true';
 
 						$$(componentIds.propertyView).setValues(propValues);
 						$$(componentIds.propertyView).refresh();
@@ -566,22 +578,13 @@ steal(
 							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
 						}
 					},
-					{ label: "Filter", type: "label" },
+					{ label: "Filter", type: "label", id: componentIds.currentUserFilterTitle },
 					{
-						id: componentIds.recordFilter,
-						name: 'filter',
-						type: 'richselect',
-						label: 'Row',
-						template: function (data, dataValue) {
-							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
-
-							if (selectedData && selectedData.length > 0) {
-								return selectedData[0].value;
-							}
-							else {
-								return '[None]';
-							}
-						}
+						id: componentIds.currentUserFilter,
+						name: 'currentUserFilter',
+						type: 'checkbox',
+						label: 'Current user',
+						editable: false
 					}
 				],
 				on: {
