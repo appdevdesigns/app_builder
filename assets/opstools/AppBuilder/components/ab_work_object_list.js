@@ -64,7 +64,7 @@ height:800,
 				},
 				type: {
 					height:"auto",
-					unsyncNumber: "",  // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+					// unsyncNumber: "",  // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
 				on: {
@@ -367,7 +367,7 @@ console.error('TODO: syncNumRefresh()');
 	var _templateListItem = [
 		"<div class='ab-object-list-item'>",
 			"#label#",
-			"{common.unsyncNumber}",
+			// "{common.unsyncNumber}",
 			"{common.iconGear}",
 		"</div>",
 	].join('');
