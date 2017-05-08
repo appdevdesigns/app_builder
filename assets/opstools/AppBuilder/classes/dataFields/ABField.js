@@ -1,6 +1,6 @@
-/* 
+/*
  * ABField
- * 
+ *
  * An ABField defines a single unique Field/Column in a ABObject.
  *
  */
@@ -8,7 +8,7 @@
 
 
 
-import OP from "../../OP/OP"
+// import OP from "../../OP/OP"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -49,7 +49,7 @@ export default class ABField {
   			showIcon:1
   		}
 
-  		for(var f in defaultValues) { 
+  		for(var f in defaultValues) {
 			var component = $$(ids[f]);
 			component.setValue(defaultValues[f]);
 		}
@@ -59,8 +59,8 @@ export default class ABField {
 	/**
 	 * @function definitionEditor
 	 *
-	 * Many DataFields share some base information for their usage 
-	 * in the AppBuilder.  The UI Editors have a common header 
+	 * Many DataFields share some base information for their usage
+	 * in the AppBuilder.  The UI Editors have a common header
 	 * and footer format, and this function allows child DataFields
 	 * to not have to define those over and over.
 	 *
@@ -109,7 +109,7 @@ export default class ABField {
 					view: "text",
 					id: ids.label,
 					name:'label',
-					label: App.labels.dataFieldHeaderLabel, 
+					label: App.labels.dataFieldHeaderLabel,
 					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
 					labelWidth: 50,
 					css: 'ab-new-label-name',
@@ -134,7 +134,7 @@ export default class ABField {
 				},
 				{
 					view: 'checkbox',
-					id: ids.showIcon, 
+					id: ids.showIcon,
 					name:'showIcon',
 					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
 					labelWidth: 0,
@@ -149,7 +149,7 @@ export default class ABField {
 
 
 
-  	/* 
+  	/*
   	 * @method isValid
   	 * check the current values to make sure they are valid.
   	 * Here we check the default values provided by ABField.
@@ -170,7 +170,7 @@ export default class ABField {
 		}
 
 		return errors;
-	} 
+	}
 
 
 
@@ -188,8 +188,8 @@ export default class ABField {
 	 * destroy the current instance of ABApplication
 	 *
 	 * also remove it from our _AllApplications
-	 * 
-	 * @return {Promise} 
+	 *
+	 * @return {Promise}
 	 */
 	destroy () {
 		if (this.id) {
@@ -204,8 +204,8 @@ console.error('TODO: ABField.destroy()');
 	 *
 	 * persist this instance of ABField with it's parent ABObject
 	 *
-	 * 
-	 * @return {Promise} 	
+	 *
+	 * @return {Promise}
 	 *						.resolve( {this} )
 	 */
 	save () {
@@ -235,7 +235,7 @@ console.error('TODO: ABField.destroy()');
 	 * properly compile the current state of this ABField instance
 	 * into the values needed for saving to the DB.
 	 *
-	 * @return {json} 
+	 * @return {json}
 	 */
 	toObj () {
 
@@ -259,7 +259,7 @@ console.error('TODO: ABField.destroy()');
 	///
 
 	columnHeader (isObjectWorkspace) {
-		
+
 		var config = {
 			id: this.columnName,
 			header: this.label,

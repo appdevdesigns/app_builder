@@ -71,462 +71,7 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var _OPOP = __webpack_require__(1);
-
-var _OPOP2 = _interopRequireDefault(_OPOP);
-
-__webpack_require__(29);
-
-var _ABObject = __webpack_require__(10);
-
-var _ABObject2 = _interopRequireDefault(_ABObject);
-
-var _AllApplications = [];
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-function toDC(data) {
-	return new webix.DataCollection({
-		data: data
-
-	});
-}
-
-// on: {
-// 	onAfterDelete: function(id) {
-
-// 	}
-// }
-function toArray(DC) {
-	var ary = [];
-
-	var id = DC.getFirstId();
-	while (id) {
-		var element = DC.getItem(id);
-		ary.push(element);
-		id = DC.getNextId(id);
-	}
-
-	return ary;
-}
-
-var ABApplication = (function () {
-	function ABApplication(attributes) {
-		var _this = this;
-
-		_classCallCheck(this, ABApplication);
-
-		// ABApplication Attributes
-		this.id = attributes.id;
-		this.json = attributes.json;
-		this.name = attributes.name || this.json.name || "";
-		this.role = attributes.role;
-
-		// multilingual fields: label, description
-		_OPOP2["default"].Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
-
-		// import all our ABObjects
-		var newObjects = [];
-		(attributes.json.objects || []).forEach(function (obj) {
-			newObjects.push(new _ABObject2["default"](obj, _this));
-		});
-		this._objects = newObjects;
-
-		// import all our ABViews
-
-		// instance keeps a link to our Model for .save() and .destroy();
-		this.Model = _OPOP2["default"].Model.get('opstools.BuildApp.ABApplication');
-		this.Model.Models(ABApplication);
-	}
-
-	///
-	/// Static Methods
-	///
-	/// Available to the Class level object.  These methods are not dependent
-	/// on the instance values of the Application.
-	///
-
-	/**
-  * @function allApplications
-  *
-  * return a DataCollection that contains all the ABApplications this user
-  * can see (based upon server side permissions);
-  * 
-  * NOTE: this manages the results in the _AllApplications dataCollection
-  * store.  Any future .create(), .destroy(), .updates() modify values in 
-  * that collection.
-  *
-  * Any webix ui components synced to that collection will be automatically 
-  * updated.
-  *
-  * @return {Promise} 
-  */
-
-	_createClass(ABApplication, [{
-		key: "destroy",
-
-		///
-		/// Instance Methods
-		///
-
-		/// ABApplication data methods
-
-		/**
-   * @method destroy()
-   *
-   * destroy the current instance of ABApplication
-   *
-   * also remove it from our _AllApplications
-   * 
-   * @return {Promise} 
-   */
-		value: function destroy() {
-			var _this2 = this;
-
-			if (this.id) {
-				return this.Model.destroy(this.id).then(function () {
-					_AllApplications.remove(_this2.id);
-				});
-			}
-		}
-
-		/**
-   * @method save()
-   *
-   * persist the current instance of ABApplication to the DB
-   *
-   * Also, keep the values in _AllApplications up to date.
-   * 
-   * @return {Promise} 
-   */
-	}, {
-		key: "save",
-		value: function save() {
-			var _this3 = this;
-
-			var values = this.toObj();
-
-			// we already have an .id, so this must be an UPDATE
-			if (values.id) {
-
-				return this.Model.update(values.id, values).then(function () {
-					_AllApplications.updateItem(values.id, _this3);
-				});
-			} else {
-
-				// must be a CREATE:
-				return this.Model.create(values).then(function (data) {
-					_this3.id = data.id;
-					_AllApplications.add(_this3, 0);
-				});
-			}
-		}
-
-		/**
-   * @method toObj()
-   *
-   * properly compile the current state of this ABApplication instance
-   * into the values needed for saving to the DB.
-   *
-   * Most of the instance data is stored in .json field, so be sure to 
-   * update that from all the current values of our child fields.
-   *
-   * @return {json} 
-   */
-	}, {
-		key: "toObj",
-		value: function toObj() {
-
-			_OPOP2["default"].Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
-			this.json.name = this.name;
-
-			// for each Object: compile to json
-			var currObjects = [];
-			this._objects.forEach(function (obj) {
-				currObjects.push(obj.toObj());
-			});
-			this.json.objects = currObjects;
-
-			return {
-				id: this.id,
-				name: this.name,
-				json: this.json,
-				role: this.role
-			};
-		}
-
-		/// ABApplication Permission methods
-
-		/**
-   * @method assignPermissions()
-   *
-   * Make sure the current ABApplication permissions match the given 
-   * array of permissions.
-   *
-   * @param {array} permItems	an array of role assignments that this 
-   * 							ABApplication should match.
-   * @return {Promise} 
-   */
-	}, {
-		key: "assignPermissions",
-		value: function assignPermissions(permItems) {
-			var _this4 = this;
-
-			return new Promise(function (resolve, reject) {
-				AD.comm.service.put({
-					url: '/app_builder/' + _this4.id + '/role/assign',
-					data: {
-						roles: permItems
-					}
-				}).fail(reject).done(resolve);
-			});
-		}
-
-		/**
-   * @method getPermissions()
-   *
-   * Return an array of role assignments that are currently assigned to this
-   * ABApplication.
-   *
-   * @return {Promise} 	resolve(list) : list {array} Role assignments
-   */
-	}, {
-		key: "getPermissions",
-		value: function getPermissions() {
-			var _this5 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				AD.comm.service.get({ url: '/app_builder/' + _this5.id + '/role' }).fail(reject).done(resolve);
-			});
-		}
-
-		/**
-   * @method createPermission()
-   *
-   * Create a Role in the system after the name of the current ABApplication.
-   *
-   * @return {Promise} 	
-   */
-	}, {
-		key: "createPermission",
-		value: function createPermission() {
-			var _this6 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				// TODO: need to take created role and store as : .json.applicationRole = role.id
-
-				AD.comm.service.post({ url: '/app_builder/' + _this6.id + '/role' }).fail(reject).done(resolve);
-			});
-		}
-
-		/**
-   * @method deletePermission()
-   *
-   * Remove the Role in the system of the current ABApplication.
-   * (the one created by  .createPermission() )
-   *
-   * @return {Promise} 	
-   */
-	}, {
-		key: "deletePermission",
-		value: function deletePermission() {
-			var _this7 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				// TODO: need to remove created role from : .json.applicationRole
-				AD.comm.service["delete"]({ url: '/app_builder/' + _this7.id + '/role' }).fail(reject).done(resolve);
-			});
-		}
-
-		///
-		/// Objects
-		///
-
-		/**
-   * @method objects()
-   *
-   * return an array of all the ABObjects for this ABApplication.
-   *
-   * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn 
-   *						returns true for.
-   * @return {array} 	array of ABObject
-   */
-	}, {
-		key: "objects",
-		value: function objects(filter) {
-
-			filter = filter || function () {
-				return true;
-			};
-
-			return this._objects.filter(filter);
-		}
-
-		/**
-   * @method objectNew()
-   *
-   * return an instance of a new (unsaved) ABObject that is tied to this 
-   * ABApplication.
-   *
-   * NOTE: this new object is not included in our this.objects until a .save() 
-   * is performed on the object.
-   *
-   * @return {ABObject} 	
-   */
-	}, {
-		key: "objectNew",
-		value: function objectNew(values) {
-			return new _ABObject2["default"](values, this);
-		}
-
-		/**
-   * @method objectSave()
-   *
-   * persist the current ABObject in our list of ._objects.
-   *
-   * @param {ABObject} object 
-   * @return {Promise} 	
-   */
-	}, {
-		key: "objectSave",
-		value: function objectSave(object) {
-			var isIncluded = this.objects(function (o) {
-				return o.id == object.id;
-			}).length > 0;
-			if (!isIncluded) {
-				this._objects.push(object);
-			}
-
-			return this.save();
-		}
-	}], [{
-		key: "allApplications",
-		value: function allApplications() {
-			return new Promise(function (resolve, reject) {
-
-				var ModelApplication = _OPOP2["default"].Model.get('opstools.BuildApp.ABApplication');
-				ModelApplication.Models(ABApplication); // set the Models  setting.
-
-				ModelApplication.findAll().then(function (data) {
-
-					// NOTE: data is already a DataCollection from .findAll()
-					_AllApplications = data;
-
-					resolve(data);
-				})["catch"](reject);
-			});
-		}
-
-		/**
-   * @function create
-   *
-   * take the initial values and create an instance of ABApplication.
-   * 
-   * @return {Promise} 
-   */
-	}, {
-		key: "create",
-		value: function create(values) {
-			return new Promise(function (resolve, reject) {
-
-				var newApp = {};
-				_OPOP2["default"].Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
-				values.json = newApp;
-				newApp.name = values.name;
-
-				var ModelApplication = _OPOP2["default"].Model.get('opstools.BuildApp.ABApplication');
-				ModelApplication.create(values).then(function (app) {
-
-					// return an instance of ABApplication
-					var App = new ABApplication(app);
-
-					_AllApplications.add(App, 0);
-					resolve(App);
-				})["catch"](reject);
-			});
-		}
-
-		/**
-   * @method fieldsMultilingual()
-   *
-   * return an array of fields that are considered Multilingual labels for
-   * an ABApplication
-   * 
-   * @return {array} 
-   */
-	}, {
-		key: "fieldsMultilingual",
-		value: function fieldsMultilingual() {
-			return ['label', 'description'];
-		}
-
-		//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
-
-	}, {
-		key: "isValid",
-		value: function isValid(op, values) {
-
-			var errors = null;
-
-			// during an ADD operation
-			if (op == 'add') {
-
-				// label/name must be unique:
-				var arrayApplications = toArray(_AllApplications);
-
-				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
-				var matchingApps = arrayApplications.filter(function (app) {
-					return app.name.trim().toLowerCase() == nameMatch;
-				});
-				if (matchingApps && matchingApps.length > 0) {
-
-					errors = _OPOP2["default"].Form.validationError({
-						name: 'label',
-						message: L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch)
-					}, errors);
-				}
-			}
-
-			// Check the common validations:
-			// TODO:
-			// if (!inputValidator.validate(values.label)) {
-			// 	_logic.buttonSaveEnable();
-			// 	return false;
-			// }
-
-			return errors;
-		}
-	}]);
-
-	return ABApplication;
-})();
-
-exports["default"] = ABApplication;
-module.exports = exports["default"];
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /**
  * @class AD_Client
  * @parent index 4
@@ -680,6 +225,461 @@ exports["default"] = OP;
 
 // import "./model.js"
 module.exports = exports["default"];
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+// import OP from "OP"
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+__webpack_require__(29);
+
+var _ABObject = __webpack_require__(10);
+
+var _ABObject2 = _interopRequireDefault(_ABObject);
+
+var _AllApplications = [];
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+function toDC(data) {
+	return new webix.DataCollection({
+		data: data
+
+	});
+}
+
+// on: {
+// 	onAfterDelete: function(id) {
+
+// 	}
+// }
+function toArray(DC) {
+	var ary = [];
+
+	var id = DC.getFirstId();
+	while (id) {
+		var element = DC.getItem(id);
+		ary.push(element);
+		id = DC.getNextId(id);
+	}
+
+	return ary;
+}
+
+var ABApplication = (function () {
+	function ABApplication(attributes) {
+		var _this = this;
+
+		_classCallCheck(this, ABApplication);
+
+		// ABApplication Attributes
+		this.id = attributes.id;
+		this.json = attributes.json;
+		this.name = attributes.name || this.json.name || "";
+		this.role = attributes.role;
+
+		// multilingual fields: label, description
+		OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
+
+		// import all our ABObjects
+		var newObjects = [];
+		(attributes.json.objects || []).forEach(function (obj) {
+			newObjects.push(new _ABObject2["default"](obj, _this));
+		});
+		this._objects = newObjects;
+
+		// import all our ABViews
+
+		// instance keeps a link to our Model for .save() and .destroy();
+		this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
+		this.Model.Models(ABApplication);
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+	/**
+  * @function allApplications
+  *
+  * return a DataCollection that contains all the ABApplications this user
+  * can see (based upon server side permissions);
+  *
+  * NOTE: this manages the results in the _AllApplications dataCollection
+  * store.  Any future .create(), .destroy(), .updates() modify values in
+  * that collection.
+  *
+  * Any webix ui components synced to that collection will be automatically
+  * updated.
+  *
+  * @return {Promise}
+  */
+
+	_createClass(ABApplication, [{
+		key: "destroy",
+
+		///
+		/// Instance Methods
+		///
+
+		/// ABApplication data methods
+
+		/**
+   * @method destroy()
+   *
+   * destroy the current instance of ABApplication
+   *
+   * also remove it from our _AllApplications
+   *
+   * @return {Promise}
+   */
+		value: function destroy() {
+			var _this2 = this;
+
+			if (this.id) {
+				return this.Model.destroy(this.id).then(function () {
+					_AllApplications.remove(_this2.id);
+				});
+			}
+		}
+
+		/**
+   * @method save()
+   *
+   * persist the current instance of ABApplication to the DB
+   *
+   * Also, keep the values in _AllApplications up to date.
+   *
+   * @return {Promise}
+   */
+	}, {
+		key: "save",
+		value: function save() {
+			var _this3 = this;
+
+			var values = this.toObj();
+
+			// we already have an .id, so this must be an UPDATE
+			if (values.id) {
+
+				return this.Model.update(values.id, values).then(function () {
+					_AllApplications.updateItem(values.id, _this3);
+				});
+			} else {
+
+				// must be a CREATE:
+				return this.Model.create(values).then(function (data) {
+					_this3.id = data.id;
+					_AllApplications.add(_this3, 0);
+				});
+			}
+		}
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABApplication instance
+   * into the values needed for saving to the DB.
+   *
+   * Most of the instance data is stored in .json field, so be sure to
+   * update that from all the current values of our child fields.
+   *
+   * @return {json}
+   */
+	}, {
+		key: "toObj",
+		value: function toObj() {
+
+			OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
+			this.json.name = this.name;
+
+			// for each Object: compile to json
+			var currObjects = [];
+			this._objects.forEach(function (obj) {
+				currObjects.push(obj.toObj());
+			});
+			this.json.objects = currObjects;
+
+			return {
+				id: this.id,
+				name: this.name,
+				json: this.json,
+				role: this.role
+			};
+		}
+
+		/// ABApplication Permission methods
+
+		/**
+   * @method assignPermissions()
+   *
+   * Make sure the current ABApplication permissions match the given
+   * array of permissions.
+   *
+   * @param {array} permItems	an array of role assignments that this
+   * 							ABApplication should match.
+   * @return {Promise}
+   */
+	}, {
+		key: "assignPermissions",
+		value: function assignPermissions(permItems) {
+			var _this4 = this;
+
+			return new Promise(function (resolve, reject) {
+				AD.comm.service.put({
+					url: '/app_builder/' + _this4.id + '/role/assign',
+					data: {
+						roles: permItems
+					}
+				}).fail(reject).done(resolve);
+			});
+		}
+
+		/**
+   * @method getPermissions()
+   *
+   * Return an array of role assignments that are currently assigned to this
+   * ABApplication.
+   *
+   * @return {Promise} 	resolve(list) : list {array} Role assignments
+   */
+	}, {
+		key: "getPermissions",
+		value: function getPermissions() {
+			var _this5 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				AD.comm.service.get({ url: '/app_builder/' + _this5.id + '/role' }).fail(reject).done(resolve);
+			});
+		}
+
+		/**
+   * @method createPermission()
+   *
+   * Create a Role in the system after the name of the current ABApplication.
+   *
+   * @return {Promise}
+   */
+	}, {
+		key: "createPermission",
+		value: function createPermission() {
+			var _this6 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// TODO: need to take created role and store as : .json.applicationRole = role.id
+
+				AD.comm.service.post({ url: '/app_builder/' + _this6.id + '/role' }).fail(reject).done(resolve);
+			});
+		}
+
+		/**
+   * @method deletePermission()
+   *
+   * Remove the Role in the system of the current ABApplication.
+   * (the one created by  .createPermission() )
+   *
+   * @return {Promise}
+   */
+	}, {
+		key: "deletePermission",
+		value: function deletePermission() {
+			var _this7 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// TODO: need to remove created role from : .json.applicationRole
+				AD.comm.service["delete"]({ url: '/app_builder/' + _this7.id + '/role' }).fail(reject).done(resolve);
+			});
+		}
+
+		///
+		/// Objects
+		///
+
+		/**
+   * @method objects()
+   *
+   * return an array of all the ABObjects for this ABApplication.
+   *
+   * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn
+   *						returns true for.
+   * @return {array} 	array of ABObject
+   */
+	}, {
+		key: "objects",
+		value: function objects(filter) {
+
+			filter = filter || function () {
+				return true;
+			};
+
+			return this._objects.filter(filter);
+		}
+
+		/**
+   * @method objectNew()
+   *
+   * return an instance of a new (unsaved) ABObject that is tied to this
+   * ABApplication.
+   *
+   * NOTE: this new object is not included in our this.objects until a .save()
+   * is performed on the object.
+   *
+   * @return {ABObject}
+   */
+	}, {
+		key: "objectNew",
+		value: function objectNew(values) {
+			return new _ABObject2["default"](values, this);
+		}
+
+		/**
+   * @method objectSave()
+   *
+   * persist the current ABObject in our list of ._objects.
+   *
+   * @param {ABObject} object
+   * @return {Promise}
+   */
+	}, {
+		key: "objectSave",
+		value: function objectSave(object) {
+			var isIncluded = this.objects(function (o) {
+				return o.id == object.id;
+			}).length > 0;
+			if (!isIncluded) {
+				this._objects.push(object);
+			}
+
+			return this.save();
+		}
+	}], [{
+		key: "allApplications",
+		value: function allApplications() {
+			return new Promise(function (resolve, reject) {
+
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.Models(ABApplication); // set the Models  setting.
+
+				ModelApplication.findAll().then(function (data) {
+
+					// NOTE: data is already a DataCollection from .findAll()
+					_AllApplications = data;
+
+					resolve(data);
+				})["catch"](reject);
+			});
+		}
+
+		/**
+   * @function create
+   *
+   * take the initial values and create an instance of ABApplication.
+   *
+   * @return {Promise}
+   */
+	}, {
+		key: "create",
+		value: function create(values) {
+			return new Promise(function (resolve, reject) {
+
+				var newApp = {};
+				OP.Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
+				values.json = newApp;
+				newApp.name = values.name;
+
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.create(values).then(function (app) {
+
+					// return an instance of ABApplication
+					var App = new ABApplication(app);
+
+					_AllApplications.add(App, 0);
+					resolve(App);
+				})["catch"](reject);
+			});
+		}
+
+		/**
+   * @method fieldsMultilingual()
+   *
+   * return an array of fields that are considered Multilingual labels for
+   * an ABApplication
+   *
+   * @return {array}
+   */
+	}, {
+		key: "fieldsMultilingual",
+		value: function fieldsMultilingual() {
+			return ['label', 'description'];
+		}
+
+		//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+	}, {
+		key: "isValid",
+		value: function isValid(op, values) {
+
+			var errors = null;
+
+			// during an ADD operation
+			if (op == 'add') {
+
+				// label/name must be unique:
+				var arrayApplications = toArray(_AllApplications);
+
+				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
+				var matchingApps = arrayApplications.filter(function (app) {
+					return app.name.trim().toLowerCase() == nameMatch;
+				});
+				if (matchingApps && matchingApps.length > 0) {
+
+					errors = OP.Form.validationError({
+						name: 'label',
+						message: L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch)
+					}, errors);
+				}
+			}
+
+			// Check the common validations:
+			// TODO:
+			// if (!inputValidator.validate(values.label)) {
+			// 	_logic.buttonSaveEnable();
+			// 	return false;
+			// }
+
+			return errors;
+		}
+	}]);
+
+	return ABApplication;
+})();
+
+exports["default"] = ABApplication;
+module.exports = exports["default"];
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 2 */
@@ -1459,6 +1459,8 @@ module.exports = exports["default"];
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+// import OP from "OP"
 
 
 Object.defineProperty(exports, "__esModule", {
@@ -1470,10 +1472,6 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var _OPOP = __webpack_require__(1);
-
-var _OPOP2 = _interopRequireDefault(_OPOP);
 
 var _ABFieldManager = __webpack_require__(9);
 
@@ -1503,7 +1501,7 @@ var ABObject = (function () {
 
 		/*
   {
-  	id: uuid(), 
+  	id: uuid(),
   	name: 'name',
   	labelFormat: 'xxxxx',
   	isImported: 1/0,
@@ -1533,7 +1531,7 @@ var ABObject = (function () {
 
 		// multilingual fields: label, description
 		// array of [ids] to add hidden:true to
-		_OPOP2["default"].Multilingual.translate(this, this, ['label']);
+		OP.Multilingual.translate(this, this, ['label']);
 
 		// import all our ABObjects
 		var newFields = [];
@@ -1567,7 +1565,7 @@ var ABObject = (function () {
 				return o.name.toLowerCase() == _this2.name.toLowerCase();
 			}).length == 0;
 			if (!isNameUnique) {
-				errors = _OPOP2["default"].Form.validationError({
+				errors = OP.Form.validationError({
 					name: 'name',
 					message: L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name)
 				}, errors);
@@ -1595,8 +1593,8 @@ var ABObject = (function () {
    * destroy the current instance of ABApplication
    *
    * also remove it from our _AllApplications
-   * 
-   * @return {Promise} 
+   *
+   * @return {Promise}
    */
 	}, {
 		key: "destroy",
@@ -1615,8 +1613,8 @@ var ABObject = (function () {
    *
    * persist this instance of ABObject with it's parent ABApplication
    *
-   * 
-   * @return {Promise} 	
+   *
+   * @return {Promise}
    *						.resolve( {this} )
    */
 	}, {
@@ -1629,7 +1627,7 @@ var ABObject = (function () {
 				// if this is our initial save()
 				if (!_this3.id) {
 
-					_this3.id = _OPOP2["default"].Util.uuid(); // setup default .id
+					_this3.id = OP.Util.uuid(); // setup default .id
 					_this3.label = _this3.label || _this3.name;
 					_this3.urlPath = _this3.urlPath || _this3.application.name + '/' + _this3.name;
 				}
@@ -1648,16 +1646,16 @@ var ABObject = (function () {
    * properly compile the current state of this ABApplication instance
    * into the values needed for saving to the DB.
    *
-   * Most of the instance data is stored in .json field, so be sure to 
+   * Most of the instance data is stored in .json field, so be sure to
    * update that from all the current values of our child fields.
    *
-   * @return {json} 
+   * @return {json}
    */
 	}, {
 		key: "toObj",
 		value: function toObj() {
 
-			_OPOP2["default"].Multilingual.unTranslate(this, this, ["label"]);
+			OP.Multilingual.unTranslate(this, this, ["label"]);
 
 			// // for each Object: compile to json
 			var currFields = [];
@@ -1687,7 +1685,7 @@ var ABObject = (function () {
    *
    * return an array of all the ABFields for this ABObject.
    *
-   * @return {array} 	
+   * @return {array}
    */
 	}, {
 		key: "fields",
@@ -1703,13 +1701,13 @@ var ABObject = (function () {
 		/**
    * @method fieldNew()
    *
-   * return an instance of a new (unsaved) ABField that is tied to this 
+   * return an instance of a new (unsaved) ABField that is tied to this
    * ABObject.
    *
-   * NOTE: this new field is not included in our this.fields until a .save() 
+   * NOTE: this new field is not included in our this.fields until a .save()
    * is performed on the field.
    *
-   * @return {ABField} 	
+   * @return {ABField}
    */
 	}, {
 		key: "fieldNew",
@@ -1721,11 +1719,11 @@ var ABObject = (function () {
 		/**
    * @method fieldSave()
    *
-   * save the given ABField in our ._fields array and persist the current 
+   * save the given ABField in our ._fields array and persist the current
    * values.
    *
    * @param {ABField} field The instance of the field to save.
-   * @return {Promise} 	
+   * @return {Promise}
    */
 	}, {
 		key: "fieldSave",
@@ -1795,15 +1793,16 @@ var ABObject = (function () {
 
 exports["default"] = ABObject;
 module.exports = exports["default"];
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
- * AB 
+ * AB
  *
  * The base AppBuilder component.  It manages these components:
  *   - ab_choose :  choose an application to work with
@@ -1811,11 +1810,11 @@ module.exports = exports["default"];
  *
  */
 
+// import '../OP/OP'
+
 
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-__webpack_require__(1);
 
 __webpack_require__(15);
 
@@ -1913,21 +1912,22 @@ OP.Component.extend('ab', function (App) {
 	// return the current instance of this component:
 	return {
 		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component 
+		init: _init, // {fn} 	init() to setup this component
 		actions: _actions // {ob}		hash of fn() to expose so other components can access.
 	};
 });
 
 //// REFACTORING TODOs:
 // TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
-// import './OP/OP';
+/* WEBPACK VAR INJECTION */(function(OP) {
+// import 'OP';
 // import '../../../../../assets/js/webix/webix'
 
 
@@ -2022,18 +2022,21 @@ AD.Control.OpsTool.extend('BuildApp', {
 	}
 
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* 
+/* WEBPACK VAR INJECTION */(function(OP) {/*
  * ABField
- * 
+ *
  * An ABField defines a single unique Field/Column in a ABObject.
  *
  */
+
+// import OP from "../../OP/OP"
 
 
 
@@ -2043,13 +2046,7 @@ Object.defineProperty(exports, '__esModule', {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-var _OPOP = __webpack_require__(1);
-
-var _OPOP2 = _interopRequireDefault(_OPOP);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -2067,7 +2064,7 @@ var ABField = (function () {
 		this.showIcon = this.showIcon === "true" ? true : false;
 
 		// label is a multilingual value:
-		_OPOP2['default'].Multilingual.translate(this, values, ['label']);
+		OP.Multilingual.translate(this, values, ['label']);
 	}
 
 	///
@@ -2080,7 +2077,7 @@ var ABField = (function () {
 	_createClass(ABField, [{
 		key: 'isValid',
 
-		/* 
+		/*
    * @method isValid
    * check the current values to make sure they are valid.
    * Here we check the default values provided by ABField.
@@ -2097,7 +2094,7 @@ var ABField = (function () {
 				return f.columnName.toLowerCase() == _this.columnName.toLowerCase();
 			}).length == 0;
 			if (!isNameUnique) {
-				errors = _OPOP2['default'].Form.validationError({
+				errors = OP.Form.validationError({
 					name: 'columnName',
 					message: L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name)
 				}, errors);
@@ -2118,8 +2115,8 @@ var ABField = (function () {
    * destroy the current instance of ABApplication
    *
    * also remove it from our _AllApplications
-   * 
-   * @return {Promise} 
+   *
+   * @return {Promise}
    */
 	}, {
 		key: 'destroy',
@@ -2134,8 +2131,8 @@ var ABField = (function () {
    *
    * persist this instance of ABField with it's parent ABObject
    *
-   * 
-   * @return {Promise} 	
+   *
+   * @return {Promise}
    *						.resolve( {this} )
    */
 	}, {
@@ -2147,7 +2144,7 @@ var ABField = (function () {
 
 				// if this is our initial save()
 				if (!_this2.id) {
-					_this2.id = _OPOP2['default'].Util.uuid(); // setup default .id
+					_this2.id = OP.Util.uuid(); // setup default .id
 				}
 
 				_this2.object.fieldSave(_this2).then(function () {
@@ -2164,14 +2161,14 @@ var ABField = (function () {
    * properly compile the current state of this ABField instance
    * into the values needed for saving to the DB.
    *
-   * @return {json} 
+   * @return {json}
    */
 	}, {
 		key: 'toObj',
 		value: function toObj() {
 
 			// store "label" in our translations
-			_OPOP2['default'].Multilingual.unTranslate(this, this, ["label"]);
+			OP.Multilingual.unTranslate(this, this, ["label"]);
 
 			return {
 				columnName: this.columnName,
@@ -2220,8 +2217,8 @@ var ABField = (function () {
 		/**
    * @function definitionEditor
    *
-   * Many DataFields share some base information for their usage 
-   * in the AppBuilder.  The UI Editors have a common header 
+   * Many DataFields share some base information for their usage
+   * in the AppBuilder.  The UI Editors have a common header
    * and footer format, and this function allows child DataFields
    * to not have to define those over and over.
    *
@@ -2307,6 +2304,7 @@ var ABField = (function () {
 
 exports['default'] = ABField;
 module.exports = exports['default'];
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 14 */
@@ -2707,7 +2705,7 @@ module.exports = exports['default'];
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * AB Choose
  *
@@ -2774,13 +2772,14 @@ OP.Component.extend('ab_choose', function (App) {
 		_logic: _logic // Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * AB Choose Form
  *
@@ -2792,7 +2791,7 @@ OP.Component.extend('ab_choose', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -3556,13 +3555,14 @@ OP.Component.extend('ab_choose_form', function (App) {
 		_logic: _logic
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * AB Choose List
  *
@@ -3573,7 +3573,7 @@ OP.Component.extend('ab_choose_form', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -3958,13 +3958,14 @@ OP.Component.extend('ab_choose_list', function (App) {
 		_logic: _logic // exposed for Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * AB Choose List
  *
@@ -4057,13 +4058,14 @@ OP.Component.extend('ab_choose_list_menu', function (App) {
 		init: _init
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work
  *
@@ -4075,7 +4077,7 @@ OP.Component.extend('ab_choose_list_menu', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -4273,13 +4275,14 @@ OP.Component.extend('ab_work', function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_interface
  *
@@ -4291,7 +4294,7 @@ OP.Component.extend('ab_work', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -4397,13 +4400,14 @@ OP.Component.extend('ab_work_interface', function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object
  *
@@ -4415,7 +4419,7 @@ OP.Component.extend('ab_work_interface', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -4511,13 +4515,14 @@ OP.Component.extend('ab_work_object', function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object_list
  *
@@ -4529,7 +4534,7 @@ OP.Component.extend('ab_work_object', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -4860,13 +4865,14 @@ OP.Component.extend('ab_work_object_list', function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object_list_newObject
  *
@@ -5050,13 +5056,14 @@ OP.Component.extend('ab_work_object_list_newObject', function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object_list_newObject_blank
  *
@@ -5252,13 +5259,14 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object_workspace
  *
@@ -5270,7 +5278,7 @@ OP.Component.extend('ab_work_object_list_newObject_blank', function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -5578,13 +5586,14 @@ OP.Component.extend(idBase, function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object_workspace
  *
@@ -5832,13 +5841,14 @@ OP.Component.extend(idBase, function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object_workspace_popupNewDataField
  *
@@ -5850,7 +5860,7 @@ OP.Component.extend(idBase, function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -6070,13 +6080,14 @@ OP.Component.extend(idBase, function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * ab_work_object_workspace_popupNewDataField
  *
@@ -6088,7 +6099,7 @@ OP.Component.extend(idBase, function (App) {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _classesABApplication = __webpack_require__(0);
+var _classesABApplication = __webpack_require__(1);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
@@ -6473,13 +6484,14 @@ OP.Component.extend(idBase, function (App) {
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-//
+/* WEBPACK VAR INJECTION */(function(OP) {//
 // REFACTORING:
 //
 // Our goal here is to create a Model object that will interact with Sails' blueprints and
@@ -6501,13 +6513,14 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 }, {
 	// instance Methods
 });
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * custom_editlist
  *
@@ -6574,13 +6587,14 @@ OP.CustomComponent.extend(ComponentKey, function (App, componentKey) {
 // lookup the OP.Component[] to create an application instance of
 exports['default'] = { key: ComponentKey };
 module.exports = exports['default'];
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 /*
  * custom_edittree
  *
@@ -6647,6 +6661,7 @@ OP.CustomComponent.extend(ComponentKey, function (App, componentKey) {
 // lookup the OP.Component[] to create an application instance of
 exports['default'] = { key: ComponentKey };
 module.exports = exports['default'];
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ })
 /******/ ]);
