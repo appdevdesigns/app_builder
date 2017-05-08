@@ -1,15 +1,16 @@
 module.exports = {
 	"paths": {
-		"opstools/OP_Bundle": "opstools/BuildApp/OP/OP.js",
+		// "opstools/OP_Bundle": "opstools/BuildApp/OP_Bundle.js",
 		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js"
 	},
 	"bundle": [
-		"opstools/OP_Bundle",
+		// "opstools/OP_Bundle",
 		"opstools/BuildApp"
 	],
 	"meta": {
 		"opstools/BuildApp": {
 			"deps": [
+				// "opstools/OP_Bundle",
 				"async",
 				"can",
 				"webix",
@@ -17,6 +18,10 @@ module.exports = {
 				"OpsPortal/classes/OpsWebixDataCollection"
 			]
 		},
+		// "opstools/OP_Bundle": {
+    //   "format": "global",
+    //   "sideBundle": true
+		// },
 		"js/selectivity/selectivity-full.min": {
 			"format": "global",
 			"deps": [
