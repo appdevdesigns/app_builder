@@ -30,8 +30,8 @@ OP.Component.extend('ab_choose', function(App) {
 	// Application multi-views
 	var _ui = {
 		view:"multiview",
+		animate:false,
 		id: ids.component,
-		autoheight: true,
 		cells: [
 			AppList.ui,
 			AppForm.ui
@@ -45,7 +45,7 @@ OP.Component.extend('ab_choose', function(App) {
 
 		AppList.init();
 		AppForm.init();
-		
+
 	}
 
 
@@ -60,7 +60,7 @@ OP.Component.extend('ab_choose', function(App) {
 		 * Switch the AppBuilder UI to show the Application Chooser component.
 		 */
 		transitionApplicationChooser:function() {
-			$$(ids.component).show();	
+			$$(ids.component).show();
 		}
 
 	}

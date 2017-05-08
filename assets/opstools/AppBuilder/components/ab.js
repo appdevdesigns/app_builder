@@ -17,6 +17,9 @@ import './ab_work'
 import EditTree from '../webix_custom_components/edittree'
 import EditList from '../webix_custom_components/editlist'
 
+import style from "../AppBuilder.css"
+
+
 OP.Component.extend('ab', function(App) {
 
 
@@ -86,8 +89,8 @@ OP.Component.extend('ab', function(App) {
 	var _ui = {
 		id: ids.component,
 		view:"multiview",
-		autoheight:true,
-		autowidth:true,
+		borderless:true,
+		animate:false,
 		rows:[
 			AppChooser.ui,
 			AppWorkspace.ui

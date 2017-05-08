@@ -50,25 +50,21 @@ OP.Component.extend('ab_work_object_list', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id:ids.component,
+		margin: 10,
 		rows: [
 			{
 				view: App.custom.editlist.view,  // "editlist",
 				id: ids.list,
 				width: 250,
-
-// TODO: make this dynamically fill the screen:
-height:800,
-
 				select: true,
 				editaction: 'custom',
 				editable: true,
 				editor: "text",
 				editValue: "label",
-				template: function(obj, common) { 
-					return _logic.templateListItem(obj, common); 
+				template: function(obj, common) {
+					return _logic.templateListItem(obj, common);
 				},
 				type: {
-					height:"auto",
 					unsyncNumber: "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
@@ -98,7 +94,7 @@ height:800,
 // $(this.getItemNode(id)).find('.ab-object-list-edit').show();
 					},
 					onAfterDelete: function (id) {
-// // Fire unselect event 
+// // Fire unselect event
 // self.element.trigger(self.options.selectedObjectEvent, null);
 					},
 					onBeforeEditStop: function (state, editor) {
@@ -171,7 +167,7 @@ height:800,
 				click: function () {
 
 					_logic.toNewObject();
-					
+
 // $$(self.webixUiId.addNewPopup).define('selectNewObject', true);
 // $$(self.webixUiId.addNewPopup).show();
 				}
@@ -191,7 +187,7 @@ height:800,
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 		listBusy:function() {
@@ -270,7 +266,7 @@ console.error('TODO: syncNumRefresh()');
 		/**
 		 * @function toNewObject
 		 *
-		 * Manages initiating the transition to the new Object Popup window, 
+		 * Manages initiating the transition to the new Object Popup window,
 		 * as well as managing the new object that was created.
 		 *
 		 * @param {obj} obj the current instance of ABObject for the row.
@@ -293,7 +289,7 @@ console.error('TODO: syncNumRefresh()');
 
 	/*
 	 * _templateListItem
-	 * 
+	 *
 	 * The Object Row template definition.
 	 */
 	var _templateListItem = [
@@ -322,7 +318,7 @@ console.error('TODO: syncNumRefresh()');
 		 *
 		 * If no ABApplication is provided, then show an empty form. (create operation)
 		 *
-		 * @param {ABApplication} application  	[optional] The current ABApplication 
+		 * @param {ABApplication} application  	[optional] The current ABApplication
 		 *										we are working with.
 		 */
 		populateObjectList : function(application){
@@ -363,7 +359,7 @@ console.error('TODO: syncNumRefresh()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		_logic: _logic			// {obj} 	Unit Testing

@@ -48,7 +48,7 @@ OP.Component.extend(idBase, function(App) {
 		editaction: "custom",
 		select: "cell",
 		dragColumn: true,
-height:800,  // #hack!
+//height:800,  // #hack!
 		on: {
 			onBeforeSelect: function (data, preserve) {
 console.error('!! ToDo: onBeforeSelect()');
@@ -82,7 +82,7 @@ console.error('!! todo: onAfterSelect()');
 				// this.editCell(data.row, data.column);
 			},
 			onCheck: function (row, col, val) { // Update checkbox data
-console.error('!! ToDo: onCheck()');				
+console.error('!! ToDo: onCheck()');
 				// var item = $$(self.webixUiId.objectDatatable).getItem(row);
 
 				// self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
@@ -162,7 +162,7 @@ console.error('!! ToDo: onBeforeColumnDrag()');
 				// 	return true;
 			},
 			onBeforeColumnDrop: function (sourceId, targetId, event) {
-console.error('!! ToDo: onBeforeColumnDrag()');				
+console.error('!! ToDo: onBeforeColumnDrag()');
 				// if (targetId === 'appbuilder_trash') // Remove column
 				// 	return false;
 
@@ -177,21 +177,21 @@ console.error('!! ToDo: onBeforeColumnDrag()');
 				// }
 			},
 			onAfterColumnDrop: function (sourceId, targetId, event) {
-console.error('!! ToDo: onAfterColumnDrop()');	
+console.error('!! ToDo: onAfterColumnDrop()');
 				// self.reorderColumns();
 			},
 			onAfterColumnShow: function (id) {
-console.error('!! ToDo: onAfterColumnShow()');	
+console.error('!! ToDo: onAfterColumnShow()');
 				// $$(self.webixUiId.visibleFieldsPopup).showField(id);
 			},
 			onAfterColumnHide: function (id) {
-console.error('!! ToDo: onAfterColumnHide()');	
+console.error('!! ToDo: onAfterColumnHide()');
 				// $$(self.webixUiId.visibleFieldsPopup).hideField(id);
 			}
 		}
 	}
-					
-		
+
+
 
 
 
@@ -203,7 +203,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 	var CurrentObject = null;
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 
@@ -211,9 +211,9 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 			CurrentObject = object;
 
-			
+
 			_logic.refresh();
-			
+
 		},
 
 
@@ -222,11 +222,11 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 			// wait until we have an Object defined:
 			if (CurrentObject) {
-				
+
 				var DataTable = $$(ids.component);
 				DataTable.clearAll();
 
-		
+
 				// update DataTable structure:
 				var columnHeaders = CurrentObject.columnHeaders(true);
 				DataTable.refreshColumns(columnHeaders)
@@ -262,7 +262,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		// interface methods for parent component:

@@ -1,34 +1,40 @@
 const webpack = require('webpack'); //to access built-in plugins
 var path = require('path');
+var APP = path.resolve(__dirname);
 
 module.exports = {
+  context: APP,
   entry: {
-    OP_Bundle: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'OP', 'OP.js'),
-    BuildApp: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'AppBuilder.js')
+    OP_Bundle: APP + '/assets/opstools/AppBuilder/OP/OP.js',
+    BuildApp: APP + '/assets/opstools/AppBuilder/AppBuilder.js'
   },
   output: {
-    path: path.resolve(__dirname, 'assets', 'opstools', 'BuildApp'),
+    path: APP + '/assets/opstools/BuildApp',
     filename: '[name].js'
   },
 
   resolve: {
     alias: {
-      'OP': path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'OP', 'OP.js')
+      'OP': APP + '/assets/opstools/AppBuilder/OP/OP.js'
       // it's important what kind of paths you're using (relative vs. absolute)
     }
   },
   module: {
-    rules: [
-      {
+    rules: [{
         test: /\.(js|jsx)$/,
         loader: 'babel-loader'
+      },
+      {
+        test: /\.css$/,
+        loader: 'style-loader!css-loader'
       }
     ]
   },
   plugins: [
+    new webpack.optimize.UglifyJsPlugin(),
 
     // *************************************************************************** //
-    // This builds the OP into same bundle but automatically imports the OP object //
+    // This builds the OP into same bundle but automatically handles the import    //
     // *************************************************************************** //
     new webpack.ProvidePlugin({
         OP: "OP"
@@ -49,6 +55,5 @@ module.exports = {
       //  goes into the vendor chunk)
     })
     */
-
   ]
 };
