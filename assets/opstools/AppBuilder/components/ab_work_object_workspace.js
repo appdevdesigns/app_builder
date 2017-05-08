@@ -100,8 +100,6 @@ OP.Component.extend(idBase, function(App) {
 					}
 				]
 			},
-
-
 			{
 				id: ids.selectedObject,
 				rows: [
@@ -109,15 +107,17 @@ OP.Component.extend(idBase, function(App) {
 						view: 'toolbar',
 						id: ids.toolbar,
 						hidden: true,
+						css: "ab-data-toolbar",
 						cols: [
 							{
 								view: "button",
 								id: ids.buttonFieldsVisible,
 								label: labels.component.hideFields,
 // popup: 'self.webixUiId.visibleFieldsPopup',
-								icon: "columns",
+								icon: "eye-slash",
 								type: "icon",
-								width: 120,
+								// width: 120,
+								autowidth: true,
 								badge: 0,
 								click: function () {
 									_logic.toolbarFieldsVisible(this.$view);
@@ -129,7 +129,8 @@ OP.Component.extend(idBase, function(App) {
 								label: labels.component.filterFields,
 								icon: "filter",
 								type: "icon",
-								width: 120,
+								// width: 120,
+								autowidth: true,
 								badge: 0,
 								click: function () {
 									_logic.toolbarFilter(this);
@@ -141,7 +142,8 @@ OP.Component.extend(idBase, function(App) {
 								label: labels.component.sortFields,
 								icon: "sort",
 								type: "icon",
-								width: 120,
+								// width: 120,
+								autowidth: true,
 								badge: 0,
 								click: function () {
 									_logic.toolbarSort(this.$view);
@@ -151,19 +153,21 @@ OP.Component.extend(idBase, function(App) {
 								view: 'button',
 								id: ids.buttonFrozen,
 								label: labels.component.frozenColumns,
-popup: 'self.webixUiId.frozenColumnsPopup',
-								icon: "table",
+								popup: 'self.webixUiId.frozenColumnsPopup',
+								icon: "thumb-tack",
 								type: "icon",
-								width: 150,
+								// width: 150,
+								autowidth: true,
 								badge: 0
 							},
 							{
 								view: 'button',
 								id: ids.buttonLabel,
 								label: labels.component.defineLabel,
-								icon: "newspaper-o",
+								icon: "crosshairs",
 								type: "icon",
-								width: 130,
+								// width: 130,
+								autowidth: true,
 								click: function () {
 									_logic.toolbarDefineLabel(this.$view);
 								}
@@ -173,7 +177,8 @@ popup: 'self.webixUiId.frozenColumnsPopup',
 								label: labels.component.permission,
 								icon: "lock",
 								type: "icon",
-								width: 120
+								// width: 120
+								autowidth: true,
 							},
 							{
 								view: 'button',
@@ -181,7 +186,8 @@ popup: 'self.webixUiId.frozenColumnsPopup',
 								label: labels.component.addFields,
 								icon: "plus",
 								type: "icon",
-								width: 150,
+								// width: 150,
+								autowidth: true,
 								click:function() {
 									_logic.toolbarAddFields(this.$view);
 								}
@@ -190,10 +196,11 @@ popup: 'self.webixUiId.frozenColumnsPopup',
 								view: 'button',
 								id: ids.buttonExport,
 								label: labels.component.export,
-popup: 'self.webixUiId.exportDataPopup',
-								icon: "file-o",
+								popup: 'self.webixUiId.exportDataPopup',
+								icon: "download",
 								type: "icon",
-								width: 90
+								// width: 90
+								autowidth: true,
 							}
 						]
 					},
@@ -201,16 +208,11 @@ popup: 'self.webixUiId.exportDataPopup',
 					{
 						cols: [
 							{
-								autowidth: true
-							},
-							{
 								view: "button",
 								id: ids.buttonRowNew,
 								value: labels.component.addNewRow,
-								width: 150,
-								align: 'right',
 								click: function () {
-		// TODO:
+									// TODO:
 									_logic.rowAdd();
 									// self.addNewRow({});
 								}

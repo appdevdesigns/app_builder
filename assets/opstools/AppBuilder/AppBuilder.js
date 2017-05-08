@@ -87,6 +87,7 @@ AD.Control.OpsTool.extend('BuildApp', {
 			var computedHeight = height;
 			console.log("computed height: " + computedHeight);
 			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
+			console.log("min-height: " + mh);
 			if (mh < computedHeight) {
 				appListDom.height(computedHeight);
 				$('#ab-main-container').height(computedHeight);

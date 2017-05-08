@@ -50,7 +50,6 @@ OP.Component.extend('ab_work_object_list', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id:ids.component,
-		margin: 10,
 		rows: [
 			{
 				view: App.custom.editlist.view,  // "editlist",

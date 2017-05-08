@@ -62,7 +62,7 @@ OP.Component.extend('ab_work', function(App) {
 					{
 						view: "button",
 						label: labels.application.backToApplication,
-						autowidth: true,
+						width: 200,
 						type: "icon",
 						icon: "arrow-left",
 						align: "left",
@@ -76,52 +76,99 @@ OP.Component.extend('ab_work', function(App) {
 						align: "center"
 					},
 					{
-						id: ids.buttonSync,
-						view: "button",
-						type: "icon",
-						icon: "refresh",
-						label: labels.application.synchronize,
-						autowidth: true,
-						align: "right",
-						click: function () {
-							_logic.synchronize();
-						}
+						view: "spacer",
+						width: 200,
+						alrign: "right"
 					}
+					// {
+					// 	id: ids.buttonSync,
+					// 	view: "button",
+					// 	type: "icon",
+					// 	icon: "refresh",
+					// 	label: labels.application.synchronize,
+					// 	autowidth: true,
+					// 	align: "right",
+					// 	click: function () {
+					// 		_logic.synchronize();
+					// 	}
+					// }
 				]
 			},
+			//{ height: App.config.mediumSpacer },
+			// {
+			// 	view:"segmented",
+			// 	id: ids.tabbar,
+			// 	value: ids.tab_object,
+			// 	multiview: true,
+			// 	align: "center",
+			// 	options:[
+			// 		{
+			// 			id: ids.tab_object,
+			// 			value: labels.application.objectTitle,
+			// 			width: App.config.tabWidthMedium
+			// 		},
+			// 		{
+			// 			id: ids.tab_interface,
+			// 			value: labels.application.interfaceTitle,
+			// 			width: App.config.tabWidthMedium
+			// 		}
+			// 	],
+			// 	on: {
+			// 		onChange: function (idNew, idOld) {
+			// 			if (idNew != idOld) {
+			// 				_logic.tabSwitch(idNew, idOld);
+			// 			}
+			// 		}
+			// 	}
+			// },
 			{ height: App.config.mediumSpacer },
 			{
-				view: "tabbar",
-				id: ids.tabbar,
-				value: ids.tab_object,
-				multiview: true,
-				options: [
+				cols: [
 					{
-						id: ids.tab_object,
-						value: labels.application.objectTitle,
-						width: App.config.tabWidthMedium
+						width: App.config.mediumSpacer
 					},
 					{
-						id: ids.tab_interface,
-						value: labels.application.interfaceTitle,
-						width: App.config.tabWidthMedium
+						rows: [
+							{
+								view: "tabbar",
+								id: ids.tabbar,
+								value: ids.tab_object,
+								multiview: true,
+								options: [
+									{
+										id: ids.tab_object,
+										value: labels.application.objectTitle,
+										width: App.config.tabWidthMedium
+									},
+									{
+										id: ids.tab_interface,
+										value: labels.application.interfaceTitle,
+										width: App.config.tabWidthMedium
+									}
+								],
+								on: {
+									onChange: function (idNew, idOld) {
+										if (idNew != idOld) {
+											_logic.tabSwitch(idNew, idOld);
+										}
+									}
+								}
+							},
+							{
+								id: ids.workspace,
+								cells: [
+									AppObjectWorkspace.ui,
+									AppInterfaceWorkspace.ui
+								]
+							}
+						]
+					},
+					{
+						width: App.config.mediumSpacer
 					}
-				],
-				on: {
-					onChange: function (idNew, idOld) {
-						if (idNew != idOld) {
-							_logic.tabSwitch(idNew, idOld);
-						}
-					}
-				}
-			},
-			{
-				id: ids.workspace,
-				cells: [
-					AppObjectWorkspace.ui,
-					AppInterfaceWorkspace.ui
 				]
-			}
+			},
+			{ height: App.config.mediumSpacer }
 		]
 	};
 
@@ -193,13 +240,13 @@ console.error('TODO: ab_work.logic.synchronize()!');
 
 				// Object Workspace Tab
 				case ids.tab_object:
-					$$(ids.buttonSync).show();
+					//$$(ids.buttonSync).show();
 					App.actions.transitionObjectTab();
 					break;
 
 				// Interface Workspace Tab
 				case ids.tab_interface:
-					$$(ids.buttonSync).hide();
+					// $$(ids.buttonSync).hide();
 					App.actions.transitionInterfaceWorkspace();
 					break;
 			}

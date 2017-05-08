@@ -90,7 +90,7 @@ OP.Component.extend('ab', function(App) {
 		id: ids.component,
 		view:"multiview",
 		borderless:true,
-		animate:false,
+		animate: false,
 		rows:[
 			AppChooser.ui,
 			AppWorkspace.ui

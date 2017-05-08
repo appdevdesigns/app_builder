@@ -47,13 +47,11 @@ OP.Component.extend('ab_choose_list', function(App) {
 
 		cols: [
 			{
-				//maxWidth: App.config.appListSpacerColMaxWidth,
-				//minWidth: App.config.appListSpacerColMinWidth,
-				//width: App.config.appListSpacerColMaxWidth,
-				hidden: App.config.hideMobile
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
 			},
 			{
-				gravity: 3,
 				responsiveCell:false,
 				rows: [
 					{
@@ -170,8 +168,7 @@ OP.Component.extend('ab_choose_list', function(App) {
 			{
 				maxWidth: App.config.appListSpacerColMaxWidth,
 				minWidth: App.config.appListSpacerColMinWidth,
-				width: App.config.appListSpacerColMaxWidth,
-				hidden: App.config.hideMobile
+				width: App.config.appListSpacerColMaxWidth
  			}
 		]
 	}

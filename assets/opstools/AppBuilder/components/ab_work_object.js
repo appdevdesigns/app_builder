@@ -45,6 +45,7 @@ OP.Component.extend('ab_work_object', function(App) {
 	var _ui = {
 		id: ids.component,
 		autoheight: true,
+		margin: 20,
 		cols: [
 			ObjectList.ui,
 			{ view: "resizer"},

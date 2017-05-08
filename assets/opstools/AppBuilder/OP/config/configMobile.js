@@ -26,9 +26,13 @@ export default {
 	appListSpacerRowHeight: 10,
 	appListSpacerColMinWidth: 1,
 	appListSpacerColMaxWidth: 1,
+	objectWorkspaceColWidth: 1,
 
 	// labels
 	labelWidthSmall: 50,
+	labelWidthMedium: 80,
+	labelWidthLarge: 120,
+	labelWidthCheckbox: 0,
 
 	// hide elements for mobile
 	hideMobile: true,

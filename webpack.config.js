@@ -10,25 +10,26 @@ module.exports = {
     path: path.resolve(__dirname, 'assets', 'opstools', 'BuildApp'),
     filename: '[name].js'
   },
-
-  // entry: path.resolve(__dirname, 'assets', 'opstools', 'AppBuilder', 'AppBuilder.js'),
-  // output: {
-  //   path: path.resolve(__dirname, 'assets', 'opstools', 'BuildApp'),
-  //   filename: 'BuildApp.js'
-  // },
-
   module: {
     rules: [{
-        test: /\.(js|jsx)$/,
-        loader: 'babel-loader'
+        test: /\.(js|jsx)$/, loader: 'babel-loader'
       },
       {
         test: /\.css$/,
-        loader: 'style-loader!css-loader'
+        use: [ 'style-loader', 'css-loader' ]
       }
     ]
   },
+  devtool: "source-map",
   plugins: [
-    new webpack.optimize.UglifyJsPlugin()
+    new webpack.optimize.UglifyJsPlugin({
+        compress: {
+            warnings: true
+        },
+        sourceMap: true
+    }),
+    new webpack.LoaderOptionsPlugin({
+        minimize: true
+    })
   ]
 };

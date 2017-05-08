@@ -56,8 +56,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 			{
 				maxWidth: App.config.appListSpacerColMaxWidth,
 				minWidth: App.config.appListSpacerColMinWidth,
-				width: App.config.appListSpacerColMaxWidth,
-				hidden: App.config.hideMobile
+				width: App.config.appListSpacerColMaxWidth
 			},
 			{
 				responsiveCell:false,
@@ -252,8 +251,7 @@ OP.Component.extend('ab_choose_form', function(App) {
 			{
 				maxWidth: App.config.appListSpacerColMaxWidth,
 				minWidth: App.config.appListSpacerColMinWidth,
-				width: App.config.appListSpacerColMaxWidth,
-				hidden: App.config.hideMobile
+				width: App.config.appListSpacerColMaxWidth
 			}
 		]
 	};

@@ -36,7 +36,7 @@ OP.Component.extend(idBase, function(App) {
 
 
 	// internal list of Webix IDs to reference our UI components.
-	
+
 	var ids = {
 		component: App.unique(idBase + '_component'),
 		types: App.unique(idBase + '_types'),
@@ -57,24 +57,20 @@ OP.Component.extend(idBase, function(App) {
 		modal: true,
 		autoheight:true,
 		// maxHeight: 420,
-ready: function () {
-	console.error('ready() called!!!')
-	_logic.resetState();
-},
+		ready: function () {
+			console.error('ready() called!!!')
+			_logic.resetState();
+		},
 		body: {
 			css: 'ab-add-fields-popup',
 			borderless: true,
-			width: 380,
-			paddingX: 17,
 			rows: [
 				{
 					view: "menu",
 					id: ids.types,
-					minWidth: 500,
-					autowidth: true,
 					data: [{
 						value: labels.component.chooseType,
-submenu: ['dataFieldsManager', '.getFieldMenuList()']
+						submenu: ['dataFieldsManager', '.getFieldMenuList()']
 					}],
 					click: function (id, ev, node) {
 						_logic.typeClick();
@@ -87,29 +83,33 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 						}
 					}
 				},
-				{ height: 10 },
-				{ 
+				{
 					view:'multiview',
 					id: ids.editDefinitions,
 					// NOTE: can't leave this an empty []. We redefine this value later.
-					cells: [ { id:'del_me', view:'label', label:'edit definition here' } ] 
+					cells: [ { id:'del_me', view:'label', label:'edit definition here' } ]
 				},
 				{ height: 10 },
 				{
 					cols: [
+						{ fillspace: true },
 						{
-							view: "button", 
-							id: ids.buttonSave, 
-							label: labels.component.addNewField, 
-							type: "form", width: 120, click: function () {
-								_logic.buttonSave();
+							view: "button",
+							value: labels.common.cancel,
+							css: "ab-cancel-button",
+							autowidth: true,
+							click: function () {
+								_logic.buttonCancel();
 							}
 						},
 						{
-							view: "button", 
-							value: labels.common.cancel, 
-							width: 100, click: function () {
-								_logic.buttonCancel();
+							view: "button",
+							id: ids.buttonSave,
+							label: labels.component.addNewField,
+							autowidth: true,
+							type: "form",
+							click: function () {
+								_logic.buttonSave();
 							}
 						}
 					]
@@ -128,7 +128,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 			}
 		}
 	}
-		
+
 
 	var _objectHash = {};		// 'name' => ABFieldXXX object
 	var _componentHash = {};	// 'name' => ABFieldXXX ui component
@@ -147,11 +147,11 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 		var Fields = ABFieldManager.allFields();
 
 
-		//// we need to load a submenu entry and an editor definition for each 
+		//// we need to load a submenu entry and an editor definition for each
 		//// of our Fields
-		
 
-		
+
+
 		var submenus = [];	// Create the submenus for our Data Fields:
 		var defaultEditorComponent = null;	// choose the 1st entry for the default editor.
 		var newEditorList = {
@@ -185,7 +185,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 		$$(ids.types).updateItem(firstID, {
 			value: labels.component.chooseType,
 			submenu: submenus
-		}) 
+		})
 
 		// now remove the 'del_me' definition editor placeholder.
 		webix.ui(newEditorList, $$(ids.editDefinitions));
@@ -193,7 +193,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 
 		defaultEditorComponent.show(); // show the default editor
 		_currentEditor = defaultEditorComponent;
-		
+
 
 		// $$(ids.editDefinitions).show();
 
@@ -202,10 +202,10 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
-		
+
 		buttonCancel:function() {
 
 			_logic.resetState();
@@ -289,7 +289,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 				})
 				$$(ids.buttonSave).enable();
 			}
-			
+
 // if (!inputValidator.validateFormat(fieldInfo.name)) {
 // 	self.enable();
 // 	return;
@@ -341,7 +341,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 		 * swap the editor view to match the data field selected in the menu.
 		 *
 		 * @param {string} name  the menuName() of the submenu that was selected.
-		 */ 
+		 */
 		onMenuItemClick: function (name) {
 
 			// note, the submenu returns the Field.menuName() values.
@@ -403,7 +403,7 @@ console.error('TODO: resetState()');
 
 
 		typeClick:function() {
-			// NOTE: for functional testing we need a way to display the submenu 
+			// NOTE: for functional testing we need a way to display the submenu
 			// (functional tests don't do .hover very well)
 			// so this routine is to enable .click() to show the submenu.
 
@@ -436,7 +436,7 @@ console.error('TODO: resetState()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		_logic: _logic			// {obj} 	Unit Testing

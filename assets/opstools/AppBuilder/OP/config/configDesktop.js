@@ -35,9 +35,13 @@ export default {
 	appListSpacerRowHeight: 100,
 	appListSpacerColMinWidth: 100,
 	appListSpacerColMaxWidth: 200,
+	objectWorkspaceColWidth: 20,
 
 	// labels
 	labelWidthSmall: 50,
+	labelWidthMedium: 80,
+	labelWidthLarge: 150,
+	labelWidthCheckbox: 0,
 
 	// show elements on desktop
 	hideMobile: false,

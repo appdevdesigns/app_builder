@@ -1,6 +1,6 @@
-/* 
+/*
  * ABFieldString
- * 
+ *
  * An ABFieldString defines a string field type.
  *
  */
@@ -17,6 +17,7 @@ var labels = {
 	component: {
 
 		defaultText: L('ab.dataField.string.default', '*Default text'),
+		defaultTextPlaceholder: L('ab.dataField.string.defaultPlaceholder', '*Default field value'),
 		supportMultilingual: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
 
 
@@ -36,7 +37,7 @@ var labels = {
  * ABFieldStringComponent
  *
  * Defines the UI Component for this Data Field.  The ui component is responsible
- * for displaying the properties editor, populating existing data, retrieving 
+ * for displaying the properties editor, populating existing data, retrieving
  * property values, etc.
  *
  * @param {obj} App  the current Component Application instance for the current UI.
@@ -48,7 +49,7 @@ var ABFieldStringComponent = function(App) {
 
 	var idBase = 'ab_datafield_string';
 	var componentDefaults = {
-		textDefault: '', 
+		textDefault: '',
 		supportMultilingual:1
 	};
 	var ids = {
@@ -78,14 +79,16 @@ var ABFieldStringComponent = function(App) {
 				view: "text",
 				id: ids.textDefault,
 				name:'textDefault',
-				placeholder: labels.component.defaultText
+				labelWidth: App.config.labelWidthLarge,
+				label: labels.component.defaultText,
+				placeholder: labels.component.defaultTextPlaceholder
 			},
 			{
 				view: "checkbox",
 				id: ids.supportMultilingual,
 				name:'multilingual',
 				labelRight: labels.component.supportMultilingual,
-				labelWidth: 0,
+				labelWidth: App.config.labelWidthCheckbox,
 				value: true
 			}
 		],
@@ -118,7 +121,7 @@ var ABFieldStringComponent = function(App) {
 
 			ABField.clearEditor(App, ids);
 
-			for(var f in componentDefaults) { 
+			for(var f in componentDefaults) {
 				var component = $$(ids[f]);
 				component.setValue(componentDefaults[f]);
 			}
@@ -143,9 +146,9 @@ var ABFieldStringComponent = function(App) {
 		 * @function labelOnChange
 		 *
 		 * The ABField.definitionEditor implements a default operation
-		 * to update the value of the .columnName with the current value of 
+		 * to update the value of the .columnName with the current value of
 		 * label.
-		 * 
+		 *
 		 * if you want to override that functionality, implement this fn()
 		 *
 		 * @param {string} newVal	The new value of label
@@ -153,7 +156,7 @@ var ABFieldStringComponent = function(App) {
 		 */
 		// labelOnChange: function (newVal, oldVal) {
 
-		// 	// When the Label value changes, update our Column Name value 
+		// 	// When the Label value changes, update our Column Name value
 		// 	// to match.
 
 		// 	oldVal = oldVal || '';
@@ -191,7 +194,7 @@ console.error('TODO: .populate()');
 		 * @function values
 		 *
 		 * return the values for this form.
-		 * @return {obj}  
+		 * @return {obj}
 		 */
 		values: function () {
 
@@ -213,7 +216,7 @@ console.error('TODO: .populate()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 
@@ -240,7 +243,7 @@ class ABFieldString extends ABField {
     	this.id = values.id;
     	this.type = values.type || ABFieldString.type();
     	this.icon = values.icon || ABFieldString.icon();
-    	
+
     	this.textDefault = values.textDefault || '';
     	this.supportMultilingual = values.supportMultilingual || true;
 
@@ -269,7 +272,7 @@ class ABFieldString extends ABField {
   		return 'string';
   	}
 
-  	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+  	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
   	static icon() {
   		return 'font'
   	}
@@ -277,12 +280,12 @@ class ABFieldString extends ABField {
   	// the multilingual text for the name of this data field.
   	static  menuName() {
   		return L('ab.dataField.string.menuName', '*Single line text');
-  	} 
+  	}
 
   	// the multilingual text for the name of this data field.
   	static  description() {
   		return L('ab.dataField.string.description', '*short string value');
-  	} 
+  	}
 
 	/*
 	 * @function propertiesComponent
@@ -297,11 +300,11 @@ class ABFieldString extends ABField {
   	}
 
 
-  	//// 
+  	////
   	//// These refer to the Webix Component definitions for this data field:
   	////
 
-  	// // 
+  	// //
   	// static editor () {
   	// 	return 'text'
   	// }
@@ -322,7 +325,7 @@ class ABFieldString extends ABField {
 		// }, errors);
 
 		return errors;
-	} 
+	}
 
 
 
@@ -337,10 +340,10 @@ class ABFieldString extends ABField {
 	 * properly compile the current state of this ABApplication instance
 	 * into the values needed for saving to the DB.
 	 *
-	 * Most of the instance data is stored in .json field, so be sure to 
+	 * Most of the instance data is stored in .json field, so be sure to
 	 * update that from all the current values of our child fields.
 	 *
-	 * @return {json} 
+	 * @return {json}
 	 */
 	toObj () {
 
@@ -382,8 +385,8 @@ class ABFieldString extends ABField {
 
 // ABFieldString.name = 'string'; // unique key to reference this specific DataField
 // ABFieldString.type = 'string'; // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-// ABFieldString.icon = 'font';   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
-// ABFieldString.menuName = L('ab.dataField.string.menuName', '*Single line text');  
+// ABFieldString.icon = 'font';   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+// ABFieldString.menuName = L('ab.dataField.string.menuName', '*Single line text');
 
 
 
