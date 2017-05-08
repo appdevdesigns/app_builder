@@ -14,7 +14,7 @@ import ABFieldString from "./dataFields/ABFieldString"
  * A type => ABField  hash of the different ABFields available.
  */
 var Fields = {};
-Fields[ABFieldString.type()] = ABFieldString;
+Fields[ABFieldString.defaults().type] = ABFieldString;
 
 
 

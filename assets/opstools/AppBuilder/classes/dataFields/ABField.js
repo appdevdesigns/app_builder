@@ -5,9 +5,6 @@
  *
  */
 
-
-
-
 import OP from "../../OP/OP"
 
 function L(key, altText) {
@@ -16,20 +13,52 @@ function L(key, altText) {
 
 export default class ABField {
 
-    constructor(values, object) {
+    constructor(values, object, fieldDefaults) {
 
-    	this.label = values.label || '';
+    	// NOTE: setup this first so later we can use .fieldType(), .fieldIcon()
+    	this.defaults = fieldDefaults;
+
+
+    	/*
+  		{
+  			id:'uuid',					// uuid value for this obj
+  			type:'fieldType',			// unique key for this Field
+  			icon:'font',				// fa-[icon] reference for an icon for this Field Type
+  			label:'',					// pulled from translation
+			columnName:'column_name',	// a valid mysql table.column name 
+			settings: {					// unique settings for the type of field
+				showIcon:true/false,	// only useful in Object Workspace DataTable
+
+				// specific for dataField
+			},
+			translations:[]
+  		}
+  		*/
+    	this.id = values.id;			// NOTE: only exists after .save()
+    	this.type = values.type || this.fieldType();	
+    	this.icon = values.icon || this.fieldIcon();
+
+    	// if this is being instantiated on a read from the Property UI,
+    	// .label is coming in under .settings.label
+    	this.label = values.label || values.settings.label || '?label?';
+
     	this.columnName = values.columnName || '';
-    	this.showIcon = values.showIcon || "true";
+    	this.translations = values.translations || [];
 
-    	// convert from "true" => true
-    	this.showIcon = (this.showIcon === "true")? true:false;
+    	this.settings = values.settings || {};
+    	this.settings.showIcon = values.settings.showIcon+"" || "1";
+
+
+    	// convert from "0" => 0
+    	this.settings.showIcon = parseInt(this.settings.showIcon);
 
 
 
     	// label is a multilingual value:
-    	OP.Multilingual.translate(this, values, ['label']);
+    	OP.Multilingual.translate(this, this, ['label']);
 
+
+    	this.object = object;
   	}
 
 
@@ -41,7 +70,7 @@ export default class ABField {
   	/// on the instance values of the Application.
   	///
 
-  	static clearEditor( App, ids) {
+  	static clearEditor( ids) {
 
   		var defaultValues = {
   			label: '',
@@ -103,7 +132,7 @@ export default class ABField {
 			rows: [
 				{
 					view: "label",
-					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon()).replace('{1}', Field.menuName())
+					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
 				},
 				{
 					view: "text",
@@ -130,7 +159,7 @@ export default class ABField {
 				{
 					view: "label",
 					id: ids.fieldDescription,
-					label: Field.description()
+					label: Field.description
 				},
 				{
 					view: 'checkbox',
@@ -146,6 +175,47 @@ export default class ABField {
   		return _ui;
   	}
 
+
+  	static editorValues (settings) {
+
+  		var obj = {
+  			label: settings.label,
+  			columnName: settings.columnName,
+  			settings:settings
+  		}
+
+  		delete settings.label;
+  		delete settings.columnName;
+
+  		return obj;
+  	}
+
+
+
+	// unique key to reference this specific DataField
+  	fieldName() {
+  		return this.defaults.name;
+  	}
+
+  	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+  	fieldType() {
+  		return this.defaults.type;
+  	}
+
+  	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+  	fieldIcon() {
+  		return this.defaults.icon;
+  	}
+
+  	// the multilingual text for the name of this data field.
+  	fieldMenuName() {
+  		return this.defaults.menuName;
+  	} 
+
+  	// the multilingual text for the name of this data field.
+  	fieldDescription() {
+  		return this.defaults.description;
+  	} 
 
 
 
@@ -165,7 +235,7 @@ export default class ABField {
 		if (!isNameUnique) {
 			errors = OP.Form.validationError({
 				name:'columnName',
-				message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
+				message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.columnName),
 			}, errors);
 		}
 
@@ -243,9 +313,12 @@ console.error('TODO: ABField.destroy()');
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
 		return {
+			id : this.id,
+			type : this.type,
+			icon : this.icon,
 			columnName: this.columnName,
-			showIcon: this.showIcon,
-			translations: this.translations
+			settings: this.settings,
+			translations:this.translations
 		}
 	}
 
@@ -258,19 +331,26 @@ console.error('TODO: ABField.destroy()');
 	/// Working with Actual Object Values:
 	///
 
+	/*
+	 * @function columnHeader
+	 * Return the column header for a webix grid component for this specific 
+	 * data field.
+	 * @param {bool} isObjectWorkspace is this being used in the Object 
+	 *								   workspace.
+	 * @return {obj}  configuration obj
+	 */
 	columnHeader (isObjectWorkspace) {
 		
 		var config = {
-			id: this.columnName,
+			id: this.settings.columnName,
 			header: this.label,
 		}
 
 		if (isObjectWorkspace) {
-			if (this.showIcon) {
-				config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.icon) + config.header;
+			if (this.settings.showIcon) {
+				config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
 			}
 		}
-
 
 		return config;
 	}

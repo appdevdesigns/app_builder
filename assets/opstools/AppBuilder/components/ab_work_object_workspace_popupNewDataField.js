@@ -159,8 +159,10 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 
 		Fields.forEach(function(F){
 
+			var menuName = F.defaults().menuName ;
+
 			// add a submenu for the fields multilingual key
-			submenus.push( F.menuName() );
+			submenus.push( menuName );
 
 
 			// Add the Field's definition editor here:
@@ -171,8 +173,8 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 			newEditorList.rows.push(editorComponent.ui);
 
 
-			_objectHash[F.menuName()] = F;
-			_componentHash[F.menuName()] = editorComponent;
+			_objectHash[ menuName ] = F;
+			_componentHash[ menuName ] = editorComponent;
 
 		})
 
@@ -268,6 +270,7 @@ submenu: ['dataFieldsManager', '.getFieldMenuList()']
 
 							$$(ids.buttonSave).enable();
 							_logic.hide();
+							_currentEditor.clear();
 							_logic.callbacks.onSave(newField)
 						})
 						.catch((err) => {

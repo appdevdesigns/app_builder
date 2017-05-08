@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 32);
+/******/ 	return __webpack_require__(__webpack_require__.s = 33);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -87,9 +87,9 @@ var _OPOP = __webpack_require__(1);
 
 var _OPOP2 = _interopRequireDefault(_OPOP);
 
-__webpack_require__(29);
+__webpack_require__(30);
 
-var _ABObject = __webpack_require__(11);
+var _ABObject = __webpack_require__(12);
 
 var _ABObject2 = _interopRequireDefault(_ABObject);
 
@@ -1410,7 +1410,7 @@ Object.defineProperty(exports, "__esModule", {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _dataFieldsABFieldString = __webpack_require__(13);
+var _dataFieldsABFieldString = __webpack_require__(14);
 
 var _dataFieldsABFieldString2 = _interopRequireDefault(_dataFieldsABFieldString);
 
@@ -1419,7 +1419,7 @@ var _dataFieldsABFieldString2 = _interopRequireDefault(_dataFieldsABFieldString)
  * A type => ABField  hash of the different ABFields available.
  */
 var Fields = {};
-Fields[_dataFieldsABFieldString2["default"].type()] = _dataFieldsABFieldString2["default"];
+Fields[_dataFieldsABFieldString2["default"].defaults().type] = _dataFieldsABFieldString2["default"];
 
 exports["default"] = {
 
@@ -1459,6 +1459,381 @@ module.exports = exports["default"];
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* 
+ * ABField
+ * 
+ * An ABField defines a single unique Field/Column in a ABObject.
+ *
+ */
+
+
+
+Object.defineProperty(exports, '__esModule', {
+	value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _OPOP = __webpack_require__(1);
+
+var _OPOP2 = _interopRequireDefault(_OPOP);
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var ABField = (function () {
+	function ABField(values, object, fieldDefaults) {
+		_classCallCheck(this, ABField);
+
+		// NOTE: setup this first so later we can use .fieldType(), .fieldIcon()
+		this.defaults = fieldDefaults;
+
+		/*
+  {
+  id:'uuid',					// uuid value for this obj
+  type:'fieldType',			// unique key for this Field
+  icon:'font',				// fa-[icon] reference for an icon for this Field Type
+  label:'',					// pulled from translation
+  columnName:'column_name',	// a valid mysql table.column name 
+  settings: {					// unique settings for the type of field
+  showIcon:true/false,	// only useful in Object Workspace DataTable
+  // specific for dataField
+  },
+  translations:[]
+  }
+  */
+		this.id = values.id; // NOTE: only exists after .save()
+		this.type = values.type || this.fieldType();
+		this.icon = values.icon || this.fieldIcon();
+
+		// if this is being instantiated on a read from the Property UI,
+		// .label is coming in under .settings.label
+		this.label = values.label || values.settings.label || '?label?';
+
+		this.columnName = values.columnName || '';
+		this.translations = values.translations || [];
+
+		this.settings = values.settings || {};
+		this.settings.showIcon = values.settings.showIcon + "" || "1";
+
+		// convert from "0" => 0
+		this.settings.showIcon = parseInt(this.settings.showIcon);
+
+		// label is a multilingual value:
+		_OPOP2['default'].Multilingual.translate(this, this, ['label']);
+
+		this.object = object;
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+	_createClass(ABField, [{
+		key: 'fieldName',
+
+		// unique key to reference this specific DataField
+		value: function fieldName() {
+			return this.defaults.name;
+		}
+
+		// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	}, {
+		key: 'fieldType',
+		value: function fieldType() {
+			return this.defaults.type;
+		}
+
+		// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+	}, {
+		key: 'fieldIcon',
+		value: function fieldIcon() {
+			return this.defaults.icon;
+		}
+
+		// the multilingual text for the name of this data field.
+	}, {
+		key: 'fieldMenuName',
+		value: function fieldMenuName() {
+			return this.defaults.menuName;
+		}
+
+		// the multilingual text for the name of this data field.
+	}, {
+		key: 'fieldDescription',
+		value: function fieldDescription() {
+			return this.defaults.description;
+		}
+
+		/* 
+   * @method isValid
+   * check the current values to make sure they are valid.
+   * Here we check the default values provided by ABField.
+   *
+   * @return null or [{OP.Form.validationError()}] objects.
+   */
+	}, {
+		key: 'isValid',
+		value: function isValid() {
+			var _this = this;
+
+			var errors = null;
+
+			// .columnName must be unique among fileds on the same object
+			var isNameUnique = this.object.fields(function (f) {
+				return f.columnName.toLowerCase() == _this.columnName.toLowerCase();
+			}).length == 0;
+			if (!isNameUnique) {
+				errors = _OPOP2['default'].Form.validationError({
+					name: 'columnName',
+					message: L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.columnName)
+				}, errors);
+			}
+
+			return errors;
+		}
+
+		///
+		/// Instance Methods
+		///
+
+		/// ABApplication data methods
+
+		/**
+   * @method destroy()
+   *
+   * destroy the current instance of ABApplication
+   *
+   * also remove it from our _AllApplications
+   * 
+   * @return {Promise} 
+   */
+	}, {
+		key: 'destroy',
+		value: function destroy() {
+			if (this.id) {
+				console.error('TODO: ABField.destroy()');
+			}
+		}
+
+		/**
+   * @method save()
+   *
+   * persist this instance of ABField with it's parent ABObject
+   *
+   * 
+   * @return {Promise} 	
+   *						.resolve( {this} )
+   */
+	}, {
+		key: 'save',
+		value: function save() {
+			var _this2 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// if this is our initial save()
+				if (!_this2.id) {
+					_this2.id = _OPOP2['default'].Util.uuid(); // setup default .id
+				}
+
+				_this2.object.fieldSave(_this2).then(function () {
+					resolve(_this2);
+				})['catch'](function (err) {
+					reject(err);
+				});
+			});
+		}
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABField instance
+   * into the values needed for saving to the DB.
+   *
+   * @return {json} 
+   */
+	}, {
+		key: 'toObj',
+		value: function toObj() {
+
+			// store "label" in our translations
+			_OPOP2['default'].Multilingual.unTranslate(this, this, ["label"]);
+
+			return {
+				id: this.id,
+				type: this.type,
+				icon: this.icon,
+				columnName: this.columnName,
+				settings: this.settings,
+				translations: this.translations
+			};
+		}
+
+		///
+		/// Working with Actual Object Values:
+		///
+
+		/*
+   * @function columnHeader
+   * Return the column header for a webix grid component for this specific 
+   * data field.
+   * @param {bool} isObjectWorkspace is this being used in the Object 
+   *								   workspace.
+   * @return {obj}  configuration obj
+   */
+	}, {
+		key: 'columnHeader',
+		value: function columnHeader(isObjectWorkspace) {
+
+			var config = {
+				id: this.settings.columnName,
+				header: this.label
+			};
+
+			if (isObjectWorkspace) {
+				if (this.settings.showIcon) {
+					config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.fieldIcon()) + config.header;
+				}
+			}
+
+			return config;
+		}
+	}], [{
+		key: 'clearEditor',
+		value: function clearEditor(ids) {
+
+			var defaultValues = {
+				label: '',
+				columnName: '',
+				showIcon: 1
+			};
+
+			for (var f in defaultValues) {
+				var component = $$(ids[f]);
+				component.setValue(defaultValues[f]);
+			}
+		}
+
+		/**
+   * @function definitionEditor
+   *
+   * Many DataFields share some base information for their usage 
+   * in the AppBuilder.  The UI Editors have a common header 
+   * and footer format, and this function allows child DataFields
+   * to not have to define those over and over.
+   *
+   * The common layout header contains:
+   *		[Menu Label]
+   *		[textBox: labelName]
+   *		[text:    description]
+   *
+   * The defined DataField UI will be added at the end of this.
+   *
+   * This routine actually updated the live DataField definition
+   * with the common header info.
+   *
+   * @param {DataField} field  The DataField object to work with.
+   */
+	}, {
+		key: 'definitionEditor',
+		value: function definitionEditor(App, ids, _logic, Field) {
+
+			/// TODO: maybe just pass in onChange instead of _logic
+			/// if not onChange, then use our default:
+
+			// setup our default labelOnChange functionality:
+			var _onChange = function onChange(newVal, oldVal) {
+
+				oldVal = oldVal || '';
+
+				if (newVal != oldVal && oldVal == $$(ids.columnName).getValue()) {
+					$$(ids.columnName).setValue(newVal);
+				}
+			};
+
+			// if they provided a labelOnChange() override, use that:
+			if (_logic.labelOnChange) {
+				_onChange = _logic.labelOnChange;
+			}
+
+			var _ui = {
+				// id: ids.component,
+				rows: [{
+					view: "label",
+					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
+				}, {
+					view: "text",
+					id: ids.label,
+					name: 'label',
+					label: App.labels.dataFieldHeaderLabel,
+					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
+					labelWidth: 50,
+					css: 'ab-new-label-name',
+					on: {
+						onChange: function onChange(newVal, oldVal) {
+							_onChange(newVal, oldVal);
+						}
+					}
+				}, {
+					view: "text",
+					id: ids.columnName,
+					name: 'columnName',
+					label: App.labels.dataFieldColumnName, // 'Name',
+					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
+					labelWidth: App.config.labelWidthSmall
+				}, {
+					view: "label",
+					id: ids.fieldDescription,
+					label: Field.description
+				}, {
+					view: 'checkbox',
+					id: ids.showIcon,
+					name: 'showIcon',
+					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
+					labelWidth: 0,
+					value: true
+				}]
+			};
+
+			return _ui;
+		}
+	}, {
+		key: 'editorValues',
+		value: function editorValues(settings) {
+
+			var obj = {
+				label: settings.label,
+				columnName: settings.columnName,
+				settings: settings
+			};
+
+			delete settings.label;
+			delete settings.columnName;
+
+			return obj;
+		}
+	}]);
+
+	return ABField;
+})();
+
+exports['default'] = ABField;
+module.exports = exports['default'];
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 
 /*
  * AB
@@ -1475,16 +1850,16 @@ module.exports = exports["default"];
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-__webpack_require__(14);
+__webpack_require__(15);
 
-__webpack_require__(18);
+__webpack_require__(19);
 
 // Import our Custom Components here:
-var _webix_custom_componentsEdittree = __webpack_require__(31);
+var _webix_custom_componentsEdittree = __webpack_require__(32);
 
 var _webix_custom_componentsEdittree2 = _interopRequireDefault(_webix_custom_componentsEdittree);
 
-var _webix_custom_componentsEditlist = __webpack_require__(30);
+var _webix_custom_componentsEditlist = __webpack_require__(31);
 
 var _webix_custom_componentsEditlist2 = _interopRequireDefault(_webix_custom_componentsEditlist);
 
@@ -1580,7 +1955,7 @@ OP.Component.extend('ab', function (App) {
 // TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1927,14 +2302,14 @@ exports["default"] = ABObject;
 module.exports = exports["default"];
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* 
- * ABField
+ * ABFieldComponent
  * 
- * An ABField defines a single unique Field/Column in a ABObject.
+ * An ABFieldComponent defines the UI component used by an ABField to display it's properties.
  *
  */
 
@@ -1950,27 +2325,45 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var _OPOP = __webpack_require__(1);
+var _ABField = __webpack_require__(10);
 
-var _OPOP2 = _interopRequireDefault(_OPOP);
+var _ABField2 = _interopRequireDefault(_ABField);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-var ABField = (function () {
-	function ABField(values, object) {
-		_classCallCheck(this, ABField);
+var ABFieldComponent = (function () {
+	function ABFieldComponent(options) {
+		var _this = this;
 
-		this.label = values.label || '';
-		this.columnName = values.columnName || '';
-		this.showIcon = values.showIcon || "true";
+		_classCallCheck(this, ABFieldComponent);
 
-		// convert from "true" => true
-		this.showIcon = this.showIcon === "true" ? true : false;
+		this.options = options;
 
-		// label is a multilingual value:
-		_OPOP2['default'].Multilingual.translate(this, values, ['label']);
+		this.fieldDefaults = options.fieldDefaults || {};
+
+		this.elements = options.elements || [];
+
+		this.defaultValues = options.defaultValues || {};
+
+		this.rules = options.rules || {};
+
+		this.logic = options.logic || {};
+
+		this.init = options.init || function () {};
+
+		this.idBase = this.fieldDefaults.name || '??fieldName??';
+
+		// this.ids = options.ids || {};
+		this.ids = {};
+
+		// for each provided element: create an this.ids for it:
+		this.elements.forEach(function (e) {
+			if (e.name) {
+				_this.ids[e.name] = e.name;
+			}
+		});
 	}
 
 	///
@@ -1980,167 +2373,250 @@ var ABField = (function () {
 	/// on the instance values of the Application.
 	///
 
-	_createClass(ABField, [{
-		key: 'isValid',
+	/**
+  * @function definitionEditor
+  *
+  * Many DataFields share some base information for their usage 
+  * in the AppBuilder.  The UI Editors have a common header 
+  * and footer format, and this function allows child DataFields
+  * to not have to define those over and over.
+  *
+  * The common layout header contains:
+  *		[Menu Label]
+  *		[textBox: labelName]
+  *		[text:    description]
+  *
+  * The defined DataField UI will be added at the end of this.
+  *
+  * This routine actually updated the live DataField definition
+  * with the common header info.
+  *
+  * @param {DataField} field  The DataField object to work with.
+  */
 
-		/* 
-   * @method isValid
-   * check the current values to make sure they are valid.
-   * Here we check the default values provided by ABField.
-   *
-   * @return null or [{OP.Form.validationError()}] objects.
-   */
-		value: function isValid() {
-			var _this = this;
-
-			var errors = null;
-
-			// .columnName must be unique among fileds on the same object
-			var isNameUnique = this.object.fields(function (f) {
-				return f.columnName.toLowerCase() == _this.columnName.toLowerCase();
-			}).length == 0;
-			if (!isNameUnique) {
-				errors = _OPOP2['default'].Form.validationError({
-					name: 'columnName',
-					message: L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name)
-				}, errors);
-			}
-
-			return errors;
-		}
+	_createClass(ABFieldComponent, [{
+		key: 'component',
 
 		///
 		/// Instance Methods
 		///
 
-		/// ABApplication data methods
-
-		/**
-   * @method destroy()
-   *
-   * destroy the current instance of ABApplication
-   *
-   * also remove it from our _AllApplications
-   * 
-   * @return {Promise} 
-   */
-	}, {
-		key: 'destroy',
-		value: function destroy() {
-			if (this.id) {
-				console.error('TODO: ABField.destroy()');
-			}
-		}
-
-		/**
-   * @method save()
-   *
-   * persist this instance of ABField with it's parent ABObject
-   *
-   * 
-   * @return {Promise} 	
-   *						.resolve( {this} )
-   */
-	}, {
-		key: 'save',
-		value: function save() {
+		value: function component(App) {
 			var _this2 = this;
 
-			return new Promise(function (resolve, reject) {
+			// labels.common = App.labels;
 
-				// if this is our initial save()
-				if (!_this2.id) {
-					_this2.id = _OPOP2['default'].Util.uuid(); // setup default .id
-				}
+			// var idBase = 'ab_datafield_string';
 
-				_this2.object.fieldSave(_this2).then(function () {
-					resolve(_this2);
-				})['catch'](function (err) {
-					reject(err);
-				});
-			});
-		}
+			// var componentDefaults = {
+			// 	textDefault: '',
+			// 	supportMultilingual:1
+			// };
 
-		/**
-   * @method toObj()
-   *
-   * properly compile the current state of this ABField instance
-   * into the values needed for saving to the DB.
-   *
-   * @return {json} 
-   */
-	}, {
-		key: 'toObj',
-		value: function toObj() {
+			var ids = {
 
-			// store "label" in our translations
-			_OPOP2['default'].Multilingual.unTranslate(this, this, ["label"]);
+				component: App.unique(this.idBase + '_component'),
 
-			return {
-				columnName: this.columnName,
-				showIcon: this.showIcon,
-				translations: this.translations
-			};
-		}
-
-		///
-		/// Working with Actual Object Values:
-		///
-
-	}, {
-		key: 'columnHeader',
-		value: function columnHeader(isObjectWorkspace) {
-
-			var config = {
-				id: this.columnName,
-				header: this.label
+				// the common property fields
+				label: App.unique(this.idBase + '_label'),
+				columnName: App.unique(this.idBase + '_columnName'),
+				fieldDescription: App.unique(this.idBase + '_fieldDescription'),
+				showIcon: App.unique(this.idBase + '_showIcon')
 			};
 
-			if (isObjectWorkspace) {
-				if (this.showIcon) {
-					config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.icon) + config.header;
-				}
+			// make sure to include this instances element's ids into our list:
+			for (var i in this.ids) {
+				ids[i] = App.unique(this.idBase + '_' + i);
 			}
 
-			return config;
+			//// NOTE: we merge in the common headers below.
+			var _ui = {
+				view: 'form',
+				id: ids.component,
+				autoheight: true,
+				borderless: true,
+				elements: [
+					// {
+					// 	view: "text",
+					// 	id: ids.textDefault,
+					// 	name:'textDefault',
+					// 	placeholder: labels.component.defaultText
+					// },
+					// {
+					// 	view: "checkbox",
+					// 	id: ids.supportMultilingual,
+					// 	name:'supportMultilingual',
+					// 	labelRight: labels.component.supportMultilingual,
+					// 	labelWidth: 0,
+					// 	value: true
+					// }
+				],
+
+				rules: {
+					'label': webix.rules.isNotEmpty,
+					'columnName': webix.rules.isNotEmpty
+				}
+			};
+
+			var _init = function _init() {
+
+				// call our provided .init() routine
+				this.init(ids);
+			};
+
+			var _logic = {
+
+				/*
+     * @function clear
+     *
+     * clear the form.
+     */
+				clear: function clear() {
+
+					_ABField2['default'].clearEditor(ids);
+
+					for (var f in _this2.defaultValues) {
+						var component = $$(ids[f]);
+						if (component) {
+							component.setValue(_this2.defaultValues[f]);
+						} else {
+							console.warn('!! could not find component for default value: name:' + f + ' id:' + ids[f]);
+						}
+					}
+
+					$$(ids.component).clearValidation();
+
+					// perform provided .clear()
+					if (_this2.logic.clear) {
+						_this2.logic.clear(ids);
+					}
+				},
+
+				/*
+     * @function isValid
+     *
+     * checks the current values on the componet to see if they are Valid
+     */
+				isValid: function isValid() {
+
+					var isValid = $$(ids.component).validate();
+
+					// perform provided .isValid()
+					if (_this2.logic.isValid) {
+						isValid = _this2.logic.isValid(ids, isValid);
+					}
+
+					return isValid;
+				},
+
+				/*
+     * @function labelOnChange
+     *
+     * The ABField.definitionEditor implements a default operation
+     * to update the value of the .columnName with the current value of 
+     * label.
+     * 
+     * if you want to override that functionality, implement this fn()
+     *
+     * @param {string} newVal	The new value of label
+     * @param {string} oldVal	The previous value
+     */
+				// labelOnChange: function (newVal, oldVal) {
+
+				// 	// When the Label value changes, update our Column Name value
+				// 	// to match.
+
+				// 	oldVal = oldVal || '';
+				// 	if (newVal != oldVal &&
+				// 		oldVal == $$(ids.columnName).getValue()) {
+				// 		$$(ids.columnName).setValue(newVal);
+				// 	}
+				// },
+
+				/*
+     * @function populate
+     *
+     * populate the form with the given ABField instance provided.
+     *
+     * @param {ABField} field
+     */
+				populate: function populate(field) {
+
+					console.error('TODO: .populate()');
+
+					// perform provided .populate()
+					if (_this2.logic.populate) {
+						_this2.logic.populate(ids, field);
+					}
+				},
+
+				/*
+     * @function show
+     *
+     * show this component.
+     */
+				show: function show() {
+					$$(ids.component).clearValidation();
+					$$(ids.component).show();
+
+					// perform provided .show()
+					if (_this2.logic.show) {
+						_this2.logic.show(ids);
+					}
+				},
+
+				/*
+     * @function values
+     *
+     * return the values for this form.
+     * @return {obj}  
+     */
+				values: function values() {
+
+					var settings = $$(ids.component).getValues();
+					var values = _ABField2['default'].editorValues(settings);
+
+					values.type = _this2.fieldDefaults.type;
+
+					// perform provided .values()
+					if (_this2.logic.values) {
+						values = _this2.logic.values(ids, values);
+					}
+
+					return values;
+				}
+
+			};
+
+			// apply overrides to our logic functions:
+			for (var l in this.logic) {
+				if (!_logic[l]) _logic[l] = this.logic[l];
+			}
+
+			// make sure our given elements, have an id set:
+
+			// get the common UI headers entries, and insert them above ours here:
+			// NOTE: put this here so that _logic is defined.
+			var commonUI = _ABField2['default'].definitionEditor(App, ids, _logic, this.fieldDefaults);
+			_ui.elements = commonUI.rows.concat(this.elements);
+
+			// return the current instance of this component:
+			return {
+				ui: _ui, // {obj} 	the webix ui definition for this component
+				init: _init, // {fn} 	init() to setup this component 
+				// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+				// DataField exposed actions:
+				clear: _logic.clear,
+				isValid: _logic.isValid,
+				populate: _logic.populate,
+				show: _logic.show,
+				values: _logic.values,
+
+				_logic: _logic // {obj} 	Unit Testing
+			};
 		}
 	}], [{
-		key: 'clearEditor',
-		value: function clearEditor(App, ids) {
-
-			var defaultValues = {
-				label: '',
-				columnName: '',
-				showIcon: 1
-			};
-
-			for (var f in defaultValues) {
-				var component = $$(ids[f]);
-				component.setValue(defaultValues[f]);
-			}
-		}
-
-		/**
-   * @function definitionEditor
-   *
-   * Many DataFields share some base information for their usage 
-   * in the AppBuilder.  The UI Editors have a common header 
-   * and footer format, and this function allows child DataFields
-   * to not have to define those over and over.
-   *
-   * The common layout header contains:
-   *		[Menu Label]
-   *		[textBox: labelName]
-   *		[text:    description]
-   *
-   * The defined DataField UI will be added at the end of this.
-   *
-   * This routine actually updated the live DataField definition
-   * with the common header info.
-   *
-   * @param {DataField} field  The DataField object to work with.
-   */
-	}, {
 		key: 'definitionEditor',
 		value: function definitionEditor(App, ids, _logic, Field) {
 
@@ -2166,7 +2642,7 @@ var ABField = (function () {
 				// id: ids.component,
 				rows: [{
 					view: "label",
-					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon()).replace('{1}', Field.menuName())
+					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
 				}, {
 					view: "text",
 					id: ids.label,
@@ -2190,7 +2666,7 @@ var ABField = (function () {
 				}, {
 					view: "label",
 					id: ids.fieldDescription,
-					label: Field.description()
+					label: Field.description
 				}, {
 					view: 'checkbox',
 					id: ids.showIcon,
@@ -2205,14 +2681,14 @@ var ABField = (function () {
 		}
 	}]);
 
-	return ABField;
+	return ABFieldComponent;
 })();
 
-exports['default'] = ABField;
+exports['default'] = ABFieldComponent;
 module.exports = exports['default'];
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2225,44 +2701,42 @@ module.exports = exports['default'];
 
 
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _ABField2 = __webpack_require__(12);
+var _ABField2 = __webpack_require__(10);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
+
+var _ABFieldComponent = __webpack_require__(13);
+
+var _ABFieldComponent2 = _interopRequireDefault(_ABFieldComponent);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-var labels = {
+var ABFieldStringDefaults = {
+	name: 'string', // unique key to reference this specific DataField
+	type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	icon: 'font', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
-	component: {
+	// menuName: what gets displayed in the Editor drop list
+	menuName: L('ab.dataField.string.menuName', '*Single line text'),
 
-		defaultText: L('ab.dataField.string.default', '*Default text'),
-		supportMultilingual: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
-
-		// should be common?
-		headerLabel: L('ab.dataField.common.headerLabel', '*Label'),
-		headerLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
-
-		columnName: L('ab.dataField.common.columnName', '*Name'),
-		columnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
-
-		showIcon: L('ab.dataField.common.showIcon', '*show icon?')
-	}
+	// description: what gets displayed in the Editor description.
+	description: L('ab.dataField.string.description', '*short string value')
 };
 
 /**
@@ -2275,173 +2749,258 @@ var labels = {
  * @param {obj} App  the current Component Application instance for the current UI.
  * @return {obj} the Component object.
  */
-var ABFieldStringComponent = function ABFieldStringComponent(App) {
+// var ABFieldStringComponent = function(App) {
 
-	labels.common = App.labels;
+// 	labels.common = App.labels;
 
-	var idBase = 'ab_datafield_string';
-	var componentDefaults = {
+// 	var idBase = 'ab_datafield_string';
+
+// 	var componentDefaults = {
+// 		textDefault: '',
+// 		supportMultilingual:1
+// 	};
+
+// 	var ids = {
+
+// 		component: App.unique(idBase+'_component'),
+
+// 		textDefault: App.unique(idBase+'_textdefault'),
+// 		supportMultilingual: App.unique(idBase+'_supportMultilingual'),
+
+// 		// the common property fields
+// 		label: App.unique(idBase+'_label'),
+// 		columnName: App.unique(idBase+'_columnName'),
+// 		fieldDescription: App.unique(idBase+'_fieldDescription'),
+// 		showIcon: App.unique(idBase+'_showIcon'),
+// 	}
+
+// 	//// NOTE: we merge in the common headers below.
+// 	var _ui = {
+// 		view:'form',
+// 		id: ids.component,
+// 		autoheight:true,
+// 		borderless:true,
+// 		elements: [
+// 			{
+// 				view: "text",
+// 				id: ids.textDefault,
+// 				name:'textDefault',
+// 				placeholder: labels.component.defaultText
+// 			},
+// 			{
+// 				view: "checkbox",
+// 				id: ids.supportMultilingual,
+// 				name:'supportMultilingual',
+// 				labelRight: labels.component.supportMultilingual,
+// 				labelWidth: 0,
+// 				value: true
+// 			}
+// 		],
+
+// 		rules:{
+// 			'label':webix.rules.isNotEmpty,
+// 			'columnName':webix.rules.isNotEmpty
+// 		}
+// 	}
+
+// 	var _init = function() {
+
+// 		// perform any additional setup actions.
+// 		// for example, don't want to show the description, then .hide() it here:
+// 		// $$(ids.fieldDescription).hide();
+// 	}
+
+// 	var _logic = {
+
+// 		/*
+// 		 * @function clear
+// 		 *
+// 		 * clear the form.
+// 		 */
+// 		clear: function () {
+
+// 			ABField.clearEditor(App, ids);
+
+// 			for(var f in componentDefaults) {
+// 				var component = $$(ids[f]);
+// 				component.setValue(componentDefaults[f]);
+// 			}
+
+// 			$$(ids.component).clearValidation();
+// 		},
+
+// 		/*
+// 		 * @function isValid
+// 		 *
+// 		 * checks the current values on the componet to see if they are Valid
+// 		 */
+// 		isValid: function () {
+
+// 			return $$(ids.component).validate();
+
+// 		},
+
+// 		 * @function labelOnChange
+// 		 *
+// 		 * The ABField.definitionEditor implements a default operation
+// 		 * to update the value of the .columnName with the current value of
+// 		 * label.
+// 		 *
+// 		 * if you want to override that functionality, implement this fn()
+// 		 *
+// 		 * @param {string} newVal	The new value of label
+// 		 * @param {string} oldVal	The previous value
+
+// 		// labelOnChange: function (newVal, oldVal) {
+
+// 		// 	// When the Label value changes, update our Column Name value
+// 		// 	// to match.
+
+// 		// 	oldVal = oldVal || '';
+// 		// 	if (newVal != oldVal &&
+// 		// 		oldVal == $$(ids.columnName).getValue()) {
+// 		// 		$$(ids.columnName).setValue(newVal);
+// 		// 	}
+// 		// },
+
+// 		/*
+// 		 * @function populate
+// 		 *
+// 		 * populate the form with the given ABField instance provided.
+// 		 *
+// 		 * @param {ABFieldString} field
+// 		 */
+// 		populate: function (field) {
+// console.error('TODO: .populate()');
+// 		},
+
+// 		/*
+// 		 * @function show
+// 		 *
+// 		 * show this component.
+// 		 */
+// 		show: function() {
+// 			$$(ids.component).clearValidation();
+// 			$$(ids.component).show();
+// 		},
+
+// 		/*
+// 		 * @function values
+// 		 *
+// 		 * return the values for this form.
+// 		 * @return {obj} 
+// 		 */
+// 		values: function () {
+
+// 			var settings = $$(ids.component).getValues();
+// 			var values = ABField.editorValues(settings);
+
+// 			values.type = ABFieldStringDefaults.type;
+
+// 			return values;
+// 		}
+
+// 	}
+
+// 	// get the common UI headers entries, and insert them above ours here:
+// 	// NOTE: put this here so that _logic is defined.
+// 	var commonUI = ABField.definitionEditor(App, ids, _logic, ABFieldStringDefaults);
+// 	_ui.elements = commonUI.rows.concat(_ui.elements);
+
+// 	// return the current instance of this component:
+// 	return {
+// 		ui:_ui,					// {obj} 	the webix ui definition for this component
+// 		init:_init,				// {fn} 	init() to setup this component 
+// 		// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+// 		// DataField exposed actions:
+// 		clear: _logic.clear,
+// 		isValid:_logic.isValid,
+// 		populate: _logic.populate,
+// 		show: _logic.show,
+// 		values: _logic.values,
+
+// 		_logic: _logic			// {obj} 	Unit Testing
+// 	}
+// }
+
+var ABFieldStringComponent = new _ABFieldComponent2["default"]({
+
+	fieldDefaults: ABFieldStringDefaults,
+
+	// idBase: the unique component string for this ABField
+	// idBase: idBase,
+
+	// ids, without the App.unique(idBase+ xxx).  must have a matching one for 
+	// each defaultValues entry
+	// ids:{
+	// 	textDefault: '_textdefault',
+	// 	supportMultilingual: '_supportMultilingual',
+	// },
+
+	elements: [{
+		view: "text",
+		// id: ids.textDefault,
+		name: 'textDefault',
+		placeholder: L('ab.dataField.string.default', '*Default text')
+	}, {
+		view: "checkbox",
+		// id: ids.supportMultilingual,
+		name: 'supportMultilingual',
+		labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
+		labelWidth: 0,
+		value: true
+	}],
+
+	// defaultValues: the keys must match a .name of your elements to set it's default value.
+	defaultValues: {
 		textDefault: '',
 		supportMultilingual: 1
-	};
-	var ids = {
+	},
 
-		component: App.unique(idBase + '_component'),
+	// rules: basic form validation rules for webix form entry.
+	// the keys must match a .name of your .elements for it to apply
+	rules: {
+		// 'textDefault':webix.rules.isNotEmpty,
+		// 'supportMultilingual':webix.rules.isNotEmpty
+	},
 
-		textDefault: App.unique(idBase + '_textdefault'),
-		supportMultilingual: App.unique(idBase + '_supportMultilingual'),
+	// include additional behavior on default component operations here:
+	// The base routines will be processed first, then these.  Any results
+	// from the base routine, will be passed on to these:
+	// 	@param {obj} ids  the list of ids used to generate the UI.  your
+	//					  provided .elements will have matching .name keys
+	//					  to access them here.
+	//  @param {obj} values the current set of values provided for this instance
+	// 					  of ABField:
+	//					  {
+	//						id:'',			// if already .saved()
+	// 						label:'',
+	// 						columnName:'',
+	//						settings:{
+	//							showIcon:'',
+	//
+	//							your element key=>values here	
+	//						}
+	//					  }
+	//
+	// 		.clear(ids)  : reset the display to an empty state
+	// 		.isValid(ids, isValid): perform validation on the current editor values
+	// 		.populate(ids, values) : populate the form with your current settings
+	// 		.show(ids)   : display the form in the editor
+	// 		.values(ids, values) : return the current values from the form
+	logic: {},
 
-		// the common property fields
-		label: App.unique(idBase + '_label'),
-		columnName: App.unique(idBase + '_columnName'),
-		fieldDescription: App.unique(idBase + '_fieldDescription'),
-		showIcon: App.unique(idBase + '_showIcon')
-	};
-
-	//// NOTE: we merge in the common headers below.
-	var _ui = {
-		view: 'form',
-		id: ids.component,
-		autoheight: true,
-		borderless: true,
-		elements: [{
-			view: "text",
-			id: ids.textDefault,
-			name: 'textDefault',
-			placeholder: labels.component.defaultText
-		}, {
-			view: "checkbox",
-			id: ids.supportMultilingual,
-			name: 'multilingual',
-			labelRight: labels.component.supportMultilingual,
-			labelWidth: 0,
-			value: true
-		}],
-
-		rules: {
-			'label': webix.rules.isNotEmpty,
-			'columnName': webix.rules.isNotEmpty
-		}
-	};
-
-	var _init = function _init() {
-
-		// perform any additional setup actions.
-		// for example, don't want to show the description, then .hide() it here:
+	// perform any additional setup actions here.
+	// @param {obj} ids  the hash of id values for all the current form elements.
+	//					 it should have your elements + the default Header elements:
+	//						.label, .columnName, .fieldDescription, .showIcon
+	init: function init(ids) {
+		// want to hide the description? :
 		// $$(ids.fieldDescription).hide();
-	};
+	}
 
-	var _logic = {
-
-		/*
-   * @function clear
-   *
-   * clear the form.
-   */
-		clear: function clear() {
-
-			_ABField3['default'].clearEditor(App, ids);
-
-			for (var f in componentDefaults) {
-				var component = $$(ids[f]);
-				component.setValue(componentDefaults[f]);
-			}
-
-			$$(ids.component).clearValidation();
-		},
-
-		/*
-   * @function isValid
-   *
-   * checks the current values on the componet to see if they are Valid
-   */
-		isValid: function isValid() {
-
-			return $$(ids.component).validate();
-		},
-
-		/*
-   * @function labelOnChange
-   *
-   * The ABField.definitionEditor implements a default operation
-   * to update the value of the .columnName with the current value of 
-   * label.
-   * 
-   * if you want to override that functionality, implement this fn()
-   *
-   * @param {string} newVal	The new value of label
-   * @param {string} oldVal	The previous value
-   */
-		// labelOnChange: function (newVal, oldVal) {
-
-		// 	// When the Label value changes, update our Column Name value
-		// 	// to match.
-
-		// 	oldVal = oldVal || '';
-		// 	if (newVal != oldVal &&
-		// 		oldVal == $$(ids.columnName).getValue()) {
-		// 		$$(ids.columnName).setValue(newVal);
-		// 	}
-		// },
-
-		/*
-   * @function populate
-   *
-   * populate the form with the given ABField instance provided.
-   *
-   * @param {ABFieldString} field
-   */
-		populate: function populate(field) {
-			console.error('TODO: .populate()');
-		},
-
-		/*
-   * @function show
-   *
-   * show this component.
-   */
-		show: function show() {
-			$$(ids.component).clearValidation();
-			$$(ids.component).show();
-		},
-
-		/*
-   * @function values
-   *
-   * return the values for this form.
-   * @return {obj}  
-   */
-		values: function values() {
-
-			var values = $$(ids.component).getValues();
-			values.type = ABFieldString.type();
-
-			return values;
-		}
-
-	};
-
-	// get the common UI headers entries, and insert them above ours here:
-	// NOTE: put this here so that _logic is defined.
-	var commonUI = _ABField3['default'].definitionEditor(App, ids, _logic, ABFieldString);
-	_ui.elements = commonUI.rows.concat(_ui.elements);
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component 
-		// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
-
-		// DataField exposed actions:
-		clear: _logic.clear,
-		isValid: _logic.isValid,
-		populate: _logic.populate,
-		show: _logic.show,
-		values: _logic.values,
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-};
+});
 
 var ABFieldString = (function (_ABField) {
 	_inherits(ABFieldString, _ABField);
@@ -2449,53 +3008,37 @@ var ABFieldString = (function (_ABField) {
 	function ABFieldString(values, object) {
 		_classCallCheck(this, ABFieldString);
 
-		_get(Object.getPrototypeOf(ABFieldString.prototype), 'constructor', this).call(this, values, object);
+		_get(Object.getPrototypeOf(ABFieldString.prototype), "constructor", this).call(this, values, object, ABFieldStringDefaults);
 
-		this.id = values.id;
-		this.type = values.type || ABFieldString.type();
-		this.icon = values.icon || ABFieldString.icon();
+		/*
+  {
+  settings: {
+  textDefault: 'string',
+  supportMultilingual: true/false
+  }
+  }
+  */
 
-		this.textDefault = values.textDefault || '';
-		this.supportMultilingual = values.supportMultilingual || true;
+		// we're responsible for setting up our specific settings:
+		this.settings.textDefault = values.settings.textDefault || '';
+		this.settings.supportMultilingual = values.settings.supportMultilingual + "" || "1";
 
-		// add this if there are more multilingual labels than what our super() defines:
-		// OP.Multilingual.translate(this, values, ['label']);
-
-		this.object = object;
+		// text to Int:
+		this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
 	}
 
-	// ABFieldString.name = 'string'; // unique key to reference this specific DataField
-	// ABFieldString.type = 'string'; // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	// ABFieldString.icon = 'font';   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
-	// ABFieldString.menuName = L('ab.dataField.string.menuName', '*Single line text'); 
-
-	///
-	/// Static Methods
-	///
-	/// Return the Definition related values for a String data field.
-	///
-
-	// unique key to reference this specific DataField
+	// return the default values for this DataField
 
 	_createClass(ABFieldString, [{
-		key: 'isValid',
+		key: "isValid",
 
-		////
-		//// These refer to the Webix Component definitions for this data field:
-		////
-
-		// //
-		// static editor () {
-		// 	return 'text'
-		// }
-
-		// static filterType () {
-		// 	return 'text'
-		// }
+		///
+		/// Instance Methods
+		///
 
 		value: function isValid() {
 
-			var errors = _get(Object.getPrototypeOf(ABFieldString.prototype), 'isValid', this).call(this);
+			var errors = _get(Object.getPrototypeOf(ABFieldString.prototype), "isValid", this).call(this);
 
 			// errors = OP.Form.validationError({
 			// 	name:'columnName',
@@ -2504,10 +3047,6 @@ var ABFieldString = (function (_ABField) {
 
 			return errors;
 		}
-
-		///
-		/// Instance Methods
-		///
 
 		/**
    * @method toObj()
@@ -2520,20 +3059,14 @@ var ABFieldString = (function (_ABField) {
    *
    * @return {json} 
    */
-	}, {
-		key: 'toObj',
-		value: function toObj() {
+		// toObj () {
 
-			var obj = _get(Object.getPrototypeOf(ABFieldString.prototype), 'toObj', this).call(this);
+		// 	var obj = super.toObj();
 
-			obj.id = this.id;
-			obj.type = this.type;
-			obj.icon = this.icon;
-			obj.textDefault = this.textDefault;
-			obj.supportMultilingual = this.supportMultilingual;
+		// 	// obj.settings = this.settings;  // <--  super.toObj()
 
-			return obj;
-		}
+		// 	return obj;
+		// }
 
 		///
 		/// Working with Actual Object Values:
@@ -2541,9 +3074,9 @@ var ABFieldString = (function (_ABField) {
 
 		// return the grid column header definition for this instance of ABFieldString
 	}, {
-		key: 'columnHeader',
+		key: "columnHeader",
 		value: function columnHeader(isObjectWorkspace) {
-			var config = _get(Object.getPrototypeOf(ABFieldString.prototype), 'columnHeader', this).call(this, isObjectWorkspace);
+			var config = _get(Object.getPrototypeOf(ABFieldString.prototype), "columnHeader", this).call(this, isObjectWorkspace);
 
 			config.editor = 'text';
 			config.sort = 'string';
@@ -2551,37 +3084,9 @@ var ABFieldString = (function (_ABField) {
 			return config;
 		}
 	}], [{
-		key: 'name',
-		value: function name() {
-			return 'string';
-		}
-
-		// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	}, {
-		key: 'type',
-		value: function type() {
-			return 'string';
-		}
-
-		// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
-	}, {
-		key: 'icon',
-		value: function icon() {
-			return 'font';
-		}
-
-		// the multilingual text for the name of this data field.
-	}, {
-		key: 'menuName',
-		value: function menuName() {
-			return L('ab.dataField.string.menuName', '*Single line text');
-		}
-
-		// the multilingual text for the name of this data field.
-	}, {
-		key: 'description',
-		value: function description() {
-			return L('ab.dataField.string.description', '*short string value');
+		key: "defaults",
+		value: function defaults() {
+			return ABFieldStringDefaults;
 		}
 
 		/*
@@ -2593,20 +3098,20 @@ var ABFieldString = (function (_ABField) {
    * @return {Component}
    */
 	}, {
-		key: 'propertiesComponent',
+		key: "propertiesComponent",
 		value: function propertiesComponent(App) {
-			return ABFieldStringComponent(App);
+			return ABFieldStringComponent.component(App);
 		}
 	}]);
 
 	return ABFieldString;
-})(_ABField3['default']);
+})(_ABField3["default"]);
 
-exports['default'] = ABFieldString;
-module.exports = exports['default'];
+exports["default"] = ABFieldString;
+module.exports = exports["default"];
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2622,14 +3127,15 @@ module.exports = exports['default'];
 
 
 
+__webpack_require__(17);
+
 __webpack_require__(16);
 
-__webpack_require__(15);
-
-OP.Component.extend('ab_choose', function (App) {
+var idBase = 'ab_choose';
+OP.Component.extend(idBase, function (App) {
 
 	var ids = {
-		component: App.unique('ab_choose')
+		component: App.unique(idBase + '_component')
 	};
 
 	// Define the external components used in this Component:
@@ -2679,7 +3185,7 @@ OP.Component.extend('ab_choose', function (App) {
 });
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2705,7 +3211,7 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		formHeader: L('ab.application.form.header', "*Application Info"),
 		placeholderName: L('ab.application.form.placeholderName', "*Application name"),
@@ -2721,25 +3227,27 @@ var labels = {
 	}
 };
 
-OP.Component.extend('ab_choose_form', function (App) {
+var idBase = 'ab_choose_form';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	var ids = {
-		formComponent: App.unique('ab_choose_form_component'),
-		form: App.unique('ab-app-list-form'),
-		appFormPermissionList: App.unique('ab-app-form-permission'),
-		appFormCreateRoleButton: App.unique('ab-app-form-create-role'),
+		component: App.unique(idBase + '_component'),
 
-		saveButton: App.unique('ab-app-form-button-save')
+		form: App.unique(idBase + '_form'),
+		appFormPermissionList: App.unique(idBase + '_permission'),
+		appFormCreateRoleButton: App.unique(idBase + '_createRole'),
+
+		saveButton: App.unique(idBase + '_buttonSave')
 	};
 
 	var _ui = {
-		id: ids.formComponent,
+		id: ids.component,
 		scroll: true,
 		rows: [{
 			view: "toolbar",
-			cols: [{ view: "label", label: labels.application.formHeader, fillspace: true }]
+			cols: [{ view: "label", label: labels.component.formHeader, fillspace: true }]
 		}, {
 			view: "form",
 			id: ids.form,
@@ -2750,17 +3258,17 @@ OP.Component.extend('ab_choose_form', function (App) {
 				view: "text",
 				label: labels.common.formName,
 				required: true,
-				placeholder: labels.application.placeholderName,
+				placeholder: labels.component.placeholderName,
 				labelWidth: 100,
 				on: {
 					onChange: function onChange(newValue, oldValue) {
 						_logic.permissionRenameRole(newValue, oldValue);
 					}
 				}
-			}, { name: "description", view: "textarea", label: labels.common.formDescription, placeholder: labels.application.placeholderDescription, labelWidth: 100, height: 100 }, { type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>' + labels.application.sectionPermission }, {
+			}, { name: "description", view: "textarea", label: labels.common.formDescription, placeholder: labels.component.placeholderDescription, labelWidth: 100, height: 100 }, { type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>' + labels.component.sectionPermission }, {
 				view: "toolbar",
 				cols: [{
-					template: labels.application.permissionHeader,
+					template: labels.component.permissionHeader,
 					type: 'header',
 					borderless: true
 				}, {
@@ -2771,20 +3279,10 @@ OP.Component.extend('ab_choose_form', function (App) {
 					align: "right",
 					offIcon: "square-o",
 					onIcon: "check-square-o",
-					label: labels.application.createNewRole,
+					label: labels.component.createNewRole,
 					on: {
 						onItemClick: function onItemClick(id, e) {
-							if (this.getValue()) {
-
-								// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
-								// Add new app role
-								var appName = $$(ids.form).elements["label"].getValue();
-								_logic.permissionAddNew(appName);
-							} else {
-
-								// Remove app role
-								_logic.permissionRemoveNew();
-							}
+							_logic.createRoleButtonClick();
 						}
 					}
 				}]
@@ -2801,23 +3299,7 @@ OP.Component.extend('ab_choose_form', function (App) {
 				template: "#name#",
 				on: {
 					onItemClick: function onItemClick(id, e, node) {
-						if (this.getItem(id).isApplicationRole) {
-							return;
-						}
-
-						if (this.isSelected(id)) {
-							this.unselect(id);
-						} else {
-							var selectedIds = this.getSelectedId();
-
-							if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
-								if (selectedIds) selectedIds = [selectedIds];else selectedIds = [];
-							}
-
-							selectedIds.push(id);
-
-							this.select(selectedIds);
-						}
+						_logic.permissionClick(id, e, node);
 					}
 				}
 			}, { height: 5 }, {
@@ -2825,26 +3307,7 @@ OP.Component.extend('ab_choose_form', function (App) {
 					id: ids.saveButton,
 					view: "button", label: labels.common.save, type: "form", width: 100,
 					click: function click() {
-
-						_logic.buttonSaveDisable();
-						_logic.formBusy();
-
-						// if there is a selected Application, then this is an UPDATE
-						var updateApp = App.actions.getSelectedApplication();
-						if (updateApp) {
-
-							if (_logic.formValidate('update')) {
-
-								_logic.applicationUpdate(updateApp);
-							}
-						} else {
-
-							// else this is a Create
-							if (_logic.formValidate('add')) {
-
-								_logic.applicationCreate(_logic.formValues());
-							}
-						}
+						_logic.buttonSaveClick();
 					} // end click()
 				}, {
 					view: "button", value: labels.common.cancel, width: 100,
@@ -2965,6 +3428,34 @@ OP.Component.extend('ab_choose_form', function (App) {
 		},
 
 		/**
+   * @function buttonSaveClick
+   *
+   * Process the user clicking on the [Save] button.
+   */
+		buttonSaveClick: function buttonSaveClick() {
+
+			_logic.buttonSaveDisable();
+			_logic.formBusy();
+
+			// if there is a selected Application, then this is an UPDATE
+			var updateApp = App.actions.getSelectedApplication();
+			if (updateApp) {
+
+				if (_logic.formValidate('update')) {
+
+					_logic.applicationUpdate(updateApp);
+				}
+			} else {
+
+				// else this is a Create
+				if (_logic.formValidate('add')) {
+
+					_logic.applicationCreate(_logic.formValues());
+				}
+			}
+		},
+
+		/**
    * @function buttonSaveDisable
    *
    * Disable the save button.
@@ -2991,6 +3482,26 @@ OP.Component.extend('ab_choose_form', function (App) {
 
 			_logic.formReset();
 			App.actions.transitionApplicationList();
+		},
+
+		/**
+   * @function createRoleButtonClick
+   *
+   * The user clicked the [Create Role] button.  Update the UI and add a
+   * unique Application permission to our list.
+   */
+		createRoleButtonClick: function createRoleButtonClick() {
+
+			if ($$(ids.appFormCreateRoleButton).getValue()) {
+
+				// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
+				// Add new app role
+				var appName = $$(ids.form).elements["label"].getValue();
+				_logic.permissionAddNew(appName);
+			} else {
+				// Remove app role
+				_logic.permissionRemoveNew();
+			}
 		},
 
 		/**
@@ -3093,8 +3604,8 @@ OP.Component.extend('ab_choose_form', function (App) {
 			// // Prevent duplicate application name
 			// if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
 			// 	OP.Dialog.Alert({
-			// 		title: labels.application.invalidName,
-			// 		text: labels.application.duplicateName.replace("#appName#", appName),
+			// 		title: labels.component.invalidName,
+			// 		text: labels.component.duplicateName.replace("#appName#", appName),
 			// 		ok: labels.common.ok
 			// 	});
 
@@ -3140,6 +3651,32 @@ OP.Component.extend('ab_choose_form', function (App) {
 			var selectedIds = $$(ids.appFormPermissionList).getSelectedId(true);
 			selectedIds.push('newRole');
 			$$(ids.appFormPermissionList).select(selectedIds);
+		},
+
+		/**
+   * @function permissionClick
+   *
+   * Process when a permission entry in the list is clicked.
+   */
+		permissionClick: function permissionClick(id, e, node) {
+			var List = $$(ids.appFormPermissionList);
+			if (List.getItem(id).isApplicationRole) {
+				return;
+			}
+
+			if (List.isSelected(id)) {
+				List.unselect(id);
+			} else {
+				var selectedIds = List.getSelectedId();
+
+				if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
+					if (selectedIds) selectedIds = [selectedIds];else selectedIds = [];
+				}
+
+				selectedIds.push(id);
+
+				List.select(selectedIds);
+			}
 		},
 
 		/**
@@ -3408,43 +3945,29 @@ OP.Component.extend('ab_choose_form', function (App) {
    */
 		show: function show() {
 
-			$$(ids.formComponent).show();
+			$$(ids.component).show();
 		}
 	};
 
 	// Expose any globally accessible Actions:
 	var _actions = {
 
-		/**
-   * @function populateApplicationForm()
-   *
-   * Initialze the Form with the values from the provided ABApplication.
-   *
-   * If no ABApplication is provided, then show an empty form. (create operation)
-   *
-   * @param {ABApplication} Application  	[optional] The current ABApplication 
-   *										we are working with.
-   */
-		// populateApplicationForm:function(Application){
-
-		// },
-
 		// initiate a request to create a new Application
-		transitionApplicationForm: function transitionApplicationForm(Application) {
+		transitionApplicationForm: function transitionApplicationForm(application) {
 
-			// if no Application is given, then this should be a [create] operation,
+			// if no application is given, then this should be a [create] operation,
 			// so clear our AppList
-			if ('undefined' == typeof Application) {
+			if ('undefined' == typeof application) {
 				App.actions.unselectApplication();
 			}
 
 			// now prepare our form:
 			_logic.formReset();
-			if (Application) {
+			if (application) {
 				// populate Form here:
-				_logic.formPopulate(Application);
+				_logic.formPopulate(application);
 			}
-			_logic.permissionPopulate(Application);
+			_logic.permissionPopulate(application);
 			_logic.show();
 		}
 
@@ -3460,7 +3983,7 @@ OP.Component.extend('ab_choose_form', function (App) {
 });
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3479,7 +4002,7 @@ var _classesABApplication = __webpack_require__(0);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
-__webpack_require__(17);
+__webpack_require__(18);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -3487,23 +4010,25 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 		title: L('ab.application.application', '*Application'),
 		createNew: L('ab.application.createNew', '*Add new application'),
 		noApplication: L('ab.application.noApplication', "*There is no application data")
-
 	}
 };
 
-OP.Component.extend('ab_choose_list', function (App) {
+var idBase = 'ab_choose_list';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	var ids = {
-		component: App.unique('ab_choose_listcomponent'),
-		list: App.unique('ab_choose_list'),
-		toolBar: App.unique('ab_choose_list_toolbar'),
-		buttonCreateNewApplication: App.unique('ab_choose_list_buttonNewApp')
+		component: App.unique(idBase + '_component'),
+
+		uploader: App.unique(idBase + '_uploader'),
+		list: App.unique(idBase + '_list'),
+		toolBar: App.unique(idBase + '_toolbar'),
+		buttonCreateNewApplication: App.unique(idBase + '_buttonNewApp')
 	};
 
 	var MenuComponent = OP.Component['ab_choose_list_menu'](App);
@@ -3541,18 +4066,18 @@ OP.Component.extend('ab_choose_list', function (App) {
 			{
 				view: "toolbar",
 				id: ids.toolBar,
-				cols: [{ view: "label", label: labels.application.title, fillspace: true }, {
+				cols: [{ view: "label", label: labels.component.title, fillspace: true }, {
 					id: ids.buttonCreateNewApplication,
 					view: "button",
-					value: labels.application.createNew,
+					value: labels.component.createNew,
 					width: 200,
 					click: function click() {
-
 						// Inform our Chooser we have a request to create an Application:
 						App.actions.transitionApplicationForm();
 					}
 				}, /* leave empty for a create */{
 					view: "uploader",
+					id: ids.uploader,
 					value: labels.common["import"],
 					width: 200,
 					upload: '/app_builder/appJSON',
@@ -3560,23 +4085,13 @@ OP.Component.extend('ab_choose_list', function (App) {
 					autosend: true,
 					on: {
 						onAfterFileAdd: function onAfterFileAdd() {
-							this.disable();
-							_logic.busy();
+							_logic.onAfterFileAdd();
 						},
 						onFileUpload: function onFileUpload(item, response) {
-							_logic.loadData(); // refresh app list
-							this.enable();
-							_logic.ready();
+							_logic.onFileUpload(item, response);
 						},
 						onFileUploadError: function onFileUploadError(details, response) {
-							var errorMessage = 'Error: ' + (response && response.message);
-							webix.message({
-								type: 'error',
-								text: errorMessage
-							});
-							_logic.loadData(); // refresh app list
-							this.enable();
-							_logic.ready();
+							_logic.onFileUploadError(details, response);
 						}
 					}
 				}]
@@ -3600,29 +4115,11 @@ OP.Component.extend('ab_choose_list', function (App) {
 				},
 				select: false,
 				onClick: {
-					"ab-app-list-item": function abAppListItem(e, id, trg) {
-						_logic.busy();
-
-						this.select(id);
-
-						var selectedApp = this.getItem(id);
-
-						if (selectedApp) {
-
-							_logic.ready();
-
-							// We've selected an Application to work with
-							App.actions.transitionWorkspace(selectedApp);
-						}
-
-						return false; // block default behavior
+					"ab-app-list-item": function abAppListItem(ev, id, trg) {
+						return _logic.onClickListItem(ev, id, trg);
 					},
-					"ab-app-list-edit": function abAppListEdit(e, id, trg) {
-						// Show menu
-						PopupMenu.show(trg);
-						this.select(id);
-
-						return false; // block default behavior
+					"ab-app-list-edit": function abAppListEdit(ev, id, trg) {
+						return _logic.onClickListEdit(ev, id, trg);
 					}
 				}
 			}]
@@ -3684,6 +4181,86 @@ OP.Component.extend('ab_choose_list', function (App) {
 		},
 
 		/**
+   * @function onAfterFileAdd
+   *
+   * UI updates for when a file upload is initiated
+   */
+		onAfterFileAdd: function onAfterFileAdd() {
+			$$(ids.uploader).disable();
+			_logic.busy();
+		},
+
+		/**
+   * @function onClickListEdit
+   *
+   * UI updates for when the edit gear is clicked
+   */
+		onClickListEdit: function onClickListEdit(ev, id, trg) {
+
+			// Show menu
+			PopupMenu.show(trg);
+			$$(ids.list).select(id);
+
+			return false; // block default behavior
+		},
+
+		/**
+   * @function onClickListItem
+   *
+   * An item in the list is selected. So update the workspace with that 
+   * object.
+   */
+		onClickListItem: function onClickListItem(ev, id, trg) {
+
+			_logic.busy();
+
+			$$(ids.list).select(id);
+
+			var selectedApp = $$(ids.list).getItem(id);
+
+			if (selectedApp) {
+
+				_logic.ready();
+
+				// We've selected an Application to work with
+				App.actions.transitionWorkspace(selectedApp);
+			}
+
+			return false; // block default behavior
+		},
+
+		/**
+   * @function onFileUpload
+   *
+   * The File Upload process finished.
+   */
+		onFileUpload: function onFileUpload(item, response) {
+			_logic.loadData(); // refresh app list
+			$$(ids.uploader).enable();
+			_logic.ready();
+		},
+
+		/**
+   * @function onFileUploadError
+   *
+   * The File Upload process exited with an error.
+   */
+		onFileUploadError: function onFileUploadError(details, response) {
+
+			var errorMessage = 'Error: ' + (response && response.message);
+			OP.Dialog.Alert({
+				text: errorMessage
+			});
+			// webix.message({
+			// 	type: 'error',
+			// 	text: errorMessage
+			// });
+			_logic.loadData(); // refresh app list
+			$$(ids.uploader).enable();
+			_logic.ready();
+		},
+
+		/**
    * @function refreshOverlay
    *
    * If we have no items in our list, display a Message.
@@ -3692,7 +4269,7 @@ OP.Component.extend('ab_choose_list', function (App) {
 			var appList = $$(ids.list);
 
 			if (!appList.count()) //if no data is available
-				appList.showOverlay(labels.application.noApplication);else appList.hideOverlay();
+				appList.showOverlay(labels.component.noApplication);else appList.hideOverlay();
 		},
 
 		/**
@@ -3862,7 +4439,7 @@ OP.Component.extend('ab_choose_list', function (App) {
 });
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3882,25 +4459,26 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 		menu: L('ab.application.menu', "*Application Menu"),
 		confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
 		confirmDeleteMessage: L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
 	}
 };
 
-OP.Component.extend('ab_choose_list_menu', function (App) {
+var idBase = 'ab_choose_list_menu';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	var ids = {
-		menu: App.unique('ab_choose_list_menu')
+		menu: App.unique(idBase + '_menu')
 	};
 
 	var _ui = {
 		view: "popup",
 		id: ids.menu,
-		head: labels.application.menu,
+		head: labels.component.menu,
 		width: 100,
 		body: {
 			view: "list",
@@ -3912,39 +4490,7 @@ OP.Component.extend('ab_choose_list_menu', function (App) {
 			select: false,
 			on: {
 				'onItemClick': function onItemClick(timestamp, e, trg) {
-
-					// hide our popup before we trigger any other possible UI animation: (like .edit)
-					// NOTE: if the UI is animating another component, and we do .hide()
-					// while it is in progress, the UI will glitch and give the user whiplash.
-					$$(ids.menu).hide();
-
-					var selectedApp = App.actions.getSelectedApplication();
-
-					switch (trg.textContent.trim()) {
-						case labels.common.edit:
-							App.actions.transitionApplicationForm(selectedApp);
-							break;
-
-						case labels.common['delete']:
-							OP.Dialog.ConfirmDelete({
-								title: labels.application.confirmDeleteTitle,
-								text: labels.application.confirmDeleteMessage.replace('{0}', selectedApp.label),
-								callback: function callback(result) {
-
-									if (!result) return;
-
-									App.actions.deleteApplication(selectedApp);
-								}
-							});
-							break;
-
-						case labels.common['export']:
-							// Download the JSON file to disk
-							window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
-							break;
-					}
-
-					return false;
+					return _logic.onItemClick(timestamp, e, trg);
 				}
 			}
 		}
@@ -3954,14 +4500,59 @@ OP.Component.extend('ab_choose_list_menu', function (App) {
 
 	var _init = function _init() {};
 
+	var _logic = {
+
+		/**
+   * @function onItemClick
+   * process which item in our popup was selected.
+   */
+		onItemClick: function onItemClick(timestamp, e, trg) {
+
+			// hide our popup before we trigger any other possible UI animation: (like .edit)
+			// NOTE: if the UI is animating another component, and we do .hide()
+			// while it is in progress, the UI will glitch and give the user whiplash.
+			$$(ids.menu).hide();
+
+			var selectedApp = App.actions.getSelectedApplication();
+
+			switch (trg.textContent.trim()) {
+				case labels.common.edit:
+					App.actions.transitionApplicationForm(selectedApp);
+					break;
+
+				case labels.common['delete']:
+					OP.Dialog.ConfirmDelete({
+						title: labels.component.confirmDeleteTitle,
+						text: labels.component.confirmDeleteMessage.replace('{0}', selectedApp.label),
+						callback: function callback(result) {
+
+							if (!result) return;
+
+							App.actions.deleteApplication(selectedApp);
+						}
+					});
+					break;
+
+				case labels.common['export']:
+					// Download the JSON file to disk
+					window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
+					break;
+			}
+
+			return false;
+		}
+	};
+
 	return {
 		ui: _ui,
-		init: _init
+		init: _init,
+
+		_logic: _logic // exposed for Unit Testing
 	};
 });
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3981,9 +4572,9 @@ var _classesABApplication = __webpack_require__(0);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
-__webpack_require__(20);
+__webpack_require__(21);
 
-__webpack_require__(19);
+__webpack_require__(20);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -4030,7 +4621,8 @@ OP.Component.extend('ab_work', function (App) {
 			id: ids.toolBar,
 			autowidth: true,
 			cols: [{
-				view: "button", value: labels.application.backToApplication, width: 250, align: "right", click: function click() {
+				view: "button", value: labels.application.backToApplication, width: 250, align: "right",
+				click: function click() {
 					App.actions.transitionApplicationChooser();
 				}
 			}, {
@@ -4133,13 +4725,13 @@ OP.Component.extend('ab_work', function (App) {
 				// Object Workspace Tab
 				case ids.tab_object:
 					$$(ids.buttonSync).show();
-					App.actions.transitionObjectTab();
+					AppObjectWorkspace.show();
 					break;
 
 				// Interface Workspace Tab
 				case ids.tab_interface:
 					$$(ids.buttonSync).hide();
-					App.actions.transitionInterfaceWorkspace();
+					AppInterfaceWorkspace.show();
 					break;
 			}
 		}
@@ -4158,8 +4750,8 @@ OP.Component.extend('ab_work', function (App) {
 		transitionWorkspace: function transitionWorkspace(application) {
 
 			_logic.applicationInit(application);
-			App.actions.initObjectTab(application);
-			App.actions.initInterfaceTab(application);
+			AppObjectWorkspace.applicationLoad(application);
+			AppInterfaceWorkspace.applicationLoad(application);
 
 			_logic.show();
 		}
@@ -4177,7 +4769,7 @@ OP.Component.extend('ab_work', function (App) {
 });
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4203,20 +4795,21 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 
 	}
 };
 
-OP.Component.extend('ab_work_interface', function (App) {
+var idBase = 'ab_work_interface';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_interface_component')
+		component: App.unique(idBase + '_component')
 
 	};
 
@@ -4234,25 +4827,16 @@ OP.Component.extend('ab_work_interface', function (App) {
 	// our internal business logic
 	;var _logic = {
 
-		// /**
-		//  * @function formBusy
-		//  *
-		//  * Show the progress indicator to indicate a Form operation is in
-		//  * progress.
-		//  */
-		// formBusy: function() {
-
-		// 	$$(ids.form).showProgress({ type: 'icon' });
-		// },
-
-		// /**
-		//  * @function formReady()
-		//  *
-		//  * remove the busy indicator from the form.
-		//  */
-		// formReady: function() {
-		// 	$$(ids.form).hideProgress();
-		// },
+		/**
+   * @function applicationLoad
+   *
+   * Initialize the Object Workspace with the given ABApplication.
+   *
+   * @param {ABApplication} application 
+   */
+		applicationLoad: function applicationLoad(application) {
+			console.error('TODO: ab_work_interface.applicationLoad()');
+		},
 
 		/**
    * @function show()
@@ -4266,29 +4850,7 @@ OP.Component.extend('ab_work_interface', function (App) {
 	};
 
 	// Expose any globally accessible Actions:
-	var _actions = {
-
-		/**
-   * @function initInterfaceTab
-   *
-   * Initialize the Object Workspace with the given ABApplication.
-   *
-   * @param {ABApplication} application 
-   */
-		initInterfaceTab: function initInterfaceTab(application) {
-			console.error('TODO: ab_work_interface.actions.initInterfaceTab()');
-		},
-
-		/**
-   * @function transitionInterfaceWorkspace
-   *
-   * Display the Interface Workspace UI
-   */
-		transitionInterfaceWorkspace: function transitionInterfaceWorkspace() {
-			_logic.show();
-		}
-
-	};
+	var _actions = {};
 
 	// return the current instance of this component:
 	return {
@@ -4296,12 +4858,15 @@ OP.Component.extend('ab_work_interface', function (App) {
 		init: _init, // {fn} 	init() to setup this component 
 		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
 
+		applicationLoad: _logic.applicationLoad,
+		show: _logic.show,
+
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4321,9 +4886,9 @@ var _classesABApplication = __webpack_require__(0);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
-__webpack_require__(21);
+__webpack_require__(22);
 
-__webpack_require__(24);
+__webpack_require__(25);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -4331,20 +4896,21 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 
 	}
 };
 
-OP.Component.extend('ab_work_object', function (App) {
+var idBase = 'ab_work_object';
+OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('ab_work_object_component')
+		component: App.unique(idBase + '_component')
 
 	};
 
@@ -4368,6 +4934,18 @@ OP.Component.extend('ab_work_object', function (App) {
 	var _logic = {
 
 		/**
+   * @function applicationLoad
+   *
+   * Initialize the Object Workspace with the given ABApplication.
+   *
+   * @param {ABApplication} application 
+   */
+		applicationLoad: function applicationLoad(application) {
+			ObjectList.applicationLoad(application);
+			ObjectWorkspace.clearObjectWorkspace();
+		},
+
+		/**
    * @function show()
    *
    * Show this component.
@@ -4379,30 +4957,7 @@ OP.Component.extend('ab_work_object', function (App) {
 	};
 
 	// Expose any globally accessible Actions:
-	var _actions = {
-
-		/**
-   * @function initObjectTab
-   *
-   * Initialize the Object Workspace with the given ABApplication.
-   *
-   * @param {ABApplication} application 
-   */
-		initObjectTab: function initObjectTab(application) {
-			ObjectList.applicationLoad(application);
-			ObjectWorkspace.clearObjectWorkspace();
-		},
-
-		/**
-   * @function transitionObjectTab
-   *
-   * Display the Object Tab UI
-   */
-		transitionObjectTab: function transitionObjectTab() {
-			_logic.show();
-		}
-
-	};
+	var _actions = {};
 
 	// return the current instance of this component:
 	return {
@@ -4410,12 +4965,15 @@ OP.Component.extend('ab_work_object', function (App) {
 		init: _init, // {fn} 	init() to setup this component 
 		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
 
+		applicationLoad: _logic.applicationLoad,
+		show: _logic.show,
+
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4435,7 +4993,7 @@ var _classesABApplication = __webpack_require__(0);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
-__webpack_require__(22);
+__webpack_require__(23);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -4443,7 +5001,7 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 		addNew: L('ab.object.addNew', '*Add new object')
@@ -4486,7 +5044,7 @@ OP.Component.extend(idBase, function (App) {
 			},
 			type: {
 				height: "auto",
-				unsyncNumber: "", // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+				// unsyncNumber: "",  // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 				iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 			},
 			on: {
@@ -4514,7 +5072,7 @@ OP.Component.extend(idBase, function (App) {
 		}, {
 			view: 'button',
 			id: ids.buttonNew,
-			value: labels.application.addNew,
+			value: labels.component.addNew,
 			click: function click() {
 				_logic.clickNewObject();
 			}
@@ -4764,7 +5322,9 @@ OP.Component.extend(idBase, function (App) {
   * 
   * The Object Row template definition.
   */
-	var _templateListItem = ["<div class='ab-object-list-item'>", "#label#", "{common.unsyncNumber}", "{common.iconGear}", "</div>"].join('');
+	var _templateListItem = ["<div class='ab-object-list-item'>", "#label#",
+	// "{common.unsyncNumber}",
+	"{common.iconGear}", "</div>"].join('');
 
 	// Note: put these here so _logic is defined:
 	// There is a Popup for adding a new Object:
@@ -4806,7 +5366,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4829,7 +5389,7 @@ OP.Component.extend(idBase, function (App) {
 
 
 
-__webpack_require__(23);
+__webpack_require__(24);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -4991,7 +5551,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5190,7 +5750,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5210,13 +5770,13 @@ var _classesABApplication = __webpack_require__(0);
 
 var _classesABApplication2 = _interopRequireDefault(_classesABApplication);
 
-__webpack_require__(25);
-
 __webpack_require__(26);
 
 __webpack_require__(27);
 
 __webpack_require__(28);
+
+__webpack_require__(29);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -5227,6 +5787,8 @@ var labels = {
 	component: {
 
 		addNewRow: L('ab.object.addNewRow', "*Add new row"),
+
+		selectObject: L('ab.object.selectObject', "*Select an object to work with."),
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 
@@ -5280,7 +5842,7 @@ OP.Component.extend(idBase, function (App) {
 		rows: [{
 			// view:''
 			id: ids.noSelection,
-			rows: [{ view: 'label', label: '* Select an Object to work with' }]
+			rows: [{ view: 'label', label: labels.component.selectObject }]
 		}, {
 			id: ids.selectedObject,
 			rows: [{
@@ -5347,7 +5909,10 @@ OP.Component.extend(idBase, function (App) {
 					label: labels.component.permission,
 					icon: "lock",
 					type: "icon",
-					width: 120
+					width: 120,
+					click: function click() {
+						_logic.toolbarPermission(this.$view);
+					}
 				}, {
 					view: 'button',
 					id: ids.buttonAddField,
@@ -5362,10 +5927,13 @@ OP.Component.extend(idBase, function (App) {
 					view: 'button',
 					id: ids.buttonExport,
 					label: labels.component["export"],
-					popup: 'self.webixUiId.exportDataPopup',
+					// popup: 'self.webixUiId.exportDataPopup',
 					icon: "file-o",
 					type: "icon",
-					width: 90
+					width: 90,
+					click: function click() {
+						_logic.toolbarButtonExport(this.$view);
+					}
 				}]
 			}, DataTable.ui, {
 				cols: [{
@@ -5438,7 +6006,9 @@ OP.Component.extend(idBase, function (App) {
    */
 		clearObjectWorkspace: function clearObjectWorkspace() {
 
-			$$(ids.noSelection).show();
+			// NOTE: to clear a visual glitch when multiple views are updating
+			// at one time ... stop the animation on this one:
+			$$(ids.noSelection).show(false, false);
 		},
 
 		/**
@@ -5459,6 +6029,10 @@ OP.Component.extend(idBase, function (App) {
    */
 		toolbarAddFields: function toolbarAddFields($view) {
 			PopupNewDataField.show($view);
+		},
+
+		toolbarButtonExport: function toolbarButtonExport($view) {
+			console.error('TODO: Button Export()');
 		},
 
 		/**
@@ -5498,6 +6072,10 @@ OP.Component.extend(idBase, function (App) {
    */
 		toolbarFrozen: function toolbarFrozen($view) {
 			console.error('TODO: toolbarFrozen()');
+		},
+
+		toolbarPermission: function toolbarPermission($view) {
+			console.error('TODO: toolbarPermission()');
 		},
 
 		/**
@@ -5574,7 +6152,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5828,7 +6406,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6095,7 +6673,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6371,7 +6949,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6523,8 +7101,10 @@ OP.Component.extend(idBase, function (App) {
 
 		Fields.forEach(function (F) {
 
+			var menuName = F.defaults().menuName;
+
 			// add a submenu for the fields multilingual key
-			submenus.push(F.menuName());
+			submenus.push(menuName);
 
 			// Add the Field's definition editor here:
 			var editorComponent = F.propertiesComponent(App);
@@ -6533,8 +7113,8 @@ OP.Component.extend(idBase, function (App) {
 			}
 			newEditorList.rows.push(editorComponent.ui);
 
-			_objectHash[F.menuName()] = F;
-			_componentHash[F.menuName()] = editorComponent;
+			_objectHash[menuName] = F;
+			_componentHash[menuName] = editorComponent;
 		});
 
 		// the submenu button has a placeholder we need to remove and update
@@ -6618,6 +7198,7 @@ OP.Component.extend(idBase, function (App) {
 
 							$$(ids.buttonSave).enable();
 							_logic.hide();
+							_currentEditor.clear();
 							_logic.callbacks.onSave(newField);
 						})["catch"](function (err) {
 							$$(ids.buttonSave).enable();
@@ -6774,7 +7355,7 @@ OP.Component.extend(idBase, function (App) {
 });
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6802,7 +7383,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 });
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6875,7 +7456,7 @@ exports['default'] = { key: ComponentKey };
 module.exports = exports['default'];
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6948,7 +7529,7 @@ exports['default'] = { key: ComponentKey };
 module.exports = exports['default'];
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6958,7 +7539,7 @@ module.exports = exports['default'];
 
 
 
-__webpack_require__(10);
+__webpack_require__(11);
 
 AD.Control.OpsTool.extend('BuildApp', {
 
