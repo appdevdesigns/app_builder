@@ -20,7 +20,7 @@ var labels = {
 }
 
 
-var ComponentKey = 'ab_custom_edittree';
+var ComponentKey = 'ab_custom_editlist';
 OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
 	// App 	{obj}	our application instance object.
 	// componentKey {string}	the destination key in App.custom[componentKey] for the instance of this component:

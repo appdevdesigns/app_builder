@@ -1,5 +1,5 @@
 
-import OP from "../OP/OP"
+// import OP from "OP"
 import "../data/ABApplication"
 
 import ABObject from "./ABObject"
@@ -50,7 +50,7 @@ export default class ABApplication {
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
-	  	
+
 	  	// import all our ABObjects
 	  	var newObjects = [];
 	  	(attributes.json.objects || []).forEach((obj) => {
@@ -83,18 +83,18 @@ export default class ABApplication {
   	 *
   	 * return a DataCollection that contains all the ABApplications this user
   	 * can see (based upon server side permissions);
-  	 * 
+  	 *
   	 * NOTE: this manages the results in the _AllApplications dataCollection
-  	 * store.  Any future .create(), .destroy(), .updates() modify values in 
+  	 * store.  Any future .create(), .destroy(), .updates() modify values in
   	 * that collection.
   	 *
-  	 * Any webix ui components synced to that collection will be automatically 
+  	 * Any webix ui components synced to that collection will be automatically
   	 * updated.
   	 *
-  	 * @return {Promise} 
+  	 * @return {Promise}
   	 */
 	static allApplications() {
-		return new Promise( 
+		return new Promise(
 			(resolve, reject) => {
 
 				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
@@ -102,7 +102,7 @@ export default class ABApplication {
 
 				ModelApplication.findAll()
 					.then(function(data){
-						
+
 						// NOTE: data is already a DataCollection from .findAll()
 						_AllApplications = data;
 
@@ -119,8 +119,8 @@ export default class ABApplication {
   	 * @function create
   	 *
   	 * take the initial values and create an instance of ABApplication.
-  	 * 
-  	 * @return {Promise} 
+  	 *
+  	 * @return {Promise}
   	 */
 	static create(values) {
 		return new Promise(
@@ -152,12 +152,12 @@ export default class ABApplication {
 	 *
 	 * return an array of fields that are considered Multilingual labels for
 	 * an ABApplication
-	 * 
-	 * @return {array} 
+	 *
+	 * @return {array}
 	 */
 	static fieldsMultilingual() {
 		return ['label', 'description'];
-	} 
+	}
 
 
 
@@ -174,11 +174,11 @@ export default class ABApplication {
 				var arrayApplications = toArray(_AllApplications);
 
 				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
-				var matchingApps = arrayApplications.filter(function (app) { 
-					return app.name.trim().toLowerCase() == nameMatch; 
+				var matchingApps = arrayApplications.filter(function (app) {
+					return app.name.trim().toLowerCase() == nameMatch;
 				})
 				if (matchingApps && matchingApps.length > 0) {
-					
+
 					errors = OP.Form.validationError({
 						name:'label',
 						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
@@ -197,7 +197,7 @@ export default class ABApplication {
 
 
 			return errors;
-	} 
+	}
 
 
 
@@ -215,8 +215,8 @@ export default class ABApplication {
 	 * destroy the current instance of ABApplication
 	 *
 	 * also remove it from our _AllApplications
-	 * 
-	 * @return {Promise} 
+	 *
+	 * @return {Promise}
 	 */
 	destroy () {
 		if (this.id) {
@@ -234,8 +234,8 @@ export default class ABApplication {
 	 * persist the current instance of ABApplication to the DB
 	 *
 	 * Also, keep the values in _AllApplications up to date.
-	 * 
-	 * @return {Promise} 
+	 *
+	 * @return {Promise}
 	 */
 	save () {
 
@@ -248,7 +248,7 @@ export default class ABApplication {
 					.then(() => {
 						_AllApplications.updateItem(values.id, this);
 					});
-				
+
 		} else {
 
 			// must be a CREATE:
@@ -258,7 +258,7 @@ export default class ABApplication {
 						_AllApplications.add(this, 0);
 					});
 		}
-	
+
 	}
 
 
@@ -268,10 +268,10 @@ export default class ABApplication {
 	 * properly compile the current state of this ABApplication instance
 	 * into the values needed for saving to the DB.
 	 *
-	 * Most of the instance data is stored in .json field, so be sure to 
+	 * Most of the instance data is stored in .json field, so be sure to
 	 * update that from all the current values of our child fields.
 	 *
-	 * @return {json} 
+	 * @return {json}
 	 */
 	toObj () {
 
@@ -301,12 +301,12 @@ export default class ABApplication {
 	/**
 	 * @method assignPermissions()
 	 *
-	 * Make sure the current ABApplication permissions match the given 
+	 * Make sure the current ABApplication permissions match the given
 	 * array of permissions.
 	 *
-	 * @param {array} permItems	an array of role assignments that this 
+	 * @param {array} permItems	an array of role assignments that this
 	 * 							ABApplication should match.
-	 * @return {Promise} 
+	 * @return {Promise}
 	 */
 	assignPermissions (permItems) {
 		return new Promise(
@@ -334,7 +334,7 @@ export default class ABApplication {
 	 */
 	getPermissions () {
 
-		return new Promise( 
+		return new Promise(
 			(resolve, reject) => {
 
 				AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' })
@@ -350,10 +350,10 @@ export default class ABApplication {
 	 *
 	 * Create a Role in the system after the name of the current ABApplication.
 	 *
-	 * @return {Promise} 	
+	 * @return {Promise}
 	 */
 	createPermission () {
-		return new Promise( 
+		return new Promise(
 			(resolve, reject) => {
 
 // TODO: need to take created role and store as : .json.applicationRole = role.id
@@ -373,13 +373,13 @@ export default class ABApplication {
 	 * Remove the Role in the system of the current ABApplication.
 	 * (the one created by  .createPermission() )
 	 *
-	 * @return {Promise} 	
+	 * @return {Promise}
 	 */
 	deletePermission () {
-		return new Promise( 
+		return new Promise(
 			(resolve, reject) => {
 
-// TODO: need to remove created role from : .json.applicationRole 
+// TODO: need to remove created role from : .json.applicationRole
 				AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' })
 				.fail(reject)
 				.done(resolve)
@@ -403,7 +403,7 @@ export default class ABApplication {
 	 *
 	 * return an array of all the ABObjects for this ABApplication.
 	 *
-	 * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn 
+	 * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn
 	 *						returns true for.
 	 * @return {array} 	array of ABObject
 	 */
@@ -420,13 +420,13 @@ export default class ABApplication {
 	/**
 	 * @method objectNew()
 	 *
-	 * return an instance of a new (unsaved) ABObject that is tied to this 
+	 * return an instance of a new (unsaved) ABObject that is tied to this
 	 * ABApplication.
 	 *
-	 * NOTE: this new object is not included in our this.objects until a .save() 
+	 * NOTE: this new object is not included in our this.objects until a .save()
 	 * is performed on the object.
 	 *
-	 * @return {ABObject} 	
+	 * @return {ABObject}
 	 */
 	objectNew( values ) {
 		return new ABObject(values, this);
@@ -439,8 +439,8 @@ export default class ABApplication {
 	 *
 	 * persist the current ABObject in our list of ._objects.
 	 *
-	 * @param {ABObject} object 
-	 * @return {Promise} 	
+	 * @param {ABObject} object
+	 * @return {Promise}
 	 */
 	objectSave( object ) {
 		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);

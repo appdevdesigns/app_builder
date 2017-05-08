@@ -20,10 +20,11 @@ var labels = {
 		formHeader: L('ab.application.form.header', "*Application Info"),
 		placeholderName: L('ab.application.form.placeholderName', "*Application name"),
 		placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
+		formDescription: L('ab.application.form.formDescription', "*Description"),
 
 		sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
-		permissionHeader: L('ab.application.form.headerPermission',  "*Assign one or more roles to set permissions for user to view this app"),
-		createNewRole: L('ab.application.form.createNewRoleButton', "*Create a new role to view this app"),
+		permissionHeader: L('ab.application.form.headerPermission',  "*Who can use this app?"),
+		createNewRole: L('ab.application.form.createNewRoleButton', "*Create new roll"),
 
 		invalidName: L('ab.application.invalidName', "*This application name is invalid"),
 		duplicateName: L('ab.application.duplicateName', "*Name must be unique."),
@@ -50,97 +51,144 @@ OP.Component.extend(idBase, function(App) {
 
 
 	var _ui = {
+
 		id: ids.component,
-		scroll: true,
-		rows: [
+		responsive:"hide",
+		cols: [
 			{
-				view: "toolbar",
-				cols: [{ view: "label", label: labels.component.formHeader, fillspace: true }]
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
 			},
 			{
-				view: "form",
-				id: ids.form,
-				autoheight: true,
-				margin: 0,
-				elements: [
-					{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
+				responsiveCell:false,
+				rows: [
 					{
-						name: "label",
-						view: "text",
-						label: labels.common.formName,
-						required: true,
-						placeholder: labels.component.placeholderName,
-						labelWidth: 100,
-						on: {
-							onChange: function (newValue, oldValue) {
-								_logic.permissionRenameRole(newValue, oldValue);
-							}
-						}
+						maxHeight: App.config.appListSpacerRowHeight,
+						hidden: App.config.hideMobile
 					},
-					{ name: "description", view: "textarea", label: labels.common.formDescription, placeholder: labels.component.placeholderDescription, labelWidth: 100, height: 100 },
-					{ type: "section", template: '<span class="webix_icon fa-lock" style="max-width:32px;"></span>'+labels.component.sectionPermission },
 					{
 						view: "toolbar",
-						cols: [
+						cols: [{ view: "label", label: labels.component.formHeader, fillspace: true }]
+					},
+					{
+						view: "form",
+						id: ids.form,
+						autoheight: true,
+						margin: 0,
+						elements: [
+							//{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
 							{
-								template: labels.component.permissionHeader, 
-								type: 'header',
-								borderless: true
-							},
-							{
-								view: "toggle",
-								id: ids.appFormCreateRoleButton,
-								type: "iconButton",
-								width: 300,
-								align: "right",
-								offIcon: "square-o",
-								onIcon: "check-square-o",
-								label: labels.component.createNewRole, 
+								name: "label",
+								view: "text",
+								label: labels.common.formName,
+								required: true,
+								placeholder: labels.component.placeholderName,
+								labelWidth: 100,
 								on: {
-									onItemClick: function (id, e) {
-										_logic.createRoleButtonClick();
+									onChange: function (newValue, oldValue) {
+										_logic.permissionRenameRole(newValue, oldValue);
 									}
 								}
-							}
-						]
-					},
-					{
-						name: "permissions",
-						id: ids.appFormPermissionList,
-						view: "list",
-						height: 130,
-						autowidth: true,
-						borderless: true,
-						margin: 0,
-						css: "ab-app-form-permission",
-						scroll: "y",
-						template: "#name#",
-						on: {
-							onItemClick: function (id, e, node) {
-								_logic.permissionClick(id, e, node);
-							}
-						}
-					},
-					{ height: 5 },
-					{
-						margin: 5, cols: [
-							{ fillspace: true },
+							},
+							{ height: App.config.smallSpacer },
 							{
-								id: ids.saveButton,
-								view: "button", label: labels.common.save, type: "form", width: 100, 
-								click: function () {
-									_logic.buttonSaveClick();
-								} // end click()
+								name: "description",
+								view: "textarea",
+								// label: labels.common.formDescription,
+								label: "Description",
+								labelAlign: "left",
+								labelWidth: 100,
+								placeholder: labels.component.placeholderDescription,
+								height: 100
+							},
+							{ height: App.config.smallSpacer },
+							{
+								view: "toolbar",
+								css: "ab-toolbar-submenu",
+								cols: [
+									{
+										template: labels.component.permissionHeader,
+										type: 'header',
+										borderless: true
+									},
+									{
+										view: "toggle",
+										id: ids.appFormCreateRoleButton,
+										type: "icon",
+										align: "right",
+										autowidth: true,
+										css: "ab-standard-button",
+										offIcon: "square-o",
+										onIcon: "check-square-o",
+										label: labels.component.createNewRole,
+										on: {
+											onItemClick: function (id, e) {
+												_logic.createRoleButtonClick();
+											}
+										}
+									}
+								]
 							},
 							{
-								view: "button", value: labels.common.cancel, width: 100, 
-								click: function () {
-									_logic.cancel();
+								name: "permissions",
+								id: ids.appFormPermissionList,
+								view: "list",
+								//height: 130,
+								autowidth: true,
+								autoheight: true,
+								margin: 0,
+								css: "ab-app-form-permission",
+								template: "{common.markCheckbox()} #name#",
+								type:{
+									markCheckbox:function(obj ){
+										return "<span class='check webix_icon fa-"+(obj.markCheckbox?"check-":"")+"square-o'></span>";
+									}
+								},
+								on: {
+									onItemClick: function (id, e, node) {
+										_logic.permissionClick(id, e, node);
+									}
 								}
+							},
+							{ height: App.config.smallSpacer },
+							{
+								margin: 5,
+								cols: [
+									{ fillspace: true },
+									{
+										view: "button",
+										value: labels.common.cancel,
+										width: App.config.buttonWidthSmall,
+										css: "ab-cancel-button",
+										click: function () {
+											_logic.cancel();
+										}
+									},
+									{
+										id: ids.saveButton,
+										view: "button",
+										label: labels.common.save,
+										type: "form",
+										width: App.config.buttonWidthSmall,
+										click: function () {
+											_logic.buttonSaveClick();
+										} // end click()
+									}
+								]
 							}
 						]
+					},
+					{
+						maxHeight: App.config.appListSpacerRowHeight,
+						hidden: App.config.hideMobile
 					}
 				]
+			},
+			{
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
 			}
 		]
 	};
@@ -162,7 +210,7 @@ OP.Component.extend(idBase, function(App) {
 		/**
 		 * @function applicationCreate
 		 *
-		 * Step through the process of creating an ABApplication with the 
+		 * Step through the process of creating an ABApplication with the
 		 * current state of the Form.
 		 *
 		 * @param {obj} values 	current value hash of the form values.
@@ -221,10 +269,10 @@ OP.Component.extend(idBase, function(App) {
 		/**
 		 * @function applicationUpdate
 		 *
-		 * Step through the process of updating an ABApplication with the 
+		 * Step through the process of updating an ABApplication with the
 		 * current state of the Form.
 		 *
-		 * @param {ABApplication} application 
+		 * @param {ABApplication} application
 		 */
 		applicationUpdate: function(Application) {
 			var values = _logic.formValues();
@@ -250,7 +298,7 @@ OP.Component.extend(idBase, function(App) {
 							next();
 						})
 						.catch(next)
-						
+
 				}
 			], function (err) {
 
@@ -335,7 +383,7 @@ OP.Component.extend(idBase, function(App) {
 		 * Cancel the current Form Operation and return us to the AppList.
 		 */
 		cancel: function() {
-									
+
 			_logic.formReset();
 			App.actions.transitionApplicationList();
 		},
@@ -366,7 +414,7 @@ OP.Component.extend(idBase, function(App) {
 		/**
 		 * @function formBusy
 		 *
-		 * Show the progress indicator to indicate a Form operation is in 
+		 * Show the progress indicator to indicate a Form operation is in
 		 * progress.
 		 */
 		formBusy: function() {
@@ -394,7 +442,7 @@ OP.Component.extend(idBase, function(App) {
 					}
 				})
 			}
-			
+
 			// _logic.permissionPopulate(application);
 
 		},
@@ -490,7 +538,7 @@ OP.Component.extend(idBase, function(App) {
 		 *
 		 * return an object hash of name:value pairs of the current Form.
 		 *
-		 * @return {obj} 
+		 * @return {obj}
 		 */
 		formValues: function() {
 			// return the current values of the Form elements.
@@ -514,7 +562,8 @@ OP.Component.extend(idBase, function(App) {
 			$$(ids.appFormPermissionList).add({
 				id: 'newRole',
 				name: _logic.permissionName(appName),
-				isApplicationRole: true
+				isApplicationRole: true,
+				markCheckbox: 1
 			}, 0);
 
 
@@ -532,15 +581,22 @@ OP.Component.extend(idBase, function(App) {
 		 * Process when a permission entry in the list is clicked.
 		 */
 		permissionClick: function (id, e, node) {
+			
+
 			var List = $$(ids.appFormPermissionList);
+
+			var item = List.getItem(id); 
+
 			if (List.getItem(id).isApplicationRole) {
 				return;
 			}
 
 			if (List.isSelected(id)) {
+				item.markCheckbox = 0; 
 				List.unselect(id);
 			}
 			else {
+				item.markCheckbox = 1; 
 				var selectedIds = List.getSelectedId();
 
 				if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
@@ -553,6 +609,8 @@ OP.Component.extend(idBase, function(App) {
 				selectedIds.push(id);
 
 				List.select(selectedIds);
+
+				List.updateItem(id, item); 
 			}
 		},
 
@@ -566,7 +624,7 @@ OP.Component.extend(idBase, function(App) {
 		 * @return {string} 	Permission Role Name.
 		 */
 		permissionName: function(appName) {
-			return appName  + " Application Role"; 
+			return appName  + " Application Role";
 		},
 
 
@@ -590,7 +648,7 @@ OP.Component.extend(idBase, function(App) {
 
 							// scan the roles and determine if any of them have been created
 							// after the current Application.name:
-							var parsedRoles = roles.map((r) => { 
+							var parsedRoles = roles.map((r) => {
 								if (application) {
 									if (r.name == _logic.permissionName(application.name.split('_').join(' '))) {
 										r.isApplicationRole = true;
@@ -616,14 +674,15 @@ OP.Component.extend(idBase, function(App) {
 
 				},
 				function (available_roles, selected_role_ids, next) {
-					
-					// mark the role(s) in available_roles that is tied 
+
+					// mark the role(s) in available_roles that is tied
 					// this application:
 					if (application && application.role) {
 						available_roles.forEach(function (r) {
-		
-							if (r.id == (application.role.id || application.role))
+							if (r.id == (application.role.id || application.role)) {
 								r.isApplicationRole = true;
+								r.markCheckbox = 1;
+							}
 						});
 					}
 
@@ -640,6 +699,13 @@ OP.Component.extend(idBase, function(App) {
 					if (selected_role_ids && selected_role_ids.length > 0) {
 						// Select permissions
 						PermForm.select(selected_role_ids);
+						available_roles.forEach(function (r) {
+							if (selected_role_ids.indexOf(r.id) > -1) {
+								var item = $$(ids.appFormPermissionList).getItem(r.id);
+								item.markCheckbox = 1;
+								$$(ids.appFormPermissionList).updateItem(r.id, item);
+							}
+						});
 
 						// Select create role application button
 						var markCreateButton = available_roles.filter(function (r) { return r.isApplicationRole; }).length > 0 ? 1 : 0;
@@ -657,7 +723,7 @@ OP.Component.extend(idBase, function(App) {
 
 			});
 
-			// return appName  + " Application Role"; 
+			// return appName  + " Application Role";
 		},
 
 
@@ -673,7 +739,7 @@ OP.Component.extend(idBase, function(App) {
 
 			// find any roles that are put here from our application form:
 			var appRoles = $$(ids.appFormPermissionList).find(function (perm) { return perm.isApplicationRole; });
-			
+
 			// remove them:
 			appRoles.forEach(function (r) {
 				$$(ids.appFormPermissionList).remove(r.id);
@@ -714,7 +780,7 @@ OP.Component.extend(idBase, function(App) {
 		permissionSave: function (app) {
 //// REFACTOR:
 // this step implies that ab_choose_form understands the intracies of how
-// ABApplication and Permissions work.  
+// ABApplication and Permissions work.
 			return new Promise(
 				(resolve, reject) => {
 
@@ -729,7 +795,7 @@ OP.Component.extend(idBase, function(App) {
 						// check to see if we already have a permission that isApplicationRole
 						var selectedPerms = $$(ids.appFormPermissionList).getSelectedItem(true);
 						selectedPerms = selectedPerms.filter((perm) => { return perm.isApplicationRole; })
-						
+
 						// if not, then create one:
 						if (selectedPerms.length == 0) {
 
@@ -739,7 +805,7 @@ OP.Component.extend(idBase, function(App) {
 									.then(function (result) {
 
 										// remember the Role we just created
-										appRole = result;	
+										appRole = result;
 										cb();
 									})
 									.catch(cb)
@@ -752,7 +818,7 @@ OP.Component.extend(idBase, function(App) {
 							app.deletePermission()
 								.then(function () { cb(); })
 								.catch(cb)
-								
+
 						});
 					}
 
@@ -766,8 +832,8 @@ OP.Component.extend(idBase, function(App) {
 					// Make sure Application is linked to selected permission items:
 					saveRoleTasks.push(function (cb) {
 
-						// ok, so we removed the 'newRole' entry, but we might 
-						// have created an entry for it earlier, if so, add in  
+						// ok, so we removed the 'newRole' entry, but we might
+						// have created an entry for it earlier, if so, add in
 						// the created one here:
 						if ($$(ids.appFormCreateRoleButton).getValue() && appRole) {
 
@@ -797,7 +863,7 @@ OP.Component.extend(idBase, function(App) {
 							reject(err);
 						} else {
 							// we return the instance of the newly created Permission.
-							resolve(appRole);  
+							resolve(appRole);
 						}
 					});
 				}
@@ -851,6 +917,7 @@ OP.Component.extend(idBase, function(App) {
 		transitionApplicationForm:function(application){
 			
 			// if no application is given, then this should be a [create] operation,
+
 			// so clear our AppList
 			if ('undefined' == typeof application) {
 				App.actions.unselectApplication();
@@ -864,7 +931,7 @@ OP.Component.extend(idBase, function(App) {
 			}
 			_logic.permissionPopulate(application);
 			_logic.show();
-		},
+		}
 
 	}
 

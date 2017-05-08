@@ -51,16 +51,15 @@ OP.Component.extend(idBase, function(App) {
 				id: ids.list,
 				width: 250,
 
-// TODO: make this dynamically fill the screen:
-height:800,
+height:800, // #Hack!
 
 				select: true,
 				editaction: 'custom',
 				editable: true,
 				editor: "text",
 				editValue: "label",
-				template: function(obj, common) { 
-					return _logic.templateListItem(obj, common); 
+				template: function(obj, common) {
+					return _logic.templateListItem(obj, common);
 				},
 				type: {
 					height:"auto",
@@ -113,7 +112,7 @@ height:800,
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 
@@ -144,6 +143,8 @@ height:800,
 			List.data.sync(objectList);
 			List.refresh();
 			List.unselectAll();
+
+
 
 			// 
 			_logic.syncNumberRefresh();
@@ -361,7 +362,7 @@ console.error('TODO: syncNumRefresh()');
 
 	/*
 	 * _templateListItem
-	 * 
+	 *
 	 * The Object Row template definition.
 	 */
 	var _templateListItem = [
@@ -408,7 +409,7 @@ console.error('TODO: syncNumRefresh()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		// interface methods for parent component:

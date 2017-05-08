@@ -8,7 +8,6 @@
 import ABApplication from "../classes/ABApplication"
 import "./ab_choose_list_menu"
 
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -19,6 +18,7 @@ var labels = {
 
 	component: {
 		title: L('ab.application.application', '*Application'),
+
 		createNew: L('ab.application.createNew', '*Add new application'),
 		noApplication: L('ab.application.noApplication', "*There is no application data")					
 	}
@@ -46,32 +46,24 @@ OP.Component.extend(idBase, function(App) {
 	var _ui = {
 
 		id: ids.component,
+		responsive:"hide",
 
 		cols: [
-
-			//
-			// Left Column Spacer
-			//
-			{ width:100 },
-
-
-			//
-			// Center column Content:
-			// 
 			{
-				
-				autoheight: true,
-				autowidth: true,
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
+			},
+			{
+				responsiveCell:false,
 				rows: [
-
-					// 
-					// Top Spacer
-					//
-					{ height: 30 },
-
+					{
+						maxHeight: App.config.appListSpacerRowHeight,
+						hidden: App.config.hideMobile
+					},
 					//
 					// ToolBar
-					// 
+					//
 					{
 						view: "toolbar",
 						id: ids.toolBar,
@@ -79,10 +71,12 @@ OP.Component.extend(idBase, function(App) {
 							{ view: "label", label:labels.component.title, fillspace: true },
 							{
 								id: ids.buttonCreateNewApplication,
-								view: "button", 
-								value: labels.component.createNew, 
-								width: 200,
-								click: function() { 
+								view: "button",
+								label: labels.component.createNew,
+								autowidth: true,
+								type: "icon",
+								icon: "plus",
+								click: function() {
 									// Inform our Chooser we have a request to create an Application:
 									App.actions.transitionApplicationForm( /* leave empty for a create */ );
 								}
@@ -90,10 +84,12 @@ OP.Component.extend(idBase, function(App) {
 							{
 								view: "uploader",
 								id: ids.uploader,
-								value: labels.common.import,
-								width: 200,
+								label: labels.common.import,
+								autowidth: true,
 								upload: '/app_builder/appJSON',
 								multiple: false,
+								type: "icon",
+								icon: "upload",
 								autosend: true,
 								on: {
 									onAfterFileAdd: function () {
@@ -113,18 +109,16 @@ OP.Component.extend(idBase, function(App) {
 
 					//
 					// The List of Applications
-					// 
+					//
 					{
 						id: ids.list,
 						view: "list",
-						minHeight: 227,
-						autowidth: true,
 						css: 'ab-app-select-list',
 						template: function (obj, common) {
 							return _logic.templateListItem(obj, common);
 						},
 						type: {
-							height: 100, // Defines item height
+							height: App.config.appListRowHeight, // Defines item height
 							iconGear: "<span class='webix_icon fa-cog'></span>"
 						},
 						select: false,
@@ -136,14 +130,18 @@ OP.Component.extend(idBase, function(App) {
 								return _logic.onClickListEdit(ev, id, trg);
 							}
 						}
+					},
+					{
+						maxHeight: App.config.appListSpacerRowHeight,
+						hidden: App.config.hideMobile
 					}
 				]
 			},
-
-			// 
-			// Right Column Spacer
-			// 
-			{ width:100 }
+			{
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
+ 			}
 		]
 	}
 
@@ -180,7 +178,7 @@ OP.Component.extend(idBase, function(App) {
 
 					_logic.ready();
 
-					// make sure our overlay is updated when items are added/removed 
+					// make sure our overlay is updated when items are added/removed
 					// from our data list.
 					data.attachEvent("onAfterAdd", function(id, index){
 					    _logic.refreshOverlay();
@@ -378,7 +376,7 @@ OP.Component.extend(idBase, function(App) {
 
 	/*
 	 * _templateListItem
-	 * 
+	 *
 	 * The AppList Row template definition.
 	 */
 	var _templateListItem = [
@@ -393,11 +391,11 @@ OP.Component.extend(idBase, function(App) {
 		"</div>"
 	].join('');
 
-			
+
 
 	/*
 	 * @function _init
-	 * 
+	 *
 	 * The init() that performs the necessary setup for our AppList chooser.
 	 */
 	var _init = function() {
@@ -458,7 +456,7 @@ OP.Component.extend(idBase, function(App) {
 			// Delete application data
 			_logic.busy();
 
-			
+
 			app.destroy()
 				.then(function (result) {
 					_logic.reset();
@@ -491,7 +489,7 @@ OP.Component.extend(idBase, function(App) {
 		transitionApplicationList:function() {
 			$$(ids.component).show();
 		}
-	}			
+	}
 
 
 

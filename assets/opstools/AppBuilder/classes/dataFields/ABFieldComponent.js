@@ -20,7 +20,7 @@ export default class ABFieldComponent {
 
     	this.fieldDefaults = options.fieldDefaults || {};
 
-    	this.elements = options.elements || [];
+    	this.elements = options.elements || function (App) { return []; } ;
 
     	this.defaultValues = options.defaultValues || {};
 
@@ -37,12 +37,7 @@ export default class ABFieldComponent {
     	// this.ids = options.ids || {};
     	this.ids = {};
 
-    	// for each provided element: create an this.ids for it:
-    	this.elements.forEach((e) => {
-    		if (e.name) {
-    			this.ids[e.name] = e.name;
-    		}
-    	})
+    	
   	}
 
 
@@ -152,15 +147,13 @@ export default class ABFieldComponent {
 
 	component (App) {
 
-		// labels.common = App.labels;
-
-		// var idBase = 'ab_datafield_string';
-
-
-		// var componentDefaults = {
-		// 	textDefault: '', 
-		// 	supportMultilingual:1
-		// };
+		// for each provided element: create an this.ids for it:
+    	var elements = this.elements(App);
+    	elements.forEach((e) => {
+    		if (e.name) {
+    			this.ids[e.name] = e.name;
+    		}
+    	})
 
 
 
@@ -361,7 +354,7 @@ console.error('TODO: .populate()');
 		// get the common UI headers entries, and insert them above ours here:
 		// NOTE: put this here so that _logic is defined.
 		var commonUI = ABField.definitionEditor(App, ids, _logic, this.fieldDefaults);
-		_ui.elements = commonUI.rows.concat(this.elements);
+		_ui.elements = commonUI.rows.concat(elements);
 
 
 		// return the current instance of this component:

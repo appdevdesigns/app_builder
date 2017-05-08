@@ -1,5 +1,5 @@
 
-import OP from "../OP/OP"
+// import OP from "OP"
 import ABFieldManager from "./ABFieldManager"
 
 
@@ -24,7 +24,7 @@ export default class ABObject {
     constructor(attributes, application) {
 /*
 {
-	id: uuid(), 
+	id: uuid(),
 	name: 'name',
 	labelFormat: 'xxxxx',
 	isImported: 1/0,
@@ -49,7 +49,7 @@ export default class ABObject {
     	this.importFromObject = attributes.importFromObject || "";
     	this.translations = attributes.translations;
 
-    	this.objectWorkspace = attributes.objectWorkspace || { 
+    	this.objectWorkspace = attributes.objectWorkspace || {
     		hiddenFields:[], 	// array of [ids] to add hidden:true to
     	};
 
@@ -57,7 +57,7 @@ export default class ABObject {
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this, ['label']);
 
-	  	
+
 	  	// import all our ABObjects
 	  	var newFields = [];
 	  	(attributes.fields || []).forEach((field) => {
@@ -107,7 +107,7 @@ export default class ABObject {
 
 
 		return errors;
-	} 
+	}
 
 
 
@@ -125,8 +125,8 @@ export default class ABObject {
 	 * destroy the current instance of ABApplication
 	 *
 	 * also remove it from our _AllApplications
-	 * 
-	 * @return {Promise} 
+	 *
+	 * @return {Promise}
 	 */
 	destroy () {
 		if (this.id) {
@@ -144,8 +144,8 @@ console.error('TODO: ABObject.destroy()');
 	 *
 	 * persist this instance of ABObject with it's parent ABApplication
 	 *
-	 * 
-	 * @return {Promise} 	
+	 *
+	 * @return {Promise}
 	 *						.resolve( {this} )
 	 */
 	save () {
@@ -179,10 +179,10 @@ console.error('TODO: ABObject.destroy()');
 	 * properly compile the current state of this ABApplication instance
 	 * into the values needed for saving to the DB.
 	 *
-	 * Most of the instance data is stored in .json field, so be sure to 
+	 * Most of the instance data is stored in .json field, so be sure to
 	 * update that from all the current values of our child fields.
 	 *
-	 * @return {json} 
+	 * @return {json}
 	 */
 	toObj () {
 
@@ -204,7 +204,7 @@ console.error('TODO: ABObject.destroy()');
     		importFromObject: this.importFromObject,
     		objectWorkspace:  this.objectWorkspace,
     		translations: 	this.translations,
-    		fields: 	 	currFields 
+    		fields: 	 	currFields
 		}
 	}
 
@@ -225,7 +225,7 @@ console.error('TODO: ABObject.destroy()');
 	 *
 	 * return an array of all the ABFields for this ABObject.
 	 *
-	 * @return {array} 	
+	 * @return {array}
 	 */
 	fields (filter) {
 
@@ -239,13 +239,13 @@ console.error('TODO: ABObject.destroy()');
 	/**
 	 * @method fieldNew()
 	 *
-	 * return an instance of a new (unsaved) ABField that is tied to this 
+	 * return an instance of a new (unsaved) ABField that is tied to this
 	 * ABObject.
 	 *
-	 * NOTE: this new field is not included in our this.fields until a .save() 
+	 * NOTE: this new field is not included in our this.fields until a .save()
 	 * is performed on the field.
 	 *
-	 * @return {ABField} 	
+	 * @return {ABField}
 	 */
 	fieldNew ( values ) {
 		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
@@ -257,11 +257,11 @@ console.error('TODO: ABObject.destroy()');
 	/**
 	 * @method fieldSave()
 	 *
-	 * save the given ABField in our ._fields array and persist the current 
+	 * save the given ABField in our ._fields array and persist the current
 	 * values.
 	 *
 	 * @param {ABField} field The instance of the field to save.
-	 * @return {Promise} 	
+	 * @return {Promise}
 	 */
 	fieldSave( field ) {
 		var isIncluded = (this.fields(function(o){ return o.id == field.id }).length > 0);
@@ -319,14 +319,14 @@ console.error('TODO: ABObject.destroy()');
 			headers.forEach((h) => { h.adjust = true; });
 
 			// hide any hiddenfields
-			this.workspaceHiddenFields.forEach((hfID)=>{ 
+			this.workspaceHiddenFields.forEach((hfID)=>{
 				headers.forEach((h)=> {
 					if (idLookup[h.id] == hfID){
 						h.hidden = true;
 					}
 				})
 			});
-			
+
 		}
 
 		return headers;

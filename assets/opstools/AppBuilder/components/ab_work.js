@@ -53,8 +53,6 @@ OP.Component.extend('ab_work', function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
-		autoheight: true,
-		autowidth: true,
 		rows: [
 			{
 				view: "toolbar",
@@ -62,61 +60,116 @@ OP.Component.extend('ab_work', function(App) {
 				autowidth: true,
 				cols: [
 					{
-						view: "button", value: labels.application.backToApplication, width: 250, align: "right", 
+						view: "button",
+						label: labels.application.backToApplication,
+						width: 200,
+						type: "icon",
+						icon: "arrow-left",
+						align: "left",
+
 						click: function () {
 							App.actions.transitionApplicationChooser();
 						}
 					},
 					{
-						id: ids.buttonSync,
-						view: "button",
-						type: "iconButton",
-						icon: "refresh",
-						label: labels.application.synchronize,
-						width: 250,
-						//autowidth: true,
-						align: "right",
-						click: function () {
-							_logic.synchronize();
-						}
+						view: "label",
+						id: ids.labelAppName,
+						align: "center"
 					},
-					{ fillspace: true },
-					{ view: "label", id: ids.labelAppName, width: 400, align: "right" }
+					{
+						view: "spacer",
+						width: 200,
+						alrign: "right"
+					}
+					// {
+					// 	id: ids.buttonSync,
+					// 	view: "button",
+					// 	type: "icon",
+					// 	icon: "refresh",
+					// 	label: labels.application.synchronize,
+					// 	autowidth: true,
+					// 	align: "right",
+					// 	click: function () {
+					// 		_logic.synchronize();
+					// 	}
+					// }
 				]
 			},
-			{ height: 10 },
+			//{ height: App.config.mediumSpacer },
+			// {
+			// 	view:"segmented",
+			// 	id: ids.tabbar,
+			// 	value: ids.tab_object,
+			// 	multiview: true,
+			// 	align: "center",
+			// 	options:[
+			// 		{
+			// 			id: ids.tab_object,
+			// 			value: labels.application.objectTitle,
+			// 			width: App.config.tabWidthMedium
+			// 		},
+			// 		{
+			// 			id: ids.tab_interface,
+			// 			value: labels.application.interfaceTitle,
+			// 			width: App.config.tabWidthMedium
+			// 		}
+			// 	],
+			// 	on: {
+			// 		onChange: function (idNew, idOld) {
+			// 			if (idNew != idOld) {
+			// 				_logic.tabSwitch(idNew, idOld);
+			// 			}
+			// 		}
+			// 	}
+			// },
+			{ height: App.config.mediumSpacer },
 			{
-				view: "tabbar", 
-				id: ids.tabbar, 
-				value: ids.tab_object, 
-				multiview: true,
-				options: [
-					{ 
-						id: ids.tab_object, 
-						value: labels.application.objectTitle, 
-						width: 120 
+				cols: [
+					{
+						width: App.config.mediumSpacer
 					},
-					{ 
-						id: ids.tab_interface, 
-						value: labels.application.interfaceTitle, 
-						width: 120 
+					{
+						rows: [
+							{
+								view: "tabbar",
+								id: ids.tabbar,
+								value: ids.tab_object,
+								multiview: true,
+								options: [
+									{
+										id: ids.tab_object,
+										value: labels.application.objectTitle,
+										width: App.config.tabWidthMedium
+									},
+									{
+										id: ids.tab_interface,
+										value: labels.application.interfaceTitle,
+										width: App.config.tabWidthMedium
+									}
+								],
+								on: {
+									onChange: function (idNew, idOld) {
+										if (idNew != idOld) {
+											_logic.tabSwitch(idNew, idOld);
+										}
+									}
+								}
+							},
+							{
+								id: ids.workspace,
+								cells: [
+									AppObjectWorkspace.ui,
+									AppInterfaceWorkspace.ui
+								]
+							}
+						]
+					},
+					{
+						width: App.config.mediumSpacer
 					}
-				],
-				on: {
-					onChange: function (idNew, idOld) {
-						if (idNew != idOld) {
-							_logic.tabSwitch(idNew, idOld);
-						}
-					}
-				}
-			},
-			{
-				id: ids.workspace,
-				cells: [
-					AppObjectWorkspace.ui,
-					AppInterfaceWorkspace.ui
 				]
-			}
+			},
+			{ height: App.config.mediumSpacer }
 		]
 	};
 
@@ -124,7 +177,7 @@ OP.Component.extend('ab_work', function(App) {
 
 	// Our init() function for setting up our UI
 	var _init = function() {
-		
+
 		AppObjectWorkspace.init();
 		AppInterfaceWorkspace.init();
 
@@ -134,10 +187,10 @@ OP.Component.extend('ab_work', function(App) {
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
-		
+
 		applicationInit:function(application) {
 
 			// setup Application Label:
@@ -180,7 +233,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 		 * Every time a tab switch happens, decide which workspace to show.
 		 *
 		 * @param {string} idTab	the id of the tab that was changed to.
-		 * @param {string} idOld	the previous tab id  
+		 * @param {string} idOld	the previous tab id
 		 */
 		tabSwitch:function(idTab, idOld) {
 
@@ -188,13 +241,15 @@ console.error('TODO: ab_work.logic.synchronize()!');
 
 				// Object Workspace Tab
 				case ids.tab_object:
-					$$(ids.buttonSync).show();
+
+					// $$(ids.buttonSync).show();
 					AppObjectWorkspace.show();
 					break;
 
 				// Interface Workspace Tab
 				case ids.tab_interface:
-					$$(ids.buttonSync).hide();
+
+					// $$(ids.buttonSync).hide();
 					AppInterfaceWorkspace.show();
 					break;
 			}
@@ -213,13 +268,14 @@ console.error('TODO: ab_work.logic.synchronize()!');
 		 *
 		 * Switch the UI to view the App Workspace screen.
 		 *
-		 * @param {ABApplication} application 
+		 * @param {ABApplication} application
 		 */
 		transitionWorkspace:function(application){
 
 			_logic.applicationInit(application);
 			AppObjectWorkspace.applicationLoad(application);
 			AppInterfaceWorkspace.applicationLoad(application);
+
 
 			_logic.show();	
 		}
@@ -230,7 +286,7 @@ console.error('TODO: ab_work.logic.synchronize()!');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		_logic: _logic			// {obj} 	Unit Testing

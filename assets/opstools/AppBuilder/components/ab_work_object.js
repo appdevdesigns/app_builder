@@ -44,9 +44,11 @@ OP.Component.extend(idBase, function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
+		autoheight: true,
+		margin: 20,
 		cols: [
 			ObjectList.ui,
-			{ view: "resizer", autoheight: true },
+			{ view: "resizer"},
 			ObjectWorkspace.ui
 		]
 	};
@@ -55,7 +57,7 @@ OP.Component.extend(idBase, function(App) {
 
 	// Our init() function for setting up our UI
 	var _init = function() {
-		
+
 		ObjectWorkspace.init();
 		ObjectList.init();
 
@@ -63,7 +65,7 @@ OP.Component.extend(idBase, function(App) {
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 		/**
@@ -95,13 +97,14 @@ OP.Component.extend(idBase, function(App) {
 	// Expose any globally accessible Actions:
 	var _actions = {
 
+
 	}
 
 
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 

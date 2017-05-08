@@ -1,6 +1,6 @@
-/* 
+/*
  * ABFieldString
- * 
+ *
  * An ABFieldString defines a string field type.
  *
  */
@@ -13,7 +13,6 @@ import ABFieldComponent from "./ABFieldComponent"
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
-
 
 
 var ABFieldStringDefaults = {
@@ -35,7 +34,7 @@ var ABFieldStringDefaults = {
  * ABFieldStringComponent
  *
  * Defines the UI Component for this Data Field.  The ui component is responsible
- * for displaying the properties editor, populating existing data, retrieving 
+ * for displaying the properties editor, populating existing data, retrieving
  * property values, etc.
  *
  * @param {obj} App  the current Component Application instance for the current UI.
@@ -48,6 +47,7 @@ var ABFieldStringDefaults = {
 // 	var idBase = 'ab_datafield_string';
 
 
+
 // 	var componentDefaults = {
 // 		textDefault: '', 
 // 		supportMultilingual:1
@@ -58,6 +58,7 @@ var ABFieldStringDefaults = {
 // 	var ids = {
 
 // 		component: App.unique(idBase+'_component'),
+
 
 // 		textDefault: App.unique(idBase+'_textdefault'),
 // 		supportMultilingual: App.unique(idBase+'_supportMultilingual'),
@@ -108,7 +109,6 @@ var ABFieldStringDefaults = {
 // 		// for example, don't want to show the description, then .hide() it here:
 // 		// $$(ids.fieldDescription).hide();
 // 	}
-
 
 
 // 	var _logic = {
@@ -236,24 +236,28 @@ var ABFieldStringDefaults = {
 // }
 
 
+
 var ABFieldStringComponent = new ABFieldComponent({
 
 	fieldDefaults: ABFieldStringDefaults,
 
-	elements:[
-		{
-			view: "text",
-			name:'textDefault',
-			placeholder: L('ab.dataField.string.default', '*Default text')
-		},
-		{
-			view: "checkbox",
-			name:'supportMultilingual',
-			labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
-			labelWidth: 0,
-			value: true
-		}
-	],
+	elements:function(App) {
+		return [
+			{
+				view: "text",
+				name:'textDefault',
+				labelWidth: App.config.labelWidthLarge,
+				placeholder: L('ab.dataField.string.default', '*Default text')
+			},
+			{
+				view: "checkbox",
+				name:'supportMultilingual',
+				labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
+				labelWidth: App.config.labelWidthCheckbox,
+				value: true
+			}
+		]
+	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
 	defaultValues:{
@@ -310,6 +314,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 
 
 
+
 class ABFieldString extends ABField {
 
     constructor(values, object) {
@@ -340,6 +345,7 @@ class ABFieldString extends ABField {
   	}
 
 
+
 	/*
 	 * @function propertiesComponent
 	 *
@@ -351,7 +357,6 @@ class ABFieldString extends ABField {
   	static propertiesComponent(App) {
   		return ABFieldStringComponent.component(App);
   	}
-
 
 
 
@@ -370,7 +375,7 @@ class ABFieldString extends ABField {
 		// }, errors);
 
 		return errors;
-	} 
+	}
 
 
 	/**
@@ -379,10 +384,10 @@ class ABFieldString extends ABField {
 	 * properly compile the current state of this ABApplication instance
 	 * into the values needed for saving to the DB.
 	 *
-	 * Most of the instance data is stored in .json field, so be sure to 
+	 * Most of the instance data is stored in .json field, so be sure to
 	 * update that from all the current values of our child fields.
 	 *
-	 * @return {json} 
+	 * @return {json}
 	 */
 	// toObj () {
 
@@ -411,6 +416,7 @@ class ABFieldString extends ABField {
 	}
 
 }
+
 
 
 export default ABFieldString;

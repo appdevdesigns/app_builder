@@ -48,6 +48,7 @@ OP.Component.extend(idBase, function(App) {
 	labels.common = App.labels;
 
 
+
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
 		component: App.unique(idBase + '_component'),
@@ -72,7 +73,7 @@ OP.Component.extend(idBase, function(App) {
 
 		noSelection: App.unique(idBase + '_noSelection'),
 		selectedObject: App.unique(idBase + '_selectedObject'),
-		
+
 	}
 
 
@@ -89,10 +90,12 @@ OP.Component.extend(idBase, function(App) {
 		id: ids.component,
 		rows:[
 			{
-				// view:''
 				id: ids.noSelection,
 				rows:[
-					{ view:'label', label:labels.component.selectObject }
+					{ 
+						view:'label', 
+						label:labels.component.selectObject 
+					}
 				]
 			},
 			{
@@ -102,15 +105,17 @@ OP.Component.extend(idBase, function(App) {
 						view: 'toolbar',
 						id: ids.toolbar,
 						hidden: true,
+						css: "ab-data-toolbar",
 						cols: [
-							{ 
+							{
 								view: "button",
-								id: ids.buttonFieldsVisible, 
-								label: labels.component.hideFields, 
-// popup: 'self.webixUiId.visibleFieldsPopup', 
-								icon: "columns", 
-								type: "icon", 
-								width: 120, 
+								id: ids.buttonFieldsVisible,
+								label: labels.component.hideFields,
+// popup: 'self.webixUiId.visibleFieldsPopup',
+								icon: "eye-slash",
+								type: "icon",
+								// width: 120,
+								autowidth: true,
 								badge: 0,
 								click: function () {
 									_logic.toolbarFieldsVisible(this.$view);
@@ -118,80 +123,84 @@ OP.Component.extend(idBase, function(App) {
 							},
 							{
 								view: 'button',
-								id: ids.buttonFilter, 
-								label: labels.component.filterFields, 
-								icon: "filter", 
-								type: "icon", 
-								width: 120, 
+								id: ids.buttonFilter,
+								label: labels.component.filterFields,
+								icon: "filter",
+								type: "icon",
+								// width: 120,
+								autowidth: true,
 								badge: 0,
 								click: function () {
 									_logic.toolbarFilter(this);
 								}
 							},
 							{
-								view: 'button', 
-								id: ids.buttonSort, 
-								label: labels.component.sortFields, 
-								icon: "sort", 
-								type: "icon", 
-								width: 120, 
+								view: 'button',
+								id: ids.buttonSort,
+								label: labels.component.sortFields,
+								icon: "sort",
+								type: "icon",
+								// width: 120,
+								autowidth: true,
 								badge: 0,
 								click: function () {
 									_logic.toolbarSort(this.$view);
 								}
 							},
-							{ 
-								view: 'button', 
-								id: ids.buttonFrozen, 
-								label: labels.component.frozenColumns, 
-								icon: "table", 
-								type: "icon", 
-								width: 150, 
+							{
+								view: 'button',
+								id: ids.buttonFrozen,
+								label: labels.component.frozenColumns,
+								icon: "thumb-tack",
+								type: "icon",
+								autowidth: true,
 								badge: 0,
 								click: function(){
 									_logic.toolbarFrozen(this.$view);
 								}
 							},
-							{ 
-								view: 'button', 
+							{
+								view: 'button',
 								id: ids.buttonLabel,
-								label: labels.component.defineLabel, 
-								icon: "newspaper-o", 
-								type: "icon", 
-								width: 130,
+								label: labels.component.defineLabel,
+								icon: "crosshairs",
+								type: "icon",
+								// width: 130,
+								autowidth: true,
 								click: function () {
 									_logic.toolbarDefineLabel(this.$view);
 								}
 							},
-							{ 
-								view: 'button', 
-								label: labels.component.permission, 
-								icon: "lock", 
-								type: "icon", 
-								width: 120,
+							{
+								view: 'button',
+								label: labels.component.permission,
+								icon: "lock",
+								type: "icon",
+								autowidth: true,
 								click: function() {
 									_logic.toolbarPermission(this.$view);
 								}
+
 							},
-							{ 
-								view: 'button', 
-								id: ids.buttonAddField, 
-								label: labels.component.addFields, 
-								icon: "plus", 
-								type: "icon", 
-								width: 150,
+							{
+								view: 'button',
+								id: ids.buttonAddField,
+								label: labels.component.addFields,
+								icon: "plus",
+								type: "icon",
+								// width: 150,
+								autowidth: true,
 								click:function() {
 									_logic.toolbarAddFields(this.$view);
 								}
 							},
-							{ 
-								view: 'button', 
-								id: ids.buttonExport, 
-								label: labels.component.export, 
-// popup: 'self.webixUiId.exportDataPopup', 
-								icon: "file-o", 
-								type: "icon", 
-								width: 90,
+							{
+								view: 'button',
+								id: ids.buttonExport,
+								label: labels.component.export,
+								icon: "download",
+								type: "icon",
+								autowidth: true,
 								click: function() {
 									_logic.toolbarButtonExport(this.$view);
 								}
@@ -202,14 +211,9 @@ OP.Component.extend(idBase, function(App) {
 					{
 						cols: [
 							{
-								autowidth: true
-							},
-							{
 								view: "button",
 								id: ids.buttonRowNew,
 								value: labels.component.addNewRow,
-								width: 150,
-								align: 'right',
 								click: function () {
 // TODO:
 									_logic.rowAdd();
@@ -223,7 +227,7 @@ OP.Component.extend(idBase, function(App) {
 			}
 		]
 	}
-		
+
 
 
 
@@ -239,7 +243,7 @@ OP.Component.extend(idBase, function(App) {
 
 	var CurrentObject = null;
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 
@@ -425,6 +429,7 @@ console.error('TODO: toolbarSort()');
 			// update hiddenFields 
 			_logic.callbackFieldsVisible();
 
+
 			PopupDefineLabelComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			DataTable.objectLoad(object);
@@ -436,7 +441,7 @@ console.error('TODO: toolbarSort()');
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		// interface methods for parent component:

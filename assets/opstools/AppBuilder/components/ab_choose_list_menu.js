@@ -18,7 +18,7 @@ var labels = {
 	component: {
 		menu : L('ab.application.menu', "*Application Menu"),
 		confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
-		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")		
+		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
 	}
 }
 
@@ -27,7 +27,6 @@ var idBase = 'ab_choose_list_menu';
 OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
-
 
 
 	var ids = {
@@ -43,10 +42,11 @@ OP.Component.extend(idBase, function(App) {
 		width: 100,
 		body: {
 			view: "list",
+			borderless: true,
 			data: [
 				{ command: labels.common.edit, icon: "fa-pencil-square-o" },
-				{ command: labels.common.delete, icon: "fa-trash" },
-				{ command: labels.common.export, icon: "fa-download" }
+				{ command: labels.common.export, icon: "fa-download" },
+				{ command: labels.common.delete, icon: "fa-trash" }
 			],
 			datatype: "json",
 
@@ -72,6 +72,7 @@ OP.Component.extend(idBase, function(App) {
 
 
 	var _logic = {
+
 
 		/**
 		 * @function onItemClick
@@ -112,9 +113,10 @@ OP.Component.extend(idBase, function(App) {
 			
 			return false;
 		}
+
 	}
 
-							
+
 
 	return {
 		ui: _ui,

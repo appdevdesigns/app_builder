@@ -22,7 +22,6 @@ import Util  from "./util"
 
 import Config from "./config/config"
 
-
     window.OP = {};
 
 
@@ -69,12 +68,12 @@ import Config from "./config/config"
 
 			/*
 			 * actions:
-			 * a hash of exposed application methods that are shared among our 
-			 * components, so one component can invoke an action that updates 
+			 * a hash of exposed application methods that are shared among our
+			 * components, so one component can invoke an action that updates
 			 * another component.
 			 */
 			actions:{
-				
+
 			},
 
 
@@ -89,7 +88,7 @@ import Config from "./config/config"
 			 * a collection of custom components for this App Instance.
 			 */
 			custom:{
-		
+
 			},
 
 			/*
@@ -97,14 +96,14 @@ import Config from "./config/config"
 			 * a collection of labels that are common for the Application.
 			 */
 			labels:{
-		
+
 			},
 
 			/*
 			 * unique()
 			 * A function that returns a globally unique Key.
 			 * @param {string} key   The key to modify and return.
-			 * @return {string} 
+			 * @return {string}
 			 */
 			unique: function(key) { return key+this.uuid; },
 
@@ -124,7 +123,7 @@ import Config from "./config/config"
 		};
 	}
 
-	
+
 	OP.Dialog = AD.op.Dialog;
 
 	OP.Error = AD.error;
@@ -133,7 +132,7 @@ import Config from "./config/config"
 
 	OP.Multilingual = Multilingual;
 	OP.Model = Model;
-	
+
 
 	OP.Util = Util;
 

@@ -1,10 +1,9 @@
 
-// import './OP/OP';
+// import 'OP';
 // import '../../../../../assets/js/webix/webix'
 
+
 import './components/ab'
-
-
 
 
 AD.Control.OpsTool.extend('BuildApp', {
@@ -83,8 +82,13 @@ AD.Control.OpsTool.extend('BuildApp', {
 			}
 			appListDom.width(width);
 
-			var computedHeight = height - 140;
+			// Removed this because the 140 pixels was causing the list to not scroll to the bottom of the page
+			// var computedHeight = height - 140;
+
+			var computedHeight = height;
+			console.log("computed height: " + computedHeight);
 			var mh = parseInt(appListDom.css('min-height').replace('px', ''));
+			console.log("min-height: " + mh);
 			if (mh < computedHeight) {
 				appListDom.height(computedHeight);
 				$('#ab-main-container').height(computedHeight);
