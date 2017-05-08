@@ -15,7 +15,7 @@ function L(key, altText) {
 
 var labels = {
 
-	application: {
+	component: {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 
@@ -23,14 +23,14 @@ var labels = {
 }
 
 
-
-OP.Component.extend('[template]', function(App) {
+idBase = '[template]';
+OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;
 
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
-		component: App.unique('[template]_component'),
+		component: App.unique(idBase + '_component'),
 
 	}
 
@@ -127,6 +127,9 @@ OP.Component.extend('[template]', function(App) {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
 		init:_init,				// {fn} 	init() to setup this component  
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		// interface methods for parent component:
+		show: _logic.show,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}
