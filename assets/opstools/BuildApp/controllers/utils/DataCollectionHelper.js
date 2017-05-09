@@ -166,7 +166,7 @@ steal(
 
 													if (userCol) {
 														var selectRow = dataCollections[objectId].find(function (row) {
-															if (typeof row[userCol.name] == 'array') {
+															if (row[userCol.name].filter) {
 																return row[userCol.name].filter(function (data) {
 																	return data.id == dataCollections[objectId].currUsername;
 																}).length > 0;
