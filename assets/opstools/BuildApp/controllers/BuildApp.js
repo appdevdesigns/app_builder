@@ -6,6 +6,7 @@ steal(
 	'opstools/BuildApp/views/BuildApp/BuildApp.ejs',
 	'opstools/BuildApp/controllers/AppList.js',
 	'opstools/BuildApp/controllers/AppWorkspace.js',
+    'countly-sdk-web/lib/countly.min',
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
@@ -93,6 +94,12 @@ steal(
 										action: 'start',
 										step: 'syncObjectData'
 									});
+									
+									Countly.end_event({
+									   key: 'synchronize',
+									   count: 1,
+									   segmentation: data
+									});
 
 									// Sync object data
 									self.controllers.AppWorkspace.syncObjectsData()
@@ -166,6 +173,8 @@ steal(
 								action: 'start',
 								step: 'request'
 							});
+							
+							Countly.start_event('synchronize');
 
 							AD.comm.service.post({
 								url: '/app_builder/fullReload/' + data.appID
@@ -214,6 +223,14 @@ steal(
 										console.log('... Sync Done!');
 										// remove this subscription.
 										AD.comm.socket.unsubscribe(subID);
+										
+										// This may be redundant, or even unused
+										// see initEvents()
+                                        Countly.end_event({
+                                            key: 'synchronize',
+                                            count: 1,
+                                            segmentation: { appID: data.appID }
+                                        });
 									}
 								}, delay);
 
@@ -289,6 +306,13 @@ steal(
 										'',
 										data.options.error
 									].join('\n')
+									
+									Countly.end_event({
+									   key: 'synchronize',
+									   segmentation: {
+									       'error': data.options.error
+									   }
+									});
 
 									// Show retry screen
 									$$(self.webixUiId.loadingScreen).showErrorScreen(
