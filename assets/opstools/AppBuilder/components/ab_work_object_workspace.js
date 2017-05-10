@@ -343,9 +343,12 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 						callback:function( isOK ) {
 
 							if (isOK) {
-//// LEFT OFF HERE:
 
-
+								field.destroy()
+								.then(()=>{
+									DataTable.refresh();
+								});
+								
 							}
 						}
 					})

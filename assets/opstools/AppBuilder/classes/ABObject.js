@@ -255,6 +255,23 @@ console.error('TODO: ABObject.destroy()');
 
 
 	/**
+	 * @method fieldRemove()
+	 *
+	 * remove the given ABField from our ._fields array and persist the current
+	 * values.
+	 *
+	 * @param {ABField} field The instance of the field to remove.
+	 * @return {Promise}
+	 */
+	fieldRemove( field ) {
+		this._fields = this.fields(function(o){ return o.id != field.id });
+
+		return this.save();
+	}
+
+
+
+	/**
 	 * @method fieldSave()
 	 *
 	 * save the given ABField in our ._fields array and persist the current

@@ -260,10 +260,28 @@ export default class ABField {
 	 * @return {Promise}
 	 */
 	destroy () {
-		if (this.id) {
-console.error('TODO: ABField.destroy()');
+		return new Promise(
+			(resolve, reject) => {
 
-		}
+				// verify we have been .save()d before:
+				if (this.id) {
+
+					this.object.fieldRemove(this)
+					.then(() => {
+						resolve();
+					})
+					.catch(function(err){
+						reject(err);
+					})
+
+				} else {
+
+					resolve();  // nothing to do really
+				}
+				
+			}
+		)
+
 	}
 
 
