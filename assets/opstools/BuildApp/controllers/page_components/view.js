@@ -129,20 +129,6 @@ steal(
 
 				// Initial events
 				if (data.dataCollection) {
-					// TEMPORARY FEATURE :
-					if (setting.currentUserFilter == true || setting.currentUserFilter == "true") {
-						data.dataCollection.hasCurrentUserFilter = true;
-						setTimeout(function () {
-							data.dataCollection.updateCursorToCurrentUser();
-						}, 100);
-					}
-					else {
-						data.dataCollection.hasCurrentUserFilter = false;
-						setTimeout(function () {
-							data.dataCollection.updateCursorToCurrentUser();
-						}, 100);
-					}
-
 					if (eventIds['onAfterCursorChange'] == null) {
 						eventIds['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 							updateData.call(self, setting);
@@ -345,6 +331,22 @@ steal(
 						updateData.call(self, setting);
 
 						$$(self.viewId).hideProgress();
+
+						// TEMPORARY FEATURE :
+						if (data.dataCollection) {
+							if (setting.currentUserFilter == true || setting.currentUserFilter == "true") {
+								data.dataCollection.hasCurrentUserFilter = true;
+								setTimeout(function () {
+									data.dataCollection.updateCursorToCurrentUser();
+								}, 100);
+							}
+							else {
+								data.dataCollection.hasCurrentUserFilter = false;
+								setTimeout(function () {
+									data.dataCollection.updateCursorToCurrentUser();
+								}, 100);
+							}
+						}
 
 						// Trigger render event
 						$(self).trigger('renderComplete', {});
