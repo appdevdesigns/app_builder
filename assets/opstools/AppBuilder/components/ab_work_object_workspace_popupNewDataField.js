@@ -132,8 +132,13 @@ OP.Component.extend(idBase, function(App) {
 
 	var _objectHash = {};		// 'name' => ABFieldXXX object
 	var _componentHash = {};	// 'name' => ABFieldXXX ui component
+	var _componentsByType = {}; // 'type' => ABFieldXXX ui component
 	var _currentEditor = null;
 	var _currentObject = null;
+
+	var defaultEditorComponent = null;	// the default editor.
+
+	var _editField = null;		// field instance being edited
 
 	// Our init() function for setting up our UI
 	var _init = function(options) {
@@ -153,7 +158,6 @@ OP.Component.extend(idBase, function(App) {
 
 
 		var submenus = [];	// Create the submenus for our Data Fields:
-		var defaultEditorComponent = null;	// choose the 1st entry for the default editor.
 		var newEditorList = {
 			id:ids.editDefinitions,
 			rows:[]
@@ -162,6 +166,7 @@ OP.Component.extend(idBase, function(App) {
 		Fields.forEach(function(F){
 
 			var menuName = F.defaults().menuName ;
+			var type = F.defaults().type;
 
 			// add a submenu for the fields multilingual key
 			submenus.push( menuName );
@@ -177,6 +182,7 @@ OP.Component.extend(idBase, function(App) {
 
 			_objectHash[ menuName ] = F;
 			_componentHash[ menuName ] = editorComponent;
+			_componentsByType[ type ]  = editorComponent;
 
 		})
 
@@ -224,30 +230,7 @@ OP.Component.extend(idBase, function(App) {
 
 		buttonSave:function() {
 
-// var self = this;
-
 			$$(ids.buttonSave).disable();
-
-// var base = self.getTopParentView(),
-// 	dataTable = base.dataTable,
-// 	fieldInfo = dataFieldsManager.getSettings(base.fieldName);
-
-// if (!dataTable) {
-// 	webix.message({ type: "error", text: labels.add_fields.registerTableWarning });
-// 	self.enable();
-// 	return;
-// }
-
-// if (!fieldInfo) {
-// 	webix.alert({
-// 		title: 'Field info error',
-// 		text: 'System could not get this field information ',
-// 		ok: labels.common.ok
-// 	});
-// 	self.enable();
-// 	return;
-// }
-
 
 
 			var editor = _currentEditor;
@@ -257,28 +240,51 @@ OP.Component.extend(idBase, function(App) {
 				if (editor.isValid()) {
 
 					var values = editor.values();
-					var newField = _currentObject.fieldNew(values);
+
+					var field = null;
+					var oldData = null;
+
+					// if this is an ADD operation, (_editField will be undefined)
+					if (!_editField) {
+
+						// get a new instance of a field:
+						field = _currentObject.fieldNew(values);
+
+					} else {
+
+						// use our _editField, backup our oldData
+						oldData = _editField.toObj();
+						_editField.fromValues(values);
+
+						field = _editField;
+					}
 
 
-					// newField can check for more validations:
-					var errors = newField.isValid();
+					var errors = field.isValid();
 					if (errors) {
 						OP.Form.isValidationError(errors, $$(editor.ui.id));
+
+						// keep our old data
+						if (oldData) {
+							field.fromValues(oldData);
+						}
+
 						$$(ids.buttonSave).enable();
 					} else {
 
-						newField.save()
+						field.save()
 						.then(()=>{
 
 							$$(ids.buttonSave).enable();
 							_logic.hide();
 							_currentEditor.clear();
-							_logic.callbacks.onSave(newField)
+							_logic.callbacks.onSave(field)
 						})
 						.catch((err) => {
 							$$(ids.buttonSave).enable();
 						})
 					}
+
 
 				} else {
 					$$(ids.buttonSave).enable();
@@ -339,6 +345,44 @@ OP.Component.extend(idBase, function(App) {
 		},
 
 
+
+		modeAdd:function() {
+
+			// show default editor:
+			defaultEditorComponent.show();
+			_currentEditor = defaultEditorComponent;
+
+			// show the ability to switch data types
+			$$(ids.types).show();
+
+			// change button text to 'add'
+			$$(ids.buttonSave).define('label', labels.component.addNewField);
+			$$(ids.buttonSave).refresh();
+		},
+
+
+		modeEdit: function(field) {
+
+			// switch to this field's editor:
+			// hide the rest
+			for(var c in _componentsByType) {
+				if (c == field.type) {
+					_componentsByType[c].populate(field);
+					_componentsByType[c].show();
+				} else {
+					_componentsByType[c].hide();
+				}
+			}
+
+			// hide the ability to switch data types
+			$$(ids.types).hide();
+
+			// change button text to 'save'
+			$$(ids.buttonSave).define('label', labels.common.save);
+			$$(ids.buttonSave).refresh();
+		},
+
+
 		/**
 		 * @function onMenuItemClick
 		 * swap the editor view to match the data field selected in the menu.
@@ -366,18 +410,18 @@ OP.Component.extend(idBase, function(App) {
 
 
 		onShow: function() {
-// if (!AD.comm.isServerReady()) {
-// 	this.getTopParentView().hide();
+			// if (!AD.comm.isServerReady()) {
+			// 	this.getTopParentView().hide();
 
-// 	webix.alert({
-// 		title: labels.add_fields.cannotUpdateFields,
-// 		text: labels.add_fields.waitRestructureObjects,
-// 		ok: labels.common.ok
-// 	});
-// }
-// else { // Set default field type
-// 	this.showFieldData('string');
-// }
+			// 	webix.alert({
+			// 		title: labels.add_fields.cannotUpdateFields,
+			// 		text: labels.add_fields.waitRestructureObjects,
+			// 		ok: labels.common.ok
+			// 	});
+			// }
+			// else { // Set default field type
+			// 	this.showFieldData('string');
+			// }
 console.error('TODO: onShow();')
 		},
 
@@ -397,8 +441,22 @@ console.error('TODO: resetState()');
 		 *
 		 * Show this component.
 		 * @param {obj} $view  the webix.$view to hover the popup around.
+		 * @param {ABField} field the ABField to edit.  If not provided, then
+		 *						  this is an ADD operation.
 		 */
-		show:function($view) {
+		show:function($view, field) {
+
+			_editField = field;
+			
+			if (_editField) {
+
+				_logic.modeEdit(field);
+
+			} else {
+
+				_logic.modeAdd();
+
+			}
 
 			$$(ids.component).show($view);
 		},
@@ -441,6 +499,10 @@ console.error('TODO: resetState()');
 		ui:_ui,					// {obj} 	the webix ui definition for this component
 		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+
+		show:_logic.show,		// {fn} 	fn(node, ABField)
+
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

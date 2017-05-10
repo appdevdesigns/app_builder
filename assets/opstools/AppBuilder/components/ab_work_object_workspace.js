@@ -37,7 +37,10 @@ var labels = {
 		defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
 		permission: L('ab.object.toolbar.permission', "*Permission"),
 		addFields: L('ab.object.toolbar.addFields', "*Add new column"),
-		"export": L('ab.object.toolbar.export', "*Export")
+		"export": L('ab.object.toolbar.export', "*Export"),
+
+		confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
+		confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
 	}
 }
 
@@ -81,6 +84,19 @@ OP.Component.extend(idBase, function(App) {
 	// The DataTable that displays our object:
 	var DataTable = OP.Component['ab_work_object_workspace_datatable'](App);
 
+
+	// Various Popups on our page:
+	var PopupDefineLabelComponent = OP.Component['ab_work_object_workspace_popupDefineLabel'](App);
+	var PopupDefineLabel = webix.ui(PopupDefineLabelComponent.ui);
+
+
+	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
+	// var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
+	webix.ui(PopupNewDataFieldComponent.ui);
+
+
+	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
+	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
 
 
 
@@ -235,7 +251,22 @@ OP.Component.extend(idBase, function(App) {
 	var _init = function() {
 		// webix.extend($$(ids.form), webix.ProgressBar);
 
-		DataTable.init();
+		DataTable.init({
+			onEditorMenu:_logic.callbackHeaderEditorMenu
+		});
+
+		PopupDefineLabelComponent.init({
+			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
+		});
+
+		PopupNewDataFieldComponent.init({
+			onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
+		});
+
+		PopupHideFieldComponent.init({
+			onChange:_logic.callbackFieldsVisible		// be notified when there is a change in the hidden fields
+		});
+
 
 		$$(ids.noSelection).show();
 	}
@@ -283,6 +314,48 @@ OP.Component.extend(idBase, function(App) {
 
 
 		/**
+		 * @function callbackFieldsVisible
+		 *
+		 * call back for when an editor menu action has been selected.
+		 * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
+		 */
+		callbackHeaderEditorMenu: function(action, field, node) {
+
+			switch(action) {
+
+				case 'hide':
+				case 'filter':
+				case 'sort':
+console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+action);
+					break;
+
+				case 'edit':
+					// pass control on to our Popup:
+					PopupNewDataFieldComponent.show(node, field);
+					break;
+
+				case 'delete':
+
+					// verify they mean to do this:
+					OP.Dialog.Confirm({
+						title: labels.component.confirmDeleteTitle,
+						message: labels.component.confirmDeleteMessage.replace('{0}', field.label),
+						callback:function( isOK ) {
+
+							if (isOK) {
+//// LEFT OFF HERE:
+
+
+							}
+						}
+					})
+					break;
+			}
+			
+		},
+
+
+		/**
 		 * @function clearObjectWorkspace()
 		 *
 		 * Clear the object workspace. 
@@ -313,7 +386,7 @@ OP.Component.extend(idBase, function(App) {
 		 * this object.
 		 */
 		toolbarAddFields: function($view) {
-			PopupNewDataField.show($view);
+			PopupNewDataFieldComponent.show($view);
 		},
 
 
@@ -382,28 +455,6 @@ console.error('TODO: toolbarSort()');
 		}
 	}
 
-
-
-	// NOTE: declare these after _logic  for the callbacks:
-	var PopupDefineLabelComponent = OP.Component['ab_work_object_workspace_popupDefineLabel'](App);
-	var PopupDefineLabel = webix.ui(PopupDefineLabelComponent.ui);
-	PopupDefineLabelComponent.init({
-		onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
-	})
-
-
-	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
-	var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
-	PopupNewDataFieldComponent.init({
-		onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
-	});
-
-
-	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
-	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
-	PopupHideFieldComponent.init({
-		onChange:_logic.callbackFieldsVisible		// be notified when there is a change in the hidden fields
-	})
 
 
 	// Expose any globally accessible Actions:

@@ -50,95 +50,6 @@ export default class ABFieldComponent {
   	///
 
 
-	/**
-	 * @function definitionEditor
-	 *
-	 * Many DataFields share some base information for their usage 
-	 * in the AppBuilder.  The UI Editors have a common header 
-	 * and footer format, and this function allows child DataFields
-	 * to not have to define those over and over.
-	 *
-	 * The common layout header contains:
-	 *		[Menu Label]
-	 *		[textBox: labelName]
-	 *		[text:    description]
-	 *
-	 * The defined DataField UI will be added at the end of this.
-	 *
-	 * This routine actually updated the live DataField definition
-	 * with the common header info.
-	 *
-	 * @param {DataField} field  The DataField object to work with.
-	 */
-  	static definitionEditor( App, ids, _logic, Field ) {
-
-/// TODO: maybe just pass in onChange instead of _logic
-/// if not onChange, then use our default:
-
-  		// setup our default labelOnChange functionality:
-  		var onChange = function (newVal, oldVal) {
-
-  			oldVal = oldVal || '';
-
-			if (newVal != oldVal &&
-				oldVal == $$(ids.columnName).getValue()) {
-				$$(ids.columnName).setValue(newVal);
-			}
-		}
-
-		// if they provided a labelOnChange() override, use that:
-		if (_logic.labelOnChange) {
-			onChange = _logic.labelOnChange;
-		}
-
-
-  		var _ui = {
-			// id: ids.component,
-			rows: [
-				{
-					view: "label",
-					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
-				},
-				{
-					view: "text",
-					id: ids.label,
-					name:'label',
-					label: App.labels.dataFieldHeaderLabel, 
-					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
-					labelWidth: 50,
-					css: 'ab-new-label-name',
-					on: {
-						onChange: function (newVal, oldVal) {
-							onChange(newVal, oldVal);
-						}
-					}
-				},
-				{
-					view: "text",
-					id: ids.columnName,
-					name:'columnName',
-					label: App.labels.dataFieldColumnName, // 'Name',
-					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
-					labelWidth: App.config.labelWidthSmall
-				},
-				{
-					view: "label",
-					id: ids.fieldDescription,
-					label: Field.description
-				},
-				{
-					view: 'checkbox',
-					id: ids.showIcon, 
-					name:'showIcon',
-					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
-					labelWidth: 0,
-					value:true
-				}
-			]
-		}
-
-  		return _ui;
-  	}
 
 
 	///
@@ -172,6 +83,13 @@ export default class ABFieldComponent {
 		for (var i in this.ids) {
 			ids[i] = App.unique(this.idBase+'_'+i);
 		}
+
+		// update our elements to include our ids:
+    	elements.forEach((e) => {
+    		if (e.name) {
+    			e.id = ids[e.name];
+    		}
+    	})
 
 		//// NOTE: we merge in the common headers below.
 		var _ui = {
@@ -296,10 +214,12 @@ export default class ABFieldComponent {
 
 console.error('TODO: .populate()');
 
-				// perform provided .populate()
-				if (this.logic.populate) {
-					this.logic.populate(ids, field)
-				}
+				// populate the base ABField values:
+				ABField.editorPopulate(ids, field);
+
+				elements.forEach(function(e){
+					$$(ids[e.name]).setValue(field.settings[e.name]);
+				})
 			},
 
 
@@ -342,7 +262,7 @@ console.error('TODO: .populate()');
 
 		}
 
-		// apply overrides to our logic functions:
+		// apply additional logic functions:
 		for (var l in this.logic) {
 			if (!_logic[l]) _logic[l] = this.logic[l];
 		}
@@ -358,7 +278,7 @@ console.error('TODO: .populate()');
 
 
 		// return the current instance of this component:
-		return {
+		return this._component = {
 			ui:_ui,					// {obj} 	the webix ui definition for this component
 			init:_init,				// {fn} 	init() to setup this component  
 			// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
@@ -375,5 +295,12 @@ console.error('TODO: .populate()');
 			_logic: _logic			// {obj} 	Unit Testing
 		}
 	}
+
+
+
+
+	// populate(field) {
+	// 	this._component.populate(field);
+	// }
 
 }

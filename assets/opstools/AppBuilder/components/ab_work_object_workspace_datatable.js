@@ -6,6 +6,8 @@
  *
  */
 
+import "./ab_work_object_workspace_popupHeaderEditMenu"
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -187,6 +189,10 @@ console.error('!! ToDo: onAfterColumnShow()');
 			onAfterColumnHide: function (id) {
 console.error('!! ToDo: onAfterColumnHide()');
 				// $$(self.webixUiId.visibleFieldsPopup).hideField(id);
+			},
+
+			onHeaderClick: function (id, e, node) {
+				_logic.onHeaderClick(id, e, node);
 			}
 		}
 	}
@@ -196,25 +202,89 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 
 	// Our init() function for setting up our UI
-	var _init = function() {
+	var _init = function(options) {
+
+		// register our callbacks:
+		for(var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
+
 		// webix.extend($$(ids.form), webix.ProgressBar);
 	}
 
 
-	var CurrentObject = null;
+	var CurrentObject = null;		// current ABObject being displayed
+	var EditField	= null;			// which field (column header) is popup editor for
+	var EditNode	= null;			// which html node (column header) is popup editor for
 
 	// our internal business logic
 	var _logic = {
+
+
+		callbacks:{
+
+			/**
+			 * @function onEditorMenu
+			 * report back which menu action was clicked.
+			 * We get the info from our popupHeaderEditor component, but all the 
+			 * logic to respond to those options are in our parent. So we pass it 
+			 * on ...
+			 * 
+			 * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
+			 * @param {ABField} field  the field to which the action is to be applied
+			 * @param {dom} node  the optional html node for this header item.
+			 */
+			onEditorMenu: function(action, field) {  }
+		},
+
+
+		/**
+		 * @function callbackHeaderEdit
+		 *
+		 * call back for when an item in the Header Edit Menu has been selected.
+		 * @param {string} action the action requested for this field:
+		 */
+		callbackHeaderEdit: function(action) {
+
+			PopupHeaderEdit.hide();
+			_logic.callbacks.onEditorMenu(action, EditField, EditNode);
+		},
+
+
+		/**
+		 * @function onHeaderClick
+		 * 
+		 * process the user clicking on the header for one of our columns.
+		 */
+		onHeaderClick: function (id, e, node) {
+
+			// Ignore system columns
+			if (id.column == 'appbuilder_trash')
+				return false;
+
+			// save our EditNode & EditField:
+			EditNode = node;
+
+			EditField = CurrentObject.fields(function(f){ return f.id == id.column; })[0];
+			if (EditField) {
+
+				// show the popup
+				PopupHeaderEdit.show(node);
+			}
+		
+			return false;
+		},
 
 
 		objectLoad:function(object) {
 
 			CurrentObject = object;
 
+			PopupHeaderEditComponent.objectLoad(object);
 
 			_logic.refresh();
-
 		},
+
 
 
 		// rebuild the data table view:
@@ -249,6 +319,16 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 
 	}
+
+
+
+	//// NOTE: declare these after _logic  for the callbacks:
+
+	var PopupHeaderEditComponent = OP.Component['ab_work_object_workspace_popupHeaderEditMenu'](App);
+	var PopupHeaderEdit = webix.ui(PopupHeaderEditComponent.ui);
+	PopupHeaderEditComponent.init({
+		onClick:_logic.callbackHeaderEdit		// be notified when there is a change in the hidden fields
+	})
 
 
 

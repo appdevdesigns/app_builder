@@ -34,23 +34,7 @@ export default class ABField {
 			translations:[]
   		}
   		*/
-    	this.id = values.id;			// NOTE: only exists after .save()
-    	this.type = values.type || this.fieldType();	
-    	this.icon = values.icon || this.fieldIcon();
-
-    	// if this is being instantiated on a read from the Property UI,
-    	// .label is coming in under .settings.label
-    	this.label = values.label || values.settings.label || '?label?';
-
-    	this.columnName = values.columnName || '';
-    	this.translations = values.translations || [];
-
-    	this.settings = values.settings || {};
-    	this.settings.showIcon = values.settings.showIcon+"" || "1";
-
-
-    	// convert from "0" => 0
-    	this.settings.showIcon = parseInt(this.settings.showIcon);
+  		this.fromValues(values);
 
 
 
@@ -82,6 +66,15 @@ export default class ABField {
 			var component = $$(ids[f]);
 			component.setValue(defaultValues[f]);
 		}
+  	}
+
+
+  	static editorPopulate( ids, field ) {
+
+  		$$(ids.label).setValue(field.label);
+  		$$(ids.columnName).setValue(field.columnName);
+  		$$(ids.showIcon).setValue(field.settings.showIcon);
+
   	}
 
 
@@ -232,7 +225,11 @@ export default class ABField {
 		var errors = null;
 
 		// .columnName must be unique among fileds on the same object
-		var isNameUnique = (this.object.fields((f)=>{ return f.columnName.toLowerCase() == this.columnName.toLowerCase(); }).length == 0);
+		var isNameUnique = (this.object.fields((f)=>{ 
+			var isDifferent = (f.id != this.id);
+			return (f.id != this.id) 
+					&& (f.columnName.toLowerCase() == this.columnName.toLowerCase() ); 
+		}).length == 0);
 		if (!isNameUnique) {
 			errors = OP.Form.validationError({
 				name:'columnName',
@@ -324,6 +321,28 @@ console.error('TODO: ABField.destroy()');
 	}
 
 
+	fromValues (values) {
+
+ 		this.id = values.id;			// NOTE: only exists after .save()
+    	this.type = values.type || this.fieldType();	
+    	this.icon = values.icon || this.fieldIcon();
+
+    	// if this is being instantiated on a read from the Property UI,
+    	// .label is coming in under .settings.label
+    	this.label = values.label || values.settings.label || '?label?';
+
+    	this.columnName = values.columnName || '';
+    	this.translations = values.translations || [];
+
+    	this.settings = values.settings || {};
+    	this.settings.showIcon = values.settings.showIcon+"" || "1";
+
+
+    	// convert from "0" => 0
+    	this.settings.showIcon = parseInt(this.settings.showIcon);
+	}
+
+
 
 
 
@@ -343,7 +362,7 @@ console.error('TODO: ABField.destroy()');
 	columnHeader (isObjectWorkspace) {
 
 		var config = {
-			id: this.settings.columnName,
+			id: this.id,
 			header: this.label,
 		}
 
