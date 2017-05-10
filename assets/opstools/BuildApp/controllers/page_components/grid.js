@@ -164,7 +164,10 @@ steal(
 					self.data.linkedToDataCollection = linkedToDataCollection;
 					if (events['onAfterCursorChange'] == null) {
 						events['onAfterCursorChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
-							$$(self.viewId).refresh();
+							if (setting.linkedField)
+								filterLinkedData.call(self, setting.linkedField);
+							else
+								$$(self.viewId).refresh();
 						});
 					}
 				}
