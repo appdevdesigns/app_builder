@@ -59,14 +59,12 @@ export default class ABFieldComponent {
 	component (App) {
 
 		// for each provided element: create an this.ids for it:
-    	var elements = this.elements(App);
-    	elements.forEach((e) => {
-    		if (e.name) {
-    			this.ids[e.name] = e.name;
-    		}
-    	})
+    	var elements = this.elements(App, this);
 
 
+    	////
+    	//// prepare our ids
+    	////
 
 		var ids = {
 
@@ -79,19 +77,40 @@ export default class ABFieldComponent {
 			showIcon: App.unique(this.idBase+'_showIcon'),
 		}
 
-		// make sure to include this instances element's ids into our list:
+    	this.eachDeep(elements, (e) => {
+    		if (e.name) {
+    			// if element has an .id, then use it in our list as is
+    			if (e.id) {
+    				ids[e.name] = e.id;
+    			}
+
+    			// otherwise create a new entry in our base list
+    			this.ids[e.name] = e.name;
+    		}
+    	})
+
+
+		// convert the entries in our base list into a globally acceptable id
+		// and use that in our ids list if it doesn't already exist
 		for (var i in this.ids) {
-			ids[i] = App.unique(this.idBase+'_'+i);
+			if (!ids[i]) {
+				ids[i] = App.unique(this.idBase+'_'+i);
+			}
 		}
 
-		// update our elements to include our ids:
-    	elements.forEach((e) => {
+		// update our elements to include our ids as we have them now.
+		this.eachDeep(elements, (e) => {
     		if (e.name) {
     			e.id = ids[e.name];
     		}
     	})
 
-		//// NOTE: we merge in the common headers below.
+
+		////
+		//// our UI definition:
+		////
+
+		// our base form:
 		var _ui = {
 			view:'form',
 			id: ids.component,
@@ -161,6 +180,22 @@ export default class ABFieldComponent {
 
 
 			/*
+			 * @function hide
+			 *
+			 * hide this component.
+			 */
+			hide: () => {
+				$$(ids.component).clearValidation();
+				$$(ids.component).hide( false, false);
+
+				// perform provided .hide()
+				if (this.logic.hide) {
+					this.logic.hide(ids)
+				}
+			},
+
+
+			/*
 			 * @function isValid
 			 *
 			 * checks the current values on the componet to see if they are Valid
@@ -217,9 +252,14 @@ console.error('TODO: .populate()');
 				// populate the base ABField values:
 				ABField.editorPopulate(ids, field);
 
-				elements.forEach(function(e){
+				this.eachDeep(elements, function(e){
 					$$(ids[e.name]).setValue(field.settings[e.name]);
 				})
+
+				// perform provided .populate()
+				if (this.logic.populate) {
+					this.logic.populate(ids, field);
+				}
 			},
 
 
@@ -228,9 +268,9 @@ console.error('TODO: .populate()');
 			 *
 			 * show this component.
 			 */
-			show: () => {
+			show: (a, b) => {
 				$$(ids.component).clearValidation();
-				$$(ids.component).show();
+				$$(ids.component).show(a, b);
 
 				// perform provided .show()
 				if (this.logic.show) {
@@ -276,6 +316,10 @@ console.error('TODO: .populate()');
 		var commonUI = ABField.definitionEditor(App, ids, _logic, this.fieldDefaults);
 		_ui.elements = commonUI.rows.concat(elements);
 
+		for (var r in this.rules) {
+			_ui.rules[r] = this.rules[r];
+		}
+
 
 		// return the current instance of this component:
 		return this._component = {
@@ -286,6 +330,7 @@ console.error('TODO: .populate()');
 
 			// DataField exposed actions:
 			clear: _logic.clear,
+			hide: _logic.hide,
 			isValid:_logic.isValid,
 			populate: _logic.populate,
 			show: _logic.show,
@@ -298,6 +343,44 @@ console.error('TODO: .populate()');
 
 
 
+	/**
+	 * @function eachDeep
+	 * a depth first fn to apply fn() to each element of our list.
+	 * @param {array} list  array of webix elements to scan
+	 * @param {fn} fn function to apply to each element.
+	 */
+	eachDeep(list, fn) {
+		list.forEach((e) => {
+
+			// process sub columns
+			if (e.cols) {
+				this.eachDeep(e.cols, fn);
+				return;
+			}
+
+			// or rows
+			if (e.rows) {
+				this.eachDeep(e.rows, fn);
+				return;
+			}
+
+			// or just process this element:
+			fn(e)
+		})
+	}
+
+
+	idsUnique(ids, App) {
+
+		for (var i in ids) {
+			if (ids[i] == '') {
+				ids[i] = App.unique(this.idBase+'_'+i)
+			} else {
+				ids[i] = App.unique(this.idBase+'_'+ids[i])
+			}
+		}
+		return ids;
+	}
 
 	// populate(field) {
 	// 	this._component.populate(field);

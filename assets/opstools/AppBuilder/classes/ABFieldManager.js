@@ -7,15 +7,21 @@
 
 
 import ABFieldString from "./dataFields/ABFieldString"
+import ABFieldNumber from "./dataFields/ABFieldNumber"
 
+
+import ABFieldImage from "./dataFields/ABFieldImage"
 
 /* 
  * Fields
- * A type => ABField  hash of the different ABFields available.
+ * A name => ABField  hash of the different ABFields available.
  */
 var Fields = {};
-Fields[ABFieldString.defaults().type] = ABFieldString;
+Fields[ABFieldString.defaults().name] = ABFieldString;
+Fields[ABFieldNumber.defaults().name] = ABFieldNumber;
 
+
+Fields[ABFieldImage.defaults().name] = ABFieldImage;
 
 
 

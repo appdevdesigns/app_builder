@@ -159,6 +159,7 @@ OP.Component.extend(idBase, function(App) {
 
 		var submenus = [];	// Create the submenus for our Data Fields:
 		var newEditorList = {
+			view:'multiview',
 			id:ids.editDefinitions,
 			rows:[]
 		}
@@ -198,6 +199,10 @@ OP.Component.extend(idBase, function(App) {
 		// now remove the 'del_me' definition editor placeholder.
 		webix.ui(newEditorList, $$(ids.editDefinitions));
 
+		// hide all the unused editors:
+		for (var c in _componentHash){
+			_componentHash[c].hide();
+		}
 
 		defaultEditorComponent.show(); // show the default editor
 		_currentEditor = defaultEditorComponent;
@@ -349,7 +354,7 @@ OP.Component.extend(idBase, function(App) {
 		modeAdd:function() {
 
 			// show default editor:
-			defaultEditorComponent.show();
+			defaultEditorComponent.show(false, false);
 			_currentEditor = defaultEditorComponent;
 
 			// show the ability to switch data types
@@ -363,12 +368,15 @@ OP.Component.extend(idBase, function(App) {
 
 		modeEdit: function(field) {
 
+			if (_currentEditor) _currentEditor.hide();
+
 			// switch to this field's editor:
 			// hide the rest
 			for(var c in _componentsByType) {
 				if (c == field.type) {
 					_componentsByType[c].populate(field);
-					_componentsByType[c].show();
+					_componentsByType[c].show(false, false);
+					_currentEditor = _componentsByType[c];
 				} else {
 					_componentsByType[c].hide();
 				}
