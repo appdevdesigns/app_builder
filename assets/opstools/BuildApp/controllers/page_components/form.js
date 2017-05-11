@@ -41,19 +41,28 @@ steal(
 			};
 
 		//Constructor
-		var formComponent = function (application, viewId, componentId) {
+		var formComponent = function (application, rootPageId, viewId, componentId) {
 			var data = {},
 				events = {}, // { eventName: eventId, ..., eventNameN: eventIdN }
 				customEditTimeout = {}; // { colId: timeoutId }
 
 			// Private methods
-			function showCustomEdit(column, current_view) {
+			function getCurrentModel(setting) {
+				var currModel = null;
+
+				if (setting.clearOnLoad != 'yes')
+					currModel = data.dataCollection.AB.getCurrModel(rootPageId);
+
+				return currModel;
+			}
+
+			function showCustomEdit(column, setting, current_view) {
 				if (customEditTimeout[column.id]) clearTimeout(customEditTimeout[column.id]);
 				customEditTimeout[column.id] = setTimeout(function () {
 					var rowId;
 
 					if (data.dataCollection) {
-						var currModel = data.dataCollection.AD.currModel(),
+						var currModel = getCurrentModel(setting),
 							rowId = currModel ? currModel.id : null;
 					}
 
@@ -121,11 +130,11 @@ steal(
 				$$(self.viewId).showProgress({ type: "icon" });
 
 				// Group app
-				if (linkedToDataCollection && linkedToDataCollection.getCheckedItems().length > 0) {
+				if (linkedToDataCollection && linkedToDataCollection.AB.getCheckedItems().length > 0) {
 					var linkField = self.data.columns.filter(function (col) { return col.id == setting.linkField })[0];
 					var addTasks = [];
 
-					async.eachSeries(linkedToDataCollection.getCheckedItems(), function (linkRowId) {
+					async.eachSeries(linkedToDataCollection.AB.getCheckedItems(), function (linkRowId) {
 						async.series([
 							function (next) {
 								var modelData = new dataCollection.AD.getModelObject()(); // Create new model data
@@ -166,7 +175,7 @@ steal(
 				}
 				// Save without link data (Single row)
 				else {
-					var modelData = dataCollection.AD.currModel(),
+					var modelData = getCurrentModel(setting),
 						isAdd;
 
 					// Create
@@ -234,7 +243,7 @@ steal(
 				$$(self.viewId).hideProgress();
 
 				if (setting.clearOnSave == 'yes')
-					dataCollection.setCursor(null);
+					dataCollection.AB.setCurrModel(rootPageId, null);
 				else if (dataCollection.getCursor() == null) {
 					clearForm.call(self, object, self.data.columns, dataCollection);
 				}
@@ -251,10 +260,18 @@ steal(
 				}
 			}
 
-			function showCustomFields(object, columns, rowId, rowData) {
+			function showFields(object, columns, rowId, rowData) {
 				var self = this;
 
 				if (!columns || columns.length < 1) return;
+
+				// Webix view
+				if (rowData) {
+					var modelData = rowData.attr ? rowData.attr() : rowData;
+					$$(self.viewId).setValues(modelData);
+				}
+				else
+					$$(self.viewId).setValues({});
 
 				// Custom view
 				columns.forEach(function (col) {
@@ -266,7 +283,7 @@ steal(
 					if (childView.config && childView.config.view === 'template') {
 						if (childView.customEditEventId) webix.eventRemove(childView.customEditEventId);
 						childView.customEditEventId = webix.event(childView.$view, "click", function (e) {
-							showCustomEdit(col, childView.$view);
+							showCustomEdit(col, col.setting, childView.$view);
 						});
 					}
 
@@ -305,7 +322,7 @@ steal(
 
 				if (data.linkedToDataCollection) {
 					var checkedItems = [];
-					data.linkedToDataCollection.getCheckedItems().forEach(function (rowId) {
+					data.linkedToDataCollection.AB.getCheckedItems().forEach(function (rowId) {
 						var rowData = data.linkedToDataCollection.getItem(rowId);
 
 						checkedItems.push({
@@ -376,7 +393,7 @@ steal(
 				// Clear form
 				$$(self.viewId).setValues({});
 				// Clear custom views
-				showCustomFields.call(self, object, columns, null, null);
+				showFields.call(self, object, columns, null, null);
 			}
 
 			// Set viewId to public
@@ -416,25 +433,27 @@ steal(
 				if (!data.object || data.object.length < 1) return;
 				data.object = data.object[0];
 
-				if (events['onAfterCursorChange'] == null && data.dataCollection) {
-					events['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
+				if (events['onAfterCurrModelChange'] == null && data.dataCollection) {
+					events['onAfterCurrModelChange'] = data.dataCollection.attachEvent('onAfterCurrModelChange', function (basePageId, rowId) {
+						if (basePageId != rootPageId) return;
+
 						async.series([
 							function (next) {
-								updateSaveButton(id).then(function () {
+								updateSaveButton(rowId).then(function () {
 									next();
 								}, next);
 							},
 							function (next) {
-								var currModel = data.dataCollection.AD.currModel();
+								var currModel = getCurrentModel(setting);
 
 								// Show custom display
-								showCustomFields.call(self, data.object, self.data.columns, id, currModel);
+								showFields.call(self, data.object, self.data.columns, rowId, currModel);
 
 								setElementHeights.call(self, self.data.columns, currModel);
 
 								next();
 							}
-						])
+						]);
 					});
 				}
 
@@ -726,7 +745,7 @@ steal(
 								inputWidth: 80,
 								disabled: editable,
 								click: function () {
-									data.dataCollection.setCursor(null);
+									data.dataCollection.AB.setCurrModel(rootPageId, null);
 
 									clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 
@@ -744,13 +763,11 @@ steal(
 						var currData;
 
 						// Bind data
-						if (dataCollection) {
-							$$(self.viewId).bind(dataCollection);
-							currData = dataCollection.AD.currModel();
-						}
+						if (dataCollection)
+							currData = getCurrentModel(setting);
 
 						// Show data of current select data
-						showCustomFields.call(self, data.object, self.data.columns, currData ? currData.id : null, currData);
+						showFields.call(self, data.object, self.data.columns, currData ? currData.id : null, currData);
 
 						next();
 					},
@@ -984,10 +1001,9 @@ steal(
 
 				if (!data.dataCollection) return;
 
-				var currModel = data.dataCollection.AD.currModel();
+				var currModel = getCurrentModel(data.setting);
 
 				if (data.setting.clearOnLoad === 'yes') {
-					data.dataCollection.setCursor(null);
 					clearForm.call(self, data.object, self.data.columns, data.dataCollection);
 				}
 
@@ -1001,7 +1017,7 @@ steal(
 					if (col.fieldName == 'connectObject' && !currModel) {
 						dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
 							.then(function (linkedDataCollection) {
-								var linkCurrModel = linkedDataCollection.AD.currModel();
+								var linkCurrModel = linkedDataCollection.AB.getCurrModel(rootPageId);
 								if (!linkCurrModel) return;
 
 								// Get default value of linked data

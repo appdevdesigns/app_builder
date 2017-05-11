@@ -31,6 +31,24 @@ steal(
 						*/
 					},
 					{
+
+						getRootPageId: function () {
+							var page = this,
+								parentPage = page,
+								rootPageId;
+
+							while (rootPageId == null) {
+								if (parentPage.parent == null) {
+									rootPageId = (parentPage.id || parentPage);
+								}
+								else {
+									parentPage = parentPage.parent;
+								}
+							}
+
+							return rootPageId;
+						},                          
+
 						getItemTemplate: function () {
 							var page = this,
 								comTemplate = '';
@@ -94,6 +112,7 @@ steal(
 							// Create component instance
 							page.attr('comInstances.' + item.id, new componentInstance(
 								application, // Current application
+								page.getRootPageId(), // the root page id
 								viewId, // the view id
 								item.id // the component data id
 							));

@@ -13,7 +13,7 @@ steal(
         };
 
         //Constructor
-        var tabComponent = function (application, viewId, componentId) {
+        var tabComponent = function (application, rootPageId, viewId, componentId) {
             var data = {};
 
             var _this = this;

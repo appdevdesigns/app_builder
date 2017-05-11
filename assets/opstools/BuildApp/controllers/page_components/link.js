@@ -9,7 +9,7 @@ steal(
 		};
 
 		//Constructor
-		var linkComponent = function (application, viewId, componentId) {
+		var linkComponent = function (application, rootPageId, viewId, componentId) {
 			var data = {};
 
 			this.viewId = viewId;

@@ -30,7 +30,7 @@ steal(
 		};
 
 		// Instance functions
-		var gridComponent = function (application, viewId, componentId) {
+		var gridComponent = function (application, rootPageId, viewId, componentId) {
 			var data = {},
 				events = {}; // { eventName: eventId, ..., eventNameN: eventIdN }
 
@@ -119,7 +119,7 @@ steal(
 				var field = self.data.columns.filter(function (col) { return col.id == linkedField; })[0];
 
 				if (self.data.linkedToDataCollection && field) {
-					var currModel = self.data.linkedToDataCollection.AD.currModel();
+					var currModel = self.data.linkedToDataCollection.AB.getCurrModel(rootPageId);
 
 					if (currModel) {
 						$$(self.viewId).custom_filters = $$(self.viewId).custom_filters || {};
@@ -162,8 +162,10 @@ steal(
 				// Initial linked dataCollection events
 				if (linkedToDataCollection) {
 					self.data.linkedToDataCollection = linkedToDataCollection;
-					if (events['onAfterCursorChange'] == null) {
-						events['onAfterCursorChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
+					if (events['onAfterCurrModelChange'] == null) {
+						events['onAfterCurrModelChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCurrModelChange', function (basePageId, rowId) {
+							if (basePageId != rootPageId) return;
+
 							if (setting.linkedField)
 								filterLinkedData.call(self, setting.linkedField);
 							else
@@ -434,7 +436,7 @@ steal(
 						$$(componentIds.toolbar.replace('{id}', viewId)).$setSize($$(viewId).config.width + 3);
 					}
 
-					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
+					if (self.data.dataCollection && self.data.dataCollection.AB.getCheckedItems().length > 0) {
 						if ($$(self.viewId + '-update-items-button'))
 							$$(self.viewId + '-update-items-button').enable();
 
@@ -462,7 +464,7 @@ steal(
 										$$(self.viewId).define('select', true);
 
 									if (dataCollection)
-										dataCollection.setCursor((id.row || id));
+										dataCollection.AB.setCurrModel(rootPageId, (id.row || id));
 									break;
 								case 'appbuilder_edit_form':
 									$(self).trigger('changePage', {
@@ -473,7 +475,7 @@ steal(
 										$$(self.viewId).define('select', true);
 
 									if (dataCollection)
-										dataCollection.setCursor((id.row || id));
+										dataCollection.AB.setCurrModel(rootPageId, (id.row || id));
 									break;
 							}
 						});
@@ -497,9 +499,9 @@ steal(
 
 							if (col == 'select_column') {
 								if (state)
-									self.data.dataCollection.checkItem(row);
+									self.data.dataCollection.AB.checkItem(row);
 								else
-									self.data.dataCollection.uncheckItem(row);
+									self.data.dataCollection.AB.uncheckItem(row);
 							}
 						});
 					}
@@ -510,21 +512,23 @@ steal(
 								var rowId = data.id || data;
 
 								// Set cursor of data collection
-								var currModel = dataCollection.AD.currModel();
+								var currModel = dataCollection.AB.getCurrModel(rootPageId);
 								if (!currModel || currModel.id != rowId)
-									dataCollection.setCursor(rowId);
+									dataCollection.AB.setCurrModel(rootPageId, rowId);
 							});
 						}
 
-						if (events['onAfterCursorChange'] == null) {
-							events['onAfterCursorChange'] = dataCollection.attachEvent("onAfterCursorChange", function (id) {
+						if (events['onAfterCurrModelChange'] == null) {
+							events['onAfterCurrModelChange'] = dataCollection.attachEvent("onAfterCurrModelChange", function (basePageId, rowId) {
+								if (basePageId != rootPageId) return;
 								var selectedItem = $$(self.viewId).getSelectedId(false),
 									preserve = $$(self.viewId).config.multiselect;
 
-								if (!id && $$(self.viewId).unselectAll)
+								if ($$(self.viewId).unselectAll)
 									$$(self.viewId).unselectAll();
-								else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
-									$$(self.viewId).select(id, preserve);
+
+								if ((!selectedItem || selectedItem.id != rowId) && $$(self.viewId).select) {
+									$$(self.viewId).select(rowId, preserve);
 								}
 							});
 						}
@@ -532,7 +536,7 @@ steal(
 						if (events['onCheckItemsChange'] == null) {
 							events['onCheckItemsChange'] = dataCollection.attachEvent("onCheckItemsChange", function () {
 								// Enable Update/Delete buttons
-								if (dataCollection.getCheckedItems().length > 0) {
+								if (dataCollection.AB.getCheckedItems().length > 0) {
 									if ($$(self.viewId + '-update-items-button'))
 										$$(self.viewId + '-update-items-button').enable();
 									if ($$(self.viewId + '-delete-items-button'))
