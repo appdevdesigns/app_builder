@@ -123,18 +123,40 @@ steal(
 
 					if (currModel) {
 						$$(self.viewId).custom_filters = $$(self.viewId).custom_filters || {};
-						$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
-							var itemValues = item[field.name];
 
-							if (!itemValues) {
-								return false;
-							}
-							else if (itemValues && !itemValues.filter) {
-								itemValues = [itemValues]; // Convert to array
+						// Filter to linked data collection
+						if (field.fieldName == 'connectObject') {
+							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
+								var itemValues = item[field.name];
+
+								if (!itemValues) {
+									return false;
+								}
+								else if (itemValues && !itemValues.filter) {
+									itemValues = [itemValues]; // Convert to array
+								}
+
+								return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
+							};
+						}
+						// Filter to itself
+						else {
+							var currValue = currModel.attr(field.name) || [];
+							if (currValue && !currValue.filter) {
+								currValue = [currValue];
 							}
 
-							return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
-						};
+							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
+								var itemValue = item[field.name] || [];
+								if (itemValue && !itemValue.filter) {
+									itemValue = [itemValue];
+								}
+
+								return currValue.filter(function (n) {
+									return itemValue.indexOf(n) > -1;
+								}).length > 0;
+							};
+						}
 					}
 
 					$$(self.viewId).refresh();
@@ -692,13 +714,24 @@ steal(
 						// Data source - Linked to
 						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject.toString() }),
 							linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; }),
+							selfObject = application.objects.filter(function (obj) { return obj.id == setting.object; })[0],
 							linkedToItem = $$(componentIds.propertyView).getItem('linkedTo');
+
 						linkedToItem.options = $.map(linkedObjs, function (o) {
 							return {
 								id: o.id,
 								value: o.label
 							};
 						});
+
+						// Linked to itself
+						if (selfObject) {
+							linkedToItem.options.splice(0, 0, {
+								id: selfObject.id,
+								value: selfObject.label
+							});
+						}
+
 						linkedToItem.options.splice(0, 0, {
 							id: 'none',
 							value: '[none]'
@@ -708,7 +741,16 @@ steal(
 						var linkedFieldItem = $$(componentIds.propertyView).getItem('linkedField');
 						if (setting.linkedTo) {
 							linkedFieldItem.options = self.data.columns
-								.filter(function (col) { return col.setting.linkObject == setting.linkedTo; })
+								.filter(function (col) {
+									// Link to itself
+									if (setting.linkedTo &&
+										setting.linkedTo == setting.object &&
+										col.fieldName != 'connectObject')
+										return true;
+									// Link to other object
+									else
+										return col.setting.linkObject == setting.linkedTo;
+								})
 								.map(function (col) {
 									return {
 										id: col.id,
@@ -1074,7 +1116,14 @@ steal(
 
 								if (linkedTo != 'none') {
 									linkedField.options = editInstance.data.columns
-										.filter(function (col) { return col.setting.linkObject == linkedTo; })
+										.filter(function (col) {
+											// Link to itself
+											if (linkedTo == propertyValues.object)
+												return true;
+											// Link to other object
+											else
+												return col.setting.linkObject == linkedTo;
+										})
 										.map(function (col) {
 											return {
 												id: col.id,
