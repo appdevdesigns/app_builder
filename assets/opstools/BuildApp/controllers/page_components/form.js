@@ -86,20 +86,27 @@ steal(
 								// If link column is hidden, then select cursor item of linked data collection
 								if (col.type == 'connectObject') {
 									dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
+										.fail(next)
 										.done(function (linkDC) {
-											if (col.setting.linkType == 'collection')
-												colVal = [linkDC.getCursor()];
-											else
-												colVal = linkDC.getCursor();
+
+											var linkedCurrModel = linkDC.AB.getCurrModel(rootPageId);
+											if (linkedCurrModel != null) {
+												if (col.setting.linkType == 'collection')
+													colVal = [linkedCurrModel.id];
+												else
+													colVal = linkedCurrModel.id;
+											}
+
+											next();
 										});
 								}
 							}
 							else {
 								// Get value in custom data field
 								colVal = dataFieldsManager.getValue(application, null, col, childView.$view, editValues);
+								next();
 							}
 
-							next();
 						},
 						function (next) {
 							if (colVal != null)
@@ -244,7 +251,7 @@ steal(
 
 				if (setting.clearOnSave == 'yes')
 					dataCollection.AB.setCurrModel(rootPageId, null);
-				else if (dataCollection.getCursor() == null) {
+				else if (dataCollection.AB.getCurrModel(rootPageId) == null) {
 					clearForm.call(self, object, self.data.columns, dataCollection);
 				}
 
@@ -774,8 +781,8 @@ steal(
 					// Enable/Disable save button
 					function (next) {
 						var cursorId;
-						if (dataCollection && dataCollection.getCursor() != null) {
-							cursorId = dataCollection.getCursor();
+						if (dataCollection && dataCollection.AB.getCurrModel() != null) {
+							cursorId = dataCollection.AB.getCurrModel().id;
 						}
 						updateSaveButton(cursorId).then(function () {
 							next();
