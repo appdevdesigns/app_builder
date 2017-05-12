@@ -100,6 +100,9 @@ steal(
 											next();
 										});
 								}
+								else {
+									next();
+								}
 							}
 							else {
 								// Get value in custom data field
