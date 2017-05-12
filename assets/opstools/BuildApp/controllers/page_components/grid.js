@@ -111,12 +111,12 @@ steal(
 					$$(self.viewId).hideProgress();
 			};
 
-			function filterLinkedData(linkedField) {
+			function filterLinkedData(setting) {
 				var self = this;
 
 				if (!self.data.columns) return;
 
-				var field = self.data.columns.filter(function (col) { return col.id == linkedField; })[0];
+				var field = self.data.columns.filter(function (col) { return col.id == setting.linkedField; })[0];
 
 				if (self.data.linkedToDataCollection && field) {
 					var currModel = self.data.linkedToDataCollection.AB.getCurrModel(rootPageId);
@@ -124,8 +124,28 @@ steal(
 					if (currModel) {
 						$$(self.viewId).custom_filters = $$(self.viewId).custom_filters || {};
 
+						// Filter to itself
+						if (setting.object == setting.linkedTo) {
+							var currValue = currModel.attr(field.name) || [];
+							if (currValue && !currValue.filter) {
+								currValue = [currValue];
+							}
+							currValue = currValue.map(function (n) { return n.id ? n.id : n; });
+
+							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
+								var itemValue = item[field.name] || [];
+								if (itemValue && !itemValue.filter) {
+									itemValue = [itemValue];
+								}
+								itemValue = itemValue.map(function (n) { return n.id ? n.id : n; });
+
+								return currValue.filter(function (n) {
+									return itemValue.indexOf(n) > -1;
+								}).length > 0;
+							};
+						}
 						// Filter to linked data collection
-						if (field.fieldName == 'connectObject') {
+						else {
 							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
 								var itemValues = item[field.name];
 
@@ -137,24 +157,6 @@ steal(
 								}
 
 								return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
-							};
-						}
-						// Filter to itself
-						else {
-							var currValue = currModel.attr(field.name) || [];
-							if (currValue && !currValue.filter) {
-								currValue = [currValue];
-							}
-
-							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
-								var itemValue = item[field.name] || [];
-								if (itemValue && !itemValue.filter) {
-									itemValue = [itemValue];
-								}
-
-								return currValue.filter(function (n) {
-									return itemValue.indexOf(n) > -1;
-								}).length > 0;
 							};
 						}
 					}
@@ -189,7 +191,7 @@ steal(
 							if (basePageId != rootPageId) return;
 
 							if (setting.linkedField)
-								filterLinkedData.call(self, setting.linkedField);
+								filterLinkedData.call(self, setting);
 							else
 								$$(self.viewId).refresh();
 						});
@@ -606,7 +608,7 @@ steal(
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
 				if (linkedField)
-					filterLinkedData.call(self, linkedField);
+					filterLinkedData.call(self, self.data.setting);
 			};
 
 			this.getSettings = function () {
@@ -744,8 +746,7 @@ steal(
 								.filter(function (col) {
 									// Link to itself
 									if (setting.linkedTo &&
-										setting.linkedTo == setting.object &&
-										col.fieldName != 'connectObject')
+										setting.linkedTo == setting.object)
 										return true;
 									// Link to other object
 									else
