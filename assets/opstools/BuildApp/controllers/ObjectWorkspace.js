@@ -16,6 +16,7 @@ steal(
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableDefineLabelPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableAddFieldPopup.js',
 	'opstools/BuildApp/controllers/webix_custom_components/ExportDataPopup.js',
+	'opstools/BuildApp/controllers/webix_custom_components/DataRichTextEditor.js',
 
 	'opstools/BuildApp/controllers/webix_custom_components/DataTableEditHeaderPopup.js',
 
@@ -1229,7 +1230,7 @@ steal(
 												AD.classes.AppBuilder.currApp.currObj.columns[i] = columnInfo;
 											}
 										}
-									} else { // Add 
+									} else { // Add
 										AD.classes.AppBuilder.currApp.currObj.columns.push(columnInfo);
 									}
 								}
@@ -1242,7 +1243,7 @@ steal(
 											self.data.columns[i] = columnInfo;
 										}
 									}
-								} else { // Add 
+								} else { // Add
 									self.data.columns.push(columnInfo);
 								}
 
