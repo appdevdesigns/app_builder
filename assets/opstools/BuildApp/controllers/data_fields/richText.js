@@ -14,7 +14,7 @@ steal(
 		icon: 'align-right',
 		menuName: AD.lang.label.getLabel('ab.dataField.richText.menuName') || 'Rich Text',
 		includeHeader: true,
-		description: AD.lang.label.getLabel('ab.dataField.richText.description') || 'A long text field that can span multiple lines.'
+		description: AD.lang.label.getLabel('ab.dataField.richText.description') || 'A long text field that utilizes a WYSIWYG editor toolbar.'
 	};
 
 	// Edit definition
@@ -47,6 +47,8 @@ steal(
 				icon: richTextDataField.icon,
 				editor: 'richtext', // http://docs.webix.com/desktop__editing.html
 				filter_type: 'text', // DataTableFilterPopup - filter type
+				template: '<div id="ab-rich-text-container"></div>',
+				id: 'ab-rich-text-container',
 				supportMultilingual: $$(componentIds.supportMultilingual).getValue()
 			}
 		};

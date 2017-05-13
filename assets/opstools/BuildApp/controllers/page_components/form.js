@@ -527,6 +527,27 @@ steal(
 								element.view = 'richselect';
 								element.options = listOptions[col.id];
 							}
+							else if (col.setting.editor === 'richtext') {
+
+								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>"
+									.replace(/#width#/g, element.labelWidth - 3)
+									.replace(/#label#/g, element.label);
+
+								element.cols = [
+									{
+										view: 'template',
+										minHeight: 45,
+										borderless: true,
+										template: template,
+										width: element.labelWidth + 5
+									},
+									{
+										view: 'ckeditor',
+										minHeight: 150
+									}
+								];
+
+							}
 							else if (col.setting.template) {
 								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
 									.replace(/#width#/g, element.labelWidth - 3)
