@@ -144,7 +144,7 @@ steal(
                     });
 
 
-                    var Page = AD.Model.get('opstools.BuildApp.ABPage');
+                    // var Page = AD.Model.get('opstools.BuildApp.ABPage');
 
                     function refreshTabView(cb) {
                         var renderTasks = [];
