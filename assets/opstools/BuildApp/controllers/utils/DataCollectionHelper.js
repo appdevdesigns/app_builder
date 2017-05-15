@@ -130,16 +130,17 @@ steal(
 										};
 
 										dataCollections[objectId].AB.lockCurrModel = function (rootPageId, rowId) {
-											this.setCurrModel(rootPageId, rowId);
-
 											this.preserveCurrModel[rootPageId] = rowId;
+
+											this.setCurrModel(rootPageId, rowId);
 										};
 
 										dataCollections[objectId].AB.unlockCurrModel = function (rootPageId) {
-											if (this.preserveCurrModel[rootPageId] != null)
-												this.setCurrModel(rootPageId, null);
+											if (this.preserveCurrModel[rootPageId] != null) {
+												this.preserveCurrModel[rootPageId] = null;
 
-											this.preserveCurrModel[rootPageId] = null;
+												this.setCurrModel(rootPageId, null);
+											}
 										};
 
 										dataCollections[objectId].AB.checkItem = function (rowId) {
