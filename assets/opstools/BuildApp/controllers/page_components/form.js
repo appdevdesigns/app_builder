@@ -74,12 +74,11 @@ steal(
 				var self = this,
 					q = $.Deferred(),
 					editValues = $$(self.viewId).getValues(),
-					keys = Object.keys(editValues),
-					colVal;
+					keys = Object.keys(editValues);
 
 				// Populate values to model
-				async.each(columns, function (col, ok) {
-					async.series([
+				async.eachSeries(columns, function (col, ok) {
+					async.waterfall([
 						function (next) {
 							var childView = getChildView.call(self, col.name);
 							if (childView == null) {
@@ -88,8 +87,9 @@ steal(
 									dataCollectionHelper.getDataCollection(application, col.setting.linkObject)
 										.fail(next)
 										.done(function (linkDC) {
-
+											var colVal;
 											var linkedCurrModel = linkDC.AB.getCurrModel(rootPageId);
+
 											if (linkedCurrModel != null) {
 												if (col.setting.linkType == 'collection')
 													colVal = [linkedCurrModel.id];
@@ -97,21 +97,21 @@ steal(
 													colVal = linkedCurrModel.id;
 											}
 
-											next();
+											next(null, colVal);
 										});
 								}
 								else {
-									next();
+									next(null, null);
 								}
 							}
 							else {
 								// Get value in custom data field
-								colVal = dataFieldsManager.getValue(application, null, col, childView.$view, editValues);
-								next();
+								var customVal = dataFieldsManager.getValue(application, null, col, childView.$view, editValues);
+								next(null, customVal);
 							}
 
 						},
-						function (next) {
+						function (colVal, next) {
 							if (colVal != null)
 								modelData.attr(col.name, colVal);
 							else if (editValues[col.name] != null)
