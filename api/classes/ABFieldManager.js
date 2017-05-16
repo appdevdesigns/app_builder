@@ -4,13 +4,13 @@
  * An interface for managing the different ABFields available in our AppBuilder.
  *
  */
+var path = require('path');
+
+var ABFieldString = require( path.join(__dirname, "dataFields", "ABFieldString" ));
+var ABFieldNumber = require( path.join(__dirname, "dataFields", "ABFieldNumber" )); 
 
 
-import ABFieldString from "./dataFields/ABFieldString"
-import ABFieldNumber from "./dataFields/ABFieldNumber"
-
-
-import ABFieldImage from "./dataFields/ABFieldImage"
+var ABFieldImage  = require( path.join(__dirname, "dataFields", "ABFieldImage"  )); 
 
 /* 
  * Fields
@@ -25,7 +25,7 @@ Fields[ABFieldImage.defaults().key] = ABFieldImage;
 
 
 
-export default  {
+module.exports = {
 
 
 	/*

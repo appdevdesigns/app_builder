@@ -15,8 +15,8 @@ function L(key, altText) {
 
 
 var ABFieldImageDefaults = {
-	name : 'image', // unique key to reference this specific DataField
-	type : 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	key : 'image', // unique key to reference this specific DataField
+	// type : 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	icon : 'file-image-o',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 	
 	// menuName: what gets displayed in the Editor drop list

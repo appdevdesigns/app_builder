@@ -172,6 +172,16 @@ module.exports = {
             return 'AB_' + AppBuilder.rules.nameFilter(name);
         },
 
+
+        /** 
+         * AppBuilder.rules.toObjectNameFormat
+         * 
+         * return a properly formatted Object/Table Name
+         *
+         * @param {string} appName  The name of the Application for this object
+         * @param {string} objectName  The name of the Object we are conditioning.
+         * @return {string}
+         */
         toObjectNameFormat: function (appName, objectName) {
             return (appName + '_' + AppBuilder.rules.nameFilter(objectName));
         }
