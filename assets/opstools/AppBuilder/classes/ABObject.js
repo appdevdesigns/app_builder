@@ -129,13 +129,9 @@ export default class ABObject {
 	 * @return {Promise}
 	 */
 	destroy () {
-		if (this.id) {
-console.error('TODO: ABObject.destroy()');
-			// return this.Model.destroy(this.id)
-			// 	.then(()=>{
-			// 		_AllApplications.remove(this.id);
-			// 	});
-		}
+
+		return this.application.objectDestroy(this);
+		
 	}
 
 
