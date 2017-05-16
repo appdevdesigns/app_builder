@@ -1,26 +1,24 @@
 module.exports = {
 	"paths": {
-		// "opstools/OP_Bundle": "opstools/BuildApp/OP_Bundle.js",
 		"opstools/BuildApp": "opstools/BuildApp/BuildApp.js"
 	},
 	"bundle": [
-		// "opstools/OP_Bundle",
 		"opstools/BuildApp"
 	],
 	"meta": {
 		"opstools/BuildApp": {
 			"deps": [
-				// "opstools/OP_Bundle",
 				"async",
-				"can",
 				"webix",
 				"js/selectivity/selectivity-full.min",
-				"OpsPortal/classes/OpsWebixDataCollection"
-			]
+				"OpsPortal/classes/OpsWebixDataCollection",
+				"opstools/BuildApp/OP_Bundle"
+			],
+			"format": "global"
 		},
 		// "opstools/OP_Bundle": {
-    //   "format": "global",
-    //   "sideBundle": true
+		//   "format": "global",
+		//   "sideBundle": true
 		// },
 		"js/selectivity/selectivity-full.min": {
 			"format": "global",
