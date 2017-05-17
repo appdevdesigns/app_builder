@@ -1,6 +1,6 @@
 
 /**
- * @class AD_Client
+ * @class OP
  * @parent index 4
  *
  * ###Client side global OpsPortal (OP) namespace.
@@ -15,12 +15,13 @@
 //// in 'use strict' ?
 
 // if (!window.OP) {
+import Component from "./component"
+import Config from "./config/config"
 import Form from "./form"
-import Multilingual from "./multilingual"
 import Model from "./model"
+import Multilingual from "./multilingual"
 import Util  from "./util"
 
-import Config from "./config/config"
 
     window.OP = {};
 
@@ -29,86 +30,88 @@ import Config from "./config/config"
     //              for our loaded projects.
     // OP.UI = {};    		// webix UI definitions
     // OP.Logic = {}; 		// logic references for webix application
-    OP.Component = {};  // our defined components
+    OP.Component = Component;  // our defined components
 
     OP.CustomComponent = {};  // separate holder for Webix Custom Components
 
+
+    OP.Config = Config;		// configuration Settings for our current environment.
 
 
 	// OP.UI.extend = function(key, definition) {
 	// 	OP.UI[key] = definition;
 	// }
 
-	OP.Component.extend = function(key, fn) {
-		OP.Component[key] = function(App){
+// 	OP.Component.extend = function(key, fn) {
+// 		OP.Component[key] = function(App){
 
-//// TODO: verify App has proper structure:
-			if (!App) {
-				App = OP.Component._newApp();
-			}
+// //// TODO: verify App has proper structure:
+// 			if (!App) {
+// 				App = OP.Component._newApp();
+// 			}
 
-			// make an instance of the component.
-			var component = fn(App);
+// 			// make an instance of the component.
+// 			var component = fn(App);
 
-			// transfer to App, any actions in the component:
-			if (component.actions){
-				for(var a in component.actions) {
-					App.actions[a] = component.actions[a];
-				}
-			}
+// 			// transfer to App, any actions in the component:
+// 			if (component.actions){
+// 				for(var a in component.actions) {
+// 					App.actions[a] = component.actions[a];
+// 				}
+// 			}
 
-			return component;
-		};
-	}
+// 			return component;
+// 		};
+// 	}
 
-	OP.Component._newApp = function () {
-		return {
+	// OP.Component._newApp = function () {
+	// 	return {
 
-			uuid: webix.uid(),
+	// 		uuid: webix.uid(),
 
-			/*
-			 * actions:
-			 * a hash of exposed application methods that are shared among our
-			 * components, so one component can invoke an action that updates
-			 * another component.
-			 */
-			actions:{
+	// 		/*
+	// 		 * actions:
+	// 		 * a hash of exposed application methods that are shared among our
+	// 		 * components, so one component can invoke an action that updates
+	// 		 * another component.
+	// 		 */
+	// 		actions:{
 
-			},
+	// 		},
 
 
-			/*
-			 * config
-			 * webix configuration settings for our current browser
-			 */
-			config:Config.config(),
+	// 		/*
+	// 		 * config
+	// 		 * webix configuration settings for our current browser
+	// 		 */
+	// 		config:Config.config(),
 
-			/*
-			 * custom
-			 * a collection of custom components for this App Instance.
-			 */
-			custom:{
+			
+	// 		 * custom
+	// 		 * a collection of custom components for this App Instance.
+			 
+	// 		custom:{
 
-			},
+	// 		},
 
-			/*
-			 * labels
-			 * a collection of labels that are common for the Application.
-			 */
-			labels:{
+	// 		/*
+	// 		 * labels
+	// 		 * a collection of labels that are common for the Application.
+	// 		 */
+	// 		labels:{
 
-			},
+	// 		},
 
-			/*
-			 * unique()
-			 * A function that returns a globally unique Key.
-			 * @param {string} key   The key to modify and return.
-			 * @return {string}
-			 */
-			unique: function(key) { return key+this.uuid; },
+	// 		/*
+	// 		 * unique()
+	// 		 * A function that returns a globally unique Key.
+	// 		 * @param {string} key   The key to modify and return.
+	// 		 * @return {string}
+	// 		 */
+	// 		unique: function(key) { return key+this.uuid; },
 
-		}
-	}
+	// 	}
+	// }
 
 
 	OP.CustomComponent.extend = function(key, fn) {
@@ -130,12 +133,11 @@ import Config from "./config/config"
 
 	OP.Form = Form;
 
-	OP.Multilingual = Multilingual;
 	OP.Model = Model;
 
+	OP.Multilingual = Multilingual;
 
 	OP.Util = Util;
-
 
 
 	export default OP;
