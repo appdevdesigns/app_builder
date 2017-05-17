@@ -19,7 +19,6 @@ import EditList from '../webix_custom_components/editlist'
 
 import style from "../AppBuilder.css"
 
-
 OP.Component.extend('ab', function(App) {
 
 
@@ -37,6 +36,7 @@ OP.Component.extend('ab', function(App) {
 		"export": L('ab.common.export', "*Export"),
 		formName: L('ab.common.form.name', "*Name"),
 		"import": L('ab.common.import', "*Import"),
+		rename: L('ab.common.rename', "*Rename"),
 		ok: 	  L('ab.common.ok', "*Ok"),
 
 		cancel:   L('ab.common.cancel', "*Cancel"),
@@ -53,6 +53,9 @@ OP.Component.extend('ab', function(App) {
 
 		deleteErrorMessage:   L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
 		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+
+		renameErrorMessage: L('ab.common.rename.error', "*System could not rename <b>{0}</b>."),
+		renameSuccessMessage: L('ab.common.rename.success', "*<b>{0}</b> is renamed."),
 
 
 		// Data Field  common Property labels:

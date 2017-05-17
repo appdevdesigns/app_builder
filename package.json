@@ -25,7 +25,9 @@
     "ad-utils": "appdevdesigns/ad-utils",
     "appdev-cli": "appdevdesigns/appdev-cli",
     "async": "^1.5.2",
+    "knex": "^0.13.0",
     "lodash": "^4.13.1",
+    "mysql": "^2.13.0",
     "rimraf": "^2.6.1"
   },
   "devDependencies": {

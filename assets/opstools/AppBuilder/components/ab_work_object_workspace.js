@@ -389,18 +389,6 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 		},
 
 
-		/**
-		 * @function clearObjectWorkspace()
-		 *
-		 * Clear the object workspace.
-		 */
-		clearObjectWorkspace:function(){
-
-			// NOTE: to clear a visual glitch when multiple views are updating
-			// at one time ... stop the animation on this one:
-			$$(ids.noSelection).show(false, false);
-		},
-
 
 		/**
 		 * @function show()
@@ -495,6 +483,20 @@ console.error('TODO: toolbarSort()');
 	var _actions = {
 
 
+
+		/**
+		 * @function clearObjectWorkspace()
+		 *
+		 * Clear the object workspace.
+		 */
+		clearObjectWorkspace:function(){
+
+			// NOTE: to clear a visual glitch when multiple views are updating
+			// at one time ... stop the animation on this one:
+			$$(ids.noSelection).show(false, false);
+		},
+
+
 		/**
 		 * @function populateObjectWorkspace()
 		 *
@@ -521,6 +523,7 @@ console.error('TODO: toolbarSort()');
 			DataTable.objectLoad(object);
 		}
 
+
 	}
 
 
@@ -529,9 +532,6 @@ console.error('TODO: toolbarSort()');
 		ui:_ui,					// {obj} 	the webix ui definition for this component
 		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
-
-		// interface methods for parent component:
-		clearObjectWorkspace:_logic.clearObjectWorkspace,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

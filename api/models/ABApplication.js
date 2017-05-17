@@ -7,7 +7,11 @@
 
 var async = require('async'),
     _ = require('lodash'),
-    AD = require('ad-utils');
+    AD = require('ad-utils'),
+    path = require('path');
+
+var ABClassApplication = require(path.join('..', 'classes', 'ABClassApplication'));
+
 
 module.exports = {
 
@@ -20,7 +24,7 @@ module.exports = {
 
         json : 'json', 
         
-        objects: { collection: 'ABObject', via: 'application' },
+        // objects: { collection: 'ABObject', via: 'application' },
 
         pages: { collection: 'ABPage', via: 'application' },
 
@@ -63,6 +67,12 @@ module.exports = {
 
         actionKeyName: function () {
             return actionKeyName(this.validAppName()); // 'opstools.' + this.validAppName() + '.view'; 
+        },
+
+        toABClass: function () {
+
+            return new ABClassApplication(this);
+
         },
 
         validAppName: function () {

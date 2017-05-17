@@ -8,10 +8,10 @@
 // import OP from "../../OP/OP"
 
 function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
+	return altText;  // AD.lang.label.getLabel(key) || altText;
 }
 
-export default class ABField {
+module.exports =  class ABField {
 
     constructor(values, object, fieldDefaults) {
 
@@ -39,7 +39,7 @@ export default class ABField {
 
 
     	// label is a multilingual value:
-    	OP.Multilingual.translate(this, this, ['label']);
+// OP.Multilingual.translate(this, this, ['label']);
 
 
     	this.object = object;
@@ -54,28 +54,7 @@ export default class ABField {
   	/// on the instance values of the Application.
   	///
 
-  	static clearEditor( ids) {
 
-  		var defaultValues = {
-  			label: '',
-  			columnName:'',
-  			showIcon:1
-  		}
-
-  		for(var f in defaultValues) {
-			var component = $$(ids[f]);
-			component.setValue(defaultValues[f]);
-		}
-  	}
-
-
-  	static editorPopulate( ids, field ) {
-
-  		$$(ids.label).setValue(field.label);
-  		$$(ids.columnName).setValue(field.columnName);
-  		$$(ids.showIcon).setValue(field.settings.showIcon);
-
-  	}
 
 
 	/**
@@ -98,98 +77,93 @@ export default class ABField {
 	 *
 	 * @param {DataField} field  The DataField object to work with.
 	 */
-  	static definitionEditor( App, ids, _logic, Field ) {
+//   	static definitionEditor( App, ids, _logic, Field ) {
 
-/// TODO: maybe just pass in onChange instead of _logic
-/// if not onChange, then use our default:
+// /// TODO: maybe just pass in onChange instead of _logic
+// /// if not onChange, then use our default:
 
-  		// setup our default labelOnChange functionality:
-  		var onChange = function (newVal, oldVal) {
+//   		// setup our default labelOnChange functionality:
+//   		var onChange = function (newVal, oldVal) {
 
-  			oldVal = oldVal || '';
+//   			oldVal = oldVal || '';
 
-			if (newVal != oldVal &&
-				oldVal == $$(ids.columnName).getValue()) {
-				$$(ids.columnName).setValue(newVal);
-			}
-		}
+// 			if (newVal != oldVal &&
+// 				oldVal == $$(ids.columnName).getValue()) {
+// 				$$(ids.columnName).setValue(newVal);
+// 			}
+// 		}
 
-		// if they provided a labelOnChange() override, use that:
-		if (_logic.labelOnChange) {
-			onChange = _logic.labelOnChange;
-		}
-
-
-  		var _ui = {
-			// id: ids.component,
-			rows: [
-				{
-					view: "label",
-					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
-				},
-				{
-					view: "text",
-					id: ids.label,
-					name:'label',
-					label: App.labels.dataFieldHeaderLabel,
-					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
-					labelWidth: App.config.labelWidthMedium,
-					css: 'ab-new-label-name',
-					on: {
-						onChange: function (newVal, oldVal) {
-							onChange(newVal, oldVal);
-						}
-					}
-				},
-				{
-					view: "text",
-					id: ids.columnName,
-					name:'columnName',
-					label: App.labels.dataFieldColumnName, // 'Name',
-					labelWidth: App.config.labelWidthMedium,
-					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
-				},
-				{
-					view: "label",
-					id: ids.fieldDescription,
-					label: Field.description,
-					align: "right",
-				},
-				{
-					view: 'checkbox',
-					id: ids.showIcon,
-					name:'showIcon',
-					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
-					labelWidth: App.config.labelWidthCheckbox,
-					value:true
-				}
-			]
-		}
-
-  		return _ui;
-  	}
+// 		// if they provided a labelOnChange() override, use that:
+// 		if (_logic.labelOnChange) {
+// 			onChange = _logic.labelOnChange;
+// 		}
 
 
-  	static editorValues (settings) {
+//   		var _ui = {
+// 			// id: ids.component,
+// 			rows: [
+// 				{
+// 					view: "label",
+// 					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
+// 				},
+// 				{
+// 					view: "text",
+// 					id: ids.label,
+// 					name:'label',
+// 					label: App.labels.dataFieldHeaderLabel,
+// 					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
+// 					labelWidth: App.config.labelWidthMedium,
+// 					css: 'ab-new-label-name',
+// 					on: {
+// 						onChange: function (newVal, oldVal) {
+// 							onChange(newVal, oldVal);
+// 						}
+// 					}
+// 				},
+// 				{
+// 					view: "text",
+// 					id: ids.columnName,
+// 					name:'columnName',
+// 					label: App.labels.dataFieldColumnName, // 'Name',
+// 					labelWidth: App.config.labelWidthMedium,
+// 					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
+// 				},
+// 				{
+// 					view: "label",
+// 					id: ids.fieldDescription,
+// 					label: Field.description,
+// 					align: "right",
+// 				},
+// 				{
+// 					view: 'checkbox',
+// 					id: ids.showIcon,
+// 					name:'showIcon',
+// 					labelRight: App.labels.dataFieldShowIcon, // 'Show icon',
+// 					labelWidth: App.config.labelWidthCheckbox,
+// 					value:true
+// 				}
+// 			]
+// 		}
 
-  		var obj = {
-  			label: settings.label,
-  			columnName: settings.columnName,
-  			settings:settings
-  		}
-
-  		delete settings.label;
-  		delete settings.columnName;
-
-  		return obj;
-  	}
+//   		return _ui;
+//   	}
 
 
+//   	static editorValues (settings) {
 
-// unique key to reference this specific DataField
-// fieldName() {
-// 	return this.defaults.name;
-// }
+//   		var obj = {
+//   			label: settings.label,
+//   			columnName: settings.columnName,
+//   			settings:settings
+//   		}
+
+//   		delete settings.label;
+//   		delete settings.columnName;
+
+//   		return obj;
+//   	}
+
+
 
   	// unique key to reference this specific DataField
   	fieldKey() {
@@ -224,7 +198,7 @@ export default class ABField {
 
 		var errors = null;
 
-		// .columnName must be unique among fileds on the same object
+		// .columnName must be unique among fields on the same object
 		var isNameUnique = (this.object.fields((f)=>{ 
 			var isDifferent = (f.id != this.id);
 			return (f.id != this.id) 
@@ -267,12 +241,7 @@ export default class ABField {
 				if (this.id) {
 
 					this.object.fieldRemove(this)
-					.then(() => {
-						resolve();
-					})
-					.catch(function(err){
-						reject(err);
-					})
+					.then(resolve, reject);
 
 				} else {
 
@@ -342,7 +311,7 @@ export default class ABField {
 	fromValues (values) {
 
  		this.id = values.id;			// NOTE: only exists after .save()
-    	this.key = values.key || this.fieldKey();
+    	this.key = values.key || this.fieldKey();	
     	this.icon = values.icon || this.fieldIcon();
 
     	// if this is being instantiated on a read from the Property UI,
@@ -362,6 +331,14 @@ export default class ABField {
 
 
 
+	///
+	/// DB Migrations
+	///
+
+	migrateCreate () {
+		console.error('!!! Field '+this.fieldKey()+' has not implemented migrateCreate()!!! ');
+	}
+
 
 
 
@@ -377,21 +354,21 @@ export default class ABField {
 	 *								   workspace.
 	 * @return {obj}  configuration obj
 	 */
-	columnHeader (isObjectWorkspace) {
+	// columnHeader (isObjectWorkspace) {
 
-		var config = {
-			id: this.id,
-			header: this.label,
-		}
+	// 	var config = {
+	// 		id: this.id,
+	// 		header: this.label,
+	// 	}
 
-		if (isObjectWorkspace) {
-			if (this.settings.showIcon) {
-				config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
-			}
-		}
+	// 	if (isObjectWorkspace) {
+	// 		if (this.settings.showIcon) {
+	// 			config.header = '<span class="webix_icon fa-{icon}"></span>'.replace('{icon}', this.fieldIcon() ) + config.header;
+	// 		}
+	// 	}
 
-		return config;
-	}
+	// 	return config;
+	// }
 
 
 }

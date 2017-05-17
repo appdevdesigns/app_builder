@@ -75,6 +75,22 @@ module.exports = {
     'get /app_builder/application/findModelAttributes':
         'app_builder/ABApplicationController.findModelAttributes',
 
+
+    /* Migration Services */
+    // app_builder/migrate/application/:appID/object/:objID
+    // app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+    // post url   // create the object/field table info
+    // put  url   // update the object/field table info
+    // delete url // remove the object/field table info
+    'post /app_builder/migrate/application/:appID/object/:objID' : 
+        'app_builder/ABMigrationController.createObject',
+
+
+// only for easy development/testing purposes:
+    'get /app_builder/migrate/application/:appID/object/:objID' : 
+        'app_builder/ABMigrationController.createObject',
+
+
   /*
 
   '/': {

@@ -8,6 +8,7 @@
 
 import ABApplication from "../classes/ABApplication"
 import "./ab_work_object_list_newObject"
+import "./ab_work_object_list_popupEditObject"
 
 
 function L(key, altText) {
@@ -21,6 +22,9 @@ var labels = {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 		addNew: L('ab.object.addNew', '*Add new object'),
+
+		confirmDeleteTitle: L('ab.object.delete.title', "*Delete object"),
+		confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
 
 	}
 }
@@ -40,6 +44,7 @@ OP.Component.extend(idBase, function(App) {
 
 	}
 
+	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditObject'](App);
 
 
 	// Our webix UI definition:
@@ -73,9 +78,6 @@ OP.Component.extend(idBase, function(App) {
 					onAfterSelect: function (id) {
 						_logic.selectObject(id);
 					},
-					onAfterDelete: function (id) {
-						_logic.onAfterDelete(id);
-					},
 					onBeforeEditStop: function (state, editor) {
 						_logic.onBeforeEditStop(state, editor);
 					},
@@ -108,6 +110,10 @@ OP.Component.extend(idBase, function(App) {
 		webix.extend($$(ids.list), webix.ProgressBar);
 		$$(ids.component).adjust();
 		$$(ids.list).adjust();
+
+		ObjectEditPopup.init({
+			onClick: _logic.callbackObjectEditorMenu
+		})
 	}
 
 
@@ -158,12 +164,10 @@ OP.Component.extend(idBase, function(App) {
 
 
 		clickEditMenu: function(e, id, trg) {
+			// Show menu
+			ObjectEditPopup.show(trg);
 
-console.error('!! TODO: clickEditMenu()');
-			// // Show menu
-			// $$(self.webixUiId.objectListMenuPopup).show(trg);
-
-			// return false;
+			return false;
 		},
 
 
@@ -174,12 +178,6 @@ console.error('!! TODO: clickEditMenu()');
 		listReady:function() {
 			$$(ids.list).hideProgress();
 		},
-
-
-		onAfterDelete: function (id) {
-console.error('!! todo: onAfterDelete()');
-		},
-
 
 		onAfterRender: function() {
 console.error('!! todo: onAfterRender() editing');
@@ -198,42 +196,34 @@ console.error('!! todo: onAfterRender() editing');
 
 		onAfterEditStop: function(state, editor, ignoreUpdate) {
 
-console.error('!! todo: onAfterEditStop() editing');
-			// if (state.value != state.old) {
-			// 	var _this = this;
+			_logic.showGear(editor.id);
 
-			// 	this.showProgress({ type: 'icon' });
+			if (state.value != state.old) {
+				_logic.listBusy();
 
-			// 	var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
-			// 	selectedObject.attr('label', state.value);
+				var selectedObject = $$(ids.list).getSelectedItem(false);
+				selectedObject.label = state.value;
 
-			// 	// Call server to rename
-			// 	selectedObject.save()
-			// 		.fail(function () {
-			// 			_this.hideProgress();
+				// Call server to rename
+				selectedObject.save()
+					.catch(function () {
+						_logic.listReady();
 
-			// 			webix.message({
-			// 				type: "error",
-			// 				text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
-			// 			});
+						OP.Dialog.Alert({
+							text: labels.common.renameErrorMessage.replace("{0}", state.old)
+						});
 
-			// 			AD.error.log('Object List : Error rename object data', { error: err });
-			// 		})
-			// 		.then(function () {
-			// 			_this.hideProgress();
+					})
+					.then(function () {
+						_logic.listReady();
 
-			// 			if (selectedObject.translate) selectedObject.translate();
+						// TODO : should use message box
+						OP.Dialog.Alert({
+							text: labels.common.renameSuccessMessage.replace("{0}", state.value)
+						});
 
-			// 			// Show success message
-			// 			webix.message({
-			// 				type: "success",
-			// 				text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
-			// 			});
-
-			// 			// Show gear icon
-			// 			$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
-			// 		});
-			// }
+					});
+			}
 		},
 
 		onBeforeEditStop: function(state, editor) {
@@ -270,10 +260,14 @@ console.error('!! todo: onBeforeEditStop() editing');
 			// // Refresh unsync number
 			// self.refreshUnsyncNumber();
 
-			// // Show gear icon
-			// $(this.getItemNode(id)).find('.ab-object-list-edit').show();
+			_logic.showGear(id);
 		},
 
+		showGear: function(id) {
+			var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
+			gearIcon.style.visibility = "visible";
+			gearIcon.style.display = "block";
+		},
 
 		/**
 		 * @function show()
@@ -356,6 +350,48 @@ console.error('TODO: syncNumRefresh()');
 
 			// show the new popup
 			PopupNewObject.show();
+		},
+
+		rename: function () {
+			var objectId = $$(ids.list).getSelectedId(false);
+			$$(ids.list).edit(objectId);
+		},
+
+		remove: function () {
+
+			var selectedObject = $$(ids.list).getSelectedItem(false);
+
+			// verify they mean to do this:
+			OP.Dialog.Confirm({
+				title: labels.component.confirmDeleteTitle,
+				message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
+				callback: (isOK) => {
+
+					if (isOK) {
+						_logic.listBusy();
+
+						selectedObject.destroy()
+							.then(() => {
+								_logic.listReady();
+
+								$$(ids.list).remove(selectedObject.id);
+								App.actions.clearObjectWorkspace();
+							});
+
+					}
+				}
+			})
+		},
+
+		callbackObjectEditorMenu: function (action) {
+			switch (action) {
+				case 'rename':
+					_logic.rename();
+					break;
+				case 'delete':
+					_logic.remove();
+					break;
+			}
 		}
 	}
 

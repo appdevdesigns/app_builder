@@ -53,7 +53,7 @@ module.exports = {
 
     attributes: {
 
-        object: { model: 'ABObject' },
+        // object: { model: 'ABObject' },
 
         name: {
             type: 'string',

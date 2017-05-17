@@ -15,11 +15,7 @@ function L(key, altText) {
 
 
 var ABFieldNumberDefaults = {
-	name : 'number', // unique key to reference this specific DataField
-	type : 'number', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-		// NOTE: the server side implementation will read the instance.settings and return either a:
-		//	'float', or 'integer'
-
+	key : 'number', // unique key to reference this specific DataField
 	icon : 'slack',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	// menuName: what gets displayed in the Editor drop list

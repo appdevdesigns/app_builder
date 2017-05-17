@@ -76,7 +76,7 @@ OP.Component.extend(idBase, function(App) {
 		 */
 		applicationLoad: function(application) {
 			ObjectList.applicationLoad(application);
-			ObjectWorkspace.clearObjectWorkspace();
+			App.actions.clearObjectWorkspace();
 		},
 
 

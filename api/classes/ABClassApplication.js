@@ -1,12 +1,6 @@
+var path = require('path');
 
-// import OP from "OP"
-import "../data/ABApplication"
-
-import ABObject from "./ABObject"
-
-
-var _AllApplications = [];
-
+var ABObject = require(path.join(__dirname, 'ABObject'));
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -37,7 +31,7 @@ function toArray(DC) {
 	return ary;
 }
 
-export default class ABApplication {
+module.exports =  class ABClassApplication {
 
     constructor(attributes) {
 
@@ -48,7 +42,7 @@ export default class ABApplication {
     	this.role  = attributes.role;
 
     	// multilingual fields: label, description
-    	OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
+    	// OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
 
 	  	// import all our ABObjects
@@ -63,9 +57,9 @@ export default class ABApplication {
 
 
 
-	  	// instance keeps a link to our Model for .save() and .destroy();
-	  	this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
-	  	this.Model.Models(ABApplication);
+	  	// // instance keeps a link to our Model for .save() and .destroy();
+	  	// this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
+	  	// this.Model.Models(ABApplication);
   	}
 
 
@@ -295,98 +289,106 @@ export default class ABApplication {
 
 
 
-	/// ABApplication Permission methods
+	////
+	//// DB Related 
+	////
 
-
-	/**
-	 * @method assignPermissions()
-	 *
-	 * Make sure the current ABApplication permissions match the given
-	 * array of permissions.
-	 *
-	 * @param {array} permItems	an array of role assignments that this
-	 * 							ABApplication should match.
-	 * @return {Promise}
-	 */
-	assignPermissions (permItems) {
-		return new Promise(
-			(resolve, reject) => {
-				AD.comm.service.put({
-					url: '/app_builder/' + this.id + '/role/assign',
-					data: {
-						roles: permItems
-					}
-				})
-				.fail(reject)
-				.done(resolve);
-			}
-		)
+	dbApplicationName() {
+		return AppBuilder.rules.toApplicationNameFormat(this.name);
 	}
 
-
-	/**
-	 * @method getPermissions()
-	 *
-	 * Return an array of role assignments that are currently assigned to this
-	 * ABApplication.
-	 *
-	 * @return {Promise} 	resolve(list) : list {array} Role assignments
-	 */
-	getPermissions () {
-
-		return new Promise(
-			(resolve, reject) => {
-
-				AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' })
-				.fail(reject)
-				.done(resolve)
-			}
-		);
-	}
+// 	/// ABApplication Permission methods
 
 
-	/**
-	 * @method createPermission()
-	 *
-	 * Create a Role in the system after the name of the current ABApplication.
-	 *
-	 * @return {Promise}
-	 */
-	createPermission () {
-		return new Promise(
-			(resolve, reject) => {
+// 	/**
+// 	 * @method assignPermissions()
+// 	 *
+// 	 * Make sure the current ABApplication permissions match the given
+// 	 * array of permissions.
+// 	 *
+// 	 * @param {array} permItems	an array of role assignments that this
+// 	 * 							ABApplication should match.
+// 	 * @return {Promise}
+// 	 */
+// 	assignPermissions (permItems) {
+// 		return new Promise(
+// 			(resolve, reject) => {
+// 				AD.comm.service.put({
+// 					url: '/app_builder/' + this.id + '/role/assign',
+// 					data: {
+// 						roles: permItems
+// 					}
+// 				})
+// 				.fail(reject)
+// 				.done(resolve);
+// 			}
+// 		)
+// 	}
 
-// TODO: need to take created role and store as : .json.applicationRole = role.id
 
-				AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' })
-				.fail(reject)
-				.done(resolve)
+// 	/**
+// 	 * @method getPermissions()
+// 	 *
+// 	 * Return an array of role assignments that are currently assigned to this
+// 	 * ABApplication.
+// 	 *
+// 	 * @return {Promise} 	resolve(list) : list {array} Role assignments
+// 	 */
+// 	getPermissions () {
 
-			}
-		);
-	}
+// 		return new Promise(
+// 			(resolve, reject) => {
+
+// 				AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' })
+// 				.fail(reject)
+// 				.done(resolve)
+// 			}
+// 		);
+// 	}
 
 
-	/**
-	 * @method deletePermission()
-	 *
-	 * Remove the Role in the system of the current ABApplication.
-	 * (the one created by  .createPermission() )
-	 *
-	 * @return {Promise}
-	 */
-	deletePermission () {
-		return new Promise(
-			(resolve, reject) => {
+// 	/**
+// 	 * @method createPermission()
+// 	 *
+// 	 * Create a Role in the system after the name of the current ABApplication.
+// 	 *
+// 	 * @return {Promise}
+// 	 */
+// 	createPermission () {
+// 		return new Promise(
+// 			(resolve, reject) => {
 
-// TODO: need to remove created role from : .json.applicationRole
-				AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' })
-				.fail(reject)
-				.done(resolve)
+// // TODO: need to take created role and store as : .json.applicationRole = role.id
 
-			}
-		);
-	}
+// 				AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' })
+// 				.fail(reject)
+// 				.done(resolve)
+
+// 			}
+// 		);
+// 	}
+
+
+// 	/**
+// 	 * @method deletePermission()
+// 	 *
+// 	 * Remove the Role in the system of the current ABApplication.
+// 	 * (the one created by  .createPermission() )
+// 	 *
+// 	 * @return {Promise}
+// 	 */
+// 	deletePermission () {
+// 		return new Promise(
+// 			(resolve, reject) => {
+
+// // TODO: need to remove created role from : .json.applicationRole
+// 				AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' })
+// 				.fail(reject)
+// 				.done(resolve)
+
+// 			}
+// 		);
+// 	}
 
 
 
@@ -430,30 +432,6 @@ export default class ABApplication {
 	 */
 	objectNew( values ) {
 		return new ABObject(values, this);
-	}
-
-
-
-	/**
-	 * @method objectDestroy()
-	 *
-	 * remove the current ABObject from our list of ._objects.
-	 *
-	 * @param {ABObject} object
-	 * @return {Promise}
-	 */
-	objectDestroy( object ) {
-
-		var remaininObjects = this.objects(function(o) { return o.id != object.id;})
-		this._objects = remaininObjects;
-		return this.save();
-		
-		// var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
-		// if (!isIncluded) {
-		// 	this._objects.push(object);
-		// }
-
-		// return this.save();
 	}
 
 

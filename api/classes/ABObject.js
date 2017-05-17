@@ -1,6 +1,7 @@
 
-// import OP from "OP"
-import ABFieldManager from "./ABFieldManager"
+var path = require('path');
+
+var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
 
 
 function toDC( data ) {
@@ -19,7 +20,7 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class ABObject {
+module.exports = class ABObject {
 
     constructor(attributes, application) {
 /*
@@ -51,12 +52,11 @@ export default class ABObject {
 
     	this.objectWorkspace = attributes.objectWorkspace || {
     		hiddenFields:[], 	// array of [ids] to add hidden:true to
-			frozenColumnID:"", // id of column you want to stop freezing
     	};
 
 
     	// multilingual fields: label, description
-    	OP.Multilingual.translate(this, this, ['label']);
+// OP.Multilingual.translate(this, this, ['label']);
 
 
 	  	// import all our ABObjects
@@ -130,9 +130,13 @@ export default class ABObject {
 	 * @return {Promise}
 	 */
 	destroy () {
-
-		return this.application.objectDestroy(this);
-		
+		if (this.id) {
+console.error('TODO: ABObject.destroy()');
+			// return this.Model.destroy(this.id)
+			// 	.then(()=>{
+			// 		_AllApplications.remove(this.id);
+			// 	});
+		}
 	}
 
 
@@ -245,7 +249,7 @@ export default class ABObject {
 	 * @return {ABField}
 	 */
 	fieldNew ( values ) {
-		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		// NOTE: ABFieldManager.newField() returns the proper ABFieldXXXX instance.
 		return ABFieldManager.newField( values, this );
 	}
 
@@ -292,73 +296,63 @@ export default class ABObject {
 
 
 	///
-	///	Object Workspace Settings
+	/// Migration Services
 	///
 
-
-	get workspaceHiddenFields() {
-		return this.objectWorkspace.hiddenFields;
-	}
-
-	set workspaceHiddenFields( fields ) {
-		this.objectWorkspace.hiddenFields = fields;
-	}
-
-	get workspaceFrozenColumnID() {
-		return this.objectWorkspace.frozenColumnID;
-	}
-
-	set workspacefrozenColumnID( id ) {
-		this.objectWorkspace.frozenColumnID = id;
+	dbTableName() {
+		return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
 	}
 
 
+	/**
+	 * migrateCreateTable
+	 * verify that a table for this object exists.
+	 * @param {Knex} knex the knex sql library manager for manipulating the DB.
+	 * @return {Promise}
+	 */
+	migrateCreateTable(knex) {
 
+		var tableName = this.dbTableName();
+console.log('.... dbTableName:'+ tableName);
+		return new Promise(
+			(resolve, reject) => {
 
-	///
-	/// Working with Actual Object Values:
-	///
+				knex.schema.hasTable(tableName).then((exists) => {
+					
+					// if it doesn't exist, then create it and any known fields:
+					if (!exists) {
+console.log('... creating!!!');
+						return knex.schema.createTable(tableName, (t) => {
+							t.increments('id').primary();
+							t.timestamps();
+							t.engine('InnoDB');
+							t.charset('utf8');
+							t.collate('utf8_unicode_ci');
 
-	// return the column headers for this object
-	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-	columnHeaders (isObjectWorkspace) {
+							var fieldUpdates = [];
+							this.fields().forEach((f)=>{
 
-		var headers = [];
-		var idLookup = {};
+								fieldUpdates.push(f.migrateCreate(knex));
 
-		// get the header for each of our fields:
-		this._fields.forEach(function(f){
-			var header = f.columnHeader(isObjectWorkspace);
-			headers.push(header);
-			idLookup[header.id] = f.id;	// name => id
-		})
+							})
 
+							Promise.all(fieldUpdates)
+							.then(resolve, reject);
 
-		// update our headers with any settings applied in the Object Workspace
-		if (isObjectWorkspace) {
+						})
+						// .then(function(){
+						// 	resolve();
+						// })
+						// .catch(reject);
 
-			// set column width to adjust:true by default;
-			headers.forEach((h) => { h.adjust = true; });
-
-			// hide any hiddenfields
-			if (this.workspaceHiddenFields.length > 0) {
-				this.workspaceHiddenFields.forEach((hfID)=>{
-					headers.forEach((h)=> {
-						if (idLookup[h.id] == hfID){
-							h.hidden = true;
-						}
-					})
+					} else {
+console.log('... already there.');
+						resolve();
+					}
 				});
-			}
-
-			if (this.workspaceFrozenColumnID != "") {
 
 			}
-			console.log("TODO:FREEZE COLUMNS");
-
-		}
-
-		return headers;
+		)
 	}
 
 

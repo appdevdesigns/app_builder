@@ -30,7 +30,6 @@ OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
 		component: App.unique('custom_editlist_component'),
-
 	}
 
 
