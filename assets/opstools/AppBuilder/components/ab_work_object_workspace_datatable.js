@@ -226,10 +226,10 @@ console.error('!! ToDo: onAfterColumnHide()');
 			/**
 			 * @function onEditorMenu
 			 * report back which menu action was clicked.
-			 * We get the info from our popupHeaderEditor component, but all the 
-			 * logic to respond to those options are in our parent. So we pass it 
+			 * We get the info from our popupHeaderEditor component, but all the
+			 * logic to respond to those options are in our parent. So we pass it
 			 * on ...
-			 * 
+			 *
 			 * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
 			 * @param {ABField} field  the field to which the action is to be applied
 			 * @param {dom} node  the optional html node for this header item.
@@ -253,7 +253,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 		/**
 		 * @function onHeaderClick
-		 * 
+		 *
 		 * process the user clicking on the header for one of our columns.
 		 */
 		onHeaderClick: function (id, e, node) {
@@ -271,7 +271,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 				// show the popup
 				PopupHeaderEdit.show(node);
 			}
-		
+
 			return false;
 		},
 
@@ -301,6 +301,9 @@ console.error('!! ToDo: onAfterColumnHide()');
 				var columnHeaders = CurrentObject.columnHeaders(true);
 				DataTable.refreshColumns(columnHeaders)
 
+				// freeze columns:
+				DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnIndex));
+				DataTable.refreshColumns()
 
 				// update DataTable Content
 			}

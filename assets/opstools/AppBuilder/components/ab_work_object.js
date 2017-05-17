@@ -44,8 +44,7 @@ OP.Component.extend(idBase, function(App) {
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
-		autoheight: true,
-		margin: 20,
+		margin: 10,
 		cols: [
 			ObjectList.ui,
 			{ view: "resizer"},
@@ -73,7 +72,7 @@ OP.Component.extend(idBase, function(App) {
 		 *
 		 * Initialize the Object Workspace with the given ABApplication.
 		 *
-		 * @param {ABApplication} application 
+		 * @param {ABApplication} application
 		 */
 		applicationLoad: function(application) {
 			ObjectList.applicationLoad(application);

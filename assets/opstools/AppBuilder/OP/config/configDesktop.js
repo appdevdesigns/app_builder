@@ -32,6 +32,8 @@ export default {
 	smallSpacer: 10,
 	mediumSpacer: 25,
 	largeSpacer: 50,
+	xLargeSpacer: 100,
+	xxLargeSpacer: 200,
 	appListSpacerRowHeight: 100,
 	appListSpacerColMinWidth: 100,
 	appListSpacerColMaxWidth: 200,
@@ -40,7 +42,8 @@ export default {
 	// labels
 	labelWidthSmall: 50,
 	labelWidthMedium: 80,
-	labelWidthLarge: 150,
+	labelWidthLarge: 120,
+	labelWidthXLarge: 150,
 	labelWidthCheckbox: 0,
 
 	// show elements on desktop

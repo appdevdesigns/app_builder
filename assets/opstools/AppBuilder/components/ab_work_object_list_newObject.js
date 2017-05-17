@@ -2,13 +2,13 @@
 /*
  * ab_work_object_list_newObject
  *
- * Display the form for creating a new Object.  This Popup will manage several 
+ * Display the form for creating a new Object.  This Popup will manage several
  * different sub components for gathering Object data for saving.
  *
- * The sub components will gather the data for the object and do basic form 
- * validations on their interface.  
+ * The sub components will gather the data for the object and do basic form
+ * validations on their interface.
  *
- * when ready, the sub component will call onSave(values, cb)  to allow this 
+ * when ready, the sub component will call onSave(values, cb)  to allow this
  * component to manage the actual final object validation, and saving to this
  * application.  On success, cb(null) will be called.  on error cb(err) will
  * be called.
@@ -28,7 +28,7 @@ var labels = {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
 		addNew: L('ab.object.addNew', '*Add new object'),
-							
+
 	}
 }
 
@@ -51,7 +51,7 @@ OP.Component.extend(idBase, function(App) {
 	var _ui = {
 		view: "window",
 		id: ids.component,
-		width: 400,
+		// width: 400,
 		position: "center",
 		modal: true,
 		head: labels.component.addNew,
@@ -88,10 +88,10 @@ OP.Component.extend(idBase, function(App) {
 
 
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
-		
+
 
 
 		/**
@@ -123,7 +123,7 @@ OP.Component.extend(idBase, function(App) {
 		/**
 		 * @function save
 		 *
-		 * take the data gathered by our child creation tabs, and 
+		 * take the data gathered by our child creation tabs, and
 		 * add it to our current application.
 		 *
 		 * @param {obj} values  key=>value hash of model values.
@@ -193,7 +193,7 @@ OP.Component.extend(idBase, function(App) {
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 		// interface methods for parent component:

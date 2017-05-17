@@ -84,7 +84,7 @@ OP.Component.extend(idBase, function(App) {
             }
         }
     }
-		
+
 
 
 	// Our init() function for setting up our UI
@@ -100,17 +100,17 @@ OP.Component.extend(idBase, function(App) {
 
 	var CurrentObject = null;
 
-	// our internal business logic 
+	// our internal business logic
 	var _logic = {
 
 		callbacks:{
 
 			/**
 			 * @function onChange
-			 * called when we have made changes to the hidden field settings 
+			 * called when we have made changes to the hidden field settings
 			 * of our Current Object.
 			 *
-			 * this is meant to alert our parent component to respond to the 
+			 * this is meant to alert our parent component to respond to the
 			 * change.
 			 */
 			onChange:function(){}
@@ -172,7 +172,7 @@ OP.Component.extend(idBase, function(App) {
 			if (isHidden) {
 				// unhide this field
 
-				// get remaining fields 
+				// get remaining fields
 				newFields = CurrentObject.workspaceHiddenFields.filter((fID)=>{ return fID != id;});
 
 				// find the icon and display it:
@@ -206,7 +206,7 @@ OP.Component.extend(idBase, function(App) {
 			if (node) {
 				node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
 			}
-		}, 
+		},
 
 
 		/**
@@ -246,7 +246,7 @@ OP.Component.extend(idBase, function(App) {
 
 				// next item
 				id = List.getNextId(id);
-			}			
+			}
 
 		},
 
@@ -271,7 +271,7 @@ OP.Component.extend(idBase, function(App) {
 
 			$$(ids.list).parse(allFields);
 		}
-		
+
 	}
 
 
@@ -287,7 +287,7 @@ OP.Component.extend(idBase, function(App) {
 	// return the current instance of this component:
 	return {
 		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component  
+		init:_init,				// {fn} 	init() to setup this component
 		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
 

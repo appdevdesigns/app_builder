@@ -15,6 +15,15 @@ export default {
 
 	// button types
 	buttonWidthLarge: 200,
+	buttonWidthMedium: 150,
+	buttonWidthSmall: 100,
+	buttonWidthExtraSmall: 50,
+
+	// tab types
+	tabWidthLarge: 200,
+	tabWidthMedium: 120,
+	tabWidthSmall: 100,
+	tabWidthExtraSmall: 50,
 
 	// column types
 
@@ -23,6 +32,8 @@ export default {
 	smallSpacer: 1,
 	mediumSpacer: 10,
 	largeSpacer: 20,
+	xLargeSpacer: 50,
+	xxLargeSpacer: 100,
 	appListSpacerRowHeight: 10,
 	appListSpacerColMinWidth: 1,
 	appListSpacerColMaxWidth: 1,

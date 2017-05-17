@@ -66,20 +66,24 @@ OP.Component.extend(idBase, function(App) {
 			borderless: true,
 			rows: [
 				{
-					view: "menu",
+					view: "richselect",
 					id: ids.types,
-					data: [{
-						value: labels.component.chooseType,
-						submenu: ['dataFieldsManager', '.getFieldMenuList()']
-					}],
-					click: function (id, ev, node) {
-						_logic.typeClick();
-						ev.preventDefault();
-					},
+					value: 1,
+					options: [
+						{"id":1, "value":labels.component.chooseType}
+					],
+					// data: [{
+					// 	value: labels.component.chooseType,
+					// 	submenu: ['dataFieldsManager', '.getFieldMenuList()']
+					// }],
+					// click: function (id, ev, node) {
+					// 	_logic.typeClick();
+					// 	ev.preventDefault();
+					// },
 					on: {
-						onMenuItemClick: function (id, ev, node) {
-							_logic.onMenuItemClick(id);
-							ev.preventDefault();
+						onChange: function (id, ev, node) {
+							_logic.onChange(id);
+							//ev.preventDefault();
 						}
 					}
 				},
@@ -157,7 +161,7 @@ OP.Component.extend(idBase, function(App) {
 
 
 
-		var submenus = [];	// Create the submenus for our Data Fields:
+		var submenus = [{"id":1, "value":labels.component.chooseType}];	// Create the submenus for our Data Fields:
 		var newEditorList = {
 			view:'multiview',
 			id:ids.editDefinitions,
@@ -170,7 +174,7 @@ OP.Component.extend(idBase, function(App) {
 			var type = F.defaults().type;
 
 			// add a submenu for the fields multilingual key
-			submenus.push( menuName );
+			submenus.push( {"id":menuName, "value":menuName} );
 
 
 			// Add the Field's definition editor here:
@@ -190,11 +194,14 @@ OP.Component.extend(idBase, function(App) {
 
 		// the submenu button has a placeholder we need to remove and update
 		// with one that has all our submenus in it.
-		var firstID = $$(ids.types).getFirstId();
-		$$(ids.types).updateItem(firstID, {
-			value: labels.component.chooseType,
-			submenu: submenus
-		})
+		// var firstID = $$(ids.types).getFirstId();
+		// $$(ids.types).updateItem(firstID, {
+		// 	value: labels.component.chooseType,
+		// 	submenu: submenus
+		// })
+		$$(ids.types).define("options",submenus);
+		$$(ids.types).setValue(1);
+		$$(ids.types).refresh();
 
 		// now remove the 'del_me' definition editor placeholder.
 		webix.ui(newEditorList, $$(ids.editDefinitions));
@@ -392,12 +399,12 @@ OP.Component.extend(idBase, function(App) {
 
 
 		/**
-		 * @function onMenuItemClick
+		 * @function onChange
 		 * swap the editor view to match the data field selected in the menu.
 		 *
 		 * @param {string} name  the menuName() of the submenu that was selected.
 		 */
-		onMenuItemClick: function (name) {
+		onChange: function (name) {
 
 			// note, the submenu returns the Field.menuName() values.
 			// we use that to lookup the Field here:
@@ -405,6 +412,7 @@ OP.Component.extend(idBase, function(App) {
 			if (editor) {
 				editor.show();
 				_currentEditor = editor;
+				$$(ids.types).blur();
 			} else {
 
 				// most likely they clicked on the menu button itself.
@@ -455,7 +463,7 @@ console.error('TODO: resetState()');
 		show:function($view, field) {
 
 			_editField = field;
-			
+
 			if (_editField) {
 
 				_logic.modeEdit(field);

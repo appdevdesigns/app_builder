@@ -51,7 +51,7 @@ OP.Component.extend(idBase, function(App) {
 				id: ids.list,
 				width: 250,
 
-height:800, // #Hack!
+//height:800, // #Hack!
 
 				select: true,
 				editaction: 'custom',
@@ -62,7 +62,7 @@ height:800, // #Hack!
 					return _logic.templateListItem(obj, common);
 				},
 				type: {
-					height:"auto",
+					// height:"auto",
 					// unsyncNumber: "",  // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
@@ -123,7 +123,7 @@ height:800, // #Hack!
 		 *
 		 * If no ABApplication is provided, then show an empty form. (create operation)
 		 *
-		 * @param {ABApplication} application  	[optional] The current ABApplication 
+		 * @param {ABApplication} application  	[optional] The current ABApplication
 		 *										we are working with.
 		 */
 		applicationLoad : function(application){
@@ -146,7 +146,7 @@ height:800, // #Hack!
 
 
 
-			// 
+			//
 			_logic.syncNumberRefresh();
 			_logic.listReady();
 
@@ -177,7 +177,7 @@ console.error('!! TODO: clickEditMenu()');
 
 
 		onAfterDelete: function (id) {
-console.error('!! todo: onAfterDelete()');			
+console.error('!! todo: onAfterDelete()');
 		},
 
 

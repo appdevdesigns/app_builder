@@ -51,6 +51,7 @@ export default class ABObject {
 
     	this.objectWorkspace = attributes.objectWorkspace || {
     		hiddenFields:[], 	// array of [ids] to add hidden:true to
+			frozenColumnID:"", // id of column you want to stop freezing
     	};
 
 
@@ -307,6 +308,14 @@ console.error('TODO: ABObject.destroy()');
 		this.objectWorkspace.hiddenFields = fields;
 	}
 
+	get workspaceFrozenColumnID() {
+		return this.objectWorkspace.frozenColumnID;
+	}
+
+	set workspacefrozenColumnID( id ) {
+		this.objectWorkspace.frozenColumnID = id;
+	}
+
 
 
 
@@ -336,13 +345,20 @@ console.error('TODO: ABObject.destroy()');
 			headers.forEach((h) => { h.adjust = true; });
 
 			// hide any hiddenfields
-			this.workspaceHiddenFields.forEach((hfID)=>{
-				headers.forEach((h)=> {
-					if (idLookup[h.id] == hfID){
-						h.hidden = true;
-					}
-				})
-			});
+			if (this.workspaceHiddenFields.length > 0) {
+				this.workspaceHiddenFields.forEach((hfID)=>{
+					headers.forEach((h)=> {
+						if (idLookup[h.id] == hfID){
+							h.hidden = true;
+						}
+					})
+				});
+			}
+
+			if (this.workspaceFrozenColumnID != "") {
+
+			}
+			console.log("TODO:FREEZE COLUMNS");
 
 		}
 
