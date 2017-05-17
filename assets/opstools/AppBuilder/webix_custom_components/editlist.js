@@ -7,72 +7,53 @@
  */
 
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-
-var labels = {
-
-	component: {
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-	}
-}
-
-
 var ComponentKey = 'ab_custom_editlist';
-OP.CustomComponent.extend(ComponentKey, function(App, componentKey ) {
-	// App 	{obj}	our application instance object.
-	// componentKey {string}	the destination key in App.custom[componentKey] for the instance of this component:
+export default class ABCustomEditList extends OP.CustomComponent { // .extend(ComponentKey, function(App, componentKey ) {
 
-	labels.common = App.labels;
+	constructor(App, key) {
+		// App 	{obj}	our application instance object.
+		// key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique('custom_editlist_component'),
+		super(App, key);
+
+		var L = this.Label;
+
+
+		var labels = {
+
+			common : App.labels,
+
+			component: {
+
+			}
+
+		}
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: App.unique(ComponentKey),
+		}
+
+
+
+		// Our webix UI definition:
+		var _ui = {
+	        name: ComponentKey
+	    };
+	    this.view = ComponentKey;
+
+
+
+	    // our internal business logic 
+		var _logic = {
+
+		}
+		this._logic = _logic;
+
+
+		// Tell Webix to create an INSTANCE of our custom component:
+	    webix.protoUI(_ui, webix.EditAbility, webix.ui.list);
+
 	}
 
-
-
-	// Our webix UI definition:
-	var _ui = {
-        name: App.unique("custom_editlist")	// keep this unique for this App instance.
-    };
-
-
-
-
-
-	// our internal business logic 
-	var _logic = {
-
-	}
-
-
-
-	// Tell Webix to create an INSTANCE of our custom component:
-    webix.protoUI(_ui, webix.EditAbility, webix.ui.list);
-
-
-    // current definition of our Component 
-    var Component = {
-		view: _ui.name,			// {string} the webix.view value for this custom component
-
-		_logic: _logic			// {obj} 	Unit Testing
-	}
-
-
-	// Save our definition into App.custom.[key]
-    App.custom = App.custom || {};
-    App.custom[componentKey] = Component;
-
-
-	// return the current definition of this component:
-	return Component;
-
-})
-
-
-// After importing this custom component, you get back the .key to use to 
-// lookup the OP.Component[] to create an application instance of 
-export default { key: ComponentKey };
+}

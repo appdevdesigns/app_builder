@@ -7,8 +7,8 @@
  */
 
 // import ABApplication from "../classes/ABApplication"
-// import "./ab_work_object"
-// import "./ab_work_interface"
+import AB_Work_Object from "./ab_work_object"
+import AB_Work_Interface from "./ab_work_interface"
 
 
 
@@ -23,16 +23,16 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 
 		var labels = {
 
-			application: {
+			common : App.labels,
+
+			component: {
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
 				backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
 				synchronize: L('ab.application.synchronize', "*Synchronize"),
 				objectTitle: L('ab.object.title', "*Objects"),
 				interfaceTitle: L('ab.interface.title', "*Interface")
-			},
-
-			common : App.labels
+			}
 		}
 
 
@@ -50,8 +50,8 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 		}
 
 
-// var AppObjectWorkspace = OP.Component['ab_work_object'](App);
-// var AppInterfaceWorkspace = OP.Component['ab_work_interface'](App);
+		var AppObjectWorkspace = new AB_Work_Object(App);
+		var AppInterfaceWorkspace = new AB_Work_Interface(App);
 
 
 
@@ -66,7 +66,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 					cols: [
 						{
 							view: "button",
-							label: labels.application.backToApplication,
+							label: labels.component.backToApplication,
 							width: 200,
 							type: "icon",
 							icon: "arrow-left",
@@ -91,7 +91,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 						// 	view: "button",
 						// 	type: "icon",
 						// 	icon: "refresh",
-						// 	label: labels.application.synchronize,
+						// 	label: labels.component.synchronize,
 						// 	autowidth: true,
 						// 	align: "right",
 						// 	click: function () {
@@ -110,12 +110,12 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 				// 	options:[
 				// 		{
 				// 			id: ids.tab_object,
-				// 			value: labels.application.objectTitle,
+				// 			value: labels.component.objectTitle,
 				// 			width: App.config.tabWidthMedium
 				// 		},
 				// 		{
 				// 			id: ids.tab_interface,
-				// 			value: labels.application.interfaceTitle,
+				// 			value: labels.component.interfaceTitle,
 				// 			width: App.config.tabWidthMedium
 				// 		}
 				// 	],
@@ -143,12 +143,12 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 									options: [
 										{
 											id: ids.tab_object,
-											value: labels.application.objectTitle,
+											value: labels.component.objectTitle,
 											width: App.config.tabWidthMedium
 										},
 										{
 											id: ids.tab_interface,
-											value: labels.application.interfaceTitle,
+											value: labels.component.interfaceTitle,
 											width: App.config.tabWidthMedium
 										}
 									],
@@ -163,10 +163,8 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 								{
 									id: ids.workspace,
 									cells: [
-// AppObjectWorkspace.ui,
-{ view:'label', label:'AppObjectWorkspace.ui'},
-// AppInterfaceWorkspace.ui
-{ view:'label', label:'AppInterfaceWorkspace.ui'}
+										AppObjectWorkspace.ui,
+										AppInterfaceWorkspace.ui
 									]
 								}
 							]
@@ -185,8 +183,8 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 		// Our init() function for setting up our UI
 		this.init = function() {
 
-// AppObjectWorkspace.init();
-// AppInterfaceWorkspace.init();
+			AppObjectWorkspace.init();
+			AppInterfaceWorkspace.init();
 
 			// initialize the Object Workspace to show first.
 			_logic.tabSwitch(ids.tab_object);
@@ -250,14 +248,14 @@ console.error('TODO: ab_work.logic.synchronize()!');
 					case ids.tab_object:
 
 						// $$(ids.buttonSync).show();
-// AppObjectWorkspace.show();
+						AppObjectWorkspace.show();
 						break;
 
 					// Interface Workspace Tab
 					case ids.tab_interface:
 
 						// $$(ids.buttonSync).hide();
-// AppInterfaceWorkspace.show();
+						AppInterfaceWorkspace.show();
 						break;
 				}
 

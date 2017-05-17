@@ -16,6 +16,7 @@
 
 // if (!window.OP) {
 import Component from "./component"
+import CustomComponent from "./customComponent"
 import Config from "./config/config"
 import Form from "./form"
 import Model from "./model"
@@ -32,7 +33,7 @@ import Util  from "./util"
     // OP.Logic = {}; 		// logic references for webix application
     OP.Component = Component;  // our defined components
 
-    OP.CustomComponent = {};  // separate holder for Webix Custom Components
+    OP.CustomComponent = CustomComponent;  // Webix Custom Components
 
 
     OP.Config = Config;		// configuration Settings for our current environment.
@@ -114,17 +115,17 @@ import Util  from "./util"
 	// }
 
 
-	OP.CustomComponent.extend = function(key, fn) {
-		OP.CustomComponent[key] = function(App, key){
+	// OP.CustomComponent.extend = function(key, fn) {
+	// 	OP.CustomComponent[key] = function(App, key){
 
-			if (!App) {
-				App = OP.Component._newApp();
-			}
+	// 		if (!App) {
+	// 			App = OP.Component._newApp();
+	// 		}
 
-			// make an instance of the component.
-			return fn(App, key);
-		};
-	}
+	// 		// make an instance of the component.
+	// 		return fn(App, key);
+	// 	};
+	// }
 
 
 	OP.Dialog = AD.op.Dialog;

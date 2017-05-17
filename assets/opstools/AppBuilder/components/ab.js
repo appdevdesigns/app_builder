@@ -14,8 +14,8 @@ import AB_Choose from './ab_choose'
 import AB_Work from './ab_work'
 
 // Import our Custom Components here:
-// import EditTree from '../webix_custom_components/edittree'
-// import EditList from '../webix_custom_components/editlist'
+import EditTree from '../webix_custom_components/edittree'
+import EditList from '../webix_custom_components/editlist'
 
 import style from "../AppBuilder.css"
 
@@ -71,12 +71,9 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 		}
 
 
-
-
-// // make instances of our Custom Components:
-// OP.CustomComponent[EditTree.key](App, 'edittree'); // ->  App.custom.edittree  now exists
-// OP.CustomComponent[EditList.key](App, 'editlist'); // ->  App.custom.editlist  now exists
-
+		// make instances of our Custom Components:
+		new EditList(App, 'editlist');	// ->  App.custom.editlist  now exists
+		new EditTree(App, 'edittree');	// ->  App.custom.edittree  now exists
 
 
 		var ids = {
