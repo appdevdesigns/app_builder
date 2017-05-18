@@ -266,13 +266,15 @@ export default class ABField {
 				// verify we have been .save()d before:
 				if (this.id) {
 
-					this.object.fieldRemove(this)
-					.then(() => {
-						resolve();
+					// NOTE: our .migrateXXX() routines expect the object to currently exist
+					// in the DB before we perform the DB operations.  So we need to 
+					// .migrateDrop()  before we actually .objectDestroy() this.
+					this.migrateDrop()
+					.then(()=>{
+						return this.object.fieldRemove(this);
 					})
-					.catch(function(err){
-						reject(err);
-					})
+					.then(resolve)
+					.catch(reject)
 
 				} else {
 
@@ -298,14 +300,29 @@ export default class ABField {
 		return new Promise(
 			(resolve, reject) => {
 
+				var isAdd = false;
 				// if this is our initial save()
 				if (!this.id) {
+					isAdd = true;
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
+
 				this.object.fieldSave(this)
 				.then(() => {
-					resolve(this);
+
+					if (isAdd) {
+					
+						this.migrateCreate()
+						.then(()=>{
+							resolve(this);
+						})
+						.catch(reject);
+
+					} else {
+						resolve(this);
+					}
+					
 				})
 				.catch(function(err){
 					reject(err);
@@ -339,6 +356,12 @@ export default class ABField {
 	}
 
 
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values  
+	 */
 	fromValues (values) {
 
  		this.id = values.id;			// NOTE: only exists after .save()
@@ -362,6 +385,32 @@ export default class ABField {
 
 
 
+	///
+	/// DB Migrations
+	///
+
+	migrateCreate() {
+		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
+			.replace('#appID#', this.object.application.id)
+			.replace('#objID#', this.object.id)
+			.replace('#fieldID#', this.id)
+
+		return OP.Comm.Service.post({
+			url: url
+		})
+	}
+
+
+	migrateDrop() {
+		var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'
+			.replace('#appID#', this.object.application.id)
+			.replace('#objID#', this.object.id)
+			.replace('#fieldID#', this.id)
+
+		return OP.Comm.Service['delete']({
+			url: url
+		})
+	}
 
 
 

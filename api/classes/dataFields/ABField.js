@@ -335,38 +335,64 @@ module.exports =  class ABField {
 	/// DB Migrations
 	///
 
-	migrateCreate () {
+
+	/**
+	 * @function migrateCreate
+	 * perform the necessary sql actions to ADD this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateCreate (knex) {
 		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented migrateCreate()!!! ');
 	}
 
 
-	migrateDrop () {
+	/**
+	 * @function migrateDrop
+	 * perform the necessary sql actions to drop this column from the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateDrop (knex) {
+
 		sails.log.info(''+this.fieldKey()+'.migrateDrop() ');
 		return new Promise(
 			(resolve, reject) => {
 
 				var tableName = this.object.dbTableName();
 
-				// if this column exists
-				knex.schema.hasColumn(tableName, this.columnName)
+				// if the table exists:
+				knex.schema.hasTable(tableName)
 				.then((exists) => {
-
 					if (exists) {
+						
+						// if this column exists
+						knex.schema.hasColumn(tableName, this.columnName)
+						.then((exists) => {
 
-						// get the .table editor and drop the column
-						knex.schema.table(tableName, (t)=>{
-							t.dropColumn(this.columnName);
+							if (exists) {
+
+								// get the .table editor and drop the column
+								knex.schema.table(tableName, (t)=>{
+									t.dropColumn(this.columnName);
+								})
+								.then(resolve)
+								.catch(reject);
+
+							} else {
+
+								// nothing to do then.
+								resolve();
+							}
+
 						})
-						.then(resolve)
 						.catch(reject);
 
-					} else {
 
-						// nothing to do then.
+					} else {
 						resolve();
 					}
+				});
 
-				})
+				
 
 			}
 		)

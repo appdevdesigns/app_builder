@@ -117,6 +117,7 @@ class ABFieldString extends ABField {
 	/// DB Migrations
 	///
 
+
 	/**
 	 * @function migrateCreate
 	 * perform the necessary sql actions to ADD this column to the DB table.

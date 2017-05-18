@@ -38,7 +38,7 @@ module.exports = {
 
             })
             .catch(function(err){
-                ADCore.error.log('ABMigration.createObject() failed:', { error:err, id:appID, object:object });
+                ADCore.error.log('ABMigration.createObject() failed:', { error:err, object:object });
                 res.AD.error(err, 500);
             })
 
@@ -74,9 +74,6 @@ module.exports = {
             })
             
         })
-        .catch(function(){
-
-        })
         
     },
 
@@ -86,7 +83,7 @@ module.exports = {
     /**
      * createField
      *
-     * post app_builder/migrate/application/:appID/object/:objID
+     * post app_builder/migrate/application/:appID/object/:objID/field/:fieldID
      */
     createField: function(req, res) {
         res.set('content-type', 'application/javascript');
@@ -94,24 +91,52 @@ module.exports = {
         sails.log.info('ABMigrationConroller.createField()');
 
         // NOTE: verifyAnd...() handles any errors and responses internally.
-        // only need to responde to an object being passed back on .resolve()
-        verifyAndReturnObject(req, res)
-        .then(function(object){
+        // only need to respond to a field being passed back on .resolve()
+        verifyAndReturnField(req, res)
+        .then(function(field){
 
-            verifyAndReturnField(req, res, object)
-            .then(function(field){
+            ABMigration.createField(field)
+            .then(function(){
 
-                ABMigration.createField(field)
-                .then(function(){
+                res.AD.success({good:'job'});
 
-                    res.AD.success({good:'job'});
+            })
+            .catch(function(err){
+                ADCore.error.log('ABMigration.createField() failed:', { error:err, field:field });
+                res.AD.error(err, 500);
+            })
 
-                })
-                .catch(function(err){
-                    ADCore.error.log('ABMigration.createField() failed:', { error:err, id:appID, object:object, field:field });
-                    res.AD.error(err, 500);
-                })
+        })
 
+    },
+
+
+
+
+    /**
+     * dropField
+     *
+     * delete app_builder/migrate/application/:appID/object/:objID/field/:fieldID
+     */
+    dropField: function(req, res) {
+        res.set('content-type', 'application/javascript');
+        
+        sails.log.info('ABMigrationConroller.dropField()');
+
+        // NOTE: verifyAnd...() handles any errors and responses internally.
+        // only need to respond to a field being passed back on .resolve()
+        verifyAndReturnField(req, res)
+        .then(function(field){
+
+            ABMigration.dropField(field)
+            .then(function(){
+
+                res.AD.success({ good:'job'});
+
+            })
+            .catch(function(err){
+                ADCore.error.log('ABMigration.dropField() failed:', { error:err, field:field });
+                res.AD.error(err, 500);
             })
 
         })
@@ -195,46 +220,52 @@ function verifyAndReturnObject(req, res) {
         }
     )
 
-
-
 }
 
 
-function verifyAndReturnField(req, res, object) {
+function verifyAndReturnField(req, res) {
 
     return new Promise(
         (resolve, reject) => {
 
-            var fieldID = req.param('fieldID', -1);
-
-            sails.log.verbose('... fieldID:'+fieldID);
-
-            // Verify input params are valid:
-            if (fieldID == -1) {
-                var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
-                invalidError.details = 'missing field.id';
-                sails.log.error(invalidError);
-                res.AD.error(invalidError, 400);
-                reject();
-            } 
+            verifyAndReturnObject(req, res)
+            .then(function(object){
 
 
-            // find and return our field
-            var field = object.fields((f) => { return f.id == fieldID; })[0];
-            if (field) {
+                var fieldID = req.param('fieldID', -1);
 
-                resolve( field );
+                sails.log.verbose('... fieldID:'+fieldID);
 
-            } else {
+                // Verify input params are valid:
+                if (fieldID == -1) {
+                    var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+                    invalidError.details = 'missing field.id';
+                    sails.log.error(invalidError);
+                    res.AD.error(invalidError, 400);
+                    reject();
+                } 
 
-                // error: field not found!
-                var err = ADCore.error.fromKey('E_NOTFOUND');
-                err.message = "Field not found.";
-                err.fieldID = fieldID;
-                sails.log.error(err);
-                res.AD.error(err, 404);
-                reject();
-            }
+
+                // find and return our field
+                var field = object.fields((f) => { return f.id == fieldID; })[0];
+                if (field) {
+
+                    resolve( field );
+
+                } else {
+
+                    // error: field not found!
+                    var err = ADCore.error.fromKey('E_NOTFOUND');
+                    err.message = "Field not found.";
+                    err.fieldID = fieldID;
+                    sails.log.error(err);
+                    res.AD.error(err, 404);
+                    reject();
+                }
+
+
+            }, reject)
+            .catch(reject);
 
         }
     )
