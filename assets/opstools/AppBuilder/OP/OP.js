@@ -15,6 +15,7 @@
 //// in 'use strict' ?
 
 // if (!window.OP) {
+import Comm from "./comm/comm"
 import Form from "./form"
 import Multilingual from "./multilingual"
 import Model from "./model"
@@ -29,6 +30,9 @@ import Config from "./config/config"
     //              for our loaded projects.
     // OP.UI = {};    		// webix UI definitions
     // OP.Logic = {}; 		// logic references for webix application
+
+    OP.Comm = Comm;
+
     OP.Component = {};  // our defined components
 
     OP.CustomComponent = {};  // separate holder for Webix Custom Components
