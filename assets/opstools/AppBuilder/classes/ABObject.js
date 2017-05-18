@@ -129,9 +129,44 @@ export default class ABObject {
 	 * @return {Promise}
 	 */
 	destroy () {
-
-		return this.application.objectDestroy(this);
 		
+		return new Promise(
+			(resolve, reject) => {
+
+				// OK, some of our Fields have special follow up actions that need to be
+				// considered when they no longer exist, so before we simply drop this
+				// object/table, drop each of our fields and give them a chance to clean up
+				// what needs cleaning up.
+
+				// ==> More work, but safer.
+				var fieldDrops = [];
+				this.fields().forEach((f)=>{
+					fieldDrops.push(f.destroy());
+				})
+
+				Promise.all(fieldDrops)
+				.then(()=>{
+
+					// now drop our table
+					// NOTE: our .migrateXXX() routines expect the object to currently exist
+					// in the DB before we perform the DB operations.  So we need to 
+					// .migrateDrop()  before we actually .objectDestroy() this.
+					this.migrateDrop()
+					.then(()=>{
+
+						// finally remove us from the application storage
+						return this.application.objectDestroy(this);
+
+					})
+					.then(resolve)
+					.catch(reject);
+
+				})
+				.catch(reject);
+
+			}
+		);
+
 	}
 
 
@@ -149,17 +184,32 @@ export default class ABObject {
 		return new Promise(
 			(resolve, reject) => {
 
+				var isAdd = false;
+
 				// if this is our initial save()
 				if (!this.id) {
 
 					this.id = OP.Util.uuid();	// setup default .id
 					this.label = this.label || this.name;
 					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
+					isAdd = true;
 				}
 
 				this.application.objectSave(this)
 				.then(() => {
-					resolve(this);
+
+					if (isAdd) {
+
+						// on a Create: trigger a migrateCreate object
+						this.migrateCreate()
+						.then(()=>{
+							resolve(this);
+						}, reject);
+
+					} else {
+						resolve(this);
+					}
+
 				})
 				.catch(function(err){
 					reject(err);
@@ -207,6 +257,30 @@ export default class ABObject {
 
 
 
+	///
+	/// DB Migrations
+	///
+
+	migrateCreate() {
+		var url = '/app_builder/migrate/application/#appID#/object/#objID#'
+			.replace('#appID#', this.application.id)
+			.replace('#objID#', this.id);
+
+		return OP.Comm.Service.post({
+			url: url
+		})
+	}
+
+
+	migrateDrop() {
+		var url = '/app_builder/migrate/application/#appID#/object/#objID#'
+			.replace('#appID#', this.application.id)
+			.replace('#objID#', this.id);
+
+		return OP.Comm.Service['delete']({
+			url: url
+		})
+	}
 
 
 	///

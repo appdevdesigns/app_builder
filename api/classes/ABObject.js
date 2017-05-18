@@ -310,10 +310,12 @@ console.error('TODO: ABObject.destroy()');
 	 * @param {Knex} knex the knex sql library manager for manipulating the DB.
 	 * @return {Promise}
 	 */
-	migrateCreateTable(knex) {
+	migrateCreate(knex) {
+		sails.log.verbose('ABObject.migrateCreate()');
 
 		var tableName = this.dbTableName();
-console.log('.... dbTableName:'+ tableName);
+		sails.log.verbose('.... dbTableName:'+ tableName);
+
 		return new Promise(
 			(resolve, reject) => {
 
@@ -321,7 +323,7 @@ console.log('.... dbTableName:'+ tableName);
 					
 					// if it doesn't exist, then create it and any known fields:
 					if (!exists) {
-console.log('... creating!!!');
+						sails.log.verbose('... creating!!!');
 						return knex.schema.createTable(tableName, (t) => {
 							t.increments('id').primary();
 							t.timestamps();
@@ -340,16 +342,66 @@ console.log('... creating!!!');
 							.then(resolve, reject);
 
 						})
-						// .then(function(){
-						// 	resolve();
-						// })
-						// .catch(reject);
 
 					} else {
-console.log('... already there.');
+						sails.log.verbose('... already there.');
 						resolve();
 					}
 				});
+
+			}
+		)
+	}
+
+
+
+
+
+	/**
+	 * migrateDropTable
+	 * remove the table for this object if it exists.
+	 * @param {Knex} knex the knex sql library manager for manipulating the DB.
+	 * @return {Promise}
+	 */
+	migrateDrop(knex) {
+		sails.log.verbose('ABObject.migrateDrop()');
+
+		var tableName = this.dbTableName();
+		sails.log.verbose('.... dbTableName:'+ tableName);
+
+		return new Promise(
+			(resolve, reject) => {
+				sails.log.silly('.... .migrateDropTable()  before knex:');
+
+				//BEFORE we just go drop the table, let's give each of our
+				// fields the chance to perform any clean up actions related
+				// to their columns being removed from the system.
+				//   Image Fields, Attachment Fields, Connection Fields, etc... 
+
+
+// QUESTION: When removing ConnectionFields:  If other objects connect to this object, we
+// need to decide how to handle that:
+// - auto remove those fields from other objects?
+// - perform the corrections here, or alert the USER in the UI and expect them to 
+//   make the changes manually? 
+
+
+				var fieldDrops = [];
+				this.fields().forEach((f)=>{
+					fieldDrops.push(f.migrateDrop(knex));
+				})
+
+				Promise.all(fieldDrops)
+				.then(function(){
+
+					knex.schema.dropTableIfExists(tableName)
+					.then(resolve)
+					.catch(reject);
+
+				})
+				.catch(reject);
+
+				
 
 			}
 		)
