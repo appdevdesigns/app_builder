@@ -357,7 +357,7 @@ console.error('TODO: syncNumRefresh()');
 				}
 
 				objectList.add(object,0);
-				$$(ids.list).select(newObject.id);
+				$$(ids.list).select(object.id);
 			},
 
 

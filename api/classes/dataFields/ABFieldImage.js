@@ -153,11 +153,12 @@ class ABFieldImage extends ABField {
 	 * perform the necessary sql actions to drop this column from the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	migrateDrop () {
+	migrateDrop (knex) {
 		return new Promise(
 			(resolve, reject) => {
-
-super.migrateDrop()
+				
+sails.log.error('!!! TODO: pay attention to the .removeExistingData setting !!!');
+super.migrateDrop(knex)
 .then(resolve)
 .catch(reject);
 
