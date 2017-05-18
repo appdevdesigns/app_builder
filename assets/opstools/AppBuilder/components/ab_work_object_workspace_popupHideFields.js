@@ -21,6 +21,7 @@ var labels = {
 
 		showAll: L('ab.visible_fields.showAll', "*Show All"),
 		hideAll: L('ab.visible_fields.hideAll', "*Hide All"),
+		errorFrozen: L('ab.visible_fields.errorFrozen', "*Sorry, you cannot hide your last frozen column."),
 	}
 }
 
@@ -72,7 +73,7 @@ OP.Component.extend(idBase, function(App) {
                     template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
                     on: {
                         onItemClick: function (id, e, node) {
-							_logic.listItemClick(id, e, node);
+							_logic.clickListItem(id, e, node);
                         }
                     }
                 }
@@ -163,10 +164,17 @@ OP.Component.extend(idBase, function(App) {
 
 
 		/**
-		 * @function listItemClick
+		 * @function clickListItem
 		 * update the clicked field setting.
 		 */
-		listItemClick: function(id, e, node) {
+		clickListItem: function(id, e, node) {
+			if (CurrentObject.workspaceFrozenColumnID == id) {
+				OP.Dialog.Alert({
+					text: labels.component.errorFrozen
+				});
+				return;
+			}
+
 			var newFields = [];
 			var isHidden = CurrentObject.workspaceHiddenFields.filter((fID) => { return fID == id;}).length>0;
 			if (isHidden) {
@@ -194,6 +202,30 @@ OP.Component.extend(idBase, function(App) {
 			.catch(function(err){
 				OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
 			})
+		},
+
+		/**
+		 * @function iconFreezeOff
+		 * Remove thumb tack if the field is not the choosen frozen column field
+		 * @param {DOM} node  the html dom node of the element that contains our icon
+		 */
+		iconFreezeOff: function(node) {
+			if (node) {
+				node.querySelector('.ab-visible-field-icon').classList.remove("fa-thumb-tack");
+				node.querySelector('.ab-visible-field-icon').classList.add("fa-circle");
+			}
+		},
+
+		/**
+		 * @function iconFreezeOn
+		 * Show a thumb tack if the field is the choosen frozen column field
+		 * @param {DOM} node  the html dom node of the element that contains our icon
+		 */
+		iconFreezeOn: function(node) {
+			if (node) {
+				node.querySelector('.ab-visible-field-icon').classList.remove("fa-circle");
+				node.querySelector('.ab-visible-field-icon').classList.add("fa-thumb-tack");
+			}
 		},
 
 
@@ -235,6 +267,12 @@ OP.Component.extend(idBase, function(App) {
 
 				// find it's HTML Node
 				var node = List.getItemNode(id);
+
+				if (CurrentObject.workspaceFrozenColumnID == id) {
+					_logic.iconFreezeOn(node);
+				} else {
+					_logic.iconFreezeOff(node);
+				}
 
 				// if this item is not hidden, show it.
 				if (CurrentObject.workspaceHiddenFields.indexOf(id) == -1) {

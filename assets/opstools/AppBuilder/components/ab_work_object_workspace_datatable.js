@@ -248,6 +248,18 @@ console.error('!! ToDo: onAfterColumnHide()');
 			_logic.callbacks.onEditorMenu(action, EditField, EditNode);
 		},
 
+		/**
+		 * @function getColumnIndex
+		 *
+		 * return the column index of a given column ID
+		 * @param {string} id column id you want the index of
+		 */
+		getColumnIndex: function(id) {
+			var DataTable = $$(ids.component);
+
+			return DataTable.getColumnIndex(id);
+		},
+
 
 		/**
 		 * @function onHeaderClick
@@ -298,13 +310,12 @@ console.error('!! ToDo: onAfterColumnHide()');
 				// update DataTable structure:
 				var columnHeaders = CurrentObject.columnHeaders(true);
 				DataTable.refreshColumns(columnHeaders)
-
 				// freeze columns:
 				if (CurrentObject.workspaceFrozenColumnID != "") {
-					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID));
+					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
 					DataTable.refreshColumns()
 				}
-				
+
 				// update DataTable Content
 			}
 		},
@@ -352,6 +363,8 @@ console.error('!! ToDo: onAfterColumnHide()');
 		objectLoad: _logic.objectLoad,
 		refresh: _logic.refresh,
 
+		// expose data for badge on frozen button
+		getColumnIndex: _logic.getColumnIndex,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

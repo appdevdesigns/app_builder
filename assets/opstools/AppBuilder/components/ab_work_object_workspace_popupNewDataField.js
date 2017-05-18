@@ -200,7 +200,7 @@ OP.Component.extend(idBase, function(App) {
 		// 	submenu: submenus
 		// })
 		$$(ids.types).define("options",submenus);
-		$$(ids.types).setValue(1);
+//		$$(ids.types).setValue(1);
 		$$(ids.types).refresh();
 
 		// now remove the 'del_me' definition editor placeholder.
@@ -405,7 +405,6 @@ OP.Component.extend(idBase, function(App) {
 		 * @param {string} name  the menuName() of the submenu that was selected.
 		 */
 		onChange: function (name) {
-
 			// note, the submenu returns the Field.menuName() values.
 			// we use that to lookup the Field here:
 			var editor = _componentHash[name];

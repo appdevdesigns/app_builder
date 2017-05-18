@@ -47,26 +47,7 @@ OP.Component.extend(idBase, function(App) {
 		body: {
 			rows: [
 				{
-					view: 'list',
-					id: ids.list,
-					width: 250,
-					autoheight: true,
-					select: false,
-					template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
-					on: {
-						onItemClick: function (id, e, node) {
-							_logic.listItemClick(id, e, node);
-
-							// dataTable.define('leftSplit', dataTable.getColumnIndex(id) + 1);
-							// dataTable.refreshColumns();
-							//
-							// $$(ids.component).refreshShowIcons();
-							// $$(ids.component).callChangeEvent();
-						}
-					}
-				},
-				{
-					view: 'button', value: labels.component.clearAll, click: function () {
+					view: 'button', value: labels.component.clearAll, click: function (id, e, node) {
 						_logic.clickClearAll(id, e, node);
 
 						// dataTable.define('leftSplit', 0);
@@ -75,12 +56,31 @@ OP.Component.extend(idBase, function(App) {
 						// $$(ids.component).refreshShowIcons();
 						// $$(ids.component).callChangeEvent();
 					}
+				},
+				{
+					view: 'list',
+					id: ids.list,
+					width: 250,
+					autoheight: true,
+					select: false,
+					template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
+					on: {
+						onItemClick: function (id, e, node) {
+							_logic.clickListItem(id, e, node);
+
+							// dataTable.define('leftSplit', dataTable.getColumnIndex(id) + 1);
+							// dataTable.refreshColumns();
+							//
+							// $$(ids.component).refreshShowIcons();
+							// $$(ids.component).callChangeEvent();
+						}
+					}
 				}
 			]
 		},
 		on: {
 			onShow: function () {
-				//$$(ids.frozenPopup).populateList();
+				_logic.iconsReset();
 			}
 		}
     }
@@ -130,101 +130,86 @@ OP.Component.extend(idBase, function(App) {
 				_logic.callbacks.onChange()
 			})
 			.catch(function(err){
-				OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:frozenColumnID });
+				OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:"" });
 			})
 		},
 
 
 		/**
-		 * @function listItemClick
+		 * @function clickListItem
 		 * update the list to show which columns are frozen by showing an icon next to the column name
 		 */
-		listItemClick: function(id, e, node) {
+		clickListItem: function(id, e, node) {
 			// update our Object with current frozen column id
-			CurrentObject.workspacefrozenColumnID = id;
+			CurrentObject.workspaceFrozenColumnID = id;
 			CurrentObject.save()
 			.then(function(){
 				_logic.iconsReset();
 				_logic.callbacks.onChange()
 			})
 			.catch(function(err){
-				OP.Error.log('Error trying to save workspacefrozenColumnID', {error:err, fields:frozenColumnID });
+				OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:id });
 			})
 		},
 
 		/**
-		 * @function refreshShowIcons
-		 * update the list to show which columns are frozen by showing an icon next to the column name
-		 */
-		populateList: function () {
-			var fieldList = [];
-			// Get all columns include hidden columns
-			if (data.fieldList) {
-				data.fieldList.forEach(function (f) {
-					fieldList.push({
-						id: f.name,
-						label: f.label,
-					});
-				});
-			}
-
-			return fieldList;
-			// $('.ab-frozen-field-icon').hide();
-			//
-			// if (dataTable) {
-			// 	for (var i = 0; i < dataTable.config.leftSplit; i++) {
-			// 		var c = dataTable.config.columns[i];
-			// 		$($$(componentIds.fieldsList).getItemNode(c.id)).find('.ab-frozen-field-icon').show();
-			// 	}
-			// }
-		},
-
-
-		/**
-		 * @function iconHide
+		 * @function iconDefault
 		 * Hide the icon for the given node
 		 * @param {DOM} node  the html dom node of the element that contains our icon
 		 */
-		iconHide: function(node) {
-			// if (node) {
-			// 	node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
-			// }
+		iconDefault: function(node) {
+			if (node) {
+				node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle");
+				node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle-o");
+			}
 		},
 
 
 		/**
-		 * @function iconShow
+		 * @function iconFreeze
 		 * Show the icon for the given node
 		 * @param {DOM} node  the html dom node of the element that contains our icon
 		 */
-		iconShow: function(node) {
-			// if (node) {
-			// 	node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
-			// }
+		iconFreeze: function(node) {
+			if (node) {
+				node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle-o");
+				node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle");
+			}
 		},
-
 
 		/**
 		 * @function iconsReset
 		 * Reset the icon displays according to the current values in our Object
 		 */
 		iconsReset: function() {
-
 			var List = $$(ids.list);
+			var isFrozen = false;
 
 			// for each item in the List
 			var id = List.getFirstId();
 			while(id) {
-
 				// find it's HTML Node
 				var node = List.getItemNode(id);
 
-				// if this item is not hidden, show it.
-				if (CurrentObject.workspacefrozenColumnID <= id) {
-					_logic.iconShow(node);
+				if (CurrentObject.workspaceFrozenColumnID == "") {
+					// if there isn't any frozen columns just use the plain icon
+					_logic.iconDefault(node);
+				} else if (isFrozen == false) {
+					// if this item is not the frozen id it is frozen until we reach the frozen id
+					_logic.iconFreeze(node);
 				} else {
-					// else hide it
-					_logic.iconHide(node);
+					// else just show default icon
+					_logic.iconDefault(node);
+				}
+
+				if (CurrentObject.workspaceFrozenColumnID == id) {
+					isFrozen = true;
+				}
+
+				if (CurrentObject.objectWorkspace.hiddenFields.indexOf(id) != -1) {
+					node.style.display = "none";
+				} else {
+					node.style.display = "";
 				}
 
 				// next item
@@ -248,11 +233,12 @@ OP.Component.extend(idBase, function(App) {
 			allFields.forEach((f) => {
 				listFields.push({
 					id: f.id,
-					label: f.label
+					label: f.label,
+					$css:"hidden_fields_"+f.id
 				})
 			})
 
-			$$(ids.list).parse(allFields);
+			$$(ids.list).parse(listFields);
 		}
 
 	}

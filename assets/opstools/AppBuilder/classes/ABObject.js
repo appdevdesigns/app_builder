@@ -49,11 +49,15 @@ export default class ABObject {
     	this.importFromObject = attributes.importFromObject || "";
     	this.translations = attributes.translations;
 
+		if (typeof(attributes.objectWorkspace) != "undefined") {
+			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
+			if (typeof(attributes.objectWorkspace.frozenColumnID) == "undefined") attributes.objectWorkspace.frozenColumnID = "";
+		}
+
     	this.objectWorkspace = attributes.objectWorkspace || {
     		hiddenFields:[], 	// array of [ids] to add hidden:true to
 			frozenColumnID:"", // id of column you want to stop freezing
     	};
-
 
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this, ['label']);
@@ -132,7 +136,7 @@ export default class ABObject {
 	destroy () {
 
 		return this.application.objectDestroy(this);
-		
+
 	}
 
 
@@ -308,7 +312,7 @@ export default class ABObject {
 		return this.objectWorkspace.frozenColumnID;
 	}
 
-	set workspacefrozenColumnID( id ) {
+	set workspaceFrozenColumnID( id ) {
 		this.objectWorkspace.frozenColumnID = id;
 	}
 
@@ -350,12 +354,6 @@ export default class ABObject {
 					})
 				});
 			}
-
-			if (this.workspaceFrozenColumnID != "") {
-
-			}
-			console.log("TODO:FREEZE COLUMNS");
-
 		}
 
 		return headers;

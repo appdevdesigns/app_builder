@@ -319,11 +319,17 @@ OP.Component.extend(idBase, function(App) {
 		 * call back for when the hidden fields have changed.
 		 */
 		callbackFrozenColumns: function() {
-			var frozenColumnIndex = CurrentObject.workspaceFrozenColumnIndex;
-			$$(ids.buttonFrozen).define('badge', frozenColumnIndex);
-			$$(ids.buttonFrozen).refresh();
 
-			DataTable.refresh();
+			var frozenID = CurrentObject.workspaceFrozenColumnID;
+
+			if (typeof(frozenID) != "undefined") {
+				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1
+
+				$$(ids.buttonFrozen).define('badge', badgeNumber);
+				$$(ids.buttonFrozen).refresh();
+
+				DataTable.refresh();
+			}
 		},
 
 		/**
@@ -340,12 +346,15 @@ OP.Component.extend(idBase, function(App) {
 				$$(ids.buttonFieldsVisible).refresh();
 
 				DataTable.refresh();
+
+				// if you unhide a field it may fall inside the frozen columns range so lets check
+				_logic.callbackFrozenColumns();
 			}
 		},
 
 
 		/**
-		 * @function callbackFieldsVisible
+		 * @function callbackHeaderEditorMenu
 		 *
 		 * call back for when an editor menu action has been selected.
 		 * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
@@ -521,6 +530,9 @@ console.error('TODO: toolbarSort()');
 			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			DataTable.objectLoad(object);
+
+			// update frozen columns
+			_logic.callbackFrozenColumns();
 		}
 
 

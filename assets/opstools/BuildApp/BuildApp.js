@@ -2675,6 +2675,11 @@ var ABObject = function () {
 		this.importFromObject = attributes.importFromObject || "";
 		this.translations = attributes.translations;
 
+		if (typeof attributes.objectWorkspace != "undefined") {
+			if (typeof attributes.objectWorkspace.hiddenFields == "undefined") attributes.objectWorkspace.hiddenFields = [];
+			if (typeof attributes.objectWorkspace.frozenColumnID == "undefined") attributes.objectWorkspace.frozenColumnID = "";
+		}
+
 		this.objectWorkspace = attributes.objectWorkspace || {
 			hiddenFields: [], // array of [ids] to add hidden:true to
 			frozenColumnID: "" };
@@ -2958,9 +2963,6 @@ var ABObject = function () {
 						});
 					});
 				}
-
-				if (this.workspaceFrozenColumnID != "") {}
-				console.log("TODO:FREEZE COLUMNS");
 			}
 
 			return headers;
@@ -2977,9 +2979,7 @@ var ABObject = function () {
 		key: "workspaceFrozenColumnID",
 		get: function get() {
 			return this.objectWorkspace.frozenColumnID;
-		}
-	}, {
-		key: "workspacefrozenColumnID",
+		},
 		set: function set(id) {
 			this.objectWorkspace.frozenColumnID = id;
 		}
@@ -6004,7 +6004,7 @@ OP.Component.extend(idBase, function (App) {
 
 	};
 
-	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditObject'](App);
+	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditMenu'](App);
 
 	// Our webix UI definition:
 	var _ui = {
@@ -6025,8 +6025,7 @@ OP.Component.extend(idBase, function (App) {
 				return _logic.templateListItem(obj, common);
 			},
 			type: {
-				// height:"auto",
-				// unsyncNumber: "",  // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+				height: "auto",
 				iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 			},
 			on: {
@@ -6785,7 +6784,7 @@ var labels = {
 	}
 };
 
-var idBase = 'ab_work_object_list_popupEditObject';
+var idBase = 'ab_work_object_list_popupEditMenu';
 OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
@@ -6798,7 +6797,7 @@ OP.Component.extend(idBase, function (App) {
 		view: "popup",
 		id: ids.menu,
 		head: labels.component.menu,
-		width: 100,
+		width: 120,
 		body: {
 			view: "list",
 			borderless: true,
@@ -6824,7 +6823,9 @@ OP.Component.extend(idBase, function (App) {
 
 		// register our callbacks:
 		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			if (options && options[c]) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
 		}
 	};
 
@@ -6859,11 +6860,11 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		show: function show(itemNode) {
-			$$(ids.menu).show(itemNode);
+			if ($$(ids.menu) && itemNode) $$(ids.menu).show(itemNode);
 		},
 
 		hide: function hide() {
-			$$(ids.menu).hide();
+			if ($$(ids.menu)) $$(ids.menu).hide();
 		}
 
 	};
@@ -7168,11 +7169,17 @@ OP.Component.extend(idBase, function (App) {
    * call back for when the hidden fields have changed.
    */
 		callbackFrozenColumns: function callbackFrozenColumns() {
-			var frozenColumnIndex = CurrentObject.workspaceFrozenColumnIndex;
-			$$(ids.buttonFrozen).define('badge', frozenColumnIndex);
-			$$(ids.buttonFrozen).refresh();
 
-			DataTable.refresh();
+			var frozenID = CurrentObject.workspaceFrozenColumnID;
+
+			if (typeof frozenID != "undefined") {
+				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
+
+				$$(ids.buttonFrozen).define('badge', badgeNumber);
+				$$(ids.buttonFrozen).refresh();
+
+				DataTable.refresh();
+			}
 		},
 
 		/**
@@ -7189,11 +7196,14 @@ OP.Component.extend(idBase, function (App) {
 				$$(ids.buttonFieldsVisible).refresh();
 
 				DataTable.refresh();
+
+				// if you unhide a field it may fall inside the frozen columns range so lets check
+				_logic.callbackFrozenColumns();
 			}
 		},
 
 		/**
-   * @function callbackFieldsVisible
+   * @function callbackHeaderEditorMenu
    *
    * call back for when an editor menu action has been selected.
    * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
@@ -7350,6 +7360,9 @@ OP.Component.extend(idBase, function (App) {
 			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			DataTable.objectLoad(object);
+
+			// update frozen columns
+			_logic.callbackFrozenColumns();
 		}
 
 	};
@@ -7607,6 +7620,18 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		/**
+   * @function getColumnIndex
+   *
+   * return the column index of a given column ID
+   * @param {string} id column id you want the index of
+   */
+		getColumnIndex: function getColumnIndex(id) {
+			var DataTable = $$(ids.component);
+
+			return DataTable.getColumnIndex(id);
+		},
+
+		/**
    * @function onHeaderClick
    *
    * process the user clicking on the header for one of our columns.
@@ -7652,10 +7677,9 @@ OP.Component.extend(idBase, function (App) {
 				// update DataTable structure:
 				var columnHeaders = CurrentObject.columnHeaders(true);
 				DataTable.refreshColumns(columnHeaders);
-
 				// freeze columns:
 				if (CurrentObject.workspaceFrozenColumnID != "") {
-					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID));
+					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
 					DataTable.refreshColumns();
 				}
 
@@ -7695,6 +7719,9 @@ OP.Component.extend(idBase, function (App) {
 		// interface methods for parent component:
 		objectLoad: _logic.objectLoad,
 		refresh: _logic.refresh,
+
+		// expose data for badge on frozen button
+		getColumnIndex: _logic.getColumnIndex,
 
 		_logic: _logic // {obj} 	Unit Testing
 	};
@@ -8019,25 +8046,7 @@ OP.Component.extend(idBase, function (App) {
 		width: 500,
 		body: {
 			rows: [{
-				view: 'list',
-				id: ids.list,
-				width: 250,
-				autoheight: true,
-				select: false,
-				template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
-				on: {
-					onItemClick: function onItemClick(id, e, node) {
-						_logic.listItemClick(id, e, node);
-
-						// dataTable.define('leftSplit', dataTable.getColumnIndex(id) + 1);
-						// dataTable.refreshColumns();
-						//
-						// $$(ids.component).refreshShowIcons();
-						// $$(ids.component).callChangeEvent();
-					}
-				}
-			}, {
-				view: 'button', value: labels.component.clearAll, click: function click() {
+				view: 'button', value: labels.component.clearAll, click: function click(id, e, node) {
 					_logic.clickClearAll(id, e, node);
 
 					// dataTable.define('leftSplit', 0);
@@ -8046,11 +8055,29 @@ OP.Component.extend(idBase, function (App) {
 					// $$(ids.component).refreshShowIcons();
 					// $$(ids.component).callChangeEvent();
 				}
+			}, {
+				view: 'list',
+				id: ids.list,
+				width: 250,
+				autoheight: true,
+				select: false,
+				template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
+				on: {
+					onItemClick: function onItemClick(id, e, node) {
+						_logic.clickListItem(id, e, node);
+
+						// dataTable.define('leftSplit', dataTable.getColumnIndex(id) + 1);
+						// dataTable.refreshColumns();
+						//
+						// $$(ids.component).refreshShowIcons();
+						// $$(ids.component).callChangeEvent();
+					}
+				}
 			}]
 		},
 		on: {
 			onShow: function onShow() {
-				//$$(ids.frozenPopup).populateList();
+				_logic.iconsReset();
 			}
 		}
 	};
@@ -8093,72 +8120,47 @@ OP.Component.extend(idBase, function (App) {
 				_logic.iconsReset();
 				_logic.callbacks.onChange();
 			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: frozenColumnID });
+				OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: "" });
 			});
 		},
 
 		/**
-   * @function listItemClick
+   * @function clickListItem
    * update the list to show which columns are frozen by showing an icon next to the column name
    */
-		listItemClick: function listItemClick(id, e, node) {
+		clickListItem: function clickListItem(id, e, node) {
 			// update our Object with current frozen column id
-			CurrentObject.workspacefrozenColumnID = id;
+			CurrentObject.workspaceFrozenColumnID = id;
 			CurrentObject.save().then(function () {
 				_logic.iconsReset();
 				_logic.callbacks.onChange();
 			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspacefrozenColumnID', { error: err, fields: frozenColumnID });
+				OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: id });
 			});
 		},
 
 		/**
-   * @function refreshShowIcons
-   * update the list to show which columns are frozen by showing an icon next to the column name
-   */
-		populateList: function populateList() {
-			var fieldList = [];
-			// Get all columns include hidden columns
-			if (data.fieldList) {
-				data.fieldList.forEach(function (f) {
-					fieldList.push({
-						id: f.name,
-						label: f.label
-					});
-				});
-			}
-
-			return fieldList;
-			// $('.ab-frozen-field-icon').hide();
-			//
-			// if (dataTable) {
-			// 	for (var i = 0; i < dataTable.config.leftSplit; i++) {
-			// 		var c = dataTable.config.columns[i];
-			// 		$($$(componentIds.fieldsList).getItemNode(c.id)).find('.ab-frozen-field-icon').show();
-			// 	}
-			// }
-		},
-
-		/**
-   * @function iconHide
+   * @function iconDefault
    * Hide the icon for the given node
    * @param {DOM} node  the html dom node of the element that contains our icon
    */
-		iconHide: function iconHide(node) {
-			// if (node) {
-			// 	node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
-			// }
+		iconDefault: function iconDefault(node) {
+			if (node) {
+				node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle");
+				node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle-o");
+			}
 		},
 
 		/**
-   * @function iconShow
+   * @function iconFreeze
    * Show the icon for the given node
    * @param {DOM} node  the html dom node of the element that contains our icon
    */
-		iconShow: function iconShow(node) {
-			// if (node) {
-			// 	node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
-			// }
+		iconFreeze: function iconFreeze(node) {
+			if (node) {
+				node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle-o");
+				node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle");
+			}
 		},
 
 		/**
@@ -8166,22 +8168,34 @@ OP.Component.extend(idBase, function (App) {
    * Reset the icon displays according to the current values in our Object
    */
 		iconsReset: function iconsReset() {
-
 			var List = $$(ids.list);
+			var isFrozen = false;
 
 			// for each item in the List
 			var id = List.getFirstId();
 			while (id) {
-
 				// find it's HTML Node
 				var node = List.getItemNode(id);
 
-				// if this item is not hidden, show it.
-				if (CurrentObject.workspacefrozenColumnID <= id) {
-					_logic.iconShow(node);
+				if (CurrentObject.workspaceFrozenColumnID == "") {
+					// if there isn't any frozen columns just use the plain icon
+					_logic.iconDefault(node);
+				} else if (isFrozen == false) {
+					// if this item is not the frozen id it is frozen until we reach the frozen id
+					_logic.iconFreeze(node);
 				} else {
-					// else hide it
-					_logic.iconHide(node);
+					// else just show default icon
+					_logic.iconDefault(node);
+				}
+
+				if (CurrentObject.workspaceFrozenColumnID == id) {
+					isFrozen = true;
+				}
+
+				if (CurrentObject.objectWorkspace.hiddenFields.indexOf(id) != -1) {
+					node.style.display = "none";
+				} else {
+					node.style.display = "";
 				}
 
 				// next item
@@ -8203,11 +8217,12 @@ OP.Component.extend(idBase, function (App) {
 			allFields.forEach(function (f) {
 				listFields.push({
 					id: f.id,
-					label: f.label
+					label: f.label,
+					$css: "hidden_fields_" + f.id
 				});
 			});
 
-			$$(ids.list).parse(allFields);
+			$$(ids.list).parse(listFields);
 		}
 
 	};
@@ -8457,7 +8472,8 @@ var labels = {
 	component: {
 
 		showAll: L('ab.visible_fields.showAll', "*Show All"),
-		hideAll: L('ab.visible_fields.hideAll', "*Hide All")
+		hideAll: L('ab.visible_fields.hideAll', "*Hide All"),
+		errorFrozen: L('ab.visible_fields.errorFrozen', "*Sorry, you cannot hide your last frozen column.")
 	}
 };
 
@@ -8501,7 +8517,7 @@ OP.Component.extend(idBase, function (App) {
 				template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
 				on: {
 					onItemClick: function onItemClick(id, e, node) {
-						_logic.listItemClick(id, e, node);
+						_logic.clickListItem(id, e, node);
 					}
 				}
 			}]
@@ -8580,10 +8596,17 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		/**
-   * @function listItemClick
+   * @function clickListItem
    * update the clicked field setting.
    */
-		listItemClick: function listItemClick(id, e, node) {
+		clickListItem: function clickListItem(id, e, node) {
+			if (CurrentObject.workspaceFrozenColumnID == id) {
+				OP.Dialog.Alert({
+					text: labels.component.errorFrozen
+				});
+				return;
+			}
+
 			var newFields = [];
 			var isHidden = CurrentObject.workspaceHiddenFields.filter(function (fID) {
 				return fID == id;
@@ -8612,6 +8635,30 @@ OP.Component.extend(idBase, function (App) {
 			}).catch(function (err) {
 				OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newFields });
 			});
+		},
+
+		/**
+   * @function iconFreezeOff
+   * Remove thumb tack if the field is not the choosen frozen column field
+   * @param {DOM} node  the html dom node of the element that contains our icon
+   */
+		iconFreezeOff: function iconFreezeOff(node) {
+			if (node) {
+				node.querySelector('.ab-visible-field-icon').classList.remove("fa-thumb-tack");
+				node.querySelector('.ab-visible-field-icon').classList.add("fa-circle");
+			}
+		},
+
+		/**
+   * @function iconFreezeOn
+   * Show a thumb tack if the field is the choosen frozen column field
+   * @param {DOM} node  the html dom node of the element that contains our icon
+   */
+		iconFreezeOn: function iconFreezeOn(node) {
+			if (node) {
+				node.querySelector('.ab-visible-field-icon').classList.remove("fa-circle");
+				node.querySelector('.ab-visible-field-icon').classList.add("fa-thumb-tack");
+			}
 		},
 
 		/**
@@ -8650,6 +8697,12 @@ OP.Component.extend(idBase, function (App) {
 
 				// find it's HTML Node
 				var node = List.getItemNode(id);
+
+				if (CurrentObject.workspaceFrozenColumnID == id) {
+					_logic.iconFreezeOn(node);
+				} else {
+					_logic.iconFreezeOff(node);
+				}
 
 				// if this item is not hidden, show it.
 				if (CurrentObject.workspaceHiddenFields.indexOf(id) == -1) {
@@ -8893,7 +8946,7 @@ OP.Component.extend(idBase, function (App) {
 		// 	submenu: submenus
 		// })
 		$$(ids.types).define("options", submenus);
-		$$(ids.types).setValue(1);
+		//		$$(ids.types).setValue(1);
 		$$(ids.types).refresh();
 
 		// now remove the 'del_me' definition editor placeholder.
@@ -9081,21 +9134,20 @@ OP.Component.extend(idBase, function (App) {
    * @param {string} name  the menuName() of the submenu that was selected.
    */
 		onChange: function onChange(name) {
-
 			// note, the submenu returns the Field.menuName() values.
 			// we use that to lookup the Field here:
 			var editor = _componentHash[name];
 			if (editor) {
 				editor.show();
 				_currentEditor = editor;
-				$$(ids.types).blur();
+				//$$(ids.types).blur();
 			} else {
 
-				// most likely they clicked on the menu button itself.
-				// do nothing.
+					// most likely they clicked on the menu button itself.
+					// do nothing.
 
-				// OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
-			}
+					// OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
+				}
 		},
 
 		onShow: function onShow() {
@@ -9548,7 +9600,7 @@ exports = module.exports = __webpack_require__(39)(undefined);
 
 
 // module
-exports.push([module.i, ".webix_view, .webix_el_colorpicker input, .webix_el_combo input, .webix_el_datepicker input, .webix_el_search input, .webix_el_text input, .webix_control button, .webix_control input, .webix_control textarea, .webix_el_label, .webix_inp_bottom_label, .webix_inp_label, .webix_inp_top_label {\n\tfont-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif !important;\n}\n.ab-generated-page {\n\toverflow-y: auto;\n}\n.ab-main-container {\n\tposition: relative;\n\tdisplay: block;\n\twidth: 100%;\n\tbackground: -moz-linear-gradient(top, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%); /* FF3.6-15 */\n\tbackground: -webkit-linear-gradient(top, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0) 100%); /* Chrome10-25,Safari5.1-6 */\n\tbackground: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */\n}\n.ab-main-container .pointer {\n\tcursor: pointer;\n}\n.ab-main-container .right {\n\ttext-align: right;\n}\n.ab-main-container .center {\n\ttext-align: center;\n}\n.ab-main-container .left {\n\ttext-align: left;\n}\n.ab-text-bold {\n\tfont-weight: bold !important;\n}\n.ab-scroll-y {\n\toverflow-y: auto !important;\n}\n.ab-ellipses-text, .ab-ellipses-text > div {\n\toverflow: hidden;\n\twhite-space: nowrap;\n\ttext-overflow: ellipsis;\n}\n.float-left {\n\tfloat: left;\n}\n.float-right {\n\tfloat: right;\n}\n\n/* Webix icon */\n.ab-main-container .webix_icon {\n\tline-height: inherit;\n}\n\n/* Fix overflow-x */\n.ab-generated-page .webix_scroll_cont {\n\toverflow: auto !important;\n}\n\n/* == Webix datatable == */\n/* Checkbox column */\n.ab-main-container .webix_hcell.center input[type=checkbox] {\n\twidth:20px;\n\theight:20px;\n\tmargin-top:12px;\n  }\n.ab-main-container .webix_table_checkbox {\n\twidth:20px;\n\theight:20px;\n\tmargin-top:5px;\n}\n/* Last column */\n.ab-main-container .webix_column.webix_last > div,\n.ab-main-container .webix_hs_center td.webix_last,\n.ab-main-container .ab-app-list-descriptionwebix_hs_right td.webix_last {\n\tborder-right-width: 1px !important;\n}\n/* No padding/margin column */\n.ab-column-no-padding div {\n\tpadding: 0px !important;\n\tmargin: 0px !important;\n}\n.ab-main-container .ab-cell-warn {\n\tbackground-color: #F5AE0F !important;\n}\n\n/* Webix selected item */\n.webix_list_item.webix_selected,\n.webix_column>div.webix_cell_select,\n.webix_column>div.webix_column_select,\n.webix_column>div.webix_row_select {\n\tbackground-color: #3498db !important;\n}\n\n/* Webix message */\n.webix_success {\n  background-color: #BFF2BF;\n}\n.webix_success div {\n  background-color: #BFF2BF;\n  border: 1px solid #007A00;\n  color: #000;\n}\n\n/* Webix list */\n.ab-main-container .webix_list_item .webix_selected,\n.ab-main-container .webix_tree_item.webix_selected {\n\tcolor: #fff !important;\n\tbackground-color: #3498db !important;\n}\n.ab-app-form-permission .webix_selected {\n\tcolor: #333 !important;\n\tbackground-color: transparent !important;\n}\n\n/* Webix toolbar */\n.ab-toolbar-submenu, .ab-toolbar-submenu .webix_header>div {\n\tbackground: #EEE !important;\n\tcolor: #666 !important;\n\tfont-size: 15px !important;\n\tfont-weight: bold !important;\n\tborder-bottom: 0px !important;\n}\n\n/* Webix segmented */\n.ab-form-component-item .webix_segment_0.webix_selected,\n.ab-form-component-item .webix_segment_1.webix_selected,\n.ab-form-component-item .webix_segment_N.webix_selected,\n.ab-component-view-edit-field .webix_segment_0.webix_selected,\n.ab-component-view-edit-field .webix_segment_1.webix_selected,\n.ab-component-view-edit-field .webix_segment_N.webix_selected {\n\tcolor: #fff !important;\n\tbackground-color: #3498db !important;\n}\n\n.ab-form-component-item .webix_segment_0,\n.ab-form-component-item .webix_segment_1,\n.ab-form-component-item .webix_segment_N,\n.ab-component-view-edit-field .webix_segment_0,\n.ab-component-view-edit-field .webix_segment_1,\n.ab-component-view-edit-field .webix_segment_N {\n\tcolor: #3498db;\n\tbackground: #fff;\n}\n\n/* Add new columns popup */\n.ab-add-fields-popup {\n\toverflow-y: auto;\n}\n\n/* Application list */\n.ab-app-list {\n/*\n\tmin-height: 300px;\n\tpadding: 40px 100px;\n*/\n}\n.ab-app-select-list .webix_selected {\n\tbackground-color: #FFF !important;\n\tcolor: #333 !important;\n}\n.ab-app-select-list .webix_list_item:hover {\n\tbackground: #ebebeb;\n}\n.ab-app-list-item {\n\tposition: relative;\n\theight: 100%;\n\tmargin: -2px -10px;\n\tpadding: 15px;\n\tline-height: 20px;\n}\ndiv[view_id='ab-app-list'] div.webix_list_item:hover,\ndiv[view_id='ab-object-list'] div.webix_list_item:hover,\ndiv[view_id='ab-object-list-menu'] div.webix_list_item:hover,\ndiv[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover,\ndiv[view_id='ab-edit-header-items'] div.webix_list_item:hover,\ndiv[view_id='ab-frozen-field-list'] div.webix_list_item:hover {\n\tbackground-color: #eee;\n}\n.ab-app-list-name {\n\tfont-size: large;\n}\n.ab-app-list-description {\n\tcolor: #999;\n\tfont-size: small;\n}\n.ab-app-list-info {\n\twidth: 95%;\n\tdisplay: inline-block;\n}\n.ab-app-list-edit {\n\tposition: absolute;\n\ttop: 0;\n\tright: 10px;\n\topacity: 0.4;\n\tline-height: 70px;\n\theight: 70px;\n}\n.ab-app-list-edit:hover {\n\topacity: 1;\n}\n\n/* Application workspace */\n.ab-app-workspace {\n\t/*min-height: 100px;*/\n}\n.ab-unsync-data-warning {\n\tcursor: pointer;\n    color: #fff;\n    background-color: #F5962F;\n    border: #fff dotted 1px !important;\n    padding-left: 2px;\n}\n.ab-unsync-data-popup .webix_win_head {\n\tbackground-color: #F5962F;\n}\n.ab-unsync-data-popup .webix_win_head .header {\n\tpadding-left: 5px;\n\tfont-weight: bold;\n    color: #fff;\n}\n.ab-unsync-data-status {\n\tpadding: 3px;\n}\n.ab-unsync-data-in-progress {\n\tbackground-color: #F5AE0F;\n}\n.ab-unsync-data-done {\n\tbackground-color: #3AB349;\n}\n.ab-unsync-data-error {\n\tbackground-color: #EC2F2F;\n}\n\n/* Object list */\n.ab-object-list-item {\n\tposition: relative;\n\theight: 100%;\n}\n.ab-object-list-edit {\n\tposition: absolute;\n\ttop: 0px;\n\tright: 5px;\n\tdisplay: none;\n}\n.ab-object-unsync {\n\tbackground-color: #d2e3ef;\n\tcolor: #4a4a4a;\n\tposition: absolute;\n\ttop: 4px;\n\tright: 30px;\n\tfont-size: 12px;\n\tborder-radius: 6px;\n\tpadding: 0px 4px;\n\theight: 20px;\n\tline-height: 20px;\n\tdisplay: none;\n}\n\n/* Interface list */\n.ab-page-list-item {\n\tposition: relative;\n\theight: 100%;\n}\n.ab-page-list-edit {\n\tposition: absolute;\n\ttop: 0px;\n\tright: 5px;\n\tdisplay: none;\n\tcursor: pointer;\n}\n\n/* Object datatable */\n.ab-object-data-header {\n\tposition: relative;\n}\n.ab-object-data-new-header {\n\tbackground-color: #cfd9e0;\n}\n\n.ab-object-data-header-edit {\n\tdisplay: none;\n\tposition: absolute;\n\ttop: 15px;\n\tright: 10px;\n}\n.ab-object-data-header:hover .ab-object-data-header-edit {\n\tdisplay: block;\n}\n.ab-object-unsync-data {\n\tbackground-color: #dae6fb;\n}\n.ab-object-view-column {\n\tcolor: #3498db;\n\tfont-weight: bold;\n\ttext-align: center;\n\tcursor: pointer;\n}\n\n/* Connect object data */\n.ab-connect-data-info {\n\tdisplay: inline-block;\n\twidth: 90px;\n\twhite-space: nowrap;\n\toverflow: hidden;\n\ttext-overflow: ellipsis;\n}\n\n.ab-connect-data-disable {\n\tbackground-color: #aaa;\n}\n\n/* Custom selectivity */\n.ab-main-container .selectivity-multiple-input-container {\n\tbackground: none !important;\n\tpadding: 0px !important;\n\toverflow: hidden !important;\n\tmax-height: 100% !important;\n}\n.ab-main-container .selectivity-multiple-selected-item {\n\tbackground: #3498db !important;\n\tpadding-right: 5px;\n\t/*max-width: 100px !important;*/\n}\n\n/* Interface tree view */\n.ab-main-container .webix_tree_item.webix_selected span {\n\tpadding: 0px;\n\tbackground: #3498db !important;\n}\n\n/* Interface new page popup */\n.ab-interface-new-quick-page {\n    overflow: scroll !important;\n\toverflow-x: hidden !important;\n\toverflow-y: auto !important;\n}\n\n.ab-interface-new-quick-page .webix_inp_checkbox_border label {\n\tfont-weight: normal; /* Override bootstrap*/\n}\n\n/* Interface page layout */\n.ab-component-drop-area {\n\tmargin-right: 2px;\n\tborder: 1px dashed #000 !important;\n\tbackground-color: #D3E9EF;\n\tbackground-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='30px' width='90px'><text x='20' y='20' fill='#95CBEF' font-size='15'>Drop Here</text></svg>\");\n}\n\ndiv[view_id='ab-interface-layout-page'] .webix_list_item,\n.ab-component-in-page {\n\twidth: 100%;\n\tposition: relative;\n\tbackground-color: #fff;\n\tclear: both;\n}\n\n.ab-component-item-name {\n\tfloat: left;\n\tfont-size: 18px;\n\tborder-right: 1px solid #ebebeb;\n\tvertical-align: top;\n\tpadding-top: 10px;\n\twidth: 90px;\n\tmargin-bottom: -500em; /* CSS hack: equal height of right float */\n\tpadding-bottom: 500em;\n}\n\n.ab-component-item-display {\n\tfloat: right;\n\tvertical-align: top;\n\tpadding: 10px;\n\twidth: 87%;\n\tline-height: 100%;\n\toverflow-x: auto;\n}\n\n.ab-component-remove {\n\tposition: absolute;\n\ttop: 5px;\n\tright: 1px;\n}\n\n.ab-component-link {\n\tcolor: #003B7E;\n\ttext-decoration: underline;\n\tcursor: pointer;\n}\n\n/* Interface component list */\n.ab-component-item-drag {\n\tborder: 1px dotted #000 !important;\n\tfont-size: 35px;\n\tbackground-color: #fff;\n}\n\n/* Header component */\n.ab-component-header {\n\tfont-size: 25px;\n\tfont-weight: bold;\n\tmargin: 0px;\n\tpadding: 0px;\n}\n.ab-component-description {\n\tfont-size: 14px;\n\tpadding: 0px;\n}\n\n/* Menu component */\n.ab-page-list-item .webix_tree_checkbox {\n\tmargin: 0px !important;\n}\n\n/* Object toolbar */\n.ab-data-toolbar {\n\tbackground: #aaa !important;\n}\n.ab-data-toolbar button {\n\ttext-align: center;\n\tfont-size: 14px;\n}\n.ab-data-toolbar button:hover, .ab-data-toolbar button:active {\n\tbackground: #aaa !important;\n}\n.ab-data-toolbar button .webix_icon_btn {\n\topacity: 0.6;\n\tfont-size: 15px;\n}\n.ab-data-toolbar button:hover .webix_icon_btn {\n\topacity: 1;\n}\n\n/* Grid component */\n.ab-page-grid-column-item .column-checkbox {\n\tdisplay: inline-block;\n\tposition: relative;\n\ttop: -5px;\n\twidth: 30px;\n}\n\n.ab-page-grid-column-item .column-empty-checkbox {\n\tposition: relative;\n\twidth: 50px;\n\theight: 38px;\n}\n\n.ab-page-grid-column-item .column-name {\n\tdisplay: inline-block;\n\tposition: relative;\n\ttop: -18px;\n}\n\n/* Form component */\n.ab-standard-button button, .ab-standard-button button:hover, .ab-standard-button button:active, .ab-standard-button .webix_icon_btn {\n\tbackground: transparent !important;\n\tborder-color: transparent !important;\n\tcolor: #666 !important;\n\tbox-shadow: none !important;\n}\n.ab-cancel-button button {\n\tbackground: transparent !important;\n\tcolor: #AAA;\n\tborder-color: transparent;\n}\n.ab-cancel-button button:hover {\n\ttext-decoration: underline;\n}\n.ab-cancel-button button:active {\n\tbox-shadow: none;\n}\n.ab-form-connect-data {\n\tfloat: left;\n\tborder: #CCC solid 1px;\n\tpadding: 0px 5px;\n\tmin-width: 70%;\n\tborder-radius: 6px;\n}\n\n.ab-main-container .webix_layout_form {\n\tbackground-color: #fff !important;\n}\n\n/* Loading Screen */\n.ab-loading-screen {\n\tbackground: #000;\n\topacity: 0.7;\n\tposition: absolute !important;\n}\n.ab-loading-body {\n\tbackground: #000;\n\tborder-width: 0px !important;\n}\n.ab-loading-message {\n\tcolor: #fff !important;\n\tbackground: #000 !important;\n\tfont-size: 30px !important;\n\ttext-align: center;\n\tvertical-align: middle;\n\tborder-width: 0px !important;\n\tpadding-top: 20% !important;\n\theight: 100px !important;\n}\n.ab-loading-button {\n\ttext-align: center;\n}\n.ab-loading-button button {\n\tbackground-color: #003B7E;\n\twidth: 200px;\n}\n.ab-loading-cancel-button {\n\ttext-align: center;\n\tbackground: transparent;\n}\n.ab-loading-cancel-button a {\n\tcolor: #fff !important;\n}\n.ab-loading-screen .webix_progress_bottom {\n\theight: 40px !important;\n\topacity: 1;\n}\n.ab-loading-screen .webix_progress_bottom .webix_progress_state {\n\theight: 40px !important;\n}\n\n/* Dynamic DataTable */\n.dynamic-datatable-view .webix_badge {\n\tmargin: 0 !important;\n}\n\n/* Number data field */\n.ab-number-format-show {\n\twhite-space: nowrap;\n}\n\n/* Icon Picker */\n.ab-main-container .iconpicker .iconpicker-items {\n\tcolor: #000;\n}\n\n/* Webix Tabs */\ndiv.webix_item_tab {\n\tfont-size: 16px;\n}\n\n::-webkit-input-placeholder { /* Chrome/Opera/Safari */\n  color: #CCC;\n}\n::-moz-placeholder { /* Firefox 19+ */\n  color: #CCC;\n}\n:-ms-input-placeholder { /* IE 10+ */\n  color: #CCC;\n}\n:-moz-placeholder { /* Firefox 18- */\n  color: #CCC;\n}\n", ""]);
+exports.push([module.i, ".webix_view, .webix_el_colorpicker input, .webix_el_combo input, .webix_el_datepicker input, .webix_el_search input, .webix_el_text input, .webix_control button, .webix_control input, .webix_control textarea, .webix_el_label, .webix_inp_bottom_label, .webix_inp_label, .webix_inp_top_label {\n\tfont-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif !important;\n}\n.ab-generated-page {\n\toverflow-y: auto;\n}\n.ab-main-container {\n\tposition: relative;\n\tdisplay: block;\n\twidth: 100%;\n\tbackground: -moz-linear-gradient(top, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 100%); /* FF3.6-15 */\n\tbackground: -webkit-linear-gradient(top, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0) 100%); /* Chrome10-25,Safari5.1-6 */\n\tbackground: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%,rgba(0,0,0,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */\n}\n.ab-main-container .pointer {\n\tcursor: pointer;\n}\n.ab-main-container .right {\n\ttext-align: right;\n}\n.ab-main-container .center {\n\ttext-align: center;\n}\n.ab-main-container .left {\n\ttext-align: left;\n}\n.ab-text-bold {\n\tfont-weight: bold !important;\n}\n.ab-scroll-y {\n\toverflow-y: auto !important;\n}\n.ab-ellipses-text, .ab-ellipses-text > div {\n\toverflow: hidden;\n\twhite-space: nowrap;\n\ttext-overflow: ellipsis;\n}\n.float-left {\n\tfloat: left;\n}\n.float-right {\n\tfloat: right;\n}\n\n/* Webix icon */\n.ab-main-container .webix_icon {\n\tline-height: inherit;\n}\n\n/* Fix overflow-x */\n.ab-generated-page .webix_scroll_cont {\n\toverflow: auto !important;\n}\n\n/* == Webix datatable == */\n/* Checkbox column */\n.ab-main-container .webix_hcell.center input[type=checkbox] {\n\twidth:20px;\n\theight:20px;\n\tmargin-top:12px;\n  }\n.ab-main-container .webix_table_checkbox {\n\twidth:20px;\n\theight:20px;\n\tmargin-top:5px;\n}\n/* Last column */\n.ab-main-container .webix_column.webix_last > div,\n.ab-main-container .webix_hs_center td.webix_last,\n.ab-main-container .ab-app-list-descriptionwebix_hs_right td.webix_last {\n\tborder-right-width: 1px !important;\n}\n/* No padding/margin column */\n.ab-column-no-padding div {\n\tpadding: 0px !important;\n\tmargin: 0px !important;\n}\n.ab-main-container .ab-cell-warn {\n\tbackground-color: #F5AE0F !important;\n}\n\n/* Webix selected item */\n.webix_list_item.webix_selected,\n.webix_column>div.webix_cell_select,\n.webix_column>div.webix_column_select,\n.webix_column>div.webix_row_select {\n\tbackground-color: #3498db !important;\n}\n\n/* Webix message */\n.webix_success {\n  background-color: #BFF2BF;\n}\n.webix_success div {\n  background-color: #BFF2BF;\n  border: 1px solid #007A00;\n  color: #000;\n}\n\n/* Webix list */\n.ab-main-container .webix_list_item .webix_selected,\n.ab-main-container .webix_tree_item.webix_selected {\n\tcolor: #fff !important;\n\tbackground-color: #3498db !important;\n}\n.ab-app-form-permission .webix_selected {\n\tcolor: #333 !important;\n\tbackground-color: transparent !important;\n}\n\n/* Webix toolbar */\n.ab-toolbar-submenu, .ab-toolbar-submenu .webix_header>div {\n\tbackground: #EEE !important;\n\tcolor: #666 !important;\n\tfont-size: 15px !important;\n\tfont-weight: bold !important;\n\tborder-bottom: 0px !important;\n}\n\n/* Webix segmented */\n.ab-form-component-item .webix_segment_0.webix_selected,\n.ab-form-component-item .webix_segment_1.webix_selected,\n.ab-form-component-item .webix_segment_N.webix_selected,\n.ab-component-view-edit-field .webix_segment_0.webix_selected,\n.ab-component-view-edit-field .webix_segment_1.webix_selected,\n.ab-component-view-edit-field .webix_segment_N.webix_selected {\n\tcolor: #fff !important;\n\tbackground-color: #3498db !important;\n}\n\n.ab-form-component-item .webix_segment_0,\n.ab-form-component-item .webix_segment_1,\n.ab-form-component-item .webix_segment_N,\n.ab-component-view-edit-field .webix_segment_0,\n.ab-component-view-edit-field .webix_segment_1,\n.ab-component-view-edit-field .webix_segment_N {\n\tcolor: #3498db;\n\tbackground: #fff;\n}\n\n/* Add new columns popup */\n.ab-add-fields-popup {\n\toverflow-y: auto;\n}\n\n/* Application list */\n.ab-app-list {\n/*\n\tmin-height: 300px;\n\tpadding: 40px 100px;\n*/\n}\n.ab-app-select-list .webix_selected {\n\tbackground-color: #FFF !important;\n\tcolor: #333 !important;\n}\n.ab-app-select-list .webix_list_item:hover {\n\tbackground: #ebebeb;\n}\n.ab-app-list-item {\n\tposition: relative;\n\theight: 100%;\n\tmargin: -2px -10px;\n\tpadding: 15px;\n\tline-height: 20px;\n}\ndiv[view_id='ab-app-list'] div.webix_list_item:hover,\ndiv[view_id='ab-object-list'] div.webix_list_item:hover,\ndiv[view_id='ab-object-list-menu'] div.webix_list_item:hover,\ndiv[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover,\ndiv[view_id='ab-edit-header-items'] div.webix_list_item:hover,\ndiv[view_id='ab-frozen-field-list'] div.webix_list_item:hover {\n\tbackground-color: #eee;\n}\n.ab-app-list-name {\n\tfont-size: large;\n}\n.ab-app-list-description {\n\tcolor: #999;\n\tfont-size: small;\n}\n.ab-app-list-info {\n\twidth: 95%;\n\tdisplay: inline-block;\n}\n.ab-app-list-edit {\n\tposition: absolute;\n\ttop: 0;\n\tright: 10px;\n\topacity: 0.4;\n\tline-height: 70px;\n\theight: 70px;\n}\n.ab-app-list-edit:hover {\n\topacity: 1;\n}\n\n/* Application workspace */\n.ab-app-workspace {\n\t/*min-height: 100px;*/\n}\n.ab-unsync-data-warning {\n\tcursor: pointer;\n    color: #fff;\n    background-color: #F5962F;\n    border: #fff dotted 1px !important;\n    padding-left: 2px;\n}\n.ab-unsync-data-popup .webix_win_head {\n\tbackground-color: #F5962F;\n}\n.ab-unsync-data-popup .webix_win_head .header {\n\tpadding-left: 5px;\n\tfont-weight: bold;\n    color: #fff;\n}\n.ab-unsync-data-status {\n\tpadding: 3px;\n}\n.ab-unsync-data-in-progress {\n\tbackground-color: #F5AE0F;\n}\n.ab-unsync-data-done {\n\tbackground-color: #3AB349;\n}\n.ab-unsync-data-error {\n\tbackground-color: #EC2F2F;\n}\n\n/* Object list */\n.ab-object-list-item {\n\tposition: relative;\n\theight: 100%;\n}\n.ab-object-list-edit {\n\tposition: absolute;\n\ttop: 0px;\n\tright: 5px;\n\tdisplay: none;\n}\n.ab-object-unsync {\n\tbackground-color: #d2e3ef;\n\tcolor: #4a4a4a;\n\tposition: absolute;\n\ttop: 4px;\n\tright: 30px;\n\tfont-size: 12px;\n\tborder-radius: 6px;\n\tpadding: 0px 4px;\n\theight: 20px;\n\tline-height: 20px;\n\tdisplay: none;\n}\n\n/* Interface list */\n.ab-page-list-item {\n\tposition: relative;\n\theight: 100%;\n}\n.ab-page-list-edit {\n\tposition: absolute;\n\ttop: 0px;\n\tright: 5px;\n\tdisplay: none;\n\tcursor: pointer;\n}\n\n/* Object datatable */\n.ab-object-data-header {\n\tposition: relative;\n}\n.ab-object-data-new-header {\n\tbackground-color: #cfd9e0;\n}\n\n.ab-object-data-header-edit {\n\tdisplay: none;\n\tposition: absolute;\n\ttop: 15px;\n\tright: 10px;\n}\n.ab-object-data-header:hover .ab-object-data-header-edit {\n\tdisplay: block;\n}\n.ab-object-unsync-data {\n\tbackground-color: #dae6fb;\n}\n.ab-object-view-column {\n\tcolor: #3498db;\n\tfont-weight: bold;\n\ttext-align: center;\n\tcursor: pointer;\n}\n\n/* Connect object data */\n.ab-connect-data-info {\n\tdisplay: inline-block;\n\twidth: 90px;\n\twhite-space: nowrap;\n\toverflow: hidden;\n\ttext-overflow: ellipsis;\n}\n\n.ab-connect-data-disable {\n\tbackground-color: #aaa;\n}\n\n/* Custom selectivity */\n.ab-main-container .selectivity-multiple-input-container {\n\tbackground: none !important;\n\tpadding: 0px !important;\n\toverflow: hidden !important;\n\tmax-height: 100% !important;\n}\n.ab-main-container .selectivity-multiple-selected-item {\n\tbackground: #3498db !important;\n\tpadding-right: 5px;\n\t/*max-width: 100px !important;*/\n}\n\n/* Interface tree view */\n.ab-main-container .webix_tree_item.webix_selected span {\n\tpadding: 0px;\n\tbackground: #3498db !important;\n}\n\n/* Interface new page popup */\n.ab-interface-new-quick-page {\n    overflow: scroll !important;\n\toverflow-x: hidden !important;\n\toverflow-y: auto !important;\n}\n\n.ab-interface-new-quick-page .webix_inp_checkbox_border label {\n\tfont-weight: normal; /* Override bootstrap*/\n}\n\n/* Interface page layout */\n.ab-component-drop-area {\n\tmargin-right: 2px;\n\tborder: 1px dashed #000 !important;\n\tbackground-color: #D3E9EF;\n\tbackground-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='30px' width='90px'><text x='20' y='20' fill='#95CBEF' font-size='15'>Drop Here</text></svg>\");\n}\n\ndiv[view_id='ab-interface-layout-page'] .webix_list_item,\n.ab-component-in-page {\n\twidth: 100%;\n\tposition: relative;\n\tbackground-color: #fff;\n\tclear: both;\n}\n\n.ab-component-item-name {\n\tfloat: left;\n\tfont-size: 18px;\n\tborder-right: 1px solid #ebebeb;\n\tvertical-align: top;\n\tpadding-top: 10px;\n\twidth: 90px;\n\tmargin-bottom: -500em; /* CSS hack: equal height of right float */\n\tpadding-bottom: 500em;\n}\n\n.ab-component-item-display {\n\tfloat: right;\n\tvertical-align: top;\n\tpadding: 10px;\n\twidth: 87%;\n\tline-height: 100%;\n\toverflow-x: auto;\n}\n\n.ab-component-remove {\n\tposition: absolute;\n\ttop: 5px;\n\tright: 1px;\n}\n\n.ab-component-link {\n\tcolor: #003B7E;\n\ttext-decoration: underline;\n\tcursor: pointer;\n}\n\n/* Interface component list */\n.ab-component-item-drag {\n\tborder: 1px dotted #000 !important;\n\tfont-size: 35px;\n\tbackground-color: #fff;\n}\n\n/* Header component */\n.ab-component-header {\n\tfont-size: 25px;\n\tfont-weight: bold;\n\tmargin: 0px;\n\tpadding: 0px;\n}\n.ab-component-description {\n\tfont-size: 14px;\n\tpadding: 0px;\n}\n\n/* Menu component */\n.ab-page-list-item .webix_tree_checkbox {\n\tmargin: 0px !important;\n}\n\n/* Object toolbar */\n.ab-data-toolbar {\n\tbackground: #aaa !important;\n}\n.ab-data-toolbar button {\n\ttext-align: center;\n\tfont-size: 14px;\n}\n.ab-data-toolbar button:hover, .ab-data-toolbar button:active {\n\tbackground: #aaa !important;\n}\n.ab-data-toolbar button .webix_icon_btn {\n\topacity: 0.6;\n\tfont-size: 15px;\n}\n.ab-data-toolbar button:hover .webix_icon_btn {\n\topacity: 1;\n}\n\n/* Grid component */\n.ab-page-grid-column-item .column-checkbox {\n\tdisplay: inline-block;\n\tposition: relative;\n\ttop: -5px;\n\twidth: 30px;\n}\n\n.ab-page-grid-column-item .column-empty-checkbox {\n\tposition: relative;\n\twidth: 50px;\n\theight: 38px;\n}\n\n.ab-page-grid-column-item .column-name {\n\tdisplay: inline-block;\n\tposition: relative;\n\ttop: -18px;\n}\n\n/* Form component */\n.ab-standard-button button, .ab-standard-button button:hover, .ab-standard-button button:active, .ab-standard-button .webix_icon_btn {\n\tbackground: transparent !important;\n\tborder-color: transparent !important;\n\tcolor: #666 !important;\n\tbox-shadow: none !important;\n}\n.ab-cancel-button button {\n\tbackground: transparent !important;\n\tcolor: #AAA;\n\tborder-color: transparent;\n}\n.ab-cancel-button button:hover {\n\ttext-decoration: underline;\n}\n.ab-cancel-button button:active {\n\tbox-shadow: none;\n}\n.ab-form-connect-data {\n\tfloat: left;\n\tborder: #CCC solid 1px;\n\tpadding: 0px 5px;\n\tmin-width: 70%;\n\tborder-radius: 6px;\n}\n\n.ab-main-container .webix_layout_form {\n\tbackground-color: #fff !important;\n}\n\n/* Loading Screen */\n.ab-loading-screen {\n\tbackground: #000;\n\topacity: 0.7;\n\tposition: absolute !important;\n}\n.ab-loading-body {\n\tbackground: #000;\n\tborder-width: 0px !important;\n}\n.ab-loading-message {\n\tcolor: #fff !important;\n\tbackground: #000 !important;\n\tfont-size: 30px !important;\n\ttext-align: center;\n\tvertical-align: middle;\n\tborder-width: 0px !important;\n\tpadding-top: 20% !important;\n\theight: 100px !important;\n}\n.ab-loading-button {\n\ttext-align: center;\n}\n.ab-loading-button button {\n\tbackground-color: #003B7E;\n\twidth: 200px;\n}\n.ab-loading-cancel-button {\n\ttext-align: center;\n\tbackground: transparent;\n}\n.ab-loading-cancel-button a {\n\tcolor: #fff !important;\n}\n.ab-loading-screen .webix_progress_bottom {\n\theight: 40px !important;\n\topacity: 1;\n}\n.ab-loading-screen .webix_progress_bottom .webix_progress_state {\n\theight: 40px !important;\n}\n\n/* Dynamic DataTable */\n.dynamic-datatable-view .webix_badge {\n\tmargin: 0 !important;\n}\n\n/* Number data field */\n.ab-number-format-show {\n\twhite-space: nowrap;\n}\n\n/* Icon Picker */\n.ab-main-container .iconpicker .iconpicker-items {\n\tcolor: #000;\n}\n\n/* Webix Tabs */\ndiv.webix_item_tab {\n\tfont-size: 16px;\n}\n\n::-webkit-input-placeholder { /* Chrome/Opera/Safari */\n  color: #CCC;\n}\n::-moz-placeholder { /* Firefox 19+ */\n  color: #CCC;\n}\n:-ms-input-placeholder { /* IE 10+ */\n  color: #CCC;\n}\n:-moz-placeholder { /* Firefox 18- */\n  color: #CCC;\n}\n\n/* Webix popup */\n.webix_popup_text {\n\tpadding-right: 20px;\n\tpadding-left: 20px;\n}\n\n/* Webix badge */\n.webix_badge {\n\tline-height: 22px;\n\ttext-indent: -1px;\n}\n", ""]);
 
 // exports
 

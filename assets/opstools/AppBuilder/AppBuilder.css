@@ -550,3 +550,15 @@ div.webix_item_tab {
 :-moz-placeholder { /* Firefox 18- */
   color: #CCC;
 }
+
+/* Webix popup */
+.webix_popup_text {
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+/* Webix badge */
+.webix_badge {
+	line-height: 22px;
+	text-indent: -1px;
+}
