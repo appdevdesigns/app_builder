@@ -300,9 +300,11 @@ console.error('!! ToDo: onAfterColumnHide()');
 				DataTable.refreshColumns(columnHeaders)
 
 				// freeze columns:
-				DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnIndex));
-				DataTable.refreshColumns()
-
+				if (CurrentObject.workspaceFrozenColumnID != "") {
+					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID));
+					DataTable.refreshColumns()
+				}
+				
 				// update DataTable Content
 			}
 		},

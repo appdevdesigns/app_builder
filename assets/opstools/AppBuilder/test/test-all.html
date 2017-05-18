@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<!--
+
+    Client side unit tests for the Labels controller, via mocha-phantomjs.
+
+    Node.js module dependencies:
+        mocha
+        chai
+
+    USAGE:
+        mocha-phantomjs label-test.html
+        (also manually viewable in a web browser)
+
+-->
+
+<head>
+	<title>App Builder client side tests</title>
+	<meta charset="UTF-8">
+	<!--<link href="js/mocha/mocha.css" rel="stylesheet" />
+    <script src="js/mocha/mocha.js"></script>
+    <script src="js/chai/chai.js"></script>-->
+	<link href="//cdnjs.cloudflare.com/ajax/libs/mocha/3.1.0/mocha.css" rel="stylesheet" />
+	<script src="//cdnjs.cloudflare.com/ajax/libs/mocha/3.1.0/mocha.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/chai/3.5.0/chai.js"></script>
+	<script src="//cdn.rawgit.com/chaijs/chai-spies/master/chai-spies.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/sinon.js/1.15.4/sinon.js"></script>
+
+	<link href="/js/webix/webix.css" rel="stylesheet" />
+	<script src="/js/webix/webix.js"></script>
+	<script src="/js/async.js"></script>
+
+</head>
+
+<body>
+	<script src="/steal/steal.js?opstools/AppBuilder/test/test_loader.js" config='/stealconfig.js'></script>
+
+	<!--Mocha display element-->
+	<div id="mocha"></div>
+
+
+</body>
+
+</html>

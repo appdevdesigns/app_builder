@@ -8,7 +8,7 @@
 
 import ABApplication from "../classes/ABApplication"
 import "./ab_work_object_list_newObject"
-import "./ab_work_object_list_popupEditObject"
+import "./ab_work_object_list_popupEditMenu"
 
 
 function L(key, altText) {
@@ -44,7 +44,7 @@ OP.Component.extend(idBase, function(App) {
 
 	}
 
-	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditObject'](App);
+	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditMenu'](App);
 
 
 	// Our webix UI definition:
@@ -67,8 +67,7 @@ OP.Component.extend(idBase, function(App) {
 					return _logic.templateListItem(obj, common);
 				},
 				type: {
-					// height:"auto",
-					// unsyncNumber: "",  // "<span class='ab-object-unsync'><span class='ab-object-unsync-number'></span> unsync</span>",
+					height: "auto",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
 				on: {

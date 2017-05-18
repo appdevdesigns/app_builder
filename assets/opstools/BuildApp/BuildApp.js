@@ -242,7 +242,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // import OP from "OP"
 
 
-__webpack_require__(35);
+__webpack_require__(36);
 
 var _ABObject = __webpack_require__(14);
 
@@ -567,6 +567,33 @@ var ABApplication = function () {
 		}
 
 		/**
+   * @method objectDestroy()
+   *
+   * remove the current ABObject from our list of ._objects.
+   *
+   * @param {ABObject} object
+   * @return {Promise}
+   */
+
+	}, {
+		key: "objectDestroy",
+		value: function objectDestroy(object) {
+
+			var remaininObjects = this.objects(function (o) {
+				return o.id != object.id;
+			});
+			this._objects = remaininObjects;
+			return this.save();
+
+			// var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
+			// if (!isIncluded) {
+			// 	this._objects.push(object);
+			// }
+
+			// return this.save();
+		}
+
+		/**
    * @method objectSave()
    *
    * persist the current ABObject in our list of ._objects.
@@ -733,7 +760,7 @@ var ABField = function () {
 		/*
   {
   id:'uuid',					// uuid value for this obj
-  type:'fieldType',			// unique key for this Field
+  key:'fieldKey',				// unique key for this Field
   icon:'font',				// fa-[icon] reference for an icon for this Field Type
   label:'',					// pulled from translation
   columnName:'column_name',	// a valid mysql table.column name 
@@ -760,20 +787,17 @@ var ABField = function () {
 	///
 
 	_createClass(ABField, [{
-		key: 'fieldName',
+		key: 'fieldKey',
 
 
 		// unique key to reference this specific DataField
-		value: function fieldName() {
-			return this.defaults.name;
-		}
+		// fieldName() {
+		// 	return this.defaults.name;
+		// }
 
-		// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-
-	}, {
-		key: 'fieldType',
-		value: function fieldType() {
-			return this.defaults.type;
+		// unique key to reference this specific DataField
+		value: function fieldKey() {
+			return this.defaults.key;
 		}
 
 		// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
@@ -918,7 +942,7 @@ var ABField = function () {
 
 			return {
 				id: this.id,
-				type: this.type,
+				key: this.key,
 				icon: this.icon,
 				columnName: this.columnName,
 				settings: this.settings,
@@ -930,7 +954,7 @@ var ABField = function () {
 		value: function fromValues(values) {
 
 			this.id = values.id; // NOTE: only exists after .save()
-			this.type = values.type || this.fieldType();
+			this.key = values.key || this.fieldKey();
 			this.icon = values.icon || this.fieldIcon();
 
 			// if this is being instantiated on a read from the Property UI,
@@ -2127,8 +2151,6 @@ var ABFieldComponent = function () {
      */
 				populate: function populate(field) {
 
-					console.error('TODO: .populate()');
-
 					// populate the base ABField values:
 					_ABField2.default.editorPopulate(ids, field);
 
@@ -2168,7 +2190,7 @@ var ABFieldComponent = function () {
 					var settings = $$(ids.component).getValues();
 					var values = _ABField2.default.editorValues(settings);
 
-					values.type = _this.fieldDefaults.type;
+					values.key = _this.fieldDefaults.key;
 
 					// perform provided .values()
 					if (_this.logic.values) {
@@ -2307,10 +2329,10 @@ var Fields = {}; /*
                   *
                   */
 
-Fields[_ABFieldString2.default.defaults().name] = _ABFieldString2.default;
-Fields[_ABFieldNumber2.default.defaults().name] = _ABFieldNumber2.default;
+Fields[_ABFieldString2.default.defaults().key] = _ABFieldString2.default;
+Fields[_ABFieldNumber2.default.defaults().key] = _ABFieldNumber2.default;
 
-Fields[_ABFieldImage2.default.defaults().name] = _ABFieldImage2.default;
+Fields[_ABFieldImage2.default.defaults().key] = _ABFieldImage2.default;
 
 exports.default = {
 
@@ -2334,8 +2356,8 @@ exports.default = {
   */
 	newField: function newField(values, object) {
 
-		if (values.type) {
-			return new Fields[values.type](values, object);
+		if (values.key) {
+			return new Fields[values.key](values, object);
 		} else {
 
 			//// TODO: what to do here?
@@ -2355,15 +2377,15 @@ __webpack_require__(18);
 
 __webpack_require__(22);
 
-var _edittree = __webpack_require__(37);
+var _edittree = __webpack_require__(38);
 
 var _edittree2 = _interopRequireDefault(_edittree);
 
-var _editlist = __webpack_require__(36);
+var _editlist = __webpack_require__(37);
 
 var _editlist2 = _interopRequireDefault(_editlist);
 
-var _AppBuilder = __webpack_require__(42);
+var _AppBuilder = __webpack_require__(43);
 
 var _AppBuilder2 = _interopRequireDefault(_AppBuilder);
 
@@ -2384,6 +2406,7 @@ OP.Component.extend('ab', function (App) {
 		"export": L('ab.common.export', "*Export"),
 		formName: L('ab.common.form.name', "*Name"),
 		"import": L('ab.common.import', "*Import"),
+		rename: L('ab.common.rename', "*Rename"),
 		ok: L('ab.common.ok', "*Ok"),
 
 		cancel: L('ab.common.cancel', "*Cancel"),
@@ -2400,6 +2423,9 @@ OP.Component.extend('ab', function (App) {
 
 		deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
 		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+
+		renameErrorMessage: L('ab.common.rename.error', "*System could not rename <b>{0}</b>."),
+		renameSuccessMessage: L('ab.common.rename.success', "*<b>{0}</b> is renamed."),
 
 		// Data Field  common Property labels:
 		dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
@@ -2727,13 +2753,8 @@ var ABObject = function () {
 	}, {
 		key: "destroy",
 		value: function destroy() {
-			if (this.id) {
-				console.error('TODO: ABObject.destroy()');
-				// return this.Model.destroy(this.id)
-				// 	.then(()=>{
-				// 		_AllApplications.remove(this.id);
-				// 	});
-			}
+
+			return this.application.objectDestroy(this);
 		}
 
 		/**
@@ -3011,8 +3032,8 @@ function L(key, altText) {
 }
 
 var ABFieldImageDefaults = {
-	name: 'image', // unique key to reference this specific DataField
-	type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	key: 'image', // unique key to reference this specific DataField
+	// type : 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	icon: 'file-image-o', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 	// menuName: what gets displayed in the Editor drop list
@@ -3311,11 +3332,7 @@ function L(key, altText) {
 }
 
 var ABFieldNumberDefaults = {
-	name: 'number', // unique key to reference this specific DataField
-	type: 'number', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	// NOTE: the server side implementation will read the instance.settings and return either a:
-	//	'float', or 'integer'
-
+	key: 'number', // unique key to reference this specific DataField
 	icon: 'slack', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	// menuName: what gets displayed in the Editor drop list
@@ -3755,8 +3772,8 @@ function L(key, altText) {
 }
 
 var ABFieldStringDefaults = {
-	name: 'string', // unique key to reference this specific DataField
-	type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	key: 'string', // unique key to reference this specific DataField
+	// type : 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	icon: 'font', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	// menuName: what gets displayed in the Editor drop list
@@ -3772,202 +3789,7 @@ var ABFieldStringDefaults = {
  * Defines the UI Component for this Data Field.  The ui component is responsible
  * for displaying the properties editor, populating existing data, retrieving
  * property values, etc.
- *
- * @param {obj} App  the current Component Application instance for the current UI.
- * @return {obj} the Component object.
  */
-// var ABFieldStringComponent = function(App) {
-
-// 	labels.common = App.labels;
-
-// 	var idBase = 'ab_datafield_string';
-
-
-// 	var componentDefaults = {
-// 		textDefault: '',
-// 		supportMultilingual:1
-// 	};
-
-
-// 	var ids = {
-
-// 		component: App.unique(idBase+'_component'),
-
-
-// 		textDefault: App.unique(idBase+'_textdefault'),
-// 		supportMultilingual: App.unique(idBase+'_supportMultilingual'),
-
-
-// 		// the common property fields
-// 		label: App.unique(idBase+'_label'),
-// 		columnName: App.unique(idBase+'_columnName'),
-// 		fieldDescription: App.unique(idBase+'_fieldDescription'),
-// 		showIcon: App.unique(idBase+'_showIcon'),
-// 	}
-
-
-// 	//// NOTE: we merge in the common headers below.
-// 	var _ui = {
-// 		view:'form',
-// 		id: ids.component,
-// 		autoheight:true,
-// 		borderless:true,
-// 		elements: [
-// 			{
-// 				view: "text",
-// 				id: ids.textDefault,
-// 				name:'textDefault',
-// 				placeholder: labels.component.defaultText
-// 			},
-// 			{
-// 				view: "checkbox",
-// 				id: ids.supportMultilingual,
-// 				name:'supportMultilingual',
-// 				labelRight: labels.component.supportMultilingual,
-// 				labelWidth: 0,
-// 				value: true
-// 			}
-// 		],
-
-// 		rules:{
-// 			'label':webix.rules.isNotEmpty,
-// 			'columnName':webix.rules.isNotEmpty
-// 		}
-// 	}
-
-
-// 	var _init = function() {
-
-// 		// perform any additional setup actions.
-// 		// for example, don't want to show the description, then .hide() it here:
-// 		// $$(ids.fieldDescription).hide();
-// 	}
-
-
-// 	var _logic = {
-
-// 		/*
-// 		 * @function clear
-// 		 *
-// 		 * clear the form.
-// 		 */
-// 		clear: function () {
-
-// 			ABField.clearEditor(App, ids);
-
-// 			for(var f in componentDefaults) {
-// 				var component = $$(ids[f]);
-// 				component.setValue(componentDefaults[f]);
-// 			}
-
-// 			$$(ids.component).clearValidation();
-// 		},
-
-
-// 		/*
-// 		 * @function isValid
-// 		 *
-// 		 * checks the current values on the componet to see if they are Valid
-// 		 */
-// 		isValid: function () {
-
-// 			return $$(ids.component).validate();
-
-// 		},
-
-
-// 		 * @function labelOnChange
-// 		 *
-// 		 * The ABField.definitionEditor implements a default operation
-// 		 * to update the value of the .columnName with the current value of
-// 		 * label.
-// 		 *
-// 		 * if you want to override that functionality, implement this fn()
-// 		 *
-// 		 * @param {string} newVal	The new value of label
-// 		 * @param {string} oldVal	The previous value
-
-// 		// labelOnChange: function (newVal, oldVal) {
-
-// 		// 	// When the Label value changes, update our Column Name value
-// 		// 	// to match.
-
-// 		// 	oldVal = oldVal || '';
-// 		// 	if (newVal != oldVal &&
-// 		// 		oldVal == $$(ids.columnName).getValue()) {
-// 		// 		$$(ids.columnName).setValue(newVal);
-// 		// 	}
-// 		// },
-
-
-// 		/*
-// 		 * @function populate
-// 		 *
-// 		 * populate the form with the given ABField instance provided.
-// 		 *
-// 		 * @param {ABFieldString} field
-// 		 */
-// 		populate: function (field) {
-// console.error('TODO: .populate()');
-// 		},
-
-
-// 		/*
-// 		 * @function show
-// 		 *
-// 		 * show this component.
-// 		 */
-// 		show: function() {
-// 			$$(ids.component).clearValidation();
-// 			$$(ids.component).show();
-// 		},
-
-
-// 		/*
-// 		 * @function values
-// 		 *
-// 		 * return the values for this form.
-// 		 * @return {obj}
-// 		 */
-// 		values: function () {
-
-// 			var settings = $$(ids.component).getValues();
-// 			var values = ABField.editorValues(settings);
-
-// 			values.type = ABFieldStringDefaults.type;
-
-// 			return values;
-// 		}
-
-// 	}
-
-
-// 	// get the common UI headers entries, and insert them above ours here:
-// 	// NOTE: put this here so that _logic is defined.
-// 	var commonUI = ABField.definitionEditor(App, ids, _logic, ABFieldStringDefaults);
-// 	_ui.elements = commonUI.rows.concat(_ui.elements);
-
-
-// 	// return the current instance of this component:
-// 	return {
-// 		ui:_ui,					// {obj} 	the webix ui definition for this component
-// 		init:_init,				// {fn} 	init() to setup this component
-// 		// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
-
-
-// 		// DataField exposed actions:
-// 		clear: _logic.clear,
-// 		isValid:_logic.isValid,
-// 		populate: _logic.populate,
-// 		show: _logic.show,
-// 		values: _logic.values,
-
-
-// 		_logic: _logic			// {obj} 	Unit Testing
-// 	}
-// }
-
-
 var ABFieldStringComponent = new _ABFieldComponent2.default({
 
 	fieldDefaults: ABFieldStringDefaults,
@@ -6033,7 +5855,7 @@ var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
 __webpack_require__(25);
 
-__webpack_require__(28);
+__webpack_require__(29);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6096,7 +5918,7 @@ OP.Component.extend(idBase, function (App) {
    */
 		applicationLoad: function applicationLoad(application) {
 			ObjectList.applicationLoad(application);
-			ObjectWorkspace.clearObjectWorkspace();
+			App.actions.clearObjectWorkspace();
 		},
 
 		/**
@@ -6141,8 +5963,13 @@ var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
 __webpack_require__(26);
 
+__webpack_require__(28);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
 /*
  * ab_work_object_list
  *
@@ -6150,16 +5977,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  */
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
 var labels = {
 
 	component: {
 
 		// formHeader: L('ab.application.form.header', "*Application Info"),
-		addNew: L('ab.object.addNew', '*Add new object')
+		addNew: L('ab.object.addNew', '*Add new object'),
+
+		confirmDeleteTitle: L('ab.object.delete.title', "*Delete object"),
+		confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
 
 	}
 };
@@ -6177,6 +6003,8 @@ OP.Component.extend(idBase, function (App) {
 		buttonNew: App.unique(idBase + '_buttonNew')
 
 	};
+
+	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditObject'](App);
 
 	// Our webix UI definition:
 	var _ui = {
@@ -6208,9 +6036,6 @@ OP.Component.extend(idBase, function (App) {
 				onAfterSelect: function onAfterSelect(id) {
 					_logic.selectObject(id);
 				},
-				onAfterDelete: function onAfterDelete(id) {
-					_logic.onAfterDelete(id);
-				},
 				onBeforeEditStop: function onBeforeEditStop(state, editor) {
 					_logic.onBeforeEditStop(state, editor);
 				},
@@ -6239,6 +6064,10 @@ OP.Component.extend(idBase, function (App) {
 		webix.extend($$(ids.list), webix.ProgressBar);
 		$$(ids.component).adjust();
 		$$(ids.list).adjust();
+
+		ObjectEditPopup.init({
+			onClick: _logic.callbackObjectEditorMenu
+		});
 	};
 
 	// our internal business logic
@@ -6281,12 +6110,10 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		clickEditMenu: function clickEditMenu(e, id, trg) {
+			// Show menu
+			ObjectEditPopup.show(trg);
 
-			console.error('!! TODO: clickEditMenu()');
-			// // Show menu
-			// $$(self.webixUiId.objectListMenuPopup).show(trg);
-
-			// return false;
+			return false;
 		},
 
 		listBusy: function listBusy() {
@@ -6295,10 +6122,6 @@ OP.Component.extend(idBase, function (App) {
 
 		listReady: function listReady() {
 			$$(ids.list).hideProgress();
-		},
-
-		onAfterDelete: function onAfterDelete(id) {
-			console.error('!! todo: onAfterDelete()');
 		},
 
 		onAfterRender: function onAfterRender() {
@@ -6318,42 +6141,30 @@ OP.Component.extend(idBase, function (App) {
 
 		onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
 
-			console.error('!! todo: onAfterEditStop() editing');
-			// if (state.value != state.old) {
-			// 	var _this = this;
+			_logic.showGear(editor.id);
 
-			// 	this.showProgress({ type: 'icon' });
+			if (state.value != state.old) {
+				_logic.listBusy();
 
-			// 	var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (item, index, list) { return item.id == editor.id; })[0];
-			// 	selectedObject.attr('label', state.value);
+				var selectedObject = $$(ids.list).getSelectedItem(false);
+				selectedObject.label = state.value;
 
-			// 	// Call server to rename
-			// 	selectedObject.save()
-			// 		.fail(function () {
-			// 			_this.hideProgress();
+				// Call server to rename
+				selectedObject.save().catch(function () {
+					_logic.listReady();
 
-			// 			webix.message({
-			// 				type: "error",
-			// 				text: self.labels.common.renameErrorMessage.replace("{0}", state.old)
-			// 			});
+					OP.Dialog.Alert({
+						text: labels.common.renameErrorMessage.replace("{0}", state.old)
+					});
+				}).then(function () {
+					_logic.listReady();
 
-			// 			AD.error.log('Object List : Error rename object data', { error: err });
-			// 		})
-			// 		.then(function () {
-			// 			_this.hideProgress();
-
-			// 			if (selectedObject.translate) selectedObject.translate();
-
-			// 			// Show success message
-			// 			webix.message({
-			// 				type: "success",
-			// 				text: self.labels.common.renameSuccessMessage.replace('{0}', state.value)
-			// 			});
-
-			// 			// Show gear icon
-			// 			$(_this.getItemNode(editor.id)).find('.ab-object-list-edit').show();
-			// 		});
-			// }
+					// TODO : should use message box
+					OP.Dialog.Alert({
+						text: labels.common.renameSuccessMessage.replace("{0}", state.value)
+					});
+				});
+			}
 		},
 
 		onBeforeEditStop: function onBeforeEditStop(state, editor) {
@@ -6389,8 +6200,13 @@ OP.Component.extend(idBase, function (App) {
 			// // Refresh unsync number
 			// self.refreshUnsyncNumber();
 
-			// // Show gear icon
-			// $(this.getItemNode(id)).find('.ab-object-list-edit').show();
+			_logic.showGear(id);
+		},
+
+		showGear: function showGear(id) {
+			var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
+			gearIcon.style.visibility = "visible";
+			gearIcon.style.display = "block";
 		},
 
 		/**
@@ -6468,6 +6284,46 @@ OP.Component.extend(idBase, function (App) {
 
 			// show the new popup
 			PopupNewObject.show();
+		},
+
+		rename: function rename() {
+			var objectId = $$(ids.list).getSelectedId(false);
+			$$(ids.list).edit(objectId);
+		},
+
+		remove: function remove() {
+
+			var selectedObject = $$(ids.list).getSelectedItem(false);
+
+			// verify they mean to do this:
+			OP.Dialog.Confirm({
+				title: labels.component.confirmDeleteTitle,
+				message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
+				callback: function callback(isOK) {
+
+					if (isOK) {
+						_logic.listBusy();
+
+						selectedObject.destroy().then(function () {
+							_logic.listReady();
+
+							$$(ids.list).remove(selectedObject.id);
+							App.actions.clearObjectWorkspace();
+						});
+					}
+				}
+			});
+		},
+
+		callbackObjectEditorMenu: function callbackObjectEditorMenu(action) {
+			switch (action) {
+				case 'rename':
+					_logic.rename();
+					break;
+				case 'delete':
+					_logic.remove();
+					break;
+			}
 		}
 	};
 
@@ -6909,19 +6765,140 @@ OP.Component.extend(idBase, function (App) {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
+/*
+ * Edit object popup 
+ *
+ * .
+ *
+ */
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var labels = {
+
+	component: {
+		menu: L('ab.application.menu', "*Application Menu"),
+		confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
+		confirmDeleteMessage: L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
+	}
+};
+
+var idBase = 'ab_work_object_list_popupEditObject';
+OP.Component.extend(idBase, function (App) {
+
+	labels.common = App.labels;
+
+	var ids = {
+		menu: App.unique(idBase + '_menu')
+	};
+
+	var _ui = {
+		view: "popup",
+		id: ids.menu,
+		head: labels.component.menu,
+		width: 100,
+		body: {
+			view: "list",
+			borderless: true,
+			data: [{ command: labels.common.rename, icon: "fa-pencil-square-o" }, { command: labels.common.delete, icon: "fa-trash" }],
+			datatype: "json",
+			template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
+			autoheight: true,
+			select: false,
+			on: {
+				'onItemClick': function onItemClick(timestamp, e, trg) {
+					return _logic.onItemClick(timestamp, e, trg);
+				}
+			}
+		}
+	};
+
+	var _data = {};
+
+	var _init = function _init(options) {
+		webix.ui(_ui);
+
+		_logic.hide();
+
+		// register our callbacks:
+		for (var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
+	};
+
+	var _logic = {
+
+		callbacks: {
+			onClick: function onClick(action) {}
+		},
+
+		/**
+   * @function onItemClick
+   * process which item in our popup was selected.
+   */
+		onItemClick: function onItemClick(timestamp, e, trg) {
+
+			// hide our popup before we trigger any other possible UI animation: (like .edit)
+			// NOTE: if the UI is animating another component, and we do .hide()
+			// while it is in progress, the UI will glitch and give the user whiplash.
+
+			switch (trg.textContent.trim()) {
+				case labels.common.rename:
+					this.callbacks.onClick('rename');
+					break;
+				case labels.common['delete']:
+					this.callbacks.onClick('delete');
+					break;
+			}
+
+			this.hide();
+
+			return false;
+		},
+
+		show: function show(itemNode) {
+			$$(ids.menu).show(itemNode);
+		},
+
+		hide: function hide() {
+			$$(ids.menu).hide();
+		}
+
+	};
+
+	return {
+		ui: _ui,
+		init: _init,
+
+		show: _logic.show,
+
+		_logic: _logic // exposed for Unit Testing
+	};
+});
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
 var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
-
-__webpack_require__(29);
 
 __webpack_require__(30);
 
 __webpack_require__(31);
 
-__webpack_require__(33);
+__webpack_require__(32);
 
 __webpack_require__(34);
+
+__webpack_require__(35);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7257,18 +7234,6 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		/**
-   * @function clearObjectWorkspace()
-   *
-   * Clear the object workspace.
-   */
-		clearObjectWorkspace: function clearObjectWorkspace() {
-
-			// NOTE: to clear a visual glitch when multiple views are updating
-			// at one time ... stop the animation on this one:
-			$$(ids.noSelection).show(false, false);
-		},
-
-		/**
    * @function show()
    *
    * Show this component.
@@ -7351,6 +7316,18 @@ OP.Component.extend(idBase, function (App) {
 	var _actions = {
 
 		/**
+   * @function clearObjectWorkspace()
+   *
+   * Clear the object workspace.
+   */
+		clearObjectWorkspace: function clearObjectWorkspace() {
+
+			// NOTE: to clear a visual glitch when multiple views are updating
+			// at one time ... stop the animation on this one:
+			$$(ids.noSelection).show(false, false);
+		},
+
+		/**
    * @function populateObjectWorkspace()
    *
    * Initialize the Object Workspace with the provided ABObject.
@@ -7383,22 +7360,19 @@ OP.Component.extend(idBase, function (App) {
 		init: _init, // {fn} 	init() to setup this component
 		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
 
-		// interface methods for parent component:
-		clearObjectWorkspace: _logic.clearObjectWorkspace,
-
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(32);
+__webpack_require__(33);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -7680,8 +7654,10 @@ OP.Component.extend(idBase, function (App) {
 				DataTable.refreshColumns(columnHeaders);
 
 				// freeze columns:
-				DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnIndex));
-				DataTable.refreshColumns();
+				if (CurrentObject.workspaceFrozenColumnID != "") {
+					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID));
+					DataTable.refreshColumns();
+				}
 
 				// update DataTable Content
 			}
@@ -7726,7 +7702,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7994,7 +7970,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8255,7 +8231,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8454,7 +8430,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8730,7 +8706,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9211,7 +9187,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9241,7 +9217,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9279,7 +9255,6 @@ OP.CustomComponent.extend(ComponentKey, function (App, componentKey) {
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
 		component: App.unique('custom_editlist_component')
-
 	};
 
 	// Our webix UI definition:
@@ -9314,7 +9289,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9388,7 +9363,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9470,7 +9445,7 @@ function toComment(sourceMap) {
 }
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9565,10 +9540,10 @@ module.exports = function (css) {
 };
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(38)(undefined);
+exports = module.exports = __webpack_require__(39)(undefined);
 // imports
 
 
@@ -9579,7 +9554,7 @@ exports.push([module.i, ".webix_view, .webix_el_colorpicker input, .webix_el_com
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -9616,7 +9591,7 @@ var stylesInDom = {},
 	singletonElement = null,
 	singletonCounter = 0,
 	styleElementsInsertedAtTop = [],
-	fixUrls = __webpack_require__(39);
+	fixUrls = __webpack_require__(40);
 
 module.exports = function(list, options) {
 	if(typeof DEBUG !== "undefined" && DEBUG) {
@@ -9875,16 +9850,16 @@ function updateLink(linkElement, options, obj) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(40);
+var content = __webpack_require__(41);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(41)(content, {});
+var update = __webpack_require__(42)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {

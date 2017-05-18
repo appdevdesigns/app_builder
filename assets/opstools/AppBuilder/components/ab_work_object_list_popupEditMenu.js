@@ -22,7 +22,7 @@ var labels = {
 }
 
 
-var idBase = 'ab_work_object_list_popupEditObject';
+var idBase = 'ab_work_object_list_popupEditMenu';
 OP.Component.extend(idBase, function (App) {
 
 	labels.common = App.labels;
@@ -38,7 +38,7 @@ OP.Component.extend(idBase, function (App) {
 		view: "popup",
 		id: ids.menu,
 		head: labels.component.menu,
-		width: 100,
+		width: 120,
 		body: {
 			view: "list",
 			borderless: true,
@@ -70,7 +70,9 @@ OP.Component.extend(idBase, function (App) {
 
 		// register our callbacks:
 		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			if (options && options[c]) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
 		}
 
 	}
@@ -108,12 +110,14 @@ OP.Component.extend(idBase, function (App) {
 			return false;
 		},
 
-		show: function(itemNode) {
-			$$(ids.menu).show(itemNode);
+		show: function (itemNode) {
+			if ($$(ids.menu) && itemNode)
+				$$(ids.menu).show(itemNode);
 		},
 
-		hide: function() {
-			$$(ids.menu).hide();
+		hide: function () {
+			if ($$(ids.menu))
+				$$(ids.menu).hide();
 		}
 
 	}
