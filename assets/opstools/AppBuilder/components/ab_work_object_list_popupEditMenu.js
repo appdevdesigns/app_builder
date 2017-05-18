@@ -52,7 +52,7 @@ OP.Component.extend(idBase, function (App) {
 			select: false,
 			on: {
 				'onItemClick': function (timestamp, e, trg) {
-					return _logic.onItemClick(timestamp, e, trg);
+					return _logic.onItemClick(trg);
 				}
 			}
 		}
@@ -90,13 +90,13 @@ OP.Component.extend(idBase, function (App) {
 		 * @function onItemClick
 		 * process which item in our popup was selected.
 		 */
-		onItemClick: function (timestamp, e, trg) {
+		onItemClick: function (itemNode) {
 
 			// hide our popup before we trigger any other possible UI animation: (like .edit)
 			// NOTE: if the UI is animating another component, and we do .hide()
 			// while it is in progress, the UI will glitch and give the user whiplash.
 
-			switch (trg.textContent.trim()) {
+			switch (itemNode.textContent.trim()) {
 				case labels.common.rename:
 					this.callbacks.onClick('rename');
 					break;
