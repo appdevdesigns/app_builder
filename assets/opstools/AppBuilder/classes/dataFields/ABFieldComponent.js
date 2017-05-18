@@ -247,8 +247,6 @@ export default class ABFieldComponent {
 			 */
 			populate: (field) => {
 
-console.error('TODO: .populate()');
-
 				// populate the base ABField values:
 				ABField.editorPopulate(ids, field);
 
@@ -290,7 +288,7 @@ console.error('TODO: .populate()');
 				var settings = $$(ids.component).getValues();
 				var values = ABField.editorValues(settings);
 
-				values.type = this.fieldDefaults.type;
+				values.key = this.fieldDefaults.key;
 		
 				// perform provided .values()
 				if (this.logic.values) {

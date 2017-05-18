@@ -28,8 +28,6 @@ OP.Component.extend(idBase, function(App) {
 	labels.common = App.labels;
 
 
-
-
 	// internal list of Webix IDs to reference our UI components.
 	var ids = {
 		component: App.unique(idBase+'_component'),
