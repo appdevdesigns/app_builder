@@ -32,7 +32,7 @@ export default class ABFieldComponent {
 
 
 
-    	this.idBase = this.fieldDefaults.name || '??fieldName??';
+    	this.idBase = this.fieldDefaults.key || '??fieldKey??';
 
     	// this.ids = options.ids || {};
     	this.ids = {};
