@@ -27,6 +27,16 @@ var __dfdBuildDirectoryCreated = null;
 
 var DataFields = {};
 
+// Sometimes, the column data types in AB & Sails have different names.
+// This will map Sails model column type to the AppBuilder object type.
+// For example, a Sails 'integer' column is an AB 'number' column.
+var typeMap = {
+    integer: 'number',
+    float: 'number',
+    datetime: 'date',
+    json: 'text',
+};
+
 
 function importDataFields(next) {
     var dataFieldPath = path.join(__dirname, 'data_fields');
@@ -1968,12 +1978,7 @@ linkModel(fullName, function(err){
                             isSynced: true // Import object has synced columns by default
                         };
 
-                        var typeMap = {
-                            integer: 'number',
-                            float: 'number',
-                            datetime: 'date',
-                            json: 'text',
-                        };
+                        // See top of file for `typeMap`
                         var fieldType = typeMap[col.type] || col.type;
 
                         // Special case for float type
@@ -2312,6 +2317,18 @@ linkModel(fullName, function(err){
                         type: col.type
                     };
                 }
+            }
+        }
+        
+        // Check if column types are supported by AppBuilder
+        var validTypes = ABColumn.getValidTypes();
+        for (var colName in columns) {
+            var type = columns[colName].type;
+            type = typeMap[type] || type;
+            if (validTypes.indexOf(type) >= 0) {
+                columns[colName].supported = true;
+            } else {
+                columns[colName].supported = false;
             }
         }
 
