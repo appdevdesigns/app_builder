@@ -537,3 +537,28 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 div.webix_item_tab {
 	font-size: 16px;
 }
+
+::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+  color: #CCC;
+}
+::-moz-placeholder { /* Firefox 19+ */
+  color: #CCC;
+}
+:-ms-input-placeholder { /* IE 10+ */
+  color: #CCC;
+}
+:-moz-placeholder { /* Firefox 18- */
+  color: #CCC;
+}
+
+/* Webix popup */
+.webix_popup_text {
+	padding-right: 20px;
+	padding-left: 20px;
+}
+
+/* Webix badge */
+.webix_badge {
+	line-height: 22px;
+	text-indent: -1px;
+}

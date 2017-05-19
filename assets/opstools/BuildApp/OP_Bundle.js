@@ -1,2 +1,1002 @@
-!function(e){function t(r){if(n[r])return n[r].exports;var i=n[r]={i:r,l:!1,exports:{}};return e[r].call(i.exports,i,i.exports,t),i.l=!0,i.exports}var n={};t.m=e,t.c=n,t.i=function(e){return e},t.d=function(e,n,r){t.o(e,n)||Object.defineProperty(e,n,{configurable:!1,enumerable:!0,get:r})},t.n=function(e){var n=e&&e.__esModule?function(){return e.default}:function(){return e};return t.d(n,"a",n),n},t.o=function(e,t){return Object.prototype.hasOwnProperty.call(e,t)},t.p="",t(t.s=0)}([function(e,t,n){"use strict";(function(e){function r(e){return e&&e.__esModule?e:{default:e}}Object.defineProperty(t,"__esModule",{value:!0});var i=n(4),a=r(i),o=n(6),u=r(o),l=n(5),c=r(l),s=n(7),f=r(s),d=n(3),p=r(d);window.OP={},e.Component={},e.CustomComponent={},e.Component.extend=function(t,n){e.Component[t]=function(t){t||(t=e.Component._newApp());var r=n(t);if(r.actions)for(var i in r.actions)t.actions[i]=r.actions[i];return r}},e.Component._newApp=function(){return{uuid:webix.uid(),actions:{},config:p.default.config(),custom:{},labels:{},unique:function(e){return e+this.uuid}}},e.CustomComponent.extend=function(t,n){e.CustomComponent[t]=function(t,r){return t||(t=e.Component._newApp()),n(t,r)}},e.Dialog=AD.op.Dialog,e.Error=AD.error,e.Form=a.default,e.Multilingual=u.default,e.Model=c.default,e.Util=f.default,t.default=e}).call(t,n(0))},,,function(e,t,n){"use strict";function r(e){return e&&e.__esModule?e:{default:e}}Object.defineProperty(t,"__esModule",{value:!0});var i=n(8),a=r(i),o=n(9),u=r(o);t.default={config:function(){return window.innerWidth<768?u.default:a.default}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default={validationError:function(e,t){t=t||{error:"E_VALIDATION",invalidAttributes:{}};var n=t.invalidAttributes;return n[e.name]=n[e.name]||[],n[e.name].push(e),t},isValidationError:function(e,t){var n=!1;if(e&&(e.error&&"E_UNKNOWN"==e.error&&e.raw&&e.raw.length>0&&(e=e.raw[0]),e.err&&(e=e.err),e.error&&"E_VALIDATION"==e.error||e.code&&"E_VALIDATION"==e.code)){var r=e.invalidAttributes;if(r){var i=!1;for(var a in r)if(t.elements[a]){var o=r[a],u=[];o.forEach(function(e){u.push(e.message)}),t.markInvalid(a,u.join(", ")),n||(t.elements[a].focus(),n=!0),i=!0}if(i)return!0}}return!1}}},function(e,t,n){"use strict";function r(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}Object.defineProperty(t,"__esModule",{value:!0});var i=function(){function e(e,t){for(var n=0;n<t.length;n++){var r=t[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,r.key,r)}}return function(t,n,r){return n&&e(t.prototype,n),r&&e(t,r),t}}(),a={findAll:"GET #url#",findOne:"GET #url#/{id}",create:"POST #url#",update:"PUT #url#/{id}",destroy:"DELETE #url#/{id}"},o={},u=function(){function e(t,n,i){r(this,e),this.key=t,this.staticData=n,this.instanceData=i,this.Model=n.Model,this.url={};for(var o in a)this.url[o]=n[o]}return i(e,[{key:"Models",value:function(e){this.Model=e}},{key:"findAll",value:function(e){var t=this;return new Promise(function(n,r){var i=t.service("findAll");AD.comm.service[i.verb]({url:i.url,params:e}).fail(r).done(function(e){if(e=e.data||e,Array.isArray(e)||(e=[e]),t.Model){var r=[];e.forEach(function(e){e&&r.push(new t.Model(e))}),e=r}var i=new webix.DataCollection({data:e,on:{onAfterDelete:function(e){}}});n(i)})})}},{key:"findOne",value:function(e){var t=this;return new Promise(function(n,r){var i=t.service("findOne"),a=i.url;for(var o in e){var u=a;a=AD.util.string.replaceAll(a,"{"+o+"}",e[o]),u!=a&&delete e[o]}i.url=a,AD.comm.service[i.verb]({url:i.url,params:e}).fail(r).done(function(e){e.translate&&e.translate(),n(e.attr?e.attr():e)})})}},{key:"create",value:function(e){var t=this;return new Promise(function(n,r){var i=t.service("create");AD.comm.service[i.verb]({url:i.url,params:e}).fail(r).done(function(e){e.translate&&e.translate(),n(e.attr?e.attr():e)})})}},{key:"update",value:function(e,t){var n=this;return new Promise(function(r,i){var a=n.service("update",e);AD.comm.service[a.verb]({url:a.url,params:t}).fail(i).done(r)})}},{key:"destroy",value:function(e){var t=this;return new Promise(function(n,r){var i=t.service("destroy",e);AD.comm.service[i.verb]({url:i.url,params:{}}).fail(r).done(n)})}},{key:"service",value:function(e,t){var n=this.url[e].split(" "),r=n[0].toLowerCase(),i=n.pop();if(t){var e="{id}";i=AD.util.string.replaceAll(i,e,t)}return{verb:r,url:i}}}]),e}();t.default={extend:function(e,t,n){if(t.restURL)for(var r in a)t[r]=a[r].replace("#url#",t.restURL);s(o,e)[c(e)]=new u(e,t,n)},get:function(e){return l(o,e)}};var l=function(e,t){var n=t.split("."),r=e;return n.forEach(function(e){if(null==r){console.error("! current name segment is null.  Check your given name to make sure it is properly given: ",e)}r&&(void 0===r[e]&&(r=null),r&&(r=r[e]))}),r},c=function(e){return e.split(".").pop()},s=function(e,t){var n=t.split("."),r=(n.pop(),e);return n.forEach(function(e){void 0===r[e]&&(r[e]={}),r=r[e]}),r}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default={translate:function(e,t,n){t.translations||(t.translations=[]);var r=AD.lang.currentLanguage||"en";n&&n.length>0&&t.translations.forEach(function(t){t.language_code==r&&n.forEach(function(n){e[n]=t[n]||""})})},unTranslate:function(e,t,n){t=t||{},n=n||[],t.translations||(t.translations=[]);var r=AD.lang.currentLanguage||"en";if(n&&n.length>0){var i=!1;if(t.translations.forEach(function(t){t.language_code==r&&(n.forEach(function(n){t[n]=e[n]}),i=!0)}),!i){var a={};a.language_code=r,n.forEach(function(t){null!=e[t]&&(a[t]=e[t])}),t.translations.push(a)}}}}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default={uuid:AD.util.uuid}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default={appListRowHeight:70,buttonWidthLarge:200,buttonWidthMedium:150,buttonWidthSmall:100,buttonWidthExtraSmall:50,tabWidthLarge:200,tabWidthMedium:120,tabWidthSmall:100,tabWidthExtraSmall:50,smallSpacer:10,mediumSpacer:25,largeSpacer:50,appListSpacerRowHeight:100,appListSpacerColMinWidth:100,appListSpacerColMaxWidth:200,objectWorkspaceColWidth:20,labelWidthSmall:50,labelWidthMedium:80,labelWidthLarge:150,labelWidthCheckbox:0,hideMobile:!1}},function(e,t,n){"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.default={appListRowHeight:70,buttonWidthLarge:200,smallSpacer:1,mediumSpacer:10,largeSpacer:20,appListSpacerRowHeight:10,appListSpacerColMinWidth:1,appListSpacerColMaxWidth:1,objectWorkspaceColWidth:1,labelWidthSmall:50,labelWidthMedium:80,labelWidthLarge:120,labelWidthCheckbox:0,hideMobile:!0}}]);
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// identity function for calling harmony imports with the correct context
+/******/ 	__webpack_require__.i = function(value) { return value; };
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, {
+/******/ 				configurable: false,
+/******/ 				enumerable: true,
+/******/ 				get: getter
+/******/ 			});
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _form = __webpack_require__(4);
+
+var _form2 = _interopRequireDefault(_form);
+
+var _multilingual = __webpack_require__(6);
+
+var _multilingual2 = _interopRequireDefault(_multilingual);
+
+var _model = __webpack_require__(5);
+
+var _model2 = _interopRequireDefault(_model);
+
+var _util = __webpack_require__(7);
+
+var _util2 = _interopRequireDefault(_util);
+
+var _config = __webpack_require__(3);
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+window.OP = {};
+
+// OP.xxxx      These properties hold the defined Class/Controller/Model definitions
+//              for our loaded projects.
+// OP.UI = {};    		// webix UI definitions
+// OP.Logic = {}; 		// logic references for webix application
+
+/**
+ * @class AD_Client
+ * @parent index 4
+ *
+ * ###Client side global OpsPortal (OP) namespace.
+ *
+ * This file defines standard functions and calls for OpsPortal
+ * objects on the client side.
+ */
+
+// Create our OP  Namespace only if it hasn't been created already
+
+//// TODO: how to disable 'use strict'?  or perform this check without an error
+//// in 'use strict' ?
+
+// if (!window.OP) {
+OP.Component = {}; // our defined components
+
+OP.CustomComponent = {}; // separate holder for Webix Custom Components
+
+
+// OP.UI.extend = function(key, definition) {
+// 	OP.UI[key] = definition;
+// }
+
+OP.Component.extend = function (key, fn) {
+	OP.Component[key] = function (App) {
+
+		//// TODO: verify App has proper structure:
+		if (!App) {
+			App = OP.Component._newApp();
+		}
+
+		// make an instance of the component.
+		var component = fn(App);
+
+		// transfer to App, any actions in the component:
+		if (component.actions) {
+			for (var a in component.actions) {
+				App.actions[a] = component.actions[a];
+			}
+		}
+
+		return component;
+	};
+};
+
+OP.Component._newApp = function () {
+	return {
+
+		uuid: webix.uid(),
+
+		/*
+   * actions:
+   * a hash of exposed application methods that are shared among our
+   * components, so one component can invoke an action that updates
+   * another component.
+   */
+		actions: {},
+
+		/*
+   * config
+   * webix configuration settings for our current browser
+   */
+		config: _config2.default.config(),
+
+		/*
+   * custom
+   * a collection of custom components for this App Instance.
+   */
+		custom: {},
+
+		/*
+   * labels
+   * a collection of labels that are common for the Application.
+   */
+		labels: {},
+
+		/*
+   * unique()
+   * A function that returns a globally unique Key.
+   * @param {string} key   The key to modify and return.
+   * @return {string}
+   */
+		unique: function unique(key) {
+			return key + this.uuid;
+		}
+
+	};
+};
+
+OP.CustomComponent.extend = function (key, fn) {
+	OP.CustomComponent[key] = function (App, key) {
+
+		if (!App) {
+			App = OP.Component._newApp();
+		}
+
+		// make an instance of the component.
+		return fn(App, key);
+	};
+};
+
+OP.Dialog = AD.op.Dialog;
+
+OP.Error = AD.error;
+
+OP.Form = _form2.default;
+
+OP.Multilingual = _multilingual2.default;
+OP.Model = _model2.default;
+
+OP.Util = _util2.default;
+
+exports.default = OP;
+// }
+
+
+// import "./model.js"
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 1 */,
+/* 2 */,
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _configDesktop = __webpack_require__(8);
+
+var _configDesktop2 = _interopRequireDefault(_configDesktop);
+
+var _configMobile = __webpack_require__(9);
+
+var _configMobile2 = _interopRequireDefault(_configMobile);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @class config
+ *
+ * Manage our configuration settings.
+ */
+
+exports.default = {
+	config: function config() {
+
+		// TODO: decide which config file to return here:
+		if (window.innerWidth < 768) {
+			return _configMobile2.default;
+		}
+		return _configDesktop2.default;
+	}
+};
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = {
+
+	/**
+  * @function OP.Form.validationError
+  *
+  * creates an error object that can be used in OP.Form.isValidationError()
+  * to update a webix form with error validation messages.
+  *
+  * @param {json} error 	an error object
+  *				error.name	{string} the attribute name (Form.element[error.name])
+  *				error.message {string} the message to display for the error
+  *
+  * @return {obj} an error object.
+  */
+	validationError: function validationError(error, errorObj) {
+
+		errorObj = errorObj || {
+			error: 'E_VALIDATION',
+			invalidAttributes: {}
+		};
+
+		var attr = errorObj.invalidAttributes;
+		attr[error.name] = attr[error.name] || [];
+
+		attr[error.name].push(error);
+
+		return errorObj;
+	},
+
+	/**
+  * @function OP.Form.isValidationError
+  *
+  * scans the given error to see if it is a sails' respone about an invalid
+  * value from one of the form elements.
+  *
+  * @codestart
+  * var form = $$('formID');
+  * var values = form.getValues();
+  * model.attr(values);
+  * model.save()
+  * .fail(function(err){
+  *     if (!OP.Form.isValidationError(err, form)) {
+  *         OP.error.log('Error saving current model ()', {error:err, values:values});
+  *     }
+  * })
+  * .then(function(newData){
+  * 
+  * });
+  * @codeend
+  *
+  * @param {obj} error  the error response object
+  * @param {obj} form   the webix form instance (or reference)
+  * @return {bool}      true if error was about a form element.  false otherwise.
+  */
+	isValidationError: function isValidationError(error, form) {
+
+		// {bool} have we set focus to form component?
+		var hasFocused = false;
+
+		// if we have an error object:
+		if (error) {
+
+			//// if the error obj is provided by Sails response, 
+			//// do some clean up on the error object:
+
+
+			// dig down to sails provided error object:
+			if (error.error && error.error == 'E_UNKNOWN' && error.raw && error.raw.length > 0) {
+
+				error = error.raw[0];
+			}
+
+			// drill down to the embedded .err object if it exists
+			if (error.err) {
+				error = error.err;
+			}
+
+			//// Now process the error object
+			//// 
+			if (error.error && error.error == 'E_VALIDATION' || error.code && error.code == 'E_VALIDATION') {
+
+				var attrs = error.invalidAttributes;
+				if (attrs) {
+
+					var wasForm = false;
+					for (var attr in attrs) {
+
+						// if this is a field in the form:
+						if (form.elements[attr]) {
+
+							var errors = attrs[attr];
+							var msg = [];
+							errors.forEach(function (err) {
+								msg.push(err.message);
+							});
+
+							// set the invalid error message
+							form.markInvalid(attr, msg.join(', '));
+
+							// set focus to the 1st form element we mark:
+							if (!hasFocused) {
+								form.elements[attr].focus();
+								hasFocused = true;
+							}
+
+							wasForm = true;
+						}
+					}
+
+					if (wasForm) {
+						return true;
+					}
+				}
+			}
+		}
+
+		// if we missed updating our form with an error
+		// this was not a validation error so return false
+		return false;
+	}
+
+};
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var _restURLs = {
+	findAll: 'GET #url#',
+	findOne: 'GET #url#/{id}',
+	create: 'POST #url#',
+	update: 'PUT #url#/{id}',
+	destroy: 'DELETE #url#/{id}'
+};
+
+var _Models = {};
+
+var OPModel = function () {
+	function OPModel(key, staticData, instanceData) {
+		_classCallCheck(this, OPModel);
+
+		this.key = key;
+		this.staticData = staticData;
+		this.instanceData = instanceData;
+		this.Model = staticData.Model;
+
+		this.url = {};
+		for (var r in _restURLs) {
+			this.url[r] = staticData[r];
+		}
+	}
+
+	_createClass(OPModel, [{
+		key: 'Models',
+		value: function Models(Model) {
+			this.Model = Model;
+		}
+	}, {
+		key: 'findAll',
+		value: function findAll(cond) {
+			var _this = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// NOTE: currently reusing AD.Model
+
+				// var Model = AD.Model.get(this.key);
+				// Model.findAll(cond)
+
+				var service = _this.service('findAll');
+
+				AD.comm.service[service.verb]({ url: service.url, params: cond }).fail(reject).done(function (data) {
+
+					data = data.data || data;
+
+					// our findAll() should return an array of items.
+					if (!Array.isArray(data)) {
+						data = [data];
+					}
+
+					// return instances of this.Model if provided:
+					if (_this.Model) {
+						var newList = []; // Model.List();
+						data.forEach(function (l) {
+							if (l) {
+								newList.push(new _this.Model(l));
+							}
+						});
+
+						data = newList;
+					}
+
+					// convert to a WebixDataCollection:
+					var dc = new webix.DataCollection({
+						data: data,
+
+						on: {
+							onAfterDelete: function onAfterDelete(id) {}
+						}
+					});
+
+					// dc._toArray = function() {
+					// 	var data = [];
+					// 	var id = this.getFirstId();
+					// 	while(id) {
+					// 		data.push(this.getItem(id));
+					// 		id = this.getNextId(id);
+					// 	}
+					// 	return data;
+					// }
+
+
+					resolve(dc);
+				});
+			});
+		}
+	}, {
+		key: 'findOne',
+		value: function findOne(cond) {
+			var _this2 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				var service = _this2.service('findOne');
+
+				var nURI = service.url;
+				for (var k in cond) {
+					var oURI = nURI;
+					nURI = AD.util.string.replaceAll(nURI, "{" + k + "}", cond[k]);
+
+					// if there was a change, remove k from cond:
+					if (oURI != nURI) {
+						delete cond[k];
+					}
+				}
+				service.url = nURI;
+
+				AD.comm.service[service.verb]({ url: service.url, params: cond }).fail(reject).done(function (item) {
+					if (item.translate) item.translate();
+
+					resolve(item.attr ? item.attr() : item);
+				});
+			});
+		}
+	}, {
+		key: 'create',
+		value: function create(attr) {
+			var _this3 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				var service = _this3.service('create');
+
+				AD.comm.service[service.verb]({ url: service.url, params: attr }).fail(reject).done(function (item) {
+					if (item.translate) item.translate();
+
+					resolve(item.attr ? item.attr() : item);
+				});
+			});
+		}
+	}, {
+		key: 'update',
+		value: function update(id, attr) {
+			var _this4 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				var service = _this4.service('update', id);
+
+				AD.comm.service[service.verb]({ url: service.url, params: attr }).fail(reject).done(resolve);
+			});
+		}
+	}, {
+		key: 'destroy',
+		value: function destroy(id) {
+			var _this5 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				var service = _this5.service('destroy', id);
+
+				AD.comm.service[service.verb]({ url: service.url, params: {} }).fail(reject).done(resolve);
+			});
+		}
+	}, {
+		key: 'service',
+		value: function service(key, id) {
+			var parts = this.url[key].split(' ');
+			var verb = parts[0].toLowerCase();
+			var uri = parts.pop();
+
+			if (id) {
+				var key = '{id}';
+				uri = AD.util.string.replaceAll(uri, key, id);
+			}
+
+			return {
+				verb: verb,
+				url: uri
+			};
+		}
+	}]);
+
+	return OPModel;
+}();
+
+exports.default = {
+
+	extend: function extend(key, staticData, instance) {
+
+		//
+		// Create the AD.Model from this definition
+		//
+
+		if (staticData.restURL) {
+			for (var u in _restURLs) {
+				staticData[u] = _restURLs[u].replace('#url#', staticData.restURL);
+			}
+		}
+
+		// var alreadyThere = AD.Model.get(key);
+		// if (!alreadyThere) {
+
+		// 	AD.Model.Base.extend(key, staticData, instance);
+		// 	AD.Model.extend(key, staticData, instance);
+		// }
+
+		//
+		// Now create our OP.Model:
+		//
+		var curr = nameSpace(_Models, key);
+		var modelName = objectName(key);
+
+		curr[modelName] = new OPModel(key, staticData, instance);
+	},
+
+	get: function get(key) {
+		return findObject(_Models, key);
+	}
+};
+
+/*
+ * @function findObject
+ *
+ * Return the object specified by the given name space:
+ *
+ * @param {object} baseObj  The base object to search on
+ *                          usually AD.models or AD.models_base
+ *
+ * @param {string} name   The provided namespace to parse and search for
+ *                        The name can be spaced using '.' 
+ *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
+ *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
+ *
+ * @returns {object}  the object resolved by the namespaced base 
+ *                    eg:  findObject(AD.models, 'Resource') => return AD.models.Resource
+ *                         findObject(AD.models, 'coolTool.Resource1') => AD.models.coolTool.Resource1
+ *
+ *                    if an object is not found, null is returned.
+ */
+
+var findObject = function findObject(baseObj, name) {
+
+	// first lets figure out our namespacing:
+	var nameList = name.split('.');
+
+	// for each remaining name segments, make sure we have a 
+	// namespace container for it:
+	var curr = baseObj;
+	nameList.forEach(function (name) {
+
+		if (curr == null) {
+			var whoops = true;
+			console.error('! current name segment is null.  Check your given name to make sure it is properly given: ', name);
+		}
+		if (curr) {
+			if (typeof curr[name] == 'undefined') {
+				curr = null;
+			}
+			if (curr) curr = curr[name];
+		}
+	});
+
+	return curr;
+};
+
+/*
+ * @function objectName
+ *
+ * parse the name and return the name of the object we will create.
+ *
+ * @param {string} name   The provided namespace to parse 
+ *                        The name can be spaced using '.' 
+ *
+ * @returns {string}  the name of the model object 
+ *                    eg:  objectName('Resource') => return 'Resource'
+ *                         objectName('coolTool.Resource1') => 'Resource1'
+ */
+var objectName = function objectName(name) {
+
+	// first lets figure out our namespacing:
+	var nameList = name.split('.');
+	var objName = nameList.pop(); // remove the last one.
+
+	return objName;
+};
+
+/*
+ * @function nameSpace
+ *
+ * Make sure the proper name space is created on the given base.
+ *
+ * @param {object} baseObj  The base object to create the namespace on
+ *                          usually AD.models or AD.models_base
+ *
+ * @param {string} name   The provided namespace to parse and create
+ *                        The name can be spaced using '.' 
+ *                        eg.  'coolTool.Resource1' => AD.models.coolTool.Resource1
+ *                             'coolerApp.tool1.Resource1' => AD.models.coolerApp.tool1.Resource1
+ *
+ * @returns {object}  the object that represents the namespaced base 
+ *                    that the Model is to be created on.
+ *                    eg:  nameSpace(AD.models, 'Resource') => return AD.models
+ *                         nameSpace(AD.models, 'coolTool.Resource1') => AD.models.coolTool
+ */
+var nameSpace = function nameSpace(baseObj, name) {
+
+	// first lets figure out our namespacing:
+	var nameList = name.split('.');
+	var controlName = nameList.pop(); // remove the last one.
+
+	// for each remaining name segments, make sure we have a 
+	// namespace container for it:
+	var curr = baseObj;
+	nameList.forEach(function (name) {
+
+		if (typeof curr[name] == 'undefined') {
+			curr[name] = {};
+		}
+		curr = curr[name];
+	});
+
+	return curr;
+};
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+/*
+ * OP.Multilingual
+ *
+ * A set of helpers for Multilingual Data.
+ *
+ */
+
+exports.default = {
+
+	/**
+  * @function OP.Multilingual.translate
+  *
+  * Given a set of json data, pull out any multilingual translations
+  * and flatten those values to the base object.
+  *
+  * @param {obj} obj  The instance of the object being translated
+  * @param {json} json The json data being used for translation.
+  *						There should be json.translations = [ {transEntry}, ...]
+  *						where transEntry = {
+  *							language_code:'en',
+  *							field1:'value',
+  *							...
+  *						}
+  * @param {array} fields an Array of multilingual fields to pull to 
+  *						 the obj[field] value.
+  *
+  */
+	translate: function translate(obj, json, fields) {
+
+		if (!json.translations) {
+			json.translations = [];
+		}
+
+		var currLanguage = AD.lang.currentLanguage || 'en';
+
+		if (fields && fields.length > 0) {
+
+			json.translations.forEach(function (t) {
+				// find the translation for the current language code
+				if (t.language_code == currLanguage) {
+
+					// copy each field to the root object
+					fields.forEach(function (f) {
+						obj[f] = t[f] || ''; // default to '' if not found. 
+					});
+				}
+			});
+		}
+	},
+
+	/**
+  * @function OP.Multilingual.unTranslate
+  *
+  * Take the multilingual information in the base obj, and push that 
+  * down into the json.translations data.
+  *
+  * @param {obj} obj  The instance of the object with the translation
+  * @param {json} json The json data being used for translation.
+  *						There should be json.translations = [ {transEntry}, ...]
+  *						where transEntry = {
+  *							language_code:'en',
+  *							field1:'value',
+  *							...
+  *						}
+  * @param {array} fields an Array of multilingual fields to pull from 
+  *						 the obj[field] value.
+  *
+  */
+	unTranslate: function unTranslate(obj, json, fields) {
+
+		json = json || {};
+		fields = fields || [];
+
+		if (!json.translations) {
+			json.translations = [];
+		}
+
+		var currLanguage = AD.lang.currentLanguage || 'en';
+
+		if (fields && fields.length > 0) {
+
+			var foundOne = false;
+
+			json.translations.forEach(function (t) {
+				// find the translation for the current language code
+				if (t.language_code == currLanguage) {
+
+					// copy each field to the root object
+					fields.forEach(function (f) {
+						t[f] = obj[f];
+					});
+
+					foundOne = true;
+				}
+			});
+
+			// if we didn't update an existing translation
+			if (!foundOne) {
+
+				// create a translation entry:
+				var trans = {};
+
+				// assume current languageCode:
+				trans.language_code = currLanguage;
+
+				fields.forEach(function (field) {
+					if (obj[field] != null) {
+						trans[field] = obj[field];
+					}
+				});
+
+				json.translations.push(trans);
+			}
+		}
+	}
+};
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+exports.default = {
+
+	uuid: AD.util.uuid
+
+};
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+/**
+ * @class configDesktop
+ *
+ * Manage our configuration settings for Desktop styles.
+
+ */
+
+exports.default = {
+
+	// Application List
+	appListRowHeight: 70,
+
+	// button types
+	buttonWidthLarge: 200,
+	buttonWidthMedium: 150,
+	buttonWidthSmall: 100,
+	buttonWidthExtraSmall: 50,
+
+	// tab types
+	tabWidthLarge: 200,
+	tabWidthMedium: 120,
+	tabWidthSmall: 100,
+	tabWidthExtraSmall: 50,
+
+	// column types
+
+
+	// spacers
+	smallSpacer: 10,
+	mediumSpacer: 25,
+	largeSpacer: 50,
+	xLargeSpacer: 100,
+	xxLargeSpacer: 200,
+	appListSpacerRowHeight: 100,
+	appListSpacerColMinWidth: 100,
+	appListSpacerColMaxWidth: 200,
+	objectWorkspaceColWidth: 20,
+
+	// labels
+	labelWidthSmall: 50,
+	labelWidthMedium: 80,
+	labelWidthLarge: 120,
+	labelWidthXLarge: 150,
+	labelWidthCheckbox: 0,
+
+	// show elements on desktop
+	hideMobile: false
+
+};
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+/**
+ * @class configMobile
+ *
+ * Manage our configuration settings for mobile styles.
+
+ */
+
+exports.default = {
+
+	// Application List
+	appListRowHeight: 70,
+
+	// button types
+	buttonWidthLarge: 200,
+	buttonWidthMedium: 150,
+	buttonWidthSmall: 100,
+	buttonWidthExtraSmall: 50,
+
+	// tab types
+	tabWidthLarge: 200,
+	tabWidthMedium: 120,
+	tabWidthSmall: 100,
+	tabWidthExtraSmall: 50,
+
+	// column types
+
+
+	// spacers
+	smallSpacer: 1,
+	mediumSpacer: 10,
+	largeSpacer: 20,
+	xLargeSpacer: 50,
+	xxLargeSpacer: 100,
+	appListSpacerRowHeight: 10,
+	appListSpacerColMinWidth: 1,
+	appListSpacerColMaxWidth: 1,
+	objectWorkspaceColWidth: 1,
+
+	// labels
+	labelWidthSmall: 50,
+	labelWidthMedium: 80,
+	labelWidthLarge: 120,
+	labelWidthCheckbox: 0,
+
+	// hide elements for mobile
+	hideMobile: true
+
+};
+
+/***/ })
+/******/ ]);
 //# sourceMappingURL=OP_Bundle.js.map

@@ -18,11 +18,11 @@ function L(key, altText) {
 var ABFieldStringDefaults = {
 	key : 'string', // unique key to reference this specific DataField
 	// type : 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	icon : 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
-	
+	icon : 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+
 	// menuName: what gets displayed in the Editor drop list
 	menuName : L('ab.dataField.string.menuName', '*Single line text'),
-	
+
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.string.description', '*short string value')
 }
@@ -46,8 +46,9 @@ var ABFieldStringComponent = new ABFieldComponent({
 			{
 				view: "text",
 				name:'textDefault',
-				labelWidth: App.config.labelWidthLarge,
-				placeholder: L('ab.dataField.string.default', '*Default text')
+				labelWidth: App.config.labelWidthMedium,
+				label: L('ab.dataField.string.defaultLabel', '*Default'),
+				placeholder: L('ab.dataField.string.default', '*Enter default value')
 			},
 			{
 				view: "checkbox",
@@ -61,7 +62,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
 	defaultValues:{
-		'textDefault': '', 
+		'textDefault': '',
 		'supportMultilingual':1
 	},
 
@@ -74,8 +75,8 @@ var ABFieldStringComponent = new ABFieldComponent({
 
 	// include additional behavior on default component operations here:
 	// The base routines will be processed first, then these.  Any results
-	// from the base routine, will be passed on to these: 
-	// 	@param {obj} ids  the list of ids used to generate the UI.  your 
+	// from the base routine, will be passed on to these:
+	// 	@param {obj} ids  the list of ids used to generate the UI.  your
 	//					  provided .elements will have matching .name keys
 	//					  to access them here.
 	//  @param {obj} values the current set of values provided for this instance
@@ -87,7 +88,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 	//						settings:{
 	//							showIcon:'',
 	//
-	//							your element key=>values here	
+	//							your element key=>values here
 	//						}
 	//					  }
 	//

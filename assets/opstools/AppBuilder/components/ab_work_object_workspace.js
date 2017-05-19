@@ -9,6 +9,7 @@
 import ABApplication from "../classes/ABApplication"
 import "./ab_work_object_workspace_datatable"
 import "./ab_work_object_workspace_popupDefineLabel"
+import "./ab_work_object_workspace_popupFrozenColumns"
 import "./ab_work_object_workspace_popupHideFields"
 import "./ab_work_object_workspace_popupNewDataField"
 
@@ -89,6 +90,8 @@ OP.Component.extend(idBase, function(App) {
 	var PopupDefineLabelComponent = OP.Component['ab_work_object_workspace_popupDefineLabel'](App);
 	var PopupDefineLabel = webix.ui(PopupDefineLabelComponent.ui);
 
+	var PopupFrozenColumnsComponent = OP.Component['ab_work_object_workspace_popupFrozenColumns'](App);
+	var PopupFrozenColumns = webix.ui(PopupFrozenColumnsComponent.ui);
 
 	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
 	// var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
@@ -108,9 +111,18 @@ OP.Component.extend(idBase, function(App) {
 			{
 				id: ids.noSelection,
 				rows:[
-					{ 
-						view:'label', 
-						label:labels.component.selectObject 
+					{
+						maxHeight: App.config.xxLargeSpacer,
+						hidden: App.config.hideMobile
+					},
+					{
+						view:'label',
+						align: "center",
+						label:labels.component.selectObject
+					},
+					{
+						maxHeight: App.config.xxLargeSpacer,
+						hidden: App.config.hideMobile
 					}
 				]
 			},
@@ -259,6 +271,10 @@ OP.Component.extend(idBase, function(App) {
 			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
 		});
 
+		PopupFrozenColumnsComponent.init({
+			onChange:_logic.callbackFrozenColumns		// be notified when there is a change in the frozen columns
+		});
+
 		PopupNewDataFieldComponent.init({
 			onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
 		});
@@ -297,6 +313,24 @@ OP.Component.extend(idBase, function(App) {
 
 		},
 
+		/**
+		 * @function callbackFrozenColumns
+		 *
+		 * call back for when the hidden fields have changed.
+		 */
+		callbackFrozenColumns: function() {
+
+			var frozenID = CurrentObject.workspaceFrozenColumnID;
+
+			if (typeof(frozenID) != "undefined") {
+				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1
+
+				$$(ids.buttonFrozen).define('badge', badgeNumber);
+				$$(ids.buttonFrozen).refresh();
+
+				DataTable.refresh();
+			}
+		},
 
 		/**
 		 * @function callbackFieldsVisible
@@ -306,15 +340,21 @@ OP.Component.extend(idBase, function(App) {
 		callbackFieldsVisible: function() {
 
 			var hiddenFields = CurrentObject.workspaceHiddenFields;
-			$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
-			$$(ids.buttonFieldsVisible).refresh();
 
-			DataTable.refresh();
+			if (typeof(hiddenFields) != "undefined") {
+				$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+				$$(ids.buttonFieldsVisible).refresh();
+
+				DataTable.refresh();
+
+				// if you unhide a field it may fall inside the frozen columns range so lets check
+				_logic.callbackFrozenColumns();
+			}
 		},
 
 
 		/**
-		 * @function callbackFieldsVisible
+		 * @function callbackHeaderEditorMenu
 		 *
 		 * call back for when an editor menu action has been selected.
 		 * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
@@ -348,13 +388,13 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 								.then(()=>{
 									DataTable.refresh();
 								});
-								
+
 							}
 						}
 					})
 					break;
 			}
-			
+
 		},
 
 
@@ -373,7 +413,7 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 		/**
 		 * @function toolbarAddFields
 		 *
-		 * Show the popup to allow the user to create new fields for 
+		 * Show the popup to allow the user to create new fields for
 		 * this object.
 		 */
 		toolbarAddFields: function($view) {
@@ -389,7 +429,7 @@ console.error('TODO: Button Export()');
 		/**
 		 * @function toolbarDefineLabel
 		 *
-		 * Show the popup to allow the user to define the default label for 
+		 * Show the popup to allow the user to define the default label for
 		 * this object.
 		 */
 		toolbarDefineLabel: function($view) {
@@ -425,7 +465,7 @@ console.error('TODO: button filterFields()');
 		 * show the popup to freeze columns for the datatable
 		 */
 		toolbarFrozen: function ($view) {
-console.error('TODO: toolbarFrozen()');
+			PopupFrozenColumns.show($view);
 		},
 
 
@@ -456,10 +496,10 @@ console.error('TODO: toolbarSort()');
 		/**
 		 * @function clearObjectWorkspace()
 		 *
-		 * Clear the object workspace. 
+		 * Clear the object workspace.
 		 */
 		clearObjectWorkspace:function(){
-			
+
 			// NOTE: to clear a visual glitch when multiple views are updating
 			// at one time ... stop the animation on this one:
 			$$(ids.noSelection).show(false, false);
@@ -482,13 +522,17 @@ console.error('TODO: toolbarSort()');
 
 			App.actions.populateObjectPopupAddDataField(object);
 
-			// update hiddenFields 
+			// update hiddenFields
 			_logic.callbackFieldsVisible();
 
 
 			PopupDefineLabelComponent.objectLoad(object);
+			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			DataTable.objectLoad(object);
+
+			// update frozen columns
+			_logic.callbackFrozenColumns();
 		}
 
 

@@ -224,10 +224,10 @@ console.error('!! ToDo: onAfterColumnHide()');
 			/**
 			 * @function onEditorMenu
 			 * report back which menu action was clicked.
-			 * We get the info from our popupHeaderEditor component, but all the 
-			 * logic to respond to those options are in our parent. So we pass it 
+			 * We get the info from our popupHeaderEditor component, but all the
+			 * logic to respond to those options are in our parent. So we pass it
 			 * on ...
-			 * 
+			 *
 			 * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
 			 * @param {ABField} field  the field to which the action is to be applied
 			 * @param {dom} node  the optional html node for this header item.
@@ -248,10 +248,22 @@ console.error('!! ToDo: onAfterColumnHide()');
 			_logic.callbacks.onEditorMenu(action, EditField, EditNode);
 		},
 
+		/**
+		 * @function getColumnIndex
+		 *
+		 * return the column index of a given column ID
+		 * @param {string} id column id you want the index of
+		 */
+		getColumnIndex: function(id) {
+			var DataTable = $$(ids.component);
+
+			return DataTable.getColumnIndex(id);
+		},
+
 
 		/**
 		 * @function onHeaderClick
-		 * 
+		 *
 		 * process the user clicking on the header for one of our columns.
 		 */
 		onHeaderClick: function (id, e, node) {
@@ -269,7 +281,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 				// show the popup
 				PopupHeaderEdit.show(node);
 			}
-		
+
 			return false;
 		},
 
@@ -298,7 +310,11 @@ console.error('!! ToDo: onAfterColumnHide()');
 				// update DataTable structure:
 				var columnHeaders = CurrentObject.columnHeaders(true);
 				DataTable.refreshColumns(columnHeaders)
-
+				// freeze columns:
+				if (CurrentObject.workspaceFrozenColumnID != "") {
+					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+					DataTable.refreshColumns()
+				}
 
 				// update DataTable Content
 			}
@@ -347,6 +363,8 @@ console.error('!! ToDo: onAfterColumnHide()');
 		objectLoad: _logic.objectLoad,
 		refresh: _logic.refresh,
 
+		// expose data for badge on frozen button
+		getColumnIndex: _logic.getColumnIndex,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}
