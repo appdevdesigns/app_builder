@@ -25,7 +25,7 @@ export default class ABField {
   			key:'fieldKey',				// unique key for this Field
   			icon:'font',				// fa-[icon] reference for an icon for this Field Type
   			label:'',					// pulled from translation
-			columnName:'column_name',	// a valid mysql table.column name 
+			columnName:'column_name',	// a valid mysql table.column name
 			settings: {					// unique settings for the type of field
 				showIcon:true/false,	// only useful in Object Workspace DataTable
 
@@ -123,10 +123,10 @@ export default class ABField {
   		var _ui = {
 			// id: ids.component,
 			rows: [
-				{
-					view: "label",
-					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
-				},
+				// {
+				// 	view: "label",
+				// 	label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
+				// },
 				{
 					view: "text",
 					id: ids.label,
@@ -196,7 +196,7 @@ export default class ABField {
   		return this.defaults.key;
   	}
 
-  	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+  	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
   	fieldIcon() {
   		return this.defaults.icon;
   	}
@@ -204,12 +204,12 @@ export default class ABField {
   	// the multilingual text for the name of this data field.
   	fieldMenuName() {
   		return this.defaults.menuName;
-  	} 
+  	}
 
   	// the multilingual text for the name of this data field.
   	fieldDescription() {
   		return this.defaults.description;
-  	} 
+  	}
 
 
 
@@ -225,10 +225,10 @@ export default class ABField {
 		var errors = null;
 
 		// .columnName must be unique among fileds on the same object
-		var isNameUnique = (this.object.fields((f)=>{ 
+		var isNameUnique = (this.object.fields((f)=>{
 			var isDifferent = (f.id != this.id);
-			return (f.id != this.id) 
-					&& (f.columnName.toLowerCase() == this.columnName.toLowerCase() ); 
+			return (f.id != this.id)
+					&& (f.columnName.toLowerCase() == this.columnName.toLowerCase() );
 		}).length == 0);
 		if (!isNameUnique) {
 			errors = OP.Form.validationError({
@@ -267,7 +267,7 @@ export default class ABField {
 				if (this.id) {
 
 					// NOTE: our .migrateXXX() routines expect the object to currently exist
-					// in the DB before we perform the DB operations.  So we need to 
+					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
 					this.migrateDrop()
 					.then(()=>{
@@ -280,7 +280,7 @@ export default class ABField {
 
 					resolve();  // nothing to do really
 				}
-				
+
 			}
 		)
 
@@ -312,7 +312,7 @@ export default class ABField {
 				.then(() => {
 
 					if (isAdd) {
-					
+
 						this.migrateCreate()
 						.then(()=>{
 							resolve(this);
@@ -322,7 +322,7 @@ export default class ABField {
 					} else {
 						resolve(this);
 					}
-					
+
 				})
 				.catch(function(err){
 					reject(err);
@@ -360,7 +360,7 @@ export default class ABField {
 	 * @method fromValues()
 	 *
 	 * initialze this object with the given set of values.
-	 * @param {obj} values  
+	 * @param {obj} values
 	 */
 	fromValues (values) {
 
@@ -420,9 +420,9 @@ export default class ABField {
 
 	/*
 	 * @function columnHeader
-	 * Return the column header for a webix grid component for this specific 
+	 * Return the column header for a webix grid component for this specific
 	 * data field.
-	 * @param {bool} isObjectWorkspace is this being used in the Object 
+	 * @param {bool} isObjectWorkspace is this being used in the Object
 	 *								   workspace.
 	 * @return {obj}  configuration obj
 	 */
