@@ -70,6 +70,7 @@ OP.Component.extend(idBase, function(App) {
 
 	// Our init() function for setting up our UI
 	var _init = function(options) {
+		webix.ui(_ui);
 
 		// register our callbacks:
 		for(var c in _logic.callbacks) {
@@ -198,6 +199,7 @@ OP.Component.extend(idBase, function(App) {
 
 		// interface methods for parent component:
 		applicationLoad:_logic.applicationLoad,
+		show: _logic.show,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

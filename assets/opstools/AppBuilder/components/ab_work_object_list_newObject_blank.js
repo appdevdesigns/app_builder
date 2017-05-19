@@ -159,6 +159,7 @@ OP.Component.extend(idBase, function(App) {
 				// if there was no error, clear the form for the next
 				// entry:
 				_logic.formClear();
+				saveButton.enable();
 			});
 
 		},
