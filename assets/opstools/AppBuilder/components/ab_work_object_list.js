@@ -56,7 +56,7 @@ OP.Component.extend(idBase, function(App) {
 				id: ids.list,
 				width: 250,
 
-height:800, // #Hack!
+//height:800, // #Hack!
 
 				select: true,
 				editaction: 'custom',
@@ -220,7 +220,7 @@ console.error('!! todo: onAfterRender() editing');
 						OP.Dialog.Alert({
 							text: labels.common.renameSuccessMessage.replace("{0}", state.value)
 						});
-					
+
 					});
 			}
 		},

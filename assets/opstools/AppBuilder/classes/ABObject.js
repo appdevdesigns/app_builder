@@ -49,10 +49,15 @@ export default class ABObject {
     	this.importFromObject = attributes.importFromObject || "";
     	this.translations = attributes.translations;
 
+		if (typeof(attributes.objectWorkspace) != "undefined") {
+			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
+			if (typeof(attributes.objectWorkspace.frozenColumnID) == "undefined") attributes.objectWorkspace.frozenColumnID = "";
+		}
+
     	this.objectWorkspace = attributes.objectWorkspace || {
     		hiddenFields:[], 	// array of [ids] to add hidden:true to
+			frozenColumnID:"", // id of column you want to stop freezing
     	};
-
 
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this, ['label']);
@@ -129,7 +134,6 @@ export default class ABObject {
 	 * @return {Promise}
 	 */
 	destroy () {
-		
 		return new Promise(
 			(resolve, reject) => {
 
@@ -149,7 +153,7 @@ export default class ABObject {
 
 					// now drop our table
 					// NOTE: our .migrateXXX() routines expect the object to currently exist
-					// in the DB before we perform the DB operations.  So we need to 
+					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
 					this.migrateDrop()
 					.then(()=>{
@@ -166,7 +170,6 @@ export default class ABObject {
 
 			}
 		);
-
 	}
 
 
@@ -377,6 +380,14 @@ export default class ABObject {
 		this.objectWorkspace.hiddenFields = fields;
 	}
 
+	get workspaceFrozenColumnID() {
+		return this.objectWorkspace.frozenColumnID;
+	}
+
+	set workspaceFrozenColumnID( id ) {
+		this.objectWorkspace.frozenColumnID = id;
+	}
+
 
 
 
@@ -406,14 +417,15 @@ export default class ABObject {
 			headers.forEach((h) => { h.adjust = true; });
 
 			// hide any hiddenfields
-			this.workspaceHiddenFields.forEach((hfID)=>{
-				headers.forEach((h)=> {
-					if (idLookup[h.id] == hfID){
-						h.hidden = true;
-					}
-				})
-			});
-
+			if (this.workspaceHiddenFields.length > 0) {
+				this.workspaceHiddenFields.forEach((hfID)=>{
+					headers.forEach((h)=> {
+						if (idLookup[h.id] == hfID){
+							h.hidden = true;
+						}
+					})
+				});
+			}
 		}
 
 		return headers;

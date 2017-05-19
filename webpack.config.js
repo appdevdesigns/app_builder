@@ -30,16 +30,16 @@ module.exports = {
   },
   devtool: "source-map",
   plugins: [
-    new webpack.optimize.UglifyJsPlugin({
-        compress: {
-            warnings: true
-        },
-        sourceMap: true
-    }),
-    new webpack.LoaderOptionsPlugin({
-        minimize: false  // true
-    }),
-    
+    // new webpack.optimize.UglifyJsPlugin({
+    //     compress: {
+    //         warnings: true
+    //     },
+    //     sourceMap: true
+    // }),
+    // new webpack.LoaderOptionsPlugin({
+    //     minimize: false  // true
+    // }),
+
     // *************************************************************************** //
     // This builds the OP into same bundle but automatically handles the import    //
     // *************************************************************************** //
