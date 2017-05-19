@@ -32,7 +32,8 @@ var defaultValues = {
 	'useWidth':0,
 	'imageWidth':'',
 	'useHeight': 0,
-	'imageHeight': ''
+	'imageHeight': '',
+	'removeExistingData': 0
 }
 
 
@@ -175,7 +176,8 @@ class ABFieldImage extends ABField {
 				'useWidth':0,
 				'imageWidth':'',
 				'useHeight': 0,
-				'imageHeight': ''
+				'imageHeight': '',
+				'removeExistingData': 0
 			}
     	}
     	*/
@@ -189,6 +191,7 @@ class ABFieldImage extends ABField {
     	// text to Int:
     	this.settings.useWidth = parseInt(this.settings.useWidth);
     	this.settings.useHeight = parseInt(this.settings.useHeight);
+    	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
   	}
 
 
@@ -229,6 +232,55 @@ class ABFieldImage extends ABField {
 
 		return errors;
 	}
+
+
+
+	/**
+	 * @function destroy
+	 * On a destroy operation, ask if the user wants to keep the related images.
+	 */
+	destroy () {
+		return new Promise(
+			(resolve, reject) => {
+
+				// verify we have been .save()d before:
+				if (this.id) {
+
+					// Ask the user what to do about the existing images:
+					OP.Dialog.Confirm({
+						title: L('ab.dataField.image.keepImages', '*Keep Images?'),
+						message: L('ab.dataField.image.keepImagesDescription', '*Do you want to keep the images referenced by #label#?').replace('#label#', this.label),
+						callback: (result) => {
+
+							// update this setting so the server can respond correctly in
+							// ABFieldImage.migrateDrop()
+							this.settings.removeExistingData = result ? 0: 1;
+							this.save()
+							.then(()=>{
+
+// TODO: a reminder that you still got alot on the server to do!
+OP.Dialog.Alert({
+	title:'!! TODO !!',
+	text:'Tell a Developer to actually pay attention to this!'
+})
+								// now the default .destroy() 
+								super.destroy()
+								.then(resolve)
+								.catch(reject);
+							})
+							.catch(reject);
+						}
+					})
+
+				} else {
+					resolve();  // nothing to do really
+				}
+				
+			}
+		)
+	}
+
+
 
 
 	/**

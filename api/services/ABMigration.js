@@ -15,6 +15,7 @@ var knexConn = null;
 
 module.exports = {
 
+
     connection:function() {
 
         if (!knexConn) {
@@ -34,10 +35,35 @@ module.exports = {
         return knexConn;
     },
 
+
     createObject:function(object) {
 
         var knex = ABMigration.connection();
-        return object.migrateCreateTable(knex);
+        return object.migrateCreate(knex);
+
+    },
+
+
+    dropObject:function(object) {
+
+        var knex = ABMigration.connection();
+        return object.migrateDrop(knex);
+
+    },
+
+
+    createField:function(field) {
+
+        var knex = ABMigration.connection();
+        return field.migrateCreate(knex);
+
+    },
+
+
+    dropField:function(field) {
+
+        var knex = ABMigration.connection();
+        return field.migrateDrop(knex);
 
     }
 

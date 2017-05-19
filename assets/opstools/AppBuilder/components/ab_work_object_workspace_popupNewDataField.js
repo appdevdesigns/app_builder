@@ -171,7 +171,7 @@ OP.Component.extend(idBase, function(App) {
 		Fields.forEach(function(F){
 
 			var menuName = F.defaults().menuName ;
-			var type = F.defaults().type;
+			var key = F.defaults().key;
 
 			// add a submenu for the fields multilingual key
 			submenus.push( {"id":menuName, "value":menuName} );
@@ -187,7 +187,7 @@ OP.Component.extend(idBase, function(App) {
 
 			_objectHash[ menuName ] = F;
 			_componentHash[ menuName ] = editorComponent;
-			_componentsByType[ type ]  = editorComponent;
+			_componentsByType[ key ]  = editorComponent;
 
 		})
 
@@ -380,7 +380,7 @@ OP.Component.extend(idBase, function(App) {
 			// switch to this field's editor:
 			// hide the rest
 			for(var c in _componentsByType) {
-				if (c == field.type) {
+				if (c == field.key) {
 					_componentsByType[c].populate(field);
 					_componentsByType[c].show(false, false);
 					_currentEditor = _componentsByType[c];

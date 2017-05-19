@@ -75,14 +75,16 @@
 
 describe('ab_work_object_list_popupEditMenu component', function () {
 
+	var sandbox;
+
 	var mockApp = OP.Component._newApp();
 	var componentName = 'ab_work_object_list_popupEditMenu';
-	var componentTarget;
+	var target;
 
 	before(function () {
 		OP.Component['ab'](mockApp);
 
-		componentTarget = OP.Component[componentName](mockApp);
+		target = OP.Component[componentName](mockApp);
 
 		// TODO: render UI function
 		// buildHTML();
@@ -90,23 +92,39 @@ describe('ab_work_object_list_popupEditMenu component', function () {
 		// TODO: mock up parent dependencies
 	});
 
+	/*
+ **
+ **
+ **
+ **
+ **
+ **
+ */
+	beforeEach(function () {
+		sandbox = sinon.sandbox.create();
+	});
+
+	afterEach(function () {
+		sandbox.restore();
+	});
+
 	it('should exist component', function () {
-		assert.isNotNull(componentTarget);
+		assert.isNotNull(target);
 	});
 
 	// UI test cases
 	describe('UI testing', function () {
 
 		it('should have ui setting', function () {
-			assert.isNotNull(componentTarget.ui, "should have a ui property");
+			assert.isNotNull(target.ui, "should have a ui property");
 		});
 
 		it("should be webix's popup", function () {
-			assert.equal(componentTarget.ui.view, "popup");
+			assert.equal(target.ui.view, "popup");
 		});
 
 		it('should have 2 menu items', function () {
-			var menuItems = componentTarget.ui.body.data;
+			var menuItems = target.ui.body.data;
 
 			var labelRename = mockApp.labels.rename;
 			var labelDelete = mockApp.labels['delete'];
@@ -117,42 +135,104 @@ describe('ab_work_object_list_popupEditMenu component', function () {
 		});
 
 		it('should have item click event', function () {
-			var itemClickFn = componentTarget.ui.body.on.onItemClick;
+			var itemClickFn = target.ui.body.on.onItemClick;
 
 			assert.isNotNull(itemClickFn, 'should have item click event');
 		});
 
 		it('should call _logic.onItemClick when a menu item is clicked', function () {
-			var itemClickFn = componentTarget.ui.body.on.onItemClick;
-			var spyLogicItemClick = chai.spy(componentTarget._logic.onItemClick);
+			var itemClickFn = target.ui.body.on.onItemClick,
+			    spyLogicItemClick = sandbox.spy(target._logic, 'onItemClick'),
+			    itemClickParam = { textContent: 'rename' };
 
 			// Assume a menu item is clicked
-			itemClickFn(null, null, { textContent: '' });
+			itemClickFn(null, null, itemClickParam);
 
 			// Assert _logic.onItemClick should be called in onItemClick of menu
-			expect(spyLogicItemClick).to.have.been.called;
+			sinon.assert.calledOnce(spyLogicItemClick);
+
+			// Assert pass a correct parameter to _logic.onItemClick
+			sinon.assert.calledWith(spyLogicItemClick, itemClickParam);
 		});
 	});
 
 	describe('Init testing', function () {
 		it('should have init function', function () {
-			assert.isNotNull(componentTarget.init, "should have a init property");
+			assert.isNotNull(target.init, "should have a init property");
 		});
 
-		it.skip('should create webix ui', function () {
-			var spyWebixUi = chai.spy(webix.ui);
+		it('should create webix ui', function () {
+			var spyWebixUi = sandbox.spy(webix, 'ui'),
+			    spyLogicHide = sandbox.spy(target._logic, 'hide');
 
 			// Call init
-			componentTarget.init();
+			target.init();
 
-			// Should pass .ui to a parameter of webix.ui
-			expect(spyWebixUi).to.have.been.called.with(componentTarget.ui, 'Should pass .ui to a parameter of webix.ui');
+			// Assert call webix.ui once and pass .ui of this component to webix.ui()
+			sinon.assert.calledOnce(spyWebixUi);
+			sinon.assert.calledWith(spyWebixUi, target.ui);
+
+			// Assert call _logic.hide once
+			sinon.assert.calledOnce(spyLogicHide);
+		});
+
+		it('should set callbacks to _logic', function () {
+			var options = {
+				onClick: function onClick(action) {
+					console.log("This is a test callback");
+				}
+			};
+
+			// Call init
+			target.init(options);
+
+			// Assert onClick callback should be in _logic
+			assert.equal(target._logic.callbacks.onClick, options.onClick);
 		});
 	});
 
 	describe('Actions testing', function () {});
 
-	describe('Logic testing', function () {});
+	describe('Logic testing', function () {
+		it('should pass "rename" to callback when the rename item is clicked', function () {
+			var spyCallbacks = sandbox.spy(target._logic.callbacks, 'onClick');
+			var spyHide = sandbox.spy(target._logic, 'hide');
+
+			// Assume menu item is clicked
+			var result = target._logic.onItemClick({ textContent: mockApp.labels.rename });
+
+			// Should call onClick callback and pass "rename" to a parameter 
+			sinon.assert.calledOnce(spyCallbacks);
+			sinon.assert.calledWith(spyCallbacks, 'rename');
+
+			// Should hide this popup
+			sinon.assert.calledOnce(spyHide);
+
+			// Should return false to cancel a event of webix
+			assert.equal(result, false);
+		});
+
+		it('should pass "delete" to callback when the delete item is clicked', function () {
+			var spyCallbacks = sandbox.spy(target._logic.callbacks, 'onClick');
+			var spyHide = sandbox.spy(target._logic, 'hide');
+
+			// Assume menu item is clicked
+			var result = target._logic.onItemClick({ textContent: mockApp.labels['delete'] });
+
+			// Should call onClick callback and pass "delete" to a parameter 
+			sinon.assert.calledOnce(spyCallbacks);
+			sinon.assert.calledWith(spyCallbacks, 'delete');
+
+			// Should hide this popup
+			sinon.assert.calledOnce(spyHide);
+
+			// Should return false to cancel a event of webix
+			assert.equal(result, false);
+		});
+		// onItemClick
+		// show
+		// hide
+	});
 });
 
 /***/ }),
@@ -719,7 +799,7 @@ webpackJsonp([0], [
 			/*
    {
    id:'uuid',					// uuid value for this obj
-   type:'fieldType',			// unique key for this Field
+   key:'fieldKey',				// unique key for this Field
    icon:'font',				// fa-[icon] reference for an icon for this Field Type
    label:'',					// pulled from translation
    columnName:'column_name',	// a valid mysql table.column name 
@@ -746,19 +826,16 @@ webpackJsonp([0], [
 		///
 
 		_createClass(ABField, [{
-			key: 'fieldName',
+			key: 'fieldKey',
 
 			// unique key to reference this specific DataField
-			value: function fieldName() {
-				return this.defaults.name;
-			}
+			// fieldName() {
+			// 	return this.defaults.name;
+			// }
 
-			// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-
-		}, {
-			key: 'fieldType',
-			value: function fieldType() {
-				return this.defaults.type;
+			// unique key to reference this specific DataField
+			value: function fieldKey() {
+				return this.defaults.key;
 			}
 
 			// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
@@ -903,7 +980,7 @@ webpackJsonp([0], [
 
 				return {
 					id: this.id,
-					type: this.type,
+					key: this.key,
 					icon: this.icon,
 					columnName: this.columnName,
 					settings: this.settings,
@@ -915,7 +992,7 @@ webpackJsonp([0], [
 			value: function fromValues(values) {
 
 				this.id = values.id; // NOTE: only exists after .save()
-				this.type = values.type || this.fieldType();
+				this.key = values.key || this.fieldKey();
 				this.icon = values.icon || this.fieldIcon();
 
 				// if this is being instantiated on a read from the Property UI,
@@ -1357,8 +1434,6 @@ webpackJsonp([0], [
       */
 					populate: function populate(field) {
 
-						console.error('TODO: .populate()');
-
 						// populate the base ABField values:
 						_ABField2.default.editorPopulate(ids, field);
 
@@ -1398,7 +1473,7 @@ webpackJsonp([0], [
 						var settings = $$(ids.component).getValues();
 						var values = _ABField2.default.editorValues(settings);
 
-						values.type = _this.fieldDefaults.type;
+						values.key = _this.fieldDefaults.key;
 
 						// perform provided .values()
 						if (_this.logic.values) {
@@ -1539,10 +1614,10 @@ webpackJsonp([0], [
                    *
                    */
 
-	Fields[_ABFieldString2.default.defaults().name] = _ABFieldString2.default;
-	Fields[_ABFieldNumber2.default.defaults().name] = _ABFieldNumber2.default;
+	Fields[_ABFieldString2.default.defaults().key] = _ABFieldString2.default;
+	Fields[_ABFieldNumber2.default.defaults().key] = _ABFieldNumber2.default;
 
-	Fields[_ABFieldImage2.default.defaults().name] = _ABFieldImage2.default;
+	Fields[_ABFieldImage2.default.defaults().key] = _ABFieldImage2.default;
 
 	exports.default = {
 
@@ -1566,8 +1641,8 @@ webpackJsonp([0], [
    */
 		newField: function newField(values, object) {
 
-			if (values.type) {
-				return new Fields[values.type](values, object);
+			if (values.key) {
+				return new Fields[values.key](values, object);
 			} else {
 
 				//// TODO: what to do here?
@@ -2282,8 +2357,8 @@ webpackJsonp([0], [
 	}
 
 	var ABFieldImageDefaults = {
-		name: 'image', // unique key to reference this specific DataField
-		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+		key: 'image', // unique key to reference this specific DataField
+		// type : 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'file-image-o', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 		// menuName: what gets displayed in the Editor drop list
@@ -2617,11 +2692,7 @@ webpackJsonp([0], [
 	}
 
 	var ABFieldNumberDefaults = {
-		name: 'number', // unique key to reference this specific DataField
-		type: 'number', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-		// NOTE: the server side implementation will read the instance.settings and return either a:
-		//	'float', or 'integer'
-
+		key: 'number', // unique key to reference this specific DataField
 		icon: 'slack', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 		// menuName: what gets displayed in the Editor drop list
@@ -3077,8 +3148,8 @@ webpackJsonp([0], [
 	}
 
 	var ABFieldStringDefaults = {
-		name: 'string', // unique key to reference this specific DataField
-		type: 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+		key: 'string', // unique key to reference this specific DataField
+		// type : 'string', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 		icon: 'font', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 		// menuName: what gets displayed in the Editor drop list
@@ -3094,202 +3165,7 @@ webpackJsonp([0], [
   * Defines the UI Component for this Data Field.  The ui component is responsible
   * for displaying the properties editor, populating existing data, retrieving
   * property values, etc.
-  *
-  * @param {obj} App  the current Component Application instance for the current UI.
-  * @return {obj} the Component object.
   */
-	// var ABFieldStringComponent = function(App) {
-
-	// 	labels.common = App.labels;
-
-	// 	var idBase = 'ab_datafield_string';
-
-
-	// 	var componentDefaults = {
-	// 		textDefault: '', 
-	// 		supportMultilingual:1
-	// 	};
-
-
-	// 	var ids = {
-
-	// 		component: App.unique(idBase+'_component'),
-
-
-	// 		textDefault: App.unique(idBase+'_textdefault'),
-	// 		supportMultilingual: App.unique(idBase+'_supportMultilingual'),
-
-
-	// 		// the common property fields
-	// 		label: App.unique(idBase+'_label'),
-	// 		columnName: App.unique(idBase+'_columnName'),
-	// 		fieldDescription: App.unique(idBase+'_fieldDescription'),
-	// 		showIcon: App.unique(idBase+'_showIcon'),
-	// 	}
-
-
-	// 	//// NOTE: we merge in the common headers below.
-	// 	var _ui = {
-	// 		view:'form',
-	// 		id: ids.component,
-	// 		autoheight:true,
-	// 		borderless:true,
-	// 		elements: [
-	// 			{
-	// 				view: "text",
-	// 				id: ids.textDefault,
-	// 				name:'textDefault',
-	// 				placeholder: labels.component.defaultText
-	// 			},
-	// 			{
-	// 				view: "checkbox",
-	// 				id: ids.supportMultilingual,
-	// 				name:'supportMultilingual',
-	// 				labelRight: labels.component.supportMultilingual,
-	// 				labelWidth: 0,
-	// 				value: true
-	// 			}
-	// 		],
-
-	// 		rules:{
-	// 			'label':webix.rules.isNotEmpty,
-	// 			'columnName':webix.rules.isNotEmpty
-	// 		}
-	// 	}
-
-
-	// 	var _init = function() {
-
-	// 		// perform any additional setup actions.
-	// 		// for example, don't want to show the description, then .hide() it here:
-	// 		// $$(ids.fieldDescription).hide();
-	// 	}
-
-
-	// 	var _logic = {
-
-	// 		/*
-	// 		 * @function clear
-	// 		 *
-	// 		 * clear the form.
-	// 		 */
-	// 		clear: function () {
-
-	// 			ABField.clearEditor(App, ids);
-
-	// 			for(var f in componentDefaults) { 
-	// 				var component = $$(ids[f]);
-	// 				component.setValue(componentDefaults[f]);
-	// 			}
-
-	// 			$$(ids.component).clearValidation();
-	// 		},
-
-
-	// 		/*
-	// 		 * @function isValid
-	// 		 *
-	// 		 * checks the current values on the componet to see if they are Valid
-	// 		 */
-	// 		isValid: function () {
-
-	// 			return $$(ids.component).validate();
-
-	// 		},
-
-
-	// 		 * @function labelOnChange
-	// 		 *
-	// 		 * The ABField.definitionEditor implements a default operation
-	// 		 * to update the value of the .columnName with the current value of 
-	// 		 * label.
-	// 		 * 
-	// 		 * if you want to override that functionality, implement this fn()
-	// 		 *
-	// 		 * @param {string} newVal	The new value of label
-	// 		 * @param {string} oldVal	The previous value
-
-	// 		// labelOnChange: function (newVal, oldVal) {
-
-	// 		// 	// When the Label value changes, update our Column Name value 
-	// 		// 	// to match.
-
-	// 		// 	oldVal = oldVal || '';
-	// 		// 	if (newVal != oldVal &&
-	// 		// 		oldVal == $$(ids.columnName).getValue()) {
-	// 		// 		$$(ids.columnName).setValue(newVal);
-	// 		// 	}
-	// 		// },
-
-
-	// 		/*
-	// 		 * @function populate
-	// 		 *
-	// 		 * populate the form with the given ABField instance provided.
-	// 		 *
-	// 		 * @param {ABFieldString} field
-	// 		 */
-	// 		populate: function (field) {
-	// console.error('TODO: .populate()');
-	// 		},
-
-
-	// 		/*
-	// 		 * @function show
-	// 		 *
-	// 		 * show this component.
-	// 		 */
-	// 		show: function() {
-	// 			$$(ids.component).clearValidation();
-	// 			$$(ids.component).show();
-	// 		},
-
-
-	// 		/*
-	// 		 * @function values
-	// 		 *
-	// 		 * return the values for this form.
-	// 		 * @return {obj}  
-	// 		 */
-	// 		values: function () {
-
-	// 			var settings = $$(ids.component).getValues();
-	// 			var values = ABField.editorValues(settings);
-
-	// 			values.type = ABFieldStringDefaults.type;
-
-	// 			return values;
-	// 		}
-
-	// 	}
-
-
-	// 	// get the common UI headers entries, and insert them above ours here:
-	// 	// NOTE: put this here so that _logic is defined.
-	// 	var commonUI = ABField.definitionEditor(App, ids, _logic, ABFieldStringDefaults);
-	// 	_ui.elements = commonUI.rows.concat(_ui.elements);
-
-
-	// 	// return the current instance of this component:
-	// 	return {
-	// 		ui:_ui,					// {obj} 	the webix ui definition for this component
-	// 		init:_init,				// {fn} 	init() to setup this component  
-	// 		// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
-
-
-	// 		// DataField exposed actions:
-	// 		clear: _logic.clear,
-	// 		isValid:_logic.isValid,
-	// 		populate: _logic.populate,
-	// 		show: _logic.show,
-	// 		values: _logic.values,
-
-
-	// 		_logic: _logic			// {obj} 	Unit Testing
-	// 	}
-	// }
-
-
 	var ABFieldStringComponent = new _ABFieldComponent2.default({
 
 		fieldDefaults: ABFieldStringDefaults,
@@ -5529,7 +5405,7 @@ webpackJsonp([0], [
 					return _logic.templateListItem(obj, common);
 				},
 				type: {
-					height: 35,
+					height: "auto",
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
 				on: {
@@ -6309,7 +6185,7 @@ webpackJsonp([0], [
 				select: false,
 				on: {
 					'onItemClick': function onItemClick(timestamp, e, trg) {
-						return _logic.onItemClick(timestamp, e, trg);
+						return _logic.onItemClick(trg);
 					}
 				}
 			}
@@ -6340,13 +6216,13 @@ webpackJsonp([0], [
     * @function onItemClick
     * process which item in our popup was selected.
     */
-			onItemClick: function onItemClick(timestamp, e, trg) {
+			onItemClick: function onItemClick(itemNode) {
 
 				// hide our popup before we trigger any other possible UI animation: (like .edit)
 				// NOTE: if the UI is animating another component, and we do .hide()
 				// while it is in progress, the UI will glitch and give the user whiplash.
 
-				switch (trg.textContent.trim()) {
+				switch (itemNode.textContent.trim()) {
 					case labels.common.rename:
 						this.callbacks.onClick('rename');
 						break;
@@ -8448,7 +8324,6 @@ webpackJsonp([0], [
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
 			component: App.unique('custom_editlist_component')
-
 		};
 
 		// Our webix UI definition:

@@ -85,11 +85,20 @@ module.exports = {
     'post /app_builder/migrate/application/:appID/object/:objID' : 
         'app_builder/ABMigrationController.createObject',
 
+    'delete /app_builder/migrate/application/:appID/object/:objID' : 
+        'app_builder/ABMigrationController.dropObject',
+
+    'post /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
+        'app_builder/ABMigrationController.createField',
+
+    'delete /app_builder/migrate/application/:appID/object/:objID/field/:fieldID' : 
+        'app_builder/ABMigrationController.dropField',
+
+
 
 // only for easy development/testing purposes:
-    'get /app_builder/migrate/application/:appID/object/:objID' : 
-        'app_builder/ABMigrationController.createObject',
-
+'get /app_builder/migrate/application/:appID/object/:objID' : 
+    'app_builder/ABMigrationController.createObject',
 
   /*
 

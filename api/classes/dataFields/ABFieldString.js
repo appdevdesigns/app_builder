@@ -117,6 +117,7 @@ class ABFieldString extends ABField {
 	/// DB Migrations
 	///
 
+
 	/**
 	 * @function migrateCreate
 	 * perform the necessary sql actions to ADD this column to the DB table.
@@ -173,6 +174,21 @@ class ABFieldString extends ABField {
 		)
 
 	}
+
+
+	/**
+	 * @function migrateDrop
+	 * perform the necessary sql actions to drop this column from the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	// NOTE: ABField.migrateDrop() is pretty good for most cases.
+	// migrateDrop (knex) {
+	// 	return new Promise(
+	// 		(resolve, reject) => {
+	// 			// do your special drop operations here.
+	// 		}
+	// 	)
+	// }
 
 }
 

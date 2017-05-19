@@ -335,8 +335,67 @@ module.exports =  class ABField {
 	/// DB Migrations
 	///
 
-	migrateCreate () {
-		console.error('!!! Field '+this.fieldKey()+' has not implemented migrateCreate()!!! ');
+
+	/**
+	 * @function migrateCreate
+	 * perform the necessary sql actions to ADD this column to the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateCreate (knex) {
+		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented migrateCreate()!!! ');
+	}
+
+
+	/**
+	 * @function migrateDrop
+	 * perform the necessary sql actions to drop this column from the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateDrop (knex) {
+
+		sails.log.info(''+this.fieldKey()+'.migrateDrop() ');
+		return new Promise(
+			(resolve, reject) => {
+
+				var tableName = this.object.dbTableName();
+
+				// if the table exists:
+				knex.schema.hasTable(tableName)
+				.then((exists) => {
+					if (exists) {
+						
+						// if this column exists
+						knex.schema.hasColumn(tableName, this.columnName)
+						.then((exists) => {
+
+							if (exists) {
+
+								// get the .table editor and drop the column
+								knex.schema.table(tableName, (t)=>{
+									t.dropColumn(this.columnName);
+								})
+								.then(resolve)
+								.catch(reject);
+
+							} else {
+
+								// nothing to do then.
+								resolve();
+							}
+
+						})
+						.catch(reject);
+
+
+					} else {
+						resolve();
+					}
+				});
+
+				
+
+			}
+		)
 	}
 
 

@@ -28,7 +28,8 @@ var defaultValues = {
 	'useWidth':0,
 	'imageWidth':'',
 	'useHeight': 0,
-	'imageHeight': ''
+	'imageHeight': '',
+	'removeExistingData': 0
 }
 
 
@@ -57,6 +58,7 @@ class ABFieldImage extends ABField {
     	// text to Int:
     	this.settings.useWidth = parseInt(this.settings.useWidth);
     	this.settings.useHeight = parseInt(this.settings.useHeight);
+    	this.settings.removeExistingData = parseInt(this.settings.removeExistingData);
   	}
 
 
@@ -140,6 +142,61 @@ class ABFieldImage extends ABField {
 			}
 		)
 
+	}
+
+
+
+
+
+	/**
+	 * @function migrateDrop
+	 * perform the necessary sql actions to drop this column from the DB table.
+	 * @param {knex} knex the Knex connection.
+	 */
+	migrateDrop (knex) {
+		return new Promise(
+			(resolve, reject) => {
+				
+sails.log.error('!!! TODO: pay attention to the .removeExistingData setting !!!');
+super.migrateDrop(knex)
+.then(resolve)
+.catch(reject);
+
+// TODO: 
+// implement the ability to remove the existing images referenced by this now-to-be-removed
+// column from our shared OPImageUploader repository.
+// this is a rough Pseudo Code of what should happen:
+
+				// if (this.settings.removeExistingData) {
+
+				// 	var model = this.object.model();
+				// 	model.findAll()
+				// 	.then(function(entries){
+
+				// 		var allActions = [];
+				// 		entries.forEach((e)=>{
+				// 			allActions.push(OPImageUploader.remove( e[this.columnName] ) );
+				// 		})
+
+				// 		Promise.all(allActions)
+				// 		.then(function(){
+				// 			super.migrateDrop()
+				// 			.then(resolve)
+				// 			.catch(reject);
+
+				// 		})
+				// 	})
+
+				// } else {
+
+				// 		super.migrateDrop()
+				// 		.then(resolve)
+				// 		.catch(reject);
+
+				// }
+
+			}
+		)
 	}
 
 
