@@ -95,6 +95,16 @@ module.exports = {
         'app_builder/ABMigrationController.dropField',
 
 
+    /* Model Services */
+    // app_builder/model/application/:appID/object/:objID
+    // get  url   // find   the object data
+    // post url   // create the object data
+    // put  url   // update the object data
+    // delete url // remove the object dat
+    'get /app_builder/model/application/:appID/object/:objID' : 
+        'app_builder/ABModelController.find',
+
+        
 
 // only for easy development/testing purposes:
 'get /app_builder/migrate/application/:appID/object/:objID' : 

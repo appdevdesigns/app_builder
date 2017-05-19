@@ -211,6 +211,39 @@ class ABFieldNumber extends ABField {
 	// }
 
 
+
+	///
+	/// DB Model Services
+	///
+
+	/**
+	 * @method jsonSchemaProperties
+	 * register your current field's properties here:
+	 */
+	jsonSchemaProperties(obj) {
+		// take a look here:  http://json-schema.org/example1.html
+
+		// if our field is not already defined:
+		if (!obj[this.columnName]) {
+
+
+			// if this is an integer:
+			if (this.settings.typeDecimals == 'none') {
+
+				obj[this.columnName] = { type:'integer' }
+				
+			} else {
+
+				obj[this.columnName] = { type:'number' }
+
+			}
+
+//// TODO: insert validation values here.
+			
+		}
+		
+	}
+
 }
 
 

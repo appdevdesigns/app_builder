@@ -185,12 +185,6 @@ export default class ABField {
   	}
 
 
-
-// unique key to reference this specific DataField
-// fieldName() {
-// 	return this.defaults.name;
-// }
-
   	// unique key to reference this specific DataField
   	fieldKey() {
   		return this.defaults.key;

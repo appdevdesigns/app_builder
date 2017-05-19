@@ -401,6 +401,21 @@ module.exports =  class ABField {
 
 
 
+
+	///
+	/// DB Model Services
+	///
+
+	/**
+	 * @method jsonSchemaProperties
+	 * register your current field's properties here:
+	 */
+	jsonSchemaProperties(obj) {
+		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented jsonSchemaProperties()!!! ');
+	}
+
+
+
 	///
 	/// Working with Actual Object Values:
 	///
