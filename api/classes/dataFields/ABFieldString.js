@@ -190,6 +190,56 @@ class ABFieldString extends ABField {
 	// 	)
 	// }
 
+
+
+	///
+	/// DB Model Services
+	///
+
+	/**
+	 * @method jsonSchemaProperties
+	 * register your current field's properties here:
+	 */
+	jsonSchemaProperties(obj) {
+		// take a look here:  http://json-schema.org/example1.html
+
+		if (this.settings.supportMultilingual) {
+
+			// make sure our translations  column is setup:
+
+			// if not already setup:
+			if (!obj['translations']) {
+
+				obj.translations = {
+					type:'array',
+					items:{
+						type:'object',
+						properties:{
+							language_code:{
+								type:'string'
+							}
+						}
+					}
+				}
+
+			}
+
+			// make sure our column is described in the 
+			if (!obj.translations.items.properties[this.columnName]) {
+				obj.translations.items.properties[this.columnName] = { type:'string' }
+			}
+
+		} else {
+
+			// we're not multilingual, so just tack this one on:
+			if (!obj[this.columnName]) {
+				obj[this.columnName] = { type:'string' }
+			}
+
+		}
+		
+	}
+
 }
 
 
