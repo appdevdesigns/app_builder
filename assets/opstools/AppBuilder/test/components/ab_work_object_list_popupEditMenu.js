@@ -7,6 +7,7 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 	var target;
 
 	before(() => {
+
 		OP.Component['ab'](mockApp);
 
 		target = OP.Component[componentName](mockApp);
@@ -29,7 +30,7 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 
 	afterEach(function () {
 		sandbox.restore();
-	})
+	});
 
 
 
@@ -164,11 +165,11 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 		});
 
 		it('should exist .show', () => {
-			aseert.isNotNull(target._logic.show);
+			assert.isNotNull(target._logic.show);
 		});
 
 		it('should exist .hide', () => {
-			aseert.isNotNull(target._logic.hide);
+			assert.isNotNull(target._logic.hide);
 		});
 
 	});
