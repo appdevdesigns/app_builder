@@ -8,6 +8,7 @@ var path = require('path');
 
 var ABFieldString = require( path.join(__dirname, "dataFields", "ABFieldString" ));
 var ABFieldNumber = require( path.join(__dirname, "dataFields", "ABFieldNumber" )); 
+var ABFieldDate = require( path.join(__dirname, "dataFields", "ABFieldDate" ));
 
 
 var ABFieldImage  = require( path.join(__dirname, "dataFields", "ABFieldImage"  )); 
@@ -19,6 +20,7 @@ var ABFieldImage  = require( path.join(__dirname, "dataFields", "ABFieldImage"  
 var Fields = {};
 Fields[ABFieldString.defaults().key] = ABFieldString;
 Fields[ABFieldNumber.defaults().key] = ABFieldNumber;
+Fields[ABFieldDate.defaults().key] = ABFieldDate;
 
 
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
