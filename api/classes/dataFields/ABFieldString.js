@@ -6,6 +6,7 @@
  */
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
+var _ = require('lodash');
 
 
 
@@ -238,6 +239,38 @@ class ABFieldString extends ABField {
 
 		}
 		
+	}
+
+
+
+	/**
+	 * @method postGet
+	 * Perform any final conditioning of data returned from our DB table before
+	 * it is returned to the client.
+	 * @param {obj} data  a json object representing the current table row
+	 */
+	postGet( data ) {
+		return new Promise(
+			(resolve, reject) => {
+
+				// if we are a multilingual field, make sure the .translations data is
+				// an object and not a string.
+				//// NOTE: a properly formatted json data in the .translations 
+				//// field should already be parsed as it is returned from 
+				//// objection.js query().
+				if (this.settings.supportMultilingual) {
+					
+					sails.log.verbose('ABFieldString.postGet(): ---> _.isString('+ data.translations +'):');	
+					if (_.isString(data.translations)) {
+
+						sails.log.verbose('ABFieldString.postGet(): ---> JSON.parse()');
+						data.translations = JSON.parse(data.translations);
+					}
+				}
+
+				resolve();
+			}
+		)
 	}
 
 }
