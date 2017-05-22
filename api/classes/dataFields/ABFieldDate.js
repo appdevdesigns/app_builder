@@ -1,36 +1,33 @@
 /*
- * ABFieldString
+ * ABFieldDate
  *
- * An ABFieldString defines a string field type.
+ * An ABFieldDate defines a Date field type.
  *
  */
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
-
-
 
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
 }
 
 
-var ABFieldStringDefaults = {
-	key : 'string', // unique key to reference this specific DataField
-	icon : 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
-	
+var ABFieldDateDefaults = {
+	key: 'date', // unique key to reference this specific DataField
+	icon: 'calendar',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+
 	// menuName: what gets displayed in the Editor drop list
-	menuName : L('ab.dataField.string.menuName', '*Single line text'),
-	
+	menuName: L('ab.dataField.date.menuName', '*Date'),
+
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short string value')
+	description: ''
 }
 
 
-
-class ABFieldString extends ABField {
+class ABFieldDate extends ABField {
 
     constructor(values, object) {
-    	super(values, object, ABFieldStringDefaults);
+		super(values, object, ABFieldDateDefaults);
 
     	/*
     	{
@@ -41,20 +38,20 @@ class ABFieldString extends ABField {
     	}
     	*/
 
-    	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = values.settings.textDefault || '';
-    	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "1";
+		// we're responsible for setting up our specific settings:
+		this.settings.textDefault = values.settings.textDefault || '';
+		this.settings.supportMultilingual = values.settings.supportMultilingual + "" || "1";
 
-    	// text to Int:
-    	this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+		// text to Int:
+		this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
 
-  	}
+	}
 
 
-  	// return the default values for this DataField
-  	static defaults() {
-  		return ABFieldStringDefaults;
-  	}
+	// return the default values for this DataField
+	static defaults() {
+		return ABFieldDateDefaults;
+	}
 
 
 
@@ -66,9 +63,9 @@ class ABFieldString extends ABField {
 	 * @param {App} App the UI App instance passed around the Components.
 	 * @return {Component}
 	 */
-  	// static propertiesComponent(App) {
-  	// 	return ABFieldStringComponent.component(App);
-  	// }
+	// static propertiesComponent(App) {
+	// 	return ABFieldDateComponent.component(App);
+	// }
 
 
 
@@ -123,56 +120,46 @@ class ABFieldString extends ABField {
 	 * perform the necessary sql actions to ADD this column to the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	migrateCreate (knex) {
+	migrateCreate(knex) {
 		return new Promise(
 			(resolve, reject) => {
 
 				var tableName = this.object.dbTableName();
 
-				// if this is a multilingual field, then manage a json translation store:
-				if (this.settings.supportMultilingual) {
-
-					// make sure there is a 'translations' json field included:
-					knex.schema.hasColumn(tableName, 'translations')
+				// if this column doesn't already exist (you never know)
+				knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 
 						// create one if it doesn't exist:
 						if (!exists) {
 
-							knex.schema.table(tableName, (t)=>{
-									t.json('translations');
-								})
-								.then(resolve, reject);
+							return knex.schema.table(tableName, (t) => {
 
-						} else {
+								// create a column that has date/time type
+								if (this.settings.includeTime == true) {
 
-							// there is already a translations holder, so all good.
-							resolve();
-						}
-					})
-					
-				} else {
+									t.dateTime(this.columnName);
 
-					knex.schema.hasColumn(tableName, this.columnName)
-					.then((exists) => {
+								// create a column that has date type
+								} else {
 
-						if (!exists) {
-							knex.schema.table(tableName, (t) => {
-								t.string(this.columnName).defaultTo(this.settings.textDefault);
+									t.date(this.columnName);
+								}
 							})
-							.then(resolve, reject);
+								.then(() => {
+									resolve();
+								})
+								.catch(reject);
 
 						} else {
+
+							// there is already a column for this, so move along.
 							resolve();
 						}
-
-					})
-					
-				}
+					});
 
 			}
-		)
-
+		);
 	}
 
 
@@ -203,45 +190,29 @@ class ABFieldString extends ABField {
 	jsonSchemaProperties(obj) {
 		// take a look here:  http://json-schema.org/example1.html
 
-		if (this.settings.supportMultilingual) {
+		// if our field is not already defined:
+		if (!obj[this.columnName]) {
 
-			// make sure our translations  column is setup:
 
-			// if not already setup:
-			if (!obj['translations']) {
+			// if this is an integer:
+			if (this.settings.includeTime == true) {
 
-				obj.translations = {
-					type:'array',
-					items:{
-						type:'object',
-						properties:{
-							language_code:{
-								type:'string'
-							}
-						}
-					}
-				}
+				obj[this.columnName] = { type: 'datetime' }
+
+			} else {
+
+				obj[this.columnName] = { type: 'date' }
 
 			}
 
-			// make sure our column is described in the 
-			if (!obj.translations.items.properties[this.columnName]) {
-				obj.translations.items.properties[this.columnName] = { type:'string' }
-			}
-
-		} else {
-
-			// we're not multilingual, so just tack this one on:
-			if (!obj[this.columnName]) {
-				obj[this.columnName] = { type:'string' }
-			}
+			//// TODO: insert validation values here.
 
 		}
-		
+
 	}
 
 }
 
 
 
-module.exports = ABFieldString;
+module.exports = ABFieldDate;

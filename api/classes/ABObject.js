@@ -2,6 +2,7 @@
 var path = require('path');
 
 var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
+var Model = require('objection').Model;
 
 
 function toDC( data ) {
@@ -405,6 +406,55 @@ console.error('TODO: ABObject.destroy()');
 
 			}
 		)
+	}
+
+
+	///
+	/// DB Model Services
+	///
+
+	/**
+	 * @method model
+	 * return an objection.js model for working with the data in this Object.
+	 * @return {Objection.Model} 
+	 */
+	model() {
+
+		if (!this.__myModel) {
+
+			var tableName = this.dbTableName();
+			var knex = ABMigration.connection();
+
+			// Compile our jsonSchema from our DataFields
+			var jsonSchema = {
+				type: 'object',
+				required: [],
+				properties: {
+
+				}
+			}
+			var allFields = this.fields();
+			allFields.forEach((f)=>{
+				f.jsonSchemaProperties(jsonSchema.properties);
+			})
+
+
+			class MyModel extends Model {
+
+				// Table name is the only required property.
+				static get tableName() {
+					return tableName;
+				}
+
+				static get jsonSchema () {
+    				return jsonSchema
+    			}
+			}
+
+			this.__myModel = MyModel.bindKnex(knex);
+		}
+
+		return this.__myModel;
 	}
 
 

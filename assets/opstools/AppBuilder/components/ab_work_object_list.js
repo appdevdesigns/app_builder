@@ -44,8 +44,6 @@ OP.Component.extend(idBase, function(App) {
 
 	}
 
-	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditMenu'](App);
-
 
 	// Our webix UI definition:
 	var _ui = {
@@ -67,7 +65,7 @@ OP.Component.extend(idBase, function(App) {
 					return _logic.templateListItem(obj, common);
 				},
 				type: {
-					height: "auto",
+					height: 35,
 					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 				},
 				on: {
@@ -106,11 +104,19 @@ OP.Component.extend(idBase, function(App) {
 	// Our init() function for setting up our UI
 	var _init = function() {
 
-		webix.extend($$(ids.list), webix.ProgressBar);
-		$$(ids.component).adjust();
-		$$(ids.list).adjust();
+		if ($$(ids.component))
+			$$(ids.component).adjust();
 
-		ObjectEditPopup.init({
+		if ($$(ids.list)) {
+			webix.extend($$(ids.list), webix.ProgressBar);
+			$$(ids.list).adjust();
+		}
+
+		PopupNewObjectComponent.init({
+			onDone: _logic.callbackNewObject
+		});
+
+		PopupEditObjectComponent.init({
 			onClick: _logic.callbackObjectEditorMenu
 		})
 	}
@@ -152,7 +158,6 @@ OP.Component.extend(idBase, function(App) {
 
 
 			//
-			_logic.syncNumberRefresh();
 			_logic.listReady();
 
 
@@ -164,7 +169,7 @@ OP.Component.extend(idBase, function(App) {
 
 		clickEditMenu: function(e, id, trg) {
 			// Show menu
-			ObjectEditPopup.show(trg);
+			PopupEditObjectComponent.show(trg);
 
 			return false;
 		},
@@ -279,33 +284,6 @@ console.error('!! todo: onBeforeEditStop() editing');
 		},
 
 
-		syncNumberRefresh:function() {
-
-//// NOTE: I think we are removing Sync Numbers with the refactor.
-//// probably wont need this.
-console.error('TODO: syncNumRefresh()');
-			// var self = this,
-			// 	objects = [];
-
-			// objects = $$(self.webixUiId.objectList).data.find(function (d) {
-			// 	return objectName ? d.name == objectName : true;
-			// }, false, true);
-
-			// objects.forEach(function (obj) {
-			// 	var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
-			// 		unsyncNumber = (objectModel && objectModel.Cached ? objectModel.Cached.count() : 0),
-			// 		htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
-
-			// 	if (unsyncNumber > 0) {
-			// 		htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
-			// 		htmlItem.find('.ab-object-unsync').show();
-			// 	}
-			// 	else {
-			// 		htmlItem.find('.ab-object-unsync').hide();
-			// 	}
-			// });
-		},
-
 
 		/**
 		 * @function templateListItem
@@ -335,7 +313,7 @@ console.error('TODO: syncNumRefresh()');
 				return;
 			}
 
-			objectList.add(object,0);
+			objectList.add(object, objectList.count());
 			$$(ids.list).select(object.id);
 		},
 
@@ -348,7 +326,7 @@ console.error('TODO: syncNumRefresh()');
 		clickNewObject:function() {
 
 			// show the new popup
-			PopupNewObject.show();
+			PopupNewObjectComponent.show();
 		},
 
 		rename: function () {
@@ -412,10 +390,7 @@ console.error('TODO: syncNumRefresh()');
 	// Note: put these here so _logic is defined:
 	// There is a Popup for adding a new Object:
 	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
-	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
-	PopupNewObjectComponent.init({
-		onDone:_logic.callbackNewObject
-	});
+	var PopupEditObjectComponent = OP.Component['ab_work_object_list_popupEditMenu'](App);
 
 
 

@@ -13,6 +13,12 @@ async.series([
 			.then(function () { next(); });
 	},
 
+	// Load dependencies of BuildApp
+	function (next) {
+		System.import('opstools/BuildApp')
+			.then(function () { next(); });
+	},
+
 
 	// Setup Mocha
 	// and set expect & assert to global variable
