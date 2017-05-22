@@ -36,14 +36,14 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 
 
 	it('should exist component', () => {
-		assert.isNotNull(target);
+		assert.isDefined(target);
 	});
 
 	// UI test cases
 	describe('UI testing', () => {
 
 		it('should have ui setting', () => {
-			assert.isNotNull(target.ui, "should have a ui property");
+			assert.isDefined(target.ui, "should have a ui property");
 		});
 
 		it("should be webix's popup", () => {
@@ -64,7 +64,7 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 		it('should have item click event', () => {
 			let itemClickFn = target.ui.body.on.onItemClick;
 
-			assert.isNotNull(itemClickFn, 'should have item click event');
+			assert.isDefined(itemClickFn, 'should have item click event');
 		});
 
 		it('should call _logic.onItemClick when a menu item is clicked', () => {
@@ -87,7 +87,7 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 
 	describe('Init testing', () => {
 		it('should have init function', () => {
-			assert.isNotNull(target.init, "should have a init property");
+			assert.isDefined(target.init, "should have a init property");
 		});
 
 		it('should create webix ui', () => {
@@ -165,11 +165,11 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 		});
 
 		it('should exist .show', () => {
-			assert.isNotNull(target._logic.show);
+			assert.isDefined(target._logic.show);
 		});
 
 		it('should exist .hide', () => {
-			assert.isNotNull(target._logic.hide);
+			assert.isDefined(target._logic.hide);
 		});
 
 	});

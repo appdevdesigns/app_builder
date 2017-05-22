@@ -1,3 +1,5 @@
+import ABApplication from "../../classes/ABApplication"
+
 describe('ab_work_object_list_newObject component', () => {
 
 	var sandbox;
@@ -23,14 +25,14 @@ describe('ab_work_object_list_newObject component', () => {
 	});
 
 	it('should exist component', () => {
-		assert.isNotNull(target);
+		assert.isDefined(target);
 	});
 
 	// UI test cases
 	describe('UI testing', () => {
 
 		it('should have ui setting', () => {
-			assert.isNotNull(target.ui, "should have a ui property");
+			assert.isDefined(target.ui, "should have a ui property");
 		});
 
 		it("should be webix's window", () => {
@@ -43,7 +45,7 @@ describe('ab_work_object_list_newObject component', () => {
 	// Init test cases
 	describe('Init testing', () => {
 		it("should exist init property", () => {
-			assert.isNotNull(target.init, "should have a init property");
+			assert.isDefined(target.init, "should have a init property");
 		});
 
 		it("should create webix ui", () => {
@@ -69,23 +71,56 @@ describe('ab_work_object_list_newObject component', () => {
 
 	// Logic test cases
 	describe('Logic testing', () => {
-		it('should exist .applicationLoad', () => {
-			assert.isNotNull(target.applicationLoad);
+		it('.applicationLoad: should exist', () => {
+			assert.isDefined(target.applicationLoad);
+			assert.equal(target.applicationLoad, target._logic.applicationLoad);
 		});
 
-		it('should exist .hide', () => {
-			assert.isNotNull(target.hide);
+		it('.show: should exist', () => {
+			assert.isDefined(target.show);
+			assert.equal(target.show, target._logic.show);
 		});
 
-		it('should exist .show', () => {
-			assert.isNotNull(target.show);
+		it('.hide: should exist', () => {
+			assert.isDefined(target._logic.hide);
 		});
 
-		// TODO : Mock up ABApplication to test .save()
-		it.skip('should create new object to application', () => {
+		it('.save: should show a alert box when currentApplication is null', () => {
+			// Use stub instead of spy to avoid show alert popup
+			let stubAlert = sinon.stub(OP.Dialog, 'Alert', function () { });
+
 			let newObjectValues = {};
+			let callback = function (err) {
+				// Assert it should return error in callback
+				assert.isDefined(err);
+			};
 
-			target.save(newObjectValues);
+			// Call save object
+			let result = target._logic.save(newObjectValues, callback);
+
+			assert.isFalse(result);
+			sinon.assert.calledOnce(stubAlert);
+		});
+
+		it('.save: should create a new object to current application', () => {
+			var sampleApp = new ABApplication({
+				id: 999,
+				name: "Test Application",
+				json: {}
+			});
+
+			// Load a example application to component
+			target.applicationLoad(sampleApp);
+
+			let spyObjectNew = sinon.spy(sampleApp, "objectNew");
+			let sampleObject = {};
+			let callback = function (err) {
+				// Assert it should not return any error in callback
+				assert.isNotDefined(err);
+			};
+			let result = target._logic.save(sampleObject, callback)
+
+			sinon.assert.calledOnce(spyObjectNew);
 		});
 	});
 
