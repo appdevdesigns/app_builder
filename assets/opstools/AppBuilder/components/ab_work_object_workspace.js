@@ -318,7 +318,7 @@ OP.Component.extend(idBase, function(App) {
 		 *
 		 * call back for when the hidden fields have changed.
 		 */
-		callbackFrozenColumns: function() {
+		callbackFrozenColumns: function( skipRefresh ) {
 
 			var frozenID = CurrentObject.workspaceFrozenColumnID;
 
@@ -328,7 +328,9 @@ OP.Component.extend(idBase, function(App) {
 				$$(ids.buttonFrozen).define('badge', badgeNumber);
 				$$(ids.buttonFrozen).refresh();
 
-				DataTable.refresh();
+				if (!skipRefresh) {
+					DataTable.refresh();
+				}
 			}
 		},
 
@@ -530,9 +532,8 @@ console.error('TODO: toolbarSort()');
 			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			DataTable.objectLoad(object);
+			_logic.callbackFrozenColumns(true);
 
-			// update frozen columns
-			_logic.callbackFrozenColumns();
 		}
 
 
