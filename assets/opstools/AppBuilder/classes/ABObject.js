@@ -51,13 +51,15 @@ export default class ABObject {
     	this.translations = attributes.translations;
 
 		if (typeof(attributes.objectWorkspace) != "undefined") {
-			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
+			if (typeof(attributes.objectWorkspace.sortFields) == "undefined") attributes.objectWorkspace.sortFields = [];
 			if (typeof(attributes.objectWorkspace.frozenColumnID) == "undefined") attributes.objectWorkspace.frozenColumnID = "";
+			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
 		}
 
     	this.objectWorkspace = attributes.objectWorkspace || {
-    		hiddenFields:[], 	// array of [ids] to add hidden:true to
+			sortFields:[], // array of columns with their sort configurations
 			frozenColumnID:"", // id of column you want to stop freezing
+    		hiddenFields:[], // array of [ids] to add hidden:true to
     	};
 
     	// multilingual fields: label, description
@@ -364,12 +366,11 @@ export default class ABObject {
 	}
 
 
-
 	multilingualFields() {
 		var fields = [];
 
 		var found = this.fields(function(f){ return f.isMultilingual(); });
-		found.forEach((f)=>{ 
+		found.forEach((f)=>{
 			fields.push(f.columnName);
 		})
 
@@ -377,19 +378,15 @@ export default class ABObject {
 	}
 
 
-
-
 	///
 	///	Object Workspace Settings
 	///
-
-
-	get workspaceHiddenFields() {
-		return this.objectWorkspace.hiddenFields;
+	get workspaceSortFields() {
+		return this.objectWorkspace.sortFields;
 	}
 
-	set workspaceHiddenFields( fields ) {
-		this.objectWorkspace.hiddenFields = fields;
+	set workspaceSortFields( fields ) {
+		this.objectWorkspace.sortFields = fields;
 	}
 
 	get workspaceFrozenColumnID() {
@@ -399,6 +396,15 @@ export default class ABObject {
 	set workspaceFrozenColumnID( id ) {
 		this.objectWorkspace.frozenColumnID = id;
 	}
+
+	get workspaceHiddenFields() {
+		return this.objectWorkspace.hiddenFields;
+	}
+
+	set workspaceHiddenFields( fields ) {
+		this.objectWorkspace.hiddenFields = fields;
+	}
+
 
 
 
