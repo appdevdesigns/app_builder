@@ -30,6 +30,7 @@
     "knex": "^0.13.0",
     "lodash": "^4.13.1",
     "mysql": "^2.13.0",
+    "objection": "^0.7.12",
     "rimraf": "^2.6.1"
   },
   "devDependencies": {
