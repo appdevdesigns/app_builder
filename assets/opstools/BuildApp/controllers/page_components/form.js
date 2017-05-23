@@ -326,7 +326,8 @@ steal(
 						}
 					}
 
-					childView.define('height', 35); // Default height
+					// Removed as this was overiding the webix container height.
+					// childView.define('height', 35); // Default height
 					childView.resize();
 				});
 			}
@@ -533,6 +534,7 @@ steal(
 									.replace(/#width#/g, element.labelWidth - 3)
 									.replace(/#label#/g, element.label);
 
+								// element.height = 250;
 								element.cols = [
 									{
 										view: 'template',
@@ -542,10 +544,14 @@ steal(
 										width: element.labelWidth + 5
 									},
 									{
+										id: col.setting.editorId,
 										view: 'ckeditor',
-										minHeight: 150
+										minHeight: 200,
+										value: '',
 									}
 								];
+
+								console.log('element: ---> ', element)
 
 							}
 							else if (col.setting.template) {
@@ -1217,6 +1223,7 @@ steal(
 				],
 				on: {
 					onAfterEditStop: function (state, editor, ignoreUpdate) {
+						console.log('onAfterEditStop ---- ');
 						if (ignoreUpdate || state.old == state.value) return false;
 
 						var viewId = componentIds.editForm,

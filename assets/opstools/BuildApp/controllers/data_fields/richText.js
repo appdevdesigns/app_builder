@@ -4,6 +4,7 @@ steal(
 	function () {
 	var componentIds = {
 		editView: 'ab-new-richText',
+		editorId: 'ckeditor-richtext',
 		supportMultilingual: 'ab-new-richText-support-multilingual',
 	};
 
@@ -44,11 +45,10 @@ steal(
 			fieldName: richTextDataField.name,
 			type: richTextDataField.type,
 			setting: {
+				editorId: componentIds.editorId,
 				icon: richTextDataField.icon,
 				editor: 'richtext', // http://docs.webix.com/desktop__editing.html
 				filter_type: 'text', // DataTableFilterPopup - filter type
-				template: '<div id="ab-rich-text-container"></div>',
-				id: 'ab-rich-text-container',
 				supportMultilingual: $$(componentIds.supportMultilingual).getValue()
 			}
 		};
@@ -58,6 +58,10 @@ steal(
 	richTextDataField.resetState = function () {
 		$$(componentIds.supportMultilingual).setValue(1);
 	}
+
+	// richTextDataField.getRowHeight = function (fieldData, data) {
+	// 	return 150;
+	// };
 
 	return richTextDataField;
 });
