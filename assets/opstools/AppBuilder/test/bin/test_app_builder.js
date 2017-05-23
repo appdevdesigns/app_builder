@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 12);
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -370,7 +370,7 @@ var ABField = function () {
 		value: function columnHeader(isObjectWorkspace) {
 
 			var config = {
-				id: this.id,
+				id: this.columnName, // this.id,
 				header: this.label
 			};
 
@@ -381,6 +381,18 @@ var ABField = function () {
 			}
 
 			return config;
+		}
+
+		/*
+   * @function isMultilingual
+   * does this field represent multilingual data?
+   * @return {bool}
+   */
+
+	}, {
+		key: 'isMultilingual',
+		value: function isMultilingual() {
+			return false;
 		}
 	}], [{
 		key: 'clearEditor',
@@ -1031,7 +1043,7 @@ describe('ab_work_object_list_newObject component', function () {
 			var sampleObject = {};
 			var callback = function callback(err) {
 				// Assert it should not return any error in callback
-				assert.isNotDefined(err);
+				assert.isNull(err);
 			};
 			var result = target._logic.save(sampleObject, callback);
 
@@ -1228,9 +1240,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // import OP from "OP"
 
 
-__webpack_require__(11);
+__webpack_require__(12);
 
-var _ABObject = __webpack_require__(6);
+var _ABObject = __webpack_require__(7);
 
 var _ABObject2 = _interopRequireDefault(_ABObject);
 
@@ -1718,19 +1730,19 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _ABFieldString = __webpack_require__(10);
+var _ABFieldString = __webpack_require__(11);
 
 var _ABFieldString2 = _interopRequireDefault(_ABFieldString);
 
-var _ABFieldNumber = __webpack_require__(9);
+var _ABFieldNumber = __webpack_require__(10);
 
 var _ABFieldNumber2 = _interopRequireDefault(_ABFieldNumber);
 
-var _ABFieldDate = __webpack_require__(7);
+var _ABFieldDate = __webpack_require__(8);
 
 var _ABFieldDate2 = _interopRequireDefault(_ABFieldDate);
 
-var _ABFieldImage = __webpack_require__(8);
+var _ABFieldImage = __webpack_require__(9);
 
 var _ABFieldImage2 = _interopRequireDefault(_ABFieldImage);
 
@@ -1798,12 +1810,237 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+//
+// ABModel
+//
+// Represents the Data interface for an ABObject data.
+//
+// 2 ways to use an ABModel to load a DataTable:
+// 	Method 1:  
+// 	gather all the data externally and send to the DataTable
+//		Model.findAll()
+//		.then((data)=>{
+//			DataTable.parse(data);
+//		})
+//
+// 	Method 2: 
+// 	Set the Model object with a condition / skip / limit, then 
+// 	use it to load the DataTable:
+//		Model.where({})
+//		.skip(XX)
+//		.limit(XX)
+//		.loadInto(DataTable);
+
+
+function toDC(data) {
+	return new webix.DataCollection({
+		data: data
+
+	});
+}
+
+var ABModel = function () {
+	function ABModel(object) {
+		_classCallCheck(this, ABModel);
+
+		// link me to my parent ABApplication
+		this.object = object;
+
+		this._where = null;
+		this._skip = null;
+		this._limit = null;
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+
+	///
+	/// Instance Methods
+	///
+
+
+	_createClass(ABModel, [{
+		key: 'modelURL',
+		value: function modelURL() {
+			return '/app_builder/model/application/#appID#/object/#objID#'.replace('#appID#', this.object.application.id).replace('#objID#', this.object.id);
+		}
+
+		/**
+   * @method findAll
+   * performs a data find with the provided condition.
+   */
+
+	}, {
+		key: 'findAll',
+		value: function findAll(cond) {
+			var _this = this;
+
+			cond = cond || {};
+
+			// prepare our condition:
+			var newCond = {};
+
+			// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
+			// just use this one.
+			if (cond.where) {
+				newCond = cond;
+			} else {
+
+				// else, assume the provided condition is the .where clause.
+				newCond.where = cond;
+			}
+
+			return new Promise(function (resolve, reject) {
+
+				OP.Comm.Service.get({
+					url: _this.modelURL(),
+					params: newCond
+				}).then(function (data) {
+
+					// if this object has some multilingual fields, translate the data:
+					var mlFields = _this.object.multilingualFields();
+					if (mlFields.length) {
+
+						data.data.forEach(function (d) {
+							OP.Multilingual.translate(d, d, mlFields);
+						});
+					}
+
+					resolve(data);
+				}).catch(reject);
+			});
+		}
+
+		/**
+   * @method loadInto
+   * loads the current values into the provided Webix DataTable
+   * @param {DataTable} DT  A Webix component that can dynamically load data.
+   */
+
+	}, {
+		key: 'loadInto',
+		value: function loadInto(DT) {
+			var _this2 = this;
+
+			// if a limit was applied, then this component should be loading dynamically
+			if (this._limit) {
+
+				DT.define('datafetch', this._limit);
+				DT.define('datathrottle', 500); // 5 sec
+
+
+				// catch the event where data is requested:
+				// here we will do our own findAll() so we can persist
+				// the provided .where condition.
+				DT.attachEvent("onDataRequest", function (start, count) {
+
+					var cond = {
+						where: _this2._where,
+						limit: count,
+						skip: start
+					};
+
+					_this2.findAll(cond).then(function (data) {
+						DT.parse(data);
+					});
+
+					return false; // <-- prevent the default "onDataRequest"
+				});
+
+				DT.refresh();
+			}
+
+			// else just load it all at once:
+			var cond = {};
+			if (this._where) cond.where = this._where;
+			if (this._limit != null) cond.limit = this._limit;
+			if (this._skip != null) cond.skip = this._skip;
+
+			this.findAll(cond).then(function (data) {
+				DT.parse(data);
+			}).catch(function (err) {
+				console.error('!!!!!', err);
+			});
+		}
+
+		/**
+   * @method limit
+   * set the limit value for this set of data
+   * @param {integer} limit  the number or elements to return in this call
+   * @return {ABModel} this object that is chainable.
+   */
+
+	}, {
+		key: 'limit',
+		value: function limit(_limit) {
+			this._limit = _limit;
+			return this;
+		}
+
+		/**
+   * @method skip
+   * set the skip value for this set of data
+   * @param {integer} skip  the number or elements to skip
+   * @return {ABModel} this object that is chainable.
+   */
+
+	}, {
+		key: 'skip',
+		value: function skip(_skip) {
+			this._skip = _skip;
+			return this;
+		}
+
+		/**
+   * @method where
+   * set the where condition for the data being loaded.
+   * @param {json} cond  the json condition statement.
+   * @return {ABModel} this object that is chainable.
+   */
+
+	}, {
+		key: 'where',
+		value: function where(cond) {
+			this._where = cond;
+			return this;
+		}
+	}]);
+
+	return ABModel;
+}();
+
+exports.default = ABModel;
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 // import OP from "OP"
 
 
 var _ABFieldManager = __webpack_require__(5);
 
 var _ABFieldManager2 = _interopRequireDefault(_ABFieldManager);
+
+var _ABModel = __webpack_require__(6);
+
+var _ABModel2 = _interopRequireDefault(_ABModel);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2156,6 +2393,20 @@ var ABObject = function () {
 
 			return this.save();
 		}
+	}, {
+		key: "multilingualFields",
+		value: function multilingualFields() {
+			var fields = [];
+
+			var found = this.fields(function (f) {
+				return f.isMultilingual();
+			});
+			found.forEach(function (f) {
+				fields.push(f.columnName);
+			});
+
+			return fields;
+		}
 
 		///
 		///	Object Workspace Settings
@@ -2167,8 +2418,9 @@ var ABObject = function () {
 
 
 		///
-		/// Working with Actual Object Values:
+		/// Working with Client Components:
 		///
+
 
 		// return the column headers for this object
 		// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
@@ -2206,6 +2458,22 @@ var ABObject = function () {
 
 			return headers;
 		}
+
+		///
+		/// Working with data from server
+		///
+
+		/**
+   * @method model
+   * return a Model object that will allow you to interact with the data for
+   * this ABObject.
+   */
+
+	}, {
+		key: "model",
+		value: function model() {
+			return new _ABModel2.default(this);
+		}
 	}, {
 		key: "workspaceHiddenFields",
 		get: function get() {
@@ -2230,7 +2498,7 @@ var ABObject = function () {
 exports.default = ABObject;
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2278,8 +2546,88 @@ var ABFieldDateDefaults = {
 	menuName: L('ab.dataField.date.menuName', '*Date'),
 
 	// description: what gets displayed in the Editor description.
-	description: ''
+	description: L('ab.dataField.date.description', '*Pick one from a calendar.')
 };
+
+var defaultValues = {
+	"includeTime": 0,
+	"defaultCurrentDate": 0,
+	"defaultDate": "",
+	"dayFormat": "DD",
+	"dayOrder": 1,
+	"dayDelimiter": "slash",
+	"monthFormat": "MM",
+	"monthOrder": 2,
+	"monthDelimiter": "slash",
+	"yearFormat": "YYYY",
+	"yearOrder": 3,
+	"yearDelimiter": "slash"
+};
+
+var ids = {
+	default: 'ab-date-default',
+	currentToDefault: 'ab-date-current-to-default',
+
+	dateDisplay: 'ab-date-display',
+
+	dayOrder: 'ab-date-day-order',
+	monthOrder: 'ab-date-month-order',
+	yearOrder: 'ab-date-year-order',
+	dayFormat: 'ab-date-day-format',
+	monthFormat: 'ab-date-month-format',
+	yearFormat: 'ab-date-year-format',
+	dayDelimiter: 'ab-date-day-delimiter',
+	monthDelimiter: 'ab-date-month-delimiter',
+	yearDelimiter: 'ab-date-year-delimiter'
+};
+
+var delimiterList = [{ id: 'comma', value: "Comma", sign: "," }, { id: 'slash', value: "Slash", sign: "/" }, { id: 'space', value: "Space", sign: " " }, { id: 'dash', value: "Dash", sign: "-" }];
+
+/** Private methods **/
+function getDelimiterSign(text) {
+	var delimiterItem = delimiterList.filter(function (item) {
+		return item.id = text;
+	})[0];
+
+	return delimiterItem ? delimiterItem.sign : null;
+}
+
+function getDateFormat(setting) {
+	var momentFormat = "";
+
+	for (var i = 1; i <= 3; i++) {
+		if (setting.dayOrder == i) {
+			momentFormat += setting.dayFormat;
+			momentFormat += i != 3 ? setting.dayDelimiter : '';
+		}
+		if (setting.monthOrder == i) {
+			momentFormat += setting.monthFormat;
+			momentFormat += i != 3 ? setting.monthDelimiter : '';
+		}
+		if (setting.yearOrder == i) {
+			momentFormat += setting.yearFormat;
+			momentFormat += i != 3 ? setting.yearDelimiter : '';
+		}
+	}
+
+	return moment(new Date()).format(momentFormat);
+}
+
+function refreshDateDisplay() {
+	var dateFormat = getDateFormat({
+		dayOrder: $$(ids.dayOrder).getValue(),
+		monthOrder: $$(ids.monthOrder).getValue(),
+		yearOrder: $$(ids.yearOrder).getValue(),
+		dayFormat: $$(ids.dayFormat).getValue(),
+		monthFormat: $$(ids.monthFormat).getValue(),
+		yearFormat: $$(ids.yearFormat).getValue(),
+		dayDelimiter: getDelimiterSign($$(ids.dayDelimiter).getValue()),
+		monthDelimiter: getDelimiterSign($$(ids.monthDelimiter).getValue()),
+		yearDelimiter: getDelimiterSign($$(ids.yearDelimiter).getValue())
+	});
+
+	$$(ids.dateDisplay).setValue(dateFormat);
+}
 
 /**
  * ABFieldDateComponent
@@ -2293,293 +2641,228 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 
 	elements: function elements(App) {
 		return [{
-			view: "label",
-			label: "Pick one from a calendar."
-		}, {
 			view: "checkbox",
 			name: "includeTime",
 			labelRight: "Include time",
 			labelWidth: 0,
 			on: {
 				onChange: function onChange(newVal, oldVal) {
-					// TODO : Re-render default date picker
-					// webix.ui({
-					// 	view: 'datepicker',
-					// 	label: "Default",
-					// 	id: componentIds.default,
-					// 	timepicker: newVal ? true : false,
-					// 	disabled: $$(componentIds.currentToDefault).getValue() == true
-					// }, $$(componentIds.default));
+					// Re-render default date picker
+					webix.ui({
+						view: 'datepicker',
+						label: "Default",
+						id: ids.default,
+						timepicker: newVal ? true : false,
+						disabled: $$(ids.currentToDefault).getValue() == true
+					}, $$(ids.default));
 				}
 			}
 		}, {
 			view: 'checkbox',
+			id: ids.currentToDefault,
 			name: "defaultCurrentDate",
 			labelRight: 'Set current date to default value',
 			labelWidth: 0,
 			on: {
 				onChange: function onChange(newVal, oldVal) {
-					// if (newVal) {
-					// 	$$(componentIds.default).disable();
-					// }
-					// else {
-					// 	$$(componentIds.default).enable();
-					// }
+					if (newVal) {
+						$$(ids.default).disable();
+					} else {
+						$$(ids.default).enable();
+					}
 				}
 			}
 		}, {
 			view: 'datepicker',
+			id: ids.default,
 			label: "Default",
 			name: 'defaultDate',
-			timepicker: false // TODO
-		}, {
-			view: "label",
-			label: "Date format options"
-		}, {
-			view: "text",
-			name: "dateDisplay",
-			label: "Date Display",
-			labelWidth: "100",
-			// id: componentIds.dateDisplay,
-			disabled: true,
-			//value : showdateDisplay(),
-			placeholder: "date-display"
+			timepicker: false
 		}, {
 			cols: [{
-				view: "richselect",
-				name: "dayFormat",
-				// id: componentIds.includeDayFormat,
-				label: "Day",
-				value: 'includeDay-ddd',
-				options: [{ id: 'includeDay-D', value: "1 2 ... 30 31" }, { id: 'includeDay-Do', value: "1st 2nd ... 30th 31st" }, { id: 'includeDay-DD', value: "01 02 ... 30 31" }, { id: 'includeDay-dd', value: "Su Mo ... Fr Sa" }, { id: 'includeDay-ddd', value: "Sun Mon ... Fri Sat" }, { id: 'includeDay-dddd', value: "Sunday Monday ... Friday Saturday" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-
+				view: 'label',
+				label: 'Display',
+				css: 'ab-text-bold'
 			}, {
-				view: "richselect",
-				name: "dayOrder",
-				// id: componentIds.includeDayOrder,
-				label: "Places",
-				value: 1,
-				//disabled: true,
-				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
+				view: 'label',
+				id: ids.dateDisplay,
+				label: ''
 			}]
-
-		}, {
-			view: "radio",
-			name: "dayDelimiter",
-			// id: componentIds.typeDayFormatDelimiters,
-			label: "Delimiters",
-			value: 'slash',
-			vertical: true,
-			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "Slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
-			on: {
-				'onChange': function onChange(newValue, oldValue) {
-					// showDateDisplay();
-				}
-			}
-		}, {
-			cols: [{
-				view: "richselect",
-				name: "monthFormat",
-				// id: componentIds.includeMonthFormat,
-				label: "Month",
-				value: 'includeMonth-MMM',
-				options: [{ id: 'includeMonth-M', value: "1 2 ... 11 12" }, { id: 'includeMonth-Mo', value: "1st 2nd ... 11th 12th" }, { id: 'includeMonth-MM', value: "01 02 ... 11 12" }, { id: 'includeMonth-MMM', value: "Jan Feb ... Nov Dec" }, { id: 'includeMonth-MMMM', value: "January February ... November December" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}, {
-				view: "richselect",
-				name: "monthOrder",
-				// id: componentIds.includeMonthOrder,
-				label: "Places",
-				value: 2,
-				//disabled: true,
-				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}]
-		}, {
-			view: "radio",
-			name: "monthDelimiter",
-			// id: componentIds.typeMonthFormatDelimiters,
-			label: "Delimiters",
-			value: 'slash',
-			vertical: true,
-			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "Slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
-			on: {
-				'onChange': function onChange(newValue, oldValue) {
-					// showDateDisplay();
-				}
-			}
-		}, {
-			cols: [{
-				view: "richselect",
-				name: "yearDelimiter",
-				// id: componentIds.includeYearFormat,
-				label: "Year",
-				value: 'includeYear-YYYY',
-				options: [{ id: 'includeYear-YY', value: "70 71 ... 29 30" }, { id: 'includeYear-YYYY', value: "1970 1971 ... 2029 2030" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}, {
-				view: "richselect",
-				name: "yearOrder",
-				// id: componentIds.includeYearOrder,
-				label: "Places",
-				value: 3,
-				//disabled: true,
-				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}]
-
-		}, {
-			view: "radio",
-			name: "yearDelimiter",
-			// id: componentIds.typeYearFormatDelimiters,
-			label: "Delimiters",
-			value: 'slash',
-			vertical: true,
-			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
-			on: {
-				'onChange': function onChange(newValue, oldValue) {
-					// showDateDisplay();
-				}
-			}
 		},
 
-		// Validator
+		// Display date format
 		{
-			view: 'label',
-			label: 'Validation criteria',
-			css: 'ab-text-bold'
-		}, {
-			// id: componentIds.validateCondition,
-			view: "select",
-			name: "validateCondition",
-			label: "Condition",
-			value: 'none',
-			options: [{ id: 'none', value: '[Condition]' }, { id: 'dateRange', value: 'Range' }, { id: 'between', value: 'Between' }, { id: 'notBetween', value: 'Not between' }, { id: '=', value: 'Equal to' }, { id: '<>', value: 'Not equal to' }, { id: '>', value: 'Greater than' }, { id: '<', value: 'Less than' }, { id: '>=', value: 'Greater than or Equal to' }, { id: '<=', value: 'Less than or Equal to' }],
-			on: {
-				onChange: function onChange(newVal, oldVal) {
-					// switch (newVal) {
-					// 	case 'none':
-					// 		$$(componentIds.validateRange).hide();
-					// 		$$(componentIds.validateLeft).hide();
-					// 		$$(componentIds.validateRight).hide();
-					// 		break;
-					// 	case 'dateRange':
-					// 		$$(componentIds.validateRange).show();
-					// 		$$(componentIds.validateLeft).hide();
-					// 		$$(componentIds.validateRight).hide();
-					// 		break;
-					// 	case 'between':
-					// 	case 'notBetween':
-					// 		$$(componentIds.validateRange).hide();
-					// 		$$(componentIds.validateLeft).define('label', 'Start Date');
-					// 		$$(componentIds.validateLeft).refresh();
-					// 		$$(componentIds.validateLeft).show();
-					// 		$$(componentIds.validateRight).show();
-					// 		break;
-					// 	case '=':
-					// 	case '<>':
-					// 	case '>':
-					// 	case '<':
-					// 	case '>=':
-					// 	case '<=':
-					// 		$$(componentIds.validateRange).hide();
-					// 		$$(componentIds.validateLeft).define('label', 'Date');
-					// 		$$(componentIds.validateLeft).refresh();
-					// 		$$(componentIds.validateLeft).show();
-					// 		$$(componentIds.validateRight).hide();
-					// 		break;
-					// }
-				}
-			}
-		}, {
-			// id: componentIds.validateRange,
-			rows: [{
-				// id: componentIds.validateRangeUnit,
-				view: "select",
-				name: "validateRangeUnit",
-				label: 'Unit',
-				options: [{ id: 'days', value: 'Days' }, { id: 'months', value: 'Months' }, { id: 'years', value: 'Years' }],
-				on: {
-					onChange: function onChange(newVal) {
-						// $$(componentIds.validateRangeBeforeLabel).refresh();
-						// $$(componentIds.validateRangeAfterLabel).refresh();
-					}
-				}
-			}, {
-				cols: [{
-					// id: componentIds.validateRangeBeforeLabel,
-					view: 'template',
-					align: 'left',
-					width: 125,
-					borderless: true
-				}, {
-					view: 'label',
-					label: '[Current date]',
-					align: 'center'
-				}, {
-					// id: componentIds.validateRangeAfterLabel,
-					view: 'template',
-					align: 'right',
-					borderless: true
-				}]
-			}, {
-				cols: [{
-					// id: componentIds.validateRangeBefore,
-					view: 'slider',
-					name: "validateRangeBefore",
-					on: {
-						onChange: function onChange(newVal, oldValue) {
-							// $$(componentIds.validateRangeBeforeLabel).refresh();
+			view: "accordion",
+			multi: false,
+			collapsed: true,
+			rows: [
+			// Day format
+			{
+				header: "Day",
+				body: {
+					rows: [{
+						view: "richselect",
+						name: "dayFormat",
+						id: ids.dayFormat,
+						label: "Format",
+						labelWidth: 100,
+						options: [{ id: 'D', value: "1 2 ... 30 31" }, { id: 'Do', value: "1st 2nd ... 30th 31st" }, { id: 'DD', value: "01 02 ... 30 31" }, { id: 'dd', value: "Su Mo ... Fr Sa" }, { id: 'ddd', value: "Sun Mon ... Fri Sat" }, { id: 'dddd', value: "Sunday Monday ... Friday Saturday" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
 						}
-					}
-				}, {
-					// id: componentIds.validateRangeAfter,
-					view: 'slider',
-					name: "validateRangeAfter",
-					on: {
-						onChange: function onChange(newVal, oldValue) {
-							// $$(componentIds.validateRangeAfterLabel).refresh();
+					}, {
+						view: "richselect",
+						name: "dayOrder",
+						id: ids.dayOrder,
+						label: "Places",
+						labelWidth: 100,
+						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
 						}
-					}
-				}]
+					}, {
+						view: "radio",
+						name: "dayDelimiter",
+						id: ids.dayDelimiter,
+						label: "Delimiter",
+						labelWidth: 100,
+						vertical: true,
+						options: delimiterList,
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}]
+				}
+			},
+
+			// Month format
+			{
+				header: "Month",
+				body: {
+					rows: [{
+						view: "richselect",
+						name: "monthFormat",
+						id: ids.monthFormat,
+						label: "Format",
+						labelWidth: 100,
+						options: [{ id: 'M', value: "1 2 ... 11 12" }, { id: 'Mo', value: "1st 2nd ... 11th 12th" }, { id: 'MM', value: "01 02 ... 11 12" }, { id: 'MMM', value: "Jan Feb ... Nov Dec" }, { id: 'MMMM', value: "January February ... November December" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "richselect",
+						name: "monthOrder",
+						id: ids.monthOrder,
+						label: "Places",
+						labelWidth: 100,
+						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "radio",
+						name: "monthDelimiter",
+						id: ids.monthDelimiter,
+						label: "Delimiter",
+						labelWidth: 100,
+						vertical: true,
+						options: delimiterList,
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}]
+				}
+			},
+
+			// Year format
+			{
+				header: "Year",
+				body: {
+					rows: [{
+						view: "richselect",
+						name: "yearFormat",
+						id: ids.yearFormat,
+						label: "Format",
+						labelWidth: 100,
+						options: [{ id: 'YY', value: "70 71 ... 29 30" }, { id: 'YYYY', value: "1970 1971 ... 2029 2030" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "richselect",
+						name: "yearOrder",
+						id: ids.yearOrder,
+						label: "Places",
+						labelWidth: 100,
+						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "radio",
+						name: "yearDelimiter",
+						id: ids.yearDelimiter,
+						label: "Delimiter",
+						labelWidth: 100,
+						vertical: true,
+						options: delimiterList,
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}]
+				}
 			}]
-		}, {
-			// id: componentIds.validateLeft,
-			name: "validateStartDate",
-			view: 'datepicker',
-			label: 'Start Date'
-		}, {
-			// id: componentIds.validateRight,
-			name: "validateEndDate",
-			view: 'datepicker',
-			label: 'End Date'
 		}];
+	},
+
+	// defaultValues: the keys must match a .name of your elements to set it's default value.
+	defaultValues: defaultValues,
+
+	// rules: basic form validation rules for webix form entry.
+	// the keys must match a .name of your .elements for it to apply
+	rules: {},
+
+	// include additional behavior on default component operations here:
+	// The base routines will be processed first, then these.  Any results
+	// from the base routine, will be passed on to these:
+	logic: {
+
+		// populate: function (ids, values) {
+		// 	if (values.settings.validation) {
+		// 		$$(ids.validateMinimum).enable();
+		// 		$$(ids.validateMaximum).enable();
+		// 	} else {
+		// 		$$(ids.validateMinimum).disable();
+		// 		$$(ids.validateMaximum).disable();
+		// 	}
+		// }
+
+	},
+
+	// perform any additional setup actions here.
+	// @param {obj} ids  the hash of id values for all the current form elements.
+	//					 it should have your elements + the default Header elements:
+	//						.label, .columnName, .fieldDescription, .showIcon
+	init: function init(ids) {
+		refreshDateDisplay();
 	}
 
 });
@@ -2691,7 +2974,7 @@ var ABFieldDate = function (_ABField) {
 exports.default = ABFieldDate;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3036,7 +3319,7 @@ var ABFieldImage = function (_ABField) {
 exports.default = ABFieldImage;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3476,7 +3759,7 @@ webix.editors.number = webix.extend({
 exports.default = ABFieldNumber;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3692,6 +3975,18 @@ var ABFieldString = function (_ABField) {
 
 			return config;
 		}
+
+		/*
+   * @function isMultilingual
+   * does this field represent multilingual data?
+   * @return {bool}
+   */
+
+	}, {
+		key: "isMultilingual",
+		value: function isMultilingual() {
+			return this.settings.supportMultilingual == 1;
+		}
 	}], [{
 		key: "defaults",
 		value: function defaults() {
@@ -3720,7 +4015,7 @@ var ABFieldString = function (_ABField) {
 exports.default = ABFieldString;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3749,7 +4044,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 });
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
