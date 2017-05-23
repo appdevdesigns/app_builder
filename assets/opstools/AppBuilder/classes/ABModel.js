@@ -66,6 +66,13 @@ export default class ABModel {
 		.replace('#objID#', this.object.id)
 	}
 
+	modelURLUpdate ( id ) {
+		return '/app_builder/model/application/#appID#/object/#objID#/#id#'
+		.replace('#appID#', this.object.application.id)
+		.replace('#objID#', this.object.id)
+		.replace('#id#', id);
+	}
+
 
 	/**
 	 * @method findAll
@@ -128,7 +135,7 @@ export default class ABModel {
 		if (this._limit) {
 
 			DT.define('datafetch', this._limit);
-			DT.define('datathrottle',  500 );  // 5 sec
+			DT.define('datathrottle',  250 );  // 250ms???
 		
 
 			// catch the event where data is requested:
@@ -194,6 +201,39 @@ console.error('!!!!!', err);
 	skip(skip) {
 		this._skip = skip;
 		return this;
+	}
+
+
+
+
+	/**
+	 * @method update
+	 * update model values on the server.
+	 */
+	update(id, values) {
+
+// if this object has some multilingual fields, translate the data:
+		var mlFields = this.object.multilingualFields();
+		if (mlFields.length) {
+			OP.Multilingual.unTranslate(values, values, mlFields);
+		}
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Service.put({
+					url:this.modelURLUpdate( id ),
+					params:values
+				})
+				.then((data)=>{
+
+					resolve(data);
+				})
+				.catch(reject);
+
+			}
+		)
+
 	}
 
 

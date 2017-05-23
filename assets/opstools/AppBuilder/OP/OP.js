@@ -17,6 +17,7 @@
 // if (!window.OP) {
 import Comm from "./comm/comm"
 import Form from "./form"
+import Grid from "./grid"
 import Multilingual from "./multilingual"
 import Model from "./model"
 import Util  from "./util"
@@ -133,6 +134,8 @@ import Config from "./config/config"
 	OP.Error = AD.error;
 
 	OP.Form = Form;
+
+	OP.Grid = Grid;
 
 	OP.Multilingual = Multilingual;
 	OP.Model = Model;

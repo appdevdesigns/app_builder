@@ -243,6 +243,35 @@ class ABFieldString extends ABField {
 
 
 
+
+
+	/**
+	 * @method requestParam
+	 * return the entry in the given input that relates to this field.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} or undefined
+	 */
+	requestParam(allParameters) {
+		var myParameter;
+
+		// if we are a multilingual field, make sure the .translations data is
+		// returned:
+		if (this.settings.supportMultilingual) {
+
+			if (allParameters.translations) {
+				myParameter = {};
+				myParameter.translations = allParameters.translations
+			}
+			
+		} else {
+			myParameter = super.requestParam(allParameters);
+		}
+
+		return myParameter;
+	}
+
+
+
 	/**
 	 * @method postGet
 	 * Perform any final conditioning of data returned from our DB table before

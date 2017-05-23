@@ -38,12 +38,12 @@ class ABFieldDate extends ABField {
     	}
     	*/
 
-		// we're responsible for setting up our specific settings:
-		this.settings.textDefault = values.settings.textDefault || '';
-		this.settings.supportMultilingual = values.settings.supportMultilingual + "" || "1";
+		// // we're responsible for setting up our specific settings:
+		// this.settings.textDefault = values.settings.textDefault || '';
+		// this.settings.supportMultilingual = values.settings.supportMultilingual + "" || "1";
 
-		// text to Int:
-		this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+		// // text to Int:
+		// this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
 
 	}
 
@@ -193,22 +193,47 @@ class ABFieldDate extends ABField {
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
 
-
-			// if this is an integer:
-			if (this.settings.includeTime == true) {
-
-				obj[this.columnName] = { type: 'datetime' }
-
-			} else {
-
-				obj[this.columnName] = { type: 'date' }
-
-			}
-
-			//// TODO: insert validation values here.
+			//// NOTE: json-schema does not define 'date' or 'datetime' types.
+			//// to validate these, we define type:'string' and checked against 
+			//// format:'date-time'
+// if null is allowed:
+			obj[this.columnName] = { type:['null', 'string'], format:'date-time' }
+// else 
+// obj[this.columnName] = { type:'string', format:'date-time' }
 
 		}
 
+	}
+
+
+
+	/**
+	 * @method requestParam
+	 * return the entry in the given input that relates to this field.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} or undefined
+	 */
+	requestParam(allParameters) {
+
+		var myParameter = super.requestParam(allParameters);
+		
+		if (!_.isUndefined(myParameter[this.columnName])) {
+
+			// not a valid date.
+			if (myParameter[this.columnName] == '') {
+
+//// TODO: 
+// for now, just don't return the date.  But in the future decide what to do based upon our 
+// settings:
+// if required -> return a default value? return null? 
+// if !required -> just don't return a value like now?
+delete myParameter[this.columnName];
+
+			}
+			
+		}
+
+		return myParameter;
 	}
 
 }

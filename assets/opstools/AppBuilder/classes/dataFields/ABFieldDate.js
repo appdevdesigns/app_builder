@@ -78,7 +78,7 @@ var ABFieldDateDefaults = {
 }
 
 var ids = {
-	default: 'ab-date-default',
+	"default": 'ab-date-default',
 	currentToDefault: 'ab-date-current-to-default',
 
 	dateDisplay: 'ab-date-display',

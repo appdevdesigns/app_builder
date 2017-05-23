@@ -34,7 +34,7 @@ export default {
 	/**
 	 * @function OP.Form.isValidationError
 	 *
-	 * scans the given error to see if it is a sails' respone about an invalid
+	 * scans the given error to see if it is a sails' response about an invalid
 	 * value from one of the form elements.
 	 *
 	 * @codestart

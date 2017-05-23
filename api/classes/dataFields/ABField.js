@@ -4,6 +4,7 @@
  * An ABField defines a single unique Field/Column in a ABObject.
  *
  */
+var _ = require('lodash');
 
 // import OP from "../../OP/OP"
 
@@ -413,6 +414,41 @@ module.exports =  class ABField {
 	jsonSchemaProperties(obj) {
 		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented jsonSchemaProperties()!!! ');
 	}
+
+
+
+	/**
+	 * @method requestParam
+	 * return the entry in the given input that relates to this field.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} or undefined
+	 */
+	requestParam(allParameters) {
+		var myParameter;
+
+		if (!_.isUndefined(allParameters[this.columnName])) {
+			myParameter = {};
+			myParameter[this.columnName] = allParameters[this.columnName]
+		}
+
+		return myParameter;
+	}
+
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidParam(allParameters) {
+		var errors = [];
+		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidParams()!!!');
+		return errors;
+	}
+
 
 
 	/**

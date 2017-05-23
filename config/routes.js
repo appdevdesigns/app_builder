@@ -104,6 +104,14 @@ module.exports = {
     'get /app_builder/model/application/:appID/object/:objID' : 
         'app_builder/ABModelController.find',
 
+    'post /app_builder/model/application/:appID/object/:objID' : 
+        'app_builder/ABModelController.create',
+
+    'put /app_builder/model/application/:appID/object/:objID/:id' : 
+        'app_builder/ABModelController.update',
+
+    'delete /app_builder/model/application/:appID/object/:objID/:id' : 
+        'app_builder/ABModelController.delete',
         
 
 // only for easy development/testing purposes:

@@ -5,6 +5,10 @@ var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
 var Model = require('objection').Model;
 
 
+var __ModelPool = {};  // reuse any previously created Model connections
+					   // to minimize .knex bindings (and connection pools!)
+
+
 function toDC( data ) {
 	return new webix.DataCollection({
 		data: data,
@@ -420,9 +424,11 @@ console.error('TODO: ABObject.destroy()');
 	 */
 	model() {
 
-		if (!this.__myModel) {
+		var tableName = this.dbTableName();
 
-			var tableName = this.dbTableName();
+		if (!__ModelPool[tableName]) {
+
+			
 			var knex = ABMigration.connection();
 
 			// Compile our jsonSchema from our DataFields
@@ -430,6 +436,9 @@ console.error('TODO: ABObject.destroy()');
 				type: 'object',
 				required: [],
 				properties: {
+
+					created_at:{ type:['null', 'string'], format:'date-time' },
+					updated_at:{ type:['null', 'string'], format:'date-time' }
 
 				}
 			}
@@ -451,11 +460,56 @@ console.error('TODO: ABObject.destroy()');
     			}
 			}
 
-			this.__myModel = MyModel.bindKnex(knex);
+			__ModelPool[tableName] = MyModel.bindKnex(knex);
 		}
 
-		return this.__myModel;
+		return __ModelPool[tableName];
 	}
+
+
+
+	/**
+	 * @method requestParams
+	 * Parse through the given parameters and return a subset of data that
+	 * relates to the fields in this object.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} 
+	 */
+	requestParams(allParameters) {
+		var usefulParameters = {};
+		this.fields().forEach((f) => {
+			var p = f.requestParam(allParameters);
+			if (p) {
+				for (var a in p) {
+					usefulParameters[a] = p[a];
+				}
+			}
+		})
+
+		return usefulParameters;
+	}
+
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an array of any invalid
+	 * value errors.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidParams(allParameters) {
+		var errors = [];
+		this.fields().forEach((f) => {
+			var p = f.isValidParam(allParameters);
+			if (p.length>0) {
+				errors = errors.concat(p);
+			}
+		})
+
+		return errors;
+	}
+
 
 
 	/**
