@@ -23,7 +23,7 @@ import Util  from "./util"
 
 import Config from "./config/config"
 
-    window.OP = {};
+    window.OP = OP;
 
 
     // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
@@ -139,8 +139,6 @@ import Config from "./config/config"
 
 
 	OP.Util = Util;
-
-
 
 	export default OP;
 // }

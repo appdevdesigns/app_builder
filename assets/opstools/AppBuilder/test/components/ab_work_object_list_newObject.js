@@ -116,7 +116,7 @@ describe('ab_work_object_list_newObject component', () => {
 			let sampleObject = {};
 			let callback = function (err) {
 				// Assert it should not return any error in callback
-				assert.isNotDefined(err);
+				assert.isNull(err);
 			};
 			let result = target._logic.save(sampleObject, callback)
 
