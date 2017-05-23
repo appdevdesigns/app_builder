@@ -127,7 +127,7 @@ OP.Component.extend(idBase, function(App) {
 			CurrentObject.save()
 			.then(function(){
 				_logic.iconsReset();
-				_logic.callbacks.onChange()
+				_logic.callbacks.onChange();
 			})
 			.catch(function(err){
 				OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:"" });
@@ -206,7 +206,7 @@ OP.Component.extend(idBase, function(App) {
 					isFrozen = true;
 				}
 
-				if (CurrentObject.objectWorkspace.hiddenFields.indexOf(id) != -1) {
+				if (CurrentObject.workspaceHiddenFields.indexOf(id) != -1) {
 					node.style.display = "none";
 				} else {
 					node.style.display = "";

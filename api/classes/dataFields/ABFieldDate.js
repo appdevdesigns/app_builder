@@ -23,11 +23,34 @@ var ABFieldDateDefaults = {
 	description: ''
 }
 
+var defaultValues = {
+	includeTime: 0,
+	defaultCurrentDate: 0,
+	defaultDate: "",
+	dayFormat: "DD",
+	dayOrder: 1,
+	dayDelimiter: "slash",
+	monthFormat: "MM",
+	monthOrder: 2,
+	monthDelimiter: "slash",
+	yearFormat: "YYYY",
+	yearOrder: 3,
+	yearDelimiter: "slash",
+
+	validateCondition: "none",
+	validateRangeUnit: "days",
+	validateRangeBefore: 0,
+	validateRangeAfter: 0,
+	validateStartDate: null,
+	validateEndDate: null
+}
+
 
 class ABFieldDate extends ABField {
 
     constructor(values, object) {
 		super(values, object, ABFieldDateDefaults);
+
 
     	/*
     	{
@@ -38,12 +61,18 @@ class ABFieldDate extends ABField {
     	}
     	*/
 
-		// // we're responsible for setting up our specific settings:
-		// this.settings.textDefault = values.settings.textDefault || '';
-		// this.settings.supportMultilingual = values.settings.supportMultilingual + "" || "1";
+		// we're responsible for setting up our specific settings:
+		for (var dv in defaultValues) {
+			this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
 
-		// // text to Int:
-		// this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+		// text to Int:
+		this.settings.includeTime = parseInt(this.settings.includeTime);
+		this.settings.defaultCurrentDate = parseInt(this.settings.defaultCurrentDate);
+		this.settings.dayOrder = parseInt(this.settings.dayOrder);
+		this.settings.monthOrder = parseInt(this.settings.monthOrder);
+		this.settings.yearOrder = parseInt(this.settings.yearOrder);
+
 
 	}
 
@@ -140,7 +169,7 @@ class ABFieldDate extends ABField {
 
 									t.dateTime(this.columnName);
 
-								// create a column that has date type
+									// create a column that has date type
 								} else {
 
 									t.date(this.columnName);
