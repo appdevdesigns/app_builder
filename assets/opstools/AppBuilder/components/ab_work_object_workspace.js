@@ -12,6 +12,7 @@ import "./ab_work_object_workspace_popupDefineLabel"
 import "./ab_work_object_workspace_popupFrozenColumns"
 import "./ab_work_object_workspace_popupHideFields"
 import "./ab_work_object_workspace_popupNewDataField"
+import "./ab_work_object_workspace_popupSortFields"
 
 
 
@@ -93,15 +94,15 @@ OP.Component.extend(idBase, function(App) {
 	var PopupFrozenColumnsComponent = OP.Component['ab_work_object_workspace_popupFrozenColumns'](App);
 	var PopupFrozenColumns = webix.ui(PopupFrozenColumnsComponent.ui);
 
+	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
+	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
+
 	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
 	// var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
 	webix.ui(PopupNewDataFieldComponent.ui);
 
-
-	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
-	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
-
-
+	var PopupSortFieldComponent = OP.Component['ab_work_object_workspace_popupSortFields'](App);
+	var PopupSortField = webix.ui(PopupSortFieldComponent.ui);
 
 	// Our webix UI definition:
 	var _ui = {
@@ -275,12 +276,18 @@ OP.Component.extend(idBase, function(App) {
 			onChange:_logic.callbackFrozenColumns		// be notified when there is a change in the frozen columns
 		});
 
+		PopupHideFieldComponent.init({
+			onChange:_logic.callbackFieldsVisible		// be notified when there is a change in the hidden fields
+		});
+
 		PopupNewDataFieldComponent.init({
 			onSave:_logic.callbackAddFields			// be notified when a new Field is created & saved
 		});
 
-		PopupHideFieldComponent.init({
-			onChange:_logic.callbackFieldsVisible		// be notified when there is a change in the hidden fields
+		var fieldList = DataTable.getFieldList();
+
+		PopupSortFieldComponent.init({
+			onChange:_logic.callbackSortFields		// be notified when there is a change in the sort fields
 		});
 
 
@@ -323,7 +330,7 @@ OP.Component.extend(idBase, function(App) {
 			var frozenID = CurrentObject.workspaceFrozenColumnID;
 
 			if (typeof(frozenID) != "undefined") {
-				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1
+				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
 
 				$$(ids.buttonFrozen).define('badge', badgeNumber);
 				$$(ids.buttonFrozen).refresh();
@@ -397,6 +404,23 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 					break;
 			}
 
+		},
+
+		/**
+		 * @function callbackSortFields
+		 *
+		 * call back for when the sort fields popup changes
+		 */
+		callbackSortFields: function() {
+
+			var sortFields = CurrentObject.workspaceSortFields;
+
+			if (typeof(sortFields) != "undefined") {
+				$$(ids.buttonSort).define('badge', sortFields.length);
+				$$(ids.buttonSort).refresh();
+
+				//DataTable.refresh();
+			}
 		},
 
 
@@ -482,9 +506,10 @@ console.error('TODO: toolbarPermission()');
 		 * show the popup to sort the datatable
 		 */
 		toolbarSort:function($view) {
+			PopupSortField.show($view);
 // self.refreshPopupData();
 // $$(self.webixUiId.sortFieldsPopup).show($view);
-console.error('TODO: toolbarSort()');
+//console.error('TODO: toolbarSort()');
 		}
 	}
 
@@ -526,12 +551,17 @@ console.error('TODO: toolbarSort()');
 
 			// update hiddenFields
 			_logic.callbackFieldsVisible();
+			_logic.callbackSortFields();
 
+
+
+			DataTable.objectLoad(object);
 
 			PopupDefineLabelComponent.objectLoad(object);
 			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
-			DataTable.objectLoad(object);
+			PopupSortFieldComponent.objectLoad(object);
+
 			_logic.callbackFrozenColumns(true);
 
 		}

@@ -260,6 +260,18 @@ console.error('!! ToDo: onAfterColumnHide()');
 			return DataTable.getColumnIndex(id);
 		},
 
+		/**
+		 * @function getColumnConfig
+		 *
+		 * return the column config of a datagrid
+		 * @param {string} id datagrid id you want the column info from
+		 */
+		getFieldList: function() {
+			var DataTable = $$(ids.component);
+
+			return DataTable.fieldList;
+		},
+
 
 		/**
 		 * @function onHeaderClick
@@ -316,9 +328,16 @@ console.error('!! ToDo: onAfterColumnHide()');
 					DataTable.refreshColumns()
 				}
 
+				if (CurrentObject.workspaceSortFields != []) {
+					var sorts = CurrentObject.workspaceSortFields;
+					sorts.forEach((s) => {
+						DataTable.sort(s);
+					})
+				}
+
 				//// update DataTable Content
 
-				// Set the Model object with a condition / skip / limit, then 
+				// Set the Model object with a condition / skip / limit, then
 				// use it to load the DataTable:
 				//// NOTE: this should take advantage of Webix dynamic data loading on
 				//// larger data sets.
@@ -375,6 +394,9 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 		// expose data for badge on frozen button
 		getColumnIndex: _logic.getColumnIndex,
+
+		// expose data for column sort UI
+		getFieldList: _logic.getFieldList,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}
