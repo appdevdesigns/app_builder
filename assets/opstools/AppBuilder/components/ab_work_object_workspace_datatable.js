@@ -307,7 +307,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 				DataTable.clearAll();
 
 
-				// update DataTable structure:
+				//// update DataTable structure:
 				var columnHeaders = CurrentObject.columnHeaders(true);
 				DataTable.refreshColumns(columnHeaders)
 				// freeze columns:
@@ -316,7 +316,17 @@ console.error('!! ToDo: onAfterColumnHide()');
 					DataTable.refreshColumns()
 				}
 
-				// update DataTable Content
+				//// update DataTable Content
+
+				// Set the Model object with a condition / skip / limit, then 
+				// use it to load the DataTable:
+				//// NOTE: this should take advantage of Webix dynamic data loading on
+				//// larger data sets.
+				CurrentObject.model()
+				.where({})
+				.skip(0)
+				.limit(30)
+				.loadInto(DataTable);
 			}
 		},
 

@@ -458,4 +458,32 @@ console.error('TODO: ABObject.destroy()');
 	}
 
 
+	/**
+	 * @method postGet
+	 * Allow our DataFields another pass at the data before returning it to the
+	 * client.  Our DataFields can do any post conditioning of their data 
+	 * before it is sent back.
+	 * @param {array} data  array of table rows returned from our table.
+	 * @return {Objection.Model} 
+	 */
+	postGet( data ) {
+		return new Promise(
+			(resolve, reject) => {
+
+				var allActions = [];
+
+				data.forEach((d)=>{
+					this.fields().forEach((f) => {
+						allActions.push(f.postGet(d));  // update data in place.
+					})
+				})
+
+				Promise.all(allActions)
+				.then(resolve)
+				.catch(reject);
+
+			}
+		)
+	}
+
 }

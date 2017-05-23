@@ -415,6 +415,21 @@ module.exports =  class ABField {
 	}
 
 
+	/**
+	 * @method postGet
+	 * Perform any final conditioning of data returned from our DB table before
+	 * it is returned to the client.
+	 * @param {obj} data  a json object representing the current table row
+	 */
+	postGet( data ) {
+		return new Promise(
+			(resolve, reject) => {
+				resolve();
+			}
+		)
+	}
+
+
 
 	///
 	/// Working with Actual Object Values:

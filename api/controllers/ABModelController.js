@@ -10,6 +10,7 @@ var _ = require('lodash');
 var path = require('path');
 var async = require('async');
 
+var cJSON = require('circular-json');
 
 var reloading = null;
 
@@ -27,31 +28,72 @@ module.exports = {
         AppBuilder.routes.verifyAndReturnObject(req, res)
         .then(function(object){
 
-            var Model = object.model();
-console.log('... jsonSchema:', Model.jsonSchema);
 
-console.log('... jsonSchema.translations:', Model.jsonSchema.properties.translations )
-
-for(var t in Model.jsonSchema.properties.translations.items) {
-    console.log('... '+t+': ', Model.jsonSchema.properties.translations.items[t]);
-}
-
-            Model.query()
-            .then((objects) => {
-console.log('... .findAll(): objects:', objects);
-
-//// LEFT OFF:
-// why is my translations not being converted into an OBJECT automatically?
-// - add post processing to convert JSON
-// - add paging
-// - client side ABObject.model() to return an object with .findAll() to access this route
-// - pass in filter to findAll()
-//      -> { where:{}, skip:xx, pagingParamX:yy }
+            var query = object.model().query();
 
 
-                res.AD.success(objects);
+/// IMPLEMENT .where()  here
+
+
+            var result = {};
+            var offset = req.options._offset;
+            var limit = req.options._limit;
+
+            // promise for the total count.
+            var pCount = query.clone().count('* as count').first();
+            
+            // apply any offset/limit if provided.
+            if (offset) {
+                query.offset(offset);
+            }
+            if (limit) {
+                query.limit(limit);
+            }
+
+            Promise.all([
+              pCount,
+              query
+            ]).then(function(values) {
+
+                var count = values[0].count;
+                var rows = values[1];
+                result.data = rows;
+
+                // webix pagination format:
+                result.total_count = count;
+                result.pos = offset;
+
+                result.offset = offset;
+                result.limit = limit;
+                
+                if ((offset + rows.length) < count) {
+                    result.offset_next = offset+limit;
+                }
+
+
+
+//// TODO: evaluate if we really need to do this: 
+//// ?) do we have a data field that actually needs to post process it's data
+////    before returning it to the client?
+
+                // object.postGet(result.data)
+                // .then(()=>{
+
+
+                    if(res.header) res.header('Content-type', 'application/json');
+                    
+                    res.send(result, 200);
+
+
+                // })
+
+                
             })
+            .catch((err)=>{
 
+                res.AD.error(err);
+
+            });
 
 
         });
