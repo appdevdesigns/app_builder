@@ -11,16 +11,13 @@
  * http://sailsjs.org/#documentation
  */
 
-// var serviceStack = ADCore.policy.serviceStack([ 'policy1', 'policy2']);
+var findStack = ADCore.policy.serviceStack([ 'ABModelNormalize' ]);
 
 module.exports = {
 
-//    'app_builder/YourController': {
-//        method: ['isAuthenticatedService'],
-//        auth: [],
-//        sync: serviceStack,
-//        logout:true
-//    }
+   'app_builder/ABModelController': {
+       find: findStack
+   }
 
 
 };

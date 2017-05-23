@@ -216,6 +216,19 @@ class ABFieldString extends ABField {
 		return config;
 	}
 
+
+
+	/*
+	 * @function isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	isMultilingual() {
+		return this.settings.supportMultilingual == 1;
+	}
+
+
+
 }
 
 

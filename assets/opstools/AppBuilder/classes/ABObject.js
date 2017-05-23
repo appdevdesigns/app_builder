@@ -1,6 +1,7 @@
 
 // import OP from "OP"
 import ABFieldManager from "./ABFieldManager"
+import ABModel from "./ABModel"
 
 
 function toDC( data ) {
@@ -364,6 +365,17 @@ export default class ABObject {
 
 
 
+	multilingualFields() {
+		var fields = [];
+
+		var found = this.fields(function(f){ return f.isMultilingual(); });
+		found.forEach((f)=>{ 
+			fields.push(f.columnName);
+		})
+
+		return fields;
+	}
+
 
 
 
@@ -392,8 +404,9 @@ export default class ABObject {
 
 
 	///
-	/// Working with Actual Object Values:
+	/// Working with Client Components:
 	///
+
 
 	// return the column headers for this object
 	// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
@@ -429,6 +442,20 @@ export default class ABObject {
 		}
 
 		return headers;
+	}
+
+
+	///
+	/// Working with data from server
+	///
+
+	/**
+	 * @method model
+	 * return a Model object that will allow you to interact with the data for
+	 * this ABObject.
+	 */
+	model() {
+		return new ABModel(this);
 	}
 
 

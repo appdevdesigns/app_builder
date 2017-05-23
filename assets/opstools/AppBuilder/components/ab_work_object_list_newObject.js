@@ -117,7 +117,8 @@ OP.Component.extend(idBase, function(App) {
 		 * remove the busy indicator from the form.
 		 */
 		hide: function() {
-			$$(ids.component).hide();
+			if ($$(ids.component))
+				$$(ids.component).hide();
 		},
 
 
@@ -176,7 +177,8 @@ OP.Component.extend(idBase, function(App) {
 		 */
 		show:function() {
 
-			$$(ids.component).show();
+			if ($$(ids.component))
+				$$(ids.component).show();
 		}
 	}
 

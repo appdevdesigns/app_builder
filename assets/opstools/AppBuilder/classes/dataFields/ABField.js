@@ -423,7 +423,7 @@ export default class ABField {
 	columnHeader (isObjectWorkspace) {
 
 		var config = {
-			id: this.id,
+			id: this.columnName, // this.id,
 			header: this.label,
 		}
 
@@ -434,6 +434,17 @@ export default class ABField {
 		}
 
 		return config;
+	}
+
+
+
+	/*
+	 * @function isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	isMultilingual() {
+		return false;
 	}
 
 
