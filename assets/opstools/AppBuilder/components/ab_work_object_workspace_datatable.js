@@ -51,6 +51,7 @@ OP.Component.extend(idBase, function(App) {
 //height:800,  // #hack!
 		on: {
 			onBeforeSelect: function (data, preserve) {
+
 console.error('!! ToDo: onBeforeSelect()');
 				// var itemNode = this.getItemNode({ row: data.row, column: data.column });
 
@@ -64,22 +65,7 @@ console.error('!! ToDo: onBeforeSelect()');
 				// return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
 			},
 			onAfterSelect: function (data, prevent) {
-console.error('!! todo: onAfterSelect()');
-				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
-				// 	fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-
-				// if (!fieldData || fieldData.length < 1) {
-				// 	console.log('System could not found this column data');
-				// 	return false;
-				// } else
-				// 	fieldData = fieldData[0];
-
-				// // Custom update data
-				// if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
-				// 	return false;
-
-				// // Normal update data
-				// this.editCell(data.row, data.column);
+				_logic.onAfterSelect(data, prevent);
 			},
 			onCheck: function (row, col, val) { // Update checkbox data
 console.error('!! ToDo: onCheck()');
@@ -99,7 +85,7 @@ console.error('!! ToDo: onCheck()');
 				// 	});
 			},
 			onBeforeEditStop: function (state, editor) {
-console.error('!! ToDo: onCheck()');
+console.error('!! ToDo: onBeforeEditStop()');
 				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
 
 				// if (!column || column.length < 1) return true;
@@ -114,33 +100,7 @@ console.error('!! ToDo: onCheck()');
 				// return passValidate;
 			},
 			onAfterEditStop: function (state, editor, ignoreUpdate) {
-console.error('!! ToDo: onAfterEditStop()');
-				// var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
-
-				// self.updateRowData(state, editor, ignoreUpdate)
-				// 	.fail(function (err) { // Cached
-				// 		item[editor.column] = state.old;
-				// 		$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-				// 		$$(self.webixUiId.objectDatatable).refresh(editor.row);
-
-				// 		// TODO : Message
-
-				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-				// 	})
-				// 	.then(function (result) {
-				// 		if (item) {
-				// 			item[editor.column] = state.value;
-
-				// 			if (result && result.constructor.name === 'Cached' && result.isUnsync())
-				// 				item.isUnsync = true;
-
-				// 			$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-				// 		}
-
-				// 		// TODO : Message
-
-				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-				// 	});
+				_logic.onAfterEditStop(state, editor, ignoreUpdate);
 			},
 			onColumnResize: function (id, newWidth, oldWidth, user_action) {
 console.error('!! ToDo: onColumnResize()');
@@ -260,6 +220,151 @@ console.error('!! ToDo: onAfterColumnHide()');
 			return DataTable.getColumnIndex(id);
 		},
 
+		/**
+		 * @function getColumnConfig
+		 *
+		 * return the column config of a datagrid
+		 * @param {string} id datagrid id you want the column info from
+		 */
+		getFieldList: function() {
+			var DataTable = $$(ids.component);
+
+			return DataTable.fieldList;
+		},
+
+
+
+		/**
+		 * @function onAfterEditStop
+		 * When an editor is finished.
+		 * @param {json} state 
+		 * @param {} editor
+		 * @param {} ignoreUpdate 
+		 * @return 
+		 */
+		onAfterEditStop: function (state, editor, ignoreUpdate) {
+
+			// state:   {value: "new value", old: "old value"}
+			// editor:  { column:"columnName", row:ID, value:'value', getInputNode:fn(), config:{}, focus: fn(), getValue: fn(), setValue: function, getInputNode: function, render: function…}
+			
+			var DataTable = $$(ids.component);
+			
+			if (state.value != state.old) {
+
+
+//// LEFT OFF:
+// convert to only update the currently edited value:
+// client side .validate() 
+// client side editor: Date, ABFieldImage,
+// 
+
+				var item = DataTable.getItem(editor.row);
+				item[editor.column] = state.value;
+
+				DataTable.removeCellCss(item.id, editor.column, "webix_invalid");
+				DataTable.removeCellCss(item.id, editor.column, "webix_invalid_cell");
+
+				CurrentObject.model()
+				.update(item.id, item)
+				.then(()=>{
+
+					DataTable.updateItem(editor.row, item);
+					DataTable.clearSelection();
+					DataTable.refresh(editor.row);
+
+				})
+				.catch((err)=>{
+
+					OP.Error.log('Error saving item:', {error:err});
+
+
+
+					DataTable.clearSelection();
+					if (OP.Grid.isValidationError(err, editor, DataTable)) {
+
+// Do we reset the value?
+// item[editor.column] = state.old;
+// DataTable.updateItem(editor.row, item);
+
+					} else {
+
+// this was some other Error!
+					}
+
+					
+				})
+
+			} else {
+
+				DataTable.clearSelection();
+			}
+
+			return false;
+
+				// var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+				// self.updateRowData(state, editor, ignoreUpdate)
+				// 	.fail(function (err) { // Cached
+				// 		item[editor.column] = state.old;
+				// 		$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+				// 		$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+				// 		// TODO : Message
+
+				// 		$$(self.webixUiId.objectDatatable).hideProgress();
+				// 	})
+				// 	.then(function (result) {
+				// 		if (item) {
+				// 			item[editor.column] = state.value;
+
+				// 			if (result && result.constructor.name === 'Cached' && result.isUnsync())
+				// 				item.isUnsync = true;
+
+				// 			$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+				// 		}
+
+				// 		// TODO : Message
+
+				// 		$$(self.webixUiId.objectDatatable).hideProgress();
+				// 	});
+		},
+
+
+
+		/**
+		 * @function onAfterSelect
+		 * This is when a user clicks on a cell.  We use the onAfterSelect to 
+		 * trigger a normal .editCell() if there isn't a custom editor for this field.
+		 * @param {json} data webix cell data
+		 * @return 
+		 */
+		onAfterSelect: function (data, prevent) {
+			// data: {row: 1, column: "name", id: "1_name", toString: function}
+			// data.row: .model.id
+			// data.column => columnName of the field
+
+
+			// Normal update data
+			$$(ids.component).editCell(data.row, data.column);
+
+
+				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
+				// 	fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+
+				// if (!fieldData || fieldData.length < 1) {
+				// 	console.log('System could not found this column data');
+				// 	return false;
+				// } else
+				// 	fieldData = fieldData[0];
+
+				// // Custom update data
+				// if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
+				// 	return false;
+
+				// // Normal update data
+				// this.editCell(data.row, data.column);
+		},
+
 
 		/**
 		 * @function onHeaderClick
@@ -316,9 +421,16 @@ console.error('!! ToDo: onAfterColumnHide()');
 					DataTable.refreshColumns()
 				}
 
+				if (CurrentObject.workspaceSortFields != []) {
+					var sorts = CurrentObject.workspaceSortFields;
+					sorts.forEach((s) => {
+						DataTable.sort(s);
+					})
+				}
+
 				//// update DataTable Content
 
-				// Set the Model object with a condition / skip / limit, then 
+				// Set the Model object with a condition / skip / limit, then
 				// use it to load the DataTable:
 				//// NOTE: this should take advantage of Webix dynamic data loading on
 				//// larger data sets.
@@ -375,6 +487,9 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 		// expose data for badge on frozen button
 		getColumnIndex: _logic.getColumnIndex,
+
+		// expose data for column sort UI
+		getFieldList: _logic.getFieldList,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

@@ -77,34 +77,31 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _form = __webpack_require__(4);
+var _comm = __webpack_require__(4);
+
+var _comm2 = _interopRequireDefault(_comm);
+
+var _form = __webpack_require__(6);
 
 var _form2 = _interopRequireDefault(_form);
 
-var _multilingual = __webpack_require__(6);
+var _multilingual = __webpack_require__(8);
 
 var _multilingual2 = _interopRequireDefault(_multilingual);
 
-var _model = __webpack_require__(5);
+var _model = __webpack_require__(7);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(7);
+var _util = __webpack_require__(9);
 
 var _util2 = _interopRequireDefault(_util);
 
-var _config = __webpack_require__(3);
+var _config = __webpack_require__(5);
 
 var _config2 = _interopRequireDefault(_config);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-window.OP = {};
-
-// OP.xxxx      These properties hold the defined Class/Controller/Model definitions
-//              for our loaded projects.
-// OP.UI = {};    		// webix UI definitions
-// OP.Logic = {}; 		// logic references for webix application
 
 /**
  * @class AD_Client
@@ -122,6 +119,15 @@ window.OP = {};
 //// in 'use strict' ?
 
 // if (!window.OP) {
+window.OP = {};
+
+// OP.xxxx      These properties hold the defined Class/Controller/Model definitions
+//              for our loaded projects.
+// OP.UI = {};    		// webix UI definitions
+// OP.Logic = {}; 		// logic references for webix application
+
+OP.Comm = _comm2.default;
+
 OP.Component = {}; // our defined components
 
 OP.CustomComponent = {}; // separate holder for Webix Custom Components
@@ -230,7 +236,8 @@ exports.default = OP;
 /***/ }),
 /* 1 */,
 /* 2 */,
-/* 3 */
+/* 3 */,
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -240,11 +247,34 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _configDesktop = __webpack_require__(8);
+var _comm_service = __webpack_require__(10);
+
+var _comm_service2 = _interopRequireDefault(_comm_service);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+
+	// OP.Comm.Service.*
+	Service: _comm_service2.default
+};
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _configDesktop = __webpack_require__(11);
 
 var _configDesktop2 = _interopRequireDefault(_configDesktop);
 
-var _configMobile = __webpack_require__(9);
+var _configMobile = __webpack_require__(12);
 
 var _configMobile2 = _interopRequireDefault(_configMobile);
 
@@ -268,7 +298,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -401,7 +431,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -734,7 +764,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 };
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -861,7 +891,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -877,7 +907,58 @@ exports.default = {
 };
 
 /***/ }),
-/* 8 */
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+//
+// OP.Comm.Service.*
+// 
+// Map our old jQuery deferred comm utilities with ES6 promises.
+//
+
+
+var services = {
+
+	// OP.Comm.Service.get(options, cb) => {promise}
+	get: function get(options, cb) {
+		return new Promise(function (resolve, reject) {
+			AD.comm.service.get(options, cb).then(resolve, reject);
+		});
+	},
+
+	// OP.Comm.Service.post(options, cb) => {promise}
+	post: function post(options, cb) {
+		return new Promise(function (resolve, reject) {
+			AD.comm.service.post(options, cb).then(resolve, reject);
+		});
+	},
+
+	// OP.Comm.Service.put(options, cb) => {promise}
+	put: function put(options, cb) {
+		return new Promise(function (resolve, reject) {
+			AD.comm.service.put(options, cb).then(resolve, reject);
+		});
+	}
+
+};
+
+// OP.Comm.Service.delete(options, cb) => {promise}
+services['delete'] = function (options, cb) {
+	return new Promise(function (resolve, reject) {
+		AD.comm.service['delete'](options, cb).then(resolve, reject);
+	});
+};
+
+exports.default = services;
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -938,7 +1019,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 9 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

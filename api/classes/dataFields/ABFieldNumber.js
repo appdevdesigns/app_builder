@@ -4,6 +4,7 @@
  * An ABFieldNumber defines a Number field type.
  *
  */
+var _ = require('lodash');
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
 
@@ -242,6 +243,59 @@ class ABFieldNumber extends ABField {
 			
 		}
 		
+	}
+
+
+
+	/**
+	 * @method requestParam
+	 * return the entry in the given input that relates to this field.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} or undefined
+	 */
+	requestParam(allParameters) {
+
+		var myParameter = super.requestParam(allParameters);
+		
+		if (!_.isUndefined(myParameter[this.columnName])) {
+
+			// if this is an integer:
+			if (this.settings.typeDecimals == 'none') {
+
+				myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+				
+			} else {
+				var places = parseInt(this.settings.typeDecimalPlaces) || 2;
+				myParameter[this.columnName] = parseFloat(parseFloat(myParameter[this.columnName]).toFixed(places));
+			}
+			
+		}
+
+		return myParameter;
+	}
+
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidParam(allParameters) {
+		var errors = [];
+		
+		var value = allParameters[this.columnName];
+		if (_.isNaN(value) || (!_.isNumber(value))) {
+			errors.push({
+				name:this.columnName,
+				message:'Number Required',
+				value:value
+			})
+		}
+
+		return errors;
 	}
 
 }

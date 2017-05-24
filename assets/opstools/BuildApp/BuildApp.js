@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ 	return __webpack_require__(__webpack_require__.s = 15);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -77,34 +77,31 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _form = __webpack_require__(4);
+var _comm = __webpack_require__(4);
+
+var _comm2 = _interopRequireDefault(_comm);
+
+var _form = __webpack_require__(6);
 
 var _form2 = _interopRequireDefault(_form);
 
-var _multilingual = __webpack_require__(6);
+var _multilingual = __webpack_require__(8);
 
 var _multilingual2 = _interopRequireDefault(_multilingual);
 
-var _model = __webpack_require__(5);
+var _model = __webpack_require__(7);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(7);
+var _util = __webpack_require__(9);
 
 var _util2 = _interopRequireDefault(_util);
 
-var _config = __webpack_require__(3);
+var _config = __webpack_require__(5);
 
 var _config2 = _interopRequireDefault(_config);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-window.OP = {};
-
-// OP.xxxx      These properties hold the defined Class/Controller/Model definitions
-//              for our loaded projects.
-// OP.UI = {};    		// webix UI definitions
-// OP.Logic = {}; 		// logic references for webix application
 
 /**
  * @class AD_Client
@@ -122,6 +119,15 @@ window.OP = {};
 //// in 'use strict' ?
 
 // if (!window.OP) {
+window.OP = {};
+
+// OP.xxxx      These properties hold the defined Class/Controller/Model definitions
+//              for our loaded projects.
+// OP.UI = {};    		// webix UI definitions
+// OP.Logic = {}; 		// logic references for webix application
+
+OP.Comm = _comm2.default;
+
 OP.Component = {}; // our defined components
 
 OP.CustomComponent = {}; // separate holder for Webix Custom Components
@@ -242,9 +248,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // import OP from "OP"
 
 
-__webpack_require__(36);
+__webpack_require__(40);
 
-var _ABObject = __webpack_require__(14);
+var _ABObject = __webpack_require__(16);
 
 var _ABObject2 = _interopRequireDefault(_ABObject);
 
@@ -763,7 +769,7 @@ var ABField = function () {
   key:'fieldKey',				// unique key for this Field
   icon:'font',				// fa-[icon] reference for an icon for this Field Type
   label:'',					// pulled from translation
-  columnName:'column_name',	// a valid mysql table.column name 
+  columnName:'column_name',	// a valid mysql table.column name
   settings: {					// unique settings for the type of field
   showIcon:true/false,	// only useful in Object Workspace DataTable
   // specific for dataField
@@ -791,16 +797,11 @@ var ABField = function () {
 
 
 		// unique key to reference this specific DataField
-		// fieldName() {
-		// 	return this.defaults.name;
-		// }
-
-		// unique key to reference this specific DataField
 		value: function fieldKey() {
 			return this.defaults.key;
 		}
 
-		// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+		// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	}, {
 		key: 'fieldIcon',
@@ -882,11 +883,12 @@ var ABField = function () {
 				// verify we have been .save()d before:
 				if (_this2.id) {
 
-					_this2.object.fieldRemove(_this2).then(function () {
-						resolve();
-					}).catch(function (err) {
-						reject(err);
-					});
+					// NOTE: our .migrateXXX() routines expect the object to currently exist
+					// in the DB before we perform the DB operations.  So we need to
+					// .migrateDrop()  before we actually .objectDestroy() this.
+					_this2.migrateDrop().then(function () {
+						return _this2.object.fieldRemove(_this2);
+					}).then(resolve).catch(reject);
 				} else {
 
 					resolve(); // nothing to do really
@@ -911,13 +913,23 @@ var ABField = function () {
 
 			return new Promise(function (resolve, reject) {
 
+				var isAdd = false;
 				// if this is our initial save()
 				if (!_this3.id) {
+					isAdd = true;
 					_this3.id = OP.Util.uuid(); // setup default .id
 				}
 
 				_this3.object.fieldSave(_this3).then(function () {
-					resolve(_this3);
+
+					if (isAdd) {
+
+						_this3.migrateCreate().then(function () {
+							resolve(_this3);
+						}).catch(reject);
+					} else {
+						resolve(_this3);
+					}
 				}).catch(function (err) {
 					reject(err);
 				});
@@ -949,6 +961,14 @@ var ABField = function () {
 				translations: this.translations
 			};
 		}
+
+		/**
+   * @method fromValues()
+   *
+   * initialze this object with the given set of values.
+   * @param {obj} values
+   */
+
 	}, {
 		key: 'fromValues',
 		value: function fromValues(values) {
@@ -972,14 +992,37 @@ var ABField = function () {
 		}
 
 		///
+		/// DB Migrations
+		///
+
+	}, {
+		key: 'migrateCreate',
+		value: function migrateCreate() {
+			var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'.replace('#appID#', this.object.application.id).replace('#objID#', this.object.id).replace('#fieldID#', this.id);
+
+			return OP.Comm.Service.post({
+				url: url
+			});
+		}
+	}, {
+		key: 'migrateDrop',
+		value: function migrateDrop() {
+			var url = '/app_builder/migrate/application/#appID#/object/#objID#/field/#fieldID#'.replace('#appID#', this.object.application.id).replace('#objID#', this.object.id).replace('#fieldID#', this.id);
+
+			return OP.Comm.Service['delete']({
+				url: url
+			});
+		}
+
+		///
 		/// Working with Actual Object Values:
 		///
 
 		/*
    * @function columnHeader
-   * Return the column header for a webix grid component for this specific 
+   * Return the column header for a webix grid component for this specific
    * data field.
-   * @param {bool} isObjectWorkspace is this being used in the Object 
+   * @param {bool} isObjectWorkspace is this being used in the Object
    *								   workspace.
    * @return {obj}  configuration obj
    */
@@ -1070,10 +1113,12 @@ var ABField = function () {
 
 			var _ui = {
 				// id: ids.component,
-				rows: [{
-					view: "label",
-					label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
-				}, {
+				rows: [
+				// {
+				// 	view: "label",
+				// 	label: "<span class='webix_icon fa-{0}'></span>{1}".replace('{0}', Field.icon).replace('{1}', Field.menuName)
+				// },
+				{
 					view: "text",
 					id: ids.label,
 					name: 'label',
@@ -1143,11 +1188,429 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _configDesktop = __webpack_require__(8);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * ABFieldComponent
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * An ABFieldComponent defines the UI component used by an ABField to display it's properties.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+var _ABField = __webpack_require__(2);
+
+var _ABField2 = _interopRequireDefault(_ABField);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var ABFieldComponent = function () {
+	function ABFieldComponent(options) {
+		_classCallCheck(this, ABFieldComponent);
+
+		this.options = options;
+
+		this.fieldDefaults = options.fieldDefaults || {};
+
+		this.elements = options.elements || function (App) {
+			return [];
+		};
+
+		this.defaultValues = options.defaultValues || {};
+
+		this.rules = options.rules || {};
+
+		this.logic = options.logic || {};
+
+		this.init = options.init || function () {};
+
+		this.idBase = this.fieldDefaults.key || '??fieldKey??';
+
+		// this.ids = options.ids || {};
+		this.ids = {};
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+
+	///
+	/// Instance Methods
+	///
+
+	_createClass(ABFieldComponent, [{
+		key: 'component',
+		value: function component(App) {
+			var _this = this;
+
+			// for each provided element: create an this.ids for it:
+			var elements = this.elements(App, this);
+
+			////
+			//// prepare our ids
+			////
+
+			var ids = {
+
+				component: App.unique(this.idBase + '_component'),
+
+				// the common property fields
+				label: App.unique(this.idBase + '_label'),
+				columnName: App.unique(this.idBase + '_columnName'),
+				fieldDescription: App.unique(this.idBase + '_fieldDescription'),
+				showIcon: App.unique(this.idBase + '_showIcon')
+			};
+
+			this.eachDeep(elements, function (e) {
+				if (e.name) {
+					// if element has an .id, then use it in our list as is
+					if (e.id) {
+						ids[e.name] = e.id;
+					}
+
+					// otherwise create a new entry in our base list
+					_this.ids[e.name] = e.name;
+				}
+			});
+
+			// convert the entries in our base list into a globally acceptable id
+			// and use that in our ids list if it doesn't already exist
+			for (var i in this.ids) {
+				if (!ids[i]) {
+					ids[i] = App.unique(this.idBase + '_' + i);
+				}
+			}
+
+			// update our elements to include our ids as we have them now.
+			this.eachDeep(elements, function (e) {
+				if (e.name) {
+					e.id = ids[e.name];
+				}
+			});
+
+			////
+			//// our UI definition:
+			////
+
+			// our base form:
+			var _ui = {
+				view: 'form',
+				id: ids.component,
+				autoheight: true,
+				borderless: true,
+				elements: [
+					// {
+					// 	view: "text",
+					// 	id: ids.textDefault,
+					// 	name:'textDefault',
+					// 	placeholder: labels.component.defaultText
+					// },
+					// {
+					// 	view: "checkbox",
+					// 	id: ids.supportMultilingual,
+					// 	name:'supportMultilingual',
+					// 	labelRight: labels.component.supportMultilingual,
+					// 	labelWidth: 0,
+					// 	value: true
+					// }
+				],
+
+				rules: {
+					'label': webix.rules.isNotEmpty,
+					'columnName': webix.rules.isNotEmpty
+				}
+			};
+
+			var _init = function _init() {
+
+				// call our provided .init() routine
+				this.init(ids);
+			};
+
+			var _logic = {
+
+				/*
+     * @function clear
+     *
+     * clear the form.
+     */
+				clear: function clear() {
+
+					_ABField2.default.clearEditor(ids);
+
+					for (var f in _this.defaultValues) {
+						var component = $$(ids[f]);
+						if (component) {
+							component.setValue(_this.defaultValues[f]);
+						} else {
+							console.warn('!! could not find component for default value: name:' + f + ' id:' + ids[f]);
+						}
+					}
+
+					$$(ids.component).clearValidation();
+
+					// perform provided .clear()
+					if (_this.logic.clear) {
+						_this.logic.clear(ids);
+					}
+				},
+
+				/*
+     * @function hide
+     *
+     * hide this component.
+     */
+				hide: function hide() {
+					$$(ids.component).clearValidation();
+					$$(ids.component).hide(false, false);
+
+					// perform provided .hide()
+					if (_this.logic.hide) {
+						_this.logic.hide(ids);
+					}
+				},
+
+				/*
+     * @function isValid
+     *
+     * checks the current values on the componet to see if they are Valid
+     */
+				isValid: function isValid() {
+
+					var isValid = $$(ids.component).validate();
+
+					// perform provided .isValid()
+					if (_this.logic.isValid) {
+						isValid = _this.logic.isValid(ids, isValid);
+					}
+
+					return isValid;
+				},
+
+				/*
+     * @function labelOnChange
+     *
+     * The ABField.definitionEditor implements a default operation
+     * to update the value of the .columnName with the current value of 
+     * label.
+     * 
+     * if you want to override that functionality, implement this fn()
+     *
+     * @param {string} newVal	The new value of label
+     * @param {string} oldVal	The previous value
+     */
+				// labelOnChange: function (newVal, oldVal) {
+
+				// 	// When the Label value changes, update our Column Name value 
+				// 	// to match.
+
+				// 	oldVal = oldVal || '';
+				// 	if (newVal != oldVal &&
+				// 		oldVal == $$(ids.columnName).getValue()) {
+				// 		$$(ids.columnName).setValue(newVal);
+				// 	}
+				// },
+
+
+				/*
+     * @function populate
+     *
+     * populate the form with the given ABField instance provided.
+     *
+     * @param {ABField} field
+     */
+				populate: function populate(field) {
+
+					// populate the base ABField values:
+					_ABField2.default.editorPopulate(ids, field);
+
+					_this.eachDeep(elements, function (e) {
+						if (e.name != null) {
+							$$(ids[e.name]).setValue(field.settings[e.name]);
+						}
+					});
+
+					// perform provided .populate()
+					if (_this.logic.populate) {
+						_this.logic.populate(ids, field);
+					}
+				},
+
+				/*
+     * @function show
+     *
+     * show this component.
+     */
+				show: function show(a, b) {
+					$$(ids.component).clearValidation();
+					$$(ids.component).show(a, b);
+
+					// perform provided .show()
+					if (_this.logic.show) {
+						_this.logic.show(ids);
+					}
+				},
+
+				/*
+     * @function values
+     *
+     * return the values for this form.
+     * @return {obj}  
+     */
+				values: function values() {
+
+					var settings = $$(ids.component).getValues();
+					var values = _ABField2.default.editorValues(settings);
+
+					values.key = _this.fieldDefaults.key;
+
+					// perform provided .values()
+					if (_this.logic.values) {
+						values = _this.logic.values(ids, values);
+					}
+
+					return values;
+				}
+
+			};
+
+			// apply additional logic functions:
+			for (var l in this.logic) {
+				if (!_logic[l]) _logic[l] = this.logic[l];
+			}
+
+			// make sure our given elements, have an id set:
+
+
+			// get the common UI headers entries, and insert them above ours here:
+			// NOTE: put this here so that _logic is defined.
+			var commonUI = _ABField2.default.definitionEditor(App, ids, _logic, this.fieldDefaults);
+			_ui.elements = commonUI.rows.concat(elements);
+
+			for (var r in this.rules) {
+				_ui.rules[r] = this.rules[r];
+			}
+
+			// return the current instance of this component:
+			return this._component = {
+				ui: _ui, // {obj} 	the webix ui definition for this component
+				init: _init, // {fn} 	init() to setup this component  
+				// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+
+				// DataField exposed actions:
+				clear: _logic.clear,
+				hide: _logic.hide,
+				isValid: _logic.isValid,
+				populate: _logic.populate,
+				show: _logic.show,
+				values: _logic.values,
+
+				_logic: _logic // {obj} 	Unit Testing
+			};
+		}
+
+		/**
+   * @function eachDeep
+   * a depth first fn to apply fn() to each element of our list.
+   * @param {array} list  array of webix elements to scan
+   * @param {fn} fn function to apply to each element.
+   */
+
+	}, {
+		key: 'eachDeep',
+		value: function eachDeep(list, fn) {
+			var _this2 = this;
+
+			list.forEach(function (e) {
+
+				// process sub columns
+				if (e.cols) {
+					_this2.eachDeep(e.cols, fn);
+					return;
+				}
+
+				// or rows
+				if (e.rows) {
+					_this2.eachDeep(e.rows, fn);
+					return;
+				}
+
+				// or just process this element:
+				fn(e);
+			});
+		}
+	}, {
+		key: 'idsUnique',
+		value: function idsUnique(ids, App) {
+
+			for (var i in ids) {
+				if (ids[i] == '') {
+					ids[i] = App.unique(this.idBase + '_' + i);
+				} else {
+					ids[i] = App.unique(this.idBase + '_' + ids[i]);
+				}
+			}
+			return ids;
+		}
+
+		// populate(field) {
+		// 	this._component.populate(field);
+		// }
+
+	}]);
+
+	return ABFieldComponent;
+}();
+
+exports.default = ABFieldComponent;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _comm_service = __webpack_require__(10);
+
+var _comm_service2 = _interopRequireDefault(_comm_service);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+
+	// OP.Comm.Service.*
+	Service: _comm_service2.default
+};
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _configDesktop = __webpack_require__(11);
 
 var _configDesktop2 = _interopRequireDefault(_configDesktop);
 
-var _configMobile = __webpack_require__(9);
+var _configMobile = __webpack_require__(12);
 
 var _configMobile2 = _interopRequireDefault(_configMobile);
 
@@ -1171,7 +1634,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1304,7 +1767,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1637,7 +2100,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 };
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1764,7 +2227,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1780,7 +2243,58 @@ exports.default = {
 };
 
 /***/ }),
-/* 8 */
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+//
+// OP.Comm.Service.*
+// 
+// Map our old jQuery deferred comm utilities with ES6 promises.
+//
+
+
+var services = {
+
+	// OP.Comm.Service.get(options, cb) => {promise}
+	get: function get(options, cb) {
+		return new Promise(function (resolve, reject) {
+			AD.comm.service.get(options, cb).then(resolve, reject);
+		});
+	},
+
+	// OP.Comm.Service.post(options, cb) => {promise}
+	post: function post(options, cb) {
+		return new Promise(function (resolve, reject) {
+			AD.comm.service.post(options, cb).then(resolve, reject);
+		});
+	},
+
+	// OP.Comm.Service.put(options, cb) => {promise}
+	put: function put(options, cb) {
+		return new Promise(function (resolve, reject) {
+			AD.comm.service.put(options, cb).then(resolve, reject);
+		});
+	}
+
+};
+
+// OP.Comm.Service.delete(options, cb) => {promise}
+services['delete'] = function (options, cb) {
+	return new Promise(function (resolve, reject) {
+		AD.comm.service['delete'](options, cb).then(resolve, reject);
+	});
+};
+
+exports.default = services;
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1841,7 +2355,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 9 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1901,7 +2415,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 10 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1911,408 +2425,19 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * ABFieldComponent
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * An ABFieldComponent defines the UI component used by an ABField to display it's properties.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      *
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
-
-var _ABField = __webpack_require__(2);
-
-var _ABField2 = _interopRequireDefault(_ABField);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var ABFieldComponent = function () {
-	function ABFieldComponent(options) {
-		_classCallCheck(this, ABFieldComponent);
-
-		this.options = options;
-
-		this.fieldDefaults = options.fieldDefaults || {};
-
-		this.elements = options.elements || function (App) {
-			return [];
-		};
-
-		this.defaultValues = options.defaultValues || {};
-
-		this.rules = options.rules || {};
-
-		this.logic = options.logic || {};
-
-		this.init = options.init || function () {};
-
-		this.idBase = this.fieldDefaults.name || '??fieldName??';
-
-		// this.ids = options.ids || {};
-		this.ids = {};
-	}
-
-	///
-	/// Static Methods
-	///
-	/// Available to the Class level object.  These methods are not dependent
-	/// on the instance values of the Application.
-	///
-
-
-	///
-	/// Instance Methods
-	///
-
-	_createClass(ABFieldComponent, [{
-		key: 'component',
-		value: function component(App) {
-			var _this = this;
-
-			// for each provided element: create an this.ids for it:
-			var elements = this.elements(App, this);
-
-			////
-			//// prepare our ids
-			////
-
-			var ids = {
-
-				component: App.unique(this.idBase + '_component'),
-
-				// the common property fields
-				label: App.unique(this.idBase + '_label'),
-				columnName: App.unique(this.idBase + '_columnName'),
-				fieldDescription: App.unique(this.idBase + '_fieldDescription'),
-				showIcon: App.unique(this.idBase + '_showIcon')
-			};
-
-			this.eachDeep(elements, function (e) {
-				if (e.name) {
-					// if element has an .id, then use it in our list as is
-					if (e.id) {
-						ids[e.name] = e.id;
-					}
-
-					// otherwise create a new entry in our base list
-					_this.ids[e.name] = e.name;
-				}
-			});
-
-			// convert the entries in our base list into a globally acceptable id
-			// and use that in our ids list if it doesn't already exist
-			for (var i in this.ids) {
-				if (!ids[i]) {
-					ids[i] = App.unique(this.idBase + '_' + i);
-				}
-			}
-
-			// update our elements to include our ids as we have them now.
-			this.eachDeep(elements, function (e) {
-				if (e.name) {
-					e.id = ids[e.name];
-				}
-			});
-
-			////
-			//// our UI definition:
-			////
-
-			// our base form:
-			var _ui = {
-				view: 'form',
-				id: ids.component,
-				autoheight: true,
-				borderless: true,
-				elements: [
-					// {
-					// 	view: "text",
-					// 	id: ids.textDefault,
-					// 	name:'textDefault',
-					// 	placeholder: labels.component.defaultText
-					// },
-					// {
-					// 	view: "checkbox",
-					// 	id: ids.supportMultilingual,
-					// 	name:'supportMultilingual',
-					// 	labelRight: labels.component.supportMultilingual,
-					// 	labelWidth: 0,
-					// 	value: true
-					// }
-				],
-
-				rules: {
-					'label': webix.rules.isNotEmpty,
-					'columnName': webix.rules.isNotEmpty
-				}
-			};
-
-			var _init = function _init() {
-
-				// call our provided .init() routine
-				this.init(ids);
-			};
-
-			var _logic = {
-
-				/*
-     * @function clear
-     *
-     * clear the form.
-     */
-				clear: function clear() {
-
-					_ABField2.default.clearEditor(ids);
-
-					for (var f in _this.defaultValues) {
-						var component = $$(ids[f]);
-						if (component) {
-							component.setValue(_this.defaultValues[f]);
-						} else {
-							console.warn('!! could not find component for default value: name:' + f + ' id:' + ids[f]);
-						}
-					}
-
-					$$(ids.component).clearValidation();
-
-					// perform provided .clear()
-					if (_this.logic.clear) {
-						_this.logic.clear(ids);
-					}
-				},
-
-				/*
-     * @function hide
-     *
-     * hide this component.
-     */
-				hide: function hide() {
-					$$(ids.component).clearValidation();
-					$$(ids.component).hide(false, false);
-
-					// perform provided .hide()
-					if (_this.logic.hide) {
-						_this.logic.hide(ids);
-					}
-				},
-
-				/*
-     * @function isValid
-     *
-     * checks the current values on the componet to see if they are Valid
-     */
-				isValid: function isValid() {
-
-					var isValid = $$(ids.component).validate();
-
-					// perform provided .isValid()
-					if (_this.logic.isValid) {
-						isValid = _this.logic.isValid(ids, isValid);
-					}
-
-					return isValid;
-				},
-
-				/*
-     * @function labelOnChange
-     *
-     * The ABField.definitionEditor implements a default operation
-     * to update the value of the .columnName with the current value of 
-     * label.
-     * 
-     * if you want to override that functionality, implement this fn()
-     *
-     * @param {string} newVal	The new value of label
-     * @param {string} oldVal	The previous value
-     */
-				// labelOnChange: function (newVal, oldVal) {
-
-				// 	// When the Label value changes, update our Column Name value 
-				// 	// to match.
-
-				// 	oldVal = oldVal || '';
-				// 	if (newVal != oldVal &&
-				// 		oldVal == $$(ids.columnName).getValue()) {
-				// 		$$(ids.columnName).setValue(newVal);
-				// 	}
-				// },
-
-
-				/*
-     * @function populate
-     *
-     * populate the form with the given ABField instance provided.
-     *
-     * @param {ABField} field
-     */
-				populate: function populate(field) {
-
-					// populate the base ABField values:
-					_ABField2.default.editorPopulate(ids, field);
-
-					_this.eachDeep(elements, function (e) {
-						$$(ids[e.name]).setValue(field.settings[e.name]);
-					});
-
-					// perform provided .populate()
-					if (_this.logic.populate) {
-						_this.logic.populate(ids, field);
-					}
-				},
-
-				/*
-     * @function show
-     *
-     * show this component.
-     */
-				show: function show(a, b) {
-					$$(ids.component).clearValidation();
-					$$(ids.component).show(a, b);
-
-					// perform provided .show()
-					if (_this.logic.show) {
-						_this.logic.show(ids);
-					}
-				},
-
-				/*
-     * @function values
-     *
-     * return the values for this form.
-     * @return {obj}  
-     */
-				values: function values() {
-
-					var settings = $$(ids.component).getValues();
-					var values = _ABField2.default.editorValues(settings);
-
-					values.key = _this.fieldDefaults.key;
-
-					// perform provided .values()
-					if (_this.logic.values) {
-						values = _this.logic.values(ids, values);
-					}
-
-					return values;
-				}
-
-			};
-
-			// apply additional logic functions:
-			for (var l in this.logic) {
-				if (!_logic[l]) _logic[l] = this.logic[l];
-			}
-
-			// make sure our given elements, have an id set:
-
-
-			// get the common UI headers entries, and insert them above ours here:
-			// NOTE: put this here so that _logic is defined.
-			var commonUI = _ABField2.default.definitionEditor(App, ids, _logic, this.fieldDefaults);
-			_ui.elements = commonUI.rows.concat(elements);
-
-			for (var r in this.rules) {
-				_ui.rules[r] = this.rules[r];
-			}
-
-			// return the current instance of this component:
-			return this._component = {
-				ui: _ui, // {obj} 	the webix ui definition for this component
-				init: _init, // {fn} 	init() to setup this component  
-				// actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
-
-
-				// DataField exposed actions:
-				clear: _logic.clear,
-				hide: _logic.hide,
-				isValid: _logic.isValid,
-				populate: _logic.populate,
-				show: _logic.show,
-				values: _logic.values,
-
-				_logic: _logic // {obj} 	Unit Testing
-			};
-		}
-
-		/**
-   * @function eachDeep
-   * a depth first fn to apply fn() to each element of our list.
-   * @param {array} list  array of webix elements to scan
-   * @param {fn} fn function to apply to each element.
-   */
-
-	}, {
-		key: 'eachDeep',
-		value: function eachDeep(list, fn) {
-			var _this2 = this;
-
-			list.forEach(function (e) {
-
-				// process sub columns
-				if (e.cols) {
-					_this2.eachDeep(e.cols, fn);
-					return;
-				}
-
-				// or rows
-				if (e.rows) {
-					_this2.eachDeep(e.rows, fn);
-					return;
-				}
-
-				// or just process this element:
-				fn(e);
-			});
-		}
-	}, {
-		key: 'idsUnique',
-		value: function idsUnique(ids, App) {
-
-			for (var i in ids) {
-				if (ids[i] == '') {
-					ids[i] = App.unique(this.idBase + '_' + i);
-				} else {
-					ids[i] = App.unique(this.idBase + '_' + ids[i]);
-				}
-			}
-			return ids;
-		}
-
-		// populate(field) {
-		// 	this._component.populate(field);
-		// }
-
-	}]);
-
-	return ABFieldComponent;
-}();
-
-exports.default = ABFieldComponent;
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _ABFieldString = __webpack_require__(17);
+var _ABFieldString = __webpack_require__(20);
 
 var _ABFieldString2 = _interopRequireDefault(_ABFieldString);
 
-var _ABFieldNumber = __webpack_require__(16);
+var _ABFieldNumber = __webpack_require__(19);
 
 var _ABFieldNumber2 = _interopRequireDefault(_ABFieldNumber);
 
-var _ABFieldImage = __webpack_require__(15);
+var _ABFieldDate = __webpack_require__(17);
+
+var _ABFieldDate2 = _interopRequireDefault(_ABFieldDate);
+
+var _ABFieldImage = __webpack_require__(18);
 
 var _ABFieldImage2 = _interopRequireDefault(_ABFieldImage);
 
@@ -2322,15 +2447,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Fields
  * A name => ABField  hash of the different ABFields available.
  */
-var Fields = {}; /* 
-                  * ABFieldManager
-                  * 
-                  * An interface for managing the different ABFields available in our AppBuilder.
-                  *
-                  */
+/* 
+ * ABFieldManager
+ * 
+ * An interface for managing the different ABFields available in our AppBuilder.
+ *
+ */
 
+var Fields = {};
 Fields[_ABFieldString2.default.defaults().key] = _ABFieldString2.default;
 Fields[_ABFieldNumber2.default.defaults().key] = _ABFieldNumber2.default;
+Fields[_ABFieldDate2.default.defaults().key] = _ABFieldDate2.default;
 
 Fields[_ABFieldImage2.default.defaults().key] = _ABFieldImage2.default;
 
@@ -2367,25 +2494,25 @@ exports.default = {
 };
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(18);
+__webpack_require__(21);
 
-__webpack_require__(22);
+__webpack_require__(25);
 
-var _edittree = __webpack_require__(38);
+var _edittree = __webpack_require__(42);
 
 var _edittree2 = _interopRequireDefault(_edittree);
 
-var _editlist = __webpack_require__(37);
+var _editlist = __webpack_require__(41);
 
 var _editlist2 = _interopRequireDefault(_editlist);
 
-var _AppBuilder = __webpack_require__(43);
+var _AppBuilder = __webpack_require__(47);
 
 var _AppBuilder2 = _interopRequireDefault(_AppBuilder);
 
@@ -2503,13 +2630,13 @@ OP.Component.extend('ab', function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(12);
+__webpack_require__(14);
 
 AD.Control.OpsTool.extend('BuildApp', {
 
@@ -2609,7 +2736,7 @@ AD.Control.OpsTool.extend('BuildApp', {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 14 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2623,7 +2750,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // import OP from "OP"
 
 
-var _ABFieldManager = __webpack_require__(11);
+var _ABFieldManager = __webpack_require__(13);
 
 var _ABFieldManager2 = _interopRequireDefault(_ABFieldManager);
 
@@ -2676,13 +2803,15 @@ var ABObject = function () {
 		this.translations = attributes.translations;
 
 		if (typeof attributes.objectWorkspace != "undefined") {
-			if (typeof attributes.objectWorkspace.hiddenFields == "undefined") attributes.objectWorkspace.hiddenFields = [];
+			if (typeof attributes.objectWorkspace.sortFields == "undefined") attributes.objectWorkspace.sortFields = [];
 			if (typeof attributes.objectWorkspace.frozenColumnID == "undefined") attributes.objectWorkspace.frozenColumnID = "";
+			if (typeof attributes.objectWorkspace.hiddenFields == "undefined") attributes.objectWorkspace.hiddenFields = [];
 		}
 
 		this.objectWorkspace = attributes.objectWorkspace || {
-			hiddenFields: [], // array of [ids] to add hidden:true to
-			frozenColumnID: "" };
+			sortFields: [], // array of columns with their sort configurations
+			frozenColumnID: "", // id of column you want to stop freezing
+			hiddenFields: [] };
 
 		// multilingual fields: label, description
 		OP.Multilingual.translate(this, this, ['label']);
@@ -2758,8 +2887,34 @@ var ABObject = function () {
 	}, {
 		key: "destroy",
 		value: function destroy() {
+			var _this3 = this;
 
-			return this.application.objectDestroy(this);
+			return new Promise(function (resolve, reject) {
+
+				// OK, some of our Fields have special follow up actions that need to be
+				// considered when they no longer exist, so before we simply drop this
+				// object/table, drop each of our fields and give them a chance to clean up
+				// what needs cleaning up.
+
+				// ==> More work, but safer.
+				var fieldDrops = [];
+				_this3.fields().forEach(function (f) {
+					fieldDrops.push(f.destroy());
+				});
+
+				Promise.all(fieldDrops).then(function () {
+
+					// now drop our table
+					// NOTE: our .migrateXXX() routines expect the object to currently exist
+					// in the DB before we perform the DB operations.  So we need to
+					// .migrateDrop()  before we actually .objectDestroy() this.
+					_this3.migrateDrop().then(function () {
+
+						// finally remove us from the application storage
+						return _this3.application.objectDestroy(_this3);
+					}).then(resolve).catch(reject);
+				}).catch(reject);
+			});
 		}
 
 		/**
@@ -2775,20 +2930,32 @@ var ABObject = function () {
 	}, {
 		key: "save",
 		value: function save() {
-			var _this3 = this;
+			var _this4 = this;
 
 			return new Promise(function (resolve, reject) {
 
-				// if this is our initial save()
-				if (!_this3.id) {
+				var isAdd = false;
 
-					_this3.id = OP.Util.uuid(); // setup default .id
-					_this3.label = _this3.label || _this3.name;
-					_this3.urlPath = _this3.urlPath || _this3.application.name + '/' + _this3.name;
+				// if this is our initial save()
+				if (!_this4.id) {
+
+					_this4.id = OP.Util.uuid(); // setup default .id
+					_this4.label = _this4.label || _this4.name;
+					_this4.urlPath = _this4.urlPath || _this4.application.name + '/' + _this4.name;
+					isAdd = true;
 				}
 
-				_this3.application.objectSave(_this3).then(function () {
-					resolve(_this3);
+				_this4.application.objectSave(_this4).then(function () {
+
+					if (isAdd) {
+
+						// on a Create: trigger a migrateCreate object
+						_this4.migrateCreate().then(function () {
+							resolve(_this4);
+						}, reject);
+					} else {
+						resolve(_this4);
+					}
 				}).catch(function (err) {
 					reject(err);
 				});
@@ -2830,6 +2997,29 @@ var ABObject = function () {
 				translations: this.translations,
 				fields: currFields
 			};
+		}
+
+		///
+		/// DB Migrations
+		///
+
+	}, {
+		key: "migrateCreate",
+		value: function migrateCreate() {
+			var url = '/app_builder/migrate/application/#appID#/object/#objID#'.replace('#appID#', this.application.id).replace('#objID#', this.id);
+
+			return OP.Comm.Service.post({
+				url: url
+			});
+		}
+	}, {
+		key: "migrateDrop",
+		value: function migrateDrop() {
+			var url = '/app_builder/migrate/application/#appID#/object/#objID#'.replace('#appID#', this.application.id).replace('#objID#', this.id);
+
+			return OP.Comm.Service['delete']({
+				url: url
+			});
 		}
 
 		///
@@ -2922,7 +3112,6 @@ var ABObject = function () {
 		///	Object Workspace Settings
 		///
 
-
 	}, {
 		key: "columnHeaders",
 
@@ -2968,12 +3157,12 @@ var ABObject = function () {
 			return headers;
 		}
 	}, {
-		key: "workspaceHiddenFields",
+		key: "workspaceSortFields",
 		get: function get() {
-			return this.objectWorkspace.hiddenFields;
+			return this.objectWorkspace.sortFields;
 		},
 		set: function set(fields) {
-			this.objectWorkspace.hiddenFields = fields;
+			this.objectWorkspace.sortFields = fields;
 		}
 	}, {
 		key: "workspaceFrozenColumnID",
@@ -2982,6 +3171,14 @@ var ABObject = function () {
 		},
 		set: function set(id) {
 			this.objectWorkspace.frozenColumnID = id;
+		}
+	}, {
+		key: "workspaceHiddenFields",
+		get: function get() {
+			return this.objectWorkspace.hiddenFields;
+		},
+		set: function set(fields) {
+			this.objectWorkspace.hiddenFields = fields;
 		}
 	}]);
 
@@ -2992,7 +3189,7 @@ exports.default = ABObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3010,7 +3207,468 @@ var _ABField2 = __webpack_require__(2);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
-var _ABFieldComponent = __webpack_require__(10);
+var _ABFieldComponent = __webpack_require__(3);
+
+var _ABFieldComponent2 = _interopRequireDefault(_ABFieldComponent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * ABFieldDate
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * An ABFieldDate defines a date/datetime field type.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var ABFieldDateDefaults = {
+	key: 'date', // unique key to reference this specific DataField
+
+	icon: 'calendar', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+
+	// menuName: what gets displayed in the Editor drop list
+	menuName: L('ab.dataField.date.menuName', '*Date'),
+
+	// description: what gets displayed in the Editor description.
+	description: ''
+};
+
+/**
+ * ABFieldDateComponent
+ *
+ * Defines the UI Component for this Data Field.  The ui component is responsible
+ * for displaying the properties editor, populating existing data, retrieving
+ * property values, etc.
+ */
+var ABFieldDateComponent = new _ABFieldComponent2.default({
+	fieldDefaults: ABFieldDateDefaults,
+
+	elements: function elements(App) {
+		return [{
+			view: "label",
+			label: "Pick one from a calendar."
+		}, {
+			view: "checkbox",
+			name: "includeTime",
+			labelRight: "Include time",
+			labelWidth: 0,
+			on: {
+				onChange: function onChange(newVal, oldVal) {
+					// TODO : Re-render default date picker
+					// webix.ui({
+					// 	view: 'datepicker',
+					// 	label: "Default",
+					// 	id: componentIds.default,
+					// 	timepicker: newVal ? true : false,
+					// 	disabled: $$(componentIds.currentToDefault).getValue() == true
+					// }, $$(componentIds.default));
+				}
+			}
+		}, {
+			view: 'checkbox',
+			name: "defaultCurrentDate",
+			labelRight: 'Set current date to default value',
+			labelWidth: 0,
+			on: {
+				onChange: function onChange(newVal, oldVal) {
+					// if (newVal) {
+					// 	$$(componentIds.default).disable();
+					// }
+					// else {
+					// 	$$(componentIds.default).enable();
+					// }
+				}
+			}
+		}, {
+			view: 'datepicker',
+			label: "Default",
+			name: 'defaultDate',
+			timepicker: false // TODO
+		}, {
+			view: "label",
+			label: "Date format options"
+		}, {
+			view: "text",
+			name: "dateDisplay",
+			label: "Date Display",
+			labelWidth: "100",
+			// id: componentIds.dateDisplay,
+			disabled: true,
+			//value : showdateDisplay(),
+			placeholder: "date-display"
+		}, {
+			cols: [{
+				view: "richselect",
+				name: "dayFormat",
+				// id: componentIds.includeDayFormat,
+				label: "Day",
+				value: 'includeDay-ddd',
+				options: [{ id: 'includeDay-D', value: "1 2 ... 30 31" }, { id: 'includeDay-Do', value: "1st 2nd ... 30th 31st" }, { id: 'includeDay-DD', value: "01 02 ... 30 31" }, { id: 'includeDay-dd', value: "Su Mo ... Fr Sa" }, { id: 'includeDay-ddd', value: "Sun Mon ... Fri Sat" }, { id: 'includeDay-dddd', value: "Sunday Monday ... Friday Saturday" }],
+				on: {
+					'onChange': function onChange(newValue, oldValue) {
+						// showDateDisplay();
+					}
+				}
+
+			}, {
+				view: "richselect",
+				name: "dayOrder",
+				// id: componentIds.includeDayOrder,
+				label: "Places",
+				value: 1,
+				//disabled: true,
+				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+				on: {
+					'onChange': function onChange(newValue, oldValue) {
+						// showDateDisplay();
+					}
+				}
+			}]
+
+		}, {
+			view: "radio",
+			name: "dayDelimiter",
+			// id: componentIds.typeDayFormatDelimiters,
+			label: "Delimiters",
+			value: 'slash',
+			vertical: true,
+			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "Slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
+			on: {
+				'onChange': function onChange(newValue, oldValue) {
+					// showDateDisplay();
+				}
+			}
+		}, {
+			cols: [{
+				view: "richselect",
+				name: "monthFormat",
+				// id: componentIds.includeMonthFormat,
+				label: "Month",
+				value: 'includeMonth-MMM',
+				options: [{ id: 'includeMonth-M', value: "1 2 ... 11 12" }, { id: 'includeMonth-Mo', value: "1st 2nd ... 11th 12th" }, { id: 'includeMonth-MM', value: "01 02 ... 11 12" }, { id: 'includeMonth-MMM', value: "Jan Feb ... Nov Dec" }, { id: 'includeMonth-MMMM', value: "January February ... November December" }],
+				on: {
+					'onChange': function onChange(newValue, oldValue) {
+						// showDateDisplay();
+					}
+				}
+			}, {
+				view: "richselect",
+				name: "monthOrder",
+				// id: componentIds.includeMonthOrder,
+				label: "Places",
+				value: 2,
+				//disabled: true,
+				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+				on: {
+					'onChange': function onChange(newValue, oldValue) {
+						// showDateDisplay();
+					}
+				}
+			}]
+		}, {
+			view: "radio",
+			name: "monthDelimiter",
+			// id: componentIds.typeMonthFormatDelimiters,
+			label: "Delimiters",
+			value: 'slash',
+			vertical: true,
+			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "Slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
+			on: {
+				'onChange': function onChange(newValue, oldValue) {
+					// showDateDisplay();
+				}
+			}
+		}, {
+			cols: [{
+				view: "richselect",
+				name: "yearDelimiter",
+				// id: componentIds.includeYearFormat,
+				label: "Year",
+				value: 'includeYear-YYYY',
+				options: [{ id: 'includeYear-YY', value: "70 71 ... 29 30" }, { id: 'includeYear-YYYY', value: "1970 1971 ... 2029 2030" }],
+				on: {
+					'onChange': function onChange(newValue, oldValue) {
+						// showDateDisplay();
+					}
+				}
+			}, {
+				view: "richselect",
+				name: "yearOrder",
+				// id: componentIds.includeYearOrder,
+				label: "Places",
+				value: 3,
+				//disabled: true,
+				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+				on: {
+					'onChange': function onChange(newValue, oldValue) {
+						// showDateDisplay();
+					}
+				}
+			}]
+
+		}, {
+			view: "radio",
+			name: "yearDelimiter",
+			// id: componentIds.typeYearFormatDelimiters,
+			label: "Delimiters",
+			value: 'slash',
+			vertical: true,
+			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
+			on: {
+				'onChange': function onChange(newValue, oldValue) {
+					// showDateDisplay();
+				}
+			}
+		},
+
+		// Validator
+		{
+			view: 'label',
+			label: 'Validation criteria',
+			css: 'ab-text-bold'
+		}, {
+			// id: componentIds.validateCondition,
+			view: "select",
+			name: "validateCondition",
+			label: "Condition",
+			value: 'none',
+			options: [{ id: 'none', value: '[Condition]' }, { id: 'dateRange', value: 'Range' }, { id: 'between', value: 'Between' }, { id: 'notBetween', value: 'Not between' }, { id: '=', value: 'Equal to' }, { id: '<>', value: 'Not equal to' }, { id: '>', value: 'Greater than' }, { id: '<', value: 'Less than' }, { id: '>=', value: 'Greater than or Equal to' }, { id: '<=', value: 'Less than or Equal to' }],
+			on: {
+				onChange: function onChange(newVal, oldVal) {
+					// switch (newVal) {
+					// 	case 'none':
+					// 		$$(componentIds.validateRange).hide();
+					// 		$$(componentIds.validateLeft).hide();
+					// 		$$(componentIds.validateRight).hide();
+					// 		break;
+					// 	case 'dateRange':
+					// 		$$(componentIds.validateRange).show();
+					// 		$$(componentIds.validateLeft).hide();
+					// 		$$(componentIds.validateRight).hide();
+					// 		break;
+					// 	case 'between':
+					// 	case 'notBetween':
+					// 		$$(componentIds.validateRange).hide();
+					// 		$$(componentIds.validateLeft).define('label', 'Start Date');
+					// 		$$(componentIds.validateLeft).refresh();
+					// 		$$(componentIds.validateLeft).show();
+					// 		$$(componentIds.validateRight).show();
+					// 		break;
+					// 	case '=':
+					// 	case '<>':
+					// 	case '>':
+					// 	case '<':
+					// 	case '>=':
+					// 	case '<=':
+					// 		$$(componentIds.validateRange).hide();
+					// 		$$(componentIds.validateLeft).define('label', 'Date');
+					// 		$$(componentIds.validateLeft).refresh();
+					// 		$$(componentIds.validateLeft).show();
+					// 		$$(componentIds.validateRight).hide();
+					// 		break;
+					// }
+				}
+			}
+		}, {
+			// id: componentIds.validateRange,
+			rows: [{
+				// id: componentIds.validateRangeUnit,
+				view: "select",
+				name: "validateRangeUnit",
+				label: 'Unit',
+				options: [{ id: 'days', value: 'Days' }, { id: 'months', value: 'Months' }, { id: 'years', value: 'Years' }],
+				on: {
+					onChange: function onChange(newVal) {
+						// $$(componentIds.validateRangeBeforeLabel).refresh();
+						// $$(componentIds.validateRangeAfterLabel).refresh();
+					}
+				}
+			}, {
+				cols: [{
+					// id: componentIds.validateRangeBeforeLabel,
+					view: 'template',
+					align: 'left',
+					width: 125,
+					borderless: true
+				}, {
+					view: 'label',
+					label: '[Current date]',
+					align: 'center'
+				}, {
+					// id: componentIds.validateRangeAfterLabel,
+					view: 'template',
+					align: 'right',
+					borderless: true
+				}]
+			}, {
+				cols: [{
+					// id: componentIds.validateRangeBefore,
+					view: 'slider',
+					name: "validateRangeBefore",
+					on: {
+						onChange: function onChange(newVal, oldValue) {
+							// $$(componentIds.validateRangeBeforeLabel).refresh();
+						}
+					}
+				}, {
+					// id: componentIds.validateRangeAfter,
+					view: 'slider',
+					name: "validateRangeAfter",
+					on: {
+						onChange: function onChange(newVal, oldValue) {
+							// $$(componentIds.validateRangeAfterLabel).refresh();
+						}
+					}
+				}]
+			}]
+		}, {
+			// id: componentIds.validateLeft,
+			name: "validateStartDate",
+			view: 'datepicker',
+			label: 'Start Date'
+		}, {
+			// id: componentIds.validateRight,
+			name: "validateEndDate",
+			view: 'datepicker',
+			label: 'End Date'
+		}];
+	}
+
+});
+
+var ABFieldDate = function (_ABField) {
+	_inherits(ABFieldDate, _ABField);
+
+	function ABFieldDate(values, object) {
+		_classCallCheck(this, ABFieldDate);
+
+		return _possibleConstructorReturn(this, (ABFieldDate.__proto__ || Object.getPrototypeOf(ABFieldDate)).call(this, values, object, ABFieldDateDefaults));
+
+		/*
+  {
+  	settings: {
+  		textDefault: 'string',
+  		supportMultilingual: true/false
+  	}
+  }
+  */
+	}
+
+	// return the default values for this DataField
+
+
+	_createClass(ABFieldDate, [{
+		key: "isValid",
+
+
+		///
+		/// Instance Methods
+		///
+
+
+		value: function isValid() {
+
+			var errors = _get(ABFieldDate.prototype.__proto__ || Object.getPrototypeOf(ABFieldDate.prototype), "isValid", this).call(this);
+
+			// errors = OP.Form.validationError({
+			// 	name:'columnName',
+			// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
+			// }, errors);
+
+			return errors;
+		}
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABApplication instance
+   * into the values needed for saving to the DB.
+   *
+   * Most of the instance data is stored in .json field, so be sure to
+   * update that from all the current values of our child fields.
+   *
+   * @return {json}
+   */
+		// toObj () {
+
+		// 	var obj = super.toObj();
+
+		// 	// obj.settings = this.settings;  // <--  super.toObj()
+
+		// 	return obj;
+		// }
+
+
+		///
+		/// Working with Actual Object Values:
+		///
+
+		// return the grid column header definition for this instance of ABFieldDate
+
+	}, {
+		key: "columnHeader",
+		value: function columnHeader(isObjectWorkspace) {
+			var config = _get(ABFieldDate.prototype.__proto__ || Object.getPrototypeOf(ABFieldDate.prototype), "columnHeader", this).call(this, isObjectWorkspace);
+
+			config.editor = 'text';
+			config.sort = 'string';
+
+			return config;
+		}
+	}], [{
+		key: "defaults",
+		value: function defaults() {
+			return ABFieldDateDefaults;
+		}
+
+		/*
+  * @function propertiesComponent
+  *
+  * return a UI Component that contains the property definitions for this Field.
+  *
+  * @param {App} App the UI App instance passed around the Components.
+  * @return {Component}
+  */
+
+	}, {
+		key: "propertiesComponent",
+		value: function propertiesComponent(App) {
+			return ABFieldDateComponent.component(App);
+		}
+	}]);
+
+	return ABFieldDate;
+}(_ABField3.default);
+
+exports.default = ABFieldDate;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _ABField2 = __webpack_require__(2);
+
+var _ABField3 = _interopRequireDefault(_ABField2);
+
+var _ABFieldComponent = __webpack_require__(3);
 
 var _ABFieldComponent2 = _interopRequireDefault(_ABFieldComponent);
 
@@ -3047,7 +3705,8 @@ var defaultValues = {
 	'useWidth': 0,
 	'imageWidth': '',
 	'useHeight': 0,
-	'imageHeight': ''
+	'imageHeight': '',
+	'removeExistingData': 0
 };
 
 /**
@@ -3168,7 +3827,8 @@ var ABFieldImage = function (_ABField) {
   'useWidth':0,
   'imageWidth':'',
   'useHeight': 0,
-  'imageHeight': ''
+  'imageHeight': '',
+  'removeExistingData': 0
   }
   }
   */
@@ -3183,6 +3843,7 @@ var ABFieldImage = function (_ABField) {
 		// text to Int:
 		_this.settings.useWidth = parseInt(_this.settings.useWidth);
 		_this.settings.useHeight = parseInt(_this.settings.useHeight);
+		_this.settings.removeExistingData = parseInt(_this.settings.removeExistingData);
 		return _this;
 	}
 
@@ -3208,6 +3869,48 @@ var ABFieldImage = function (_ABField) {
 			// }, errors);
 
 			return errors;
+		}
+
+		/**
+   * @function destroy
+   * On a destroy operation, ask if the user wants to keep the related images.
+   */
+
+	}, {
+		key: "destroy",
+		value: function destroy() {
+			var _this2 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// verify we have been .save()d before:
+				if (_this2.id) {
+
+					// Ask the user what to do about the existing images:
+					OP.Dialog.Confirm({
+						title: L('ab.dataField.image.keepImages', '*Keep Images?'),
+						message: L('ab.dataField.image.keepImagesDescription', '*Do you want to keep the images referenced by #label#?').replace('#label#', _this2.label),
+						callback: function callback(result) {
+
+							// update this setting so the server can respond correctly in
+							// ABFieldImage.migrateDrop()
+							_this2.settings.removeExistingData = result ? 0 : 1;
+							_this2.save().then(function () {
+
+								// TODO: a reminder that you still got alot on the server to do!
+								OP.Dialog.Alert({
+									title: '!! TODO !!',
+									text: 'Tell a Developer to actually pay attention to this!'
+								});
+								// now the default .destroy() 
+								_get(ABFieldImage.prototype.__proto__ || Object.getPrototypeOf(ABFieldImage.prototype), "destroy", _this2).call(_this2).then(resolve).catch(reject);
+							}).catch(reject);
+						}
+					});
+				} else {
+					resolve(); // nothing to do really
+				}
+			});
 		}
 
 		/**
@@ -3290,9 +3993,10 @@ var ABFieldImage = function (_ABField) {
 
 
 exports.default = ABFieldImage;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 16 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3310,7 +4014,7 @@ var _ABField2 = __webpack_require__(2);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
-var _ABFieldComponent = __webpack_require__(10);
+var _ABFieldComponent = __webpack_require__(3);
 
 var _ABFieldComponent2 = _interopRequireDefault(_ABFieldComponent);
 
@@ -3732,7 +4436,7 @@ webix.editors.number = webix.extend({
 exports.default = ABFieldNumber;
 
 /***/ }),
-/* 17 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3750,7 +4454,7 @@ var _ABField2 = __webpack_require__(2);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
-var _ABFieldComponent = __webpack_require__(10);
+var _ABFieldComponent = __webpack_require__(3);
 
 var _ABFieldComponent2 = _interopRequireDefault(_ABFieldComponent);
 
@@ -3976,15 +4680,15 @@ var ABFieldString = function (_ABField) {
 exports.default = ABFieldString;
 
 /***/ }),
-/* 18 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(20);
+__webpack_require__(23);
 
-__webpack_require__(19);
+__webpack_require__(22);
 
 /*
  * AB Choose
@@ -4050,7 +4754,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 19 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4911,7 +5615,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 20 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4921,7 +5625,7 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(21);
+__webpack_require__(24);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5362,7 +6066,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 21 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5477,7 +6181,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 22 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5487,9 +6191,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(24);
+__webpack_require__(27);
 
-__webpack_require__(23);
+__webpack_require__(26);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5744,7 +6448,7 @@ OP.Component.extend('ab_work', function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 23 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5843,7 +6547,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 24 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5853,9 +6557,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(25);
+__webpack_require__(28);
 
-__webpack_require__(29);
+__webpack_require__(32);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5951,7 +6655,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 25 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5961,9 +6665,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(26);
+__webpack_require__(29);
 
-__webpack_require__(28);
+__webpack_require__(31);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6004,8 +6708,6 @@ OP.Component.extend(idBase, function (App) {
 
 	};
 
-	var ObjectEditPopup = OP.Component['ab_work_object_list_popupEditMenu'](App);
-
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
@@ -6025,7 +6727,7 @@ OP.Component.extend(idBase, function (App) {
 				return _logic.templateListItem(obj, common);
 			},
 			type: {
-				height: "auto",
+				height: 35,
 				iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 			},
 			on: {
@@ -6060,11 +6762,18 @@ OP.Component.extend(idBase, function (App) {
 	// Our init() function for setting up our UI
 	var _init = function _init() {
 
-		webix.extend($$(ids.list), webix.ProgressBar);
-		$$(ids.component).adjust();
-		$$(ids.list).adjust();
+		if ($$(ids.component)) $$(ids.component).adjust();
 
-		ObjectEditPopup.init({
+		if ($$(ids.list)) {
+			webix.extend($$(ids.list), webix.ProgressBar);
+			$$(ids.list).adjust();
+		}
+
+		PopupNewObjectComponent.init({
+			onDone: _logic.callbackNewObject
+		});
+
+		PopupEditObjectComponent.init({
 			onClick: _logic.callbackObjectEditorMenu
 		});
 	};
@@ -6101,7 +6810,6 @@ OP.Component.extend(idBase, function (App) {
 			List.unselectAll();
 
 			//
-			_logic.syncNumberRefresh();
 			_logic.listReady();
 
 			// prepare our Popup with the current Application
@@ -6110,7 +6818,7 @@ OP.Component.extend(idBase, function (App) {
 
 		clickEditMenu: function clickEditMenu(e, id, trg) {
 			// Show menu
-			ObjectEditPopup.show(trg);
+			PopupEditObjectComponent.show(trg);
 
 			return false;
 		},
@@ -6218,33 +6926,6 @@ OP.Component.extend(idBase, function (App) {
 			$$(ids.component).show();
 		},
 
-		syncNumberRefresh: function syncNumberRefresh() {
-
-			//// NOTE: I think we are removing Sync Numbers with the refactor.
-			//// probably wont need this.
-			console.error('TODO: syncNumRefresh()');
-			// var self = this,
-			// 	objects = [];
-
-			// objects = $$(self.webixUiId.objectList).data.find(function (d) {
-			// 	return objectName ? d.name == objectName : true;
-			// }, false, true);
-
-			// objects.forEach(function (obj) {
-			// 	var objectModel = modelCreator.getModel(AD.classes.AppBuilder.currApp, obj.name),
-			// 		unsyncNumber = (objectModel && objectModel.Cached ? objectModel.Cached.count() : 0),
-			// 		htmlItem = $($$(self.webixUiId.objectList).getItemNode(obj.id));
-
-			// 	if (unsyncNumber > 0) {
-			// 		htmlItem.find('.ab-object-unsync-number').html(unsyncNumber);
-			// 		htmlItem.find('.ab-object-unsync').show();
-			// 	}
-			// 	else {
-			// 		htmlItem.find('.ab-object-unsync').hide();
-			// 	}
-			// });
-		},
-
 		/**
    * @function templateListItem
    *
@@ -6270,8 +6951,8 @@ OP.Component.extend(idBase, function (App) {
 				return;
 			}
 
-			objectList.add(object, 0);
-			$$(ids.list).select(newObject.id);
+			objectList.add(object, objectList.count());
+			$$(ids.list).select(object.id);
 		},
 
 		/**
@@ -6282,7 +6963,7 @@ OP.Component.extend(idBase, function (App) {
 		clickNewObject: function clickNewObject() {
 
 			// show the new popup
-			PopupNewObject.show();
+			PopupNewObjectComponent.show();
 		},
 
 		rename: function rename() {
@@ -6338,10 +7019,7 @@ OP.Component.extend(idBase, function (App) {
 	// Note: put these here so _logic is defined:
 	// There is a Popup for adding a new Object:
 	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
-	var PopupNewObject = webix.ui(PopupNewObjectComponent.ui);
-	PopupNewObjectComponent.init({
-		onDone: _logic.callbackNewObject
-	});
+	var PopupEditObjectComponent = OP.Component['ab_work_object_list_popupEditMenu'](App);
 
 	var CurrentApplication = null;
 	var objectList = null;
@@ -6376,13 +7054,13 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 26 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(27);
+__webpack_require__(30);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -6442,6 +7120,7 @@ OP.Component.extend(idBase, function (App) {
 
 	// Our init() function for setting up our UI
 	var _init = function _init(options) {
+		webix.ui(_ui);
 
 		// register our callbacks:
 		for (var c in _logic.callbacks) {
@@ -6551,6 +7230,7 @@ OP.Component.extend(idBase, function (App) {
 
 		// interface methods for parent component:
 		applicationLoad: _logic.applicationLoad,
+		show: _logic.show,
 
 		_logic: _logic // {obj} 	Unit Testing
 	};
@@ -6558,7 +7238,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 27 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6708,6 +7388,7 @@ OP.Component.extend(idBase, function (App) {
 				// if there was no error, clear the form for the next
 				// entry:
 				_logic.formClear();
+				saveButton.enable();
 			});
 		},
 
@@ -6758,7 +7439,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 28 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6808,7 +7489,7 @@ OP.Component.extend(idBase, function (App) {
 			select: false,
 			on: {
 				'onItemClick': function onItemClick(timestamp, e, trg) {
-					return _logic.onItemClick(timestamp, e, trg);
+					return _logic.onItemClick(trg);
 				}
 			}
 		}
@@ -6839,13 +7520,13 @@ OP.Component.extend(idBase, function (App) {
    * @function onItemClick
    * process which item in our popup was selected.
    */
-		onItemClick: function onItemClick(timestamp, e, trg) {
+		onItemClick: function onItemClick(itemNode) {
 
 			// hide our popup before we trigger any other possible UI animation: (like .edit)
 			// NOTE: if the UI is animating another component, and we do .hide()
 			// while it is in progress, the UI will glitch and give the user whiplash.
 
-			switch (trg.textContent.trim()) {
+			switch (itemNode.textContent.trim()) {
 				case labels.common.rename:
 					this.callbacks.onClick('rename');
 					break;
@@ -6881,7 +7562,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 29 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6891,28 +7572,29 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(30);
-
-__webpack_require__(31);
-
-__webpack_require__(32);
+__webpack_require__(33);
 
 __webpack_require__(34);
 
 __webpack_require__(35);
 
+__webpack_require__(37);
+
+__webpack_require__(38);
+
+__webpack_require__(39);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
 /*
  * ab_work_object_workspace
  *
  * Manage the Object Workspace area.
  *
  */
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
 
 var labels = {
 
@@ -6977,12 +7659,15 @@ OP.Component.extend(idBase, function (App) {
 	var PopupFrozenColumnsComponent = OP.Component['ab_work_object_workspace_popupFrozenColumns'](App);
 	var PopupFrozenColumns = webix.ui(PopupFrozenColumnsComponent.ui);
 
+	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
+	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
+
 	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
 	// var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
 	webix.ui(PopupNewDataFieldComponent.ui);
 
-	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
-	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
+	var PopupSortFieldComponent = OP.Component['ab_work_object_workspace_popupSortFields'](App);
+	var PopupSortField = webix.ui(PopupSortFieldComponent.ui);
 
 	// Our webix UI definition:
 	var _ui = {
@@ -7131,12 +7816,21 @@ OP.Component.extend(idBase, function (App) {
 			onChange: _logic.callbackFrozenColumns // be notified when there is a change in the frozen columns
 		});
 
+		PopupHideFieldComponent.init({
+			onChange: _logic.callbackFieldsVisible // be notified when there is a change in the hidden fields
+		});
+
 		PopupNewDataFieldComponent.init({
 			onSave: _logic.callbackAddFields // be notified when a new Field is created & saved
 		});
 
-		PopupHideFieldComponent.init({
-			onChange: _logic.callbackFieldsVisible // be notified when there is a change in the hidden fields
+		var fieldList = DataTable.getFieldList();
+
+		PopupSortFieldComponent.init({
+			data: { "james": "duncan" },
+			datatable: DataTable,
+			fieldList: fieldList,
+			onChange: _logic.callbackSortFields // be notified when there is a change in the sort fields
 		});
 
 		$$(ids.noSelection).show();
@@ -7168,7 +7862,7 @@ OP.Component.extend(idBase, function (App) {
    *
    * call back for when the hidden fields have changed.
    */
-		callbackFrozenColumns: function callbackFrozenColumns() {
+		callbackFrozenColumns: function callbackFrozenColumns(skipRefresh) {
 
 			var frozenID = CurrentObject.workspaceFrozenColumnID;
 
@@ -7178,7 +7872,9 @@ OP.Component.extend(idBase, function (App) {
 				$$(ids.buttonFrozen).define('badge', badgeNumber);
 				$$(ids.buttonFrozen).refresh();
 
-				DataTable.refresh();
+				if (!skipRefresh) {
+					DataTable.refresh();
+				}
 			}
 		},
 
@@ -7241,6 +7937,25 @@ OP.Component.extend(idBase, function (App) {
 					});
 					break;
 			}
+		},
+
+		/**
+   * @function callbackSortFields
+   *
+   * call back for when the sort fields popup changes
+   */
+		callbackSortFields: function callbackSortFields() {
+
+			var fieldList = DataTable.getFieldList();
+
+			//alert(fieldList);
+
+			// if (typeof(fieldList) != "undefined") {
+			// 	$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+			// 	$$(ids.buttonFieldsVisible).refresh();
+			//
+			// 	DataTable.refresh();
+			// }
 		},
 
 		/**
@@ -7316,9 +8031,10 @@ OP.Component.extend(idBase, function (App) {
    * show the popup to sort the datatable
    */
 		toolbarSort: function toolbarSort($view) {
+			PopupSortField.show($view);
 			// self.refreshPopupData();
 			// $$(self.webixUiId.sortFieldsPopup).show($view);
-			console.error('TODO: toolbarSort()');
+			//console.error('TODO: toolbarSort()');
 		}
 	};
 
@@ -7356,13 +8072,14 @@ OP.Component.extend(idBase, function (App) {
 			// update hiddenFields
 			_logic.callbackFieldsVisible();
 
+			DataTable.objectLoad(object);
+
 			PopupDefineLabelComponent.objectLoad(object);
 			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
-			DataTable.objectLoad(object);
+			PopupSortFieldComponent.objectLoad(object);
 
-			// update frozen columns
-			_logic.callbackFrozenColumns();
+			_logic.callbackFrozenColumns(true);
 		}
 
 	};
@@ -7379,13 +8096,13 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 30 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(33);
+__webpack_require__(36);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -7632,6 +8349,18 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		/**
+   * @function getColumnConfig
+   *
+   * return the column config of a datagrid
+   * @param {string} id datagrid id you want the column info from
+   */
+		getFieldList: function getFieldList() {
+			var DataTable = $$(ids.component);
+
+			return DataTable.fieldList;
+		},
+
+		/**
    * @function onHeaderClick
    *
    * process the user clicking on the header for one of our columns.
@@ -7723,13 +8452,16 @@ OP.Component.extend(idBase, function (App) {
 		// expose data for badge on frozen button
 		getColumnIndex: _logic.getColumnIndex,
 
+		// expose data for column sort UI
+		getFieldList: _logic.getFieldList,
+
 		_logic: _logic // {obj} 	Unit Testing
 	};
 });
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 31 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7997,7 +8729,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 32 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8192,7 +8924,7 @@ OP.Component.extend(idBase, function (App) {
 					isFrozen = true;
 				}
 
-				if (CurrentObject.objectWorkspace.hiddenFields.indexOf(id) != -1) {
+				if (CurrentObject.workspaceHiddenFields.indexOf(id) != -1) {
 					node.style.display = "none";
 				} else {
 					node.style.display = "";
@@ -8246,7 +8978,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 33 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8445,7 +9177,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 34 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8759,7 +9491,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8769,7 +9501,7 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-var _ABFieldManager = __webpack_require__(11);
+var _ABFieldManager = __webpack_require__(13);
 
 var _ABFieldManager2 = _interopRequireDefault(_ABFieldManager);
 
@@ -8790,7 +9522,7 @@ var labels = {
 
 	component: {
 
-		chooseType: L('ab.add_fields.chooseType', "*Choose field type..."),
+		fieldType: L('ab.add_fields.fieldType', "*Field type"),
 		label: L('ab.add_fields.label', "*Label"),
 		addNewField: L('ab.add_fields.addNewField', "*Add Column")
 
@@ -8832,22 +9564,19 @@ OP.Component.extend(idBase, function (App) {
 			rows: [{
 				view: "richselect",
 				id: ids.types,
-				value: 1,
-				options: [{ "id": 1, "value": labels.component.chooseType }],
-				// data: [{
-				// 	value: labels.component.chooseType,
-				// 	submenu: ['dataFieldsManager', '.getFieldMenuList()']
-				// }],
-				// click: function (id, ev, node) {
-				// 	_logic.typeClick();
-				// 	ev.preventDefault();
-				// },
+				label: labels.component.fieldType,
+				labelWidth: App.config.labelWidthLarge,
+				options: [
+				//We will add these later
+				{ id: 'temporary', view: 'temporary' }],
 				on: {
 					onChange: function onChange(id, ev, node) {
 						_logic.onChange(id);
-						//ev.preventDefault();
 					}
 				}
+			}, {
+				height: 10,
+				type: "line"
 			}, {
 				view: 'multiview',
 				id: ids.editDefinitions,
@@ -8894,6 +9623,8 @@ OP.Component.extend(idBase, function (App) {
 	var _currentObject = null;
 
 	var defaultEditorComponent = null; // the default editor.
+	var defaultEditorID = null; // the default editor id.
+	var submenus = []; // Create the submenus for our Data Fields:
 
 	var _editField = null; // field instance being edited
 
@@ -8911,7 +9642,6 @@ OP.Component.extend(idBase, function (App) {
 		//// of our Fields
 
 
-		var submenus = [{ "id": 1, "value": labels.component.chooseType }]; // Create the submenus for our Data Fields:
 		var newEditorList = {
 			view: 'multiview',
 			id: ids.editDefinitions,
@@ -8921,7 +9651,7 @@ OP.Component.extend(idBase, function (App) {
 		Fields.forEach(function (F) {
 
 			var menuName = F.defaults().menuName;
-			var type = F.defaults().type;
+			var key = F.defaults().key;
 
 			// add a submenu for the fields multilingual key
 			submenus.push({ "id": menuName, "value": menuName });
@@ -8930,12 +9660,13 @@ OP.Component.extend(idBase, function (App) {
 			var editorComponent = F.propertiesComponent(App);
 			if (!defaultEditorComponent) {
 				defaultEditorComponent = editorComponent;
+				defaultEditorID = menuName;
 			}
 			newEditorList.rows.push(editorComponent.ui);
 
 			_objectHash[menuName] = F;
 			_componentHash[menuName] = editorComponent;
-			_componentsByType[type] = editorComponent;
+			_componentsByType[key] = editorComponent;
 		});
 
 		// the submenu button has a placeholder we need to remove and update
@@ -8946,8 +9677,7 @@ OP.Component.extend(idBase, function (App) {
 		// 	submenu: submenus
 		// })
 		$$(ids.types).define("options", submenus);
-		//		$$(ids.types).setValue(1);
-		$$(ids.types).refresh();
+		$$(ids.types).refresh;
 
 		// now remove the 'del_me' definition editor placeholder.
 		webix.ui(newEditorList, $$(ids.editDefinitions));
@@ -8959,6 +9689,9 @@ OP.Component.extend(idBase, function (App) {
 
 		defaultEditorComponent.show(); // show the default editor
 		_currentEditor = defaultEditorComponent;
+
+		// set the richselect to the first option by default.
+		$$(ids.types).setValue(submenus[0].id);
 
 		// $$(ids.editDefinitions).show();
 
@@ -9110,7 +9843,7 @@ OP.Component.extend(idBase, function (App) {
 			// switch to this field's editor:
 			// hide the rest
 			for (var c in _componentsByType) {
-				if (c == field.type) {
+				if (c == field.key) {
 					_componentsByType[c].populate(field);
 					_componentsByType[c].show(false, false);
 					_currentEditor = _componentsByType[c];
@@ -9140,14 +9873,14 @@ OP.Component.extend(idBase, function (App) {
 			if (editor) {
 				editor.show();
 				_currentEditor = editor;
-				//$$(ids.types).blur();
+				$$(ids.types).blur();
 			} else {
 
-					// most likely they clicked on the menu button itself.
-					// do nothing.
+				// most likely they clicked on the menu button itself.
+				// do nothing.
 
-					// OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
-				}
+				// OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
+			}
 		},
 
 		onShow: function onShow() {
@@ -9167,6 +9900,11 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		resetState: function resetState() {
+			defaultEditorComponent.show(); // show the default editor
+			_currentEditor = defaultEditorComponent;
+
+			// set the richselect to the first option by default.
+			$$(ids.types).setValue(submenus[0].id);
 
 			// add mode :  change button text to 'Add'
 			// show the default editor
@@ -9239,7 +9977,467 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 36 */
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+var _ABApplication = __webpack_require__(1);
+
+var _ABApplication2 = _interopRequireDefault(_ABApplication);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+/*
+ * ab_work_object_workspace_popupSortFields
+ *
+ * Manage the Sort Fields popup.
+ *
+ */
+
+var labels = {
+
+	component: {
+		addNewSort: L('ab.sort_fields.addNewSort', "*Add new sort"),
+		selectField: L('ab.sort_fields.selectField', "*Please select field"),
+		textAsc: L('ab.sort_fields.textAsc', "*A -> Z"),
+		textDesc: L('ab.sort_fields.textDesc', "*Z -> A"),
+		dateAsc: L('ab.sort_fields.dateAsc', "*Before -> After"),
+		dateDesc: L('ab.sort_fields.dateDesc', "*After -> Before"),
+		numberAsc: L('ab.sort_fields.numberAsc', "*1 -> 9"),
+		numberDesc: L('ab.sort_fields.numberDesc', "*9 -> 1"),
+		booleanAsc: L('ab.sort_fields.booleanAsc', "*Checked -> Unchecked"),
+		booleanDesc: L('ab.sort_fields.booleanDesc', "*Unchecked -> Checked")
+	}
+};
+
+var idBase = 'ab_work_object_workspace_popupSortFields';
+OP.Component.extend(idBase, function (App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components
+	var ids = {
+		component: App.unique(idBase + '_component'),
+		list: App.unique(idBase + "_list"),
+		form: App.unique(idBase + "_form")
+	};
+
+	// Our webix UI definition:
+	var _ui = {
+		view: "popup",
+		id: ids.component,
+		autoheight: true,
+		width: 500,
+		body: {
+			view: "form",
+			id: ids.form,
+			autoheight: true,
+			elements: [{
+				view: "button", value: labels.component.addNewSort, click: function click(id, e, node) {
+					_logic.clickAddNewSort();
+					_logic.callbacks.onChange();
+
+					// this.getTopParentView().addNewSort();
+					// this.getTopParentView().callChangeEvent();
+				}
+			}]
+		},
+		on: {
+			onShow: function onShow() {
+				_logic.onShow();
+				// var sort_popup = this,
+				// sort_form = sort_popup.getChildViews()[0];
+				//
+				// if (sort_form.getChildViews().length < 2) {
+				// 	sort_form.getTopParentView().addNewSort();
+				// 	sort_popup.callChangeEvent();
+				// }
+			}
+		}
+	};
+
+	// Our init() function for setting up our UI
+	var _init = function _init(options) {
+		// register our callbacks:
+		for (var c in _logic.callbacks) {
+			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+		}
+	};
+
+	var CurrentObject = null;
+
+	// our internal business logic
+	var _logic = {
+
+		callbacks: {
+
+			/**
+    * @function onChange
+    * called when we have made changes to the hidden field settings
+    * of our Current Object.
+    *
+    * this is meant to alert our parent component to respond to the
+    * change.
+    */
+			onChange: function onChange() {}
+		},
+
+		/**
+   * @function clickAddNewSort
+   * the user clicked the add new sort buttton. I don't know what it does...will update later
+   */
+		clickAddNewSort: function clickAddNewSort(by, dir, as, id) {
+			// Prevent duplicate fields
+			var sort_popup = $$(ids.component),
+			    sort_form = $$(ids.form),
+			    isExists = false;
+
+			if (by) {
+				sort_form.getChildViews().forEach(function (v, index) {
+					if (index >= sort_form.getChildViews().length - 1) return;
+
+					if (by == v.getChildViews()[0].getValue()) {
+						isExists = true;
+						return;
+					}
+				});
+
+				// If field exists, it will not add new sort
+				if (isExists) return;
+			}
+
+			var viewIndex = sort_form.getChildViews().length - 1;
+			var listFields = _logic.getFieldList(true);
+			sort_form.addView({
+				id: 'sort' + webix.uid(),
+				cols: [{
+					view: "combo",
+					width: 220,
+					options: listFields,
+					on: {
+						"onChange": function onChange(columnId) {
+							//var columnConfig = sort_popup.dataTable.getColumnConfig(columnId),
+							var allFields = CurrentObject.fields();
+							var columnConfig = "",
+							    sortInput = this.getParentView().getChildViews()[1],
+							    options = null;
+
+							allFields.forEach(function (f) {
+								if (f.columnName == columnId) {
+									columnConfig = f;
+								}
+							});
+
+							if (!columnConfig) return;
+
+							switch (columnConfig.key) {
+								case "string":
+								case "text":
+								case "list":
+								case "multiselect":
+									options = [{ id: 'asc', value: labels.component.textAsc }, { id: 'desc', value: labels.component.textDesc }];
+									break;
+								case "date":
+									options = [{ id: 'asc', value: labels.component.dateAsc }, { id: 'desc', value: labels.component.dateDesc }];
+									break;
+								case "number":
+									options = [{ id: 'asc', value: labels.component.numberAsc }, { id: 'desc', value: labels.component.numberDesc }];
+									break;
+								case "boolean":
+									options = [{ id: 'asc', value: labels.component.booleanAsc }, { id: 'desc', value: labels.component.booleanDesc }];
+									break;
+							}
+
+							sortInput.define('options', options);
+							sortInput.refresh();
+
+							_logic.refreshFieldList();
+							//sort_popup.sort();
+
+							var sortFields = CurrentObject.workspaceSortFields;
+							sortFields[columnId] = options[0];
+
+							CurrentObject.workspaceSortFields = sortFields;
+							CurrentObject.save();
+
+							//this.getTopParentView().callChangeEvent();
+							_logic.callbacks.onChange();
+						}
+					}
+				}, {
+					view: "segmented", width: 200, options: [{ id: '', value: labels.component.selectField }],
+					on: {
+						onChange: function onChange(newv, oldv) {// 'asc' or 'desc' values
+							//CurrentObject.workspaceSortFields[columnId] = newv;
+							//CurrentObject.save();
+							//sort_popup.sort();
+						}
+					}
+				}, {
+					view: "button", icon: "trash", type: "icon", width: 30, click: function click() {
+						sort_form.removeView(this.getParentView());
+						_logic.refreshFieldList(true);
+						sort_popup.sort();
+
+						// this.getTopParentView().callChangeEvent();
+						_logic.callbacks.onChange();
+					}
+				}]
+			}, viewIndex);
+
+			// Select field
+			if (id) {
+				var fieldsCombo = sort_form.getChildViews()[viewIndex].getChildViews()[0];
+				fieldsCombo.setValue(id);
+				// this.getTopParentView().callChangeEvent();
+				_logic.callbacks.onChange();
+			}
+		},
+
+		/**
+   * @function getFieldList
+   * return field list so we can present a custom UI for view
+   */
+		getFieldList: function getFieldList(excludeSelected) {
+			var sort_popup = $$(ids.component),
+			    sort_form = $$(ids.form),
+			    listFields = [];
+
+			if (!CurrentObject.fields()) return listFields;
+
+			// Get all fields include hidden fields
+			var allFields = CurrentObject.fields();
+			allFields.forEach(function (f) {
+				console.log(f);
+				listFields.push({
+					id: f.columnName,
+					label: f.label
+				});
+			});
+
+			// Remove selected field
+			if (excludeSelected) {
+				var childViews = sort_form.getChildViews();
+				if (childViews.length > 1) {
+					// Ignore 'Add new sort' button
+					childViews.forEach(function (cView, index) {
+						if (childViews.length - 1 <= index) return false;
+
+						var selectedValue = cView.getChildViews()[0].getValue();
+						if (selectedValue) {
+							var removeIndex = null;
+							var removeItem = $.grep(listFields, function (f, index) {
+								if (f.id == selectedValue) {
+									removeIndex = index;
+									return true;
+								} else {
+									return false;
+								}
+							});
+							listFields.splice(removeIndex, 1);
+						}
+					});
+				}
+			}
+			alert(listFields);
+			return listFields;
+		},
+
+		/**
+   * @function refreshFieldList
+   * return an updated field list so you cannot duplicate a sort
+   */
+		refreshFieldList: function refreshFieldList(ignoreRemoveViews) {
+			var sort_popup = $$(ids.component),
+			    sort_form = $$(ids.form),
+			    listFields = _logic.getFieldList(false),
+			    selectedFields = [],
+			    removeChildViews = [];
+
+			var childViews = sort_form.getChildViews();
+			if (childViews.length > 1) {
+				// Ignore 'Add new sort' button
+				childViews.forEach(function (cView, index) {
+					if (childViews.length - 1 <= index) return false;
+
+					var fieldId = cView.getChildViews()[0].getValue(),
+					    fieldObj = $.grep(listFields, function (f) {
+						return f.id == fieldId;
+					});
+
+					if (fieldObj.length > 0) {
+						// Add selected field to list
+						selectedFields.push(fieldObj[0]);
+					} else {
+						// Add condition to remove
+						removeChildViews.push(cView);
+					}
+				});
+			}
+
+			// Remove filter conditions when column is deleted
+			if (!ignoreRemoveViews) {
+				removeChildViews.forEach(function (cView, index) {
+					sort_form.removeView(cView);
+				});
+			}
+
+			// Field list should not duplicate field items
+			childViews = sort_form.getChildViews();
+			if (childViews.length > 1) {
+				// Ignore 'Add new sort' button
+				childViews.forEach(function (cView, index) {
+					if (childViews.length - 1 <= index) return false;
+
+					var fieldId = cView.getChildViews()[0].getValue(),
+					    fieldObj = $.grep(listFields, function (f) {
+						return f.id == fieldId;
+					});
+
+					var selectedFieldsExcludeCurField = $(selectedFields).not(fieldObj);
+
+					var enableFields = $(listFields).not(selectedFieldsExcludeCurField).get();
+
+					// Update field list
+					cView.getChildViews()[0].define('options', enableFields);
+					cView.getChildViews()[0].refresh();
+				});
+			}
+		},
+
+		/**
+   * @function sort
+   * this preforms the sort on the datagrid (this may move to the datagrid once I read further)
+   */
+		sort: function sort() {
+			var sort_popup = $$(ids.component),
+			    sort_form = $$(ids.form),
+			    columnOrders = [];
+
+			sort_form.getChildViews().forEach(function (cView, index) {
+				if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
+					return;
+
+				var columnId = cView.getChildViews()[0].getValue();
+				var order = cView.getChildViews()[1].getValue();
+
+				if (columnId) {
+					var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
+
+					if (columnConfig) {
+						columnOrders.push({
+							name: columnConfig.id,
+							order: order
+						});
+					}
+				}
+			});
+
+			sort_popup.dataTable.sort(function (a, b) {
+				var result = false;
+
+				for (var i = 0; i < columnOrders.length; i++) {
+					var column = columnOrders[i],
+					    aValue = a[column.name],
+					    bValue = b[column.name];
+
+					if ($.isArray(aValue)) {
+						aValue = $.map(aValue, function (item) {
+							return item.text;
+						}).join(' ');
+					}
+
+					if ($.isArray(bValue)) {
+						bValue = $.map(bValue, function (item) {
+							return item.text;
+						}).join(' ');
+					}
+
+					if (aValue != bValue) {
+						if (column.order == 'asc') {
+							result = aValue > bValue ? 1 : -1;
+						} else {
+							result = aValue < bValue ? 1 : -1;
+						}
+						break;
+					}
+				}
+
+				return result;
+			});
+		},
+
+		/**
+   * @function objectLoad
+   * Ready the Popup according to the current object
+   * @param {ABObject} object  the currently selected object.
+   */
+		objectLoad: function objectLoad(object) {
+			CurrentObject = object;
+
+			// // refresh list
+			// var allFields = CurrentObject.fields();
+			// allFields.forEach((f) => {
+			// 	alert(f.label);
+			// 	listFields.push({
+			// 		id: f.id,
+			// 		label: f.label,
+			// 		$css:"hidden_fields_"+f.id
+			// 	})
+			// })
+
+			//$$(ids.list).parse(listFields);
+		},
+
+		/**
+   * @function objectLoad
+   * Ready the Popup according to the current object
+   * @param {ABObject} object  the currently selected object.
+   */
+		onShow: function onShow() {
+			var sort_popup = $$(ids.component),
+			    sort_form = $$(ids.form);
+
+			if (sort_form.getChildViews().length < 2) {
+				// sort_form.getTopParentView().addNewSort();
+				// sort_popup.callChangeEvent();
+				_logic.clickAddNewSort();
+				_logic.callbacks.onChange();
+			} else {
+				var sorts = CurrentObject.workspaceSortFields;
+				sorts.forEach(function (s) {
+					_logic.clickAddNewSort(s.by, s.dir, s.as);
+				});
+			}
+		}
+
+	};
+
+	// Expose any globally accessible Actions:
+	var _actions = {};
+
+	// return the current instance of this component:
+	return {
+		ui: _ui, // {obj} 	the webix ui definition for this component
+		init: _init, // {fn} 	init() to setup this component
+		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+
+
+		// interface methods for parent component:
+		objectLoad: _logic.objectLoad,
+
+		_logic: _logic // {obj} 	Unit Testing
+	};
+});
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9269,7 +10467,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 37 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9341,7 +10539,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 38 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9415,7 +10613,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 39 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9497,7 +10695,7 @@ function toComment(sourceMap) {
 }
 
 /***/ }),
-/* 40 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9592,10 +10790,10 @@ module.exports = function (css) {
 };
 
 /***/ }),
-/* 41 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(39)(undefined);
+exports = module.exports = __webpack_require__(43)(undefined);
 // imports
 
 
@@ -9606,7 +10804,7 @@ exports.push([module.i, ".webix_view, .webix_el_colorpicker input, .webix_el_com
 
 
 /***/ }),
-/* 42 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -9643,7 +10841,7 @@ var stylesInDom = {},
 	singletonElement = null,
 	singletonCounter = 0,
 	styleElementsInsertedAtTop = [],
-	fixUrls = __webpack_require__(40);
+	fixUrls = __webpack_require__(44);
 
 module.exports = function(list, options) {
 	if(typeof DEBUG !== "undefined" && DEBUG) {
@@ -9902,16 +11100,16 @@ function updateLink(linkElement, options, obj) {
 
 
 /***/ }),
-/* 43 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(41);
+var content = __webpack_require__(45);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(42)(content, {});
+var update = __webpack_require__(46)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
