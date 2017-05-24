@@ -1,11 +1,47 @@
 async.series([
 
+	function (next) {
+		var stealMeta = steal.config("meta");
+
+		var reauthIndex = -1;
+		stealMeta.appdev.deps.filter(function (dep, index) {
+			if (dep == 'appdev/auth/reauth')
+				reauthIndex = index;
+		});
+
+		if (reauthIndex > -1) {
+			stealMeta.appdev.deps.splice(reauthIndex, 1);
+
+			steal.config({
+				meta: {
+					"appdev": stealMeta.appdev
+				}
+			});
+		}
+
+		next();
+	},
+
 	// Load dependencies of appdev
 	function (next) {
 		System.import('appdev')
-			.then(function () { next(); });
-	},
+			.then(function () {
+				next();
 
+				AD = AD || {};
+				AD.ui = AD.ui || {};
+				AD.ui.reauth = {
+					inProgress: function () { return false; },
+					start: function () {
+						var deferred = AD.sal.Deferred();
+
+						deferred.resolve();
+
+						return deferred;
+					}
+				};
+			});
+	},
 
 	// Load dependencies of OpsPortal
 	function (next) {

@@ -2550,18 +2550,25 @@ var ABFieldDateDefaults = {
 };
 
 var defaultValues = {
-	"includeTime": 0,
-	"defaultCurrentDate": 0,
-	"defaultDate": "",
-	"dayFormat": "DD",
-	"dayOrder": 1,
-	"dayDelimiter": "slash",
-	"monthFormat": "MM",
-	"monthOrder": 2,
-	"monthDelimiter": "slash",
-	"yearFormat": "YYYY",
-	"yearOrder": 3,
-	"yearDelimiter": "slash"
+	includeTime: 0,
+	defaultCurrentDate: 0,
+	defaultDate: "",
+	dayFormat: "DD",
+	dayOrder: 1,
+	dayDelimiter: "slash",
+	monthFormat: "MM",
+	monthOrder: 2,
+	monthDelimiter: "slash",
+	yearFormat: "YYYY",
+	yearOrder: 3,
+	yearDelimiter: "slash",
+
+	validateCondition: "none",
+	validateRangeUnit: "days",
+	validateRangeBefore: 0,
+	validateRangeAfter: 0,
+	validateStartDate: null,
+	validateEndDate: null
 };
 
 var ids = {
@@ -2578,7 +2585,19 @@ var ids = {
 	yearFormat: 'ab-date-year-format',
 	dayDelimiter: 'ab-date-day-delimiter',
 	monthDelimiter: 'ab-date-month-delimiter',
-	yearDelimiter: 'ab-date-year-delimiter'
+	yearDelimiter: 'ab-date-year-delimiter',
+
+	// validation
+	validateCondition: 'ab-date-validate-condition',
+	validateRange: 'ab-date-validate-range',
+	validateRangeUnit: 'ab-date-validate-range-unit',
+	validateRangeBefore: 'ab-date-validate-range-before',
+	validateRangeAfter: 'ab-date-validate-range-after',
+	validateRangeBeforeLabel: 'ab-date-validate-before-label',
+	validateRangeAfterLabel: 'ab-date-validate-after-label',
+
+	validateLeft: 'ab-date-validate-left',
+	validateRight: 'ab-date-validate-right'
 };
 
 var delimiterList = [{ id: 'comma', value: "Comma", sign: "," }, { id: 'slash', value: "Slash", sign: "/" }, { id: 'space', value: "Space", sign: " " }, { id: 'dash', value: "Dash", sign: "-" }];
@@ -2586,7 +2605,7 @@ var delimiterList = [{ id: 'comma', value: "Comma", sign: "," }, { id: 'slash', 
 /** Private methods **/
 function getDelimiterSign(text) {
 	var delimiterItem = delimiterList.filter(function (item) {
-		return item.id = text;
+		return item.id == text;
 	})[0];
 
 	return delimiterItem ? delimiterItem.sign : null;
@@ -2639,7 +2658,9 @@ function refreshDateDisplay() {
 var ABFieldDateComponent = new _ABFieldComponent2.default({
 	fieldDefaults: ABFieldDateDefaults,
 
-	elements: function elements(App) {
+	elements: function elements(App, field) {
+		ids = field.idsUnique(ids, App);
+
 		return [{
 			view: "checkbox",
 			name: "includeTime",
@@ -2706,6 +2727,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.dayFormat,
 						label: "Format",
 						labelWidth: 100,
+						value: 'D',
 						options: [{ id: 'D', value: "1 2 ... 30 31" }, { id: 'Do', value: "1st 2nd ... 30th 31st" }, { id: 'DD', value: "01 02 ... 30 31" }, { id: 'dd', value: "Su Mo ... Fr Sa" }, { id: 'ddd', value: "Sun Mon ... Fri Sat" }, { id: 'dddd', value: "Sunday Monday ... Friday Saturday" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
@@ -2718,6 +2740,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.dayOrder,
 						label: "Places",
 						labelWidth: 100,
+						value: '1',
 						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
@@ -2732,6 +2755,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						labelWidth: 100,
 						vertical: true,
 						options: delimiterList,
+						value: 'slash',
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
 								refreshDateDisplay();
@@ -2751,6 +2775,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.monthFormat,
 						label: "Format",
 						labelWidth: 100,
+						value: 'MM',
 						options: [{ id: 'M', value: "1 2 ... 11 12" }, { id: 'Mo', value: "1st 2nd ... 11th 12th" }, { id: 'MM', value: "01 02 ... 11 12" }, { id: 'MMM', value: "Jan Feb ... Nov Dec" }, { id: 'MMMM', value: "January February ... November December" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
@@ -2763,6 +2788,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.monthOrder,
 						label: "Places",
 						labelWidth: 100,
+						value: '2',
 						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
@@ -2777,6 +2803,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						labelWidth: 100,
 						vertical: true,
 						options: delimiterList,
+						value: 'slash',
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
 								refreshDateDisplay();
@@ -2796,6 +2823,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.yearFormat,
 						label: "Format",
 						labelWidth: 100,
+						value: 'YYYY',
 						options: [{ id: 'YY', value: "70 71 ... 29 30" }, { id: 'YYYY', value: "1970 1971 ... 2029 2030" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
@@ -2808,6 +2836,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.yearOrder,
 						label: "Places",
 						labelWidth: 100,
+						value: '3',
 						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
@@ -2822,6 +2851,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						labelWidth: 100,
 						vertical: true,
 						options: delimiterList,
+						value: 'slash',
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
 								refreshDateDisplay();
@@ -2830,6 +2860,136 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 					}]
 				}
 			}]
+		},
+
+		// Validator
+		{
+			view: 'label',
+			label: "Validation criteria",
+			css: 'ab-text-bold'
+		}, {
+			id: ids.validateCondition,
+			view: "select",
+			name: "validateCondition",
+			label: "Condition",
+			labelWidth: 100,
+			value: 'none',
+			options: [{ id: 'none', value: '[None]' }, { id: 'dateRange', value: 'Range' }, { id: 'between', value: 'Between' }, { id: 'notBetween', value: 'Not between' }, { id: '=', value: 'Equal to' }, { id: '<>', value: 'Not equal to' }, { id: '>', value: 'Greater than' }, { id: '<', value: 'Less than' }, { id: '>=', value: 'Greater than or Equal to' }, { id: '<=', value: 'Less than or Equal to' }],
+			on: {
+				onChange: function onChange(newVal, oldVal) {
+					switch (newVal) {
+						case 'none':
+							$$(ids.validateRange).hide();
+							$$(ids.validateLeft).hide();
+							$$(ids.validateRight).hide();
+							break;
+						case 'dateRange':
+							$$(ids.validateRange).show();
+							$$(ids.validateLeft).hide();
+							$$(ids.validateRight).hide();
+							break;
+						case 'between':
+						case 'notBetween':
+							$$(ids.validateRange).hide();
+							$$(ids.validateLeft).define('label', 'Start Date');
+							$$(ids.validateLeft).refresh();
+							$$(ids.validateLeft).show();
+							$$(ids.validateRight).show();
+							break;
+						case '=':
+						case '<>':
+						case '>':
+						case '<':
+						case '>=':
+						case '<=':
+							$$(ids.validateRange).hide();
+							$$(ids.validateLeft).define('label', 'Date');
+							$$(ids.validateLeft).refresh();
+							$$(ids.validateLeft).show();
+							$$(ids.validateRight).hide();
+							break;
+					}
+				}
+			}
+		}, {
+			id: ids.validateRange,
+			hidden: true,
+			rows: [{
+				id: ids.validateRangeUnit,
+				view: "select",
+				name: "validateRangeUnit",
+				label: 'Unit',
+				labelWidth: 100,
+				options: [{ id: 'days', value: 'Days' }, { id: 'months', value: 'Months' }, { id: 'years', value: 'Years' }],
+				on: {
+					onChange: function onChange(newVal) {
+						$$(ids.validateRangeBeforeLabel).refresh();
+						$$(ids.validateRangeAfterLabel).refresh();
+					}
+				}
+			}, {
+				cols: [{
+					id: ids.validateRangeBeforeLabel,
+					view: 'template',
+					align: 'left',
+					width: 140,
+					borderless: true,
+					template: function template() {
+						var beforeLabel = 'Before #number# #unit#'.replace('#number#', $$(ids.validateRangeBefore).getValue()).replace('#unit#', $$(ids.validateRangeUnit).getValue());
+
+						return beforeLabel;
+					}
+				}, {
+					view: 'label',
+					label: '',
+					align: 'center',
+					width: 1
+				}, {
+					id: ids.validateRangeAfterLabel,
+					view: 'template',
+					align: 'right',
+					borderless: true,
+					template: function template() {
+						var afterLabel = 'After #number# #unit#'.replace('#number#', $$(ids.validateRangeAfter).getValue()).replace('#unit#', $$(ids.validateRangeUnit).getValue());
+
+						return afterLabel;
+					}
+				}]
+			}, {
+				cols: [{
+					id: ids.validateRangeBefore,
+					view: 'slider',
+					name: "validateRangeBefore",
+					on: {
+						onChange: function onChange(newVal, oldValue) {
+							$$(ids.validateRangeBeforeLabel).refresh();
+						}
+					}
+				}, {
+					id: ids.validateRangeAfter,
+					view: 'slider',
+					name: "validateRangeAfter",
+					on: {
+						onChange: function onChange(newVal, oldValue) {
+							$$(ids.validateRangeAfterLabel).refresh();
+						}
+					}
+				}]
+			}]
+		}, {
+			id: ids.validateLeft,
+			name: "validateStartDate",
+			view: 'datepicker',
+			label: 'Start Date',
+			labelWidth: 100,
+			hidden: true
+		}, {
+			id: ids.validateRight,
+			name: "validateEndDate",
+			view: 'datepicker',
+			label: 'End Date',
+			labelWidth: 100,
+			hidden: true
 		}];
 	},
 
@@ -2844,6 +3004,8 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 	// The base routines will be processed first, then these.  Any results
 	// from the base routine, will be passed on to these:
 	logic: {
+
+		isValid: function isValid(ids, _isValid) {}
 
 		// populate: function (ids, values) {
 		// 	if (values.settings.validation) {
@@ -2873,16 +3035,21 @@ var ABFieldDate = function (_ABField) {
 	function ABFieldDate(values, object) {
 		_classCallCheck(this, ABFieldDate);
 
-		return _possibleConstructorReturn(this, (ABFieldDate.__proto__ || Object.getPrototypeOf(ABFieldDate)).call(this, values, object, ABFieldDateDefaults));
+		// we're responsible for setting up our specific settings:
+		var _this = _possibleConstructorReturn(this, (ABFieldDate.__proto__ || Object.getPrototypeOf(ABFieldDate)).call(this, values, object, ABFieldDateDefaults));
 
-		/*
-  {
-  	settings: {
-  		textDefault: 'string',
-  		supportMultilingual: true/false
-  	}
-  }
-  */
+		for (var dv in defaultValues) {
+			_this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
+
+		// text to Int:
+		_this.settings.includeTime = parseInt(_this.settings.includeTime);
+		_this.settings.defaultCurrentDate = parseInt(_this.settings.defaultCurrentDate);
+		_this.settings.dayOrder = parseInt(_this.settings.dayOrder);
+		_this.settings.monthOrder = parseInt(_this.settings.monthOrder);
+		_this.settings.yearOrder = parseInt(_this.settings.yearOrder);
+
+		return _this;
 	}
 
 	// return the default values for this DataField
