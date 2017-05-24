@@ -1,6 +1,12 @@
 
 export default class UIComponent {
-
+    
+    /**
+     * @param {object} App 
+     *      ?what is this?
+     * @param {string} idBase
+     *      Identifier for this component
+     */
 	constructor(App, idBase) {
 
 		if (!App) {
