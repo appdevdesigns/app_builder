@@ -143,13 +143,10 @@ OP.Component.extend(idBase, function(App) {
 
 
 			// now send data back to be added:
-			_logic.callbacks.onSave(values, function(err) {
+			_logic.callbacks.onSave(values, function(validator) {
 
-				if (err) {
-					if (OP.Form.isValidationError(err, Form)) {
-						// do I do anything else here?
-						// this auto updates the form
-					}
+				if (validator) {
+					validator.updateForm(Form);
 
 					// get notified if there was an error saving.
 					saveButton.enable();

@@ -492,20 +492,14 @@ OP.Component.extend(idBase, function(App) {
 			}
 
 
-			var errors = ABApplication.isValid(op, Form.getValues());
-			if (OP.Form.isValidationError(errors, Form)) {
+			var validator = ABApplication.isValid(op, Form.getValues());
+			if (validator.fail()) {
+				validator.updateForm(Form);
 				_logic.formReady();
 				_logic.buttonSaveEnable();
 				return false;
 			}
 
-
-///// TODO: 
-// Implement common Form Input Validations
-// convert this to:  
-// app = ABApplication.newApplication(Form.getValues())
-// errors = app.inValid()
-// if (OP.Form.isValidationError(errors, Form)) { }
 
 
 			// var appName = $$(ids.form).elements['label'].getValue(),

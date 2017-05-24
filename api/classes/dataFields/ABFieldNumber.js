@@ -256,19 +256,21 @@ class ABFieldNumber extends ABField {
 	requestParam(allParameters) {
 
 		var myParameter = super.requestParam(allParameters);
-		
-		if (!_.isUndefined(myParameter[this.columnName])) {
+		if (myParameter) {
 
-			// if this is an integer:
-			if (this.settings.typeDecimals == 'none') {
+			if (!_.isUndefined(myParameter[this.columnName])) {
 
-				myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+				// if this is an integer:
+				if (this.settings.typeDecimals == 'none') {
+
+					myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+					
+				} else {
+					var places = parseInt(this.settings.typeDecimalPlaces) || 2;
+					myParameter[this.columnName] = parseFloat(parseFloat(myParameter[this.columnName]).toFixed(places));
+				}
 				
-			} else {
-				var places = parseInt(this.settings.typeDecimalPlaces) || 2;
-				myParameter[this.columnName] = parseFloat(parseFloat(myParameter[this.columnName]).toFixed(places));
 			}
-			
 		}
 
 		return myParameter;
@@ -283,16 +285,19 @@ class ABFieldNumber extends ABField {
 	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
 	 * @return {array} 
 	 */
-	isValidParam(allParameters) {
+	isValidData(allParameters) {
 		var errors = [];
-		
-		var value = allParameters[this.columnName];
-		if (_.isNaN(value) || (!_.isNumber(value))) {
-			errors.push({
-				name:this.columnName,
-				message:'Number Required',
-				value:value
-			})
+
+		if (typeof allParameters[this.columnName] != 'undefined') {
+			
+			var value = allParameters[this.columnName];
+			if (_.isNaN(value) || (!_.isNumber(value))) {
+				errors.push({
+					name:this.columnName,
+					message:'Number Required',
+					value:value
+				})
+			}
 		}
 
 		return errors;

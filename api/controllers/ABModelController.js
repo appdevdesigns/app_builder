@@ -140,7 +140,7 @@ console.log('... id:', id);
             var updateParams = object.requestParams(allParams);  
 
 
-            var validationErrors = object.isValidParams(updateParams);
+            var validationErrors = object.isValidData(updateParams);
             if (validationErrors.length == 0) {
 
                 // this is an update operation, so ... 
@@ -162,7 +162,25 @@ console.log('...  (err) handler!', err);
                     // handle invalid values here:
                     if (err instanceof ValidationError) {
 
-                        res.AD.error(err);
+// return an invalid values response:
+var errorResponse = {
+    error:'E_VALIDATION',
+    invalidAttributes:{
+
+    }
+}
+
+var attr = errorResponse.invalidAttributes;
+
+for(var e in err.data) {
+    attr[e] = attr[e] || [];
+    err.data[e].forEach((eObj)=>{
+        eObj.name = e;
+        attr[e].push(eObj);
+    })
+}
+
+                        res.AD.error(errorResponse);
                     }
 
                 })
@@ -194,18 +212,11 @@ console.log('... catch(err) !');
                     attr[e.name] = attr[e.name] || [];
                     attr[e.name].push(e);
                 })
-                
+
                 res.AD.error(errorResponse);
             }
             
-
         })
-
-//// LEFT OFF HERE:
-// pull out known fields.
-// save them in the table.
-// finished.
-
 
     }
     

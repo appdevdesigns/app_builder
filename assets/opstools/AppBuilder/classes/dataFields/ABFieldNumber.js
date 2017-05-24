@@ -392,14 +392,11 @@ class ABFieldNumber extends ABField {
 
 	isValid() {
 
-		var errors = super.isValid();
+		var validator = super.isValid();
 
-		// errors = OP.Form.validationError({
-		// 	name:'columnName',
-		// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-		// }, errors);
+		// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-		return errors;
+		return validator;
 	}
 
 
@@ -438,6 +435,41 @@ class ABFieldNumber extends ABField {
 		config.sort   = 'int';			// [sort_type]
 
 		return config;
+	}
+
+
+
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} data  a key=>value hash of the inputs to parse.
+	 * @param {OPValidator} validator  provided Validator fn
+	 * @return {array} 
+	 */
+	isValidData(data, validator) {
+
+		if (typeof data[this.columnName] != 'undefined') {
+			var value = data[this.columnName];
+
+			// if this is an integer:
+			if (this.settings.typeDecimals == 'none') {
+
+				value = parseInt(value);
+				
+			} else {
+				var places = parseInt(this.settings.typeDecimalPlaces) || 2;
+				value = parseFloat(parseFloat(value).toFixed(places));
+			}
+
+			function isNumeric(n) {
+			  return !Number.isNaN(parseFloat(n)) && Number.isFinite(n);
+			}
+			if (!isNumeric(value)) {
+				validator.addError(this.columnName, 'invalid number');
+			}
+		}
+
 	}
 
 }

@@ -21,6 +21,7 @@ import Grid from "./grid"
 import Multilingual from "./multilingual"
 import Model from "./model"
 import Util  from "./util"
+import Validation from "./validation"
 
 import Config from "./config/config"
 
@@ -133,15 +134,18 @@ import Config from "./config/config"
 
 	OP.Error = AD.error;
 
-	OP.Form = Form;
+	// OP.Form = Form;
 
-	OP.Grid = Grid;
+	// OP.Grid = Grid;
 
 	OP.Multilingual = Multilingual;
 	OP.Model = Model;
 
 
 	OP.Util = Util;
+
+	OP.Validation = Validation;
+	
 
 	export default OP;
 // }

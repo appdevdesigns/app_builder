@@ -148,10 +148,10 @@ OP.Component.extend(idBase, function(App) {
 
 
 			// have newObject validate it's values.
-			var validationErrors = newObject.isValid();
-			if (validationErrors) {
-				cb(validationErrors);						// tell current Tab component the errors
-				return false;								// stop here.
+			var validator = newObject.isValid();
+			if (validator.fail()) {
+				cb(validator);							// tell current Tab component the errors
+				return false;							// stop here.
 			}
 
 

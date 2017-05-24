@@ -245,11 +245,12 @@ class ABFieldDate extends ABField {
 	requestParam(allParameters) {
 
 		var myParameter = super.requestParam(allParameters);
-		
-		if (!_.isUndefined(myParameter[this.columnName])) {
+		if (myParameter) {
+			
+			if (!_.isUndefined(myParameter[this.columnName])) {
 
-			// not a valid date.
-			if (myParameter[this.columnName] == '') {
+				// not a valid date.
+				if (myParameter[this.columnName] == '') {
 
 //// TODO: 
 // for now, just don't return the date.  But in the future decide what to do based upon our 
@@ -258,10 +259,11 @@ class ABFieldDate extends ABField {
 // if !required -> just don't return a value like now?
 delete myParameter[this.columnName];
 
+				}
+				
 			}
-			
 		}
-
+console.log('... Date:', myParameter);
 		return myParameter;
 	}
 

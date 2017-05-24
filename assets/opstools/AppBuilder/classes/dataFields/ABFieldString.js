@@ -168,14 +168,11 @@ class ABFieldString extends ABField {
 
 	isValid() {
 
-		var errors = super.isValid();
+		var validator = super.isValid();
 
-		// errors = OP.Form.validationError({
-		// 	name:'columnName',
-		// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-		// }, errors);
+		// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-		return errors;
+		return validator;
 	}
 
 

@@ -649,14 +649,11 @@ class ABFieldDate extends ABField {
 
 	isValid() {
 
-		var errors = super.isValid();
+		var validator = super.isValid();
 
-		// errors = OP.Form.validationError({
-		// 	name:'columnName',
-		// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-		// }, errors);
+		// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-		return errors;
+		return validator;
 	}
 
 
@@ -691,10 +688,76 @@ class ABFieldDate extends ABField {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.editor = 'text';
-		config.sort = 'string'
+		config.editor = 'date';
+		config.sort = 'string';
+		
+
+		// NOTE: it seems that the default value is a string in ISO format.
+
+		//// NOTE: webix seems unable to parse ISO string into => date here.
+		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
+
+		config.format = function (d) {
+			if ((d == '') || (typeof d == 'undefined')) {
+				return '';
+			}
+			// convert ISO string -> Date() -> our formatted string
+
+// TODO: pull format from settings.
+			return webix.Date.dateToStr('%d %M %Y')(new Date(d));  
+		}
+
+
+		config.editFormat = function(d) {
+			// this routine needs to return a Date() object for the editor to work with.
+
+			// if d is not set, return a default Date() value.
+			if ((d == '') || (typeof d == 'undefined')) {
+// TODO: setup default date from settings:
+				return new Date();	
+			}
+
+			// else retun the actual ISO string => Date() value
+			return new Date(d);
+		}
+
 
 		return config;
+	}
+
+
+
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} data  a key=>value hash of the inputs to parse.
+	 * @param {OPValidator} validator  provided Validator fn
+	 * @return {array} 
+	 */
+	isValidData(data, validator) {
+
+		if (typeof data[this.columnName] != 'undefined') {
+			var value = data[this.columnName];
+
+			if (!(value instanceof Date)) {
+				value = new Date(value);
+			}
+
+			// verify we didn't end up with an InValid Date result.
+			if ((Object.prototype.toString.call(value) === '[object Date]')
+				&& (isFinite(value))) {
+
+				// all good, so store as ISO format string.
+				data[this.columnName] = value.toISOString();
+
+			} else {
+
+				// return a validation error
+				validator.addError(this.columnName, 'Should be a Date!');
+			}
+		}
+
 	}
 
 }

@@ -212,11 +212,11 @@ export default class ABField {
   	 * check the current values to make sure they are valid.
   	 * Here we check the default values provided by ABField.
   	 *
-  	 * @return null or [{OP.Form.validationError()}] objects.
+  	 * @return null or [{OP.Validation.validator()}] objects.
   	 */
 	isValid() {
 
-		var errors = null;
+		var validator = OP.Validation.validator();
 
 		// .columnName must be unique among fileds on the same object
 		var isNameUnique = (this.object.fields((f)=>{
@@ -225,13 +225,10 @@ export default class ABField {
 					&& (f.columnName.toLowerCase() == this.columnName.toLowerCase() );
 		}).length == 0);
 		if (!isNameUnique) {
-			errors = OP.Form.validationError({
-				name:'columnName',
-				message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.columnName),
-			}, errors);
+			validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.columnName) );
 		}
 
-		return errors;
+		return validator;
 	}
 
 
@@ -434,6 +431,20 @@ export default class ABField {
 		}
 
 		return config;
+	}
+
+
+
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} data  a key=>value hash of the inputs to parse.
+	 */
+	isValidData(data, validator) {
+
+		console.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
+
 	}
 
 

@@ -93,16 +93,17 @@ export default class ABObject {
 
 	isValid() {
 
-		var errors = null;
+		var validator = OP.Validation.validator();
 
 
 		// label/name must be unique:
 		var isNameUnique = (this.application.objects((o) => { return o.name.toLowerCase() == this.name.toLowerCase(); }).length == 0);
 		if (!isNameUnique) {
-			errors = OP.Form.validationError({
-					name:'name',
-					message:L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name),
-				}, errors);
+			validator.addError('name', L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name) );
+// errors = OP.Form.validationError({
+// 		name:'name',
+// 		message:L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name),
+// 	}, errors);
 		}
 
 
@@ -113,8 +114,7 @@ export default class ABObject {
 // 	return false;
 // }
 
-
-		return errors;
+		return validator;
 	}
 
 
@@ -448,6 +448,24 @@ export default class ABObject {
 		}
 
 		return headers;
+	}
+
+
+
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an array of any invalid
+	 * value errors.
+	 * @param {obj} data a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidData(data) {
+		var validator = OP.Validation.validator();
+		this.fields().forEach((f) => {
+			var p = f.isValidData(data, validator);
+		})
+
+		return validator;
 	}
 
 

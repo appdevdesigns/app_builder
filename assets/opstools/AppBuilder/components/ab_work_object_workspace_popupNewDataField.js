@@ -272,9 +272,10 @@ OP.Component.extend(idBase, function(App) {
 					}
 
 
-					var errors = field.isValid();
-					if (errors) {
-						OP.Form.isValidationError(errors, $$(editor.ui.id));
+					var validator = field.isValid();
+					if (validator.fail()) {
+						validator.updateForm($$(editor.ui.id))
+// OP.Form.isValidationError(errors, $$(editor.ui.id));
 
 						// keep our old data
 						if (oldData) {
@@ -293,6 +294,7 @@ OP.Component.extend(idBase, function(App) {
 							_logic.callbacks.onSave(field)
 						})
 						.catch((err) => {
+							OP.Validation.isFormValidationError(err, $$(editor.ui.id));
 							$$(ids.buttonSave).enable();
 						})
 					}

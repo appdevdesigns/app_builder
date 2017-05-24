@@ -492,16 +492,16 @@ console.error('TODO: ABObject.destroy()');
 
 
 	/**
-	 * @method isValidParams
-	 * Parse through the given parameters and return an array of any invalid
+	 * @method isValidData
+	 * Parse through the given data and return an array of any invalid
 	 * value errors.
 	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
 	 * @return {array} 
 	 */
-	isValidParams(allParameters) {
+	isValidData(allParameters) {
 		var errors = [];
 		this.fields().forEach((f) => {
-			var p = f.isValidParam(allParameters);
+			var p = f.isValidData(allParameters);
 			if (p.length>0) {
 				errors = errors.concat(p);
 			}

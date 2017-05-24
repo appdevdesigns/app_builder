@@ -253,10 +253,9 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 
 //// LEFT OFF:
-// convert to only update the currently edited value:
-// client side .validate() 
-// client side editor: Date, ABFieldImage,
-// 
+// client side editor: ABFieldImage,
+
+
 
 				var item = DataTable.getItem(editor.row);
 				item[editor.column] = state.value;
@@ -264,35 +263,52 @@ console.error('!! ToDo: onAfterColumnHide()');
 				DataTable.removeCellCss(item.id, editor.column, "webix_invalid");
 				DataTable.removeCellCss(item.id, editor.column, "webix_invalid_cell");
 
-				CurrentObject.model()
-				.update(item.id, item)
-				.then(()=>{
+				var validator = CurrentObject.isValidData(item);
+				if (validator.pass()) {
 
-					DataTable.updateItem(editor.row, item);
-					DataTable.clearSelection();
-					DataTable.refresh(editor.row);
+					
+//// Question: do we submit full item updates?  or just patches?
+var patch = {};
+patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
 
-				})
-				.catch((err)=>{
+					CurrentObject.model()
+					// .update(item.id, item)
+.update(item.id, patch)
+					.then(()=>{
 
-					OP.Error.log('Error saving item:', {error:err});
+						DataTable.updateItem(editor.row, item);
+						DataTable.clearSelection();
+						DataTable.refresh(editor.row);
 
+					})
+					.catch((err)=>{
 
+						OP.Error.log('Error saving item:', {error:err});
 
-					DataTable.clearSelection();
-					if (OP.Grid.isValidationError(err, editor, DataTable)) {
+						DataTable.clearSelection();
+						if (OP.Validation.isGridValidationError(err, editor.row, DataTable)) {
 
 // Do we reset the value?
 // item[editor.column] = state.old;
 // DataTable.updateItem(editor.row, item);
 
-					} else {
+						} else {
 
 // this was some other Error!
-					}
 
-					
-				})
+						}
+
+						
+					})
+
+				} else {
+					validator.updateGrid(editor.row, DataTable);
+					// var errObj = OP.Form.toValidationObject(errors);
+					// OP.Grid.isValidationError(errObj, editor, DataTable);
+
+				}
+
+
 
 			} else {
 

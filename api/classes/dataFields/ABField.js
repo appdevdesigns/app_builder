@@ -437,15 +437,15 @@ module.exports =  class ABField {
 
 
 	/**
-	 * @method isValidParams
+	 * @method isValidData
 	 * Parse through the given parameters and return an error if this field's
 	 * data seems invalid.
 	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
 	 * @return {array} 
 	 */
-	isValidParam(allParameters) {
+	isValidData(allParameters) {
 		var errors = [];
-		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidParams()!!!');
+		sails.log.error('!!! Field ['+this.fieldKey()+'] has not implemented .isValidData()!!!');
 		return errors;
 	}
 

@@ -165,7 +165,7 @@ export default class ABApplication {
 
 	static isValid(op, values) {
 
-			var errors = null;
+			var validator = OP.Validation.validator();
 
 			// during an ADD operation
 			if (op == 'add') {
@@ -179,10 +179,11 @@ export default class ABApplication {
 				})
 				if (matchingApps && matchingApps.length > 0) {
 
-					errors = OP.Form.validationError({
-						name:'label',
-						message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
-					}, errors);
+					validator.addError('label', L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch) )
+					// var errors = OP.Form.validationError({
+					// 	name:'label',
+					// 	message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
+					// }, errors);
 				}
 
 			}
@@ -196,7 +197,7 @@ export default class ABApplication {
 // }
 
 
-			return errors;
+			return validator;
 	}
 
 
