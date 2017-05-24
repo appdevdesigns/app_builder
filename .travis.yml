@@ -7,7 +7,7 @@ sudo: false
 before_script:
 - npm install -g sails@0.12.13
 - npm install -g appdevdesigns/appdev-cli
-- cd /home/travis/tmp
+- cd /tmp
 - chmod +x /home/travis/build/appdevdesigns/app_builder/test/setup/install.sh
 - /home/travis/build/appdevdesigns/app_builder/test/setup/install.sh
 - cd ad-test/node_modules
