@@ -87,7 +87,7 @@ describe('ab_work_object_list_newObject component', () => {
 
 		it('.save: should show a alert box when currentApplication is null', () => {
 			// Use stub instead of spy to avoid show alert popup
-			let stubAlert = sinon.stub(OP.Dialog, 'Alert', function () { });
+			let stubAlert = sinon.stub(OP.Dialog, 'Alert').callsFake(function () { });
 
 			let newObjectValues = {};
 			let callback = function (err) {

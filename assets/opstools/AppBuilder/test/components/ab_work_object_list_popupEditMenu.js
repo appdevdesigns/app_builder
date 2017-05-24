@@ -109,7 +109,6 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 		it('should set callbacks to _logic', () => {
 			let options = {
 				onClick: function (action) {
-					console.log("This is a test callback");
 				}
 			};
 

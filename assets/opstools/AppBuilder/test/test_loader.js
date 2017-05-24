@@ -1,23 +1,15 @@
 async.series([
 
+	// Map appdev/auth/reauth.js file to another file,
+	// to ignore login page
 	function (next) {
-		var stealMeta = steal.config("meta");
+		var stealMap = steal.config("map");
 
-		var reauthIndex = -1;
-		stealMeta.appdev.deps.filter(function (dep, index) {
-			if (dep == 'appdev/auth/reauth')
-				reauthIndex = index;
+		stealMap["appdev/auth/reauth"] = "opstools/AppBuilder/test/test_loader";
+
+		steal.config({
+			map: stealMap
 		});
-
-		if (reauthIndex > -1) {
-			stealMeta.appdev.deps.splice(reauthIndex, 1);
-
-			steal.config({
-				meta: {
-					"appdev": stealMeta.appdev
-				}
-			});
-		}
 
 		next();
 	},
