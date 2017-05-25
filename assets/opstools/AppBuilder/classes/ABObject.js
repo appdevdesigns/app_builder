@@ -452,6 +452,26 @@ export default class ABObject {
 
 
 
+	// after a component has rendered, tell each of our fields to perform
+	// any custom display operations
+	// @param {Webix.DataStore} data a webix datastore of all the rows effected
+	//        by the render.
+	customDisplays(data, App, DataTable) {
+		var fields = this.fields();
+
+		var id = data.getFirstId();
+		while(id) {
+			var row = data.getItem(id);
+			fields.forEach((f)=>{
+				var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+				f.customDisplay(row, App, node);
+			})
+			id = data.getNextId(id);
+		}
+	}
+
+
+
 	/**
 	 * @method isValidData
 	 * Parse through the given data and return an array of any invalid

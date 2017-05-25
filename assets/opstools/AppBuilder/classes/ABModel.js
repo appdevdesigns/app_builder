@@ -215,7 +215,9 @@ console.error('!!!!!', err);
 // if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		if (mlFields.length) {
-			OP.Multilingual.unTranslate(values, values, mlFields);
+			if (values.translations) {
+				OP.Multilingual.unTranslate(values, values, mlFields);
+			}
 		}
 
 		return new Promise(

@@ -168,6 +168,22 @@ console.error('!! ToDo: onAfterColumnHide()');
 		}
 
 		// webix.extend($$(ids.form), webix.ProgressBar);
+
+		// NOTE: register the onAfterRender() here, so it only registers
+		// one.
+		var DataTable = $$(ids.component);
+		var throttleOnAfterRender = null;
+		DataTable.attachEvent("onAfterRender", function(data){
+
+			if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
+			throttleOnAfterRender = setTimeout(()=>{ 
+				if (CurrentObject) {
+					CurrentObject.customDisplays(data, App, DataTable);
+				}
+			}, 150);
+
+		});
+
 	}
 
 
@@ -267,13 +283,15 @@ console.error('!! ToDo: onAfterColumnHide()');
 				if (validator.pass()) {
 
 					
-//// Question: do we submit full item updates?  or just patches?
-var patch = {};
-patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
-
+// var patch = {};
+// patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
+					
+					// NOTE: keep updating the WHOLE item.  if not, we run the risk of
+					// the multilingual labels getting reset if they are not part of the
+					// data being sent back.
 					CurrentObject.model()
-					// .update(item.id, item)
-.update(item.id, patch)
+					.update(item.id, item)
+// .update(item.id, patch)
 					.then(()=>{
 
 						DataTable.updateItem(editor.row, item);
@@ -302,10 +320,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 					})
 
 				} else {
-					validator.updateGrid(editor.row, DataTable);
-					// var errObj = OP.Form.toValidationObject(errors);
-					// OP.Grid.isValidationError(errObj, editor, DataTable);
 
+					validator.updateGrid(editor.row, DataTable);
 				}
 
 
@@ -443,6 +459,17 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 						DataTable.sort(s);
 					})
 				}
+
+				// render custom displays:
+// 				var throttleOnAfterRender = null;
+// 				DataTable.attachEvent("onAfterRender", function(data){
+// webix.message('onAfterRender check')
+// 					if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
+// 					throttleOnAfterRender = setTimeout(()=>{ 
+// webix.message("onAfterRender()");
+// 						CurrentObject.onAfterRender(data, App);
+// 					}, 150);
+// 				});
 
 				//// update DataTable Content
 
