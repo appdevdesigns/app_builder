@@ -15,6 +15,7 @@ var labels = {
 
 	component: {
 		placeholderName: L('ab.object.form.placeholderName', "*Object name"),
+		addNewObject: L('ab.object.form.addNewObject', "*Add Object"),
 	}
 }
 
@@ -53,14 +54,23 @@ OP.Component.extend(idBase, function(App) {
 				{
 					margin: 5,
 					cols: [
+						{ fillspace: true },
 						{
-							view: "button", id: ids.buttonCancel, value: labels.common.cancel, 
+							view: "button",
+							id: ids.buttonCancel,
+							value: labels.common.cancel, 
+							css: "ab-cancel-button",
+							autowidth: true,
 							click: function () {
 								_logic.cancel();
 							}
 						},
 						{
-							view: "button", id: ids.buttonSave, value: labels.common.add, type: "form", 
+							view: "button",
+							id: ids.buttonSave,
+							value: labels.component.addNewObject,
+							autowidth: true, 
+							type: "form",
 							click: function () {
 								return _logic.save();
 							}

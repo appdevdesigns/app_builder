@@ -11,6 +11,13 @@ module.exports = {
     path: APP + '/bin',
     filename: 'test_app_builder.js'
   },
+  resolve: {
+    alias: {
+      // 'OP': APP + '/../../../assets/opstools/AppBuilder/OP/OP.js'
+      'OP' : '/home/pong/Desktop/AppBuilder/node_modules/app_builder/assets/opstools/AppBuilder/OP/OP.js'
+      // it's important what kind of paths you're using (relative vs. absolute)
+    }
+  },
   module: {
     rules: [{
         test: /\.(js|jsx)$/, loader: 'babel-loader'
