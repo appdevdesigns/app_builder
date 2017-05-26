@@ -34,6 +34,7 @@ export default {
 	largeSpacer: 20,
 	xLargeSpacer: 50,
 	xxLargeSpacer: 100,
+	xxxLargeSpacer: 120,
 	appListSpacerRowHeight: 10,
 	appListSpacerColMinWidth: 1,
 	appListSpacerColMaxWidth: 1,

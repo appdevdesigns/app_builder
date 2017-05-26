@@ -113,7 +113,7 @@ OP.Component.extend(idBase, function(App) {
 				id: ids.noSelection,
 				rows:[
 					{
-						maxHeight: App.config.xxLargeSpacer,
+						maxHeight: App.config.xxxLargeSpacer,
 						hidden: App.config.hideMobile
 					},
 					{
@@ -122,7 +122,7 @@ OP.Component.extend(idBase, function(App) {
 						label:labels.component.selectObject
 					},
 					{
-						maxHeight: App.config.xxLargeSpacer,
+						maxHeight: App.config.xxxLargeSpacer,
 						hidden: App.config.hideMobile
 					}
 				]
@@ -325,7 +325,7 @@ OP.Component.extend(idBase, function(App) {
 		 *
 		 * call back for when the hidden fields have changed.
 		 */
-		callbackFrozenColumns: function( skipRefresh ) {
+		callbackFrozenColumns: function() {
 
 			var frozenID = CurrentObject.workspaceFrozenColumnID;
 
@@ -334,11 +334,9 @@ OP.Component.extend(idBase, function(App) {
 
 				$$(ids.buttonFrozen).define('badge', badgeNumber);
 				$$(ids.buttonFrozen).refresh();
-
-				if (!skipRefresh) {
-					DataTable.refresh();
-				}
 			}
+
+			DataTable.refresh();
 		},
 
 		/**
@@ -354,11 +352,11 @@ OP.Component.extend(idBase, function(App) {
 				$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
 				$$(ids.buttonFieldsVisible).refresh();
 
-				DataTable.refresh();
-
-				// if you unhide a field it may fall inside the frozen columns range so lets check
-				_logic.callbackFrozenColumns();
 			}
+			DataTable.refresh();
+
+			// if you unhide a field it may fall inside the frozen columns range so lets check
+			_logic.callbackFrozenColumns();
 		},
 
 
@@ -418,9 +416,9 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 			if (typeof(sortFields) != "undefined") {
 				$$(ids.buttonSort).define('badge', sortFields.length);
 				$$(ids.buttonSort).refresh();
-
-				//DataTable.refresh();
 			}
+
+			DataTable.sortTable();
 		},
 
 
@@ -549,20 +547,18 @@ console.error('TODO: toolbarPermission()');
 
 			App.actions.populateObjectPopupAddDataField(object);
 
-			// update hiddenFields
-			_logic.callbackFieldsVisible();
-			_logic.callbackSortFields();
-
-
-
 			DataTable.objectLoad(object);
+
+			// update hiddenFields
 
 			PopupDefineLabelComponent.objectLoad(object);
 			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			PopupSortFieldComponent.objectLoad(object);
 
-			_logic.callbackFrozenColumns(true);
+			_logic.callbackFieldsVisible();
+			_logic.callbackFrozenColumns();
+			_logic.callbackSortFields();
 
 		}
 

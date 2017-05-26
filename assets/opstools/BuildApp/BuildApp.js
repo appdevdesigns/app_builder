@@ -81,21 +81,21 @@ var _comm = __webpack_require__(4);
 
 var _comm2 = _interopRequireDefault(_comm);
 
-var _form = __webpack_require__(6);
-
-var _form2 = _interopRequireDefault(_form);
-
-var _multilingual = __webpack_require__(8);
+var _multilingual = __webpack_require__(7);
 
 var _multilingual2 = _interopRequireDefault(_multilingual);
 
-var _model = __webpack_require__(7);
+var _model = __webpack_require__(6);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(9);
+var _util = __webpack_require__(8);
 
 var _util2 = _interopRequireDefault(_util);
+
+var _validation = __webpack_require__(9);
+
+var _validation2 = _interopRequireDefault(_validation);
 
 var _config = __webpack_require__(5);
 
@@ -119,13 +119,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //// in 'use strict' ?
 
 // if (!window.OP) {
-window.OP = {};
+window.OP = OP;
 
 // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
 //              for our loaded projects.
 // OP.UI = {};    		// webix UI definitions
 // OP.Logic = {}; 		// logic references for webix application
 
+// import Form from "./form"
+// import Grid from "./grid"
 OP.Comm = _comm2.default;
 
 OP.Component = {}; // our defined components
@@ -219,12 +221,16 @@ OP.Dialog = AD.op.Dialog;
 
 OP.Error = AD.error;
 
-OP.Form = _form2.default;
+// OP.Form = Form;
+
+// OP.Grid = Grid;
 
 OP.Multilingual = _multilingual2.default;
 OP.Model = _model2.default;
 
 OP.Util = _util2.default;
+
+OP.Validation = _validation2.default;
 
 exports.default = OP;
 // }
@@ -248,9 +254,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // import OP from "OP"
 
 
-__webpack_require__(40);
+__webpack_require__(41);
 
-var _ABObject = __webpack_require__(16);
+var _ABObject = __webpack_require__(17);
 
 var _ABObject2 = _interopRequireDefault(_ABObject);
 
@@ -689,7 +695,7 @@ var ABApplication = function () {
 		key: "isValid",
 		value: function isValid(op, values) {
 
-			var errors = null;
+			var validator = OP.Validation.validator();
 
 			// during an ADD operation
 			if (op == 'add') {
@@ -703,10 +709,11 @@ var ABApplication = function () {
 				});
 				if (matchingApps && matchingApps.length > 0) {
 
-					errors = OP.Form.validationError({
-						name: 'label',
-						message: L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch)
-					}, errors);
+					validator.addError('label', L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch));
+					// var errors = OP.Form.validationError({
+					// 	name:'label',
+					// 	message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
+					// }, errors);
 				}
 			}
 
@@ -718,7 +725,7 @@ var ABApplication = function () {
 			// }
 
 
-			return errors;
+			return validator;
 		}
 	}]);
 
@@ -830,7 +837,7 @@ var ABField = function () {
    * check the current values to make sure they are valid.
    * Here we check the default values provided by ABField.
    *
-   * @return null or [{OP.Form.validationError()}] objects.
+   * @return null or [{OP.Validation.validator()}] objects.
    */
 
 	}, {
@@ -838,7 +845,7 @@ var ABField = function () {
 		value: function isValid() {
 			var _this = this;
 
-			var errors = null;
+			var validator = OP.Validation.validator();
 
 			// .columnName must be unique among fileds on the same object
 			var isNameUnique = this.object.fields(function (f) {
@@ -846,13 +853,10 @@ var ABField = function () {
 				return f.id != _this.id && f.columnName.toLowerCase() == _this.columnName.toLowerCase();
 			}).length == 0;
 			if (!isNameUnique) {
-				errors = OP.Form.validationError({
-					name: 'columnName',
-					message: L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.columnName)
-				}, errors);
+				validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.columnName));
 			}
 
-			return errors;
+			return validator;
 		}
 
 		///
@@ -1032,7 +1036,7 @@ var ABField = function () {
 		value: function columnHeader(isObjectWorkspace) {
 
 			var config = {
-				id: this.id,
+				id: this.columnName, // this.id,
 				header: this.label
 			};
 
@@ -1043,6 +1047,32 @@ var ABField = function () {
 			}
 
 			return config;
+		}
+
+		/**
+   * @method isValidData
+   * Parse through the given data and return an error if this field's
+   * data seems invalid.
+   * @param {obj} data  a key=>value hash of the inputs to parse.
+   */
+
+	}, {
+		key: 'isValidData',
+		value: function isValidData(data, validator) {
+
+			console.error('!!! Field [' + this.fieldKey() + '] has not implemented .isValidData()!!!');
+		}
+
+		/*
+   * @function isMultilingual
+   * does this field represent multilingual data?
+   * @return {bool}
+   */
+
+	}, {
+		key: 'isMultilingual',
+		value: function isMultilingual() {
+			return false;
 		}
 	}], [{
 		key: 'clearEditor',
@@ -1643,139 +1673,6 @@ exports.default = {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.default = {
-
-	/**
-  * @function OP.Form.validationError
-  *
-  * creates an error object that can be used in OP.Form.isValidationError()
-  * to update a webix form with error validation messages.
-  *
-  * @param {json} error 	an error object
-  *				error.name	{string} the attribute name (Form.element[error.name])
-  *				error.message {string} the message to display for the error
-  *
-  * @return {obj} an error object.
-  */
-	validationError: function validationError(error, errorObj) {
-
-		errorObj = errorObj || {
-			error: 'E_VALIDATION',
-			invalidAttributes: {}
-		};
-
-		var attr = errorObj.invalidAttributes;
-		attr[error.name] = attr[error.name] || [];
-
-		attr[error.name].push(error);
-
-		return errorObj;
-	},
-
-	/**
-  * @function OP.Form.isValidationError
-  *
-  * scans the given error to see if it is a sails' respone about an invalid
-  * value from one of the form elements.
-  *
-  * @codestart
-  * var form = $$('formID');
-  * var values = form.getValues();
-  * model.attr(values);
-  * model.save()
-  * .fail(function(err){
-  *     if (!OP.Form.isValidationError(err, form)) {
-  *         OP.error.log('Error saving current model ()', {error:err, values:values});
-  *     }
-  * })
-  * .then(function(newData){
-  * 
-  * });
-  * @codeend
-  *
-  * @param {obj} error  the error response object
-  * @param {obj} form   the webix form instance (or reference)
-  * @return {bool}      true if error was about a form element.  false otherwise.
-  */
-	isValidationError: function isValidationError(error, form) {
-
-		// {bool} have we set focus to form component?
-		var hasFocused = false;
-
-		// if we have an error object:
-		if (error) {
-
-			//// if the error obj is provided by Sails response, 
-			//// do some clean up on the error object:
-
-
-			// dig down to sails provided error object:
-			if (error.error && error.error == 'E_UNKNOWN' && error.raw && error.raw.length > 0) {
-
-				error = error.raw[0];
-			}
-
-			// drill down to the embedded .err object if it exists
-			if (error.err) {
-				error = error.err;
-			}
-
-			//// Now process the error object
-			//// 
-			if (error.error && error.error == 'E_VALIDATION' || error.code && error.code == 'E_VALIDATION') {
-
-				var attrs = error.invalidAttributes;
-				if (attrs) {
-
-					var wasForm = false;
-					for (var attr in attrs) {
-
-						// if this is a field in the form:
-						if (form.elements[attr]) {
-
-							var errors = attrs[attr];
-							var msg = [];
-							errors.forEach(function (err) {
-								msg.push(err.message);
-							});
-
-							// set the invalid error message
-							form.markInvalid(attr, msg.join(', '));
-
-							// set focus to the 1st form element we mark:
-							if (!hasFocused) {
-								form.elements[attr].focus();
-								hasFocused = true;
-							}
-
-							wasForm = true;
-						}
-					}
-
-					if (wasForm) {
-						return true;
-					}
-				}
-			}
-		}
-
-		// if we missed updating our form with an error
-		// this was not a validation error so return false
-		return false;
-	}
-
-};
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -2100,7 +1997,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 };
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2227,7 +2124,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2241,6 +2138,306 @@ exports.default = {
 	uuid: AD.util.uuid
 
 };
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var OPValidator = function () {
+	function OPValidator() {
+		_classCallCheck(this, OPValidator);
+
+		this.errors = [];
+	}
+
+	_createClass(OPValidator, [{
+		key: 'addError',
+		value: function addError(name, message) {
+			this.errors.push({ name: name, message: message });
+		}
+	}, {
+		key: 'pass',
+		value: function pass() {
+			return this.errors.length == 0;
+		}
+	}, {
+		key: 'fail',
+		value: function fail() {
+			return this.errors.length > 0;
+		}
+	}, {
+		key: 'toValidationObject',
+		value: function toValidationObject() {
+			var obj = {
+				error: 'E_VALIDATION',
+				invalidAttributes: {}
+			};
+
+			var attr = obj.invalidAttributes;
+
+			this.errors.forEach(function (e) {
+
+				attr[e.name] = attr[e.name] || [];
+				attr[e.name].push(e);
+			});
+
+			return obj;
+		}
+	}, {
+		key: 'updateForm',
+		value: function updateForm(form) {
+			var vObj = this.toValidationObject();
+			OP.Validation.isFormValidationError(vObj, form);
+		}
+	}, {
+		key: 'updateGrid',
+		value: function updateGrid(rowID, grid) {
+			var vObj = this.toValidationObject();
+			OP.Validation.isGridValidationError(vObj, rowID, grid);
+		}
+	}]);
+
+	return OPValidator;
+}();
+
+//// LEFT OFF HERE:
+// add an OP.Validation  and remove OP.Form  OP.Grid
+// update existing Applicaiton, Object, Field forms to use this.
+
+
+exports.default = {
+
+	/**
+  * @function OP.Validation.validator
+  * return a new instance of OPValidator.
+  * @return {OPValidator}
+  */
+	validator: function validator() {
+		return new OPValidator();
+	},
+
+	// var validator = OP.Validation.validator()
+	// validator.addError('name', 'message')
+	// validator.pass() 
+	// validator.updateForm(Form);
+	// validator.updateGrid(editor, Grid);
+
+	/**
+  * @function OP.Validation.isFormValidationError
+  *
+  * scans the given error to see if it is a sails' response about an invalid
+  * value from one of the form elements.
+  *
+  * @codestart
+  * var form = $$('formID');
+  * var values = form.getValues();
+  * model.attr(values);
+  * model.save()
+  * .fail(function(err){
+  *     if (!OP.Form.isFormValidationError(err, form)) {
+  *         OP.error.log('Error saving current model ()', {error:err, values:values});
+  *     }
+  * })
+  * .then(function(newData){
+  * 
+  * });
+  * @codeend
+  *
+  * @param {obj} error  the error response object
+  * @param {obj} form   the webix form instance (or reference)
+  * @return {bool}      true if error was about a form element.  false otherwise.
+  */
+	isFormValidationError: function isFormValidationError(error, form) {
+
+		// {bool} have we set focus to form component?
+		var hasFocused = false;
+
+		// if we have an error object:
+		if (error) {
+
+			//// if the error obj is provided by Sails response, 
+			//// do some clean up on the error object:
+
+
+			// dig down to sails provided error object:
+			if (error.error && error.error == 'E_UNKNOWN' && error.raw && error.raw.length > 0) {
+
+				error = error.raw[0];
+			}
+
+			// drill down to the embedded .err object if it exists
+			if (error.err) {
+				error = error.err;
+			}
+
+			//// Now process the error object
+			//// 
+			if (error.error && error.error == 'E_VALIDATION' || error.code && error.code == 'E_VALIDATION') {
+
+				var attrs = error.invalidAttributes;
+				if (attrs) {
+
+					var wasForm = false;
+					for (var attr in attrs) {
+
+						// if this is a field in the form:
+						if (form.elements[attr]) {
+
+							var errors = attrs[attr];
+							var msg = [];
+							errors.forEach(function (err) {
+								msg.push(err.message);
+							});
+
+							// set the invalid error message
+							form.markInvalid(attr, msg.join(', '));
+
+							// set focus to the 1st form element we mark:
+							if (!hasFocused) {
+								form.elements[attr].focus();
+								hasFocused = true;
+							}
+
+							wasForm = true;
+						}
+					}
+
+					if (wasForm) {
+						return true;
+					}
+				}
+			}
+		}
+
+		// if we missed updating our form with an error
+		// this was not a validation error so return false
+		return false;
+	},
+
+	/**
+  * @function OP.Validation.isGridValidationError
+  *
+  * scans the given error to see if it is a sails' response about an invalid
+  * value from one of our grid columns.
+  *
+  * @codestart
+  * var grid = $$('myGrid');
+  * model.attr(values);
+  * model.save()
+  * .fail(function(err){
+  *     if (!OP.Validation.isGridValidationError(err, editor, grid)) {
+  *         OP.error.log('Error saving current model ()', {error:err, values:values});
+  *     }
+  * })
+  * .then(function(newData){
+  * 
+  * });
+  * @codeend
+  *
+  * @param {obj} error  the error response object
+  * @param {integer} row the row id of the Grid to update.
+  * @param {obj} Grid   the webix grid instance (or reference)
+  * @return {bool}      true if error was about a grid column.  false otherwise.
+  */
+	isGridValidationError: function isGridValidationError(error, row, Grid) {
+
+		// if we have an error object:
+		if (error) {
+
+			//// if the error obj is provided by Sails response, 
+			//// do some clean up on the error object:
+
+
+			// dig down to sails provided error object:
+			if (error.error && error.error == 'E_UNKNOWN' && error.raw && error.raw.length > 0) {
+
+				error = error.raw[0];
+			}
+
+			// drill down to the embedded .err object if it exists
+			if (error.err) {
+				error = error.err;
+			}
+
+			// if this is from our server response:
+			if (error.data && error.data.error && error.data.error == 'E_VALIDATION') {
+				error = error.data;
+			}
+
+			//// Now process the error object
+			//// 
+			if (error.error && error.error == 'E_VALIDATION' || error.code && error.code == 'E_VALIDATION') {
+
+				var attrs = error.invalidAttributes;
+				if (attrs) {
+
+					var wasGrid = false;
+					for (var attr in attrs) {
+
+						// if this is a field in the form:
+						// if (form.elements[attr]) {
+
+						// 	var errors = attrs[attr];
+						// 	var msg = [];
+						// 	errors.forEach(function(err) {
+						// 		msg.push(err.message);
+						// 	})
+
+						// 	// set the invalid error message
+						// 	form.markInvalid(attr, msg.join(', '));
+
+						// 	// set focus to the 1st form element we mark:
+						// 	if (!hasFocused) {
+						// 		form.elements[attr].focus();
+						// 		hasFocused = true;
+						// 	}
+
+						// 	wasForm = true;
+						// }
+
+
+						Grid.addCellCss(row, attr, "webix_invalid");
+						Grid.addCellCss(row, attr, "webix_invalid_cell");
+
+						var msg = [];
+						attrs[attr].forEach(function (e) {
+							msg.push(e.message);
+						});
+
+						OP.Dialog.Alert({
+							text: attr + ': ' + msg.join(', ')
+						});
+
+						wasGrid = true;
+					}
+
+					Grid.refresh(row);
+
+					if (wasGrid) {
+						return true;
+					}
+				}
+			}
+		}
+
+		// if we missed updating our Grid with an error
+		// this was not a validation error so return false
+		return false;
+	}
+
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 10 */
@@ -2337,6 +2534,7 @@ exports.default = {
 	largeSpacer: 50,
 	xLargeSpacer: 100,
 	xxLargeSpacer: 200,
+	xxxLargeSpacer: 400,
 	appListSpacerRowHeight: 100,
 	appListSpacerColMinWidth: 100,
 	appListSpacerColMaxWidth: 200,
@@ -2398,6 +2596,7 @@ exports.default = {
 	largeSpacer: 20,
 	xLargeSpacer: 50,
 	xxLargeSpacer: 100,
+	xxxLargeSpacer: 120,
 	appListSpacerRowHeight: 10,
 	appListSpacerColMinWidth: 1,
 	appListSpacerColMaxWidth: 1,
@@ -2425,19 +2624,19 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _ABFieldString = __webpack_require__(20);
+var _ABFieldString = __webpack_require__(21);
 
 var _ABFieldString2 = _interopRequireDefault(_ABFieldString);
 
-var _ABFieldNumber = __webpack_require__(19);
+var _ABFieldNumber = __webpack_require__(20);
 
 var _ABFieldNumber2 = _interopRequireDefault(_ABFieldNumber);
 
-var _ABFieldDate = __webpack_require__(17);
+var _ABFieldDate = __webpack_require__(18);
 
 var _ABFieldDate2 = _interopRequireDefault(_ABFieldDate);
 
-var _ABFieldImage = __webpack_require__(18);
+var _ABFieldImage = __webpack_require__(19);
 
 var _ABFieldImage2 = _interopRequireDefault(_ABFieldImage);
 
@@ -2500,19 +2699,19 @@ exports.default = {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(21);
+__webpack_require__(22);
 
-__webpack_require__(25);
+__webpack_require__(26);
 
-var _edittree = __webpack_require__(42);
+var _edittree = __webpack_require__(43);
 
 var _edittree2 = _interopRequireDefault(_edittree);
 
-var _editlist = __webpack_require__(41);
+var _editlist = __webpack_require__(42);
 
 var _editlist2 = _interopRequireDefault(_editlist);
 
-var _AppBuilder = __webpack_require__(47);
+var _AppBuilder = __webpack_require__(48);
 
 var _AppBuilder2 = _interopRequireDefault(_AppBuilder);
 
@@ -2747,12 +2946,271 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+//
+// ABModel
+//
+// Represents the Data interface for an ABObject data.
+//
+// 2 ways to use an ABModel to load a DataTable:
+// 	Method 1:  
+// 	gather all the data externally and send to the DataTable
+//		Model.findAll()
+//		.then((data)=>{
+//			DataTable.parse(data);
+//		})
+//
+// 	Method 2: 
+// 	Set the Model object with a condition / skip / limit, then 
+// 	use it to load the DataTable:
+//		Model.where({})
+//		.skip(XX)
+//		.limit(XX)
+//		.loadInto(DataTable);
+
+
+function toDC(data) {
+	return new webix.DataCollection({
+		data: data
+
+	});
+}
+
+var ABModel = function () {
+	function ABModel(object) {
+		_classCallCheck(this, ABModel);
+
+		// link me to my parent ABApplication
+		this.object = object;
+
+		this._where = null;
+		this._skip = null;
+		this._limit = null;
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+
+	///
+	/// Instance Methods
+	///
+
+
+	_createClass(ABModel, [{
+		key: 'modelURL',
+		value: function modelURL() {
+			return '/app_builder/model/application/#appID#/object/#objID#'.replace('#appID#', this.object.application.id).replace('#objID#', this.object.id);
+		}
+	}, {
+		key: 'modelURLUpdate',
+		value: function modelURLUpdate(id) {
+			return '/app_builder/model/application/#appID#/object/#objID#/#id#'.replace('#appID#', this.object.application.id).replace('#objID#', this.object.id).replace('#id#', id);
+		}
+
+		/**
+   * @method findAll
+   * performs a data find with the provided condition.
+   */
+
+	}, {
+		key: 'findAll',
+		value: function findAll(cond) {
+			var _this = this;
+
+			cond = cond || {};
+
+			// prepare our condition:
+			var newCond = {};
+
+			// if the provided cond looks like our { where:{}, skip:xx, limit:xx } format,
+			// just use this one.
+			if (cond.where) {
+				newCond = cond;
+			} else {
+
+				// else, assume the provided condition is the .where clause.
+				newCond.where = cond;
+			}
+
+			return new Promise(function (resolve, reject) {
+
+				OP.Comm.Service.get({
+					url: _this.modelURL(),
+					params: newCond
+				}).then(function (data) {
+
+					// if this object has some multilingual fields, translate the data:
+					var mlFields = _this.object.multilingualFields();
+					if (mlFields.length) {
+
+						data.data.forEach(function (d) {
+							OP.Multilingual.translate(d, d, mlFields);
+						});
+					}
+
+					resolve(data);
+				}).catch(reject);
+			});
+		}
+
+		/**
+   * @method loadInto
+   * loads the current values into the provided Webix DataTable
+   * @param {DataTable} DT  A Webix component that can dynamically load data.
+   */
+
+	}, {
+		key: 'loadInto',
+		value: function loadInto(DT) {
+			var _this2 = this;
+
+			// if a limit was applied, then this component should be loading dynamically
+			if (this._limit) {
+
+				DT.define('datafetch', this._limit);
+				DT.define('datathrottle', 250); // 250ms???
+
+
+				// catch the event where data is requested:
+				// here we will do our own findAll() so we can persist
+				// the provided .where condition.
+				DT.attachEvent("onDataRequest", function (start, count) {
+
+					var cond = {
+						where: _this2._where,
+						limit: count,
+						skip: start
+					};
+
+					_this2.findAll(cond).then(function (data) {
+						DT.parse(data);
+					});
+
+					return false; // <-- prevent the default "onDataRequest"
+				});
+
+				DT.refresh();
+			}
+
+			// else just load it all at once:
+			var cond = {};
+			if (this._where) cond.where = this._where;
+			if (this._limit != null) cond.limit = this._limit;
+			if (this._skip != null) cond.skip = this._skip;
+
+			this.findAll(cond).then(function (data) {
+				DT.parse(data);
+			}).catch(function (err) {
+				console.error('!!!!!', err);
+			});
+		}
+
+		/**
+   * @method limit
+   * set the limit value for this set of data
+   * @param {integer} limit  the number or elements to return in this call
+   * @return {ABModel} this object that is chainable.
+   */
+
+	}, {
+		key: 'limit',
+		value: function limit(_limit) {
+			this._limit = _limit;
+			return this;
+		}
+
+		/**
+   * @method skip
+   * set the skip value for this set of data
+   * @param {integer} skip  the number or elements to skip
+   * @return {ABModel} this object that is chainable.
+   */
+
+	}, {
+		key: 'skip',
+		value: function skip(_skip) {
+			this._skip = _skip;
+			return this;
+		}
+
+		/**
+   * @method update
+   * update model values on the server.
+   */
+
+	}, {
+		key: 'update',
+		value: function update(id, values) {
+			var _this3 = this;
+
+			// if this object has some multilingual fields, translate the data:
+			var mlFields = this.object.multilingualFields();
+			if (mlFields.length) {
+				OP.Multilingual.unTranslate(values, values, mlFields);
+			}
+
+			return new Promise(function (resolve, reject) {
+
+				OP.Comm.Service.put({
+					url: _this3.modelURLUpdate(id),
+					params: values
+				}).then(function (data) {
+
+					resolve(data);
+				}).catch(reject);
+			});
+		}
+
+		/**
+   * @method where
+   * set the where condition for the data being loaded.
+   * @param {json} cond  the json condition statement.
+   * @return {ABModel} this object that is chainable.
+   */
+
+	}, {
+		key: 'where',
+		value: function where(cond) {
+			this._where = cond;
+			return this;
+		}
+	}]);
+
+	return ABModel;
+}();
+
+exports.default = ABModel;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 // import OP from "OP"
 
 
 var _ABFieldManager = __webpack_require__(13);
 
 var _ABFieldManager2 = _interopRequireDefault(_ABFieldManager);
+
+var _ABModel = __webpack_require__(16);
+
+var _ABModel2 = _interopRequireDefault(_ABModel);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2842,17 +3300,18 @@ var ABObject = function () {
 		value: function isValid() {
 			var _this2 = this;
 
-			var errors = null;
+			var validator = OP.Validation.validator();
 
 			// label/name must be unique:
 			var isNameUnique = this.application.objects(function (o) {
 				return o.name.toLowerCase() == _this2.name.toLowerCase();
 			}).length == 0;
 			if (!isNameUnique) {
-				errors = OP.Form.validationError({
-					name: 'name',
-					message: L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name)
-				}, errors);
+				validator.addError('name', L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name));
+				// errors = OP.Form.validationError({
+				// 		name:'name',
+				// 		message:L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name),
+				// 	}, errors);
 			}
 
 			// Check the common validations:
@@ -2862,8 +3321,7 @@ var ABObject = function () {
 			// 	return false;
 			// }
 
-
-			return errors;
+			return validator;
 		}
 
 		///
@@ -3107,6 +3565,20 @@ var ABObject = function () {
 
 			return this.save();
 		}
+	}, {
+		key: "multilingualFields",
+		value: function multilingualFields() {
+			var fields = [];
+
+			var found = this.fields(function (f) {
+				return f.isMultilingual();
+			});
+			found.forEach(function (f) {
+				fields.push(f.columnName);
+			});
+
+			return fields;
+		}
 
 		///
 		///	Object Workspace Settings
@@ -3117,21 +3589,22 @@ var ABObject = function () {
 
 
 		///
-		/// Working with Actual Object Values:
+		/// Working with Client Components:
 		///
+
 
 		// return the column headers for this object
 		// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
 		value: function columnHeaders(isObjectWorkspace) {
 
 			var headers = [];
-			var idLookup = {};
+			var columnNameLookup = {};
 
 			// get the header for each of our fields:
 			this._fields.forEach(function (f) {
 				var header = f.columnHeader(isObjectWorkspace);
 				headers.push(header);
-				idLookup[header.id] = f.id; // name => id
+				columnNameLookup[header.id] = f.columnName; // name => id
 			});
 
 			// update our headers with any settings applied in the Object Workspace
@@ -3146,7 +3619,7 @@ var ABObject = function () {
 				if (this.workspaceHiddenFields.length > 0) {
 					this.workspaceHiddenFields.forEach(function (hfID) {
 						headers.forEach(function (h) {
-							if (idLookup[h.id] == hfID) {
+							if (columnNameLookup[h.id] == hfID) {
 								h.hidden = true;
 							}
 						});
@@ -3155,6 +3628,41 @@ var ABObject = function () {
 			}
 
 			return headers;
+		}
+
+		/**
+   * @method isValidData
+   * Parse through the given data and return an array of any invalid
+   * value errors.
+   * @param {obj} data a key=>value hash of the inputs to parse.
+   * @return {array}
+   */
+
+	}, {
+		key: "isValidData",
+		value: function isValidData(data) {
+			var validator = OP.Validation.validator();
+			this.fields().forEach(function (f) {
+				var p = f.isValidData(data, validator);
+			});
+
+			return validator;
+		}
+
+		///
+		/// Working with data from server
+		///
+
+		/**
+   * @method model
+   * return a Model object that will allow you to interact with the data for
+   * this ABObject.
+   */
+
+	}, {
+		key: "model",
+		value: function model() {
+			return new _ABModel2.default(this);
 		}
 	}, {
 		key: "workspaceSortFields",
@@ -3189,7 +3697,7 @@ exports.default = ABObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3237,8 +3745,107 @@ var ABFieldDateDefaults = {
 	menuName: L('ab.dataField.date.menuName', '*Date'),
 
 	// description: what gets displayed in the Editor description.
-	description: ''
+	description: L('ab.dataField.date.description', '*Pick one from a calendar.')
 };
+
+var defaultValues = {
+	includeTime: 0,
+	defaultCurrentDate: 0,
+	defaultDate: "",
+	dayFormat: "DD",
+	dayOrder: 1,
+	dayDelimiter: "slash",
+	monthFormat: "MM",
+	monthOrder: 2,
+	monthDelimiter: "slash",
+	yearFormat: "YYYY",
+	yearOrder: 3,
+	yearDelimiter: "slash",
+
+	validateCondition: "none",
+	validateRangeUnit: "days",
+	validateRangeBefore: 0,
+	validateRangeAfter: 0,
+	validateStartDate: null,
+	validateEndDate: null
+};
+
+var ids = {
+	default: 'ab-date-default',
+	currentToDefault: 'ab-date-current-to-default',
+
+	dateDisplay: 'ab-date-display',
+
+	dayOrder: 'ab-date-day-order',
+	monthOrder: 'ab-date-month-order',
+	yearOrder: 'ab-date-year-order',
+	dayFormat: 'ab-date-day-format',
+	monthFormat: 'ab-date-month-format',
+	yearFormat: 'ab-date-year-format',
+	dayDelimiter: 'ab-date-day-delimiter',
+	monthDelimiter: 'ab-date-month-delimiter',
+	yearDelimiter: 'ab-date-year-delimiter',
+
+	// validation
+	validateCondition: 'ab-date-validate-condition',
+	validateRange: 'ab-date-validate-range',
+	validateRangeUnit: 'ab-date-validate-range-unit',
+	validateRangeBefore: 'ab-date-validate-range-before',
+	validateRangeAfter: 'ab-date-validate-range-after',
+	validateRangeBeforeLabel: 'ab-date-validate-before-label',
+	validateRangeAfterLabel: 'ab-date-validate-after-label',
+
+	validateLeft: 'ab-date-validate-left',
+	validateRight: 'ab-date-validate-right'
+};
+
+var delimiterList = [{ id: 'comma', value: "Comma", sign: "," }, { id: 'slash', value: "Slash", sign: "/" }, { id: 'space', value: "Space", sign: " " }, { id: 'dash', value: "Dash", sign: "-" }];
+
+/** Private methods **/
+function getDelimiterSign(text) {
+	var delimiterItem = delimiterList.filter(function (item) {
+		return item.id == text;
+	})[0];
+
+	return delimiterItem ? delimiterItem.sign : null;
+}
+
+function getDateFormat(setting) {
+	var momentFormat = "";
+
+	for (var i = 1; i <= 3; i++) {
+		if (setting.dayOrder == i) {
+			momentFormat += setting.dayFormat;
+			momentFormat += i != 3 ? setting.dayDelimiter : '';
+		}
+		if (setting.monthOrder == i) {
+			momentFormat += setting.monthFormat;
+			momentFormat += i != 3 ? setting.monthDelimiter : '';
+		}
+		if (setting.yearOrder == i) {
+			momentFormat += setting.yearFormat;
+			momentFormat += i != 3 ? setting.yearDelimiter : '';
+		}
+	}
+
+	return moment(new Date()).format(momentFormat);
+}
+
+function refreshDateDisplay() {
+	var dateFormat = getDateFormat({
+		dayOrder: $$(ids.dayOrder).getValue(),
+		monthOrder: $$(ids.monthOrder).getValue(),
+		yearOrder: $$(ids.yearOrder).getValue(),
+		dayFormat: $$(ids.dayFormat).getValue(),
+		monthFormat: $$(ids.monthFormat).getValue(),
+		yearFormat: $$(ids.yearFormat).getValue(),
+		dayDelimiter: getDelimiterSign($$(ids.dayDelimiter).getValue()),
+		monthDelimiter: getDelimiterSign($$(ids.monthDelimiter).getValue()),
+		yearDelimiter: getDelimiterSign($$(ids.yearDelimiter).getValue())
+	});
+
+	$$(ids.dateDisplay).setValue(dateFormat);
+}
 
 /**
  * ABFieldDateComponent
@@ -3250,295 +3857,373 @@ var ABFieldDateDefaults = {
 var ABFieldDateComponent = new _ABFieldComponent2.default({
 	fieldDefaults: ABFieldDateDefaults,
 
-	elements: function elements(App) {
+	elements: function elements(App, field) {
+		ids = field.idsUnique(ids, App);
+
 		return [{
-			view: "label",
-			label: "Pick one from a calendar."
-		}, {
 			view: "checkbox",
 			name: "includeTime",
 			labelRight: "Include time",
 			labelWidth: 0,
 			on: {
 				onChange: function onChange(newVal, oldVal) {
-					// TODO : Re-render default date picker
-					// webix.ui({
-					// 	view: 'datepicker',
-					// 	label: "Default",
-					// 	id: componentIds.default,
-					// 	timepicker: newVal ? true : false,
-					// 	disabled: $$(componentIds.currentToDefault).getValue() == true
-					// }, $$(componentIds.default));
+					// Re-render default date picker
+					webix.ui({
+						view: 'datepicker',
+						label: "Default",
+						id: ids.default,
+						timepicker: newVal ? true : false,
+						disabled: $$(ids.currentToDefault).getValue() == true
+					}, $$(ids.default));
 				}
 			}
 		}, {
 			view: 'checkbox',
+			id: ids.currentToDefault,
 			name: "defaultCurrentDate",
 			labelRight: 'Set current date to default value',
 			labelWidth: 0,
 			on: {
 				onChange: function onChange(newVal, oldVal) {
-					// if (newVal) {
-					// 	$$(componentIds.default).disable();
-					// }
-					// else {
-					// 	$$(componentIds.default).enable();
-					// }
+					if (newVal) {
+						$$(ids.default).disable();
+					} else {
+						$$(ids.default).enable();
+					}
 				}
 			}
 		}, {
 			view: 'datepicker',
+			id: ids.default,
 			label: "Default",
 			name: 'defaultDate',
-			timepicker: false // TODO
-		}, {
-			view: "label",
-			label: "Date format options"
-		}, {
-			view: "text",
-			name: "dateDisplay",
-			label: "Date Display",
-			labelWidth: "100",
-			// id: componentIds.dateDisplay,
-			disabled: true,
-			//value : showdateDisplay(),
-			placeholder: "date-display"
+			timepicker: false
 		}, {
 			cols: [{
-				view: "richselect",
-				name: "dayFormat",
-				// id: componentIds.includeDayFormat,
-				label: "Day",
-				value: 'includeDay-ddd',
-				options: [{ id: 'includeDay-D', value: "1 2 ... 30 31" }, { id: 'includeDay-Do', value: "1st 2nd ... 30th 31st" }, { id: 'includeDay-DD', value: "01 02 ... 30 31" }, { id: 'includeDay-dd', value: "Su Mo ... Fr Sa" }, { id: 'includeDay-ddd', value: "Sun Mon ... Fri Sat" }, { id: 'includeDay-dddd', value: "Sunday Monday ... Friday Saturday" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-
+				view: 'label',
+				label: 'Display',
+				css: 'ab-text-bold'
 			}, {
-				view: "richselect",
-				name: "dayOrder",
-				// id: componentIds.includeDayOrder,
-				label: "Places",
-				value: 1,
-				//disabled: true,
-				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
+				view: 'label',
+				id: ids.dateDisplay,
+				label: ''
+			}]
+		},
+
+		// Display date format
+		{
+			view: "accordion",
+			multi: false,
+			collapsed: true,
+			rows: [
+			// Day format
+			{
+				header: "Day",
+				body: {
+					rows: [{
+						view: "richselect",
+						name: "dayFormat",
+						id: ids.dayFormat,
+						label: "Format",
+						labelWidth: 100,
+						value: 'D',
+						options: [{ id: 'D', value: "1 2 ... 30 31" }, { id: 'Do', value: "1st 2nd ... 30th 31st" }, { id: 'DD', value: "01 02 ... 30 31" }, { id: 'dd', value: "Su Mo ... Fr Sa" }, { id: 'ddd', value: "Sun Mon ... Fri Sat" }, { id: 'dddd', value: "Sunday Monday ... Friday Saturday" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "richselect",
+						name: "dayOrder",
+						id: ids.dayOrder,
+						label: "Places",
+						labelWidth: 100,
+						value: '1',
+						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "radio",
+						name: "dayDelimiter",
+						id: ids.dayDelimiter,
+						label: "Delimiter",
+						labelWidth: 100,
+						vertical: true,
+						options: delimiterList,
+						value: 'slash',
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}]
+				}
+			},
+
+			// Month format
+			{
+				header: "Month",
+				body: {
+					rows: [{
+						view: "richselect",
+						name: "monthFormat",
+						id: ids.monthFormat,
+						label: "Format",
+						labelWidth: 100,
+						value: 'MM',
+						options: [{ id: 'M', value: "1 2 ... 11 12" }, { id: 'Mo', value: "1st 2nd ... 11th 12th" }, { id: 'MM', value: "01 02 ... 11 12" }, { id: 'MMM', value: "Jan Feb ... Nov Dec" }, { id: 'MMMM', value: "January February ... November December" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "richselect",
+						name: "monthOrder",
+						id: ids.monthOrder,
+						label: "Places",
+						labelWidth: 100,
+						value: '2',
+						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "radio",
+						name: "monthDelimiter",
+						id: ids.monthDelimiter,
+						label: "Delimiter",
+						labelWidth: 100,
+						vertical: true,
+						options: delimiterList,
+						value: 'slash',
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}]
+				}
+			},
+
+			// Year format
+			{
+				header: "Year",
+				body: {
+					rows: [{
+						view: "richselect",
+						name: "yearFormat",
+						id: ids.yearFormat,
+						label: "Format",
+						labelWidth: 100,
+						value: 'YYYY',
+						options: [{ id: 'YY', value: "70 71 ... 29 30" }, { id: 'YYYY', value: "1970 1971 ... 2029 2030" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "richselect",
+						name: "yearOrder",
+						id: ids.yearOrder,
+						label: "Places",
+						labelWidth: 100,
+						value: '3',
+						options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "radio",
+						name: "yearDelimiter",
+						id: ids.yearDelimiter,
+						label: "Delimiter",
+						labelWidth: 100,
+						vertical: true,
+						options: delimiterList,
+						value: 'slash',
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}]
 				}
 			}]
-
-		}, {
-			view: "radio",
-			name: "dayDelimiter",
-			// id: componentIds.typeDayFormatDelimiters,
-			label: "Delimiters",
-			value: 'slash',
-			vertical: true,
-			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "Slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
-			on: {
-				'onChange': function onChange(newValue, oldValue) {
-					// showDateDisplay();
-				}
-			}
-		}, {
-			cols: [{
-				view: "richselect",
-				name: "monthFormat",
-				// id: componentIds.includeMonthFormat,
-				label: "Month",
-				value: 'includeMonth-MMM',
-				options: [{ id: 'includeMonth-M', value: "1 2 ... 11 12" }, { id: 'includeMonth-Mo', value: "1st 2nd ... 11th 12th" }, { id: 'includeMonth-MM', value: "01 02 ... 11 12" }, { id: 'includeMonth-MMM', value: "Jan Feb ... Nov Dec" }, { id: 'includeMonth-MMMM', value: "January February ... November December" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}, {
-				view: "richselect",
-				name: "monthOrder",
-				// id: componentIds.includeMonthOrder,
-				label: "Places",
-				value: 2,
-				//disabled: true,
-				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}]
-		}, {
-			view: "radio",
-			name: "monthDelimiter",
-			// id: componentIds.typeMonthFormatDelimiters,
-			label: "Delimiters",
-			value: 'slash',
-			vertical: true,
-			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "Slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
-			on: {
-				'onChange': function onChange(newValue, oldValue) {
-					// showDateDisplay();
-				}
-			}
-		}, {
-			cols: [{
-				view: "richselect",
-				name: "yearDelimiter",
-				// id: componentIds.includeYearFormat,
-				label: "Year",
-				value: 'includeYear-YYYY',
-				options: [{ id: 'includeYear-YY', value: "70 71 ... 29 30" }, { id: 'includeYear-YYYY', value: "1970 1971 ... 2029 2030" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}, {
-				view: "richselect",
-				name: "yearOrder",
-				// id: componentIds.includeYearOrder,
-				label: "Places",
-				value: 3,
-				//disabled: true,
-				options: [{ id: 1, value: "1" }, { id: 2, value: "2" }, { id: 3, value: "3" }],
-				on: {
-					'onChange': function onChange(newValue, oldValue) {
-						// showDateDisplay();
-					}
-				}
-			}]
-
-		}, {
-			view: "radio",
-			name: "yearDelimiter",
-			// id: componentIds.typeYearFormatDelimiters,
-			label: "Delimiters",
-			value: 'slash',
-			vertical: true,
-			options: [{ id: 'comma', value: "Comma" }, { id: 'slash', value: "slash" }, { id: 'space', value: "Space" }, { id: 'dash', value: "Dash" }],
-			on: {
-				'onChange': function onChange(newValue, oldValue) {
-					// showDateDisplay();
-				}
-			}
 		},
 
 		// Validator
 		{
 			view: 'label',
-			label: 'Validation criteria',
+			label: "Validation criteria",
 			css: 'ab-text-bold'
 		}, {
-			// id: componentIds.validateCondition,
+			id: ids.validateCondition,
 			view: "select",
 			name: "validateCondition",
 			label: "Condition",
+			labelWidth: 100,
 			value: 'none',
-			options: [{ id: 'none', value: '[Condition]' }, { id: 'dateRange', value: 'Range' }, { id: 'between', value: 'Between' }, { id: 'notBetween', value: 'Not between' }, { id: '=', value: 'Equal to' }, { id: '<>', value: 'Not equal to' }, { id: '>', value: 'Greater than' }, { id: '<', value: 'Less than' }, { id: '>=', value: 'Greater than or Equal to' }, { id: '<=', value: 'Less than or Equal to' }],
+			options: [{ id: 'none', value: '[None]' }, { id: 'dateRange', value: 'Range' }, { id: 'between', value: 'Between' }, { id: 'notBetween', value: 'Not between' }, { id: '=', value: 'Equal to' }, { id: '<>', value: 'Not equal to' }, { id: '>', value: 'Greater than' }, { id: '<', value: 'Less than' }, { id: '>=', value: 'Greater than or Equal to' }, { id: '<=', value: 'Less than or Equal to' }],
 			on: {
 				onChange: function onChange(newVal, oldVal) {
-					// switch (newVal) {
-					// 	case 'none':
-					// 		$$(componentIds.validateRange).hide();
-					// 		$$(componentIds.validateLeft).hide();
-					// 		$$(componentIds.validateRight).hide();
-					// 		break;
-					// 	case 'dateRange':
-					// 		$$(componentIds.validateRange).show();
-					// 		$$(componentIds.validateLeft).hide();
-					// 		$$(componentIds.validateRight).hide();
-					// 		break;
-					// 	case 'between':
-					// 	case 'notBetween':
-					// 		$$(componentIds.validateRange).hide();
-					// 		$$(componentIds.validateLeft).define('label', 'Start Date');
-					// 		$$(componentIds.validateLeft).refresh();
-					// 		$$(componentIds.validateLeft).show();
-					// 		$$(componentIds.validateRight).show();
-					// 		break;
-					// 	case '=':
-					// 	case '<>':
-					// 	case '>':
-					// 	case '<':
-					// 	case '>=':
-					// 	case '<=':
-					// 		$$(componentIds.validateRange).hide();
-					// 		$$(componentIds.validateLeft).define('label', 'Date');
-					// 		$$(componentIds.validateLeft).refresh();
-					// 		$$(componentIds.validateLeft).show();
-					// 		$$(componentIds.validateRight).hide();
-					// 		break;
-					// }
+					switch (newVal) {
+						case 'none':
+							$$(ids.validateRange).hide();
+							$$(ids.validateLeft).hide();
+							$$(ids.validateRight).hide();
+							break;
+						case 'dateRange':
+							$$(ids.validateRange).show();
+							$$(ids.validateLeft).hide();
+							$$(ids.validateRight).hide();
+							break;
+						case 'between':
+						case 'notBetween':
+							$$(ids.validateRange).hide();
+							$$(ids.validateLeft).define('label', 'Start Date');
+							$$(ids.validateLeft).refresh();
+							$$(ids.validateLeft).show();
+							$$(ids.validateRight).show();
+							break;
+						case '=':
+						case '<>':
+						case '>':
+						case '<':
+						case '>=':
+						case '<=':
+							$$(ids.validateRange).hide();
+							$$(ids.validateLeft).define('label', 'Date');
+							$$(ids.validateLeft).refresh();
+							$$(ids.validateLeft).show();
+							$$(ids.validateRight).hide();
+							break;
+					}
 				}
 			}
 		}, {
-			// id: componentIds.validateRange,
+			id: ids.validateRange,
+			hidden: true,
 			rows: [{
-				// id: componentIds.validateRangeUnit,
+				id: ids.validateRangeUnit,
 				view: "select",
 				name: "validateRangeUnit",
 				label: 'Unit',
+				labelWidth: 100,
 				options: [{ id: 'days', value: 'Days' }, { id: 'months', value: 'Months' }, { id: 'years', value: 'Years' }],
 				on: {
 					onChange: function onChange(newVal) {
-						// $$(componentIds.validateRangeBeforeLabel).refresh();
-						// $$(componentIds.validateRangeAfterLabel).refresh();
+						$$(ids.validateRangeBeforeLabel).refresh();
+						$$(ids.validateRangeAfterLabel).refresh();
 					}
 				}
 			}, {
 				cols: [{
-					// id: componentIds.validateRangeBeforeLabel,
+					id: ids.validateRangeBeforeLabel,
 					view: 'template',
 					align: 'left',
-					width: 125,
-					borderless: true
+					width: 140,
+					borderless: true,
+					template: function template() {
+						var beforeLabel = 'Before #number# #unit#'.replace('#number#', $$(ids.validateRangeBefore).getValue()).replace('#unit#', $$(ids.validateRangeUnit).getValue());
+
+						return beforeLabel;
+					}
 				}, {
 					view: 'label',
-					label: '[Current date]',
-					align: 'center'
+					label: '',
+					align: 'center',
+					width: 1
 				}, {
-					// id: componentIds.validateRangeAfterLabel,
+					id: ids.validateRangeAfterLabel,
 					view: 'template',
 					align: 'right',
-					borderless: true
+					borderless: true,
+					template: function template() {
+						var afterLabel = 'After #number# #unit#'.replace('#number#', $$(ids.validateRangeAfter).getValue()).replace('#unit#', $$(ids.validateRangeUnit).getValue());
+
+						return afterLabel;
+					}
 				}]
 			}, {
 				cols: [{
-					// id: componentIds.validateRangeBefore,
+					id: ids.validateRangeBefore,
 					view: 'slider',
 					name: "validateRangeBefore",
 					on: {
 						onChange: function onChange(newVal, oldValue) {
-							// $$(componentIds.validateRangeBeforeLabel).refresh();
+							$$(ids.validateRangeBeforeLabel).refresh();
 						}
 					}
 				}, {
-					// id: componentIds.validateRangeAfter,
+					id: ids.validateRangeAfter,
 					view: 'slider',
 					name: "validateRangeAfter",
 					on: {
 						onChange: function onChange(newVal, oldValue) {
-							// $$(componentIds.validateRangeAfterLabel).refresh();
+							$$(ids.validateRangeAfterLabel).refresh();
 						}
 					}
 				}]
 			}]
 		}, {
-			// id: componentIds.validateLeft,
+			id: ids.validateLeft,
 			name: "validateStartDate",
 			view: 'datepicker',
-			label: 'Start Date'
+			label: 'Start Date',
+			labelWidth: 100,
+			hidden: true
 		}, {
-			// id: componentIds.validateRight,
+			id: ids.validateRight,
 			name: "validateEndDate",
 			view: 'datepicker',
-			label: 'End Date'
+			label: 'End Date',
+			labelWidth: 100,
+			hidden: true
 		}];
+	},
+
+	// defaultValues: the keys must match a .name of your elements to set it's default value.
+	defaultValues: defaultValues,
+
+	// rules: basic form validation rules for webix form entry.
+	// the keys must match a .name of your .elements for it to apply
+	rules: {},
+
+	// include additional behavior on default component operations here:
+	// The base routines will be processed first, then these.  Any results
+	// from the base routine, will be passed on to these:
+	logic: {
+
+		isValid: function isValid(ids, _isValid) {}
+
+		// populate: function (ids, values) {
+		// 	if (values.settings.validation) {
+		// 		$$(ids.validateMinimum).enable();
+		// 		$$(ids.validateMaximum).enable();
+		// 	} else {
+		// 		$$(ids.validateMinimum).disable();
+		// 		$$(ids.validateMaximum).disable();
+		// 	}
+		// }
+
+	},
+
+	// perform any additional setup actions here.
+	// @param {obj} ids  the hash of id values for all the current form elements.
+	//					 it should have your elements + the default Header elements:
+	//						.label, .columnName, .fieldDescription, .showIcon
+	init: function init(ids) {
+		refreshDateDisplay();
 	}
 
 });
@@ -3549,16 +4234,21 @@ var ABFieldDate = function (_ABField) {
 	function ABFieldDate(values, object) {
 		_classCallCheck(this, ABFieldDate);
 
-		return _possibleConstructorReturn(this, (ABFieldDate.__proto__ || Object.getPrototypeOf(ABFieldDate)).call(this, values, object, ABFieldDateDefaults));
+		// we're responsible for setting up our specific settings:
+		var _this = _possibleConstructorReturn(this, (ABFieldDate.__proto__ || Object.getPrototypeOf(ABFieldDate)).call(this, values, object, ABFieldDateDefaults));
 
-		/*
-  {
-  	settings: {
-  		textDefault: 'string',
-  		supportMultilingual: true/false
-  	}
-  }
-  */
+		for (var dv in defaultValues) {
+			_this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
+
+		// text to Int:
+		_this.settings.includeTime = parseInt(_this.settings.includeTime);
+		_this.settings.defaultCurrentDate = parseInt(_this.settings.defaultCurrentDate);
+		_this.settings.dayOrder = parseInt(_this.settings.dayOrder);
+		_this.settings.monthOrder = parseInt(_this.settings.monthOrder);
+		_this.settings.yearOrder = parseInt(_this.settings.yearOrder);
+
+		return _this;
 	}
 
 	// return the default values for this DataField
@@ -3575,14 +4265,11 @@ var ABFieldDate = function (_ABField) {
 
 		value: function isValid() {
 
-			var errors = _get(ABFieldDate.prototype.__proto__ || Object.getPrototypeOf(ABFieldDate.prototype), "isValid", this).call(this);
+			var validator = _get(ABFieldDate.prototype.__proto__ || Object.getPrototypeOf(ABFieldDate.prototype), "isValid", this).call(this);
 
-			// errors = OP.Form.validationError({
-			// 	name:'columnName',
-			// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-			// }, errors);
+			// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-			return errors;
+			return validator;
 		}
 
 		/**
@@ -3617,10 +4304,71 @@ var ABFieldDate = function (_ABField) {
 		value: function columnHeader(isObjectWorkspace) {
 			var config = _get(ABFieldDate.prototype.__proto__ || Object.getPrototypeOf(ABFieldDate.prototype), "columnHeader", this).call(this, isObjectWorkspace);
 
-			config.editor = 'text';
+			config.editor = 'date';
 			config.sort = 'string';
 
+			// NOTE: it seems that the default value is a string in ISO format.
+
+			//// NOTE: webix seems unable to parse ISO string into => date here.
+			// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
+
+			config.format = function (d) {
+				if (d == '' || typeof d == 'undefined') {
+					return '';
+				}
+				// convert ISO string -> Date() -> our formatted string
+
+				// TODO: pull format from settings.
+				return webix.Date.dateToStr('%d %M %Y')(new Date(d));
+			};
+
+			config.editFormat = function (d) {
+				// this routine needs to return a Date() object for the editor to work with.
+
+				// if d is not set, return a default Date() value.
+				if (d == '' || typeof d == 'undefined') {
+					// TODO: setup default date from settings:
+					return new Date();
+				}
+
+				// else retun the actual ISO string => Date() value
+				return new Date(d);
+			};
+
 			return config;
+		}
+
+		/**
+   * @method isValidData
+   * Parse through the given data and return an error if this field's
+   * data seems invalid.
+   * @param {obj} data  a key=>value hash of the inputs to parse.
+   * @param {OPValidator} validator  provided Validator fn
+   * @return {array} 
+   */
+
+	}, {
+		key: "isValidData",
+		value: function isValidData(data, validator) {
+
+			if (typeof data[this.columnName] != 'undefined') {
+				var value = data[this.columnName];
+
+				if (!(value instanceof Date)) {
+					value = new Date(value);
+				}
+
+				// verify we didn't end up with an InValid Date result.
+				if (Object.prototype.toString.call(value) === '[object Date]' && isFinite(value)) {
+
+					// all good, so store as ISO format string.
+					data[this.columnName] = value.toISOString();
+				} else {
+
+					// return a validation error
+					validator.addError(this.columnName, 'Should be a Date!');
+				}
+			}
 		}
 	}], [{
 		key: "defaults",
@@ -3650,7 +4398,7 @@ var ABFieldDate = function (_ABField) {
 exports.default = ABFieldDate;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3861,14 +4609,11 @@ var ABFieldImage = function (_ABField) {
 
 		value: function isValid() {
 
-			var errors = _get(ABFieldImage.prototype.__proto__ || Object.getPrototypeOf(ABFieldImage.prototype), "isValid", this).call(this);
+			var validator = _get(ABFieldImage.prototype.__proto__ || Object.getPrototypeOf(ABFieldImage.prototype), "isValid", this).call(this);
 
-			// errors = OP.Form.validationError({
-			// 	name:'columnName',
-			// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-			// }, errors);
+			// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-			return errors;
+			return validator;
 		}
 
 		/**
@@ -3996,7 +4741,7 @@ exports.default = ABFieldImage;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4349,14 +5094,11 @@ var ABFieldNumber = function (_ABField) {
 
 		value: function isValid() {
 
-			var errors = _get(ABFieldNumber.prototype.__proto__ || Object.getPrototypeOf(ABFieldNumber.prototype), "isValid", this).call(this);
+			var validator = _get(ABFieldNumber.prototype.__proto__ || Object.getPrototypeOf(ABFieldNumber.prototype), "isValid", this).call(this);
 
-			// errors = OP.Form.validationError({
-			// 	name:'columnName',
-			// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-			// }, errors);
+			// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-			return errors;
+			return validator;
 		}
 
 		/**
@@ -4395,6 +5137,41 @@ var ABFieldNumber = function (_ABField) {
 			config.sort = 'int'; // [sort_type]
 
 			return config;
+		}
+
+		/**
+   * @method isValidData
+   * Parse through the given data and return an error if this field's
+   * data seems invalid.
+   * @param {obj} data  a key=>value hash of the inputs to parse.
+   * @param {OPValidator} validator  provided Validator fn
+   * @return {array} 
+   */
+
+	}, {
+		key: "isValidData",
+		value: function isValidData(data, validator) {
+
+			if (typeof data[this.columnName] != 'undefined') {
+				var isNumeric = function isNumeric(n) {
+					return !Number.isNaN(parseFloat(n)) && Number.isFinite(n);
+				};
+
+				var value = data[this.columnName];
+
+				// if this is an integer:
+				if (this.settings.typeDecimals == 'none') {
+
+					value = parseInt(value);
+				} else {
+					var places = parseInt(this.settings.typeDecimalPlaces) || 2;
+					value = parseFloat(parseFloat(value).toFixed(places));
+				}
+
+				if (!isNumeric(value)) {
+					validator.addError(this.columnName, 'invalid number');
+				}
+			}
 		}
 	}], [{
 		key: "defaults",
@@ -4436,7 +5213,7 @@ webix.editors.number = webix.extend({
 exports.default = ABFieldNumber;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4605,14 +5382,11 @@ var ABFieldString = function (_ABField) {
 
 		value: function isValid() {
 
-			var errors = _get(ABFieldString.prototype.__proto__ || Object.getPrototypeOf(ABFieldString.prototype), "isValid", this).call(this);
+			var validator = _get(ABFieldString.prototype.__proto__ || Object.getPrototypeOf(ABFieldString.prototype), "isValid", this).call(this);
 
-			// errors = OP.Form.validationError({
-			// 	name:'columnName',
-			// 	message:L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name),
-			// }, errors);
+			// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
 
-			return errors;
+			return validator;
 		}
 
 		/**
@@ -4652,6 +5426,18 @@ var ABFieldString = function (_ABField) {
 
 			return config;
 		}
+
+		/*
+   * @function isMultilingual
+   * does this field represent multilingual data?
+   * @return {bool}
+   */
+
+	}, {
+		key: "isMultilingual",
+		value: function isMultilingual() {
+			return this.settings.supportMultilingual == 1;
+		}
 	}], [{
 		key: "defaults",
 		value: function defaults() {
@@ -4680,15 +5466,15 @@ var ABFieldString = function (_ABField) {
 exports.default = ABFieldString;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(23);
+__webpack_require__(24);
 
-__webpack_require__(22);
+__webpack_require__(23);
 
 /*
  * AB Choose
@@ -4754,7 +5540,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5189,20 +5975,13 @@ OP.Component.extend(idBase, function (App) {
 				return false;
 			}
 
-			var errors = _ABApplication2.default.isValid(op, Form.getValues());
-			if (OP.Form.isValidationError(errors, Form)) {
+			var validator = _ABApplication2.default.isValid(op, Form.getValues());
+			if (validator.fail()) {
+				validator.updateForm(Form);
 				_logic.formReady();
 				_logic.buttonSaveEnable();
 				return false;
 			}
-
-			///// TODO: 
-			// Implement common Form Input Validations
-			// convert this to:  
-			// app = ABApplication.newApplication(Form.getValues())
-			// errors = app.inValid()
-			// if (OP.Form.isValidationError(errors, Form)) { }
-
 
 			// var appName = $$(ids.form).elements['label'].getValue(),
 			// 	appDescription = $$(ids.form).elements['description'].getValue();
@@ -5615,7 +6394,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5625,7 +6404,7 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(24);
+__webpack_require__(25);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6066,7 +6845,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6181,7 +6960,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6191,9 +6970,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(27);
+__webpack_require__(28);
 
-__webpack_require__(26);
+__webpack_require__(27);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6448,7 +7227,7 @@ OP.Component.extend('ab_work', function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6547,7 +7326,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6557,9 +7336,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(28);
+__webpack_require__(29);
 
-__webpack_require__(32);
+__webpack_require__(33);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6655,7 +7434,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6665,9 +7444,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(29);
+__webpack_require__(30);
 
-__webpack_require__(31);
+__webpack_require__(32);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7054,13 +7833,13 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(30);
+__webpack_require__(31);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -7158,7 +7937,7 @@ OP.Component.extend(idBase, function (App) {
    * remove the busy indicator from the form.
    */
 		hide: function hide() {
-			$$(ids.component).hide();
+			if ($$(ids.component)) $$(ids.component).hide();
 		},
 
 		/**
@@ -7186,9 +7965,9 @@ OP.Component.extend(idBase, function (App) {
 			var newObject = currentApplication.objectNew(values);
 
 			// have newObject validate it's values.
-			var validationErrors = newObject.isValid();
-			if (validationErrors) {
-				cb(validationErrors); // tell current Tab component the errors
+			var validator = newObject.isValid();
+			if (validator.fail()) {
+				cb(validator); // tell current Tab component the errors
 				return false; // stop here.
 			}
 
@@ -7211,7 +7990,7 @@ OP.Component.extend(idBase, function (App) {
    */
 		show: function show() {
 
-			$$(ids.component).show();
+			if ($$(ids.component)) $$(ids.component).show();
 		}
 	};
 
@@ -7238,7 +8017,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7372,13 +8151,10 @@ OP.Component.extend(idBase, function (App) {
 			var values = Form.getValues();
 
 			// now send data back to be added:
-			_logic.callbacks.onSave(values, function (err) {
+			_logic.callbacks.onSave(values, function (validator) {
 
-				if (err) {
-					if (OP.Form.isValidationError(err, Form)) {}
-					// do I do anything else here?
-					// this auto updates the form
-
+				if (validator) {
+					validator.updateForm(Form);
 
 					// get notified if there was an error saving.
 					saveButton.enable();
@@ -7439,7 +8215,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7562,7 +8338,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7572,17 +8348,17 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(33);
-
 __webpack_require__(34);
 
 __webpack_require__(35);
 
-__webpack_require__(37);
+__webpack_require__(36);
 
 __webpack_require__(38);
 
 __webpack_require__(39);
+
+__webpack_require__(40);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7676,14 +8452,14 @@ OP.Component.extend(idBase, function (App) {
 		rows: [{
 			id: ids.noSelection,
 			rows: [{
-				maxHeight: App.config.xxLargeSpacer,
+				maxHeight: App.config.xxxLargeSpacer,
 				hidden: App.config.hideMobile
 			}, {
 				view: 'label',
 				align: "center",
 				label: labels.component.selectObject
 			}, {
-				maxHeight: App.config.xxLargeSpacer,
+				maxHeight: App.config.xxxLargeSpacer,
 				hidden: App.config.hideMobile
 			}]
 		}, {
@@ -7827,9 +8603,6 @@ OP.Component.extend(idBase, function (App) {
 		var fieldList = DataTable.getFieldList();
 
 		PopupSortFieldComponent.init({
-			data: { "james": "duncan" },
-			datatable: DataTable,
-			fieldList: fieldList,
 			onChange: _logic.callbackSortFields // be notified when there is a change in the sort fields
 		});
 
@@ -7862,7 +8635,7 @@ OP.Component.extend(idBase, function (App) {
    *
    * call back for when the hidden fields have changed.
    */
-		callbackFrozenColumns: function callbackFrozenColumns(skipRefresh) {
+		callbackFrozenColumns: function callbackFrozenColumns() {
 
 			var frozenID = CurrentObject.workspaceFrozenColumnID;
 
@@ -7871,11 +8644,9 @@ OP.Component.extend(idBase, function (App) {
 
 				$$(ids.buttonFrozen).define('badge', badgeNumber);
 				$$(ids.buttonFrozen).refresh();
-
-				if (!skipRefresh) {
-					DataTable.refresh();
-				}
 			}
+
+			DataTable.refresh();
 		},
 
 		/**
@@ -7890,12 +8661,11 @@ OP.Component.extend(idBase, function (App) {
 			if (typeof hiddenFields != "undefined") {
 				$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
 				$$(ids.buttonFieldsVisible).refresh();
-
-				DataTable.refresh();
-
-				// if you unhide a field it may fall inside the frozen columns range so lets check
-				_logic.callbackFrozenColumns();
 			}
+			DataTable.refresh();
+
+			// if you unhide a field it may fall inside the frozen columns range so lets check
+			_logic.callbackFrozenColumns();
 		},
 
 		/**
@@ -7946,16 +8716,14 @@ OP.Component.extend(idBase, function (App) {
    */
 		callbackSortFields: function callbackSortFields() {
 
-			var fieldList = DataTable.getFieldList();
+			var sortFields = CurrentObject.workspaceSortFields;
 
-			//alert(fieldList);
+			if (typeof sortFields != "undefined") {
+				$$(ids.buttonSort).define('badge', sortFields.length);
+				$$(ids.buttonSort).refresh();
+			}
 
-			// if (typeof(fieldList) != "undefined") {
-			// 	$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
-			// 	$$(ids.buttonFieldsVisible).refresh();
-			//
-			// 	DataTable.refresh();
-			// }
+			DataTable.sortTable();
 		},
 
 		/**
@@ -8069,17 +8837,18 @@ OP.Component.extend(idBase, function (App) {
 
 			App.actions.populateObjectPopupAddDataField(object);
 
-			// update hiddenFields
-			_logic.callbackFieldsVisible();
-
 			DataTable.objectLoad(object);
+
+			// update hiddenFields
 
 			PopupDefineLabelComponent.objectLoad(object);
 			PopupFrozenColumnsComponent.objectLoad(object);
 			PopupHideFieldComponent.objectLoad(object);
 			PopupSortFieldComponent.objectLoad(object);
 
-			_logic.callbackFrozenColumns(true);
+			_logic.callbackFieldsVisible();
+			_logic.callbackFrozenColumns();
+			_logic.callbackSortFields();
 		}
 
 	};
@@ -8096,13 +8865,13 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(36);
+__webpack_require__(37);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -8145,6 +8914,7 @@ OP.Component.extend(idBase, function (App) {
 		//height:800,  // #hack!
 		on: {
 			onBeforeSelect: function onBeforeSelect(data, preserve) {
+
 				console.error('!! ToDo: onBeforeSelect()');
 				// var itemNode = this.getItemNode({ row: data.row, column: data.column });
 
@@ -8158,22 +8928,7 @@ OP.Component.extend(idBase, function (App) {
 				// return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
 			},
 			onAfterSelect: function onAfterSelect(data, prevent) {
-				console.error('!! todo: onAfterSelect()');
-				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
-				// 	fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-
-				// if (!fieldData || fieldData.length < 1) {
-				// 	console.log('System could not found this column data');
-				// 	return false;
-				// } else
-				// 	fieldData = fieldData[0];
-
-				// // Custom update data
-				// if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
-				// 	return false;
-
-				// // Normal update data
-				// this.editCell(data.row, data.column);
+				_logic.onAfterSelect(data, prevent);
 			},
 			onCheck: function onCheck(row, col, val) {
 				// Update checkbox data
@@ -8194,7 +8949,7 @@ OP.Component.extend(idBase, function (App) {
 				// 	});
 			},
 			onBeforeEditStop: function onBeforeEditStop(state, editor) {
-				console.error('!! ToDo: onCheck()');
+				console.error('!! ToDo: onBeforeEditStop()');
 				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
 
 				// if (!column || column.length < 1) return true;
@@ -8209,33 +8964,10 @@ OP.Component.extend(idBase, function (App) {
 				// return passValidate;
 			},
 			onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
-				console.error('!! ToDo: onAfterEditStop()');
-				// var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
-
-				// self.updateRowData(state, editor, ignoreUpdate)
-				// 	.fail(function (err) { // Cached
-				// 		item[editor.column] = state.old;
-				// 		$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-				// 		$$(self.webixUiId.objectDatatable).refresh(editor.row);
-
-				// 		// TODO : Message
-
-				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-				// 	})
-				// 	.then(function (result) {
-				// 		if (item) {
-				// 			item[editor.column] = state.value;
-
-				// 			if (result && result.constructor.name === 'Cached' && result.isUnsync())
-				// 				item.isUnsync = true;
-
-				// 			$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-				// 		}
-
-				// 		// TODO : Message
-
-				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-				// 	});
+				_logic.onAfterEditStop(state, editor, ignoreUpdate);
+			},
+			onAfterLoad: function onAfterLoad() {
+				_logic.onAfterLoad();
 			},
 			onColumnResize: function onColumnResize(id, newWidth, oldWidth, user_action) {
 				console.error('!! ToDo: onColumnResize()');
@@ -8361,6 +9093,141 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		/**
+   * @function onAfterEditStop
+   * When an editor is finished.
+   * @param {json} state
+   * @param {} editor
+   * @param {} ignoreUpdate
+   * @return
+   */
+		onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+
+			// state:   {value: "new value", old: "old value"}
+			// editor:  { column:"columnName", row:ID, value:'value', getInputNode:fn(), config:{}, focus: fn(), getValue: fn(), setValue: function, getInputNode: function, render: function…}
+
+			var DataTable = $$(ids.component);
+
+			if (state.value != state.old) {
+
+				//// LEFT OFF:
+				// client side editor: ABFieldImage,
+
+
+				var item = DataTable.getItem(editor.row);
+				item[editor.column] = state.value;
+
+				DataTable.removeCellCss(item.id, editor.column, "webix_invalid");
+				DataTable.removeCellCss(item.id, editor.column, "webix_invalid_cell");
+
+				var validator = CurrentObject.isValidData(item);
+				if (validator.pass()) {
+
+					//// Question: do we submit full item updates?  or just patches?
+					var patch = {};
+					patch[editor.column] = item[editor.column]; // NOTE: isValidData() might also condition the data for sending.state.value;
+
+					CurrentObject.model()
+					// .update(item.id, item)
+					.update(item.id, patch).then(function () {
+
+						DataTable.updateItem(editor.row, item);
+						DataTable.clearSelection();
+						DataTable.refresh(editor.row);
+					}).catch(function (err) {
+
+						OP.Error.log('Error saving item:', { error: err });
+
+						DataTable.clearSelection();
+						if (OP.Validation.isGridValidationError(err, editor.row, DataTable)) {
+
+							// Do we reset the value?
+							// item[editor.column] = state.old;
+							// DataTable.updateItem(editor.row, item);
+
+						} else {
+
+								// this was some other Error!
+
+							}
+					});
+				} else {
+					validator.updateGrid(editor.row, DataTable);
+					// var errObj = OP.Form.toValidationObject(errors);
+					// OP.Grid.isValidationError(errObj, editor, DataTable);
+				}
+			} else {
+
+				DataTable.clearSelection();
+			}
+
+			return false;
+
+			// var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+			// self.updateRowData(state, editor, ignoreUpdate)
+			// 	.fail(function (err) { // Cached
+			// 		item[editor.column] = state.old;
+			// 		$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+			// 		$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+			// 		// TODO : Message
+
+			// 		$$(self.webixUiId.objectDatatable).hideProgress();
+			// 	})
+			// 	.then(function (result) {
+			// 		if (item) {
+			// 			item[editor.column] = state.value;
+
+			// 			if (result && result.constructor.name === 'Cached' && result.isUnsync())
+			// 				item.isUnsync = true;
+
+			// 			$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+			// 		}
+
+			// 		// TODO : Message
+
+			// 		$$(self.webixUiId.objectDatatable).hideProgress();
+			// 	});
+		},
+
+		onAfterLoad: function onAfterLoad() {
+			_logic.sortTable();
+		},
+
+		/**
+   * @function onAfterSelect
+   * This is when a user clicks on a cell.  We use the onAfterSelect to
+   * trigger a normal .editCell() if there isn't a custom editor for this field.
+   * @param {json} data webix cell data
+   * @return
+   */
+		onAfterSelect: function onAfterSelect(data, prevent) {
+			// data: {row: 1, column: "name", id: "1_name", toString: function}
+			// data.row: .model.id
+			// data.column => columnName of the field
+
+
+			// Normal update data
+			$$(ids.component).editCell(data.row, data.column);
+
+			// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
+			// 	fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+
+			// if (!fieldData || fieldData.length < 1) {
+			// 	console.log('System could not found this column data');
+			// 	return false;
+			// } else
+			// 	fieldData = fieldData[0];
+
+			// // Custom update data
+			// if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
+			// 	return false;
+
+			// // Normal update data
+			// this.editCell(data.row, data.column);
+		},
+
+		/**
    * @function onHeaderClick
    *
    * process the user clicking on the header for one of our columns.
@@ -8403,7 +9270,7 @@ OP.Component.extend(idBase, function (App) {
 				var DataTable = $$(ids.component);
 				DataTable.clearAll();
 
-				// update DataTable structure:
+				//// update DataTable structure:
 				var columnHeaders = CurrentObject.columnHeaders(true);
 				DataTable.refreshColumns(columnHeaders);
 				// freeze columns:
@@ -8412,7 +9279,13 @@ OP.Component.extend(idBase, function (App) {
 					DataTable.refreshColumns();
 				}
 
-				// update DataTable Content
+				//// update DataTable Content
+
+				// Set the Model object with a condition / skip / limit, then
+				// use it to load the DataTable:
+				//// NOTE: this should take advantage of Webix dynamic data loading on
+				//// larger data sets.
+				CurrentObject.model().where({}).skip(0).limit(30).loadInto(DataTable);
 			}
 		},
 
@@ -8424,6 +9297,65 @@ OP.Component.extend(idBase, function (App) {
 		show: function show() {
 
 			$$(ids.component).show();
+		},
+
+		/**
+   * @function sort(dir, a, b)
+   *
+   * Sort this component.
+   */
+		sort: function sort(dir, aValue, bValue) {
+			var result = false;
+
+			if (dir == 'asc') {
+				result = aValue > bValue ? 1 : -1;
+			} else {
+				result = aValue < bValue ? 1 : -1;
+			}
+			return result;
+		},
+
+		sortNext: function sortNext(dir, a, b, sorts, index) {
+			var index = index + 1,
+			    a = a,
+			    b = b,
+			    aValue = a[sorts[index].by],
+			    bValue = b[sorts[index].by],
+			    result = false;
+
+			if (aValue == bValue && sorts.length > index + 1) {
+				result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
+			} else {
+				result = _logic.sort(sorts[index].dir, aValue, bValue);
+			}
+			return result;
+		},
+
+		sortTable: function sortTable() {
+			var DataTable = $$(ids.component);
+
+			if (CurrentObject) {
+				var sorts = CurrentObject.workspaceSortFields;
+
+				if (sorts.length > 0) {
+					var columnOrders = [];
+
+					DataTable.sort(function (a, b) {
+						var result = false,
+						    index = 0,
+						    aValue = a[sorts[index].by],
+						    bValue = b[sorts[index].by];
+
+						if (aValue == bValue && sorts.length > index + 1) {
+							result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
+						} else {
+							result = _logic.sort(sorts[index].dir, aValue, bValue);
+						}
+
+						return result;
+					});
+				}
+			}
 		}
 
 	};
@@ -8454,6 +9386,7 @@ OP.Component.extend(idBase, function (App) {
 
 		// expose data for column sort UI
 		getFieldList: _logic.getFieldList,
+		sortTable: _logic.sortTable,
 
 		_logic: _logic // {obj} 	Unit Testing
 	};
@@ -8461,7 +9394,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8729,7 +9662,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8809,6 +9742,7 @@ OP.Component.extend(idBase, function (App) {
 		},
 		on: {
 			onShow: function onShow() {
+				_logic.onShow();
 				_logic.iconsReset();
 			}
 		}
@@ -8862,12 +9796,15 @@ OP.Component.extend(idBase, function (App) {
    */
 		clickListItem: function clickListItem(id, e, node) {
 			// update our Object with current frozen column id
-			CurrentObject.workspaceFrozenColumnID = id;
+			var List = $$(ids.list);
+			var recordClicked = List.getItem(id);
+			var label = recordClicked.label;
+			CurrentObject.workspaceFrozenColumnID = label;
 			CurrentObject.save().then(function () {
 				_logic.iconsReset();
 				_logic.callbacks.onChange();
 			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: id });
+				OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: label });
 			});
 		},
 
@@ -8906,6 +9843,9 @@ OP.Component.extend(idBase, function (App) {
 			// for each item in the List
 			var id = List.getFirstId();
 			while (id) {
+				var record = List.getItem(id);
+				var label = record.label;
+
 				// find it's HTML Node
 				var node = List.getItemNode(id);
 
@@ -8920,11 +9860,11 @@ OP.Component.extend(idBase, function (App) {
 					_logic.iconDefault(node);
 				}
 
-				if (CurrentObject.workspaceFrozenColumnID == id) {
+				if (CurrentObject.workspaceFrozenColumnID == label) {
 					isFrozen = true;
 				}
 
-				if (CurrentObject.workspaceHiddenFields.indexOf(id) != -1) {
+				if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
 					node.style.display = "none";
 				} else {
 					node.style.display = "";
@@ -8942,7 +9882,9 @@ OP.Component.extend(idBase, function (App) {
    */
 		objectLoad: function objectLoad(object) {
 			CurrentObject = object;
+		},
 
+		onShow: function onShow() {
 			// refresh list
 			var allFields = CurrentObject.fields();
 			var listFields = [];
@@ -8978,7 +9920,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9177,7 +10119,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9256,6 +10198,7 @@ OP.Component.extend(idBase, function (App) {
 		},
 		on: {
 			onShow: function onShow() {
+				_logic.onShow();
 				_logic.iconsReset();
 			}
 		}
@@ -9298,7 +10241,7 @@ OP.Component.extend(idBase, function (App) {
 			var allFields = CurrentObject.fields();
 			var newHidden = [];
 			allFields.forEach(function (f) {
-				newHidden.push(f.id);
+				newHidden.push(f.columnName);
 			});
 
 			// store that
@@ -9332,7 +10275,9 @@ OP.Component.extend(idBase, function (App) {
    * update the clicked field setting.
    */
 		clickListItem: function clickListItem(id, e, node) {
-			if (CurrentObject.workspaceFrozenColumnID == id) {
+			var List = $$(ids.list);
+			var item = List.getItem(id);
+			if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
 				OP.Dialog.Alert({
 					text: labels.component.errorFrozen
 				});
@@ -9341,21 +10286,21 @@ OP.Component.extend(idBase, function (App) {
 
 			var newFields = [];
 			var isHidden = CurrentObject.workspaceHiddenFields.filter(function (fID) {
-				return fID == id;
+				return fID == item.columnName;
 			}).length > 0;
 			if (isHidden) {
 				// unhide this field
 
 				// get remaining fields
 				newFields = CurrentObject.workspaceHiddenFields.filter(function (fID) {
-					return fID != id;
+					return fID != item.columnName;
 				});
 
 				// find the icon and display it:
 				_logic.iconShow(node);
 			} else {
 				newFields = CurrentObject.workspaceHiddenFields;
-				newFields.push(id);
+				newFields.push(item.columnName);
 
 				_logic.iconHide(node);
 			}
@@ -9426,18 +10371,19 @@ OP.Component.extend(idBase, function (App) {
 			// for each item in the List
 			var id = List.getFirstId();
 			while (id) {
+				var item = List.getItem(id);
 
 				// find it's HTML Node
 				var node = List.getItemNode(id);
 
-				if (CurrentObject.workspaceFrozenColumnID == id) {
+				if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
 					_logic.iconFreezeOn(node);
 				} else {
 					_logic.iconFreezeOff(node);
 				}
 
 				// if this item is not hidden, show it.
-				if (CurrentObject.workspaceHiddenFields.indexOf(id) == -1) {
+				if (CurrentObject.workspaceHiddenFields.indexOf(item.columnName) == -1) {
 					_logic.iconShow(node);
 				} else {
 					// else hide it
@@ -9456,14 +10402,21 @@ OP.Component.extend(idBase, function (App) {
    */
 		objectLoad: function objectLoad(object) {
 			CurrentObject = object;
+		},
 
+		/**
+   * @function onShow
+   * Ready the Popup according to the current object each time it is shown (perhaps a field was created or delted)
+   */
+		onShow: function onShow() {
 			// refresh list
 			var allFields = CurrentObject.fields();
 			var listFields = [];
 			allFields.forEach(function (f) {
 				listFields.push({
 					id: f.id,
-					label: f.label
+					label: f.label,
+					columnName: f.columnName
 				});
 			});
 
@@ -9491,7 +10444,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9743,9 +10696,10 @@ OP.Component.extend(idBase, function (App) {
 						field = _editField;
 					}
 
-					var errors = field.isValid();
-					if (errors) {
-						OP.Form.isValidationError(errors, $$(editor.ui.id));
+					var validator = field.isValid();
+					if (validator.fail()) {
+						validator.updateForm($$(editor.ui.id));
+						// OP.Form.isValidationError(errors, $$(editor.ui.id));
 
 						// keep our old data
 						if (oldData) {
@@ -9762,6 +10716,7 @@ OP.Component.extend(idBase, function (App) {
 							_currentEditor.clear();
 							_logic.callbacks.onSave(field);
 						}).catch(function (err) {
+							OP.Validation.isFormValidationError(err, $$(editor.ui.id));
 							$$(ids.buttonSave).enable();
 						});
 					}
@@ -9977,7 +10932,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10037,26 +10992,16 @@ OP.Component.extend(idBase, function (App) {
 			view: "form",
 			id: ids.form,
 			autoheight: true,
+			borderless: true,
 			elements: [{
 				view: "button", value: labels.component.addNewSort, click: function click(id, e, node) {
 					_logic.clickAddNewSort();
-					_logic.callbacks.onChange();
-
-					// this.getTopParentView().addNewSort();
-					// this.getTopParentView().callChangeEvent();
 				}
 			}]
 		},
 		on: {
 			onShow: function onShow() {
 				_logic.onShow();
-				// var sort_popup = this,
-				// sort_form = sort_popup.getChildViews()[0];
-				//
-				// if (sort_form.getChildViews().length < 2) {
-				// 	sort_form.getTopParentView().addNewSort();
-				// 	sort_popup.callChangeEvent();
-				// }
 			}
 		}
 	};
@@ -10094,22 +11039,7 @@ OP.Component.extend(idBase, function (App) {
 		clickAddNewSort: function clickAddNewSort(by, dir, as, id) {
 			// Prevent duplicate fields
 			var sort_popup = $$(ids.component),
-			    sort_form = $$(ids.form),
-			    isExists = false;
-
-			if (by) {
-				sort_form.getChildViews().forEach(function (v, index) {
-					if (index >= sort_form.getChildViews().length - 1) return;
-
-					if (by == v.getChildViews()[0].getValue()) {
-						isExists = true;
-						return;
-					}
-				});
-
-				// If field exists, it will not add new sort
-				if (isExists) return;
-			}
+			    sort_form = $$(ids.form);
 
 			var viewIndex = sort_form.getChildViews().length - 1;
 			var listFields = _logic.getFieldList(true);
@@ -10121,10 +11051,11 @@ OP.Component.extend(idBase, function (App) {
 					options: listFields,
 					on: {
 						"onChange": function onChange(columnId) {
-							//var columnConfig = sort_popup.dataTable.getColumnConfig(columnId),
 							var allFields = CurrentObject.fields();
 							var columnConfig = "",
-							    sortInput = this.getParentView().getChildViews()[1],
+							    sortDir = this.getParentView().getChildViews()[1],
+							    sortAs = this.getParentView().getChildViews()[2],
+							    defaultAs = null,
 							    options = null;
 
 							allFields.forEach(function (f) {
@@ -10137,66 +11068,62 @@ OP.Component.extend(idBase, function (App) {
 
 							switch (columnConfig.key) {
 								case "string":
-								case "text":
-								case "list":
-								case "multiselect":
 									options = [{ id: 'asc', value: labels.component.textAsc }, { id: 'desc', value: labels.component.textDesc }];
+									defaultAs = "string";
 									break;
 								case "date":
 									options = [{ id: 'asc', value: labels.component.dateAsc }, { id: 'desc', value: labels.component.dateDesc }];
+									defaultAs = "date";
 									break;
 								case "number":
 									options = [{ id: 'asc', value: labels.component.numberAsc }, { id: 'desc', value: labels.component.numberDesc }];
-									break;
-								case "boolean":
-									options = [{ id: 'asc', value: labels.component.booleanAsc }, { id: 'desc', value: labels.component.booleanDesc }];
+									defaultAs = "int";
 									break;
 							}
 
-							sortInput.define('options', options);
-							sortInput.refresh();
+							sortDir.define('options', options);
+							sortDir.refresh();
+
+							sortAs.setValue(defaultAs);
 
 							_logic.refreshFieldList();
-							//sort_popup.sort();
 
-							var sortFields = CurrentObject.workspaceSortFields;
-							sortFields[columnId] = options[0];
-
-							CurrentObject.workspaceSortFields = sortFields;
-							CurrentObject.save();
-
-							//this.getTopParentView().callChangeEvent();
-							_logic.callbacks.onChange();
+							_logic.saveSorts();
 						}
 					}
 				}, {
 					view: "segmented", width: 200, options: [{ id: '', value: labels.component.selectField }],
 					on: {
-						onChange: function onChange(newv, oldv) {// 'asc' or 'desc' values
-							//CurrentObject.workspaceSortFields[columnId] = newv;
-							//CurrentObject.save();
-							//sort_popup.sort();
+						onChange: function onChange(newv, oldv) {
+							// 'asc' or 'desc' values
+							_logic.saveSorts();
 						}
 					}
+				}, {
+					view: "text", width: 20, hidden: true, value: ""
 				}, {
 					view: "button", icon: "trash", type: "icon", width: 30, click: function click() {
 						sort_form.removeView(this.getParentView());
 						_logic.refreshFieldList(true);
-						sort_popup.sort();
-
-						// this.getTopParentView().callChangeEvent();
-						_logic.callbacks.onChange();
+						_logic.saveSorts();
 					}
 				}]
 			}, viewIndex);
 
 			// Select field
-			if (id) {
+			if (by) {
 				var fieldsCombo = sort_form.getChildViews()[viewIndex].getChildViews()[0];
-				fieldsCombo.setValue(id);
-				// this.getTopParentView().callChangeEvent();
-				_logic.callbacks.onChange();
+				fieldsCombo.setValue(by);
 			}
+			if (dir) {
+				var segmentButton = sort_form.getChildViews()[viewIndex].getChildViews()[1];
+				segmentButton.setValue(dir);
+			}
+			if (as) {
+				var asField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
+				asField.setValue(as);
+			}
+			_logic.callbacks.onChange();
 		},
 
 		/**
@@ -10213,7 +11140,6 @@ OP.Component.extend(idBase, function (App) {
 			// Get all fields include hidden fields
 			var allFields = CurrentObject.fields();
 			allFields.forEach(function (f) {
-				console.log(f);
 				listFields.push({
 					id: f.columnName,
 					label: f.label
@@ -10244,8 +11170,110 @@ OP.Component.extend(idBase, function (App) {
 					});
 				}
 			}
-			alert(listFields);
 			return listFields;
+		},
+
+		// /**
+		//  * @function sort
+		//  * this preforms the sort on the datagrid (this may move to the datagrid once I read further)
+		//  */
+		// sort: function () {
+		// 	var sort_popup = $$(ids.component),
+		// 		sort_form = $$(ids.form),
+		// 		columnOrders = [];
+		//
+		// 	sort_form.getChildViews().forEach(function (cView, index) {
+		// 		if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
+		// 			return;
+		//
+		// 		var columnId = cView.getChildViews()[0].getValue();
+		// 		var order = cView.getChildViews()[1].getValue();
+		//
+		// 		if (columnId) {
+		// 			var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
+		//
+		// 			if (columnConfig) {
+		// 				columnOrders.push({
+		// 					name: columnConfig.id,
+		// 					order: order
+		// 				});
+		// 			}
+		// 		}
+		// 	});
+		//
+		// 	sort_popup.dataTable.sort(function (a, b) {
+		// 		var result = false;
+		//
+		// 		for (var i = 0; i < columnOrders.length; i++) {
+		// 			var column = columnOrders[i],
+		// 				aValue = a[column.name],
+		// 				bValue = b[column.name];
+		//
+		// 			if ($.isArray(aValue)) {
+		// 				aValue = $.map(aValue, function (item) { return item.text }).join(' ');
+		// 			}
+		//
+		// 			if ($.isArray(bValue)) {
+		// 				bValue = $.map(bValue, function (item) { return item.text }).join(' ');
+		// 			}
+		//
+		// 			if (aValue != bValue) {
+		// 				if (column.order == 'asc') {
+		// 					result = aValue > bValue ? 1 : -1;
+		// 				}
+		// 				else {
+		// 					result = aValue < bValue ? 1 : -1;
+		// 				}
+		// 				break;
+		// 			}
+		// 		}
+		//
+		// 		return result;
+		// 	});
+		// },
+
+		/**
+   * @function objectLoad
+   * Ready the Popup according to the current object
+   * @param {ABObject} object  the currently selected object.
+   */
+		objectLoad: function objectLoad(object) {
+			CurrentObject = object;
+
+			// // refresh list
+			// var allFields = CurrentObject.fields();
+			// allFields.forEach((f) => {
+			// 	alert(f.label);
+			// 	listFields.push({
+			// 		id: f.id,
+			// 		label: f.label,
+			// 		$css:"hidden_fields_"+f.id
+			// 	})
+			// })
+
+			//$$(ids.list).parse(listFields);
+		},
+
+		/**
+   * @function objectLoad
+   * Ready the Popup according to the current object
+   * @param {ABObject} object  the currently selected object.
+   */
+		onShow: function onShow() {
+			var sort_popup = $$(ids.component),
+			    sort_form = $$(ids.form);
+
+			var childViews = sort_form.getChildViews();
+			if (childViews.length == 1) {
+				var sorts = CurrentObject.workspaceSortFields;
+				sorts.forEach(function (s) {
+					_logic.clickAddNewSort(s.by, s.dir, s.as);
+				});
+
+				if (sorts.length == 0) {
+					_logic.clickAddNewSort();
+				}
+			}
 		},
 
 		/**
@@ -10311,109 +11339,34 @@ OP.Component.extend(idBase, function (App) {
 		},
 
 		/**
-   * @function sort
-   * this preforms the sort on the datagrid (this may move to the datagrid once I read further)
+   * @function saveSorts
+   * This parses the sort form to build in order the sorts then saves to the application object workspace
    */
-		sort: function sort() {
+		saveSorts: function saveSorts() {
+			// Prevent duplicate fields
 			var sort_popup = $$(ids.component),
 			    sort_form = $$(ids.form),
-			    columnOrders = [];
+			    sortFields = [];
 
-			sort_form.getChildViews().forEach(function (cView, index) {
-				if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
-					return;
+			var childViews = sort_form.getChildViews();
+			if (childViews.length > 1) {
+				// Ignore 'Add new sort' button
+				childViews.forEach(function (cView, index) {
+					if (childViews.length - 1 <= index) return false;
 
-				var columnId = cView.getChildViews()[0].getValue();
-				var order = cView.getChildViews()[1].getValue();
-
-				if (columnId) {
-					var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
-
-					if (columnConfig) {
-						columnOrders.push({
-							name: columnConfig.id,
-							order: order
-						});
-					}
-				}
-			});
-
-			sort_popup.dataTable.sort(function (a, b) {
-				var result = false;
-
-				for (var i = 0; i < columnOrders.length; i++) {
-					var column = columnOrders[i],
-					    aValue = a[column.name],
-					    bValue = b[column.name];
-
-					if ($.isArray(aValue)) {
-						aValue = $.map(aValue, function (item) {
-							return item.text;
-						}).join(' ');
-					}
-
-					if ($.isArray(bValue)) {
-						bValue = $.map(bValue, function (item) {
-							return item.text;
-						}).join(' ');
-					}
-
-					if (aValue != bValue) {
-						if (column.order == 'asc') {
-							result = aValue > bValue ? 1 : -1;
-						} else {
-							result = aValue < bValue ? 1 : -1;
-						}
-						break;
-					}
-				}
-
-				return result;
-			});
-		},
-
-		/**
-   * @function objectLoad
-   * Ready the Popup according to the current object
-   * @param {ABObject} object  the currently selected object.
-   */
-		objectLoad: function objectLoad(object) {
-			CurrentObject = object;
-
-			// // refresh list
-			// var allFields = CurrentObject.fields();
-			// allFields.forEach((f) => {
-			// 	alert(f.label);
-			// 	listFields.push({
-			// 		id: f.id,
-			// 		label: f.label,
-			// 		$css:"hidden_fields_"+f.id
-			// 	})
-			// })
-
-			//$$(ids.list).parse(listFields);
-		},
-
-		/**
-   * @function objectLoad
-   * Ready the Popup according to the current object
-   * @param {ABObject} object  the currently selected object.
-   */
-		onShow: function onShow() {
-			var sort_popup = $$(ids.component),
-			    sort_form = $$(ids.form);
-
-			if (sort_form.getChildViews().length < 2) {
-				// sort_form.getTopParentView().addNewSort();
-				// sort_popup.callChangeEvent();
-				_logic.clickAddNewSort();
-				_logic.callbacks.onChange();
-			} else {
-				var sorts = CurrentObject.workspaceSortFields;
-				sorts.forEach(function (s) {
-					_logic.clickAddNewSort(s.by, s.dir, s.as);
+					var by = cView.getChildViews()[0].getValue();
+					var dir = cView.getChildViews()[1].getValue();
+					var as = cView.getChildViews()[2].getValue();
+					sortFields.push({ "by": by, "dir": dir, "as": as });
 				});
 			}
+
+			CurrentObject.workspaceSortFields = sortFields;
+			CurrentObject.save().then(function () {
+				_logic.callbacks.onChange();
+			}).catch(function (err) {
+				OP.Error.log('Error trying to save workspaceSortFields', { error: err, fields: sortFields });
+			});
 		}
 
 	};
@@ -10437,7 +11390,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10467,7 +11420,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10539,7 +11492,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10613,7 +11566,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10695,7 +11648,7 @@ function toComment(sourceMap) {
 }
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10790,10 +11743,10 @@ module.exports = function (css) {
 };
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(43)(undefined);
+exports = module.exports = __webpack_require__(44)(undefined);
 // imports
 
 
@@ -10804,7 +11757,7 @@ exports.push([module.i, ".webix_view, .webix_el_colorpicker input, .webix_el_com
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -10841,7 +11794,7 @@ var stylesInDom = {},
 	singletonElement = null,
 	singletonCounter = 0,
 	styleElementsInsertedAtTop = [],
-	fixUrls = __webpack_require__(44);
+	fixUrls = __webpack_require__(45);
 
 module.exports = function(list, options) {
 	if(typeof DEBUG !== "undefined" && DEBUG) {
@@ -11100,16 +12053,16 @@ function updateLink(linkElement, options, obj) {
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(45);
+var content = __webpack_require__(46);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(46)(content, {});
+var update = __webpack_require__(47)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {

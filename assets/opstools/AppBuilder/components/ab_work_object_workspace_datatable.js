@@ -102,6 +102,9 @@ console.error('!! ToDo: onBeforeEditStop()');
 			onAfterEditStop: function (state, editor, ignoreUpdate) {
 				_logic.onAfterEditStop(state, editor, ignoreUpdate);
 			},
+			onAfterLoad: function () {
+				_logic.onAfterLoad();
+			},
 			onColumnResize: function (id, newWidth, oldWidth, user_action) {
 console.error('!! ToDo: onColumnResize()');
 				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
@@ -237,24 +240,23 @@ console.error('!! ToDo: onAfterColumnHide()');
 		/**
 		 * @function onAfterEditStop
 		 * When an editor is finished.
-		 * @param {json} state 
+		 * @param {json} state
 		 * @param {} editor
-		 * @param {} ignoreUpdate 
-		 * @return 
+		 * @param {} ignoreUpdate
+		 * @return
 		 */
 		onAfterEditStop: function (state, editor, ignoreUpdate) {
 
 			// state:   {value: "new value", old: "old value"}
 			// editor:  { column:"columnName", row:ID, value:'value', getInputNode:fn(), config:{}, focus: fn(), getValue: fn(), setValue: function, getInputNode: function, render: function…}
-			
+
 			var DataTable = $$(ids.component);
-			
+
 			if (state.value != state.old) {
 
 
 //// LEFT OFF:
 // client side editor: ABFieldImage,
-
 
 
 				var item = DataTable.getItem(editor.row);
@@ -266,7 +268,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 				var validator = CurrentObject.isValidData(item);
 				if (validator.pass()) {
 
-					
+
 //// Question: do we submit full item updates?  or just patches?
 var patch = {};
 patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
@@ -298,7 +300,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 						}
 
-						
+
 					})
 
 				} else {
@@ -345,14 +347,18 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 				// 	});
 		},
 
+		onAfterLoad: function() {
+			_logic.sortTable();
+		},
+
 
 
 		/**
 		 * @function onAfterSelect
-		 * This is when a user clicks on a cell.  We use the onAfterSelect to 
+		 * This is when a user clicks on a cell.  We use the onAfterSelect to
 		 * trigger a normal .editCell() if there isn't a custom editor for this field.
 		 * @param {json} data webix cell data
-		 * @return 
+		 * @return
 		 */
 		onAfterSelect: function (data, prevent) {
 			// data: {row: 1, column: "name", id: "1_name", toString: function}
@@ -437,12 +443,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 					DataTable.refreshColumns()
 				}
 
-				if (CurrentObject.workspaceSortFields != []) {
-					var sorts = CurrentObject.workspaceSortFields;
-					sorts.forEach((s) => {
-						DataTable.sort(s);
-					})
-				}
 
 				//// update DataTable Content
 
@@ -468,6 +468,67 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 			$$(ids.component).show();
 		},
+
+		/**
+		 * @function sort(dir, a, b)
+		 *
+		 * Sort this component.
+		 */
+		sort:function(dir, aValue, bValue) {
+			var result = false;
+
+			if (dir == 'asc') {
+				result = aValue > bValue ? 1 : -1;
+			}
+			else {
+				result = aValue < bValue ? 1 : -1;
+			}
+			return result;
+		},
+
+		sortNext:function(dir, a, b, sorts, index) {
+			var index = index+1,
+				a = a,
+				b = b,
+				aValue = a[sorts[index].by],
+				bValue = b[sorts[index].by],
+				result = false;
+
+			if (aValue == bValue && sorts.length > index+1) {
+				result = _logic.sortNext(sorts[index].dir, a, b, sorts, index)
+			} else {
+				result = _logic.sort(sorts[index].dir, aValue, bValue);
+			}
+			return result;
+		},
+
+		sortTable:function() {
+			var DataTable = $$(ids.component);
+
+			if (CurrentObject) {
+				var sorts = CurrentObject.workspaceSortFields;
+
+				if (sorts.length > 0) {
+					var columnOrders = [];
+
+					DataTable.sort(function (a, b) {
+						var result = false,
+							index = 0,
+							aValue = a[sorts[index].by],
+							bValue = b[sorts[index].by];
+
+						if (aValue == bValue && sorts.length > index+1) {
+							result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
+						} else {
+							result = _logic.sort(sorts[index].dir, aValue, bValue);
+						}
+
+						return result;
+					});
+
+				}
+			}
+		}
 
 
 	}
@@ -506,6 +567,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 		// expose data for column sort UI
 		getFieldList: _logic.getFieldList,
+		sortTable: _logic.sortTable,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}

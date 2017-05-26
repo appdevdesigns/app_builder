@@ -81,6 +81,7 @@ OP.Component.extend(idBase, function(App) {
         },
         on: {
             onShow: function () {
+				_logic.onShow();
                 _logic.iconsReset();
             }
         }
@@ -128,7 +129,7 @@ OP.Component.extend(idBase, function(App) {
 			var allFields = CurrentObject.fields();
 			var newHidden = [];
 			allFields.forEach(function(f){
-				newHidden.push(f.id);
+				newHidden.push(f.columnName);
 			})
 
 			// store that
@@ -168,7 +169,9 @@ OP.Component.extend(idBase, function(App) {
 		 * update the clicked field setting.
 		 */
 		clickListItem: function(id, e, node) {
-			if (CurrentObject.workspaceFrozenColumnID == id) {
+			var List = $$(ids.list);
+			var item = List.getItem(id);
+			if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
 				OP.Dialog.Alert({
 					text: labels.component.errorFrozen
 				});
@@ -176,19 +179,19 @@ OP.Component.extend(idBase, function(App) {
 			}
 
 			var newFields = [];
-			var isHidden = CurrentObject.workspaceHiddenFields.filter((fID) => { return fID == id;}).length>0;
+			var isHidden = CurrentObject.workspaceHiddenFields.filter((fID) => { return fID == item.columnName;}).length>0;
 			if (isHidden) {
 				// unhide this field
 
 				// get remaining fields
-				newFields = CurrentObject.workspaceHiddenFields.filter((fID)=>{ return fID != id;});
+				newFields = CurrentObject.workspaceHiddenFields.filter((fID)=>{ return fID != item.columnName;});
 
 				// find the icon and display it:
 				_logic.iconShow(node);
 
 			} else {
 				newFields = CurrentObject.workspaceHiddenFields;
-				newFields.push(id);
+				newFields.push(item.columnName);
 
 				_logic.iconHide(node);
 			}
@@ -264,18 +267,19 @@ OP.Component.extend(idBase, function(App) {
 			// for each item in the List
 			var id = List.getFirstId();
 			while(id) {
+				var item = List.getItem(id);
 
 				// find it's HTML Node
 				var node = List.getItemNode(id);
 
-				if (CurrentObject.workspaceFrozenColumnID == id) {
+				if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
 					_logic.iconFreezeOn(node);
 				} else {
 					_logic.iconFreezeOff(node);
 				}
 
 				// if this item is not hidden, show it.
-				if (CurrentObject.workspaceHiddenFields.indexOf(id) == -1) {
+				if (CurrentObject.workspaceHiddenFields.indexOf(item.columnName) == -1) {
 					_logic.iconShow(node);
 				} else {
 					// else hide it
@@ -296,14 +300,21 @@ OP.Component.extend(idBase, function(App) {
 		 */
 		objectLoad: function(object) {
 			CurrentObject = object;
+		},
 
+		/**
+		 * @function onShow
+		 * Ready the Popup according to the current object each time it is shown (perhaps a field was created or delted)
+		 */
+		onShow: function() {
 			// refresh list
 			var allFields = CurrentObject.fields();
 			var listFields = [];
 			allFields.forEach((f) => {
 				listFields.push({
 					id: f.id,
-					label: f.label
+					label: f.label,
+					columnName: f.columnName
 				})
 			})
 

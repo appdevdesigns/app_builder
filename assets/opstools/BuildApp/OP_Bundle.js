@@ -81,21 +81,21 @@ var _comm = __webpack_require__(4);
 
 var _comm2 = _interopRequireDefault(_comm);
 
-var _form = __webpack_require__(6);
-
-var _form2 = _interopRequireDefault(_form);
-
-var _multilingual = __webpack_require__(8);
+var _multilingual = __webpack_require__(7);
 
 var _multilingual2 = _interopRequireDefault(_multilingual);
 
-var _model = __webpack_require__(7);
+var _model = __webpack_require__(6);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(9);
+var _util = __webpack_require__(8);
 
 var _util2 = _interopRequireDefault(_util);
+
+var _validation = __webpack_require__(9);
+
+var _validation2 = _interopRequireDefault(_validation);
 
 var _config = __webpack_require__(5);
 
@@ -119,13 +119,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //// in 'use strict' ?
 
 // if (!window.OP) {
-window.OP = {};
+window.OP = OP;
 
 // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
 //              for our loaded projects.
 // OP.UI = {};    		// webix UI definitions
 // OP.Logic = {}; 		// logic references for webix application
 
+// import Form from "./form"
+// import Grid from "./grid"
 OP.Comm = _comm2.default;
 
 OP.Component = {}; // our defined components
@@ -219,12 +221,16 @@ OP.Dialog = AD.op.Dialog;
 
 OP.Error = AD.error;
 
-OP.Form = _form2.default;
+// OP.Form = Form;
+
+// OP.Grid = Grid;
 
 OP.Multilingual = _multilingual2.default;
 OP.Model = _model2.default;
 
 OP.Util = _util2.default;
+
+OP.Validation = _validation2.default;
 
 exports.default = OP;
 // }
@@ -299,139 +305,6 @@ exports.default = {
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.default = {
-
-	/**
-  * @function OP.Form.validationError
-  *
-  * creates an error object that can be used in OP.Form.isValidationError()
-  * to update a webix form with error validation messages.
-  *
-  * @param {json} error 	an error object
-  *				error.name	{string} the attribute name (Form.element[error.name])
-  *				error.message {string} the message to display for the error
-  *
-  * @return {obj} an error object.
-  */
-	validationError: function validationError(error, errorObj) {
-
-		errorObj = errorObj || {
-			error: 'E_VALIDATION',
-			invalidAttributes: {}
-		};
-
-		var attr = errorObj.invalidAttributes;
-		attr[error.name] = attr[error.name] || [];
-
-		attr[error.name].push(error);
-
-		return errorObj;
-	},
-
-	/**
-  * @function OP.Form.isValidationError
-  *
-  * scans the given error to see if it is a sails' respone about an invalid
-  * value from one of the form elements.
-  *
-  * @codestart
-  * var form = $$('formID');
-  * var values = form.getValues();
-  * model.attr(values);
-  * model.save()
-  * .fail(function(err){
-  *     if (!OP.Form.isValidationError(err, form)) {
-  *         OP.error.log('Error saving current model ()', {error:err, values:values});
-  *     }
-  * })
-  * .then(function(newData){
-  * 
-  * });
-  * @codeend
-  *
-  * @param {obj} error  the error response object
-  * @param {obj} form   the webix form instance (or reference)
-  * @return {bool}      true if error was about a form element.  false otherwise.
-  */
-	isValidationError: function isValidationError(error, form) {
-
-		// {bool} have we set focus to form component?
-		var hasFocused = false;
-
-		// if we have an error object:
-		if (error) {
-
-			//// if the error obj is provided by Sails response, 
-			//// do some clean up on the error object:
-
-
-			// dig down to sails provided error object:
-			if (error.error && error.error == 'E_UNKNOWN' && error.raw && error.raw.length > 0) {
-
-				error = error.raw[0];
-			}
-
-			// drill down to the embedded .err object if it exists
-			if (error.err) {
-				error = error.err;
-			}
-
-			//// Now process the error object
-			//// 
-			if (error.error && error.error == 'E_VALIDATION' || error.code && error.code == 'E_VALIDATION') {
-
-				var attrs = error.invalidAttributes;
-				if (attrs) {
-
-					var wasForm = false;
-					for (var attr in attrs) {
-
-						// if this is a field in the form:
-						if (form.elements[attr]) {
-
-							var errors = attrs[attr];
-							var msg = [];
-							errors.forEach(function (err) {
-								msg.push(err.message);
-							});
-
-							// set the invalid error message
-							form.markInvalid(attr, msg.join(', '));
-
-							// set focus to the 1st form element we mark:
-							if (!hasFocused) {
-								form.elements[attr].focus();
-								hasFocused = true;
-							}
-
-							wasForm = true;
-						}
-					}
-
-					if (wasForm) {
-						return true;
-					}
-				}
-			}
-		}
-
-		// if we missed updating our form with an error
-		// this was not a validation error so return false
-		return false;
-	}
-
-};
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -764,7 +637,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 };
 
 /***/ }),
-/* 8 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -891,7 +764,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -905,6 +778,306 @@ exports.default = {
 	uuid: AD.util.uuid
 
 };
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var OPValidator = function () {
+	function OPValidator() {
+		_classCallCheck(this, OPValidator);
+
+		this.errors = [];
+	}
+
+	_createClass(OPValidator, [{
+		key: 'addError',
+		value: function addError(name, message) {
+			this.errors.push({ name: name, message: message });
+		}
+	}, {
+		key: 'pass',
+		value: function pass() {
+			return this.errors.length == 0;
+		}
+	}, {
+		key: 'fail',
+		value: function fail() {
+			return this.errors.length > 0;
+		}
+	}, {
+		key: 'toValidationObject',
+		value: function toValidationObject() {
+			var obj = {
+				error: 'E_VALIDATION',
+				invalidAttributes: {}
+			};
+
+			var attr = obj.invalidAttributes;
+
+			this.errors.forEach(function (e) {
+
+				attr[e.name] = attr[e.name] || [];
+				attr[e.name].push(e);
+			});
+
+			return obj;
+		}
+	}, {
+		key: 'updateForm',
+		value: function updateForm(form) {
+			var vObj = this.toValidationObject();
+			OP.Validation.isFormValidationError(vObj, form);
+		}
+	}, {
+		key: 'updateGrid',
+		value: function updateGrid(rowID, grid) {
+			var vObj = this.toValidationObject();
+			OP.Validation.isGridValidationError(vObj, rowID, grid);
+		}
+	}]);
+
+	return OPValidator;
+}();
+
+//// LEFT OFF HERE:
+// add an OP.Validation  and remove OP.Form  OP.Grid
+// update existing Applicaiton, Object, Field forms to use this.
+
+
+exports.default = {
+
+	/**
+  * @function OP.Validation.validator
+  * return a new instance of OPValidator.
+  * @return {OPValidator}
+  */
+	validator: function validator() {
+		return new OPValidator();
+	},
+
+	// var validator = OP.Validation.validator()
+	// validator.addError('name', 'message')
+	// validator.pass() 
+	// validator.updateForm(Form);
+	// validator.updateGrid(editor, Grid);
+
+	/**
+  * @function OP.Validation.isFormValidationError
+  *
+  * scans the given error to see if it is a sails' response about an invalid
+  * value from one of the form elements.
+  *
+  * @codestart
+  * var form = $$('formID');
+  * var values = form.getValues();
+  * model.attr(values);
+  * model.save()
+  * .fail(function(err){
+  *     if (!OP.Form.isFormValidationError(err, form)) {
+  *         OP.error.log('Error saving current model ()', {error:err, values:values});
+  *     }
+  * })
+  * .then(function(newData){
+  * 
+  * });
+  * @codeend
+  *
+  * @param {obj} error  the error response object
+  * @param {obj} form   the webix form instance (or reference)
+  * @return {bool}      true if error was about a form element.  false otherwise.
+  */
+	isFormValidationError: function isFormValidationError(error, form) {
+
+		// {bool} have we set focus to form component?
+		var hasFocused = false;
+
+		// if we have an error object:
+		if (error) {
+
+			//// if the error obj is provided by Sails response, 
+			//// do some clean up on the error object:
+
+
+			// dig down to sails provided error object:
+			if (error.error && error.error == 'E_UNKNOWN' && error.raw && error.raw.length > 0) {
+
+				error = error.raw[0];
+			}
+
+			// drill down to the embedded .err object if it exists
+			if (error.err) {
+				error = error.err;
+			}
+
+			//// Now process the error object
+			//// 
+			if (error.error && error.error == 'E_VALIDATION' || error.code && error.code == 'E_VALIDATION') {
+
+				var attrs = error.invalidAttributes;
+				if (attrs) {
+
+					var wasForm = false;
+					for (var attr in attrs) {
+
+						// if this is a field in the form:
+						if (form.elements[attr]) {
+
+							var errors = attrs[attr];
+							var msg = [];
+							errors.forEach(function (err) {
+								msg.push(err.message);
+							});
+
+							// set the invalid error message
+							form.markInvalid(attr, msg.join(', '));
+
+							// set focus to the 1st form element we mark:
+							if (!hasFocused) {
+								form.elements[attr].focus();
+								hasFocused = true;
+							}
+
+							wasForm = true;
+						}
+					}
+
+					if (wasForm) {
+						return true;
+					}
+				}
+			}
+		}
+
+		// if we missed updating our form with an error
+		// this was not a validation error so return false
+		return false;
+	},
+
+	/**
+  * @function OP.Validation.isGridValidationError
+  *
+  * scans the given error to see if it is a sails' response about an invalid
+  * value from one of our grid columns.
+  *
+  * @codestart
+  * var grid = $$('myGrid');
+  * model.attr(values);
+  * model.save()
+  * .fail(function(err){
+  *     if (!OP.Validation.isGridValidationError(err, editor, grid)) {
+  *         OP.error.log('Error saving current model ()', {error:err, values:values});
+  *     }
+  * })
+  * .then(function(newData){
+  * 
+  * });
+  * @codeend
+  *
+  * @param {obj} error  the error response object
+  * @param {integer} row the row id of the Grid to update.
+  * @param {obj} Grid   the webix grid instance (or reference)
+  * @return {bool}      true if error was about a grid column.  false otherwise.
+  */
+	isGridValidationError: function isGridValidationError(error, row, Grid) {
+
+		// if we have an error object:
+		if (error) {
+
+			//// if the error obj is provided by Sails response, 
+			//// do some clean up on the error object:
+
+
+			// dig down to sails provided error object:
+			if (error.error && error.error == 'E_UNKNOWN' && error.raw && error.raw.length > 0) {
+
+				error = error.raw[0];
+			}
+
+			// drill down to the embedded .err object if it exists
+			if (error.err) {
+				error = error.err;
+			}
+
+			// if this is from our server response:
+			if (error.data && error.data.error && error.data.error == 'E_VALIDATION') {
+				error = error.data;
+			}
+
+			//// Now process the error object
+			//// 
+			if (error.error && error.error == 'E_VALIDATION' || error.code && error.code == 'E_VALIDATION') {
+
+				var attrs = error.invalidAttributes;
+				if (attrs) {
+
+					var wasGrid = false;
+					for (var attr in attrs) {
+
+						// if this is a field in the form:
+						// if (form.elements[attr]) {
+
+						// 	var errors = attrs[attr];
+						// 	var msg = [];
+						// 	errors.forEach(function(err) {
+						// 		msg.push(err.message);
+						// 	})
+
+						// 	// set the invalid error message
+						// 	form.markInvalid(attr, msg.join(', '));
+
+						// 	// set focus to the 1st form element we mark:
+						// 	if (!hasFocused) {
+						// 		form.elements[attr].focus();
+						// 		hasFocused = true;
+						// 	}
+
+						// 	wasForm = true;
+						// }
+
+
+						Grid.addCellCss(row, attr, "webix_invalid");
+						Grid.addCellCss(row, attr, "webix_invalid_cell");
+
+						var msg = [];
+						attrs[attr].forEach(function (e) {
+							msg.push(e.message);
+						});
+
+						OP.Dialog.Alert({
+							text: attr + ': ' + msg.join(', ')
+						});
+
+						wasGrid = true;
+					}
+
+					Grid.refresh(row);
+
+					if (wasGrid) {
+						return true;
+					}
+				}
+			}
+		}
+
+		// if we missed updating our Grid with an error
+		// this was not a validation error so return false
+		return false;
+	}
+
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 10 */
@@ -1001,6 +1174,7 @@ exports.default = {
 	largeSpacer: 50,
 	xLargeSpacer: 100,
 	xxLargeSpacer: 200,
+	xxxLargeSpacer: 400,
 	appListSpacerRowHeight: 100,
 	appListSpacerColMinWidth: 100,
 	appListSpacerColMaxWidth: 200,
@@ -1062,6 +1236,7 @@ exports.default = {
 	largeSpacer: 20,
 	xLargeSpacer: 50,
 	xxLargeSpacer: 100,
+	xxxLargeSpacer: 120,
 	appListSpacerRowHeight: 10,
 	appListSpacerColMinWidth: 1,
 	appListSpacerColMaxWidth: 1,
