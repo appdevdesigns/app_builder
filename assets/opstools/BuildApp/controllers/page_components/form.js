@@ -544,12 +544,15 @@ steal(
 										width: element.labelWidth + 5
 									},
 									{
-										id: col.setting.editorId,
-										view: 'ckeditor',
-										minHeight: 200,
-										value: '',
+										view: 'template',
+										template: "<div class='ab-richtext-data-field'></div>",
+										height: 375,
+										css: 'richtext-container',
+										borderless: true,
 									}
 								];
+
+								console.log('col.setting.editorId: --> ', col.setting.editorId)
 
 								console.log('element: ---> ', element)
 

@@ -25,22 +25,24 @@ function() {
 
   webix.editors.$popup.richtext = {
     view: "popup",
-    width: 250,
-    height: 250,
+    width: 450,
+    height: 350,
     padding: 0,
     body: {
-      view:"ckeditor"
+      id: "ckeditor-richtext",
+      // view:"ckeditor"
+      view:"tinymce-editor"
     }
   };
 
   webix.editors.richtext = webix.extend({
     popupType: "richtext",
 
-    render:function(){
-        return webix.html.create("div", {
-            "class":"webix_dt_editor"
-        }, "<textarea name='richtext_view'>");
-    }
+    // render:function(){
+    //     return webix.html.create("div", {
+    //         "class":"webix_dt_editor"
+    //     }, "<textarea name='richtext_view'>");
+    // }
   }, webix.editors.popup);
 
 });

@@ -83,7 +83,7 @@
 
 /* Webix message */
 .webix_success {
-  background-color: #BFF2BF;	
+  background-color: #BFF2BF;
 }
 .webix_success div {
   background-color: #BFF2BF;
@@ -124,7 +124,7 @@
 }
 
 /* Add new columns popup */
-.ab-add-fields-popup { 
+.ab-add-fields-popup {
 	overflow-y: auto;
 }
 
@@ -141,13 +141,13 @@
 	position: relative;
 	height: 100%;
 }
-div[view_id='ab-app-list'] div.webix_list_item:hover, 
+div[view_id='ab-app-list'] div.webix_list_item:hover,
 div[view_id='ab-object-list'] div.webix_list_item:hover,
 div[view_id='ab-object-list-menu'] div.webix_list_item:hover,
 div[view_id='ab-new-connectObject-list-item'] div.webix_list_item:hover,
 div[view_id='ab-edit-header-items'] div.webix_list_item:hover,
 div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
-	background-color: #eee;	
+	background-color: #eee;
 }
 .ab-app-list-name {
 	font-weight: bold;
@@ -176,7 +176,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
     color: #fff;
     background-color: #F5962F;
     border: #fff dotted 1px !important;
-    padding-left: 2px;	
+    padding-left: 2px;
 }
 .ab-unsync-data-popup .webix_win_head {
 	background-color: #F5962F;
@@ -279,7 +279,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 
 /* Custom selectivity */
 .ab-main-container .selectivity-multiple-input-container {
-	background: none !important;  
+	background: none !important;
 	padding: 0px !important;
 	overflow: hidden !important;
 	max-height: 100% !important;
@@ -292,7 +292,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 
 /* Interface tree view */
 .ab-main-container .webix_tree_item.webix_selected span {
-	padding: 0px; 
+	padding: 0px;
 	background: #3498db !important;
 }
 
@@ -359,7 +359,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-component-item-drag {
 	border: 1px dotted #000 !important;
 	font-size: 35px;
-	background-color: #fff;	
+	background-color: #fff;
 }
 
 /* Header component */
@@ -480,4 +480,19 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 }
 .ab-reload-page-button:hover {
 	opacity: 1;
+}
+
+/* Rich Text Component */
+.richtext-container .webix_template{
+	padding: 7px 5px 0px 0px !important;
+}
+.ab-richtext-data-field {
+	width: 100%;
+}
+.ab-richtext-data-field .richtext_editor {
+	width: 100% !important;
+	height: 350px !important;
+}
+.ab-richtext-data-field iframe {
+	height: 276px !important;
 }
