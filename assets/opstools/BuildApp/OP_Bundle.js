@@ -735,7 +735,12 @@ exports.default = {
 
 					// copy each field to the root object
 					fields.forEach(function (f) {
-						t[f] = obj[f];
+
+						// verify obj[f] is defined 
+						// --> DONT erase the existing translation
+						if (typeof obj[f] != 'undefined') {
+							t[f] = obj[f];
+						}
 					});
 
 					foundOne = true;

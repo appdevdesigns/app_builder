@@ -8,26 +8,26 @@ describe('AppBuilder service', function () {
 		assert.isDefined(AppBuilder, ' --> AppBuilder should be defined!');
 	});
 
-	it('build object', function (done) {
-		this.timeout(15000);
+	// it('build object', function (done) {
+	// 	this.timeout(15000);
 
-		async.series([
-			function (next) {
-				AppBuilder.buildObject(1)
-					.fail(next)
-					.then(function () {
-						next();
-					});
-			},
-			function (next) {
-				AppBuilder.buildObject(2)
-					.fail(next)
-					.then(function () {
-						next();
-					});
+	// 	async.series([
+	// 		function (next) {
+	// 			AppBuilder.buildObject(1)
+	// 				.fail(next)
+	// 				.then(function () {
+	// 					next();
+	// 				});
+	// 		},
+	// 		function (next) {
+	// 			AppBuilder.buildObject(2)
+	// 				.fail(next)
+	// 				.then(function () {
+	// 					next();
+	// 				});
 
-			}
-		], done);
-	});
+	// 		}
+	// 	], done);
+	// });
 
 });

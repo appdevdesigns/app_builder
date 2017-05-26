@@ -434,6 +434,21 @@ export default class ABField {
 	}
 
 
+	/*
+	 * @function customDisplay
+	 * perform any custom display modifications for this field.  If this isn't 
+	 * a standard value display (think image, Map, graph, etc...) then use this
+	 * method to create the display in the table/grid cell.
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customDisplay(row, App, node) {
+		
+	}
+
+
 
 	/**
 	 * @method isValidData

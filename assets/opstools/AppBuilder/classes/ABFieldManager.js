@@ -9,6 +9,7 @@
 import ABFieldString from "./dataFields/ABFieldString"
 import ABFieldNumber from "./dataFields/ABFieldNumber"
 import ABFieldDate from "./dataFields/ABFieldDate"
+import ABFieldBoolean from "./dataFields/ABFieldBoolean"
 
 
 import ABFieldImage from "./dataFields/ABFieldImage"
@@ -21,6 +22,7 @@ var Fields = {};
 Fields[ABFieldString.defaults().key] = ABFieldString;
 Fields[ABFieldNumber.defaults().key] = ABFieldNumber;
 Fields[ABFieldDate.defaults().key] = ABFieldDate;
+Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 
 
 Fields[ABFieldImage.defaults().key] = ABFieldImage;

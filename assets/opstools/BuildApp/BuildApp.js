@@ -254,7 +254,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 // import OP from "OP"
 
 
-__webpack_require__(41);
+__webpack_require__(42);
 
 var _ABObject = __webpack_require__(17);
 
@@ -1048,6 +1048,21 @@ var ABField = function () {
 
 			return config;
 		}
+
+		/*
+   * @function customDisplay
+   * perform any custom display modifications for this field.  If this isn't 
+   * a standard value display (think image, Map, graph, etc...) then use this
+   * method to create the display in the table/grid cell.
+   * @param {object} row is the {name=>value} hash of the current row of data.
+   * @param {App} App the shared ui App object useful more making globally
+   *					unique id references.
+   * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+   */
+
+	}, {
+		key: 'customDisplay',
+		value: function customDisplay(row, App, node) {}
 
 		/**
    * @method isValidData
@@ -2095,7 +2110,12 @@ exports.default = {
 
 					// copy each field to the root object
 					fields.forEach(function (f) {
-						t[f] = obj[f];
+
+						// verify obj[f] is defined 
+						// --> DONT erase the existing translation
+						if (typeof obj[f] != 'undefined') {
+							t[f] = obj[f];
+						}
 					});
 
 					foundOne = true;
@@ -2624,19 +2644,23 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _ABFieldString = __webpack_require__(21);
+var _ABFieldString = __webpack_require__(22);
 
 var _ABFieldString2 = _interopRequireDefault(_ABFieldString);
 
-var _ABFieldNumber = __webpack_require__(20);
+var _ABFieldNumber = __webpack_require__(21);
 
 var _ABFieldNumber2 = _interopRequireDefault(_ABFieldNumber);
 
-var _ABFieldDate = __webpack_require__(18);
+var _ABFieldDate = __webpack_require__(19);
 
 var _ABFieldDate2 = _interopRequireDefault(_ABFieldDate);
 
-var _ABFieldImage = __webpack_require__(19);
+var _ABFieldBoolean = __webpack_require__(18);
+
+var _ABFieldBoolean2 = _interopRequireDefault(_ABFieldBoolean);
+
+var _ABFieldImage = __webpack_require__(20);
 
 var _ABFieldImage2 = _interopRequireDefault(_ABFieldImage);
 
@@ -2646,17 +2670,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Fields
  * A name => ABField  hash of the different ABFields available.
  */
-/* 
- * ABFieldManager
- * 
- * An interface for managing the different ABFields available in our AppBuilder.
- *
- */
+var Fields = {}; /* 
+                  * ABFieldManager
+                  * 
+                  * An interface for managing the different ABFields available in our AppBuilder.
+                  *
+                  */
 
-var Fields = {};
 Fields[_ABFieldString2.default.defaults().key] = _ABFieldString2.default;
 Fields[_ABFieldNumber2.default.defaults().key] = _ABFieldNumber2.default;
 Fields[_ABFieldDate2.default.defaults().key] = _ABFieldDate2.default;
+Fields[_ABFieldBoolean2.default.defaults().key] = _ABFieldBoolean2.default;
 
 Fields[_ABFieldImage2.default.defaults().key] = _ABFieldImage2.default;
 
@@ -2699,19 +2723,19 @@ exports.default = {
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(22);
+__webpack_require__(23);
 
-__webpack_require__(26);
+__webpack_require__(27);
 
-var _edittree = __webpack_require__(43);
+var _edittree = __webpack_require__(44);
 
 var _edittree2 = _interopRequireDefault(_edittree);
 
-var _editlist = __webpack_require__(42);
+var _editlist = __webpack_require__(43);
 
 var _editlist2 = _interopRequireDefault(_editlist);
 
-var _AppBuilder = __webpack_require__(48);
+var _AppBuilder = __webpack_require__(49);
 
 var _AppBuilder2 = _interopRequireDefault(_AppBuilder);
 
@@ -3153,7 +3177,9 @@ var ABModel = function () {
 			// if this object has some multilingual fields, translate the data:
 			var mlFields = this.object.multilingualFields();
 			if (mlFields.length) {
-				OP.Multilingual.unTranslate(values, values, mlFields);
+				if (values.translations) {
+					OP.Multilingual.unTranslate(values, values, mlFields);
+				}
 			}
 
 			return new Promise(function (resolve, reject) {
@@ -3630,6 +3656,31 @@ var ABObject = function () {
 			return headers;
 		}
 
+		// after a component has rendered, tell each of our fields to perform
+		// any custom display operations
+		// @param {Webix.DataStore} data a webix datastore of all the rows effected
+		//        by the render.
+
+	}, {
+		key: "customDisplays",
+		value: function customDisplays(data, App, DataTable) {
+			var _this5 = this;
+
+			var fields = this.fields();
+
+			var id = data.getFirstId();
+			while (id) {
+				var row = data.getItem(id);
+				fields.forEach(function (f) {
+					if (_this5.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
+						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+						f.customDisplay(row, App, node);
+					}
+				});
+				id = data.getNextId(id);
+			}
+		}
+
 		/**
    * @method isValidData
    * Parse through the given data and return an array of any invalid
@@ -3698,6 +3749,245 @@ exports.default = ABObject;
 
 /***/ }),
 /* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _ABField2 = __webpack_require__(2);
+
+var _ABField3 = _interopRequireDefault(_ABField2);
+
+var _ABFieldComponent = __webpack_require__(3);
+
+var _ABFieldComponent2 = _interopRequireDefault(_ABFieldComponent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * ABFieldBoolean
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * An ABFieldBoolean defines a boolean field type.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var ABFieldBooleanDefaults = {
+	key: 'boolean', // unique key to reference this specific DataField
+
+	icon: 'check-square-o', // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+
+	// menuName: what gets displayed in the Editor drop list
+	menuName: L('ab.dataField.boolean.menuName', '*Checkbox'),
+
+	// description: what gets displayed in the Editor description.
+	description: L('ab.dataField.boolean.description', '*A single checkbox that can be checked or unchecked.')
+};
+
+var defaultValues = {
+	default: 0
+};
+
+/**
+ * ABFieldBooleanComponent
+ *
+ * Defines the UI Component for this Data Field.  The ui component is responsible
+ * for displaying the properties editor, populating existing data, retrieving
+ * property values, etc.
+ */
+var ABFieldBooleanComponent = new _ABFieldComponent2.default({
+	fieldDefaults: ABFieldBooleanDefaults,
+
+	elements: function elements(App, field) {
+		// ids = field.idsUnique(ids, App);
+
+		return [{
+			name: "default",
+			view: "checkbox",
+			label: "Default",
+			labelPosition: "left",
+			labelWidth: 70,
+			labelRight: 'Uncheck',
+			css: "webix_table_checkbox",
+			on: {
+				onChange: function onChange(newVal, oldVal) {
+					this.define('labelRight', newVal ? 'Check' : 'Uncheck');
+					this.refresh();
+				}
+			}
+		}];
+	},
+
+	// defaultValues: the keys must match a .name of your elements to set it's default value.
+	defaultValues: defaultValues,
+
+	// rules: basic form validation rules for webix form entry.
+	// the keys must match a .name of your .elements for it to apply
+	rules: {},
+
+	// include additional behavior on default component operations here:
+	// The base routines will be processed first, then these.  Any results
+	// from the base routine, will be passed on to these:
+	logic: {
+
+		// isValid: function (ids, isValid) {
+
+		// }
+
+		// populate: function (ids, values) {
+		// 	if (values.settings.validation) {
+		// 		$$(ids.validateMinimum).enable();
+		// 		$$(ids.validateMaximum).enable();
+		// 	} else {
+		// 		$$(ids.validateMinimum).disable();
+		// 		$$(ids.validateMaximum).disable();
+		// 	}
+		// }
+
+	},
+
+	// perform any additional setup actions here.
+	// @param {obj} ids  the hash of id values for all the current form elements.
+	//					 it should have your elements + the default Header elements:
+	//						.label, .columnName, .fieldDescription, .showIcon
+	init: function init(ids) {}
+
+});
+
+var ABFieldBoolean = function (_ABField) {
+	_inherits(ABFieldBoolean, _ABField);
+
+	function ABFieldBoolean(values, object) {
+		_classCallCheck(this, ABFieldBoolean);
+
+		// we're responsible for setting up our specific settings:
+		var _this = _possibleConstructorReturn(this, (ABFieldBoolean.__proto__ || Object.getPrototypeOf(ABFieldBoolean)).call(this, values, object, ABFieldBooleanDefaults));
+
+		for (var dv in defaultValues) {
+			_this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
+
+		if (_this.settings.default != null) _this.settings.default = parseInt(_this.settings.default);
+		return _this;
+	}
+
+	// return the default values for this DataField
+
+
+	_createClass(ABFieldBoolean, [{
+		key: "isValid",
+
+
+		///
+		/// Instance Methods
+		///
+
+
+		value: function isValid() {
+
+			var validator = _get(ABFieldBoolean.prototype.__proto__ || Object.getPrototypeOf(ABFieldBoolean.prototype), "isValid", this).call(this);
+
+			// validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.name) );
+
+			return validator;
+		}
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABApplication instance
+   * into the values needed for saving to the DB.
+   *
+   * Most of the instance data is stored in .json field, so be sure to
+   * update that from all the current values of our child fields.
+   *
+   * @return {json}
+   */
+		// toObj () {
+
+		// 	var obj = super.toObj();
+
+		// 	// obj.settings = this.settings;  // <--  super.toObj()
+
+		// 	return obj;
+		// }
+
+
+		///
+		/// Working with Actual Object Values:
+		///
+
+		// return the grid column header definition for this instance of ABFieldBoolean
+
+	}, {
+		key: "columnHeader",
+		value: function columnHeader(isObjectWorkspace) {
+			var config = _get(ABFieldBoolean.prototype.__proto__ || Object.getPrototypeOf(ABFieldBoolean.prototype), "columnHeader", this).call(this, isObjectWorkspace);
+
+			config.editor = 'template';
+			config.template = '<div class="ab-boolean-display">{common.checkbox()}</div>';
+			config.css = 'center';
+			// config.sort = 'string';
+
+			return config;
+		}
+
+		/**
+   * @method isValidData
+   * Parse through the given data and return an error if this field's
+   * data seems invalid.
+   * @param {obj} data  a key=>value hash of the inputs to parse.
+   * @param {OPValidator} validator  provided Validator fn
+   * @return {array} 
+   */
+
+	}, {
+		key: "isValidData",
+		value: function isValidData(data, validator) {}
+	}], [{
+		key: "defaults",
+		value: function defaults() {
+			return ABFieldBooleanDefaults;
+		}
+
+		/*
+  * @function propertiesComponent
+  *
+  * return a UI Component that contains the property definitions for this Field.
+  *
+  * @param {App} App the UI App instance passed around the Components.
+  * @return {Component}
+  */
+
+	}, {
+		key: "propertiesComponent",
+		value: function propertiesComponent(App) {
+			return ABFieldBooleanComponent.component(App);
+		}
+	}]);
+
+	return ABFieldBoolean;
+}(_ABField3.default);
+
+exports.default = ABFieldBoolean;
+
+/***/ }),
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4398,7 +4688,7 @@ var ABFieldDate = function (_ABField) {
 exports.default = ABFieldDate;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4683,17 +4973,208 @@ var ABFieldImage = function (_ABField) {
 		/// Working with Actual Object Values:
 		///
 
+	}, {
+		key: "idCustomContainer",
+		value: function idCustomContainer(obj) {
+			return "#columnName#-#id#-image".replace('#id#', obj.id).replace('#columnName#', this.columnName);
+		}
+
 		// return the grid column header definition for this instance of ABFieldImage
 
 	}, {
 		key: "columnHeader",
 		value: function columnHeader(isObjectWorkspace) {
+			var _this3 = this;
+
 			var config = _get(ABFieldImage.prototype.__proto__ || Object.getPrototypeOf(ABFieldImage.prototype), "columnHeader", this).call(this, isObjectWorkspace);
 
-			config.editor = 'text'; // '[edit_type]'   for your unique situation
+			config.editor = false; // 'text';  // '[edit_type]'   for your unique situation
 			config.sort = 'string'; // '[sort_type]'   for your unique situation
 
+			if (this.settings.useWidth) {
+				config.width = this.settings.imageWidth;
+			}
+
+			// populate our default template:
+			config.template = function (obj) {
+
+				var imgDiv = ['<div id="#id#" class="ab-image-data-field">', _this3.imageTemplate(obj), '</div>'].join('');
+
+				return imgDiv.replace('#id#', _this3.idCustomContainer(obj));
+			};
+
 			return config;
+		}
+
+		/*
+   * @function customDisplay
+   * perform any custom display modifications for this field.  
+   * @param {object} row is the {name=>value} hash of the current row of data.
+   * @param {App} App the shared ui App object useful more making globally
+   *					unique id references.
+   * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+   */
+
+	}, {
+		key: "customDisplay",
+		value: function customDisplay(row, App, node) {
+			var _this4 = this;
+
+			// sanity check.
+			if (!node) {
+				return;
+			}
+
+			var idBase = App.unique(this.idCustomContainer(row));
+			var ids = {
+				container: idBase + '-container',
+				uploader: idBase + '-uploader',
+				icon: idBase + '-icon',
+				image: idBase + '-image'
+			};
+
+			// safety check:
+			// webix seems to crash if you specify a .container that doesn't exists:
+			// Note: when the template is first created, we don't have App.unique() 
+			var parentContainer = node.querySelector('#' + this.idCustomContainer(row)); // $$(this.idCustomContainer(obj));
+			if (parentContainer) {
+
+				parentContainer.innerHTML = '';
+				parentContainer.id = idBase; // change it to the unique one.
+
+				var imgHeight = 33;
+				if (this.settings.useHeight) {
+					imgHeight = parseInt(this.settings.imageHeight);
+				}
+
+				var imgWidth = 50;
+				if (this.settings.useWidth) {
+					imgWidth = parseInt(this.settings.imageWidth);
+				}
+				//// TODO: actually pay attention to the height and width when 
+				//// displaying the images.
+
+				// use a webix component for displaying the content.
+				// do this so I can use the progress spinner
+				var webixContainer = webix.ui({
+					view: 'template',
+					id: ids.container,
+					container: idBase,
+
+					template: this.imageTemplate(row),
+
+					borderless: true,
+					height: imgHeight,
+					width: imgWidth
+				});
+				webix.extend(webixContainer, webix.ProgressBar);
+
+				////
+				//// Prepare the Uploader
+				////
+
+				// The Server Side action key format for this Application:
+				var actionKey = 'opstool.AB_' + this.object.application.name.replace('_', '') + '.view';
+				var url = '/' + ['opsportal', 'image', this.object.application.name, actionKey, '1'].join('/');
+
+				var uploader = webix.ui({
+					view: "uploader",
+					id: ids.uploader,
+					apiOnly: true,
+					upload: url,
+					inputName: 'image',
+					multiple: false,
+					// formData:{
+					// 	appKey:application.name,
+					// 	permission:actionKey,
+					// 	isWebix:true,
+					// 	imageParam:'upload'
+					// },
+					on: {
+
+						// when a file is added to the uploader
+						onBeforeFileAdd: function onBeforeFileAdd(item) {
+
+							node.classList.remove('webix_invalid');
+							node.classList.remove('webix_invalid_cell');
+
+							// verify file type
+							var acceptableTypes = ['jpg', 'jpeg', 'bmp', 'png', 'gif'];
+							var type = item.type.toLowerCase();
+							if (acceptableTypes.indexOf(type) == -1) {
+								//// TODO: multilingual
+								webix.message("Only [" + acceptableTypes.join(", ") + "] images are supported");
+								return false;
+							}
+
+							// start progress indicator
+							webixContainer.showProgress({
+								type: "icon",
+								delay: 2000
+							});
+						},
+
+						// when upload is complete:
+						onFileUpload: function onFileUpload(item, response) {
+
+							webixContainer.hideProgress();
+							_this4.showImage(idBase, response.data.uuid);
+
+							// TODO: delete previous image from our OPsPortal service?
+
+							// update just this value on our current object.model
+							var values = {};
+							values[_this4.columnName] = response.data.uuid;
+							_this4.object.model().update(row.id, values).then(function () {}).catch(function (err) {
+
+								node.classList.add('webix_invalid');
+								node.classList.add('webix_invalid_cell');
+
+								OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+								console.error(err);
+							});
+						},
+
+						// if an error was returned
+						onFileUploadError: function onFileUploadError(item, response) {
+							OP.Error.log('Error loading image', response);
+							webixContainer.hideProgress();
+						}
+					}
+				});
+				uploader.addDropZone(webixContainer.$view);
+			}
+		}
+	}, {
+		key: "imageTemplate",
+		value: function imageTemplate(obj) {
+
+			// deault view is icon:
+			var iconDisplay = '';
+			var imageDisplay = 'display:none;';
+			var imageURL = '';
+
+			// if we have a value for this field, then switch to image:
+			var value = obj[this.columnName];
+			if (value && value != '') {
+				iconDisplay = 'display:none;';
+				imageDisplay = '';
+				imageURL = "background-image:url('/opsportal/image/" + this.object.application.name + "/" + obj[this.columnName] + "');";
+			}
+
+			return ['<div class="image-data-field-icon" style="text-align: center; ' + iconDisplay + '"><i class="fa fa-file-image-o fa-2x"></i></div>', '<div class="image-data-field-image" style="' + imageDisplay + ' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; ' + imageURL + '"></div>'].join('');
+		}
+	}, {
+		key: "showImage",
+		value: function showImage(id, uuid) {
+			var parentContainer = document.getElementById(id); // $$(this.idCustomContainer(obj));
+			if (parentContainer) {
+
+				parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
+				var image = parentContainer.querySelector('.image-data-field-image');
+				image.style.display = '';
+				image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name + "/" + uuid + "')";
+			}
 		}
 	}], [{
 		key: "defaults",
@@ -4741,7 +5222,7 @@ exports.default = ABFieldImage;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5213,7 +5694,7 @@ webix.editors.number = webix.extend({
 exports.default = ABFieldNumber;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5466,15 +5947,15 @@ var ABFieldString = function (_ABField) {
 exports.default = ABFieldString;
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(24);
+__webpack_require__(25);
 
-__webpack_require__(23);
+__webpack_require__(24);
 
 /*
  * AB Choose
@@ -5540,7 +6021,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6394,7 +6875,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6404,7 +6885,7 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(25);
+__webpack_require__(26);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6845,7 +7326,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6960,7 +7441,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6970,9 +7451,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(28);
+__webpack_require__(29);
 
-__webpack_require__(27);
+__webpack_require__(28);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7227,7 +7708,7 @@ OP.Component.extend('ab_work', function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7326,7 +7807,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7336,9 +7817,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(29);
+__webpack_require__(30);
 
-__webpack_require__(33);
+__webpack_require__(34);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7434,7 +7915,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7444,9 +7925,9 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(30);
+__webpack_require__(31);
 
-__webpack_require__(32);
+__webpack_require__(33);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7833,13 +8314,13 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(31);
+__webpack_require__(32);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -8017,7 +8498,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8037,7 +8518,8 @@ function L(key, altText) {
 var labels = {
 
 	component: {
-		placeholderName: L('ab.object.form.placeholderName', "*Object name")
+		placeholderName: L('ab.object.form.placeholderName', "*Object name"),
+		addNewObject: L('ab.object.form.addNewObject', "*Add Object")
 	}
 };
 
@@ -8070,13 +8552,21 @@ OP.Component.extend(idBase, function (App) {
 			},
 			elements: [{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.component.placeholderName, labelWidth: 70 }, {
 				margin: 5,
-				cols: [{
-					view: "button", id: ids.buttonCancel, value: labels.common.cancel,
+				cols: [{ fillspace: true }, {
+					view: "button",
+					id: ids.buttonCancel,
+					value: labels.common.cancel,
+					css: "ab-cancel-button",
+					autowidth: true,
 					click: function click() {
 						_logic.cancel();
 					}
 				}, {
-					view: "button", id: ids.buttonSave, value: labels.common.add, type: "form",
+					view: "button",
+					id: ids.buttonSave,
+					value: labels.component.addNewObject,
+					autowidth: true,
+					type: "form",
 					click: function click() {
 						return _logic.save();
 					}
@@ -8215,7 +8705,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8338,7 +8828,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8348,17 +8838,17 @@ var _ABApplication = __webpack_require__(1);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(34);
-
 __webpack_require__(35);
 
 __webpack_require__(36);
 
-__webpack_require__(38);
+__webpack_require__(37);
 
 __webpack_require__(39);
 
 __webpack_require__(40);
+
+__webpack_require__(41);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -8865,13 +9355,13 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(37);
+__webpack_require__(38);
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -9031,6 +9521,20 @@ OP.Component.extend(idBase, function (App) {
 		}
 
 		// webix.extend($$(ids.form), webix.ProgressBar);
+
+		// NOTE: register the onAfterRender() here, so it only registers
+		// one.
+		var DataTable = $$(ids.component);
+		var throttleOnAfterRender = null;
+		DataTable.attachEvent("onAfterRender", function (data) {
+
+			if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
+			throttleOnAfterRender = setTimeout(function () {
+				if (CurrentObject) {
+					CurrentObject.customDisplays(data, App, DataTable);
+				}
+			}, 150);
+		});
 	};
 
 	var CurrentObject = null; // current ABObject being displayed
@@ -9126,9 +9630,9 @@ OP.Component.extend(idBase, function (App) {
 					var patch = {};
 					patch[editor.column] = item[editor.column]; // NOTE: isValidData() might also condition the data for sending.state.value;
 
-					CurrentObject.model()
-					// .update(item.id, item)
-					.update(item.id, patch).then(function () {
+					CurrentObject.model().update(item.id, item)
+					// .update(item.id, patch)
+					.then(function () {
 
 						DataTable.updateItem(editor.row, item);
 						DataTable.clearSelection();
@@ -9151,9 +9655,8 @@ OP.Component.extend(idBase, function (App) {
 							}
 					});
 				} else {
+
 					validator.updateGrid(editor.row, DataTable);
-					// var errObj = OP.Form.toValidationObject(errors);
-					// OP.Grid.isValidationError(errObj, editor, DataTable);
 				}
 			} else {
 
@@ -9279,6 +9782,17 @@ OP.Component.extend(idBase, function (App) {
 					DataTable.refreshColumns();
 				}
 
+				// render custom displays:
+				// 				var throttleOnAfterRender = null;
+				// 				DataTable.attachEvent("onAfterRender", function(data){
+				// webix.message('onAfterRender check')
+				// 					if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
+				// 					throttleOnAfterRender = setTimeout(()=>{
+				// webix.message("onAfterRender()");
+				// 						CurrentObject.onAfterRender(data, App);
+				// 					}, 150);
+				// 				});
+
 				//// update DataTable Content
 
 				// Set the Model object with a condition / skip / limit, then
@@ -9394,7 +9908,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9662,7 +10176,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9920,7 +10434,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10119,7 +10633,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10444,7 +10958,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10932,7 +11446,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11390,7 +11904,7 @@ OP.Component.extend(idBase, function (App) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11420,7 +11934,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11492,7 +12006,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11566,7 +12080,7 @@ exports.default = { key: ComponentKey };
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11648,7 +12162,7 @@ function toComment(sourceMap) {
 }
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11743,10 +12257,10 @@ module.exports = function (css) {
 };
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(44)(undefined);
+exports = module.exports = __webpack_require__(45)(undefined);
 // imports
 
 
@@ -11757,7 +12271,7 @@ exports.push([module.i, ".webix_view, .webix_el_colorpicker input, .webix_el_com
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -11794,7 +12308,7 @@ var stylesInDom = {},
 	singletonElement = null,
 	singletonCounter = 0,
 	styleElementsInsertedAtTop = [],
-	fixUrls = __webpack_require__(45);
+	fixUrls = __webpack_require__(46);
 
 module.exports = function(list, options) {
 	if(typeof DEBUG !== "undefined" && DEBUG) {
@@ -12053,16 +12567,16 @@ function updateLink(linkElement, options, obj) {
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(46);
+var content = __webpack_require__(47);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(47)(content, {});
+var update = __webpack_require__(48)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {

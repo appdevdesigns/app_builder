@@ -307,15 +307,218 @@ OP.Dialog.Alert({
 	/// Working with Actual Object Values:
 	///
 
+	idCustomContainer(obj) {
+		return "#columnName#-#id#-image"
+			.replace('#id#', obj.id)
+			.replace('#columnName#', this.columnName);
+	}
+
+
 	// return the grid column header definition for this instance of ABFieldImage
 	columnHeader (isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.editor = 'text';  // '[edit_type]'   for your unique situation
+		config.editor = false;  // 'text';  // '[edit_type]'   for your unique situation
 		config.sort   = 'string' // '[sort_type]'   for your unique situation
+
+		if (this.settings.useWidth) {
+			config.width = this.settings.imageWidth;
+		}
+
+		// populate our default template:
+		config.template = (obj) => {
+
+			var imgDiv = [
+				'<div id="#id#" class="ab-image-data-field">',
+				this.imageTemplate(obj),
+				'</div>'
+			].join('');
+
+			return imgDiv
+				.replace('#id#', this.idCustomContainer(obj) )
+		}
 
 		return config;
 	}
+
+
+	/*
+	 * @function customDisplay
+	 * perform any custom display modifications for this field.  
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customDisplay(row, App, node) {
+		// sanity check.
+		if (!node) { return }
+
+
+		var idBase = App.unique(this.idCustomContainer(row));
+		var ids = {
+			container:idBase+'-container',
+			uploader: idBase+'-uploader',
+			icon: idBase+'-icon',
+			image: idBase+'-image'
+		}
+
+
+		// safety check:
+		// webix seems to crash if you specify a .container that doesn't exists:
+		// Note: when the template is first created, we don't have App.unique() 
+		var parentContainer = node.querySelector('#'+this.idCustomContainer(row)); // $$(this.idCustomContainer(obj));
+		if(parentContainer) {
+
+			parentContainer.innerHTML = '';
+			parentContainer.id = idBase;	// change it to the unique one.
+
+			var imgHeight = 33;
+			if (this.settings.useHeight){
+				imgHeight = parseInt(this.settings.imageHeight);
+			}
+
+			var imgWidth = 50;
+			if (this.settings.useWidth){
+				imgWidth = parseInt(this.settings.imageWidth);
+			}
+//// TODO: actually pay attention to the height and width when 
+//// displaying the images.
+
+			// use a webix component for displaying the content.
+			// do this so I can use the progress spinner
+			var webixContainer = webix.ui({
+				view:'template',
+				id: ids.container,
+				container: idBase,
+				
+				template:this.imageTemplate(row),
+
+				borderless:true,
+				height: imgHeight,
+				width:  imgWidth
+			});
+			webix.extend(webixContainer, webix.ProgressBar);
+
+			////
+			//// Prepare the Uploader
+			////
+
+			// The Server Side action key format for this Application:
+			var actionKey = 'opstool.AB_'+this.object.application.name.replace('_','')+'.view';
+			var url = '/'+[ 'opsportal', 'image', this.object.application.name, actionKey, '1'].join('/');
+
+			var uploader = webix.ui({ 
+			    view:"uploader",  
+			    id:ids.uploader, 
+			    apiOnly: true, 
+			    upload:url,
+			    inputName:'image',
+			    multiple: false,
+			    // formData:{
+			    // 	appKey:application.name,
+			    // 	permission:actionKey,
+			    // 	isWebix:true,
+			    // 	imageParam:'upload'
+			    // },
+			    on: {
+
+			    	// when a file is added to the uploader
+			    	onBeforeFileAdd:function(item){
+
+						node.classList.remove('webix_invalid');
+						node.classList.remove('webix_invalid_cell');
+						
+			    		// verify file type
+			    		var acceptableTypes = ['jpg', 'jpeg', 'bmp', 'png', 'gif'];
+					    var type = item.type.toLowerCase();
+					    if (acceptableTypes.indexOf(type) == -1){
+//// TODO: multilingual
+webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
+					        return false;
+					    }
+
+						// start progress indicator
+						webixContainer.showProgress({
+						   type:"icon",
+						   delay:2000
+						});
+					},
+
+			    	// when upload is complete:
+			    	onFileUpload:(item, response)=>{
+						
+						webixContainer.hideProgress();
+						this.showImage(idBase, response.data.uuid);
+
+// TODO: delete previous image from our OPsPortal service?
+						
+						// update just this value on our current object.model
+						var values = {};
+						values[this.columnName] = response.data.uuid
+						this.object.model().update(row.id, values)
+						.then(()=>{
+
+						})
+						.catch((err)=>{
+
+							node.classList.add('webix_invalid');
+							node.classList.add('webix_invalid_cell');
+						
+							OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
+							console.error(err);
+						})
+
+					},
+
+					// if an error was returned
+					onFileUploadError:function(item, response){
+						OP.Error.log('Error loading image', response);
+						webixContainer.hideProgress();
+					}
+			    }
+			});
+			uploader.addDropZone(webixContainer.$view);
+
+		}	
+	}
+
+
+	imageTemplate(obj) {
+
+		// deault view is icon:
+		var iconDisplay = '';
+		var imageDisplay = 'display:none;';
+		var imageURL    = ''
+		
+		// if we have a value for this field, then switch to image:
+		var value = obj[this.columnName];
+		if ((value) && (value != '')) {
+			iconDisplay = 'display:none;';
+			imageDisplay = '';
+			imageURL    = "background-image:url('/opsportal/image/" + this.object.application.name+"/"+obj[this.columnName]+"');"
+		}
+
+		return [
+			'<div class="image-data-field-icon" style="text-align: center; '+iconDisplay+'"><i class="fa fa-file-image-o fa-2x"></i></div>',
+			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'"></div>',
+		].join('');
+
+	}
+
+
+	showImage(id, uuid) {
+		var parentContainer = document.getElementById(id); // $$(this.idCustomContainer(obj));
+		if(parentContainer) {
+
+			parentContainer.querySelector('.image-data-field-icon').style.display = 'none';
+			var image = parentContainer.querySelector('.image-data-field-image');
+			image.style.display = '';
+			image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+uuid+"')";
+
+		}
+	}
+
 
 }
 

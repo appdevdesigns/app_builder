@@ -163,12 +163,12 @@ console.log('... update application: ', updatedRecord);
                         callback();
                     }, callback);
             },
-            function (callback) {
-                ABObject.destroy({ application: appIds })
-                    .then(function () {
-                        callback();
-                    }, callback);
-            },
+            // function (callback) {
+            //     ABObject.destroy({ application: appIds })
+            //         .then(function () {
+            //             callback();
+            //         }, callback);
+            // },
             function (callback) {
                 ABPage.destroy({ application: appIds })
                     .then(function () {
