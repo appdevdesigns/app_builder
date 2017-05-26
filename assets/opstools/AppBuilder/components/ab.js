@@ -16,6 +16,7 @@ import './ab_work'
 // Import our Custom Components here:
 import EditTree from '../webix_custom_components/edittree'
 import EditList from '../webix_custom_components/editlist'
+import DateTimePicker from '../webix_custom_components/datetimepicker'
 
 import style from "../AppBuilder.css"
 
@@ -72,6 +73,7 @@ OP.Component.extend('ab', function(App) {
 	// make instances of our Custom Components:
 	OP.CustomComponent[EditTree.key](App, 'edittree'); // ->  App.custom.edittree  now exists
 	OP.CustomComponent[EditList.key](App, 'editlist'); // ->  App.custom.editlist  now exists
+	OP.CustomComponent[DateTimePicker.key](App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
 
 
 

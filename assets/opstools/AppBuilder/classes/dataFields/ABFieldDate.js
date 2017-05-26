@@ -31,15 +31,19 @@ var defaultValues = {
 	includeTime: 0,
 	defaultCurrentDate: 0,
 	defaultDate: "",
-	dayFormat: "DD",
+	dayFormat: "%d",
 	dayOrder: 1,
 	dayDelimiter: "slash",
-	monthFormat: "MM",
+	monthFormat: "%m",
 	monthOrder: 2,
 	monthDelimiter: "slash",
-	yearFormat: "YYYY",
+	yearFormat: "%Y",
 	yearOrder: 3,
 	yearDelimiter: "slash",
+
+	hourFormat: '%h',
+	periodFormat: 'none',
+	timeDelimiter: 'colon',
 
 	validateCondition: "none",
 	validateRangeUnit: "days",
@@ -55,6 +59,7 @@ var ids = {
 
 	dateDisplay: 'ab-date-display',
 
+	// Date
 	dayOrder: 'ab-date-day-order',
 	monthOrder: 'ab-date-month-order',
 	yearOrder: 'ab-date-year-order',
@@ -64,6 +69,13 @@ var ids = {
 	dayDelimiter: 'ab-date-day-delimiter',
 	monthDelimiter: 'ab-date-month-delimiter',
 	yearDelimiter: 'ab-date-year-delimiter',
+
+	// Time
+	includeTime: 'ab-date-include-time',
+	timeFormat: 'ab-date-time-format',
+	hourFormat: 'ab-date-hour-format',
+	periodFormat: 'ab-date-period-format',
+	timeDelimiter: 'ab-date-time-delimiter',
 
 	// validation
 	validateCondition: 'ab-date-validate-condition',
@@ -82,7 +94,8 @@ var delimiterList = [
 	{ id: 'comma', value: "Comma", sign: "," },
 	{ id: 'slash', value: "Slash", sign: "/" },
 	{ id: 'space', value: "Space", sign: " " },
-	{ id: 'dash', value: "Dash", sign: "-" }
+	{ id: 'dash', value: "Dash", sign: "-" },
+	{ id: 'colon', value: "Colon", sign: ":" },
 ];
 
 
@@ -92,28 +105,39 @@ function getDelimiterSign(text) {
 		return item.id == text;
 	})[0];
 
-	return delimiterItem ? delimiterItem.sign : null;
+	return delimiterItem ? delimiterItem.sign : '';
 }
 
 function getDateFormat(setting) {
-	var momentFormat = "";
+	var dateFormat = "";
 
+	// Date format
 	for (var i = 1; i <= 3; i++) {
 		if (setting.dayOrder == i) {
-			momentFormat += setting.dayFormat;
-			momentFormat += (i != 3) ? setting.dayDelimiter : '';
+			dateFormat += setting.dayFormat;
+			dateFormat += (i != 3) ? getDelimiterSign(setting.dayDelimiter) : '';
 		}
 		if (setting.monthOrder == i) {
-			momentFormat += setting.monthFormat;
-			momentFormat += (i != 3) ? setting.monthDelimiter : '';
+			dateFormat += setting.monthFormat;
+			dateFormat += (i != 3) ? getDelimiterSign(setting.monthDelimiter) : '';
 		}
 		if (setting.yearOrder == i) {
-			momentFormat += setting.yearFormat;
-			momentFormat += (i != 3) ? setting.yearDelimiter : '';
+			dateFormat += setting.yearFormat;
+			dateFormat += (i != 3) ? getDelimiterSign(setting.yearDelimiter) : '';
 		}
 	}
 
-	return moment(new Date()).format(momentFormat);
+	// Time format
+	if (setting.includeTime) {
+		dateFormat += (' {hour}{delimiter}{minute}{period}'
+			.replace('{hour}', setting.hourFormat)
+			.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
+			.replace('{minute}', '%i')
+			.replace('{period}', setting.periodFormat != 'none' ? setting.periodFormat : '')
+		);
+	}
+
+	return dateFormat;
 }
 
 function refreshDateDisplay() {
@@ -124,12 +148,19 @@ function refreshDateDisplay() {
 		dayFormat: $$(ids.dayFormat).getValue(),
 		monthFormat: $$(ids.monthFormat).getValue(),
 		yearFormat: $$(ids.yearFormat).getValue(),
-		dayDelimiter: getDelimiterSign($$(ids.dayDelimiter).getValue()),
-		monthDelimiter: getDelimiterSign($$(ids.monthDelimiter).getValue()),
-		yearDelimiter: getDelimiterSign($$(ids.yearDelimiter).getValue()),
+		dayDelimiter: $$(ids.dayDelimiter).getValue(),
+		monthDelimiter: $$(ids.monthDelimiter).getValue(),
+		yearDelimiter: $$(ids.yearDelimiter).getValue(),
+
+		includeTime: $$(ids.includeTime).getValue(),
+		hourFormat: $$(ids.hourFormat).getValue(),
+		timeDelimiter: $$(ids.timeDelimiter).getValue(),
+		periodFormat: $$(ids.periodFormat).getValue(),
 	});
 
-	$$(ids.dateDisplay).setValue(dateFormat);
+	var dateDisplay = webix.Date.dateToStr(dateFormat)(new Date());
+
+	$$(ids.dateDisplay).setValue(dateDisplay);
 }
 
 
@@ -150,6 +181,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 			{
 				view: "checkbox",
 				name: "includeTime",
+				id: ids.includeTime,
 				labelRight: "Include time",
 				labelWidth: 0,
 				on: {
@@ -162,6 +194,13 @@ var ABFieldDateComponent = new ABFieldComponent({
 							timepicker: newVal ? true : false,
 							disabled: $$(ids.currentToDefault).getValue() == true
 						}, $$(ids.default));
+
+						refreshDateDisplay();
+
+						if (newVal)
+							$$(ids.timeFormat).show();
+						else
+							$$(ids.timeFormat).hide();
 					}
 				}
 			},
@@ -194,7 +233,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 					{
 						view: 'label',
 						label: 'Display',
-						css: 'ab-text-bold'
+						css: 'ab-text-bold',
+						width: 80
 					},
 					{
 						view: 'label',
@@ -221,14 +261,14 @@ var ABFieldDateComponent = new ABFieldComponent({
 									id: ids.dayFormat,
 									label: "Format",
 									labelWidth: 100,
-									value: 'D',
+									value: '%d',
 									options: [
-										{ id: 'D', value: "1 2 ... 30 31" },
-										{ id: 'Do', value: "1st 2nd ... 30th 31st" },
-										{ id: 'DD', value: "01 02 ... 30 31" },
-										{ id: 'dd', value: "Su Mo ... Fr Sa" },
-										{ id: 'ddd', value: "Sun Mon ... Fri Sat" },
-										{ id: 'dddd', value: "Sunday Monday ... Friday Saturday" },
+										{ id: '%d', value: "1 2 ... 30 31" },
+										// { id: 'Do', value: "1st 2nd ... 30th 31st" },
+										{ id: '%j', value: "01 02 ... 30 31" },
+										// { id: 'dd', value: "Su Mo ... Fr Sa" },
+										{ id: '%D', value: "Sun Mon ... Fri Sat" },
+										{ id: '%l', value: "Sunday Monday ... Friday Saturday" },
 									],
 									on: {
 										'onChange': function (newValue, oldValue) {
@@ -284,13 +324,13 @@ var ABFieldDateComponent = new ABFieldComponent({
 									id: ids.monthFormat,
 									label: "Format",
 									labelWidth: 100,
-									value: 'MM',
+									value: '%m',
 									options: [
-										{ id: 'M', value: "1 2 ... 11 12" },
-										{ id: 'Mo', value: "1st 2nd ... 11th 12th" },
-										{ id: 'MM', value: "01 02 ... 11 12" },
-										{ id: 'MMM', value: "Jan Feb ... Nov Dec" },
-										{ id: 'MMMM', value: "January February ... November December" }
+										{ id: '%n', value: "1 2 ... 11 12" },
+										// { id: 'Mo', value: "1st 2nd ... 11th 12th" },
+										{ id: '%m', value: "01 02 ... 11 12" },
+										{ id: '%M', value: "Jan Feb ... Nov Dec" },
+										{ id: '%F', value: "January February ... November December" }
 									],
 									on: {
 										'onChange': function (newValue, oldValue) {
@@ -346,10 +386,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 									id: ids.yearFormat,
 									label: "Format",
 									labelWidth: 100,
-									value: 'YYYY',
+									value: '%Y',
 									options: [
-										{ id: 'YY', value: "70 71 ... 29 30" },
-										{ id: 'YYYY', value: "1970 1971 ... 2029 2030" },
+										{ id: '%y', value: "70 71 ... 29 30" },
+										{ id: '%Y', value: "1970 1971 ... 2029 2030" },
 
 									],
 									on: {
@@ -385,6 +425,69 @@ var ABFieldDateComponent = new ABFieldComponent({
 									vertical: true,
 									options: delimiterList,
 									value: 'slash',
+									on: {
+										'onChange': function (newValue, oldValue) {
+											refreshDateDisplay();
+										}
+									}
+								}
+							]
+						}
+					},
+
+					// Time
+					{
+						id: ids.timeFormat,
+						hidden: true,
+						header: "Time",
+						body: {
+							rows: [
+								{
+									view: "richselect",
+									name: "hourFormat",
+									id: ids.hourFormat,
+									label: "Hour",
+									labelWidth: 100,
+									value: '%h',
+									options: [
+										{ id: '%h', value: "00 01 ... 10 11" },
+										{ id: '%g', value: "0 1 ... 10 11" },
+										{ id: '%H', value: "00 01 ... 22 23" },
+										{ id: '%G', value: "0 1 ... 22 23" }
+									],
+									on: {
+										'onChange': function (newValue, oldValue) {
+											refreshDateDisplay();
+										}
+									}
+								},
+								{
+									view: "richselect",
+									name: "periodFormat",
+									id: ids.periodFormat,
+									label: "Period",
+									labelWidth: 100,
+									value: 'none',
+									options: [
+										{ id: 'none', value: "[none]" },
+										{ id: '%a', value: "am pm" },
+										{ id: '%A', value: "AM PM" }
+									],
+									on: {
+										'onChange': function (newValue, oldValue) {
+											refreshDateDisplay();
+										}
+									}
+								},
+								{
+									view: "radio",
+									name: "timeDelimiter",
+									id: ids.timeDelimiter,
+									label: "Delimiter",
+									labelWidth: 100,
+									vertical: true,
+									options: delimiterList,
+									value: 'colon',
 									on: {
 										'onChange': function (newValue, oldValue) {
 											refreshDateDisplay();
@@ -578,9 +681,9 @@ var ABFieldDateComponent = new ABFieldComponent({
 	// from the base routine, will be passed on to these:
 	logic: {
 
-		isValid: function (ids, isValid) {
+		// isValid: function (ids, isValid) {
 
-		}
+		// }
 
 		// populate: function (ids, values) {
 		// 	if (values.settings.validation) {
@@ -688,33 +791,39 @@ class ABFieldDate extends ABField {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.editor = 'date';
+		if (this.settings.includeTime)
+			config.editor = 'datetime';
+		else
+			config.editor = 'date';
+
 		config.sort = 'string';
-		
+
 
 		// NOTE: it seems that the default value is a string in ISO format.
 
 		//// NOTE: webix seems unable to parse ISO string into => date here.
 		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
-		config.format = function (d) {
-			if ((d == '') || (typeof d == 'undefined')) {
+		config.format = (d) => {
+			if ((d == '') || (d == null)) {
 				return '';
 			}
 			// convert ISO string -> Date() -> our formatted string
 
-// TODO: pull format from settings.
-			return webix.Date.dateToStr('%d %M %Y')(new Date(d));  
-		}
+			// pull format from settings.
+			var dateFormat = getDateFormat(this.settings);
+
+			return webix.Date.dateToStr(dateFormat)(new Date(d));
+		};
 
 
-		config.editFormat = function(d) {
+		config.editFormat = (d) => {
 			// this routine needs to return a Date() object for the editor to work with.
 
 			// if d is not set, return a default Date() value.
-			if ((d == '') || (typeof d == 'undefined')) {
+			if ((d == '') || (d == null)) {
 // TODO: setup default date from settings:
-				return new Date();	
+				return '';
 			}
 
 			// else retun the actual ISO string => Date() value
@@ -728,6 +837,29 @@ class ABFieldDate extends ABField {
 
 
 	/**
+	 * @method defaultValue
+	 * insert a key=>value pair that represent the default value
+	 * for this field.
+	 * @param {obj} values a key=>value hash of the current values.
+	 */
+	defaultValue(values) {
+		// if no default value is set, then don't insert a value.
+		if (values[this.columnName] == null) {
+			// Set current date as default
+			if (this.settings.defaultCurrentDate) {
+				values[this.columnName] = new Date();
+			}
+			// Specfic default date
+			else if (this.settings.defaultDate != null && this.settings.defaultDate.length > 0) {
+				values[this.columnName] = new Date(this.settings.defaultDate);
+			}
+		}
+	}
+
+
+
+
+	/**
 	 * @method isValidData
 	 * Parse through the given data and return an error if this field's
 	 * data seems invalid.
@@ -737,7 +869,7 @@ class ABFieldDate extends ABField {
 	 */
 	isValidData(data, validator) {
 
-		if (typeof data[this.columnName] != 'undefined') {
+		if (data[this.columnName] != null) {
 			var value = data[this.columnName];
 
 			if (!(value instanceof Date)) {
