@@ -426,6 +426,18 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 
 
 		/**
+		 * @function rowAdd()
+		 *
+		 * When our [add row] button is pressed, alert our DataTable
+		 * component to add a row.
+		 */
+		rowAdd:function() {
+			DataTable.addRow();
+		},
+
+
+
+		/**
 		 * @function show()
 		 *
 		 * Show this component.

@@ -17,7 +17,8 @@ function L(key, altText) {
 var labels = {
 
 	component: {
-
+		confirmDeleteRowTitle : L('ab.object.deleteRow.title', "*Delete data"),
+		confirmDeleteRowMessage : L('ab.object.deleteRow.message', "*Do you want to delete this row?"),
 	}
 }
 
@@ -184,6 +185,57 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 		});
 
+
+		// Process our onItemClick events. 
+		// this is a good place to check if our delete/trash icon was clicked.
+		DataTable.attachEvent("onItemClick", function (id, e, node) {
+
+			// make sure we have an object selected before processing this.
+			if (!CurrentObject) { return; }
+
+
+			// if this was our trash icon:
+			if (e.target.className.indexOf('trash') > -1) {
+
+				OP.Dialog.Confirm({
+					title: labels.component.confirmDeleteRowTitle,
+					text:  labels.component.confirmDeleteRowMessage,
+					callback: function (result) {
+						if (result) {
+
+							CurrentObject.model()
+							.delete(id)
+							.then((response)=>{
+
+								if (response.numRows > 0) {
+									DataTable.remove(id);
+									DataTable.clearSelection();
+								} else {
+
+									OP.Dialog.Alert({
+										text:'No rows were effected.  This does not seem right.'
+									})
+//// TODO: what do we do here?
+								}
+							})
+							.catch((err)=>{
+
+								OP.Error.log('Error deleting item:', {error:err});
+
+//// TODO: what do we do here?	
+							})
+						}
+
+						DataTable.clearSelection();
+						return true;
+					}
+				});
+			}	
+			
+		});
+
+
+
 	}
 
 
@@ -267,9 +319,6 @@ console.error('!! ToDo: onAfterColumnHide()');
 			
 			if (state.value != state.old) {
 
-
-//// LEFT OFF:
-// client side editor: ABFieldImage,
 
 
 
@@ -445,8 +494,20 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 
 				//// update DataTable structure:
+				// get column list from our CurrentObject
 				var columnHeaders = CurrentObject.columnHeaders(true);
+
+				// add the delete / Trash column
+				columnHeaders.push({
+					id: "appbuilder_trash",
+					header: "",
+					width: 40,
+					template: "<span class='trash'>{common.trashIcon()}</span>",
+					css: { 'text-align': 'center' }
+				})
 				DataTable.refreshColumns(columnHeaders)
+
+
 				// freeze columns:
 				if (CurrentObject.workspaceFrozenColumnID != "") {
 					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
@@ -483,6 +544,22 @@ console.error('!! ToDo: onAfterColumnHide()');
 				.limit(30)
 				.loadInto(DataTable);
 			}
+		},
+
+
+		/**
+		 * @function rowAdd()
+		 *
+		 * add a new row to the data table
+		 */
+		rowAdd:function() {
+			var emptyObj = CurrentObject.defaultValues();
+			CurrentObject.model()
+			.create(emptyObj)
+			.then((obj)=>{
+				var DataTable = $$(ids.component);
+				DataTable.add(obj, 0);
+			})
 		},
 
 
@@ -527,6 +604,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 		// interface methods for parent component:
 		objectLoad: _logic.objectLoad,
 		refresh: _logic.refresh,
+		addRow: _logic.rowAdd,
 
 		// expose data for badge on frozen button
 		getColumnIndex: _logic.getColumnIndex,

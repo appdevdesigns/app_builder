@@ -473,6 +473,24 @@ export default class ABObject {
 
 
 	/**
+	 * @method defaultValues
+	 * Collect a hash of key=>value pairs that represent the default values 
+	 * from each of our fields.
+	 * @param {obj} data a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	defaultValues() {
+		var values = {};
+		this.fields().forEach((f) => {
+			f.defaultValue(values);
+		})
+
+		return values;
+	}
+
+
+
+	/**
 	 * @method isValidData
 	 * Parse through the given data and return an array of any invalid
 	 * value errors.

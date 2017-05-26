@@ -23,9 +23,101 @@ var reloading = null;
 
 module.exports = {
 
-    create: function(req, res) {
-sails.log.error('!!!! TODO: create() ');
+    create: function(req, res) {   
+
+
+        AppBuilder.routes.verifyAndReturnObject(req, res)
+        .then(function(object){
+
+
+            var allParams = req.allParams();
+            sails.log.verbose('ABModelController.create(): allParams:', allParams);
+
+            // return the parameters from the input params that relate to this object
+            var createParams = object.requestParams(allParams);  
+
+
+            var validationErrors = object.isValidData(createParams);
+            if (validationErrors.length == 0) {
+
+                // this is a create operation, so ... 
+                createParams.created_at = createParams.updated_at = (new Date()).toISOString();
+
+                sails.log.verbose('ABModelController.create(): createParams:', createParams);
+
+                var query = object.model().query();
+
+                query.insert(createParams)
+                .then((newObj)=>{
+
+                    res.AD.success(newObj);
+
+                }, (err)=>{
+
+                    // handle invalid values here:
+                    if (err instanceof ValidationError) {
+
+//// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
+
+// return an invalid values response:
+var errorResponse = {
+    error:'E_VALIDATION',
+    invalidAttributes:{
+
+    }
+}
+
+var attr = errorResponse.invalidAttributes;
+
+for(var e in err.data) {
+    attr[e] = attr[e] || [];
+    err.data[e].forEach((eObj)=>{
+        eObj.name = e;
+        attr[e].push(eObj);
+    })
+}
+
+                        res.AD.error(errorResponse);
+                    }
+
+                })
+                .catch((err)=>{
+console.log('... catch(err) !');
+
+                    if (!(err instanceof ValidationError)) {
+                        ADCore.error.log('Error performing update!', {error:err})
+                        res.AD.error(err);
+                        sails.log.error('!!!! error:', err);
+                    }
+                })
+
+
+
+            } else {
+
+                // return an invalid values response:
+                var errorResponse = {
+                    error:'E_VALIDATION',
+                    invalidAttributes:{
+
+                    }
+                }
+
+                var attr = errorResponse.invalidAttributes;
+
+                validationErrors.forEach((e)=>{
+                    attr[e.name] = attr[e.name] || [];
+                    attr[e.name].push(e);
+                })
+
+                res.AD.error(errorResponse);
+            }
+            
+        })
+
     },
+
+
 
     /**
      * find
@@ -112,14 +204,55 @@ sails.log.error('!!!! TODO: create() ');
 
 
     delete: function(req, res) {
-sails.log.error('!!!! TODO: delete() ');
+
+        var id = req.param('id', -1);
+
+
+        if (id == -1) {
+            var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
+            invalidError.details = 'missing .id';
+            sails.log.error(invalidError);
+            res.AD.error(invalidError, 400);
+            return;
+        }
+
+        AppBuilder.routes.verifyAndReturnObject(req, res)
+        .then(function(object){
+
+
+                object.model().query()
+                .deleteById(id)
+                .then((numRows)=>{
+
+                    res.AD.success({numRows:numRows});
+
+                }, (err)=>{
+
+// console.log('...  (err) handler!', err);
+
+                    res.AD.error(err);
+                    
+
+                })
+                .catch((err)=>{
+// console.log('... catch(err) !');
+
+                    if (!(err instanceof ValidationError)) {
+                        ADCore.error.log('Error performing update!', {error:err})
+                        res.AD.error(err);
+                        sails.log.error('!!!! error:', err);
+                    }
+                })
+
+        })
+
     },
 
 
     update: function(req, res) {
 
         var id = req.param('id', -1);
-console.log('... id:', id);
+
 
         if (id == -1) {
             var invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
@@ -161,6 +294,8 @@ console.log('...  (err) handler!', err);
 
                     // handle invalid values here:
                     if (err instanceof ValidationError) {
+
+//// TODO: refactor these invalid data handlers to a common OP.Validation.toErrorResponse(err)
 
 // return an invalid values response:
 var errorResponse = {

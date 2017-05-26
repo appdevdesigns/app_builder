@@ -440,6 +440,22 @@ class ABFieldNumber extends ABField {
 
 
 	/**
+	 * @method defaultValue
+	 * insert a key=>value pair that represent the default value
+	 * for this field.
+	 * @param {obj} values a key=>value hash of the current values.
+	 */
+	defaultValue(values) {
+		
+		// if no default value is set, then don't insert a value.
+		if (this.settings.numberDefault != '') {
+			values[this.columnName] = this.settings.numberDefault;
+		}
+	}
+
+
+
+	/**
 	 * @method isValidData
 	 * Parse through the given data and return an error if this field's
 	 * data seems invalid.

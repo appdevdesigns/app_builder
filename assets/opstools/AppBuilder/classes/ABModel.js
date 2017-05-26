@@ -66,11 +66,76 @@ export default class ABModel {
 		.replace('#objID#', this.object.id)
 	}
 
-	modelURLUpdate ( id ) {
+	modelURLItem ( id ) {
 		return '/app_builder/model/application/#appID#/object/#objID#/#id#'
 		.replace('#appID#', this.object.application.id)
 		.replace('#objID#', this.object.id)
 		.replace('#id#', id);
+	}
+
+
+
+
+
+
+
+
+
+	/**
+	 * @method create
+	 * update model values on the server.
+	 */
+	create(values) {
+
+		// if this object has some multilingual fields, translate the data:
+		var mlFields = this.object.multilingualFields();
+		if (mlFields.length) {
+			if (values.translations) {
+				OP.Multilingual.unTranslate(values, values, mlFields);
+			}
+		}
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Service.post({
+					url:this.modelURL(),
+					params:values
+				})
+				.then((data)=>{
+
+					resolve(data);
+				})
+				.catch(reject);
+
+			}
+		)
+
+	}
+
+
+	/**
+	 * @method delete
+	 * remove this model instance from the server
+	 * @param {integer} id  the .id of the instance to remove.
+	 * @return {Promise}
+	 */
+	delete(id) {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Service['delete']({
+					url:this.modelURLItem(id)
+				})
+				.then((data)=>{
+					resolve(data);
+				})
+				.catch(reject);
+
+			}
+		)
+
 	}
 
 
@@ -212,7 +277,7 @@ console.error('!!!!!', err);
 	 */
 	update(id, values) {
 
-// if this object has some multilingual fields, translate the data:
+		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		if (mlFields.length) {
 			if (values.translations) {
@@ -224,11 +289,10 @@ console.error('!!!!!', err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url:this.modelURLUpdate( id ),
+					url:this.modelURLItem( id ),
 					params:values
 				})
 				.then((data)=>{
-
 					resolve(data);
 				})
 				.catch(reject);
