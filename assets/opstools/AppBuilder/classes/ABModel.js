@@ -206,7 +206,14 @@ export default class ABModel {
 			// catch the event where data is requested:
 			// here we will do our own findAll() so we can persist
 			// the provided .where condition.
-			DT.attachEvent("onDataRequest", (start, count) => {
+
+			// oh yeah, and make sure to remove any existing event handler when we 
+			// perform a new .loadInto()
+			DT.___AD = DT.___AD || {};
+			if( DT.___AD.onDataRequestEvent) {
+				DT.detachEvent(DT.___AD.onDataRequestEvent);
+			}
+			DT.___AD.onDataRequestEvent = DT.attachEvent("onDataRequest", (start, count) => {
 				
 				var cond = {
 					where:this._where,

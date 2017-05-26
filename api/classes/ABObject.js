@@ -467,6 +467,18 @@ console.error('TODO: ABObject.destroy()');
 	}
 
 
+	/**
+	 * @method modelRefresh
+	 * when the definition of a model changes, we need to clear our cached
+	 * model definitions.
+	 * NOTE: called from our ABField.migrateXXX methods.
+	 */
+	modelRefresh() {
+
+		var tableName = this.dbTableName();
+		delete __ModelPool[tableName];
+	}
+
 
 	/**
 	 * @method requestParams

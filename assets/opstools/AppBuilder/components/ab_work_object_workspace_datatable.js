@@ -465,7 +465,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 			// save our EditNode & EditField:
 			EditNode = node;
 
-			EditField = CurrentObject.fields(function(f){ return f.id == id.column; })[0];
+			EditField = CurrentObject.fields(function(f){ return f.columnName == id.column; })[0];
 			if (EditField) {
 
 				// show the popup

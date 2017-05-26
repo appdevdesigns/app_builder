@@ -234,6 +234,9 @@ function simpleFieldOperation(req, res, operation) {
         ABMigration[operation](field)
         .then(function(){
 
+            // make sure this field's object's model cache is reset
+            field.object.modelRefresh();
+
             res.AD.success({ good:'job'});
 
         })
