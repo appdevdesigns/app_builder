@@ -5,36 +5,38 @@
  *
  */
 
-// import OP from "../../OP/OP"
+import ABFieldBase from "./ABFieldBase"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class ABField {
+export default class ABField extends ABFieldBase {
 
     constructor(values, object, fieldDefaults) {
 
-    	// NOTE: setup this first so later we can use .fieldType(), .fieldIcon()
-    	this.defaults = fieldDefaults;
+    	super(values, object, fieldDefaults);
+
+   //  	// NOTE: setup this first so later we can use .fieldType(), .fieldIcon()
+   //  	this.defaults = fieldDefaults;
 
 
-    	/*
-  		{
-  			id:'uuid',					// uuid value for this obj
-  			key:'fieldKey',				// unique key for this Field
-  			icon:'font',				// fa-[icon] reference for an icon for this Field Type
-  			label:'',					// pulled from translation
-			columnName:'column_name',	// a valid mysql table.column name
-			settings: {					// unique settings for the type of field
-				showIcon:true/false,	// only useful in Object Workspace DataTable
+    	
+  	// 	{
+  	// 		id:'uuid',					// uuid value for this obj
+  	// 		key:'fieldKey',				// unique key for this Field
+  	// 		icon:'font',				// fa-[icon] reference for an icon for this Field Type
+  	// 		label:'',					// pulled from translation
+			// columnName:'column_name',	// a valid mysql table.column name
+			// settings: {					// unique settings for the type of field
+			// 	showIcon:true/false,	// only useful in Object Workspace DataTable
 
-				// specific for dataField
-			},
-			translations:[]
-  		}
-  		*/
-  		this.fromValues(values);
+			// 	// specific for dataField
+			// },
+			// translations:[]
+  	// 	}
+  		
+  	// 	this.fromValues(values);
 
 
 
@@ -42,7 +44,7 @@ export default class ABField {
     	OP.Multilingual.translate(this, this, ['label']);
 
 
-    	this.object = object;
+    	// this.object = object;
   	}
 
 
@@ -185,28 +187,6 @@ export default class ABField {
   	}
 
 
-  	// unique key to reference this specific DataField
-  	fieldKey() {
-  		return this.defaults.key;
-  	}
-
-  	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
-  	fieldIcon() {
-  		return this.defaults.icon;
-  	}
-
-  	// the multilingual text for the name of this data field.
-  	fieldMenuName() {
-  		return this.defaults.menuName;
-  	}
-
-  	// the multilingual text for the name of this data field.
-  	fieldDescription() {
-  		return this.defaults.description;
-  	}
-
-
-
   	/*
   	 * @method isValid
   	 * check the current values to make sure they are valid.
@@ -336,43 +316,10 @@ export default class ABField {
 		// store "label" in our translations
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		return {
-			id : this.id,
-			key : this.key,
-			icon : this.icon,
-			columnName: this.columnName,
-			settings: this.settings,
-			translations:this.translations
-		}
+		return super.toObj();
 	}
 
 
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues (values) {
-
- 		this.id = values.id;			// NOTE: only exists after .save()
-    	this.key = values.key || this.fieldKey();
-    	this.icon = values.icon || this.fieldIcon();
-
-    	// if this is being instantiated on a read from the Property UI,
-    	// .label is coming in under .settings.label
-    	this.label = values.label || values.settings.label || '?label?';
-
-    	this.columnName = values.columnName || '';
-    	this.translations = values.translations || [];
-
-    	this.settings = values.settings || {};
-    	this.settings.showIcon = values.settings.showIcon+"" || "1";
-
-
-    	// convert from "0" => 0
-    	this.settings.showIcon = parseInt(this.settings.showIcon);
-	}
 
 
 

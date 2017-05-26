@@ -1,6 +1,7 @@
 
 var path = require('path');
 
+var ABObjectBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABObjectBase.js"));
 var ABFieldManager = require(path.join(__dirname, 'ABFieldManager'));
 var Model = require('objection').Model;
 
@@ -25,9 +26,10 @@ function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-module.exports = class ABObject {
+module.exports = class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
+    	super(attributes, application);
 /*
 {
 	id: uuid(),
@@ -46,34 +48,7 @@ module.exports = class ABObject {
 }
 */
 
-    	// ABApplication Attributes
-    	this.id    = attributes.id;
-    	this.name  = attributes.name || "";
-    	this.labelFormat = attributes.labelFormat || "";
-    	this.isImported  = attributes.isImported  || 0;
-    	this.urlPath	 = attributes.urlPath     || "";
-    	this.importFromObject = attributes.importFromObject || "";
-    	this.translations = attributes.translations;
 
-    	this.objectWorkspace = attributes.objectWorkspace || {
-    		hiddenFields:[], 	// array of [ids] to add hidden:true to
-    	};
-
-
-    	// multilingual fields: label, description
-// OP.Multilingual.translate(this, this, ['label']);
-
-
-	  	// import all our ABObjects
-	  	var newFields = [];
-	  	(attributes.fields || []).forEach((field) => {
-	  		newFields.push( this.fieldNew(field) );
-	  	})
-	  	this._fields = newFields;
-
-
-	  	// link me to my parent ABApplication
-	  	this.application = application;
   	}
 
 
@@ -87,34 +62,6 @@ module.exports = class ABObject {
 
 
 
-//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
-
-	isValid() {
-
-		var errors = null;
-
-
-		// label/name must be unique:
-		var isNameUnique = (this.application.objects((o) => { return o.name.toLowerCase() == this.name.toLowerCase(); }).length == 0);
-		if (!isNameUnique) {
-			errors = OP.Form.validationError({
-					name:'name',
-					message:L('ab.validation.object.name.unique', 'Object name must be unique (#name# already used in this Application)').replace('#name#', this.name),
-				}, errors);
-		}
-
-
-			// Check the common validations:
-// TODO:
-// if (!inputValidator.validate(values.label)) {
-// 	_logic.buttonSaveEnable();
-// 	return false;
-// }
-
-
-		return errors;
-	}
-
 
 
 	///
@@ -122,124 +69,10 @@ module.exports = class ABObject {
 	///
 
 
-	/// ABApplication data methods
-
-
-	/**
-	 * @method destroy()
-	 *
-	 * destroy the current instance of ABApplication
-	 *
-	 * also remove it from our _AllApplications
-	 *
-	 * @return {Promise}
-	 */
-	destroy () {
-		if (this.id) {
-console.error('TODO: ABObject.destroy()');
-			// return this.Model.destroy(this.id)
-			// 	.then(()=>{
-			// 		_AllApplications.remove(this.id);
-			// 	});
-		}
-	}
-
-
-	/**
-	 * @method save()
-	 *
-	 * persist this instance of ABObject with it's parent ABApplication
-	 *
-	 *
-	 * @return {Promise}
-	 *						.resolve( {this} )
-	 */
-	save () {
-
-		return new Promise(
-			(resolve, reject) => {
-
-				// if this is our initial save()
-				if (!this.id) {
-
-					this.id = OP.Util.uuid();	// setup default .id
-					this.label = this.label || this.name;
-					this.urlPath = this.urlPath || this.application.name + '/' + this.name;
-				}
-
-				this.application.objectSave(this)
-				.then(() => {
-					resolve(this);
-				})
-				.catch(function(err){
-					reject(err);
-				})
-			}
-		)
-	}
-
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	toObj () {
-
-		OP.Multilingual.unTranslate(this, this, ["label"]);
-
-		// // for each Object: compile to json
-		var currFields = [];
-		this._fields.forEach((obj) => {
-			currFields.push(obj.toObj())
-		})
-
-
-		return {
-			id: 			this.id,
-			name: 			this.name,
-    		labelFormat: 	this.labelFormat,
-    		isImported:  	this.isImported,
-    		urlPath: 		this.urlPath,
-    		importFromObject: this.importFromObject,
-    		objectWorkspace:  this.objectWorkspace,
-    		translations: 	this.translations,
-    		fields: 	 	currFields
-		}
-	}
-
-
-
-
-
 
 	///
 	/// Fields
 	///
-
-
-
-
-	/**
-	 * @method fields()
-	 *
-	 * return an array of all the ABFields for this ABObject.
-	 *
-	 * @return {array}
-	 */
-	fields (filter) {
-
-		filter = filter || function() {return true; };
-
-		return this._fields.filter(filter);
-	}
-
 
 
 	/**
@@ -257,44 +90,6 @@ console.error('TODO: ABObject.destroy()');
 		// NOTE: ABFieldManager.newField() returns the proper ABFieldXXXX instance.
 		return ABFieldManager.newField( values, this );
 	}
-
-
-
-	/**
-	 * @method fieldRemove()
-	 *
-	 * remove the given ABField from our ._fields array and persist the current
-	 * values.
-	 *
-	 * @param {ABField} field The instance of the field to remove.
-	 * @return {Promise}
-	 */
-	fieldRemove( field ) {
-		this._fields = this.fields(function(o){ return o.id != field.id });
-
-		return this.save();
-	}
-
-
-
-	/**
-	 * @method fieldSave()
-	 *
-	 * save the given ABField in our ._fields array and persist the current
-	 * values.
-	 *
-	 * @param {ABField} field The instance of the field to save.
-	 * @return {Promise}
-	 */
-	fieldSave( field ) {
-		var isIncluded = (this.fields(function(o){ return o.id == field.id }).length > 0);
-		if (!isIncluded) {
-			this._fields.push(field);
-		}
-
-		return this.save();
-	}
-
 
 
 
@@ -510,6 +305,7 @@ console.error('TODO: ABObject.destroy()');
 	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
 	 * @return {array} 
 	 */
+//// TODO: create OP.Validation.validator() and use super.isValidData() instead.
 	isValidData(allParameters) {
 		var errors = [];
 		this.fields().forEach((f) => {

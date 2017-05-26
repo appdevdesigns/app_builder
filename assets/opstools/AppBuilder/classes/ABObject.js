@@ -1,28 +1,20 @@
 
+
+import ABObjectBase from "./ABObjectBase"
+
 // import OP from "OP"
 import ABFieldManager from "./ABFieldManager"
 import ABModel from "./ABModel"
 
 
-function toDC( data ) {
-	return new webix.DataCollection({
-		data: data,
-
-		// on: {
-		// 	onAfterDelete: function(id) {
-
-		// 	}
-		// }
-	});
-}
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class ABObject {
+export default class ABObject extends ABObjectBase {
 
     constructor(attributes, application) {
+    	super(attributes, application);
 /*
 {
 	id: uuid(),
@@ -41,41 +33,9 @@ export default class ABObject {
 }
 */
 
-    	// ABApplication Attributes
-    	this.id    = attributes.id;
-    	this.name  = attributes.name || "";
-    	this.labelFormat = attributes.labelFormat || "";
-    	this.isImported  = attributes.isImported  || 0;
-    	this.urlPath	 = attributes.urlPath     || "";
-    	this.importFromObject = attributes.importFromObject || "";
-    	this.translations = attributes.translations;
-
-		if (typeof(attributes.objectWorkspace) != "undefined") {
-			if (typeof(attributes.objectWorkspace.sortFields) == "undefined") attributes.objectWorkspace.sortFields = [];
-			if (typeof(attributes.objectWorkspace.frozenColumnID) == "undefined") attributes.objectWorkspace.frozenColumnID = "";
-			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
-		}
-
-    	this.objectWorkspace = attributes.objectWorkspace || {
-			sortFields:[], // array of columns with their sort configurations
-			frozenColumnID:"", // id of column you want to stop freezing
-    		hiddenFields:[], // array of [ids] to add hidden:true to
-    	};
-
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this, ['label']);
 
-
-	  	// import all our ABObjects
-	  	var newFields = [];
-	  	(attributes.fields || []).forEach((field) => {
-	  		newFields.push( this.fieldNew(field) );
-	  	})
-	  	this._fields = newFields;
-
-
-	  	// link me to my parent ABApplication
-	  	this.application = application;
   	}
 
 
@@ -240,24 +200,7 @@ export default class ABObject {
 
 		OP.Multilingual.unTranslate(this, this, ["label"]);
 
-		// // for each Object: compile to json
-		var currFields = [];
-		this._fields.forEach((obj) => {
-			currFields.push(obj.toObj())
-		})
-
-
-		return {
-			id: 			this.id,
-			name: 			this.name,
-    		labelFormat: 	this.labelFormat,
-    		isImported:  	this.isImported,
-    		urlPath: 		this.urlPath,
-    		importFromObject: this.importFromObject,
-    		objectWorkspace:  this.objectWorkspace,
-    		translations: 	this.translations,
-    		fields: 	 	currFields
-		}
+		return super.toObj();
 	}
 
 
@@ -294,24 +237,6 @@ export default class ABObject {
 	///
 
 
-
-
-	/**
-	 * @method fields()
-	 *
-	 * return an array of all the ABFields for this ABObject.
-	 *
-	 * @return {array}
-	 */
-	fields (filter) {
-
-		filter = filter || function() {return true; };
-
-		return this._fields.filter(filter);
-	}
-
-
-
 	/**
 	 * @method fieldNew()
 	 *
@@ -327,85 +252,6 @@ export default class ABObject {
 		// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
 		return ABFieldManager.newField( values, this );
 	}
-
-
-
-	/**
-	 * @method fieldRemove()
-	 *
-	 * remove the given ABField from our ._fields array and persist the current
-	 * values.
-	 *
-	 * @param {ABField} field The instance of the field to remove.
-	 * @return {Promise}
-	 */
-	fieldRemove( field ) {
-		this._fields = this.fields(function(o){ return o.id != field.id });
-
-		return this.save();
-	}
-
-
-
-	/**
-	 * @method fieldSave()
-	 *
-	 * save the given ABField in our ._fields array and persist the current
-	 * values.
-	 *
-	 * @param {ABField} field The instance of the field to save.
-	 * @return {Promise}
-	 */
-	fieldSave( field ) {
-		var isIncluded = (this.fields(function(o){ return o.id == field.id }).length > 0);
-		if (!isIncluded) {
-			this._fields.push(field);
-		}
-
-		return this.save();
-	}
-
-
-	multilingualFields() {
-		var fields = [];
-
-		var found = this.fields(function(f){ return f.isMultilingual(); });
-		found.forEach((f)=>{
-			fields.push(f.columnName);
-		})
-
-		return fields;
-	}
-
-
-	///
-	///	Object Workspace Settings
-	///
-	get workspaceSortFields() {
-		return this.objectWorkspace.sortFields;
-	}
-
-	set workspaceSortFields( fields ) {
-		this.objectWorkspace.sortFields = fields;
-	}
-
-	get workspaceFrozenColumnID() {
-		return this.objectWorkspace.frozenColumnID;
-	}
-
-	set workspaceFrozenColumnID( id ) {
-		this.objectWorkspace.frozenColumnID = id;
-	}
-
-	get workspaceHiddenFields() {
-		return this.objectWorkspace.hiddenFields;
-	}
-
-	set workspaceHiddenFields( fields ) {
-		this.objectWorkspace.hiddenFields = fields;
-	}
-
-
 
 
 
@@ -473,40 +319,6 @@ export default class ABObject {
 	}
 
 
-
-	/**
-	 * @method defaultValues
-	 * Collect a hash of key=>value pairs that represent the default values 
-	 * from each of our fields.
-	 * @param {obj} data a key=>value hash of the inputs to parse.
-	 * @return {array} 
-	 */
-	defaultValues() {
-		var values = {};
-		this.fields().forEach((f) => {
-			f.defaultValue(values);
-		})
-
-		return values;
-	}
-
-
-
-	/**
-	 * @method isValidData
-	 * Parse through the given data and return an array of any invalid
-	 * value errors.
-	 * @param {obj} data a key=>value hash of the inputs to parse.
-	 * @return {array}
-	 */
-	isValidData(data) {
-		var validator = OP.Validation.validator();
-		this.fields().forEach((f) => {
-			var p = f.isValidData(data, validator);
-		})
-
-		return validator;
-	}
 
 
 	///

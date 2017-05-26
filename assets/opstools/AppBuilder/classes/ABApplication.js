@@ -1,7 +1,7 @@
 
 // import OP from "OP"
+import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
-
 import ABObject from "./ABObject"
 
 
@@ -10,18 +10,6 @@ var _AllApplications = [];
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
-}
-
-function toDC( data ) {
-	return new webix.DataCollection({
-		data: data,
-
-		// on: {
-		// 	onAfterDelete: function(id) {
-
-		// 	}
-		// }
-	});
 }
 
 function toArray(DC) {
@@ -37,26 +25,14 @@ function toArray(DC) {
 	return ary;
 }
 
-export default class ABApplication {
+export default class ABApplication extends ABApplicationBase {
 
     constructor(attributes) {
+    	super(attributes);
 
-    	// ABApplication Attributes
-    	this.id    = attributes.id;
-    	this.json  = attributes.json;
-    	this.name  = attributes.name || this.json.name || "";
-    	this.role  = attributes.role;
 
     	// multilingual fields: label, description
     	OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
-
-
-	  	// import all our ABObjects
-	  	var newObjects = [];
-	  	(attributes.json.objects || []).forEach((obj) => {
-	  		newObjects.push( new ABObject(obj, this) );
-	  	})
-	  	this._objects = newObjects;
 
 
 	  	// import all our ABViews
@@ -146,18 +122,6 @@ export default class ABApplication {
 		)
 	}
 
-
-	/**
-	 * @method fieldsMultilingual()
-	 *
-	 * return an array of fields that are considered Multilingual labels for
-	 * an ABApplication
-	 *
-	 * @return {array}
-	 */
-	static fieldsMultilingual() {
-		return ['label', 'description'];
-	}
 
 
 
@@ -277,21 +241,8 @@ export default class ABApplication {
 	toObj () {
 
 		OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
-		this.json.name = this.name;
 
-		// for each Object: compile to json
-		var currObjects = [];
-		this._objects.forEach((obj) => {
-			currObjects.push(obj.toObj())
-		})
-		this.json.objects = currObjects;
-
-		return {
-			id:this.id,
-			name:this.name,
-			json:this.json,
-			role:this.role
-		}
+		return super.toObj();
 	}
 
 
@@ -397,27 +348,6 @@ export default class ABApplication {
 	///
 
 
-
-
-	/**
-	 * @method objects()
-	 *
-	 * return an array of all the ABObjects for this ABApplication.
-	 *
-	 * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn
-	 *						returns true for.
-	 * @return {array} 	array of ABObject
-	 */
-	objects (filter) {
-
-		filter = filter || function() {return true; };
-
-		return this._objects.filter(filter);
-
-	}
-
-
-
 	/**
 	 * @method objectNew()
 	 *
@@ -433,47 +363,5 @@ export default class ABApplication {
 		return new ABObject(values, this);
 	}
 
-
-
-	/**
-	 * @method objectDestroy()
-	 *
-	 * remove the current ABObject from our list of ._objects.
-	 *
-	 * @param {ABObject} object
-	 * @return {Promise}
-	 */
-	objectDestroy( object ) {
-
-		var remaininObjects = this.objects(function(o) { return o.id != object.id;})
-		this._objects = remaininObjects;
-		return this.save();
-		
-		// var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
-		// if (!isIncluded) {
-		// 	this._objects.push(object);
-		// }
-
-		// return this.save();
-	}
-
-
-
-	/**
-	 * @method objectSave()
-	 *
-	 * persist the current ABObject in our list of ._objects.
-	 *
-	 * @param {ABObject} object
-	 * @return {Promise}
-	 */
-	objectSave( object ) {
-		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
-		if (!isIncluded) {
-			this._objects.push(object);
-		}
-
-		return this.save();
-	}
 
 }
