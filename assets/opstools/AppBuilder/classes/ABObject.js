@@ -419,13 +419,13 @@ export default class ABObject {
 	columnHeaders (isObjectWorkspace) {
 
 		var headers = [];
-		var idLookup = {};
+		var columnNameLookup = {};
 
 		// get the header for each of our fields:
 		this._fields.forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace);
 			headers.push(header);
-			idLookup[header.id] = f.id;	// name => id
+			columnNameLookup[header.id] = f.columnName;	// name => id
 		})
 
 
@@ -439,7 +439,7 @@ export default class ABObject {
 			if (this.workspaceHiddenFields.length > 0) {
 				this.workspaceHiddenFields.forEach((hfID)=>{
 					headers.forEach((h)=> {
-						if (idLookup[h.id] == hfID){
+						if (columnNameLookup[h.id] == hfID){
 							h.hidden = true;
 						}
 					})
@@ -463,8 +463,10 @@ export default class ABObject {
 		while(id) {
 			var row = data.getItem(id);
 			fields.forEach((f)=>{
-				var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-				f.customDisplay(row, App, node);
+				if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
+					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+					f.customDisplay(row, App, node);
+				}
 			})
 			id = data.getNextId(id);
 		}
@@ -495,7 +497,7 @@ export default class ABObject {
 	 * Parse through the given data and return an array of any invalid
 	 * value errors.
 	 * @param {obj} data a key=>value hash of the inputs to parse.
-	 * @return {array} 
+	 * @return {array}
 	 */
 	isValidData(data) {
 		var validator = OP.Validation.validator();

@@ -103,6 +103,9 @@ console.error('!! ToDo: onBeforeEditStop()');
 			onAfterEditStop: function (state, editor, ignoreUpdate) {
 				_logic.onAfterEditStop(state, editor, ignoreUpdate);
 			},
+			onAfterLoad: function () {
+				_logic.onAfterLoad();
+			},
 			onColumnResize: function (id, newWidth, oldWidth, user_action) {
 console.error('!! ToDo: onColumnResize()');
 				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
@@ -177,7 +180,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 		DataTable.attachEvent("onAfterRender", function(data){
 
 			if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
-			throttleOnAfterRender = setTimeout(()=>{ 
+			throttleOnAfterRender = setTimeout(()=>{
 				if (CurrentObject) {
 					CurrentObject.customDisplays(data, App, DataTable);
 				}
@@ -305,20 +308,19 @@ console.error('!! ToDo: onAfterColumnHide()');
 		/**
 		 * @function onAfterEditStop
 		 * When an editor is finished.
-		 * @param {json} state 
+		 * @param {json} state
 		 * @param {} editor
-		 * @param {} ignoreUpdate 
-		 * @return 
+		 * @param {} ignoreUpdate
+		 * @return
 		 */
 		onAfterEditStop: function (state, editor, ignoreUpdate) {
 
 			// state:   {value: "new value", old: "old value"}
 			// editor:  { column:"columnName", row:ID, value:'value', getInputNode:fn(), config:{}, focus: fn(), getValue: fn(), setValue: function, getInputNode: function, render: function…}
-			
-			var DataTable = $$(ids.component);
-			
-			if (state.value != state.old) {
 
+			var DataTable = $$(ids.component);
+
+			if (state.value != state.old) {
 
 
 
@@ -331,13 +333,11 @@ console.error('!! ToDo: onAfterColumnHide()');
 				var validator = CurrentObject.isValidData(item);
 				if (validator.pass()) {
 
-					
-// var patch = {};
-// patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
-					
-					// NOTE: keep updating the WHOLE item.  if not, we run the risk of
-					// the multilingual labels getting reset if they are not part of the
-					// data being sent back.
+
+//// Question: do we submit full item updates?  or just patches?
+var patch = {};
+patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
+
 					CurrentObject.model()
 					.update(item.id, item)
 // .update(item.id, patch)
@@ -365,7 +365,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 						}
 
-						
+
 					})
 
 				} else {
@@ -410,14 +410,18 @@ console.error('!! ToDo: onAfterColumnHide()');
 				// 	});
 		},
 
+		onAfterLoad: function() {
+			_logic.sortTable();
+		},
+
 
 
 		/**
 		 * @function onAfterSelect
-		 * This is when a user clicks on a cell.  We use the onAfterSelect to 
+		 * This is when a user clicks on a cell.  We use the onAfterSelect to
 		 * trigger a normal .editCell() if there isn't a custom editor for this field.
 		 * @param {json} data webix cell data
-		 * @return 
+		 * @return
 		 */
 		onAfterSelect: function (data, prevent) {
 			// data: {row: 1, column: "name", id: "1_name", toString: function}
@@ -514,19 +518,13 @@ console.error('!! ToDo: onAfterColumnHide()');
 					DataTable.refreshColumns()
 				}
 
-				if (CurrentObject.workspaceSortFields != []) {
-					var sorts = CurrentObject.workspaceSortFields;
-					sorts.forEach((s) => {
-						DataTable.sort(s);
-					})
-				}
 
 				// render custom displays:
 // 				var throttleOnAfterRender = null;
 // 				DataTable.attachEvent("onAfterRender", function(data){
 // webix.message('onAfterRender check')
 // 					if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
-// 					throttleOnAfterRender = setTimeout(()=>{ 
+// 					throttleOnAfterRender = setTimeout(()=>{
 // webix.message("onAfterRender()");
 // 						CurrentObject.onAfterRender(data, App);
 // 					}, 150);
@@ -573,6 +571,67 @@ console.error('!! ToDo: onAfterColumnHide()');
 			$$(ids.component).show();
 		},
 
+		/**
+		 * @function sort(dir, a, b)
+		 *
+		 * Sort this component.
+		 */
+		sort:function(dir, aValue, bValue) {
+			var result = false;
+
+			if (dir == 'asc') {
+				result = aValue > bValue ? 1 : -1;
+			}
+			else {
+				result = aValue < bValue ? 1 : -1;
+			}
+			return result;
+		},
+
+		sortNext:function(dir, a, b, sorts, index) {
+			var index = index+1,
+				a = a,
+				b = b,
+				aValue = a[sorts[index].by],
+				bValue = b[sorts[index].by],
+				result = false;
+
+			if (aValue == bValue && sorts.length > index+1) {
+				result = _logic.sortNext(sorts[index].dir, a, b, sorts, index)
+			} else {
+				result = _logic.sort(sorts[index].dir, aValue, bValue);
+			}
+			return result;
+		},
+
+		sortTable:function() {
+			var DataTable = $$(ids.component);
+
+			if (CurrentObject) {
+				var sorts = CurrentObject.workspaceSortFields;
+
+				if (sorts.length > 0) {
+					var columnOrders = [];
+
+					DataTable.sort(function (a, b) {
+						var result = false,
+							index = 0,
+							aValue = a[sorts[index].by],
+							bValue = b[sorts[index].by];
+
+						if (aValue == bValue && sorts.length > index+1) {
+							result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
+						} else {
+							result = _logic.sort(sorts[index].dir, aValue, bValue);
+						}
+
+						return result;
+					});
+
+				}
+			}
+		}
+
 
 	}
 
@@ -611,6 +670,7 @@ console.error('!! ToDo: onAfterColumnHide()');
 
 		// expose data for column sort UI
 		getFieldList: _logic.getFieldList,
+		sortTable: _logic.sortTable,
 
 		_logic: _logic			// {obj} 	Unit Testing
 	}
