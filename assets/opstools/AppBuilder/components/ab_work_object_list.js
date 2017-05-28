@@ -313,8 +313,9 @@ console.error('!! todo: onBeforeEditStop() editing');
 				return;
 			}
 
-			objectList.add(object, objectList.count());
+			$$(ids.list).add(object);
 			$$(ids.list).select(object.id);
+
 		},
 
 
