@@ -508,159 +508,257 @@ module.exports = {
     /**
      * Generate the application directory structure
      */
-    buildApplication: function (appID) {
-        var dfd = AD.sal.Deferred();
-        var cwd = process.cwd();
+//     buildApplication: function (appID) {
+//         var dfd = AD.sal.Deferred();
+//         var cwd = process.cwd();
 
-        var pluginExists = false;
+//         var pluginExists = false;
 
-        var appName, moduleName, areaName, areaKey;
+//         var appName, moduleName, areaName, areaKey;
 
-        var Application = null;
+//         var Application = null;
 
-        // if we are currently building it:
-        if (appsBuildInProgress[appID]) {
-            // console.log('... App Build in progress : waiting!');
-            return appsBuildInProgress[appID];
-        }
+//         // if we are currently building it:
+//         if (appsBuildInProgress[appID]) {
+//             // console.log('... App Build in progress : waiting!');
+//             return appsBuildInProgress[appID];
+//         }
 
 
-        // if we get here, we start building this app:
-        // So mark that it is in progress:
-        appsBuildInProgress[appID] = dfd;
+//         // if we get here, we start building this app:
+//         // So mark that it is in progress:
+//         appsBuildInProgress[appID] = dfd;
 
-        async.series([
-            function (next) {
-                ABApplication.find({ id: appID })
-                    .populate('translations')
-                    .then(function (list) {
-                        if (!list || !list[0]) {
-                            throw new Error('Application not found');
+//         async.series([
+//             function (next) {
+//                 ABApplication.find({ id: appID })
+//                     .populate('translations')
+//                     .then(function (list) {
+//                         if (!list || !list[0]) {
+//                             throw new Error('Application not found');
+//                         }
+//                         var obj = list[0];
+//                         // Only numbers and alphabets will be used
+//                         Application = obj;
+//                         appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
+//                         moduleName = appName.toLowerCase();
+//                         next();
+//                         return null;
+//                     })
+//                     .catch(function (err) {
+//                         next(err);
+//                         return null;
+//                     });
+
+//             },
+
+//             // Check if plugin already exists
+//             function (next) {
+//                 process.chdir('node_modules'); // sails/node_modules/
+//                 fs.stat(moduleName, function (err, stat) {
+//                     if (!err) {
+//                         pluginExists = true;
+//                     }
+//                     next();
+//                 });
+//             },
+
+//             // Create opstool plugin with appdev-cli
+//             function (next) {
+
+//                 if (pluginExists) {
+//                     // Skip this step if plugin already exists
+//                     return next();
+//                 }
+//                 AD.spawn.command({
+//                     command: cliCommand,
+//                     options: [
+//                         'opstoolplugin',
+//                         appName,
+//                         '1' // isOPView
+//                     ],
+//                     shouldEcho: true,
+//                     responses: {
+//                         'unit test capabilities': 'no\n',
+//                         'author': 'AppBuilder\n',
+//                         'description': '\n',
+//                         'version': '\n',
+//                         'repository': '\n',
+//                     }
+//                 })
+//                     .fail(next)
+//                     .done(function () {
+//                         next();
+//                     });
+//             },
+
+//             // Delete old .adn file
+//             function (next) {
+//
+//                 process.chdir(moduleName); // sails/node_modules/ab_{appName}/
+//                 async.each(['.adn'], function (target, ok) {
+//                     // Delete file if it exists
+//                     fs.unlink(target, function (err) {
+//                         // Ignore errors. If file does not exist, that's fine.
+//                         ok();
+//                     });
+//                 }, function (err) {
+//                     next();
+//                 });
+//             },
+
+//             // Symlink the .adn file
+//             function (next) {
+//                 fs.symlink(path.join(cwd, '.adn'), '.adn', next);
+//             },
+
+
+//             // make sure OpsPortal navigation has an area for this application defined:
+//             function (next) {
+
+//                 // if this was our first time to create the App, 
+//                 // then create an area.  
+//                 // Dont keep creating one since they might want to remove it using the
+//                 // Live Navigation Editor
+//                 if (!pluginExists) {
+
+//                     var areaName = Application.name;
+//                     var areaKey = Application.areaKey();
+//                     var label = areaName;  // default if no translations provided
+//                     Application.translations.some(function (trans) {
+//                         if (label == areaName) {
+//                             label = trans.label;
+//                             return true;  // stops the looping.
+//                         }
+//                     })
+//                     var defaultArea = {
+//                         key: areaKey,
+//                         icon: 'fa-cubes',
+//                         isDefault: false,
+//                         label: label,
+//                         context: areaKey
+//                     }
+
+//                     // Note: this will only create it if it doesn't already exist.
+//                     OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
+
+//                         // area is null if already existed, 
+//                         // not null if just created:
+
+//                         next(err);
+//                     })
+
+//                 } else {
+//                     next();
+//                 }
+
+//             }
+
+//         ], function (err) {
+//             process.chdir(cwd);
+//             if (err) dfd.reject(err);
+//             else dfd.resolve({});
+
+//             // now remove our flag:
+//             // console.log('... App Build finished!');
+//             delete appsBuildInProgress[appID];
+//         });
+
+//         return dfd;
+//     },
+
+
+
+    registerNavBarArea: function (appID) {
+        
+        return new Promise(
+            (resolve, reject) => {
+
+                var Application = null;
+
+
+                // if we get here, we start building this app:
+                // So mark that it is in progress:
+                appsBuildInProgress[appID] = dfd;
+
+                async.series([
+                    function (next) {
+                        ABApplication.find({ id: appID })
+                            .populate('translations')
+                            .then(function (list) {
+
+                                if (!list || !list[0]) {
+                                    var err = new Error('Application not found');
+                                    ADCore.error.log('Application not found ', {error:err, appID:appID });
+                                    next( err );
+                                    return;
+                                }
+
+
+                                var obj = list[0];
+                                // Only numbers and alphabets will be used
+                                Application = obj;
+                                next();
+                                return null;
+                            })
+                            .catch(function (err) {
+                                next(err);
+                                return null;
+                            });
+
+                    },
+
+
+                    // make sure OpsPortal navigation has an area for this application defined:
+                    function (next) {
+
+                        // if this was our first time to create the App, 
+                        // then create an area.  
+                        // Dont keep creating one since they might want to remove it using the
+                        // Live Navigation Editor
+
+
+                        var areaName = Application.name;
+                        var areaKey = Application.areaKey();
+                        var label = areaName;  // default if no translations provided
+
+                        // now take the 1st translation we find:
+                        Application.translations.some(function (trans) {
+                            if (label == areaName) {
+                                label = trans.label;
+                                return true;  // stops the looping.
+                            }
+                        })
+
+                        var defaultArea = {
+                            key: areaKey,
+                            icon: 'fa-cubes',
+                            isDefault: false,
+                            label: label,
+                            context: areaKey
                         }
-                        var obj = list[0];
-                        // Only numbers and alphabets will be used
-                        Application = obj;
-                        appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
-                        moduleName = appName.toLowerCase();
-                        next();
-                        return null;
-                    })
-                    .catch(function (err) {
-                        next(err);
-                        return null;
-                    });
 
-            },
+                        // Note: this will only create it if it doesn't already exist.
+                        OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
 
-            // Check if plugin already exists
-            function (next) {
-                process.chdir('node_modules'); // sails/node_modules/
-                fs.stat(moduleName, function (err, stat) {
-                    if (!err) {
-                        pluginExists = true;
+                            // area is null if already existed, 
+                            // not null if just created:
+
+                            next(err);
+                        })
+
+
                     }
-                    next();
+
+                ], function (err) {
+
+                    if (err) reject(err);
+                    else resolve({});
                 });
-            },
-
-            // Create opstool plugin with appdev-cli
-            function (next) {
-                if (pluginExists) {
-                    // Skip this step if plugin already exists
-                    return next();
-                }
-                AD.spawn.command({
-                    command: cliCommand,
-                    options: [
-                        'opstoolplugin',
-                        appName,
-                        '1' // isOPView
-                    ],
-                    shouldEcho: true,
-                    responses: {
-                        'unit test capabilities': 'no\n',
-                        'author': 'AppBuilder\n',
-                        'description': '\n',
-                        'version': '\n',
-                        'repository': '\n',
-                    }
-                })
-                    .fail(next)
-                    .done(function () {
-                        next();
-                    });
-            },
-
-            // Delete old .adn file
-            function (next) {
-                process.chdir(moduleName); // sails/node_modules/ab_{appName}/
-                async.each(['.adn'], function (target, ok) {
-                    // Delete file if it exists
-                    fs.unlink(target, function (err) {
-                        // Ignore errors. If file does not exist, that's fine.
-                        ok();
-                    });
-                }, function (err) {
-                    next();
-                });
-            },
-
-            // Symlink the .adn file
-            function (next) {
-                fs.symlink(path.join(cwd, '.adn'), '.adn', next);
-            },
-
-
-            // make sure OpsPortal navigation has an area for this application defined:
-            function (next) {
-
-                // if this was our first time to create the App, 
-                // then create an area.  
-                // Dont keep creating one since they might want to remove it using the
-                // Live Navigation Editor
-                if (!pluginExists) {
-
-                    var areaName = Application.name;
-                    var areaKey = Application.areaKey();
-                    var label = areaName;  // default if no translations provided
-                    Application.translations.some(function (trans) {
-                        if (label == areaName) {
-                            label = trans.label;
-                            return true;  // stops the looping.
-                        }
-                    })
-                    var defaultArea = {
-                        key: areaKey,
-                        icon: 'fa-cubes',
-                        isDefault: false,
-                        label: label,
-                        context: areaKey
-                    }
-
-                    // Note: this will only create it if it doesn't already exist.
-                    OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
-
-                        // area is null if already existed, 
-                        // not null if just created:
-
-                        next(err);
-                    })
-
-                } else {
-                    next();
-                }
 
             }
+        )
 
-        ], function (err) {
-            process.chdir(cwd);
-            if (err) dfd.reject(err);
-            else dfd.resolve({});
-
-            // now remove our flag:
-            // console.log('... App Build finished!');
-            delete appsBuildInProgress[appID];
-        });
 
         return dfd;
     },

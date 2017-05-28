@@ -112,12 +112,8 @@ module.exports = {
         if ((newRecord)
             && (newRecord.id)) {
 
-            // console.log('... ABApplication.afterCreate():  id: '+newRecord.id);
-
-            // Start building the physical module on the FileSystem:
-            setTimeout(function () {
-                AppBuilder.buildApplication(newRecord.id);
-            }, 500);
+            sails.log.info('ABApplication:afterCreate() triggering registerNavBarArea('+newRecord.id+')');
+            AppBuilder.registerNavBarArea(newRecord.id);
         }
 
         // don't wait around:
@@ -169,12 +165,12 @@ console.log('... update application: ', updatedRecord);
             //             callback();
             //         }, callback);
             // },
-            function (callback) {
-                ABPage.destroy({ application: appIds })
-                    .then(function () {
-                        callback();
-                    }, callback);
-            },
+            // function (callback) {
+            //     ABPage.destroy({ application: appIds })
+            //         .then(function () {
+            //             callback();
+            //         }, callback);
+            // },
 
             function ABApplication_AfterDelete_RemovePermissions(callback) {
 
