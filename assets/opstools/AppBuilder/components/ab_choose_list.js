@@ -6,7 +6,8 @@
  *
  */
 import ABApplication from "../classes/ABApplication"
-import "./ab_choose_list_menu"
+// import "./ab_choose_list_menu"
+import "./ab_common_popupEditMenu"  
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -20,7 +21,10 @@ var labels = {
 		title: L('ab.application.application', '*Application'),
 
 		createNew: L('ab.application.createNew', '*Add new application'),
-		noApplication: L('ab.application.noApplication', "*There is no application data")					
+		noApplication: L('ab.application.noApplication', "*There is no application data"),
+
+		confirmDeleteTitle : L('ab.application.delete.title', "*Delete application"),
+		confirmDeleteMessage : L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
 	}
 }
 
@@ -39,9 +43,9 @@ OP.Component.extend(idBase, function(App) {
 		buttonCreateNewApplication: App.unique(idBase + '_buttonNewApp')
 	}
 
-	var MenuComponent = OP.Component['ab_choose_list_menu'](App);
-	var PopupMenu = webix.ui(MenuComponent.ui);
-	PopupMenu.hide();
+	var MenuComponent = OP.Component['ab_common_popupEditMenu'](App);
+	// var PopupMenu = webix.ui(MenuComponent.ui);
+	// PopupMenu.hide();
 
 	var _ui = {
 
@@ -164,6 +168,39 @@ OP.Component.extend(idBase, function(App) {
 		},
 
 
+
+		callbackApplicationEditorMenu: function(action) {
+
+			var selectedApp = $$(ids.list).getSelectedItem();
+
+			switch (action) {
+
+				case 'edit':
+					App.actions.transitionApplicationForm(selectedApp);
+					break;
+
+				case 'delete':
+					OP.Dialog.ConfirmDelete({
+						title: labels.component.confirmDeleteTitle,
+						text: labels.component.confirmDeleteMessage.replace('{0}', selectedApp.label),
+						callback: function (result) {
+
+							if (!result) return;
+
+							App.actions.deleteApplication(selectedApp);									
+						}
+					})
+					break;
+
+				case 'export':
+					// Download the JSON file to disk
+					window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
+					break;
+			}
+
+		},
+
+
 		/**
 		 * @function loadData
 		 *
@@ -221,8 +258,16 @@ OP.Component.extend(idBase, function(App) {
 		 */
 		onClickListEdit: function(ev, id, trg) {
 
+			var options = [
+				{ label: labels.common.edit, icon: "fa-pencil-square-o", command:'edit' },
+				{ label: labels.common.export, icon: "fa-download", command:'export' },
+				{ label: labels.common.delete, icon: "fa-trash", command:'delete' }
+			];
+
+			MenuComponent.menuOptions(options);
+
 			// Show menu
-			PopupMenu.show(trg);
+			MenuComponent.show(trg);
 			$$(ids.list).select(id);
 
 			return false; // block default behavior
@@ -402,7 +447,9 @@ OP.Component.extend(idBase, function(App) {
 		webix.extend($$(ids.list), webix.ProgressBar);
 		webix.extend($$(ids.list), webix.OverlayBox);
 
-		MenuComponent.init();
+		MenuComponent.init({
+			onClick: _logic.callbackApplicationEditorMenu
+		})
 
 		// start things off by loading the current list of Applications
 		_logic.loadData();

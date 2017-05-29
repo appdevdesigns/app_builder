@@ -8,7 +8,7 @@
 
 import ABApplication from "../classes/ABApplication"
 import "./ab_work_object_list_newObject"
-import "./ab_work_object_list_popupEditMenu"
+import "./ab_common_popupEditMenu"   // "./ab_work_object_list_popupEditMenu"
 
 
 function L(key, altText) {
@@ -52,15 +52,15 @@ OP.Component.extend(idBase, function(App) {
 			{
 				view: App.custom.editlist.view,  // "editlist",
 				id: ids.list,
-				width: 250,
-
-//height:800, // #Hack!
+				width: 250,	// TODO: @James
 
 				select: true,
+
 				editaction: 'custom',
 				editable: true,
 				editor: "text",
 				editValue: "label",
+
 				template: function(obj, common) {
 					return _logic.templateListItem(obj, common);
 				},
@@ -391,7 +391,7 @@ console.error('!! todo: onBeforeEditStop() editing');
 	// Note: put these here so _logic is defined:
 	// There is a Popup for adding a new Object:
 	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
-	var PopupEditObjectComponent = OP.Component['ab_work_object_list_popupEditMenu'](App);
+	var PopupEditObjectComponent = OP.Component['ab_common_popupEditMenu'](App);
 
 
 
