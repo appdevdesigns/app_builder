@@ -6,7 +6,9 @@
  *
  */
 
-import ABApplication from "../classes/ABApplication"
+
+import "./ab_work_interface_list"
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -35,16 +37,34 @@ OP.Component.extend(idBase, function(App) {
 	}
 
 
+	var ViewList = OP.Component['ab_work_interface_list'](App);
+
 
 	// Our webix UI definition:
 	var _ui = {
 		id: ids.component,
-		//scroll: true,
-		rows: [
-			{
-				view: "label",
-				label:"interface workspace",
-			},
+		margin: 10,
+		cols: [
+			ViewList.ui,
+			{ view: "resizer"},
+{
+	// id: ids.noSelection,
+	rows:[
+		{
+			maxHeight: App.config.xxxLargeSpacer,
+			hidden: App.config.hideMobile
+		},
+		{
+			view:'label',
+			align: "center",
+			label:"interface workspace",
+		},
+		{
+			maxHeight: App.config.xxxLargeSpacer,
+			hidden: App.config.hideMobile
+		}
+	]
+}
 		]
 	};
 
@@ -53,7 +73,7 @@ OP.Component.extend(idBase, function(App) {
 	// Our init() function for setting up our UI
 	var _init = function() {
 		// webix.extend($$(ids.form), webix.ProgressBar);
-
+		ViewList.init();
 	}
 
 
@@ -71,7 +91,9 @@ OP.Component.extend(idBase, function(App) {
 		 * @param {ABApplication} application 
 		 */
 		applicationLoad:function(application) {
-console.error('TODO: ab_work_interface.applicationLoad()');
+
+			ViewList.applicationLoad(application);
+
 		},
 
 

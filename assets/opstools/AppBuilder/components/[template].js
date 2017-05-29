@@ -23,7 +23,7 @@ var labels = {
 }
 
 
-idBase = '[template]';
+var idBase = '[template]';
 OP.Component.extend(idBase, function(App) {
 
 	labels.common = App.labels;

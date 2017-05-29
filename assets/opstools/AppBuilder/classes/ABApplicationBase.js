@@ -32,14 +32,18 @@ module.exports = class ABApplicationBase {
 
 
 	  	// import all our ABObjects
+	  	// NOTE: we work with ABObjects on both the client and server sides.
+	  	// So we provide object methods in the base class.  However, each
+	  	// ABObject sub class (client and server) needs to implement it's own
+	  	// .objectNew() method.
 	  	var newObjects = [];
 	  	(attributes.json.objects || []).forEach((obj) => {
-	  		newObjects.push( this.objectNew(obj) );  // new ABObject(obj, this) );
+	  		newObjects.push( this.objectNew(obj) );  
 	  	})
 	  	this._objects = newObjects;
 
 
-	  	// import all our ABViews
+
 
   	}
 
@@ -165,13 +169,6 @@ module.exports = class ABApplicationBase {
 		var remaininObjects = this.objects(function(o) { return o.id != object.id;})
 		this._objects = remaininObjects;
 		return this.save();
-		
-		// var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
-		// if (!isIncluded) {
-		// 	this._objects.push(object);
-		// }
-
-		// return this.save();
 	}
 
 

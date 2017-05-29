@@ -3,6 +3,7 @@
 import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
 import ABObject from "./ABObject"
+import ABViewManager from "./ABViewManager"
 
 
 var _AllApplications = [];
@@ -36,7 +37,12 @@ export default class ABApplication extends ABApplicationBase {
 
 
 	  	// import all our ABViews
-
+	  	// We only work with ABViews on the client side.
+	  	var newViews = [];
+	  	(attributes.json.views || []).forEach((view) => {
+	  		newViews.push( this.viewNew(view, null) );  
+	  	})
+	  	this._views = newViews;
 
 
 	  	// instance keeps a link to our Model for .save() and .destroy();
@@ -242,6 +248,15 @@ export default class ABApplication extends ABApplicationBase {
 
 		OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
 
+
+		// for each View: compile to json
+		var currViews = [];
+		this._views.forEach((view) => {
+			currViews.push(view.toObj())
+		})
+		this.json.views = currViews;
+
+
 		return super.toObj();
 	}
 
@@ -342,7 +357,6 @@ export default class ABApplication extends ABApplicationBase {
 
 
 
-
 	///
 	/// Objects
 	///
@@ -363,5 +377,81 @@ export default class ABApplication extends ABApplicationBase {
 		return new ABObject(values, this);
 	}
 
+
+
+	///
+	/// Views
+	///
+
+
+	/**
+	 * @method views()
+	 *
+	 * return an array of all the ABViews for this ABApplication.
+	 *
+	 * @param {fn} filter  	a filter fn to return a set of ABViews that this fn
+	 *						returns true for.
+	 * @return {array} 	array of ABViews
+	 */
+	views (filter) {
+
+		filter = filter || function() {return true; };
+
+		return this._views.filter(filter);
+
+	}
+
+
+
+	/**
+	 * @method viewNew()
+	 *
+	 * return an instance of a new (unsaved) ABView that is tied to this
+	 * ABApplication.
+	 *
+	 * NOTE: this new view is not included in our this.views until a .save()
+	 * is performed on the view.
+	 *
+	 * @return {ABViews}
+	 */
+	viewNew( values ) {
+		return new ABViewManager.newView(values, this, null);
+	}
+
+
+
+	/**
+	 * @method viewDestroy()
+	 *
+	 * remove the current ABView from our list of ._views.
+	 *
+	 * @param {ABView} view
+	 * @return {Promise}
+	 */
+	viewDestroy( view ) {
+
+		var remainingViews = this.views(function(v) { return v.id != view.id;})
+		this._views = remainingViews;
+		return this.save();
+	}
+
+
+
+	/**
+	 * @method viewSave()
+	 *
+	 * persist the current ABView in our list of ._views.
+	 *
+	 * @param {ABView} object
+	 * @return {Promise}
+	 */
+	viewSave( view ) {
+		var isIncluded = (this.views(function(v){ return v.id == view.id }).length > 0);
+		if (!isIncluded) {
+			this._views.push(view);
+		}
+
+		return this.save();
+	}
 
 }

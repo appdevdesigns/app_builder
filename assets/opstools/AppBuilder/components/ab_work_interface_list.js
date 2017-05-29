@@ -1,0 +1,539 @@
+
+/*
+ * ab_work_object_list
+ *
+ * Manage the Object List
+ *
+ */
+
+import ABApplication from "../classes/ABApplication"
+import "./ab_work_interface_list_newPage"
+import "./ab_common_popupEditMenu"
+
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+
+var labels = {
+
+	component: {
+
+		// formHeader: L('ab.application.form.header', "*Application Info"),
+		addNew: L('ab.interface.addNewPage', '*Add new Page'),
+
+		confirmDeleteTitle: L('ab.interface.delete.title', "*Delete Page"),
+		confirmDeleteMessage: L('ab.interface.delete.message', "*Do you want to delete <b>{0}</b>?")
+
+	}
+}
+
+
+var idBase = 'ab_work_interface_list';
+OP.Component.extend(idBase, function(App) {
+
+	labels.common = App.labels;
+
+	// internal list of Webix IDs to reference our UI components.
+	var ids = {
+		component: App.unique(idBase+ '_component'),
+
+		list: App.unique(idBase+ '_editlist'),
+		buttonNew: App.unique(idBase+ '_buttonNew'),
+
+	}
+
+
+	// // Note: put these here so _logic is defined:
+	// // There is a Popup for adding a new Object:
+	var PopupNewPageComponent = OP.Component['ab_work_interface_list_newPage'](App);
+	var PopupEditPageComponent = OP.Component['ab_common_popupEditMenu'](App);
+
+
+
+	// Our webix UI definition:
+	var _ui = {
+		id:ids.component,
+		rows: [
+			{
+				view: App.custom.edittree.view,  // "editlist",
+				id: ids.list,
+				width: 250,	// TODO: @James
+
+				select: true,
+
+				editaction: 'custom',
+				editable: true,
+				editor: "text",
+				editValue: "label",
+
+				template: function(obj, common) {
+					return _logic.templateListItem(obj, common);
+				},
+				type: {
+					height: 35,
+					iconGear: "<span class='webix_icon fa-cog'></span>"
+				},
+				on: {
+					onAfterRender: function () {
+						_logic.onAfterRender();
+					},
+					onAfterSelect: function (id) {
+						_logic.onAfterSelect(id);
+					},
+					onAfterOpen: function () {
+						_logic.onAfterOpen();
+
+					},
+					onAfterClose: function () {
+						var ids = this.getSelectedId(true);
+
+						// Show gear icon
+						ids.forEach(function (id) {
+							self.showGear(id);
+						});
+					},
+					onBeforeEditStop: function (state, editor) {
+						_logic.onBeforeEditStop(state, editor);
+					},
+					onAfterEditStop: function (state, editor, ignoreUpdate) {
+						_logic.onAfterEditStop(state, editor, ignoreUpdate);
+					}
+				},
+				onClick: {
+					"ab-page-list-edit": function (e, id, trg) {
+						_logic.clickEditMenu(e, id, trg);
+					}
+				}
+			},
+			{
+				view: 'button',
+				id: ids.buttonNew,
+				value: labels.component.addNew,
+				click: function () {
+					_logic.clickNewView();
+				}
+			}
+		]
+	};
+
+
+
+	// Our init() function for setting up our UI
+	var _init = function() {
+
+		if ($$(ids.component))
+			$$(ids.component).adjust();
+
+		if ($$(ids.list)) {
+			webix.extend($$(ids.list), webix.ProgressBar);
+			$$(ids.list).adjust();
+		}
+
+		PopupNewPageComponent.init({
+			onSave: _logic.callbackNewPage
+		});
+
+		PopupEditPageComponent.init({
+			onClick: _logic.callbackPageEditMenu
+		})
+	}
+
+
+
+	// our internal business logic
+	var _logic = {
+
+
+		/**
+		 * @function applicationLoad
+		 *
+		 * Initialize the Object List from the provided ABApplication
+		 *
+		 * If no ABApplication is provided, then show an empty form. (create operation)
+		 *
+		 * @param {ABApplication} application  	[optional] The current ABApplication
+		 *										we are working with.
+		 */
+		applicationLoad : function(application){
+			_logic.listBusy();
+
+			CurrentApplication = application;
+
+			// get a DataCollection of all our objects
+			viewList = new webix.DataCollection({
+				data: application.views(),
+			});
+
+			// clear our list and display our objects:
+			var List = $$(ids.list);
+			List.clearAll();
+			List.data.unsync();
+			List.data.sync(viewList);
+			List.refresh();
+			List.unselectAll();
+
+
+
+			//
+			_logic.listReady();
+
+
+			// // prepare our Popup with the current Application
+			PopupNewPageComponent.applicationLoad(application);
+
+		},
+
+
+		/**
+		 * @function callbackNewObject
+		 *
+		 * Once a New Page was created in the Popup, follow up with it here.
+		 */
+		callbackNewPage:function(page){
+
+			$$(ids.list).add(page);
+			$$(ids.list).select(page.id);
+			PopupNewPageComponent.hide();
+
+		},
+
+
+		/**
+		 * @function callbackPageEditMenu
+		 *
+		 * Respond to the edit menu selection.
+		 */
+		callbackPageEditMenu: function(action) {
+
+			switch (action) {
+				case 'rename':
+					_logic.rename();
+					break;
+				case 'delete':
+					_logic.remove();
+					break;
+			}
+		},
+
+
+		clickEditMenu: function(e, id, trg) {
+			// Show menu
+			PopupEditPageComponent.show(trg);
+
+			return false;
+		},
+
+
+		listBusy:function() {
+			$$(ids.list).showProgress({ type: "icon" });
+		},
+
+
+		listReady:function() {
+			$$(ids.list).hideProgress();
+		},
+
+
+//// LEFT OFF HERE:
+//// ab_choose_list -> reuse our common PopupEditor
+//// 
+
+
+
+		onAfterClose: function() {
+console.error('!! todo: onAfterClose()');
+												// var ids = this.getSelectedId(true);
+
+												// // Show gear icon
+												// ids.forEach(function (id) {
+												// 	self.showGear(id);
+												// });
+		},
+
+
+		onAfterEditStop: function(state, editor, ignoreUpdate) {
+
+			_logic.showGear(editor.id);
+
+			if (state.value != state.old) {
+				_logic.listBusy();
+
+				var selectedPage = $$(ids.list).getSelectedItem(false);
+				selectedPage.label = state.value;
+
+				// Call server to rename
+				selectedPage.save()
+					.catch(function () {
+						_logic.listReady();
+
+						OP.Dialog.Alert({
+							text: labels.common.renameErrorMessage.replace("{0}", state.old)
+						});
+
+					})
+					.then(function () {
+						_logic.listReady();
+
+						// TODO : should use message box
+						OP.Dialog.Alert({
+							text: labels.common.renameSuccessMessage.replace("{0}", state.value)
+						});
+
+					});
+			}
+		},
+
+
+		onAfterOpen: function() {
+console.error('!! todo: onAfterOpen() ');
+						// var ids = this.getSelectedId(true);
+
+						// // Show gear icon
+						// ids.forEach(function (id) {
+						// 	self.showGear(id);
+						// });
+		},
+
+
+		onAfterRender: function() {
+console.error('!! todo: onAfterRender() editing');
+			// webix.once(function () {
+			// 	$$(self.webixUiId.objectList).data.each(function (d) {
+			// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
+			// 	});
+			// });
+
+			// // Show gear icon
+			// if (this.getSelectedId(true).length > 0) {
+			// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+			// 	self.refreshUnsyncNumber();
+			// }
+		},
+
+
+		/**
+		 * @function onAfterSelect()
+		 *
+		 * Perform these actions when a View is selected in the List.
+		 */
+		onAfterSelect: function (id) {
+
+			var view = $$(ids.list).getItem(id);
+// App.actions.populateViewWorkspace(view);
+
+			_logic.showGear(id);
+		},
+
+
+
+		onBeforeEditStop: function(state, editor) {
+console.error('!! todo: onBeforeEditStop() editing');
+			// if (!inputValidator.validateFormat(state.value)) {
+			// 	return false;
+			// }
+
+			// // Validation - check duplicate
+			// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
+			// 	webix.alert({
+			// 		title: self.labels.object.invalidName,
+			// 		ok: self.labels.common.ok,
+			// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
+			// 	});
+
+			// 	return false;
+			// }
+		},
+
+
+		rename: function() {
+			var pageID = $$(ids.list).getSelectedId(false);
+			$$(ids.list).edit(pageID);
+		},
+
+		remove: function() {
+
+			var selectedPage = $$(ids.list).getSelectedItem(false);
+
+			// verify they mean to do this:
+			OP.Dialog.Confirm({
+				title: labels.component.confirmDeleteTitle,
+				message: labels.component.confirmDeleteMessage.replace('{0}', selectedPage.label),
+				callback: (isOK) => {
+
+					if (isOK) {
+						_logic.listBusy();
+
+						selectedPage.destroy()
+							.then(() => {
+								_logic.listReady();
+
+								$$(ids.list).remove(selectedPage.id);
+// App.actions.clearObjectWorkspace();
+							});
+
+					}
+				}
+			})
+		},
+
+
+		showGear: function(id) {
+			var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-page-list-edit');
+			gearIcon.style.visibility = "visible";
+			gearIcon.style.display = "block";
+		},
+
+		/**
+		 * @function show()
+		 *
+		 * Show this component.
+		 */
+		show:function() {
+
+			$$(ids.component).show();
+		},
+
+
+
+		/**
+		 * @function templateListItem
+		 *
+		 * Defines the template for each row of our ObjectList.
+		 *
+		 * @param {obj} obj the current instance of ABObject for the row.
+		 * @param {?} common the webix.common icon data structure
+		 * @return {string}
+		 */
+		templateListItem: function(item, common) {
+
+
+			var template = _templateListItem;
+
+
+			template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
+			template = template.replace('#typeIcon#', 'fa-file-o');
+
+
+						// // Disallow rename/delete on Tabs
+						// if (item.type !== 'tab')
+						// 	template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
+						// else
+						// 	template = template.replace("#iconGear#", "");
+
+						// switch (item.type) {
+						// 	case 'modal':
+						// 		template = template.replace('#typeIcon#', 'fa-list-alt');
+						// 		break;
+						// 	case 'tab':
+						// 		template = template.replace('#typeIcon#', 'fa-folder-o');
+						// 		break;
+						// 	case 'page':
+						// 	default:
+						// 		template = template.replace('#typeIcon#', 'fa-file-o');
+						// 		break;
+						// }
+
+			return template
+				.replace('#label#', item.label)
+				.replace('{common.icon()}', common.icon(item))
+				.replace('{common.iconGear}', common.iconGear);
+
+		},
+
+
+		/**
+		 * @function clickNewView
+		 *
+		 * Manages initiating the transition to the new Object Popup window
+		 */
+		clickNewView:function() {
+
+			// show the new popup
+			PopupNewPageComponent.show();
+		},
+
+		// rename: function () {
+		// 	var objectId = $$(ids.list).getSelectedId(false);
+		// 	$$(ids.list).edit(objectId);
+		// },
+
+		// remove: function () {
+
+		// 	var selectedObject = $$(ids.list).getSelectedItem(false);
+
+		// 	// verify they mean to do this:
+		// 	OP.Dialog.Confirm({
+		// 		title: labels.component.confirmDeleteTitle,
+		// 		message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
+		// 		callback: (isOK) => {
+
+		// 			if (isOK) {
+		// 				_logic.listBusy();
+
+		// 				selectedObject.destroy()
+		// 					.then(() => {
+		// 						_logic.listReady();
+
+		// 						$$(ids.list).remove(selectedObject.id);
+		// 						App.actions.clearObjectWorkspace();
+		// 					});
+
+		// 			}
+		// 		}
+		// 	})
+		// },
+
+		// callbackObjectEditorMenu: function (action) {
+		// 	switch (action) {
+		// 		case 'rename':
+		// 			_logic.rename();
+		// 			break;
+		// 		case 'delete':
+		// 			_logic.remove();
+		// 			break;
+		// 	}
+		// }
+	}
+
+
+	/*
+	 * _templateListItem
+	 *
+	 * The Object Row template definition.
+	 */
+	var _templateListItem = [
+		"<div class='ab-page-list-item'>",
+			"{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#",
+		"</div>"
+	].join('');
+
+
+
+
+	var CurrentApplication = null;
+	var viewList = null;
+
+
+
+	// Expose any globally accessible Actions:
+	var _actions = {
+
+
+	}
+
+
+	// return the current instance of this component:
+	return {
+		ui:_ui,					// {obj} 	the webix ui definition for this component
+		init:_init,				// {fn} 	init() to setup this component
+		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
+
+		// interface methods for parent component:
+		applicationLoad:_logic.applicationLoad,
+
+		_logic: _logic			// {obj} 	Unit Testing
+	}
+
+})

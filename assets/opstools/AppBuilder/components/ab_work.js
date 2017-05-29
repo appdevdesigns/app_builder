@@ -182,6 +182,12 @@ OP.Component.extend('ab_work', function(App) {
 		AppInterfaceWorkspace.init();
 
 		// initialize the Object Workspace to show first.
+		
+//// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
+//// tab switch, then use that value here to show you which tab to display on loading.
+//// don't save application each time the tab workspace changes.  just make the setting 
+//// and then when they update anything in those workspace editors, this get's updated.
+
 		_logic.tabSwitch(ids.tab_object);
 	}
 
