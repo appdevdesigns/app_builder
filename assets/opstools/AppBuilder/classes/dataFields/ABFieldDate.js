@@ -86,8 +86,8 @@ var ids = {
 	validateRangeBeforeLabel: 'ab-date-validate-before-label',
 	validateRangeAfterLabel: 'ab-date-validate-after-label',
 
-	validateLeft: 'ab-date-validate-left',
-	validateRight: 'ab-date-validate-right'
+	validateStartDate: 'ab-date-validate-start-date',
+	validateEndDate: 'ab-date-validate-end-date'
 };
 
 var delimiterList = [
@@ -531,21 +531,21 @@ var ABFieldDateComponent = new ABFieldComponent({
 						switch (newVal) {
 							case 'none':
 								$$(ids.validateRange).hide();
-								$$(ids.validateLeft).hide();
-								$$(ids.validateRight).hide();
+								$$(ids.validateStartDate).hide();
+								$$(ids.validateEndDate).hide();
 								break;
 							case 'dateRange':
 								$$(ids.validateRange).show();
-								$$(ids.validateLeft).hide();
-								$$(ids.validateRight).hide();
+								$$(ids.validateStartDate).hide();
+								$$(ids.validateEndDate).hide();
 								break;
 							case 'between':
 							case 'notBetween':
 								$$(ids.validateRange).hide();
-								$$(ids.validateLeft).define('label', 'Start Date');
-								$$(ids.validateLeft).refresh();
-								$$(ids.validateLeft).show();
-								$$(ids.validateRight).show();
+								$$(ids.validateStartDate).define('label', 'Start Date');
+								$$(ids.validateStartDate).refresh();
+								$$(ids.validateStartDate).show();
+								$$(ids.validateEndDate).show();
 								break;
 							case '=':
 							case '<>':
@@ -554,10 +554,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 							case '>=':
 							case '<=':
 								$$(ids.validateRange).hide();
-								$$(ids.validateLeft).define('label', 'Date');
-								$$(ids.validateLeft).refresh();
-								$$(ids.validateLeft).show();
-								$$(ids.validateRight).hide();
+								$$(ids.validateStartDate).define('label', 'Date');
+								$$(ids.validateStartDate).refresh();
+								$$(ids.validateStartDate).show();
+								$$(ids.validateEndDate).hide();
 								break;
 						}
 					}
@@ -649,7 +649,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				]
 			},
 			{
-				id: ids.validateLeft,
+				id: ids.validateStartDate,
 				name: "validateStartDate",
 				view: 'datepicker',
 				label: 'Start Date',
@@ -657,7 +657,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				hidden: true
 			},
 			{
-				id: ids.validateRight,
+				id: ids.validateEndDate,
 				name: "validateEndDate",
 				view: 'datepicker',
 				label: 'End Date',
@@ -820,9 +820,7 @@ class ABFieldDate extends ABField {
 		config.editFormat = (d) => {
 			// this routine needs to return a Date() object for the editor to work with.
 
-			// if d is not set, return a default Date() value.
 			if ((d == '') || (d == null)) {
-// TODO: setup default date from settings:
 				return '';
 			}
 
@@ -845,14 +843,16 @@ class ABFieldDate extends ABField {
 	defaultValue(values) {
 		// if no default value is set, then don't insert a value.
 		if (values[this.columnName] == null) {
+
 			// Set current date as default
 			if (this.settings.defaultCurrentDate) {
-				values[this.columnName] = new Date();
+				values[this.columnName] = (new Date()).toISOString();
 			}
 			// Specfic default date
-			else if (this.settings.defaultDate != null && this.settings.defaultDate.length > 0) {
-				values[this.columnName] = new Date(this.settings.defaultDate);
+			else if (this.settings.defaultDate) {
+				values[this.columnName] = (new Date(this.settings.defaultDate)).toISOString();
 			}
+
 		}
 	}
 
@@ -869,7 +869,7 @@ class ABFieldDate extends ABField {
 	 */
 	isValidData(data, validator) {
 
-		if (data[this.columnName] != null) {
+		if (data[this.columnName]) {
 			var value = data[this.columnName];
 
 			if (!(value instanceof Date)) {
@@ -880,8 +880,76 @@ class ABFieldDate extends ABField {
 			if ((Object.prototype.toString.call(value) === '[object Date]')
 				&& (isFinite(value))) {
 
-				// all good, so store as ISO format string.
-				data[this.columnName] = value.toISOString();
+				var isValid = true;
+
+				// Custom vaildate is here
+				if (this.settings && this.settings.validateCondition) {
+					var startDate = this.settings.validateStartDate ? new Date(this.settings.validateStartDate) : null;
+					var endDate = this.settings.validateEndDate ? new Date(this.settings.validateEndDate) : null;
+
+					switch (this.settings.validateCondition) {
+						case 'dateRange':
+							var minDate = moment().subtract(this.settings.validateRangeBefore, this.settings.validateRangeUnit).toDate();
+							var maxDate = moment().add(this.settings.validateRangeAfter, this.settings.validateRangeUnit).toDate();
+
+							if (minDate < value && value < maxDate)
+								isValid = true;
+							else {
+								isValid = false;
+								validator.addError(this.columnName, 'Should be a Date!');
+							}
+
+							break;
+						case 'between':
+						case 'notBetween':
+							if (this.settings.validateCondition == 'between' && startDate < value && value < endDate)
+								isValid = true;
+							else if (this.settings.validateCondition == 'notBetween' && value < startDate && endDate < value)
+								isValid = true;
+							else {
+								isValid = false;
+								validator.addError(this.columnName, 'Should be a Date!');
+							}
+
+							break;
+						case '=':
+							isValid = (value.getTime() == startDate.getTime());
+							if (!isValid)
+								validator.addError(this.columnName, 'Should be a Date!');
+							break;
+						case '<>':
+							isValid = (value.getTime() != startDate.getTime());
+							if (!isValid)
+								validator.addError(this.columnName, 'Should be a Date!');
+							break;
+						case '>':
+							isValid = (value.getTime() > startDate.getTime());
+							if (!isValid)
+								validator.addError(this.columnName, 'Should be a Date!');
+							break;
+						case '<':
+							isValid = (value.getTime() < startDate.getTime());
+							if (!isValid)
+								validator.addError(this.columnName, 'Should be a Date!');
+							break;
+						case '>=':
+							isValid = (value.getTime() >= startDate.getTime());
+							if (!isValid)
+								validator.addError(this.columnName, 'Should be a Date!');
+							break;
+						case '<=':
+							isValid = (value.getTime() <= startDate.getTime());
+							if (!isValid)
+								validator.addError(this.columnName, 'Should be a Date!');
+							break;
+					}
+				}
+
+				if (isValid) {
+					// all good, so store as ISO format string.
+					data[this.columnName] = value.toISOString();
+				}
+
 
 			} else {
 

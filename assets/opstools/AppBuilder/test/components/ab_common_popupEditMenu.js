@@ -1,9 +1,9 @@
-describe('ab_work_object_list_popupEditMenu component', () => {
+describe('ab_common_popupEditMenu component', () => {
 
 	var sandbox;
 
 	var mockApp = OP.Component._newApp();
-	var componentName = 'ab_work_object_list_popupEditMenu';
+	var componentName = 'ab_common_popupEditMenu';
 	var target;
 
 	before(() => {
@@ -48,17 +48,6 @@ describe('ab_work_object_list_popupEditMenu component', () => {
 
 		it("should be webix's popup", () => {
 			assert.equal(target.ui.view, "popup");
-		});
-
-		it('should have 2 menu items', () => {
-			let menuItems = target.ui.body.data;
-
-			let labelRename = mockApp.labels.rename;
-			let labelDelete = mockApp.labels['delete'];
-
-			assert.equal(menuItems.length, 2);
-			assert.equal(menuItems[0].command, labelRename, 'first menu item should be rename');
-			assert.equal(menuItems[1].command, labelDelete, 'second menu item should be delete');
 		});
 
 		it('should have item click event', () => {
