@@ -1,4 +1,5 @@
 import ABApplication from "../../classes/ABApplication"
+import ABListNewObject from "../../components/ab_work_object_list_newObject"
 
 describe('ab_work_object_list_newObject component', () => {
 
@@ -9,11 +10,11 @@ describe('ab_work_object_list_newObject component', () => {
 	var target;
 
 	before(() => {
-		mockApp = OP.Component._newApp();
+		// mockApp = OP.Component._newApp();
 
-		OP.Component['ab'](mockApp);
+		// OP.Component['ab'](mockApp);
 
-		target = OP.Component[componentName](mockApp);
+		target = new ABListNewObject(mockApp);
 	});
 
 	beforeEach(() => {

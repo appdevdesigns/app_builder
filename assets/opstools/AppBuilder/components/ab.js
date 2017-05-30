@@ -121,6 +121,10 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 
 		})
 
+
+
+		this._app = App;  // for unit testing.
+
 	}
 
 };

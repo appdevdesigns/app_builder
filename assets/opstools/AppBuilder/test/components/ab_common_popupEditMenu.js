@@ -1,16 +1,26 @@
+
+import AB from '../../components/ab'
+import ABCommonPopup from '../../components/ab_common_popupEditMenu';
+
 describe('ab_common_popupEditMenu component', () => {
 
 	var sandbox;
 
-	var mockApp = OP.Component._newApp();
+	var ab = new AB();
+	var ui = ab.ui;
+	ui.container = 'mocha_test_div';
+	webix.ui(ui)
+
+	var mockApp = ab._app;
+
 	var componentName = 'ab_common_popupEditMenu';
 	var target;
 
 	before(() => {
 
-		OP.Component['ab'](mockApp);
+		// OP.Component['ab'](mockApp);
 
-		target = OP.Component[componentName](mockApp);
+		target = new ABCommonPopup(mockApp);
 
 		// TODO: render UI function
 		// buildHTML();
