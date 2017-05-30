@@ -16,11 +16,11 @@ describe('ab_work_object_list_newObject component', () => {
 		target = OP.Component[componentName](mockApp);
 	});
 
-	beforeEach(function () {
+	beforeEach(() => {
 		sandbox = sinon.sandbox.create();
 	});
 
-	afterEach(function () {
+	afterEach(() => {
 		sandbox.restore();
 	});
 
