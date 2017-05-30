@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -74,37 +74,45 @@
 /* WEBPACK VAR INJECTION */(function(OP) {
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+  value: true
 });
 
-var _comm = __webpack_require__(4);
+var _comm = __webpack_require__(5);
 
 var _comm2 = _interopRequireDefault(_comm);
 
-var _multilingual = __webpack_require__(7);
+var _component = __webpack_require__(2);
 
-var _multilingual2 = _interopRequireDefault(_multilingual);
+var _component2 = _interopRequireDefault(_component);
 
-var _model = __webpack_require__(6);
+var _config = __webpack_require__(6);
+
+var _config2 = _interopRequireDefault(_config);
+
+var _customComponent = __webpack_require__(7);
+
+var _customComponent2 = _interopRequireDefault(_customComponent);
+
+var _model = __webpack_require__(8);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(8);
+var _multilingual = __webpack_require__(9);
+
+var _multilingual2 = _interopRequireDefault(_multilingual);
+
+var _util = __webpack_require__(10);
 
 var _util2 = _interopRequireDefault(_util);
 
-var _validation = __webpack_require__(9);
+var _validation = __webpack_require__(11);
 
 var _validation2 = _interopRequireDefault(_validation);
-
-var _config = __webpack_require__(5);
-
-var _config2 = _interopRequireDefault(_config);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * @class AD_Client
+ * @class OP
  * @parent index 4
  *
  * ###Client side global OpsPortal (OP) namespace.
@@ -119,114 +127,27 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //// in 'use strict' ?
 
 // if (!window.OP) {
+
 window.OP = OP;
 
 // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
 //              for our loaded projects.
-// OP.UI = {};    		// webix UI definitions
-// OP.Logic = {}; 		// logic references for webix application
 
-// import Form from "./form"
-// import Grid from "./grid"
-OP.Comm = _comm2.default;
+OP.Comm = _comm2.default; // communication routines (AJAX calls)
 
-OP.Component = {}; // our defined components
+OP.Component = _component2.default; // our defined components
 
-OP.CustomComponent = {}; // separate holder for Webix Custom Components
+OP.Config = _config2.default; // configuration Settings for our current environment.
 
-
-// OP.UI.extend = function(key, definition) {
-// 	OP.UI[key] = definition;
-// }
-
-OP.Component.extend = function (key, fn) {
-	OP.Component[key] = function (App) {
-
-		//// TODO: verify App has proper structure:
-		if (!App) {
-			App = OP.Component._newApp();
-		}
-
-		// make an instance of the component.
-		var component = fn(App);
-
-		// transfer to App, any actions in the component:
-		if (component.actions) {
-			for (var a in component.actions) {
-				App.actions[a] = component.actions[a];
-			}
-		}
-
-		return component;
-	};
-};
-
-OP.Component._newApp = function () {
-	return {
-
-		uuid: webix.uid(),
-
-		/*
-   * actions:
-   * a hash of exposed application methods that are shared among our
-   * components, so one component can invoke an action that updates
-   * another component.
-   */
-		actions: {},
-
-		/*
-   * config
-   * webix configuration settings for our current browser
-   */
-		config: _config2.default.config(),
-
-		/*
-   * custom
-   * a collection of custom components for this App Instance.
-   */
-		custom: {},
-
-		/*
-   * labels
-   * a collection of labels that are common for the Application.
-   */
-		labels: {},
-
-		/*
-   * unique()
-   * A function that returns a globally unique Key.
-   * @param {string} key   The key to modify and return.
-   * @return {string}
-   */
-		unique: function unique(key) {
-			return key + this.uuid;
-		}
-
-	};
-};
-
-OP.CustomComponent.extend = function (key, fn) {
-	OP.CustomComponent[key] = function (App, key) {
-
-		if (!App) {
-			App = OP.Component._newApp();
-		}
-
-		// make an instance of the component.
-		return fn(App, key);
-	};
-};
+OP.CustomComponent = _customComponent2.default; // Webix Custom Components
 
 OP.Dialog = AD.op.Dialog;
 
 OP.Error = AD.error;
 
-// OP.Form = Form;
-
-// OP.Grid = Grid;
+OP.Model = _model2.default;
 
 OP.Multilingual = _multilingual2.default;
-OP.Model = _model2.default;
 
 OP.Util = _util2.default;
 
@@ -251,545 +172,64 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-// import OP from "OP"
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-__webpack_require__(42);
+var _ABFieldBase2 = __webpack_require__(25);
 
-var _ABObject = __webpack_require__(17);
-
-var _ABObject2 = _interopRequireDefault(_ABObject);
+var _ABFieldBase3 = _interopRequireDefault(_ABFieldBase2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var _AllApplications = [];
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * ABField
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * An ABField defines a single unique Field/Column in a ABObject.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-function toDC(data) {
-	return new webix.DataCollection({
-		data: data
+var ABField = function (_ABFieldBase) {
+	_inherits(ABField, _ABFieldBase);
 
-	});
-}
-
-function toArray(DC) {
-	var ary = [];
-
-	var id = DC.getFirstId();
-	while (id) {
-		var element = DC.getItem(id);
-		ary.push(element);
-		id = DC.getNextId(id);
-	}
-
-	return ary;
-}
-
-var ABApplication = function () {
-	function ABApplication(attributes) {
-		var _this = this;
-
-		_classCallCheck(this, ABApplication);
-
-		// ABApplication Attributes
-		this.id = attributes.id;
-		this.json = attributes.json;
-		this.name = attributes.name || this.json.name || "";
-		this.role = attributes.role;
-
-		// multilingual fields: label, description
-		OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
-
-		// import all our ABObjects
-		var newObjects = [];
-		(attributes.json.objects || []).forEach(function (obj) {
-			newObjects.push(new _ABObject2.default(obj, _this));
-		});
-		this._objects = newObjects;
-
-		// import all our ABViews
-
-
-		// instance keeps a link to our Model for .save() and .destroy();
-		this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
-		this.Model.Models(ABApplication);
-	}
-
-	///
-	/// Static Methods
-	///
-	/// Available to the Class level object.  These methods are not dependent
-	/// on the instance values of the Application.
-	///
-
-
-	/**
-  * @function allApplications
-  *
-  * return a DataCollection that contains all the ABApplications this user
-  * can see (based upon server side permissions);
-  *
-  * NOTE: this manages the results in the _AllApplications dataCollection
-  * store.  Any future .create(), .destroy(), .updates() modify values in
-  * that collection.
-  *
-  * Any webix ui components synced to that collection will be automatically
-  * updated.
-  *
-  * @return {Promise}
-  */
-
-
-	_createClass(ABApplication, [{
-		key: "destroy",
-
-
-		///
-		/// Instance Methods
-		///
-
-
-		/// ABApplication data methods
-
-
-		/**
-   * @method destroy()
-   *
-   * destroy the current instance of ABApplication
-   *
-   * also remove it from our _AllApplications
-   *
-   * @return {Promise}
-   */
-		value: function destroy() {
-			var _this2 = this;
-
-			if (this.id) {
-				return this.Model.destroy(this.id).then(function () {
-					_AllApplications.remove(_this2.id);
-				});
-			}
-		}
-
-		/**
-   * @method save()
-   *
-   * persist the current instance of ABApplication to the DB
-   *
-   * Also, keep the values in _AllApplications up to date.
-   *
-   * @return {Promise}
-   */
-
-	}, {
-		key: "save",
-		value: function save() {
-			var _this3 = this;
-
-			var values = this.toObj();
-
-			// we already have an .id, so this must be an UPDATE
-			if (values.id) {
-
-				return this.Model.update(values.id, values).then(function () {
-					_AllApplications.updateItem(values.id, _this3);
-				});
-			} else {
-
-				// must be a CREATE:
-				return this.Model.create(values).then(function (data) {
-					_this3.id = data.id;
-					_AllApplications.add(_this3, 0);
-				});
-			}
-		}
-
-		/**
-   * @method toObj()
-   *
-   * properly compile the current state of this ABApplication instance
-   * into the values needed for saving to the DB.
-   *
-   * Most of the instance data is stored in .json field, so be sure to
-   * update that from all the current values of our child fields.
-   *
-   * @return {json}
-   */
-
-	}, {
-		key: "toObj",
-		value: function toObj() {
-
-			OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
-			this.json.name = this.name;
-
-			// for each Object: compile to json
-			var currObjects = [];
-			this._objects.forEach(function (obj) {
-				currObjects.push(obj.toObj());
-			});
-			this.json.objects = currObjects;
-
-			return {
-				id: this.id,
-				name: this.name,
-				json: this.json,
-				role: this.role
-			};
-		}
-
-		/// ABApplication Permission methods
-
-
-		/**
-   * @method assignPermissions()
-   *
-   * Make sure the current ABApplication permissions match the given
-   * array of permissions.
-   *
-   * @param {array} permItems	an array of role assignments that this
-   * 							ABApplication should match.
-   * @return {Promise}
-   */
-
-	}, {
-		key: "assignPermissions",
-		value: function assignPermissions(permItems) {
-			var _this4 = this;
-
-			return new Promise(function (resolve, reject) {
-				AD.comm.service.put({
-					url: '/app_builder/' + _this4.id + '/role/assign',
-					data: {
-						roles: permItems
-					}
-				}).fail(reject).done(resolve);
-			});
-		}
-
-		/**
-   * @method getPermissions()
-   *
-   * Return an array of role assignments that are currently assigned to this
-   * ABApplication.
-   *
-   * @return {Promise} 	resolve(list) : list {array} Role assignments
-   */
-
-	}, {
-		key: "getPermissions",
-		value: function getPermissions() {
-			var _this5 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				AD.comm.service.get({ url: '/app_builder/' + _this5.id + '/role' }).fail(reject).done(resolve);
-			});
-		}
-
-		/**
-   * @method createPermission()
-   *
-   * Create a Role in the system after the name of the current ABApplication.
-   *
-   * @return {Promise}
-   */
-
-	}, {
-		key: "createPermission",
-		value: function createPermission() {
-			var _this6 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				// TODO: need to take created role and store as : .json.applicationRole = role.id
-
-				AD.comm.service.post({ url: '/app_builder/' + _this6.id + '/role' }).fail(reject).done(resolve);
-			});
-		}
-
-		/**
-   * @method deletePermission()
-   *
-   * Remove the Role in the system of the current ABApplication.
-   * (the one created by  .createPermission() )
-   *
-   * @return {Promise}
-   */
-
-	}, {
-		key: "deletePermission",
-		value: function deletePermission() {
-			var _this7 = this;
-
-			return new Promise(function (resolve, reject) {
-
-				// TODO: need to remove created role from : .json.applicationRole
-				AD.comm.service.delete({ url: '/app_builder/' + _this7.id + '/role' }).fail(reject).done(resolve);
-			});
-		}
-
-		///
-		/// Objects
-		///
-
-
-		/**
-   * @method objects()
-   *
-   * return an array of all the ABObjects for this ABApplication.
-   *
-   * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn
-   *						returns true for.
-   * @return {array} 	array of ABObject
-   */
-
-	}, {
-		key: "objects",
-		value: function objects(filter) {
-
-			filter = filter || function () {
-				return true;
-			};
-
-			return this._objects.filter(filter);
-		}
-
-		/**
-   * @method objectNew()
-   *
-   * return an instance of a new (unsaved) ABObject that is tied to this
-   * ABApplication.
-   *
-   * NOTE: this new object is not included in our this.objects until a .save()
-   * is performed on the object.
-   *
-   * @return {ABObject}
-   */
-
-	}, {
-		key: "objectNew",
-		value: function objectNew(values) {
-			return new _ABObject2.default(values, this);
-		}
-
-		/**
-   * @method objectDestroy()
-   *
-   * remove the current ABObject from our list of ._objects.
-   *
-   * @param {ABObject} object
-   * @return {Promise}
-   */
-
-	}, {
-		key: "objectDestroy",
-		value: function objectDestroy(object) {
-
-			var remaininObjects = this.objects(function (o) {
-				return o.id != object.id;
-			});
-			this._objects = remaininObjects;
-			return this.save();
-
-			// var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
-			// if (!isIncluded) {
-			// 	this._objects.push(object);
-			// }
-
-			// return this.save();
-		}
-
-		/**
-   * @method objectSave()
-   *
-   * persist the current ABObject in our list of ._objects.
-   *
-   * @param {ABObject} object
-   * @return {Promise}
-   */
-
-	}, {
-		key: "objectSave",
-		value: function objectSave(object) {
-			var isIncluded = this.objects(function (o) {
-				return o.id == object.id;
-			}).length > 0;
-			if (!isIncluded) {
-				this._objects.push(object);
-			}
-
-			return this.save();
-		}
-	}], [{
-		key: "allApplications",
-		value: function allApplications() {
-			return new Promise(function (resolve, reject) {
-
-				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
-				ModelApplication.Models(ABApplication); // set the Models  setting.
-
-				ModelApplication.findAll().then(function (data) {
-
-					// NOTE: data is already a DataCollection from .findAll()
-					_AllApplications = data;
-
-					resolve(data);
-				}).catch(reject);
-			});
-		}
-
-		/**
-   * @function create
-   *
-   * take the initial values and create an instance of ABApplication.
-   *
-   * @return {Promise}
-   */
-
-	}, {
-		key: "create",
-		value: function create(values) {
-			return new Promise(function (resolve, reject) {
-
-				var newApp = {};
-				OP.Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
-				values.json = newApp;
-				newApp.name = values.name;
-
-				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
-				ModelApplication.create(values).then(function (app) {
-
-					// return an instance of ABApplication
-					var App = new ABApplication(app);
-
-					_AllApplications.add(App, 0);
-					resolve(App);
-				}).catch(reject);
-			});
-		}
-
-		/**
-   * @method fieldsMultilingual()
-   *
-   * return an array of fields that are considered Multilingual labels for
-   * an ABApplication
-   *
-   * @return {array}
-   */
-
-	}, {
-		key: "fieldsMultilingual",
-		value: function fieldsMultilingual() {
-			return ['label', 'description'];
-		}
-
-		//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
-
-	}, {
-		key: "isValid",
-		value: function isValid(op, values) {
-
-			var validator = OP.Validation.validator();
-
-			// during an ADD operation
-			if (op == 'add') {
-
-				// label/name must be unique:
-				var arrayApplications = toArray(_AllApplications);
-
-				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
-				var matchingApps = arrayApplications.filter(function (app) {
-					return app.name.trim().toLowerCase() == nameMatch;
-				});
-				if (matchingApps && matchingApps.length > 0) {
-
-					validator.addError('label', L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch));
-					// var errors = OP.Form.validationError({
-					// 	name:'label',
-					// 	message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
-					// }, errors);
-				}
-			}
-
-			// Check the common validations:
-			// TODO:
-			// if (!inputValidator.validate(values.label)) {
-			// 	_logic.buttonSaveEnable();
-			// 	return false;
-			// }
-
-
-			return validator;
-		}
-	}]);
-
-	return ABApplication;
-}();
-
-exports.default = ABApplication;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(OP) {
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/*
- * ABField
- *
- * An ABField defines a single unique Field/Column in a ABObject.
- *
- */
-
-// import OP from "../../OP/OP"
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var ABField = function () {
 	function ABField(values, object, fieldDefaults) {
 		_classCallCheck(this, ABField);
 
-		// NOTE: setup this first so later we can use .fieldType(), .fieldIcon()
-		this.defaults = fieldDefaults;
+		//  	// NOTE: setup this first so later we can use .fieldType(), .fieldIcon()
+		//  	this.defaults = fieldDefaults;
 
-		/*
-  {
-  id:'uuid',					// uuid value for this obj
-  key:'fieldKey',				// unique key for this Field
-  icon:'font',				// fa-[icon] reference for an icon for this Field Type
-  label:'',					// pulled from translation
-  columnName:'column_name',	// a valid mysql table.column name
-  settings: {					// unique settings for the type of field
-  showIcon:true/false,	// only useful in Object Workspace DataTable
-  // specific for dataField
-  },
-  translations:[]
-  }
-  */
-		this.fromValues(values);
+
+		// 	{
+		// 		id:'uuid',					// uuid value for this obj
+		// 		key:'fieldKey',				// unique key for this Field
+		// 		icon:'font',				// fa-[icon] reference for an icon for this Field Type
+		// 		label:'',					// pulled from translation
+		// columnName:'column_name',	// a valid mysql table.column name
+		// settings: {					// unique settings for the type of field
+		// 	showIcon:true/false,	// only useful in Object Workspace DataTable
+
+		// 	// specific for dataField
+		// },
+		// translations:[]
+		// 	}
+
+		// 	this.fromValues(values);
+
 
 		// label is a multilingual value:
-		OP.Multilingual.translate(this, this, ['label']);
+		var _this = _possibleConstructorReturn(this, (ABField.__proto__ || Object.getPrototypeOf(ABField)).call(this, values, object, fieldDefaults));
 
-		this.object = object;
+		OP.Multilingual.translate(_this, _this, ['label']);
+
+		// this.object = object;
+		return _this;
 	}
 
 	///
@@ -800,37 +240,8 @@ var ABField = function () {
 	///
 
 	_createClass(ABField, [{
-		key: 'fieldKey',
+		key: 'isValid',
 
-
-		// unique key to reference this specific DataField
-		value: function fieldKey() {
-			return this.defaults.key;
-		}
-
-		// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
-
-	}, {
-		key: 'fieldIcon',
-		value: function fieldIcon() {
-			return this.defaults.icon;
-		}
-
-		// the multilingual text for the name of this data field.
-
-	}, {
-		key: 'fieldMenuName',
-		value: function fieldMenuName() {
-			return this.defaults.menuName;
-		}
-
-		// the multilingual text for the name of this data field.
-
-	}, {
-		key: 'fieldDescription',
-		value: function fieldDescription() {
-			return this.defaults.description;
-		}
 
 		/*
    * @method isValid
@@ -839,18 +250,15 @@ var ABField = function () {
    *
    * @return null or [{OP.Validation.validator()}] objects.
    */
-
-	}, {
-		key: 'isValid',
 		value: function isValid() {
-			var _this = this;
+			var _this2 = this;
 
 			var validator = OP.Validation.validator();
 
 			// .columnName must be unique among fileds on the same object
 			var isNameUnique = this.object.fields(function (f) {
-				var isDifferent = f.id != _this.id;
-				return f.id != _this.id && f.columnName.toLowerCase() == _this.columnName.toLowerCase();
+				var isDifferent = f.id != _this2.id;
+				return f.id != _this2.id && f.columnName.toLowerCase() == _this2.columnName.toLowerCase();
 			}).length == 0;
 			if (!isNameUnique) {
 				validator.addError('columnName', L('ab.validation.object.name.unique', 'Field columnName must be unique (#name# already used in this Application)').replace('#name#', this.columnName));
@@ -880,18 +288,18 @@ var ABField = function () {
 	}, {
 		key: 'destroy',
 		value: function destroy() {
-			var _this2 = this;
+			var _this3 = this;
 
 			return new Promise(function (resolve, reject) {
 
 				// verify we have been .save()d before:
-				if (_this2.id) {
+				if (_this3.id) {
 
 					// NOTE: our .migrateXXX() routines expect the object to currently exist
 					// in the DB before we perform the DB operations.  So we need to
 					// .migrateDrop()  before we actually .objectDestroy() this.
-					_this2.migrateDrop().then(function () {
-						return _this2.object.fieldRemove(_this2);
+					_this3.migrateDrop().then(function () {
+						return _this3.object.fieldRemove(_this3);
 					}).then(resolve).catch(reject);
 				} else {
 
@@ -913,26 +321,26 @@ var ABField = function () {
 	}, {
 		key: 'save',
 		value: function save() {
-			var _this3 = this;
+			var _this4 = this;
 
 			return new Promise(function (resolve, reject) {
 
 				var isAdd = false;
 				// if this is our initial save()
-				if (!_this3.id) {
+				if (!_this4.id) {
 					isAdd = true;
-					_this3.id = OP.Util.uuid(); // setup default .id
+					_this4.id = OP.Util.uuid(); // setup default .id
 				}
 
-				_this3.object.fieldSave(_this3).then(function () {
+				_this4.object.fieldSave(_this4).then(function () {
 
 					if (isAdd) {
 
-						_this3.migrateCreate().then(function () {
-							resolve(_this3);
+						_this4.migrateCreate().then(function () {
+							resolve(_this4);
 						}).catch(reject);
 					} else {
-						resolve(_this3);
+						resolve(_this4);
 					}
 				}).catch(function (err) {
 					reject(err);
@@ -956,43 +364,7 @@ var ABField = function () {
 			// store "label" in our translations
 			OP.Multilingual.unTranslate(this, this, ["label"]);
 
-			return {
-				id: this.id,
-				key: this.key,
-				icon: this.icon,
-				columnName: this.columnName,
-				settings: this.settings,
-				translations: this.translations
-			};
-		}
-
-		/**
-   * @method fromValues()
-   *
-   * initialze this object with the given set of values.
-   * @param {obj} values
-   */
-
-	}, {
-		key: 'fromValues',
-		value: function fromValues(values) {
-
-			this.id = values.id; // NOTE: only exists after .save()
-			this.key = values.key || this.fieldKey();
-			this.icon = values.icon || this.fieldIcon();
-
-			// if this is being instantiated on a read from the Property UI,
-			// .label is coming in under .settings.label
-			this.label = values.label || values.settings.label || '?label?';
-
-			this.columnName = values.columnName || '';
-			this.translations = values.translations || [];
-
-			this.settings = values.settings || {};
-			this.settings.showIcon = values.settings.showIcon + "" || "1";
-
-			// convert from "0" => 0
-			this.settings.showIcon = parseInt(this.settings.showIcon);
+			return _get(ABField.prototype.__proto__ || Object.getPrototypeOf(ABField.prototype), 'toObj', this).call(this);
 		}
 
 		///
@@ -1217,9 +589,111 @@ var ABField = function () {
 	}]);
 
 	return ABField;
-}();
+}(_ABFieldBase3.default);
 
 exports.default = ABField;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var UIComponent = function () {
+
+	/**
+  * @param {object} App 
+  *      ?what is this?
+  * @param {string} idBase
+  *      Identifier for this component
+  */
+	function UIComponent(App, idBase) {
+		_classCallCheck(this, UIComponent);
+
+		if (!App) {
+			App = {
+
+				uuid: webix.uid(),
+
+				/*
+     * actions:
+     * a hash of exposed application methods that are shared among our
+     * components, so one component can invoke an action that updates
+     * another component.
+     */
+				actions: {},
+
+				/*
+     * config
+     * webix configuration settings for our current browser
+     */
+				config: OP.Config.config(),
+
+				/*
+     * custom
+     * a collection of custom components for this App Instance.
+     */
+				custom: {},
+
+				/*
+     * labels
+     * a collection of labels that are common for the Application.
+     */
+				labels: {},
+
+				/*
+     * unique()
+     * A function that returns a globally unique Key.
+     * @param {string} key   The key to modify and return.
+     * @return {string}
+     */
+				unique: function unique(key) {
+					return key + this.uuid;
+				}
+
+			};
+		}
+
+		this.App = App;
+
+		this.idBase = idBase || '?idbase?';
+	}
+
+	_createClass(UIComponent, [{
+		key: 'actions',
+		value: function actions(_actions) {
+			if (_actions) {
+				for (var a in _actions) {
+					this.App.actions[a] = _actions[a];
+				}
+			}
+		}
+	}, {
+		key: 'Label',
+		value: function Label(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
+	}, {
+		key: 'unique',
+		value: function unique(key) {
+			return this.App.unique(this.idBase + '_' + key);
+		}
+	}]);
+
+	return UIComponent;
+}();
+
+exports.default = UIComponent;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
@@ -1240,7 +714,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       *
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       */
 
-var _ABField = __webpack_require__(2);
+var _ABField = __webpack_require__(1);
 
 var _ABField2 = _interopRequireDefault(_ABField);
 
@@ -1622,23 +1096,493 @@ exports.default = ABFieldComponent;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
+/* WEBPACK VAR INJECTION */(function(OP) {
 
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _comm_service = __webpack_require__(10);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _comm_service2 = _interopRequireDefault(_comm_service);
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+var _ABApplicationBase2 = __webpack_require__(20);
+
+var _ABApplicationBase3 = _interopRequireDefault(_ABApplicationBase2);
+
+__webpack_require__(52);
+
+var _ABObject = __webpack_require__(22);
+
+var _ABObject2 = _interopRequireDefault(_ABObject);
+
+var _ABViewManager = __webpack_require__(24);
+
+var _ABViewManager2 = _interopRequireDefault(_ABViewManager);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = {
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	// OP.Comm.Service.*
-	Service: _comm_service2.default
-};
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+// import OP from "OP"
+
+
+var _AllApplications = [];
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+function toArray(DC) {
+	var ary = [];
+
+	var id = DC.getFirstId();
+	while (id) {
+		var element = DC.getItem(id);
+		ary.push(element);
+		id = DC.getNextId(id);
+	}
+
+	return ary;
+}
+
+var ABApplication = function (_ABApplicationBase) {
+	_inherits(ABApplication, _ABApplicationBase);
+
+	function ABApplication(attributes) {
+		_classCallCheck(this, ABApplication);
+
+		// multilingual fields: label, description
+		var _this = _possibleConstructorReturn(this, (ABApplication.__proto__ || Object.getPrototypeOf(ABApplication)).call(this, attributes));
+
+		OP.Multilingual.translate(_this, _this.json, ABApplication.fieldsMultilingual());
+
+		// import all our ABViews
+		// We only work with ABViews on the client side.
+		var newViews = [];
+		(attributes.json.views || []).forEach(function (view) {
+			newViews.push(_this.viewNew(view, null));
+		});
+		_this._views = newViews;
+
+		// instance keeps a link to our Model for .save() and .destroy();
+		_this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
+		_this.Model.Models(ABApplication);
+		return _this;
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+
+	/**
+  * @function allApplications
+  *
+  * return a DataCollection that contains all the ABApplications this user
+  * can see (based upon server side permissions);
+  *
+  * NOTE: this manages the results in the _AllApplications dataCollection
+  * store.  Any future .create(), .destroy(), .updates() modify values in
+  * that collection.
+  *
+  * Any webix ui components synced to that collection will be automatically
+  * updated.
+  *
+  * @return {Promise}
+  */
+
+
+	_createClass(ABApplication, [{
+		key: "destroy",
+
+
+		///
+		/// Instance Methods
+		///
+
+
+		/// ABApplication data methods
+
+
+		/**
+   * @method destroy()
+   *
+   * destroy the current instance of ABApplication
+   *
+   * also remove it from our _AllApplications
+   *
+   * @return {Promise}
+   */
+		value: function destroy() {
+			var _this2 = this;
+
+			if (this.id) {
+				return this.Model.destroy(this.id).then(function () {
+					_AllApplications.remove(_this2.id);
+				});
+			}
+		}
+
+		/**
+   * @method save()
+   *
+   * persist the current instance of ABApplication to the DB
+   *
+   * Also, keep the values in _AllApplications up to date.
+   *
+   * @return {Promise}
+   */
+
+	}, {
+		key: "save",
+		value: function save() {
+			var _this3 = this;
+
+			var values = this.toObj();
+
+			// we already have an .id, so this must be an UPDATE
+			if (values.id) {
+
+				return this.Model.update(values.id, values).then(function () {
+					_AllApplications.updateItem(values.id, _this3);
+				});
+			} else {
+
+				// must be a CREATE:
+				return this.Model.create(values).then(function (data) {
+					_this3.id = data.id;
+					_AllApplications.add(_this3, 0);
+				});
+			}
+		}
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABApplication instance
+   * into the values needed for saving to the DB.
+   *
+   * Most of the instance data is stored in .json field, so be sure to
+   * update that from all the current values of our child fields.
+   *
+   * @return {json}
+   */
+
+	}, {
+		key: "toObj",
+		value: function toObj() {
+
+			OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
+
+			// for each View: compile to json
+			var currViews = [];
+			this._views.forEach(function (view) {
+				currViews.push(view.toObj());
+			});
+			this.json.views = currViews;
+
+			return _get(ABApplication.prototype.__proto__ || Object.getPrototypeOf(ABApplication.prototype), "toObj", this).call(this);
+		}
+
+		/// ABApplication Permission methods
+
+
+		/**
+   * @method assignPermissions()
+   *
+   * Make sure the current ABApplication permissions match the given
+   * array of permissions.
+   *
+   * @param {array} permItems	an array of role assignments that this
+   * 							ABApplication should match.
+   * @return {Promise}
+   */
+
+	}, {
+		key: "assignPermissions",
+		value: function assignPermissions(permItems) {
+			var _this4 = this;
+
+			return new Promise(function (resolve, reject) {
+				AD.comm.service.put({
+					url: '/app_builder/' + _this4.id + '/role/assign',
+					data: {
+						roles: permItems
+					}
+				}).fail(reject).done(resolve);
+			});
+		}
+
+		/**
+   * @method getPermissions()
+   *
+   * Return an array of role assignments that are currently assigned to this
+   * ABApplication.
+   *
+   * @return {Promise} 	resolve(list) : list {array} Role assignments
+   */
+
+	}, {
+		key: "getPermissions",
+		value: function getPermissions() {
+			var _this5 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				AD.comm.service.get({ url: '/app_builder/' + _this5.id + '/role' }).fail(reject).done(resolve);
+			});
+		}
+
+		/**
+   * @method createPermission()
+   *
+   * Create a Role in the system after the name of the current ABApplication.
+   *
+   * @return {Promise}
+   */
+
+	}, {
+		key: "createPermission",
+		value: function createPermission() {
+			var _this6 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// TODO: need to take created role and store as : .json.applicationRole = role.id
+
+				AD.comm.service.post({ url: '/app_builder/' + _this6.id + '/role' }).fail(reject).done(resolve);
+			});
+		}
+
+		/**
+   * @method deletePermission()
+   *
+   * Remove the Role in the system of the current ABApplication.
+   * (the one created by  .createPermission() )
+   *
+   * @return {Promise}
+   */
+
+	}, {
+		key: "deletePermission",
+		value: function deletePermission() {
+			var _this7 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// TODO: need to remove created role from : .json.applicationRole
+				AD.comm.service.delete({ url: '/app_builder/' + _this7.id + '/role' }).fail(reject).done(resolve);
+			});
+		}
+
+		///
+		/// Objects
+		///
+
+
+		/**
+   * @method objectNew()
+   *
+   * return an instance of a new (unsaved) ABObject that is tied to this
+   * ABApplication.
+   *
+   * NOTE: this new object is not included in our this.objects until a .save()
+   * is performed on the object.
+   *
+   * @return {ABObject}
+   */
+
+	}, {
+		key: "objectNew",
+		value: function objectNew(values) {
+			return new _ABObject2.default(values, this);
+		}
+
+		///
+		/// Views
+		///
+
+
+		/**
+   * @method views()
+   *
+   * return an array of all the ABViews for this ABApplication.
+   *
+   * @param {fn} filter  	a filter fn to return a set of ABViews that this fn
+   *						returns true for.
+   * @return {array} 	array of ABViews
+   */
+
+	}, {
+		key: "views",
+		value: function views(filter) {
+
+			filter = filter || function () {
+				return true;
+			};
+
+			return this._views.filter(filter);
+		}
+
+		/**
+   * @method viewNew()
+   *
+   * return an instance of a new (unsaved) ABView that is tied to this
+   * ABApplication.
+   *
+   * NOTE: this new view is not included in our this.views until a .save()
+   * is performed on the view.
+   *
+   * @return {ABViews}
+   */
+
+	}, {
+		key: "viewNew",
+		value: function viewNew(values) {
+			return new _ABViewManager2.default.newView(values, this, null);
+		}
+
+		/**
+   * @method viewDestroy()
+   *
+   * remove the current ABView from our list of ._views.
+   *
+   * @param {ABView} view
+   * @return {Promise}
+   */
+
+	}, {
+		key: "viewDestroy",
+		value: function viewDestroy(view) {
+
+			var remainingViews = this.views(function (v) {
+				return v.id != view.id;
+			});
+			this._views = remainingViews;
+			return this.save();
+		}
+
+		/**
+   * @method viewSave()
+   *
+   * persist the current ABView in our list of ._views.
+   *
+   * @param {ABView} object
+   * @return {Promise}
+   */
+
+	}, {
+		key: "viewSave",
+		value: function viewSave(view) {
+			var isIncluded = this.views(function (v) {
+				return v.id == view.id;
+			}).length > 0;
+			if (!isIncluded) {
+				this._views.push(view);
+			}
+
+			return this.save();
+		}
+	}], [{
+		key: "allApplications",
+		value: function allApplications() {
+			return new Promise(function (resolve, reject) {
+
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.Models(ABApplication); // set the Models  setting.
+
+				ModelApplication.findAll().then(function (data) {
+
+					// NOTE: data is already a DataCollection from .findAll()
+					_AllApplications = data;
+
+					resolve(data);
+				}).catch(reject);
+			});
+		}
+
+		/**
+   * @function create
+   *
+   * take the initial values and create an instance of ABApplication.
+   *
+   * @return {Promise}
+   */
+
+	}, {
+		key: "create",
+		value: function create(values) {
+			return new Promise(function (resolve, reject) {
+
+				var newApp = {};
+				OP.Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
+				values.json = newApp;
+				newApp.name = values.name;
+
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.create(values).then(function (app) {
+
+					// return an instance of ABApplication
+					var App = new ABApplication(app);
+
+					_AllApplications.add(App, 0);
+					resolve(App);
+				}).catch(reject);
+			});
+		}
+
+		//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+
+	}, {
+		key: "isValid",
+		value: function isValid(op, values) {
+
+			var validator = OP.Validation.validator();
+
+			// during an ADD operation
+			if (op == 'add') {
+
+				// label/name must be unique:
+				var arrayApplications = toArray(_AllApplications);
+
+				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
+				var matchingApps = arrayApplications.filter(function (app) {
+					return app.name.trim().toLowerCase() == nameMatch;
+				});
+				if (matchingApps && matchingApps.length > 0) {
+
+					validator.addError('label', L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch));
+					// var errors = OP.Form.validationError({
+					// 	name:'label',
+					// 	message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
+					// }, errors);
+				}
+			}
+
+			// Check the common validations:
+			// TODO:
+			// if (!inputValidator.validate(values.label)) {
+			// 	_logic.buttonSaveEnable();
+			// 	return false;
+			// }
+
+
+			return validator;
+		}
+	}]);
+
+	return ABApplication;
+}(_ABApplicationBase3.default);
+
+exports.default = ABApplication;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 5 */
@@ -1651,11 +1595,34 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _configDesktop = __webpack_require__(11);
+var _comm_service = __webpack_require__(12);
+
+var _comm_service2 = _interopRequireDefault(_comm_service);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+
+	// OP.Comm.Service.*
+	Service: _comm_service2.default
+};
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _configDesktop = __webpack_require__(13);
 
 var _configDesktop2 = _interopRequireDefault(_configDesktop);
 
-var _configMobile = __webpack_require__(12);
+var _configMobile = __webpack_require__(14);
 
 var _configMobile2 = _interopRequireDefault(_configMobile);
 
@@ -1679,7 +1646,49 @@ exports.default = {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _component = __webpack_require__(2);
+
+var _component2 = _interopRequireDefault(_component);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var UICustomComponent = function (_Component) {
+	_inherits(UICustomComponent, _Component);
+
+	function UICustomComponent(App, componentKey) {
+		_classCallCheck(this, UICustomComponent);
+
+		// Save our definition into App.custom.[key]
+		var _this = _possibleConstructorReturn(this, (UICustomComponent.__proto__ || Object.getPrototypeOf(UICustomComponent)).call(this, App, componentKey));
+
+		App.custom = App.custom || {};
+		App.custom[componentKey] = _this;
+		return _this;
+	}
+
+	return UICustomComponent;
+}(_component2.default);
+
+exports.default = UICustomComponent;
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2012,7 +2021,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 };
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2144,7 +2153,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2160,7 +2169,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2460,7 +2469,7 @@ exports.default = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2511,7 +2520,7 @@ services['delete'] = function (options, cb) {
 exports.default = services;
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2573,7 +2582,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2634,7 +2643,259 @@ exports.default = {
 };
 
 /***/ }),
-/* 13 */
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _ABView2 = __webpack_require__(31);
+
+var _ABView3 = _interopRequireDefault(_ABView2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /*
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * ABViewPage
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * An ABView that represents a "Page" in the system.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * Pages are 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *	- allowed to be displayed in the interface list
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *	- return a full list of components that can be added to the view editor
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                * 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
+
+function L(key, altText) {
+  return AD.lang.label.getLabel(key) || altText;
+}
+
+var ABViewDefaults = {
+  key: 'page', // unique key identifier for this ABView
+  icon: 'cube' };
+
+var ABViewPage = function (_ABView) {
+  _inherits(ABViewPage, _ABView);
+
+  function ABViewPage(values, application, parent) {
+    _classCallCheck(this, ABViewPage);
+
+    return _possibleConstructorReturn(this, (ABViewPage.__proto__ || Object.getPrototypeOf(ABViewPage)).call(this, values, application, parent, ABViewDefaults));
+
+    // 	{
+    // 		id:'uuid',					// uuid value for this obj
+    // 		key:'viewKey',				// unique key for this View Type
+    // 		icon:'font',				// fa-[icon] reference for an icon for this View Type
+    // 		label:'',					// pulled from translation
+
+    //		settings: {					// unique settings for the type of field
+    //		},
+
+    //		translations:[]
+    // 	}
+
+  }
+
+  _createClass(ABViewPage, null, [{
+    key: 'defaults',
+    value: function defaults() {
+      return ABViewDefaults;
+    }
+  }]);
+
+  return ABViewPage;
+}(_ABView3.default);
+
+exports.default = ABViewPage;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+/*
+ * ab_common_popupEditMenu
+ *
+ * Many of our Lists offer a gear icon that allows a popup menu to select
+ * a set of options for this entry.  This is a common Popup Editor for those
+ * options.
+ *
+ */
+
+var ABCommonPopupEditMenu = function (_OP$Component) {
+	_inherits(ABCommonPopupEditMenu, _OP$Component);
+
+	function ABCommonPopupEditMenu(App) {
+		_classCallCheck(this, ABCommonPopupEditMenu);
+
+		var _this = _possibleConstructorReturn(this, (ABCommonPopupEditMenu.__proto__ || Object.getPrototypeOf(ABCommonPopupEditMenu)).call(this, App, 'ab_common_popupEditMenu'));
+
+		var L = _this.Label;
+
+		var labels = {
+
+			common: App.labels,
+
+			component: {
+				menu: L('ab.application.menu', "*Application Menu"),
+				confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
+				confirmDeleteMessage: L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
+			}
+		};
+
+		// since multiple instances of this component can exists, we need to 
+		// make each instance have unique ids => so add webix.uid() to them:
+		var uid = webix.uid();
+		var ids = {
+			menu: _this.unique('menu') + uid,
+			list: _this.unique('list') + uid
+		};
+
+		_this.ui = {
+			view: "popup",
+			id: ids.menu,
+			head: labels.component.menu,
+			width: 120,
+			body: {
+				view: "list",
+				id: ids.list,
+				borderless: true,
+				data: [{ label: labels.common.rename, icon: "fa-pencil-square-o" }, { label: labels.common.delete, icon: "fa-trash" }],
+				datatype: "json",
+				template: "<i class='fa #icon#' aria-hidden='true'></i> #label#",
+				autoheight: true,
+				select: false,
+				on: {
+					'onItemClick': function onItemClick(timestamp, e, trg) {
+						return _logic.onItemClick(trg);
+					}
+				}
+			}
+		};
+
+		var Popup = null;
+		var _menuOptions = [{ label: labels.common.rename, icon: "fa-pencil-square-o", command: 'rename' }, { label: labels.common.delete, icon: "fa-trash", command: 'delete' }];
+
+		_this.init = function (options) {
+
+			Popup = webix.ui(_this.ui); // the current instance of this editor.
+
+			_logic.hide();
+			_logic.menuOptions(_menuOptions);
+
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				if (options && options[c]) {
+					_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+				}
+			}
+		};
+
+		var _logic = _this._logic = {
+
+			callbacks: {
+				onClick: function onClick(action) {}
+			},
+
+			/**
+    * @function menuOptions
+    * override the set of menu options.
+    * @param {array} menuOptions an array of option entries:
+    *				  .label {string} multilingual label of the option
+    *				  .icon  {string} the font awesome icon reference
+    *				  .command {string} the command passed back when selected.
+    */
+			menuOptions: function menuOptions(_menuOptions2) {
+
+				$$(ids.list).clearAll();
+
+				_menuOptions = _menuOptions2;
+				var data = [];
+				_menuOptions2.forEach(function (mo) {
+					data.push({ label: mo.label, icon: mo.icon });
+				});
+				$$(ids.list).parse(data);
+				$$(ids.list).refresh();
+			},
+
+			/**
+    * @function onItemClick
+    * process which item in our popup was selected.
+    */
+			onItemClick: function onItemClick(itemNode) {
+
+				// hide our popup before we trigger any other possible UI animation: (like .edit)
+				// NOTE: if the UI is animating another component, and we do .hide()
+				// while it is in progress, the UI will glitch and give the user whiplash.
+
+				// switch (itemNode.textContent.trim()) {
+				// 	case labels.common.rename:
+				// 		this.callbacks.onClick('rename');
+				// 		break;
+				// 	case labels.common['delete']:
+				// 		this.callbacks.onClick('delete');
+				// 		break;
+				// }
+				var label = itemNode.textContent.trim();
+				var option = _menuOptions.filter(function (mo) {
+					return mo.label == label;
+				})[0];
+				if (option) {
+					this.callbacks.onClick(option.command);
+				}
+
+				this.hide();
+
+				return false;
+			},
+
+			show: function show(itemNode) {
+				if (Popup && itemNode) Popup.show(itemNode);
+			},
+
+			hide: function hide() {
+				if (Popup) Popup.hide();
+			}
+
+		};
+
+		// external interface:
+		_this.menuOptions = _logic.menuOptions;
+		_this.show = _logic.show;
+		return _this;
+	}
+
+	return ABCommonPopupEditMenu;
+}(OP.Component);
+
+exports.default = ABCommonPopupEditMenu;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2644,23 +2905,23 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _ABFieldString = __webpack_require__(22);
+var _ABFieldString = __webpack_require__(30);
 
 var _ABFieldString2 = _interopRequireDefault(_ABFieldString);
 
-var _ABFieldNumber = __webpack_require__(21);
+var _ABFieldNumber = __webpack_require__(29);
 
 var _ABFieldNumber2 = _interopRequireDefault(_ABFieldNumber);
 
-var _ABFieldDate = __webpack_require__(19);
+var _ABFieldDate = __webpack_require__(27);
 
 var _ABFieldDate2 = _interopRequireDefault(_ABFieldDate);
 
-var _ABFieldBoolean = __webpack_require__(18);
+var _ABFieldBoolean = __webpack_require__(26);
 
 var _ABFieldBoolean2 = _interopRequireDefault(_ABFieldBoolean);
 
-var _ABFieldImage = __webpack_require__(20);
+var _ABFieldImage = __webpack_require__(28);
 
 var _ABFieldImage2 = _interopRequireDefault(_ABFieldImage);
 
@@ -2717,129 +2978,47 @@ exports.default = {
 };
 
 /***/ }),
-/* 14 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(23);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
 
-__webpack_require__(27);
+var _ab_choose = __webpack_require__(32);
 
-var _edittree = __webpack_require__(44);
+var _ab_choose2 = _interopRequireDefault(_ab_choose);
+
+var _ab_work = __webpack_require__(35);
+
+var _ab_work2 = _interopRequireDefault(_ab_work);
+
+var _edittree = __webpack_require__(55);
 
 var _edittree2 = _interopRequireDefault(_edittree);
 
-var _editlist = __webpack_require__(43);
+var _editlist = __webpack_require__(54);
 
 var _editlist2 = _interopRequireDefault(_editlist);
 
-var _AppBuilder = __webpack_require__(49);
+var _datetimepicker = __webpack_require__(53);
+
+var _datetimepicker2 = _interopRequireDefault(_datetimepicker);
+
+var _AppBuilder = __webpack_require__(60);
 
 var _AppBuilder2 = _interopRequireDefault(_AppBuilder);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-OP.Component.extend('ab', function (App) {
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	function L(key, altText) {
-		return AD.lang.label.getLabel(key) || altText;
-	}
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-	// setup the common labels for our AppBuilder Application.
-	App.labels = {
-		add: L('ab.common.add', "*Add"),
-		create: L('ab.common.create', "*Create"),
-		"delete": L('ab.common.delete', "*Delete"),
-		edit: L('ab.common.edit', "*Edit"),
-		"export": L('ab.common.export', "*Export"),
-		formName: L('ab.common.form.name', "*Name"),
-		"import": L('ab.common.import', "*Import"),
-		rename: L('ab.common.rename', "*Rename"),
-		ok: L('ab.common.ok', "*Ok"),
-
-		cancel: L('ab.common.cancel', "*Cancel"),
-		save: L('ab.common.save', "*Save"),
-
-		yes: L('ab.common.yes', "*Yes"),
-		no: L('ab.common.no', "*No"),
-
-		createErrorMessage: L('ab.common.create.error', "*System could not create <b>{0}</b>."),
-		createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
-
-		updateErrorMessage: L('ab.common.update.error', "*System could not update <b>{0}</b>."),
-		updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
-
-		deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
-		deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
-
-		renameErrorMessage: L('ab.common.rename.error', "*System could not rename <b>{0}</b>."),
-		renameSuccessMessage: L('ab.common.rename.success', "*<b>{0}</b> is renamed."),
-
-		// Data Field  common Property labels:
-		dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
-		dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
-
-		dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
-		dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
-
-		dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?')
-	};
-
-	// make instances of our Custom Components:
-	OP.CustomComponent[_edittree2.default.key](App, 'edittree'); // ->  App.custom.edittree  now exists
-	OP.CustomComponent[_editlist2.default.key](App, 'editlist'); // ->  App.custom.editlist  now exists
-
-
-	var ids = {
-		component: App.unique('app_builder_root')
-	};
-
-	// Define the external components used in this Component:
-	var AppChooser = OP.Component['ab_choose'](App);
-	var AppWorkspace = OP.Component['ab_work'](App);
-
-	// This component's UI definition:
-	// Application multi-views
-	var _ui = {
-		id: ids.component,
-		view: "multiview",
-		borderless: true,
-		animate: false,
-		rows: [AppChooser.ui, AppWorkspace.ui]
-	};
-
-	// This component's init() definition:
-	var _init = function _init() {
-
-		AppChooser.init();
-		AppWorkspace.init();
-
-		// start off only showing the App Chooser:
-		App.actions.transitionApplicationChooser();
-
-		// perform an initial resize adjustment
-		$$(ids.component).adjust();
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions // {ob}		hash of fn() to expose so other components can access.
-	};
-});
-
-//// REFACTORING TODOs:
-// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
-
-
-// Import our Custom Components here:
-
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * AB
  *
@@ -2850,16 +3029,128 @@ OP.Component.extend('ab', function (App) {
  */
 
 // import '../OP/OP'
+
+// Import our Custom Components here:
+
+
+var AB = function (_OP$Component) {
+	_inherits(AB, _OP$Component);
+
+	//('ab', function(App) {
+
+
+	function AB(App) {
+		_classCallCheck(this, AB);
+
+		var _this = _possibleConstructorReturn(this, (AB.__proto__ || Object.getPrototypeOf(AB)).call(this, App, 'ab'));
+
+		App = _this.App;
+		var L = _this.Label;
+
+		// setup the common labels for our AppBuilder Application.
+		App.labels = {
+			add: L('ab.common.add', "*Add"),
+			create: L('ab.common.create', "*Create"),
+			"delete": L('ab.common.delete', "*Delete"),
+			edit: L('ab.common.edit', "*Edit"),
+			"export": L('ab.common.export', "*Export"),
+			formName: L('ab.common.form.name', "*Name"),
+			"import": L('ab.common.import', "*Import"),
+			rename: L('ab.common.rename', "*Rename"),
+			ok: L('ab.common.ok', "*Ok"),
+
+			cancel: L('ab.common.cancel', "*Cancel"),
+			save: L('ab.common.save', "*Save"),
+
+			yes: L('ab.common.yes', "*Yes"),
+			no: L('ab.common.no', "*No"),
+
+			createErrorMessage: L('ab.common.create.error', "*System could not create <b>{0}</b>."),
+			createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
+
+			updateErrorMessage: L('ab.common.update.error', "*System could not update <b>{0}</b>."),
+			updateSucessMessage: L('ab.common.update.success', "*<b>{0}</b> is updated."),
+
+			deleteErrorMessage: L('ab.common.delete.error', "*System could not delete <b>{0}</b>."),
+			deleteSuccessMessage: L('ab.common.delete.success', "*<b>{0}</b> is deleted."),
+
+			renameErrorMessage: L('ab.common.rename.error', "*System could not rename <b>{0}</b>."),
+			renameSuccessMessage: L('ab.common.rename.success', "*<b>{0}</b> is renamed."),
+
+			// Data Field  common Property labels:
+			dataFieldHeaderLabel: L('ab.dataField.common.headerLabel', '*Label'),
+			dataFieldHeaderLabelPlaceholder: L('ab.dataField.common.headerLabelPlaceholder', '*Header Name'),
+
+			dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
+			dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
+
+			dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?')
+		};
+
+		// make instances of our Custom Components:
+		new _editlist2.default(App, 'editlist'); // ->  App.custom.editlist  now exists
+		new _edittree2.default(App, 'edittree'); // ->  App.custom.edittree  now exists
+		new _datetimepicker2.default(App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
+
+
+		var ids = {
+			component: _this.unique('root')
+		};
+
+		// Define the external components used in this Component:
+		var AppChooser = new _ab_choose2.default(App);
+		var AppWorkspace = new _ab_work2.default(App);
+
+		// This component's UI definition:
+		// Application multi-views
+		_this.ui = {
+			id: ids.component,
+			view: "multiview",
+			borderless: true,
+			animate: false,
+			// height : 800,
+			rows: [AppChooser.ui, AppWorkspace.ui]
+		};
+
+		_this.init = function () {
+
+			AppChooser.init();
+			AppWorkspace.init();
+
+			// start off only showing the App Chooser:
+			App.actions.transitionApplicationChooser();
+
+			// perform an initial resize adjustment
+			$$(ids.component).adjust();
+		};
+
+		_this.actions({});
+
+		return _this;
+	}
+
+	return AB;
+}(OP.Component);
+
+exports.default = AB;
+;
+
+//// REFACTORING TODOs:
+// TODO: AppForm-> Permissions : refresh permission list, remove AppRole permission on Application.delete().
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 15 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(14);
+
+var _ab = __webpack_require__(18);
+
+var _ab2 = _interopRequireDefault(_ab);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 AD.Control.OpsTool.extend('BuildApp', {
 
@@ -2904,7 +3195,8 @@ AD.Control.OpsTool.extend('BuildApp', {
 	initWebixUI: function initWebixUI() {
 
 		// get the AppBuilder (AB) Webix Component
-		var AppBuilder = OP.Component['ab']();
+		// var AppBuilder = OP.Component['ab']();
+		var AppBuilder = new _ab2.default();
 		var ui = AppBuilder.ui;
 
 		// tell the AppBuilder where to attach
@@ -2956,10 +3248,214 @@ AD.Control.OpsTool.extend('BuildApp', {
 });
 // import 'OP';
 // import '../../../../../assets/js/webix/webix'
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 16 */
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+function toArray(DC) {
+	var ary = [];
+
+	var id = DC.getFirstId();
+	while (id) {
+		var element = DC.getItem(id);
+		ary.push(element);
+		id = DC.getNextId(id);
+	}
+
+	return ary;
+}
+
+module.exports = function () {
+	function ABApplicationBase(attributes) {
+		var _this = this;
+
+		_classCallCheck(this, ABApplicationBase);
+
+		// ABApplication Attributes
+		this.id = attributes.id;
+		this.json = attributes.json;
+		this.name = attributes.name || this.json.name || "";
+		this.role = attributes.role;
+
+		// import all our ABObjects
+		// NOTE: we work with ABObjects on both the client and server sides.
+		// So we provide object methods in the base class.  However, each
+		// ABObject sub class (client and server) needs to implement it's own
+		// .objectNew() method.
+		var newObjects = [];
+		(attributes.json.objects || []).forEach(function (obj) {
+			newObjects.push(_this.objectNew(obj));
+		});
+		this._objects = newObjects;
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+
+	/**
+  * @method fieldsMultilingual()
+  *
+  * return an array of fields that are considered Multilingual labels for
+  * an ABApplication
+  *
+  * @return {array}
+  */
+
+
+	_createClass(ABApplicationBase, [{
+		key: 'toObj',
+
+
+		///
+		/// Instance Methods
+		///
+
+
+		/// ABApplication data methods
+
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABApplication instance
+   * into the values needed for saving to the DB.
+   *
+   * Most of the instance data is stored in .json field, so be sure to
+   * update that from all the current values of our child fields.
+   *
+   * @return {json}
+   */
+		value: function toObj() {
+
+			this.json.name = this.name;
+
+			// for each Object: compile to json
+			var currObjects = [];
+			this._objects.forEach(function (obj) {
+				currObjects.push(obj.toObj());
+			});
+			this.json.objects = currObjects;
+
+			return {
+				id: this.id,
+				name: this.name,
+				json: this.json,
+				role: this.role
+			};
+		}
+
+		///
+		/// Objects
+		///
+
+
+		/**
+   * @method objects()
+   *
+   * return an array of all the ABObjects for this ABApplication.
+   *
+   * @param {fn} filter  	a filter fn to return a set of ABObjects that this fn
+   *						returns true for.
+   * @return {array} 	array of ABObject
+   */
+
+	}, {
+		key: 'objects',
+		value: function objects(filter) {
+
+			filter = filter || function () {
+				return true;
+			};
+
+			return this._objects.filter(filter);
+		}
+
+		/**
+   * @method objectNew()
+   *
+   * return an instance of a new (unsaved) ABObject that is tied to this
+   * ABApplication.
+   *
+   * NOTE: this new object is not included in our this.objects until a .save()
+   * is performed on the object.
+   *
+   * @return {ABObject}
+   */
+		// objectNew( values ) {
+		// 	return new ABObject(values, this);
+		// }
+
+
+		/**
+   * @method objectDestroy()
+   *
+   * remove the current ABObject from our list of ._objects.
+   *
+   * @param {ABObject} object
+   * @return {Promise}
+   */
+
+	}, {
+		key: 'objectDestroy',
+		value: function objectDestroy(object) {
+
+			var remaininObjects = this.objects(function (o) {
+				return o.id != object.id;
+			});
+			this._objects = remaininObjects;
+			return this.save();
+		}
+
+		/**
+   * @method objectSave()
+   *
+   * persist the current ABObject in our list of ._objects.
+   *
+   * @param {ABObject} object
+   * @return {Promise}
+   */
+
+	}, {
+		key: 'objectSave',
+		value: function objectSave(object) {
+			var isIncluded = this.objects(function (o) {
+				return o.id == object.id;
+			}).length > 0;
+			if (!isIncluded) {
+				this._objects.push(object);
+			}
+
+			return this.save();
+		}
+	}], [{
+		key: 'fieldsMultilingual',
+		value: function fieldsMultilingual() {
+			return ['label', 'description'];
+		}
+	}]);
+
+	return ABApplicationBase;
+}();
+
+/***/ }),
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3033,9 +3529,61 @@ var ABModel = function () {
 			return '/app_builder/model/application/#appID#/object/#objID#'.replace('#appID#', this.object.application.id).replace('#objID#', this.object.id);
 		}
 	}, {
-		key: 'modelURLUpdate',
-		value: function modelURLUpdate(id) {
+		key: 'modelURLItem',
+		value: function modelURLItem(id) {
 			return '/app_builder/model/application/#appID#/object/#objID#/#id#'.replace('#appID#', this.object.application.id).replace('#objID#', this.object.id).replace('#id#', id);
+		}
+
+		/**
+   * @method create
+   * update model values on the server.
+   */
+
+	}, {
+		key: 'create',
+		value: function create(values) {
+			var _this = this;
+
+			// if this object has some multilingual fields, translate the data:
+			var mlFields = this.object.multilingualFields();
+			if (mlFields.length) {
+				if (values.translations) {
+					OP.Multilingual.unTranslate(values, values, mlFields);
+				}
+			}
+
+			return new Promise(function (resolve, reject) {
+
+				OP.Comm.Service.post({
+					url: _this.modelURL(),
+					params: values
+				}).then(function (data) {
+
+					resolve(data);
+				}).catch(reject);
+			});
+		}
+
+		/**
+   * @method delete
+   * remove this model instance from the server
+   * @param {integer} id  the .id of the instance to remove.
+   * @return {Promise}
+   */
+
+	}, {
+		key: 'delete',
+		value: function _delete(id) {
+			var _this2 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				OP.Comm.Service['delete']({
+					url: _this2.modelURLItem(id)
+				}).then(function (data) {
+					resolve(data);
+				}).catch(reject);
+			});
 		}
 
 		/**
@@ -3046,7 +3594,7 @@ var ABModel = function () {
 	}, {
 		key: 'findAll',
 		value: function findAll(cond) {
-			var _this = this;
+			var _this3 = this;
 
 			cond = cond || {};
 
@@ -3066,12 +3614,12 @@ var ABModel = function () {
 			return new Promise(function (resolve, reject) {
 
 				OP.Comm.Service.get({
-					url: _this.modelURL(),
+					url: _this3.modelURL(),
 					params: newCond
 				}).then(function (data) {
 
 					// if this object has some multilingual fields, translate the data:
-					var mlFields = _this.object.multilingualFields();
+					var mlFields = _this3.object.multilingualFields();
 					if (mlFields.length) {
 
 						data.data.forEach(function (d) {
@@ -3093,7 +3641,7 @@ var ABModel = function () {
 	}, {
 		key: 'loadInto',
 		value: function loadInto(DT) {
-			var _this2 = this;
+			var _this4 = this;
 
 			// if a limit was applied, then this component should be loading dynamically
 			if (this._limit) {
@@ -3105,15 +3653,22 @@ var ABModel = function () {
 				// catch the event where data is requested:
 				// here we will do our own findAll() so we can persist
 				// the provided .where condition.
-				DT.attachEvent("onDataRequest", function (start, count) {
+
+				// oh yeah, and make sure to remove any existing event handler when we 
+				// perform a new .loadInto()
+				DT.___AD = DT.___AD || {};
+				if (DT.___AD.onDataRequestEvent) {
+					DT.detachEvent(DT.___AD.onDataRequestEvent);
+				}
+				DT.___AD.onDataRequestEvent = DT.attachEvent("onDataRequest", function (start, count) {
 
 					var cond = {
-						where: _this2._where,
+						where: _this4._where,
 						limit: count,
 						skip: start
 					};
 
-					_this2.findAll(cond).then(function (data) {
+					_this4.findAll(cond).then(function (data) {
 						DT.parse(data);
 					});
 
@@ -3172,7 +3727,7 @@ var ABModel = function () {
 	}, {
 		key: 'update',
 		value: function update(id, values) {
-			var _this3 = this;
+			var _this5 = this;
 
 			// if this object has some multilingual fields, translate the data:
 			var mlFields = this.object.multilingualFields();
@@ -3185,10 +3740,9 @@ var ABModel = function () {
 			return new Promise(function (resolve, reject) {
 
 				OP.Comm.Service.put({
-					url: _this3.modelURLUpdate(id),
+					url: _this5.modelURLItem(id),
 					params: values
 				}).then(function (data) {
-
 					resolve(data);
 				}).catch(reject);
 			});
@@ -3216,7 +3770,7 @@ exports.default = ABModel;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 17 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3227,14 +3781,18 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-// import OP from "OP"
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _ABFieldManager = __webpack_require__(13);
+var _ABObjectBase2 = __webpack_require__(23);
+
+var _ABObjectBase3 = _interopRequireDefault(_ABObjectBase2);
+
+var _ABFieldManager = __webpack_require__(17);
 
 var _ABFieldManager2 = _interopRequireDefault(_ABFieldManager);
 
-var _ABModel = __webpack_require__(16);
+var _ABModel = __webpack_require__(21);
 
 var _ABModel2 = _interopRequireDefault(_ABModel);
 
@@ -3242,21 +3800,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function toDC(data) {
-	return new webix.DataCollection({
-		data: data
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-	});
-}
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+// import OP from "OP"
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-var ABObject = function () {
-	function ABObject(attributes, application) {
-		var _this = this;
+var ABObject = function (_ABObjectBase) {
+	_inherits(ABObject, _ABObjectBase);
 
+	function ABObject(attributes, application) {
 		_classCallCheck(this, ABObject);
 
 		/*
@@ -3277,38 +3835,12 @@ var ABObject = function () {
   }
   */
 
-		// ABApplication Attributes
-		this.id = attributes.id;
-		this.name = attributes.name || "";
-		this.labelFormat = attributes.labelFormat || "";
-		this.isImported = attributes.isImported || 0;
-		this.urlPath = attributes.urlPath || "";
-		this.importFromObject = attributes.importFromObject || "";
-		this.translations = attributes.translations;
-
-		if (typeof attributes.objectWorkspace != "undefined") {
-			if (typeof attributes.objectWorkspace.sortFields == "undefined") attributes.objectWorkspace.sortFields = [];
-			if (typeof attributes.objectWorkspace.frozenColumnID == "undefined") attributes.objectWorkspace.frozenColumnID = "";
-			if (typeof attributes.objectWorkspace.hiddenFields == "undefined") attributes.objectWorkspace.hiddenFields = [];
-		}
-
-		this.objectWorkspace = attributes.objectWorkspace || {
-			sortFields: [], // array of columns with their sort configurations
-			frozenColumnID: "", // id of column you want to stop freezing
-			hiddenFields: [] };
-
 		// multilingual fields: label, description
-		OP.Multilingual.translate(this, this, ['label']);
+		var _this = _possibleConstructorReturn(this, (ABObject.__proto__ || Object.getPrototypeOf(ABObject)).call(this, attributes, application));
 
-		// import all our ABObjects
-		var newFields = [];
-		(attributes.fields || []).forEach(function (field) {
-			newFields.push(_this.fieldNew(field));
-		});
-		this._fields = newFields;
+		OP.Multilingual.translate(_this, _this, ['label']);
 
-		// link me to my parent ABApplication
-		this.application = application;
+		return _this;
 	}
 
 	///
@@ -3464,23 +3996,7 @@ var ABObject = function () {
 
 			OP.Multilingual.unTranslate(this, this, ["label"]);
 
-			// // for each Object: compile to json
-			var currFields = [];
-			this._fields.forEach(function (obj) {
-				currFields.push(obj.toObj());
-			});
-
-			return {
-				id: this.id,
-				name: this.name,
-				labelFormat: this.labelFormat,
-				isImported: this.isImported,
-				urlPath: this.urlPath,
-				importFromObject: this.importFromObject,
-				objectWorkspace: this.objectWorkspace,
-				translations: this.translations,
-				fields: currFields
-			};
+			return _get(ABObject.prototype.__proto__ || Object.getPrototypeOf(ABObject.prototype), "toObj", this).call(this);
 		}
 
 		///
@@ -3504,6 +4020,246 @@ var ABObject = function () {
 			return OP.Comm.Service['delete']({
 				url: url
 			});
+		}
+
+		///
+		/// Fields
+		///
+
+
+		/**
+   * @method fieldNew()
+   *
+   * return an instance of a new (unsaved) ABField that is tied to this
+   * ABObject.
+   *
+   * NOTE: this new field is not included in our this.fields until a .save()
+   * is performed on the field.
+   *
+   * @return {ABField}
+   */
+
+	}, {
+		key: "fieldNew",
+		value: function fieldNew(values) {
+			// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+			return _ABFieldManager2.default.newField(values, this);
+		}
+
+		///
+		/// Working with Client Components:
+		///
+
+
+		// return the column headers for this object
+		// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
+
+	}, {
+		key: "columnHeaders",
+		value: function columnHeaders(isObjectWorkspace) {
+
+			var headers = [];
+			var columnNameLookup = {};
+
+			// get the header for each of our fields:
+			this._fields.forEach(function (f) {
+				var header = f.columnHeader(isObjectWorkspace);
+				headers.push(header);
+				columnNameLookup[header.id] = f.columnName; // name => id
+			});
+
+			// update our headers with any settings applied in the Object Workspace
+			if (isObjectWorkspace) {
+
+				// set column width to adjust:true by default;
+				headers.forEach(function (h) {
+					h.adjust = true;
+				});
+
+				// hide any hiddenfields
+				if (this.workspaceHiddenFields.length > 0) {
+					this.workspaceHiddenFields.forEach(function (hfID) {
+						headers.forEach(function (h) {
+							if (columnNameLookup[h.id] == hfID) {
+								h.hidden = true;
+							}
+						});
+					});
+				}
+			}
+
+			return headers;
+		}
+
+		// after a component has rendered, tell each of our fields to perform
+		// any custom display operations
+		// @param {Webix.DataStore} data a webix datastore of all the rows effected
+		//        by the render.
+
+	}, {
+		key: "customDisplays",
+		value: function customDisplays(data, App, DataTable) {
+			var _this5 = this;
+
+			var fields = this.fields();
+
+			var id = data.getFirstId();
+			while (id) {
+				var row = data.getItem(id);
+				fields.forEach(function (f) {
+					if (_this5.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
+						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+						f.customDisplay(row, App, node);
+					}
+				});
+				id = data.getNextId(id);
+			}
+		}
+
+		///
+		/// Working with data from server
+		///
+
+		/**
+   * @method model
+   * return a Model object that will allow you to interact with the data for
+   * this ABObject.
+   */
+
+	}, {
+		key: "model",
+		value: function model() {
+			return new _ABModel2.default(this);
+		}
+	}]);
+
+	return ABObject;
+}(_ABObjectBase3.default);
+
+exports.default = ABObject;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// import OP from "OP"
+// var ABFieldManager = require( "./ABFieldManager.js")
+
+// import ABModel from "./ABModel"
+
+
+module.exports = function () {
+	function ABObjectBase(attributes, application) {
+		var _this = this;
+
+		_classCallCheck(this, ABObjectBase);
+
+		/*
+  {
+  	id: uuid(),
+  	name: 'name',
+  	labelFormat: 'xxxxx',
+  	isImported: 1/0,
+  	urlPath:'string',
+  	importFromObject: 'string', // JSON Schema style reference:  '#[ABApplication.id]/objects/[ABObject.id]'
+  								// to get other object:  ABApplication.objectFromRef(obj.importFromObject);
+  	translations:[
+  		{}
+  	],
+  	fields:[
+  		{ABDataField}
+  	]
+  }
+  */
+
+		// ABApplication Attributes
+		this.id = attributes.id;
+		this.name = attributes.name || "";
+		this.labelFormat = attributes.labelFormat || "";
+		this.isImported = attributes.isImported || 0;
+		this.urlPath = attributes.urlPath || "";
+		this.importFromObject = attributes.importFromObject || "";
+		this.translations = attributes.translations;
+
+		if (typeof attributes.objectWorkspace != "undefined") {
+			if (typeof attributes.objectWorkspace.sortFields == "undefined") attributes.objectWorkspace.sortFields = [];
+			if (typeof attributes.objectWorkspace.frozenColumnID == "undefined") attributes.objectWorkspace.frozenColumnID = "";
+			if (typeof attributes.objectWorkspace.hiddenFields == "undefined") attributes.objectWorkspace.hiddenFields = [];
+		}
+
+		this.objectWorkspace = attributes.objectWorkspace || {
+			sortFields: [], // array of columns with their sort configurations
+			frozenColumnID: "", // id of column you want to stop freezing
+			hiddenFields: [] };
+
+		// import all our ABObjects
+		var newFields = [];
+		(attributes.fields || []).forEach(function (field) {
+			newFields.push(_this.fieldNew(field));
+		});
+		this._fields = newFields;
+
+		// link me to my parent ABApplication
+		this.application = application;
+	}
+
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
+
+
+	///
+	/// Instance Methods
+	///
+
+
+	/**
+  * @method toObj()
+  *
+  * properly compile the current state of this ABApplication instance
+  * into the values needed for saving to the DB.
+  *
+  * Most of the instance data is stored in .json field, so be sure to
+  * update that from all the current values of our child fields.
+  *
+  * @return {json}
+  */
+
+
+	_createClass(ABObjectBase, [{
+		key: "toObj",
+		value: function toObj() {
+
+			OP.Multilingual.unTranslate(this, this, ["label"]);
+
+			// // for each Object: compile to json
+			var currFields = [];
+			this._fields.forEach(function (obj) {
+				currFields.push(obj.toObj());
+			});
+
+			return {
+				id: this.id,
+				name: this.name,
+				labelFormat: this.labelFormat,
+				isImported: this.isImported,
+				urlPath: this.urlPath,
+				importFromObject: this.importFromObject,
+				objectWorkspace: this.objectWorkspace,
+				translations: this.translations,
+				fields: currFields
+			};
 		}
 
 		///
@@ -3541,13 +4297,11 @@ var ABObject = function () {
    *
    * @return {ABField}
    */
+		// fieldNew ( values ) {
+		// 	// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
+		// 	return ABFieldManager.newField( values, this );
+		// }
 
-	}, {
-		key: "fieldNew",
-		value: function fieldNew(values) {
-			// NOTE: ABFieldManager returns the proper ABFieldXXXX instance.
-			return _ABFieldManager2.default.newField(values, this);
-		}
 
 		/**
    * @method fieldRemove()
@@ -3611,74 +4365,23 @@ var ABObject = function () {
 		///
 
 	}, {
-		key: "columnHeaders",
+		key: "defaultValues",
 
 
-		///
-		/// Working with Client Components:
-		///
-
-
-		// return the column headers for this object
-		// @param {bool} isObjectWorkspace  return the settings saved for the object workspace
-		value: function columnHeaders(isObjectWorkspace) {
-
-			var headers = [];
-			var columnNameLookup = {};
-
-			// get the header for each of our fields:
-			this._fields.forEach(function (f) {
-				var header = f.columnHeader(isObjectWorkspace);
-				headers.push(header);
-				columnNameLookup[header.id] = f.columnName; // name => id
+		/**
+   * @method defaultValues
+   * Collect a hash of key=>value pairs that represent the default values 
+   * from each of our fields.
+   * @param {obj} data a key=>value hash of the inputs to parse.
+   * @return {array} 
+   */
+		value: function defaultValues() {
+			var values = {};
+			this.fields().forEach(function (f) {
+				f.defaultValue(values);
 			});
 
-			// update our headers with any settings applied in the Object Workspace
-			if (isObjectWorkspace) {
-
-				// set column width to adjust:true by default;
-				headers.forEach(function (h) {
-					h.adjust = true;
-				});
-
-				// hide any hiddenfields
-				if (this.workspaceHiddenFields.length > 0) {
-					this.workspaceHiddenFields.forEach(function (hfID) {
-						headers.forEach(function (h) {
-							if (columnNameLookup[h.id] == hfID) {
-								h.hidden = true;
-							}
-						});
-					});
-				}
-			}
-
-			return headers;
-		}
-
-		// after a component has rendered, tell each of our fields to perform
-		// any custom display operations
-		// @param {Webix.DataStore} data a webix datastore of all the rows effected
-		//        by the render.
-
-	}, {
-		key: "customDisplays",
-		value: function customDisplays(data, App, DataTable) {
-			var _this5 = this;
-
-			var fields = this.fields();
-
-			var id = data.getFirstId();
-			while (id) {
-				var row = data.getItem(id);
-				fields.forEach(function (f) {
-					if (_this5.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node);
-					}
-				});
-				id = data.getNextId(id);
-			}
+			return values;
 		}
 
 		/**
@@ -3698,22 +4401,6 @@ var ABObject = function () {
 			});
 
 			return validator;
-		}
-
-		///
-		/// Working with data from server
-		///
-
-		/**
-   * @method model
-   * return a Model object that will allow you to interact with the data for
-   * this ABObject.
-   */
-
-	}, {
-		key: "model",
-		value: function model() {
-			return new _ABModel2.default(this);
 		}
 	}, {
 		key: "workspaceSortFields",
@@ -3741,14 +4428,248 @@ var ABObject = function () {
 		}
 	}]);
 
-	return ABObject;
+	return ABObjectBase;
 }();
-
-exports.default = ABObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 18 */
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ABViewPage = __webpack_require__(15);
+
+var _ABViewPage2 = _interopRequireDefault(_ABViewPage);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* 
+ * Views
+ * A name => ABView  hash of the different ABViews available.
+ */
+var Views = {}; /* 
+                 * ABViewManager
+                 * 
+                 * An interface for managing the different ABViews available in our AppBuilder.
+                 *
+                 */
+
+Views[_ABViewPage2.default.defaults().key] = _ABViewPage2.default;
+
+exports.default = {
+
+	/*
+  * @function allViews
+  * return all the currently defined ABViews in an array.
+  * @return [{ABView},...]
+  */
+	allViews: function allViews() {
+		var views = [];
+		for (var v in Views) {
+			views.push(Views[v]);
+		}
+		return views;
+	},
+
+	/*
+  * @function newView
+  * return an instance of an ABView based upon the values.key value.
+  * @return {ABView}
+  */
+	newView: function newView(values, application, parent) {
+
+		parent = parent || null;
+
+		if (values.key) {
+			return new Views[values.key](values, application, parent);
+		} else {
+			var err = new Error('unknown view key');
+			OP.Error.log('Unknown view key [' + values.key + ']:', { error: err, values: value, application: application });
+			return null;
+		}
+	}
+
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/*
+ * ABFieldBase
+ *
+ * ABFieldBase defines the common ABField structure that is shared between 
+ * the client and the server.  Mostly how it manages it's internal data, and
+ * how it is related to the ABObject classes.
+ *
+ */
+
+// import OP from "../../OP/OP"
+
+function L(key, altText) {
+  return AD.lang.label.getLabel(key) || altText;
+}
+
+module.exports = function () {
+  function ABField(values, object, fieldDefaults) {
+    _classCallCheck(this, ABField);
+
+    // NOTE: setup this first so later we can use .fieldType(), .fieldIcon()
+    this.defaults = fieldDefaults;
+
+    /*
+    {
+    id:'uuid',					// uuid value for this obj
+    key:'fieldKey',				// unique key for this Field
+    icon:'font',				// fa-[icon] reference for an icon for this Field Type
+    label:'',					// pulled from translation
+    columnName:'column_name',	// a valid mysql table.column name
+    settings: {					// unique settings for the type of field
+    showIcon:true/false,	// only useful in Object Workspace DataTable
+    // specific for dataField
+    },
+    translations:[]
+    }
+    */
+    this.fromValues(values);
+
+    this.object = object;
+  }
+
+  ///
+  /// Static Methods
+  ///
+  /// Available to the Class level object.  These methods are not dependent
+  /// on the instance values of the Application.
+  ///
+
+
+  // unique key to reference this specific DataField
+
+
+  _createClass(ABField, [{
+    key: 'fieldKey',
+    value: function fieldKey() {
+      return this.defaults.key;
+    }
+
+    // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+
+  }, {
+    key: 'fieldIcon',
+    value: function fieldIcon() {
+      return this.defaults.icon;
+    }
+
+    // the multilingual text for the name of this data field.
+
+  }, {
+    key: 'fieldMenuName',
+    value: function fieldMenuName() {
+      return this.defaults.menuName;
+    }
+
+    // the multilingual text for the name of this data field.
+
+  }, {
+    key: 'fieldDescription',
+    value: function fieldDescription() {
+      return this.defaults.description;
+    }
+
+    ///
+    /// Instance Methods
+    ///
+
+
+    /// ABApplication data methods
+
+
+    /**
+     * @method toObj()
+     *
+     * properly compile the current state of this ABField instance
+     * into the values needed for saving to the DB.
+     *
+     * @return {json}
+     */
+
+  }, {
+    key: 'toObj',
+    value: function toObj() {
+
+      return {
+        id: this.id,
+        key: this.key,
+        icon: this.icon,
+        columnName: this.columnName,
+        settings: this.settings,
+        translations: this.translations
+      };
+    }
+
+    /**
+     * @method fromValues()
+     *
+     * initialze this object with the given set of values.
+     * @param {obj} values
+     */
+
+  }, {
+    key: 'fromValues',
+    value: function fromValues(values) {
+
+      this.id = values.id; // NOTE: only exists after .save()
+      this.key = values.key || this.fieldKey();
+      this.icon = values.icon || this.fieldIcon();
+
+      // if this is being instantiated on a read from the Property UI,
+      // .label is coming in under .settings.label
+      this.label = values.label || values.settings.label || '?label?';
+
+      this.columnName = values.columnName || '';
+      this.translations = values.translations || [];
+
+      this.settings = values.settings || {};
+      this.settings.showIcon = values.settings.showIcon + "" || "1";
+
+      // convert from "0" => 0
+      this.settings.showIcon = parseInt(this.settings.showIcon);
+    }
+
+    /**
+     * @method defaultValue
+     * insert a key=>value pair that represent the default value
+     * for this field.
+     * @param {obj} values a key=>value hash of the current values.
+     */
+
+  }, {
+    key: 'defaultValue',
+    value: function defaultValue(values) {
+      values[this.columnName] = '';
+    }
+  }]);
+
+  return ABField;
+}();
+
+/***/ }),
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3762,7 +4683,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _ABField2 = __webpack_require__(2);
+var _ABField2 = __webpack_require__(1);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
@@ -3987,7 +4908,7 @@ var ABFieldBoolean = function (_ABField) {
 exports.default = ABFieldBoolean;
 
 /***/ }),
-/* 19 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4001,7 +4922,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _ABField2 = __webpack_require__(2);
+var _ABField2 = __webpack_require__(1);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
@@ -4042,15 +4963,19 @@ var defaultValues = {
 	includeTime: 0,
 	defaultCurrentDate: 0,
 	defaultDate: "",
-	dayFormat: "DD",
+	dayFormat: "%d",
 	dayOrder: 1,
 	dayDelimiter: "slash",
-	monthFormat: "MM",
+	monthFormat: "%m",
 	monthOrder: 2,
 	monthDelimiter: "slash",
-	yearFormat: "YYYY",
+	yearFormat: "%Y",
 	yearOrder: 3,
 	yearDelimiter: "slash",
+
+	hourFormat: '%h',
+	periodFormat: 'none',
+	timeDelimiter: 'colon',
 
 	validateCondition: "none",
 	validateRangeUnit: "days",
@@ -4066,6 +4991,7 @@ var ids = {
 
 	dateDisplay: 'ab-date-display',
 
+	// Date
 	dayOrder: 'ab-date-day-order',
 	monthOrder: 'ab-date-month-order',
 	yearOrder: 'ab-date-year-order',
@@ -4075,6 +5001,13 @@ var ids = {
 	dayDelimiter: 'ab-date-day-delimiter',
 	monthDelimiter: 'ab-date-month-delimiter',
 	yearDelimiter: 'ab-date-year-delimiter',
+
+	// Time
+	includeTime: 'ab-date-include-time',
+	timeFormat: 'ab-date-time-format',
+	hourFormat: 'ab-date-hour-format',
+	periodFormat: 'ab-date-period-format',
+	timeDelimiter: 'ab-date-time-delimiter',
 
 	// validation
 	validateCondition: 'ab-date-validate-condition',
@@ -4089,7 +5022,7 @@ var ids = {
 	validateRight: 'ab-date-validate-right'
 };
 
-var delimiterList = [{ id: 'comma', value: "Comma", sign: "," }, { id: 'slash', value: "Slash", sign: "/" }, { id: 'space', value: "Space", sign: " " }, { id: 'dash', value: "Dash", sign: "-" }];
+var delimiterList = [{ id: 'comma', value: "Comma", sign: "," }, { id: 'slash', value: "Slash", sign: "/" }, { id: 'space', value: "Space", sign: " " }, { id: 'dash', value: "Dash", sign: "-" }, { id: 'colon', value: "Colon", sign: ":" }];
 
 /** Private methods **/
 function getDelimiterSign(text) {
@@ -4097,28 +5030,34 @@ function getDelimiterSign(text) {
 		return item.id == text;
 	})[0];
 
-	return delimiterItem ? delimiterItem.sign : null;
+	return delimiterItem ? delimiterItem.sign : '';
 }
 
 function getDateFormat(setting) {
-	var momentFormat = "";
+	var dateFormat = "";
 
+	// Date format
 	for (var i = 1; i <= 3; i++) {
 		if (setting.dayOrder == i) {
-			momentFormat += setting.dayFormat;
-			momentFormat += i != 3 ? setting.dayDelimiter : '';
+			dateFormat += setting.dayFormat;
+			dateFormat += i != 3 ? getDelimiterSign(setting.dayDelimiter) : '';
 		}
 		if (setting.monthOrder == i) {
-			momentFormat += setting.monthFormat;
-			momentFormat += i != 3 ? setting.monthDelimiter : '';
+			dateFormat += setting.monthFormat;
+			dateFormat += i != 3 ? getDelimiterSign(setting.monthDelimiter) : '';
 		}
 		if (setting.yearOrder == i) {
-			momentFormat += setting.yearFormat;
-			momentFormat += i != 3 ? setting.yearDelimiter : '';
+			dateFormat += setting.yearFormat;
+			dateFormat += i != 3 ? getDelimiterSign(setting.yearDelimiter) : '';
 		}
 	}
 
-	return moment(new Date()).format(momentFormat);
+	// Time format
+	if (setting.includeTime) {
+		dateFormat += ' {hour}{delimiter}{minute}{period}'.replace('{hour}', setting.hourFormat).replace('{delimiter}', getDelimiterSign(setting.timeDelimiter)).replace('{minute}', '%i').replace('{period}', setting.periodFormat != 'none' ? setting.periodFormat : '');
+	}
+
+	return dateFormat;
 }
 
 function refreshDateDisplay() {
@@ -4129,12 +5068,19 @@ function refreshDateDisplay() {
 		dayFormat: $$(ids.dayFormat).getValue(),
 		monthFormat: $$(ids.monthFormat).getValue(),
 		yearFormat: $$(ids.yearFormat).getValue(),
-		dayDelimiter: getDelimiterSign($$(ids.dayDelimiter).getValue()),
-		monthDelimiter: getDelimiterSign($$(ids.monthDelimiter).getValue()),
-		yearDelimiter: getDelimiterSign($$(ids.yearDelimiter).getValue())
+		dayDelimiter: $$(ids.dayDelimiter).getValue(),
+		monthDelimiter: $$(ids.monthDelimiter).getValue(),
+		yearDelimiter: $$(ids.yearDelimiter).getValue(),
+
+		includeTime: $$(ids.includeTime).getValue(),
+		hourFormat: $$(ids.hourFormat).getValue(),
+		timeDelimiter: $$(ids.timeDelimiter).getValue(),
+		periodFormat: $$(ids.periodFormat).getValue()
 	});
 
-	$$(ids.dateDisplay).setValue(dateFormat);
+	var dateDisplay = webix.Date.dateToStr(dateFormat)(new Date());
+
+	$$(ids.dateDisplay).setValue(dateDisplay);
 }
 
 /**
@@ -4153,6 +5099,7 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 		return [{
 			view: "checkbox",
 			name: "includeTime",
+			id: ids.includeTime,
 			labelRight: "Include time",
 			labelWidth: 0,
 			on: {
@@ -4165,6 +5112,10 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						timepicker: newVal ? true : false,
 						disabled: $$(ids.currentToDefault).getValue() == true
 					}, $$(ids.default));
+
+					refreshDateDisplay();
+
+					if (newVal) $$(ids.timeFormat).show();else $$(ids.timeFormat).hide();
 				}
 			}
 		}, {
@@ -4192,7 +5143,8 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 			cols: [{
 				view: 'label',
 				label: 'Display',
-				css: 'ab-text-bold'
+				css: 'ab-text-bold',
+				width: 80
 			}, {
 				view: 'label',
 				id: ids.dateDisplay,
@@ -4216,8 +5168,12 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.dayFormat,
 						label: "Format",
 						labelWidth: 100,
-						value: 'D',
-						options: [{ id: 'D', value: "1 2 ... 30 31" }, { id: 'Do', value: "1st 2nd ... 30th 31st" }, { id: 'DD', value: "01 02 ... 30 31" }, { id: 'dd', value: "Su Mo ... Fr Sa" }, { id: 'ddd', value: "Sun Mon ... Fri Sat" }, { id: 'dddd', value: "Sunday Monday ... Friday Saturday" }],
+						value: '%d',
+						options: [{ id: '%d', value: "1 2 ... 30 31" },
+						// { id: 'Do', value: "1st 2nd ... 30th 31st" },
+						{ id: '%j', value: "01 02 ... 30 31" },
+						// { id: 'dd', value: "Su Mo ... Fr Sa" },
+						{ id: '%D', value: "Sun Mon ... Fri Sat" }, { id: '%l', value: "Sunday Monday ... Friday Saturday" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
 								refreshDateDisplay();
@@ -4264,8 +5220,10 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.monthFormat,
 						label: "Format",
 						labelWidth: 100,
-						value: 'MM',
-						options: [{ id: 'M', value: "1 2 ... 11 12" }, { id: 'Mo', value: "1st 2nd ... 11th 12th" }, { id: 'MM', value: "01 02 ... 11 12" }, { id: 'MMM', value: "Jan Feb ... Nov Dec" }, { id: 'MMMM', value: "January February ... November December" }],
+						value: '%m',
+						options: [{ id: '%n', value: "1 2 ... 11 12" },
+						// { id: 'Mo', value: "1st 2nd ... 11th 12th" },
+						{ id: '%m', value: "01 02 ... 11 12" }, { id: '%M', value: "Jan Feb ... Nov Dec" }, { id: '%F', value: "January February ... November December" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
 								refreshDateDisplay();
@@ -4312,8 +5270,8 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						id: ids.yearFormat,
 						label: "Format",
 						labelWidth: 100,
-						value: 'YYYY',
-						options: [{ id: 'YY', value: "70 71 ... 29 30" }, { id: 'YYYY', value: "1970 1971 ... 2029 2030" }],
+						value: '%Y',
+						options: [{ id: '%y', value: "70 71 ... 29 30" }, { id: '%Y', value: "1970 1971 ... 2029 2030" }],
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
 								refreshDateDisplay();
@@ -4341,6 +5299,56 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 						vertical: true,
 						options: delimiterList,
 						value: 'slash',
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}]
+				}
+			},
+
+			// Time
+			{
+				id: ids.timeFormat,
+				hidden: true,
+				header: "Time",
+				body: {
+					rows: [{
+						view: "richselect",
+						name: "hourFormat",
+						id: ids.hourFormat,
+						label: "Hour",
+						labelWidth: 100,
+						value: '%h',
+						options: [{ id: '%h', value: "00 01 ... 10 11" }, { id: '%g', value: "0 1 ... 10 11" }, { id: '%H', value: "00 01 ... 22 23" }, { id: '%G', value: "0 1 ... 22 23" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "richselect",
+						name: "periodFormat",
+						id: ids.periodFormat,
+						label: "Period",
+						labelWidth: 100,
+						value: 'none',
+						options: [{ id: 'none', value: "[none]" }, { id: '%a', value: "am pm" }, { id: '%A', value: "AM PM" }],
+						on: {
+							'onChange': function onChange(newValue, oldValue) {
+								refreshDateDisplay();
+							}
+						}
+					}, {
+						view: "radio",
+						name: "timeDelimiter",
+						id: ids.timeDelimiter,
+						label: "Delimiter",
+						labelWidth: 100,
+						vertical: true,
+						options: delimiterList,
+						value: 'colon',
 						on: {
 							'onChange': function onChange(newValue, oldValue) {
 								refreshDateDisplay();
@@ -4494,7 +5502,9 @@ var ABFieldDateComponent = new _ABFieldComponent2.default({
 	// from the base routine, will be passed on to these:
 	logic: {
 
-		isValid: function isValid(ids, _isValid) {}
+		// isValid: function (ids, isValid) {
+
+		// }
 
 		// populate: function (ids, values) {
 		// 	if (values.settings.validation) {
@@ -4592,9 +5602,12 @@ var ABFieldDate = function (_ABField) {
 	}, {
 		key: "columnHeader",
 		value: function columnHeader(isObjectWorkspace) {
+			var _this2 = this;
+
 			var config = _get(ABFieldDate.prototype.__proto__ || Object.getPrototypeOf(ABFieldDate.prototype), "columnHeader", this).call(this, isObjectWorkspace);
 
-			config.editor = 'date';
+			if (this.settings.includeTime) config.editor = 'datetime';else config.editor = 'date';
+
 			config.sort = 'string';
 
 			// NOTE: it seems that the default value is a string in ISO format.
@@ -4603,22 +5616,24 @@ var ABFieldDate = function (_ABField) {
 			// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
 			config.format = function (d) {
-				if (d == '' || typeof d == 'undefined') {
+				if (d == '' || d == null) {
 					return '';
 				}
 				// convert ISO string -> Date() -> our formatted string
 
-				// TODO: pull format from settings.
-				return webix.Date.dateToStr('%d %M %Y')(new Date(d));
+				// pull format from settings.
+				var dateFormat = getDateFormat(_this2.settings);
+
+				return webix.Date.dateToStr(dateFormat)(new Date(d));
 			};
 
 			config.editFormat = function (d) {
 				// this routine needs to return a Date() object for the editor to work with.
 
 				// if d is not set, return a default Date() value.
-				if (d == '' || typeof d == 'undefined') {
+				if (d == '' || d == null) {
 					// TODO: setup default date from settings:
-					return new Date();
+					return '';
 				}
 
 				// else retun the actual ISO string => Date() value
@@ -4626,6 +5641,29 @@ var ABFieldDate = function (_ABField) {
 			};
 
 			return config;
+		}
+
+		/**
+   * @method defaultValue
+   * insert a key=>value pair that represent the default value
+   * for this field.
+   * @param {obj} values a key=>value hash of the current values.
+   */
+
+	}, {
+		key: "defaultValue",
+		value: function defaultValue(values) {
+			// if no default value is set, then don't insert a value.
+			if (values[this.columnName] == null) {
+				// Set current date as default
+				if (this.settings.defaultCurrentDate) {
+					values[this.columnName] = new Date();
+				}
+				// Specfic default date
+				else if (this.settings.defaultDate != null && this.settings.defaultDate.length > 0) {
+						values[this.columnName] = new Date(this.settings.defaultDate);
+					}
+			}
 		}
 
 		/**
@@ -4641,7 +5679,7 @@ var ABFieldDate = function (_ABField) {
 		key: "isValidData",
 		value: function isValidData(data, validator) {
 
-			if (typeof data[this.columnName] != 'undefined') {
+			if (data[this.columnName] != null) {
 				var value = data[this.columnName];
 
 				if (!(value instanceof Date)) {
@@ -4688,7 +5726,7 @@ var ABFieldDate = function (_ABField) {
 exports.default = ABFieldDate;
 
 /***/ }),
-/* 20 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4702,7 +5740,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _ABField2 = __webpack_require__(2);
+var _ABField2 = __webpack_require__(1);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
@@ -5222,7 +6260,7 @@ exports.default = ABFieldImage;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 21 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5236,7 +6274,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _ABField2 = __webpack_require__(2);
+var _ABField2 = __webpack_require__(1);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
@@ -5621,6 +6659,23 @@ var ABFieldNumber = function (_ABField) {
 		}
 
 		/**
+   * @method defaultValue
+   * insert a key=>value pair that represent the default value
+   * for this field.
+   * @param {obj} values a key=>value hash of the current values.
+   */
+
+	}, {
+		key: "defaultValue",
+		value: function defaultValue(values) {
+
+			// if no default value is set, then don't insert a value.
+			if (this.settings.numberDefault != '') {
+				values[this.columnName] = this.settings.numberDefault;
+			}
+		}
+
+		/**
    * @method isValidData
    * Parse through the given data and return an error if this field's
    * data seems invalid.
@@ -5694,7 +6749,7 @@ webix.editors.number = webix.extend({
 exports.default = ABFieldNumber;
 
 /***/ }),
-/* 22 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5708,7 +6763,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _ABField2 = __webpack_require__(2);
+var _ABField2 = __webpack_require__(1);
 
 var _ABField3 = _interopRequireDefault(_ABField2);
 
@@ -5947,16 +7002,289 @@ var ABFieldString = function (_ABField) {
 exports.default = ABFieldString;
 
 /***/ }),
-/* 23 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(25);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
 
-__webpack_require__(24);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/*
+ * ABView
+ *
+ * An ABView defines a UI display container.
+ *
+ */
+
+function L(key, altText) {
+	return AD.lang.label.getLabel(key) || altText;
+}
+
+var ABView = function () {
+
+	/**
+  * @param {obj} values  key=>value hash of ABView values
+  * @param {ABApplication} application the application object this view is under
+  * @param {ABView} parent the ABView this view is a child of. (can be null)
+  * @param {obj} defaultValues special sub class defined default values.
+  */
+	function ABView(values, application, parent, defaultValues) {
+		_classCallCheck(this, ABView);
+
+		this.defaults = defaultValues;
+
+		// 	{
+		// 		id:'uuid',					// uuid value for this obj
+		// 		key:'viewKey',				// unique key for this View Type
+		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
+		// 		label:'',					// pulled from translation
+
+		//		settings: {					// unique settings for the type of field
+		//		},
+
+		// 		children:[],				// the child views contained by this view.
+
+		//		translations:[]
+		// 	}
+
+		this.fromValues(values);
+
+		// label is a multilingual value:
+		OP.Multilingual.translate(this, this, ['label']);
+
+		this.application = application;
+
+		this.parent = parent || null;
+	}
+
+	_createClass(ABView, [{
+		key: 'viewKey',
+		value: function viewKey() {
+			return this.defaults.key;
+		}
+	}, {
+		key: 'viewIcon',
+		value: function viewIcon() {
+			return this.defaults.icon;
+		}
+
+		/*
+   * @method isValid
+   * check the current values to make sure they are valid.
+   * Here we check the default values provided by ABView.
+   *
+   * @return {OP.Validation.validator()}
+   */
+
+	}, {
+		key: 'isValid',
+		value: function isValid() {
+			var _this = this;
+
+			var validator = OP.Validation.validator();
+
+			// // labels must be unique among views on the same parent
+			var parent = this.parent;
+			if (!parent) {
+				parent = this.application;
+			}
+
+			var isNameUnique = parent.views(function (v) {
+				return v.id != _this.id && v.label.toLowerCase() == _this.label.toLowerCase();
+			}).length == 0;
+			if (!isNameUnique) {
+				validator.addError('label', L('ab.validation.view.label.unique', '*View label must be unique among peers.'));
+			}
+
+			return validator;
+		}
+
+		///
+		/// Instance Methods
+		///
+
+
+		/// ABApplication data methods
+
+
+		/**
+   * @method destroy()
+   *
+   * destroy the current instance of ABApplication
+   *
+   * also remove it from our _AllApplications
+   *
+   * @return {Promise}
+   */
+
+	}, {
+		key: 'destroy',
+		value: function destroy() {
+			var _this2 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// verify we have been .save()d before:
+				if (_this2.id) {
+
+					if (!_this2.parent) {
+
+						_this2.application.viewDestroy(_this2).then(resolve).catch(reject);
+					} else {}
+				} else {
+
+					resolve(); // nothing to do really
+				}
+			});
+		}
+
+		/**
+   * @method save()
+   *
+   * persist this instance of ABField with it's parent ABObject
+   *
+   *
+   * @return {Promise}
+   *						.resolve( {this} )
+   */
+
+	}, {
+		key: 'save',
+		value: function save() {
+			var _this3 = this;
+
+			return new Promise(function (resolve, reject) {
+
+				// if this is our initial save()
+				if (!_this3.id) {
+					_this3.id = OP.Util.uuid(); // setup default .id
+				}
+
+				// if this is not a child of another view then store under
+				// application.
+				var parent = _this3.parent;
+				if (!parent) parent = _this3.application;
+
+				parent.viewSave(_this3).then(resolve).catch(reject);
+			});
+		}
+
+		/**
+   * @method toObj()
+   *
+   * properly compile the current state of this ABField instance
+   * into the values needed for saving to the DB.
+   *
+   * @return {json}
+   */
+
+	}, {
+		key: 'toObj',
+		value: function toObj() {
+
+			OP.Multilingual.unTranslate(this, this, ['label']);
+
+			// // for each Object: compile to json
+			var currChildren = [];
+			this._children.forEach(function (child) {
+				currChildren.push(child.toObj());
+			});
+
+			return {
+				id: this.id,
+				key: this.key,
+				icon: this.icon,
+
+				// parent: this.parent,
+
+				settings: this.settings || {},
+				translations: this.translations || [],
+				children: currChildren
+
+			};
+		}
+
+		/**
+   * @method fromValues()
+   *
+   * initialze this object with the given set of values.
+   * @param {obj} values
+   */
+
+	}, {
+		key: 'fromValues',
+		value: function fromValues(values) {
+
+			this.id = values.id; // NOTE: only exists after .save()
+			this.key = values.key || this.viewKey();
+			this.icon = values.icon || this.viewIcon();
+
+			// this.parent = values.parent || null;
+
+			values.settings = values.settings || {};
+
+			// if this is being instantiated on a read from the Property UI,
+			// .label is coming in under .settings.label
+			this.label = values.label || values.settings.label || '?label?';
+
+			this.translations = values.translations || [];
+
+			this.settings = values.settings || {};
+
+			var children = [];
+			// (values.children || []).forEach((child) => {
+			// 	children.push(this.newChild(child));
+			// })
+			this._children = children;
+
+			// convert from "0" => 0
+		}
+	}, {
+		key: 'isRoot',
+		value: function isRoot() {
+			return this.parent == null;
+		}
+	}]);
+
+	return ABView;
+}();
+
+exports.default = ABView;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ab_choose_list = __webpack_require__(34);
+
+var _ab_choose_list2 = _interopRequireDefault(_ab_choose_list);
+
+var _ab_choose_form = __webpack_require__(33);
+
+var _ab_choose_form2 = _interopRequireDefault(_ab_choose_form);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * AB Choose
  *
@@ -5966,76 +7294,91 @@ __webpack_require__(24);
  *
  */
 
-var idBase = 'ab_choose';
-OP.Component.extend(idBase, function (App) {
+var ABChoose = function (_OP$Component) {
+	_inherits(ABChoose, _OP$Component);
 
-	var ids = {
-		component: App.unique(idBase + '_component')
-	};
+	// (idBase, function(App) {
 
-	// Define the external components used in this Component:
-	var AppList = OP.Component['ab_choose_list'](App);
-	var AppForm = OP.Component['ab_choose_form'](App);
 
-	// This component's UI definition:
-	// Application multi-views
-	var _ui = {
-		view: "multiview",
-		animate: false,
-		id: ids.component,
-		cells: [AppList.ui, AppForm.ui]
-	};
+	function ABChoose(App) {
+		_classCallCheck(this, ABChoose);
 
-	// This component's Init definition:
-	var _init = function _init() {
+		var _this = _possibleConstructorReturn(this, (ABChoose.__proto__ || Object.getPrototypeOf(ABChoose)).call(this, App, 'ab_choose'));
 
-		AppList.init();
-		AppForm.init();
-	};
+		var ids = {
+			component: _this.unique('component')
+		};
 
-	// Expose any globally accessible Actions:
-	var _actions = {
+		// Define the external components used in this Component:
+		var AppList = new _ab_choose_list2.default(App); // OP.Component['ab_choose_list'](App);
+		var AppForm = new _ab_choose_form2.default(App); // OP.Component['ab_choose_form'](App);
 
-		/**
-   * @function transitionApplicationChooser
-   *
-   * Switch the AppBuilder UI to show the Application Chooser component.
-   */
-		transitionApplicationChooser: function transitionApplicationChooser() {
-			$$(ids.component).show();
-		}
 
-	};
+		// This component's UI definition:
+		// Application multi-views
+		_this.ui = {
+			view: "multiview",
+			animate: false,
+			id: ids.component,
+			cells: [AppList.ui, AppForm.ui]
+		};
 
-	var _logic = {};
+		// This component's Init definition:
+		_this.init = function () {
 
-	// return the current instance of this component:
-	return {
-		ui: _ui,
-		init: _init,
-		actions: _actions,
+			AppList.init();
+			AppForm.init();
+		};
 
-		_logic: _logic // Unit Testing
-	};
-});
+		_this.actions({
+
+			/**
+    * @function transitionApplicationChooser
+    *
+    * Switch the AppBuilder UI to show the Application Chooser component.
+    */
+			transitionApplicationChooser: function transitionApplicationChooser() {
+				$$(ids.component).show();
+			}
+
+		});
+
+		var _logic = {};
+
+		_this._logic = _logic;
+
+		return _this;
+	}
+
+	return ABChoose;
+}(OP.Component);
+
+exports.default = ABChoose;
+;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 24 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ABApplication = __webpack_require__(4);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * AB Choose Form
  *
@@ -6043,1423 +7386,1374 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+var ABChoose = function (_OP$Component) {
+	_inherits(ABChoose, _OP$Component);
 
-	component: {
+	// .extend(idBase, function(App) {
 
-		formHeader: L('ab.application.form.header', "*Application Info"),
-		placeholderName: L('ab.application.form.placeholderName', "*Application name"),
-		placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
-		formDescription: L('ab.application.form.formDescription', "*Description"),
 
-		sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
-		permissionHeader: L('ab.application.form.headerPermission', "*Who can use this app?"),
-		createNewRole: L('ab.application.form.createNewRoleButton', "*Create new roll"),
+	function ABChoose(App) {
+		_classCallCheck(this, ABChoose);
 
-		invalidName: L('ab.application.invalidName', "*This application name is invalid"),
-		duplicateName: L('ab.application.duplicateName', "*Name must be unique.")
+		var _this = _possibleConstructorReturn(this, (ABChoose.__proto__ || Object.getPrototypeOf(ABChoose)).call(this, App, 'ab_choose_form'));
 
-	}
-};
+		var L = _this.Label; // lazy shortcut
 
-var idBase = 'ab_choose_form';
-OP.Component.extend(idBase, function (App) {
+		var labels = {
 
-	labels.common = App.labels;
+			common: App.labels,
 
-	var ids = {
-		component: App.unique(idBase + '_component'),
+			component: {
 
-		form: App.unique(idBase + '_form'),
-		appFormPermissionList: App.unique(idBase + '_permission'),
-		appFormCreateRoleButton: App.unique(idBase + '_createRole'),
+				formHeader: L('ab.application.form.header', "*Application Info"),
+				placeholderName: L('ab.application.form.placeholderName', "*Application name"),
+				placeholderDescription: L('ab.application.form.placeholderDescription', "*Application description"),
+				formDescription: L('ab.application.form.formDescription', "*Description"),
 
-		saveButton: App.unique(idBase + '_buttonSave')
-	};
+				sectionPermission: L('ab.application.form.sectionPermission', "*Permission"),
+				permissionHeader: L('ab.application.form.headerPermission', "*Who can use this app?"),
+				createNewRole: L('ab.application.form.createNewRoleButton', "*Create new roll"),
 
-	var _ui = {
+				invalidName: L('ab.application.invalidName', "*This application name is invalid"),
+				duplicateName: L('ab.application.duplicateName', "*Name must be unique.")
 
-		id: ids.component,
-		responsive: "hide",
-		cols: [{
-			maxWidth: App.config.appListSpacerColMaxWidth,
-			minWidth: App.config.appListSpacerColMinWidth,
-			width: App.config.appListSpacerColMaxWidth
-		}, {
-			responsiveCell: false,
-			rows: [{
-				maxHeight: App.config.appListSpacerRowHeight,
-				hidden: App.config.hideMobile
+			}
+		};
+
+		var ids = {
+			component: _this.unique('component'),
+
+			form: _this.unique('form'),
+			appFormPermissionList: _this.unique('permission'),
+			appFormCreateRoleButton: _this.unique('createRole'),
+
+			saveButton: _this.unique('buttonSave')
+		};
+
+		_this.ui = {
+
+			id: ids.component,
+			responsive: "hide",
+			cols: [{
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
 			}, {
-				view: "toolbar",
-				cols: [{ view: "label", label: labels.component.formHeader, fillspace: true }]
-			}, {
-				view: "form",
-				id: ids.form,
-				autoheight: true,
-				margin: 0,
-				elements: [
-				//{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
-				{
-					name: "label",
-					view: "text",
-					label: labels.common.formName,
-					required: true,
-					placeholder: labels.component.placeholderName,
-					labelWidth: 100,
-					on: {
-						onChange: function onChange(newValue, oldValue) {
-							_logic.permissionRenameRole(newValue, oldValue);
-						}
-					}
-				}, { height: App.config.smallSpacer }, {
-					name: "description",
-					view: "textarea",
-					// label: labels.common.formDescription,
-					label: "Description",
-					labelAlign: "left",
-					labelWidth: 100,
-					placeholder: labels.component.placeholderDescription,
-					height: 100
-				}, { height: App.config.smallSpacer }, {
-					view: "toolbar",
-					css: "ab-toolbar-submenu",
-					cols: [{
-						template: labels.component.permissionHeader,
-						type: 'header',
-						borderless: true
-					}, {
-						view: "toggle",
-						id: ids.appFormCreateRoleButton,
-						type: "icon",
-						align: "right",
-						autowidth: true,
-						css: "ab-standard-button",
-						offIcon: "square-o",
-						onIcon: "check-square-o",
-						label: labels.component.createNewRole,
-						on: {
-							onItemClick: function onItemClick(id, e) {
-								_logic.createRoleButtonClick();
-							}
-						}
-					}]
+				responsiveCell: false,
+				rows: [{
+					maxHeight: App.config.appListSpacerRowHeight,
+					hidden: App.config.hideMobile
 				}, {
-					name: "permissions",
-					id: ids.appFormPermissionList,
-					view: "list",
-					//height: 130,
-					autowidth: true,
+					view: "toolbar",
+					cols: [{ view: "label", label: labels.component.formHeader, fillspace: true }]
+				}, {
+					view: "form",
+					id: ids.form,
 					autoheight: true,
 					margin: 0,
-					css: "ab-app-form-permission",
-					template: "{common.markCheckbox()} #name#",
-					type: {
-						markCheckbox: function markCheckbox(obj) {
-							return "<span class='check webix_icon fa-" + (obj.markCheckbox ? "check-" : "") + "square-o'></span>";
+					elements: [
+					//{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
+					{
+						name: "label",
+						view: "text",
+						label: labels.common.formName,
+						required: true,
+						placeholder: labels.component.placeholderName,
+						labelWidth: 100,
+						on: {
+							onChange: function onChange(newValue, oldValue) {
+								_logic.permissionRenameRole(newValue, oldValue);
+							}
 						}
-					},
-					on: {
-						onItemClick: function onItemClick(id, e, node) {
-							_logic.permissionClick(id, e, node);
-						}
-					}
-				}, { height: App.config.smallSpacer }, {
-					margin: 5,
-					cols: [{ fillspace: true }, {
-						view: "button",
-						value: labels.common.cancel,
-						width: App.config.buttonWidthSmall,
-						css: "ab-cancel-button",
-						click: function click() {
-							_logic.cancel();
-						}
+					}, { height: App.config.smallSpacer }, {
+						name: "description",
+						view: "textarea",
+						// label: labels.common.formDescription,
+						label: "Description",
+						labelAlign: "left",
+						labelWidth: 100,
+						placeholder: labels.component.placeholderDescription,
+						height: 100
+					}, { height: App.config.smallSpacer }, {
+						view: "toolbar",
+						css: "ab-toolbar-submenu",
+						cols: [{
+							template: labels.component.permissionHeader,
+							type: 'header',
+							borderless: true
+						}, {
+							view: "toggle",
+							id: ids.appFormCreateRoleButton,
+							type: "icon",
+							align: "right",
+							autowidth: true,
+							css: "ab-standard-button",
+							offIcon: "square-o",
+							onIcon: "check-square-o",
+							label: labels.component.createNewRole,
+							on: {
+								onItemClick: function onItemClick(id, e) {
+									_logic.createRoleButtonClick();
+								}
+							}
+						}]
 					}, {
-						id: ids.saveButton,
-						view: "button",
-						label: labels.common.save,
-						type: "form",
-						width: App.config.buttonWidthSmall,
-						click: function click() {
-							_logic.buttonSaveClick();
-						} // end click()
+						name: "permissions",
+						id: ids.appFormPermissionList,
+						view: "list",
+						//height: 130,
+						autowidth: true,
+						autoheight: true,
+						margin: 0,
+						css: "ab-app-form-permission",
+						template: "{common.markCheckbox()} #name#",
+						type: {
+							markCheckbox: function markCheckbox(obj) {
+								return "<span class='check webix_icon fa-" + (obj.markCheckbox ? "check-" : "") + "square-o'></span>";
+							}
+						},
+						on: {
+							onItemClick: function onItemClick(id, e, node) {
+								_logic.permissionClick(id, e, node);
+							}
+						}
+					}, { height: App.config.smallSpacer }, {
+						margin: 5,
+						cols: [{ fillspace: true }, {
+							view: "button",
+							value: labels.common.cancel,
+							width: App.config.buttonWidthSmall,
+							css: "ab-cancel-button",
+							click: function click() {
+								_logic.cancel();
+							}
+						}, {
+							id: ids.saveButton,
+							view: "button",
+							label: labels.common.save,
+							type: "form",
+							width: App.config.buttonWidthSmall,
+							click: function click() {
+								_logic.buttonSaveClick();
+							} // end click()
+						}]
 					}]
+				}, {
+					maxHeight: App.config.appListSpacerRowHeight,
+					hidden: App.config.hideMobile
 				}]
 			}, {
-				maxHeight: App.config.appListSpacerRowHeight,
-				hidden: App.config.hideMobile
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
 			}]
-		}, {
-			maxWidth: App.config.appListSpacerColMaxWidth,
-			minWidth: App.config.appListSpacerColMinWidth,
-			width: App.config.appListSpacerColMaxWidth
-		}]
-	};
+		};
 
-	var FormFields = ['label', 'description'];
+		var FormFields = ['label', 'description'];
 
-	var _init = function _init() {
-		webix.extend($$(ids.form), webix.ProgressBar);
-		webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
-	};
+		_this.init = function () {
+			webix.extend($$(ids.form), webix.ProgressBar);
+			webix.extend($$(ids.appFormPermissionList), webix.ProgressBar);
+		};
 
-	var _logic = {
+		var _logic = {
 
-		/**
-   * @function applicationCreate
-   *
-   * Step through the process of creating an ABApplication with the
-   * current state of the Form.
-   *
-   * @param {obj} values 	current value hash of the form values.
-   */
-		applicationCreate: function applicationCreate(values) {
+			/**
+    * @function applicationCreate
+    *
+    * Step through the process of creating an ABApplication with the
+    * current state of the Form.
+    *
+    * @param {obj} values 	current value hash of the form values.
+    */
+			applicationCreate: function applicationCreate(values) {
 
-			var newApp = {
-				name: values.label,
-				label: values.label,
-				description: values.description
-			};
+				var newApp = {
+					name: values.label,
+					label: values.label,
+					description: values.description
+				};
 
-			async.waterfall([function (cb) {
-				// Create application data
-				_ABApplication2.default.create(newApp).then(function (result) {
-					cb(null, result);
-				}).catch(cb);
-			}, function (createdApp, cb) {
-				_logic.permissionSave(createdApp).then(function () {
-					cb();
-				}).catch(cb);
-			}], function (err) {
-				_logic.formReady();
+				async.waterfall([function (cb) {
+					// Create application data
+					_ABApplication2.default.create(newApp).then(function (result) {
+						cb(null, result);
+					}).catch(cb);
+				}, function (createdApp, cb) {
+					_logic.permissionSave(createdApp).then(function () {
+						cb();
+					}).catch(cb);
+				}], function (err) {
+					_logic.formReady();
 
-				if (err) {
+					if (err) {
+						webix.message({
+							type: "error",
+							text: labels.common.createErrorMessage.replace('{0}', values.label)
+						});
+
+						AD.error.log('App Builder : Error create application data', { error: err });
+
+						_logic.buttonSaveEnable();
+
+						return;
+					}
+
+					App.actions.transitionApplicationList();
+
 					webix.message({
-						type: "error",
-						text: labels.common.createErrorMessage.replace('{0}', values.label)
+						type: "success",
+						text: labels.common.createSuccessMessage.replace('{0}', values.label)
 					});
-
-					AD.error.log('App Builder : Error create application data', { error: err });
 
 					_logic.buttonSaveEnable();
+				});
+			},
 
-					return;
+			/**
+    * @function applicationUpdate
+    *
+    * Step through the process of updating an ABApplication with the
+    * current state of the Form.
+    *
+    * @param {ABApplication} application
+    */
+			applicationUpdate: function applicationUpdate(Application) {
+				var values = _logic.formValues();
+
+				async.waterfall([function (next) {
+					_logic.permissionSave(Application).then(function (result) {
+						next(null, result);
+					}).catch(next);
+				}, function (app_role, next) {
+					// Update application data
+					Application.label = values.label;
+					Application.description = values.description;
+
+					if (app_role && app_role.id) Application.role = app_role.id;else Application.role = null;
+
+					Application.save().then(function () {
+						next();
+					}).catch(next);
+				}], function (err) {
+
+					_logic.formReady();
+					_logic.buttonSaveEnable();
+					if (err) {
+						webix.message({
+							type: "error",
+							text: labels.common.updateErrorMessage.replace('{0}', Application.label)
+						});
+						AD.error.log('App Builder : Error update application data', { error: err });
+						return false;
+					}
+
+					App.actions.transitionApplicationList();
+
+					webix.message({
+						type: "success",
+						text: labels.common.updateSucessMessage.replace('{0}', Application.label)
+					});
+				});
+			},
+
+			/**
+    * @function buttonSaveClick
+    *
+    * Process the user clicking on the [Save] button.
+    */
+			buttonSaveClick: function buttonSaveClick() {
+
+				_logic.buttonSaveDisable();
+				_logic.formBusy();
+
+				// if there is a selected Application, then this is an UPDATE
+				var updateApp = App.actions.getSelectedApplication();
+				if (updateApp) {
+
+					if (_logic.formValidate('update')) {
+
+						_logic.applicationUpdate(updateApp);
+					}
+				} else {
+
+					// else this is a Create
+					if (_logic.formValidate('add')) {
+
+						_logic.applicationCreate(_logic.formValues());
+					}
+				}
+			},
+
+			/**
+    * @function buttonSaveDisable
+    *
+    * Disable the save button.
+    */
+			buttonSaveDisable: function buttonSaveDisable() {
+				$$(ids.saveButton).disable();
+			},
+
+			/**
+    * @function buttonSaveEnable
+    *
+    * Re-enable the save button.
+    */
+			buttonSaveEnable: function buttonSaveEnable() {
+				$$(ids.saveButton).enable();
+			},
+
+			/**
+    * @function cancel
+    *
+    * Cancel the current Form Operation and return us to the AppList.
+    */
+			cancel: function cancel() {
+
+				_logic.formReset();
+				App.actions.transitionApplicationList();
+			},
+
+			/**
+    * @function createRoleButtonClick
+    *
+    * The user clicked the [Create Role] button.  Update the UI and add a
+    * unique Application permission to our list.
+    */
+			createRoleButtonClick: function createRoleButtonClick() {
+
+				if ($$(ids.appFormCreateRoleButton).getValue()) {
+
+					// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
+					// Add new app role
+					var appName = $$(ids.form).elements["label"].getValue();
+					_logic.permissionAddNew(appName);
+				} else {
+					// Remove app role
+					_logic.permissionRemoveNew();
+				}
+			},
+
+			/**
+    * @function formBusy
+    *
+    * Show the progress indicator to indicate a Form operation is in
+    * progress.
+    */
+			formBusy: function formBusy() {
+
+				$$(ids.form).showProgress({ type: 'icon' });
+			},
+
+			/**
+    * @function formPopulate()
+    *
+    * populate the form values from the given ABApplication
+    *
+    * @param {ABApplication} application  instance of the ABApplication
+    */
+			formPopulate: function formPopulate(application) {
+
+				var Form = $$(ids.form);
+
+				// Populate data to form
+				if (application) {
+					FormFields.forEach(function (f) {
+						if (Form.elements[f]) {
+							Form.elements[f].setValue(application[f]);
+						}
+					});
 				}
 
-				App.actions.transitionApplicationList();
+				// _logic.permissionPopulate(application);
+			},
 
-				webix.message({
-					type: "success",
-					text: labels.common.createSuccessMessage.replace('{0}', values.label)
-				});
+			/**
+    * @function formReady()
+    *
+    * remove the busy indicator from the form.
+    */
+			formReady: function formReady() {
+				$$(ids.form).hideProgress();
+			},
 
-				_logic.buttonSaveEnable();
-			});
-		},
+			/**
+    * @function formReset()
+    *
+    * return the form to an empty state.
+    */
+			formReset: function formReset() {
 
-		/**
-   * @function applicationUpdate
-   *
-   * Step through the process of updating an ABApplication with the
-   * current state of the Form.
-   *
-   * @param {ABApplication} application
-   */
-		applicationUpdate: function applicationUpdate(Application) {
-			var values = _logic.formValues();
+				$$(ids.form).clear();
+				$$(ids.form).clearValidation();
+				// $$(self.webixUiids.appFormPermissionList).clearValidation();
+				// $$(self.webixUiids.appFormPermissionList).clearAll();
+				// $$(self.webixUiids.appFormCreateRoleButton).setValue(0);
+			},
 
-			async.waterfall([function (next) {
-				_logic.permissionSave(Application).then(function (result) {
-					next(null, result);
-				}).catch(next);
-			}, function (app_role, next) {
-				// Update application data
-				Application.label = values.label;
-				Application.description = values.description;
+			/**
+    * @function formValidate()
+    *
+    * validate the form values.
+    *
+    * @return {bool}  true if all values pass validation.  false otherwise.
+    */
+			formValidate: function formValidate(op) {
+				// op : ['add', 'update', 'destroy']
 
-				if (app_role && app_role.id) Application.role = app_role.id;else Application.role = null;
+				var Form = $$(ids.form);
+				if (!Form.validate()) {
+					// TODO : Error message
 
-				Application.save().then(function () {
-					next();
-				}).catch(next);
-			}], function (err) {
-
-				_logic.formReady();
-				_logic.buttonSaveEnable();
-				if (err) {
-					webix.message({
-						type: "error",
-						text: labels.common.updateErrorMessage.replace('{0}', Application.label)
-					});
-					AD.error.log('App Builder : Error update application data', { error: err });
+					_logic.buttonSaveEnable();
 					return false;
 				}
 
-				App.actions.transitionApplicationList();
-
-				webix.message({
-					type: "success",
-					text: labels.common.updateSucessMessage.replace('{0}', Application.label)
-				});
-			});
-		},
-
-		/**
-   * @function buttonSaveClick
-   *
-   * Process the user clicking on the [Save] button.
-   */
-		buttonSaveClick: function buttonSaveClick() {
-
-			_logic.buttonSaveDisable();
-			_logic.formBusy();
-
-			// if there is a selected Application, then this is an UPDATE
-			var updateApp = App.actions.getSelectedApplication();
-			if (updateApp) {
-
-				if (_logic.formValidate('update')) {
-
-					_logic.applicationUpdate(updateApp);
-				}
-			} else {
-
-				// else this is a Create
-				if (_logic.formValidate('add')) {
-
-					_logic.applicationCreate(_logic.formValues());
-				}
-			}
-		},
-
-		/**
-   * @function buttonSaveDisable
-   *
-   * Disable the save button.
-   */
-		buttonSaveDisable: function buttonSaveDisable() {
-			$$(ids.saveButton).disable();
-		},
-
-		/**
-   * @function buttonSaveEnable
-   *
-   * Re-enable the save button.
-   */
-		buttonSaveEnable: function buttonSaveEnable() {
-			$$(ids.saveButton).enable();
-		},
-
-		/**
-   * @function cancel
-   *
-   * Cancel the current Form Operation and return us to the AppList.
-   */
-		cancel: function cancel() {
-
-			_logic.formReset();
-			App.actions.transitionApplicationList();
-		},
-
-		/**
-   * @function createRoleButtonClick
-   *
-   * The user clicked the [Create Role] button.  Update the UI and add a
-   * unique Application permission to our list.
-   */
-		createRoleButtonClick: function createRoleButtonClick() {
-
-			if ($$(ids.appFormCreateRoleButton).getValue()) {
-
-				// TODO: if not called from anywhere else, then move the name gathering into .permissionAddNew()
-				// Add new app role
-				var appName = $$(ids.form).elements["label"].getValue();
-				_logic.permissionAddNew(appName);
-			} else {
-				// Remove app role
-				_logic.permissionRemoveNew();
-			}
-		},
-
-		/**
-   * @function formBusy
-   *
-   * Show the progress indicator to indicate a Form operation is in
-   * progress.
-   */
-		formBusy: function formBusy() {
-
-			$$(ids.form).showProgress({ type: 'icon' });
-		},
-
-		/**
-   * @function formPopulate()
-   *
-   * populate the form values from the given ABApplication
-   *
-   * @param {ABApplication} application  instance of the ABApplication
-   */
-		formPopulate: function formPopulate(application) {
-
-			var Form = $$(ids.form);
-
-			// Populate data to form
-			if (application) {
-				FormFields.forEach(function (f) {
-					if (Form.elements[f]) {
-						Form.elements[f].setValue(application[f]);
-					}
-				});
-			}
-
-			// _logic.permissionPopulate(application);
-		},
-
-		/**
-   * @function formReady()
-   *
-   * remove the busy indicator from the form.
-   */
-		formReady: function formReady() {
-			$$(ids.form).hideProgress();
-		},
-
-		/**
-   * @function formReset()
-   *
-   * return the form to an empty state.
-   */
-		formReset: function formReset() {
-
-			$$(ids.form).clear();
-			$$(ids.form).clearValidation();
-			// $$(self.webixUiids.appFormPermissionList).clearValidation();
-			// $$(self.webixUiids.appFormPermissionList).clearAll();
-			// $$(self.webixUiids.appFormCreateRoleButton).setValue(0);
-		},
-
-		/**
-   * @function formValidate()
-   *
-   * validate the form values.
-   *
-   * @return {bool}  true if all values pass validation.  false otherwise.
-   */
-		formValidate: function formValidate(op) {
-			// op : ['add', 'update', 'destroy']
-
-			var Form = $$(ids.form);
-			if (!Form.validate()) {
-				// TODO : Error message
-
-				_logic.buttonSaveEnable();
-				return false;
-			}
-
-			var validator = _ABApplication2.default.isValid(op, Form.getValues());
-			if (validator.fail()) {
-				validator.updateForm(Form);
-				_logic.formReady();
-				_logic.buttonSaveEnable();
-				return false;
-			}
-
-			// var appName = $$(ids.form).elements['label'].getValue(),
-			// 	appDescription = $$(ids.form).elements['description'].getValue();
-
-			// if (!inputValidator.validate(appName)) {
-			// 	_logic.buttonSaveEnable();
-			// 	return false;
-			// }
-
-			// // Prevent duplicate application name
-			// if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
-			// 	OP.Dialog.Alert({
-			// 		title: labels.component.invalidName,
-			// 		text: labels.component.duplicateName.replace("#appName#", appName),
-			// 		ok: labels.common.ok
-			// 	});
-
-			// 	$$(ids.form).elements['label'].focus();
-			// 	_logic.buttonSaveEnable();
-			// 	return false;
-			// }
-
-			return true;
-		},
-
-		/**
-   * @function formValues()
-   *
-   * return an object hash of name:value pairs of the current Form.
-   *
-   * @return {obj}
-   */
-		formValues: function formValues() {
-			// return the current values of the Form elements.
-			return $$(ids.form).getValues();
-		},
-
-		/**
-   * @function permissionAddNew
-   *
-   * create a new permission entry based upon the current Application.label
-   *
-   * This not only adds it to our Permission List, but also selects it.
-   *
-   * @param {string} appName	The Application.label of the current Application
-   */
-		permissionAddNew: function permissionAddNew(appName) {
-
-			// add new role entry
-			$$(ids.appFormPermissionList).add({
-				id: 'newRole',
-				name: _logic.permissionName(appName),
-				isApplicationRole: true,
-				markCheckbox: 1
-			}, 0);
-
-			// Select new role
-			var selectedIds = $$(ids.appFormPermissionList).getSelectedId(true);
-			selectedIds.push('newRole');
-			$$(ids.appFormPermissionList).select(selectedIds);
-		},
-
-		/**
-   * @function permissionClick
-   *
-   * Process when a permission entry in the list is clicked.
-   */
-		permissionClick: function permissionClick(id, e, node) {
-
-			var List = $$(ids.appFormPermissionList);
-
-			var item = List.getItem(id);
-
-			if (List.getItem(id).isApplicationRole) {
-				return;
-			}
-
-			if (List.isSelected(id)) {
-				item.markCheckbox = 0;
-				List.unselect(id);
-			} else {
-				item.markCheckbox = 1;
-				var selectedIds = List.getSelectedId();
-
-				if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
-					if (selectedIds) selectedIds = [selectedIds];else selectedIds = [];
+				var validator = _ABApplication2.default.isValid(op, Form.getValues());
+				if (validator.fail()) {
+					validator.updateForm(Form);
+					_logic.formReady();
+					_logic.buttonSaveEnable();
+					return false;
 				}
 
-				selectedIds.push(id);
+				// var appName = $$(ids.form).elements['label'].getValue(),
+				// 	appDescription = $$(ids.form).elements['description'].getValue();
 
-				List.select(selectedIds);
+				// if (!inputValidator.validate(appName)) {
+				// 	_logic.buttonSaveEnable();
+				// 	return false;
+				// }
 
-				List.updateItem(id, item);
-			}
-		},
+				// // Prevent duplicate application name
+				// if (self.data.filter(function (app) { return app.name.trim().toLowerCase() == appName.trim().replace(/ /g, '_').toLowerCase(); }).length > 0) {
+				// 	OP.Dialog.Alert({
+				// 		title: labels.component.invalidName,
+				// 		text: labels.component.duplicateName.replace("#appName#", appName),
+				// 		ok: labels.common.ok
+				// 	});
 
-		/**
-   * @function permissionName
-   *
-   * returns a formatted name for a Permission Role based upon the provided Application.label
-   *
-   * @param {string} appName	the current value of the Application.label
-   * @return {string} 	Permission Role Name.
-   */
-		permissionName: function permissionName(appName) {
-			return appName + " Application Role";
-		},
+				// 	$$(ids.form).elements['label'].focus();
+				// 	_logic.buttonSaveEnable();
+				// 	return false;
+				// }
 
-		/**
-   * @function permissionPopulate
-   *
-   * fill out the Permission list
-   *
-   * @param {ABApplication} application	the current ABApplication we are editing
-   */
-		permissionPopulate: function permissionPopulate(application) {
+				return true;
+			},
 
-			var PermForm = $$(ids.appFormPermissionList);
-			// Get user's roles
-			PermForm.showProgress({ type: 'icon' });
-			async.waterfall([function (next) {
-				AD.comm.service.get({ url: '/app_builder/user/roles' }).fail(function (err) {
-					next(err);
-				}).done(function (roles) {
+			/**
+    * @function formValues()
+    *
+    * return an object hash of name:value pairs of the current Form.
+    *
+    * @return {obj}
+    */
+			formValues: function formValues() {
+				// return the current values of the Form elements.
+				return $$(ids.form).getValues();
+			},
 
-					// scan the roles and determine if any of them have been created
-					// after the current Application.name:
-					var parsedRoles = roles.map(function (r) {
-						if (application) {
-							if (r.name == _logic.permissionName(application.name.split('_').join(' '))) {
-								r.isApplicationRole = true;
-							}
-						}
-						return r;
-					});
-					next(null, parsedRoles);
-				});
-			}, function (available_roles, next) {
-				if (application && application.id) {
-					application.getPermissions().then(function (selected_role_ids) {
-						next(null, available_roles, selected_role_ids);
-					}).catch(function (err) {
-						next(err);
-					});
+			/**
+    * @function permissionAddNew
+    *
+    * create a new permission entry based upon the current Application.label
+    *
+    * This not only adds it to our Permission List, but also selects it.
+    *
+    * @param {string} appName	The Application.label of the current Application
+    */
+			permissionAddNew: function permissionAddNew(appName) {
+
+				// add new role entry
+				$$(ids.appFormPermissionList).add({
+					id: 'newRole',
+					name: _logic.permissionName(appName),
+					isApplicationRole: true,
+					markCheckbox: 1
+				}, 0);
+
+				// Select new role
+				var selectedIds = $$(ids.appFormPermissionList).getSelectedId(true);
+				selectedIds.push('newRole');
+				$$(ids.appFormPermissionList).select(selectedIds);
+			},
+
+			/**
+    * @function permissionClick
+    *
+    * Process when a permission entry in the list is clicked.
+    */
+			permissionClick: function permissionClick(id, e, node) {
+
+				var List = $$(ids.appFormPermissionList);
+
+				var item = List.getItem(id);
+
+				if (List.getItem(id).isApplicationRole) {
+					return;
+				}
+
+				if (List.isSelected(id)) {
+					item.markCheckbox = 0;
+					List.unselect(id);
 				} else {
-					next(null, available_roles, []);
-				}
-			}, function (available_roles, selected_role_ids, next) {
+					item.markCheckbox = 1;
+					var selectedIds = List.getSelectedId();
 
-				// mark the role(s) in available_roles that is tied
-				// this application:
-				if (application && application.role) {
-					available_roles.forEach(function (r) {
-						if (r.id == (application.role.id || application.role)) {
-							r.isApplicationRole = true;
-							r.markCheckbox = 1;
-						}
+					if (typeof selectedIds === 'string' || !isNaN(selectedIds)) {
+						if (selectedIds) selectedIds = [selectedIds];else selectedIds = [];
+					}
+
+					selectedIds.push(id);
+
+					List.select(selectedIds);
+
+					List.updateItem(id, item);
+				}
+			},
+
+			/**
+    * @function permissionName
+    *
+    * returns a formatted name for a Permission Role based upon the provided Application.label
+    *
+    * @param {string} appName	the current value of the Application.label
+    * @return {string} 	Permission Role Name.
+    */
+			permissionName: function permissionName(appName) {
+				return appName + " Application Role";
+			},
+
+			/**
+    * @function permissionPopulate
+    *
+    * fill out the Permission list
+    *
+    * @param {ABApplication} application	the current ABApplication we are editing
+    */
+			permissionPopulate: function permissionPopulate(application) {
+
+				var PermForm = $$(ids.appFormPermissionList);
+				// Get user's roles
+				PermForm.showProgress({ type: 'icon' });
+				async.waterfall([function (next) {
+					AD.comm.service.get({ url: '/app_builder/user/roles' }).fail(function (err) {
+						next(err);
+					}).done(function (roles) {
+
+						// scan the roles and determine if any of them have been created
+						// after the current Application.name:
+						var parsedRoles = roles.map(function (r) {
+							if (application) {
+								if (r.name == _logic.permissionName(application.name.split('_').join(' '))) {
+									r.isApplicationRole = true;
+								}
+							}
+							return r;
+						});
+						next(null, parsedRoles);
 					});
-				}
+				}, function (available_roles, next) {
+					if (application && application.id) {
+						application.getPermissions().then(function (selected_role_ids) {
+							next(null, available_roles, selected_role_ids);
+						}).catch(function (err) {
+							next(err);
+						});
+					} else {
+						next(null, available_roles, []);
+					}
+				}, function (available_roles, selected_role_ids, next) {
 
-				// Sort permission list
-				available_roles.sort(function (a, b) {
-					return a.isApplicationRole === b.isApplicationRole ? 0 : a.isApplicationRole ? -1 : 1;
+					// mark the role(s) in available_roles that is tied
+					// this application:
+					if (application && application.role) {
+						available_roles.forEach(function (r) {
+							if (r.id == (application.role.id || application.role)) {
+								r.isApplicationRole = true;
+								r.markCheckbox = 1;
+							}
+						});
+					}
+
+					// Sort permission list
+					available_roles.sort(function (a, b) {
+						return a.isApplicationRole === b.isApplicationRole ? 0 : a.isApplicationRole ? -1 : 1;
+					});
+
+					// reload list from our available_roles
+					PermForm.clearAll();
+					PermForm.parse(available_roles);
+
+					// mark which roles have already been selected
+					if (selected_role_ids && selected_role_ids.length > 0) {
+						// Select permissions
+						PermForm.select(selected_role_ids);
+						available_roles.forEach(function (r) {
+							if (selected_role_ids.indexOf(r.id) > -1) {
+								var item = $$(ids.appFormPermissionList).getItem(r.id);
+								item.markCheckbox = 1;
+								$$(ids.appFormPermissionList).updateItem(r.id, item);
+							}
+						});
+
+						// Select create role application button
+						var markCreateButton = available_roles.filter(function (r) {
+							return r.isApplicationRole;
+						}).length > 0 ? 1 : 0;
+						$$(ids.appFormCreateRoleButton).setValue(markCreateButton);
+					}
+
+					next();
+				}], function (err) {
+					if (err) {
+						webix.message(err.message);
+					}
+
+					PermForm.hideProgress();
 				});
 
-				// reload list from our available_roles
-				PermForm.clearAll();
-				PermForm.parse(available_roles);
+				// return appName  + " Application Role";
+			},
 
-				// mark which roles have already been selected
-				if (selected_role_ids && selected_role_ids.length > 0) {
-					// Select permissions
-					PermForm.select(selected_role_ids);
-					available_roles.forEach(function (r) {
-						if (selected_role_ids.indexOf(r.id) > -1) {
-							var item = $$(ids.appFormPermissionList).getItem(r.id);
-							item.markCheckbox = 1;
-							$$(ids.appFormPermissionList).updateItem(r.id, item);
+			/**
+    * @function permissionRemoveNew()
+    *
+    * Intended to be called when the USER unselects the option to create a Permission
+    * for this Application.
+    *
+    * We remove any Permission Role created for this Application.
+    */
+			permissionRemoveNew: function permissionRemoveNew() {
+
+				// find any roles that are put here from our application form:
+				var appRoles = $$(ids.appFormPermissionList).find(function (perm) {
+					return perm.isApplicationRole;
+				});
+
+				// remove them:
+				appRoles.forEach(function (r) {
+					$$(ids.appFormPermissionList).remove(r.id);
+				});
+			},
+
+			/*
+    * permissionRenameRole
+    *
+    * When the name of the Appliction changes, change the Name of the Permission as well.
+    *
+    * @param {string} newValue  the current name of the application
+    * @param {string} oldValue  the previous name of the application
+    */
+			permissionRenameRole: function permissionRenameRole(newValue, oldValue) {
+
+				var editRole = $$(ids.appFormPermissionList).find(function (d) {
+					return d.name === _logic.permissionName(oldValue);
+				});
+
+				editRole.forEach(function (r) {
+					var editItem = $$(ids.appFormPermissionList).getItem(r.id);
+					editItem.name = _logic.permissionName(newValue);
+
+					$$(ids.appFormPermissionList).updateItem(editItem.id, editItem);
+				});
+			},
+
+			/**
+    * @function permissionSave()
+    *
+    * step through saving the current Permission Settings and associating
+    * them with the current Application.
+    *
+    * @param {ABApplication} App  	The current Application we are working with.
+    * @return {Promise}			.resolve( {Permission} ) if one is created for this App
+    */
+			permissionSave: function permissionSave(app) {
+				//// REFACTOR:
+				// this step implies that ab_choose_form understands the intracies of how
+				// ABApplication and Permissions work.
+				return new Promise(function (resolve, reject) {
+
+					var saveRoleTasks = [],
+					    appRole = null;
+
+					//// Process the option to create a newRole For this Application:
+
+					// if the button is set
+					if ($$(ids.appFormCreateRoleButton).getValue()) {
+
+						// check to see if we already have a permission that isApplicationRole
+						var selectedPerms = $$(ids.appFormPermissionList).getSelectedItem(true);
+						selectedPerms = selectedPerms.filter(function (perm) {
+							return perm.isApplicationRole;
+						});
+
+						// if not, then create one:
+						if (selectedPerms.length == 0) {
+
+							// Create new role for application
+							saveRoleTasks.push(function (cb) {
+								app.createPermission().then(function (result) {
+
+									// remember the Role we just created
+									appRole = result;
+									cb();
+								}).catch(cb);
+							});
 						}
-					});
-
-					// Select create role application button
-					var markCreateButton = available_roles.filter(function (r) {
-						return r.isApplicationRole;
-					}).length > 0 ? 1 : 0;
-					$$(ids.appFormCreateRoleButton).setValue(markCreateButton);
-				}
-
-				next();
-			}], function (err) {
-				if (err) {
-					webix.message(err.message);
-				}
-
-				PermForm.hideProgress();
-			});
-
-			// return appName  + " Application Role";
-		},
-
-		/**
-   * @function permissionRemoveNew()
-   *
-   * Intended to be called when the USER unselects the option to create a Permission
-   * for this Application.
-   *
-   * We remove any Permission Role created for this Application.
-   */
-		permissionRemoveNew: function permissionRemoveNew() {
-
-			// find any roles that are put here from our application form:
-			var appRoles = $$(ids.appFormPermissionList).find(function (perm) {
-				return perm.isApplicationRole;
-			});
-
-			// remove them:
-			appRoles.forEach(function (r) {
-				$$(ids.appFormPermissionList).remove(r.id);
-			});
-		},
-
-		/*
-   * permissionRenameRole
-   *
-   * When the name of the Appliction changes, change the Name of the Permission as well.
-   *
-   * @param {string} newValue  the current name of the application
-   * @param {string} oldValue  the previous name of the application
-   */
-		permissionRenameRole: function permissionRenameRole(newValue, oldValue) {
-
-			var editRole = $$(ids.appFormPermissionList).find(function (d) {
-				return d.name === _logic.permissionName(oldValue);
-			});
-
-			editRole.forEach(function (r) {
-				var editItem = $$(ids.appFormPermissionList).getItem(r.id);
-				editItem.name = _logic.permissionName(newValue);
-
-				$$(ids.appFormPermissionList).updateItem(editItem.id, editItem);
-			});
-		},
-
-		/**
-   * @function permissionSave()
-   *
-   * step through saving the current Permission Settings and associating
-   * them with the current Application.
-   *
-   * @param {ABApplication} App  	The current Application we are working with.
-   * @return {Promise}			.resolve( {Permission} ) if one is created for this App
-   */
-		permissionSave: function permissionSave(app) {
-			//// REFACTOR:
-			// this step implies that ab_choose_form understands the intracies of how
-			// ABApplication and Permissions work.
-			return new Promise(function (resolve, reject) {
-
-				var saveRoleTasks = [],
-				    appRole = null;
-
-				//// Process the option to create a newRole For this Application:
-
-				// if the button is set
-				if ($$(ids.appFormCreateRoleButton).getValue()) {
-
-					// check to see if we already have a permission that isApplicationRole
-					var selectedPerms = $$(ids.appFormPermissionList).getSelectedItem(true);
-					selectedPerms = selectedPerms.filter(function (perm) {
-						return perm.isApplicationRole;
-					});
-
-					// if not, then create one:
-					if (selectedPerms.length == 0) {
-
-						// Create new role for application
+					} else {
+						// Delete any existing application roles
 						saveRoleTasks.push(function (cb) {
-							app.createPermission().then(function (result) {
-
-								// remember the Role we just created
-								appRole = result;
+							app.deletePermission().then(function () {
 								cb();
 							}).catch(cb);
 						});
 					}
-				} else {
-					// Delete any existing application roles
+
+					//// Now process any additional roles:
+
+					// get array of selected permissions that are not our newRole
+					var permItems = $$(ids.appFormPermissionList).getSelectedItem(true);
+					permItems = permItems.filter(function (item) {
+						return item.id !== 'newRole';
+					}); // Remove new role item
+
+
+					// Make sure Application is linked to selected permission items:
 					saveRoleTasks.push(function (cb) {
-						app.deletePermission().then(function () {
+
+						// ok, so we removed the 'newRole' entry, but we might
+						// have created an entry for it earlier, if so, add in
+						// the created one here:
+						if ($$(ids.appFormCreateRoleButton).getValue() && appRole) {
+
+							// make sure it isn't already in there:
+							var appRoleItem = permItems.filter(function (item) {
+								return item.id == appRole.id;
+							});
+							if (!appRoleItem || appRoleItem.length < 1) {
+
+								// if not, add it :
+								permItems.push({
+									id: appRole.id,
+									isApplicationRole: true
+								});
+							}
+						}
+
+						// Assign Role Permissions
+						app.assignPermissions(permItems).then(function () {
 							cb();
 						}).catch(cb);
 					});
-				}
 
-				//// Now process any additional roles:
-
-				// get array of selected permissions that are not our newRole
-				var permItems = $$(ids.appFormPermissionList).getSelectedItem(true);
-				permItems = permItems.filter(function (item) {
-					return item.id !== 'newRole';
-				}); // Remove new role item
-
-
-				// Make sure Application is linked to selected permission items:
-				saveRoleTasks.push(function (cb) {
-
-					// ok, so we removed the 'newRole' entry, but we might
-					// have created an entry for it earlier, if so, add in
-					// the created one here:
-					if ($$(ids.appFormCreateRoleButton).getValue() && appRole) {
-
-						// make sure it isn't already in there:
-						var appRoleItem = permItems.filter(function (item) {
-							return item.id == appRole.id;
-						});
-						if (!appRoleItem || appRoleItem.length < 1) {
-
-							// if not, add it :
-							permItems.push({
-								id: appRole.id,
-								isApplicationRole: true
-							});
-						}
-					}
-
-					// Assign Role Permissions
-					app.assignPermissions(permItems).then(function () {
-						cb();
-					}).catch(cb);
-				});
-
-				async.series(saveRoleTasks, function (err, results) {
-					if (err) {
-						reject(err);
-					} else {
-						// we return the instance of the newly created Permission.
-						resolve(appRole);
-					}
-				});
-			});
-
-			//// REFACTOR QUESTION:
-			// why are we updating the app.permissions with this data structure?
-			// where is this data structure being used?
-			// Earlier we are using another structure (permissionAddNew()) ... how is that related to this?
-
-			// // Final task
-			// saveRoleTasks.push(function (cb) {
-			// 	// Update store app data
-			// 	var applicationData = self.data.filter(function (d) { return d.id == app.id; });
-			// 	applicationData.forEach(function (app) {
-			// 		app.attr('permissions', $.map(permItems, function (item) {
-			// 			return {
-			// 				application: app.id,
-			// 				permission: item.id,
-			// 				isApplicationRole: item.isApplicationRole
-			// 			}
-			// 		}));
-			// 	});
-
-			// 	q.resolve(appRole);
-			// 	cb();
-			// })
-		},
-
-		/**
-   * @function show()
-   *
-   * Show the Form Component.
-   */
-		show: function show() {
-
-			$$(ids.component).show();
-		}
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {
-
-		// initiate a request to create a new Application
-		transitionApplicationForm: function transitionApplicationForm(application) {
-
-			// if no application is given, then this should be a [create] operation,
-
-			// so clear our AppList
-			if ('undefined' == typeof application) {
-				App.actions.unselectApplication();
-			}
-
-			// now prepare our form:
-			_logic.formReset();
-			if (application) {
-				// populate Form here:
-				_logic.formPopulate(application);
-			}
-			_logic.permissionPopulate(application);
-			_logic.show();
-		}
-
-	};
-
-	return {
-		ui: _ui,
-		init: _init,
-		actions: _actions,
-
-		_logic: _logic
-	};
-});
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(OP) {
-
-var _ABApplication = __webpack_require__(1);
-
-var _ABApplication2 = _interopRequireDefault(_ABApplication);
-
-__webpack_require__(26);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/*
- * AB Choose List
- *
- * Display a list of Applications for the user to select.
- *
- */
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var labels = {
-
-	component: {
-		title: L('ab.application.application', '*Application'),
-
-		createNew: L('ab.application.createNew', '*Add new application'),
-		noApplication: L('ab.application.noApplication', "*There is no application data")
-	}
-};
-
-var idBase = 'ab_choose_list';
-OP.Component.extend(idBase, function (App) {
-
-	labels.common = App.labels;
-
-	var ids = {
-		component: App.unique(idBase + '_component'),
-
-		uploader: App.unique(idBase + '_uploader'),
-		list: App.unique(idBase + '_list'),
-		toolBar: App.unique(idBase + '_toolbar'),
-		buttonCreateNewApplication: App.unique(idBase + '_buttonNewApp')
-	};
-
-	var MenuComponent = OP.Component['ab_choose_list_menu'](App);
-	var PopupMenu = webix.ui(MenuComponent.ui);
-	PopupMenu.hide();
-
-	var _ui = {
-
-		id: ids.component,
-		responsive: "hide",
-
-		cols: [{
-			maxWidth: App.config.appListSpacerColMaxWidth,
-			minWidth: App.config.appListSpacerColMinWidth,
-			width: App.config.appListSpacerColMaxWidth
-		}, {
-			responsiveCell: false,
-			rows: [{
-				maxHeight: App.config.appListSpacerRowHeight,
-				hidden: App.config.hideMobile
-			},
-			//
-			// ToolBar
-			//
-			{
-				view: "toolbar",
-				id: ids.toolBar,
-				cols: [{ view: "label", label: labels.component.title, fillspace: true }, {
-					id: ids.buttonCreateNewApplication,
-					view: "button",
-					label: labels.component.createNew,
-					autowidth: true,
-					type: "icon",
-					icon: "plus",
-					click: function click() {
-						// Inform our Chooser we have a request to create an Application:
-						App.actions.transitionApplicationForm();
-					}
-				}, {
-					view: "uploader",
-					id: ids.uploader,
-					label: labels.common.import,
-					autowidth: true,
-					upload: '/app_builder/appJSON',
-					multiple: false,
-					type: "icon",
-					icon: "upload",
-					autosend: true,
-					on: {
-						onAfterFileAdd: function onAfterFileAdd() {
-							_logic.onAfterFileAdd();
-						},
-						onFileUpload: function onFileUpload(item, response) {
-							_logic.onFileUpload(item, response);
-						},
-						onFileUploadError: function onFileUploadError(details, response) {
-							_logic.onFileUploadError(details, response);
-						}
-					}
-				}]
-			},
-
-			//
-			// The List of Applications
-			//
-			{
-				id: ids.list,
-				view: "list",
-				css: 'ab-app-select-list',
-				template: function template(obj, common) {
-					return _logic.templateListItem(obj, common);
-				},
-				type: {
-					height: App.config.appListRowHeight, // Defines item height
-					iconGear: "<span class='webix_icon fa-cog'></span>"
-				},
-				select: false,
-				onClick: {
-					"ab-app-list-item": function abAppListItem(ev, id, trg) {
-						return _logic.onClickListItem(ev, id, trg);
-					},
-					"ab-app-list-edit": function abAppListEdit(ev, id, trg) {
-						return _logic.onClickListEdit(ev, id, trg);
-					}
-				}
-			}, {
-				maxHeight: App.config.appListSpacerRowHeight,
-				hidden: App.config.hideMobile
-			}]
-		}, {
-			maxWidth: App.config.appListSpacerColMaxWidth,
-			minWidth: App.config.appListSpacerColMinWidth,
-			width: App.config.appListSpacerColMaxWidth
-		}]
-	};
-
-	var _data = {};
-
-	var _logic = {
-
-		/**
-   * @function busy
-   *
-   * show a busy indicator on our App List
-   */
-		busy: function busy() {
-			if ($$(ids.list).showProgress) $$(ids.list).showProgress({ icon: 'cursor' });
-		},
-
-		/**
-   * @function loadData
-   *
-   * Load all the ABApplications and display them in our App List
-   */
-		loadData: function loadData() {
-
-			// Get applications data from the server
-			_logic.busy();
-			_ABApplication2.default.allApplications().then(function (data) {
-
-				_logic.ready();
-
-				// make sure our overlay is updated when items are added/removed
-				// from our data list.
-				data.attachEvent("onAfterAdd", function (id, index) {
-					_logic.refreshOverlay();
-				});
-
-				data.attachEvent("onAfterDelete", function (id) {
-					_logic.refreshOverlay();
-				});
-
-				_data.listApplications = data;
-
-				_logic.refreshList();
-			}).catch(function (err) {
-				_logic.ready();
-				webix.message({
-					type: "error",
-					text: err
-				});
-				AD.error.log('App Builder : Error loading application data', { error: err });
-			});
-		},
-
-		/**
-   * @function onAfterFileAdd
-   *
-   * UI updates for when a file upload is initiated
-   */
-		onAfterFileAdd: function onAfterFileAdd() {
-			$$(ids.uploader).disable();
-			_logic.busy();
-		},
-
-		/**
-   * @function onClickListEdit
-   *
-   * UI updates for when the edit gear is clicked
-   */
-		onClickListEdit: function onClickListEdit(ev, id, trg) {
-
-			// Show menu
-			PopupMenu.show(trg);
-			$$(ids.list).select(id);
-
-			return false; // block default behavior
-		},
-
-		/**
-   * @function onClickListItem
-   *
-   * An item in the list is selected. So update the workspace with that 
-   * object.
-   */
-		onClickListItem: function onClickListItem(ev, id, trg) {
-
-			_logic.busy();
-
-			$$(ids.list).select(id);
-
-			var selectedApp = $$(ids.list).getItem(id);
-
-			if (selectedApp) {
-
-				_logic.ready();
-
-				// We've selected an Application to work with
-				App.actions.transitionWorkspace(selectedApp);
-			}
-
-			return false; // block default behavior
-		},
-
-		/**
-   * @function onFileUpload
-   *
-   * The File Upload process finished.
-   */
-		onFileUpload: function onFileUpload(item, response) {
-			_logic.loadData(); // refresh app list
-			$$(ids.uploader).enable();
-			_logic.ready();
-		},
-
-		/**
-   * @function onFileUploadError
-   *
-   * The File Upload process exited with an error.
-   */
-		onFileUploadError: function onFileUploadError(details, response) {
-
-			var errorMessage = 'Error: ' + (response && response.message);
-			OP.Dialog.Alert({
-				text: errorMessage
-			});
-			// webix.message({
-			// 	type: 'error',
-			// 	text: errorMessage
-			// });
-			_logic.loadData(); // refresh app list
-			$$(ids.uploader).enable();
-			_logic.ready();
-		},
-
-		/**
-   * @function refreshOverlay
-   *
-   * If we have no items in our list, display a Message.
-   */
-		refreshOverlay: function refreshOverlay() {
-			var appList = $$(ids.list);
-
-			if (!appList.count()) //if no data is available
-				appList.showOverlay(labels.component.noApplication);else appList.hideOverlay();
-		},
-
-		/**
-   * @function ready
-   *
-   * remove the busy indicator on our App List
-   */
-		ready: function ready() {
-			if ($$(ids.list).hideProgress) $$(ids.list).hideProgress();
-		},
-
-		/**
-   * @function reset
-   *
-   * Return our App List to an unselected state.
-   */
-		reset: function reset() {
-			$$(ids.list).unselectAll();
-		},
-
-		/**
-   * @function refreshList
-   *
-   * Apply our list of ABApplication data to our AppList
-   */
-		refreshList: function refreshList() {
-
-			var appList = $$(ids.list);
-
-			appList.clearAll();
-			appList.data.unsync();
-			appList.data.sync(_data.listApplications);
-
-			_logic.refreshOverlay();
-
-			appList.refresh();
-
-			_logic.ready();
-		},
-
-		/**
-   * @function show
-   *
-   * Trigger our List component to show
-   */
-		show: function show() {
-			$$(ids.component).show();
-		},
-
-		/**
-   * @function templateListItem
-   *
-   * Defines the template for each row of our AppList.
-   *
-   * @param {obj} obj the current instance of ABApplication for the row.
-   * @param {?} common the webix.common icon data structure
-   * @return {string}
-   */
-		templateListItem: function templateListItem(obj, common) {
-			return _templateListItem.replace('#label#', obj.label || '').replace('#description#', obj.description || '').replace('{common.iconGear}', common.iconGear);
-		}
-	};
-
-	/*
-  * _templateListItem
-  *
-  * The AppList Row template definition.
-  */
-	var _templateListItem = ["<div class='ab-app-list-item'>", "<div class='ab-app-list-info'>", "<div class='ab-app-list-name'>#label#</div>", "<div class='ab-app-list-description'>#description#</div>", "</div>", "<div class='ab-app-list-edit'>", "{common.iconGear}", "</div>", "</div>"].join('');
-
-	/*
-  * @function _init
-  *
-  * The init() that performs the necessary setup for our AppList chooser.
-  */
-	var _init = function _init() {
-		webix.extend($$(ids.list), webix.ProgressBar);
-		webix.extend($$(ids.list), webix.OverlayBox);
-
-		MenuComponent.init();
-
-		// start things off by loading the current list of Applications
-		_logic.loadData();
-	};
-
-	/*
-  * {json} _actions
-  *
-  * The exported methods available to other Components.
-  */
-	var _actions = {
-
-		/**
-   * @function unselectApplication
-   *
-   * resets the AppList to an unselected state.
-   */
-		unselectApplication: function unselectApplication() {
-			_logic.reset();
-		},
-
-		/**
-   * @function getSelectedApplication
-   *
-   * returns which ABApplication is currently selected.
-   * @return {ABApplication}  or {null} if nothing selected.
-   */
-		getSelectedApplication: function getSelectedApplication() {
-			return $$(ids.list).getSelectedItem();
-		},
-
-		/**
-   * @function deleteApplication
-   *
-   * deletes the given ABAppliction.
-   *
-   * NOTE: this assumes the component using this method has already
-   * provided the delete confirmation.
-   *
-   * @param {ABApplication} app  the ABAppliction to delete.
-   */
-		deleteApplication: function deleteApplication(app) {
-
-			if (!app) return;
-
-			// Delete application data
-			_logic.busy();
-
-			app.destroy().then(function (result) {
-				_logic.reset();
-				_logic.ready();
-
-				webix.message({
-					type: "success",
-					text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
-				});
-			}).catch(function (err) {
-				_logic.reset();
-				_logic.ready();
-
-				webix.message({
-					type: "error",
-					text: labels.common.deleteErrorMessage.replace("{0}", app.label)
-				});
-
-				AD.error.log('App Builder : Error delete application data', { error: err });
-			});
-		},
-
-		/**
-   * @function transitionApplicationList
-   *
-   * Trigger our List component to show
-   */
-		transitionApplicationList: function transitionApplicationList() {
-			$$(ids.component).show();
-		}
-	};
-
-	return {
-		ui: _ui,
-		init: _init,
-		actions: _actions,
-
-		_logic: _logic // exposed for Unit Testing
-	};
-});
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(OP) {
-
-/*
- * AB Choose List
- *
- * Display a list of Applications for the user to select.
- *
- */
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var labels = {
-
-	component: {
-		menu: L('ab.application.menu', "*Application Menu"),
-		confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
-		confirmDeleteMessage: L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
-	}
-};
-
-var idBase = 'ab_choose_list_menu';
-OP.Component.extend(idBase, function (App) {
-
-	labels.common = App.labels;
-
-	var ids = {
-		menu: App.unique(idBase + '_menu')
-	};
-
-	var _ui = {
-		view: "popup",
-		id: ids.menu,
-		head: labels.component.menu,
-		width: 100,
-		body: {
-			view: "list",
-			borderless: true,
-			data: [{ command: labels.common.edit, icon: "fa-pencil-square-o" }, { command: labels.common.export, icon: "fa-download" }, { command: labels.common.delete, icon: "fa-trash" }],
-			datatype: "json",
-
-			template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
-			autoheight: true,
-			select: false,
-			on: {
-				'onItemClick': function onItemClick(timestamp, e, trg) {
-					return _logic.onItemClick(timestamp, e, trg);
-				}
-			}
-		}
-	};
-
-	var _data = {};
-
-	var _init = function _init() {};
-
-	var _logic = {
-
-		/**
-   * @function onItemClick
-   * process which item in our popup was selected.
-   */
-		onItemClick: function onItemClick(timestamp, e, trg) {
-
-			// hide our popup before we trigger any other possible UI animation: (like .edit)
-			// NOTE: if the UI is animating another component, and we do .hide()
-			// while it is in progress, the UI will glitch and give the user whiplash.
-			$$(ids.menu).hide();
-
-			var selectedApp = App.actions.getSelectedApplication();
-
-			switch (trg.textContent.trim()) {
-				case labels.common.edit:
-					App.actions.transitionApplicationForm(selectedApp);
-					break;
-
-				case labels.common.delete:
-					OP.Dialog.ConfirmDelete({
-						title: labels.component.confirmDeleteTitle,
-						text: labels.component.confirmDeleteMessage.replace('{0}', selectedApp.label),
-						callback: function callback(result) {
-
-							if (!result) return;
-
-							App.actions.deleteApplication(selectedApp);
+					async.series(saveRoleTasks, function (err, results) {
+						if (err) {
+							reject(err);
+						} else {
+							// we return the instance of the newly created Permission.
+							resolve(appRole);
 						}
 					});
-					break;
+				});
 
-				case labels.common.export:
-					// Download the JSON file to disk
-					window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
-					break;
+				//// REFACTOR QUESTION:
+				// why are we updating the app.permissions with this data structure?
+				// where is this data structure being used?
+				// Earlier we are using another structure (permissionAddNew()) ... how is that related to this?
+
+				// // Final task
+				// saveRoleTasks.push(function (cb) {
+				// 	// Update store app data
+				// 	var applicationData = self.data.filter(function (d) { return d.id == app.id; });
+				// 	applicationData.forEach(function (app) {
+				// 		app.attr('permissions', $.map(permItems, function (item) {
+				// 			return {
+				// 				application: app.id,
+				// 				permission: item.id,
+				// 				isApplicationRole: item.isApplicationRole
+				// 			}
+				// 		}));
+				// 	});
+
+				// 	q.resolve(appRole);
+				// 	cb();
+				// })
+			},
+
+			/**
+    * @function show()
+    *
+    * Show the Form Component.
+    */
+			show: function show() {
+
+				$$(ids.component).show();
+			}
+		};
+		_this._logic = _logic;
+
+		_this.actions({
+
+			// initiate a request to create a new Application
+			transitionApplicationForm: function transitionApplicationForm(application) {
+
+				// if no application is given, then this should be a [create] operation,
+
+				// so clear our AppList
+				if ('undefined' == typeof application) {
+					App.actions.unselectApplication();
+				}
+
+				// now prepare our form:
+				_logic.formReset();
+				if (application) {
+					// populate Form here:
+					_logic.formPopulate(application);
+				}
+				_logic.permissionPopulate(application);
+				_logic.show();
 			}
 
-			return false;
-		}
+		});
 
-	};
+		return _this;
+	}
 
-	return {
-		ui: _ui,
-		init: _init,
+	return ABChoose;
+}(OP.Component);
 
-		_logic: _logic // exposed for Unit Testing
-	};
-});
+exports.default = ABChoose;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 27 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ABApplication = __webpack_require__(4);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(29);
+var _ab_common_popupEditMenu = __webpack_require__(16);
 
-__webpack_require__(28);
+var _ab_common_popupEditMenu2 = _interopRequireDefault(_ab_common_popupEditMenu);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+/*
+ * AB Choose List
+ *
+ * Display a list of Applications for the user to select.
+ *
+ */
+
+
+var ABChooseList = function (_OP$Component) {
+	_inherits(ABChooseList, _OP$Component);
+
+	function ABChooseList(App) {
+		_classCallCheck(this, ABChooseList);
+
+		var _this = _possibleConstructorReturn(this, (ABChooseList.__proto__ || Object.getPrototypeOf(ABChooseList)).call(this, App, 'ab_choose_list'));
+
+		var L = _this.Label;
+
+		var labels = {
+
+			common: App.labels,
+
+			component: {
+				title: L('ab.application.application', '*Application'),
+
+				createNew: L('ab.application.createNew', '*Add new application'),
+				noApplication: L('ab.application.noApplication', "*There is no application data"),
+
+				confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
+				confirmDeleteMessage: L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
+			}
+		};
+
+		var ids = {
+			component: _this.unique('component'),
+
+			uploader: _this.unique('uploader'),
+			list: _this.unique('list'),
+			toolBar: _this.unique('toolbar'),
+			buttonCreateNewApplication: _this.unique('buttonNewApp')
+		};
+
+		var MenuComponent = new _ab_common_popupEditMenu2.default(App);
+
+		_this.ui = {
+
+			id: ids.component,
+			responsive: "hide",
+
+			cols: [{
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
+			}, {
+				responsiveCell: false,
+				rows: [{
+					maxHeight: App.config.appListSpacerRowHeight,
+					hidden: App.config.hideMobile
+				},
+				//
+				// ToolBar
+				//
+				{
+					view: "toolbar",
+					id: ids.toolBar,
+					cols: [{ view: "label", label: labels.component.title, fillspace: true }, {
+						id: ids.buttonCreateNewApplication,
+						view: "button",
+						label: labels.component.createNew,
+						autowidth: true,
+						type: "icon",
+						icon: "plus",
+						click: function click() {
+							// Inform our Chooser we have a request to create an Application:
+							App.actions.transitionApplicationForm();
+						}
+					}, {
+						view: "uploader",
+						id: ids.uploader,
+						label: labels.common.import,
+						autowidth: true,
+						upload: '/app_builder/appJSON',
+						multiple: false,
+						type: "icon",
+						icon: "upload",
+						autosend: true,
+						on: {
+							onAfterFileAdd: function onAfterFileAdd() {
+								_logic.onAfterFileAdd();
+							},
+							onFileUpload: function onFileUpload(item, response) {
+								_logic.onFileUpload(item, response);
+							},
+							onFileUploadError: function onFileUploadError(details, response) {
+								_logic.onFileUploadError(details, response);
+							}
+						}
+					}]
+				},
+
+				//
+				// The List of Applications
+				//
+				{
+					id: ids.list,
+					view: "list",
+					css: 'ab-app-select-list',
+					template: function template(obj, common) {
+						return _logic.templateListItem(obj, common);
+					},
+					type: {
+						height: App.config.appListRowHeight, // Defines item height
+						iconGear: "<span class='webix_icon fa-cog'></span>"
+					},
+					select: false,
+					onClick: {
+						"ab-app-list-item": function abAppListItem(ev, id, trg) {
+							return _logic.onClickListItem(ev, id, trg);
+						},
+						"ab-app-list-edit": function abAppListEdit(ev, id, trg) {
+							return _logic.onClickListEdit(ev, id, trg);
+						}
+					}
+				}, {
+					maxHeight: App.config.appListSpacerRowHeight,
+					hidden: App.config.hideMobile
+				}]
+			}, {
+				maxWidth: App.config.appListSpacerColMaxWidth,
+				minWidth: App.config.appListSpacerColMinWidth,
+				width: App.config.appListSpacerColMaxWidth
+			}]
+		};
+
+		var _data = {};
+
+		var _logic = {
+
+			/**
+    * @function busy
+    *
+    * show a busy indicator on our App List
+    */
+			busy: function busy() {
+				if ($$(ids.list).showProgress) $$(ids.list).showProgress({ icon: 'cursor' });
+			},
+
+			callbackApplicationEditorMenu: function callbackApplicationEditorMenu(action) {
+
+				var selectedApp = $$(ids.list).getSelectedItem();
+
+				switch (action) {
+
+					case 'edit':
+						App.actions.transitionApplicationForm(selectedApp);
+						break;
+
+					case 'delete':
+						OP.Dialog.ConfirmDelete({
+							title: labels.component.confirmDeleteTitle,
+							text: labels.component.confirmDeleteMessage.replace('{0}', selectedApp.label),
+							callback: function callback(result) {
+
+								if (!result) return;
+
+								App.actions.deleteApplication(selectedApp);
+							}
+						});
+						break;
+
+					case 'export':
+						// Download the JSON file to disk
+						window.location.assign('/app_builder/appJSON/' + selectedApp.id + '?download=1');
+						break;
+				}
+			},
+
+			/**
+    * @function loadData
+    *
+    * Load all the ABApplications and display them in our App List
+    */
+			loadData: function loadData() {
+
+				// Get applications data from the server
+				_logic.busy();
+				_ABApplication2.default.allApplications().then(function (data) {
+
+					_logic.ready();
+
+					// make sure our overlay is updated when items are added/removed
+					// from our data list.
+					data.attachEvent("onAfterAdd", function (id, index) {
+						_logic.refreshOverlay();
+					});
+
+					data.attachEvent("onAfterDelete", function (id) {
+						_logic.refreshOverlay();
+					});
+
+					_data.listApplications = data;
+
+					_logic.refreshList();
+				}).catch(function (err) {
+					_logic.ready();
+					webix.message({
+						type: "error",
+						text: err
+					});
+					AD.error.log('App Builder : Error loading application data', { error: err });
+				});
+			},
+
+			/**
+    * @function onAfterFileAdd
+    *
+    * UI updates for when a file upload is initiated
+    */
+			onAfterFileAdd: function onAfterFileAdd() {
+				$$(ids.uploader).disable();
+				_logic.busy();
+			},
+
+			/**
+    * @function onClickListEdit
+    *
+    * UI updates for when the edit gear is clicked
+    */
+			onClickListEdit: function onClickListEdit(ev, id, trg) {
+
+				var options = [{ label: labels.common.edit, icon: "fa-pencil-square-o", command: 'edit' }, { label: labels.common.export, icon: "fa-download", command: 'export' }, { label: labels.common.delete, icon: "fa-trash", command: 'delete' }];
+
+				MenuComponent.menuOptions(options);
+
+				// Show menu
+				MenuComponent.show(trg);
+				$$(ids.list).select(id);
+
+				return false; // block default behavior
+			},
+
+			/**
+    * @function onClickListItem
+    *
+    * An item in the list is selected. So update the workspace with that 
+    * object.
+    */
+			onClickListItem: function onClickListItem(ev, id, trg) {
+
+				_logic.busy();
+
+				$$(ids.list).select(id);
+
+				var selectedApp = $$(ids.list).getItem(id);
+
+				if (selectedApp) {
+
+					_logic.ready();
+
+					// We've selected an Application to work with
+					App.actions.transitionWorkspace(selectedApp);
+				}
+
+				return false; // block default behavior
+			},
+
+			/**
+    * @function onFileUpload
+    *
+    * The File Upload process finished.
+    */
+			onFileUpload: function onFileUpload(item, response) {
+				_logic.loadData(); // refresh app list
+				$$(ids.uploader).enable();
+				_logic.ready();
+			},
+
+			/**
+    * @function onFileUploadError
+    *
+    * The File Upload process exited with an error.
+    */
+			onFileUploadError: function onFileUploadError(details, response) {
+
+				var errorMessage = 'Error: ' + (response && response.message);
+				OP.Dialog.Alert({
+					text: errorMessage
+				});
+				// webix.message({
+				// 	type: 'error',
+				// 	text: errorMessage
+				// });
+				_logic.loadData(); // refresh app list
+				$$(ids.uploader).enable();
+				_logic.ready();
+			},
+
+			/**
+    * @function refreshOverlay
+    *
+    * If we have no items in our list, display a Message.
+    */
+			refreshOverlay: function refreshOverlay() {
+				var appList = $$(ids.list);
+
+				if (!appList.count()) //if no data is available
+					appList.showOverlay(labels.component.noApplication);else appList.hideOverlay();
+			},
+
+			/**
+    * @function ready
+    *
+    * remove the busy indicator on our App List
+    */
+			ready: function ready() {
+				if ($$(ids.list).hideProgress) $$(ids.list).hideProgress();
+			},
+
+			/**
+    * @function reset
+    *
+    * Return our App List to an unselected state.
+    */
+			reset: function reset() {
+				$$(ids.list).unselectAll();
+			},
+
+			/**
+    * @function refreshList
+    *
+    * Apply our list of ABApplication data to our AppList
+    */
+			refreshList: function refreshList() {
+
+				var appList = $$(ids.list);
+
+				appList.clearAll();
+				appList.data.unsync();
+				appList.data.sync(_data.listApplications);
+
+				_logic.refreshOverlay();
+
+				appList.refresh();
+
+				_logic.ready();
+			},
+
+			/**
+    * @function show
+    *
+    * Trigger our List component to show
+    */
+			show: function show() {
+				$$(ids.component).show();
+			},
+
+			/**
+    * @function templateListItem
+    *
+    * Defines the template for each row of our AppList.
+    *
+    * @param {obj} obj the current instance of ABApplication for the row.
+    * @param {?} common the webix.common icon data structure
+    * @return {string}
+    */
+			templateListItem: function templateListItem(obj, common) {
+				return _templateListItem.replace('#label#', obj.label || '').replace('#description#', obj.description || '').replace('{common.iconGear}', common.iconGear);
+			}
+		};
+		_this._logic = _logic;
+
+		/*
+   * _templateListItem
+   *
+   * The AppList Row template definition.
+   */
+		var _templateListItem = ["<div class='ab-app-list-item'>", "<div class='ab-app-list-info'>", "<div class='ab-app-list-name'>#label#</div>", "<div class='ab-app-list-description'>#description#</div>", "</div>", "<div class='ab-app-list-edit'>", "{common.iconGear}", "</div>", "</div>"].join('');
+
+		/*
+   * @function _init
+   *
+   * The init() that performs the necessary setup for our AppList chooser.
+   */
+		_this.init = function () {
+			webix.extend($$(ids.list), webix.ProgressBar);
+			webix.extend($$(ids.list), webix.OverlayBox);
+
+			MenuComponent.init({
+				onClick: _logic.callbackApplicationEditorMenu
+			});
+
+			// start things off by loading the current list of Applications
+			_logic.loadData();
+		};
+
+		/*
+   * The exported methods available to other Components.
+   */
+		_this.actions({
+
+			/**
+    * @function unselectApplication
+    *
+    * resets the AppList to an unselected state.
+    */
+			unselectApplication: function unselectApplication() {
+				_logic.reset();
+			},
+
+			/**
+    * @function getSelectedApplication
+    *
+    * returns which ABApplication is currently selected.
+    * @return {ABApplication}  or {null} if nothing selected.
+    */
+			getSelectedApplication: function getSelectedApplication() {
+				return $$(ids.list).getSelectedItem();
+			},
+
+			/**
+    * @function deleteApplication
+    *
+    * deletes the given ABAppliction.
+    *
+    * NOTE: this assumes the component using this method has already
+    * provided the delete confirmation.
+    *
+    * @param {ABApplication} app  the ABAppliction to delete.
+    */
+			deleteApplication: function deleteApplication(app) {
+
+				if (!app) return;
+
+				// Delete application data
+				_logic.busy();
+
+				app.destroy().then(function (result) {
+					_logic.reset();
+					_logic.ready();
+
+					webix.message({
+						type: "success",
+						text: labels.common.deleteSuccessMessage.replace('{0}', app.label)
+					});
+				}).catch(function (err) {
+					_logic.reset();
+					_logic.ready();
+
+					webix.message({
+						type: "error",
+						text: labels.common.deleteErrorMessage.replace("{0}", app.label)
+					});
+
+					AD.error.log('App Builder : Error delete application data', { error: err });
+				});
+			},
+
+			/**
+    * @function transitionApplicationList
+    *
+    * Trigger our List component to show
+    */
+			transitionApplicationList: function transitionApplicationList() {
+				$$(ids.component).show();
+			}
+		});
+
+		return _this;
+	}
+
+	return ABChooseList;
+}(OP.Component);
+
+exports.default = ABChooseList;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ab_work_object = __webpack_require__(40);
+
+var _ab_work_object2 = _interopRequireDefault(_ab_work_object);
+
+var _ab_work_interface = __webpack_require__(36);
+
+var _ab_work_interface2 = _interopRequireDefault(_ab_work_interface);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * ab_work
  *
@@ -7467,262 +8761,285 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+// import ABApplication from "../classes/ABApplication"
 
-	application: {
 
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-		backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
-		synchronize: L('ab.application.synchronize', "*Synchronize"),
-		objectTitle: L('ab.object.title', "*Objects"),
-		interfaceTitle: L('ab.interface.title', "*Interface")
-	}
-};
+var AB_Work = function (_OP$Component) {
+	_inherits(AB_Work, _OP$Component);
 
-OP.Component.extend('ab_work', function (App) {
+	// ('ab_work', function(App) {
 
-	labels.common = App.labels;
 
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique('ab_work_component'),
-		toolBar: App.unique('ab_work_toolbar'),
-		buttonSync: App.unique('ab_work_button_sync'),
-		labelAppName: App.unique('ab_work_label_appname'),
-		tabbar: App.unique('ab_work_tabbar'),
-		tab_object: App.unique('ab_work_tab_object'),
-		tab_interface: App.unique('ab_work_tab_interface'),
-		workspace: App.unique('ab_work_workspace')
-	};
+	function AB_Work(App) {
+		_classCallCheck(this, AB_Work);
 
-	var AppObjectWorkspace = OP.Component['ab_work_object'](App);
-	var AppInterfaceWorkspace = OP.Component['ab_work_interface'](App);
+		var _this = _possibleConstructorReturn(this, (AB_Work.__proto__ || Object.getPrototypeOf(AB_Work)).call(this, App, 'ab_work'));
 
-	// Our webix UI definition:
-	var _ui = {
-		id: ids.component,
-		rows: [{
-			view: "toolbar",
-			id: ids.toolBar,
-			autowidth: true,
-			cols: [{
-				view: "button",
-				label: labels.application.backToApplication,
-				width: 200,
-				type: "icon",
-				icon: "arrow-left",
-				align: "left",
+		var L = _this.Label;
 
-				click: function click() {
-					App.actions.transitionApplicationChooser();
-				}
-			}, {
-				view: "label",
-				id: ids.labelAppName,
-				align: "center"
-			}, {
-				view: "spacer",
-				width: 200,
-				alrign: "right"
+		var labels = {
+
+			common: App.labels,
+
+			component: {
+
+				// formHeader: L('ab.application.form.header', "*Application Info"),
+				backToApplication: L('ab.application.backToApplication', "*Back to Applications page"),
+				synchronize: L('ab.application.synchronize', "*Synchronize"),
+				objectTitle: L('ab.object.title', "*Objects"),
+				interfaceTitle: L('ab.interface.title', "*Interface")
 			}
-			// {
-			// 	id: ids.buttonSync,
-			// 	view: "button",
-			// 	type: "icon",
-			// 	icon: "refresh",
-			// 	label: labels.application.synchronize,
-			// 	autowidth: true,
-			// 	align: "right",
-			// 	click: function () {
-			// 		_logic.synchronize();
-			// 	}
-			// }
-			]
-		},
-		//{ height: App.config.mediumSpacer },
-		// {
-		// 	view:"segmented",
-		// 	id: ids.tabbar,
-		// 	value: ids.tab_object,
-		// 	multiview: true,
-		// 	align: "center",
-		// 	options:[
-		// 		{
-		// 			id: ids.tab_object,
-		// 			value: labels.application.objectTitle,
-		// 			width: App.config.tabWidthMedium
-		// 		},
-		// 		{
-		// 			id: ids.tab_interface,
-		// 			value: labels.application.interfaceTitle,
-		// 			width: App.config.tabWidthMedium
-		// 		}
-		// 	],
-		// 	on: {
-		// 		onChange: function (idNew, idOld) {
-		// 			if (idNew != idOld) {
-		// 				_logic.tabSwitch(idNew, idOld);
-		// 			}
-		// 		}
-		// 	}
-		// },
-		{ height: App.config.mediumSpacer }, {
-			cols: [{
-				width: App.config.mediumSpacer
-			}, {
-				rows: [{
-					view: "tabbar",
-					id: ids.tabbar,
-					value: ids.tab_object,
-					multiview: true,
-					options: [{
-						id: ids.tab_object,
-						value: labels.application.objectTitle,
-						width: App.config.tabWidthMedium
-					}, {
-						id: ids.tab_interface,
-						value: labels.application.interfaceTitle,
-						width: App.config.tabWidthMedium
-					}],
-					on: {
-						onChange: function onChange(idNew, idOld) {
-							if (idNew != idOld) {
-								_logic.tabSwitch(idNew, idOld);
-							}
-						}
+		};
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component'),
+			toolBar: _this.unique('toolbar'),
+			buttonSync: _this.unique('button_sync'),
+			labelAppName: _this.unique('label_appname'),
+			tabbar: _this.unique('tabbar'),
+			tab_object: _this.unique('tab_object'),
+			tab_interface: _this.unique('tab_interface'),
+			workspace: _this.unique('workspace')
+		};
+
+		var AppObjectWorkspace = new _ab_work_object2.default(App);
+		var AppInterfaceWorkspace = new _ab_work_interface2.default(App);
+
+		// Our webix UI definition:
+		_this.ui = {
+			id: ids.component,
+			rows: [{
+				view: "toolbar",
+				id: ids.toolBar,
+				autowidth: true,
+				cols: [{
+					view: "button",
+					label: labels.component.backToApplication,
+					width: 200,
+					type: "icon",
+					icon: "arrow-left",
+					align: "left",
+
+					click: function click() {
+						App.actions.transitionApplicationChooser();
 					}
 				}, {
-					id: ids.workspace,
-					cells: [AppObjectWorkspace.ui, AppInterfaceWorkspace.ui]
+					view: "label",
+					id: ids.labelAppName,
+					align: "center"
+				}, {
+					view: "spacer",
+					width: 200,
+					alrign: "right"
+				}
+				// {
+				// 	id: ids.buttonSync,
+				// 	view: "button",
+				// 	type: "icon",
+				// 	icon: "refresh",
+				// 	label: labels.component.synchronize,
+				// 	autowidth: true,
+				// 	align: "right",
+				// 	click: function () {
+				// 		_logic.synchronize();
+				// 	}
+				// }
+				]
+			},
+			//{ height: App.config.mediumSpacer },
+			// {
+			// 	view:"segmented",
+			// 	id: ids.tabbar,
+			// 	value: ids.tab_object,
+			// 	multiview: true,
+			// 	align: "center",
+			// 	options:[
+			// 		{
+			// 			id: ids.tab_object,
+			// 			value: labels.component.objectTitle,
+			// 			width: App.config.tabWidthMedium
+			// 		},
+			// 		{
+			// 			id: ids.tab_interface,
+			// 			value: labels.component.interfaceTitle,
+			// 			width: App.config.tabWidthMedium
+			// 		}
+			// 	],
+			// 	on: {
+			// 		onChange: function (idNew, idOld) {
+			// 			if (idNew != idOld) {
+			// 				_logic.tabSwitch(idNew, idOld);
+			// 			}
+			// 		}
+			// 	}
+			// },
+			{ height: App.config.mediumSpacer }, {
+				cols: [{
+					width: App.config.mediumSpacer
+				}, {
+					rows: [{
+						view: "tabbar",
+						id: ids.tabbar,
+						value: ids.tab_object,
+						multiview: true,
+						options: [{
+							id: ids.tab_object,
+							value: labels.component.objectTitle,
+							width: App.config.tabWidthMedium
+						}, {
+							id: ids.tab_interface,
+							value: labels.component.interfaceTitle,
+							width: App.config.tabWidthMedium
+						}],
+						on: {
+							onChange: function onChange(idNew, idOld) {
+								if (idNew != idOld) {
+									_logic.tabSwitch(idNew, idOld);
+								}
+							}
+						}
+					}, {
+						id: ids.workspace,
+						cells: [AppObjectWorkspace.ui, AppInterfaceWorkspace.ui]
+					}]
+				}, {
+					width: App.config.mediumSpacer
 				}]
-			}, {
-				width: App.config.mediumSpacer
-			}]
-		}, { height: App.config.mediumSpacer }]
-	};
+			}, { height: App.config.mediumSpacer }]
+		};
 
-	// Our init() function for setting up our UI
-	var _init = function _init() {
+		// Our init() function for setting up our UI
+		_this.init = function () {
 
-		AppObjectWorkspace.init();
-		AppInterfaceWorkspace.init();
+			AppObjectWorkspace.init();
+			AppInterfaceWorkspace.init();
 
-		// initialize the Object Workspace to show first.
-		_logic.tabSwitch(ids.tab_object);
-	};
+			//// TODO: keep track of the last workspace in application.workspace.lastWorkspace on every
+			//// tab switch, then use that value here to show you which tab to display on loading.
+			//// don't save application each time the tab workspace changes.  just make the setting 
+			//// and then when they update anything in those workspace editors, this get's updated.
 
-	// our internal business logic
-	var _logic = {
+			// initialize the Object Workspace to show first.
+			_logic.tabSwitch(ids.tab_object);
+		};
 
-		applicationInit: function applicationInit(application) {
+		// our internal business logic
+		var _logic = {
 
-			// setup Application Label:
-			$$(ids.labelAppName).define('label', application.label);
-			$$(ids.labelAppName).refresh();
-		},
+			applicationInit: function applicationInit(application) {
 
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
+				// setup Application Label:
+				$$(ids.labelAppName).define('label', application.label);
+				$$(ids.labelAppName).refresh();
+			},
 
-			$$(ids.component).show();
-		},
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
 
-		/**
-   * @function synchronize
-   *
-   * Kick off the Synchronization process.
-   */
-		synchronize: function synchronize() {
+				$$(ids.component).show();
+			},
 
-			// self.element.trigger(self.options.synchronizeEvent, {
-			// 	appID: AD.classes.AppBuilder.currApp.id
-			// });
-			//// Question: where should this logic go?  Here or in ab.js ?
+			/**
+    * @function synchronize
+    *
+    * Kick off the Synchronization process.
+    */
+			synchronize: function synchronize() {
 
-			console.error('TODO: ab_work.logic.synchronize()!');
-		},
+				// self.element.trigger(self.options.synchronizeEvent, {
+				// 	appID: AD.classes.AppBuilder.currApp.id
+				// });
+				//// Question: where should this logic go?  Here or in ab.js ?
 
-		/**
-   * @function tabSwitch
-   *
-   * Every time a tab switch happens, decide which workspace to show.
-   *
-   * @param {string} idTab	the id of the tab that was changed to.
-   * @param {string} idOld	the previous tab id
-   */
-		tabSwitch: function tabSwitch(idTab, idOld) {
+				console.error('TODO: ab_work.logic.synchronize()!');
+			},
 
-			switch (idTab) {
+			/**
+    * @function tabSwitch
+    *
+    * Every time a tab switch happens, decide which workspace to show.
+    *
+    * @param {string} idTab	the id of the tab that was changed to.
+    * @param {string} idOld	the previous tab id
+    */
+			tabSwitch: function tabSwitch(idTab, idOld) {
 
-				// Object Workspace Tab
-				case ids.tab_object:
+				switch (idTab) {
 
-					// $$(ids.buttonSync).show();
-					AppObjectWorkspace.show();
-					break;
+					// Object Workspace Tab
+					case ids.tab_object:
 
-				// Interface Workspace Tab
-				case ids.tab_interface:
+						// $$(ids.buttonSync).show();
+						AppObjectWorkspace.show();
+						break;
 
-					// $$(ids.buttonSync).hide();
-					AppInterfaceWorkspace.show();
-					break;
+					// Interface Workspace Tab
+					case ids.tab_interface:
+
+						// $$(ids.buttonSync).hide();
+						AppInterfaceWorkspace.show();
+						break;
+				}
 			}
-		}
-	};
+		};
+		_this._logic = _logic;
 
-	// Expose any globally accessible Actions:
-	var _actions = {
+		_this.actions({
 
-		/**
-   * @function transitionWorkspace
-   *
-   * Switch the UI to view the App Workspace screen.
-   *
-   * @param {ABApplication} application
-   */
-		transitionWorkspace: function transitionWorkspace(application) {
+			/**
+    * @function transitionWorkspace
+    *
+    * Switch the UI to view the App Workspace screen.
+    *
+    * @param {ABApplication} application
+    */
+			transitionWorkspace: function transitionWorkspace(application) {
 
-			_logic.applicationInit(application);
-			AppObjectWorkspace.applicationLoad(application);
-			AppInterfaceWorkspace.applicationLoad(application);
+				_logic.applicationInit(application);
+				AppObjectWorkspace.applicationLoad(application);
+				AppInterfaceWorkspace.applicationLoad(application);
 
-			_logic.show();
-		}
+				_logic.show();
+			}
 
-	};
+		});
 
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+		return _this;
+	}
 
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+	return AB_Work;
+}(OP.Component);
+
+exports.default = AB_Work;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 28 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
 
-var _ABApplication2 = _interopRequireDefault(_ABApplication);
+var _ab_work_interface_list = __webpack_require__(37);
+
+var _ab_work_interface_list2 = _interopRequireDefault(_ab_work_interface_list);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * ab_work_interface
  *
@@ -7730,210 +9047,135 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+var AB_Work_Interface = function (_OP$Component) {
+	_inherits(AB_Work_Interface, _OP$Component);
 
-	component: {
+	function AB_Work_Interface(App) {
+		_classCallCheck(this, AB_Work_Interface);
 
-		// formHeader: L('ab.application.form.header', "*Application Info"),
+		var _this = _possibleConstructorReturn(this, (AB_Work_Interface.__proto__ || Object.getPrototypeOf(AB_Work_Interface)).call(this, App, 'ab_work_interface'));
 
+		var L = _this.Label;
+
+		var labels = {
+
+			common: App.labels,
+
+			component: {
+
+				// formHeader: L('ab.application.form.header', "*Application Info"),
+
+			}
+		};
+
+		var ViewList = new _ab_work_interface_list2.default(App);
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component')
+
+		};
+
+		// Our webix UI definition:
+		_this.ui = {
+			id: ids.component,
+			margin: 10,
+			cols: [ViewList.ui, { view: "resizer" }, {
+				// id: ids.noSelection,
+				rows: [{
+					maxHeight: App.config.xxxLargeSpacer,
+					hidden: App.config.hideMobile
+				}, {
+					view: 'label',
+					align: "center",
+					label: "interface workspace"
+				}, {
+					maxHeight: App.config.xxxLargeSpacer,
+					hidden: App.config.hideMobile
+				}]
+			}]
+		};
+
+		// Our init() function for setting up our UI
+		_this.init = function () {
+			// webix.extend($$(ids.form), webix.ProgressBar);
+			ViewList.init();
+		};
+
+		// our internal business logic
+		var _logic = {
+
+			/**
+    * @function applicationLoad
+    *
+    * Initialize the Object Workspace with the given ABApplication.
+    *
+    * @param {ABApplication} application 
+    */
+			applicationLoad: function applicationLoad(application) {
+
+				ViewList.applicationLoad(application);
+			},
+
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
+
+				$$(ids.component).show();
+			}
+		};
+		_this._logic = _logic;
+
+		_this.actions({});
+
+		// 
+		// Define our external interface methods:
+		// 
+		_this.applicationLoad = _logic.applicationLoad;
+		_this.show = _logic.show;
+
+		return _this;
 	}
-};
 
-var idBase = 'ab_work_interface';
-OP.Component.extend(idBase, function (App) {
+	return AB_Work_Interface;
+}(OP.Component);
 
-	labels.common = App.labels;
-
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique(idBase + '_component')
-
-	};
-
-	// Our webix UI definition:
-	var _ui = {
-		id: ids.component,
-		//scroll: true,
-		rows: [{
-			view: "label",
-			label: "interface workspace"
-		}]
-	};
-
-	// Our init() function for setting up our UI
-	var _init = function _init() {}
-	// webix.extend($$(ids.form), webix.ProgressBar);
-
-	// our internal business logic
-	;var _logic = {
-
-		/**
-   * @function applicationLoad
-   *
-   * Initialize the Object Workspace with the given ABApplication.
-   *
-   * @param {ABApplication} application 
-   */
-		applicationLoad: function applicationLoad(application) {
-			console.error('TODO: ab_work_interface.applicationLoad()');
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
-
-			$$(ids.component).show();
-		}
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-		applicationLoad: _logic.applicationLoad,
-		show: _logic.show,
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+exports.default = AB_Work_Interface;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 29 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
-
-var _ABApplication2 = _interopRequireDefault(_ABApplication);
-
-__webpack_require__(30);
-
-__webpack_require__(34);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-/*
- * ab_work_object
- *
- * Display the Object Tab UI:
- *
- */
-
-var labels = {
-
-	component: {
-
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-
-	}
-};
-
-var idBase = 'ab_work_object';
-OP.Component.extend(idBase, function (App) {
-
-	labels.common = App.labels;
-
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique(idBase + '_component')
-
-	};
-
-	var ObjectList = OP.Component['ab_work_object_list'](App);
-	var ObjectWorkspace = OP.Component['ab_work_object_workspace'](App);
-
-	// Our webix UI definition:
-	var _ui = {
-		id: ids.component,
-		margin: 10,
-		cols: [ObjectList.ui, { view: "resizer" }, ObjectWorkspace.ui]
-	};
-
-	// Our init() function for setting up our UI
-	var _init = function _init() {
-
-		ObjectWorkspace.init();
-		ObjectList.init();
-	};
-
-	// our internal business logic
-	var _logic = {
-
-		/**
-   * @function applicationLoad
-   *
-   * Initialize the Object Workspace with the given ABApplication.
-   *
-   * @param {ABApplication} application
-   */
-		applicationLoad: function applicationLoad(application) {
-			ObjectList.applicationLoad(application);
-			App.actions.clearObjectWorkspace();
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
-
-			$$(ids.component).show();
-		}
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-
-		applicationLoad: _logic.applicationLoad,
-		show: _logic.show,
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
+Object.defineProperty(exports, "__esModule", {
+	value: true
 });
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(OP) {
-
-var _ABApplication = __webpack_require__(1);
+var _ABApplication = __webpack_require__(4);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(31);
+var _ab_work_interface_list_newPage = __webpack_require__(38);
 
-__webpack_require__(33);
+var _ab_work_interface_list_newPage2 = _interopRequireDefault(_ab_work_interface_list_newPage);
+
+var _ab_common_popupEditMenu = __webpack_require__(16);
+
+var _ab_common_popupEditMenu2 = _interopRequireDefault(_ab_common_popupEditMenu);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * ab_work_object_list
  *
@@ -7941,390 +9183,1545 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+var AB_Work_Interface_List = function (_OP$Component) {
+	_inherits(AB_Work_Interface_List, _OP$Component);
 
-	component: {
+	function AB_Work_Interface_List(App) {
+		_classCallCheck(this, AB_Work_Interface_List);
 
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-		addNew: L('ab.object.addNew', '*Add new object'),
+		var _this = _possibleConstructorReturn(this, (AB_Work_Interface_List.__proto__ || Object.getPrototypeOf(AB_Work_Interface_List)).call(this, App, 'ab_work_interface_list'));
 
-		confirmDeleteTitle: L('ab.object.delete.title', "*Delete object"),
-		confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
+		var L = _this.Label;
 
-	}
-};
+		var labels = {
 
-var idBase = 'ab_work_object_list';
-OP.Component.extend(idBase, function (App) {
+			common: App.labels,
 
-	labels.common = App.labels;
+			component: {
 
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique(idBase + '_component'),
+				// formHeader: L('ab.application.form.header', "*Application Info"),
+				addNew: L('ab.interface.addNewPage', '*Add new Page'),
 
-		list: App.unique(idBase + '_editlist'),
-		buttonNew: App.unique(idBase + '_buttonNew')
+				confirmDeleteTitle: L('ab.interface.delete.title', "*Delete Page"),
+				confirmDeleteMessage: L('ab.interface.delete.message', "*Do you want to delete <b>{0}</b>?")
 
-	};
+			}
+		};
 
-	// Our webix UI definition:
-	var _ui = {
-		id: ids.component,
-		rows: [{
-			view: App.custom.editlist.view, // "editlist",
-			id: ids.list,
-			width: 250,
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component'),
 
-			//height:800, // #Hack!
+			list: _this.unique('editlist'),
+			buttonNew: _this.unique('buttonNew')
+		};
 
-			select: true,
-			editaction: 'custom',
-			editable: true,
-			editor: "text",
-			editValue: "label",
-			template: function template(obj, common) {
-				return _logic.templateListItem(obj, common);
-			},
-			type: {
-				height: 35,
-				iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
-			},
-			on: {
-				onAfterRender: function onAfterRender() {
-					_logic.onAfterRender();
+		// // Note: put these here so _logic is defined:
+		// // There is a Popup for adding a new Object:
+		var PopupNewPageComponent = new _ab_work_interface_list_newPage2.default(App);
+		var PopupEditPageComponent = new _ab_common_popupEditMenu2.default(App);
+
+		// Our webix UI definition:
+		_this.ui = {
+			id: ids.component,
+			rows: [{
+				view: App.custom.edittree.view, // "editlist",
+				id: ids.list,
+				width: 250, // TODO: @James
+
+				select: true,
+
+				editaction: 'custom',
+				editable: true,
+				editor: "text",
+				editValue: "label",
+
+				template: function template(obj, common) {
+					return _logic.templateListItem(obj, common);
 				},
-				onAfterSelect: function onAfterSelect(id) {
-					_logic.selectObject(id);
+				type: {
+					height: 35,
+					iconGear: "<span class='webix_icon fa-cog'></span>"
 				},
-				onBeforeEditStop: function onBeforeEditStop(state, editor) {
-					_logic.onBeforeEditStop(state, editor);
-				},
-				onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
-					_logic.onAfterEditStop(state, editor, ignoreUpdate);
-				}
-			},
-			onClick: {
-				"ab-object-list-edit": function abObjectListEdit(e, id, trg) {
-					_logic.clickEditMenu(e, id, trg);
-				}
-			}
-		}, {
-			view: 'button',
-			id: ids.buttonNew,
-			value: labels.component.addNew,
-			click: function click() {
-				_logic.clickNewObject();
-			}
-		}]
-	};
+				on: {
+					onAfterRender: function onAfterRender() {
+						_logic.onAfterRender();
+					},
+					onAfterSelect: function onAfterSelect(id) {
+						_logic.onAfterSelect(id);
+					},
+					onAfterOpen: function onAfterOpen() {
+						_logic.onAfterOpen();
+					},
+					onAfterClose: function onAfterClose() {
+						var ids = this.getSelectedId(true);
 
-	// Our init() function for setting up our UI
-	var _init = function _init() {
-
-		if ($$(ids.component)) $$(ids.component).adjust();
-
-		if ($$(ids.list)) {
-			webix.extend($$(ids.list), webix.ProgressBar);
-			$$(ids.list).adjust();
-		}
-
-		PopupNewObjectComponent.init({
-			onDone: _logic.callbackNewObject
-		});
-
-		PopupEditObjectComponent.init({
-			onClick: _logic.callbackObjectEditorMenu
-		});
-	};
-
-	// our internal business logic
-	var _logic = {
-
-		/**
-   * @function applicationLoad
-   *
-   * Initialize the Object List from the provided ABApplication
-   *
-   * If no ABApplication is provided, then show an empty form. (create operation)
-   *
-   * @param {ABApplication} application  	[optional] The current ABApplication
-   *										we are working with.
-   */
-		applicationLoad: function applicationLoad(application) {
-			_logic.listBusy();
-
-			CurrentApplication = application;
-
-			// get a DataCollection of all our objects
-			objectList = new webix.DataCollection({
-				data: application.objects()
-			});
-
-			// clear our list and display our objects:
-			var List = $$(ids.list);
-			List.clearAll();
-			List.data.unsync();
-			List.data.sync(objectList);
-			List.refresh();
-			List.unselectAll();
-
-			//
-			_logic.listReady();
-
-			// prepare our Popup with the current Application
-			PopupNewObjectComponent.applicationLoad(application);
-		},
-
-		clickEditMenu: function clickEditMenu(e, id, trg) {
-			// Show menu
-			PopupEditObjectComponent.show(trg);
-
-			return false;
-		},
-
-		listBusy: function listBusy() {
-			$$(ids.list).showProgress({ type: "icon" });
-		},
-
-		listReady: function listReady() {
-			$$(ids.list).hideProgress();
-		},
-
-		onAfterRender: function onAfterRender() {
-			console.error('!! todo: onAfterRender() editing');
-			// webix.once(function () {
-			// 	$$(self.webixUiId.objectList).data.each(function (d) {
-			// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
-			// 	});
-			// });
-
-			// // Show gear icon
-			// if (this.getSelectedId(true).length > 0) {
-			// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
-			// 	self.refreshUnsyncNumber();
-			// }
-		},
-
-		onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
-
-			_logic.showGear(editor.id);
-
-			if (state.value != state.old) {
-				_logic.listBusy();
-
-				var selectedObject = $$(ids.list).getSelectedItem(false);
-				selectedObject.label = state.value;
-
-				// Call server to rename
-				selectedObject.save().catch(function () {
-					_logic.listReady();
-
-					OP.Dialog.Alert({
-						text: labels.common.renameErrorMessage.replace("{0}", state.old)
-					});
-				}).then(function () {
-					_logic.listReady();
-
-					// TODO : should use message box
-					OP.Dialog.Alert({
-						text: labels.common.renameSuccessMessage.replace("{0}", state.value)
-					});
-				});
-			}
-		},
-
-		onBeforeEditStop: function onBeforeEditStop(state, editor) {
-			console.error('!! todo: onBeforeEditStop() editing');
-			// if (!inputValidator.validateFormat(state.value)) {
-			// 	return false;
-			// }
-
-			// // Validation - check duplicate
-			// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
-			// 	webix.alert({
-			// 		title: self.labels.object.invalidName,
-			// 		ok: self.labels.common.ok,
-			// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
-			// 	});
-
-			// 	return false;
-			// }
-		},
-
-		/**
-   * @function selectObject()
-   *
-   * Perform these actions when an Object is selected in the List.
-   */
-		selectObject: function selectObject(id) {
-
-			var object = $$(ids.list).getItem(id);
-			App.actions.populateObjectWorkspace(object);
-
-			//// TODO: do we need these?
-
-			// // Refresh unsync number
-			// self.refreshUnsyncNumber();
-
-			_logic.showGear(id);
-		},
-
-		showGear: function showGear(id) {
-			var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
-			gearIcon.style.visibility = "visible";
-			gearIcon.style.display = "block";
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
-
-			$$(ids.component).show();
-		},
-
-		/**
-   * @function templateListItem
-   *
-   * Defines the template for each row of our ObjectList.
-   *
-   * @param {obj} obj the current instance of ABObject for the row.
-   * @param {?} common the webix.common icon data structure
-   * @return {string}
-   */
-		templateListItem: function templateListItem(obj, common) {
-			return _templateListItem.replace('#label#', obj.label || '??label??').replace('{common.iconGear}', common.iconGear);
-		},
-
-		/**
-   * @function callbackNewObject
-   *
-   * Once a New Object was created in the Popup, follow up with it here.
-   */
-		callbackNewObject: function callbackNewObject(err, object) {
-
-			if (err) {
-				OP.Error.log('Error creating New Object', { error: err });
-				return;
-			}
-
-			objectList.add(object, objectList.count());
-			$$(ids.list).select(object.id);
-		},
-
-		/**
-   * @function clickNewObject
-   *
-   * Manages initiating the transition to the new Object Popup window
-   */
-		clickNewObject: function clickNewObject() {
-
-			// show the new popup
-			PopupNewObjectComponent.show();
-		},
-
-		rename: function rename() {
-			var objectId = $$(ids.list).getSelectedId(false);
-			$$(ids.list).edit(objectId);
-		},
-
-		remove: function remove() {
-
-			var selectedObject = $$(ids.list).getSelectedItem(false);
-
-			// verify they mean to do this:
-			OP.Dialog.Confirm({
-				title: labels.component.confirmDeleteTitle,
-				message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
-				callback: function callback(isOK) {
-
-					if (isOK) {
-						_logic.listBusy();
-
-						selectedObject.destroy().then(function () {
-							_logic.listReady();
-
-							$$(ids.list).remove(selectedObject.id);
-							App.actions.clearObjectWorkspace();
+						// Show gear icon
+						ids.forEach(function (id) {
+							self.showGear(id);
 						});
+					},
+					onBeforeEditStop: function onBeforeEditStop(state, editor) {
+						_logic.onBeforeEditStop(state, editor);
+					},
+					onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+						_logic.onAfterEditStop(state, editor, ignoreUpdate);
+					}
+				},
+				onClick: {
+					"ab-page-list-edit": function abPageListEdit(e, id, trg) {
+						_logic.clickEditMenu(e, id, trg);
 					}
 				}
-			});
-		},
+			}, {
+				view: 'button',
+				id: ids.buttonNew,
+				value: labels.component.addNew,
+				click: function click() {
+					_logic.clickNewView();
+				}
+			}]
+		};
 
-		callbackObjectEditorMenu: function callbackObjectEditorMenu(action) {
-			switch (action) {
-				case 'rename':
-					_logic.rename();
-					break;
-				case 'delete':
-					_logic.remove();
-					break;
+		// Our init() function for setting up our UI
+		_this.init = function () {
+
+			if ($$(ids.component)) $$(ids.component).adjust();
+
+			if ($$(ids.list)) {
+				webix.extend($$(ids.list), webix.ProgressBar);
+				$$(ids.list).adjust();
 			}
-		}
-	};
 
-	/*
-  * _templateListItem
-  *
-  * The Object Row template definition.
-  */
-	var _templateListItem = ["<div class='ab-object-list-item'>", "#label#",
-	// "{common.unsyncNumber}",
-	"{common.iconGear}", "</div>"].join('');
+			PopupNewPageComponent.init({
+				onSave: _logic.callbackNewPage
+			});
 
-	// Note: put these here so _logic is defined:
-	// There is a Popup for adding a new Object:
-	var PopupNewObjectComponent = OP.Component['ab_work_object_list_newObject'](App);
-	var PopupEditObjectComponent = OP.Component['ab_work_object_list_popupEditMenu'](App);
+			PopupEditPageComponent.init({
+				onClick: _logic.callbackPageEditMenu
+			});
+		};
 
-	var CurrentApplication = null;
-	var objectList = null;
+		// our internal business logic
+		var _logic = {
 
-	// Expose any globally accessible Actions:
-	var _actions = {
+			/**
+    * @function applicationLoad
+    *
+    * Initialize the Object List from the provided ABApplication
+    *
+    * If no ABApplication is provided, then show an empty form. (create operation)
+    *
+    * @param {ABApplication} application  	[optional] The current ABApplication
+    *										we are working with.
+    */
+			applicationLoad: function applicationLoad(application) {
+				_logic.listBusy();
 
-		/**
-   * @function getSelectedObject
+				CurrentApplication = application;
+
+				// get a DataCollection of all our objects
+				viewList = new webix.DataCollection({
+					data: application.views()
+				});
+
+				// clear our list and display our objects:
+				var List = $$(ids.list);
+				List.clearAll();
+				List.data.unsync();
+				List.data.sync(viewList);
+				List.refresh();
+				List.unselectAll();
+
+				//
+				_logic.listReady();
+
+				// // prepare our Popup with the current Application
+				PopupNewPageComponent.applicationLoad(application);
+			},
+
+			/**
+    * @function callbackNewObject
+    *
+    * Once a New Page was created in the Popup, follow up with it here.
+    */
+			callbackNewPage: function callbackNewPage(page) {
+
+				$$(ids.list).add(page);
+				$$(ids.list).select(page.id);
+				PopupNewPageComponent.hide();
+			},
+
+			/**
+    * @function callbackPageEditMenu
+    *
+    * Respond to the edit menu selection.
+    */
+			callbackPageEditMenu: function callbackPageEditMenu(action) {
+
+				switch (action) {
+					case 'rename':
+						_logic.rename();
+						break;
+					case 'delete':
+						_logic.remove();
+						break;
+				}
+			},
+
+			clickEditMenu: function clickEditMenu(e, id, trg) {
+				// Show menu
+				PopupEditPageComponent.show(trg);
+
+				return false;
+			},
+
+			listBusy: function listBusy() {
+				$$(ids.list).showProgress({ type: "icon" });
+			},
+
+			listReady: function listReady() {
+				$$(ids.list).hideProgress();
+			},
+
+			onAfterClose: function onAfterClose() {
+				console.error('!! todo: onAfterClose()');
+				// var ids = this.getSelectedId(true);
+
+				// // Show gear icon
+				// ids.forEach(function (id) {
+				// 	self.showGear(id);
+				// });
+			},
+
+			onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+
+				_logic.showGear(editor.id);
+
+				if (state.value != state.old) {
+					_logic.listBusy();
+
+					var selectedPage = $$(ids.list).getSelectedItem(false);
+					selectedPage.label = state.value;
+
+					// Call server to rename
+					selectedPage.save().catch(function () {
+						_logic.listReady();
+
+						OP.Dialog.Alert({
+							text: labels.common.renameErrorMessage.replace("{0}", state.old)
+						});
+					}).then(function () {
+						_logic.listReady();
+
+						// TODO : should use message box
+						OP.Dialog.Alert({
+							text: labels.common.renameSuccessMessage.replace("{0}", state.value)
+						});
+					});
+				}
+			},
+
+			onAfterOpen: function onAfterOpen() {
+				console.error('!! todo: onAfterOpen() ');
+				// var ids = this.getSelectedId(true);
+
+				// // Show gear icon
+				// ids.forEach(function (id) {
+				// 	self.showGear(id);
+				// });
+			},
+
+			onAfterRender: function onAfterRender() {
+				console.error('!! todo: onAfterRender() editing');
+				// webix.once(function () {
+				// 	$$(self.webixUiId.objectList).data.each(function (d) {
+				// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
+				// 	});
+				// });
+
+				// // Show gear icon
+				// if (this.getSelectedId(true).length > 0) {
+				// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+				// 	self.refreshUnsyncNumber();
+				// }
+			},
+
+			/**
+    * @function onAfterSelect()
+    *
+    * Perform these actions when a View is selected in the List.
+    */
+			onAfterSelect: function onAfterSelect(id) {
+
+				var view = $$(ids.list).getItem(id);
+				// App.actions.populateViewWorkspace(view);
+
+				_logic.showGear(id);
+			},
+
+			onBeforeEditStop: function onBeforeEditStop(state, editor) {
+				console.error('!! todo: onBeforeEditStop() editing');
+				// if (!inputValidator.validateFormat(state.value)) {
+				// 	return false;
+				// }
+
+				// // Validation - check duplicate
+				// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
+				// 	webix.alert({
+				// 		title: self.labels.object.invalidName,
+				// 		ok: self.labels.common.ok,
+				// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
+				// 	});
+
+				// 	return false;
+				// }
+			},
+
+			rename: function rename() {
+				var pageID = $$(ids.list).getSelectedId(false);
+				$$(ids.list).edit(pageID);
+			},
+
+			remove: function remove() {
+
+				var selectedPage = $$(ids.list).getSelectedItem(false);
+
+				// verify they mean to do this:
+				OP.Dialog.Confirm({
+					title: labels.component.confirmDeleteTitle,
+					message: labels.component.confirmDeleteMessage.replace('{0}', selectedPage.label),
+					callback: function callback(isOK) {
+
+						if (isOK) {
+							_logic.listBusy();
+
+							selectedPage.destroy().then(function () {
+								_logic.listReady();
+
+								$$(ids.list).remove(selectedPage.id);
+								// App.actions.clearObjectWorkspace();
+							});
+						}
+					}
+				});
+			},
+
+			showGear: function showGear(id) {
+				var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-page-list-edit');
+				gearIcon.style.visibility = "visible";
+				gearIcon.style.display = "block";
+			},
+
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
+
+				$$(ids.component).show();
+			},
+
+			/**
+    * @function templateListItem
+    *
+    * Defines the template for each row of our ObjectList.
+    *
+    * @param {obj} obj the current instance of ABObject for the row.
+    * @param {?} common the webix.common icon data structure
+    * @return {string}
+    */
+			templateListItem: function templateListItem(item, common) {
+
+				var template = _templateListItem;
+
+				template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
+				template = template.replace('#typeIcon#', 'fa-file-o');
+
+				// // Disallow rename/delete on Tabs
+				// if (item.type !== 'tab')
+				// 	template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
+				// else
+				// 	template = template.replace("#iconGear#", "");
+
+				// switch (item.type) {
+				// 	case 'modal':
+				// 		template = template.replace('#typeIcon#', 'fa-list-alt');
+				// 		break;
+				// 	case 'tab':
+				// 		template = template.replace('#typeIcon#', 'fa-folder-o');
+				// 		break;
+				// 	case 'page':
+				// 	default:
+				// 		template = template.replace('#typeIcon#', 'fa-file-o');
+				// 		break;
+				// }
+
+				return template.replace('#label#', item.label).replace('{common.icon()}', common.icon(item)).replace('{common.iconGear}', common.iconGear);
+			},
+
+			/**
+    * @function clickNewView
+    *
+    * Manages initiating the transition to the new Object Popup window
+    */
+			clickNewView: function clickNewView() {
+
+				// show the new popup
+				PopupNewPageComponent.show();
+			}
+
+		};
+		_this._logic = _logic;
+
+		/*
+   * _templateListItem
    *
-   * returns which ABObject is currently selected.
-   * @return {ABObject}  or {null} if nothing selected.
+   * The Object Row template definition.
    */
-		getSelectedObject: function getSelectedObject() {
-			return $$(ids.list).getSelectedItem();
-		}
+		var _templateListItem = ["<div class='ab-page-list-item'>", "{common.icon()} <span class='webix_icon #typeIcon#'></span> #label# #iconGear#", "</div>"].join('');
 
-	};
+		var CurrentApplication = null;
+		var viewList = null;
 
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+		// Expose any globally accessible Actions:
+		_this.actions({});
 
-		// interface methods for parent component:
-		applicationLoad: _logic.applicationLoad,
+		//
+		// Define our external interface methods:
+		// 
+		_this.applicationLoad = _logic.applicationLoad;
 
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+		return _this;
+	}
+
+	return AB_Work_Interface_List;
+}(OP.Component);
+
+exports.default = AB_Work_Interface_List;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 31 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(32);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+var _ab_work_interface_list_newPage_blankPage = __webpack_require__(39);
+
+var _ab_work_interface_list_newPage_blankPage2 = _interopRequireDefault(_ab_work_interface_list_newPage_blankPage);
+
+var _ABViewPage = __webpack_require__(15);
+
+var _ABViewPage2 = _interopRequireDefault(_ABViewPage);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+/*
+ * ab_work_interface_list_newPage
+ *
+ * Display the form for creating a new Application.
+ *
+ */
+
+// import AB_Work_Interface_List_NewPage_QuickPage from "./ab_work_interface_list_newPage_quickPage"
+
+
+var AB_Work_Interface_List_NewPage = function (_OP$Component) {
+	_inherits(AB_Work_Interface_List_NewPage, _OP$Component);
+
+	function AB_Work_Interface_List_NewPage(App) {
+		_classCallCheck(this, AB_Work_Interface_List_NewPage);
+
+		var _this = _possibleConstructorReturn(this, (AB_Work_Interface_List_NewPage.__proto__ || Object.getPrototypeOf(AB_Work_Interface_List_NewPage)).call(this, App, 'ab_work_interface_list_newPage'));
+
+		var L = _this.Label;
+
+		var labels = {
+
+			common: App.labels,
+
+			component: {
+
+				addNewPage: L('ab.interface.addNewPage', '*Add a new page'),
+
+				// formHeader: L('ab.application.form.header', "*Application Info"),
+				quickPage: L('ab.interface.quickPage', '*Quick Page'),
+				blankPage: L('ab.interface.blankPage', '*Blank Page')
+
+			}
+		};
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component'),
+
+			selectTab: _this.unique('selectTab'),
+
+			tabBlank: _this.unique('tabBlank'),
+			tabQuick: _this.unique('tabQuick'),
+
+			buttonSave: _this.unique('buttonSave')
+
+		};
+
+		var BlankPage = new _ab_work_interface_list_newPage_blankPage2.default(App);
+		// var QuickPage = new AB_Work_Interface_List_NewPage_QuickPage(App);
+
+
+		// Our webix UI definition:
+		_this.ui = {
+			view: "window",
+			id: ids.component,
+
+			//// TODO: @James
+			width: 650,
+			maxHeight: 500,
+
+			position: "center",
+			modal: true,
+			head: labels.component.addNewPage,
+			body: {
+				rows: [{
+					id: ids.selectTab,
+					view: "tabbar",
+					multiview: true,
+					options: [{ id: ids.tabQuick, value: labels.component.quickPage }, { id: ids.tabBlank, value: labels.component.blankPage }],
+					on: {
+						onChange: function onChange(newTab, oldTab) {
+							_logic.tabSwitch(newTab, oldTab);
+						}
+					}
+				}, {
+					cells: [BlankPage.ui]
+				}, {
+					margin: 5,
+					cols: [{
+						view: "button",
+						value: labels.common.cancel,
+						click: function click() {
+							_logic.buttonCancel();
+						}
+					}, {
+						id: ids.buttonSave,
+						view: "button",
+						value: labels.common.add,
+						// type: "form",
+						click: function click() {
+							_logic.buttonSave();
+						}
+					}]
+				}]
+			}
+		};
+
+		// Our init() function for setting up our UI
+		_this.init = function (options) {
+			// webix.extend($$(ids.form), webix.ProgressBar);
+
+			// we're a popup, so create our own ui
+			webix.ui(this.ui);
+
+			BlankPage.init();
+
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
+
+			$$(ids.selectTab).setValue(ids.tabBlank);
+			_logic.tabSwitch(ids.tabBlank);
+		};
+
+		var CurrentApplication = null;
+		var CurrentEditor = null;
+
+		// our internal business logic 
+		var _logic = {
+
+			/**
+    * @function applicationLoad()
+    *
+    * Prepare our New Popups with the current Application
+    */
+			applicationLoad: function applicationLoad(application) {
+				CurrentApplication = application;
+
+				BlankPage.applicationLoad(application);
+				// QuickPage.applicationLoad(application);
+			},
+
+			buttonCancel: function buttonCancel() {
+				CurrentEditor.clear();
+				_logic.hide();
+			},
+
+			buttonSave: function buttonSave() {
+
+				var values = CurrentEditor.values();
+
+				// this interface only creates Root Pages, or pages related to 
+				var page = null;
+				if (values.parent) {
+					page = values.parent.newChild(values);
+				} else {
+					page = CurrentApplication.viewNew(values);
+				}
+
+				var validator = page.isValid(values);
+				if (validator.fail()) {
+					CurrentEditor.errors(validator);
+				} else {
+
+					page.save().then(function () {
+						_logic.callbacks.onSave(page);
+						BlankPage.clear();
+						// QuickPage.clear();
+						_logic.hide();
+
+						// the CurrentApplication has changed it's values, so 
+						// refresh our editors with the curent values:
+						_logic.applicationLoad(CurrentApplication);
+					});
+				}
+			},
+
+			callbacks: {
+				onSave: function onSave() {
+					console.error('!! no onSave() callback handler! ');
+				}
+			},
+
+			/**
+    * @function hide()
+    *
+    * Hide this component.
+    */
+			hide: function hide() {
+
+				$$(ids.component).hide();
+			},
+
+			// /**
+			//  * @function formBusy
+			//  *
+			//  * Show the progress indicator to indicate a Form operation is in 
+			//  * progress.
+			//  */
+			// formBusy: function() {
+
+			// 	$$(ids.form).showProgress({ type: 'icon' });
+			// },
+
+
+			// /**
+			//  * @function formReady()
+			//  *
+			//  * remove the busy indicator from the form.
+			//  */
+			// formReady: function() {
+			// 	$$(ids.form).hideProgress();
+			// },
+
+
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
+
+				$$(ids.component).show();
+			},
+
+			/**
+    * @function tabSwitch()
+    *
+    * Switch between the different New Page Editors.
+    */
+			tabSwitch: function tabSwitch(newTab, oldTab) {
+
+				if (newTab != oldTab) {
+
+					switch (newTab) {
+						case ids.tabQuick:
+							CurrentEditor = QuickPage;
+							QuickPage.show();
+							break;
+						case ids.tabBlank:
+							CurrentEditor = BlankPage;
+							BlankPage.show();
+							break;
+					}
+				}
+			}
+		};
+		_this._logic = _logic;
+
+		// Expose any globally accessible Actions:
+		_this.actions({
+
+			/**
+    * @function populateApplicationForm()
+    *
+    * Initialze the Form with the values from the provided ABApplication.
+    *
+    * If no ABApplication is provided, then show an empty form. (create operation)
+    *
+    * @param {ABApplication} Application  	[optional] The current ABApplication 
+    *										we are working with.
+    */
+			// populateApplicationForm:function(Application){
+
+			// 	_logic.formReset();
+			// 	if (Application) {
+			// 		// populate Form here:
+			// 		_logic.formPopulate(Application);
+			// 	}
+			// 	_logic.permissionPopulate(Application);
+			// 	_logic.show();
+			// }
+
+		});
+
+		// 
+		// Define our external interface methods:
+		// 
+		_this.applicationLoad = _logic.applicationLoad;
+		_this.hide = _logic.hide;
+		_this.show = _logic.show;
+		return _this;
+	}
+
+	return AB_Work_Interface_List_NewPage;
+}(OP.Component);
+
+exports.default = AB_Work_Interface_List_NewPage;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ABViewPage = __webpack_require__(15);
+
+var _ABViewPage2 = _interopRequireDefault(_ABViewPage);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+/*
+ * ab_work_interface_list_newPage_blankPage
+ *
+ * Display the form for creating a new blank page 
+ *
+ */
+
+var AB_Work_Interface_List_NewPage_BlankPage = function (_OP$Component) {
+	_inherits(AB_Work_Interface_List_NewPage_BlankPage, _OP$Component);
+
+	function AB_Work_Interface_List_NewPage_BlankPage(App) {
+		_classCallCheck(this, AB_Work_Interface_List_NewPage_BlankPage);
+
+		var _this = _possibleConstructorReturn(this, (AB_Work_Interface_List_NewPage_BlankPage.__proto__ || Object.getPrototypeOf(AB_Work_Interface_List_NewPage_BlankPage)).call(this, App, 'ab_work_interface_list_newPage_blankPage'));
+
+		var L = _this.Label;
+
+		var labels = {
+			common: App.labels,
+			component: {
+
+				// formHeader: L('ab.application.form.header', "*Application Info"),
+				parentPage: L('ab.interface.page.parentList', '*Parent Page'),
+				placeholderPageName: L('ab.interface.placeholderPageName', '*Page name'),
+
+				rootPage: L('ab.interface.rootPage', '*[Root page]')
+			}
+		};
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component'),
+
+			parentList: _this.unique('parentList'),
+			formName: _this.unique('formName')
+
+		};
+
+		// Our webix UI definition:
+		_this.ui = {
+			view: "form",
+			id: ids.component,
+
+			//// TODO: @James
+			width: 400,
+
+			elements: [{
+				view: "select",
+				id: ids.parentList,
+				label: labels.component.parentPage,
+				name: "parent",
+				labelWidth: 110,
+				options: []
+			}, {
+				view: "text",
+				id: ids.formName,
+				label: labels.common.formName,
+				name: "label",
+				required: true,
+				placeholder: labels.component.placeholderPageName,
+				labelWidth: 110
+			}]
+
+		};
+
+		// Our init() function for setting up our UI
+		_this.init = function () {
+			// webix.extend($$(ids.form), webix.ProgressBar);
+
+		};
+
+		var CurrentApplication = null;
+
+		// our internal business logic 
+		var _logic = _this._logic = {
+
+			/**
+    * @function applicationLoad()
+    *
+    * Prepare our New Popups with the current Application
+    */
+			applicationLoad: function applicationLoad(application) {
+				CurrentApplication = application;
+
+				var options = [{ id: '-', value: labels.component.rootPage }];
+				application.views(function (v) {
+					return v.isRoot();
+				}).forEach(function (page) {
+					options.push({ id: page.id, value: page.label });
+				});
+
+				$$(ids.parentList).define('options', options);
+				$$(ids.parentList).refresh();
+			},
+
+			/**
+    * @function clear()
+    *
+    * Clear our form
+    */
+			clear: function clear() {
+				$$(ids.component).clearValidation();
+				$$(ids.component).clear();
+				$$(ids.parentList).setValue('-');
+			},
+
+			/**
+    * @function errors()
+    *
+    * show errors on our form:
+    */
+			errors: function errors(validator) {
+				validator.updateForm($$(ids.component));
+			},
+
+			// /**
+			//  * @function formBusy
+			//  *
+			//  * Show the progress indicator to indicate a Form operation is in 
+			//  * progress.
+			//  */
+			// formBusy: function() {
+
+			// 	$$(ids.form).showProgress({ type: 'icon' });
+			// },
+
+
+			// /**
+			//  * @function formReady()
+			//  *
+			//  * remove the busy indicator from the form.
+			//  */
+			// formReady: function() {
+			// 	$$(ids.form).hideProgress();
+			// },
+
+
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
+
+				// $$(componentId.addNewForm).clearValidation();
+				// $$(componentId.addNewForm).clear();
+
+				// var options = [{ id: '', value: '[Root page]' }];
+				// application.pages.each(function (d) {
+				// 	if (!d.parent) { // Get only root pages
+				// 		options.push({ id: d.id, value: d.label });
+				// 	}
+				// });
+
+				// $$(componentId.addNewParentList).define('options', options);
+
+				// // Default select parent page
+				// if (selectedPage) {
+				// 	var selected_page_id = selectedPage.id;
+
+				// 	if (selectedPage.parent)
+				// 		selected_page_id = selectedPage.parent.id || selectedPage.parent;
+
+				// 	$$(componentId.addNewParentList).setValue(selected_page_id);
+				// }
+				// else
+				// 	$$(componentId.addNewParentList).setValue('');
+
+				// $$(componentId.addNewParentList).render();
+
+
+				$$(ids.component).show();
+			},
+
+			values: function values() {
+
+				var parent = $$(ids.parentList).getValue().trim();
+				if (parent == '-') parent = null;
+
+				// convert a parent .id value to the actual object (or undefined if not found)
+				if (parent) {
+					CurrentApplication.views(function (v) {
+						return v.id == parent;
+					})[0];
+				}
+
+				return {
+					parent: parent,
+					label: $$(ids.formName).getValue().trim(),
+					key: _ABViewPage2.default.defaults().key
+				};
+			}
+		};
+
+		// Expose any globally accessible Actions:
+		_this.actions({
+
+			/**
+    * @function populateApplicationForm()
+    *
+    * Initialze the Form with the values from the provided ABApplication.
+    *
+    * If no ABApplication is provided, then show an empty form. (create operation)
+    *
+    * @param {ABApplication} Application  	[optional] The current ABApplication 
+    *										we are working with.
+    */
+			// populateApplicationForm:function(Application){
+
+			// 	_logic.formReset();
+			// 	if (Application) {
+			// 		// populate Form here:
+			// 		_logic.formPopulate(Application);
+			// 	}
+			// 	_logic.permissionPopulate(Application);
+			// 	_logic.show();
+			// }
+
+		});
+
+		// 
+		// Define our external interface methods:
+		// 
+		_this.applicationLoad = _logic.applicationLoad;
+		_this.clear = _logic.clear;
+		_this.errors = _logic.errors;
+		_this.show = _logic.show;
+		_this.values = _logic.values;
+
+		return _this;
+	}
+
+	return AB_Work_Interface_List_NewPage_BlankPage;
+}(OP.Component);
+
+exports.default = AB_Work_Interface_List_NewPage_BlankPage;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 40 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ab_work_object_list = __webpack_require__(41);
+
+var _ab_work_object_list2 = _interopRequireDefault(_ab_work_object_list);
+
+var _ab_work_object_workspace = __webpack_require__(44);
+
+var _ab_work_object_workspace2 = _interopRequireDefault(_ab_work_object_workspace);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+/*
+ * ab_work_object
+ *
+ * Display the Object Tab UI:
+ *
+ */
+
+var AB_Work_Object = function (_OP$Component) {
+	_inherits(AB_Work_Object, _OP$Component);
+
+	//.extend(idBase, function(App) {
+
+	function AB_Work_Object(App) {
+		_classCallCheck(this, AB_Work_Object);
+
+		var _this = _possibleConstructorReturn(this, (AB_Work_Object.__proto__ || Object.getPrototypeOf(AB_Work_Object)).call(this, App, 'ab_work_object'));
+
+		var L = _this.Label;
+
+		var labels = {
+			common: App.labels,
+			component: {}
+		};
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component')
+
+		};
+
+		var ObjectList = new _ab_work_object_list2.default(App);
+		var ObjectWorkspace = new _ab_work_object_workspace2.default(App);
+
+		// Our webix UI definition:
+		_this.ui = {
+			id: ids.component,
+			margin: 10,
+			cols: [ObjectList.ui, { view: "resizer" }, ObjectWorkspace.ui]
+		};
+
+		// Our init() function for setting up our UI
+		_this.init = function () {
+
+			ObjectWorkspace.init();
+			ObjectList.init();
+		};
+
+		// our internal business logic
+		var _logic = {
+
+			/**
+    * @function applicationLoad
+    *
+    * Initialize the Object Workspace with the given ABApplication.
+    *
+    * @param {ABApplication} application
+    */
+			applicationLoad: function applicationLoad(application) {
+				ObjectList.applicationLoad(application);
+				App.actions.clearObjectWorkspace();
+			},
+
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
+
+				$$(ids.component).show();
+			}
+		};
+		_this._logic = _logic;
+
+		// 
+		// Define our external interface methods:
+		// 
+		_this.applicationLoad = _logic.applicationLoad;
+		_this.show = _logic.show;
+
+		return _this;
+	}
+
+	return AB_Work_Object;
+}(OP.Component);
+
+exports.default = AB_Work_Object;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 41 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ab_work_object_list_newObject = __webpack_require__(42);
+
+var _ab_work_object_list_newObject2 = _interopRequireDefault(_ab_work_object_list_newObject);
+
+var _ab_common_popupEditMenu = __webpack_require__(16);
+
+var _ab_common_popupEditMenu2 = _interopRequireDefault(_ab_common_popupEditMenu);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+/*
+ * ab_work_object_list
+ *
+ * Manage the Object List
+ *
+ */
+
+// "./ab_work_object_list_popupEditMenu"
+
+
+var AB_Work_Object_List = function (_OP$Component) {
+	_inherits(AB_Work_Object_List, _OP$Component);
+
+	//.extend(idBase, function(App) {
+
+	function AB_Work_Object_List(App) {
+		_classCallCheck(this, AB_Work_Object_List);
+
+		var _this = _possibleConstructorReturn(this, (AB_Work_Object_List.__proto__ || Object.getPrototypeOf(AB_Work_Object_List)).call(this, App, 'ab_work_object_list'));
+
+		var L = _this.Label;
+
+		var labels = {
+			common: App.labels,
+			component: {
+
+				// formHeader: L('ab.application.form.header', "*Application Info"),
+				addNew: L('ab.object.addNew', '*Add new object'),
+
+				confirmDeleteTitle: L('ab.object.delete.title', "*Delete object"),
+				confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
+			}
+		};
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component'),
+
+			list: _this.unique('editlist'),
+			buttonNew: _this.unique('buttonNew')
+
+		};
+
+		// There is a Popup for adding a new Object:
+		var PopupNewObjectComponent = new _ab_work_object_list_newObject2.default(App);
+
+		// the popup edit list for each entry in the list.
+		var PopupEditObjectComponent = new _ab_common_popupEditMenu2.default(App);
+
+		// Our webix UI definition:
+		_this.ui = {
+			id: ids.component,
+			rows: [{
+				view: App.custom.editlist.view, // "editlist",
+				id: ids.list,
+				width: 250, // TODO: @James
+
+				select: true,
+
+				editaction: 'custom',
+				editable: true,
+				editor: "text",
+				editValue: "label",
+
+				template: function template(obj, common) {
+					return _logic.templateListItem(obj, common);
+				},
+				type: {
+					height: 35,
+					iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
+				},
+				on: {
+					onAfterRender: function onAfterRender() {
+						_logic.onAfterRender();
+					},
+					onAfterSelect: function onAfterSelect(id) {
+						_logic.selectObject(id);
+					},
+					onBeforeEditStop: function onBeforeEditStop(state, editor) {
+						_logic.onBeforeEditStop(state, editor);
+					},
+					onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+						_logic.onAfterEditStop(state, editor, ignoreUpdate);
+					}
+				},
+				onClick: {
+					"ab-object-list-edit": function abObjectListEdit(e, id, trg) {
+						_logic.clickEditMenu(e, id, trg);
+					}
+				}
+			}, {
+				view: 'button',
+				id: ids.buttonNew,
+				value: labels.component.addNew,
+				click: function click() {
+					_logic.clickNewObject();
+				}
+			}]
+		};
+
+		var CurrentApplication = null;
+		var objectList = null;
+
+		// Our init() function for setting up our UI
+		_this.init = function () {
+
+			if ($$(ids.component)) $$(ids.component).adjust();
+
+			if ($$(ids.list)) {
+				webix.extend($$(ids.list), webix.ProgressBar);
+				$$(ids.list).adjust();
+			}
+
+			PopupNewObjectComponent.init({
+				onDone: _logic.callbackNewObject
+			});
+
+			PopupEditObjectComponent.init({
+				onClick: _logic.callbackObjectEditorMenu
+			});
+		};
+
+		// our internal business logic
+		var _logic = _this._logic = {
+
+			/**
+    * @function applicationLoad
+    *
+    * Initialize the Object List from the provided ABApplication
+    *
+    * If no ABApplication is provided, then show an empty form. (create operation)
+    *
+    * @param {ABApplication} application  	[optional] The current ABApplication
+    *										we are working with.
+    */
+			applicationLoad: function applicationLoad(application) {
+				_logic.listBusy();
+
+				CurrentApplication = application;
+
+				// get a DataCollection of all our objects
+				objectList = new webix.DataCollection({
+					data: application.objects()
+				});
+
+				// clear our list and display our objects:
+				var List = $$(ids.list);
+				List.clearAll();
+				List.data.unsync();
+				List.data.sync(objectList);
+				List.refresh();
+				List.unselectAll();
+
+				//
+				_logic.listReady();
+
+				// prepare our Popup with the current Application
+				PopupNewObjectComponent.applicationLoad(application);
+			},
+
+			clickEditMenu: function clickEditMenu(e, id, trg) {
+				// Show menu
+				PopupEditObjectComponent.show(trg);
+
+				return false;
+			},
+
+			listBusy: function listBusy() {
+				$$(ids.list).showProgress({ type: "icon" });
+			},
+
+			listReady: function listReady() {
+				$$(ids.list).hideProgress();
+			},
+
+			onAfterRender: function onAfterRender() {
+				console.error('!! todo: onAfterRender() editing');
+				// webix.once(function () {
+				// 	$$(self.webixUiId.objectList).data.each(function (d) {
+				// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
+				// 	});
+				// });
+
+				// // Show gear icon
+				// if (this.getSelectedId(true).length > 0) {
+				// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
+				// 	self.refreshUnsyncNumber();
+				// }
+			},
+
+			onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+
+				_logic.showGear(editor.id);
+
+				if (state.value != state.old) {
+					_logic.listBusy();
+
+					var selectedObject = $$(ids.list).getSelectedItem(false);
+					selectedObject.label = state.value;
+
+					// Call server to rename
+					selectedObject.save().catch(function () {
+						_logic.listReady();
+
+						OP.Dialog.Alert({
+							text: labels.common.renameErrorMessage.replace("{0}", state.old)
+						});
+					}).then(function () {
+						_logic.listReady();
+
+						// TODO : should use message box
+						OP.Dialog.Alert({
+							text: labels.common.renameSuccessMessage.replace("{0}", state.value)
+						});
+					});
+				}
+			},
+
+			onBeforeEditStop: function onBeforeEditStop(state, editor) {
+				console.error('!! todo: onBeforeEditStop() editing');
+				// if (!inputValidator.validateFormat(state.value)) {
+				// 	return false;
+				// }
+
+				// // Validation - check duplicate
+				// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
+				// 	webix.alert({
+				// 		title: self.labels.object.invalidName,
+				// 		ok: self.labels.common.ok,
+				// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
+				// 	});
+
+				// 	return false;
+				// }
+			},
+
+			/**
+    * @function selectObject()
+    *
+    * Perform these actions when an Object is selected in the List.
+    */
+			selectObject: function selectObject(id) {
+
+				var object = $$(ids.list).getItem(id);
+				App.actions.populateObjectWorkspace(object);
+
+				//// TODO: do we need these?
+
+				// // Refresh unsync number
+				// self.refreshUnsyncNumber();
+
+				_logic.showGear(id);
+			},
+
+			showGear: function showGear(id) {
+				var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-object-list-edit');
+				gearIcon.style.visibility = "visible";
+				gearIcon.style.display = "block";
+			},
+
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
+
+				$$(ids.component).show();
+			},
+
+			/**
+    * @function templateListItem
+    *
+    * Defines the template for each row of our ObjectList.
+    *
+    * @param {obj} obj the current instance of ABObject for the row.
+    * @param {?} common the webix.common icon data structure
+    * @return {string}
+    */
+			templateListItem: function templateListItem(obj, common) {
+				return _templateListItem.replace('#label#', obj.label || '??label??').replace('{common.iconGear}', common.iconGear);
+			},
+
+			/**
+    * @function callbackNewObject
+    *
+    * Once a New Object was created in the Popup, follow up with it here.
+    */
+			callbackNewObject: function callbackNewObject(err, object) {
+
+				if (err) {
+					OP.Error.log('Error creating New Object', { error: err });
+					return;
+				}
+
+				$$(ids.list).add(object);
+				$$(ids.list).select(object.id);
+			},
+
+			/**
+    * @function clickNewObject
+    *
+    * Manages initiating the transition to the new Object Popup window
+    */
+			clickNewObject: function clickNewObject() {
+
+				// show the new popup
+				PopupNewObjectComponent.show();
+			},
+
+			rename: function rename() {
+				var objectId = $$(ids.list).getSelectedId(false);
+				$$(ids.list).edit(objectId);
+			},
+
+			remove: function remove() {
+
+				var selectedObject = $$(ids.list).getSelectedItem(false);
+
+				// verify they mean to do this:
+				OP.Dialog.Confirm({
+					title: labels.component.confirmDeleteTitle,
+					message: labels.component.confirmDeleteMessage.replace('{0}', selectedObject.label),
+					callback: function callback(isOK) {
+
+						if (isOK) {
+							_logic.listBusy();
+
+							selectedObject.destroy().then(function () {
+								_logic.listReady();
+
+								$$(ids.list).remove(selectedObject.id);
+								App.actions.clearObjectWorkspace();
+							});
+						}
+					}
+				});
+			},
+
+			callbackObjectEditorMenu: function callbackObjectEditorMenu(action) {
+				switch (action) {
+					case 'rename':
+						_logic.rename();
+						break;
+					case 'delete':
+						_logic.remove();
+						break;
+				}
+			}
+		};
+
+		/*
+   * _templateListItem
+   *
+   * The Object Row template definition.
+   */
+		var _templateListItem = ["<div class='ab-object-list-item'>", "#label#",
+		// "{common.unsyncNumber}",
+		"{common.iconGear}", "</div>"].join('');
+
+		// Expose any globally accessible Actions:
+		_this.actions({
+
+			/**
+    * @function getSelectedObject
+    *
+    * returns which ABObject is currently selected.
+    * @return {ABObject}  or {null} if nothing selected.
+    */
+			getSelectedObject: function getSelectedObject() {
+				return $$(ids.list).getSelectedItem();
+			}
+
+		});
+
+		// 
+		// Define our external interface methods:
+		// 
+		_this.applicationLoad = _logic.applicationLoad;
+
+		return _this;
+	}
+
+	return AB_Work_Object_List;
+}(OP.Component);
+
+exports.default = AB_Work_Object_List;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 42 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _ab_work_object_list_newObject_blank = __webpack_require__(43);
+
+var _ab_work_object_list_newObject_blank2 = _interopRequireDefault(_ab_work_object_list_newObject_blank);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * ab_work_object_list_newObject
  *
@@ -8341,168 +10738,180 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+var AB_Work_Object_List_NewObject = function (_OP$Component) {
+	_inherits(AB_Work_Object_List_NewObject, _OP$Component);
 
-	component: {
+	//.extend(idBase, function(App) {
 
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-		addNew: L('ab.object.addNew', '*Add new object')
+	function AB_Work_Object_List_NewObject(App) {
+		_classCallCheck(this, AB_Work_Object_List_NewObject);
 
-	}
-};
+		var _this = _possibleConstructorReturn(this, (AB_Work_Object_List_NewObject.__proto__ || Object.getPrototypeOf(AB_Work_Object_List_NewObject)).call(this, App, 'ab_work_object_list_newObject'));
 
-var idBase = 'ab_work_object_list_newObject';
-OP.Component.extend(idBase, function (App) {
+		var L = _this.Label;
 
-	labels.common = App.labels;
-
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique(idBase + '_component')
-	};
-
-	var BlankTab = OP.Component['ab_work_object_list_newObject_blank'](App);
-
-	// Our webix UI definition:
-	var _ui = {
-		view: "window",
-		id: ids.component,
-		// width: 400,
-		position: "center",
-		modal: true,
-		head: labels.component.addNew,
-		selectNewObject: true,
-		body: {
-			view: "tabview",
-			cells: [BlankTab.ui]
-		}
-	};
-
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
-		webix.ui(_ui);
-
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
-
-		var ourCBs = {
-			onCancel: _logic.hide,
-			onSave: _logic.save
+		var labels = {
+			common: App.labels,
+			component: {
+				addNew: L('ab.object.addNew', '*Add new object')
+			}
 		};
 
-		BlankTab.init(ourCBs);
-	};
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: _this.unique('component')
+		};
 
-	// our internal business logic
-	var _logic = {
+		var BlankTab = new _ab_work_object_list_newObject_blank2.default(App);
 
-		/**
-   * @function applicationLoad()
-   *
-   * prepare ourself with the current application
-   */
-		applicationLoad: function applicationLoad(application) {
-			// _logic.show();
-			currentApplication = application; // remember our current Application.
-		},
+		// Our webix UI definition:
+		_this.ui = {
+			view: "window",
+			id: ids.component,
+			// width: 400,
+			position: "center",
+			modal: true,
+			head: labels.component.addNew,
+			selectNewObject: true,
+			body: {
+				view: "tabview",
+				cells: [BlankTab.ui]
+			}
+		};
 
-		callbacks: {
-			onDone: function onDone() {}
-		},
+		// Our init() function for setting up our UI
+		_this.init = function (options) {
+			webix.ui(_this.ui);
 
-		/**
-   * @function hide()
-   *
-   * remove the busy indicator from the form.
-   */
-		hide: function hide() {
-			if ($$(ids.component)) $$(ids.component).hide();
-		},
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
 
-		/**
-   * @function save
-   *
-   * take the data gathered by our child creation tabs, and
-   * add it to our current application.
-   *
-   * @param {obj} values  key=>value hash of model values.
-   * @param {fn}  cb 		node style callback to indicate success/failure
-   */
-		save: function save(values, cb) {
+			var ourCBs = {
+				onCancel: _logic.hide,
+				onSave: _logic.save
+			};
 
-			// must have an application set.
-			if (!currentApplication) {
-				OP.Dialog.Alert({
-					title: 'Shoot!',
-					test: 'No Application Set!  Why?'
+			BlankTab.init(ourCBs);
+		};
+
+		// our internal business logic
+		var _logic = _this._logic = {
+
+			/**
+    * @function applicationLoad()
+    *
+    * prepare ourself with the current application
+    */
+			applicationLoad: function applicationLoad(application) {
+				// _logic.show();
+				currentApplication = application; // remember our current Application.
+			},
+
+			callbacks: {
+				onDone: function onDone() {}
+			},
+
+			/**
+    * @function hide()
+    *
+    * remove the busy indicator from the form.
+    */
+			hide: function hide() {
+				if ($$(ids.component)) $$(ids.component).hide();
+			},
+
+			/**
+    * @function save
+    *
+    * take the data gathered by our child creation tabs, and
+    * add it to our current application.
+    *
+    * @param {obj} values  key=>value hash of model values.
+    * @param {fn}  cb 		node style callback to indicate success/failure
+    */
+			save: function save(values, cb) {
+
+				// must have an application set.
+				if (!currentApplication) {
+					OP.Dialog.Alert({
+						title: 'Shoot!',
+						test: 'No Application Set!  Why?'
+					});
+					cb(true); // there was an error.
+					return false;
+				}
+
+				// create a new (unsaved) instance of our object:
+				var newObject = currentApplication.objectNew(values);
+
+				// have newObject validate it's values.
+				var validator = newObject.isValid();
+				if (validator.fail()) {
+					cb(validator); // tell current Tab component the errors
+					return false; // stop here.
+				}
+
+				// if we get here, save the new Object
+				newObject.save().then(function (obj) {
+
+					// successfully done:
+					cb(); // tell current tab component save successful
+					_logic.hide(); // hide our popup
+					_logic.callbacks.onDone(null, obj); // tell parent component we're done
+				}).catch(function (err) {
+					cb(err); // tell current Tab component there was an error
 				});
-				cb(true); // there was an error.
-				return false;
+			},
+
+			/**
+    * @function show()
+    *
+    * Show this component.
+    */
+			show: function show() {
+
+				if ($$(ids.component)) $$(ids.component).show();
 			}
+		};
 
-			// create a new (unsaved) instance of our object:
-			var newObject = currentApplication.objectNew(values);
+		var currentApplication = null;
 
-			// have newObject validate it's values.
-			var validator = newObject.isValid();
-			if (validator.fail()) {
-				cb(validator); // tell current Tab component the errors
-				return false; // stop here.
-			}
+		// Expose any globally accessible Actions:
+		_this.actions({});
 
-			// if we get here, save the new Object
-			newObject.save().then(function (obj) {
+		// 
+		// Define our external interface methods:
+		// 
+		_this.applicationLoad = _logic.applicationLoad;
+		_this.show = _logic.show;
 
-				// successfully done:
-				cb(); // tell current tab component save successful
-				_logic.hide(); // hide our popup
-				_logic.callbacks.onDone(null, obj); // tell parent component we're done
-			}).catch(function (err) {
-				cb(err); // tell current Tab component there was an error
-			});
-		},
+		return _this;
+	}
 
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
+	return AB_Work_Object_List_NewObject;
+}(OP.Component);
 
-			if ($$(ids.component)) $$(ids.component).show();
-		}
-	};
-
-	var currentApplication = null;
-	// var currentCallBack = null;
-
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-		// interface methods for parent component:
-		applicationLoad: _logic.applicationLoad,
-		show: _logic.show,
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+exports.default = AB_Work_Object_List_NewObject;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 32 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /*
  * ab_work_object_list_newObject_blank
@@ -8511,350 +10920,253 @@ OP.Component.extend(idBase, function (App) {
  *
  */
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+var AB_Work_Object_List_NewObject_Blank = function (_OP$Component) {
+    _inherits(AB_Work_Object_List_NewObject_Blank, _OP$Component);
 
-var labels = {
+    //.extend(idBase, function(App) {
 
-	component: {
-		placeholderName: L('ab.object.form.placeholderName', "*Object name"),
-		addNewObject: L('ab.object.form.addNewObject', "*Add Object")
-	}
-};
+    function AB_Work_Object_List_NewObject_Blank(App) {
+        _classCallCheck(this, AB_Work_Object_List_NewObject_Blank);
 
-var idBase = 'ab_work_object_list_newObject_blank';
-OP.Component.extend(idBase, function (App) {
+        var _this = _possibleConstructorReturn(this, (AB_Work_Object_List_NewObject_Blank.__proto__ || Object.getPrototypeOf(AB_Work_Object_List_NewObject_Blank)).call(this, App, 'ab_work_object_list_newObject_blank'));
 
-	labels.common = App.labels;
+        var L = _this.Label;
 
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique(idBase + '_component'),
+        var labels = {
+            common: App.labels,
+            component: {
+                placeholderName: L('ab.object.form.placeholderName', "*Object name"),
+                addNewObject: L('ab.object.form.addNewObject', "*Add Object")
+            }
+        };
 
-		form: App.unique(idBase + '_blank'),
-		buttonSave: App.unique(idBase + '_save'),
-		buttonCancel: App.unique(idBase + '_cancel')
-	};
+        // internal list of Webix IDs to reference our UI components.
+        var ids = {
+            component: _this.unique('component'),
 
-	// Our webix UI definition:
-	var _ui = {
-		id: ids.component,
-		header: labels.common.create,
-		body: {
-			view: "form",
-			id: ids.form,
-			width: 400,
-			rules: {
+            form: _this.unique('blank'),
+            buttonSave: _this.unique('save'),
+            buttonCancel: _this.unique('cancel')
+        };
 
-				// TODO:
-				// name: inputValidator.rules.validateObjectName
-			},
-			elements: [{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.component.placeholderName, labelWidth: 70 }, {
-				margin: 5,
-				cols: [{ fillspace: true }, {
-					view: "button",
-					id: ids.buttonCancel,
-					value: labels.common.cancel,
-					css: "ab-cancel-button",
-					autowidth: true,
-					click: function click() {
-						_logic.cancel();
-					}
-				}, {
-					view: "button",
-					id: ids.buttonSave,
-					value: labels.component.addNewObject,
-					autowidth: true,
-					type: "form",
-					click: function click() {
-						return _logic.save();
-					}
-				}]
-			}]
-		}
-	};
+        // Our webix UI definition:
+        _this.ui = {
+            id: ids.component,
+            header: labels.common.create,
+            body: {
+                view: "form",
+                id: ids.form,
+                width: 400,
+                rules: {
 
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
-		// webix.extend($$(ids.form), webix.ProgressBar);
+                    // TODO:
+                    // name: inputValidator.rules.validateObjectName
+                },
+                elements: [{ view: "text", label: labels.common.formName, name: "name", required: true, placeholder: labels.component.placeholderName, labelWidth: 70 }, {
+                    margin: 5,
+                    cols: [{ fillspace: true }, {
+                        view: "button",
+                        id: ids.buttonCancel,
+                        value: labels.common.cancel,
+                        css: "ab-cancel-button",
+                        autowidth: true,
+                        click: function click() {
+                            _logic.cancel();
+                        }
+                    }, {
+                        view: "button",
+                        id: ids.buttonSave,
+                        value: labels.component.addNewObject,
+                        autowidth: true,
+                        type: "form",
+                        click: function click() {
+                            return _logic.save();
+                        }
+                    }]
+                }]
+            }
+        };
 
-		// load up our callbacks.
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
-	};
+        // Our init() function for setting up our UI
+        _this.init = function (options) {
+            // webix.extend($$(ids.form), webix.ProgressBar);
 
-	// our internal business logic 
-	var _logic = {
+            // load up our callbacks.
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
+        };
 
-		callbacks: {
-			onCancel: function onCancel() {
-				console.warn('NO onCancel()!');
-			},
-			onSave: function onSave(values, cb) {
-				console.warn('NO onSave()!');
-			}
-		},
+        // our internal business logic 
+        var _logic = _this._logic = {
 
-		cancel: function cancel() {
+            callbacks: {
+                onCancel: function onCancel() {
+                    console.warn('NO onCancel()!');
+                },
+                onSave: function onSave(values, cb) {
+                    console.warn('NO onSave()!');
+                }
+            },
 
-			_logic.formClear();
-			_logic.callbacks.onCancel();
-		},
+            cancel: function cancel() {
 
-		formClear: function formClear() {
-			$$(ids.form).clearValidation();
-			$$(ids.form).clear();
-		},
+                _logic.formClear();
+                _logic.callbacks.onCancel();
+            },
 
-		/**
-   * @function hide()
-   *
-   * hide this component.
-   */
-		hide: function hide() {
+            formClear: function formClear() {
+                $$(ids.form).clearValidation();
+                $$(ids.form).clear();
+            },
 
-			$$(ids.component).hide();
-		},
+            /**
+             * @function hide()
+             *
+             * hide this component.
+             */
+            hide: function hide() {
 
-		/**
-   * @function save
-   *
-   * verify the current info is ok, package it, and return it to be 
-   * added to the application.createModel() method.
-   */
-		save: function save() {
-			var saveButton = $$(ids.buttonSave);
-			saveButton.disable();
+                $$(ids.component).hide();
+            },
 
-			var Form = $$(ids.form);
+            /**
+             * @function save
+             *
+             * verify the current info is ok, package it, and return it to be 
+             * added to the application.createModel() method.
+             */
+            save: function save() {
+                var saveButton = $$(ids.buttonSave);
+                saveButton.disable();
 
-			Form.clearValidation();
+                var Form = $$(ids.form);
 
-			// if it doesn't pass the basic form validation, return:
-			if (!Form.validate()) {
-				saveButton.enable();
-				return false;
-			}
+                Form.clearValidation();
 
-			var values = Form.getValues();
+                // if it doesn't pass the basic form validation, return:
+                if (!Form.validate()) {
+                    saveButton.enable();
+                    return false;
+                }
 
-			// now send data back to be added:
-			_logic.callbacks.onSave(values, function (validator) {
+                var values = Form.getValues();
 
-				if (validator) {
-					validator.updateForm(Form);
+                // now send data back to be added:
+                _logic.callbacks.onSave(values, function (validator) {
 
-					// get notified if there was an error saving.
-					saveButton.enable();
-					return false;
-				}
+                    if (validator) {
+                        validator.updateForm(Form);
 
-				// if there was no error, clear the form for the next
-				// entry:
-				_logic.formClear();
-				saveButton.enable();
-			});
-		},
+                        // get notified if there was an error saving.
+                        saveButton.enable();
+                        return false;
+                    }
 
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
+                    // if there was no error, clear the form for the next
+                    // entry:
+                    _logic.formClear();
+                    saveButton.enable();
+                });
+            },
 
-			$$(ids.component).show();
-		}
-	};
+            /**
+             * @function show()
+             *
+             * Show this component.
+             */
+            show: function show() {
 
-	// Expose any globally accessible Actions:
-	var _actions = {}
+                if ($$(ids.component)) $$(ids.component).show();
+            }
+        };
 
-	/**
-  * @function populateApplicationForm()
-  *
-  * Initialze the Form with the values from the provided ABApplication.
-  *
-  * If no ABApplication is provided, then show an empty form. (create operation)
-  *
-  * @param {ABApplication} Application  	[optional] The current ABApplication 
-  *										we are working with.
-  */
-	// populateApplicationForm:function(Application){
+        // Expose any globally accessible Actions:
+        _this.actions({
 
-	// 	_logic.formReset();
-	// 	if (Application) {
-	// 		// populate Form here:
-	// 		_logic.formPopulate(Application);
-	// 	}
-	// 	_logic.permissionPopulate(Application);
-	// 	_logic.show();
-	// }
+            /**
+             * @function populateApplicationForm()
+             *
+             * Initialze the Form with the values from the provided ABApplication.
+             *
+             * If no ABApplication is provided, then show an empty form. (create operation)
+             *
+             * @param {ABApplication} Application   [optional] The current ABApplication 
+             *                                      we are working with.
+             */
+            // populateApplicationForm:function(Application){
 
-	// return the current instance of this component:
-	;return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component  
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+            //  _logic.formReset();
+            //  if (Application) {
+            //      // populate Form here:
+            //      _logic.formPopulate(Application);
+            //  }
+            //  _logic.permissionPopulate(Application);
+            //  _logic.show();
+            // }
 
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+        });
+
+        // 
+        // Define our external interface methods:
+        // 
+
+
+        return _this;
+    }
+
+    return AB_Work_Object_List_NewObject_Blank;
+}(OP.Component);
+
+exports.default = AB_Work_Object_List_NewObject_Blank;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 33 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-/*
- * Edit object popup 
- *
- * .
- *
- */
-
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var labels = {
-
-	component: {
-		menu: L('ab.application.menu', "*Application Menu"),
-		confirmDeleteTitle: L('ab.application.delete.title', "*Delete application"),
-		confirmDeleteMessage: L('ab.application.delete.message', "*Do you want to delete <b>{0}</b>?")
-	}
-};
-
-var idBase = 'ab_work_object_list_popupEditMenu';
-OP.Component.extend(idBase, function (App) {
-
-	labels.common = App.labels;
-
-	var ids = {
-		menu: App.unique(idBase + '_menu')
-	};
-
-	var _ui = {
-		view: "popup",
-		id: ids.menu,
-		head: labels.component.menu,
-		width: 120,
-		body: {
-			view: "list",
-			borderless: true,
-			data: [{ command: labels.common.rename, icon: "fa-pencil-square-o" }, { command: labels.common.delete, icon: "fa-trash" }],
-			datatype: "json",
-			template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
-			autoheight: true,
-			select: false,
-			on: {
-				'onItemClick': function onItemClick(timestamp, e, trg) {
-					return _logic.onItemClick(trg);
-				}
-			}
-		}
-	};
-
-	var _data = {};
-
-	var _init = function _init(options) {
-		webix.ui(_ui);
-
-		_logic.hide();
-
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			if (options && options[c]) {
-				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-			}
-		}
-	};
-
-	var _logic = {
-
-		callbacks: {
-			onClick: function onClick(action) {}
-		},
-
-		/**
-   * @function onItemClick
-   * process which item in our popup was selected.
-   */
-		onItemClick: function onItemClick(itemNode) {
-
-			// hide our popup before we trigger any other possible UI animation: (like .edit)
-			// NOTE: if the UI is animating another component, and we do .hide()
-			// while it is in progress, the UI will glitch and give the user whiplash.
-
-			switch (itemNode.textContent.trim()) {
-				case labels.common.rename:
-					this.callbacks.onClick('rename');
-					break;
-				case labels.common['delete']:
-					this.callbacks.onClick('delete');
-					break;
-			}
-
-			this.hide();
-
-			return false;
-		},
-
-		show: function show(itemNode) {
-			if ($$(ids.menu) && itemNode) $$(ids.menu).show(itemNode);
-		},
-
-		hide: function hide() {
-			if ($$(ids.menu)) $$(ids.menu).hide();
-		}
-
-	};
-
-	return {
-		ui: _ui,
-		init: _init,
-
-		show: _logic.show,
-
-		_logic: _logic // exposed for Unit Testing
-	};
+Object.defineProperty(exports, "__esModule", {
+    value: true
 });
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(OP) {
-
-var _ABApplication = __webpack_require__(1);
+var _ABApplication = __webpack_require__(4);
 
 var _ABApplication2 = _interopRequireDefault(_ABApplication);
 
-__webpack_require__(35);
+var _ab_work_object_workspace_datatable = __webpack_require__(45);
 
-__webpack_require__(36);
+var _ab_work_object_workspace_datatable2 = _interopRequireDefault(_ab_work_object_workspace_datatable);
 
-__webpack_require__(37);
+var _ab_work_object_workspace_popupDefineLabel = __webpack_require__(46);
 
-__webpack_require__(39);
+var _ab_work_object_workspace_popupDefineLabel2 = _interopRequireDefault(_ab_work_object_workspace_popupDefineLabel);
 
-__webpack_require__(40);
+var _ab_work_object_workspace_popupFrozenColumns = __webpack_require__(47);
 
-__webpack_require__(41);
+var _ab_work_object_workspace_popupFrozenColumns2 = _interopRequireDefault(_ab_work_object_workspace_popupFrozenColumns);
+
+var _ab_work_object_workspace_popupHideFields = __webpack_require__(49);
+
+var _ab_work_object_workspace_popupHideFields2 = _interopRequireDefault(_ab_work_object_workspace_popupHideFields);
+
+var _ab_work_object_workspace_popupNewDataField = __webpack_require__(50);
+
+var _ab_work_object_workspace_popupNewDataField2 = _interopRequireDefault(_ab_work_object_workspace_popupNewDataField);
+
+var _ab_work_object_workspace_popupSortFields = __webpack_require__(51);
+
+var _ab_work_object_workspace_popupSortFields2 = _interopRequireDefault(_ab_work_object_workspace_popupSortFields);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * ab_work_object_workspace
  *
@@ -8862,510 +11174,517 @@ function L(key, altText) {
  *
  */
 
-var labels = {
-
-	component: {
-
-		addNewRow: L('ab.object.addNewRow', "*Add new row"),
-
-		selectObject: L('ab.object.selectObject', "*Select an object to work with."),
-
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-
-		// Toolbar:
-		hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
-		filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
-		sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
-		frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen columns"),
-		defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
-		permission: L('ab.object.toolbar.permission', "*Permission"),
-		addFields: L('ab.object.toolbar.addFields', "*Add new column"),
-		"export": L('ab.object.toolbar.export', "*Export"),
-
-		confirmDeleteTitle: L('ab.object.delete.title', "*Delete data field"),
-		confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
-	}
-};
-
-var idBase = 'ab_work_object_workspace';
-OP.Component.extend(idBase, function (App) {
-
-	labels.common = App.labels;
-
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique(idBase + '_component'),
-
-		buttonAddField: App.unique(idBase + '_buttonAddField'),
-		buttonExport: App.unique(idBase + '_buttonExport'),
-		buttonFieldsVisible: App.unique(idBase + '_buttonFieldsVisible'),
-		buttonFilter: App.unique(idBase + '_buttonFilter'),
-		buttonFrozen: App.unique(idBase + '_buttonFrozen'),
-		buttonLabel: App.unique(idBase + '_buttonLabel'),
-		buttonRowNew: App.unique(idBase + '_buttonRowNew'),
-		buttonSort: App.unique(idBase + '_buttonSort'),
-
-		datatable: App.unique(idBase + '_datatable'),
-
-		// Toolbar:
-		toolbar: App.unique(idBase + '_toolbar'),
-
-		noSelection: App.unique(idBase + '_noSelection'),
-		selectedObject: App.unique(idBase + '_selectedObject')
-
-	};
-
-	// The DataTable that displays our object:
-	var DataTable = OP.Component['ab_work_object_workspace_datatable'](App);
-
-	// Various Popups on our page:
-	var PopupDefineLabelComponent = OP.Component['ab_work_object_workspace_popupDefineLabel'](App);
-	var PopupDefineLabel = webix.ui(PopupDefineLabelComponent.ui);
-
-	var PopupFrozenColumnsComponent = OP.Component['ab_work_object_workspace_popupFrozenColumns'](App);
-	var PopupFrozenColumns = webix.ui(PopupFrozenColumnsComponent.ui);
-
-	var PopupHideFieldComponent = OP.Component['ab_work_object_workspace_popupHideFields'](App);
-	var PopupHideField = webix.ui(PopupHideFieldComponent.ui);
-
-	var PopupNewDataFieldComponent = OP.Component['ab_work_object_workspace_popupNewDataField'](App);
-	// var PopupNewDataField = webix.ui(PopupNewDataFieldComponent.ui);
-	webix.ui(PopupNewDataFieldComponent.ui);
-
-	var PopupSortFieldComponent = OP.Component['ab_work_object_workspace_popupSortFields'](App);
-	var PopupSortField = webix.ui(PopupSortFieldComponent.ui);
-
-	// Our webix UI definition:
-	var _ui = {
-		view: 'multiview',
-		id: ids.component,
-		rows: [{
-			id: ids.noSelection,
-			rows: [{
-				maxHeight: App.config.xxxLargeSpacer,
-				hidden: App.config.hideMobile
-			}, {
-				view: 'label',
-				align: "center",
-				label: labels.component.selectObject
-			}, {
-				maxHeight: App.config.xxxLargeSpacer,
-				hidden: App.config.hideMobile
-			}]
-		}, {
-			id: ids.selectedObject,
-			rows: [{
-				view: 'toolbar',
-				id: ids.toolbar,
-				hidden: true,
-				css: "ab-data-toolbar",
-				cols: [{
-					view: "button",
-					id: ids.buttonFieldsVisible,
-					label: labels.component.hideFields,
-					// popup: 'self.webixUiId.visibleFieldsPopup',
-					icon: "eye-slash",
-					type: "icon",
-					// width: 120,
-					autowidth: true,
-					badge: 0,
-					click: function click() {
-						_logic.toolbarFieldsVisible(this.$view);
-					}
-				}, {
-					view: 'button',
-					id: ids.buttonFilter,
-					label: labels.component.filterFields,
-					icon: "filter",
-					type: "icon",
-					// width: 120,
-					autowidth: true,
-					badge: 0,
-					click: function click() {
-						_logic.toolbarFilter(this);
-					}
-				}, {
-					view: 'button',
-					id: ids.buttonSort,
-					label: labels.component.sortFields,
-					icon: "sort",
-					type: "icon",
-					// width: 120,
-					autowidth: true,
-					badge: 0,
-					click: function click() {
-						_logic.toolbarSort(this.$view);
-					}
-				}, {
-					view: 'button',
-					id: ids.buttonFrozen,
-					label: labels.component.frozenColumns,
-					icon: "thumb-tack",
-					type: "icon",
-					autowidth: true,
-					badge: 0,
-					click: function click() {
-						_logic.toolbarFrozen(this.$view);
-					}
-				}, {
-					view: 'button',
-					id: ids.buttonLabel,
-					label: labels.component.defineLabel,
-					icon: "crosshairs",
-					type: "icon",
-					// width: 130,
-					autowidth: true,
-					click: function click() {
-						_logic.toolbarDefineLabel(this.$view);
-					}
-				}, {
-					view: 'button',
-					label: labels.component.permission,
-					icon: "lock",
-					type: "icon",
-					autowidth: true,
-					click: function click() {
-						_logic.toolbarPermission(this.$view);
-					}
-
-				}, {
-					view: 'button',
-					id: ids.buttonAddField,
-					label: labels.component.addFields,
-					icon: "plus",
-					type: "icon",
-					// width: 150,
-					autowidth: true,
-					click: function click() {
-						_logic.toolbarAddFields(this.$view);
-					}
-				}, {
-					view: 'button',
-					id: ids.buttonExport,
-					label: labels.component.export,
-					icon: "download",
-					type: "icon",
-					autowidth: true,
-					click: function click() {
-						_logic.toolbarButtonExport(this.$view);
-					}
-				}]
-			}, DataTable.ui, {
-				cols: [{
-					view: "button",
-					id: ids.buttonRowNew,
-					value: labels.component.addNewRow,
-					click: function click() {
-						// TODO:
-						_logic.rowAdd();
-						// self.addNewRow({});
-					}
-				}]
-			}]
-
-		}]
-	};
-
-	// Our init() function for setting up our UI
-	var _init = function _init() {
-		// webix.extend($$(ids.form), webix.ProgressBar);
-
-		DataTable.init({
-			onEditorMenu: _logic.callbackHeaderEditorMenu
-		});
-
-		PopupDefineLabelComponent.init({
-			onChange: _logic.callbackDefineLabel // be notified when there is a change in the label
-		});
-
-		PopupFrozenColumnsComponent.init({
-			onChange: _logic.callbackFrozenColumns // be notified when there is a change in the frozen columns
-		});
-
-		PopupHideFieldComponent.init({
-			onChange: _logic.callbackFieldsVisible // be notified when there is a change in the hidden fields
-		});
-
-		PopupNewDataFieldComponent.init({
-			onSave: _logic.callbackAddFields // be notified when a new Field is created & saved
-		});
-
-		var fieldList = DataTable.getFieldList();
-
-		PopupSortFieldComponent.init({
-			onChange: _logic.callbackSortFields // be notified when there is a change in the sort fields
-		});
-
-		$$(ids.noSelection).show();
-	};
-
-	var CurrentObject = null;
-
-	// our internal business logic
-	var _logic = {
-
-		/**
-   * @function callbackDefineLabel
-   *
-   * call back for when the Define Label popup is finished.
-   */
-		callbackAddFields: function callbackAddFields(field) {
-			DataTable.refresh();
-		},
-
-		/**
-   * @function callbackDefineLabel
-   *
-   * call back for when the Define Label popup is finished.
-   */
-		callbackDefineLabel: function callbackDefineLabel() {},
-
-		/**
-   * @function callbackFrozenColumns
-   *
-   * call back for when the hidden fields have changed.
-   */
-		callbackFrozenColumns: function callbackFrozenColumns() {
-
-			var frozenID = CurrentObject.workspaceFrozenColumnID;
-
-			if (typeof frozenID != "undefined") {
-				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
-
-				$$(ids.buttonFrozen).define('badge', badgeNumber);
-				$$(ids.buttonFrozen).refresh();
-			}
-
-			DataTable.refresh();
-		},
-
-		/**
-   * @function callbackFieldsVisible
-   *
-   * call back for when the hidden fields have changed.
-   */
-		callbackFieldsVisible: function callbackFieldsVisible() {
-
-			var hiddenFields = CurrentObject.workspaceHiddenFields;
-
-			if (typeof hiddenFields != "undefined") {
-				$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
-				$$(ids.buttonFieldsVisible).refresh();
-			}
-			DataTable.refresh();
-
-			// if you unhide a field it may fall inside the frozen columns range so lets check
-			_logic.callbackFrozenColumns();
-		},
-
-		/**
-   * @function callbackHeaderEditorMenu
-   *
-   * call back for when an editor menu action has been selected.
-   * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
-   */
-		callbackHeaderEditorMenu: function callbackHeaderEditorMenu(action, field, node) {
-
-			switch (action) {
-
-				case 'hide':
-				case 'filter':
-				case 'sort':
-					console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:' + action);
-					break;
-
-				case 'edit':
-					// pass control on to our Popup:
-					PopupNewDataFieldComponent.show(node, field);
-					break;
-
-				case 'delete':
-
-					// verify they mean to do this:
-					OP.Dialog.Confirm({
-						title: labels.component.confirmDeleteTitle,
-						message: labels.component.confirmDeleteMessage.replace('{0}', field.label),
-						callback: function callback(isOK) {
-
-							if (isOK) {
-
-								field.destroy().then(function () {
-									DataTable.refresh();
-								});
-							}
-						}
-					});
-					break;
-			}
-		},
-
-		/**
-   * @function callbackSortFields
-   *
-   * call back for when the sort fields popup changes
-   */
-		callbackSortFields: function callbackSortFields() {
-
-			var sortFields = CurrentObject.workspaceSortFields;
-
-			if (typeof sortFields != "undefined") {
-				$$(ids.buttonSort).define('badge', sortFields.length);
-				$$(ids.buttonSort).refresh();
-			}
-
-			DataTable.sortTable();
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
-
-			$$(ids.component).show();
-		},
-
-		/**
-   * @function toolbarAddFields
-   *
-   * Show the popup to allow the user to create new fields for
-   * this object.
-   */
-		toolbarAddFields: function toolbarAddFields($view) {
-			PopupNewDataFieldComponent.show($view);
-		},
-
-		toolbarButtonExport: function toolbarButtonExport($view) {
-			console.error('TODO: Button Export()');
-		},
-
-		/**
-   * @function toolbarDefineLabel
-   *
-   * Show the popup to allow the user to define the default label for
-   * this object.
-   */
-		toolbarDefineLabel: function toolbarDefineLabel($view) {
-			PopupDefineLabel.show($view);
-		},
-
-		/**
-   * @function toolbarFieldsVisible
-   *
-   * Show the popup to allow the user to hide columns for this view.
-   */
-		toolbarFieldsVisible: function toolbarFieldsVisible($view) {
-			PopupHideField.show($view);
-		},
-
-		/**
-   * @function toolbarFilter
-   *
-   * show the popup to add a filter to the datatable
-   */
-		toolbarFilter: function toolbarFilter($view) {
-			// self.refreshPopupData();
-			// $$(self.webixUiId.filterFieldsPopup).show($view);
-			console.error('TODO: button filterFields()');
-		},
-
-		/**
-   * @function toolbarFrozen
-   *
-   * show the popup to freeze columns for the datatable
-   */
-		toolbarFrozen: function toolbarFrozen($view) {
-			PopupFrozenColumns.show($view);
-		},
-
-		toolbarPermission: function toolbarPermission($view) {
-			console.error('TODO: toolbarPermission()');
-		},
-
-		/**
-   * @function toolbarSort
-   *
-   * show the popup to sort the datatable
-   */
-		toolbarSort: function toolbarSort($view) {
-			PopupSortField.show($view);
-			// self.refreshPopupData();
-			// $$(self.webixUiId.sortFieldsPopup).show($view);
-			//console.error('TODO: toolbarSort()');
-		}
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {
-
-		/**
-   * @function clearObjectWorkspace()
-   *
-   * Clear the object workspace.
-   */
-		clearObjectWorkspace: function clearObjectWorkspace() {
-
-			// NOTE: to clear a visual glitch when multiple views are updating
-			// at one time ... stop the animation on this one:
-			$$(ids.noSelection).show(false, false);
-		},
-
-		/**
-   * @function populateObjectWorkspace()
-   *
-   * Initialize the Object Workspace with the provided ABObject.
-   *
-   * @param {ABObject} object  	current ABObject instance we are working with.
-   */
-		populateObjectWorkspace: function populateObjectWorkspace(object) {
-
-			$$(ids.toolbar).show();
-			$$(ids.selectedObject).show();
-
-			CurrentObject = object;
-
-			App.actions.populateObjectPopupAddDataField(object);
-
-			DataTable.objectLoad(object);
-
-			// update hiddenFields
-
-			PopupDefineLabelComponent.objectLoad(object);
-			PopupFrozenColumnsComponent.objectLoad(object);
-			PopupHideFieldComponent.objectLoad(object);
-			PopupSortFieldComponent.objectLoad(object);
-
-			_logic.callbackFieldsVisible();
-			_logic.callbackFrozenColumns();
-			_logic.callbackSortFields();
-		}
-
-	};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+var ABWorkObjectWorkspace = function (_OP$Component) {
+    _inherits(ABWorkObjectWorkspace, _OP$Component);
+
+    /**
+     * @param {object} ??
+     */
+    function ABWorkObjectWorkspace(App) {
+        _classCallCheck(this, ABWorkObjectWorkspace);
+
+        var _this = _possibleConstructorReturn(this, (ABWorkObjectWorkspace.__proto__ || Object.getPrototypeOf(ABWorkObjectWorkspace)).call(this, App, 'ab_work_object_workspace'));
+
+        var L = _this.Label;
+
+        var labels = {
+            common: App.labels,
+            component: {
+                addNewRow: L('ab.object.addNewRow', "*Add new row"),
+                selectObject: L('ab.object.selectObject', "*Select an object to work with."),
+                // formHeader: L('ab.application.form.header', "*Application Info"),
+                hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
+                filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
+                sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
+                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen columns"),
+                defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
+                permission: L('ab.object.toolbar.permission', "*Permission"),
+                addFields: L('ab.object.toolbar.addFields', "*Add new column"),
+                "export": L('ab.object.toolbar.export', "*Export"),
+                confirmDeleteTitle: L('ab.object.delete.title', "*Delete data field"),
+                confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
+            }
+        };
+
+        // internal list of Webix IDs to reference our UI components.
+        var ids = {
+            component: _this.unique('component'),
+
+            buttonAddField: _this.unique('buttonAddField'),
+            buttonExport: _this.unique('buttonExport'),
+            buttonFieldsVisible: _this.unique('buttonFieldsVisible'),
+            buttonFilter: _this.unique('buttonFilter'),
+            buttonFrozen: _this.unique('buttonFrozen'),
+            buttonLabel: _this.unique('buttonLabel'),
+            buttonRowNew: _this.unique('buttonRowNew'),
+            buttonSort: _this.unique('buttonSort'),
+
+            datatable: _this.unique('datatable'),
+
+            // Toolbar:
+            toolbar: _this.unique('toolbar'),
+
+            noSelection: _this.unique('noSelection'),
+            selectedObject: _this.unique('selectedObject')
+
+        };
+
+        // The DataTable that displays our object:
+        var DataTable = new _ab_work_object_workspace_datatable2.default(App);
+
+        // Various Popups on our page:
+        var PopupDefineLabelComponent = new _ab_work_object_workspace_popupDefineLabel2.default(App);
+
+        var PopupFrozenColumnsComponent = new _ab_work_object_workspace_popupFrozenColumns2.default(App);
+
+        var PopupHideFieldComponent = new _ab_work_object_workspace_popupHideFields2.default(App);
+
+        var PopupNewDataFieldComponent = new _ab_work_object_workspace_popupNewDataField2.default(App);
+
+        var PopupSortFieldComponent = new _ab_work_object_workspace_popupSortFields2.default(App);
+
+        // Our webix UI definition:
+        _this.ui = {
+            view: 'multiview',
+            id: ids.component,
+            rows: [{
+                id: ids.noSelection,
+                rows: [{
+                    maxHeight: App.config.xxxLargeSpacer,
+                    hidden: App.config.hideMobile
+                }, {
+                    view: 'label',
+                    align: "center",
+                    label: labels.component.selectObject
+                }, {
+                    maxHeight: App.config.xxxLargeSpacer,
+                    hidden: App.config.hideMobile
+                }]
+            }, {
+                id: ids.selectedObject,
+                rows: [{
+                    view: 'toolbar',
+                    id: ids.toolbar,
+                    hidden: true,
+                    css: "ab-data-toolbar",
+                    cols: [{
+                        view: "button",
+                        id: ids.buttonFieldsVisible,
+                        label: labels.component.hideFields,
+                        icon: "eye-slash",
+                        type: "icon",
+                        autowidth: true,
+                        badge: 0,
+                        click: function click() {
+                            _logic.toolbarFieldsVisible(this.$view);
+                        }
+                    }, {
+                        view: 'button',
+                        id: ids.buttonFilter,
+                        label: labels.component.filterFields,
+                        icon: "filter",
+                        type: "icon",
+                        autowidth: true,
+                        badge: 0,
+                        click: function click() {
+                            _logic.toolbarFilter(this);
+                        }
+                    }, {
+                        view: 'button',
+                        id: ids.buttonSort,
+                        label: labels.component.sortFields,
+                        icon: "sort",
+                        type: "icon",
+                        autowidth: true,
+                        badge: 0,
+                        click: function click() {
+                            _logic.toolbarSort(this.$view);
+                        }
+                    }, {
+                        view: 'button',
+                        id: ids.buttonFrozen,
+                        label: labels.component.frozenColumns,
+                        icon: "thumb-tack",
+                        type: "icon",
+                        autowidth: true,
+                        badge: 0,
+                        click: function click() {
+                            _logic.toolbarFrozen(this.$view);
+                        }
+                    }, {
+                        view: 'button',
+                        id: ids.buttonLabel,
+                        label: labels.component.defineLabel,
+                        icon: "crosshairs",
+                        type: "icon",
+                        autowidth: true,
+                        click: function click() {
+                            _logic.toolbarDefineLabel(this.$view);
+                        }
+                    }, {
+                        view: 'button',
+                        label: labels.component.permission,
+                        icon: "lock",
+                        type: "icon",
+                        autowidth: true,
+                        click: function click() {
+                            _logic.toolbarPermission(this.$view);
+                        }
+
+                    }, {
+                        view: 'button',
+                        id: ids.buttonAddField,
+                        label: labels.component.addFields,
+                        icon: "plus",
+                        type: "icon",
+                        autowidth: true,
+                        click: function click() {
+                            _logic.toolbarAddFields(this.$view);
+                        }
+                    }, {
+                        view: 'button',
+                        id: ids.buttonExport,
+                        label: labels.component.export,
+                        icon: "download",
+                        type: "icon",
+                        autowidth: true,
+                        click: function click() {
+                            _logic.toolbarButtonExport(this.$view);
+                        }
+                    }]
+                }, DataTable.ui, {
+                    cols: [{
+                        view: "button",
+                        id: ids.buttonRowNew,
+                        value: labels.component.addNewRow,
+                        click: function click() {
+                            _logic.rowAdd();
+                        }
+                    }]
+                }]
+
+            }]
+        };
+
+        // Our init() function for setting up our UI
+        _this.init = function () {
+            // webix.extend($$(ids.form), webix.ProgressBar);
+
+            DataTable.init({
+                onEditorMenu: _logic.callbackHeaderEditorMenu
+            });
+
+            PopupDefineLabelComponent.init({
+                onChange: _logic.callbackDefineLabel // be notified when there is a change in the label
+            });
+
+            PopupFrozenColumnsComponent.init({
+                onChange: _logic.callbackFrozenColumns // be notified when there is a change in the frozen columns
+            });
+
+            PopupHideFieldComponent.init({
+                onChange: _logic.callbackFieldsVisible // be notified when there is a change in the hidden fields
+            });
+
+            PopupNewDataFieldComponent.init({
+                onSave: _logic.callbackAddFields // be notified when a new Field is created & saved
+            });
+
+            // ?? what is this for ??
+            var fieldList = DataTable.getFieldList();
+
+            PopupSortFieldComponent.init({
+                onChange: _logic.callbackSortFields // be notified when there is a change in the sort fields
+            });
+
+            $$(ids.noSelection).show();
+        };
+
+        var CurrentObject = null;
+
+        // our internal business logic
+        var _logic = {
+
+            /**
+             * @function callbackDefineLabel
+             *
+             * call back for when the Define Label popup is finished.
+             */
+            callbackAddFields: function callbackAddFields(field) {
+                DataTable.refresh();
+            },
+
+            /**
+             * @function callbackDefineLabel
+             *
+             * call back for when the Define Label popup is finished.
+             */
+            callbackDefineLabel: function callbackDefineLabel() {},
+
+            /**
+             * @function callbackFrozenColumns
+             *
+             * call back for when the hidden fields have changed.
+             */
+            callbackFrozenColumns: function callbackFrozenColumns() {
+
+                var frozenID = CurrentObject.workspaceFrozenColumnID;
+
+                if (typeof frozenID != "undefined") {
+                    var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
+
+                    $$(ids.buttonFrozen).define('badge', badgeNumber);
+                    $$(ids.buttonFrozen).refresh();
+                }
+
+                DataTable.refresh();
+            },
+
+            /**
+             * @function callbackFieldsVisible
+             *
+             * call back for when the hidden fields have changed.
+             */
+            callbackFieldsVisible: function callbackFieldsVisible() {
+
+                var hiddenFields = CurrentObject.workspaceHiddenFields;
+
+                if (typeof hiddenFields != "undefined") {
+                    $$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+                    $$(ids.buttonFieldsVisible).refresh();
+                }
+                DataTable.refresh();
+
+                // if you unhide a field it may fall inside the frozen columns range so lets check
+                _logic.callbackFrozenColumns();
+            },
+
+            /**
+             * @function callbackHeaderEditorMenu
+             *
+             * call back for when an editor menu action has been selected.
+             * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
+             */
+            callbackHeaderEditorMenu: function callbackHeaderEditorMenu(action, field, node) {
+
+                switch (action) {
+
+                    case 'hide':
+                    case 'filter':
+                    case 'sort':
+                        console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:' + action);
+                        break;
+
+                    case 'edit':
+                        // pass control on to our Popup:
+                        PopupNewDataFieldComponent.show(node, field);
+                        break;
+
+                    case 'delete':
+
+                        // verify they mean to do this:
+                        OP.Dialog.Confirm({
+                            title: labels.component.confirmDeleteTitle,
+                            message: labels.component.confirmDeleteMessage.replace('{0}', field.label),
+                            callback: function callback(isOK) {
+
+                                if (isOK) {
+
+                                    field.destroy().then(function () {
+                                        DataTable.refresh();
+                                    });
+                                }
+                            }
+                        });
+                        break;
+                }
+            },
+
+            /**
+             * @function callbackSortFields
+             *
+             * call back for when the sort fields popup changes
+             */
+            callbackSortFields: function callbackSortFields() {
+
+                var sortFields = CurrentObject.workspaceSortFields;
+
+                if (typeof sortFields != "undefined") {
+                    $$(ids.buttonSort).define('badge', sortFields.length);
+                    $$(ids.buttonSort).refresh();
+                }
+
+                DataTable.sortTable();
+            },
+
+            /**
+             * @function rowAdd()
+             *
+             * When our [add row] button is pressed, alert our DataTable
+             * component to add a row.
+             */
+            rowAdd: function rowAdd() {
+                DataTable.addRow();
+            },
+
+            /**
+             * @function show()
+             *
+             * Show this component.
+             */
+            show: function show() {
+
+                $$(ids.component).show();
+            },
+
+            /**
+             * @function toolbarAddFields
+             *
+             * Show the popup to allow the user to create new fields for
+             * this object.
+             */
+            toolbarAddFields: function toolbarAddFields($view) {
+                PopupNewDataFieldComponent.show($view);
+            },
+
+            toolbarButtonExport: function toolbarButtonExport($view) {
+                console.error('TODO: Button Export()');
+            },
+
+            /**
+             * @function toolbarDefineLabel
+             *
+             * Show the popup to allow the user to define the default label for
+             * this object.
+             */
+            toolbarDefineLabel: function toolbarDefineLabel($view) {
+                PopupDefineLabelComponent.show($view);
+            },
+
+            /**
+             * @function toolbarFieldsVisible
+             *
+             * Show the popup to allow the user to hide columns for this view.
+             */
+            toolbarFieldsVisible: function toolbarFieldsVisible($view) {
+                PopupHideFieldComponent.show($view);
+            },
+
+            /**
+             * @function toolbarFilter
+             *
+             * show the popup to add a filter to the datatable
+             */
+            toolbarFilter: function toolbarFilter($view) {
+                // self.refreshPopupData();
+                // $$(self.webixUiId.filterFieldsPopup).show($view);
+                console.error('TODO: button filterFields()');
+            },
+
+            /**
+             * @function toolbarFrozen
+             *
+             * show the popup to freeze columns for the datatable
+             */
+            toolbarFrozen: function toolbarFrozen($view) {
+                PopupFrozenColumnsComponent.show($view);
+            },
+
+            toolbarPermission: function toolbarPermission($view) {
+                console.error('TODO: toolbarPermission()');
+            },
+
+            /**
+             * @function toolbarSort
+             *
+             * show the popup to sort the datatable
+             */
+            toolbarSort: function toolbarSort($view) {
+                PopupSortFieldComponent.show($view);
+                // self.refreshPopupData();
+                // $$(self.webixUiId.sortFieldsPopup).show($view);
+                //console.error('TODO: toolbarSort()');
+            }
+        };
+        _this._logic = _logic;
+
+        // Expose any globally accessible Actions:
+        _this.actions({
+
+            /**
+             * @function clearObjectWorkspace()
+             *
+             * Clear the object workspace.
+             */
+            clearObjectWorkspace: function clearObjectWorkspace() {
+
+                // NOTE: to clear a visual glitch when multiple views are updating
+                // at one time ... stop the animation on this one:
+                $$(ids.noSelection).show(false, false);
+            },
+
+            /**
+             * @function populateObjectWorkspace()
+             *
+             * Initialize the Object Workspace with the provided ABObject.
+             *
+             * @param {ABObject} object  	current ABObject instance we are working with.
+             */
+            populateObjectWorkspace: function populateObjectWorkspace(object) {
+
+                $$(ids.toolbar).show();
+                $$(ids.selectedObject).show();
+
+                CurrentObject = object;
+
+                App.actions.populateObjectPopupAddDataField(object);
+
+                DataTable.objectLoad(object);
+
+                // update hiddenFields
+
+                PopupDefineLabelComponent.objectLoad(object);
+                PopupFrozenColumnsComponent.objectLoad(object);
+                PopupHideFieldComponent.objectLoad(object);
+                PopupSortFieldComponent.objectLoad(object);
+
+                _logic.callbackFieldsVisible();
+                _logic.callbackFrozenColumns();
+                _logic.callbackSortFields();
+            }
+
+        });
+        return _this;
+    }
+
+    return ABWorkObjectWorkspace;
+}(OP.Component);
+
+exports.default = ABWorkObjectWorkspace;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 35 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-__webpack_require__(38);
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+var _ab_work_object_workspace_popupHeaderEditMenu = __webpack_require__(48);
+
+var _ab_work_object_workspace_popupHeaderEditMenu2 = _interopRequireDefault(_ab_work_object_workspace_popupHeaderEditMenu);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * ab_work_object_workspace
  *
@@ -9373,546 +11692,619 @@ function L(key, altText) {
  *
  */
 
-var labels = {
-
-	component: {}
-};
-
-var idBase = 'ab_work_object_workspace_datatable';
-OP.Component.extend(idBase, function (App) {
-
-	labels.common = App.labels;
-
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique(idBase + '_component')
-
-	};
-
-	// Our webix UI definition:
-	var _ui = {
-		view: "datatable",
-		id: ids.component,
-		resizeColumn: true,
-		resizeRow: true,
-		prerender: false,
-		editable: true,
-		fixedRowHeight: false,
-		editaction: "custom",
-		select: "cell",
-		dragColumn: true,
-		//height:800,  // #hack!
-		on: {
-			onBeforeSelect: function onBeforeSelect(data, preserve) {
-
-				console.error('!! ToDo: onBeforeSelect()');
-				// var itemNode = this.getItemNode({ row: data.row, column: data.column });
-
-				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-				// if (!column || column.length < 1) {
-				// 	console.log('System could not found this column data');
-				// 	return false;
-				// } else
-				// 	column = column[0];
-
-				// return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
-			},
-			onAfterSelect: function onAfterSelect(data, prevent) {
-				_logic.onAfterSelect(data, prevent);
-			},
-			onCheck: function onCheck(row, col, val) {
-				// Update checkbox data
-				console.error('!! ToDo: onCheck()');
-				// var item = $$(self.webixUiId.objectDatatable).getItem(row);
-
-				// self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
-				// 	.fail(function (err) {
-				// 		// Rollback
-				// 		item[col] = !val;
-				// 		$$(self.webixUiId.objectDatatable).updateItem(row, item);
-				// 		$$(self.webixUiId.objectDatatable).refresh(row);
-
-				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-				// 	})
-				// 	.then(function (result) {
-				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-				// 	});
-			},
-			onBeforeEditStop: function onBeforeEditStop(state, editor) {
-				console.error('!! ToDo: onBeforeEditStop()');
-				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
-
-				// if (!column || column.length < 1) return true;
-				// column = column[0];
-
-				// var passValidate = dataFieldsManager.validate(column, state.value);
-
-				// if (!passValidate) {
-				// 	$$(self.webixUiId.objectDatatable).editCancel();
-				// }
-
-				// return passValidate;
-			},
-			onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
-				_logic.onAfterEditStop(state, editor, ignoreUpdate);
-			},
-			onAfterLoad: function onAfterLoad() {
-				_logic.onAfterLoad();
-			},
-			onColumnResize: function onColumnResize(id, newWidth, oldWidth, user_action) {
-				console.error('!! ToDo: onColumnResize()');
-				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
-				// var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
-				// if (column && column[0])
-				// 	column[0].setWidth(newWidth);
-
-				// // if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
-				// // 	// For calculate/refresh row height
-				// // 	$$(self.webixUiId.objectDatatable).render();
-				// // }
-			},
-			onBeforeColumnDrag: function onBeforeColumnDrag(sourceId, event) {
-				console.error('!! ToDo: onBeforeColumnDrag()');
-				// if (sourceId === 'appbuilder_trash') // Remove column
-				// 	return false;
-				// else
-				// 	return true;
-			},
-			onBeforeColumnDrop: function onBeforeColumnDrop(sourceId, targetId, event) {
-				console.error('!! ToDo: onBeforeColumnDrag()');
-				// if (targetId === 'appbuilder_trash') // Remove column
-				// 	return false;
-
-				// if ($$(self.webixUiId.visibleButton).config.badge > 0) {
-				// 	webix.alert({
-				// 		title: self.labels.object.couldNotReorderField,
-				// 		ok: self.labels.common.ok,
-				// 		text: self.labels.object.couldNotReorderFieldDetail
-				// 	});
-
-				// 	return false;
-				// }
-			},
-			onAfterColumnDrop: function onAfterColumnDrop(sourceId, targetId, event) {
-				console.error('!! ToDo: onAfterColumnDrop()');
-				// self.reorderColumns();
-			},
-			onAfterColumnShow: function onAfterColumnShow(id) {
-				console.error('!! ToDo: onAfterColumnShow()');
-				// $$(self.webixUiId.visibleFieldsPopup).showField(id);
-			},
-			onAfterColumnHide: function onAfterColumnHide(id) {
-				console.error('!! ToDo: onAfterColumnHide()');
-				// $$(self.webixUiId.visibleFieldsPopup).hideField(id);
-			},
-
-			onHeaderClick: function onHeaderClick(id, e, node) {
-				_logic.onHeaderClick(id, e, node);
-			}
-		}
-	};
-
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
-
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
-
-		// webix.extend($$(ids.form), webix.ProgressBar);
-
-		// NOTE: register the onAfterRender() here, so it only registers
-		// one.
-		var DataTable = $$(ids.component);
-		var throttleOnAfterRender = null;
-		DataTable.attachEvent("onAfterRender", function (data) {
-
-			if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
-			throttleOnAfterRender = setTimeout(function () {
-				if (CurrentObject) {
-					CurrentObject.customDisplays(data, App, DataTable);
-				}
-			}, 150);
-		});
-	};
-
-	var CurrentObject = null; // current ABObject being displayed
-	var EditField = null; // which field (column header) is popup editor for
-	var EditNode = null; // which html node (column header) is popup editor for
-
-	// our internal business logic
-	var _logic = {
-
-		callbacks: {
-
-			/**
-    * @function onEditorMenu
-    * report back which menu action was clicked.
-    * We get the info from our popupHeaderEditor component, but all the
-    * logic to respond to those options are in our parent. So we pass it
-    * on ...
-    *
-    * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
-    * @param {ABField} field  the field to which the action is to be applied
-    * @param {dom} node  the optional html node for this header item.
-    */
-			onEditorMenu: function onEditorMenu(action, field) {}
-		},
-
-		/**
-   * @function callbackHeaderEdit
-   *
-   * call back for when an item in the Header Edit Menu has been selected.
-   * @param {string} action the action requested for this field:
-   */
-		callbackHeaderEdit: function callbackHeaderEdit(action) {
-
-			PopupHeaderEdit.hide();
-			_logic.callbacks.onEditorMenu(action, EditField, EditNode);
-		},
-
-		/**
-   * @function getColumnIndex
-   *
-   * return the column index of a given column ID
-   * @param {string} id column id you want the index of
-   */
-		getColumnIndex: function getColumnIndex(id) {
-			var DataTable = $$(ids.component);
-
-			return DataTable.getColumnIndex(id);
-		},
-
-		/**
-   * @function getColumnConfig
-   *
-   * return the column config of a datagrid
-   * @param {string} id datagrid id you want the column info from
-   */
-		getFieldList: function getFieldList() {
-			var DataTable = $$(ids.component);
-
-			return DataTable.fieldList;
-		},
-
-		/**
-   * @function onAfterEditStop
-   * When an editor is finished.
-   * @param {json} state
-   * @param {} editor
-   * @param {} ignoreUpdate
-   * @return
-   */
-		onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
-
-			// state:   {value: "new value", old: "old value"}
-			// editor:  { column:"columnName", row:ID, value:'value', getInputNode:fn(), config:{}, focus: fn(), getValue: fn(), setValue: function, getInputNode: function, render: function…}
-
-			var DataTable = $$(ids.component);
-
-			if (state.value != state.old) {
-
-				//// LEFT OFF:
-				// client side editor: ABFieldImage,
-
-
-				var item = DataTable.getItem(editor.row);
-				item[editor.column] = state.value;
-
-				DataTable.removeCellCss(item.id, editor.column, "webix_invalid");
-				DataTable.removeCellCss(item.id, editor.column, "webix_invalid_cell");
-
-				var validator = CurrentObject.isValidData(item);
-				if (validator.pass()) {
-
-					//// Question: do we submit full item updates?  or just patches?
-					var patch = {};
-					patch[editor.column] = item[editor.column]; // NOTE: isValidData() might also condition the data for sending.state.value;
-
-					CurrentObject.model().update(item.id, item)
-					// .update(item.id, patch)
-					.then(function () {
-
-						DataTable.updateItem(editor.row, item);
-						DataTable.clearSelection();
-						DataTable.refresh(editor.row);
-					}).catch(function (err) {
-
-						OP.Error.log('Error saving item:', { error: err });
-
-						DataTable.clearSelection();
-						if (OP.Validation.isGridValidationError(err, editor.row, DataTable)) {
-
-							// Do we reset the value?
-							// item[editor.column] = state.old;
-							// DataTable.updateItem(editor.row, item);
-
-						} else {
-
-								// this was some other Error!
-
-							}
-					});
-				} else {
-
-					validator.updateGrid(editor.row, DataTable);
-				}
-			} else {
-
-				DataTable.clearSelection();
-			}
-
-			return false;
-
-			// var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
-
-			// self.updateRowData(state, editor, ignoreUpdate)
-			// 	.fail(function (err) { // Cached
-			// 		item[editor.column] = state.old;
-			// 		$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-			// 		$$(self.webixUiId.objectDatatable).refresh(editor.row);
-
-			// 		// TODO : Message
-
-			// 		$$(self.webixUiId.objectDatatable).hideProgress();
-			// 	})
-			// 	.then(function (result) {
-			// 		if (item) {
-			// 			item[editor.column] = state.value;
-
-			// 			if (result && result.constructor.name === 'Cached' && result.isUnsync())
-			// 				item.isUnsync = true;
-
-			// 			$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
-			// 		}
-
-			// 		// TODO : Message
-
-			// 		$$(self.webixUiId.objectDatatable).hideProgress();
-			// 	});
-		},
-
-		onAfterLoad: function onAfterLoad() {
-			_logic.sortTable();
-		},
-
-		/**
-   * @function onAfterSelect
-   * This is when a user clicks on a cell.  We use the onAfterSelect to
-   * trigger a normal .editCell() if there isn't a custom editor for this field.
-   * @param {json} data webix cell data
-   * @return
-   */
-		onAfterSelect: function onAfterSelect(data, prevent) {
-			// data: {row: 1, column: "name", id: "1_name", toString: function}
-			// data.row: .model.id
-			// data.column => columnName of the field
-
-
-			// Normal update data
-			$$(ids.component).editCell(data.row, data.column);
-
-			// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
-			// 	fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-
-			// if (!fieldData || fieldData.length < 1) {
-			// 	console.log('System could not found this column data');
-			// 	return false;
-			// } else
-			// 	fieldData = fieldData[0];
-
-			// // Custom update data
-			// if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
-			// 	return false;
-
-			// // Normal update data
-			// this.editCell(data.row, data.column);
-		},
-
-		/**
-   * @function onHeaderClick
-   *
-   * process the user clicking on the header for one of our columns.
-   */
-		onHeaderClick: function onHeaderClick(id, e, node) {
-
-			// Ignore system columns
-			if (id.column == 'appbuilder_trash') return false;
-
-			// save our EditNode & EditField:
-			EditNode = node;
-
-			EditField = CurrentObject.fields(function (f) {
-				return f.id == id.column;
-			})[0];
-			if (EditField) {
-
-				// show the popup
-				PopupHeaderEdit.show(node);
-			}
-
-			return false;
-		},
-
-		objectLoad: function objectLoad(object) {
-
-			CurrentObject = object;
-
-			PopupHeaderEditComponent.objectLoad(object);
-
-			_logic.refresh();
-		},
-
-		// rebuild the data table view:
-		refresh: function refresh() {
-
-			// wait until we have an Object defined:
-			if (CurrentObject) {
-
-				var DataTable = $$(ids.component);
-				DataTable.clearAll();
-
-				//// update DataTable structure:
-				var columnHeaders = CurrentObject.columnHeaders(true);
-				DataTable.refreshColumns(columnHeaders);
-				// freeze columns:
-				if (CurrentObject.workspaceFrozenColumnID != "") {
-					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
-					DataTable.refreshColumns();
-				}
-
-				// render custom displays:
-				// 				var throttleOnAfterRender = null;
-				// 				DataTable.attachEvent("onAfterRender", function(data){
-				// webix.message('onAfterRender check')
-				// 					if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
-				// 					throttleOnAfterRender = setTimeout(()=>{
-				// webix.message("onAfterRender()");
-				// 						CurrentObject.onAfterRender(data, App);
-				// 					}, 150);
-				// 				});
-
-				//// update DataTable Content
-
-				// Set the Model object with a condition / skip / limit, then
-				// use it to load the DataTable:
-				//// NOTE: this should take advantage of Webix dynamic data loading on
-				//// larger data sets.
-				CurrentObject.model().where({}).skip(0).limit(30).loadInto(DataTable);
-			}
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   */
-		show: function show() {
-
-			$$(ids.component).show();
-		},
-
-		/**
-   * @function sort(dir, a, b)
-   *
-   * Sort this component.
-   */
-		sort: function sort(dir, aValue, bValue) {
-			var result = false;
-
-			if (dir == 'asc') {
-				result = aValue > bValue ? 1 : -1;
-			} else {
-				result = aValue < bValue ? 1 : -1;
-			}
-			return result;
-		},
-
-		sortNext: function sortNext(dir, a, b, sorts, index) {
-			var index = index + 1,
-			    a = a,
-			    b = b,
-			    aValue = a[sorts[index].by],
-			    bValue = b[sorts[index].by],
-			    result = false;
-
-			if (aValue == bValue && sorts.length > index + 1) {
-				result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
-			} else {
-				result = _logic.sort(sorts[index].dir, aValue, bValue);
-			}
-			return result;
-		},
-
-		sortTable: function sortTable() {
-			var DataTable = $$(ids.component);
-
-			if (CurrentObject) {
-				var sorts = CurrentObject.workspaceSortFields;
-
-				if (sorts.length > 0) {
-					var columnOrders = [];
-
-					DataTable.sort(function (a, b) {
-						var result = false,
-						    index = 0,
-						    aValue = a[sorts[index].by],
-						    bValue = b[sorts[index].by];
-
-						if (aValue == bValue && sorts.length > index + 1) {
-							result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
-						} else {
-							result = _logic.sort(sorts[index].dir, aValue, bValue);
-						}
-
-						return result;
-					});
-				}
-			}
-		}
-
-	};
-
-	//// NOTE: declare these after _logic  for the callbacks:
-
-	var PopupHeaderEditComponent = OP.Component['ab_work_object_workspace_popupHeaderEditMenu'](App);
-	var PopupHeaderEdit = webix.ui(PopupHeaderEditComponent.ui);
-	PopupHeaderEditComponent.init({
-		onClick: _logic.callbackHeaderEdit // be notified when there is a change in the hidden fields
-	});
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-		// interface methods for parent component:
-		objectLoad: _logic.objectLoad,
-		refresh: _logic.refresh,
-
-		// expose data for badge on frozen button
-		getColumnIndex: _logic.getColumnIndex,
-
-		// expose data for column sort UI
-		getFieldList: _logic.getFieldList,
-		sortTable: _logic.sortTable,
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+var ABWorkObjectDatatable = function (_OP$Component) {
+    _inherits(ABWorkObjectDatatable, _OP$Component);
+
+    function ABWorkObjectDatatable(App) {
+        _classCallCheck(this, ABWorkObjectDatatable);
+
+        var _this = _possibleConstructorReturn(this, (ABWorkObjectDatatable.__proto__ || Object.getPrototypeOf(ABWorkObjectDatatable)).call(this, App, 'ab_work_object_workspace_datatable'));
+
+        var L = _this.Label;
+
+        var labels = {
+            common: App.labels,
+            component: {
+
+                confirmDeleteRowTitle: L('ab.object.deleteRow.title', "*Delete data"),
+                confirmDeleteRowMessage: L('ab.object.deleteRow.message', "*Do you want to delete this row?")
+
+            }
+        };
+
+        // internal list of Webix IDs to reference our UI components.
+        var ids = {
+            component: _this.unique('component')
+
+        };
+
+        var PopupHeaderEditComponent = new _ab_work_object_workspace_popupHeaderEditMenu2.default(App);
+
+        // Our webix UI definition:
+        _this.ui = {
+            view: "datatable",
+            id: ids.component,
+            resizeColumn: true,
+            resizeRow: true,
+            prerender: false,
+            editable: true,
+            fixedRowHeight: false,
+            editaction: "custom",
+            select: "cell",
+            dragColumn: true,
+            on: {
+                onBeforeSelect: function onBeforeSelect(data, preserve) {
+
+                    console.error('!! ToDo: onBeforeSelect()');
+                    // var itemNode = this.getItemNode({ row: data.row, column: data.column });
+
+                    // var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+                    // if (!column || column.length < 1) {
+                    // 	console.log('System could not found this column data');
+                    // 	return false;
+                    // } else
+                    // 	column = column[0];
+
+                    // return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
+                },
+                onAfterSelect: function onAfterSelect(data, prevent) {
+                    _logic.onAfterSelect(data, prevent);
+                },
+                onCheck: function onCheck(row, col, val) {
+                    // Update checkbox data
+                    console.error('!! ToDo: onCheck()');
+                    // var item = $$(self.webixUiId.objectDatatable).getItem(row);
+
+                    // self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
+                    // 	.fail(function (err) {
+                    // 		// Rollback
+                    // 		item[col] = !val;
+                    // 		$$(self.webixUiId.objectDatatable).updateItem(row, item);
+                    // 		$$(self.webixUiId.objectDatatable).refresh(row);
+
+                    // 		$$(self.webixUiId.objectDatatable).hideProgress();
+                    // 	})
+                    // 	.then(function (result) {
+                    // 		$$(self.webixUiId.objectDatatable).hideProgress();
+                    // 	});
+                },
+                onBeforeEditStop: function onBeforeEditStop(state, editor) {
+                    console.error('!! ToDo: onBeforeEditStop()');
+                    // var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == editor.column; });
+
+                    // if (!column || column.length < 1) return true;
+                    // column = column[0];
+
+                    // var passValidate = dataFieldsManager.validate(column, state.value);
+
+                    // if (!passValidate) {
+                    // 	$$(self.webixUiId.objectDatatable).editCancel();
+                    // }
+
+                    // return passValidate;
+                },
+                onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+                    _logic.onAfterEditStop(state, editor, ignoreUpdate);
+                },
+                onAfterLoad: function onAfterLoad() {
+                    _logic.onAfterLoad();
+                },
+                onColumnResize: function onColumnResize(id, newWidth, oldWidth, user_action) {
+                    console.error('!! ToDo: onColumnResize()');
+                    // var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
+                    // var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
+                    // if (column && column[0])
+                    // 	column[0].setWidth(newWidth);
+
+                    // // if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
+                    // // 	// For calculate/refresh row height
+                    // // 	$$(self.webixUiId.objectDatatable).render();
+                    // // }
+                },
+                onBeforeColumnDrag: function onBeforeColumnDrag(sourceId, event) {
+                    console.error('!! ToDo: onBeforeColumnDrag()');
+                    // if (sourceId === 'appbuilder_trash') // Remove column
+                    // 	return false;
+                    // else
+                    // 	return true;
+                },
+                onBeforeColumnDrop: function onBeforeColumnDrop(sourceId, targetId, event) {
+                    console.error('!! ToDo: onBeforeColumnDrag()');
+                    // if (targetId === 'appbuilder_trash') // Remove column
+                    // 	return false;
+
+                    // if ($$(self.webixUiId.visibleButton).config.badge > 0) {
+                    // 	webix.alert({
+                    // 		title: self.labels.object.couldNotReorderField,
+                    // 		ok: self.labels.common.ok,
+                    // 		text: self.labels.object.couldNotReorderFieldDetail
+                    // 	});
+
+                    // 	return false;
+                    // }
+                },
+                onAfterColumnDrop: function onAfterColumnDrop(sourceId, targetId, event) {
+                    console.error('!! ToDo: onAfterColumnDrop()');
+                    // self.reorderColumns();
+                },
+                onAfterColumnShow: function onAfterColumnShow(id) {
+                    console.error('!! ToDo: onAfterColumnShow()');
+                    // $$(self.webixUiId.visibleFieldsPopup).showField(id);
+                },
+                onAfterColumnHide: function onAfterColumnHide(id) {
+                    console.error('!! ToDo: onAfterColumnHide()');
+                    // $$(self.webixUiId.visibleFieldsPopup).hideField(id);
+                },
+
+                onHeaderClick: function onHeaderClick(id, e, node) {
+                    _logic.onHeaderClick(id, e, node);
+                }
+            }
+        };
+
+        // Our init() function for setting up our UI
+        _this.init = function (options) {
+
+            // register our callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
+
+            // webix.extend($$(ids.form), webix.ProgressBar);
+
+            PopupHeaderEditComponent.init({
+                onClick: _logic.callbackHeaderEdit // be notified when there is a change in the hidden fields
+            });
+
+            // NOTE: register the onAfterRender() here, so it only registers
+            // one.
+            var DataTable = $$(ids.component);
+            var throttleOnAfterRender = null;
+            DataTable.attachEvent("onAfterRender", function (data) {
+
+                if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
+                throttleOnAfterRender = setTimeout(function () {
+                    if (CurrentObject) {
+                        CurrentObject.customDisplays(data, App, DataTable);
+                    }
+                }, 150);
+            });
+
+            // Process our onItemClick events. 
+            // this is a good place to check if our delete/trash icon was clicked.
+            DataTable.attachEvent("onItemClick", function (id, e, node) {
+
+                // make sure we have an object selected before processing this.
+                if (!CurrentObject) {
+                    return;
+                }
+
+                // if this was our trash icon:
+                if (e.target.className.indexOf('trash') > -1) {
+
+                    OP.Dialog.Confirm({
+                        title: labels.component.confirmDeleteRowTitle,
+                        text: labels.component.confirmDeleteRowMessage,
+                        callback: function callback(result) {
+                            if (result) {
+
+                                CurrentObject.model().delete(id).then(function (response) {
+
+                                    if (response.numRows > 0) {
+                                        DataTable.remove(id);
+                                        DataTable.clearSelection();
+                                    } else {
+
+                                        OP.Dialog.Alert({
+                                            text: 'No rows were effected.  This does not seem right.'
+                                        });
+                                        //// TODO: what do we do here?
+                                    }
+                                }).catch(function (err) {
+
+                                    OP.Error.log('Error deleting item:', { error: err });
+
+                                    //// TODO: what do we do here?	
+                                });
+                            }
+
+                            DataTable.clearSelection();
+                            return true;
+                        }
+                    });
+                }
+            });
+        };
+
+        var CurrentObject = null; // current ABObject being displayed
+        var EditField = null; // which field (column header) is popup editor for
+        var EditNode = null; // which html node (column header) is popup editor for
+
+
+        // our internal business logic
+        var _logic = _this._logic = {
+
+            callbacks: {
+
+                /**
+                 * @function onEditorMenu
+                 * report back which menu action was clicked.
+                 * We get the info from our popupHeaderEditor component, but all the
+                 * logic to respond to those options are in our parent. So we pass it
+                 * on ...
+                 *
+                 * @param {string} action [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
+                 * @param {ABField} field  the field to which the action is to be applied
+                 * @param {dom} node  the optional html node for this header item.
+                 */
+                onEditorMenu: function onEditorMenu(action, field) {}
+            },
+
+            /**
+             * @function callbackHeaderEdit
+             *
+             * call back for when an item in the Header Edit Menu has been selected.
+             * @param {string} action the action requested for this field:
+             */
+            callbackHeaderEdit: function callbackHeaderEdit(action) {
+
+                PopupHeaderEditComponent.hide();
+                _logic.callbacks.onEditorMenu(action, EditField, EditNode);
+            },
+
+            /**
+             * @function getColumnIndex
+             *
+             * return the column index of a given column ID
+             * @param {string} id column id you want the index of
+             */
+            getColumnIndex: function getColumnIndex(id) {
+                var DataTable = $$(ids.component);
+
+                return DataTable.getColumnIndex(id);
+            },
+
+            /**
+             * @function getColumnConfig
+             *
+             * return the column config of a datagrid
+             * @param {string} id datagrid id you want the column info from
+             */
+            getFieldList: function getFieldList() {
+                var DataTable = $$(ids.component);
+
+                return DataTable.fieldList;
+            },
+
+            /**
+             * @function onAfterEditStop
+             * When an editor is finished.
+             * @param {json} state
+             * @param {} editor
+             * @param {} ignoreUpdate
+             * @return
+             */
+            onAfterEditStop: function onAfterEditStop(state, editor, ignoreUpdate) {
+
+                // state:   {value: "new value", old: "old value"}
+                // editor:  { column:"columnName", row:ID, value:'value', getInputNode:fn(), config:{}, focus: fn(), getValue: fn(), setValue: function, getInputNode: function, render: function…}
+
+                var DataTable = $$(ids.component);
+
+                if (state.value != state.old) {
+
+                    var item = DataTable.getItem(editor.row);
+                    item[editor.column] = state.value;
+
+                    DataTable.removeCellCss(item.id, editor.column, "webix_invalid");
+                    DataTable.removeCellCss(item.id, editor.column, "webix_invalid_cell");
+
+                    var validator = CurrentObject.isValidData(item);
+                    if (validator.pass()) {
+
+                        //// Question: do we submit full item updates?  or just patches?
+                        var patch = {};
+                        patch[editor.column] = item[editor.column]; // NOTE: isValidData() might also condition the data for sending.state.value;
+
+                        CurrentObject.model().update(item.id, item)
+                        // .update(item.id, patch)
+                        .then(function () {
+
+                            DataTable.updateItem(editor.row, item);
+                            DataTable.clearSelection();
+                            DataTable.refresh(editor.row);
+                        }).catch(function (err) {
+
+                            OP.Error.log('Error saving item:', { error: err });
+
+                            DataTable.clearSelection();
+                            if (OP.Validation.isGridValidationError(err, editor.row, DataTable)) {
+
+                                // Do we reset the value?
+                                // item[editor.column] = state.old;
+                                // DataTable.updateItem(editor.row, item);
+
+                            } else {
+
+                                    // this was some other Error!
+
+                                }
+                        });
+                    } else {
+
+                        validator.updateGrid(editor.row, DataTable);
+                    }
+                } else {
+
+                    DataTable.clearSelection();
+                }
+
+                return false;
+
+                // var item = $$(self.webixUiId.objectDatatable).getItem(editor.row);
+
+                // self.updateRowData(state, editor, ignoreUpdate)
+                // 	.fail(function (err) { // Cached
+                // 		item[editor.column] = state.old;
+                // 		$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+                // 		$$(self.webixUiId.objectDatatable).refresh(editor.row);
+
+                // 		// TODO : Message
+
+                // 		$$(self.webixUiId.objectDatatable).hideProgress();
+                // 	})
+                // 	.then(function (result) {
+                // 		if (item) {
+                // 			item[editor.column] = state.value;
+
+                // 			if (result && result.constructor.name === 'Cached' && result.isUnsync())
+                // 				item.isUnsync = true;
+
+                // 			$$(self.webixUiId.objectDatatable).updateItem(editor.row, item);
+                // 		}
+
+                // 		// TODO : Message
+
+                // 		$$(self.webixUiId.objectDatatable).hideProgress();
+                // 	});
+            },
+
+            onAfterLoad: function onAfterLoad() {
+                _logic.sortTable();
+            },
+
+            /**
+             * @function onAfterSelect
+             * This is when a user clicks on a cell.  We use the onAfterSelect to
+             * trigger a normal .editCell() if there isn't a custom editor for this field.
+             * @param {json} data webix cell data
+             * @return
+             */
+            onAfterSelect: function onAfterSelect(data, prevent) {
+                // data: {row: 1, column: "name", id: "1_name", toString: function}
+                // data.row: .model.id
+                // data.column => columnName of the field
+
+
+                // Normal update data
+                $$(ids.component).editCell(data.row, data.column);
+
+                // var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(data.column),
+                // 	fieldData = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
+
+                // if (!fieldData || fieldData.length < 1) {
+                // 	console.log('System could not found this column data');
+                // 	return false;
+                // } else
+                // 	fieldData = fieldData[0];
+
+                // // Custom update data
+                // if (dataFieldsManager.hasCustomEdit(columnConfig.fieldName, fieldData))
+                // 	return false;
+
+                // // Normal update data
+                // this.editCell(data.row, data.column);
+            },
+
+            /**
+             * @function onHeaderClick
+             *
+             * process the user clicking on the header for one of our columns.
+             */
+            onHeaderClick: function onHeaderClick(id, e, node) {
+
+                // Ignore system columns
+                if (id.column == 'appbuilder_trash') return false;
+
+                // save our EditNode & EditField:
+                EditNode = node;
+
+                EditField = CurrentObject.fields(function (f) {
+                    return f.columnName == id.column;
+                })[0];
+                if (EditField) {
+
+                    // show the popup
+                    PopupHeaderEditComponent.show(node);
+                }
+
+                return false;
+            },
+
+            objectLoad: function objectLoad(object) {
+
+                CurrentObject = object;
+
+                PopupHeaderEditComponent.objectLoad(object);
+
+                _logic.refresh();
+            },
+
+            // rebuild the data table view:
+            refresh: function refresh() {
+
+                // wait until we have an Object defined:
+                if (CurrentObject) {
+
+                    var DataTable = $$(ids.component);
+                    DataTable.clearAll();
+
+                    //// update DataTable structure:
+                    // get column list from our CurrentObject
+                    var columnHeaders = CurrentObject.columnHeaders(true);
+
+                    // add the delete / Trash column
+                    columnHeaders.push({
+                        id: "appbuilder_trash",
+                        header: "",
+                        width: 40,
+                        template: "<span class='trash'>{common.trashIcon()}</span>",
+                        css: { 'text-align': 'center' }
+                    });
+                    DataTable.refreshColumns(columnHeaders);
+
+                    // freeze columns:
+                    if (CurrentObject.workspaceFrozenColumnID != "") {
+                        DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+                        DataTable.refreshColumns();
+                    }
+
+                    //// update DataTable Content
+
+                    // Set the Model object with a condition / skip / limit, then
+                    // use it to load the DataTable:
+                    //// NOTE: this should take advantage of Webix dynamic data loading on
+                    //// larger data sets.
+                    CurrentObject.model().where({}).skip(0).limit(30).loadInto(DataTable);
+                }
+            },
+
+            /**
+             * @function rowAdd()
+             *
+             * add a new row to the data table
+             */
+            rowAdd: function rowAdd() {
+                var emptyObj = CurrentObject.defaultValues();
+                CurrentObject.model().create(emptyObj).then(function (obj) {
+                    var DataTable = $$(ids.component);
+                    DataTable.add(obj, 0);
+                });
+            },
+
+            /**
+             * @function show()
+             *
+             * Show this component.
+             */
+            show: function show() {
+
+                $$(ids.component).show();
+            },
+
+            /**
+             * @function sort(dir, a, b)
+             *
+             * Sort this component.
+             */
+            sort: function sort(dir, aValue, bValue) {
+                var result = false;
+
+                if (dir == 'asc') {
+                    result = aValue > bValue ? 1 : -1;
+                } else {
+                    result = aValue < bValue ? 1 : -1;
+                }
+                return result;
+            },
+
+            sortNext: function sortNext(dir, a, b, sorts, index) {
+                var index = index + 1,
+                    a = a,
+                    b = b,
+                    aValue = a[sorts[index].by],
+                    bValue = b[sorts[index].by],
+                    result = false;
+
+                if (aValue == bValue && sorts.length > index + 1) {
+                    result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
+                } else {
+                    result = _logic.sort(sorts[index].dir, aValue, bValue);
+                }
+                return result;
+            },
+
+            sortTable: function sortTable() {
+                var DataTable = $$(ids.component);
+
+                if (CurrentObject) {
+                    var sorts = CurrentObject.workspaceSortFields;
+
+                    if (sorts.length > 0) {
+                        var columnOrders = [];
+
+                        DataTable.sort(function (a, b) {
+                            var result = false,
+                                index = 0,
+                                aValue = a[sorts[index].by],
+                                bValue = b[sorts[index].by];
+
+                            if (aValue == bValue && sorts.length > index + 1) {
+                                result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
+                            } else {
+                                result = _logic.sort(sorts[index].dir, aValue, bValue);
+                            }
+
+                            return result;
+                        });
+                    }
+                }
+            }
+
+        };
+
+        // Expose any globally accessible Actions:
+        _this.actions({});
+
+        // 
+        // Define our external interface methods:
+        // 
+        _this.objectLoad = _logic.objectLoad;
+        _this.refresh = _logic.refresh;
+        _this.addRow = _logic.rowAdd;
+
+        // expose data for badge on frozen button
+        _this.getColumnIndex = _logic.getColumnIndex;
+
+        // expose data for column sort UI
+        _this.getFieldList = _logic.getFieldList;
+        _this.sortTable = _logic.sortTable;
+
+        return _this;
+    }
+
+    return ABWorkObjectDatatable;
+}(OP.Component);
+
+exports.default = ABWorkObjectDatatable;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 36 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /*
  * ab_work_object_workspace_popupDefineLabel
@@ -9921,276 +12313,268 @@ OP.Component.extend(idBase, function (App) {
  *
  */
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+var ABWorkObjectPopupDefineLabel = function (_OP$Component) {
+    _inherits(ABWorkObjectPopupDefineLabel, _OP$Component);
 
-var labels = {
+    function ABWorkObjectPopupDefineLabel(App) {
+        _classCallCheck(this, ABWorkObjectPopupDefineLabel);
 
-	component: {
+        var _this = _possibleConstructorReturn(this, (ABWorkObjectPopupDefineLabel.__proto__ || Object.getPrototypeOf(ABWorkObjectPopupDefineLabel)).call(this, App, 'ab_work_object_workspace_popupDefineLabel'));
 
-		labelFormat: L('ab.define_label.labelFormat', "*Label format"),
-		selectFieldToGenerate: L('ab.define_label.selectFieldToGenerate', "*Select field item to generate format."),
-		labelFields: L('ab.define_label.labelFields', "*Fields")
-	}
-};
+        var L = _this.Label;
 
-var idBase = 'ab_work_object_workspace_popupDefineLabel';
-OP.Component.extend(idBase, function (App) {
+        var labels = {
+            common: App.labels,
+            component: {
+                labelFormat: L('ab.define_label.labelFormat', "*Label format"),
+                selectFieldToGenerate: L('ab.define_label.selectFieldToGenerate', "*Select field item to generate format."),
+                labelFields: L('ab.define_label.labelFields', "*Fields")
+            }
+        };
 
-	labels.common = App.labels;
+        // internal list of Webix IDs to reference our UI components.
+        var ids = {
+            component: _this.unique('component'),
+            format: _this.unique('format'),
+            list: _this.unique('list'),
+            buttonSave: _this.unique('buttonSave')
+        };
 
-	// internal list of Webix IDs to reference our UI components.
+        // webix UI definition:
+        _this.ui = {
+            view: "popup",
+            id: ids.component,
+            modal: true,
+            autoheight: true,
+            // maxHeight: 420,
+            width: 500,
+            body: {
+                rows: [{
+                    view: "label",
+                    label: "<b>{0}</b>".replace("{0}", labels.component.labelFormat)
+                }, {
+                    view: "textarea",
+                    id: ids.format,
+                    height: 100
+                }, {
+                    view: "label",
+                    label: labels.component.selectFieldToGenerate
+                }, {
+                    view: "label",
+                    label: "<b>{0}</b>".replace("{0}", labels.component.labelFields)
+                }, {
+                    view: 'list',
+                    id: ids.list,
+                    width: 500,
+                    maxHeight: 180,
+                    select: false,
+                    template: '#label#',
+                    on: {
+                        onItemClick: function onItemClick(id, e, node) {
+                            _logic.onItemClick(id, e, node);
+                        }
+                    }
+                }, {
+                    height: 10
+                }, {
+                    cols: [{
+                        view: "button",
+                        value: labels.common.cancel,
+                        width: 100,
+                        click: function click() {
+                            _logic.buttonCancel();
+                        }
+                    }, {
+                        view: "button",
+                        id: ids.buttonSave,
+                        label: labels.common.save,
+                        type: "form",
+                        width: 120,
+                        click: function click() {
+                            _logic.buttonSave();
+                        }
+                    }]
+                }]
+            },
+            on: {
+                onShow: function onShow() {
+                    _logic.onShow();
+                }
+            }
+        };
 
-	var ids = {
-		component: App.unique(idBase + '_component'),
-		format: App.unique(idBase + '_format'),
-		list: App.unique(idBase + '_list'),
+        var _currentObject = null;
 
-		buttonSave: App.unique(idBase + '_buttonSave')
-	};
+        // for setting up UI
+        _this.init = function (options) {
+            // register callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
-	// Our webix UI definition:
-	var _ui = {
-		view: "popup",
-		id: ids.component,
-		modal: true,
-		autoheight: true,
-		// maxHeight: 420,
+            webix.ui(_this.ui);
 
-		width: 500,
-		body: {
-			rows: [{
-				view: "label",
-				label: "<b>{0}</b>".replace("{0}", labels.component.labelFormat)
-			}, {
-				view: "textarea",
-				id: ids.format,
-				height: 100
-			}, {
-				view: "label",
-				label: labels.component.selectFieldToGenerate
-			}, {
-				view: "label",
-				label: "<b>{0}</b>".replace("{0}", labels.component.labelFields)
-			}, {
-				view: 'list',
-				id: ids.list,
-				width: 500,
-				maxHeight: 180,
-				select: false,
-				template: '#label#',
-				on: {
-					onItemClick: function onItemClick(id, e, node) {
-						_logic.onItemClick(id, e, node);
-					}
-				}
-			}, {
-				height: 10
-			}, {
-				cols: [{
-					view: "button", value: labels.common.cancel, width: 100,
-					click: function click() {
-						_logic.buttonCancel();
-					}
-				}, {
-					view: "button", id: ids.buttonSave, label: labels.common.save, type: "form", width: 120,
-					click: function click() {
-						_logic.buttonSave();
-					}
-				}]
-			}]
-		},
-		on: {
-			onShow: function onShow() {
-				_logic.onShow();
-			}
-		}
-	};
+            webix.extend($$(ids.list), webix.ProgressBar);
+        };
 
-	var _currentObject = null;
+        // internal business logic 
+        var _logic = _this.logic = {
+            buttonCancel: function buttonCancel() {
+                $$(ids.component).hide();
+            },
 
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
+            buttonSave: function buttonSave() {
+                // disable our save button
+                var ButtonSave = $$(ids.buttonSave);
+                ButtonSave.disable();
 
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
+                // get our current labelFormt
+                var labelFormat = $$(ids.format).getValue();
 
-		webix.extend($$(ids.list), webix.ProgressBar);
-	};
+                // start our spinner
+                var List = $$(ids.list);
+                List.showProgress({ type: 'icon' });
 
-	// our internal business logic 
-	var _logic = {
+                // convert from our User Friendly {Label} format to our 
+                // object friendly {Name} format
+                List.data.each(function (d) {
+                    labelFormat = labelFormat.replace(new RegExp('{' + d.label + '}', 'g'), '{' + d.id + '}');
+                });
 
-		buttonCancel: function buttonCancel() {
-			$$(ids.component).hide();
-		},
+                // save the value
+                _currentObject.labelFormat = labelFormat;
+                _currentObject.save().then(function () {
 
-		buttonSave: function buttonSave() {
+                    // all good, so
+                    List.hideProgress(); // hide the spinner
+                    ButtonSave.enable(); // enable the save button
+                    _logic.hide(); // hide the popup
 
-			// disable our save button
-			var ButtonSave = $$(ids.buttonSave);
-			ButtonSave.disable();
+                    // alert our parent component we are done with our changes:
+                    _logic.callbacks.onSave();
+                }).catch(function (err) {
+                    List.hideProgress(); // hide the spinner
+                    ButtonSave.enable(); // enable the save button
 
-			// get our current labelFormt
-			var labelFormat = $$(ids.format).getValue();
+                    // display some error to the user:
+                    OP.Error.log('Error trying to save our Object', { error: err });
+                });
+            },
 
-			// start our spinner
-			var List = $$(ids.list);
-			List.showProgress({ type: 'icon' });
+            callbacks: {
+                onCancel: function onCancel() {
+                    console.warn('NO onCancel()!');
+                },
+                onSave: function onSave(field) {
+                    console.warn('NO onSave()!');
+                }
+            },
 
-			// convert from our User Friendly {Label} format to our 
-			// object friendly {Name} format
-			List.data.each(function (d) {
-				labelFormat = labelFormat.replace(new RegExp('{' + d.label + '}', 'g'), '{' + d.id + '}');
-			});
+            hide: function hide() {
+                $$(ids.component).hide();
+            },
 
-			// save the value
-			_currentObject.labelFormat = labelFormat;
-			_currentObject.save().then(function () {
+            objectLoad: function objectLoad(object) {
+                _currentObject = object;
 
-				// all good, so
-				List.hideProgress(); // hide the spinner
-				ButtonSave.enable(); // enable the save button
-				_logic.hide(); // hide the popup
+                // clear our list
+                var List = $$(ids.list);
+                List.clearAll();
 
-				// alert our parent component we are done with our changes:
-				_logic.callbacks.onSave();
-			}).catch(function (err) {
-				List.hideProgress(); // hide the spinner
-				ButtonSave.enable(); // enable the save button
+                // refresh list with new set of fields
+                var allFields = _currentObject.fields();
+                var listFields = [];
+                allFields.forEach(function (f) {
+                    listFields.push({
+                        id: f.name,
+                        label: f.label
+                    });
+                });
 
-				// display some error to the user:
-				OP.Error.log('Error trying to save our Object', { error: err });
-			});
-		},
+                List.parse(allFields);
+            },
 
-		callbacks: {
-			onCancel: function onCancel() {
-				console.warn('NO onCancel()!');
-			},
-			onSave: function onSave(field) {
-				console.warn('NO onSave()!');
-			}
-		},
+            onItemClick: function onItemClick(id, e, node) {
+                var selectedItem = $$(ids.list).getItem(id);
+                var labelFormat = $$(ids.format).getValue();
+                labelFormat += '{{0}}'.replace('{0}', selectedItem.label);
+                $$(ids.format).setValue(labelFormat);
+            },
 
-		hide: function hide() {
-			$$(ids.component).hide();
-		},
+            onShow: function onShow() {
+                var labelFormat = _currentObject.labelFormat;
+                var Format = $$(ids.format);
+                var List = $$(ids.list);
 
-		objectLoad: function objectLoad(object) {
-			_currentObject = object;
+                Format.setValue('');
+                Format.enable();
+                List.enable();
+                $$(ids.buttonSave).enable();
 
-			// clear our list
-			var List = $$(ids.list);
-			List.clearAll();
+                // our labelFormat should be in a computer friendly {name} format
+                // here we want to convert it to a user friendly {label} format
+                // to use in our popup:
+                if (labelFormat) {
+                    if (List.data && List.data.count() > 0) {
+                        List.data.each(function (d) {
+                            labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
+                        });
+                    }
+                } else {
+                    // no label format:
+                    // Default to first field
+                    if (List.data && List.data.count() > 0) {
+                        var field = List.getItem(List.getFirstId());
+                        labelFormat = '{' + field.label + '}';
+                    }
+                }
 
-			// refresh list with new set of fields
-			var allFields = _currentObject.fields();
-			var listFields = [];
-			allFields.forEach(function (f) {
-				listFields.push({
-					id: f.name,
-					label: f.label
-				});
-			});
+                Format.setValue(labelFormat || '');
+            },
 
-			List.parse(allFields);
-		},
+            /**
+             * @function show()
+             *
+             * Show this component.
+             * @param {obj} $view  the webix.$view to hover the popup around.
+             */
+            show: function show($view) {
+                $$(ids.component).show($view);
+            }
+        };
 
-		onItemClick: function onItemClick(id, e, node) {
+        // Expose any globally accessible Actions:
+        _this.actions({});
 
-			var selectedItem = $$(ids.list).getItem(id);
+        _this.objectLoad = _logic.objectLoad;
+        _this.show = _logic.show;
 
-			var labelFormat = $$(ids.format).getValue();
-			labelFormat += '{{0}}'.replace('{0}', selectedItem.label);
+        return _this;
+    }
 
-			$$(ids.format).setValue(labelFormat);
-		},
+    return ABWorkObjectPopupDefineLabel;
+}(OP.Component);
 
-		onShow: function onShow() {
-
-			var labelFormat = _currentObject.labelFormat;
-
-			var Format = $$(ids.format);
-			var List = $$(ids.list);
-
-			Format.setValue('');
-
-			Format.enable();
-			List.enable();
-			$$(ids.buttonSave).enable();
-
-			// our labelFormat should be in a computer friendly {name} format
-			// here we want to convert it to a user friendly {label} format
-			// to use in our popup:
-			if (labelFormat) {
-				if (List.data && List.data.count() > 0) {
-					List.data.each(function (d) {
-						labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
-					});
-				}
-			} else {
-				// no label format:
-				// Default to first field
-				if (List.data && List.data.count() > 0) {
-					var field = List.getItem(List.getFirstId());
-					labelFormat = '{' + field.label + '}';
-				}
-			}
-
-			Format.setValue(labelFormat || '');
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   * @param {obj} $view  the webix.$view to hover the popup around.
-   */
-		show: function show($view) {
-
-			$$(ids.component).show($view);
-		}
-
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component  
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-
-		// interface methods for parent component:
-		objectLoad: _logic.objectLoad,
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+exports.default = ABWorkObjectPopupDefineLabel;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 37 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
 
-var _ABApplication2 = _interopRequireDefault(_ABApplication);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 /*
  * ab_work_object_workspace_popupFrozenColumns
  *
@@ -10198,247 +12582,277 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+var AB_Work_Object_Workspace_PopupFrozenColumns = function (_OP$Component) {
+	_inherits(AB_Work_Object_Workspace_PopupFrozenColumns, _OP$Component);
 
-	component: {
-		clearAll: L('ab.frozen_fields.clearAll', "*Clear All")
-	}
-};
+	//.extend(idBase, function(App) {
 
-var idBase = 'ab_work_object_workspace_popupFrozenColumns';
-OP.Component.extend(idBase, function (App) {
 
-	labels.common = App.labels;
+	function AB_Work_Object_Workspace_PopupFrozenColumns(App) {
+		_classCallCheck(this, AB_Work_Object_Workspace_PopupFrozenColumns);
 
-	// internal list of Webix IDs to reference our UI components
-	var ids = {
-		component: App.unique(idBase + '_component'),
-		list: App.unique(idBase + "_list")
-	};
+		var _this = _possibleConstructorReturn(this, (AB_Work_Object_Workspace_PopupFrozenColumns.__proto__ || Object.getPrototypeOf(AB_Work_Object_Workspace_PopupFrozenColumns)).call(this, App, 'ab_work_object_workspace_popupFrozenColumns'));
 
-	// Our webix UI definition:
-	var _ui = {
-		view: "popup",
-		id: ids.component,
-		// modal: true,
-		autoheight: true,
-		width: 500,
-		body: {
-			rows: [{
-				view: 'button', value: labels.component.clearAll, click: function click(id, e, node) {
-					_logic.clickClearAll(id, e, node);
+		var L = _this.Label;
 
-					// dataTable.define('leftSplit', 0);
-					// dataTable.refreshColumns();
-					//
-					// $$(ids.component).refreshShowIcons();
-					// $$(ids.component).callChangeEvent();
-				}
-			}, {
-				view: 'list',
-				id: ids.list,
-				width: 250,
-				autoheight: true,
-				select: false,
-				template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
-				on: {
-					onItemClick: function onItemClick(id, e, node) {
-						_logic.clickListItem(id, e, node);
+		var labels = {
+			common: App.labels,
+			component: {
+				clearAll: L('ab.frozen_fields.clearAll', "*Clear All")
+			}
+		};
 
-						// dataTable.define('leftSplit', dataTable.getColumnIndex(id) + 1);
+		// internal list of Webix IDs to reference our UI components
+		var ids = {
+			component: _this.unique('component'),
+			list: _this.unique('list')
+		};
+
+		// Our webix UI definition:
+		_this.ui = {
+			view: "popup",
+			id: ids.component,
+			// modal: true,
+			autoheight: true,
+			width: 500,
+			body: {
+				rows: [{
+					view: 'button', value: labels.component.clearAll, click: function click(id, e, node) {
+						_logic.clickClearAll(id, e, node);
+
+						// dataTable.define('leftSplit', 0);
 						// dataTable.refreshColumns();
 						//
 						// $$(ids.component).refreshShowIcons();
 						// $$(ids.component).callChangeEvent();
 					}
+				}, {
+					view: 'list',
+					id: ids.list,
+					width: 250,
+					autoheight: true,
+					select: false,
+					template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
+					on: {
+						onItemClick: function onItemClick(id, e, node) {
+							_logic.clickListItem(id, e, node);
+
+							// dataTable.define('leftSplit', dataTable.getColumnIndex(id) + 1);
+							// dataTable.refreshColumns();
+							//
+							// $$(ids.component).refreshShowIcons();
+							// $$(ids.component).callChangeEvent();
+						}
+					}
+				}]
+			},
+			on: {
+				onShow: function onShow() {
+					_logic.onShow();
+					_logic.iconsReset();
 				}
-			}]
-		},
-		on: {
-			onShow: function onShow() {
-				_logic.onShow();
-				_logic.iconsReset();
 			}
-		}
-	};
+		};
 
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
+		// Our init() function for setting up our UI
+		_this.init = function (options) {
 
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
-	};
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
+			}
 
-	var CurrentObject = null;
+			webix.ui(_this.ui);
+		};
 
-	// our internal business logic
-	var _logic = {
+		var CurrentObject = null;
 
-		callbacks: {
+		// our internal business logic
+		var _logic = _this._logic = {
+
+			callbacks: {
+
+				/**
+     * @function onChange
+     * called when we have made changes to the hidden field settings
+     * of our Current Object.
+     *
+     * this is meant to alert our parent component to respond to the
+     * change.
+     */
+				onChange: function onChange() {}
+			},
 
 			/**
-    * @function onChange
-    * called when we have made changes to the hidden field settings
-    * of our Current Object.
-    *
-    * this is meant to alert our parent component to respond to the
-    * change.
+    * @function clickClearAll
+    * the user clicked the [clear all] option.  So show unfreeze all our columns.
     */
-			onChange: function onChange() {}
-		},
-
-		/**
-   * @function clickClearAll
-   * the user clicked the [clear all] option.  So show unfreeze all our columns.
-   */
-		clickClearAll: function clickClearAll() {
-			// store empty string to not freeze any columns
-			CurrentObject.workspaceFrozenColumnID = "";
-			CurrentObject.save().then(function () {
-				_logic.iconsReset();
-				_logic.callbacks.onChange();
-			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: "" });
-			});
-		},
-
-		/**
-   * @function clickListItem
-   * update the list to show which columns are frozen by showing an icon next to the column name
-   */
-		clickListItem: function clickListItem(id, e, node) {
-			// update our Object with current frozen column id
-			var List = $$(ids.list);
-			var recordClicked = List.getItem(id);
-			var label = recordClicked.label;
-			CurrentObject.workspaceFrozenColumnID = label;
-			CurrentObject.save().then(function () {
-				_logic.iconsReset();
-				_logic.callbacks.onChange();
-			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: label });
-			});
-		},
-
-		/**
-   * @function iconDefault
-   * Hide the icon for the given node
-   * @param {DOM} node  the html dom node of the element that contains our icon
-   */
-		iconDefault: function iconDefault(node) {
-			if (node) {
-				node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle");
-				node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle-o");
-			}
-		},
-
-		/**
-   * @function iconFreeze
-   * Show the icon for the given node
-   * @param {DOM} node  the html dom node of the element that contains our icon
-   */
-		iconFreeze: function iconFreeze(node) {
-			if (node) {
-				node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle-o");
-				node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle");
-			}
-		},
-
-		/**
-   * @function iconsReset
-   * Reset the icon displays according to the current values in our Object
-   */
-		iconsReset: function iconsReset() {
-			var List = $$(ids.list);
-			var isFrozen = false;
-
-			// for each item in the List
-			var id = List.getFirstId();
-			while (id) {
-				var record = List.getItem(id);
-				var label = record.label;
-
-				// find it's HTML Node
-				var node = List.getItemNode(id);
-
-				if (CurrentObject.workspaceFrozenColumnID == "") {
-					// if there isn't any frozen columns just use the plain icon
-					_logic.iconDefault(node);
-				} else if (isFrozen == false) {
-					// if this item is not the frozen id it is frozen until we reach the frozen id
-					_logic.iconFreeze(node);
-				} else {
-					// else just show default icon
-					_logic.iconDefault(node);
-				}
-
-				if (CurrentObject.workspaceFrozenColumnID == label) {
-					isFrozen = true;
-				}
-
-				if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
-					node.style.display = "none";
-				} else {
-					node.style.display = "";
-				}
-
-				// next item
-				id = List.getNextId(id);
-			}
-		},
-
-		/**
-   * @function objectLoad
-   * Ready the Popup according to the current object
-   * @param {ABObject} object  the currently selected object.
-   */
-		objectLoad: function objectLoad(object) {
-			CurrentObject = object;
-		},
-
-		onShow: function onShow() {
-			// refresh list
-			var allFields = CurrentObject.fields();
-			var listFields = [];
-			allFields.forEach(function (f) {
-				listFields.push({
-					id: f.id,
-					label: f.label,
-					$css: "hidden_fields_" + f.id
+			clickClearAll: function clickClearAll() {
+				// store empty string to not freeze any columns
+				CurrentObject.workspaceFrozenColumnID = "";
+				CurrentObject.save().then(function () {
+					_logic.iconsReset();
+					_logic.callbacks.onChange();
+				}).catch(function (err) {
+					OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: "" });
 				});
-			});
+			},
 
-			$$(ids.list).parse(listFields);
-		}
+			/**
+    * @function clickListItem
+    * update the list to show which columns are frozen by showing an icon next to the column name
+    */
+			clickListItem: function clickListItem(id, e, node) {
+				// update our Object with current frozen column id
+				var List = $$(ids.list);
+				var recordClicked = List.getItem(id);
+				var label = recordClicked.label;
+				CurrentObject.workspaceFrozenColumnID = label;
+				CurrentObject.save().then(function () {
+					_logic.iconsReset();
+					_logic.callbacks.onChange();
+				}).catch(function (err) {
+					OP.Error.log('Error trying to save workspaceFrozenColumnID', { error: err, fields: label });
+				});
+			},
 
-	};
+			/**
+    * @function iconDefault
+    * Hide the icon for the given node
+    * @param {DOM} node  the html dom node of the element that contains our icon
+    */
+			iconDefault: function iconDefault(node) {
+				if (node) {
+					node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle");
+					node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle-o");
+				}
+			},
 
-	// Expose any globally accessible Actions:
-	var _actions = {};
+			/**
+    * @function iconFreeze
+    * Show the icon for the given node
+    * @param {DOM} node  the html dom node of the element that contains our icon
+    */
+			iconFreeze: function iconFreeze(node) {
+				if (node) {
+					node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle-o");
+					node.querySelector('.ab-frozen-field-icon').classList.add("fa-circle");
+				}
+			},
 
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+			/**
+    * @function iconsReset
+    * Reset the icon displays according to the current values in our Object
+    */
+			iconsReset: function iconsReset() {
+				var List = $$(ids.list);
+				var isFrozen = false;
 
+				// for each item in the List
+				var id = List.getFirstId();
+				while (id) {
+					var record = List.getItem(id);
+					var label = record.label;
 
-		// interface methods for parent component:
-		objectLoad: _logic.objectLoad,
+					// find it's HTML Node
+					var node = List.getItemNode(id);
 
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+					if (CurrentObject.workspaceFrozenColumnID == "") {
+						// if there isn't any frozen columns just use the plain icon
+						_logic.iconDefault(node);
+					} else if (isFrozen == false) {
+						// if this item is not the frozen id it is frozen until we reach the frozen id
+						_logic.iconFreeze(node);
+					} else {
+						// else just show default icon
+						_logic.iconDefault(node);
+					}
+
+					if (CurrentObject.workspaceFrozenColumnID == label) {
+						isFrozen = true;
+					}
+
+					if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
+						node.style.display = "none";
+					} else {
+						node.style.display = "";
+					}
+
+					// next item
+					id = List.getNextId(id);
+				}
+			},
+
+			/**
+    * @function objectLoad
+    * Ready the Popup according to the current object
+    * @param {ABObject} object  the currently selected object.
+    */
+			objectLoad: function objectLoad(object) {
+				CurrentObject = object;
+			},
+
+			onShow: function onShow() {
+				// refresh list
+				var allFields = CurrentObject.fields();
+				var listFields = [];
+				allFields.forEach(function (f) {
+					listFields.push({
+						id: f.id,
+						label: f.label,
+						$css: "hidden_fields_" + f.id
+					});
+				});
+
+				$$(ids.list).parse(listFields);
+			},
+
+			/**
+          * @function show()
+          *
+          * Show this component.
+          * @param {obj} $view  the webix.$view to hover the popup around.
+          */
+			show: function show($view) {
+				$$(ids.component).show($view);
+			}
+
+		};
+
+		// Expose any globally accessible Actions:
+		_this.actions({});
+
+		// 
+		// Define our external interface methods:
+		// 
+		_this.objectLoad = _logic.objectLoad;
+		_this.show = _logic.show;
+
+		return _this;
+	}
+
+	return AB_Work_Object_Workspace_PopupFrozenColumns;
+}(OP.Component);
+
+exports.default = AB_Work_Object_Workspace_PopupFrozenColumns;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 38 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /*
  * ab_work_object_workspace_popupHeaderEditMenu
@@ -10447,207 +12861,192 @@ OP.Component.extend(idBase, function (App) {
  *
  */
 
-// import ABApplication from "../classes/ABApplication"
-// import ABFieldManager from "../classes/ABFieldManager"
+var ABWorkObjectPopupHeaderEditMenu = function (_OP$Component) {
+    _inherits(ABWorkObjectPopupHeaderEditMenu, _OP$Component);
 
+    function ABWorkObjectPopupHeaderEditMenu(App) {
+        _classCallCheck(this, ABWorkObjectPopupHeaderEditMenu);
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+        var _this = _possibleConstructorReturn(this, (ABWorkObjectPopupHeaderEditMenu.__proto__ || Object.getPrototypeOf(ABWorkObjectPopupHeaderEditMenu)).call(this, App, 'ab_work_object_workspace_popupHeaderEditMenu'));
 
-var labels = {
+        var L = _this.Label;
 
-	component: {
+        var labels = {
+            common: App.labels,
+            component: {
+                hideField: L('ab.object.hideField', "*Hide field"),
+                filterField: L('ab.object.filterField', "*Filter field"),
+                sortField: L('ab.object.sortField', "*Sort field"),
+                editField: L('ab.object.editField', "*Edit field"),
+                deleteField: L('ab.object.deleteField', "*Delete field")
+            }
+        };
 
-		hideField: L('ab.object.hideField', "*Hide field"),
-		filterField: L('ab.object.filterField', "*Filter field"),
-		sortField: L('ab.object.sortField', "*Sort field"),
-		editField: L('ab.object.editField', "*Edit field"),
-		deleteField: L('ab.object.deleteField', "*Delete field")
-	}
-};
+        var ids = {
+            component: _this.unique('component'),
+            list: _this.unique('list')
+        };
 
-var idBase = 'ab_work_object_workspace_popupHeaderEditMenu';
-OP.Component.extend(idBase, function (App) {
+        // the list of options shown in the popup menu:
+        var menuItems = {
+            // Normally all items are available
+            'default': [{ command: labels.component.hideField, icon: "fa-columns" }, { command: labels.component.filterField, icon: "fa-filter" }, { command: labels.component.sortField, icon: "fa-sort" }, { command: labels.component.editField, icon: "fa-pencil-square-o" }, { command: labels.component.deleteField, icon: "fa-trash" }],
+            // But for imported objects, edit & delete are disabled
+            'imported': [{ command: labels.component.hideField, icon: "fa-columns" }, { command: labels.component.filterField, icon: "fa-filter" }, { command: labels.component.sortField, icon: "fa-sort" }]
+        };
 
-	labels.common = App.labels;
+        // webix UI definition:
+        _this.ui = {
+            view: "popup",
+            id: ids.component,
+            modal: false,
+            autoheight: true,
 
-	// internal list of Webix IDs to reference our UI components.
+            width: 180,
+            body: {
+                id: ids.list,
+                view: 'list',
+                datatype: "json",
+                autoheight: true,
+                select: false,
+                template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
+                data: menuItems['default'], // start with the default set:
+                on: {
+                    'onItemClick': function onItemClick(timestamp, e, node) {
+                        _logic.onItemClick(timestamp, e, node);
+                    }
+                }
+            }
+        };
 
-	var ids = {
-		component: App.unique(idBase + '_component'),
+        var CurrentObject = null;
 
-		list: App.unique(idBase + '_list')
-	};
+        // setting up UI
+        _this.init = function (options) {
+            // register callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
-	// the list of options shown in the popup menu:
-	var menuItems = {
+            // create the instance of our popup
+            webix.ui(_this.ui);
+        };
 
-		// Normally all items are available
-		'default': [{ command: labels.component.hideField, icon: "fa-columns" }, { command: labels.component.filterField, icon: "fa-filter" }, { command: labels.component.sortField, icon: "fa-sort" }, { command: labels.component.editField, icon: "fa-pencil-square-o" }, { command: labels.component.deleteField, icon: "fa-trash" }],
-		// But for imported objects, edit & delete are disabled
-		'imported': [{ command: labels.component.hideField, icon: "fa-columns" }, { command: labels.component.filterField, icon: "fa-filter" }, { command: labels.component.sortField, icon: "fa-sort" }]
-	};
+        // internal business logic
+        var _logic = _this.logic = {
+            callbacks: {
+                /**
+                 * @function onClick
+                 * report back which menu action was clicked.
+                 * possible actions: 
+                 *      [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
+                 */
+                onClick: function onClick(action) {}
+            },
 
-	// Our webix UI definition:
-	var _ui = {
-		view: "popup",
-		id: ids.component,
-		modal: false,
-		autoheight: true,
+            hide: function hide() {
+                $$(ids.component).hide();
+            },
 
-		width: 180,
-		body: {
-			id: ids.list,
-			view: 'list',
-			datatype: "json",
-			autoheight: true,
-			select: false,
-			template: "<i class='fa #icon#' aria-hidden='true'></i> #command#",
-			data: menuItems['default'], // start with the default set:
-			on: {
-				'onItemClick': function onItemClick(timestamp, e, node) {
-					_logic.onItemClick(timestamp, e, node);
-				}
-			}
-		}
-	};
+            /**
+             * @function objectLoad
+             * Ready the Popup according to the current object
+             * @param {ABObject} object  the currently selected object.
+             */
+            objectLoad: function objectLoad(object) {
+                CurrentObject = object;
 
-	var CurrentObject = null;
+                // TODO:
+                // check if object is imported, if so, then switch the 
+                // shown fields to the imported menu:
 
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
+                var listItems = menuItems['default'];
+                var List = $$(ids.list);
+                List.clearAll();
+                List.parse(listItems);
+            },
 
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
+            /**
+             * @function onItemClick
+             * when an entry in our popup menu is selected, make sure our
+             * parent component is alerted to the action requested.
+             *
+             * possible return action values: 
+             *      [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
+             *
+             */
+            onItemClick: function onItemClick(timestamp, e, node) {
+                var action = null;
+                var menu = node.textContent.trim();
+                switch (menu) {
+                    case labels.component.hideField:
+                        action = 'hide';
+                        break;
+                    case labels.component.filterField:
+                        action = 'filter';
+                        break;
+                    case labels.component.sortField:
+                        action = 'sort';
+                        break;
+                    case labels.component.editField:
+                        action = 'edit';
+                        break;
+                    case labels.component.deleteField:
+                        action = 'delete';
+                        break;
+                }
 
-		// $$(ids.editDefinitions).cells() // define the edit Definitions here.
-	};
+                _logic.callbacks.onClick(action);
+            },
 
-	// our internal business logic
-	var _logic = {
+            /**
+             * @function show()
+             *
+             * Show this component.
+             * @param {obj} $view  the webix.$view to hover the popup around.
+             */
+            show: function show($view) {
+                $$(ids.component).show($view);
+            }
+        };
 
-		callbacks: {
-			/**
-    * @function onClick
-    * report back which menu action was clicked.
-    * possible actions: [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
-    */
-			onClick: function onClick(action) {}
-		},
+        // Expose any globally accessible Actions:
+        _this.actions({
+            // populateObjectPopupAddDataField: function(object) {
+            // 	_currentObject = object;
+            // }
+        });
 
-		hide: function hide() {
-			$$(ids.component).hide();
-		},
+        _this.hide = _logic.hide;
+        _this.show = _logic.show;
+        _this.objectLoad = _logic.objectLoad;
 
-		/**
-   * @function objectLoad
-   * Ready the Popup according to the current object
-   * @param {ABObject} object  the currently selected object.
-   */
-		objectLoad: function objectLoad(object) {
-			CurrentObject = object;
+        return _this;
+    }
 
-			// TODO:
-			// check if object is imported, if so, then switch the shown fields to the imported menu:
+    return ABWorkObjectPopupHeaderEditMenu;
+}(OP.Component);
 
-			var listItems = menuItems['default'];
-			// if (object.isImported) {
-			// 	listItems = menuItems['imported'];
-			// }
-			var List = $$(ids.list);
-			List.clearAll();
-			List.parse(listItems);
-		},
-
-		/**
-   * @function onItemClick
-   * when an entry in our popup menu is selected, make sure our parent component is
-   * alerted to the action requested.
-   *
-   * possible return action values: [ 'hide', 'filter', 'sort', 'edit', 'delete' ]
-   *
-   */
-		onItemClick: function onItemClick(timestamp, e, node) {
-
-			var action = null;
-			var menu = node.textContent.trim();
-			switch (menu) {
-				case labels.component.hideField:
-					action = 'hide';
-					break;
-				case labels.component.filterField:
-					action = 'filter';
-					break;
-				case labels.component.sortField:
-					action = 'sort';
-					break;
-				case labels.component.editField:
-					action = 'edit';
-					break;
-				case labels.component.deleteField:
-					action = 'delete';
-					break;
-			}
-
-			_logic.callbacks.onClick(action);
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   * @param {obj} $view  the webix.$view to hover the popup around.
-   */
-		show: function show($view) {
-
-			$$(ids.component).show($view);
-		}
-
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {}
-
-	// populateObjectPopupAddDataField: function(object) {
-	// 	_currentObject = object;
-	// }
-
-	// return the current instance of this component:
-	;return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-
-		hide: _logic.hide,
-		objectLoad: _logic.objectLoad,
-		show: _logic.show, // function($view, field_id) 
-
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+exports.default = ABWorkObjectPopupHeaderEditMenu;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 39 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-var _ABApplication2 = _interopRequireDefault(_ABApplication);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 /*
  * ab_work_object_workspace_popupHideFields
  *
@@ -10655,325 +13054,346 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+var AB_Work_Object_Workspace_PopupHideFields = function (_OP$Component) {
+    _inherits(AB_Work_Object_Workspace_PopupHideFields, _OP$Component);
 
-	component: {
+    function AB_Work_Object_Workspace_PopupHideFields(App) {
+        _classCallCheck(this, AB_Work_Object_Workspace_PopupHideFields);
 
-		showAll: L('ab.visible_fields.showAll', "*Show All"),
-		hideAll: L('ab.visible_fields.hideAll', "*Hide All"),
-		errorFrozen: L('ab.visible_fields.errorFrozen', "*Sorry, you cannot hide your last frozen column.")
-	}
-};
+        var _this = _possibleConstructorReturn(this, (AB_Work_Object_Workspace_PopupHideFields.__proto__ || Object.getPrototypeOf(AB_Work_Object_Workspace_PopupHideFields)).call(this, App, 'ab_work_object_workspace_popupHideFields'));
 
-var idBase = 'ab_work_object_workspace_popupHideFields';
-OP.Component.extend(idBase, function (App) {
+        var L = _this.Label;
 
-	labels.common = App.labels;
+        var labels = {
+            common: App.labels,
+            component: {
+                showAll: L('ab.visible_fields.showAll', "*Show All"),
+                hideAll: L('ab.visible_fields.hideAll', "*Hide All"),
+                errorFrozen: L('ab.visible_fields.errorFrozen', "*Sorry, you cannot hide your last frozen column.")
+            }
+        };
 
-	// internal list of Webix IDs to reference our UI components
-	var ids = {
-		component: App.unique(idBase + '_component'),
-		list: App.unique(idBase + "_list")
-	};
+        // internal list of Webix IDs to reference our UI components
+        var ids = {
+            component: _this.unique('component'),
+            list: _this.unique('list')
+        };
 
-	// Our webix UI definition:
-	var _ui = {
-		view: "popup",
-		id: ids.component,
-		// modal: true,
-		autoheight: true,
-		body: {
-			rows: [{
-				cols: [{
-					view: 'button',
-					value: labels.component.showAll,
-					click: function click() {
-						_logic.clickShowAll();
-					}
-				}, {
-					view: 'button',
-					value: labels.component.hideAll,
-					click: function click() {
-						_logic.clickHideAll();
-					}
-				}]
-			}, {
-				view: 'list',
-				id: ids.list,
-				autoheight: true,
-				select: false,
-				template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
-				on: {
-					onItemClick: function onItemClick(id, e, node) {
-						_logic.clickListItem(id, e, node);
-					}
-				}
-			}]
-		},
-		on: {
-			onShow: function onShow() {
-				_logic.onShow();
-				_logic.iconsReset();
-			}
-		}
-	};
+        // Our webix UI definition:
+        _this.ui = {
+            view: "popup",
+            id: ids.component,
+            // modal: true,
+            autoheight: true,
+            body: {
+                rows: [{
+                    cols: [{
+                        view: 'button',
+                        value: labels.component.showAll,
+                        click: function click() {
+                            _logic.clickShowAll();
+                        }
+                    }, {
+                        view: 'button',
+                        value: labels.component.hideAll,
+                        click: function click() {
+                            _logic.clickHideAll();
+                        }
+                    }]
+                }, {
+                    view: 'list',
+                    id: ids.list,
+                    autoheight: true,
+                    select: false,
+                    template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
+                    on: {
+                        onItemClick: function onItemClick(id, e, node) {
+                            _logic.clickListItem(id, e, node);
+                        }
+                    }
+                }]
+            },
+            on: {
+                onShow: function onShow() {
+                    _logic.onShow();
+                    _logic.iconsReset();
+                }
+            }
+        };
 
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
+        // Our init() function for setting up our UI
+        _this.init = function (options) {
 
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
-	};
+            // register our callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
-	var CurrentObject = null;
+            webix.ui(_this.ui);
+        };
 
-	// our internal business logic
-	var _logic = {
+        var CurrentObject = null;
 
-		callbacks: {
+        // our internal business logic
+        var _logic = _this._logic = {
 
-			/**
-    * @function onChange
-    * called when we have made changes to the hidden field settings
-    * of our Current Object.
-    *
-    * this is meant to alert our parent component to respond to the
-    * change.
-    */
-			onChange: function onChange() {}
-		},
+            callbacks: {
 
-		/**
-   * @function clickHideAll
-   * the user clicked the [hide all] option.  So hide all our fields.
-   */
-		clickHideAll: function clickHideAll() {
+                /**
+                 * @function onChange
+                 * called when we have made changes to the hidden field settings
+                 * of our Current Object.
+                 *
+                 * this is meant to alert our parent component to respond to the
+                 * change.
+                 */
+                onChange: function onChange() {}
+            },
 
-			// create an array of all our field.id's:
-			var allFields = CurrentObject.fields();
-			var newHidden = [];
-			allFields.forEach(function (f) {
-				newHidden.push(f.columnName);
-			});
+            /**
+             * @function clickHideAll
+             * the user clicked the [hide all] option.  So hide all our fields.
+             */
+            clickHideAll: function clickHideAll() {
 
-			// store that
-			CurrentObject.workspaceHiddenFields = newHidden;
-			CurrentObject.save().then(function () {
-				_logic.iconsReset();
-				_logic.callbacks.onChange();
-			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newHidden });
-			});
-		},
+                // create an array of all our field.id's:
+                var allFields = CurrentObject.fields();
+                var newHidden = [];
+                allFields.forEach(function (f) {
+                    newHidden.push(f.columnName);
+                });
 
-		/**
-   * @function clickShowAll
-   * the user clicked the [show all] option.  So show all our fields.
-   */
-		clickShowAll: function clickShowAll() {
+                // store that
+                CurrentObject.workspaceHiddenFields = newHidden;
+                CurrentObject.save().then(function () {
+                    _logic.iconsReset();
+                    _logic.callbacks.onChange();
+                }).catch(function (err) {
+                    OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newHidden });
+                });
+            },
 
-			// store an empty array of hidden fields
-			CurrentObject.workspaceHiddenFields = [];
-			CurrentObject.save().then(function () {
-				_logic.iconsReset();
-				_logic.callbacks.onChange();
-			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newHidden });
-			});
-		},
+            /**
+             * @function clickShowAll
+             * the user clicked the [show all] option.  So show all our fields.
+             */
+            clickShowAll: function clickShowAll() {
 
-		/**
-   * @function clickListItem
-   * update the clicked field setting.
-   */
-		clickListItem: function clickListItem(id, e, node) {
-			var List = $$(ids.list);
-			var item = List.getItem(id);
-			if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
-				OP.Dialog.Alert({
-					text: labels.component.errorFrozen
-				});
-				return;
-			}
+                // store an empty array of hidden fields
+                CurrentObject.workspaceHiddenFields = [];
+                CurrentObject.save().then(function () {
+                    _logic.iconsReset();
+                    _logic.callbacks.onChange();
+                }).catch(function (err) {
+                    OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newHidden });
+                });
+            },
 
-			var newFields = [];
-			var isHidden = CurrentObject.workspaceHiddenFields.filter(function (fID) {
-				return fID == item.columnName;
-			}).length > 0;
-			if (isHidden) {
-				// unhide this field
+            /**
+             * @function clickListItem
+             * update the clicked field setting.
+             */
+            clickListItem: function clickListItem(id, e, node) {
+                var List = $$(ids.list);
+                var item = List.getItem(id);
+                if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
+                    OP.Dialog.Alert({
+                        text: labels.component.errorFrozen
+                    });
+                    return;
+                }
 
-				// get remaining fields
-				newFields = CurrentObject.workspaceHiddenFields.filter(function (fID) {
-					return fID != item.columnName;
-				});
+                var newFields = [];
+                var isHidden = CurrentObject.workspaceHiddenFields.filter(function (fID) {
+                    return fID == item.columnName;
+                }).length > 0;
+                if (isHidden) {
+                    // unhide this field
 
-				// find the icon and display it:
-				_logic.iconShow(node);
-			} else {
-				newFields = CurrentObject.workspaceHiddenFields;
-				newFields.push(item.columnName);
+                    // get remaining fields
+                    newFields = CurrentObject.workspaceHiddenFields.filter(function (fID) {
+                        return fID != item.columnName;
+                    });
 
-				_logic.iconHide(node);
-			}
+                    // find the icon and display it:
+                    _logic.iconShow(node);
+                } else {
+                    newFields = CurrentObject.workspaceHiddenFields;
+                    newFields.push(item.columnName);
 
-			// update our Object with current hidden fields
-			CurrentObject.workspaceHiddenFields = newFields;
-			CurrentObject.save().then(function () {
-				_logic.callbacks.onChange();
-			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newFields });
-			});
-		},
+                    _logic.iconHide(node);
+                }
 
-		/**
-   * @function iconFreezeOff
-   * Remove thumb tack if the field is not the choosen frozen column field
-   * @param {DOM} node  the html dom node of the element that contains our icon
-   */
-		iconFreezeOff: function iconFreezeOff(node) {
-			if (node) {
-				node.querySelector('.ab-visible-field-icon').classList.remove("fa-thumb-tack");
-				node.querySelector('.ab-visible-field-icon').classList.add("fa-circle");
-			}
-		},
+                // update our Object with current hidden fields
+                CurrentObject.workspaceHiddenFields = newFields;
+                CurrentObject.save().then(function () {
+                    _logic.callbacks.onChange();
+                }).catch(function (err) {
+                    OP.Error.log('Error trying to save workspaceHiddenFields', { error: err, fields: newFields });
+                });
+            },
 
-		/**
-   * @function iconFreezeOn
-   * Show a thumb tack if the field is the choosen frozen column field
-   * @param {DOM} node  the html dom node of the element that contains our icon
-   */
-		iconFreezeOn: function iconFreezeOn(node) {
-			if (node) {
-				node.querySelector('.ab-visible-field-icon').classList.remove("fa-circle");
-				node.querySelector('.ab-visible-field-icon').classList.add("fa-thumb-tack");
-			}
-		},
+            /**
+             * @function iconFreezeOff
+             * Remove thumb tack if the field is not the choosen frozen column field
+             * @param {DOM} node  the html dom node of the element that contains our icon
+             */
+            iconFreezeOff: function iconFreezeOff(node) {
+                if (node) {
+                    node.querySelector('.ab-visible-field-icon').classList.remove("fa-thumb-tack");
+                    node.querySelector('.ab-visible-field-icon').classList.add("fa-circle");
+                }
+            },
 
-		/**
-   * @function iconHide
-   * Hide the icon for the given node
-   * @param {DOM} node  the html dom node of the element that contains our icon
-   */
-		iconHide: function iconHide(node) {
-			if (node) {
-				node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
-			}
-		},
+            /**
+             * @function iconFreezeOn
+             * Show a thumb tack if the field is the choosen frozen column field
+             * @param {DOM} node  the html dom node of the element that contains our icon
+             */
+            iconFreezeOn: function iconFreezeOn(node) {
+                if (node) {
+                    node.querySelector('.ab-visible-field-icon').classList.remove("fa-circle");
+                    node.querySelector('.ab-visible-field-icon').classList.add("fa-thumb-tack");
+                }
+            },
 
-		/**
-   * @function iconShow
-   * Show the icon for the given node
-   * @param {DOM} node  the html dom node of the element that contains our icon
-   */
-		iconShow: function iconShow(node) {
-			if (node) {
-				node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
-			}
-		},
+            /**
+             * @function iconHide
+             * Hide the icon for the given node
+             * @param {DOM} node  the html dom node of the element that contains our icon
+             */
+            iconHide: function iconHide(node) {
+                if (node) {
+                    node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
+                }
+            },
 
-		/**
-   * @function iconsReset
-   * Reset the icon displays according to the current values in our Object
-   */
-		iconsReset: function iconsReset() {
+            /**
+             * @function iconShow
+             * Show the icon for the given node
+             * @param {DOM} node  the html dom node of the element that contains our icon
+             */
+            iconShow: function iconShow(node) {
+                if (node) {
+                    node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
+                }
+            },
 
-			var List = $$(ids.list);
+            /**
+             * @function iconsReset
+             * Reset the icon displays according to the current values in our Object
+             */
+            iconsReset: function iconsReset() {
 
-			// for each item in the List
-			var id = List.getFirstId();
-			while (id) {
-				var item = List.getItem(id);
+                var List = $$(ids.list);
 
-				// find it's HTML Node
-				var node = List.getItemNode(id);
+                // for each item in the List
+                var id = List.getFirstId();
+                while (id) {
+                    var item = List.getItem(id);
 
-				if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
-					_logic.iconFreezeOn(node);
-				} else {
-					_logic.iconFreezeOff(node);
-				}
+                    // find it's HTML Node
+                    var node = List.getItemNode(id);
 
-				// if this item is not hidden, show it.
-				if (CurrentObject.workspaceHiddenFields.indexOf(item.columnName) == -1) {
-					_logic.iconShow(node);
-				} else {
-					// else hide it
-					_logic.iconHide(node);
-				}
+                    if (CurrentObject.workspaceFrozenColumnID == item.columnName) {
+                        _logic.iconFreezeOn(node);
+                    } else {
+                        _logic.iconFreezeOff(node);
+                    }
 
-				// next item
-				id = List.getNextId(id);
-			}
-		},
+                    // if this item is not hidden, show it.
+                    if (CurrentObject.workspaceHiddenFields.indexOf(item.columnName) == -1) {
+                        _logic.iconShow(node);
+                    } else {
+                        // else hide it
+                        _logic.iconHide(node);
+                    }
 
-		/**
-   * @function objectLoad
-   * Ready the Popup according to the current object
-   * @param {ABObject} object  the currently selected object.
-   */
-		objectLoad: function objectLoad(object) {
-			CurrentObject = object;
-		},
+                    // next item
+                    id = List.getNextId(id);
+                }
+            },
 
-		/**
-   * @function onShow
-   * Ready the Popup according to the current object each time it is shown (perhaps a field was created or delted)
-   */
-		onShow: function onShow() {
-			// refresh list
-			var allFields = CurrentObject.fields();
-			var listFields = [];
-			allFields.forEach(function (f) {
-				listFields.push({
-					id: f.id,
-					label: f.label,
-					columnName: f.columnName
-				});
-			});
+            /**
+             * @function objectLoad
+             * Ready the Popup according to the current object
+             * @param {ABObject} object  the currently selected object.
+             */
+            objectLoad: function objectLoad(object) {
+                CurrentObject = object;
+            },
 
-			$$(ids.list).parse(allFields);
-		}
+            /**
+             * @function onShow
+             * Ready the Popup according to the current object each time it is shown (perhaps a field was created or delted)
+             */
+            onShow: function onShow() {
+                // refresh list
+                var allFields = CurrentObject.fields();
+                var listFields = [];
+                allFields.forEach(function (f) {
+                    listFields.push({
+                        id: f.id,
+                        label: f.label,
+                        columnName: f.columnName
+                    });
+                });
 
-	};
+                $$(ids.list).parse(allFields);
+            },
 
-	// Expose any globally accessible Actions:
-	var _actions = {};
+            /**
+             * @function show()
+             *
+             * Show this component.
+             * @param {obj} $view  the webix.$view to hover the popup around.
+             */
+            show: function show($view) {
+                $$(ids.component).show($view);
+            }
 
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+        };
 
+        // Expose any globally accessible Actions:
+        _this.actions({});
 
-		// interface methods for parent component:
-		objectLoad: _logic.objectLoad,
+        // 
+        // Define our external interface methods:
+        // 
+        _this.objectLoad = _logic.objectLoad;
+        _this.show = _logic.show;
 
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+        return _this;
+    }
+
+    return AB_Work_Object_Workspace_PopupHideFields;
+}(OP.Component);
+
+exports.default = AB_Work_Object_Workspace_PopupHideFields;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 40 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-var _ABApplication2 = _interopRequireDefault(_ABApplication);
-
-var _ABFieldManager = __webpack_require__(13);
+var _ABFieldManager = __webpack_require__(17);
 
 var _ABFieldManager2 = _interopRequireDefault(_ABFieldManager);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 /*
  * ab_work_object_workspace_popupNewDataField
  *
@@ -10981,486 +13401,489 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  *
  */
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var labels = {
-
-	component: {
-
-		fieldType: L('ab.add_fields.fieldType', "*Field type"),
-		label: L('ab.add_fields.label', "*Label"),
-		addNewField: L('ab.add_fields.addNewField', "*Add Column")
-
-	}
-};
-
-var idBase = 'ab_work_object_workspace_popupNewDataField';
-OP.Component.extend(idBase, function (App) {
-
-	labels.common = App.labels;
-
-	// internal list of Webix IDs to reference our UI components.
-
-	var ids = {
-		component: App.unique(idBase + '_component'),
-		types: App.unique(idBase + '_types'),
-		editDefinitions: App.unique(idBase + '_editDefinitions'),
-
-		buttonSave: App.unique(idBase + '_buttonSave'),
-		buttonCancel: App.unique(idBase + '_buttonCancel')
-	};
-
-	// Our webix UI definition:
-	var _ui = {
-		view: "popup",
-		id: ids.component,
-		modal: true,
-		autoheight: true,
-		// maxHeight: 420,
-
-		// ready: function () {
-		// 	console.error('ready() called!!!')
-		// 	_logic.resetState();
-		// },
-
-		body: {
-			css: 'ab-add-fields-popup',
-			borderless: true,
-			rows: [{
-				view: "richselect",
-				id: ids.types,
-				label: labels.component.fieldType,
-				labelWidth: App.config.labelWidthLarge,
-				options: [
-				//We will add these later
-				{ id: 'temporary', view: 'temporary' }],
-				on: {
-					onChange: function onChange(id, ev, node) {
-						_logic.onChange(id);
-					}
-				}
-			}, {
-				height: 10,
-				type: "line"
-			}, {
-				view: 'multiview',
-				id: ids.editDefinitions,
-				// NOTE: can't leave this an empty []. We redefine this value later.
-				cells: [{ id: 'del_me', view: 'label', label: 'edit definition here' }]
-			}, { height: 10 }, {
-				cols: [{ fillspace: true }, {
-					view: "button",
-					value: labels.common.cancel,
-					css: "ab-cancel-button",
-					autowidth: true,
-					click: function click() {
-						_logic.buttonCancel();
-					}
-				}, {
-					view: "button",
-					id: ids.buttonSave,
-					label: labels.component.addNewField,
-					autowidth: true,
-					type: "form",
-					click: function click() {
-						_logic.buttonSave();
-					}
-				}]
-			}]
-		},
-		on: {
-			onBeforeShow: function onBeforeShow() {
-				_logic.resetState();
-			},
-			onShow: function onShow() {
-				_logic.onShow();
-			},
-			onHide: function onHide() {
-				_logic.resetState();
-			}
-		}
-	};
+var AB_Work_Object_Workspace_PopupNewDataField = function (_OP$Component) {
+    _inherits(AB_Work_Object_Workspace_PopupNewDataField, _OP$Component);
+
+    //.extend(idBase, function(App) {
+
+    function AB_Work_Object_Workspace_PopupNewDataField(App) {
+        _classCallCheck(this, AB_Work_Object_Workspace_PopupNewDataField);
+
+        var _this = _possibleConstructorReturn(this, (AB_Work_Object_Workspace_PopupNewDataField.__proto__ || Object.getPrototypeOf(AB_Work_Object_Workspace_PopupNewDataField)).call(this, App, 'ab_work_object_workspace_popupNewDataField'));
+
+        var L = _this.Label;
+
+        var labels = {
+            common: App.labels,
+            component: {
+                fieldType: L('ab.add_fields.fieldType', "*Field type"),
+                label: L('ab.add_fields.label', "*Label"),
+                addNewField: L('ab.add_fields.addNewField', "*Add Column")
+            }
+        };
+
+        // internal list of Webix IDs to reference our UI components.
+        var ids = {
+            component: _this.unique('component'),
+            types: _this.unique('types'),
+            editDefinitions: _this.unique('editDefinitions'),
+
+            buttonSave: _this.unique('buttonSave'),
+            buttonCancel: _this.unique('buttonCancel')
+        };
+
+        // Our webix UI definition:
+        _this.ui = {
+            view: "popup",
+            id: ids.component,
+            modal: true,
+            autoheight: true,
+            // maxHeight: 420,
+
+            // ready: function () {
+            //  console.error('ready() called!!!')
+            //  _logic.resetState();
+            // },
+
+            body: {
+                css: 'ab-add-fields-popup',
+                borderless: true,
+                rows: [{
+                    view: "richselect",
+                    id: ids.types,
+                    label: labels.component.fieldType,
+                    labelWidth: App.config.labelWidthLarge,
+                    options: [
+                    //We will add these later
+                    { id: 'temporary', view: 'temporary' }],
+                    on: {
+                        onChange: function onChange(id, ev, node) {
+                            _logic.onChange(id);
+                        }
+                    }
+                }, {
+                    height: 10,
+                    type: "line"
+                }, {
+                    view: 'multiview',
+                    id: ids.editDefinitions,
+                    // NOTE: can't leave this an empty []. We redefine this value later.
+                    cells: [{ id: 'del_me', view: 'label', label: 'edit definition here' }]
+                }, { height: 10 }, {
+                    cols: [{ fillspace: true }, {
+                        view: "button",
+                        value: labels.common.cancel,
+                        css: "ab-cancel-button",
+                        autowidth: true,
+                        click: function click() {
+                            _logic.buttonCancel();
+                        }
+                    }, {
+                        view: "button",
+                        id: ids.buttonSave,
+                        label: labels.component.addNewField,
+                        autowidth: true,
+                        type: "form",
+                        click: function click() {
+                            _logic.buttonSave();
+                        }
+                    }]
+                }]
+            },
+            on: {
+                onBeforeShow: function onBeforeShow() {
+                    _logic.resetState();
+                },
+                onShow: function onShow() {
+                    _logic.onShow();
+                },
+                onHide: function onHide() {
+                    _logic.resetState();
+                }
+            }
+        };
 
-	var _objectHash = {}; // 'name' => ABFieldXXX object
-	var _componentHash = {}; // 'name' => ABFieldXXX ui component
-	var _componentsByType = {}; // 'type' => ABFieldXXX ui component
-	var _currentEditor = null;
-	var _currentObject = null;
+        var _objectHash = {}; // 'name' => ABFieldXXX object
+        var _componentHash = {}; // 'name' => ABFieldXXX ui component
+        var _componentsByType = {}; // 'type' => ABFieldXXX ui component
+        var _currentEditor = null;
+        var _currentObject = null;
 
-	var defaultEditorComponent = null; // the default editor.
-	var defaultEditorID = null; // the default editor id.
-	var submenus = []; // Create the submenus for our Data Fields:
+        var defaultEditorComponent = null; // the default editor.
+        var defaultEditorID = null; // the default editor id.
+        var submenus = []; // Create the submenus for our Data Fields:
 
-	var _editField = null; // field instance being edited
+        var _editField = null; // field instance being edited
 
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
 
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
+        // Our init() function for setting up our UI
+        _this.init = function (options) {
 
-		var Fields = _ABFieldManager2.default.allFields();
+            // register our callbacks:
+            for (var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
-		//// we need to load a submenu entry and an editor definition for each
-		//// of our Fields
+            // initialize our components
+            webix.ui(_this.ui);
 
+            var Fields = _ABFieldManager2.default.allFields();
 
-		var newEditorList = {
-			view: 'multiview',
-			id: ids.editDefinitions,
-			rows: []
-		};
+            //// we need to load a submenu entry and an editor definition for each
+            //// of our Fields
 
-		Fields.forEach(function (F) {
 
-			var menuName = F.defaults().menuName;
-			var key = F.defaults().key;
+            var newEditorList = {
+                view: 'multiview',
+                id: ids.editDefinitions,
+                rows: []
+            };
 
-			// add a submenu for the fields multilingual key
-			submenus.push({ "id": menuName, "value": menuName });
+            Fields.forEach(function (F) {
 
-			// Add the Field's definition editor here:
-			var editorComponent = F.propertiesComponent(App);
-			if (!defaultEditorComponent) {
-				defaultEditorComponent = editorComponent;
-				defaultEditorID = menuName;
-			}
-			newEditorList.rows.push(editorComponent.ui);
+                var menuName = F.defaults().menuName;
+                var key = F.defaults().key;
 
-			_objectHash[menuName] = F;
-			_componentHash[menuName] = editorComponent;
-			_componentsByType[key] = editorComponent;
-		});
+                // add a submenu for the fields multilingual key
+                submenus.push({ "id": menuName, "value": menuName });
 
-		// the submenu button has a placeholder we need to remove and update
-		// with one that has all our submenus in it.
-		// var firstID = $$(ids.types).getFirstId();
-		// $$(ids.types).updateItem(firstID, {
-		// 	value: labels.component.chooseType,
-		// 	submenu: submenus
-		// })
-		$$(ids.types).define("options", submenus);
-		$$(ids.types).refresh;
+                // Add the Field's definition editor here:
+                var editorComponent = F.propertiesComponent(App);
+                if (!defaultEditorComponent) {
+                    defaultEditorComponent = editorComponent;
+                    defaultEditorID = menuName;
+                }
+                newEditorList.rows.push(editorComponent.ui);
 
-		// now remove the 'del_me' definition editor placeholder.
-		webix.ui(newEditorList, $$(ids.editDefinitions));
+                _objectHash[menuName] = F;
+                _componentHash[menuName] = editorComponent;
+                _componentsByType[key] = editorComponent;
+            });
 
-		// hide all the unused editors:
-		for (var c in _componentHash) {
-			_componentHash[c].hide();
-		}
+            // the submenu button has a placeholder we need to remove and update
+            // with one that has all our submenus in it.
+            // var firstID = $$(ids.types).getFirstId();
+            // $$(ids.types).updateItem(firstID, {
+            //  value: labels.component.chooseType,
+            //  submenu: submenus
+            // })
+            $$(ids.types).define("options", submenus);
+            $$(ids.types).refresh;
 
-		defaultEditorComponent.show(); // show the default editor
-		_currentEditor = defaultEditorComponent;
+            // now remove the 'del_me' definition editor placeholder.
+            webix.ui(newEditorList, $$(ids.editDefinitions));
 
-		// set the richselect to the first option by default.
-		$$(ids.types).setValue(submenus[0].id);
-
-		// $$(ids.editDefinitions).show();
-
-		// $$(ids.editDefinitions).cells() // define the edit Definitions here.
-	};
-
-	// our internal business logic
-	var _logic = {
-
-		buttonCancel: function buttonCancel() {
-
-			_logic.resetState();
-
-			// clear all editors:
-			for (var c in _componentHash) {
-				_componentHash[c].clear();
-			}
-
-			// hide this popup.
-			$$(ids.component).hide();
-		},
-
-		buttonSave: function buttonSave() {
-
-			$$(ids.buttonSave).disable();
-
-			var editor = _currentEditor;
-			if (editor) {
-
-				// the editor can define some basic form validations.
-				if (editor.isValid()) {
-
-					var values = editor.values();
-
-					var field = null;
-					var oldData = null;
-
-					// if this is an ADD operation, (_editField will be undefined)
-					if (!_editField) {
-
-						// get a new instance of a field:
-						field = _currentObject.fieldNew(values);
-					} else {
-
-						// use our _editField, backup our oldData
-						oldData = _editField.toObj();
-						_editField.fromValues(values);
-
-						field = _editField;
-					}
-
-					var validator = field.isValid();
-					if (validator.fail()) {
-						validator.updateForm($$(editor.ui.id));
-						// OP.Form.isValidationError(errors, $$(editor.ui.id));
-
-						// keep our old data
-						if (oldData) {
-							field.fromValues(oldData);
-						}
-
-						$$(ids.buttonSave).enable();
-					} else {
-
-						field.save().then(function () {
-
-							$$(ids.buttonSave).enable();
-							_logic.hide();
-							_currentEditor.clear();
-							_logic.callbacks.onSave(field);
-						}).catch(function (err) {
-							OP.Validation.isFormValidationError(err, $$(editor.ui.id));
-							$$(ids.buttonSave).enable();
-						});
-					}
-				} else {
-					$$(ids.buttonSave).enable();
-				}
-			} else {
-
-				OP.Dialog.Alert({
-					title: '! Could not find the current editor.',
-					text: 'go tell a developer about this.'
-				});
-				$$(ids.buttonSave).enable();
-			}
-
-			// if (!inputValidator.validateFormat(fieldInfo.name)) {
-			// 	self.enable();
-			// 	return;
-			// }
-
-			// // Validate duplicate field name
-			// var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
-			// if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
-			// 	webix.alert({
-			// 		title: labels.add_fields.duplicateFieldTitle,
-			// 		text: labels.add_fields.duplicateFieldDescription,
-			// 		ok: labels.common.ok
-			// 	});
-			// 	this.enable();
-			// 	return;
-			// }
-
-			// if (fieldInfo.weight == null)
-			// 	fieldInfo.weight = dataTable.config.columns.length;
-
-			// // Call callback function
-			// if (base.saveFieldCallback && base.fieldName) {
-			// 	base.saveFieldCallback(base.fieldName, fieldInfo)
-			// 		.then(function () {
-			// 			self.enable();
-			// 			base.resetState();
-			// 			base.hide();
-			// 		});
-			// }
-
-		},
-
-		callbacks: {
-			onCancel: function onCancel() {
-				console.warn('NO onCancel()!');
-			},
-			onSave: function onSave(field) {
-				console.warn('NO onSave()!');
-			}
-		},
-
-		hide: function hide() {
-			$$(ids.component).hide();
-		},
-
-		modeAdd: function modeAdd() {
-
-			// show default editor:
-			defaultEditorComponent.show(false, false);
-			_currentEditor = defaultEditorComponent;
-
-			// show the ability to switch data types
-			$$(ids.types).show();
-
-			// change button text to 'add'
-			$$(ids.buttonSave).define('label', labels.component.addNewField);
-			$$(ids.buttonSave).refresh();
-		},
-
-		modeEdit: function modeEdit(field) {
-
-			if (_currentEditor) _currentEditor.hide();
-
-			// switch to this field's editor:
-			// hide the rest
-			for (var c in _componentsByType) {
-				if (c == field.key) {
-					_componentsByType[c].populate(field);
-					_componentsByType[c].show(false, false);
-					_currentEditor = _componentsByType[c];
-				} else {
-					_componentsByType[c].hide();
-				}
-			}
-
-			// hide the ability to switch data types
-			$$(ids.types).hide();
-
-			// change button text to 'save'
-			$$(ids.buttonSave).define('label', labels.common.save);
-			$$(ids.buttonSave).refresh();
-		},
-
-		/**
-   * @function onChange
-   * swap the editor view to match the data field selected in the menu.
-   *
-   * @param {string} name  the menuName() of the submenu that was selected.
-   */
-		onChange: function onChange(name) {
-			// note, the submenu returns the Field.menuName() values.
-			// we use that to lookup the Field here:
-			var editor = _componentHash[name];
-			if (editor) {
-				editor.show();
-				_currentEditor = editor;
-				$$(ids.types).blur();
-			} else {
-
-				// most likely they clicked on the menu button itself.
-				// do nothing.
-
-				// OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
-			}
-		},
-
-		onShow: function onShow() {
-			// if (!AD.comm.isServerReady()) {
-			// 	this.getTopParentView().hide();
-
-			// 	webix.alert({
-			// 		title: labels.add_fields.cannotUpdateFields,
-			// 		text: labels.add_fields.waitRestructureObjects,
-			// 		ok: labels.common.ok
-			// 	});
-			// }
-			// else { // Set default field type
-			// 	this.showFieldData('string');
-			// }
-			console.error('TODO: onShow();');
-		},
-
-		resetState: function resetState() {
-			defaultEditorComponent.show(); // show the default editor
-			_currentEditor = defaultEditorComponent;
-
-			// set the richselect to the first option by default.
-			$$(ids.types).setValue(submenus[0].id);
-
-			// add mode :  change button text to 'Add'
-			// show the default editor
-			console.error('TODO: resetState()');
-		},
-
-		/**
-   * @function show()
-   *
-   * Show this component.
-   * @param {obj} $view  the webix.$view to hover the popup around.
-   * @param {ABField} field the ABField to edit.  If not provided, then
-   *						  this is an ADD operation.
-   */
-		show: function show($view, field) {
-
-			_editField = field;
-
-			if (_editField) {
-
-				_logic.modeEdit(field);
-			} else {
-
-				_logic.modeAdd();
-			}
-
-			$$(ids.component).show($view);
-		},
-
-		typeClick: function typeClick() {
-			// NOTE: for functional testing we need a way to display the submenu
-			// (functional tests don't do .hover very well)
-			// so this routine is to enable .click() to show the submenu.
-
-			var subMenuId = $$(ids.types).config.data[0].submenu;
-
-			// #HACK Sub-menu popup does not render on initial
-			// Force it to render popup by use .getSubMenu()
-			if (typeof subMenuId != 'string') {
-				$$(ids.types).getSubMenu($$(ids.types).config.data[0].id);
-				subMenuId = $$(ids.types).config.data[0].submenu;
-			}
-
-			if ($$(subMenuId)) $$(subMenuId).show();
-		}
-	};
-
-	// Expose any globally accessible Actions:
-	var _actions = {
-
-		populateObjectPopupAddDataField: function populateObjectPopupAddDataField(object) {
-			_currentObject = object;
-		}
-
-	};
-
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
-
-
-		show: _logic.show, // {fn} 	fn(node, ABField)
-
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+            // hide all the unused editors:
+            for (var c in _componentHash) {
+                _componentHash[c].hide();
+            }
+
+            defaultEditorComponent.show(); // show the default editor
+            _currentEditor = defaultEditorComponent;
+
+            // set the richselect to the first option by default.
+            $$(ids.types).setValue(submenus[0].id);
+
+            // $$(ids.editDefinitions).show();
+
+            // $$(ids.editDefinitions).cells() // define the edit Definitions here.
+        };
+
+        // our internal business logic
+        var _logic = _this._logic = {
+
+            buttonCancel: function buttonCancel() {
+
+                _logic.resetState();
+
+                // clear all editors:
+                for (var c in _componentHash) {
+                    _componentHash[c].clear();
+                }
+
+                // hide this popup.
+                $$(ids.component).hide();
+            },
+
+            buttonSave: function buttonSave() {
+
+                $$(ids.buttonSave).disable();
+
+                var editor = _currentEditor;
+                if (editor) {
+
+                    // the editor can define some basic form validations.
+                    if (editor.isValid()) {
+
+                        var values = editor.values();
+
+                        var field = null;
+                        var oldData = null;
+
+                        // if this is an ADD operation, (_editField will be undefined)
+                        if (!_editField) {
+
+                            // get a new instance of a field:
+                            field = _currentObject.fieldNew(values);
+                        } else {
+
+                            // use our _editField, backup our oldData
+                            oldData = _editField.toObj();
+                            _editField.fromValues(values);
+
+                            field = _editField;
+                        }
+
+                        var validator = field.isValid();
+                        if (validator.fail()) {
+                            validator.updateForm($$(editor.ui.id));
+                            // OP.Form.isValidationError(errors, $$(editor.ui.id));
+
+                            // keep our old data
+                            if (oldData) {
+                                field.fromValues(oldData);
+                            }
+
+                            $$(ids.buttonSave).enable();
+                        } else {
+
+                            field.save().then(function () {
+
+                                $$(ids.buttonSave).enable();
+                                _logic.hide();
+                                _currentEditor.clear();
+                                _logic.callbacks.onSave(field);
+                            }).catch(function (err) {
+                                OP.Validation.isFormValidationError(err, $$(editor.ui.id));
+                                $$(ids.buttonSave).enable();
+                            });
+                        }
+                    } else {
+                        $$(ids.buttonSave).enable();
+                    }
+                } else {
+
+                    OP.Dialog.Alert({
+                        title: '! Could not find the current editor.',
+                        text: 'go tell a developer about this.'
+                    });
+                    $$(ids.buttonSave).enable();
+                }
+
+                // if (!inputValidator.validateFormat(fieldInfo.name)) {
+                //  self.enable();
+                //  return;
+                // }
+
+                // // Validate duplicate field name
+                // var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
+                // if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
+                //  webix.alert({
+                //      title: labels.add_fields.duplicateFieldTitle,
+                //      text: labels.add_fields.duplicateFieldDescription,
+                //      ok: labels.common.ok
+                //  });
+                //  this.enable();
+                //  return;
+                // }
+
+                // if (fieldInfo.weight == null)
+                //  fieldInfo.weight = dataTable.config.columns.length;
+
+                // // Call callback function
+                // if (base.saveFieldCallback && base.fieldName) {
+                //  base.saveFieldCallback(base.fieldName, fieldInfo)
+                //      .then(function () {
+                //          self.enable();
+                //          base.resetState();
+                //          base.hide();
+                //      });
+                // }
+
+            },
+
+            callbacks: {
+                onCancel: function onCancel() {
+                    console.warn('NO onCancel()!');
+                },
+                onSave: function onSave(field) {
+                    console.warn('NO onSave()!');
+                }
+            },
+
+            hide: function hide() {
+                $$(ids.component).hide();
+            },
+
+            modeAdd: function modeAdd() {
+
+                // show default editor:
+                defaultEditorComponent.show(false, false);
+                _currentEditor = defaultEditorComponent;
+
+                // show the ability to switch data types
+                $$(ids.types).show();
+
+                // change button text to 'add'
+                $$(ids.buttonSave).define('label', labels.component.addNewField);
+                $$(ids.buttonSave).refresh();
+            },
+
+            modeEdit: function modeEdit(field) {
+
+                if (_currentEditor) _currentEditor.hide();
+
+                // switch to this field's editor:
+                // hide the rest
+                for (var c in _componentsByType) {
+                    if (c == field.key) {
+                        _componentsByType[c].populate(field);
+                        _componentsByType[c].show(false, false);
+                        _currentEditor = _componentsByType[c];
+                    } else {
+                        _componentsByType[c].hide();
+                    }
+                }
+
+                // hide the ability to switch data types
+                $$(ids.types).hide();
+
+                // change button text to 'save'
+                $$(ids.buttonSave).define('label', labels.common.save);
+                $$(ids.buttonSave).refresh();
+            },
+
+            /**
+             * @function onChange
+             * swap the editor view to match the data field selected in the menu.
+             *
+             * @param {string} name  the menuName() of the submenu that was selected.
+             */
+            onChange: function onChange(name) {
+                // note, the submenu returns the Field.menuName() values.
+                // we use that to lookup the Field here:
+                var editor = _componentHash[name];
+                if (editor) {
+                    editor.show();
+                    _currentEditor = editor;
+                    $$(ids.types).blur();
+                } else {
+
+                    // most likely they clicked on the menu button itself.
+                    // do nothing.
+
+                    // OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
+                }
+            },
+
+            onShow: function onShow() {
+                // if (!AD.comm.isServerReady()) {
+                //  this.getTopParentView().hide();
+
+                //  webix.alert({
+                //      title: labels.add_fields.cannotUpdateFields,
+                //      text: labels.add_fields.waitRestructureObjects,
+                //      ok: labels.common.ok
+                //  });
+                // }
+                // else { // Set default field type
+                //  this.showFieldData('string');
+                // }
+                console.error('TODO: onShow();');
+            },
+
+            resetState: function resetState() {
+                defaultEditorComponent.show(); // show the default editor
+                _currentEditor = defaultEditorComponent;
+
+                // set the richselect to the first option by default.
+                $$(ids.types).setValue(submenus[0].id);
+
+                // add mode :  change button text to 'Add'
+                // show the default editor
+                console.error('TODO: resetState()');
+            },
+
+            /**
+             * @function show()
+             *
+             * Show this component.
+             * @param {obj} $view  the webix.$view to hover the popup around.
+             * @param {ABField} field the ABField to edit.  If not provided, then
+             *                        this is an ADD operation.
+             */
+            show: function show($view, field) {
+
+                _editField = field;
+
+                if (_editField) {
+
+                    _logic.modeEdit(field);
+                } else {
+
+                    _logic.modeAdd();
+                }
+
+                $$(ids.component).show($view);
+            },
+
+            typeClick: function typeClick() {
+                // NOTE: for functional testing we need a way to display the submenu
+                // (functional tests don't do .hover very well)
+                // so this routine is to enable .click() to show the submenu.
+
+                var subMenuId = $$(ids.types).config.data[0].submenu;
+
+                // #HACK Sub-menu popup does not render on initial
+                // Force it to render popup by use .getSubMenu()
+                if (typeof subMenuId != 'string') {
+                    $$(ids.types).getSubMenu($$(ids.types).config.data[0].id);
+                    subMenuId = $$(ids.types).config.data[0].submenu;
+                }
+
+                if ($$(subMenuId)) $$(subMenuId).show();
+            }
+        };
+
+        // Expose any globally accessible Actions:
+        _this.actions({
+
+            populateObjectPopupAddDataField: function populateObjectPopupAddDataField(object) {
+                _currentObject = object;
+            }
+
+        });
+
+        // 
+        // Define our external interface methods:
+        // 
+        _this.show = _logic.show; // {fn}     fn(node, ABField)
+        return _this;
+    }
+
+    return AB_Work_Object_Workspace_PopupNewDataField;
+}(OP.Component);
+
+exports.default = AB_Work_Object_Workspace_PopupNewDataField;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 41 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(OP) {
 
-var _ABApplication = __webpack_require__(1);
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
 
-var _ABApplication2 = _interopRequireDefault(_ABApplication);
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 /*
  * ab_work_object_workspace_popupSortFields
  *
@@ -11468,443 +13891,464 @@ function L(key, altText) {
  *
  */
 
-var labels = {
+var AB_Work_Object_Workspace_PopupSortFields = function (_OP$Component) {
+	_inherits(AB_Work_Object_Workspace_PopupSortFields, _OP$Component);
 
-	component: {
-		addNewSort: L('ab.sort_fields.addNewSort', "*Add new sort"),
-		selectField: L('ab.sort_fields.selectField', "*Please select field"),
-		textAsc: L('ab.sort_fields.textAsc', "*A -> Z"),
-		textDesc: L('ab.sort_fields.textDesc', "*Z -> A"),
-		dateAsc: L('ab.sort_fields.dateAsc', "*Before -> After"),
-		dateDesc: L('ab.sort_fields.dateDesc', "*After -> Before"),
-		numberAsc: L('ab.sort_fields.numberAsc', "*1 -> 9"),
-		numberDesc: L('ab.sort_fields.numberDesc', "*9 -> 1"),
-		booleanAsc: L('ab.sort_fields.booleanAsc', "*Checked -> Unchecked"),
-		booleanDesc: L('ab.sort_fields.booleanDesc', "*Unchecked -> Checked")
-	}
-};
+	//.extend(idBase, function(App) {
 
-var idBase = 'ab_work_object_workspace_popupSortFields';
-OP.Component.extend(idBase, function (App) {
+	function AB_Work_Object_Workspace_PopupSortFields(App) {
+		_classCallCheck(this, AB_Work_Object_Workspace_PopupSortFields);
 
-	labels.common = App.labels;
+		var _this = _possibleConstructorReturn(this, (AB_Work_Object_Workspace_PopupSortFields.__proto__ || Object.getPrototypeOf(AB_Work_Object_Workspace_PopupSortFields)).call(this, App, 'ab_work_object_workspace_popupSortFields'));
 
-	// internal list of Webix IDs to reference our UI components
-	var ids = {
-		component: App.unique(idBase + '_component'),
-		list: App.unique(idBase + "_list"),
-		form: App.unique(idBase + "_form")
-	};
+		var L = _this.Label;
 
-	// Our webix UI definition:
-	var _ui = {
-		view: "popup",
-		id: ids.component,
-		autoheight: true,
-		width: 500,
-		body: {
-			view: "form",
-			id: ids.form,
-			autoheight: true,
-			borderless: true,
-			elements: [{
-				view: "button", value: labels.component.addNewSort, click: function click(id, e, node) {
-					_logic.clickAddNewSort();
-				}
-			}]
-		},
-		on: {
-			onShow: function onShow() {
-				_logic.onShow();
+		var labels = {
+			common: App.labels,
+			component: {
+
+				addNewSort: L('ab.sort_fields.addNewSort', "*Add new sort"),
+				selectField: L('ab.sort_fields.selectField', "*Please select field"),
+				textAsc: L('ab.sort_fields.textAsc', "*A -> Z"),
+				textDesc: L('ab.sort_fields.textDesc', "*Z -> A"),
+				dateAsc: L('ab.sort_fields.dateAsc', "*Before -> After"),
+				dateDesc: L('ab.sort_fields.dateDesc', "*After -> Before"),
+				numberAsc: L('ab.sort_fields.numberAsc', "*1 -> 9"),
+				numberDesc: L('ab.sort_fields.numberDesc', "*9 -> 1"),
+				booleanAsc: L('ab.sort_fields.booleanAsc', "*Checked -> Unchecked"),
+				booleanDesc: L('ab.sort_fields.booleanDesc', "*Unchecked -> Checked")
+
 			}
-		}
-	};
+		};
 
-	// Our init() function for setting up our UI
-	var _init = function _init(options) {
-		// register our callbacks:
-		for (var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
-	};
+		// internal list of Webix IDs to reference our UI components
+		var ids = {
+			component: _this.unique('component'),
+			list: _this.unique('list'),
+			form: _this.unique("form")
+		};
 
-	var CurrentObject = null;
-
-	// our internal business logic
-	var _logic = {
-
-		callbacks: {
-
-			/**
-    * @function onChange
-    * called when we have made changes to the hidden field settings
-    * of our Current Object.
-    *
-    * this is meant to alert our parent component to respond to the
-    * change.
-    */
-			onChange: function onChange() {}
-		},
-
-		/**
-   * @function clickAddNewSort
-   * the user clicked the add new sort buttton. I don't know what it does...will update later
-   */
-		clickAddNewSort: function clickAddNewSort(by, dir, as, id) {
-			// Prevent duplicate fields
-			var sort_popup = $$(ids.component),
-			    sort_form = $$(ids.form);
-
-			var viewIndex = sort_form.getChildViews().length - 1;
-			var listFields = _logic.getFieldList(true);
-			sort_form.addView({
-				id: 'sort' + webix.uid(),
-				cols: [{
-					view: "combo",
-					width: 220,
-					options: listFields,
-					on: {
-						"onChange": function onChange(columnId) {
-							var allFields = CurrentObject.fields();
-							var columnConfig = "",
-							    sortDir = this.getParentView().getChildViews()[1],
-							    sortAs = this.getParentView().getChildViews()[2],
-							    defaultAs = null,
-							    options = null;
-
-							allFields.forEach(function (f) {
-								if (f.columnName == columnId) {
-									columnConfig = f;
-								}
-							});
-
-							if (!columnConfig) return;
-
-							switch (columnConfig.key) {
-								case "string":
-									options = [{ id: 'asc', value: labels.component.textAsc }, { id: 'desc', value: labels.component.textDesc }];
-									defaultAs = "string";
-									break;
-								case "date":
-									options = [{ id: 'asc', value: labels.component.dateAsc }, { id: 'desc', value: labels.component.dateDesc }];
-									defaultAs = "date";
-									break;
-								case "number":
-									options = [{ id: 'asc', value: labels.component.numberAsc }, { id: 'desc', value: labels.component.numberDesc }];
-									defaultAs = "int";
-									break;
-							}
-
-							sortDir.define('options', options);
-							sortDir.refresh();
-
-							sortAs.setValue(defaultAs);
-
-							_logic.refreshFieldList();
-
-							_logic.saveSorts();
-						}
-					}
-				}, {
-					view: "segmented", width: 200, options: [{ id: '', value: labels.component.selectField }],
-					on: {
-						onChange: function onChange(newv, oldv) {
-							// 'asc' or 'desc' values
-							_logic.saveSorts();
-						}
-					}
-				}, {
-					view: "text", width: 20, hidden: true, value: ""
-				}, {
-					view: "button", icon: "trash", type: "icon", width: 30, click: function click() {
-						sort_form.removeView(this.getParentView());
-						_logic.refreshFieldList(true);
-						_logic.saveSorts();
+		// Our webix UI definition:
+		_this.ui = {
+			view: "popup",
+			id: ids.component,
+			autoheight: true,
+			width: 500,
+			body: {
+				view: "form",
+				id: ids.form,
+				autoheight: true,
+				borderless: true,
+				elements: [{
+					view: "button", value: labels.component.addNewSort, click: function click(id, e, node) {
+						_logic.clickAddNewSort();
 					}
 				}]
-			}, viewIndex);
-
-			// Select field
-			if (by) {
-				var fieldsCombo = sort_form.getChildViews()[viewIndex].getChildViews()[0];
-				fieldsCombo.setValue(by);
+			},
+			on: {
+				onShow: function onShow() {
+					_logic.onShow();
+				}
 			}
-			if (dir) {
-				var segmentButton = sort_form.getChildViews()[viewIndex].getChildViews()[1];
-				segmentButton.setValue(dir);
+		};
+
+		// Our init() function for setting up our UI
+		_this.init = function (options) {
+			// register our callbacks:
+			for (var c in _logic.callbacks) {
+				_logic.callbacks[c] = options[c] || _logic.callbacks[c];
 			}
-			if (as) {
-				var asField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
-				asField.setValue(as);
-			}
-			_logic.callbacks.onChange();
-		},
 
-		/**
-   * @function getFieldList
-   * return field list so we can present a custom UI for view
-   */
-		getFieldList: function getFieldList(excludeSelected) {
-			var sort_popup = $$(ids.component),
-			    sort_form = $$(ids.form),
-			    listFields = [];
+			webix.ui(_this.ui);
+		};
 
-			if (!CurrentObject.fields()) return listFields;
+		var CurrentObject = null;
 
-			// Get all fields include hidden fields
-			var allFields = CurrentObject.fields();
-			allFields.forEach(function (f) {
-				listFields.push({
-					id: f.columnName,
-					label: f.label
+		// our internal business logic
+		var _logic = _this._logic = {
+
+			callbacks: {
+
+				/**
+     * @function onChange
+     * called when we have made changes to the hidden field settings
+     * of our Current Object.
+     *
+     * this is meant to alert our parent component to respond to the
+     * change.
+     */
+				onChange: function onChange() {}
+			},
+
+			/**
+    * @function clickAddNewSort
+    * the user clicked the add new sort buttton. I don't know what it does...will update later
+    */
+			clickAddNewSort: function clickAddNewSort(by, dir, as, id) {
+				// Prevent duplicate fields
+				var sort_popup = $$(ids.component),
+				    sort_form = $$(ids.form);
+
+				var viewIndex = sort_form.getChildViews().length - 1;
+				var listFields = _logic.getFieldList(true);
+				sort_form.addView({
+					id: 'sort' + webix.uid(),
+					cols: [{
+						view: "combo",
+						width: 220,
+						options: listFields,
+						on: {
+							"onChange": function onChange(columnId) {
+								var allFields = CurrentObject.fields();
+								var columnConfig = "",
+								    sortDir = this.getParentView().getChildViews()[1],
+								    sortAs = this.getParentView().getChildViews()[2],
+								    defaultAs = null,
+								    options = null;
+
+								allFields.forEach(function (f) {
+									if (f.columnName == columnId) {
+										columnConfig = f;
+									}
+								});
+
+								if (!columnConfig) return;
+
+								switch (columnConfig.key) {
+									case "string":
+										options = [{ id: 'asc', value: labels.component.textAsc }, { id: 'desc', value: labels.component.textDesc }];
+										defaultAs = "string";
+										break;
+									case "date":
+										options = [{ id: 'asc', value: labels.component.dateAsc }, { id: 'desc', value: labels.component.dateDesc }];
+										defaultAs = "date";
+										break;
+									case "number":
+										options = [{ id: 'asc', value: labels.component.numberAsc }, { id: 'desc', value: labels.component.numberDesc }];
+										defaultAs = "int";
+										break;
+								}
+
+								sortDir.define('options', options);
+								sortDir.refresh();
+
+								sortAs.setValue(defaultAs);
+
+								_logic.refreshFieldList();
+
+								_logic.saveSorts();
+							}
+						}
+					}, {
+						view: "segmented", width: 200, options: [{ id: '', value: labels.component.selectField }],
+						on: {
+							onChange: function onChange(newv, oldv) {
+								// 'asc' or 'desc' values
+								_logic.saveSorts();
+							}
+						}
+					}, {
+						view: "text", width: 20, hidden: true, value: ""
+					}, {
+						view: "button", icon: "trash", type: "icon", width: 30, click: function click() {
+							sort_form.removeView(this.getParentView());
+							_logic.refreshFieldList(true);
+							_logic.saveSorts();
+						}
+					}]
+				}, viewIndex);
+
+				// Select field
+				if (by) {
+					var fieldsCombo = sort_form.getChildViews()[viewIndex].getChildViews()[0];
+					fieldsCombo.setValue(by);
+				}
+				if (dir) {
+					var segmentButton = sort_form.getChildViews()[viewIndex].getChildViews()[1];
+					segmentButton.setValue(dir);
+				}
+				if (as) {
+					var asField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
+					asField.setValue(as);
+				}
+				_logic.callbacks.onChange();
+			},
+
+			/**
+    * @function getFieldList
+    * return field list so we can present a custom UI for view
+    */
+			getFieldList: function getFieldList(excludeSelected) {
+				var sort_popup = $$(ids.component),
+				    sort_form = $$(ids.form),
+				    listFields = [];
+
+				if (!CurrentObject.fields()) return listFields;
+
+				// Get all fields include hidden fields
+				var allFields = CurrentObject.fields();
+				allFields.forEach(function (f) {
+					listFields.push({
+						id: f.columnName,
+						label: f.label
+					});
 				});
-			});
 
-			// Remove selected field
-			if (excludeSelected) {
+				// Remove selected field
+				if (excludeSelected) {
+					var childViews = sort_form.getChildViews();
+					if (childViews.length > 1) {
+						// Ignore 'Add new sort' button
+						childViews.forEach(function (cView, index) {
+							if (childViews.length - 1 <= index) return false;
+
+							var selectedValue = cView.getChildViews()[0].getValue();
+							if (selectedValue) {
+								var removeIndex = null;
+								var removeItem = $.grep(listFields, function (f, index) {
+									if (f.id == selectedValue) {
+										removeIndex = index;
+										return true;
+									} else {
+										return false;
+									}
+								});
+								listFields.splice(removeIndex, 1);
+							}
+						});
+					}
+				}
+				return listFields;
+			},
+
+			// /**
+			//  * @function sort
+			//  * this preforms the sort on the datagrid (this may move to the datagrid once I read further)
+			//  */
+			// sort: function () {
+			// 	var sort_popup = $$(ids.component),
+			// 		sort_form = $$(ids.form),
+			// 		columnOrders = [];
+			//
+			// 	sort_form.getChildViews().forEach(function (cView, index) {
+			// 		if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
+			// 			return;
+			//
+			// 		var columnId = cView.getChildViews()[0].getValue();
+			// 		var order = cView.getChildViews()[1].getValue();
+			//
+			// 		if (columnId) {
+			// 			var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
+			//
+			// 			if (columnConfig) {
+			// 				columnOrders.push({
+			// 					name: columnConfig.id,
+			// 					order: order
+			// 				});
+			// 			}
+			// 		}
+			// 	});
+			//
+			// 	sort_popup.dataTable.sort(function (a, b) {
+			// 		var result = false;
+			//
+			// 		for (var i = 0; i < columnOrders.length; i++) {
+			// 			var column = columnOrders[i],
+			// 				aValue = a[column.name],
+			// 				bValue = b[column.name];
+			//
+			// 			if ($.isArray(aValue)) {
+			// 				aValue = $.map(aValue, function (item) { return item.text }).join(' ');
+			// 			}
+			//
+			// 			if ($.isArray(bValue)) {
+			// 				bValue = $.map(bValue, function (item) { return item.text }).join(' ');
+			// 			}
+			//
+			// 			if (aValue != bValue) {
+			// 				if (column.order == 'asc') {
+			// 					result = aValue > bValue ? 1 : -1;
+			// 				}
+			// 				else {
+			// 					result = aValue < bValue ? 1 : -1;
+			// 				}
+			// 				break;
+			// 			}
+			// 		}
+			//
+			// 		return result;
+			// 	});
+			// },
+
+			/**
+    * @function objectLoad
+    * Ready the Popup according to the current object
+    * @param {ABObject} object  the currently selected object.
+    */
+			objectLoad: function objectLoad(object) {
+				CurrentObject = object;
+
+				// // refresh list
+				// var allFields = CurrentObject.fields();
+				// allFields.forEach((f) => {
+				// 	alert(f.label);
+				// 	listFields.push({
+				// 		id: f.id,
+				// 		label: f.label,
+				// 		$css:"hidden_fields_"+f.id
+				// 	})
+				// })
+
+				//$$(ids.list).parse(listFields);
+			},
+
+			/**
+    * @function objectLoad
+    * Ready the Popup according to the current object
+    * @param {ABObject} object  the currently selected object.
+    */
+			onShow: function onShow() {
+				var sort_popup = $$(ids.component),
+				    sort_form = $$(ids.form);
+
+				var childViews = sort_form.getChildViews();
+				if (childViews.length == 1) {
+					var sorts = CurrentObject.workspaceSortFields;
+					sorts.forEach(function (s) {
+						_logic.clickAddNewSort(s.by, s.dir, s.as);
+					});
+
+					if (sorts.length == 0) {
+						_logic.clickAddNewSort();
+					}
+				}
+			},
+
+			/**
+    * @function refreshFieldList
+    * return an updated field list so you cannot duplicate a sort
+    */
+			refreshFieldList: function refreshFieldList(ignoreRemoveViews) {
+				var sort_popup = $$(ids.component),
+				    sort_form = $$(ids.form),
+				    listFields = _logic.getFieldList(false),
+				    selectedFields = [],
+				    removeChildViews = [];
+
 				var childViews = sort_form.getChildViews();
 				if (childViews.length > 1) {
 					// Ignore 'Add new sort' button
 					childViews.forEach(function (cView, index) {
 						if (childViews.length - 1 <= index) return false;
 
-						var selectedValue = cView.getChildViews()[0].getValue();
-						if (selectedValue) {
-							var removeIndex = null;
-							var removeItem = $.grep(listFields, function (f, index) {
-								if (f.id == selectedValue) {
-									removeIndex = index;
-									return true;
-								} else {
-									return false;
-								}
-							});
-							listFields.splice(removeIndex, 1);
+						var fieldId = cView.getChildViews()[0].getValue(),
+						    fieldObj = $.grep(listFields, function (f) {
+							return f.id == fieldId;
+						});
+
+						if (fieldObj.length > 0) {
+							// Add selected field to list
+							selectedFields.push(fieldObj[0]);
+						} else {
+							// Add condition to remove
+							removeChildViews.push(cView);
 						}
 					});
 				}
-			}
-			return listFields;
-		},
 
-		// /**
-		//  * @function sort
-		//  * this preforms the sort on the datagrid (this may move to the datagrid once I read further)
-		//  */
-		// sort: function () {
-		// 	var sort_popup = $$(ids.component),
-		// 		sort_form = $$(ids.form),
-		// 		columnOrders = [];
-		//
-		// 	sort_form.getChildViews().forEach(function (cView, index) {
-		// 		if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
-		// 			return;
-		//
-		// 		var columnId = cView.getChildViews()[0].getValue();
-		// 		var order = cView.getChildViews()[1].getValue();
-		//
-		// 		if (columnId) {
-		// 			var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
-		//
-		// 			if (columnConfig) {
-		// 				columnOrders.push({
-		// 					name: columnConfig.id,
-		// 					order: order
-		// 				});
-		// 			}
-		// 		}
-		// 	});
-		//
-		// 	sort_popup.dataTable.sort(function (a, b) {
-		// 		var result = false;
-		//
-		// 		for (var i = 0; i < columnOrders.length; i++) {
-		// 			var column = columnOrders[i],
-		// 				aValue = a[column.name],
-		// 				bValue = b[column.name];
-		//
-		// 			if ($.isArray(aValue)) {
-		// 				aValue = $.map(aValue, function (item) { return item.text }).join(' ');
-		// 			}
-		//
-		// 			if ($.isArray(bValue)) {
-		// 				bValue = $.map(bValue, function (item) { return item.text }).join(' ');
-		// 			}
-		//
-		// 			if (aValue != bValue) {
-		// 				if (column.order == 'asc') {
-		// 					result = aValue > bValue ? 1 : -1;
-		// 				}
-		// 				else {
-		// 					result = aValue < bValue ? 1 : -1;
-		// 				}
-		// 				break;
-		// 			}
-		// 		}
-		//
-		// 		return result;
-		// 	});
-		// },
-
-		/**
-   * @function objectLoad
-   * Ready the Popup according to the current object
-   * @param {ABObject} object  the currently selected object.
-   */
-		objectLoad: function objectLoad(object) {
-			CurrentObject = object;
-
-			// // refresh list
-			// var allFields = CurrentObject.fields();
-			// allFields.forEach((f) => {
-			// 	alert(f.label);
-			// 	listFields.push({
-			// 		id: f.id,
-			// 		label: f.label,
-			// 		$css:"hidden_fields_"+f.id
-			// 	})
-			// })
-
-			//$$(ids.list).parse(listFields);
-		},
-
-		/**
-   * @function objectLoad
-   * Ready the Popup according to the current object
-   * @param {ABObject} object  the currently selected object.
-   */
-		onShow: function onShow() {
-			var sort_popup = $$(ids.component),
-			    sort_form = $$(ids.form);
-
-			var childViews = sort_form.getChildViews();
-			if (childViews.length == 1) {
-				var sorts = CurrentObject.workspaceSortFields;
-				sorts.forEach(function (s) {
-					_logic.clickAddNewSort(s.by, s.dir, s.as);
-				});
-
-				if (sorts.length == 0) {
-					_logic.clickAddNewSort();
+				// Remove filter conditions when column is deleted
+				if (!ignoreRemoveViews) {
+					removeChildViews.forEach(function (cView, index) {
+						sort_form.removeView(cView);
+					});
 				}
-			}
-		},
 
-		/**
-   * @function refreshFieldList
-   * return an updated field list so you cannot duplicate a sort
-   */
-		refreshFieldList: function refreshFieldList(ignoreRemoveViews) {
-			var sort_popup = $$(ids.component),
-			    sort_form = $$(ids.form),
-			    listFields = _logic.getFieldList(false),
-			    selectedFields = [],
-			    removeChildViews = [];
+				// Field list should not duplicate field items
+				childViews = sort_form.getChildViews();
+				if (childViews.length > 1) {
+					// Ignore 'Add new sort' button
+					childViews.forEach(function (cView, index) {
+						if (childViews.length - 1 <= index) return false;
 
-			var childViews = sort_form.getChildViews();
-			if (childViews.length > 1) {
-				// Ignore 'Add new sort' button
-				childViews.forEach(function (cView, index) {
-					if (childViews.length - 1 <= index) return false;
+						var fieldId = cView.getChildViews()[0].getValue(),
+						    fieldObj = $.grep(listFields, function (f) {
+							return f.id == fieldId;
+						});
 
-					var fieldId = cView.getChildViews()[0].getValue(),
-					    fieldObj = $.grep(listFields, function (f) {
-						return f.id == fieldId;
+						var selectedFieldsExcludeCurField = $(selectedFields).not(fieldObj);
+
+						var enableFields = $(listFields).not(selectedFieldsExcludeCurField).get();
+
+						// Update field list
+						cView.getChildViews()[0].define('options', enableFields);
+						cView.getChildViews()[0].refresh();
 					});
+				}
+			},
 
-					if (fieldObj.length > 0) {
-						// Add selected field to list
-						selectedFields.push(fieldObj[0]);
-					} else {
-						// Add condition to remove
-						removeChildViews.push(cView);
-					}
-				});
-			}
+			/**
+    * @function saveSorts
+    * This parses the sort form to build in order the sorts then saves to the application object workspace
+    */
+			saveSorts: function saveSorts() {
+				// Prevent duplicate fields
+				var sort_popup = $$(ids.component),
+				    sort_form = $$(ids.form),
+				    sortFields = [];
 
-			// Remove filter conditions when column is deleted
-			if (!ignoreRemoveViews) {
-				removeChildViews.forEach(function (cView, index) {
-					sort_form.removeView(cView);
-				});
-			}
+				var childViews = sort_form.getChildViews();
+				if (childViews.length > 1) {
+					// Ignore 'Add new sort' button
+					childViews.forEach(function (cView, index) {
+						if (childViews.length - 1 <= index) return false;
 
-			// Field list should not duplicate field items
-			childViews = sort_form.getChildViews();
-			if (childViews.length > 1) {
-				// Ignore 'Add new sort' button
-				childViews.forEach(function (cView, index) {
-					if (childViews.length - 1 <= index) return false;
-
-					var fieldId = cView.getChildViews()[0].getValue(),
-					    fieldObj = $.grep(listFields, function (f) {
-						return f.id == fieldId;
+						var by = cView.getChildViews()[0].getValue();
+						var dir = cView.getChildViews()[1].getValue();
+						var as = cView.getChildViews()[2].getValue();
+						sortFields.push({ "by": by, "dir": dir, "as": as });
 					});
+				}
 
-					var selectedFieldsExcludeCurField = $(selectedFields).not(fieldObj);
-
-					var enableFields = $(listFields).not(selectedFieldsExcludeCurField).get();
-
-					// Update field list
-					cView.getChildViews()[0].define('options', enableFields);
-					cView.getChildViews()[0].refresh();
+				CurrentObject.workspaceSortFields = sortFields;
+				CurrentObject.save().then(function () {
+					_logic.callbacks.onChange();
+				}).catch(function (err) {
+					OP.Error.log('Error trying to save workspaceSortFields', { error: err, fields: sortFields });
 				});
-			}
-		},
+			},
 
-		/**
-   * @function saveSorts
-   * This parses the sort form to build in order the sorts then saves to the application object workspace
-   */
-		saveSorts: function saveSorts() {
-			// Prevent duplicate fields
-			var sort_popup = $$(ids.component),
-			    sort_form = $$(ids.form),
-			    sortFields = [];
-
-			var childViews = sort_form.getChildViews();
-			if (childViews.length > 1) {
-				// Ignore 'Add new sort' button
-				childViews.forEach(function (cView, index) {
-					if (childViews.length - 1 <= index) return false;
-
-					var by = cView.getChildViews()[0].getValue();
-					var dir = cView.getChildViews()[1].getValue();
-					var as = cView.getChildViews()[2].getValue();
-					sortFields.push({ "by": by, "dir": dir, "as": as });
-				});
+			/**
+    * @function show()
+    *
+    * Show this component.
+    * @param {obj} $view  the webix.$view to hover the popup around.
+    */
+			show: function show($view) {
+				$$(ids.component).show($view);
 			}
 
-			CurrentObject.workspaceSortFields = sortFields;
-			CurrentObject.save().then(function () {
-				_logic.callbacks.onChange();
-			}).catch(function (err) {
-				OP.Error.log('Error trying to save workspaceSortFields', { error: err, fields: sortFields });
-			});
-		}
+		};
 
-	};
+		// Expose any globally accessible Actions:
+		_this.actions({});
 
-	// Expose any globally accessible Actions:
-	var _actions = {};
+		// 
+		// Define our external interface methods:
+		// 
+		_this.objectLoad = _logic.objectLoad;
+		_this.show = _logic.show;
 
-	// return the current instance of this component:
-	return {
-		ui: _ui, // {obj} 	the webix ui definition for this component
-		init: _init, // {fn} 	init() to setup this component
-		actions: _actions, // {ob}		hash of fn() to expose so other components can access.
+		return _this;
+	}
 
+	return AB_Work_Object_Workspace_PopupSortFields;
+}(OP.Component);
 
-		// interface methods for parent component:
-		objectLoad: _logic.objectLoad,
-
-		_logic: _logic // {obj} 	Unit Testing
-	};
-});
+exports.default = AB_Work_Object_Workspace_PopupSortFields;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 42 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11934,7 +14378,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 43 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11943,6 +14387,94 @@ OP.Model.extend('opstools.BuildApp.ABApplication', {
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+/*
+ * custom_datetimepicker
+ *
+ * Create a custom webix component.
+ *
+ */
+
+var ComponentKey = 'ab_custom_datetimepicker';
+
+var ABCustomDateTimePicker = function (_OP$CustomComponent) {
+	_inherits(ABCustomDateTimePicker, _OP$CustomComponent);
+
+	//.extend(ComponentKey, function(App, componentKey ) {
+
+	function ABCustomDateTimePicker(App, key) {
+		_classCallCheck(this, ABCustomDateTimePicker);
+
+		var _this = _possibleConstructorReturn(this, (ABCustomDateTimePicker.__proto__ || Object.getPrototypeOf(ABCustomDateTimePicker)).call(this, App, key));
+		// App 	{obj}	our application instance object.
+		// componentKey {string}	the destination key in App.custom[componentKey] for the instance of this component:
+
+		var L = _this.Label;
+
+		var labels = {
+
+			common: App.labels,
+
+			component: {}
+
+		};
+
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: App.unique(ComponentKey)
+		};
+
+		// Our webix UI definition:
+		var _ui = {
+			name: App.unique("custom_datetimepicker") // keep this unique for this App instance.
+		};
+		_this.view = ComponentKey;
+
+		// our internal business logic 
+		var _logic = {};
+		_this._logic = _logic;
+
+		// Tell Webix to create an INSTANCE of our custom component:
+		webix.editors.$popup.datetime = {
+			view: "popup", width: 250, height: 250, padding: 0,
+			body: { view: "calendar", icons: true, borderless: true, timepicker: true }
+		};
+
+		webix.editors.datetime = webix.extend({
+			popupType: "datetime"
+		}, webix.editors.date);
+
+		return _this;
+	}
+
+	return ABCustomDateTimePicker;
+}(OP.CustomComponent);
+
+exports.default = ABCustomDateTimePicker;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 54 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /*
  * custom_editlist
@@ -11951,62 +14483,59 @@ Object.defineProperty(exports, "__esModule", {
  *
  */
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var labels = {
-
-	component: {
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-	}
-};
-
 var ComponentKey = 'ab_custom_editlist';
-OP.CustomComponent.extend(ComponentKey, function (App, componentKey) {
-	// App 	{obj}	our application instance object.
-	// componentKey {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-	labels.common = App.labels;
+var ABCustomEditList = function (_OP$CustomComponent) {
+	_inherits(ABCustomEditList, _OP$CustomComponent);
 
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique('custom_editlist_component')
-	};
+	// .extend(ComponentKey, function(App, componentKey ) {
 
-	// Our webix UI definition:
-	var _ui = {
-		name: App.unique("custom_editlist") // keep this unique for this App instance.
-	};
+	function ABCustomEditList(App, key) {
+		_classCallCheck(this, ABCustomEditList);
 
-	// our internal business logic 
-	var _logic = {};
+		var _this = _possibleConstructorReturn(this, (ABCustomEditList.__proto__ || Object.getPrototypeOf(ABCustomEditList)).call(this, App, key));
+		// App 	{obj}	our application instance object.
+		// key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-	// Tell Webix to create an INSTANCE of our custom component:
-	webix.protoUI(_ui, webix.EditAbility, webix.ui.list);
+		var L = _this.Label;
 
-	// current definition of our Component 
-	var Component = {
-		view: _ui.name, // {string} the webix.view value for this custom component
+		var labels = {
 
-		_logic: _logic // {obj} 	Unit Testing
-	};
+			common: App.labels,
 
-	// Save our definition into App.custom.[key]
-	App.custom = App.custom || {};
-	App.custom[componentKey] = Component;
+			component: {}
 
-	// return the current definition of this component:
-	return Component;
-});
+		};
 
-// After importing this custom component, you get back the .key to use to 
-// lookup the OP.Component[] to create an application instance of 
-exports.default = { key: ComponentKey };
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: App.unique(ComponentKey)
+		};
+
+		// Our webix UI definition:
+		var _ui = {
+			name: ComponentKey
+		};
+		_this.view = ComponentKey;
+
+		// our internal business logic 
+		var _logic = {};
+		_this._logic = _logic;
+
+		// Tell Webix to create an INSTANCE of our custom component:
+		webix.protoUI(_ui, webix.EditAbility, webix.ui.list);
+
+		return _this;
+	}
+
+	return ABCustomEditList;
+}(OP.CustomComponent);
+
+exports.default = ABCustomEditList;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 44 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12016,6 +14545,12 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 /*
  * custom_edittree
  *
@@ -12023,64 +14558,58 @@ Object.defineProperty(exports, "__esModule", {
  *
  */
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
-
-var labels = {
-
-	component: {
-		// formHeader: L('ab.application.form.header', "*Application Info"),
-	}
-};
-
 var ComponentKey = 'ab_custom_edittree';
-OP.CustomComponent.extend(ComponentKey, function (App, componentKey) {
-	// App 	{obj}	our application instance object.
-	// componentKey {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
+var ABCustomEditTree = function (_OP$CustomComponent) {
+	_inherits(ABCustomEditTree, _OP$CustomComponent);
 
-	labels.common = App.labels;
+	// .extend(ComponentKey, function(App, componentKey ) {
 
-	// internal list of Webix IDs to reference our UI components.
-	var ids = {
-		component: App.unique('custom_edittree_component')
+	function ABCustomEditTree(App, key) {
+		_classCallCheck(this, ABCustomEditTree);
 
-	};
+		var _this = _possibleConstructorReturn(this, (ABCustomEditTree.__proto__ || Object.getPrototypeOf(ABCustomEditTree)).call(this, App, key));
+		// App 	{obj}	our application instance object.
+		// key {string}	the destination key in App.custom[componentKey] for the instance of this component:
 
-	// Our webix Prototype definition:
-	var _ui = {
-		name: App.unique("custom_edittree") // keep this unique for this App instance.
-	};
+		var L = _this.Label;
 
-	// our internal business logic 
-	var _logic = {};
+		var labels = {
 
-	// Tell Webix to create an INSTANCE of our custom component:
-	webix.protoUI(_ui, webix.EditAbility, webix.ui.tree);
+			common: App.labels,
 
-	// current definition of our Component 
-	var Component = {
-		view: _ui.name, // {string} the webix.view value for this custom component
+			component: {}
 
-		_logic: _logic // {obj} 	Unit Testing
-	};
+		};
 
-	// Save our definition into App.custom.[key]
-	App.custom = App.custom || {};
-	App.custom[componentKey] = Component;
+		// internal list of Webix IDs to reference our UI components.
+		var ids = {
+			component: App.unique(ComponentKey)
+		};
 
-	// return the current definition of this component:
-	return Component;
-});
+		// Our webix UI definition:
+		var _ui = {
+			name: ComponentKey
+		};
+		_this.view = ComponentKey;
 
-// After importing this custom component, you get back the .key to use to 
-// lookup the OP.Component[] to create an application instance of 
-exports.default = { key: ComponentKey };
+		// our internal business logic 
+		var _logic = {};
+		_this._logic = _logic;
+
+		// Tell Webix to create an INSTANCE of our custom component:
+		webix.protoUI(_ui, webix.EditAbility, webix.ui.tree);
+		return _this;
+	}
+
+	return ABCustomEditTree;
+}(OP.CustomComponent);
+
+exports.default = ABCustomEditTree;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 45 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12162,7 +14691,7 @@ function toComment(sourceMap) {
 }
 
 /***/ }),
-/* 46 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12257,10 +14786,10 @@ module.exports = function (css) {
 };
 
 /***/ }),
-/* 47 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(45)(undefined);
+exports = module.exports = __webpack_require__(56)(undefined);
 // imports
 
 
@@ -12271,7 +14800,7 @@ exports.push([module.i, ".webix_view, .webix_el_colorpicker input, .webix_el_com
 
 
 /***/ }),
-/* 48 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -12308,7 +14837,7 @@ var stylesInDom = {},
 	singletonElement = null,
 	singletonCounter = 0,
 	styleElementsInsertedAtTop = [],
-	fixUrls = __webpack_require__(46);
+	fixUrls = __webpack_require__(57);
 
 module.exports = function(list, options) {
 	if(typeof DEBUG !== "undefined" && DEBUG) {
@@ -12567,16 +15096,16 @@ function updateLink(linkElement, options, obj) {
 
 
 /***/ }),
-/* 49 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(47);
+var content = __webpack_require__(58);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // add the styles to the DOM
-var update = __webpack_require__(48)(content, {});
+var update = __webpack_require__(59)(content, {});
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {

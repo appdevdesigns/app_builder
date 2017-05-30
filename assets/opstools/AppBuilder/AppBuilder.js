@@ -3,7 +3,7 @@
 // import '../../../../../assets/js/webix/webix'
 
 
-import './components/ab'
+import AB from './components/ab'
 
 
 AD.Control.OpsTool.extend('BuildApp', {
@@ -53,7 +53,8 @@ AD.Control.OpsTool.extend('BuildApp', {
 	initWebixUI: function () {
 
 		// get the AppBuilder (AB) Webix Component
-		var AppBuilder = OP.Component['ab']();
+		// var AppBuilder = OP.Component['ab']();
+		var AppBuilder = new AB();
 		var ui = AppBuilder.ui;
 
 		// tell the AppBuilder where to attach

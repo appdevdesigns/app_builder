@@ -74,37 +74,45 @@
 /* WEBPACK VAR INJECTION */(function(OP) {
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+  value: true
 });
 
-var _comm = __webpack_require__(4);
+var _comm = __webpack_require__(5);
 
 var _comm2 = _interopRequireDefault(_comm);
 
-var _multilingual = __webpack_require__(7);
+var _component = __webpack_require__(2);
 
-var _multilingual2 = _interopRequireDefault(_multilingual);
+var _component2 = _interopRequireDefault(_component);
 
-var _model = __webpack_require__(6);
+var _config = __webpack_require__(6);
+
+var _config2 = _interopRequireDefault(_config);
+
+var _customComponent = __webpack_require__(7);
+
+var _customComponent2 = _interopRequireDefault(_customComponent);
+
+var _model = __webpack_require__(8);
 
 var _model2 = _interopRequireDefault(_model);
 
-var _util = __webpack_require__(8);
+var _multilingual = __webpack_require__(9);
+
+var _multilingual2 = _interopRequireDefault(_multilingual);
+
+var _util = __webpack_require__(10);
 
 var _util2 = _interopRequireDefault(_util);
 
-var _validation = __webpack_require__(9);
+var _validation = __webpack_require__(11);
 
 var _validation2 = _interopRequireDefault(_validation);
-
-var _config = __webpack_require__(5);
-
-var _config2 = _interopRequireDefault(_config);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * @class AD_Client
+ * @class OP
  * @parent index 4
  *
  * ###Client side global OpsPortal (OP) namespace.
@@ -119,114 +127,27 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //// in 'use strict' ?
 
 // if (!window.OP) {
+
 window.OP = OP;
 
 // OP.xxxx      These properties hold the defined Class/Controller/Model definitions
 //              for our loaded projects.
-// OP.UI = {};    		// webix UI definitions
-// OP.Logic = {}; 		// logic references for webix application
 
-// import Form from "./form"
-// import Grid from "./grid"
-OP.Comm = _comm2.default;
+OP.Comm = _comm2.default; // communication routines (AJAX calls)
 
-OP.Component = {}; // our defined components
+OP.Component = _component2.default; // our defined components
 
-OP.CustomComponent = {}; // separate holder for Webix Custom Components
+OP.Config = _config2.default; // configuration Settings for our current environment.
 
-
-// OP.UI.extend = function(key, definition) {
-// 	OP.UI[key] = definition;
-// }
-
-OP.Component.extend = function (key, fn) {
-	OP.Component[key] = function (App) {
-
-		//// TODO: verify App has proper structure:
-		if (!App) {
-			App = OP.Component._newApp();
-		}
-
-		// make an instance of the component.
-		var component = fn(App);
-
-		// transfer to App, any actions in the component:
-		if (component.actions) {
-			for (var a in component.actions) {
-				App.actions[a] = component.actions[a];
-			}
-		}
-
-		return component;
-	};
-};
-
-OP.Component._newApp = function () {
-	return {
-
-		uuid: webix.uid(),
-
-		/*
-   * actions:
-   * a hash of exposed application methods that are shared among our
-   * components, so one component can invoke an action that updates
-   * another component.
-   */
-		actions: {},
-
-		/*
-   * config
-   * webix configuration settings for our current browser
-   */
-		config: _config2.default.config(),
-
-		/*
-   * custom
-   * a collection of custom components for this App Instance.
-   */
-		custom: {},
-
-		/*
-   * labels
-   * a collection of labels that are common for the Application.
-   */
-		labels: {},
-
-		/*
-   * unique()
-   * A function that returns a globally unique Key.
-   * @param {string} key   The key to modify and return.
-   * @return {string}
-   */
-		unique: function unique(key) {
-			return key + this.uuid;
-		}
-
-	};
-};
-
-OP.CustomComponent.extend = function (key, fn) {
-	OP.CustomComponent[key] = function (App, key) {
-
-		if (!App) {
-			App = OP.Component._newApp();
-		}
-
-		// make an instance of the component.
-		return fn(App, key);
-	};
-};
+OP.CustomComponent = _customComponent2.default; // Webix Custom Components
 
 OP.Dialog = AD.op.Dialog;
 
 OP.Error = AD.error;
 
-// OP.Form = Form;
-
-// OP.Grid = Grid;
+OP.Model = _model2.default;
 
 OP.Multilingual = _multilingual2.default;
-OP.Model = _model2.default;
 
 OP.Util = _util2.default;
 
@@ -241,9 +162,111 @@ exports.default = OP;
 
 /***/ }),
 /* 1 */,
-/* 2 */,
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(OP) {
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var UIComponent = function () {
+
+	/**
+  * @param {object} App 
+  *      ?what is this?
+  * @param {string} idBase
+  *      Identifier for this component
+  */
+	function UIComponent(App, idBase) {
+		_classCallCheck(this, UIComponent);
+
+		if (!App) {
+			App = {
+
+				uuid: webix.uid(),
+
+				/*
+     * actions:
+     * a hash of exposed application methods that are shared among our
+     * components, so one component can invoke an action that updates
+     * another component.
+     */
+				actions: {},
+
+				/*
+     * config
+     * webix configuration settings for our current browser
+     */
+				config: OP.Config.config(),
+
+				/*
+     * custom
+     * a collection of custom components for this App Instance.
+     */
+				custom: {},
+
+				/*
+     * labels
+     * a collection of labels that are common for the Application.
+     */
+				labels: {},
+
+				/*
+     * unique()
+     * A function that returns a globally unique Key.
+     * @param {string} key   The key to modify and return.
+     * @return {string}
+     */
+				unique: function unique(key) {
+					return key + this.uuid;
+				}
+
+			};
+		}
+
+		this.App = App;
+
+		this.idBase = idBase || '?idbase?';
+	}
+
+	_createClass(UIComponent, [{
+		key: 'actions',
+		value: function actions(_actions) {
+			if (_actions) {
+				for (var a in _actions) {
+					this.App.actions[a] = _actions[a];
+				}
+			}
+		}
+	}, {
+		key: 'Label',
+		value: function Label(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
+	}, {
+		key: 'unique',
+		value: function unique(key) {
+			return this.App.unique(this.idBase + '_' + key);
+		}
+	}]);
+
+	return UIComponent;
+}();
+
+exports.default = UIComponent;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
 /* 3 */,
-/* 4 */
+/* 4 */,
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -253,7 +276,7 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _comm_service = __webpack_require__(10);
+var _comm_service = __webpack_require__(12);
 
 var _comm_service2 = _interopRequireDefault(_comm_service);
 
@@ -266,7 +289,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -276,11 +299,11 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _configDesktop = __webpack_require__(11);
+var _configDesktop = __webpack_require__(13);
 
 var _configDesktop2 = _interopRequireDefault(_configDesktop);
 
-var _configMobile = __webpack_require__(12);
+var _configMobile = __webpack_require__(14);
 
 var _configMobile2 = _interopRequireDefault(_configMobile);
 
@@ -304,7 +327,49 @@ exports.default = {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _component = __webpack_require__(2);
+
+var _component2 = _interopRequireDefault(_component);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var UICustomComponent = function (_Component) {
+	_inherits(UICustomComponent, _Component);
+
+	function UICustomComponent(App, componentKey) {
+		_classCallCheck(this, UICustomComponent);
+
+		// Save our definition into App.custom.[key]
+		var _this = _possibleConstructorReturn(this, (UICustomComponent.__proto__ || Object.getPrototypeOf(UICustomComponent)).call(this, App, componentKey));
+
+		App.custom = App.custom || {};
+		App.custom[componentKey] = _this;
+		return _this;
+	}
+
+	return UICustomComponent;
+}(_component2.default);
+
+exports.default = UICustomComponent;
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -637,7 +702,7 @@ var nameSpace = function nameSpace(baseObj, name) {
 };
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -769,7 +834,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -785,7 +850,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1085,7 +1150,7 @@ exports.default = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1136,7 +1201,7 @@ services['delete'] = function (options, cb) {
 exports.default = services;
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1198,7 +1263,7 @@ exports.default = {
 };
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

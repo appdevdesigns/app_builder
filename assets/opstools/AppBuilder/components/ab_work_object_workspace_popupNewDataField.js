@@ -6,527 +6,515 @@
  *
  */
 
-import ABApplication from "../classes/ABApplication"
 import ABFieldManager from "../classes/ABFieldManager"
 
 
+export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Component {   //.extend(idBase, function(App) {
 
-function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
-}
+    constructor(App) {
+        super(App, 'ab_work_object_workspace_popupNewDataField');
+        var L = this.Label;
 
-
-var labels = {
-
-	component: {
-
-		fieldType: L('ab.add_fields.fieldType', "*Field type"),
-		label: L('ab.add_fields.label', "*Label"),
-		addNewField: L('ab.add_fields.addNewField', "*Add Column"),
-
-
-	}
-}
+        var labels = {
+            common : App.labels,
+            component: {
+                fieldType: L('ab.add_fields.fieldType', "*Field type"),
+                label: L('ab.add_fields.label', "*Label"),
+                addNewField: L('ab.add_fields.addNewField', "*Add Column"),
+            }
+        }
 
 
-var idBase = 'ab_work_object_workspace_popupNewDataField';
-OP.Component.extend(idBase, function(App) {
+        // internal list of Webix IDs to reference our UI components.
+        var ids = {
+            component: this.unique('component'),
+            types: this.unique('types'),
+            editDefinitions: this.unique('editDefinitions'),
 
-	labels.common = App.labels;
-
-
-	// internal list of Webix IDs to reference our UI components.
-
-	var ids = {
-		component: App.unique(idBase + '_component'),
-		types: App.unique(idBase + '_types'),
-		editDefinitions: App.unique(idBase+'_editDefinitions'),
-
-		buttonSave: App.unique(idBase+'_buttonSave'),
-		buttonCancel: App.unique(idBase+'_buttonCancel')
-	}
+            buttonSave: this.unique('buttonSave'),
+            buttonCancel: this.unique('buttonCancel')
+        }
 
 
 
-	// Our webix UI definition:
-	var _ui = {
-		view:"popup",
-		id: ids.component,
-		modal: true,
-		autoheight:true,
-		// maxHeight: 420,
+        // Our webix UI definition:
+        this.ui = {
+            view:"popup",
+            id: ids.component,
+            modal: true,
+            autoheight:true,
+            // maxHeight: 420,
 
-// ready: function () {
-// 	console.error('ready() called!!!')
-// 	_logic.resetState();
-// },
+    // ready: function () {
+    //  console.error('ready() called!!!')
+    //  _logic.resetState();
+    // },
 
-		body: {
-			css: 'ab-add-fields-popup',
-			borderless: true,
-			rows: [
-				{
-					view: "richselect",
-					id: ids.types,
-					label: labels.component.fieldType,
-					labelWidth: App.config.labelWidthLarge,
-					options: [
-						//We will add these later
-						{ id:'temporary', view:'temporary' }
-					],
-					on: {
-						onChange: function (id, ev, node) {
-							_logic.onChange(id);
-						}
-					}
-				},
-				{
-					height: 10,
-					type: "line"
-				},
-				{
-					view:'multiview',
-					id: ids.editDefinitions,
-					// NOTE: can't leave this an empty []. We redefine this value later.
-					cells: [ { id:'del_me', view:'label', label:'edit definition here' } ]
-				},
-				{ height: 10 },
-				{
-					cols: [
-						{ fillspace: true },
-						{
-							view: "button",
-							value: labels.common.cancel,
-							css: "ab-cancel-button",
-							autowidth: true,
-							click: function () {
-								_logic.buttonCancel();
-							}
-						},
-						{
-							view: "button",
-							id: ids.buttonSave,
-							label: labels.component.addNewField,
-							autowidth: true,
-							type: "form",
-							click: function () {
-								_logic.buttonSave();
-							}
-						}
-					]
-				}
-			]
-		},
-		on: {
-			onBeforeShow: function () {
-				_logic.resetState();
-			},
-			onShow: function () {
-				_logic.onShow();
-			},
-			onHide: function () {
-				_logic.resetState();
-			}
-		}
-	}
-
-
-	var _objectHash = {};		// 'name' => ABFieldXXX object
-	var _componentHash = {};	// 'name' => ABFieldXXX ui component
-	var _componentsByType = {}; // 'type' => ABFieldXXX ui component
-	var _currentEditor = null;
-	var _currentObject = null;
-
-	var defaultEditorComponent = null;	// the default editor.
-	var defaultEditorID = null;	// the default editor id.
-	var submenus = [];	// Create the submenus for our Data Fields:
-
-	var _editField = null;		// field instance being edited
-
-	// Our init() function for setting up our UI
-	var _init = function(options) {
-
-		// register our callbacks:
-		for(var c in _logic.callbacks) {
-			_logic.callbacks[c] = options[c] || _logic.callbacks[c];
-		}
+            body: {
+                css: 'ab-add-fields-popup',
+                borderless: true,
+                rows: [
+                    {
+                        view: "richselect",
+                        id: ids.types,
+                        label: labels.component.fieldType,
+                        labelWidth: App.config.labelWidthLarge,
+                        options: [
+                            //We will add these later
+                            { id:'temporary', view:'temporary' }
+                        ],
+                        on: {
+                            onChange: function (id, ev, node) {
+                                _logic.onChange(id);
+                            }
+                        }
+                    },
+                    {
+                        height: 10,
+                        type: "line"
+                    },
+                    {
+                        view:'multiview',
+                        id: ids.editDefinitions,
+                        // NOTE: can't leave this an empty []. We redefine this value later.
+                        cells: [ { id:'del_me', view:'label', label:'edit definition here' } ]
+                    },
+                    { height: 10 },
+                    {
+                        cols: [
+                            { fillspace: true },
+                            {
+                                view: "button",
+                                value: labels.common.cancel,
+                                css: "ab-cancel-button",
+                                autowidth: true,
+                                click: function () {
+                                    _logic.buttonCancel();
+                                }
+                            },
+                            {
+                                view: "button",
+                                id: ids.buttonSave,
+                                label: labels.component.addNewField,
+                                autowidth: true,
+                                type: "form",
+                                click: function () {
+                                    _logic.buttonSave();
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            on: {
+                onBeforeShow: function () {
+                    _logic.resetState();
+                },
+                onShow: function () {
+                    _logic.onShow();
+                },
+                onHide: function () {
+                    _logic.resetState();
+                }
+            }
+        }
 
 
-		var Fields = ABFieldManager.allFields();
+        var _objectHash = {};       // 'name' => ABFieldXXX object
+        var _componentHash = {};    // 'name' => ABFieldXXX ui component
+        var _componentsByType = {}; // 'type' => ABFieldXXX ui component
+        var _currentEditor = null;
+        var _currentObject = null;
 
+        var defaultEditorComponent = null;  // the default editor.
+        var defaultEditorID = null; // the default editor id.
+        var submenus = [];  // Create the submenus for our Data Fields:
 
-		//// we need to load a submenu entry and an editor definition for each
-		//// of our Fields
+        var _editField = null;      // field instance being edited
 
 
 
-		var newEditorList = {
-			view:'multiview',
-			id:ids.editDefinitions,
-			rows:[]
-		}
+        // Our init() function for setting up our UI
+        this.init = (options) => {
 
-		Fields.forEach(function(F){
-
-			var menuName = F.defaults().menuName ;
-			var key = F.defaults().key;
-
-			// add a submenu for the fields multilingual key
-			submenus.push( {"id":menuName, "value":menuName} );
+            // register our callbacks:
+            for(var c in _logic.callbacks) {
+                _logic.callbacks[c] = options[c] || _logic.callbacks[c];
+            }
 
 
-			// Add the Field's definition editor here:
-			var editorComponent = F.propertiesComponent(App);
-			if (!defaultEditorComponent) {
-				defaultEditorComponent = editorComponent;
-				defaultEditorID = menuName;
-			}
-			newEditorList.rows.push(editorComponent.ui);
+            // initialize our components
+            webix.ui(this.ui);
+
+            var Fields = ABFieldManager.allFields();
 
 
-			_objectHash[ menuName ] = F;
-			_componentHash[ menuName ] = editorComponent;
-			_componentsByType[ key ]  = editorComponent;
-
-		})
+            //// we need to load a submenu entry and an editor definition for each
+            //// of our Fields
 
 
-		// the submenu button has a placeholder we need to remove and update
-		// with one that has all our submenus in it.
-		// var firstID = $$(ids.types).getFirstId();
-		// $$(ids.types).updateItem(firstID, {
-		// 	value: labels.component.chooseType,
-		// 	submenu: submenus
-		// })
-		$$(ids.types).define("options",submenus);
-		$$(ids.types).refresh
 
-		// now remove the 'del_me' definition editor placeholder.
-		webix.ui(newEditorList, $$(ids.editDefinitions));
+            var newEditorList = {
+                view:'multiview',
+                id:ids.editDefinitions,
+                rows:[]
+            }
 
-		// hide all the unused editors:
-		for (var c in _componentHash){
-			_componentHash[c].hide();
-		}
+            Fields.forEach(function(F){
 
-		defaultEditorComponent.show(); // show the default editor
-		_currentEditor = defaultEditorComponent;
+                var menuName = F.defaults().menuName ;
+                var key = F.defaults().key;
 
-		// set the richselect to the first option by default.
-		$$(ids.types).setValue(submenus[0].id);
+                // add a submenu for the fields multilingual key
+                submenus.push( {"id":menuName, "value":menuName} );
 
-		// $$(ids.editDefinitions).show();
+
+                // Add the Field's definition editor here:
+                var editorComponent = F.propertiesComponent(App);
+                if (!defaultEditorComponent) {
+                    defaultEditorComponent = editorComponent;
+                    defaultEditorID = menuName;
+                }
+                newEditorList.rows.push(editorComponent.ui);
+
+
+                _objectHash[ menuName ] = F;
+                _componentHash[ menuName ] = editorComponent;
+                _componentsByType[ key ]  = editorComponent;
+
+            })
+
+
+            // the submenu button has a placeholder we need to remove and update
+            // with one that has all our submenus in it.
+            // var firstID = $$(ids.types).getFirstId();
+            // $$(ids.types).updateItem(firstID, {
+            //  value: labels.component.chooseType,
+            //  submenu: submenus
+            // })
+            $$(ids.types).define("options",submenus);
+            $$(ids.types).refresh
+
+            // now remove the 'del_me' definition editor placeholder.
+            webix.ui(newEditorList, $$(ids.editDefinitions));
+
+            // hide all the unused editors:
+            for (var c in _componentHash){
+                _componentHash[c].hide();
+            }
+
+            defaultEditorComponent.show(); // show the default editor
+            _currentEditor = defaultEditorComponent;
+
+            // set the richselect to the first option by default.
+            $$(ids.types).setValue(submenus[0].id);
+
+            // $$(ids.editDefinitions).show();
 
 // $$(ids.editDefinitions).cells() // define the edit Definitions here.
-	}
+        }
 
 
 
-	// our internal business logic
-	var _logic = {
+        // our internal business logic
+        var _logic = this._logic = {
 
 
-		buttonCancel:function() {
+            buttonCancel:function() {
 
-			_logic.resetState();
+                _logic.resetState();
 
-			// clear all editors:
-			for (var c in _componentHash) {
-				_componentHash[c].clear();
-			}
+                // clear all editors:
+                for (var c in _componentHash) {
+                    _componentHash[c].clear();
+                }
 
-			// hide this popup.
-			$$(ids.component).hide();
-		},
+                // hide this popup.
+                $$(ids.component).hide();
+            },
 
 
-		buttonSave:function() {
+            buttonSave:function() {
 
-			$$(ids.buttonSave).disable();
+                $$(ids.buttonSave).disable();
 
 
-			var editor = _currentEditor;
-			if (editor) {
+                var editor = _currentEditor;
+                if (editor) {
 
-				// the editor can define some basic form validations.
-				if (editor.isValid()) {
+                    // the editor can define some basic form validations.
+                    if (editor.isValid()) {
 
-					var values = editor.values();
+                        var values = editor.values();
 
-					var field = null;
-					var oldData = null;
+                        var field = null;
+                        var oldData = null;
 
-					// if this is an ADD operation, (_editField will be undefined)
-					if (!_editField) {
+                        // if this is an ADD operation, (_editField will be undefined)
+                        if (!_editField) {
 
-						// get a new instance of a field:
-						field = _currentObject.fieldNew(values);
+                            // get a new instance of a field:
+                            field = _currentObject.fieldNew(values);
 
-					} else {
+                        } else {
 
-						// use our _editField, backup our oldData
-						oldData = _editField.toObj();
-						_editField.fromValues(values);
+                            // use our _editField, backup our oldData
+                            oldData = _editField.toObj();
+                            _editField.fromValues(values);
 
-						field = _editField;
-					}
+                            field = _editField;
+                        }
 
 
-					var validator = field.isValid();
-					if (validator.fail()) {
-						validator.updateForm($$(editor.ui.id))
-// OP.Form.isValidationError(errors, $$(editor.ui.id));
+                        var validator = field.isValid();
+                        if (validator.fail()) {
+                            validator.updateForm($$(editor.ui.id))
+    // OP.Form.isValidationError(errors, $$(editor.ui.id));
 
-						// keep our old data
-						if (oldData) {
-							field.fromValues(oldData);
-						}
+                            // keep our old data
+                            if (oldData) {
+                                field.fromValues(oldData);
+                            }
 
-						$$(ids.buttonSave).enable();
-					} else {
+                            $$(ids.buttonSave).enable();
+                        } else {
 
-						field.save()
-						.then(()=>{
+                            field.save()
+                            .then(()=>{
 
-							$$(ids.buttonSave).enable();
-							_logic.hide();
-							_currentEditor.clear();
-							_logic.callbacks.onSave(field)
-						})
-						.catch((err) => {
-							OP.Validation.isFormValidationError(err, $$(editor.ui.id));
-							$$(ids.buttonSave).enable();
-						})
-					}
+                                $$(ids.buttonSave).enable();
+                                _logic.hide();
+                                _currentEditor.clear();
+                                _logic.callbacks.onSave(field)
+                            })
+                            .catch((err) => {
+                                OP.Validation.isFormValidationError(err, $$(editor.ui.id));
+                                $$(ids.buttonSave).enable();
+                            })
+                        }
 
 
-				} else {
-					$$(ids.buttonSave).enable();
-				}
+                    } else {
+                        $$(ids.buttonSave).enable();
+                    }
 
-			}  else {
+                }  else {
 
-				OP.Dialog.Alert({
-					title: '! Could not find the current editor.',
-					text: 'go tell a developer about this.'
-				})
-				$$(ids.buttonSave).enable();
-			}
+                    OP.Dialog.Alert({
+                        title: '! Could not find the current editor.',
+                        text: 'go tell a developer about this.'
+                    })
+                    $$(ids.buttonSave).enable();
+                }
 
-// if (!inputValidator.validateFormat(fieldInfo.name)) {
-// 	self.enable();
-// 	return;
-// }
+    // if (!inputValidator.validateFormat(fieldInfo.name)) {
+    //  self.enable();
+    //  return;
+    // }
 
-// // Validate duplicate field name
-// var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
-// if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
-// 	webix.alert({
-// 		title: labels.add_fields.duplicateFieldTitle,
-// 		text: labels.add_fields.duplicateFieldDescription,
-// 		ok: labels.common.ok
-// 	});
-// 	this.enable();
-// 	return;
-// }
+    // // Validate duplicate field name
+    // var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
+    // if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
+    //  webix.alert({
+    //      title: labels.add_fields.duplicateFieldTitle,
+    //      text: labels.add_fields.duplicateFieldDescription,
+    //      ok: labels.common.ok
+    //  });
+    //  this.enable();
+    //  return;
+    // }
 
-// if (fieldInfo.weight == null)
-// 	fieldInfo.weight = dataTable.config.columns.length;
+    // if (fieldInfo.weight == null)
+    //  fieldInfo.weight = dataTable.config.columns.length;
 
-// // Call callback function
-// if (base.saveFieldCallback && base.fieldName) {
-// 	base.saveFieldCallback(base.fieldName, fieldInfo)
-// 		.then(function () {
-// 			self.enable();
-// 			base.resetState();
-// 			base.hide();
-// 		});
-// }
+    // // Call callback function
+    // if (base.saveFieldCallback && base.fieldName) {
+    //  base.saveFieldCallback(base.fieldName, fieldInfo)
+    //      .then(function () {
+    //          self.enable();
+    //          base.resetState();
+    //          base.hide();
+    //      });
+    // }
 
 
-		},
+            },
 
 
-		callbacks:{
-			onCancel: function() { console.warn('NO onCancel()!') },
-			onSave  : function(field) { console.warn('NO onSave()!') },
-		},
+            callbacks:{
+                onCancel: function() { console.warn('NO onCancel()!') },
+                onSave  : function(field) { console.warn('NO onSave()!') },
+            },
 
 
 
-		hide:function() {
-			$$(ids.component).hide();
-		},
+            hide:function() {
+                $$(ids.component).hide();
+            },
 
 
 
-		modeAdd:function() {
+            modeAdd:function() {
 
-			// show default editor:
-			defaultEditorComponent.show(false, false);
-			_currentEditor = defaultEditorComponent;
+                // show default editor:
+                defaultEditorComponent.show(false, false);
+                _currentEditor = defaultEditorComponent;
 
-			// show the ability to switch data types
-			$$(ids.types).show();
+                // show the ability to switch data types
+                $$(ids.types).show();
 
-			// change button text to 'add'
-			$$(ids.buttonSave).define('label', labels.component.addNewField);
-			$$(ids.buttonSave).refresh();
-		},
+                // change button text to 'add'
+                $$(ids.buttonSave).define('label', labels.component.addNewField);
+                $$(ids.buttonSave).refresh();
+            },
 
 
-		modeEdit: function(field) {
+            modeEdit: function(field) {
 
-			if (_currentEditor) _currentEditor.hide();
+                if (_currentEditor) _currentEditor.hide();
 
-			// switch to this field's editor:
-			// hide the rest
-			for(var c in _componentsByType) {
-				if (c == field.key) {
-					_componentsByType[c].populate(field);
-					_componentsByType[c].show(false, false);
-					_currentEditor = _componentsByType[c];
-				} else {
-					_componentsByType[c].hide();
-				}
-			}
+                // switch to this field's editor:
+                // hide the rest
+                for(var c in _componentsByType) {
+                    if (c == field.key) {
+                        _componentsByType[c].populate(field);
+                        _componentsByType[c].show(false, false);
+                        _currentEditor = _componentsByType[c];
+                    } else {
+                        _componentsByType[c].hide();
+                    }
+                }
 
-			// hide the ability to switch data types
-			$$(ids.types).hide();
+                // hide the ability to switch data types
+                $$(ids.types).hide();
 
-			// change button text to 'save'
-			$$(ids.buttonSave).define('label', labels.common.save);
-			$$(ids.buttonSave).refresh();
-		},
+                // change button text to 'save'
+                $$(ids.buttonSave).define('label', labels.common.save);
+                $$(ids.buttonSave).refresh();
+            },
 
 
-		/**
-		 * @function onChange
-		 * swap the editor view to match the data field selected in the menu.
-		 *
-		 * @param {string} name  the menuName() of the submenu that was selected.
-		 */
-		onChange: function (name) {
-			// note, the submenu returns the Field.menuName() values.
-			// we use that to lookup the Field here:
-			var editor = _componentHash[name];
-			if (editor) {
-				editor.show();
-				_currentEditor = editor;
-				$$(ids.types).blur();
-			} else {
+            /**
+             * @function onChange
+             * swap the editor view to match the data field selected in the menu.
+             *
+             * @param {string} name  the menuName() of the submenu that was selected.
+             */
+            onChange: function (name) {
+                // note, the submenu returns the Field.menuName() values.
+                // we use that to lookup the Field here:
+                var editor = _componentHash[name];
+                if (editor) {
+                    editor.show();
+                    _currentEditor = editor;
+                    $$(ids.types).blur();
+                } else {
 
-				// most likely they clicked on the menu button itself.
-				// do nothing.
+                    // most likely they clicked on the menu button itself.
+                    // do nothing.
 
-				// OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
-			}
+                    // OP.Error.log("App Builder:Workspace:Object:NewDataField: could not find editor for submenu item:"+name, { name:name });
+                }
 
-		},
+            },
 
 
 
-		onShow: function() {
-			// if (!AD.comm.isServerReady()) {
-			// 	this.getTopParentView().hide();
+            onShow: function() {
+                // if (!AD.comm.isServerReady()) {
+                //  this.getTopParentView().hide();
 
-			// 	webix.alert({
-			// 		title: labels.add_fields.cannotUpdateFields,
-			// 		text: labels.add_fields.waitRestructureObjects,
-			// 		ok: labels.common.ok
-			// 	});
-			// }
-			// else { // Set default field type
-			// 	this.showFieldData('string');
-			// }
-console.error('TODO: onShow();')
-		},
+                //  webix.alert({
+                //      title: labels.add_fields.cannotUpdateFields,
+                //      text: labels.add_fields.waitRestructureObjects,
+                //      ok: labels.common.ok
+                //  });
+                // }
+                // else { // Set default field type
+                //  this.showFieldData('string');
+                // }
+    console.error('TODO: onShow();')
+            },
 
 
 
-		resetState: function() {
-			defaultEditorComponent.show(); // show the default editor
-			_currentEditor = defaultEditorComponent;
+            resetState: function() {
+                defaultEditorComponent.show(); // show the default editor
+                _currentEditor = defaultEditorComponent;
 
-			// set the richselect to the first option by default.
-			$$(ids.types).setValue(submenus[0].id);
+                // set the richselect to the first option by default.
+                $$(ids.types).setValue(submenus[0].id);
 
-			// add mode :  change button text to 'Add'
-			// show the default editor
-console.error('TODO: resetState()');
-		},
+                // add mode :  change button text to 'Add'
+                // show the default editor
+    console.error('TODO: resetState()');
+            },
 
 
 
-		/**
-		 * @function show()
-		 *
-		 * Show this component.
-		 * @param {obj} $view  the webix.$view to hover the popup around.
-		 * @param {ABField} field the ABField to edit.  If not provided, then
-		 *						  this is an ADD operation.
-		 */
-		show:function($view, field) {
+            /**
+             * @function show()
+             *
+             * Show this component.
+             * @param {obj} $view  the webix.$view to hover the popup around.
+             * @param {ABField} field the ABField to edit.  If not provided, then
+             *                        this is an ADD operation.
+             */
+            show:function($view, field) {
 
-			_editField = field;
+                _editField = field;
 
-			if (_editField) {
+                if (_editField) {
 
-				_logic.modeEdit(field);
+                    _logic.modeEdit(field);
 
-			} else {
+                } else {
 
-				_logic.modeAdd();
+                    _logic.modeAdd();
 
-			}
+                }
 
-			$$(ids.component).show($view);
-		},
+                $$(ids.component).show($view);
+            },
 
 
 
-		typeClick:function() {
-			// NOTE: for functional testing we need a way to display the submenu
-			// (functional tests don't do .hover very well)
-			// so this routine is to enable .click() to show the submenu.
+            typeClick:function() {
+                // NOTE: for functional testing we need a way to display the submenu
+                // (functional tests don't do .hover very well)
+                // so this routine is to enable .click() to show the submenu.
 
-			var subMenuId = $$(ids.types).config.data[0].submenu;
+                var subMenuId = $$(ids.types).config.data[0].submenu;
 
-			// #HACK Sub-menu popup does not render on initial
-			// Force it to render popup by use .getSubMenu()
-			if (typeof subMenuId != 'string') {
-				$$(ids.types).getSubMenu($$(ids.types).config.data[0].id);
-				subMenuId = $$(ids.types).config.data[0].submenu;
-			}
+                // #HACK Sub-menu popup does not render on initial
+                // Force it to render popup by use .getSubMenu()
+                if (typeof subMenuId != 'string') {
+                    $$(ids.types).getSubMenu($$(ids.types).config.data[0].id);
+                    subMenuId = $$(ids.types).config.data[0].submenu;
+                }
 
-			if ($$(subMenuId))
-				$$(subMenuId).show();
-		}
-	}
+                if ($$(subMenuId))
+                    $$(subMenuId).show();
+            }
+        }
 
 
 
-	// Expose any globally accessible Actions:
-	var _actions = {
+        // Expose any globally accessible Actions:
+        this.actions({
 
-		populateObjectPopupAddDataField: function(object) {
-			_currentObject = object;
-		}
+            populateObjectPopupAddDataField: function(object) {
+                _currentObject = object;
+            }
 
-	}
+        })
 
 
-	// return the current instance of this component:
-	return {
-		ui:_ui,					// {obj} 	the webix ui definition for this component
-		init:_init,				// {fn} 	init() to setup this component
-		actions:_actions,		// {ob}		hash of fn() to expose so other components can access.
 
+        // 
+        // Define our external interface methods:
+        // 
+        this.show = _logic.show;       // {fn}     fn(node, ABField)
+    }
 
-		show:_logic.show,		// {fn} 	fn(node, ABField)
-
-
-		_logic: _logic			// {obj} 	Unit Testing
-	}
-
-})
+}
