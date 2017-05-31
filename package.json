@@ -41,6 +41,7 @@
     "barrels": "^1.6.4",
     "chai": "^3.5.0",
     "css-loader": "^0.28.1",
+    "es6-promise": "^4.1.0",
     "extract-text-webpack-plugin": "^2.1.0",
     "mocha": "^3.1.0",
     "mocha-phantomjs": "^4.1.0",

@@ -1,3 +1,4 @@
+import AB from '../../../components/ab'
 import ABFieldDate from "../../../classes/dataFields/ABFieldDate"
 
 describe("ABFieldDate unit tests", () => {
@@ -8,15 +9,19 @@ describe("ABFieldDate unit tests", () => {
 
 	var sandbox;
 
-	var dateField;
-	var dateComponent;
+	var ab;
 	var mockApp;
 	var mockObject;
+
+	var dateField;
+	var dateComponent;
 
 	var columnName = 'TEST_DATE_COLUMN';
 
 	before(() => {
-		mockApp = OP.Component._newApp();
+		ab = new AB();
+
+		mockApp = ab._app;
 		mockObject = {};
 
 		dateField = new ABFieldDate({

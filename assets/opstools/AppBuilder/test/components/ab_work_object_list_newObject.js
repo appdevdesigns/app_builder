@@ -1,3 +1,4 @@
+import AB from '../../components/ab'
 import ABApplication from "../../classes/ABApplication"
 import ABListNewObject from "../../components/ab_work_object_list_newObject"
 
@@ -5,14 +6,16 @@ describe('ab_work_object_list_newObject component', () => {
 
 	var sandbox;
 
-	var componentName = 'ab_work_object_list_newObject';
+	var ab;
 	var mockApp;
+
+	const componentName = 'ab_work_object_list_newObject';
 	var target;
 
 	before(() => {
-		// mockApp = OP.Component._newApp();
+		ab = new AB();
 
-		// OP.Component['ab'](mockApp);
+		mockApp = ab._app;
 
 		target = new ABListNewObject(mockApp);
 	});
@@ -50,15 +53,9 @@ describe('ab_work_object_list_newObject component', () => {
 		});
 
 		it("should create webix ui", () => {
-			let spyWebixUi = sandbox.spy(webix, 'ui');
-
 			// Call init
 			let callbacks = { onDone: function () { } };
 			target.init(callbacks);
-
-			// Assert call webix.ui once and pass .ui of this component to webix.ui()
-			sinon.assert.calledOnce(spyWebixUi);
-			sinon.assert.calledWith(spyWebixUi, target.ui);
 		});
 
 

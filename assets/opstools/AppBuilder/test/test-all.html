@@ -21,20 +21,44 @@
 	<script src="../../../../node_modules/mocha/mocha.js"></script>
 	<script src="../../../../node_modules/chai/chai.js"></script>
 	<script src="../../../../node_modules/sinon/pkg/sinon.js"></script>
+	<script src="../../../../node_modules/es6-promise/dist/es6-promise.auto.min.js"></script>
+	<script src="../../../../../../assets/js/moment.min.js"></script>
 
 	<link href="../../../../../../assets/js/webix/webix.css" rel="stylesheet" />
 	<script src="../../../../../../assets/js/webix/webix.js"></script>
-	<script src="../../../../../async/dist/async.min.js"></script>
 
 </head>
 
 <body>
-	<script src="../../../../../../assets/steal/steal.js?opstools/AppBuilder/test/test_loader.js" 
-			config='../../../../../../assets/stealconfig.js'></script>
-
 	<!--Mocha display element-->
 	<div id="mocha"></div>
 
+	<div id="mocha_test_div"></div>
+
+	<script>
+		mocha.setup({
+			ui: 'bdd',
+			timeout: 9000,
+			reporter: 'html'
+		});
+
+		expect = chai.expect;
+		assert = chai.assert;
+	</script>
+
+	<script src="./mock_AD.js"></script>
+	<script src="../../BuildApp/OP_Bundle.js"></script>
+	<script src="../../BuildApp/BuildApp.js"></script>
+	<script src="./bin/test_app_builder.js"></script>
+
+	<script>
+		if (window.mochaPhantomJS) {
+			mochaPhantomJS.run();
+		}
+		else {
+			mocha.run();
+		}
+	</script>
 
 </body>
 

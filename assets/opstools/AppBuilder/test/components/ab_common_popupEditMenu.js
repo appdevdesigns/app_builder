@@ -1,4 +1,3 @@
-
 import AB from '../../components/ab'
 import ABCommonPopup from '../../components/ab_common_popupEditMenu';
 
@@ -6,26 +5,18 @@ describe('ab_common_popupEditMenu component', () => {
 
 	var sandbox;
 
-	var ab = new AB();
-	var ui = ab.ui;
-	ui.container = 'mocha_test_div';
-	webix.ui(ui)
+	var ab;
+	var mockApp;
 
-	var mockApp = ab._app;
-
-	var componentName = 'ab_common_popupEditMenu';
+	const componentName = 'ab_common_popupEditMenu';
 	var target;
 
 	before(() => {
+		ab = new AB();
 
-		// OP.Component['ab'](mockApp);
+		mockApp = ab._app;
 
 		target = new ABCommonPopup(mockApp);
-
-		// TODO: render UI function
-		// buildHTML();
-
-		// TODO: mock up parent dependencies
 	});
 
 	/*
@@ -90,15 +81,10 @@ describe('ab_common_popupEditMenu component', () => {
 		});
 
 		it('should create webix ui', () => {
-			let spyWebixUi = sandbox.spy(webix, 'ui'),
-				spyLogicHide = sandbox.spy(target._logic, 'hide');
+			let spyLogicHide = sandbox.spy(target._logic, 'hide');
 
 			// Call init
 			target.init();
-
-			// Assert call webix.ui once and pass .ui of this component to webix.ui()
-			sinon.assert.calledOnce(spyWebixUi);
-			sinon.assert.calledWith(spyWebixUi, target.ui);
 
 			// Assert call _logic.hide once
 			sinon.assert.calledOnce(spyLogicHide);

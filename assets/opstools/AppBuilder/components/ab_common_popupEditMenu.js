@@ -73,7 +73,8 @@ export default class ABCommonPopupEditMenu extends OP.Component {
 
 		this.init =  (options) => {
 
-			Popup = webix.ui(this.ui);	// the current instance of this editor.
+			if (Popup == null)
+				Popup = webix.ui(this.ui);	// the current instance of this editor.
 
 			_logic.hide();
 			_logic.menuOptions(_menuOptions);
