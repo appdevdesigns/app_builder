@@ -28,16 +28,14 @@ describe('ab_work_object_list_newObject component', () => {
 		sandbox.restore();
 	});
 
-	it('should exist component', () => {
-		assert.isDefined(target);
+
+	it('should look like a component', () => {
+		OP.Test.isComponent(target);
 	});
+
 
 	// UI test cases
 	describe('UI testing', () => {
-
-		it('should have ui setting', () => {
-			assert.isDefined(target.ui, "should have a ui property");
-		});
 
 		it("should be webix's window", () => {
 			assert.equal(target.ui.view, "window");
@@ -48,9 +46,6 @@ describe('ab_work_object_list_newObject component', () => {
 
 	// Init test cases
 	describe('Init testing', () => {
-		it("should exist init property", () => {
-			assert.isDefined(target.init, "should have a init property");
-		});
 
 		it("should create webix ui", () => {
 			// Call init
