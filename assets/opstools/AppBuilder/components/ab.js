@@ -16,6 +16,7 @@ import AB_Work from './ab_work'
 // Import our Custom Components here:
 import EditTree from '../webix_custom_components/edittree'
 import EditList from '../webix_custom_components/editlist'
+import EditSelectivity from '../webix_custom_components/editselectivity'
 import DateTimePicker from '../webix_custom_components/datetimepicker'
 
 import style from "../AppBuilder.css"

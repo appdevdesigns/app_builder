@@ -1,6 +1,6 @@
-/* 
+/*
  * ABFieldManager
- * 
+ *
  * An interface for managing the different ABFields available in our AppBuilder.
  *
  */
@@ -11,11 +11,10 @@ import ABFieldNumber from "./dataFields/ABFieldNumber"
 import ABFieldDate from "./dataFields/ABFieldDate"
 import ABFieldBoolean from "./dataFields/ABFieldBoolean"
 import ABFieldList from "./dataFields/ABFieldList"
-
-
 import ABFieldImage from "./dataFields/ABFieldImage"
+import ABFieldUser from "./dataFields/ABFieldUser"
 
-/* 
+/*
  * Fields
  * A name => ABField  hash of the different ABFields available.
  */
@@ -25,10 +24,8 @@ Fields[ABFieldNumber.defaults().key] = ABFieldNumber;
 Fields[ABFieldDate.defaults().key] = ABFieldDate;
 Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 Fields[ABFieldList.defaults().key] = ABFieldList;
-
-
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
-
+Fields[ABFieldUser.defaults().key] = ABFieldUser;
 
 
 export default  {
