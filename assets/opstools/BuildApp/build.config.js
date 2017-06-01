@@ -10,22 +10,18 @@ module.exports = {
 			"deps": [
 				"async",
 				"webix",
-				"js/selectivity/selectivity-full.min",
+				"js/selectivity/selectivity.min",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"
 			],
 			"format": "global"
 		},
-		// "opstools/OP_Bundle": {
-		//   "format": "global",
-		//   "sideBundle": true
-		// },
-		"js/selectivity/selectivity-full.min": {
+		"js/selectivity/selectivity.min": {
 			"format": "global",
 			"deps": [
 				"jquery",
 				"can",
-				"js/selectivity/selectivity-full.min.css"
+				"js/selectivity/selectivity.min.css"
 			],
 			"sideBundle": true
 		}

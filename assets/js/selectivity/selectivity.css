@@ -4,9 +4,8 @@
  * Please realize though there is no "API contract" regarding styling of CSS classes, meaning that
  * any customized CSS made may need to be updated without warning if you want to upgrade the
  * Selectivity version you use. You can mitigate this problem by using your own templates instead of
- * those defined in selectivity-templates.js, since templates will at the very least continue
- * working across patch versions and any changes necessary to templates will be documented in the
- * changelog.
+ * those defined in src/templates.js, since templates will at the very least continue working across
+ * patch versions and any changes necessary to templates will be documented in the changelog.
  */
 .selectivity-clearfix {
   clear: both; }
@@ -95,15 +94,12 @@
   border-radius: 2px;
   cursor: text;
   max-height: 10em;
-  min-height: -webkit-calc(2em + 4px);
   min-height: calc(2em + 4px);
   overflow: auto;
   padding: 5px; }
 
 .selectivity-multiple-input-container .selectivity-placeholder {
-  height: -webkit-calc(2em + 4px);
   height: calc(2em + 4px);
-  line-height: -webkit-calc(2em + 4px);
   line-height: calc(2em + 4px); }
 
 .selectivity-multiple-input,
@@ -112,7 +108,6 @@ input[type='text'].selectivity-multiple-input {
   border: none;
   float: left;
   font: inherit;
-  height: -webkit-calc(2em + 4px);
   height: calc(2em + 4px);
   max-width: 100%;
   outline: 0;
@@ -126,12 +121,6 @@ input[type='text'].selectivity-multiple-input {
 .selectivity-multiple-input::-ms-clear {
   display: none; }
 
-.selectivity-multiple-input.selectivity-width-detector {
-  position: absolute;
-  top: -10000px;
-  left: 0;
-  white-space: pre; }
-
 .selectivity-multiple-selected-item {
   background: #4484c7;
   border-radius: 3px;
@@ -140,7 +129,7 @@ input[type='text'].selectivity-multiple-input {
   float: left;
   line-height: 2em;
   margin: 2px;
-  padding-right: 5px;
+  padding: 0 5px;
   position: relative;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -153,6 +142,7 @@ input[type='text'].selectivity-multiple-input {
 .selectivity-multiple-selected-item-remove {
   color: #fff;
   cursor: pointer;
+  margin-left: -5px;
   padding: 5px; }
 
 /**
