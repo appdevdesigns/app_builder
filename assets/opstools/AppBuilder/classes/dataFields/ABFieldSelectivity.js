@@ -18,13 +18,29 @@ var defaultSettings = {
 
 export default class ABFieldSelectivity extends ABField {
 
-	constructor(values, object, fieldDefaults) {
+	constructor(values, object, fieldDefaults, options) {
 
 		super(values, object, fieldDefaults);
 
+		// set onChange callback when selectivity values changes
+		var callbacks = {
+			onChange: function (newVal) {
+			}
+		};
+
+		// register our callbacks:
+		for (var c in callbacks) {
+			if (options && options[c]) {
+				callbacks[c] = options[c] || callbacks[c];
+			}
+		}
+
+		// external interface
+		this._logic = this._logic || {};
+		this._logic.callbacks = callbacks;
 	}
 
-	static selectivityRender(domNode, settings) {
+	selectivityRender(domNode, settings) {
 		if (domNode == null) return;
 
 		// setting up our specific settings:
@@ -53,20 +69,16 @@ export default class ABFieldSelectivity extends ABField {
 		}
 
 		domNode.selectivity = selectivityInput;
-		domNode.addEventListener('change', function (e) {
-			// TODO: Callback
-			// alert('callback');
-		}, false);
 	}
 
-	static selectivityGet(domNode) {
+	selectivityGet(domNode) {
 		if (domNode && domNode.selectivity)
 			return domNode.selectivity.getData() || [];
 		else
 			return [];
 	}
 
-	static selectivitySet(domNode, data) {
+	selectivitySet(domNode, data) {
 		if (domNode && domNode.selectivity) {
 			data = data || [];
 
@@ -74,7 +86,7 @@ export default class ABFieldSelectivity extends ABField {
 		}
 	}
 
-	static selectivityDestroy(domNode) {
+	selectivityDestroy(domNode) {
 		if (domNode && domNode.selectivity) {
 			domNode.selectivity.destroy();
 
