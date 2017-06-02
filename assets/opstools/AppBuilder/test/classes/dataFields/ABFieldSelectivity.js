@@ -30,21 +30,21 @@ describe("ABFieldSelectivity unit tests", () => {
 
 
 	it('.selectivityRender: should exist', () => {
-		assert.isDefined(ABFieldSelectivity.selectivityRender);
+		assert.isDefined(target.selectivityRender);
 	});
 
 	it('.selectivityRender: should exist', () => {
-		ABFieldSelectivity.selectivityRender(document.querySelector('#test_div'));
+		target.selectivityRender(document.querySelector('#test_div'));
 	});
 
 
 
 	it('.selectivityGet: ', () => {
-		assert.isDefined(ABFieldSelectivity.selectivityGet);
+		assert.isDefined(target.selectivityGet);
 	});
 
 	it('.selectivitySet: ', () => {
-		assert.isDefined(ABFieldSelectivity.selectivitySet);
+		assert.isDefined(target.selectivitySet);
 	});
 
 
