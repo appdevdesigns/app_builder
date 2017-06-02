@@ -14,6 +14,7 @@ before_script:
 - mv /home/travis/build/appdevdesigns/app_builder .
 - cd app_builder
 - npm install --production=false
+- npm run build
 
 script:
 - npm test
