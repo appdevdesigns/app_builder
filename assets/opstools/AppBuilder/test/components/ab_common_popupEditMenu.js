@@ -35,17 +35,17 @@ describe('ab_common_popupEditMenu component', () => {
 
 
 
-
-	it('should exist component', () => {
-		assert.isDefined(target);
+	it('should look like a component', () => {
+		OP.Test.isComponent(target);
 	});
+
 
 	// UI test cases
 	describe('UI testing', () => {
 
-		it('should have ui setting', () => {
-			assert.isDefined(target.ui, "should have a ui property");
-		});
+		// it('should have ui setting', () => {
+		// 	assert.isDefined(target.ui, "should have a ui property");
+		// });
 
 		it("should be webix's popup", () => {
 			assert.equal(target.ui.view, "popup");
@@ -76,9 +76,9 @@ describe('ab_common_popupEditMenu component', () => {
 
 
 	describe('Init testing', () => {
-		it('should have init function', () => {
-			assert.isDefined(target.init, "should have a init property");
-		});
+		// it('should have init function', () => {
+		// 	assert.isDefined(target.init, "should have a init property");
+		// });
 
 		it('should create webix ui', () => {
 			let spyLogicHide = sandbox.spy(target._logic, 'hide');

@@ -10,7 +10,7 @@ module.exports = {
   tableName: 'appbuilder_application_trans',
 
 
-  connection: 'appdev_default',
+  // connection: 'appdev_default',
 
 
 

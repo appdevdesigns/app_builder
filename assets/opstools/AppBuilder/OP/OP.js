@@ -22,6 +22,7 @@ import Config from "./config/config"
 import CustomComponent from "./customComponent"
 import Model from "./model"
 import Multilingual from "./multilingual"
+import Test from "./test"
 import Util  from "./util"
 import Validation from "./validation"
 
@@ -48,6 +49,8 @@ import Validation from "./validation"
 
 	OP.Multilingual = Multilingual;
 
+	OP.Test = Test;
+	
 	OP.Util = Util;
 
 	OP.Validation = Validation;

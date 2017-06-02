@@ -17,7 +17,7 @@ module.exports = {
 
     tableName: 'appbuilder_application',
 
-    connection: 'appdev_default',
+    // connection: 'appdev_default',
 
 
     attributes: {
