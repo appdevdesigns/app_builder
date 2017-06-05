@@ -45,7 +45,7 @@ function importDataFields(next) {
 
         files.forEach(function (file) {
 
-            // if not one of our ignored files:      
+            // if not one of our ignored files:
             if (ignoreFiles.indexOf(file) == -1) {
                 DataFields[path.parse(file).name] = require(path.join(dataFieldPath, file));
             }
@@ -175,7 +175,7 @@ module.exports = {
                         res.AD.error(invalidError, 400);
                         reject();
                     }
-                    
+
 
                     ABApplication.findOne({id: appID})
                     .then(function(app) {
@@ -233,9 +233,9 @@ module.exports = {
      */
     rules: {
 
-        /** 
+        /**
          * AppBuilder.rules.nameFilter
-         * 
+         *
          * return a properly formatted name for an AppBuilder object.
          *
          * @param {string} name  The name of the object we are conditioning.
@@ -246,9 +246,9 @@ module.exports = {
         },
 
 
-        /** 
+        /**
          * AppBuilder.rules.toApplicationNameFormat
-         * 
+         *
          * return a properly formatted Application Name
          *
          * @param {string} name  The name of the Application we are conditioning.
@@ -259,9 +259,9 @@ module.exports = {
         },
 
 
-        /** 
+        /**
          * AppBuilder.rules.toObjectNameFormat
-         * 
+         *
          * return a properly formatted Object/Table Name
          *
          * @param {string} appName  The name of the Application for this object
@@ -384,7 +384,7 @@ module.exports = {
                         return ok();
                     }
 
-                    // Can't just require() it, because it's not guaranteed to 
+                    // Can't just require() it, because it's not guaranteed to
                     // execute after the first time, due to caching.
                     AD.spawn.command({
                         command: 'node',
@@ -427,7 +427,7 @@ module.exports = {
                     next();
                 });
             }],
-            
+
             services: ['controllers', function(next) {
                 sails.log('Reloading services');
                 sails.hooks.services.loadModules(function() {
@@ -444,7 +444,7 @@ module.exports = {
                 // Temporarily set environment to development so Waterline will
                 // respect the migrate:alter setting
 
-// NOTE: now we manuall lift sails in another process to do this:                
+// NOTE: now we manuall lift sails in another process to do this:
                 // sails.config.environment = 'development';
                 // process.env.NODE_ENV = 'developement';
 
@@ -487,13 +487,13 @@ module.exports = {
             }
             else {
 
-                //// FIX: somewhere in the process of reloading controllers or blueprints, 
+                //// FIX: somewhere in the process of reloading controllers or blueprints,
                 //// our client's socket looses connection with the server.  It is possible
-                //// that this notification is sent during that disconnected state and the 
+                //// that this notification is sent during that disconnected state and the
                 //// Client remains unaware of the updated status.
-                //// Here we set a timeout to give the client a chance to reconnect before 
+                //// Here we set a timeout to give the client a chance to reconnect before
                 //// we send the message.
-                setTimeout(function(){ 
+                setTimeout(function(){
                     notifyToClients(false, '', 'finish');
                 }, 3000);
 
@@ -616,8 +616,8 @@ module.exports = {
 //             // make sure OpsPortal navigation has an area for this application defined:
 //             function (next) {
 
-//                 // if this was our first time to create the App, 
-//                 // then create an area.  
+//                 // if this was our first time to create the App,
+//                 // then create an area.
 //                 // Dont keep creating one since they might want to remove it using the
 //                 // Live Navigation Editor
 //                 if (!pluginExists) {
@@ -642,7 +642,7 @@ module.exports = {
 //                     // Note: this will only create it if it doesn't already exist.
 //                     OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
 
-//                         // area is null if already existed, 
+//                         // area is null if already existed,
 //                         // not null if just created:
 
 //                         next(err);
@@ -670,7 +670,7 @@ module.exports = {
 
 
     registerNavBarArea: function (appID) {
-        
+
         return new Promise(
             (resolve, reject) => {
 
@@ -712,8 +712,8 @@ module.exports = {
                     // make sure OpsPortal navigation has an area for this application defined:
                     function (next) {
 
-                        // if this was our first time to create the App, 
-                        // then create an area.  
+                        // if this was our first time to create the App,
+                        // then create an area.
                         // Dont keep creating one since they might want to remove it using the
                         // Live Navigation Editor
 
@@ -741,7 +741,7 @@ module.exports = {
                         // Note: this will only create it if it doesn't already exist.
                         OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
 
-                            // area is null if already existed, 
+                            // area is null if already existed,
                             // not null if just created:
 
                             next(err);
@@ -1063,7 +1063,7 @@ module.exports = {
 
                     // remove the final model name and have only the path now.
                     if (parts[parts.length-1].indexOf('.js') != -1) {
-                        parts.pop(); 
+                        parts.pop();
                     }
 
                     // for each path directory, add a '..' offset
@@ -1093,7 +1093,7 @@ module.exports = {
                     var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
 // console.log('... currLivePath:'+currLivePath);
 
-                    
+
                     // if livePath Exists:
                     fs.readFile(currLivePath,function(err, data){
                         if (!err) {
@@ -1107,7 +1107,7 @@ module.exports = {
                             cb();
                         }
                     })
-                    
+
                 }
 
 // function forceCrash(name, cb) {
@@ -1118,7 +1118,7 @@ module.exports = {
 //         if (!err) {
 //             var code = [
 //                 "attributes: {",
-//                 "something:{ model:'notThere' },"    
+//                 "something:{ model:'notThere' },"
 //             ].join('\n');
 
 //             data = data.replace(/attributes\s*:\s*{/g, code);
@@ -1141,7 +1141,7 @@ module.exports = {
 linkModel(fullName, function(err){
     linkModel(fullName+'Trans', function(err){
 
-// forceCrash(fullName, function(err){ 
+// forceCrash(fullName, function(err){
         next();
 // })
 
@@ -1149,7 +1149,7 @@ linkModel(fullName, function(err){
 });
 
 
-//// This should work once we fix the fileNames and be able to handle 
+//// This should work once we fix the fileNames and be able to handle
 //// any embedded model associations:
 
 //                 async.series([
@@ -1163,7 +1163,7 @@ linkModel(fullName, function(err){
 //                             if (err) {
 //                                 ok(err);
 //                                 return;
-//                             } 
+//                             }
 
 //                             files.forEach(function(file){
 
@@ -1181,14 +1181,14 @@ linkModel(fullName, function(err){
 
 //                         // check the current model name
 //                         // make sure it is linked, then find any associated models
-//                         // and make sure they are linked.  
+//                         // and make sure they are linked.
 //                         // when the current model is fully processed, call cb().
 //                         function checkModel(name, cb) {
 
 //                             // if not already linked LINK IT and try again:
 //                             if (!hashCurrModels[name]) {
 
-//                                 // add link  
+//                                 // add link
 //                                 linkModel(name, function(err){
 //                                     if (err) {
 //                                         cb(err);
@@ -1197,7 +1197,7 @@ linkModel(fullName, function(err){
 //                                         importModel(name+'.js'); // <-- use file name
 
 //                                         // try it again.
-//                                         checkModel(name,cb); 
+//                                         checkModel(name,cb);
 //                                     }
 //                                 })
 
@@ -1211,7 +1211,7 @@ linkModel(fullName, function(err){
 //                                     var field = model.attributes[a];
 //                                     if (field.collection) {
 //                                         associatedModels.push(field.collection);
-//                                     } 
+//                                     }
 //                                     if (field.model) {
 //                                         associatedModels.push(field.model);
 //                                     }
@@ -1493,7 +1493,7 @@ linkModel(fullName, function(err){
                     if (err) {
                         if (err.code == 'E_AREANOTFOUND') {
                             console.log('... Area[' + Application.areaKey() + '] not found.  Move along ... ');
-                            // this probably means that they deleted this default area 
+                            // this probably means that they deleted this default area
                             // using the Navigation Editor.
                             // no problem here:
                             next();
@@ -1982,7 +1982,7 @@ linkModel(fullName, function(err){
                     if (err) {
                         if (err.code == 'E_AREANOTFOUND') {
                             console.log('... Area[' + Application.areaKey() + '] not found.  Move along ... ');
-                            // this probably means that they deleted this default area 
+                            // this probably means that they deleted this default area
                             // using the Navigation Editor.
                             // no problem here:
                             next();
@@ -2118,7 +2118,7 @@ linkModel(fullName, function(err){
                 function (next) {
                     async.forEachOfSeries(model.attributes, function (col, colName, colDone) {
 
-                        // In Sails models, there is a `definition` object and 
+                        // In Sails models, there is a `definition` object and
                         // an `attributes` object. The `definition` uses the
                         // real column names and has additional properties.
                         var realName = col.columnName || colName;
@@ -2130,7 +2130,7 @@ linkModel(fullName, function(err){
                             return colDone();
                         }
 
-                        // Skip foreign keys. 
+                        // Skip foreign keys.
                         // They will be handled as associations later.
                         if (!def || col.model || col.collection || def.foreignKey) {
                             return colDone();
@@ -2175,12 +2175,12 @@ linkModel(fullName, function(err){
                             fieldType = 'number';
                             colData.type = 'float';
                         }
-                        
+
                         var validTypes = ABColumn.getValidTypes();
                         if (validTypes.indexOf(fieldType) < 0) {
                             return colDone(new Error(`${modelName} contains a column "${colName}" that is of an unsupported type: ${fieldType}`));
                         }
-                        
+
                         // This will allow the column name to have > 20 characters
                         colData.setting = colData.setting || {};
                         colData.setting.isImported = 1;
@@ -2277,7 +2277,7 @@ linkModel(fullName, function(err){
                                     assocDone(err);
                                 }
                                 else if (!list || !list[0]) {
-                                    // Target model has not been imported into 
+                                    // Target model has not been imported into
                                     // this AppBuilder app
                                     return assocDone();
                                 }
@@ -2377,7 +2377,7 @@ linkModel(fullName, function(err){
                 function (next) {
                     if (modelURL) return next();
 
-                    // Patch the newly created controller file to add 
+                    // Patch the newly created controller file to add
                     // the _config property.
                     var controllerFile = path.join(appPath, 'api', 'controllers', _.upperFirst(modelName) + 'Controller.js');
                     fs.readFile(controllerFile, 'utf8', function (err, data) {
@@ -2385,7 +2385,7 @@ linkModel(fullName, function(err){
                         else {
                             var lcModelName = modelName.toLowerCase();
                             var patchData = `
-    
+
     _config: {
         model: "${lcModelName}", // all lowercase model name
         actions: false,

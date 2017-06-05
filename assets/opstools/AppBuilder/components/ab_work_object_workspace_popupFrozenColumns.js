@@ -42,14 +42,12 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			body: {
 				rows: [
 					{
-						view: 'button', value: labels.component.clearAll, click: function (id, e, node) {
-							_logic.clickClearAll(id, e, node);
-
-							// dataTable.define('leftSplit', 0);
-							// dataTable.refreshColumns();
-							//
-							// $$(ids.component).refreshShowIcons();
-							// $$(ids.component).callChangeEvent();
+						view: 'button', 
+						value: labels.component.clearAll, 
+						on: {
+							'onItemClick': function(id, e, node) {
+								return _logic.clickClearAll();								
+							}
 						}
 					},
 					{
@@ -60,14 +58,8 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 						select: false,
 						template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
 						on: {
-							onItemClick: function (id, e, node) {
+							'onItemClick': function (id, e, node) {
 								_logic.clickListItem(id, e, node);
-
-								// dataTable.define('leftSplit', dataTable.getColumnIndex(id) + 1);
-								// dataTable.refreshColumns();
-								//
-								// $$(ids.component).refreshShowIcons();
-								// $$(ids.component).callChangeEvent();
 							}
 						}
 					}
@@ -125,9 +117,11 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 				.then(function(){
 					_logic.iconsReset();
 					_logic.callbacks.onChange();
+					return false;
 				})
 				.catch(function(err){
 					OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:"" });
+					return false;
 				})
 			},
 
