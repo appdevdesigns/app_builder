@@ -82,6 +82,9 @@ export default class ABFieldSelectivity extends ABField {
 		if (domNode && domNode.selectivity) {
 			data = data || [];
 
+			if (typeof data == 'string')
+				data = JSON.parse(data);
+
 			domNode.selectivity.setData(data);
 		}
 	}

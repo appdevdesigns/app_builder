@@ -209,7 +209,11 @@ class ABFieldList extends ABField {
 
 			if (this.settings.isMultiple == true) {
 				// storing array value of selectivity
-				obj[this.columnName] = { type:'array' }
+				obj[this.columnName] = [
+					{ type: 'array' },
+					// allow null type because it could not put empty array in REST api
+					{ type: 'null' }
+				];
 			}
 			else {
 				// storing the uuid as a string.
