@@ -20,7 +20,7 @@ describe('ab_common_popupEditMenu component', () => {
 	});
 
 	/*
-	** sinon.js is a test tool that allow us create spies, stubs and mocks to replace a function 
+	** sandbox.js is a test tool that allow us create spies, stubs and mocks to replace a function 
 	** after run a test case, then they should be restored function back.
 	**
 	** sinon.sandbox it helps to create spies, stubs and mocks in a test case scope
@@ -66,10 +66,10 @@ describe('ab_common_popupEditMenu component', () => {
 			itemClickFn(null, null, itemClickParam);
 
 			// Assert _logic.onItemClick should be called in onItemClick of menu
-			sinon.assert.calledOnce(spyLogicItemClick);
+			sandbox.assert.calledOnce(spyLogicItemClick);
 
 			// Assert pass a correct parameter to _logic.onItemClick
-			sinon.assert.calledWith(spyLogicItemClick, itemClickParam);
+			sandbox.assert.calledWith(spyLogicItemClick, itemClickParam);
 		});
 
 	});
@@ -87,7 +87,7 @@ describe('ab_common_popupEditMenu component', () => {
 			target.init();
 
 			// Assert call _logic.hide once
-			sinon.assert.calledOnce(spyLogicHide);
+			sandbox.assert.calledOnce(spyLogicHide);
 
 		});
 
@@ -118,11 +118,11 @@ describe('ab_common_popupEditMenu component', () => {
 			let result = target._logic.onItemClick({ textContent: mockApp.labels.rename });
 
 			// Should call onClick callback and pass "rename" to a parameter 
-			sinon.assert.calledOnce(spyCallbacks);
-			sinon.assert.calledWith(spyCallbacks, 'rename');
+			sandbox.assert.calledOnce(spyCallbacks);
+			sandbox.assert.calledWith(spyCallbacks, 'rename');
 
 			// Should hide this popup
-			sinon.assert.calledOnce(spyHide);
+			sandbox.assert.calledOnce(spyHide);
 
 			// Should return false to cancel a event of webix
 			assert.equal(result, false);
@@ -137,11 +137,11 @@ describe('ab_common_popupEditMenu component', () => {
 			let result = target._logic.onItemClick({ textContent: mockApp.labels['delete'] });
 
 			// Should call onClick callback and pass "delete" to a parameter 
-			sinon.assert.calledOnce(spyCallbacks);
-			sinon.assert.calledWith(spyCallbacks, 'delete');
+			sandbox.assert.calledOnce(spyCallbacks);
+			sandbox.assert.calledWith(spyCallbacks, 'delete');
 
 			// Should hide this popup
-			sinon.assert.calledOnce(spyHide);
+			sandbox.assert.calledOnce(spyHide);
 
 			// Should return false to cancel a event of webix
 			assert.equal(result, false);

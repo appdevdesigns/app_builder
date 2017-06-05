@@ -43,15 +43,19 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                             {
                                 view: 'button',
                                 value: labels.component.showAll,
-                                click: function () {
-                                    _logic.clickShowAll();
+                                on: {
+                                    onItemClick: function() {
+                                        _logic.clickShowAll();
+                                    }
                                 }
                             },
                             {
                                 view: 'button',
                                 value: labels.component.hideAll,
-                                click: function () {
-                                    _logic.clickHideAll()
+                                on: {
+                                    onItemClick: function() {
+                                        _logic.clickHideAll();
+                                    }
                                 }
                             }
                         ]

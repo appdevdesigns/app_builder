@@ -106,7 +106,7 @@ describe("ABFieldDate unit tests", () => {
 
 		it('.isValidData - dateRange: should pass when enter date is in range', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			// Current date
@@ -120,7 +120,7 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.notCalled(stubAddError);
+			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
 			assert.equal(currentDate.toISOString(), rowData[columnName]);
@@ -128,7 +128,7 @@ describe("ABFieldDate unit tests", () => {
 
 		it('.isValidData - dateRange: should not pass when enter date is not in range', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			// Next 6 days from current
@@ -141,12 +141,12 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.calledOnce(stubAddError);
+			sandbox.assert.calledOnce(stubAddError);
 		});
 
 		it('.isValidData - between: should pass when enter date is in range', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-02-15');
@@ -158,7 +158,7 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.notCalled(stubAddError);
+			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
 			assert.equal(enterDate.toISOString(), rowData[columnName]);
@@ -166,7 +166,7 @@ describe("ABFieldDate unit tests", () => {
 
 		it('.isValidData - notBetween: should not pass when enter date is not in range', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-03-01');
@@ -178,12 +178,12 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.calledOnce(stubAddError);
+			sandbox.assert.calledOnce(stubAddError);
 		});
 
 		it('.isValidData - equal: should pass when enter date equals validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-02-28');
@@ -194,7 +194,7 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.notCalled(stubAddError);
+			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
 			assert.equal(enterDate.toISOString(), rowData[columnName]);
@@ -202,7 +202,7 @@ describe("ABFieldDate unit tests", () => {
 
 		it('.isValidData - equal: should not pass when enter date does not equal validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-03-01');
@@ -213,12 +213,12 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.calledOnce(stubAddError);
+			sandbox.assert.calledOnce(stubAddError);
 		});
 
 		it('.isValidData - not equal: should pass when enter date does not equal validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-02-27');
@@ -229,7 +229,7 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.notCalled(stubAddError);
+			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
 			assert.equal(enterDate.toISOString(), rowData[columnName]);
@@ -237,7 +237,7 @@ describe("ABFieldDate unit tests", () => {
 
 		it('.isValidData - not equal: should not pass when enter date equals validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-02-28');
@@ -248,12 +248,12 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.calledOnce(stubAddError);
+			sandbox.assert.calledOnce(stubAddError);
 		});
 
 		it('.isValidData - greater than: should pass when enter date is greater than validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-03-01');
@@ -264,7 +264,7 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.notCalled(stubAddError);
+			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
 			assert.equal(enterDate.toISOString(), rowData[columnName]);
@@ -272,7 +272,7 @@ describe("ABFieldDate unit tests", () => {
 
 		it('.isValidData - greater than: should not pass when enter date does not greater than validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-02-28');
@@ -283,12 +283,12 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.calledOnce(stubAddError);
+			sandbox.assert.calledOnce(stubAddError);
 		});
 
 		it('.isValidData - lower than: should pass when enter date is lower than validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-02-27');
@@ -299,7 +299,7 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.notCalled(stubAddError);
+			sandbox.assert.notCalled(stubAddError);
 
 			// .isValidDate should convert Date to ISO when valid
 			assert.equal(enterDate.toISOString(), rowData[columnName]);
@@ -307,7 +307,7 @@ describe("ABFieldDate unit tests", () => {
 
 		it('.isValidData - lower than: should not pass when enter date does not lower than validate date', () => {
 			let validator = { addError: function () { } };
-			let stubAddError = sinon.stub(validator, 'addError').callsFake(function () { });
+			let stubAddError = sandbox.stub(validator, 'addError').callsFake(function () { });
 
 			let rowData = {};
 			let enterDate = new Date('1986-02-28');
@@ -318,7 +318,7 @@ describe("ABFieldDate unit tests", () => {
 
 			dateField.isValidData(rowData, validator);
 
-			sinon.assert.calledOnce(stubAddError);
+			sandbox.assert.calledOnce(stubAddError);
 		});
 
 	});
