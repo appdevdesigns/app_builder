@@ -473,7 +473,12 @@ module.exports = {
                     .populate('translations')
                     .then(function (srcObj) {
                         sourceObject = srcObj;
-
+                        
+                        if (sourceObject.isImported) {
+                            // Imported objects can have long names
+                            sourceSetting.isImported = true;
+                        }
+                        
                         next();
                     }, next);
             },
@@ -485,7 +490,12 @@ module.exports = {
                     .populate('translations')
                     .then(function (trgObj) {
                         targetObject = trgObj;
-
+                        
+                        if (targetObject.isImported) {
+                            // Imported objects can have long names
+                            targetSetting.isImported = true;
+                        }
+                        
                         next();
                     }, next);
             },
