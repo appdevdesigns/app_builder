@@ -116,7 +116,7 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 				spyLogicClickClearAll = sandbox.spy(target._logic, 'clickClearAll');
 			
 			// Tell the app the save was successfull	
-			let stubSave = sinon.stub(mockObj, 'save').callsFake(function () { 
+			let stubSave = sandbox.stub(mockObj, 'save').callsFake(function () { 
 				return new Promise((resolve, reject) => { });
 			});
 
@@ -124,7 +124,7 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			buttonClickFn(null, null, null);
 			
 			// Assert _logic.clickClearAll should be called when claer all button is clicked
-			sinon.assert.calledOnce(spyLogicClickClearAll);
+			sandbox.assert.calledOnce(spyLogicClickClearAll);
 			
 			// Assert frozen column should be empty string
 			assert.equal('', mockObj.workspaceFrozenColumnID);
@@ -143,12 +143,12 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 				spyLogicClickListItem = sandbox.spy(target._logic, 'clickListItem');
 			
 			// Tell the app the save was successfull	
-			let stubSave = sinon.stub(mockObj, 'save').callsFake(function () { 
+			let stubSave = sandbox.stub(mockObj, 'save').callsFake(function () { 
 				return new Promise((resolve, reject) => { });
 			});
 
 			// Tell the app the icons were set up without issue
-			let stubIconReset = sinon.stub(target._logic, 'iconsReset').callsFake(function () { 
+			let stubIconReset = sandbox.stub(target._logic, 'iconsReset').callsFake(function () { 
 				// don't need to do anything but lets assume the UI did some magic here
 			});
 			
@@ -159,7 +159,7 @@ describe('ab_work_object_workspace_popupFrozenColumns component', () => {
 			itemClickFn(sampleApp.objects[0].fields[1].id, null, null);
 			
 			// Assert _logic.clickClearAll should be called when claer all button is clicked
-			sinon.assert.calledOnce(spyLogicClickListItem);
+			sandbox.assert.calledOnce(spyLogicClickListItem);
 			
 			// Assert frozen column should be the columanName of the item clicked
 			assert.equal(sampleApp.objects[0].fields[1].columnName, mockObj.workspaceFrozenColumnID);

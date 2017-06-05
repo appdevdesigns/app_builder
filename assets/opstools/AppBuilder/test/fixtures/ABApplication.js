@@ -24,7 +24,10 @@ export default {
             "urlPath": "Sample_Application/Books",
             "importFromObject": "",
             "objectWorkspace": {
-                "frozenColumnID": "Publish Date"
+                "frozenColumnID": "Publish Date",
+                "hiddenFields": [
+                    "Title"
+                ]
             },
             "translations": [
                 {

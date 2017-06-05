@@ -80,7 +80,7 @@ describe('ab_work_object_list_newObject component', () => {
 
 		it('.save: should show a alert box when currentApplication is null', () => {
 			// Use stub instead of spy to avoid show alert popup
-			let stubAlert = sinon.stub(OP.Dialog, 'Alert').callsFake(function () { });
+			let stubAlert = sandbox.stub(OP.Dialog, 'Alert').callsFake(function () { });
 
 			let newObjectValues = {};
 			let callback = function (err) {
@@ -92,7 +92,7 @@ describe('ab_work_object_list_newObject component', () => {
 			let result = target._logic.save(newObjectValues, callback);
 
 			assert.isFalse(result);
-			sinon.assert.calledOnce(stubAlert);
+			sandbox.assert.calledOnce(stubAlert);
 		});
 
 		it('.save: should create a new object to current application', () => {
@@ -105,7 +105,7 @@ describe('ab_work_object_list_newObject component', () => {
 			// Load a example application to component
 			target.applicationLoad(sampleApp);
 
-			let spyObjectNew = sinon.spy(sampleApp, "objectNew");
+			let spyObjectNew = sandbox.spy(sampleApp, "objectNew");
 			let sampleObject = {};
 			let callback = function (err) {
 				// Assert it should not return any error in callback
@@ -113,7 +113,7 @@ describe('ab_work_object_list_newObject component', () => {
 			};
 			let result = target._logic.save(sampleObject, callback)
 
-			sinon.assert.calledOnce(spyObjectNew);
+			sandbox.assert.calledOnce(spyObjectNew);
 		});
 	});
 
