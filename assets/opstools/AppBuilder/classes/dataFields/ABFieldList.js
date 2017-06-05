@@ -5,7 +5,7 @@
  *
  */
 
-import ABField from "./ABField"
+import ABFieldSelectivity from "./ABFieldSelectivity"
 import ABFieldComponent from "./ABFieldComponent"
 
 
@@ -28,36 +28,42 @@ var ABFieldListDefaults = {
 var defaultValues = {
 	isMultiple: 0,
 	options: [],
-	singleDefault: 'none'
+	singleDefault: 'none',
+	multipleDefault: []
 };
 
 var ids = {
 	multiSelectOption: 'ab-list-multiple-option',
 	singleDefault: 'ab-list-single-default',
 	multipleDefault: 'ab-list-multiple-default',
-	listOptions: 'ab-list-option'
+	options: 'ab-list-option'
 };
 
-function updateDefaultList() {
-	var optList = $$(ids.listOptions).find({}).map(function (opt) {
+
+function updateDefaultList () {
+	var optList = $$(ids.options).find({}).map(function (opt) {
 		return {
 			id: opt.id,
 			value: opt.value
 		}
 	});
 
-	// TODO : Should I use selectivity to multiple select
-	// renderMultipleSelector(
-	// 	$$(ids.multipleDefault).$view,
-	// 	optList.map(function (opt) {
-	// 		return {
-	// 			id: opt.id,
-	// 			text: opt.value
-	// 		}
-	// 	}),
-	// 	null,
-	// 	false);
+	// Multiple default selector
+	if (ABFieldListComponent.currentField) {
+		var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+		ABFieldListComponent.currentField.selectivityRender(domNode, {
+			multiple: true,
+			placeholder: '[Select]',
+			items: optList.map(function (opt) {
+				return {
+					id: opt.id,
+					text: opt.value
+				}
+			})
+		});
+	}
 
+	// Single default selector
 	optList.unshift({
 		id: 'none',
 		value: '[No Default]'
@@ -87,10 +93,9 @@ var ABFieldListComponent = new ABFieldComponent({
 				labelRight: L('ab.dataField.list.multiSelectOption', 'Multiselect'),
 				labelWidth: 0,
 				value: false,
-				disabled: true,
 				on: {
-					onChange: function () {
-						if (this.getValue() == true) {
+					onChange: (newV, oldV) => {
+						if (newV == true) {
 							$$(ids.singleDefault).hide();
 							$$(ids.multipleDefault).show();
 						}
@@ -105,7 +110,7 @@ var ABFieldListComponent = new ABFieldComponent({
 			},
 			{ view: "label", label: "<b>Options</b>" },
 			{
-				id: ids.listOptions,
+				id: ids.options,
 				name: 'options',
 				view: App.custom.editlist.view,
 				template: "<div style='position: relative;'>#value#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
@@ -117,17 +122,17 @@ var ABFieldListComponent = new ABFieldComponent({
 				onClick: {
 					"ab-new-field-remove": function (e, itemId, trg) {
 						// Remove option item
-						$$(ids.listOptions).remove(itemId);
+						$$(ids.options).remove(itemId);
 					}
 				},
 				on: {
-					onAfterAdd: function () {
+					onAfterAdd: () => {
 						updateDefaultList();
 					},
-					onAfterEditStop: function () {
+					onAfterEditStop: () => {
 						updateDefaultList();
 					},
-					onAfterDelete: function () {
+					onAfterDelete: () => {
 						updateDefaultList();
 					}
 				}
@@ -137,8 +142,8 @@ var ABFieldListComponent = new ABFieldComponent({
 				value: "Add new option",
 				click: function () {
 					var itemId = webix.uid();
-					$$(ids.listOptions).add({ id: itemId, value: '' }, $$(ids.listOptions).count());
-					$$(ids.listOptions).edit(itemId);
+					$$(ids.options).add({ id: itemId, value: '' }, $$(ids.options).count());
+					$$(ids.options).edit(itemId);
 				}
 			},
 			{
@@ -154,12 +159,12 @@ var ABFieldListComponent = new ABFieldComponent({
 			},
 			{
 				id: ids.multipleDefault,
+				name: 'multipleDefault',
 				view: 'template',
 				label: 'Default',
 				height: 50,
 				borderless: true,
 				hidden: true,
-				css: 'ab-main-container',
 				template:
 				'<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">Default</label>' +
 				'<div class="list-data-values"></div>'
@@ -183,36 +188,58 @@ var ABFieldListComponent = new ABFieldComponent({
 
 		// }
 
-		// populate: function (ids, values) {
-		// 	if (values.settings.validation) {
-		// 		$$(ids.validateMinimum).enable();
-		// 		$$(ids.validateMaximum).enable();
-		// 	} else {
-		// 		$$(ids.validateMinimum).disable();
-		// 		$$(ids.validateMaximum).disable();
-		// 	}
-		// }
+		populate: (ids, field) => {
 
-	},
+			// set options to webix list
+			var opts = field.settings.options.map(function (opt) {
+				return {
+					id: opt.id,
+					value: opt.text
+				}
+			});
+			$$(ids.options).parse(opts);
+			$$(ids.options).refresh();
 
-	// perform any additional setup actions here.
-	// @param {obj} ids  the hash of id values for all the current form elements.
-	//					 it should have your elements + the default Header elements:
-	//						.label, .columnName, .fieldDescription, .showIcon
-	init: function (ids) {
+			// update single/multiple default selector
+			ABFieldListComponent.currentField = field;
+			updateDefaultList(ids);
+
+		},
+
+		values: (ids, values) => {
+
+			// Get options list from UI, then set them to settings
+			values.settings.options = $$(ids.options).find({}).map(function (opt) {
+				return {
+					id: opt.id,
+					text: opt.value
+				}
+			});
+
+			// Set multiple default value
+			if (values.settings.isMultiple == true) {
+				var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+				values.settings.multipleDefault = [];
+				// values.settings.multipleDefault = domNode.selectivity.getData() || [];
+			}
+
+			return values;
+		}
+
 	}
-
 
 });
 
-class ABFieldList extends ABField {
+class ABFieldList extends ABFieldSelectivity {
 	constructor(values, object) {
+
 		super(values, object, ABFieldListDefaults);
 
 		// we're responsible for setting up our specific settings:
 		for (var dv in defaultValues) {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
+
 	}
 
 	// return the default values for this DataField
@@ -282,14 +309,6 @@ class ABFieldList extends ABField {
 
 		var obj = super.toObj();
 
-		// Get options list from UI, then set them to settings
-		obj.settings.options = $$(ids.listOptions).find({}).map(function (opt) {
-			return {
-				id: opt.id,
-				text: opt.value
-			}
-		});
-
 		// Un-translate options list
 		obj.settings.options.forEach(function (opt) {
 			OP.Multilingual.unTranslate(opt, opt, ["text"]);
@@ -309,8 +328,9 @@ class ABFieldList extends ABField {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		// TODO: Multiple select list
+		// Multiple select list
 		if (this.settings.isMultiple == true) {
+			config.template = '<div class="list-data-values"></div>';
 		}
 		// Single select list
 		else {
@@ -328,6 +348,57 @@ class ABFieldList extends ABField {
 
 
 
+	/*
+	 * @function customDisplay
+	 * perform any custom display modifications for this field.  
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customDisplay(row, App, node) {
+		// sanity check.
+		if (!node) { return }
+
+		if (this.settings.isMultiple == true) {
+			var domNode = node.querySelector('.list-data-values');
+
+			// Render selectivity
+			this.selectivityRender(domNode, {
+				multiple: true,
+				items: this.settings.options
+			});
+
+			// Set value to selectivity
+			this.selectivitySet(domNode, row[this.columnName]);
+
+			// Listen event when selectivity value updates
+			domNode.addEventListener('change', (e) => {
+
+				// update just this value on our current object.model
+				var values = {};
+				values[this.columnName] = this.selectivityGet(domNode);
+				this.object.model().update(row.id, values)
+					.then(()=>{
+
+					})
+					.catch((err)=>{
+
+						node.classList.add('webix_invalid');
+						node.classList.add('webix_invalid_cell');
+					
+						OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
+						console.error(err);
+					});
+
+			}, false);
+
+		}
+
+	}
+
+
+
 	/**
 	 * @method defaultValue
 	 * insert a key=>value pair that represent the default value
@@ -335,8 +406,9 @@ class ABFieldList extends ABField {
 	 * @param {obj} values a key=>value hash of the current values.
 	 */
 	defaultValue(values) {
-		// TODO: Multiple select list
+		// Multiple select list
 		if (this.settings.isMultiple == true) {
+			values[this.columnName] = this.settings.multipleDefault || [];
 		}
 		// Single select list
 		else if (this.settings.singleDefault && this.settings.singleDefault != 'none') {

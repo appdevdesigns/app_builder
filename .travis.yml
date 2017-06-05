@@ -15,8 +15,6 @@ before_script:
 - cd app_builder
 - npm install --production=false
 - npm run build
-- npm run testbuild
 
 script:
 - npm test
-- npm run testclient

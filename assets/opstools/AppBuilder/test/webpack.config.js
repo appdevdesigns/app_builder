@@ -14,7 +14,6 @@ module.exports = {
   resolve: {
     alias: {
       'OP': APP + '/../../../assets/opstools/AppBuilder/OP/OP.js'
-    //   'OP' : '/home/pong/Desktop/AppBuilder/node_modules/app_builder/assets/opstools/AppBuilder/OP/OP.js'
       // it's important what kind of paths you're using (relative vs. absolute)
     }
   },

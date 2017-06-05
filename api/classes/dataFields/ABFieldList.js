@@ -207,11 +207,17 @@ class ABFieldList extends ABField {
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
 
-			obj[this.columnName] = { type: 'string' };
-
+			if (this.settings.isMultiple == true) {
+				// storing array value of selectivity
+				obj[this.columnName] = { type:'array' }
+			}
+			else {
+				// storing the uuid as a string.
+				obj[this.columnName] = { type:'string' }
+			}
 
 		}
-
+		
 	}
 
 

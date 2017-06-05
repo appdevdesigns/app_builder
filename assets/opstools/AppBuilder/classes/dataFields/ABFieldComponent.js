@@ -162,7 +162,7 @@ export default class ABFieldComponent {
 
 				for(var f in this.defaultValues) { 
 					var component = $$(ids[f]);
-					if(component) {
+					if(component && component.setValue) {
 						component.setValue(this.defaultValues[f]);
 					} else {
 						console.warn('!! could not find component for default value: name:'+f+' id:'+ids[f]);
@@ -246,7 +246,7 @@ export default class ABFieldComponent {
 			 * @param {ABField} field
 			 */
 			populate: (field) => {
-
+console.log('POPULATE: ', populate);
 				// populate the base ABField values:
 				ABField.editorPopulate(ids, field);
 
