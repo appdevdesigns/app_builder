@@ -12,7 +12,7 @@
     "postupdate": "node setup/setup.js",
     "build": "node_modules/.bin/webpack",
     "testbuild": "node_modules/.bin/webpack --config ./assets/opstools/AppBuilder/test/webpack.config.js",
-    "testclient": "node_modules/mocha-phantomjs/bin/mocha-phantomjs assets/opstools/AppBuilder/test/test-all.html --reporter dot --ignore-resource-errors "
+    "testclient": "node_modules/mocha-phantomjs/bin/mocha-phantomjs -p node_modules/phantomjs/bin/phantomjs assets/opstools/AppBuilder/test/test-all.html --reporter dot --ignore-resource-errors "
   },
   "repository": {
     "type": "git",
