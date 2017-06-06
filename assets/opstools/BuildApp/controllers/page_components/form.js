@@ -372,7 +372,8 @@ steal(
 						}
 					}
 
-					childView.define('height', 35); // Default height
+					// Removed as this was overiding the webix container height.
+					// childView.define('height', 35); // Default height
 					childView.resize();
 				});
 			}
@@ -574,6 +575,35 @@ steal(
 							else if (col.setting.editor === 'richselect') {
 								element.view = 'richselect';
 								element.options = listOptions[col.id];
+							}
+							else if (col.setting.editor === 'richtext') {
+
+								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>"
+									.replace(/#width#/g, element.labelWidth - 3)
+									.replace(/#label#/g, element.label);
+
+								// element.height = 250;
+								element.cols = [
+									{
+										view: 'template',
+										minHeight: 45,
+										borderless: true,
+										template: template,
+										width: element.labelWidth + 5
+									},
+									{
+										view: 'template',
+										template: "<div class='ab-richtext-data-field'></div>",
+										height: 375,
+										css: 'richtext-container',
+										borderless: true,
+									}
+								];
+
+								console.log('col.setting.editorId: --> ', col.setting.editorId)
+
+								console.log('element: ---> ', element)
+
 							}
 							else if (col.setting.template) {
 								var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
@@ -1241,6 +1271,7 @@ steal(
 				],
 				on: {
 					onAfterEditStop: function (state, editor, ignoreUpdate) {
+						console.log('onAfterEditStop ---- ');
 						if (ignoreUpdate || state.old == state.value) return false;
 
 						var viewId = componentIds.editForm,
