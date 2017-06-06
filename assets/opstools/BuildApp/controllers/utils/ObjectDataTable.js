@@ -82,8 +82,8 @@ steal(
 									filterTimeoutId;
 
 								self.eventIds['onBeforeRender'] = self.dataTable.attachEvent('onBeforeRender', function (data) {
-									// If there is not have any data, then render immediately webix datatable.
-									if (self.dataTable.data == null || self.dataTable.data.count() < 1) return true;
+									// If there does not have any data, then render immediately webix datatable.
+									if (self.dataTable.data == null || self.dataTable.find({}).length < 1) return true;
 
 									if (filterTimeoutId) clearTimeout(filterTimeoutId);
 

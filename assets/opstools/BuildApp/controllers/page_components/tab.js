@@ -13,7 +13,7 @@ steal(
         };
 
         //Constructor
-        var tabComponent = function (application, viewId, componentId) {
+        var tabComponent = function (application, rootPageId, viewId, componentId) {
             var data = {};
 
             var _this = this;
@@ -144,7 +144,7 @@ steal(
                     });
 
 
-                    var Page = AD.Model.get('opstools.BuildApp.ABPage');
+                    // var Page = AD.Model.get('opstools.BuildApp.ABPage');
 
                     function refreshTabView(cb) {
                         var renderTasks = [];

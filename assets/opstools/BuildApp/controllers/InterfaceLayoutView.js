@@ -622,6 +622,7 @@ steal(
 						renderComponent: function (com) {
 							var self = this,
 								q = $.Deferred(),
+								rootPageId = AD.classes.AppBuilder.currApp.currPage.getRootPageId(),
 								componentInstance = componentManager.getComponent(com.attr('component')),
 								view = componentInstance ? componentInstance.getView() : null,
 								viewId = self.getComponentId(com.attr('id')),
@@ -632,6 +633,7 @@ steal(
 							if (componentInstance) {
 								self.data.components[com.attr('id')] = new componentInstance(
 									AD.classes.AppBuilder.currApp, // Current application
+									rootPageId, // the root page id
 									viewId, // the view id
 									com.id // the component data id
 								);

@@ -6,7 +6,7 @@ steal(
 	'opstools/BuildApp/views/BuildApp/BuildApp.ejs',
 	'opstools/BuildApp/controllers/AppList.js',
 	'opstools/BuildApp/controllers/AppWorkspace.js',
-    'countly-sdk-web/lib/countly.min',
+    // 'countly-sdk-web/lib/countly.min',
 	function () {
 		System.import('appdev').then(function () {
 			steal.import('appdev/ad',
