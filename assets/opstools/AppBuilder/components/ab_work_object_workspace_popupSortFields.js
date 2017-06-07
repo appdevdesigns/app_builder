@@ -51,11 +51,17 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				id: ids.form,
 				autoheight: true,
 				borderless: true,
-				elements: [{
-					view: "button", value: labels.component.addNewSort, click: function (id, e, node) {
-						_logic.clickAddNewSort();
+				elements: [
+					{
+						view: "button", 
+						value: labels.component.addNewSort, 
+						on: {
+							onItemClick: function(id, e, node) {
+								_logic.clickAddNewSort();
+							}
+						}
 					}
-				}]
+				]
 			},
 			on: {
 				onShow: function () {
@@ -115,51 +121,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							options: listFields,
 							on: {
 								"onChange": function (columnId) {
-									var allFields = CurrentObject.fields();
-									var columnConfig = "",
-										sortDir = this.getParentView().getChildViews()[1],
-										sortAs = this.getParentView().getChildViews()[2],
-										defaultAs = null,
-										options = null;
-
-									allFields.forEach((f) => {
-										if (f.columnName == columnId) {
-											columnConfig = f
-										}
-									});
-
-									if (!columnConfig)
-										return;
-
-									switch (columnConfig.key) {
-										case "string":
-											options = [
-												{ id: 'asc', value: labels.component.textAsc },
-												{ id: 'desc', value: labels.component.textDesc }];
-											defaultAs = "string";
-											break;
-										case "date":
-											options = [
-												{ id: 'asc', value: labels.component.dateAsc },
-												{ id: 'desc', value: labels.component.dateDesc }];
-											defaultAs = "date";
-											break;
-										case "number":
-											options = [
-												{ id: 'asc', value: labels.component.numberAsc },
-												{ id: 'desc', value: labels.component.numberDesc }];
-											defaultAs = "int";
-											break;
-									}
-
-									sortDir.define('options', options);
-									sortDir.refresh();
-
-									sortAs.setValue(defaultAs);
-
-									_logic.refreshFieldList();
-
-									_logic.saveSorts();
+									var el = this;
+									_logic.onChangeCombo(columnId, el);
 								}
 							}
 						},
@@ -232,7 +195,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							var selectedValue = cView.getChildViews()[0].getValue();
 							if (selectedValue) {
 								var removeIndex = null;
-								var removeItem = $.grep(listFields, function (f, index) {
+								var removeItem = listFields.filter(function (f, index) {
 									if (f.id == selectedValue) {
 										removeIndex = index;
 										return true;
@@ -241,6 +204,15 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 										return false;
 									}
 								});
+								// var removeItem = $.grep(listFields, function (f, index) {
+								// 	if (f.id == selectedValue) {
+								// 		removeIndex = index;
+								// 		return true;
+								// 	}
+								// 	else {
+								// 		return false;
+								// 	}
+								// });
 								listFields.splice(removeIndex, 1);
 							}
 						});
@@ -329,6 +301,54 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 				//$$(ids.list).parse(listFields);
 			},
+			
+			onChangeCombo: function(columnId, el) {
+				var allFields = CurrentObject.fields();
+				var columnConfig = "",
+					sortDir = el.getParentView().getChildViews()[1],
+					sortAs = el.getParentView().getChildViews()[2],
+					defaultAs = null,
+					options = null;
+
+				allFields.forEach((f) => {
+					if (f.columnName == columnId) {
+						columnConfig = f
+					}
+				});
+
+				if (!columnConfig)
+					return;
+
+				switch (columnConfig.key) {
+					case "string":
+						options = [
+							{ id: 'asc', value: labels.component.textAsc },
+							{ id: 'desc', value: labels.component.textDesc }];
+						defaultAs = "string";
+						break;
+					case "date":
+						options = [
+							{ id: 'asc', value: labels.component.dateAsc },
+							{ id: 'desc', value: labels.component.dateDesc }];
+						defaultAs = "date";
+						break;
+					case "number":
+						options = [
+							{ id: 'asc', value: labels.component.numberAsc },
+							{ id: 'desc', value: labels.component.numberDesc }];
+						defaultAs = "int";
+						break;
+				}
+
+				sortDir.define('options', options);
+				sortDir.refresh();
+
+				sortAs.setValue(defaultAs);
+
+				_logic.refreshFieldList();
+
+				_logic.saveSorts();
+			},
 
 			/**
 			 * @function objectLoad
@@ -370,7 +390,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							return false;
 
 						var fieldId = cView.getChildViews()[0].getValue(),
-							fieldObj = $.grep(listFields, function (f) { return f.id == fieldId });
+							// fieldObj = $.grep(listFields, function (f) { return f.id == fieldId });
+							fieldObj = listFields.filter(function (f) { return f.id == fieldId });
 
 						if (fieldObj.length > 0) {
 							// Add selected field to list
@@ -398,12 +419,25 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							return false;
 
 						var fieldId = cView.getChildViews()[0].getValue(),
-							fieldObj = $.grep(listFields, function (f) { return f.id == fieldId });
+							// fieldObj = $.grep(listFields, function (f) { return f.id == fieldId }),
+							fieldObj = listFields.filter(function (f) { return f.id == fieldId });
+							
+						// var selectedFieldsExcludeCurField = $(selectedFields).not(fieldObj);
+						var selectedFieldsExcludeCurField = selectedFields.filter(function(x){
+							if(Array.isArray(fieldObj) && fieldObj.indexOf(x) !== -1){
+								return false;
+							}
+							return true;
+						});
 
-						var selectedFieldsExcludeCurField = $(selectedFields).not(fieldObj);
-
-						var enableFields = $(listFields).not(selectedFieldsExcludeCurField).get();
-
+						// var enableFields = $(listFields).not(selectedFieldsExcludeCurField).get();						
+						var enableFields = listFields.filter(function(x){
+							if(Array.isArray(selectedFieldsExcludeCurField) && selectedFieldsExcludeCurField.indexOf(x) !== -1){
+								return false;
+							}
+							return true;
+						});
+						
 						// Update field list
 						cView.getChildViews()[0].define('options', enableFields);
 						cView.getChildViews()[0].refresh();

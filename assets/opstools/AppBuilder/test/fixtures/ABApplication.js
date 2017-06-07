@@ -27,6 +27,18 @@ export default {
                 "frozenColumnID": "Publish Date",
                 "hiddenFields": [
                     "Title"
+                ],
+                "sortFields": [
+                    {
+                        "by": "Publish Date",
+                        "dir": "asc",
+                        "as": "date"
+                    },
+                    {
+                        "by": "Title",
+                        "dir": "asc",
+                        "as": "string"
+                    }
                 ]
             },
             "translations": [
