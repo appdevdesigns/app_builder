@@ -219,6 +219,16 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         // our internal business logic
         var _logic = this._logic = {
 
+            applicationLoad: (application) => {
+
+                for (var menuName in _componentHash) {
+                    if (_componentHash[menuName] && _componentHash[menuName]._logic.applicationLoad) {
+                        _componentHash[menuName]._logic.applicationLoad(application);
+                    }
+                }
+
+            },
+
 
             buttonCancel:function() {
 
@@ -513,7 +523,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
         // 
         // Define our external interface methods:
-        // 
+        //
+        this.applicationLoad = _logic.applicationLoad; // {fn}     fn(ABApplication) 
         this.show = _logic.show;       // {fn}     fn(node, ABField)
     }
 

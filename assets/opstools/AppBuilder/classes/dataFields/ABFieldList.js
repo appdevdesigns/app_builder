@@ -40,7 +40,7 @@ var ids = {
 };
 
 
-function updateDefaultList () {
+function updateDefaultList() {
 	var optList = $$(ids.options).find({}).map(function (opt) {
 		return {
 			id: opt.id,
@@ -378,16 +378,21 @@ class ABFieldList extends ABFieldSelectivity {
 				// update just this value on our current object.model
 				var values = {};
 				values[this.columnName] = this.selectivityGet(domNode);
+
+				// pass null because it could not put empty array in REST api
+				if (values[this.columnName].length == 0)
+					values[this.columnName] = null;
+
 				this.object.model().update(row.id, values)
-					.then(()=>{
+					.then(() => {
 
 					})
-					.catch((err)=>{
+					.catch((err) => {
 
 						node.classList.add('webix_invalid');
 						node.classList.add('webix_invalid_cell');
-					
-						OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
+
+						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
 						console.error(err);
 					});
 

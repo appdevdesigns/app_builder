@@ -246,7 +246,7 @@ export default class ABFieldComponent {
 			 * @param {ABField} field
 			 */
 			populate: (field) => {
-console.log('POPULATE: ', populate);
+
 				// populate the base ABField values:
 				ABField.editorPopulate(ids, field);
 

@@ -263,9 +263,9 @@ var ABFieldDateComponent = new ABFieldComponent({
 									labelWidth: 100,
 									value: '%d',
 									options: [
-										{ id: '%d', value: "1 2 ... 30 31" },
+										{ id: '%j', value: "1 2 ... 30 31" },
 										// { id: 'Do', value: "1st 2nd ... 30th 31st" },
-										{ id: '%j', value: "01 02 ... 30 31" },
+										{ id: '%d', value: "01 02 ... 30 31" },
 										// { id: 'dd', value: "Su Mo ... Fr Sa" },
 										{ id: '%D', value: "Sun Mon ... Fri Sat" },
 										{ id: '%l', value: "Sunday Monday ... Friday Saturday" },
@@ -695,6 +695,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 		// 	}
 		// }
 
+		show: function (ids) {
+			refreshDateDisplay();
+		}
+
 	},
 
 	// perform any additional setup actions here.
@@ -702,7 +706,6 @@ var ABFieldDateComponent = new ABFieldComponent({
 	//					 it should have your elements + the default Header elements:
 	//						.label, .columnName, .fieldDescription, .showIcon
 	init: function (ids) {
-		refreshDateDisplay();
 	}
 
 
