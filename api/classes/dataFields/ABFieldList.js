@@ -26,7 +26,8 @@ var ABFieldListDefaults = {
 var defaultValues = {
 	isMultiple: 0,
 	options: [],
-	singleDefault: 'none'
+	singleDefault: 'none',
+	multipleDefault: []
 
 }
 
@@ -143,7 +144,12 @@ class ABFieldList extends ABField {
 
 								// multiple select list
 								if (this.settings.isMultiple == true) {
-									t.json(this.columnName);
+									var newCol = t.json(this.columnName);
+
+									// Set default to single select
+									if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
+										newCol.defaultTo(this.settings.multipleDefault);
+									}
 								}
 								// single select list
 								else {
@@ -209,19 +215,26 @@ class ABFieldList extends ABField {
 
 			if (this.settings.isMultiple == true) {
 				// storing array value of selectivity
-				obj[this.columnName] = [
-					{ type: 'array' },
-					// allow null type because it could not put empty array in REST api
-					{ type: 'null' }
-				];
+				obj[this.columnName] = {
+					"anyOf": [
+						{
+							"type": "array"
+						},
+						{
+							// allow empty string because it could not put empty array in REST api
+							"type": "string",
+							"maxLength": 0
+						}
+					]
+				};
 			}
 			else {
 				// storing the uuid as a string.
-				obj[this.columnName] = { type:'string' }
+				obj[this.columnName] = { type: 'string' }
 			}
 
 		}
-		
+
 	}
 
 
@@ -238,6 +251,20 @@ class ABFieldList extends ABField {
 		myParameter = super.requestParam(allParameters);
 
 		return myParameter;
+	}
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidData(allParameters) {
+		var errors = [];
+
+		return errors;
 	}
 
 }
