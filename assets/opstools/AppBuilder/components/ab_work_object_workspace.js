@@ -275,6 +275,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     	var _logic = {
 
 
+			/**
+			 * @function applicationLoad
+			 *
+			 * Initialize the Object Workspace with the given ABApplication.
+			 *
+			 * @param {ABApplication} application
+			 */
+			applicationLoad: (application) => {
+				PopupNewDataFieldComponent.applicationLoad(application);
+			},
+
     		/**
     		 * @function callbackDefineLabel
     		 *
@@ -551,6 +562,12 @@ console.error('TODO: toolbarPermission()');
 
 
     	});
+
+		// 
+		// Define our external interface methods:
+		// 
+		this.applicationLoad = this._logic.applicationLoad;
+
     }
 
 }

@@ -13,6 +13,7 @@ import ABFieldBoolean from "./dataFields/ABFieldBoolean"
 import ABFieldList from "./dataFields/ABFieldList"
 import ABFieldImage from "./dataFields/ABFieldImage"
 import ABFieldUser from "./dataFields/ABFieldUser"
+import ABFieldConnect from "./dataFields/ABFieldConnect"
 
 /*
  * Fields
@@ -26,6 +27,7 @@ Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
 Fields[ABFieldList.defaults().key] = ABFieldList;
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
+Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
 
 
 export default  {
