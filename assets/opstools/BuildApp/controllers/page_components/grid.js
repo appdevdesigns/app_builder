@@ -30,7 +30,7 @@ steal(
 		};
 
 		// Instance functions
-		var gridComponent = function (application, viewId, componentId) {
+		var gridComponent = function (application, rootPageId, viewId, componentId) {
 			var data = {},
 				events = {}; // { eventName: eventId, ..., eventNameN: eventIdN }
 
@@ -111,30 +111,54 @@ steal(
 					$$(self.viewId).hideProgress();
 			};
 
-			function filterLinkedData(linkedField) {
+			function filterLinkedData(setting) {
 				var self = this;
 
 				if (!self.data.columns) return;
 
-				var field = self.data.columns.filter(function (col) { return col.id == linkedField; })[0];
+				var field = self.data.columns.filter(function (col) { return col.id == setting.linkedField; })[0];
 
 				if (self.data.linkedToDataCollection && field) {
-					var currModel = self.data.linkedToDataCollection.AD.currModel();
+					var currModel = self.data.linkedToDataCollection.AB.getCurrModel(rootPageId);
 
 					if (currModel) {
 						$$(self.viewId).custom_filters = $$(self.viewId).custom_filters || {};
-						$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
-							var itemValues = item[field.name];
 
-							if (!itemValues) {
-								return false;
+						// Filter to itself
+						if (setting.object == setting.linkedTo) {
+							var currValue = currModel.attr(field.name) || [];
+							if (currValue && !currValue.filter) {
+								currValue = [currValue];
 							}
-							else if (itemValues && !itemValues.filter) {
-								itemValues = [itemValues]; // Convert to array
-							}
+							currValue = currValue.map(function (n) { return n.id ? n.id : n; });
 
-							return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
-						};
+							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
+								var itemValue = item[field.name] || [];
+								if (itemValue && !itemValue.filter) {
+									itemValue = [itemValue];
+								}
+								itemValue = itemValue.map(function (n) { return n.id ? n.id : n; });
+
+								return currValue.filter(function (n) {
+									return itemValue.indexOf(n) > -1;
+								}).length > 0;
+							};
+						}
+						// Filter to linked data collection
+						else {
+							$$(self.viewId).custom_filters['linked_collection_filter'] = function (item) {
+								var itemValues = item[field.name];
+
+								if (!itemValues) {
+									return false;
+								}
+								else if (itemValues && !itemValues.filter) {
+									itemValues = [itemValues]; // Convert to array
+								}
+
+								return itemValues.filter(function (f) { return f.id == currModel.id; }).length > 0;
+							};
+						}
 					}
 
 					$$(self.viewId).refresh();
@@ -162,9 +186,14 @@ steal(
 				// Initial linked dataCollection events
 				if (linkedToDataCollection) {
 					self.data.linkedToDataCollection = linkedToDataCollection;
-					if (events['onAfterCursorChange'] == null) {
-						events['onAfterCursorChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCursorChange', function (id) {
-							$$(self.viewId).refresh();
+					if (events['onAfterCurrModelChange'] == null) {
+						events['onAfterCurrModelChange'] = self.data.linkedToDataCollection.attachEvent('onAfterCurrModelChange', function (basePageId, rowId) {
+							if (basePageId != rootPageId) return;
+
+							if (setting.linkedField)
+								filterLinkedData.call(self, setting);
+							else
+								$$(self.viewId).refresh();
 						});
 					}
 				}
@@ -431,7 +460,7 @@ steal(
 						$$(componentIds.toolbar.replace('{id}', viewId)).$setSize($$(viewId).config.width + 3);
 					}
 
-					if (self.data.dataCollection && self.data.dataCollection.getCheckedItems().length > 0) {
+					if (self.data.dataCollection && self.data.dataCollection.AB.getCheckedItems().length > 0) {
 						if ($$(self.viewId + '-update-items-button'))
 							$$(self.viewId + '-update-items-button').enable();
 
@@ -459,7 +488,7 @@ steal(
 										$$(self.viewId).define('select', true);
 
 									if (dataCollection)
-										dataCollection.setCursor((id.row || id));
+										dataCollection.AB.setCurrModel(rootPageId, (id.row || id));
 									break;
 								case 'appbuilder_edit_form':
 									$(self).trigger('changePage', {
@@ -470,7 +499,7 @@ steal(
 										$$(self.viewId).define('select', true);
 
 									if (dataCollection)
-										dataCollection.setCursor((id.row || id));
+										dataCollection.AB.setCurrModel(rootPageId, (id.row || id));
 									break;
 							}
 						});
@@ -494,9 +523,9 @@ steal(
 
 							if (col == 'select_column') {
 								if (state)
-									self.data.dataCollection.checkItem(row);
+									self.data.dataCollection.AB.checkItem(row);
 								else
-									self.data.dataCollection.uncheckItem(row);
+									self.data.dataCollection.AB.uncheckItem(row);
 							}
 						});
 					}
@@ -507,21 +536,23 @@ steal(
 								var rowId = data.id || data;
 
 								// Set cursor of data collection
-								var currModel = dataCollection.AD.currModel();
+								var currModel = dataCollection.AB.getCurrModel(rootPageId);
 								if (!currModel || currModel.id != rowId)
-									dataCollection.setCursor(rowId);
+									dataCollection.AB.setCurrModel(rootPageId, rowId);
 							});
 						}
 
-						if (events['onAfterCursorChange'] == null) {
-							events['onAfterCursorChange'] = dataCollection.attachEvent("onAfterCursorChange", function (id) {
+						if (events['onAfterCurrModelChange'] == null) {
+							events['onAfterCurrModelChange'] = dataCollection.attachEvent("onAfterCurrModelChange", function (basePageId, rowId) {
+								if (basePageId != rootPageId) return;
 								var selectedItem = $$(self.viewId).getSelectedId(false),
 									preserve = $$(self.viewId).config.multiselect;
 
-								if (!id && $$(self.viewId).unselectAll)
+								if ($$(self.viewId).unselectAll)
 									$$(self.viewId).unselectAll();
-								else if ((!selectedItem || selectedItem.id != id) && $$(self.viewId).select) {
-									$$(self.viewId).select(id, preserve);
+
+								if ((!selectedItem || selectedItem.id != rowId) && $$(self.viewId).select) {
+									$$(self.viewId).select(rowId, preserve);
 								}
 							});
 						}
@@ -529,7 +560,7 @@ steal(
 						if (events['onCheckItemsChange'] == null) {
 							events['onCheckItemsChange'] = dataCollection.attachEvent("onCheckItemsChange", function () {
 								// Enable Update/Delete buttons
-								if (dataCollection.getCheckedItems().length > 0) {
+								if (dataCollection.AB.getCheckedItems().length > 0) {
 									if ($$(self.viewId + '-update-items-button'))
 										$$(self.viewId + '-update-items-button').enable();
 									if ($$(self.viewId + '-delete-items-button'))
@@ -577,7 +608,7 @@ steal(
 				populateData.call(self, self.data.setting.object, dataCollection, self.data.columns);
 
 				if (linkedField)
-					filterLinkedData.call(self, linkedField);
+					filterLinkedData.call(self, self.data.setting);
 			};
 
 			this.getSettings = function () {
@@ -685,13 +716,24 @@ steal(
 						// Data source - Linked to
 						var linkedObjIds = self.data.columns.filter(function (col) { return col.setting.linkObject != null; }).map(function (col) { return col.setting.linkObject.toString() }),
 							linkedObjs = application.objects.filter(function (obj) { return linkedObjIds.indexOf(obj.id.toString()) > -1; }),
+							selfObject = application.objects.filter(function (obj) { return obj.id == setting.object; })[0],
 							linkedToItem = $$(componentIds.propertyView).getItem('linkedTo');
+
 						linkedToItem.options = $.map(linkedObjs, function (o) {
 							return {
 								id: o.id,
 								value: o.label
 							};
 						});
+
+						// Linked to itself
+						if (selfObject) {
+							linkedToItem.options.splice(0, 0, {
+								id: selfObject.id,
+								value: selfObject.label
+							});
+						}
+
 						linkedToItem.options.splice(0, 0, {
 							id: 'none',
 							value: '[none]'
@@ -701,7 +743,15 @@ steal(
 						var linkedFieldItem = $$(componentIds.propertyView).getItem('linkedField');
 						if (setting.linkedTo) {
 							linkedFieldItem.options = self.data.columns
-								.filter(function (col) { return col.setting.linkObject == setting.linkedTo; })
+								.filter(function (col) {
+									// Link to itself
+									if (setting.linkedTo &&
+										setting.linkedTo == setting.object)
+										return true;
+									// Link to other object
+									else
+										return col.setting.linkObject == setting.linkedTo;
+								})
 								.map(function (col) {
 									return {
 										id: col.id,
@@ -1067,7 +1117,14 @@ steal(
 
 								if (linkedTo != 'none') {
 									linkedField.options = editInstance.data.columns
-										.filter(function (col) { return col.setting.linkObject == linkedTo; })
+										.filter(function (col) {
+											// Link to itself
+											if (linkedTo == propertyValues.object)
+												return true;
+											// Link to other object
+											else
+												return col.setting.linkObject == linkedTo;
+										})
 										.map(function (col) {
 											return {
 												id: col.id,

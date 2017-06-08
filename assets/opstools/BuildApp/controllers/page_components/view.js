@@ -17,11 +17,13 @@ steal(
 			editDescription: 'ab-view-edit-description',
 			selectObject: 'ab-view-select-object',
 			selectColumns: 'ab-view-select-columns',
-			recordFilter: 'ab-view-record-filter'
+			recordFilter: 'ab-view-record-filter',
+			currentUserFilterTitle: 'ab-view-current-user-title',
+			currentUserFilter: 'ab-view-current-user-filter'
 		};
 
 		// Instance functions
-		var viewComponent = function (application, viewId, componentId) {
+		var viewComponent = function (application, rootPageId, viewId, componentId) {
 			var data = {},
 				eventIds = {},
 				objectModels = {};
@@ -53,7 +55,7 @@ steal(
 				if (newData)
 					currModel = newData;
 				else if (data.dataCollection)
-					currModel = data.dataCollection.AD.currModel();
+					currModel = data.dataCollection.AB.getCurrModel(rootPageId);
 
 				currModel = currModel && currModel.attr ? currModel.attr() : currModel;
 				data.currDataId = currModel ? currModel.id : null;
@@ -128,14 +130,10 @@ steal(
 
 				// Initial events
 				if (data.dataCollection) {
-					// TEMPORARY FEATURE :
-					if (setting.recordFilter != null) {
-						data.dataCollection.setCursor(setting.recordFilter)
-						data.dataCollection.recordFilter = setting.recordFilter;
-					}
+					if (eventIds['onAfterCurrModelChange'] == null) {
+						eventIds['onAfterCurrModelChange'] = data.dataCollection.attachEvent('onAfterCurrModelChange', function (baseRootId, rowId) {
+							if (baseRootId != rootPageId) return;
 
-					if (eventIds['onAfterCursorChange'] == null) {
-						eventIds['onAfterCursorChange'] = data.dataCollection.attachEvent('onAfterCursorChange', function (id) {
 							updateData.call(self, setting);
 						});
 					}
@@ -337,6 +335,25 @@ steal(
 
 						$$(self.viewId).hideProgress();
 
+						// TEMPORARY FEATURE :
+						if (data.dataCollection) {
+							if (setting.recordFilter) {
+								data.dataCollection.AB.lockCurrModel(rootPageId, setting.recordFilter);
+							}
+							else if (setting.currentUserFilter == true || setting.currentUserFilter == "true") {
+
+								setTimeout(function () {
+									data.dataCollection.AB.updateCurrModelToCurrentUser(rootPageId);
+								}, 100);
+							}
+							else {
+
+								setTimeout(function () {
+									data.dataCollection.AB.unlockCurrModel(rootPageId);
+								}, 100);
+							}
+						}
+
 						// Trigger render event
 						$(self).trigger('renderComplete', {});
 
@@ -359,13 +376,18 @@ steal(
 					}
 				});
 
+				var recordFilter = '';
+				if (!isNaN(propertyValues[componentIds.recordFilter]))
+					recordFilter = propertyValues[componentIds.recordFilter] || '';
+
 				var settings = {
 					title: propertyValues[componentIds.editTitle],
 					description: propertyValues[componentIds.editDescription] || '',
 					object: propertyValues[componentIds.selectObject] || '', // ABObject.id
 					columns: propertyValues[componentIds.selectColumns] || '',
 					visibleFieldIds: visibleFieldIds, // [ABColumn.id]
-					recordFilter: propertyValues[componentIds.recordFilter] || ''
+					recordFilter: recordFilter,
+					currentUserFilter: propertyValues[componentIds.currentUserFilter] == true
 				};
 
 				return settings;
@@ -401,26 +423,29 @@ steal(
 								next(null, dataCollection);
 							});
 					},
-					// Get row data to show in list
+					// Enable/Disable set current user filter
 					function (dataCollection, next) {
+						// Properties
+						// Filter - Records
 						if (dataCollection) {
-							// Properties
-							// Filter - Row
 							var rowData = dataCollection.find({});
-
 							var recordFilter = $$(componentIds.propertyView).getItem(componentIds.recordFilter);
-							recordFilter.options = rowData.map(function (row) {
+							var recordOptions = rowData.map(function (row) {
 								return {
 									id: row.id,
 									value: 'ID: #id# - #label#'.replace('#id#', row.id).replace('#label#', row._dataLabel)
 								};
 							});
 
-							next();
+							recordOptions.unshift({
+								id: 'none',
+								value: '[None]'
+							});
+
+							recordFilter.options = recordOptions;
 						}
-						else {
-							next();
-						}
+
+						next();
 					}
 				]);
 
@@ -465,6 +490,7 @@ steal(
 						propValues[componentIds.selectObject] = setting.object;
 						propValues[componentIds.selectColumns] = setting.columns;
 						propValues[componentIds.recordFilter] = setting.recordFilter || '';
+						propValues[componentIds.currentUserFilter] = setting.currentUserFilter == 'true';
 
 						$$(componentIds.propertyView).setValues(propValues);
 						$$(componentIds.propertyView).refresh();
@@ -559,7 +585,7 @@ steal(
 							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
 						}
 					},
-					{ label: "Filter", type: "label" },
+					{ label: "Filter", type: "label", id: componentIds.currentUserFilterTitle },
 					{
 						id: componentIds.recordFilter,
 						name: 'filter',
@@ -567,12 +593,47 @@ steal(
 						label: 'Row',
 						template: function (data, dataValue) {
 							var selectedData = $.grep(data.options, function (opt) { return opt.id == dataValue; });
-
-							return (selectedData && selectedData.length > 0) ? selectedData[0].value : '[Select]';
+							if (selectedData && selectedData.length > 0) {
+								return selectedData[0].value;
+							}
+							else {
+								return '[None]';
+							}
 						}
+					},
+					{
+						id: componentIds.currentUserFilter,
+						name: 'currentUserFilter',
+						type: 'checkbox',
+						label: 'Current user',
+						editable: false
 					}
 				],
 				on: {
+					onAfterRender: function () {
+						// Filter - Current user
+						if (componentManager.editInstance &&
+							componentManager.editInstance.getSettings) {
+							var settings = componentManager.editInstance.getSettings();
+							var selectedObject = AD.classes.AppBuilder.currApp.objects.filter(function (obj) { return (obj.id || obj) == settings.object; })[0];
+							var userColumns = [];
+
+							if (selectedObject)
+								userColumns = selectedObject.columns.filter(function (col) { return col.fieldName == 'user'; });
+
+							var currUserFilter = $$(componentIds.propertyView).getItemNode(componentIds.currentUserFilter);
+
+							if (userColumns.length < 1) {
+								settings.currentUserFilter = '0';
+
+								$(currUserFilter).hide();
+							}
+							else {
+								$(currUserFilter).show();
+							}
+						}
+
+					},
 					onAfterEditStop: function (state, editor, ignoreUpdate) {
 						if (ignoreUpdate || state.old == state.value) return false;
 

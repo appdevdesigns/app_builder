@@ -484,3 +484,18 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-reload-page-button:hover {
 	opacity: 1;
 }
+
+/* Rich Text Component */
+.richtext-container .webix_template{
+	padding: 7px 5px 0px 0px !important;
+}
+.ab-richtext-data-field {
+	width: 100%;
+}
+.ab-richtext-data-field .richtext_editor {
+	width: 100% !important;
+	height: 350px !important;
+}
+.ab-richtext-data-field iframe {
+	height: 276px !important;
+}

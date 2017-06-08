@@ -427,7 +427,8 @@ steal(
 								map[page.id] = i; // use map to look-up the parents
 								if (page.parent) {
 									var parentId = page.parent.id ? page.parent.id : page.parent;
-									pages[map[parentId]].data.push(page);
+									if (pages[map[parentId]])
+										pages[map[parentId]].data.push(page);
 								} else {
 									treeData.push(page);
 								}

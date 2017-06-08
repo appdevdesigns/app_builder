@@ -71,19 +71,6 @@ steal(
 								.then(function (result) {
 									if (dataCollections[objectId] == null || isRefresh) {
 										dataCollections[objectId] = AD.op.WebixDataCollection(result);
-										dataCollections[objectId].checkedItems = []; // [rowId1, rowId2, ..., rowIdn]
-										dataCollections[objectId].updateDataTimeout = {}; // { dataId: timeoutId }
-
-										dataCollections[objectId].attachEvent('onAfterCursorChange', function (id) {
-
-											// TEMPORARY FEATURE :
-											if (dataCollections[objectId].recordFilter != null &&
-												dataCollections[objectId].recordFilter != id) {
-												setTimeout(function () {
-													dataCollections[objectId].setCursor(dataCollections[objectId].recordFilter);
-												}, 10);
-											}
-										});
 
 										// Listen change data event
 										dataCollections[objectId].attachEvent('onAfterAdd', function (id, index) {
@@ -94,8 +81,8 @@ steal(
 										});
 
 										dataCollections[objectId].attachEvent("onDataUpdate", function (id, data) {
-											if (dataCollections[objectId].updateDataTimeout[id]) clearTimeout(dataCollections[objectId].updateDataTimeout[id]);
-											dataCollections[objectId].updateDataTimeout[id] = setTimeout(function () {
+											if (dataCollections[objectId].AB.updateDataTimeout[id]) clearTimeout(dataCollections[objectId].AB.updateDataTimeout[id]);
+											dataCollections[objectId].AB.updateDataTimeout[id] = setTimeout(function () {
 												var rowData = dataCollections[objectId].AD.__list.filter(function (row) { return row.id == id });
 												if (!rowData || !rowData[0]) return true;
 
@@ -103,7 +90,7 @@ steal(
 
 												dataHelper.normalizeData(application, objInfo.attr('id'), objInfo.columns, rowData[0], true).then(function (result) { });
 
-												delete dataCollections[objectId].updateDataTimeout[id];
+												delete dataCollections[objectId].AB.updateDataTimeout[id];
 											}, 500);
 
 											return true;
@@ -111,28 +98,129 @@ steal(
 
 										// Delete checked item when a record is deleted
 										dataCollections[objectId].attachEvent('onAfterDelete', function (id) {
-											dataCollections[objectId].uncheckItem(id);
+											dataCollections[objectId].AB.uncheckItem(id);
 										});
 
-										dataCollections[objectId].checkItem = function (rowId) {
-											if (dataCollections[objectId].checkedItems.filter(function (item) { return item == rowId }).length < 1) {
-												dataCollections[objectId].checkedItems.push(rowId);
+										dataCollections[objectId].AB = {
+											currModels: {}, // { rootPageId: modelId, ..., rootPageIdn: modelIdn }
+											preserveCurrModel: {}, // { rootPageId: modelId, ..., rootPageIdn: modelIdn }
+											checkedItems: [], // [rowId1, rowId2, ..., rowIdn]
+											updateDataTimeout: {} // { dataId: timeoutId }
+										};
+
+										dataCollections[objectId].AB.setCurrModel = function (rootPageId, rowId) {
+
+											if (this.preserveCurrModel[rootPageId] != null) {
+												this.currModels[rootPageId] = this.preserveCurrModel[rootPageId];
+											}
+											else {
+												this.currModels[rootPageId] = rowId;
+											}
+
+											dataCollections[objectId].callEvent('onAfterCurrModelChange', [rootPageId, this.currModels[rootPageId]]);
+										};
+
+										dataCollections[objectId].AB.getCurrModel = function (rootPageId) {
+											if (this.currModels[rootPageId] != null) {
+												return dataCollections[objectId].AD.getModel(this.currModels[rootPageId]);
+											}
+											else {
+												return null;
+											}
+										};
+
+										dataCollections[objectId].AB.lockCurrModel = function (rootPageId, rowId) {
+											this.preserveCurrModel[rootPageId] = rowId;
+
+											this.setCurrModel(rootPageId, rowId);
+										};
+
+										dataCollections[objectId].AB.unlockCurrModel = function (rootPageId) {
+											if (this.preserveCurrModel[rootPageId] != null) {
+												this.preserveCurrModel[rootPageId] = null;
+
+												this.setCurrModel(rootPageId, null);
+											}
+										};
+
+										dataCollections[objectId].AB.checkItem = function (rowId) {
+											if (this.checkedItems.filter(function (item) { return item == rowId }).length < 1) {
+												this.checkedItems.push(rowId);
 												dataCollections[objectId].callEvent('onCheckItemsChange');
 											}
 										};
 
-										dataCollections[objectId].uncheckItem = function (rowId) {
-											dataCollections[objectId].checkedItems.forEach(function (item, index) {
+										dataCollections[objectId].AB.uncheckItem = function (rowId) {
+											this.checkedItems.forEach(function (item, index) {
 												if (item == rowId) {
-													dataCollections[objectId].checkedItems.splice(index, 1);
+													dataCollections[objectId].AB.checkedItems.splice(index, 1);
 													dataCollections[objectId].callEvent('onCheckItemsChange');
 													return;
 												}
 											});
 										};
 
-										dataCollections[objectId].getCheckedItems = function () {
-											return dataCollections[objectId].checkedItems;
+										dataCollections[objectId].AB.getCheckedItems = function () {
+											return this.checkedItems;
+										};
+
+										dataCollections[objectId].AB.updateCurrModelToCurrentUser = function (rootPageId) {
+											var deferred = $.Deferred();
+
+											async.series([
+												// Get default user name
+												function (next) {
+													if (dataCollections[objectId].AB.currUsername == null) {
+														AD.comm.service.get({
+															url: '/site/user/data'
+														})
+															.fail(next)
+															.done(function (data) {
+																dataCollections[objectId].AB.currUsername = data.user.username;
+
+																next();
+															});
+													}
+													else {
+														next();
+													}
+												},
+												// Set cursor to row that has a value as current user
+												function (next) {
+													var userCol = objInfo.columns.filter(function (col) { return col.fieldName == 'user'; })[0];
+
+													if (userCol) {
+														var selectRow = dataCollections[objectId].find(function (row) {
+															if (row[userCol.name] && row[userCol.name].filter) {
+																return row[userCol.name].filter(function (data) {
+																	return data.id == dataCollections[objectId].AB.currUsername;
+																}).length > 0;
+															}
+															else if (row[userCol.name] && row[userCol.name].id) {
+																return row[userCol.name].id == dataCollections[objectId].AB.currUsername;
+															}
+															else {
+																return false;
+															}
+														})[0];
+
+														if (selectRow != null)
+															dataCollections[objectId].AB.lockCurrModel(rootPageId, selectRow.id);
+
+														next();
+													}
+													else {
+														next();
+													}
+												}
+											], function (err) {
+												if (err)
+													deferred.reject(err);
+												else
+													deferred.resolve();
+											});
+
+											return deferred;
 										};
 									}
 

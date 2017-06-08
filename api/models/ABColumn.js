@@ -57,8 +57,8 @@ module.exports = {
 
         name: {
             type: 'string',
-            required: true,
-            maxLength: 20
+            required: true
+            //maxLength: 20 // <-- some exceptions
         },
 
         fieldName: {
@@ -119,6 +119,14 @@ module.exports = {
     ////
 
     beforeValidate: function (values, cb) {
+        if (values.setting && values.setting.isImported) {
+            // `isImported` means the name length can exceed the normal limit.
+        } 
+        // If not imported, the name length must not be more than 20 characters
+        else if (values.name && values.name.length > 20) {
+            return cb(new Error(`Column name "${values.name}" is too long`));
+        }
+        
         for (var key in values) {
             if (values[key] == null || typeof values[key] == 'undefined' || values[key] != values[key] /* NaN */)
                 delete values[key];
@@ -465,7 +473,12 @@ module.exports = {
                     .populate('translations')
                     .then(function (srcObj) {
                         sourceObject = srcObj;
-
+                        
+                        if (sourceObject.isImported) {
+                            // Imported objects can have long names
+                            sourceSetting.isImported = true;
+                        }
+                        
                         next();
                     }, next);
             },
@@ -477,7 +490,12 @@ module.exports = {
                     .populate('translations')
                     .then(function (trgObj) {
                         targetObject = trgObj;
-
+                        
+                        if (targetObject.isImported) {
+                            // Imported objects can have long names
+                            targetSetting.isImported = true;
+                        }
+                        
                         next();
                     }, next);
             },
@@ -507,11 +525,11 @@ module.exports = {
                 if (sourceSetting.linkType == 'collection' && targetSetting.linkType == 'collection') {
 
                     if ((sourceObject.application.name + sourceObject.name + data.name).length + 6 > 32) {
-                        data.name = data.name.substring(0, (32 - ((sourceObject.application.name + sourceObject.name).length + 5)));
+                        data.name = data.name.substring(0, (32 - ((sourceObject.application.name + sourceObject.name).length + 6)));
                     }
 
                     if ((targetObject.application.name + targetObject.name + data.targetName).length + 6 > 32) {
-                        data.targetName = data.targetName.substring(0, (32 - ((targetObject.application.name + targetObject.name).length + 5)));
+                        data.targetName = data.targetName.substring(0, (32 - ((targetObject.application.name + targetObject.name).length + 6)));
                     }
 
                     // TODO : Check duplicate column names
