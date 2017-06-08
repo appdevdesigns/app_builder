@@ -178,6 +178,8 @@ class ABFieldDate extends ABField {
 
 									t.date(this.columnName);
 								}
+
+								t.nullable();
 							})
 								.then(() => {
 									resolve();

@@ -157,26 +157,29 @@ class ABFieldNumber extends ABField {
 					if (!exists) {
 
 						return knex.schema.table(tableName, (t)=>{
+								var newCol;
 
 								// if this is an integer:
 								if (this.settings.typeDecimals == 'none') {
-
-									// not null
-									if (this.settings.allowRequired) {
-										t.integer(this.columnName).defaultTo(defaultTo).notNullable();
-									} else {
-										t.integer(this.columnName).defaultTo(defaultTo);
-									}
+									
+									newCol = t.integer(this.columnName);
 									
 								} else {
 
 									var places = parseInt(this.settings.typeDecimalPlaces);
-									if (this.settings.allowRequired) {
-										t.decimal(this.columnName, places).defaultTo(defaultTo).notNullable();
-									} else {
-										t.decimal(this.columnName, places).defaultTo(defaultTo);
-									}
 
+									newCol = t.decimal(this.columnName, places);
+
+								}
+
+								// not null
+								if (this.settings.allowRequired) {
+									newCol.notNullable();
+								}
+
+								// set default value
+								if (defaultTo) {
+									newCol.defaultTo(defaultTo);
 								}
 							})
 							.then(()=>{
@@ -288,7 +291,7 @@ class ABFieldNumber extends ABField {
 	isValidData(allParameters) {
 		var errors = [];
 
-		if (typeof allParameters[this.columnName] != 'undefined') {
+		if (allParameters[this.columnName] != null) {
 			
 			var value = allParameters[this.columnName];
 			if (_.isNaN(value) || (!_.isNumber(value))) {
