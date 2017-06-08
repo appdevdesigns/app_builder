@@ -118,7 +118,7 @@ steal(function () {
 	}
 
 	attachmentDataField.selectFileType = function (index, value) {
-		let foundIndex = selectedFileTypes.indexOf(file_types[index].ext);
+		var foundIndex = selectedFileTypes.indexOf(file_types[index].ext);
 
 		if(foundIndex == -1 && value == 1){
 			selectedFileTypes = attachmentDataField.getSelectedFileTypes();
@@ -190,7 +190,7 @@ steal(function () {
 									if(!isNaN(newv)){
 										// is a valid number
 										if(newv != ''){
-											let newVal = parseFloat(newv).toFixed(2)
+											var newVal = parseFloat(newv).toFixed(2)
 											if(newVal <= 0){
 												newVal = "1.00";
 											}
@@ -274,12 +274,12 @@ steal(function () {
 		$$(componentIds.fileTypeFieldVal).setValue(data.setting.fileTypeFieldVal);
 
 		if(data.setting.fileTypeFieldVal && data.setting.fileTypeFieldVal.length > 0) {
-			let fileTypes = [data.setting.fileTypeFieldVal];
+			var fileTypes = [data.setting.fileTypeFieldVal];
 			if(data.setting.fileTypeFieldVal.includes(',')){
 				fileTypes = data.setting.fileTypeFieldVal.split(',')
 			}
 			for (var i = 0; i < file_types.length; i++) {
-				let id = file_types[i].ext;
+				var id = file_types[i].ext;
 				if(fileTypes.indexOf(id) == -1){
 					$$(file_types[i].ext).setValue(0)
 				}else{
@@ -334,7 +334,7 @@ steal(function () {
 			return response;
 		}
 
-		let maxFileSize = $$(componentIds.maxFileSize).getValue()
+		var maxFileSize = $$(componentIds.maxFileSize).getValue()
 		if($$(componentIds.useMaxFileSize).getValue()){
 			if(!isNaN(maxFileSize)){
 				maxFileSize = parseFloat(maxFileSize)
@@ -360,7 +360,7 @@ steal(function () {
 		$$(componentIds.anyFileType).setValue(1);
 
 		for (var i = 0; i < file_types.length; i++) {
-			let id = file_types[i].ext;
+			var id = file_types[i].ext;
 			$$(id).setValue(0);
 		}
 		$$(componentIds.fileTypeFieldVal).setValue('');
@@ -479,7 +479,7 @@ steal(function () {
 				onBeforeFileAdd: function(item) {
 
 					// Check the file size
-					let incomingFileSize = (item.size / (1024*1024)).toFixed(2);
+					var incomingFileSize = (item.size / (1024*1024)).toFixed(2);
 					if(incomingFileSize > maxFileSize){
 						var message = "The maximum file size for this field is " + maxFileSize + " MB";
 						webix.alert(message);
