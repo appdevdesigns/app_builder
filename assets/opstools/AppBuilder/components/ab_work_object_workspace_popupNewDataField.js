@@ -193,7 +193,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             //  submenu: submenus
             // })
             $$(ids.types).define("options",submenus);
-            $$(ids.types).refresh
+            $$(ids.types).refresh();
 
             // now remove the 'del_me' definition editor placeholder.
             webix.ui(newEditorList, $$(ids.editDefinitions));
@@ -455,9 +455,6 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                 // set the richselect to the first option by default.
                 $$(ids.types).setValue(submenus[0].id);
 
-                // add mode :  change button text to 'Add'
-                // show the default editor
-    console.error('TODO: resetState()');
             },
 
 

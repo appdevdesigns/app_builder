@@ -314,7 +314,7 @@ console.error('!! todo: onAfterRender() editing');
 			onAfterSelect: function (id) {
 
 				var view = $$(ids.list).getItem(id);
-	// App.actions.populateViewWorkspace(view);
+				App.actions.populateInterfaceWorkspace(view);
 
 				_logic.showGear(id);
 			},

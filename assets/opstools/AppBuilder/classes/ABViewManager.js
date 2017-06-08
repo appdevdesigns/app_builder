@@ -5,7 +5,7 @@
  *
  */
 
-
+import ABView from "./views/ABView"
 import ABViewPage from "./views/ABViewPage"
 
 /* 
@@ -13,6 +13,7 @@ import ABViewPage from "./views/ABViewPage"
  * A name => ABView  hash of the different ABViews available.
  */
 var Views = {};
+Views[ABView.defaults().key] = ABView;
 Views[ABViewPage.defaults().key] = ABViewPage;
 
 

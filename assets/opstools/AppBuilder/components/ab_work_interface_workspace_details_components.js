@@ -1,16 +1,16 @@
 
 /*
- * [template]
+ * ab_work_interface_workspace_details_components
  *
  * Display the form for creating a new Application.
  *
  */
 
 
-export default class [template] extends OP.Component {
+export default class AB_Work_Interface_Workspace_Details_Components extends OP.Component {
     
     constructor(App) {
-        super(App, '[template]');
+        super(App, 'ab_work_interface_workspace_details_components');
         var L = this.Label;
         
         var labels = {
@@ -34,13 +34,13 @@ export default class [template] extends OP.Component {
             scroll: true,
             rows:[
                 {
-                    maxHeight: App.config.xxxLargeSpacer,
-                    hidden: App.config.hideMobile
-                },
-                {
-                    view:'label',
-                    align: "center",
-                    label:'[template] row'
+                    view: 'list',
+                    drag: true,
+                    select: false,
+                    template:function(obj, common) {
+                        return _logic.template(obj, common);
+                    }
+
                 },
                 {
                     maxHeight: App.config.xxxLargeSpacer,
@@ -49,6 +49,7 @@ export default class [template] extends OP.Component {
             ]
         };
         
+        var CurrentView = null;
 
         // setting up UI
         this.init = function() {
@@ -89,7 +90,19 @@ export default class [template] extends OP.Component {
              */
             show: function() {
                 $$(ids.component).show();
-            }
+            },
+
+
+            /* 
+             * @method viewLoad
+             * A new View has been selected for editing, so update
+             * our interface with the details for this View.
+             * @param {ABView} view  current view instance.
+             */
+            viewLoad: function(view) {
+                CurrentView = view;
+
+            },
         };
         
         
@@ -124,6 +137,7 @@ export default class [template] extends OP.Component {
         
         // Interface methods for parent component:
         this.show = _logic.show;
+        this.viewLoad = _logic.viewLoad;
         
     }
 }

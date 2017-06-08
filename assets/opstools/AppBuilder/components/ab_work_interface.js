@@ -7,7 +7,7 @@
  */
 
 import AB_Work_Interface_List from "./ab_work_interface_list"
-
+import AB_Work_Interface_Workspace from "./ab_work_interface_workspace"
 
 export default class AB_Work_Interface extends OP.Component {  
 
@@ -31,6 +31,7 @@ export default class AB_Work_Interface extends OP.Component {
 
 
 		var ViewList = new AB_Work_Interface_List(App);
+		var ViewWorkspace = new AB_Work_Interface_Workspace(App);
 
 
 		// internal list of Webix IDs to reference our UI components.
@@ -48,24 +49,7 @@ export default class AB_Work_Interface extends OP.Component {
 			cols: [
 				ViewList.ui,
 				{ view: "resizer"},
-{
-	// id: ids.noSelection,
-	rows:[
-		{
-			maxHeight: App.config.xxxLargeSpacer,
-			hidden: App.config.hideMobile
-		},
-		{
-			view:'label',
-			align: "center",
-			label:"interface workspace",
-		},
-		{
-			maxHeight: App.config.xxxLargeSpacer,
-			hidden: App.config.hideMobile
-		}
-	]
-}
+				ViewWorkspace.ui
 			]
 		};
 
@@ -75,6 +59,7 @@ export default class AB_Work_Interface extends OP.Component {
 		this.init = function() {
 			// webix.extend($$(ids.form), webix.ProgressBar);
 			ViewList.init();
+			ViewWorkspace.init();
 
 		}
 

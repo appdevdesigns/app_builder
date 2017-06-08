@@ -1,22 +1,22 @@
 
 /*
- * [template]
+ * ab_work_interface_workspace_details_properties
  *
- * Display the form for creating a new Application.
+ * Display the properties available for the current view.
  *
  */
+import ABViewManager from "../classes/ABViewManager"
 
-
-export default class [template] extends OP.Component {
+export default class AB_Work_Interface_Workspace_Details_Properties extends OP.Component {
     
     constructor(App) {
-        super(App, '[template]');
+        super(App, 'ab_work_interface_workspace_details_properties');
         var L = this.Label;
         
         var labels = {
             common: App.labels,
             component: {
-                // formHeader: L('ab.application.form.header', "*Application Info"),
+                properties: L('ab.interface.properties', "*Properties"),
             }
         };
         
@@ -25,6 +25,8 @@ export default class [template] extends OP.Component {
         var ids = {
             component: this.unique('component'),
             
+            editors:this.unique('editors'),
+            form:this.unique('propertyList')
         };
         
         
@@ -34,13 +36,16 @@ export default class [template] extends OP.Component {
             scroll: true,
             rows:[
                 {
-                    maxHeight: App.config.xxxLargeSpacer,
-                    hidden: App.config.hideMobile
+                    view:'label',
+                    align: "left",
+                    label:labels.component.properties
                 },
                 {
-                    view:'label',
-                    align: "center",
-                    label:'[template] row'
+                    view:'multiview',
+                    id:ids.editors,
+                    rows:[
+                        {id:'delme', view:'label',  label:'delme'}
+                    ]
                 },
                 {
                     maxHeight: App.config.xxxLargeSpacer,
@@ -49,10 +54,36 @@ export default class [template] extends OP.Component {
             ]
         };
         
-
+        var CurrentView = null;
+        var _editorsByType = {};
+        
         // setting up UI
         this.init = function() {
             // webix.extend($$(ids.form), webix.ProgressBar);
+
+            var newEditorList = {
+                view:'multiview',
+                id:ids.editors,
+                rows:[
+                ]
+            }
+
+            // Load in ALL the property editors for our known Views:
+            var allViews = ABViewManager.allViews();
+            allViews.forEach((view)=>{
+
+                var propertyComponent = view.propertyEditorComponent(App);
+
+                var key = view.defaults().key;
+                _editorsByType[key] = propertyComponent;
+
+                newEditorList.rows.push(propertyComponent.ui);
+
+            })
+
+
+            // now remove the 'del_me' definition editor placeholder.
+            webix.ui(newEditorList, $$(ids.editors));
             
         };
 
@@ -89,7 +120,29 @@ export default class [template] extends OP.Component {
              */
             show: function() {
                 $$(ids.component).show();
-            }
+            },
+
+
+            /* 
+             * @method viewLoad
+             * A new View has been selected for editing, so update
+             * our interface with the details for this View.
+             * @param {ABView} view  current view instance.
+             */
+            viewLoad: function(view) {
+                CurrentView = view;
+
+                for(var e in _editorsByType) {
+
+                    if (e == view.key) {
+                        _editorsByType[e].populate(view);
+                        _editorsByType[e].show(false, false);
+                    } else {
+                        _editorsByType[e].hide();
+                    }
+                }
+
+            },
         };
         
         
@@ -124,6 +177,7 @@ export default class [template] extends OP.Component {
         
         // Interface methods for parent component:
         this.show = _logic.show;
+        this.viewLoad = _logic.viewLoad;
         
     }
 }

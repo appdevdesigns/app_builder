@@ -1,16 +1,18 @@
 
 /*
- * [template]
+ * ab_work_interface_workspace_details
  *
- * Display the form for creating a new Application.
+ * Manages the Editor details column: Components & Properties
  *
  */
 
+import ABWorkspaceComponents from "./ab_work_interface_workspace_details_components"
+import ABWorkspaceProperties from "./ab_work_interface_workspace_details_properties"
 
-export default class [template] extends OP.Component {
+export default class AB_Work_Interface_Workspace_Details extends OP.Component {
     
     constructor(App) {
-        super(App, '[template]');
+        super(App, 'ab_work_interface_workspace_details');
         var L = this.Label;
         
         var labels = {
@@ -27,36 +29,33 @@ export default class [template] extends OP.Component {
             
         };
         
+        var ComponentList = new ABWorkspaceComponents(App);
+        var PropertiesList = new ABWorkspaceProperties(App);
         
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            scroll: true,
-            rows:[
-                {
-                    maxHeight: App.config.xxxLargeSpacer,
-                    hidden: App.config.hideMobile
-                },
-                {
-                    view:'label',
-                    align: "center",
-                    label:'[template] row'
-                },
-                {
-                    maxHeight: App.config.xxxLargeSpacer,
-                    hidden: App.config.hideMobile
-                }
+            // scroll: true,
+            rows: [
+                ComponentList.ui,
+                { view: "resizer"},
+                PropertiesList.ui
             ]
         };
         
 
+        var CurrentView = null;
+
         // setting up UI
         this.init = function() {
             // webix.extend($$(ids.form), webix.ProgressBar);
+
+            ComponentList.init();
+            PropertiesList.init();
             
         };
-
-
+        
+        
         // internal business logic 
         var _logic = this.logic = {
             
@@ -89,7 +88,21 @@ export default class [template] extends OP.Component {
              */
             show: function() {
                 $$(ids.component).show();
-            }
+            },
+
+
+            /* 
+             * @method viewLoad
+             * A new View has been selected for editing, so update
+             * our interface with the details for this View.
+             * @param {ABView} view  current view instance.
+             */
+            viewLoad: function(view) {
+                CurrentView = view;
+                ComponentList.viewLoad(view);
+                PropertiesList.viewLoad(view);
+
+            },
         };
         
         
@@ -124,6 +137,7 @@ export default class [template] extends OP.Component {
         
         // Interface methods for parent component:
         this.show = _logic.show;
+        this.viewLoad = _logic.viewLoad;
         
     }
 }

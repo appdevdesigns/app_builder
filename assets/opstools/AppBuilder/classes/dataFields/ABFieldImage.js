@@ -143,7 +143,7 @@ var ABFieldImageComponent = new ABFieldComponent({
 	//
 	// 		.clear(ids)  : reset the display to an empty state
 	// 		.isValid(ids, isValid): perform validation on the current editor values
-	// 		.populate(ids, values) : populate the form with your current settings
+	// 		.populate(ids, ABField) : populate the form with your current settings
 	// 		.show(ids)   : display the form in the editor
 	// 		.values(ids, values) : return the current values from the form
 	logic:{
