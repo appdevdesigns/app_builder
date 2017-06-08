@@ -465,7 +465,7 @@ class ABFieldNumber extends ABField {
 	 */
 	isValidData(data, validator) {
 
-		if (typeof data[this.columnName] != 'undefined') {
+		if (data[this.columnName] != null) {
 			var value = data[this.columnName];
 
 			// if this is an integer:

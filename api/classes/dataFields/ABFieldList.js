@@ -144,7 +144,7 @@ class ABFieldList extends ABField {
 
 								// multiple select list
 								if (this.settings.isMultiple == true) {
-									var newCol = t.json(this.columnName);
+									var newCol = t.json(this.columnName).nullable();
 
 									// Set default to single select
 									if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
@@ -157,7 +157,7 @@ class ABFieldList extends ABField {
 										return opt.id;
 									});
 
-									var newCol = t.enum(this.columnName, optIds);
+									var newCol = t.enum(this.columnName, optIds).nullable();
 
 									// Set default to single select
 									if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
@@ -214,7 +214,7 @@ class ABFieldList extends ABField {
 		if (!obj[this.columnName]) {
 
 			if (this.settings.isMultiple == true) {
-				// storing array value of selectivity
+				// store array value of selectivity
 				obj[this.columnName] = {
 					"anyOf": [
 						{
