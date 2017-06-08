@@ -62,7 +62,7 @@ steal(
 	}
 
 	richTextDataField.customDisplay = function (application, object, fieldData, rowData, data, viewId, itemNode, options) {
-		let richtextTemplateContainer = $(itemNode).find('.richtext-container');
+		var richtextTemplateContainer = $(itemNode).find('.richtext-container');
 		if(!richtextTemplateContainer.length){
 			// Do not render this display if we are just displaying the
 			// field value as a label
@@ -167,7 +167,6 @@ steal(
 		// console.log('TEXT AREA ID:', $(itemNode).find('textarea').attr('id'))
 		// let textareaID = $(itemNode).find('textarea').attr('id');
 		var keyContainer = this.keyContainer(itemNode);
-		let value = $$(keyContainer).getValue();
 		if(value == undefined || value == null){
 			value = '';
 		}
