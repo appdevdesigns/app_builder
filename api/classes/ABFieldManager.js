@@ -13,6 +13,7 @@ var ABFieldBoolean = require( path.join(__dirname, "dataFields", "ABFieldBoolean
 var ABFieldList = require( path.join(__dirname, "dataFields", "ABFieldList" ));
 var ABFieldImage  = require( path.join(__dirname, "dataFields", "ABFieldImage"  ));
 var ABFieldUser = require( path.join(__dirname, "dataFields", "ABFieldUser" ));
+var ABFieldConnect = require( path.join(__dirname, "dataFields", "ABFieldConnect" ));
 
 /*
  * Fields
@@ -28,6 +29,7 @@ Fields[ABFieldList.defaults().key] = ABFieldList;
 
 Fields[ABFieldImage.defaults().key] = ABFieldImage;
 Fields[ABFieldUser.defaults().key] = ABFieldUser;
+Fields[ABFieldConnect.defaults().key] = ABFieldConnect;
 
 
 module.exports = {

@@ -221,6 +221,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             applicationLoad: (application) => {
 
+                // TODO : should load ABApplication to data field popup here ?
                 for (var menuName in _componentHash) {
                     if (_componentHash[menuName] && _componentHash[menuName]._logic.applicationLoad) {
                         _componentHash[menuName]._logic.applicationLoad(application);
@@ -515,6 +516,14 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             populateObjectPopupAddDataField: function(object) {
                 _currentObject = object;
+
+                // TODO : should load current object to data field popup here ?
+                for (var menuName in _componentHash) {
+                    if (_componentHash[menuName] && _componentHash[menuName]._logic.objectLoad) {
+                        _componentHash[menuName]._logic.objectLoad(_currentObject);
+                    }
+                }
+
             }
 
         })

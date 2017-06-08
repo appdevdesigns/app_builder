@@ -107,6 +107,10 @@
 	color: #333 !important;
 	background-color: transparent !important;
 }
+.webix_list.webix_invalid {
+	background-color: #fff6f6;
+	border-color: #fea5a8;
+}
 
 /* Webix toolbar */
 .ab-toolbar-submenu, .ab-toolbar-submenu .webix_header>div {

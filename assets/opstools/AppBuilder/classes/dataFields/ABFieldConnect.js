@@ -27,9 +27,8 @@ var ABFieldConnectDefaults = {
 
 var defaultValues = {
 	linkObject: '', // ABObject.id
-	linkType: '', // one, many
-	linkViaType: '', // one, many
-	linkVia: '', // ABColumn.id
+	linkType: 'one', // one, many
+	linkViaType: 'many' // one, many
 };
 
 var ids = {
@@ -93,6 +92,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				cols: [
 					{
 						id: ids.fieldLink,
+						name: 'fieldLink',
 						view: 'label',
 						width: 110
 					},
@@ -100,7 +100,6 @@ var ABFieldConnectComponent = new ABFieldComponent({
 						id: ids.linkType,
 						name: "linkType",
 						view: "segmented",
-						value: "collection",
 						width: 165,
 						inputWidth: 160,
 						options: [
@@ -129,7 +128,6 @@ var ABFieldConnectComponent = new ABFieldComponent({
 						id: ids.linkViaType,
 						name: "linkViaType",
 						view: "segmented",
-						value: "model",
 						width: 165,
 						inputWidth: 160,
 						options: [
@@ -139,6 +137,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 					},
 					{
 						id: ids.fieldLink2,
+						name: 'fieldLink2',
 						view: 'label',
 						width: 110
 					},
@@ -163,13 +162,34 @@ var ABFieldConnectComponent = new ABFieldComponent({
 			ABFieldConnectComponent.CurrentApplication = application;
 		},
 
-		// isValid: function (ids, isValid) {
-		// }
+		objectLoad: (object) => {
+			ABFieldConnectComponent.CurrentObject = object;
+		},
+
+
+		isValid: function (ids, isValid) {
+
+			// validate require select linked object 
+			var selectedObjId = $$(ids.objectList).getSelectedId();
+			if (!selectedObjId) {
+				webix.html.addCss($$(ids.objectList).$view, "webix_invalid");
+				isValid = false;
+			}
+			else {
+				webix.html.removeCss($$(ids.objectList).$view, "webix_invalid");
+			}
+
+			return isValid;
+		},
 
 		show: (ids) => {
-
+			// add objects to list 
 			$$(ids.objectList).clearAll();
 			$$(ids.objectList).parse(ABFieldConnectComponent.CurrentApplication.objects());
+
+			// show current object name
+			$$(ids.fieldLink).setValue(ABFieldConnectComponent.CurrentObject.label);
+			$$(ids.fieldLink2).setValue(ABFieldConnectComponent.CurrentObject.label);
 		},
 
 		populate: (ids, values) => {
