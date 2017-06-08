@@ -167,6 +167,7 @@ steal(
 		// console.log('TEXT AREA ID:', $(itemNode).find('textarea').attr('id'))
 		// let textareaID = $(itemNode).find('textarea').attr('id');
 		var keyContainer = this.keyContainer(itemNode);
+		var value = $$(keyContainer).getValue();
 		if(value == undefined || value == null){
 			value = '';
 		}
