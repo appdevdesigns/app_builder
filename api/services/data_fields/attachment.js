@@ -18,18 +18,12 @@ module.exports = {
 
   defaults: {
     type: 'string',
-    fieldName: 'image',
+    fieldName: 'attachment',
     setting: {
-      icon: 'file-image-o',
-      template: '<div class="ab-image-data-field"></div>',
-      /*
-      useWidth: '1',
-      imageWidth: '100',
-      useHeight: '1',
-      imageHeight: '100',
-      width: '100',
-      */
+      icon: 'file',
+      template: '<div class="ab-attachment-data-field"></div>',
       css: 'ab-column-no-padding'
     }
   }
+
 };

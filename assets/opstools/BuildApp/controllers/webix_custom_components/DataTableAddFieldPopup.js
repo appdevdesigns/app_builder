@@ -115,6 +115,21 @@ steal(
 											return;
 										}
 
+										if (fieldInfo.setting.VALIDATION_NO_ALERT) {
+											self.enable();
+											return;
+										}
+
+										if (fieldInfo.setting.VALIDATION_ERROR) {
+											webix.alert({
+												title: fieldInfo.setting.VALIDATION_ERROR.title,
+												text: fieldInfo.setting.VALIDATION_ERROR.text,
+												ok: labels.common.ok
+											});
+											self.enable();
+											return;
+										}
+
 										if (!inputValidator.validateFormat(fieldInfo.name)) {
 											self.enable();
 											return;

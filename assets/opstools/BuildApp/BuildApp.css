@@ -469,6 +469,9 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	color: #000;
 }
 
+.ab-validation-text{
+	color: #ed3d0e;
+}
 /*Live display*/
 .ab-reload-page-button {
 	font-size: 3em;
