@@ -6,6 +6,7 @@
  */
 
 import ABField from "./ABField"
+import ABFieldSelectivity from "./ABFieldSelectivity"
 import ABFieldComponent from "./ABFieldComponent"
 
 
@@ -210,7 +211,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 });
 
-class ABFieldConnect extends ABField {
+class ABFieldConnect extends ABFieldSelectivity {
 	constructor(values, object) {
 		super(values, object, ABFieldConnectDefaults);
 
@@ -279,10 +280,77 @@ class ABFieldConnect extends ABField {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.template = '<div class="connect-data-values"></div>';
+		// render selectivity when link type is many
+		if (this.settings.linkType == 'many') {
+			config.template = '<div class="connect-data-values"></div>';
+		}
+		// Single select list
+		else {
+			config.editor = 'richselect';
+			// TODO : options
+			// config.options = [];
+		}
 
 		return config;
 	}
+
+
+	/*
+	 * @function customDisplay
+	 * perform any custom display modifications for this field.  
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customDisplay(row, App, node) {
+		// sanity check.
+		if (!node) { return }
+
+		// render selectivity when link type is many
+		if (this.settings.linkType == 'many') {
+
+			var domNode = node.querySelector('.connect-data-values');
+
+			// Render selectivity
+			this.selectivityRender(domNode, {
+				multiple: true,
+				// items: ['TEST 1', 'TEST 2'] // TODO
+			});
+
+			// Set value to selectivity
+			this.selectivitySet(domNode, row[this.columnName]);
+
+			// Listen event when selectivity value updates
+			domNode.addEventListener('change', (e) => {
+
+				// update just this value on our current object.model
+				var values = {};
+				values[this.columnName] = this.selectivityGet(domNode);
+
+				// pass null because it could not put empty array in REST api
+				if (values[this.columnName].length == 0)
+					values[this.columnName] = null;
+
+				this.object.model().update(row.id, values)
+					.then(() => {
+
+					})
+					.catch((err) => {
+
+						node.classList.add('webix_invalid');
+						node.classList.add('webix_invalid_cell');
+
+						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+						console.error(err);
+					});
+
+			}, false);
+
+		}
+
+	}
+
 
 	/**
 	 * @method defaultValue

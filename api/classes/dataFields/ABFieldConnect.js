@@ -7,6 +7,7 @@
 
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
+var async = require('async');
 
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
@@ -130,38 +131,93 @@ class ABFieldConnect extends ABField {
 
 				var tableName = this.object.dbTableName();
 
-				// if this column doesn't already exist (you never know)
-				knex.schema.hasColumn(tableName, this.columnName)
-					.then((exists) => {
+				// find linked object
+				var application = this.object.application;
+				var linkedTableName = application._objects.filter((obj) => { return obj.id == this.settings.linkObject; })[0].dbTableName();
 
-						// create one if it doesn't exist:
-						if (!exists) {
+				// 1:M - create a column in target table and references to id of linked table
+				// 1:1 - create a column in table, references to id of linked table and set to be unique
+				if (this.settings.linkType == 'one' &&
+					(this.settings.linkViaType == 'many' || this.settings.linkViaType == 'one')) {
 
-							// find linked object
-							var application = this.object.application;
-							var linkedObject = application._objects.filter((obj) => { return obj.id == this.settings.linkObject; })[0];
+					async.waterfall([
+						// check column already exist
+						(next) => {
+							knex.schema.hasColumn(tableName, this.columnName)
+								.then((exists) => {
+									next(null, exists);
+								})
+								.catch(next);
+						},
+						// create a column
+						(exists, next) => {
+							if (exists) return next();
 
-							return knex.schema.table(tableName, (t) => {
+							knex.schema.table(tableName, (t) => {
 
-								t.integer(this.columnName).unsigned();
+								var linkedColName = '#linked_object#.id'.replace('#linked_object#', linkedTableName);
 
-								// create a reference to id column of linked table
-								var linkedColName = '#linked_object#.id'.replace('#linked_object#', linkedObject.dbTableName());
+								t.integer(this.columnName).unsigned().nullable();
+
+								t.foreign(this.columnName).references(linkedColName);
+
+								// 1:1
+								if (this.settings.linkViaType == 'one') {
+									t.unique(this.columnName);
+								}
+
+							})
+								.then(() => { next(); })
+								.catch(next);
+						}
+					],
+						(err) => {
+							if (err) reject(err);
+							else resolve();
+						});
+
+				}
+
+				// M:1 - create a column in linked table and references to id of target table
+				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
+
+					async.waterfall([
+						// check column already exist
+						(next) => {
+							knex.schema.hasColumn(linkedTableName, this.columnName)
+								.then((exists) => {
+									next(null, exists);
+								})
+								.catch(next);
+						},
+						// create a column
+						(exists, next) => {
+							if (exists) return next();
+
+							knex.schema.table(linkedTableName, (t) => {
+
+								var linkedColName = '#linked_object#.id'.replace('#linked_object#', tableName);
+
+								t.integer(this.columnName).unsigned().nullable();
 
 								t.foreign(this.columnName).references(linkedColName);
 
 							})
-								.then(() => {
-									resolve();
-								})
-								.catch(reject);
-
-						} else {
-
-							// there is already a column for this, so move along.
-							resolve();
+								.then(() => { next(); })
+								.catch(next);
 						}
-					});
+					],
+						(err) => {
+							if (err) reject(err);
+							else resolve();
+						});
+
+				}
+
+				// M:N - create a new table and references to id of target table and linked table
+				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
+
+				}
 
 			}
 		);
@@ -174,14 +230,31 @@ class ABFieldConnect extends ABField {
 	 * perform the necessary sql actions to drop this column from the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	// NOTE: ABField.migrateDrop() is pretty good for most cases.
-	// migrateDrop (knex) {
-	// 	return new Promise(
-	// 		(resolve, reject) => {
-	// 			// do your special drop operations here.
-	// 		}
-	// 	)
-	// }
+	migrateDrop(knex) {
+		return new Promise(
+			(resolve, reject) => {
+				var tableName = this.object.dbTableName();
+
+				// drop foreign key
+				knex.schema.table(tableName, (t) => {
+					t.dropForeign(this.columnName)
+						.dropIndex(this.columnName)
+						.dropUnique(this.columnName);
+				})
+					//	always pass, becuase ignore not found index errors.
+					.then(() => {
+						// drop column
+						super.migrateDrop(knex)
+							.then(() => resolve(), reject);
+					})
+					.catch(() => {
+						// drop column
+						super.migrateDrop(knex)
+							.then(() => resolve(), reject);
+					});
+			}
+		)
+	}
 
 
 
@@ -199,7 +272,18 @@ class ABFieldConnect extends ABField {
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
 
-			obj[this.columnName] = { type: 'integer' }
+			obj[this.columnName] = {
+				"anyOf": [
+					{
+						type: "integer"
+					},
+					{
+						// allow empty string because it could not put empty array in REST api
+						type: "string",
+						maxLength: 0
+					}
+				]
+			};
 
 		}
 
@@ -216,6 +300,15 @@ class ABFieldConnect extends ABField {
 		var myParameter;
 
 		myParameter = super.requestParam(allParameters);
+		if (myParameter) {
+
+			if (!_.isUndefined(myParameter[this.columnName])) {
+
+				myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+
+			}
+
+		}
 
 		return myParameter;
 	}
