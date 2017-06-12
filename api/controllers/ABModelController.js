@@ -152,6 +152,11 @@ console.log('... catch(err) !');
                 query.limit(limit);
             }
 
+            // query relation data
+            var linkedFieldNames = object.fields((f) => { return f.key == 'connectObject'; }).map((f) => { return f.columnName; });
+            if (linkedFieldNames.length > 0)
+                query.eager('[#fieldNames#]'.replace('#fieldNames#', linkedFieldNames.join(', ')));
+
             Promise.all([
               pCount,
               query

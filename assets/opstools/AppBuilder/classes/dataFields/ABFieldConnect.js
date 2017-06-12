@@ -310,6 +310,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// render selectivity when link type is many
 		if (this.settings.linkType == 'many') {
 
+			// Get linked object
+			var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
+
 			var domNode = node.querySelector('.connect-data-values');
 
 			// Render selectivity
@@ -319,7 +322,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 			});
 
 			// Set value to selectivity
-			this.selectivitySet(domNode, row[this.columnName]);
+			if (row[this.columnName] != null) {
+				var selectedData = row[this.columnName].map(function (d) {
+					return {
+						id: d.id,
+						text: linkedObject.display(d)
+					}
+				});
+				this.selectivitySet(domNode, selectedData);
+			}
+			else {
+				this.selectivitySet(domNode, []);
+			}
+
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {

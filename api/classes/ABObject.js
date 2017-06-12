@@ -237,6 +237,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 				}
 			}
+			var currObject = this;
 			var allFields = this.fields();
 			allFields.forEach((f)=>{
 				f.jsonSchemaProperties(jsonSchema.properties);
@@ -253,6 +254,101 @@ module.exports = class ABObject extends ABObjectBase {
 				static get jsonSchema () {
     				return jsonSchema
     			}
+
+				static get relationMappings() {
+					// Compile our relations from our DataFields
+					var relationMappings = {};
+
+					var linkedFields = allFields.filter((f) => { return f.key == 'connectObject'; });
+
+					// linkObject: '', // ABObject.id
+					// linkType: 'one', // one, many
+					// linkViaType: 'many' // one, many
+
+					linkedFields.forEach((f) => {
+						// find linked object name
+						var linkedObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
+						if (linkedObject == null) return;
+
+						var linkedModel = linkedObject.model();
+
+						// 1:1
+						if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
+							relationMappings[f.columnName] = {
+								relation: Model.HasOneRelation,
+								modelClass: linkedModel,
+								// TODO
+								join: {
+									from: '{targetTable}.id'
+										.replace('{targetTable}', linkedObject.dbTableName()),
+
+									to: '{sourceTable}.{field}'
+										.replace('{sourceTable}', tableName)
+										.replace('{field}', f.columnName)
+								}
+							};
+						}
+						// M:N
+						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
+							// TODO
+							var joinTablename = 'TODO';
+
+							relationMappings[f.columnName] = {
+								relation: Model.ManyToManyRelation,
+								modelClass: linkedModel,
+								join: {
+									from: '{sourceTable}.id'.replace('{sourceTable}', tableName),
+
+									through: {
+										from: '{joinTable}.{sourceTable}Id'
+											.replace('{joinTable}', joinTablename)
+											.replace('{sourceTable}', tableName),
+
+
+										to: '{joinTable}.{targetTable}Id'
+											.replace('{joinTable}', joinTablename)
+											.replace('{targetTable}', linkedObject.dbTableName())
+									},
+
+									to: '{targetTable}.id'.replace('{targetTable}', linkedObject.dbTableName())
+								}
+
+							};
+						}
+						// 1:M
+						else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
+							relationMappings[f.columnName] = {
+								relation: Model.BelongsToOneRelation,
+								modelClass: linkedModel,
+								join: {
+									from: '{sourceTable}.{field}'
+										.replace('{sourceTable}', tableName)
+										.replace('{field}', f.columnName),
+
+									to: '{targetTable}.id'
+										.replace('{targetTable}', linkedObject.dbTableName())
+								}
+							};
+						}
+						// M:1
+						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+							relationMappings[f.columnName] = {
+								relation: Model.HasManyRelation,
+								modelClass: linkedModel,
+								join: {
+									from: '{sourceTable}.id'
+										.replace('{sourceTable}', tableName),
+
+									to: '{targetTable}.{field}'
+										.replace('{targetTable}', linkedObject.dbTableName())
+										.replace('{field}', f.columnName)
+								}
+							};
+						}
+					});
+
+					return relationMappings
+				}
 			}
 
 			__ModelPool[tableName] = MyModel.bindKnex(knex);
