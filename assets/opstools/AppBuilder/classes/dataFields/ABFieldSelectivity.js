@@ -18,26 +18,10 @@ var defaultSettings = {
 
 export default class ABFieldSelectivity extends ABField {
 
-	constructor(values, object, fieldDefaults, options) {
+	constructor(values, object, fieldDefaults) {
 
 		super(values, object, fieldDefaults);
 
-		// set onChange callback when selectivity values changes
-		var callbacks = {
-			onChange: function (newVal) {
-			}
-		};
-
-		// register our callbacks:
-		for (var c in callbacks) {
-			if (options && options[c]) {
-				callbacks[c] = options[c] || callbacks[c];
-			}
-		}
-
-		// external interface
-		this._logic = this._logic || {};
-		this._logic.callbacks = callbacks;
 	}
 
 	selectivityRender(domNode, settings) {
@@ -80,12 +64,10 @@ export default class ABFieldSelectivity extends ABField {
 
 	selectivitySet(domNode, data) {
 		if (domNode && domNode.selectivity) {
-			data = data || [];
-
-			if (typeof data == 'string')
+			if (typeof data == 'string' && data.length > 0)
 				data = JSON.parse(data);
 
-			if (data.length > 0)
+			if (data)
 				domNode.selectivity.setData(data);
 			else
 				domNode.selectivity.clear();

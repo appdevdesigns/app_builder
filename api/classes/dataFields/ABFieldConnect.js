@@ -133,7 +133,7 @@ class ABFieldConnect extends ABField {
 
 				// find linked object
 				var application = this.object.application;
-				var linkedTableName = application._objects.filter((obj) => { return obj.id == this.settings.linkObject; })[0].dbTableName();
+				var linkedTableName = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0].dbTableName();
 
 				// 1:M - create a column in target table and references to id of linked table
 				// 1:1 - create a column in table, references to id of linked table and set to be unique
