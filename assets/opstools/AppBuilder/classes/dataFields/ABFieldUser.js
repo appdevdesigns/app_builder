@@ -5,10 +5,8 @@
  *
  */
 
-import ABField from "./ABField"
+import ABFieldSelectivity from "./ABFieldSelectivity"
 import ABFieldComponent from "./ABFieldComponent"
-
-// import RBAC from "../../../../../../../assets/opstools/RBAC/RBAC"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -26,8 +24,17 @@ var ABFieldUserDefaults = {
 	description: L('ab.dataField.user.description', '*Add user/s to a record.')
 }
 
+var defaultValues = {
+	editable: 0,
+	isMultiple: 0,
+	isCurrentUser: 0
+};
 
-
+var ids = {
+	editable: "ab-user-editable",
+	isMultiple: "ab-user-multiple-option",
+	isCurrentUser: "ab-user-current-user-option"
+}
 
 /**
  * ABFieldStringComponent
@@ -37,41 +44,53 @@ var ABFieldUserDefaults = {
  * property values, etc.
  */
 var ABFieldUserComponent = new ABFieldComponent({
-
 	fieldDefaults: ABFieldUserDefaults,
 
-	elements:function(App) {
+	elements:function(App, field) {
+		ids = field.idsUnique(ids, App);
+		
 		return [
+			{	
+				view: 'checkbox',
+				name: 'isMultiple',
+				id: ids.isMultiple,
+				labelRight: L('ab.dataField.user.isMultiple', '*Allow multiple users'),
+				labelWidth: App.config.labelWidthCheckbox
+			},
+			{
+				view: 'checkbox',
+				name: 'isCurrentUser',
+				id: ids.isCurrentUser,
+				labelRight: L('ab.dataField.user.isCurrentUser', '*Default value as current user'),
+				labelWidth: App.config.labelWidthCheckbox,
+				on: {
+					'onChange': function (newValue, oldValue) {
+						console.log(newValue);
+						console.log(oldValue);
+						if (newValue == 0) {
+							$$(ids.editable).setValue(1)
+							$$(ids.editable).hide();
+						}
+						else {
+							$$(ids.editable).setValue(1)
+							$$(ids.editable).show();
+						}
+					}
+				}
+			},
 			{
 				view: 'checkbox',
 				name: 'editable',
-				// id: componentIds.editable,
-				labelRight: L('ab.dataField.string.editableLabel', '*Editable'),
-				labelWidth: App.config.labelWidthCheckbox
-			},
-			{
-				view: 'checkbox',
-				name: 'multiSelect',
-				// id: componentIds.multiSelect,
-				labelRight: L('ab.dataField.string.multiSelectLabel', '*Allow multiple users'),
-				labelWidth: App.config.labelWidthCheckbox
-			},
-			{
-				view: 'checkbox',
-				name: 'defaultCurrentUser',
-				// id: componentIds.defaultCurrentUser,
-				labelRight: L('ab.dataField.string.defaultLabel', '*Default value as current user'),
+				hidden: true,
+				id: ids.editable,
+				labelRight: L('ab.dataField.user.editableLabel', '*Editable'),
 				labelWidth: App.config.labelWidthCheckbox
 			}
 		]
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues:{
-		'editable':0,
-		'multiSelect':0,
-		'defaultCurrentUser':0
-	},
+	defaultValues: defaultValues,
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
@@ -123,29 +142,51 @@ var ABFieldUserComponent = new ABFieldComponent({
 
 
 
-class ABFieldUser extends ABField {
+class ABFieldUser extends ABFieldSelectivity {
 
     constructor(values, object) {
+		
     	super(values, object, ABFieldUserDefaults);
 
-    	/*
-    	{
-			settings: {
-				textDefault: 'string',
-				supportMultilingual: true/false
-			}
-    	}
-    	*/
-
     	// we're responsible for setting up our specific settings:
-    	this.settings.editable = values.settings.editable+"" || "0";
-    	this.settings.multiSelect = values.settings.multiSelect+"" || "0";
-		this.settings.defaultCurrentUser = values.settings.defaultCurrentUser+"" || "0";
+		for (var dv in defaultValues) {
+			this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
 
-    	// text to Int:
-    	this.settings.editable = parseInt(this.settings.editable);
-		this.settings.multiSelect = parseInt(this.settings.multiSelect);
-		this.settings.defaultCurrentUser = parseInt(this.settings.defaultCurrentUser);
+		this.settings.editable = parseInt(this.settings.editable);
+		this.settings.isMultiple = parseInt(this.settings.isMultiple);
+		this.settings.isCurrentUser = parseInt(this.settings.isCurrentUser);
+		
+		OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
+			if (this.settings.isMultiple == true) {
+				var items = data.map(function(item) {
+					return {
+						id: item.username,
+						text: item.username
+					}
+				});
+			} else {
+				var items = data.map(function(item) {
+					return {
+						id: item.username,
+						value: item.username
+					}
+				});
+			}
+			this._options = {
+				users: items,
+			};
+		});
+		OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
+			if (this.settings.isMultiple == true) {
+				var user = [{id:data.user.username, text:data.user.username}];
+			} else {
+				var user = data.user.username
+			}
+			this._currentUser = {
+				user: user
+			};
+		});		
   	}
 
 
@@ -185,29 +226,6 @@ class ABFieldUser extends ABField {
 	}
 
 
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	// toObj () {
-
-	// 	var obj = super.toObj();
-
-	// 	// obj.settings = this.settings;  // <--  super.toObj()
-
-	// 	return obj;
-	// }
-
-
-
-
 	///
 	/// Working with Actual Object Values:
 	///
@@ -215,26 +233,114 @@ class ABFieldUser extends ABField {
 	// return the grid column header definition for this instance of ABFieldUser
 	columnHeader (isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
+		
+		// Multiple select list
+		if (this.settings.isMultiple) {
+			config.template = '<div class="list-data-values"></div>';
+		}
+		// Single select list
+		else {
+			if (this.settings.editable) {
+				config.editor = 'richselect';
+				config.options = this._options.users;
+			}
+		}
+		
+		return config;		
 
-		config.editor = 'editselectivity';
-		config.sort   = 'string';
-		config.suggest = {
-			// data: OP.Model.get('opstools.RBAC.SiteUser')
-		};
+	}
+	
+	/*
+	 * @function customDisplay
+	 * perform any custom display modifications for this field.  
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customDisplay(row, App, node) {
+		// sanity check.
+		if (!node) { return }
 
-		return config;
+		if (this.settings.isMultiple) {
+
+			var domNode = node.querySelector('.list-data-values');
+			
+			var readOnly = true;
+			var placeholder = "";
+			if (this.settings.editable) {
+				readOnly = false;
+				placeholder = L('ab.dataField.user.placeHolder', '*Select users');
+			}
+			
+			this.selectivityRender(domNode, {
+				multiple: true,
+				placeholder: placeholder,
+				items: this._options.users,
+				readOnly: readOnly
+			});				
+			// Set value to selectivity
+			this.selectivitySet(domNode, row[this.columnName]);
+
+			// Listen event when selectivity value updates
+			domNode.addEventListener('change', (e) => {
+
+				// update just this value on our current this.model
+				var values = {};
+				values[this.columnName] = this.selectivityGet(domNode);
+
+				// pass null because it could not put empty array in REST api
+				if (values[this.columnName].length == 0)
+					values[this.columnName] = null;
+
+				this.object.model().update(row.id, values)
+					.then(() => {
+
+					})
+					.catch((err) => {
+
+						node.classList.add('webix_invalid');
+						node.classList.add('webix_invalid_cell');
+
+						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+					});
+
+			}, false);
+		}
+		
 	}
 
-}
+	/**
+	 * @method defaultValue
+	 * insert a key=>value pair that represent the default value
+	 * for this field.
+	 * @param {obj} values a key=>value hash of the current values.
+	 */
+	defaultValue(values) {
+		console.log("setting up defaults");
+		console.log(this);
+		if (this.settings.isCurrentUser) {
+			values[this.columnName] = this._currentUser.user;
+		}
+	}
 
-//// NOTE: if you need a unique [edit_type] by your returned config.editor above:
-// webix.editors = {
-//   "selectivityUsers": {
-//     focus: function () {...}
-//     getValue: function () {...},
-//     setValue: function (value) {...},
-//     render: function () {...}
-//   }
-// };
+
+
+
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} data  a key=>value hash of the inputs to parse.
+	 * @param {OPValidator} validator  provided Validator fn
+	 * @return {array} 
+	 */
+	isValidData(data, validator) {
+
+
+	}
+
+
+}
 
 export default ABFieldUser;

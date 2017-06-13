@@ -6,9 +6,6 @@
  */
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
-var _ = require('lodash');
-
-
 
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
@@ -27,34 +24,21 @@ var ABFieldUserDefaults = {
 }
 
 var defaultValues = {
-	'editable':0,
-	'multiSelect':0,
-	'defaultCurrentUser':0
-}
+	editable: 0,
+	isMultiple: 0,
+	isCurrentUser: 0
+};
 
 class ABFieldUser extends ABField {
 
     constructor(values, object) {
+		
     	super(values, object, ABFieldUserDefaults);
-
-    	/*
-    	{
-			settings: {
-				textDefault: 'string',
-				supportMultilingual: true/false
-			}
-    	}
-    	*/
 
     	// we're responsible for setting up our specific settings:
 		for (var dv in defaultValues) {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
-
-    	// text to Int:
-    	this.settings.editable = parseInt(this.settings.editable);
-		this.settings.multiSelect = parseInt(this.settings.multiSelect);
-		this.settings.defaultCurrentUser = parseInt(this.settings.defaultCurrentUser);
   	}
 
 
@@ -97,28 +81,6 @@ class ABFieldUser extends ABField {
 	}
 
 
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABApplication instance
-	 * into the values needed for saving to the DB.
-	 *
-	 * Most of the instance data is stored in .json field, so be sure to
-	 * update that from all the current values of our child fields.
-	 *
-	 * @return {json}
-	 */
-	// toObj () {
-
-	// 	var obj = super.toObj();
-
-	// 	// obj.settings = this.settings;  // <--  super.toObj()
-
-	// 	return obj;
-	// }
-
-
-
 
 	///
 	/// DB Migrations
@@ -130,36 +92,38 @@ class ABFieldUser extends ABField {
 	 * perform the necessary sql actions to ADD this column to the DB table.
 	 * @param {knex} knex the Knex connection.
 	 */
-	migrateCreate (knex) {
-		return new Promise(
-			(resolve, reject) => {
+	migrateCreate(knex) {
+ 		return new Promise(
+ 			(resolve, reject) => {
 
-				var tableName = this.object.dbTableName();
+ 				var tableName = this.object.dbTableName();
 
-				knex.schema.hasColumn(tableName, this.columnName)
-				.then((exists) => {
+ 				// if this column doesn't already exist (you never know)
+ 				knex.schema.hasColumn(tableName, this.columnName)
+ 					.then((exists) => {
 
-					if (!exists) {
-						knex.schema.table(tableName, (t) => {
-							if (this.settings.defaultCurrentUser) {
-								// t.string(this.columnName).defaultTo();
-								t.string(this.columnName).nullable();
-							} else {
-								t.string(this.columnName).nullable();
-							}
-						})
-						.then(resolve, reject);
+ 						// create one if it doesn't exist:
+ 						if (!exists) {
 
-					} else {
-						resolve();
-					}
+ 							return knex.schema.table(tableName, (t) => {
 
-				})
+								var newCol = t.json(this.columnName).nullable();
 
-			}
-		)
+ 							})
+ 								.then(() => {
+ 									resolve();
+ 								})
+ 								.catch(reject);
 
-	}
+ 						} else {
+
+ 							// there is already a column for this, so move along.
+ 							resolve();
+ 						}
+ 					});
+ 			}
+ 		);
+ 	}
 
 
 	/**
@@ -189,9 +153,29 @@ class ABFieldUser extends ABField {
 	jsonSchemaProperties(obj) {
 		// take a look here:  http://json-schema.org/example1.html
 
-		// we're not multilingual, so just tack this one on:
+		// if our field is not already defined:
 		if (!obj[this.columnName]) {
-			obj[this.columnName] = { type:'json' }
+
+			if (this.settings.isMultiple == true) {
+				// store array value of selectivity
+				obj[this.columnName] = {
+					"anyOf": [
+						{
+							"type": "array"
+						},
+						{
+							// allow empty string because it could not put empty array in REST api
+							"type": "string",
+							"maxLength": 0
+						}
+					]
+				};
+			}
+			else {
+				// storing the uuid as a string.
+				obj[this.columnName] = { type: 'string' }
+			}
+
 		}
 
 	}
