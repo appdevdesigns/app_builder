@@ -65,8 +65,6 @@ var ABFieldUserComponent = new ABFieldComponent({
 				labelWidth: App.config.labelWidthCheckbox,
 				on: {
 					'onChange': function (newValue, oldValue) {
-						console.log(newValue);
-						console.log(oldValue);
 						if (newValue == 0) {
 							$$(ids.editable).setValue(1)
 							$$(ids.editable).hide();
@@ -317,8 +315,6 @@ class ABFieldUser extends ABFieldSelectivity {
 	 * @param {obj} values a key=>value hash of the current values.
 	 */
 	defaultValue(values) {
-		console.log("setting up defaults");
-		console.log(this);
 		if (this.settings.isCurrentUser) {
 			values[this.columnName] = this._currentUser.user;
 		}
