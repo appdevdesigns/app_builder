@@ -292,16 +292,17 @@ class ABFieldUser extends ABFieldSelectivity {
 					values[this.columnName] = null;
 
 				this.object.model().update(row.id, values)
-					.then(() => {
+				.then(() => {
+					// update the client side data object as well so other data changes won't cause this save to be reverted
+					$$(node).updateItem(row.id, values);
+				})
+				.catch((err) => {
 
-					})
-					.catch((err) => {
+					node.classList.add('webix_invalid');
+					node.classList.add('webix_invalid_cell');
 
-						node.classList.add('webix_invalid');
-						node.classList.add('webix_invalid_cell');
-
-						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
-					});
+					OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+				});
 
 			}, false);
 		}
