@@ -320,7 +320,9 @@ export default class ABObject extends ABObjectBase {
 
 
 	// Display data with label format of object
-	display(rowData) {
+	displayData(rowData) {
+
+		if (rowData == null) return '';
 
 		var labelData = this.labelFormat || '{' + this._fields[0].columnName + '}';
 

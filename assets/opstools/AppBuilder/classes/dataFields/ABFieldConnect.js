@@ -219,6 +219,29 @@ class ABFieldConnect extends ABFieldSelectivity {
 		for (var dv in defaultValues) {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
+
+		// // cache linked object data
+		// if (this.settings.linkObject) {
+
+		// 	var linkedObj = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
+
+		// 	if (linkedObj) {
+
+		// 		linkedModel = linkedObj.model();
+
+		// 		linkedModel.findAll().then((data) => {
+		// 			this._options = data.map((d) => {
+		// 				return {
+		// 					id: d.id,
+		// 					text: linkedObj.displayData(d)
+		// 				};
+		// 			});
+		// 		});
+
+
+		// 	}
+		// }
+
 	}
 
 	// return the default values for this DataField
@@ -286,9 +309,29 @@ class ABFieldConnect extends ABFieldSelectivity {
 		}
 		// Single select list
 		else {
+			var dcOptions = new webix.DataCollection();
+
 			config.editor = 'richselect';
-			// TODO : options
-			// config.options = [];
+			config.options = dcOptions;
+			config.template = function (value) {
+				var selectedOpt = dcOptions.find((opt) => opt.id == (value.id || value))[0];
+
+				if (selectedOpt)
+					return selectedOpt.value;
+				else
+					return '';
+			};
+			// Get options to data collection
+			dcOptions.clearAll();
+			this.getOptions().then((options) => {
+				dcOptions.parse(options.map((opt) => {
+					return {
+						id: opt.id,
+						value: opt.text
+					}
+				}));
+			});
+
 		}
 
 		return config;
@@ -315,33 +358,39 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			var domNode = node.querySelector('.connect-data-values');
 
-			// Render selectivity
-			this.selectivityRender(domNode, {
-				multiple: true,
-				// items: ['TEST 1', 'TEST 2'] // TODO
-			});
+			this.getOptions().then((options) => {
 
-			// Set value to selectivity
-			if (row[this.columnName] != null) {
-				var selectedData = row[this.columnName].map(function (d) {
-					return {
-						id: d.id,
-						text: linkedObject.display(d)
-					}
+
+				// get selected values
+				var selectedData = [];
+				if (row[this.columnName] && row[this.columnName].map) {
+					selectedData = row[this.columnName].map(function (d) {
+						return {
+							id: d.id,
+							text: linkedObject.displayData(d)
+						}
+					});
+
+				}
+
+				// Render selectivity
+				this.selectivityRender(domNode, {
+					multiple: true,
+					items: options,
+					data: selectedData
 				});
-				this.selectivitySet(domNode, selectedData);
-			}
-			else {
-				this.selectivitySet(domNode, []);
-			}
 
+			});
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
-
+console.log('Connect Value change: ');
 				// update just this value on our current object.model
 				var values = {};
 				values[this.columnName] = this.selectivityGet(domNode);
+
+				// check data does not be changed
+				if (_.isEqual(values[this.columnName], row[this.columnName])) return;
 
 				// pass null because it could not put empty array in REST api
 				if (values[this.columnName].length == 0)
@@ -349,7 +398,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				this.object.model().update(row.id, values)
 					.then(() => {
-
+						// TODO : Need to update new value to item of DataTable .updateItem
+console.log('Update Item: ');
+						$$(node).updateItem(row.id, values);
 					})
 					.catch((err) => {
 
@@ -388,6 +439,47 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 */
 	isValidData(data, validator) {
 	}
+
+
+	getOptions() {
+		return new Promise(
+			(resolve, reject) => {
+				// check if linked object value is not define, should return a empty array
+				if (!this.settings.linkObject) return resolve([]);
+
+				// if options was cached
+				if (this._options != null) return resolve(this._options);
+
+
+
+				var linkedObj = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
+
+				// System could not found the linked object - It may be deleted ?
+				if (linkedObj == null) return reject();
+
+				// Get linked object model
+				var linkedModel = linkedObj.model();
+
+				// Pull linked object data
+				linkedModel.findAll().then((result) => {
+
+					// cache linked object data
+					this._options = result.data.map((d) => {
+						return {
+							id: d.id,
+							text: linkedObj.displayData(d)
+						};
+					});
+
+					resolve(this._options);
+
+				}, reject);
+
+
+			}
+		);
+	}
+
 
 };
 

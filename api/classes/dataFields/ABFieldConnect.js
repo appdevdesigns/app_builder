@@ -273,16 +273,7 @@ class ABFieldConnect extends ABField {
 		if (!obj[this.columnName]) {
 
 			obj[this.columnName] = {
-				"anyOf": [
-					{
-						type: "integer"
-					},
-					{
-						// allow empty string because it could not put empty array in REST api
-						type: "string",
-						maxLength: 0
-					}
-				]
+				type: ["null", "string"]
 			};
 
 		}
