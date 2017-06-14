@@ -3,13 +3,14 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/models/ABApplication.js',
 
-	function (dataHelper, modelCreator) {
+	function (dataHelper, modelCreator, ABApplication) {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',
-					'appdev/control/control',
-					'opstools/BuildApp/models/ABApplication'
+					'appdev/control/control'
+					//'opstools/BuildApp/models/ABApplication'
 				).then(function () {
 
 					// Namespacing conventions:
