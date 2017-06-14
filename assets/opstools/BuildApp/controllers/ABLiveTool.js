@@ -44,6 +44,9 @@ steal(
 
 							self.debounceResize = false;
 							self.resizeValues = { height: 0, width: 0 };
+							
+							// Has this app been selected by the user yet?
+							self.activated = false;
 
 							self.initDOM();
 							self.initModels();
@@ -106,6 +109,27 @@ steal(
 											next();
 										}, next);
 								},
+								
+								// Wait until the tool's area has been shown
+								function (next) {
+									if (self.activated) next();
+									else {
+										var areaKey = 'ab-' + self.data.application.name;
+										var subID1, subID2;
+										var callback = function(message, data) {
+											if (!self.activated && data.area == areaKey) {
+												self.activated = true;
+												subID1 && AD.comm.hub.unsubscribe(subID1);
+												subID2 && AD.comm.hub.unsubscribe(subID2);
+												next();
+											}
+										};
+										
+										subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
+										subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+									}
+								},
+								
 								// Get objects data
 								function (next) {
 									self.data.application.getObjects()
