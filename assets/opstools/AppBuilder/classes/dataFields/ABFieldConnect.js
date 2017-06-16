@@ -29,7 +29,9 @@ var ABFieldConnectDefaults = {
 var defaultValues = {
 	linkObject: '', // ABObject.id
 	linkType: 'one', // one, many
-	linkViaType: 'many' // one, many
+	linkViaType: 'many', // one, many
+	linkColumn: '', // ABObject.id
+	isSource: true // bool - NOTE : for 1:1 relation case, flag column is in which object
 };
 
 var ids = {
@@ -93,7 +95,6 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				cols: [
 					{
 						id: ids.fieldLink,
-						name: 'fieldLink',
 						view: 'label',
 						width: 110
 					},
@@ -138,7 +139,6 @@ var ABFieldConnectComponent = new ABFieldComponent({
 					},
 					{
 						id: ids.fieldLink2,
-						name: 'fieldLink2',
 						view: 'label',
 						width: 110
 					},
@@ -183,10 +183,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
 			return isValid;
 		},
 
-		show: (ids) => {
+		show: (pass_ids) => {
 			// add objects to list 
-			$$(ids.objectList).clearAll();
-			$$(ids.objectList).parse(ABFieldConnectComponent.CurrentApplication.objects());
+			$$(pass_ids.objectList).clearAll();
+			$$(pass_ids.objectList).parse(ABFieldConnectComponent.CurrentApplication.objects());
 
 			// show current object name
 			$$(ids.fieldLink).setValue(ABFieldConnectComponent.CurrentObject.label);
@@ -204,6 +204,9 @@ var ABFieldConnectComponent = new ABFieldComponent({
 			// get select linked object id
 			values.settings.linkObject = $$(ids.objectList).getSelectedId();
 
+			// for 1:1 relation case, flag column is in this object
+			values.settings.isSource = true;
+
 			return values;
 		}
 
@@ -219,28 +222,6 @@ class ABFieldConnect extends ABFieldSelectivity {
 		for (var dv in defaultValues) {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
-
-		// // cache linked object data
-		// if (this.settings.linkObject) {
-
-		// 	var linkedObj = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
-
-		// 	if (linkedObj) {
-
-		// 		linkedModel = linkedObj.model();
-
-		// 		linkedModel.findAll().then((data) => {
-		// 			this._options = data.map((d) => {
-		// 				return {
-		// 					id: d.id,
-		// 					text: linkedObj.displayData(d)
-		// 				};
-		// 			});
-		// 		});
-
-
-		// 	}
-		// }
 
 	}
 
@@ -313,14 +294,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			config.editor = 'richselect';
 			config.options = dcOptions;
-			config.template = function (value) {
-				var selectedOpt = dcOptions.find((opt) => opt.id == (value.id || value))[0];
 
-				if (selectedOpt)
-					return selectedOpt.value;
-				else
-					return '';
-			};
 			// Get options to data collection
 			dcOptions.clearAll();
 			this.getOptions().then((options) => {
@@ -363,12 +337,13 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// get selected values
 				var selectedData = [];
-				if (row[this.columnName] && row[this.columnName].map) {
-					selectedData = row[this.columnName].map(function (d) {
-						return {
-							id: d.id,
-							text: linkedObject.displayData(d)
-						}
+				var relationName = this.relationName();
+				if (row[relationName] && row[relationName].map) {
+					selectedData = row[relationName].map(function (d) {
+						// display label in format
+						d.text = d.text || linkedObject.displayData(d);
+
+						return d;
 					});
 
 				}
@@ -384,7 +359,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
-console.log('Connect Value change: ');
+
 				// update just this value on our current object.model
 				var values = {};
 				values[this.columnName] = this.selectivityGet(domNode);
@@ -398,8 +373,10 @@ console.log('Connect Value change: ');
 
 				this.object.model().update(row.id, values)
 					.then(() => {
-						// TODO : Need to update new value to item of DataTable .updateItem
-console.log('Update Item: ');
+						// update values of relation to display in grid
+						values[this.relationName()] = values[this.columnName]; 
+
+						// update new value to item of DataTable .updateItem
 						$$(node).updateItem(row.id, values);
 					})
 					.catch((err) => {
@@ -440,6 +417,10 @@ console.log('Update Item: ');
 	isValidData(data, validator) {
 	}
 
+
+	relationName() {
+		return this.columnName + '__relation';
+	}
 
 	getOptions() {
 		return new Promise(

@@ -326,9 +326,15 @@ export default class ABObject extends ABObjectBase {
 
 		var labelData = this.labelFormat || '{' + this._fields[0].columnName + '}';
 
-		for (var key in rowData) {
-			labelData = labelData.replace('{' + key + '}', rowData[key]);
-		}
+		// get column names in {colName} template
+		// ['{colName1}', ..., '{colNameN}']
+		var formatNames = labelData.match(/\{[^}]+\}/g);
+
+		formatNames.forEach(function(key) {
+			var colName = key.replace('{', '').replace('}', '');
+
+			labelData = labelData.replace(key, rowData[colName] || '');
+		});
 
 		return labelData;
 	}

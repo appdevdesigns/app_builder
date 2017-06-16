@@ -28,7 +28,11 @@ var ABFieldConnectDefaults = {
 var defaultValues = {
 	linkObject: '', // ABObject.id
 	linkType: 'one', // one, many
-	linkViaType: 'many' // one, many
+	linkViaType: 'many', // one, many
+
+	// These values are defined at server side
+	linkColumn: '', // ABColumn.id
+	isSource: true // bool - NOTE : for 1:1 relation case, flag column is in which object
 };
 
 class ABFieldConnect extends ABField {
@@ -133,7 +137,8 @@ class ABFieldConnect extends ABField {
 
 				// find linked object
 				var application = this.object.application;
-				var linkedTableName = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0].dbTableName();
+				var linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+				var linkTableName = linkObject.dbTableName();
 
 				// 1:M - create a column in target table and references to id of linked table
 				// 1:1 - create a column in table, references to id of linked table and set to be unique
@@ -155,7 +160,7 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(tableName, (t) => {
 
-								var linkedColName = '#linked_object#.id'.replace('#linked_object#', linkedTableName);
+								var linkedColName = '#linked_object#.id'.replace('#linked_object#', linkTableName);
 
 								t.integer(this.columnName).unsigned().nullable();
 
@@ -184,7 +189,7 @@ class ABFieldConnect extends ABField {
 					async.waterfall([
 						// check column already exist
 						(next) => {
-							knex.schema.hasColumn(linkedTableName, this.columnName)
+							knex.schema.hasColumn(linkTableName, this.columnName)
 								.then((exists) => {
 									next(null, exists);
 								})
@@ -194,7 +199,7 @@ class ABFieldConnect extends ABField {
 						(exists, next) => {
 							if (exists) return next();
 
-							knex.schema.table(linkedTableName, (t) => {
+							knex.schema.table(linkTableName, (t) => {
 
 								var linkedColName = '#linked_object#.id'.replace('#linked_object#', tableName);
 
@@ -216,8 +221,16 @@ class ABFieldConnect extends ABField {
 
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
-
+					// TODO
+					resolve();
 				}
+				else {
+					resolve();
+				}
+
+				// Refresh model of objects
+				this.object.modelRefresh();
+				linkObject.modelRefresh();
 
 			}
 		);
@@ -271,9 +284,8 @@ class ABFieldConnect extends ABField {
 
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
-
 			obj[this.columnName] = {
-				type: ["null", "string"]
+				type: ["null", "number", "array"]
 			};
 
 		}
@@ -291,17 +303,61 @@ class ABFieldConnect extends ABField {
 		var myParameter;
 
 		myParameter = super.requestParam(allParameters);
+
+		delete myParameter[this.columnName];
+
+		return myParameter;
+	}
+
+
+	requestRelationParam(allParameters) {
+		var myParameter;
+
+		myParameter = super.requestRelationParam(allParameters);
+
 		if (myParameter) {
 
-			if (!_.isUndefined(myParameter[this.columnName])) {
+			if (myParameter[this.columnName]) {
 
-				myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+				// if value is array, then get id of array
+				if (myParameter[this.columnName].map) {
+					myParameter[this.columnName] = myParameter[this.columnName].map(function (d) {
+						return parseInt(d.id || d);
+					});
+				}
+				// if value is a object
+				else {
+					myParameter[this.columnName] = parseInt(myParameter[this.columnName].id || myParameter[this.columnName]);
+				}
 
+
+			}
+			else {
+				myParameter[this.columnName] = [];
 			}
 
 		}
 
 		return myParameter;
+	}
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidData(allParameters) {
+		var errors = [];
+
+		return errors;
+	}
+
+
+	relationName() {
+		return this.columnName + '__relation';
 	}
 
 

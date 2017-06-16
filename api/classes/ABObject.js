@@ -222,7 +222,6 @@ module.exports = class ABObject extends ABObjectBase {
 		var tableName = this.dbTableName();
 
 		if (!__ModelPool[tableName]) {
-
 			
 			var knex = ABMigration.connection();
 
@@ -255,11 +254,21 @@ module.exports = class ABObject extends ABObjectBase {
     				return jsonSchema
     			}
 
-				static get relationMappings() {
+				// Move relation setup to below
+				// static get relationMappings () {
+				// }
+
+			}
+
+			__ModelPool[tableName] = MyModel;
+
+			// NOTE : there is relation setup here because prevent circular loop when get linked object.
+			// have to define object models to __ModelPool[tableName] first
+			MyModel.relationMappings = function() {
 					// Compile our relations from our DataFields
 					var relationMappings = {};
 
-					var linkedFields = allFields.filter((f) => { return f.key == 'connectObject'; });
+					var linkedFields = currObject.linkFields();
 
 					// linkObject: '', // ABObject.id
 					// linkType: 'one', // one, many
@@ -271,13 +280,14 @@ module.exports = class ABObject extends ABObjectBase {
 						if (linkedObject == null) return;
 
 						var linkedModel = linkedObject.model();
+						var relationName = f.columnName + "__relation";
 
 						// 1:1
 						if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
-							relationMappings[f.columnName] = {
+							relationMappings[relationName] = {
 								relation: Model.HasOneRelation,
 								modelClass: linkedModel,
-								// TODO
+								// TODO : how know 
 								join: {
 									from: '{targetTable}.id'
 										.replace('{targetTable}', linkedObject.dbTableName()),
@@ -293,7 +303,7 @@ module.exports = class ABObject extends ABObjectBase {
 							// TODO
 							var joinTablename = 'TODO';
 
-							relationMappings[f.columnName] = {
+							relationMappings[relationName] = {
 								relation: Model.ManyToManyRelation,
 								modelClass: linkedModel,
 								join: {
@@ -317,7 +327,7 @@ module.exports = class ABObject extends ABObjectBase {
 						}
 						// 1:M
 						else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
-							relationMappings[f.columnName] = {
+							relationMappings[relationName] = {
 								relation: Model.BelongsToOneRelation,
 								modelClass: linkedModel,
 								join: {
@@ -332,7 +342,7 @@ module.exports = class ABObject extends ABObjectBase {
 						}
 						// M:1
 						else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
-							relationMappings[f.columnName] = {
+							relationMappings[relationName] = {
 								relation: Model.HasManyRelation,
 								modelClass: linkedModel,
 								join: {
@@ -348,10 +358,12 @@ module.exports = class ABObject extends ABObjectBase {
 					});
 
 					return relationMappings
-				}
-			}
+			};
 
-			__ModelPool[tableName] = MyModel.bindKnex(knex);
+			// bind knex connection to object model
+			// NOTE : when model is bound, then relation setup will be executed
+			__ModelPool[tableName] = __ModelPool[tableName].bindKnex(knex);
+
 		}
 
 		return __ModelPool[tableName];
@@ -388,6 +400,25 @@ module.exports = class ABObject extends ABObjectBase {
 				}
 			}
 		})
+
+		return usefulParameters;
+	}
+
+
+	requestRelationParams(allParameters) {
+		var usefulParameters = {};
+		this.linkFields().forEach((f) => {
+
+			if (f.requestRelationParam) {
+				var p = f.requestRelationParam(allParameters);
+				if (p) {
+					for (var a in p) {
+						usefulParameters[a] = p[a];
+					}
+				}
+			}
+
+		});
 
 		return usefulParameters;
 	}
