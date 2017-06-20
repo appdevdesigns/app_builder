@@ -19,8 +19,6 @@ module.exports = {
 		"js/selectivity/selectivity.min": {
 			"format": "global",
 			"deps": [
-				"jquery",
-				"can",
 				"js/selectivity/selectivity.min.css"
 			],
 			"sideBundle": true

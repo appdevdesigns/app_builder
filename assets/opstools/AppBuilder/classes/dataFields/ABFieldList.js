@@ -363,14 +363,18 @@ class ABFieldList extends ABFieldSelectivity {
 		if (this.settings.isMultiple == true) {
 			var domNode = node.querySelector('.list-data-values');
 
+			// get selected values
+			var selectedData = [];
+			if (row[this.columnName] != null) {
+				selectedData = row[this.columnName];
+			}
+
 			// Render selectivity
 			this.selectivityRender(domNode, {
 				multiple: true,
-				items: this.settings.options
+				items: this.settings.options,
+				data: selectedData
 			});
-
-			// Set value to selectivity
-			this.selectivitySet(domNode, row[this.columnName]);
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {

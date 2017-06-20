@@ -270,6 +270,53 @@ module.exports = {
          */
         toObjectNameFormat: function (appName, objectName) {
             return (appName + '_' + AppBuilder.rules.nameFilter(objectName));
+        },
+
+
+        /**
+         * AppBuilder.rules.toFieldRelationFormat
+         *
+         * This function uses for define relation name of Knex Objection
+         * return a relation name of column
+         *
+         * @param {string} colName  The name of the Column
+         * @return {string}
+         */
+        toFieldRelationFormat: function (colName) {
+            return colName + '__relation';
+        },
+
+
+        /**
+         * AppBuilder.rules.toJunctionTableNameFormat
+         * 
+         * return many-to-many junction table name
+         * 
+         * @param {string} appName  The name of the Application for this object
+         * @param {string} sourceTableName  The name of the source object we are conditioning.
+         * @param {string} targetTableName  The name of the target object we are conditioning.
+         * @param {string} colName
+         * @return {string}
+         */
+        toJunctionTableNameFormat: function (appName, sourceTableName, targetTableName, colName) {
+            // The maximum length of a table name in MySql is 64 characters
+            if (appName.length > 14)
+                appName = appName.substring(0, 14);
+
+            if (sourceTableName.length > 15)
+                sourceTableName = sourceTableName.substring(0, 15);
+
+            if (targetTableName.length > 15)
+                targetTableName = targetTableName.substring(0, 15);
+
+            if (colName.length > 14)
+                colName = colName.substring(0, 14);
+
+            return 'AB_{appName}_{sourceName}_{targetName}_{colName}'
+                .replace('{appName}', appName)
+                .replace('{sourceName}', sourceTableName)
+                .replace('{targetName}', targetTableName)
+                .replace('{colName}', colName);
         }
 
     },

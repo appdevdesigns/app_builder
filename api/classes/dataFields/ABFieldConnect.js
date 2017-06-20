@@ -28,7 +28,11 @@ var ABFieldConnectDefaults = {
 var defaultValues = {
 	linkObject: '', // ABObject.id
 	linkType: 'one', // one, many
-	linkViaType: 'many' // one, many
+	linkViaType: 'many', // one, many
+
+	// These values are defined at server side
+	linkColumn: '', // ABColumn.id
+	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
 };
 
 class ABFieldConnect extends ABField {
@@ -133,7 +137,8 @@ class ABFieldConnect extends ABField {
 
 				// find linked object
 				var application = this.object.application;
-				var linkedTableName = application._objects.filter((obj) => { return obj.id == this.settings.linkObject; })[0].dbTableName();
+				var linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+				var linkTableName = linkObject.dbTableName();
 
 				// 1:M - create a column in target table and references to id of linked table
 				// 1:1 - create a column in table, references to id of linked table and set to be unique
@@ -155,11 +160,8 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(tableName, (t) => {
 
-								var linkedColName = '#linked_object#.id'.replace('#linked_object#', linkedTableName);
-
-								t.integer(this.columnName).unsigned().nullable();
-
-								t.foreign(this.columnName).references(linkedColName);
+								t.integer(this.columnName).unsigned().nullable()
+									.references('id').inTable(linkTableName).onDelete('cascade');
 
 								// 1:1
 								if (this.settings.linkViaType == 'one') {
@@ -184,7 +186,7 @@ class ABFieldConnect extends ABField {
 					async.waterfall([
 						// check column already exist
 						(next) => {
-							knex.schema.hasColumn(linkedTableName, this.columnName)
+							knex.schema.hasColumn(linkTableName, this.columnName)
 								.then((exists) => {
 									next(null, exists);
 								})
@@ -194,13 +196,10 @@ class ABFieldConnect extends ABField {
 						(exists, next) => {
 							if (exists) return next();
 
-							knex.schema.table(linkedTableName, (t) => {
+							knex.schema.table(linkTableName, (t) => {
 
-								var linkedColName = '#linked_object#.id'.replace('#linked_object#', tableName);
-
-								t.integer(this.columnName).unsigned().nullable();
-
-								t.foreign(this.columnName).references(linkedColName);
+								t.integer(this.columnName).unsigned().nullable()
+									.references('id').inTable(tableName).onDelete('cascade');
 
 							})
 								.then(() => { next(); })
@@ -217,7 +216,50 @@ class ABFieldConnect extends ABField {
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
+					var joinTableName = AppBuilder.rules.toJunctionTableNameFormat(
+						application.name,
+						this.object.name,
+						linkObject.name,
+						this.columnName
+					);
+
+
+
+					knex.schema.hasTable(joinTableName).then((exists) => {
+
+						// if it doesn't exist, then create it and any known fields:
+						if (!exists) {
+
+							return knex.schema.createTable(joinTableName, (t) => {
+								t.increments('id').primary();
+								t.timestamps();
+								t.engine('InnoDB');
+								t.charset('utf8');
+								t.collate('utf8_unicode_ci');
+
+								// create columns
+								t.integer(this.object.name).unsigned().nullable()
+									.references('id').inTable(tableName).onDelete('cascade');
+
+								t.integer(linkObject.name).unsigned().nullable()
+									.references('id').inTable(linkTableName).onDelete('cascade');
+							})
+								.then(() => { resolve(); })
+								.catch(reject);
+
+						} else {
+							resolve();
+						}
+					});
+
 				}
+				else {
+					resolve();
+				}
+
+				// Refresh model of objects
+				this.object.modelRefresh();
+				linkObject.modelRefresh();
 
 			}
 		);
@@ -271,18 +313,8 @@ class ABFieldConnect extends ABField {
 
 		// if our field is not already defined:
 		if (!obj[this.columnName]) {
-
 			obj[this.columnName] = {
-				"anyOf": [
-					{
-						type: "integer"
-					},
-					{
-						// allow empty string because it could not put empty array in REST api
-						type: "string",
-						maxLength: 0
-					}
-				]
+				type: ["null", "number", "array"]
 			};
 
 		}
@@ -300,17 +332,62 @@ class ABFieldConnect extends ABField {
 		var myParameter;
 
 		myParameter = super.requestParam(allParameters);
+
+		if (myParameter != null)
+			delete myParameter[this.columnName];
+
+		return myParameter;
+	}
+
+
+	requestRelationParam(allParameters) {
+		var myParameter;
+
+		myParameter = super.requestRelationParam(allParameters);
+
 		if (myParameter) {
 
-			if (!_.isUndefined(myParameter[this.columnName])) {
+			if (myParameter[this.columnName]) {
 
-				myParameter[this.columnName] = parseInt(myParameter[this.columnName]);
+				// if value is array, then get id of array
+				if (myParameter[this.columnName].map) {
+					myParameter[this.columnName] = myParameter[this.columnName].map(function (d) {
+						return parseInt(d.id || d);
+					});
+				}
+				// if value is a object
+				else {
+					myParameter[this.columnName] = parseInt(myParameter[this.columnName].id || myParameter[this.columnName]);
+				}
 
+
+			}
+			else {
+				myParameter[this.columnName] = [];
 			}
 
 		}
 
 		return myParameter;
+	}
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidData(allParameters) {
+		var errors = [];
+
+		return errors;
+	}
+
+
+	relationName() {
+		return AppBuilder.rules.toFieldRelationFormat(this.columnName);
 	}
 
 

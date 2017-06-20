@@ -143,6 +143,19 @@ module.exports =  class ABField extends ABFieldBase {
 
 
 
+	requestRelationParam(allParameters) {
+		var myParameter;
+
+		if (!_.isUndefined(allParameters[this.columnName]) && this.key == 'connectObject') {
+			myParameter = {};
+			myParameter[this.columnName] = allParameters[this.columnName]
+		}
+
+		return myParameter;
+	}
+
+
+
 	/**
 	 * @method isValidData
 	 * Parse through the given parameters and return an error if this field's

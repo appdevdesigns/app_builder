@@ -124,6 +124,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         var _componentHash = {};    // 'name' => ABFieldXXX ui component
         var _componentsByType = {}; // 'type' => ABFieldXXX ui component
         var _currentEditor = null;
+        var _currentApplication = null;
         var _currentObject = null;
 
         var defaultEditorComponent = null;  // the default editor.
@@ -221,6 +222,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             applicationLoad: (application) => {
 
+                _currentApplication = application;
+
                 // TODO : should load ABApplication to data field popup here ?
                 for (var menuName in _componentHash) {
                     if (_componentHash[menuName] && _componentHash[menuName]._logic.applicationLoad) {
@@ -266,6 +269,36 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                             // get a new instance of a field:
                             field = _currentObject.fieldNew(values);
+
+                            // TODO workaround : where should I add a new link field to link object
+                            if (field.key == 'connectObject') {
+
+                                var linkObject = _currentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
+
+                                var newLinkCol = linkObject.fieldNew({
+                                    id: OP.Util.uuid(),
+
+                                    key: field.key,
+
+                                    columnName: field.columnName,
+                                    label: field.label,
+
+                                    settings: {
+                                        showIcon: field.settings.showIcon,
+
+                                        linkObject: field.object.id,
+                                        linkType: field.settings.linkViaType,
+                                        linkViaType: field.settings.linkType,
+                                        linkColumn: field.id, // TODO
+                                        isSource: 0
+                                    }
+                                });
+
+                                linkObject._fields.push(newLinkCol);
+
+                                // Update link column id to source column
+                                field.settings.linkColumn = newLinkCol.id;
+                            }
 
                         } else {
 

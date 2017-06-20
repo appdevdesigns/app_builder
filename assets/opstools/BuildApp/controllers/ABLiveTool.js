@@ -3,13 +3,14 @@ steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
+	'opstools/BuildApp/models/ABApplication.js',
 
-	function (dataHelper, modelCreator) {
+	function (dataHelper, modelCreator, ABApplication) {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',
-					'appdev/control/control',
-					'opstools/BuildApp/models/ABApplication'
+					'appdev/control/control'
+					//'opstools/BuildApp/models/ABApplication'
 				).then(function () {
 
 					// Namespacing conventions:
@@ -43,6 +44,9 @@ steal(
 
 							self.debounceResize = false;
 							self.resizeValues = { height: 0, width: 0 };
+							
+							// Has this app been selected by the user yet?
+							self.activated = false;
 
 							self.initDOM();
 							self.initModels();
@@ -72,7 +76,12 @@ steal(
 
 						initPage: function () {
 							var self = this;
-
+							
+							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+								self.height = data.height;
+								self.resize(data.height);
+							});
+							
 							self.getData().then(function () {
 
 								self.initEvents();
@@ -105,6 +114,27 @@ steal(
 											next();
 										}, next);
 								},
+								
+								// Wait until the tool's area has been shown
+								function (next) {
+									if (self.activated) next();
+									else {
+										var areaKey = 'ab-' + self.data.application.name;
+										var subID1, subID2;
+										var callback = function(message, data) {
+											if (!self.activated && data.area == areaKey) {
+												self.activated = true;
+												subID1 && AD.comm.hub.unsubscribe(subID1);
+												subID2 && AD.comm.hub.unsubscribe(subID2);
+												next();
+											}
+										};
+										
+										subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
+										subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+									}
+								},
+								
 								// Get objects data
 								function (next) {
 									self.data.application.getObjects()
@@ -325,11 +355,6 @@ steal(
 								self.resize(self.height);
 							});
 
-							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-								self.height = data.height;
-								self.resize(data.height);
-							});
-
 						},
 
 						renderPageContainer: function () {
@@ -517,23 +542,20 @@ steal(
 							self.activePage = page;
 
 							// Question: should we do a resize() after all the components are rendered?
-							// var numDone = 0;
+							
+							async.each(self.activePage.components, function(item, nextComponent) {
 
-							self.activePage.components.forEach(function (item) {
-
-								self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
+								self.activePage.renderComponent(self.data.application, item)
+								.done(function (isNew) {
 									self.bindComponentEvents(page.comInstances[item.id], item);
 									self.bindComponentEventsInTab(item);
-									// numDone++;
-									// if (numDone >= self.activePage.components.length) {
-									//	// Now resize after all components are rendered
-									// 	self.resize();
-									// }
+									nextComponent();
 								});
 
+							}, function(err) {
+								// self.resize() // <-- doesn't do the trick
+								AD.comm.hub.publish('opsportal.resize', { height: self.height });
 							});
-
-							self.resize();
 						},
 
 						bindComponentEvents: function (comInstance, itemInfo) {

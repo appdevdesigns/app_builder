@@ -222,7 +222,6 @@ module.exports = class ABObject extends ABObjectBase {
 		var tableName = this.dbTableName();
 
 		if (!__ModelPool[tableName]) {
-
 			
 			var knex = ABMigration.connection();
 
@@ -237,6 +236,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 				}
 			}
+			var currObject = this;
 			var allFields = this.fields();
 			allFields.forEach((f)=>{
 				f.jsonSchemaProperties(jsonSchema.properties);
@@ -253,9 +253,151 @@ module.exports = class ABObject extends ABObjectBase {
 				static get jsonSchema () {
     				return jsonSchema
     			}
+
+				// Move relation setup to below
+				// static get relationMappings () {
+				// }
+
 			}
 
-			__ModelPool[tableName] = MyModel.bindKnex(knex);
+			__ModelPool[tableName] = MyModel;
+
+			// NOTE : there is relation setup here because prevent circular loop when get linked object.
+			// have to define object models to __ModelPool[tableName] first
+			MyModel.relationMappings = function () {
+				// Compile our relations from our DataFields
+				var relationMappings = {};
+
+				var linkedFields = currObject.linkFields();
+
+				// linkObject: '', // ABObject.id
+				// linkType: 'one', // one, many
+				// linkViaType: 'many' // one, many
+
+				linkedFields.forEach((f) => {
+					// find linked object name
+					var linkedObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
+					if (linkedObject == null) return;
+
+					var linkedModel = linkedObject.model();
+					var relationName = AppBuilder.rules.toFieldRelationFormat(f.columnName);
+
+					// 1:1
+					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
+
+						var sourceTable,
+							targetTable;
+
+						if (f.settings.isSource == true) {
+							sourceTable = tableName;
+							targetTable = linkedObject.dbTableName();
+						}
+						else {
+							sourceTable = linkedObject.dbTableName();
+							targetTable = tableName;
+						}
+
+						relationMappings[relationName] = {
+							relation: Model.HasOneRelation,
+							modelClass: linkedModel,
+							join: {
+								from: '{targetTable}.id'
+									.replace('{targetTable}', targetTable),
+
+								to: '{sourceTable}.{field}'
+									.replace('{sourceTable}', sourceTable)
+									.replace('{field}', f.columnName)
+							}
+						};
+					}
+					// M:N
+					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
+						var sourceObjectName,
+							sourceTableName,
+							targetObjectName,
+							targetTableName;
+
+						if (f.settings.isSource == true) {
+							sourceObjectName = currObject.name;
+							sourceTableName = tableName;
+							targetObjectName = linkedObject.name;
+							targetTableName = linkedObject.dbTableName();
+						}
+						else {
+							sourceObjectName = linkedObject.name;
+							sourceTableName = linkedObject.dbTableName();
+							targetObjectName = currObject.name;
+							targetTableName = tableName;
+						}
+
+						// get join table name
+						var joinTablename = AppBuilder.rules.toJunctionTableNameFormat(
+							currObject.application.name, // application name
+							sourceObjectName, // table name
+							targetObjectName, // linked table name
+							f.columnName); // column name
+
+						relationMappings[relationName] = {
+							relation: Model.ManyToManyRelation,
+							modelClass: linkedModel,
+							join: {
+								from: '{sourceTable}.id'.replace('{sourceTable}', sourceTableName),
+
+								through: {
+									from: '{joinTable}.{sourceColName}'
+										.replace('{joinTable}', joinTablename)
+										.replace('{sourceColName}', sourceObjectName),
+
+
+									to: '{joinTable}.{targetColName}'
+										.replace('{joinTable}', joinTablename)
+										.replace('{targetColName}', targetObjectName)
+								},
+
+								to: '{targetTable}.id'.replace('{targetTable}', targetTableName)
+							}
+
+						};
+					}
+					// 1:M
+					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
+						relationMappings[relationName] = {
+							relation: Model.BelongsToOneRelation,
+							modelClass: linkedModel,
+							join: {
+								from: '{sourceTable}.{field}'
+									.replace('{sourceTable}', tableName)
+									.replace('{field}', f.columnName),
+
+								to: '{targetTable}.id'
+									.replace('{targetTable}', linkedObject.dbTableName())
+							}
+						};
+					}
+					// M:1
+					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
+						relationMappings[relationName] = {
+							relation: Model.HasManyRelation,
+							modelClass: linkedModel,
+							join: {
+								from: '{sourceTable}.id'
+									.replace('{sourceTable}', tableName),
+
+								to: '{targetTable}.{field}'
+									.replace('{targetTable}', linkedObject.dbTableName())
+									.replace('{field}', f.columnName)
+							}
+						};
+					}
+				});
+
+				return relationMappings
+			};
+
+			// bind knex connection to object model
+			// NOTE : when model is bound, then relation setup will be executed
+			__ModelPool[tableName] = __ModelPool[tableName].bindKnex(knex);
+
 		}
 
 		return __ModelPool[tableName];
@@ -292,6 +434,25 @@ module.exports = class ABObject extends ABObjectBase {
 				}
 			}
 		})
+
+		return usefulParameters;
+	}
+
+
+	requestRelationParams(allParameters) {
+		var usefulParameters = {};
+		this.linkFields().forEach((f) => {
+
+			if (f.requestRelationParam) {
+				var p = f.requestRelationParam(allParameters);
+				if (p) {
+					for (var a in p) {
+						usefulParameters[a] = p[a];
+					}
+				}
+			}
+
+		});
 
 		return usefulParameters;
 	}

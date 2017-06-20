@@ -152,6 +152,11 @@ console.log('... catch(err) !');
                 query.limit(limit);
             }
 
+            // query relation data
+            var relationNames = object.linkFields().map((f) => { return f.relationName(); });
+            if (relationNames.length > 0)
+                query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+
             Promise.all([
               pCount,
               query
@@ -270,8 +275,11 @@ console.log('... catch(err) !');
             sails.log.verbose('ABModelController.update(): allParams:', allParams);
 
             // return the parameters from the input params that relate to this object
-            var updateParams = object.requestParams(allParams);  
+            // exclude connectObject data field values
+            var updateParams = object.requestParams(allParams);
 
+            // return the parameters of connectObject data field values 
+            var updateRelationParams = object.requestRelationParams(allParams);
 
             var validationErrors = object.isValidData(updateParams);
             if (validationErrors.length == 0) {
@@ -282,9 +290,56 @@ console.log('... catch(err) !');
                 sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
 
                 var query = object.model().query();
-                query.patch(updateParams)
-                .where('id', id)
-                .then((numRows)=>{
+
+                Promise.all([
+                    // clear relation values of relation
+                    // NOTE : There is a error when update values and foreign keys together   
+                    // - Error: Double call to a write method. You can only call one of the write methods 
+                    // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
+                    query.where('id', id).first()
+                        .then(record => {
+                            if (record == null) return record;
+
+                            for (var colName in updateRelationParams) {
+
+                                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+                                record = record.$relatedQuery(relationName).unrelate();
+                            }
+
+                            return record; 
+                        }),
+
+                    // insert relation values of relation
+                    query.where('id', id).first()
+                        .then(record => {
+                            if (record == null) return record;
+
+                            for (var colName in updateRelationParams) {
+                                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+                                // NOTE : Error: batch insert only works with Postgresql
+                                if (Array.isArray(updateRelationParams[colName])) {
+                                    record = record.$relatedQuery(relationName);
+
+                                    updateRelationParams[colName].forEach((val) => {
+                                        record = record.relate(val);
+                                    });
+                                }
+                                else {
+                                    record = record.$relatedQuery(relationName).relate(updateRelationParams[colName]);
+                                }
+                            }
+
+                            return record;
+                        }),
+
+                    // update record values
+                    query.patch(updateParams).where('id', id)
+                ])
+                .then((values)=>{
+
+                    var numRows = values[0];
 
                     res.AD.success({numRows:numRows});
 

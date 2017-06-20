@@ -319,6 +319,27 @@ export default class ABObject extends ABObjectBase {
 	}
 
 
+	// Display data with label format of object
+	displayData(rowData) {
+
+		if (rowData == null) return '';
+
+		var labelData = this.labelFormat || '{' + this._fields[0].columnName + '}';
+
+		// get column names in {colName} template
+		// ['{colName1}', ..., '{colNameN}']
+		var formatNames = labelData.match(/\{[^}]+\}/g);
+
+		formatNames.forEach(function(key) {
+			var colName = key.replace('{', '').replace('}', '');
+
+			labelData = labelData.replace(key, rowData[colName] || '');
+		});
+
+		return labelData;
+	}
+
+
 
 
 	///
