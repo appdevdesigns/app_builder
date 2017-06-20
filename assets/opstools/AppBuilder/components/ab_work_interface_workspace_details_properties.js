@@ -36,9 +36,11 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             scroll: true,
             rows:[
                 {
-                    view:'label',
-                    align: "left",
-                    label:labels.component.properties
+                    view: 'toolbar',
+                    cols: [{
+                        view: 'label',
+                        label: labels.component.properties
+                    }]
                 },
                 {
                     view:'multiview',
@@ -74,7 +76,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
 
                 var propertyComponent = view.propertyEditorComponent(App);
 
-                var key = view.defaults().key;
+                var key = view.common().key;
                 _editorsByType[key] = propertyComponent;
 
                 newEditorList.rows.push(propertyComponent.ui);

@@ -13,8 +13,8 @@ import ABViewPage from "./views/ABViewPage"
  * A name => ABView  hash of the different ABViews available.
  */
 var Views = {};
-Views[ABView.defaults().key] = ABView;
-Views[ABViewPage.defaults().key] = ABViewPage;
+Views[ABView.common().key] = ABView;
+Views[ABViewPage.common().key] = ABViewPage;
 
 
 
@@ -26,10 +26,15 @@ export default  {
 	 * return all the currently defined ABViews in an array.
 	 * @return [{ABView},...]
 	 */
-	allViews: function() {
+	allViews: function(fn) {
+		fn = fn || function() { return true; }
+
 		var views = [];
 		for (var v in Views) {
-			views.push(Views[v]);
+			var V = Views[v];
+			if (fn(V)) {
+				views.push(V);
+			}
 		}
 		return views;
 	},

@@ -6,6 +6,7 @@
  */
 
 import ABPropertyComponent from "../ABPropertyComponent"
+import ABViewManager from "../ABViewManager"
 
 
 var ABViewPropertyComponentDefaults = {
@@ -15,7 +16,8 @@ var ABViewPropertyComponentDefaults = {
 
 var ABViewDefaults = {
 	key: 'view',		// {string} unique key for this view
-	icon:'truck'			// {string} fa-[icon] reference for this view
+	icon:'truck',		// {string} fa-[icon] reference for this view
+	labelKey:'ab.components.view' // {string} the multilingual label key for the class label
 }
 
 
@@ -31,6 +33,9 @@ export default class ABView  {
     constructor(values, application, parent, defaultValues) {
 
     	this.defaults = defaultValues || ABViewDefaults;
+
+    	this.application = application;
+
     	
   	// 	{
   	// 		id:'uuid',					// uuid value for this obj
@@ -41,7 +46,7 @@ export default class ABView  {
 	//		settings: {					// unique settings for the type of field
 	//		},
 
-	// 		children:[],				// the child views contained by this view.
+	// 		views:[],					// the child views contained by this view.
 
 	//		translations:[]
   	// 	}
@@ -52,13 +57,12 @@ export default class ABView  {
     	// label is a multilingual value:
     	OP.Multilingual.translate(this, this, ['label']);
 
-    	this.application = application;
 
     	this.parent = parent || null;
   	}
 
 
-  	static defaults() {
+  	static common() {
   		return ABViewDefaults;
   	}
 
@@ -125,15 +129,12 @@ export default class ABView  {
 				// verify we have been .save()d before:
 				if (this.id) {
 
-					if (!this.parent) {
+					var parent = this.parent;
+					if (!parent) parent = this.application;
 
-						this.application.viewDestroy(this)
-						.then(resolve)
-						.catch(reject);
-
-					} else {
-
-					}
+					parent.viewDestroy(this)
+					.then(resolve)
+					.catch(reject);
 
 				} else {
 
@@ -164,8 +165,8 @@ export default class ABView  {
 					this.id = OP.Util.uuid();	// setup default .id
 				}
 
-				// if this is not a child of another view then store under
-				// application.
+				// if this is not a child of another view then tell it's
+				// application to save this view.
 				var parent = this.parent;
 				if (!parent) parent = this.application;
 
@@ -190,9 +191,9 @@ export default class ABView  {
 		OP.Multilingual.unTranslate(this, this, ['label']);
 
 		// // for each Object: compile to json
-		var currChildren = [];
-		this._children.forEach((child) => {
-			currChildren.push(child.toObj())
+		var views = [];
+		this._views.forEach((view) => {
+			views.push(view.toObj())
 		})
 
 		return {
@@ -204,7 +205,7 @@ export default class ABView  {
 
 			settings: this.settings || {},
 			translations:this.translations || [],
-			children:currChildren
+			views:views
 
 		}
 	}
@@ -236,11 +237,11 @@ export default class ABView  {
     	this.settings = values.settings || {};
 
 
-    	var children = [];
-    	// (values.children || []).forEach((child) => {
-    	// 	children.push(this.newChild(child));
-    	// })
-    	this._children = children;
+    	var views = [];
+    	(values.views || []).forEach((child) => {
+    		views.push(ABViewManager.newView(child, this.application, this));
+    	})
+    	this._views = views;
 
     	// convert from "0" => 0
 
@@ -251,6 +252,71 @@ export default class ABView  {
 	isRoot() {
 		return this.parent == null;
 	}
+
+
+
+
+
+	///
+	/// Views
+	///
+
+
+	/**
+	 * @method views()
+	 *
+	 * return an array of all the ABViews children
+	 *
+	 * @param {fn} filter  	a filter fn to return a set of ABViews that this fn
+	 *						returns true for.
+	 * @return {array} 	array of ABViews
+	 */
+	views (filter) {
+
+		filter = filter || function() {return true; };
+
+		return this._views.filter(filter);
+
+	}
+
+
+
+	/**
+	 * @method viewDestroy()
+	 *
+	 * remove the current ABView from our list of ._views.
+	 *
+	 * @param {ABView} view
+	 * @return {Promise}
+	 */
+	viewDestroy( view ) {
+
+		var remainingViews = this.views(function(v) { return v.id != view.id;})
+		this._views = remainingViews;
+		return this.save();
+	}
+
+
+
+	/**
+	 * @method viewSave()
+	 *
+	 * persist the current ABView in our list of ._views.
+	 *
+	 * @param {ABView} object
+	 * @return {Promise}
+	 */
+	viewSave( view ) {
+		var isIncluded = (this.views(function(v){ return v.id == view.id }).length > 0);
+		if (!isIncluded) {
+			this._views.push(view);
+		}
+
+		return this.save();
+	}
+
+
+
 
 
 
@@ -284,6 +350,10 @@ export default class ABView  {
 	 */
 	editorComponent(App, mode) {
 
+		function L(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
+
 		var idBase = 'ABViewEditorComponent';
 		var ids = {
 			component: App.unique(idBase+'_component'),
@@ -302,6 +372,52 @@ export default class ABView  {
 			select: false,
 			template:function(obj, common) {
 				return _logic.template(obj, common);
+			},
+			on: {
+				// onAfterRender: function () {
+				// 	self.generateComponentsInList();
+				// },
+				onBeforeDrop: function (context, ev) {
+					return _logic.onBeforeDrop(context,ev);
+				},
+				onAfterDrop: function (context, ev) {
+					// if (context.from.config.id === self.componentIds.componentList) {
+					// 	$$(self.componentIds.componentList).showProgress({ type: 'icon' });
+
+					// 	var componentIndexes = [];
+
+					// 	// Sort data
+					// 	for (var index = 0; index < $$(self.componentIds.componentList).count(); index++) {
+					// 		var comId = $$(self.componentIds.componentList).getIdByIndex(index),
+					// 			com = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == comId });
+
+					// 		if (com && com.length > 0) {
+					// 			componentIndexes.push({
+					// 				id: com[0].id,
+					// 				index: index
+					// 			});
+
+					// 		}
+					// 	}
+
+					// 	// Call sort components api
+					// 	AD.classes.AppBuilder.currApp.currPage.sortComponents(componentIndexes, function (err, result) {
+					// 		$$(self.componentIds.componentList).hideProgress();
+
+					// 		if (err) {
+					// 			// TODO : show error message
+					// 		}
+					// 		else {
+					// 			self.element.trigger(self.options.sortComponentEvent, {
+					// 				page: AD.classes.AppBuilder.currApp.currPage
+					// 			});
+					// 		}
+					// 	});
+					// }
+				}
+			},
+			externalData: function (data, id, oldData) {
+				return _logic.externalData(data, id, oldData);
 			}
 
 		}
@@ -309,43 +425,61 @@ export default class ABView  {
 
 		var _init = (options) => {
 
-this.children = [
-	{
-		id:'child1',
-		icon: 'cube',
-		label: 'Child 1',
-		component:function(app) {
-			return {
-				ui:{
-					id:'child1component',
-					view:'template',
-					template:'template child 1',
-					height:20
-				},
-				init:function() { console.log('init child 1') }
+// this.children = [
+// 	{
+// 		id:'child1',
+// 		icon: 'cube',
+// 		label: 'Child 1',
+// 		component:function(app) {
+// 			return {
+// 				ui:{
+// 					id:'child1component',
+// 					view:'template',
+// 					template:'template child 1',
+// 					height:20
+// 				},
+// 				init:function() { console.log('init child 1') }
+// 			}
+// 		}
+// 	},
+// 	{
+// 		id:'child2',
+// 		icon: 'cubes',
+// 		label: 'Child 2',
+// 		component:function(app) {
+// 			return {
+// 				ui:{
+// 					id:'child2component',
+// 					view:'template',
+// 					template:'template child 2',
+// 					height:20
+// 				},
+// 				init:function() { console.log('init child 2') }
+// 			}
+// 		}
+// 	}
+// ]
+			var viewList = this.views();
+			if (viewList.length == 0) {
+				viewList.push({
+					id:'del_me',
+					icon:'',
+					label:L('drop here', 'drop here'),
+					component:function(app) {
+						return {
+							ui:{
+								id:'child2component',
+								view:'template',
+								template:'drop here',
+								height:20
+							},
+							init:function() { console.log('init child 2') }
+						}
+					}
+				})
 			}
-		}
-	},
-	{
-		id:'child2',
-		icon: 'cubes',
-		label: 'Child 2',
-		component:function(app) {
-			return {
-				ui:{
-					id:'child2component',
-					view:'template',
-					template:'template child 2',
-					height:20
-				},
-				init:function() { console.log('init child 2') }
-			}
-		}
-	}
-]
-
 			var List = $$(_ui.id);
-			List.parse(this.children);
+			List.parse(viewList);
 
 			// in preview mode, have each child render a preview 
 			// of their content:
@@ -354,7 +488,7 @@ this.children = [
 				var allComponents = [];
 
 				// attach all the .UI views:
-				this.children.forEach((child) => {
+				this.views().forEach((child) => {
 					var component = child.component(App);
 					var id = ids.view + '_' + child.id;
 					component.ui.container = id;
@@ -372,6 +506,63 @@ this.children = [
 
 
 		var _logic = {
+
+			/* 
+			 * @method externalData()
+			 * this method is called by webix on the context.from.copy() command
+			 * in .onBeforeDrop() event.  It is for you to create a new instance
+			 * of the item being dropped.
+			 */
+			externalData:  (data, id, oldData) => {
+
+console.log('externalData', data, id, oldData);
+
+				// if oldData is an instance of our ABView object,
+				// then we have already made the instance and should return that:
+				if (oldData instanceof ABView) {
+					return oldData;
+				}
+
+
+				// otherwise this is our 1st time through:
+				// find the key to make a new instance from:
+				var key;
+
+				// 1st time through we should have a Class object:
+				if (data.common) key = data.common().key;
+
+				// but, if for some reason we have an instance:
+				if (data.defaults) key = data.defaults.key;
+
+
+				// var View = ABViewManager.allViews(function(V){ return V.common().key == key})[0];
+				var View = ABViewManager.newView({ key: key }, this.application, this);
+console.log('key:',View.defaults.key);
+				return View;
+			},
+
+			onBeforeDrop: (context, ev) => {
+
+				// if this was dropped from our own list, then skip
+				if (context.from.config.id === _ui.id) {
+					return true;
+				} else {
+
+					for (var i = 0; i < context.source.length; i++) {
+						var uid = webix.uid();
+						context.from.copy(context.source[i], context.index, $$(_ui.id), uid);
+
+						$$(_ui.id).remove('del_me');
+						var newID = $$(_ui.id).getIdByIndex(context.index);
+						var droppedViewObj = $$(_ui.id).getItem(newID);
+						droppedViewObj.id = null;
+						droppedViewObj.save();
+console.log(droppedViewObj);
+					}
+				}
+
+				return false;
+			},
 
 			template:function(obj, common) {
 
@@ -423,6 +614,7 @@ this.children = [
 		return ABViewPropertyComponent.component(App);
 	}
 
+
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var _ui = {
@@ -448,9 +640,51 @@ this.children = [
 
 	}
 
+
 	static propertyEditorPopulate(ids, view) {
 
 		$$(ids.label).setValue(view.label);
+
+	}
+
+
+	/*
+	 * @method componentList
+	 * return the list of components available on this view to display in the editor.
+	 */
+	componentList() {
+
+		// views not allowed to drop onto this View:
+		var viewsToIgnore = [ 'view', 'page' ];
+
+		var allComponents = ABViewManager.allViews();
+		var allowedComponents = [];
+
+		allComponents.forEach((c)=>{
+			if (viewsToIgnore.indexOf(c.common().key) == -1) {
+				allowedComponents.push(c);
+			}
+		})
+
+allowedComponents.push({
+	common:function(){
+		return {
+			key:'view',
+			icon:'cube',
+			label: 'ab.test.component.1'
+		}
+	}
+})
+allowedComponents.push({
+	common:function(){
+		return {
+			key:'page',
+			icon:'cubes',
+			label: 'ab.test.component.2'
+		}
+	}
+})
+		return allowedComponents;
 
 	}
 

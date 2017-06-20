@@ -17,6 +17,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             common: App.labels,
             component: {
                 // formHeader: L('ab.application.form.header', "*Application Info"),
+                components: L('ab.interface.components', '*Components')
             }
         };
         
@@ -24,6 +25,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
         // internal list of Webix IDs to reference our UI components.
         var ids = {
             component: this.unique('component'),
+            list: this.unique('list'),
             
         };
         
@@ -33,14 +35,34 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             id: ids.component,
             scroll: true,
             rows:[
-                {
-                    view: 'list',
-                    drag: true,
-                    select: false,
-                    template:function(obj, common) {
-                        return _logic.template(obj, common);
-                    }
 
+//// LEFT OFF HERE:
+// - 
+// - make editor area droppable.
+// - dragged item needs to remain in list
+// - create new Views: ABViewTitle, ABViewDescription
+
+                {
+                    view: 'toolbar',
+                    // id: self.componentIds.componentToolbar,
+                    cols: [{
+                        view: 'label',
+                        // id: self.componentIds.componentToolbarHeader,
+                        label: labels.component.components
+                    }]
+                },
+                {
+                    id: ids.list,
+                    view: 'list',
+                    drag: 'source',
+                    template: function (obj, common) {
+                        return _logic.template(obj, common);
+                    },
+                    on: {
+                        onBeforeDrag: function (context, ev) {
+                            _logic.onBeforeDrag(context, ev);
+                        }
+                    }
                 },
                 {
                     maxHeight: App.config.xxxLargeSpacer,
@@ -60,28 +82,24 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
 
         // internal business logic 
         var _logic = this.logic = {
-            
-            // /**
-            //  * @function formBusy
-            //  *
-            //  * Show the progress indicator to indicate a Form operation is in 
-            //  * progress.
-            //  */
-            // formBusy: function() {
-    
-            //  $$(ids.form).showProgress({ type: 'icon' });
-            // },
-            
-            
-            // /**
-            //  * @function formReady()
-            //  *
-            //  * remove the busy indicator from the form.
-            //  */
-            // formReady: function() {
-            //  $$(ids.form).hideProgress();
-            // },
-            
+
+
+            /**
+             * @function onBeforeDrag
+             * when a drag event is started, update the drag element display.
+             */
+            onBeforeDrag: function(context, ev) {
+
+                var component = $$(ids.list).getItem(context.source);
+                var label = component.common().label;
+                label = L(label, label);
+
+                context.html = "<div class='ab-component-item-drag'>"
+                    + "<i class='fa fa-{0}'></i> ".replace("{0}", component.common().icon)
+                    + label
+                    + "</div>";
+            },
+
             
             /**
              * @function show()
@@ -90,6 +108,20 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
              */
             show: function() {
                 $$(ids.component).show();
+            },
+
+            
+            /**
+             * @function template()
+             * compile the template for each item in the list.
+             */
+            template:function(obj, common) {
+                var label = obj.common().label
+                label = L(label, label);
+
+                return "<i class='fa fa-#icon#' aria-hidden='true'></i> #name#"
+                    .replace(/#icon#/g, obj.common().icon)
+                    .replace(/#name#/g, label);
             },
 
 
@@ -102,7 +134,10 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             viewLoad: function(view) {
                 CurrentView = view;
 
-            },
+                var components = view.componentList()
+                $$(ids.list).parse(components);
+                $$(ids.list).refresh();
+            }
         };
         
         

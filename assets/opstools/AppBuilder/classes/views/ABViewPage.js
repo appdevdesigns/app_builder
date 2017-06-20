@@ -46,7 +46,7 @@ export default class ABViewPage extends ABView  {
   	}
 
 
-  	static defaults() {
+  	static common() {
   		return ABViewDefaults;
   	}
 
