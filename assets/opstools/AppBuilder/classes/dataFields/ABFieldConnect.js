@@ -31,7 +31,7 @@ var defaultValues = {
 	linkType: 'one', // one, many
 	linkViaType: 'many', // one, many
 	linkColumn: '', // ABObject.id
-	isSource: true // bool - NOTE : for 1:1 relation case, flag column is in which object
+	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
 };
 
 var ids = {
@@ -205,7 +205,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 			values.settings.linkObject = $$(ids.objectList).getSelectedId();
 
 			// for 1:1 relation case, flag column is in this object
-			values.settings.isSource = true;
+			values.settings.isSource = 1;
 
 			return values;
 		}
@@ -220,7 +220,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		// we're responsible for setting up our specific settings:
 		for (var dv in defaultValues) {
-			this.settings[dv] = values.settings[dv] || defaultValues[dv];
+			this.settings[dv] = (values.settings[dv] != null ? values.settings[dv] : defaultValues[dv]);
 		}
 
 	}
@@ -365,7 +365,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				values[this.columnName] = this.selectivityGet(domNode);
 
 				// check data does not be changed
-				if (_.isEqual(values[this.columnName], row[this.columnName])) return;
+				if (Object.is(values[this.columnName], row[this.columnName])) return;
 
 				// pass null because it could not put empty array in REST api
 				if (values[this.columnName].length == 0)
@@ -374,7 +374,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				this.object.model().update(row.id, values)
 					.then(() => {
 						// update values of relation to display in grid
-						values[this.relationName()] = values[this.columnName]; 
+						values[this.relationName()] = values[this.columnName];
 
 						// update new value to item of DataTable .updateItem
 						$$(node).updateItem(row.id, values);

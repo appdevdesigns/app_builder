@@ -32,7 +32,7 @@ var defaultValues = {
 
 	// These values are defined at server side
 	linkColumn: '', // ABColumn.id
-	isSource: true // bool - NOTE : for 1:1 relation case, flag column is in which object
+	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
 };
 
 class ABFieldConnect extends ABField {
@@ -160,11 +160,8 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(tableName, (t) => {
 
-								var linkedColName = '#linked_object#.id'.replace('#linked_object#', linkTableName);
-
-								t.integer(this.columnName).unsigned().nullable();
-
-								t.foreign(this.columnName).references(linkedColName);
+								t.integer(this.columnName).unsigned().nullable()
+									.references('id').inTable(linkTableName).onDelete('cascade');
 
 								// 1:1
 								if (this.settings.linkViaType == 'one') {
@@ -201,11 +198,8 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(linkTableName, (t) => {
 
-								var linkedColName = '#linked_object#.id'.replace('#linked_object#', tableName);
-
-								t.integer(this.columnName).unsigned().nullable();
-
-								t.foreign(this.columnName).references(linkedColName);
+								t.integer(this.columnName).unsigned().nullable()
+									.references('id').inTable(tableName).onDelete('cascade');
 
 							})
 								.then(() => { next(); })
@@ -221,8 +215,43 @@ class ABFieldConnect extends ABField {
 
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
-					// TODO
-					resolve();
+
+					var joinTableName = AppBuilder.rules.toJunctionTableNameFormat(
+						application.name,
+						this.object.name,
+						linkObject.name,
+						this.columnName
+					);
+
+
+
+					knex.schema.hasTable(joinTableName).then((exists) => {
+
+						// if it doesn't exist, then create it and any known fields:
+						if (!exists) {
+
+							return knex.schema.createTable(joinTableName, (t) => {
+								t.increments('id').primary();
+								t.timestamps();
+								t.engine('InnoDB');
+								t.charset('utf8');
+								t.collate('utf8_unicode_ci');
+
+								// create columns
+								t.integer(this.object.name).unsigned().nullable()
+									.references('id').inTable(tableName).onDelete('cascade');
+
+								t.integer(linkObject.name).unsigned().nullable()
+									.references('id').inTable(linkTableName).onDelete('cascade');
+							})
+								.then(() => { resolve(); })
+								.catch(reject);
+
+						} else {
+							resolve();
+						}
+					});
+
 				}
 				else {
 					resolve();
@@ -304,7 +333,8 @@ class ABFieldConnect extends ABField {
 
 		myParameter = super.requestParam(allParameters);
 
-		delete myParameter[this.columnName];
+		if (myParameter != null)
+			delete myParameter[this.columnName];
 
 		return myParameter;
 	}
@@ -357,7 +387,7 @@ class ABFieldConnect extends ABField {
 
 
 	relationName() {
-		return this.columnName + '__relation';
+		return AppBuilder.rules.toFieldRelationFormat(this.columnName);
 	}
 
 

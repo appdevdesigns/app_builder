@@ -290,7 +290,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                         linkType: field.settings.linkViaType,
                                         linkViaType: field.settings.linkType,
                                         linkColumn: field.id, // TODO
-                                        isSource: false
+                                        isSource: 0
                                     }
                                 });
 

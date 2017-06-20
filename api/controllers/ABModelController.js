@@ -292,7 +292,7 @@ console.log('... catch(err) !');
                 var query = object.model().query();
 
                 Promise.all([
-                    // update the foreign keys of many-to-many relation
+                    // clear relation values of relation
                     // NOTE : There is a error when update values and foreign keys together   
                     // - Error: Double call to a write method. You can only call one of the write methods 
                     // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
@@ -301,7 +301,8 @@ console.log('... catch(err) !');
                             if (record == null) return record;
 
                             for (var colName in updateRelationParams) {
-                                var relationName = colName + '__relation';
+
+                                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
 
                                 record = record.$relatedQuery(relationName).unrelate();
                             }
@@ -309,15 +310,25 @@ console.log('... catch(err) !');
                             return record; 
                         }),
 
-                    // update the foreign keys of many-to-many relation
+                    // insert relation values of relation
                     query.where('id', id).first()
                         .then(record => {
                             if (record == null) return record;
 
                             for (var colName in updateRelationParams) {
-                                var relationName = colName + '__relation';
+                                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
 
-                                record = record.$relatedQuery(relationName).relate(updateRelationParams[colName]);
+                                // NOTE : Error: batch insert only works with Postgresql
+                                if (Array.isArray(updateRelationParams[colName])) {
+                                    record = record.$relatedQuery(relationName);
+
+                                    updateRelationParams[colName].forEach((val) => {
+                                        record = record.relate(val);
+                                    });
+                                }
+                                else {
+                                    record = record.$relatedQuery(relationName).relate(updateRelationParams[colName]);
+                                }
                             }
 
                             return record;
