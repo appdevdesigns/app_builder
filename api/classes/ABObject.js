@@ -276,10 +276,10 @@ module.exports = class ABObject extends ABObjectBase {
 
 				linkedFields.forEach((f) => {
 					// find linked object name
-					var linkedObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
-					if (linkedObject == null) return;
+					var linkObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
+					if (linkObject == null) return;
 
-					var linkedModel = linkedObject.model();
+					var linkModel = linkObject.model();
 					var relationName = AppBuilder.rules.toFieldRelationFormat(f.columnName);
 
 					// 1:1
@@ -290,16 +290,16 @@ module.exports = class ABObject extends ABObjectBase {
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
-							targetTable = linkedObject.dbTableName();
+							targetTable = linkObject.dbTableName();
 						}
 						else {
-							sourceTable = linkedObject.dbTableName();
+							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
 						}
 
 						relationMappings[relationName] = {
 							relation: Model.HasOneRelation,
-							modelClass: linkedModel,
+							modelClass: linkModel,
 							join: {
 								from: '{targetTable}.id'
 									.replace('{targetTable}', targetTable),
@@ -312,34 +312,29 @@ module.exports = class ABObject extends ABObjectBase {
 					}
 					// M:N
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'many') {
-						var sourceObjectName,
+						// get join table name
+						var joinTablename = f.joinTableName(),
+							sourceObjectName,
 							sourceTableName,
 							targetObjectName,
 							targetTableName;
 
 						if (f.settings.isSource == true) {
-							sourceObjectName = currObject.name;
-							sourceTableName = tableName;
-							targetObjectName = linkedObject.name;
-							targetTableName = linkedObject.dbTableName();
+							sourceObjectName = f.object.name;
+							sourceTableName = f.object.dbTableName();
+							targetObjectName = linkObject.name;
+							targetTableName = linkObject.dbTableName();
 						}
 						else {
-							sourceObjectName = linkedObject.name;
-							sourceTableName = linkedObject.dbTableName();
-							targetObjectName = currObject.name;
-							targetTableName = tableName;
+							sourceObjectName = linkObject.name;
+							sourceTableName = linkObject.dbTableName();
+							targetObjectName = f.object.name;
+							targetTableName = f.object.dbTableName();
 						}
-
-						// get join table name
-						var joinTablename = AppBuilder.rules.toJunctionTableNameFormat(
-							currObject.application.name, // application name
-							sourceObjectName, // table name
-							targetObjectName, // linked table name
-							f.columnName); // column name
 
 						relationMappings[relationName] = {
 							relation: Model.ManyToManyRelation,
-							modelClass: linkedModel,
+							modelClass: linkModel,
 							join: {
 								from: '{sourceTable}.id'.replace('{sourceTable}', sourceTableName),
 
@@ -363,14 +358,14 @@ module.exports = class ABObject extends ABObjectBase {
 					else if (f.settings.linkType == 'one' && f.settings.linkViaType == 'many') {
 						relationMappings[relationName] = {
 							relation: Model.BelongsToOneRelation,
-							modelClass: linkedModel,
+							modelClass: linkModel,
 							join: {
 								from: '{sourceTable}.{field}'
 									.replace('{sourceTable}', tableName)
 									.replace('{field}', f.columnName),
 
 								to: '{targetTable}.id'
-									.replace('{targetTable}', linkedObject.dbTableName())
+									.replace('{targetTable}', linkObject.dbTableName())
 							}
 						};
 					}
@@ -378,13 +373,13 @@ module.exports = class ABObject extends ABObjectBase {
 					else if (f.settings.linkType == 'many' && f.settings.linkViaType == 'one') {
 						relationMappings[relationName] = {
 							relation: Model.HasManyRelation,
-							modelClass: linkedModel,
+							modelClass: linkModel,
 							join: {
 								from: '{sourceTable}.id'
 									.replace('{sourceTable}', tableName),
 
 								to: '{targetTable}.{field}'
-									.replace('{targetTable}', linkedObject.dbTableName())
+									.replace('{targetTable}', linkObject.dbTableName())
 									.replace('{field}', f.columnName)
 							}
 						};

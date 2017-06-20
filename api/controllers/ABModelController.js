@@ -291,52 +291,59 @@ console.log('... catch(err) !');
 
                 var query = object.model().query();
 
-                Promise.all([
-                    // clear relation values of relation
-                    // NOTE : There is a error when update values and foreign keys together   
-                    // - Error: Double call to a write method. You can only call one of the write methods 
-                    // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
-                    query.where('id', id).first()
-                        .then(record => {
-                            if (record == null) return record;
+                var updateTasks = [];
 
-                            for (var colName in updateRelationParams) {
+                // NOTE : There is a error when update values and foreign keys at same time
+                // - Error: Double call to a write method. You can only call one of the write methods 
+                // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
+                if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
 
-                                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+                    for (var colName in updateRelationParams) {
+
+                        var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+                        // clear relation values of relation
+                        updateTasks.push(query.where('id', id).first()
+                            .then(record => {
+
+                                if (record == null) return record;
 
                                 record = record.$relatedQuery(relationName).unrelate();
-                            }
 
-                            return record; 
-                        }),
+                                return record;
+                            }));
 
-                    // insert relation values of relation
-                    query.where('id', id).first()
-                        .then(record => {
-                            if (record == null) return record;
+                        // convert relation data to array
+                        if (!Array.isArray(updateRelationParams[colName])) {
+                            updateRelationParams[colName] = [updateRelationParams[colName]];
+                        }
 
-                            for (var colName in updateRelationParams) {
-                                var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+                        // We could not insert many relation values at same time
+                        // NOTE : Error: batch insert only works with Postgresql
+                        updateRelationParams[colName].forEach(val => {
+                            // insert relation values of relation
+                            updateTasks.push(query.where('id', id).first()
+                                .then(record => {
+                                    if (record == null) return record;
 
-                                // NOTE : Error: batch insert only works with Postgresql
-                                if (Array.isArray(updateRelationParams[colName])) {
-                                    record = record.$relatedQuery(relationName);
+                                    record = record.$relatedQuery(relationName).relate(val);
 
-                                    updateRelationParams[colName].forEach((val) => {
-                                        record = record.relate(val);
-                                    });
-                                }
-                                else {
-                                    record = record.$relatedQuery(relationName).relate(updateRelationParams[colName]);
-                                }
-                            }
+                                    return record;
+                                }));
+                        });
 
-                            return record;
-                        }),
 
-                    // update record values
-                    query.patch(updateParams).where('id', id)
-                ])
+                    }
+                }
+
+                // update record values
+                if (updateParams != null && Object.keys(updateParams).length > 0) {
+                    updateTasks.push(query.patch(updateParams).where('id', id));
+                }
+
+
+                // Do Knex update data tasks
+                Promise.all(updateTasks)
                 .then((values)=>{
 
                     var numRows = values[0];
