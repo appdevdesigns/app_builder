@@ -34,8 +34,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             toolbarViewMode: this.unique('toolbarViewMode'),
 
             editArea: this.unique('editArea'),
-
-
         };
         
         

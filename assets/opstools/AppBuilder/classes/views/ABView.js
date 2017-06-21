@@ -460,6 +460,8 @@ export default class ABView  {
 // 	}
 // ]
 			var viewList = this.views();
+
+			// if we don't have any views, then place a "drop here" placeholder
 			if (viewList.length == 0) {
 				viewList.push({
 					id:'del_me',
@@ -515,8 +517,6 @@ export default class ABView  {
 			 */
 			externalData:  (data, id, oldData) => {
 
-console.log('externalData', data, id, oldData);
-
 				// if oldData is an instance of our ABView object,
 				// then we have already made the instance and should return that:
 				if (oldData instanceof ABView) {
@@ -537,7 +537,6 @@ console.log('externalData', data, id, oldData);
 
 				// var View = ABViewManager.allViews(function(V){ return V.common().key == key})[0];
 				var View = ABViewManager.newView({ key: key }, this.application, this);
-console.log('key:',View.defaults.key);
 				return View;
 			},
 
@@ -552,7 +551,13 @@ console.log('key:',View.defaults.key);
 						var uid = webix.uid();
 						context.from.copy(context.source[i], context.index, $$(_ui.id), uid);
 
+
+						// remove the temp "drop here" marker if it exists
 						$$(_ui.id).remove('del_me');
+
+
+						// find the newly inserted element & perform a .save()
+						// to persist it in our current view.
 						var newID = $$(_ui.id).getIdByIndex(context.index);
 						var droppedViewObj = $$(_ui.id).getItem(newID);
 						droppedViewObj.id = null;
@@ -645,6 +650,57 @@ console.log(droppedViewObj);
 
 		$$(ids.label).setValue(view.label);
 
+	}
+
+
+
+	/*
+	 * @component()
+	 * return a UI component based upon this view.
+	 * @param {obj} App 
+	 * @return {obj} UI component
+	 */
+	component(App) {
+
+		// get a UI component for each of our child views
+		var viewComponents = [];
+		this.views().forEach((v)=>{
+			viewComponents.push(v.component(App));
+		})
+
+		function L(key, altText) {
+			return AD.lang.label.getLabel(key) || altText;
+		}
+
+		var idBase = 'ABView_'+this.id;
+		var ids = {
+			component: App.unique(idBase+'_component'),
+		}
+
+
+		// an ABView is a collection of rows:
+		var _ui = {
+			id: ids.component,
+			rows:[]
+		}
+		// insert each of our sub views into our rows:
+		viewComponents.forEach((view)=>{
+			_ui.rows.push(view.ui);
+		})
+
+
+		// make sure each of our child views get .init() called
+		var _init = (options) => {
+			viewComponents.forEach((view)=>{
+				view.init();
+			})
+		}
+
+
+		return {
+			ui:_ui,
+			init:_init
+		}
 	}
 
 
