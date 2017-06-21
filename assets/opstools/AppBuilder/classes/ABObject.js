@@ -330,10 +330,10 @@ export default class ABObject extends ABObjectBase {
 		// ['{colName1}', ..., '{colNameN}']
 		var formatNames = labelData.match(/\{[^}]+\}/g);
 
-		formatNames.forEach(function(key) {
-			var colName = key.replace('{', '').replace('}', '');
+		formatNames.forEach(function(templateName) {
+			var colName = templateName.replace('{', '').replace('}', '');
 
-			labelData = labelData.replace(key, rowData[colName] || '');
+			labelData = labelData.replace(templateName, rowData[colName] || '');
 		});
 
 		return labelData;

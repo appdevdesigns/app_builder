@@ -216,14 +216,7 @@ class ABFieldConnect extends ABField {
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
-					var joinTableName = AppBuilder.rules.toJunctionTableNameFormat(
-						application.name,
-						this.object.name,
-						linkObject.name,
-						this.columnName
-					);
-
-
+					var joinTableName = this.joinTableName();
 
 					knex.schema.hasTable(joinTableName).then((exists) => {
 
@@ -277,23 +270,39 @@ class ABFieldConnect extends ABField {
 			(resolve, reject) => {
 				var tableName = this.object.dbTableName();
 
-				// drop foreign key
-				knex.schema.table(tableName, (t) => {
-					t.dropForeign(this.columnName)
-						.dropIndex(this.columnName)
-						.dropUnique(this.columnName);
-				})
-					//	always pass, becuase ignore not found index errors.
-					.then(() => {
-						// drop column
-						super.migrateDrop(knex)
-							.then(() => resolve(), reject);
+				// M:N
+				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
+					// drop join table
+					var joinTableName = this.joinTableName();
+
+					knex.schema.dropTableIfExists(joinTableName)
+						.then(() => {
+
+							super.migrateDrop(knex)
+								.then(() => resolve(), reject);
+						});
+				}
+				// M:1,  1:M,  1:1
+				else {
+					// drop foreign key
+					knex.schema.table(tableName, (t) => {
+						t.dropForeign(this.columnName)
+							.dropIndex(this.columnName)
+							.dropUnique(this.columnName);
 					})
-					.catch(() => {
-						// drop column
-						super.migrateDrop(knex)
-							.then(() => resolve(), reject);
-					});
+						.then(() => {
+							// drop column
+							super.migrateDrop(knex)
+								.then(() => resolve(), reject);
+						})
+						//	always pass, becuase ignore not found index errors.
+						.catch(() => {
+							// drop column
+							super.migrateDrop(knex)
+								.then(() => resolve(), reject);
+						});
+				}
+
 			}
 		)
 	}
@@ -390,6 +399,34 @@ class ABFieldConnect extends ABField {
 		return AppBuilder.rules.toFieldRelationFormat(this.columnName);
 	}
 
+	joinTableName() {
+		var sourceObjectName,
+			sourceTableName,
+			targetObjectName,
+			targetTableName;
+
+		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+
+		if (this.settings.isSource == true) {
+			sourceObjectName = this.object.name;
+			sourceTableName = this.object.dbTableName();
+			targetObjectName = linkObject.name;
+			targetTableName = linkObject.dbTableName();
+		}
+		else {
+			sourceObjectName = linkObject.name;
+			sourceTableName = linkObject.dbTableName();
+			targetObjectName = this.object.name;
+			targetTableName = this.object.dbTableName();
+		}
+
+		// return join table name
+		return AppBuilder.rules.toJunctionTableNameFormat(
+			this.object.application.name, // application name
+			sourceObjectName, // table name
+			targetObjectName, // linked table name
+			this.columnName); // column name
+	}
 
 }
 
