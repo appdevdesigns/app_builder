@@ -286,19 +286,22 @@ module.exports = class ABObject extends ABObjectBase {
 					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
 
 						var sourceTable,
-							targetTable;
+							targetTable,
+							relation;
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
 							targetTable = linkObject.dbTableName();
+							relation = Model.BelongsToOneRelation;
 						}
 						else {
 							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
+							relation = Model.HasOneRelation;
 						}
 
 						relationMappings[relationName] = {
-							relation: Model.HasOneRelation,
+							relation: relation,
 							modelClass: linkModel,
 							join: {
 								from: '{targetTable}.id'

@@ -264,6 +264,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         var field = null;
                         var oldData = null;
 
+                        var linkCol;
+
                         // if this is an ADD operation, (_editField will be undefined)
                         if (!_editField) {
 
@@ -275,7 +277,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                                 var linkObject = _currentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
 
-                                var newLinkCol = linkObject.fieldNew({
+                                linkCol = linkObject.fieldNew({
                                     id: OP.Util.uuid(),
 
                                     key: field.key,
@@ -289,15 +291,12 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                         linkObject: field.object.id,
                                         linkType: field.settings.linkViaType,
                                         linkViaType: field.settings.linkType,
-                                        linkColumn: field.id, // TODO
                                         isSource: 0
                                     }
                                 });
 
-                                linkObject._fields.push(newLinkCol);
-
                                 // Update link column id to source column
-                                field.settings.linkColumn = newLinkCol.id;
+                                field.settings.linkColumn = linkCol.id;
                             }
 
                         } else {
@@ -325,6 +324,12 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                             field.save()
                             .then(()=>{
+
+                                // TODO workaround : update link column id
+                                if (linkCol != null) {
+                                    linkCol.settings.linkColumn = field.id;
+                                    linkCol.save();
+                                }
 
                                 $$(ids.buttonSave).enable();
                                 _logic.hide();

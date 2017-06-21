@@ -283,7 +283,7 @@ module.exports = {
          * @return {string}
          */
         toFieldRelationFormat: function (colName) {
-            return colName + '__relation';
+            return  AppBuilder.rules.nameFilter(colName) + '__relation';
         },
 
 
@@ -300,8 +300,9 @@ module.exports = {
          */
         toJunctionTableNameFormat: function (appName, sourceTableName, targetTableName, colName) {
             // The maximum length of a table name in MySql is 64 characters
-            if (appName.length > 14)
-                appName = appName.substring(0, 14);
+            appName = this.toApplicationNameFormat(appName);
+            if (appName.length > 17)
+                appName = appName.substring(0, 17);
 
             if (sourceTableName.length > 15)
                 sourceTableName = sourceTableName.substring(0, 15);
@@ -309,10 +310,11 @@ module.exports = {
             if (targetTableName.length > 15)
                 targetTableName = targetTableName.substring(0, 15);
 
+            colName = this.nameFilter(colName);
             if (colName.length > 14)
                 colName = colName.substring(0, 14);
 
-            return 'AB_{appName}_{sourceName}_{targetName}_{colName}'
+            return '{appName}_{sourceName}_{targetName}_{colName}'
                 .replace('{appName}', appName)
                 .replace('{sourceName}', sourceTableName)
                 .replace('{targetName}', targetTableName)

@@ -290,22 +290,10 @@ class ABFieldConnect extends ABFieldSelectivity {
 		}
 		// Single select list
 		else {
-			var dcOptions = new webix.DataCollection();
+			var dcOptions = this.cacheDcOptions();
 
 			config.editor = 'richselect';
-			config.options = dcOptions;
-
-			// Get options to data collection
-			dcOptions.clearAll();
-			this.getOptions().then((options) => {
-				dcOptions.parse(options.map((opt) => {
-					return {
-						id: opt.id,
-						value: opt.text
-					}
-				}));
-			});
-
+			config.collection = dcOptions;
 		}
 
 		return config;
@@ -332,30 +320,38 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			var domNode = node.querySelector('.connect-data-values');
 
-			this.getOptions().then((options) => {
+			// get selected values
+			var selectedData = [];
+			var relationName = this.relationName();
+			if (row[relationName] && row[relationName].map) {
 
+				selectedData = row[relationName].map(function (d) {
+					// display label in format
+					d.text = d.text || linkedObject.displayData(d);
 
-				// get selected values
-				var selectedData = [];
-				var relationName = this.relationName();
-				if (row[relationName] && row[relationName].map) {
-					selectedData = row[relationName].map(function (d) {
-						// display label in format
-						d.text = d.text || linkedObject.displayData(d);
-
-						return d;
-					});
-
-				}
-
-				// Render selectivity
-				this.selectivityRender(domNode, {
-					multiple: true,
-					items: options,
-					data: selectedData
+					return d;
 				});
 
+			}
+
+			// Render selectivity
+			this.selectivityRender(domNode, {
+				multiple: true,
+				data: selectedData,
+				ajax: {
+					url: 'It will call url in .getOptions function', // require
+					minimumInputLength: 0,
+					quietMillis: 0,
+					fetch: (url, init, queryOptions) => {
+						return this.getOptions().then(function (data) {
+							return {
+								results: data
+							};
+						});
+					}
+				}
 			});
+
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
@@ -415,22 +411,43 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
+
+		// refresh options when M:1 or 1:1 value is updated
+		// because thier values should not be choosen duplicate
+		if (this.settings.linkViaType == 'one')
+			this.cacheDcOptions();
 	}
 
 
 	relationName() {
-		return this.columnName + '__relation';
+		return String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';
+	}
+
+	cacheDcOptions() {
+		var dcOptions = new webix.DataCollection();
+
+		dcOptions.clearAll();
+		this.getOptions().then((options) => {
+			dcOptions.parse(options.map((opt) => {
+				return {
+					id: opt.id,
+					value: opt.text
+				}
+			}));
+		});
+
+		return dcOptions;
 	}
 
 	getOptions() {
 		return new Promise(
 			(resolve, reject) => {
+
 				// check if linked object value is not define, should return a empty array
 				if (!this.settings.linkObject) return resolve([]);
 
 				// if options was cached
-				if (this._options != null) return resolve(this._options);
-
+				// if (this._options != null) return resolve(this._options);
 
 
 				var linkedObj = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
@@ -441,16 +458,38 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
+				// TODO : Filter
+				var filterCondition = {};
+
+				// // M:1 - get data that's only empty relation value
+				// if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
+				// 	filterCondition[this.columnName] = 'isNull';
+				// }
+				// // 1:1
+				// else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
+				// 	// 1:1 - get data is not match link id that we have
+				// 	if (this.settings.isSource == true) {
+				// 		// TODO
+				// 		filterCondition[this.columnName] = 'notHaveRelationWith';
+				// 		// value this.object.name
+				// 	}
+				// 	// 1:1 - get data that's only empty relation value by query null value from link table
+				// 	else {
+				// 		filterCondition[this.columnName] = 'isNull';
+				// 	}
+				// }
+
 				// Pull linked object data
-				linkedModel.findAll().then((result) => {
+				linkedModel.findAll(filterCondition).then((result) => {
 
 					// cache linked object data
-					this._options = result.data.map((d) => {
-						return {
-							id: d.id,
-							text: linkedObj.displayData(d)
-						};
-					});
+					this._options = result.data
+						.map((d) => {
+							return {
+								id: d.id,
+								text: linkedObj.displayData(d)
+							};
+						});
 
 					resolve(this._options);
 
