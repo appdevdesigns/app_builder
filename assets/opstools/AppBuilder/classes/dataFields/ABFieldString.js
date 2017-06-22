@@ -236,6 +236,18 @@ class ABFieldString extends ABField {
 
 
 
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} data  a key=>value hash of the inputs to parse.
+	 * @param {OPValidator} validator  provided Validator fn
+	 * @return {array} 
+	 */
+	isValidData(data, validator) {
+	}
+
+
 	/*
 	 * @function isMultilingual
 	 * does this field represent multilingual data?
