@@ -36,6 +36,13 @@ var formatList = [
 	{ id: 'percent', value: L('ab.dataField.number.format.percent', "%"), sign: "%", position: "postfix" },
 ];
 
+var delimiterList = [
+	{ id: 'none', value: L('ab.dataField.number.none', "*None") },
+	{ id: 'comma', value: L('ab.dataField.number.comma', "*Comma"), sign: ',' },
+	{ id: 'period', value: L('ab.dataField.number.period', "*Period"), sign: '.' },
+	{ id: 'space', value: L('ab.dataField.number.space', "*Space"), sign: ' ' }
+];
+
 var defaultValues = {
 	'allowRequired':0,
 	'numberDefault':'',
@@ -47,6 +54,40 @@ var defaultValues = {
 	'validation':0,
 	'validateMinimum':'',
 	'validateMaximum':''
+}
+
+function getNumberFormat(settings, data) {
+	var formatSign = formatList.filter((item) => item.id == settings.typeFormat)[0],
+		thousandsSign = delimiterList.filter((item) => item.id == settings.typeThousands)[0],
+		decimalSign = delimiterList.filter((item) => item.id == settings.typeDecimals)[0],
+		decimalPlaces = settings.typeDecimalPlaces != 'none' ? parseInt(settings.typeDecimalPlaces) : 0;
+
+	var prefix = '',
+		postfix = '';
+
+	if (formatSign && formatSign.sign) {
+		switch (formatSign.position) {
+			case 'prefix':
+				prefix = formatSign.sign;
+				break;
+			case 'postfix':
+				postfix = formatSign.sign;
+				break;
+		}
+	}
+
+	decimalSign = decimalSign.sign || '';
+	thousandsSign = thousandsSign.sign || '';
+
+	return '{prefix} {number} {postfix}'
+		.replace('{prefix}', prefix)
+		.replace('{postfix}', postfix)
+		.replace('{number}', webix.Number.format(data, {
+			groupDelimiter: thousandsSign,
+			groupSize: 3,
+			decimalDelimiter: decimalSign,
+			decimalSize: decimalPlaces
+		}));
 }
 
 /**
@@ -76,8 +117,11 @@ var ABFieldNumberComponent = new ABFieldComponent({
 		// }
 
 		var ids = {
+			allowRequired		: '',
+			numberDefault 		: '',
 			typeDecimalPlaces 	: '',
 			typeRounding 		: '',
+			validate			: '',
 			validateMinimum 	: '',
 			validateMaximum 	: ''
 		}
@@ -92,17 +136,25 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			// },
 			{
 				view: "checkbox",
-// id: componentIds.allowRequired,
+				id: ids.allowRequired,
 				name:"allowRequired",
 				labelRight: L("ab.dataField.number.required", "*Required"),
 				// inputWidth: 130,
-				labelWidth: 0
+				labelWidth: 0,
+				on: {
+					onChange: (newVal, oldVal) => {
+						// when require number, then should have default value
+						if (newVal && !$$(ids.numberDefault).getValue()) {
+							$$(ids.numberDefault).setValue('0');
+						}
+					}
+				}
 			},
 			{
 				view: "text",
 				label: L("ab.dataField.number.defaultValue", "*Default Value"),
 				labelWidth: App.config.labelWidthLarge,
-// id: componentIds.numberDefault,
+				id: ids.numberDefault,
 				name:"numberDefault",
 				placeholder: L('ab.dataField.number.defaultNumber', '*Default number'),
 				on: {
@@ -111,7 +163,12 @@ var ABFieldNumberComponent = new ABFieldComponent({
 						if (!new RegExp('^[0-9.]*$').test(newVal)) {
 							// $$(componentIds.numberDefault).setValue(oldVal);
 							this.setValue(oldVal);
+						} 
+						// when require number, then should have default value
+						else if ($$(ids.allowRequired).getValue() && !newVal) {
+							this.setValue('0');
 						}
+
 					}
 				}
 			},
@@ -128,14 +185,11 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				view: "richselect",
 // id: componentIds.typeDecimals,
 				name:'typeDecimals',
+				disallowEdit: true,
 				label: L('ab.dataField.number.decimals', "*Decimals"),
 				value: 'none',
 				labelWidth: App.config.labelWidthLarge,
-				options: [
-					{ id: 'none', value: L('ab.dataField.number.none', "*None") },
-					{ id: 'period', value: L('ab.dataField.number.period', "*Period") },
-					{ id: 'comma', value: L('ab.dataField.number.comma', "*Comma") }
-				],
+				options: delimiterList,
 				on: {
 					'onChange': function (newValue, oldValue) {
 						if (newValue == 'none') {
@@ -157,6 +211,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				view: "richselect",
 				id: ids.typeDecimalPlaces,
 				name:'typeDecimalPlaces',
+				disallowEdit: true,
 				label: "Places",
 				value: 'none',
 				labelWidth: App.config.labelWidthLarge,
@@ -196,19 +251,14 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				value: 'none',
 				labelWidth: App.config.labelWidthLarge,
 				vertical: true,
-				options: [
-					{ id: 'none', value: L('ab.dataField.number.none', "*None") },
-					{ id: 'comma', value: L('ab.dataField.number.comma', "*Comma") },
-					{ id: 'period', value: L('ab.dataField.number.period', "*Period") },
-					{ id: 'space', value: L('ab.dataField.number.space', "*Space") }
-				]
+				options: delimiterList
 			},
 
 
 
 			{
 				view: 'checkbox',
-// id: componentIds.validate,
+				id: ids.validate,
 				name:'validation',
 				labelWidth: App.config.labelWidthCheckbox,
 				labelRight: L('ab.dataField.number.validation', "*Validation"),
@@ -303,7 +353,28 @@ var ABFieldNumberComponent = new ABFieldComponent({
 	// 		.values(ids, values) : return the current values from the form
 	logic:{
 
-		populate:function(ids, values) {
+		isValid: (ids, isValid) => {
+
+			// validate min/max values
+			if ($$(ids.validation).getValue() == true &&
+				$$(ids.validateMinimum).getValue() && 
+				$$(ids.validateMaximum).getValue()) {
+				
+				isValid = $$(ids.validateMinimum).getValue() < $$(ids.validateMaximum).getValue();
+
+				if (!isValid) {
+					OP.Dialog.Alert({
+						title: 'Validate values are invalid',
+						text: 'Maximum value should be greater than minimum value'
+					});
+				}
+
+			}
+
+			return isValid;
+		},
+
+		populate: (ids, values) => {
 			if (values.settings.validation) {
 				$$(ids.validateMinimum).enable();
 				$$(ids.validateMaximum).enable();
@@ -434,6 +505,10 @@ class ABFieldNumber extends ABField {
 		config.editor = 'number';		// [edit_type] simple inline editing.
 		config.sort   = 'int';			// [sort_type]
 
+		config.format = (d) => {
+			return getNumberFormat(this.settings, d);
+		};
+
 		return config;
 	}
 
@@ -478,11 +553,33 @@ class ABFieldNumber extends ABField {
 				value = parseFloat(parseFloat(value).toFixed(places));
 			}
 
-			function isNumeric(n) {
+			var isNumeric = (n) => {
 			  return !Number.isNaN(parseFloat(n)) && Number.isFinite(n);
 			}
 			if (!isNumeric(value)) {
 				validator.addError(this.columnName, 'invalid number');
+			}
+
+			// validate Minimum
+			if (this.settings.validation == true &&
+				this.settings.validateMinimum != null && 
+				this.settings.validateMinimum > value) {
+
+				var errMessage = 'should be greater than {min}'
+					.replace('{min}', this.settings.validateMinimum);
+
+				validator.addError(this.columnName, errMessage);
+			}
+
+			// validate Maximum
+			if (this.settings.validation == true &&
+				this.settings.validateMaximum != null &&
+				this.settings.validateMaximum < value) {
+
+				var errMessage = 'should be less than {max}'
+					.replace('{max}', this.settings.validateMaximum);
+
+				validator.addError(this.columnName, errMessage);
 			}
 		}
 
