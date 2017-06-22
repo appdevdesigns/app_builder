@@ -275,6 +275,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
         
 
+        var CurrentApplication = null;
         var CurrentObject = null;
 
 
@@ -290,6 +291,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 			 * @param {ABApplication} application
 			 */
 			applicationLoad: (application) => {
+				CurrentApplication = application;
+
 				PopupNewDataFieldComponent.applicationLoad(application);
 			},
 
@@ -401,6 +404,17 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
 
     								field.destroy()
     								.then(()=>{
+
+										// TODO workaround : where should I destroy a link object
+										if (field.key == "connectObject") {
+											var linkObject = CurrentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
+											var linkField = linkObject.fields((f) => f.id == field.settings.linkColumn)[0];
+
+											if (linkField) {
+												linkField.destroy().then(() => {});
+											}
+										}
+
     									DataTable.refresh();
     								});
 

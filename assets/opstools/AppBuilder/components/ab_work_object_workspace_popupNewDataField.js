@@ -107,12 +107,9 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                 ]
             },
             on: {
-                onBeforeShow: function () {
-                    _logic.resetState();
-                },
-                onShow: function () {
-                    _logic.onShow();
-                },
+                //onBeforeShow: function () {
+                //  _logic.resetState();
+                //},
                 onHide: function () {
                     _logic.resetState();
                 }
@@ -124,6 +121,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         var _componentHash = {};    // 'name' => ABFieldXXX ui component
         var _componentsByType = {}; // 'type' => ABFieldXXX ui component
         var _currentEditor = null;
+        var _currentApplication = null;
         var _currentObject = null;
 
         var defaultEditorComponent = null;  // the default editor.
@@ -221,6 +219,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             applicationLoad: (application) => {
 
+                _currentApplication = application;
+
                 // TODO : should load ABApplication to data field popup here ?
                 for (var menuName in _componentHash) {
                     if (_componentHash[menuName] && _componentHash[menuName]._logic.applicationLoad) {
@@ -261,11 +261,40 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         var field = null;
                         var oldData = null;
 
+                        var linkCol;
+
                         // if this is an ADD operation, (_editField will be undefined)
                         if (!_editField) {
 
                             // get a new instance of a field:
                             field = _currentObject.fieldNew(values);
+
+                            // TODO workaround : where should I add a new link field to link object
+                            if (field.key == 'connectObject') {
+
+                                var linkObject = _currentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
+
+                                linkCol = linkObject.fieldNew({
+                                    id: OP.Util.uuid(),
+
+                                    key: field.key,
+
+                                    columnName: field.columnName,
+                                    label: field.label,
+
+                                    settings: {
+                                        showIcon: field.settings.showIcon,
+
+                                        linkObject: field.object.id,
+                                        linkType: field.settings.linkViaType,
+                                        linkViaType: field.settings.linkType,
+                                        isSource: 0
+                                    }
+                                });
+
+                                // Update link column id to source column
+                                field.settings.linkColumn = linkCol.id;
+                            }
 
                         } else {
 
@@ -292,6 +321,12 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                             field.save()
                             .then(()=>{
+
+                                // TODO workaround : update link column id
+                                if (linkCol != null) {
+                                    linkCol.settings.linkColumn = field.id;
+                                    linkCol.save();
+                                }
 
                                 $$(ids.buttonSave).enable();
                                 _logic.hide();
@@ -388,9 +423,22 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                 // hide the rest
                 for(var c in _componentsByType) {
                     if (c == field.key) {
-                        _componentsByType[c].populate(field);
                         _componentsByType[c].show(false, false);
+                        _componentsByType[c].populate(field);
                         _currentEditor = _componentsByType[c];
+
+                        // disable elements that disallow to edit
+                        if (_currentEditor && _currentEditor.ui && _currentEditor.ui.elements) {
+
+                                _currentEditor.ui.elements.forEach((elem) => {
+                                    if (elem.disallowEdit && $$(elem.id)) {
+
+                                        $$(elem.id).disable(); 
+
+                                    }
+                                });
+                            }
+
                     } else {
                         _componentsByType[c].hide();
                     }
@@ -429,23 +477,6 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             },
 
-
-
-            onShow: function() {
-                // if (!AD.comm.isServerReady()) {
-                //  this.getTopParentView().hide();
-
-                //  webix.alert({
-                //      title: labels.add_fields.cannotUpdateFields,
-                //      text: labels.add_fields.waitRestructureObjects,
-                //      ok: labels.common.ok
-                //  });
-                // }
-                // else { // Set default field type
-                //  this.showFieldData('string');
-                // }
-    console.error('TODO: onShow();')
-            },
 
 
 

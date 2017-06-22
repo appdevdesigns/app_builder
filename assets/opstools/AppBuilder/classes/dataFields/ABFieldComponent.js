@@ -251,7 +251,7 @@ export default class ABFieldComponent {
 				ABField.editorPopulate(ids, field);
 
 				this.eachDeep(elements, function(e){
-					if (e.name != null) {
+					if (e.name != null && $$(ids[e.name]) && $$(ids[e.name]).setValue) {
 						$$(ids[e.name]).setValue(field.settings[e.name]);
 					}
 				})

@@ -13,7 +13,7 @@ var defaultSettings = {
 	readOnly: false,
 	showDropdown: true,
 	showSearchInputInDropdown: false,
-	placeholder: "",
+	placeholder: ""
 }
 
 export default class ABFieldSelectivity extends ABField {
@@ -30,7 +30,10 @@ export default class ABFieldSelectivity extends ABField {
 		// setting up our specific settings:
 		settings = settings || {};
 		for (var dv in defaultSettings) {
-			settings[dv] = settings[dv] || defaultSettings[dv];
+			if (dv == 'data')
+				settings['data'] = this.prepareData(settings['data']);
+			else
+				settings[dv] = settings[dv] || defaultSettings[dv];
 		}
 
 		// Prevent render selectivity duplicate
@@ -64,8 +67,8 @@ export default class ABFieldSelectivity extends ABField {
 
 	selectivitySet(domNode, data) {
 		if (domNode && domNode.selectivity) {
-			if (typeof data == 'string' && data.length > 0)
-				data = JSON.parse(data);
+
+			data = this.prepareData(data);
 
 			if (data)
 				domNode.selectivity.setData(data);
@@ -81,5 +84,13 @@ export default class ABFieldSelectivity extends ABField {
 			delete domNode.selectivity;
 		}
 	}
+
+	prepareData(data) {
+		if (typeof data == 'string' && data.length > 0)
+			data = JSON.parse(data);
+
+		return data;
+	}
+
 
 };

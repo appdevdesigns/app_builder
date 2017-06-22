@@ -254,12 +254,9 @@ console.log('... catch(err) !');
             }            
             
             // query relation data
-            var linkedFieldNames = object.fields((f) => { return f.key == 'connectObject'; }).map((f) => { return f.columnName; });
-            if (linkedFieldNames.length > 0)
-                query.eager('[#fieldNames#]'.replace('#fieldNames#', linkedFieldNames.join(', ')));
-                
-                console.log(query.toString());
-                console.log("check that out");
+            var relationNames = object.linkFields().map((f) => { return f.relationName(); });
+            if (relationNames.length > 0)
+                query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
 
             Promise.all([
               pCount,
@@ -378,8 +375,11 @@ console.log('... catch(err) !');
             sails.log.verbose('ABModelController.update(): allParams:', allParams);
 
             // return the parameters from the input params that relate to this object
-            var updateParams = object.requestParams(allParams);  
+            // exclude connectObject data field values
+            var updateParams = object.requestParams(allParams);
 
+            // return the parameters of connectObject data field values 
+            var updateRelationParams = object.requestRelationParams(allParams);
 
             var validationErrors = object.isValidData(updateParams);
             if (validationErrors.length == 0) {
@@ -391,9 +391,63 @@ console.log('... catch(err) !');
                 sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
 
                 var query = object.model().query();
-                query.patch(updateParams)
-                .where('id', id)
-                .then((numRows)=>{
+
+                var updateTasks = [];
+
+                // NOTE : There is a error when update values and foreign keys at same time
+                // - Error: Double call to a write method. You can only call one of the write methods 
+                // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
+                if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
+
+                    for (var colName in updateRelationParams) {
+
+                        var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+                        // clear relation values of relation
+                        updateTasks.push(query.where('id', id).first()
+                            .then(record => {
+
+                                if (record == null) return record;
+
+                                record = record.$relatedQuery(relationName).unrelate();
+
+                                return record;
+                            }));
+
+                        // convert relation data to array
+                        if (!Array.isArray(updateRelationParams[colName])) {
+                            updateRelationParams[colName] = [updateRelationParams[colName]];
+                        }
+
+                        // We could not insert many relation values at same time
+                        // NOTE : Error: batch insert only works with Postgresql
+                        updateRelationParams[colName].forEach(val => {
+                            // insert relation values of relation
+                            updateTasks.push(query.where('id', id).first()
+                                .then(record => {
+                                    if (record == null) return record;
+
+                                    record = record.$relatedQuery(relationName).relate(val);
+
+                                    return record;
+                                }));
+                        });
+
+
+                    }
+                }
+
+                // update record values
+                if (updateParams != null && Object.keys(updateParams).length > 0) {
+                    updateTasks.push(query.patch(updateParams).where('id', id));
+                }
+
+
+                // Do Knex update data tasks
+                Promise.all(updateTasks)
+                .then((values)=>{
+
+                    var numRows = values[0];
 
                     res.AD.success({numRows:numRows});
 
