@@ -69,21 +69,26 @@ var ABFieldConnectComponent = new ABFieldComponent({
 			{
 				view: "list",
 				id: ids.objectList,
+				disallowEdit: true,
 				name: 'objectList',
 				select: true,
 				height: 140,
 				template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
 					onAfterSelect: function () {
-						var selectedObjLabel = this.getSelectedItem(false).label;
-						$$(ids.fieldLinkVia).setValue(selectedObjLabel);
-						$$(ids.fieldLinkVia2).setValue(selectedObjLabel);
+						var selectedObj = this.getSelectedItem(false);
+						if (selectedObj) {
+							var selectedObjLabel = selectedObj.label;
+							$$(ids.fieldLinkVia).setValue(selectedObjLabel);
+							$$(ids.fieldLinkVia2).setValue(selectedObjLabel);
+						}
 					}
 				}
 			},
 			{
 				view: 'button',
 				id: ids.objectCreateNew,
+				disallowEdit: true,
 				value: L('ab.dataField.connectObject.connectToNewObject', '*Connect to new Object'),
 				click: function () {
 					if (this.getTopParentView().createNewObjectEvent)
@@ -100,6 +105,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 					},
 					{
 						id: ids.linkType,
+						disallowEdit: true,
 						name: "linkType",
 						view: "segmented",
 						width: 165,
@@ -129,6 +135,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 					{
 						id: ids.linkViaType,
 						name: "linkViaType",
+						disallowEdit: true,
 						view: "segmented",
 						width: 165,
 						inputWidth: 160,
@@ -195,8 +202,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 		populate: (ids, values) => {
 			// select linked object in list
-			if (values.settings.linkObject)
+			if (values.settings.linkObject) {
 				$$(ids.objectList).select(values.settings.linkObject);
+				$$(ids.objectList).refresh();
+			}
 		},
 
 		values: (ids, values) => {

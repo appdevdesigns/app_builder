@@ -148,7 +148,7 @@ module.exports =  class ABObjectBase {
 	 */
 	linkFields () {
 
-		return this._fields.filter((f) => { return f.key == 'connectObject'; });
+		return this.fields((f) => { return f.key == 'connectObject'; });
 	}
 
 

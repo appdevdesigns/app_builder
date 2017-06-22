@@ -107,12 +107,9 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                 ]
             },
             on: {
-                onBeforeShow: function () {
-                    _logic.resetState();
-                },
-                onShow: function () {
-                    _logic.onShow();
-                },
+                //onBeforeShow: function () {
+                //  _logic.resetState();
+                //},
                 onHide: function () {
                     _logic.resetState();
                 }
@@ -426,9 +423,22 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                 // hide the rest
                 for(var c in _componentsByType) {
                     if (c == field.key) {
-                        _componentsByType[c].populate(field);
                         _componentsByType[c].show(false, false);
+                        _componentsByType[c].populate(field);
                         _currentEditor = _componentsByType[c];
+
+                        // disable elements that disallow to edit
+                        if (_currentEditor && _currentEditor.ui && _currentEditor.ui.elements) {
+
+                                _currentEditor.ui.elements.forEach((elem) => {
+                                    if (elem.disallowEdit && $$(elem.id)) {
+
+                                        $$(elem.id).disable(); 
+
+                                    }
+                                });
+                            }
+
                     } else {
                         _componentsByType[c].hide();
                     }
@@ -467,23 +477,6 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             },
 
-
-
-            onShow: function() {
-                // if (!AD.comm.isServerReady()) {
-                //  this.getTopParentView().hide();
-
-                //  webix.alert({
-                //      title: labels.add_fields.cannotUpdateFields,
-                //      text: labels.add_fields.waitRestructureObjects,
-                //      ok: labels.common.ok
-                //  });
-                // }
-                // else { // Set default field type
-                //  this.showFieldData('string');
-                // }
-    console.error('TODO: onShow();')
-            },
 
 
 
