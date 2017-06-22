@@ -38,12 +38,14 @@ module.exports =  class ABObjectBase {
 
 		if (typeof(attributes.objectWorkspace) != "undefined") {
 			if (typeof(attributes.objectWorkspace.sortFields) == "undefined") attributes.objectWorkspace.sortFields = [];
+            if (typeof(attributes.objectWorkspace.filterConditions) == "undefined") attributes.objectWorkspace.filterConditions = [];
 			if (typeof(attributes.objectWorkspace.frozenColumnID) == "undefined") attributes.objectWorkspace.frozenColumnID = "";
 			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
 		}
 
     	this.objectWorkspace = attributes.objectWorkspace || {
 			sortFields:[], // array of columns with their sort configurations
+            filterConditions:[], // array of filters to apply to the data table
 			frozenColumnID:"", // id of column you want to stop freezing
     		hiddenFields:[], // array of [ids] to add hidden:true to
     	};
@@ -216,6 +218,14 @@ module.exports =  class ABObjectBase {
 	set workspaceSortFields( fields ) {
 		this.objectWorkspace.sortFields = fields;
 	}
+
+    get workspaceFilterConditions() {
+        return this.objectWorkspace.filterConditions;
+    }
+
+    set workspaceFilterConditions( filterConditions ) {
+        this.objectWorkspace.filterConditions = filterConditions;
+    }
 
 	get workspaceFrozenColumnID() {
 		return this.objectWorkspace.frozenColumnID;

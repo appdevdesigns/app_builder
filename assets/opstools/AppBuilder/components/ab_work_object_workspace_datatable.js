@@ -281,6 +281,17 @@ console.error('!! ToDo: onAfterColumnHide()');
     			_logic.callbacks.onEditorMenu(action, EditField, EditNode);
     		},
 
+            /**
+    		 * @function getColumnConfig
+    		 *
+    		 * return the column index of a given column ID
+    		 * @param {string} id column id you want the index of
+    		 */
+    		getColumnConfig: function(id) {
+    			var DataTable = $$(ids.component);
+
+    			return DataTable.getColumnConfig(id);
+    		},
 
     		/**
     		 * @function getColumnIndex
@@ -485,7 +496,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     			PopupHeaderEditComponent.objectLoad(object);
 
-    			_logic.refresh();
+                // supressed this because it seems to be making an extra call?
+    			// _logic.refresh();
     		},
 
 
@@ -527,8 +539,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// use it to load the DataTable:
     				//// NOTE: this should take advantage of Webix dynamic data loading on
     				//// larger data sets.
+                    var wheres = {};
+                    if (CurrentObject.workspaceFilterConditions.length > 0) {
+                        wheres = CurrentObject.workspaceFilterConditions;
+                    }
     				CurrentObject.model()
-    				.where({})
+    				.where(wheres)
     				.skip(0)
     				.limit(30)
     				.loadInto(DataTable);
@@ -647,6 +663,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         this.refresh = _logic.refresh;
         this.addRow = _logic.rowAdd;
 
+        // allow getColumnConfig for sort data table component
+        this.getColumnConfig = _logic.getColumnConfig;
         // expose data for badge on frozen button
         this.getColumnIndex = _logic.getColumnIndex;
 

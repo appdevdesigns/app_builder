@@ -131,38 +131,140 @@ console.log('... catch(err) !');
         AppBuilder.routes.verifyAndReturnObject(req, res)
         .then(function(object){
 
-
             var query = object.model().query();
 
 
 /// IMPLEMENT .where()  here
-
+            var where = req.options._where;
 
             var result = {};
+
+            // 
+            if (!_.isEmpty(where)) {
+                var whereObj = {};
+                var index = 0;
+                where.forEach(function (w) {
+                    // We need to put back together our sql statment
+                    switch(w.operator) {
+                        case "contains":
+                            var operator = "LIKE";
+                            var input = "%"+w.inputValue+"%";
+                            break;
+                        case "doesn't contain":
+                            var operator = "NOT LIKE";
+                            var input = "%"+w.inputValue+"%";
+                            break;
+                        case "is not":
+                            var operator = "!=";
+                            var input = w.inputValue;
+                            break
+                        case "is before":
+                            var operator = "<";
+                            var input = w.inputValue;
+                            break;
+                        case "is after":
+                            var operator = ">";
+                            var input = w.inputValue;
+                            break;
+                        case "is on or before":
+                            var operator = "<=";
+                            var input = w.inputValue;
+                            break;
+                        case "is on or after":
+                            var operator = ">=";
+                            var input = w.inputValue;
+                            break;
+                        case ":":
+                            var operator = "=";
+                            var input = w.inputValue;
+                            break;
+                        case "≠":
+                            var operator = "!=";
+                            var input = w.inputValue;
+                            break;
+                        case "<":
+                            var operator = "<";
+                            var input = w.inputValue;
+                            break;
+                        case ">":
+                            var operator = ">";
+                            var input = w.inputValue;
+                            break;
+                        case "≤":
+                            var operator = "<=";
+                            var input = w.inputValue;
+                            break;
+                        case "≥":
+                            var operator = ">=";
+                            var input = w.inputValue;
+                            break;
+                        case "equals":
+                            var operator = "=";
+                            var input = w.inputValue;
+                            break;
+                        case "does not equal":
+                            var operator = "!=";
+                            var input = w.inputValue;
+                            break;
+                        case "is checked":
+                            var operator = "=";
+                            var input = w.inputValue;
+                            break;
+                        case "is not checked":
+                            var operator = "=";
+                            var input = w.inputValue;
+                            break;
+                        default:
+                            var operator = "=";
+                            var input = w.inputValue;
+                    }
+                    // if we are searching a multilingual field it is stored in translations so we need to search JSON
+                    if (w.isMultiLingual == 1) {
+                        fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), "$.' + w.fieldName + '"))';
+                    } else { // If we are just searching a field it is much simpler
+                        fieldName = w.fieldName;
+                    }
+                    // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
+                    var where = fieldName + " " + operator + " '" + input + "'";
+                    // Now we add in all of our where statements
+                    if (index == 0) {
+                        query.whereRaw(where);
+                    } else if (w.combineCondtion == "Or") {
+                        query.orWhereRaw(where);
+                    } else {
+                        // the default whereRaw will provide an "AND" if there is already one present
+                        query.whereRaw(where);                        
+                    }
+                    index++;
+                })
+            }
+            
+            // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
+            var pCount = query.clone().count('* as count').first(); 
+
             var offset = req.options._offset;
             var limit = req.options._limit;
 
-            // promise for the total count.
-            var pCount = query.clone().count('* as count').first();
-            
             // apply any offset/limit if provided.
             if (offset) {
                 query.offset(offset);
             }
             if (limit) {
                 query.limit(limit);
-            }
-
+            }            
+            
             // query relation data
             var linkedFieldNames = object.fields((f) => { return f.key == 'connectObject'; }).map((f) => { return f.columnName; });
             if (linkedFieldNames.length > 0)
                 query.eager('[#fieldNames#]'.replace('#fieldNames#', linkedFieldNames.join(', ')));
+                
+                console.log(query.toString());
+                console.log("check that out");
 
             Promise.all([
               pCount,
               query
             ]).then(function(values) {
-
                 var count = values[0].count;
                 var rows = values[1];
                 result.data = rows;

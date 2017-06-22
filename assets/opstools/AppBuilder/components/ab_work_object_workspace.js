@@ -9,6 +9,7 @@
 import ABApplication from "../classes/ABApplication"
 import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
 import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
+import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
 import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
 import ABPopupHideFields from "./ab_work_object_workspace_popupHideFields"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
@@ -75,6 +76,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         // Various Popups on our page:
         var PopupDefineLabelComponent = new ABPopupDefineLabel(App);
 
+        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App);
+
         var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App);
 
         var PopupHideFieldComponent = new ABPopupHideFields(App);
@@ -136,7 +139,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								autowidth: true,
     								badge: 0,
     								click: function () {
-    									_logic.toolbarFilter(this);
+    									_logic.toolbarFilter(this.$view);
     								}
     							},
     							{
@@ -243,6 +246,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
     		});
 
+            PopupFilterDataTableComponent.init({
+    			onChange:_logic.callbackFilterDataTable		// be notified when there is a change in the filters
+    		});
+
     		PopupFrozenColumnsComponent.init({
     			onChange:_logic.callbackFrozenColumns		// be notified when there is a change in the frozen columns
     		});
@@ -305,6 +312,22 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		},
 
+            /**
+    		 * @function callbackFilterDataTable
+    		 *
+    		 * call back for when the Define Label popup is finished.
+    		 */
+    		callbackFilterDataTable: function() {
+                var filterConditions = CurrentObject.workspaceFilterConditions;
+
+                if (typeof(filterConditions) != "undefined") {
+                    $$(ids.buttonFilter).define('badge', filterConditions.length);
+    				$$(ids.buttonFilter).refresh();
+                }
+                // this will be handled by the server side request now
+                DataTable.refresh();
+    		},
+
     		/**
     		 * @function callbackFrozenColumns
     		 *
@@ -338,7 +361,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     				$$(ids.buttonFieldsVisible).refresh();
 
     			}
-    			DataTable.refresh();
+    			// DataTable.refresh();
 
     			// if you unhide a field it may fall inside the frozen columns range so lets check
     			_logic.callbackFrozenColumns();
@@ -457,7 +480,6 @@ console.error('TODO: Button Export()');
     			PopupDefineLabelComponent.show($view);
     		},
 
-
     		/**
     		 * @function toolbarFieldsVisible
     		 *
@@ -474,9 +496,7 @@ console.error('TODO: Button Export()');
     		 * show the popup to add a filter to the datatable
     		 */
     		toolbarFilter: function($view) {
-// self.refreshPopupData();
-// $$(self.webixUiId.filterFieldsPopup).show($view);
-console.error('TODO: button filterFields()');
+                PopupFilterDataTableComponent.show($view);
     		},
 
 
@@ -550,12 +570,12 @@ console.error('TODO: toolbarPermission()');
     			// update hiddenFields
 
     			PopupDefineLabelComponent.objectLoad(object);
+                PopupFilterDataTableComponent.objectLoad(object);
     			PopupFrozenColumnsComponent.objectLoad(object);
     			PopupHideFieldComponent.objectLoad(object);
     			PopupSortFieldComponent.objectLoad(object);
 
     			_logic.callbackFieldsVisible();
-    			_logic.callbackFrozenColumns();
     			_logic.callbackSortFields();
 
     		}
