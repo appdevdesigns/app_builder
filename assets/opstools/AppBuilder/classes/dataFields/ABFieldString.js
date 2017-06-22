@@ -53,6 +53,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 			{
 				view: "checkbox",
 				name:'supportMultilingual',
+				disallowEdit: true,
 				labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
 				labelWidth: App.config.labelWidthCheckbox,
 				value: true
@@ -211,6 +212,26 @@ class ABFieldString extends ABField {
 		config.sort   = 'string'
 
 		return config;
+	}
+
+
+
+	/**
+	 * @method defaultValue
+	 * insert a key=>value pair that represent the default value
+	 * for this field.
+	 * @param {obj} values a key=>value hash of the current values.
+	 */
+	defaultValue(values) {
+		// if no default value is set, then don't insert a value.
+		if (!values[this.columnName]) {
+
+			// Set default string
+			if (this.settings.textDefault) {
+				values[this.columnName] = this.settings.textDefault;
+			}
+
+		}
 	}
 
 

@@ -157,15 +157,15 @@ class ABFieldString extends ABField {
 					knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 
-						if (!exists) {
-							knex.schema.table(tableName, (t) => {
-								t.string(this.columnName).defaultTo(this.settings.textDefault);
-							})
+						knex.schema.table(tableName, (t) => {
+							var currCol = t.string(this.columnName).defaultTo(this.settings.textDefault);
+
+							// alter default value of column
+							if (exists)
+								currCol.alter();
+						})
 							.then(resolve, reject);
 
-						} else {
-							resolve();
-						}
 
 					})
 					
