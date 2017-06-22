@@ -232,8 +232,8 @@ module.exports = class ABObject extends ABObjectBase {
 				required: [],
 				properties: {
 
-					created_at:{ type:['null', 'string'], format:'date-time' },
-					updated_at:{ type:['null', 'string'], format:'date-time' }
+					created_at:{ type:['null', 'string'], pattern:'^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$' },
+					updated_at:{ type:['null', 'string'], pattern:'^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$' }
 
 				}
 			}

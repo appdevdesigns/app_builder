@@ -41,7 +41,8 @@ module.exports = {
             if (validationErrors.length == 0) {
 
                 // this is a create operation, so ... 
-                createParams.created_at = createParams.updated_at = (new Date()).toISOString();
+                // createParams.created_at = (new Date()).toISOString();
+                createParams.created_at = AppBuilder.rules.toSQLDateTime(new Date());
 
                 sails.log.verbose('ABModelController.create(): createParams:', createParams);
 
@@ -282,7 +283,8 @@ console.log('... catch(err) !');
             if (validationErrors.length == 0) {
 
                 // this is an update operation, so ... 
-                updateParams.updated_at = (new Date()).toISOString();
+                // updateParams.updated_at = (new Date()).toISOString();
+                updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
 
                 sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
 

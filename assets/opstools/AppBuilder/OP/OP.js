@@ -20,6 +20,7 @@ import Comm from "./comm/comm"
 import Component from "./component"
 import Config from "./config/config"
 import CustomComponent from "./customComponent"
+import DateTime from "./dateTime"
 import Model from "./model"
 import Multilingual from "./multilingual"
 import Test from "./test"
@@ -40,6 +41,8 @@ import Validation from "./validation"
     OP.Config = Config;		// configuration Settings for our current environment.
 
     OP.CustomComponent = CustomComponent;  // Webix Custom Components
+    
+    OP.DateTime = DateTime;
 
 	OP.Dialog = AD.op.Dialog;
 
