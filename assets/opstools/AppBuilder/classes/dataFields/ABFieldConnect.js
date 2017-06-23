@@ -468,28 +468,39 @@ class ABFieldConnect extends ABFieldSelectivity {
 				var linkedModel = linkedObj.model();
 
 				// TODO : Filter
-				var filterCondition = {};
+				var where = [];
 
-				// // M:1 - get data that's only empty relation value
-				// if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-				// 	filterCondition[this.columnName] = 'isNull';
-				// }
-				// // 1:1
-				// else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
-				// 	// 1:1 - get data is not match link id that we have
-				// 	if (this.settings.isSource == true) {
-				// 		// TODO
-				// 		filterCondition[this.columnName] = 'notHaveRelationWith';
-				// 		// value this.object.name
-				// 	}
-				// 	// 1:1 - get data that's only empty relation value by query null value from link table
-				// 	else {
-				// 		filterCondition[this.columnName] = 'isNull';
-				// 	}
-				// }
+				// M:1 - get data that's only empty relation value
+				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
+					where.push({
+						fieldName: this.columnName,
+						operator: 'is null'
+					});
+				}
+				// 1:1
+				else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
+					// 1:1 - get data is not match link id that we have
+					if (this.settings.isSource == true) {
+						where.push({
+							fieldName: this.columnName,
+							operator: 'not have relation with',
+							inputValue: 'TODO'
+							// TODO
+						});
+
+						// value this.object.name
+					}
+					// 1:1 - get data that's only empty relation value by query null value from link table
+					else {
+						where.push({
+							fieldName: this.columnName,
+							operator: 'is null'
+						});
+					}
+				}
 
 				// Pull linked object data
-				linkedModel.findAll(filterCondition).then((result) => {
+				linkedModel.findAll({ where: where }).then((result) => {
 
 					// cache linked object data
 					this._options = result.data
