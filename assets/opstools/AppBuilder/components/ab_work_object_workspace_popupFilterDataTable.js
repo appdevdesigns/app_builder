@@ -7,7 +7,7 @@
  */
 
 
-export default class ab_work_object_workspace_popupFilterDataTable extends OP.Component {
+export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Component {
     
     constructor(App) {
         super(App, 'ab_work_object_workspace_popupFilterDataTable');
@@ -97,7 +97,7 @@ export default class ab_work_object_workspace_popupFilterDataTable extends OP.Co
         var CurrentObject = null;
 
         // internal business logic 
-        var _logic = this.logic = {
+        var _logic = this._logic = {
             
             callbacks:{
 

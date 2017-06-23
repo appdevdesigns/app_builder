@@ -10,51 +10,104 @@ export default {
     "translations": [
         {
             "language_code": "en",
-            "label": "Sample Application",
-            "description": "This application will test all the new features."
+            "label": "AppDev Apps",
+            "description": ""
+        },
+        {
+            "language_code": "th",
+            "label": "AppDev Apps (thai)",
+            "description": ""
         }
     ],
-    "name": "Sample_Application",
+    "name": "AppDev_Apps",
     "objects": [
         {
-            "id": "09eaa364-900d-4c90-8481-386d2faef5c1",
-            "name": "Books",
+            "id": "f0691dfe-ea6c-4c9e-bad3-f9a143beeda8",
+            "name": "Sample",
             "labelFormat": "",
             "isImported": "0",
-            "urlPath": "Sample_Application/Books",
+            "urlPath": "AppDev_Apps/Sample",
             "importFromObject": "",
             "objectWorkspace": {
-                "frozenColumnID": "Publish Date",
-                "hiddenFields": [
-                    "Title"
-                ],
+                "frozenColumnID": "Title",
                 "sortFields": [
                     {
-                        "by": "Publish Date",
+                        "by": "Noun",
                         "dir": "asc",
-                        "as": "date"
+                        "isMulti": "1"
                     },
                     {
-                        "by": "Title",
-                        "dir": "asc",
-                        "as": "string"
+                        "by": "Number",
+                        "dir": "desc",
+                        "isMulti": ""
                     }
+                ],
+                "filterConditions": [
+                    {
+                        "combineCondtion": "And",
+                        "fieldName": "Noun",
+                        "operator": "contains",
+                        "inputValue": "",
+                        "isMultiLingual": "1",
+                        "languageCode": "en"
+                    }
+                ],
+                "hiddenFields": [
+                    "Noun"
                 ]
             },
             "translations": [
                 {
                     "language_code": "en",
-                    "label": "Books"
+                    "label": "Sample"
+                },
+                {
+                    "language_code": "th",
+                    "label": "Sample (thai)"
                 }
             ],
             "fields": [
                 {
-                    "id": "fdba61d6-745d-44c7-96c0-5954ecc04704",
+                    "id": "1a328f1b-278a-4616-a93f-67d24d75fccd",
+                    "key": "string",
+                    "icon": "font",
+                    "columnName": "Noun",
+                    "settings": {
+                        "showIcon": "0",
+                        "textDefault": "",
+                        "supportMultilingual": "1"
+                    },
+                    "translations": [
+                        {
+                            "language_code": "en",
+                            "label": "Noun"
+                        }
+                    ]
+                },
+                {
+                    "id": "de70a66e-38ad-4aff-bb86-6e690fa30b07",
+                    "key": "string",
+                    "icon": "font",
+                    "columnName": "Verbs",
+                    "settings": {
+                        "showIcon": "0",
+                        "textDefault": "",
+                        "supportMultilingual": "1"
+                    },
+                    "translations": [
+                        {
+                            "language_code": "en",
+                            "label": "Verbs"
+                        }
+                    ]
+                },
+                {
+                    "id": "44396ffb-6eed-496a-800a-c192134cadff",
                     "key": "string",
                     "icon": "font",
                     "columnName": "Title",
                     "settings": {
-                        "showIcon": "1",
+                        "showIcon": "0",
                         "textDefault": "",
                         "supportMultilingual": "1"
                     },
@@ -66,72 +119,44 @@ export default {
                     ]
                 },
                 {
-                    "id": "e24ea33b-32e6-409e-9bcb-1494d4815e08",
+                    "id": "f71be778-35af-48cd-ad6b-f43b6affe033",
                     "key": "string",
                     "icon": "font",
-                    "columnName": "Author",
+                    "columnName": "Name",
                     "settings": {
-                        "showIcon": "1",
+                        "showIcon": "0",
                         "textDefault": "",
-                        "supportMultilingual": "1"
+                        "supportMultilingual": "0"
                     },
                     "translations": [
                         {
                             "language_code": "en",
-                            "label": "Author"
+                            "label": "Name"
                         }
                     ]
                 },
                 {
-                    "id": "14dedd7f-adbc-4723-b430-95271fc75d98",
-                    "key": "date",
-                    "icon": "calendar",
-                    "columnName": "Publish Date",
+                    "id": "a98f60c8-c80e-41ce-90f2-f556d5a7a2aa",
+                    "key": "number",
+                    "icon": "slack",
+                    "columnName": "Number",
                     "settings": {
-                        "showIcon": "1",
-                        "includeTime": "0",
-                        "defaultCurrentDate": "0",
-                        "defaultDate": "",
-                        "dayFormat": "%d",
-                        "dayOrder": "1",
-                        "dayDelimiter": "slash",
-                        "monthFormat": "%m",
-                        "monthOrder": "2",
-                        "monthDelimiter": "slash",
-                        "yearFormat": "%Y",
-                        "yearOrder": "3",
-                        "yearDelimiter": "slash",
-                        "hourFormat": "%h",
-                        "periodFormat": "none",
-                        "timeDelimiter": "colon",
-                        "validateCondition": "none",
-                        "validateRangeUnit": "days",
-                        "validateRangeBefore": "50",
-                        "validateRangeAfter": "50",
-                        "validateStartDate": "",
-                        "validateEndDate": ""
+                        "showIcon": "0",
+                        "allowRequired": "0",
+                        "numberDefault": "",
+                        "typeFormat": "none",
+                        "typeDecimals": "none",
+                        "typeDecimalPlaces": "none",
+                        "typeRounding": "none",
+                        "typeThousands": "none",
+                        "validation": "0",
+                        "validateMinimum": "",
+                        "validateMaximum": ""
                     },
                     "translations": [
                         {
                             "language_code": "en",
-                            "label": "Publish Date"
-                        }
-                    ]
-                },
-                {
-                    "id": "a1fba760-ac9f-4cb8-8dcb-83f883ad1c7f",
-                    "key": "list",
-                    "icon": "th-list",
-                    "columnName": "Genre",
-                    "settings": {
-                        "showIcon": "1",
-                        "isMultiple": "0",
-                        "singleDefault": "none"
-                    },
-                    "translations": [
-                        {
-                            "language_code": "en",
-                            "label": "Genre"
+                            "label": "Number"
                         }
                     ]
                 }
