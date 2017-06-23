@@ -321,12 +321,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the Define Label popup is finished.
     		 */
     		callbackFilterDataTable: function() {
-                var filterConditions = CurrentObject.workspaceFilterConditions;
-
-                if (typeof(filterConditions) != "undefined") {
-                    $$(ids.buttonFilter).define('badge', filterConditions.length);
-    				$$(ids.buttonFilter).refresh();
-                }
+                // Since we are making server side requests lets offload the badge count to another function so it can be called independently
+                _logic.getBadgeFilters();
                 // this will be handled by the server side request now
                 DataTable.refresh();
     		},
@@ -432,17 +428,37 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
     		 * call back for when the sort fields popup changes
     		 */
     		callbackSortFields: function() {
+                _logic.getBadgeSortFields();
+                DataTable.refresh();
+    		},
+            
+            /**
+    		 * @function getBadgeFilters
+    		 *
+    		 * we need to set the badge count for filters on load and after filters are added or removed
+    		 */            
+            getBadgeFilters: function() {
+                var filterConditions = CurrentObject.workspaceFilterConditions;
 
-    			var sortFields = CurrentObject.workspaceSortFields;
+                if (typeof(filterConditions) != "undefined") {
+                    $$(ids.buttonFilter).define('badge', filterConditions.length);
+                    $$(ids.buttonFilter).refresh();
+                }
+            },
+            
+            /**
+    		 * @function getBadgeSortFields
+    		 *
+    		 * we need to set the badge count for sorts on load and after sorts are added or removed
+    		 */                        
+            getBadgeSortFields: function() {
+                var sortFields = CurrentObject.workspaceSortFields;
 
     			if (typeof(sortFields) != "undefined") {
     				$$(ids.buttonSort).define('badge', sortFields.length);
     				$$(ids.buttonSort).refresh();
     			}
-
-    			DataTable.sortTable();
-    		},
-
+            },
 
 
     		/**
@@ -581,17 +597,18 @@ console.error('TODO: toolbarPermission()');
 
     			DataTable.objectLoad(object);
 
-    			// update hiddenFields
-
     			PopupDefineLabelComponent.objectLoad(object);
                 PopupFilterDataTableComponent.objectLoad(object);
     			PopupFrozenColumnsComponent.objectLoad(object);
     			PopupHideFieldComponent.objectLoad(object);
     			PopupSortFieldComponent.objectLoad(object);
 
-    			_logic.callbackFieldsVisible();
-    			_logic.callbackSortFields();
-
+    			// We can hide fields now that data is loaded
+                _logic.callbackFieldsVisible();
+                
+                // get badge counts for server side components
+                _logic.getBadgeSortFields();
+                _logic.getBadgeFilters();
     		}
 
 

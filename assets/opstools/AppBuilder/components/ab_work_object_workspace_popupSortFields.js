@@ -105,7 +105,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * @function clickAddNewSort
 			 * the user clicked the add new sort buttton. I don't know what it does...will update later
 			 */
-			clickAddNewSort: function(by, dir, as, id) {
+			clickAddNewSort: function(by, dir, isMulti, id) {
 				// Prevent duplicate fields
 				var sort_popup = $$(ids.component),
 					sort_form = $$(ids.form);
@@ -156,9 +156,9 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 					var segmentButton = sort_form.getChildViews()[viewIndex].getChildViews()[1];
 					segmentButton.setValue(dir);
 				}
-				if (as) {
-					var asField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
-					asField.setValue(as);
+				if (isMulti) {
+					var isMultilingualField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
+					isMultilingualField.setValue(isMulti);
 				}
 				_logic.callbacks.onChange();
 			},
@@ -306,8 +306,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				var allFields = CurrentObject.fields();
 				var columnConfig = "",
 					sortDir = el.getParentView().getChildViews()[1],
-					sortAs = el.getParentView().getChildViews()[2],
-					defaultAs = null,
+					isMultiLingual = el.getParentView().getChildViews()[2],
+					isMulti = 0,
 					options = null;
 
 				allFields.forEach((f) => {
@@ -324,26 +324,26 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 						options = [
 							{ id: 'asc', value: labels.component.textAsc },
 							{ id: 'desc', value: labels.component.textDesc }];
-						defaultAs = "string";
 						break;
 					case "date":
 						options = [
 							{ id: 'asc', value: labels.component.dateAsc },
 							{ id: 'desc', value: labels.component.dateDesc }];
-						defaultAs = "date";
 						break;
 					case "number":
 						options = [
 							{ id: 'asc', value: labels.component.numberAsc },
 							{ id: 'desc', value: labels.component.numberDesc }];
-						defaultAs = "int";
 						break;
 				}
 
 				sortDir.define('options', options);
 				sortDir.refresh();
 
-				sortAs.setValue(defaultAs);
+				if (columnConfig.settings.supportMultilingual)
+					isMulti = columnConfig.settings.supportMultilingual;
+					
+				isMultiLingual.setValue(isMulti);
 
 				_logic.refreshFieldList();
 
@@ -363,7 +363,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				if (childViews.length == 1) {
 					var sorts = CurrentObject.workspaceSortFields;
 					sorts.forEach((s) => {
-						_logic.clickAddNewSort(s.by, s.dir, s.as);
+						_logic.clickAddNewSort(s.by, s.dir, s.isMulti);
 					});
 
 					if (sorts.length == 0) {
@@ -464,8 +464,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 						var by = cView.getChildViews()[0].getValue();
 						var dir = cView.getChildViews()[1].getValue();
-						var as = cView.getChildViews()[2].getValue();
-						sortFields.push({"by":by, "dir":dir, "as":as})
+						var isMultiLingual = cView.getChildViews()[2].getValue();
+						sortFields.push({"by":by, "dir":dir, "isMulti":isMultiLingual})
 					});
 				}
 

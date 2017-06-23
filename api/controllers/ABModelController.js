@@ -135,13 +135,14 @@ console.log('... catch(err) !');
 
 
 /// IMPLEMENT .where()  here
-            var where = req.options._where;
+            var where = req.options._where.where;
+            
+            var sort = req.options._where.sort;
 
             var result = {};
 
-            // 
+            // Apply filters
             if (!_.isEmpty(where)) {
-                var whereObj = {};
                 var index = 0;
                 where.forEach(function (w) {
                     // We need to put back together our sql statment
@@ -220,9 +221,9 @@ console.log('... catch(err) !');
                     }
                     // if we are searching a multilingual field it is stored in translations so we need to search JSON
                     if (w.isMultiLingual == 1) {
-                        fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), "$.' + w.fieldName + '"))';
+                        var fieldName = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + w.languageCode + '")), 1, 4)), "$.' + w.fieldName + '"))';
                     } else { // If we are just searching a field it is much simpler
-                        fieldName = w.fieldName;
+                        var fieldName = w.fieldName;
                     }
                     // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
                     var where = fieldName + " " + operator + " '" + input + "'";
@@ -242,6 +243,21 @@ console.log('... catch(err) !');
             // promise for the total count. this was moved below the filters because webix will get caught in an infinte loop of queries if you don't pass the right count
             var pCount = query.clone().count('* as count').first(); 
 
+            // Apply Sorts
+            if (!_.isEmpty(sort)) {
+                sort.forEach(function (o) {
+                    // if we are ordering by a multilingual field it is stored in translations so we need to search JSON but this is different from filters
+                    // because we are going to sort by the users language not the builder's so the view will be sorted differntly depending on which languageCode
+                    // you are using but the intent of the sort is maintained
+                    if (o.isMulti == 1) {
+                        var by = 'JSON_UNQUOTE(JSON_EXTRACT(JSON_EXTRACT(translations, SUBSTRING(JSON_UNQUOTE(JSON_SEARCH(translations, "one", "' + req.user.data.languageCode + '")), 1, 4)), "$.' + o.by + '"))';
+                    } else { // If we are just sorting a field it is much simpler
+                        var by = o.by;
+                    }
+                    query.orderByRaw(by + " " + o.dir);
+                })
+            }
+
             var offset = req.options._offset;
             var limit = req.options._limit;
 
@@ -257,6 +273,8 @@ console.log('... catch(err) !');
             var relationNames = object.linkFields().map((f) => { return f.relationName(); });
             if (relationNames.length > 0)
                 query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
+                
+            // console.log(query.toString());
 
             Promise.all([
               pCount,

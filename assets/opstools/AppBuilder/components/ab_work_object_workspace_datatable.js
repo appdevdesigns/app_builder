@@ -101,9 +101,10 @@ console.error('!! ToDo: onBeforeEditStop()');
     			onAfterEditStop: function (state, editor, ignoreUpdate) {
     				_logic.onAfterEditStop(state, editor, ignoreUpdate);
     			},
-    			onAfterLoad: function () {
-    				_logic.onAfterLoad();
-    			},
+                // We are sorting with server side requests now so we can remove this
+    			// onAfterLoad: function () {
+    			// 	_logic.onAfterLoad();
+    			// },
     			onColumnResize: function (id, newWidth, oldWidth, user_action) {
 console.error('!! ToDo: onColumnResize()');
     				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
@@ -426,7 +427,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
     		onAfterLoad: function() {
-    			_logic.sortTable();
+    			// We are going to do this with a server side call now 
+                // _logic.sortTable();
     		},
 
 
@@ -543,8 +545,15 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     if (CurrentObject.workspaceFilterConditions.length > 0) {
                         wheres = CurrentObject.workspaceFilterConditions;
                     }
+                    var sorts = {};
+                    if (CurrentObject.workspaceSortFields.length > 0) {
+                        sorts = CurrentObject.workspaceSortFields;
+                    }
     				CurrentObject.model()
-    				.where(wheres)
+    				.where({
+                        where: wheres, 
+                        sort: sorts
+                    })
     				.skip(0)
     				.limit(30)
     				.loadInto(DataTable);
@@ -577,72 +586,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     			$$(ids.component).show();
     		},
-
-
-    		/**
-    		 * @function sort(dir, a, b)
-    		 *
-    		 * Sort this component.
-    		 */
-    		sort:function(dir, aValue, bValue) {
-    			var result = false;
-
-    			if (dir == 'asc') {
-    				result = aValue > bValue ? 1 : -1;
-    			}
-    			else {
-    				result = aValue < bValue ? 1 : -1;
-    			}
-    			return result;
-    		},
-
-
-    		sortNext:function(dir, a, b, sorts, index) {
-    			var index = index+1,
-    				a = a,
-    				b = b,
-    				aValue = a[sorts[index].by],
-    				bValue = b[sorts[index].by],
-    				result = false;
-
-    			if (aValue == bValue && sorts.length > index+1) {
-    				result = _logic.sortNext(sorts[index].dir, a, b, sorts, index)
-    			} else {
-    				result = _logic.sort(sorts[index].dir, aValue, bValue);
-    			}
-    			return result;
-    		},
-
-
-    		sortTable:function() {
-    			var DataTable = $$(ids.component);
-
-    			if (CurrentObject) {
-    				var sorts = CurrentObject.workspaceSortFields;
-
-    				if (sorts.length > 0) {
-    					var columnOrders = [];
-
-    					DataTable.sort(function (a, b) {
-    						var result = false,
-    							index = 0,
-    							aValue = a[sorts[index].by],
-    							bValue = b[sorts[index].by];
-
-    						if (aValue == bValue && sorts.length > index+1) {
-    							result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
-    						} else {
-    							result = _logic.sort(sorts[index].dir, aValue, bValue);
-    						}
-
-    						return result;
-    					});
-
-    				}
-    			}
-    		}
-
-
     	}
         
 
@@ -670,8 +613,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
         // expose data for column sort UI
         this.getFieldList = _logic.getFieldList;
-        this.sortTable = _logic.sortTable;
-
     }
 
 }
