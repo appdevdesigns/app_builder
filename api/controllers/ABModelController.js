@@ -214,6 +214,14 @@ console.log('... catch(err) !');
                             var operator = "=";
                             var input = w.inputValue;
                             break;
+                        case "is null":
+                            var operator = "IS NULL";
+                            var input = null;
+                            break;
+                        case "is not null":
+                            var operator = "IS NOT NULL";
+                            var input = null;
+                            break;
                         default:
                             var operator = "=";
                             var input = w.inputValue;
@@ -225,7 +233,11 @@ console.log('... catch(err) !');
                         fieldName = w.fieldName;
                     }
                     // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
-                    var where = fieldName + " " + operator + " '" + input + "'";
+                    var where = '{fieldName} {operator} {input}'
+                        .replace('{fieldName}', fieldName)
+                        .replace('{operator}', operator)
+                        .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
+
                     // Now we add in all of our where statements
                     if (index == 0) {
                         query.whereRaw(where);
