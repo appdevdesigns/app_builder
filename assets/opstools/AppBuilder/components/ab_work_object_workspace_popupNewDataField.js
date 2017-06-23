@@ -427,21 +427,36 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         _componentsByType[c].populate(field);
                         _currentEditor = _componentsByType[c];
 
-                        // disable elements that disallow to edit
-                        if (_currentEditor && _currentEditor.ui && _currentEditor.ui.elements) {
-
-                                _currentEditor.ui.elements.forEach((elem) => {
-                                    if (elem.disallowEdit && $$(elem.id)) {
-
-                                        $$(elem.id).disable(); 
-
-                                    }
-                                });
-                            }
-
                     } else {
                         _componentsByType[c].hide();
                     }
+                }
+
+                // disable elements that disallow to edit
+                if (_currentEditor && _currentEditor.ui && _currentEditor.ui.elements) {
+
+                    var disableElem = (elem) => {
+
+                        if (elem.disallowEdit && $$(elem.id) && $$(elem.id).disable) {
+                            $$(elem.id).disable();
+                        }
+
+                    };
+
+
+                    _currentEditor.ui.elements.forEach((elem) => {
+
+                        disableElem(elem);
+
+                        // disable elements are in rows/cols
+                        var childElems = elem.cols || elem.rows;
+                        if (childElems && childElems.forEach) {
+                            childElems.forEach((childElem) => {
+                                disableElem(childElem);
+                            });
+                        }
+
+                    });
                 }
 
                 // hide the ability to switch data types
@@ -481,6 +496,35 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
 
             resetState: function() {
+
+                // enable elements that disallow to edit
+                if (_currentEditor && _currentEditor.ui && _currentEditor.ui.elements) {
+
+                    var enableElem = (elem) => {
+
+                        if (elem.disallowEdit && $$(elem.id) && $$(elem.id).enable) {
+                            $$(elem.id).enable();
+                        }
+
+                    };
+
+
+                    _currentEditor.ui.elements.forEach((elem) => {
+
+                        enableElem(elem);
+
+                        // enable elements are in rows/cols
+                        var childElems = elem.cols || elem.rows;
+                        if (childElems && childElems.forEach) {
+                            childElems.forEach((childElem) => {
+                                enableElem(childElem);
+                            });
+                        }
+
+                    });
+                }
+
+
                 defaultEditorComponent.show(); // show the default editor
                 _currentEditor = defaultEditorComponent;
 

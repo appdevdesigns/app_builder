@@ -111,7 +111,8 @@ export default class ABField extends ABFieldBase {
   			oldVal = oldVal || '';
 
 			if (newVal != oldVal &&
-				oldVal == $$(ids.columnName).getValue()) {
+				oldVal == $$(ids.columnName).getValue() &&
+				$$(ids.columnName).isEnabled()) {
 				$$(ids.columnName).setValue(newVal);
 			}
 		}
@@ -147,6 +148,7 @@ export default class ABField extends ABFieldBase {
 					view: "text",
 					id: ids.columnName,
 					name:'columnName',
+					disallowEdit: true,
 					label: App.labels.dataFieldColumnName, // 'Name',
 					labelWidth: App.config.labelWidthMedium,
 					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',

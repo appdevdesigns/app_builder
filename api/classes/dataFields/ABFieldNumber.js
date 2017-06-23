@@ -153,45 +153,46 @@ class ABFieldNumber extends ABField {
 				knex.schema.hasColumn(tableName, this.columnName)
 				.then((exists) => {
 
-					// create one if it doesn't exist:
-					if (!exists) {
+					return knex.schema.table(tableName, (t) => {
+						var currCol;
 
-						return knex.schema.table(tableName, (t)=>{
-								var newCol;
+						// if this is an integer:
+						if (this.settings.typeDecimals == 'none') {
 
-								// if this is an integer:
-								if (this.settings.typeDecimals == 'none') {
-									
-									newCol = t.integer(this.columnName);
-									
-								} else {
+							currCol = t.integer(this.columnName);
 
-									var places = parseInt(this.settings.typeDecimalPlaces);
+						} else {
 
-									newCol = t.decimal(this.columnName, places);
+							var scale = parseInt(this.settings.typeDecimalPlaces);
+							var precision = scale + 8;
 
-								}
+							currCol = t.decimal(this.columnName, precision, scale);
 
-								// not null
-								if (this.settings.allowRequired) {
-									newCol.notNullable();
-								}
+						}
 
-								// set default value
-								if (defaultTo) {
-									newCol.defaultTo(defaultTo);
-								}
-							})
-							.then(()=>{
-								resolve();
-							})
-							.catch(reject);
+						// not null
+						if (this.settings.allowRequired) {
+							currCol.notNullable();
+						}
+						else {
+							currCol.nullable();
+						}
 
-					} else {
+						// set default value
+						if (defaultTo) {
+							currCol.defaultTo(defaultTo);
+						}
 
-						// there is already a column for this, so move along.
-						resolve();
-					}
+						if (exists) {
+							currCol.alter();
+						}
+
+
+					})
+						.then(() => {
+							resolve();
+						})
+						.catch(reject);
 				})
 
 			}
