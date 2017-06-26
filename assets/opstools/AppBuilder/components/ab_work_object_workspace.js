@@ -333,17 +333,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the hidden fields have changed.
     		 */
     		callbackFrozenColumns: function() {
+                // We need to load data first because there isn't anything to look at if we don't
+                DataTable.refresh();
 
-    			var frozenID = CurrentObject.workspaceFrozenColumnID;
-
-    			if (typeof(frozenID) != "undefined") {
-    				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
-
-    				$$(ids.buttonFrozen).define('badge', badgeNumber);
-    				$$(ids.buttonFrozen).refresh();
-    			}
-
-    			DataTable.refresh();
+                _logic.getBadgeFrozenColumn();
     		},
 
     		/**
@@ -352,16 +345,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the hidden fields have changed.
     		 */
     		callbackFieldsVisible: function() {
-
-    			var hiddenFields = CurrentObject.workspaceHiddenFields;
-
-    			if (typeof(hiddenFields) != "undefined") {
-    				$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
-    				$$(ids.buttonFieldsVisible).refresh();
-
-    			}
-    			// DataTable.refresh();
-
+                _logic.getBadgeHiddenFields();
     			// if you unhide a field it may fall inside the frozen columns range so lets check
     			_logic.callbackFrozenColumns();
     		},
@@ -443,6 +427,36 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
                 if (typeof(filterConditions) != "undefined") {
                     $$(ids.buttonFilter).define('badge', filterConditions.length);
                     $$(ids.buttonFilter).refresh();
+                }
+            },
+            
+            /**
+    		 * @function getBadgeFrozenColumn
+    		 *
+    		 * we need to set the badge count for frozen columns on load and after changed are added or removed
+    		 */                        
+            getBadgeFrozenColumn: function() {
+                var frozenID = CurrentObject.workspaceFrozenColumnID;
+
+                if (typeof(frozenID) != "undefined") {
+                    var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
+
+                    $$(ids.buttonFrozen).define('badge', badgeNumber);
+                    $$(ids.buttonFrozen).refresh();
+                }
+            },
+            
+            /**
+    		 * @function getBadgeHiddenFields
+    		 *
+    		 * we need to set the badge count for hidden fields on load and after fields are hidden or shown
+    		 */                        
+            getBadgeHiddenFields: function() {
+                var hiddenFields = CurrentObject.workspaceHiddenFields;
+
+                if (typeof(hiddenFields) != "undefined") {
+                    $$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+                    $$(ids.buttonFieldsVisible).refresh();
                 }
             },
             
