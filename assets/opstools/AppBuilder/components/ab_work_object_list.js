@@ -54,7 +54,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				{
 					view: App.custom.editlist.view,  // "editlist",
 					id: ids.list,
-					width: 250,	// TODO: @James
+					width: App.config.columnWidthLarge,
 
 					select: true,
 

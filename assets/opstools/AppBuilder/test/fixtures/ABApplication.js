@@ -47,11 +47,19 @@ export default {
                         "combineCondtion": "And",
                         "fieldName": "Noun",
                         "operator": "contains",
-                        "inputValue": "",
+                        "inputValue": "o",
                         "isMultiLingual": "1",
                         "languageCode": "en"
+                    },
+                    {
+                        "combineCondtion": "And",
+                        "fieldName": "Number",
+                        "operator": ">",
+                        "inputValue": "50",
+                        "isMultiLingual": "0",
+                        "languageCode": "en"
                     }
-                ],
+                ]
                 "hiddenFields": [
                     "Noun"
                 ]
