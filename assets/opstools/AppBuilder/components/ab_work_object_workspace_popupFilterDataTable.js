@@ -70,7 +70,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                     value: labels.component.addNewFilter, 
                     on: {
                         onItemClick: function (id, e, node) {
-                            _logic.addNewFilter();
+                            _logic.clickAddNewFilter();
                         }
                     }
                 }]
@@ -111,8 +111,25 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                  */
                 onChange:function(){}
             },
+            
+            callChangeEvent: function () {
+                var filter_popup = $$(ids.component),
+                    filter_form = $$(ids.filterform),
+                    conditionNumber = 0;
 
-            addNewFilter: function (filters) {
+                filter_form.getChildViews().forEach(function (v, index) {
+                    if (index >= filter_form.getChildViews().length - 1)
+                        return;
+
+                    if (v.getChildViews()[1].getValue() && v.getChildViews()[2].getValue())
+                        conditionNumber++;
+                });
+
+                // this.getTopParentView().callEvent('onChange', [filter_popup.dataTable.config.id, conditionNumber]);
+                _logic.callbacks.onChange();
+            },            
+
+            clickAddNewFilter: function (filters) {
                 var filter_popup = $$(ids.component),
                     filter_form = $$(ids.filterform),
                     viewIndex = filter_form.getChildViews().length - 1,
@@ -141,15 +158,9 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                                 "onChange": function (newValue, oldValue) {
                                     filter_popup.combineCondition = newValue;
 
-                                    var filterList = $('.combine-condition').webix_combo();
-
-                                    if ($.isArray(filterList)) {
-                                        filterList.forEach(function (elm) {
-                                            elm.setValue(newValue);
-                                        });
-                                    }
-                                    else {
-                                        filterList.setValue(newValue);
+                                    var filterList = document.getElementsByClassName("combine-condition");
+                                    for (var i = 0; i < filterList.length; i++) {
+                                        $$(filterList[i]).setValue(newValue);
                                     }
 
                                     // filter_popup.filter();
@@ -403,23 +414,6 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 _logic.callChangeEvent();
             },
             
-            callChangeEvent: function () {
-                var filter_popup = $$(ids.component),
-                    filter_form = $$(ids.filterform),
-                    conditionNumber = 0;
-
-                filter_form.getChildViews().forEach(function (v, index) {
-                    if (index >= filter_form.getChildViews().length - 1)
-                        return;
-
-                    if (v.getChildViews()[1].getValue() && v.getChildViews()[2].getValue())
-                        conditionNumber++;
-                });
-
-                // this.getTopParentView().callEvent('onChange', [filter_popup.dataTable.config.id, conditionNumber]);
-                _logic.callbacks.onChange();
-            },            
-            
             columns_setter: function (columns) {
                 var filter_popup = $$(ids.component);
 
@@ -519,7 +513,8 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                         return false;
 
                     var fieldId = cView.getChildViews()[1].getValue();
-                    if ($.grep(fieldList, function (f) { return f.id == fieldId }).length < 1) {
+                    // if ($.grep(fieldList, function (f) { return f.id == fieldId }).length < 1) {
+                    if (fieldList.filter(function (f) { return f.id == fieldId })) {
                         // Add condition to remove
                         removeChildViews.push(cView);
                     }
@@ -560,11 +555,11 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                     var filters = CurrentObject.workspaceFilterConditions;
                     if (filters.length > 0) {
                         filters.forEach((f) => {
-                            _logic.addNewFilter(f);
+                            _logic.clickAddNewFilter(f);
                         });
                     }                
                 } else if (filterform.getChildViews().length < 2) {
-                    _logic.addNewFilter();
+                    _logic.clickAddNewFilter();
                 }
 
                 

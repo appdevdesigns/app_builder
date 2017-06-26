@@ -120,14 +120,16 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							width: 220,
 							options: listFields,
 							on: {
-								"onChange": function (columnId) {
+								onChange: function (columnId) {
 									var el = this;
 									_logic.onChangeCombo(columnId, el);
 								}
 							}
 						},
 						{
-							view: "segmented", width: 200, options: [{ id: '', value: labels.component.selectField }],
+							view: "segmented", 
+							width: 200, 
+							options: [{ id: '', value: labels.component.selectField }],
 							on: {
 								onChange: function (newv, oldv) { // 'asc' or 'desc' values
 									_logic.saveSorts();
@@ -135,14 +137,23 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							}
 						},
 						{
-							view: "text", width: 20, hidden: true, value: ""
+							view: "text", 
+							width: 20, 
+							hidden: true, 
+							value: ""
 						},
 						{
-							view: "button", icon: "trash", type: "icon", width: 30, click: function () {
-								sort_form.removeView(this.getParentView());
-								_logic.refreshFieldList(true);
-								_logic.saveSorts();
-							}
+							view: "button", 
+							icon: "trash", 
+							type: "icon", 
+							width: 30,
+							on: {
+								onItemClick: function() {
+									sort_form.removeView(this.getParentView());
+									_logic.refreshFieldList(true);
+									_logic.saveSorts();									
+								}
+							} 
 						}
 					]
 				}, viewIndex);
@@ -221,64 +232,6 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				return listFields;
 			},
 
-			// /**
-			//  * @function sort
-			//  * this preforms the sort on the datagrid (this may move to the datagrid once I read further)
-			//  */
-			// sort: function () {
-			// 	var sort_popup = $$(ids.component),
-			// 		sort_form = $$(ids.form),
-			// 		columnOrders = [];
-			//
-			// 	sort_form.getChildViews().forEach(function (cView, index) {
-			// 		if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
-			// 			return;
-			//
-			// 		var columnId = cView.getChildViews()[0].getValue();
-			// 		var order = cView.getChildViews()[1].getValue();
-			//
-			// 		if (columnId) {
-			// 			var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
-			//
-			// 			if (columnConfig) {
-			// 				columnOrders.push({
-			// 					name: columnConfig.id,
-			// 					order: order
-			// 				});
-			// 			}
-			// 		}
-			// 	});
-			//
-			// 	sort_popup.dataTable.sort(function (a, b) {
-			// 		var result = false;
-			//
-			// 		for (var i = 0; i < columnOrders.length; i++) {
-			// 			var column = columnOrders[i],
-			// 				aValue = a[column.name],
-			// 				bValue = b[column.name];
-			//
-			// 			if ($.isArray(aValue)) {
-			// 				aValue = $.map(aValue, function (item) { return item.text }).join(' ');
-			// 			}
-			//
-			// 			if ($.isArray(bValue)) {
-			// 				bValue = $.map(bValue, function (item) { return item.text }).join(' ');
-			// 			}
-			//
-			// 			if (aValue != bValue) {
-			// 				if (column.order == 'asc') {
-			// 					result = aValue > bValue ? 1 : -1;
-			// 				}
-			// 				else {
-			// 					result = aValue < bValue ? 1 : -1;
-			// 				}
-			// 				break;
-			// 			}
-			// 		}
-			//
-			// 		return result;
-			// 	});
-			// },
 
 			/**
 			 * @function objectLoad
@@ -287,19 +240,6 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 */
 			objectLoad: function(object) {
 				CurrentObject = object;
-
-				// // refresh list
-				// var allFields = CurrentObject.fields();
-				// allFields.forEach((f) => {
-				// 	alert(f.label);
-				// 	listFields.push({
-				// 		id: f.id,
-				// 		label: f.label,
-				// 		$css:"hidden_fields_"+f.id
-				// 	})
-				// })
-
-				//$$(ids.list).parse(listFields);
 			},
 			
 			onChangeCombo: function(columnId, el) {
