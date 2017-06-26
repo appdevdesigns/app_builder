@@ -182,6 +182,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				view: "checkbox",
 				name: "includeTime",
 				id: ids.includeTime,
+				disallowEdit: true,
 				labelRight: "Include time",
 				labelWidth: 0,
 				on: {

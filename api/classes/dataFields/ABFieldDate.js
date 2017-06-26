@@ -6,6 +6,7 @@
  */
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
+var moment = require('moment');
 
 function L(key, altText) {
 	return altText;  // AD.lang.label.getLabel(key) || altText;
@@ -163,34 +164,38 @@ class ABFieldDate extends ABField {
 				knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 
-						// create one if it doesn't exist:
-						if (!exists) {
+						return knex.schema.table(tableName, (t) => {
 
-							return knex.schema.table(tableName, (t) => {
+							var currCol;
 
-								// create a column that has date/time type
-								if (this.settings.includeTime == true) {
+							// create a column that has date/time type
+							if (this.settings.includeTime == true) {
 
-									t.dateTime(this.columnName);
+								currCol = t.dateTime(this.columnName);
 
-									// create a column that has date type
-								} else {
+								// create a column that has date type
+							} else {
 
-									t.date(this.columnName);
-								}
+								currCol = t.date(this.columnName);
+							}
 
-								t.nullable();
-							})
-								.then(() => {
-									resolve();
-								})
-								.catch(reject);
+							currCol.nullable();
 
-						} else {
+							// set default value
+							if (this.settings.defaultDate && moment(this.settings.defaultDate).isValid()) {
+								var defaultDate = AppBuilder.rules.toSQLDateTime(this.settings.defaultDate);
 
-							// there is already a column for this, so move along.
-							resolve();
-						}
+								currCol.defaultTo(defaultDate);
+							}
+
+							if (exists) {
+								currCol.alter();
+							}
+
+						})
+							.then(() => { resolve(); })
+							.catch(reject);
+
 					});
 
 			}
@@ -231,10 +236,10 @@ class ABFieldDate extends ABField {
 			//// NOTE: json-schema does not define 'date' or 'datetime' types.
 			//// to validate these, we define type:'string' and checked against 
 			//// format:'date-time'
-// if null is allowed:
-			obj[this.columnName] = { type:['null', 'string'], format:'date-time' }
-// else 
-// obj[this.columnName] = { type:'string', format:'date-time' }
+			// if null is allowed:
+			obj[this.columnName] = { type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp }
+			// else 
+			// obj[this.columnName] = { type:'string', format:'date-time' }
 
 		}
 
@@ -252,25 +257,43 @@ class ABFieldDate extends ABField {
 
 		var myParameter = super.requestParam(allParameters);
 		if (myParameter) {
-			
+
 			if (!_.isUndefined(myParameter[this.columnName])) {
 
 				// not a valid date.
 				if (myParameter[this.columnName] == '') {
 
-//// TODO: 
-// for now, just don't return the date.  But in the future decide what to do based upon our 
-// settings:
-// if required -> return a default value? return null? 
-// if !required -> just don't return a value like now?
-delete myParameter[this.columnName];
+					//// TODO: 
+					// for now, just don't return the date.  But in the future decide what to do based upon our 
+					// settings:
+					// if required -> return a default value? return null? 
+					// if !required -> just don't return a value like now?
+					delete myParameter[this.columnName];
 
 				}
-				
+				// convert to SQL date format
+				else if (moment(myParameter[this.columnName]).isValid()) {
+					myParameter[this.columnName] = AppBuilder.rules.toSQLDateTime(myParameter[this.columnName]);
+				}
+
 			}
 		}
-console.log('... Date:', myParameter);
+
 		return myParameter;
+	}
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array} 
+	 */
+	isValidData(allParameters) {
+		var errors = [];
+
+		return errors;
 	}
 
 }
