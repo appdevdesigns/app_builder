@@ -382,7 +382,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 						values[this.relationName()] = values[this.columnName];
 
 						// update new value to item of DataTable .updateItem
-						$$(node).updateItem(row.id, values);
+						if ($$(node) && $$(node).updateItem)
+							$$(node).updateItem(row.id, values);
 					})
 					.catch((err) => {
 
@@ -467,7 +468,6 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
-				// TODO : Filter
 				var where = [];
 
 				// M:1 - get data that's only empty relation value
@@ -483,12 +483,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 					if (this.settings.isSource == true) {
 						where.push({
 							fieldName: this.columnName,
-							operator: 'not have relation with',
-							inputValue: 'TODO'
-							// TODO
+							operator: 'have no relation'
 						});
-
-						// value this.object.name
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
@@ -500,7 +496,11 @@ class ABFieldConnect extends ABFieldSelectivity {
 				}
 
 				// Pull linked object data
-				linkedModel.findAll({ where: where }).then((result) => {
+				linkedModel.findAll({
+					where: {
+						where: where
+					}
+				}).then((result) => {
 
 					// cache linked object data
 					this._options = result.data

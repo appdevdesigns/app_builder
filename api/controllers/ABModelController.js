@@ -145,6 +145,18 @@ console.log('... catch(err) !');
             if (!_.isEmpty(where)) {
                 var index = 0;
                 where.forEach(function (w) {
+
+                    // 1:1 - Get rows that no relation with 
+                    if (w.operator == 'have no relation') {
+                        var relation_name = AppBuilder.rules.toFieldRelationFormat(w.fieldName);
+
+                        query
+                            .leftJoinRelation(relation_name)
+                            .whereRaw('{relation_name}.id IS NULL'.replace('{relation_name}', relation_name));
+
+                        return;
+                    }
+
                     // We need to put back together our sql statment
                     switch(w.operator) {
                         case "contains":
