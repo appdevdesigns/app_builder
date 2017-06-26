@@ -67,21 +67,17 @@ console.error('!! ToDo: onBeforeSelect()');
     				_logic.onAfterSelect(data, prevent);
     			},
     			onCheck: function (row, col, val) { // Update checkbox data
-console.error('!! ToDo: onCheck()');
-    				// var item = $$(self.webixUiId.objectDatatable).getItem(row);
 
-    				// self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
-    				// 	.fail(function (err) {
-    				// 		// Rollback
-    				// 		item[col] = !val;
-    				// 		$$(self.webixUiId.objectDatatable).updateItem(row, item);
-    				// 		$$(self.webixUiId.objectDatatable).refresh(row);
+					var state = {
+						value: val
+					};
 
-    				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-    				// 	})
-    				// 	.then(function (result) {
-    				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-    				// 	});
+					var editor = {
+						row: row,
+						column: col
+					};
+
+					_logic.onAfterEditStop(state, editor);
     			},
     			onBeforeEditStop: function (state, editor) {
 console.error('!! ToDo: onBeforeEditStop()');

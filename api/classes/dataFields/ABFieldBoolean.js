@@ -123,29 +123,23 @@ class ABFieldBoolean extends ABField {
 				knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 
-						// create one if it doesn't exist:
-						if (!exists) {
+						return knex.schema.table(tableName, (t) => {
 
-							return knex.schema.table(tableName, (t) => {
+							var newCol = t.boolean(this.columnName);
 
-								var newCol = t.boolean(this.columnName);
+							// Set default value to column
+							if (this.settings['default'] != null) {
+								newCol.defaultTo(this.settings['default']);
+							}
 
-								// Set default value to column
-								if (this.settings['default']) {
-									newCol.defaultTo(this.settings['default']);
-								}
+							// alter column when exist:
+							if (exists) {
+								newCol.alter();
+							}
+						})
+							.then(() => { resolve(); })
+							.catch(reject);
 
-							})
-								.then(() => {
-									resolve();
-								})
-								.catch(reject);
-
-						} else {
-
-							// there is already a column for this, so move along.
-							resolve();
-						}
 					});
 
 			}
@@ -166,6 +160,60 @@ class ABFieldBoolean extends ABField {
 	// 		}
 	// 	)
 	// }
+
+
+	/**
+	 * @method jsonSchemaProperties
+	 * register your current field's properties here:
+	 */
+	jsonSchemaProperties(obj) {
+		// take a look here:  http://json-schema.org/example1.html
+
+		// if our field is not already defined:
+		if (!obj[this.columnName]) {
+			obj[this.columnName] = {
+				type: ["null", "boolean"]
+			};
+
+		}
+
+	}
+
+
+	/**
+	 * @method requestParam
+	 * return the entry in the given input that relates to this field.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {obj} or undefined
+	 */
+	requestParam(allParameters) {
+
+		var myParameter = super.requestParam(allParameters);
+		if (myParameter) {
+
+			if (!_.isUndefined(myParameter[this.columnName])) {
+
+				myParameter[this.columnName] = (myParameter[this.columnName] == 1);
+
+			}
+		}
+
+		return myParameter;
+	}
+
+
+	/**
+	 * @method isValidParams
+	 * Parse through the given parameters and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} allParameters  a key=>value hash of the inputs to parse.
+	 * @return {array}
+	 */
+	isValidData(allParameters) {
+		var errors = [];
+
+		return errors;
+	}
 
 }
 
