@@ -189,6 +189,39 @@ module.exports =  class ABObjectBase {
 	}
 
 
+    /**
+	 * @method fieldReorder()
+	 *
+	 * reorder the fields in our object
+	 *
+	 * @param {ABField} field The instance of the field to remove.
+	 * @return {Promise}
+	 */
+	fieldReorder( sourceId, targetId ) {
+        // We know what was moved and what item it has replaced/pushed forward
+        // so first we want to splice the item moved out of the array of fields
+        // and store it so we can put it somewhere else
+        let itemMoved = null;
+        for(var i=0; i<this._fields.length; i++) {
+            if (this._fields[i].columnName == sourceId) {
+                itemMoved = this._fields[i];
+                this._fields.splice(i, 1);
+                break;
+            }
+        }
+        // once we have removed/stored it we can find where its new position
+        // will be by looping back through the array and finding the item it
+        // is going to push forward
+        for(var j=0; j<this._fields.length; j++) {
+            if (this._fields[j].columnName == targetId) {
+                this._fields.splice(j, 0, itemMoved);
+                break;
+            }
+        }
+
+		return this.save();
+	}
+
 
 	/**
 	 * @method fieldSave()

@@ -119,10 +119,10 @@ console.error('!! ToDo: onColumnResize()');
     			},
     			onBeforeColumnDrag: function (sourceId, event) {
 console.error('!! ToDo: onBeforeColumnDrag()');
-    				// if (sourceId === 'appbuilder_trash') // Remove column
-    				// 	return false;
-    				// else
-    				// 	return true;
+    				if (sourceId === 'appbuilder_trash') // Remove column
+    					return false;
+    				else
+    					return true;
     			},
     			onBeforeColumnDrop: function (sourceId, targetId, event) {
 console.error('!! ToDo: onBeforeColumnDrag()');
@@ -141,7 +141,7 @@ console.error('!! ToDo: onBeforeColumnDrag()');
     			},
     			onAfterColumnDrop: function (sourceId, targetId, event) {
 console.error('!! ToDo: onAfterColumnDrop()');
-    				// self.reorderColumns();
+                    _logic.onAfterColumnDrop(sourceId, targetId, event);
     			},
     			onAfterColumnShow: function (id) {
 console.error('!! ToDo: onAfterColumnShow()');
@@ -318,6 +318,26 @@ console.error('!! ToDo: onAfterColumnHide()');
 
     			return DataTable.fieldList;
     		},
+            
+            /**
+             * @function onAfterColumnDrop
+             * When an editor drops a column to save a new column order
+             * @param {string} sourceId the columnName of the item dragged
+             * @param {string} targetId the columnName of the item dropped on
+             * @param {event} event
+             */
+            onAfterColumnDrop: function (sourceId, targetId, event) {
+                CurrentObject.fieldReorder(sourceId, targetId)
+                .then(()=>{
+
+
+                })
+                .catch((err)=>{
+
+                    OP.Error.log('Error saving new column order:', {error:err});
+
+                });
+            },
 
 
     		/**
