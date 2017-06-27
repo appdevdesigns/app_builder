@@ -115,6 +115,24 @@ module.exports =  class ABObjectBase {
 	}
 
 
+    /**
+	 * @method columnResize()
+	 *
+	 * save the new width of a column
+	 *
+	 * @param {} id The instance of the field to save.
+     * @param {int} newWidth the new width of the field
+     * @param {int} oldWidth the old width of the field
+	 * @return {Promise}
+	 */
+	columnResize( columnName, newWidth, oldWidth ) {
+        for(var i=0; i<this._fields.length; i++) {
+            if (this._fields[i].columnName == columnName) {
+                this._fields[i].settings.width = newWidth;
+            }
+        }
+        return this.save();
+	}
 
 
 

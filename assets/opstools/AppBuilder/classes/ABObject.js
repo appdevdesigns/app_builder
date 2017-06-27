@@ -270,6 +270,13 @@ export default class ABObject extends ABObjectBase {
 		// get the header for each of our fields:
 		this._fields.forEach(function(f){
 			var header = f.columnHeader(isObjectWorkspace);
+			if (f.settings.width != 0) {
+				// set column width to the customized width
+				header.width = f.settings.width;
+			} else {
+				// set column width to adjust:true by default;
+				header.adjust = true;
+			}
 			headers.push(header);
 			columnNameLookup[header.id] = f.columnName;	// name => id
 		})
@@ -277,9 +284,6 @@ export default class ABObject extends ABObjectBase {
 
 		// update our headers with any settings applied in the Object Workspace
 		if (isObjectWorkspace) {
-
-			// set column width to adjust:true by default;
-			headers.forEach((h) => { h.adjust = true; });
 
 			// hide any hiddenfields
 			if (this.workspaceHiddenFields.length > 0) {
