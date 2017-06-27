@@ -302,10 +302,20 @@ class ABFieldConnect extends ABFieldSelectivity {
 		}
 		// Single select list
 		else {
-			var dcOptions = this.cacheDcOptions();
+			var dcOptions = new webix.DataCollection();
 
 			config.editor = 'richselect';
 			config.collection = dcOptions;
+
+			dcOptions.clearAll();
+			this.getOptions().then((options) => {
+				dcOptions.parse(options.map((opt) => {
+					return {
+						id: opt.id,
+						value: opt.text
+					}
+				}));
+			});
 		}
 
 		return config;
@@ -339,15 +349,23 @@ class ABFieldConnect extends ABFieldSelectivity {
 			// get selected values
 			var selectedData = [];
 			var relationName = this.relationName();
-			if (row[relationName] && row[relationName].map) {
+			if (row[relationName] != null) {
 
-				selectedData = row[relationName].map(function (d) {
-					// display label in format
-					d.text = d.text || linkedObject.displayData(d);
+				// if this select value is array
+				if (row[relationName].map) {
 
-					return d;
-				});
+					selectedData = row[relationName].map(function (d) {
+						// display label in format
+						d.text = d.text || linkedObject.displayData(d);
 
+						return d;
+					});
+
+				}
+				else {
+					selectedData = row[relationName];
+					selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
+				}
 			}
 
 			// Render selectivity
@@ -456,22 +474,6 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 	relationName() {
 		return String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';
-	}
-
-	cacheDcOptions() {
-		var dcOptions = new webix.DataCollection();
-
-		dcOptions.clearAll();
-		this.getOptions().then((options) => {
-			dcOptions.parse(options.map((opt) => {
-				return {
-					id: opt.id,
-					value: opt.text
-				}
-			}));
-		});
-
-		return dcOptions;
 	}
 
 	getOptions() {
