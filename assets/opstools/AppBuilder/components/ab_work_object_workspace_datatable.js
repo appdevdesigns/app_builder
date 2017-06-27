@@ -55,9 +55,10 @@ export default class ABWorkObjectDatatable extends OP.Component {
 
 					if (selectField == null) return true;
 
-					var cellNode = this.getItemNode({ row: data.row, column: data.column });
+					var cellNode = this.getItemNode({ row: data.row, column: data.column }),
+						rowData = this.getItem(data.row);
 
-					return selectField.customEdit(data.row, App, cellNode);
+					return selectField.customEdit(rowData, App, cellNode);
 
     			},
     			onAfterSelect: function (data, prevent) {

@@ -490,11 +490,30 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 
 			// open file upload dialog when's click
 			parentContainer.addEventListener("click", () => {
-				$$(ids.uploader).fileDialog({ rowid : row.id });
 			});
 
 		}	
 	}
+
+
+	/*
+	* @function customEdit
+	* 
+	* @param {object} row is the {name=>value} hash of the current row of data.
+	* @param {App} App the shared ui App object useful more making globally
+	*					unique id references.
+	* @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	*/
+	customEdit(row, App, node) {
+
+		var idBase = App.unique(this.idCustomContainer(row)),
+			idUploader = idBase + '-uploader';
+
+		$$(idUploader).fileDialog({ rowid: row.id });
+
+		return false;
+	}
+
 
 
 	imageTemplate(obj) {
