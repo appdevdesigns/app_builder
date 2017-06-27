@@ -148,6 +148,14 @@ var ABFieldImageComponent = new ABFieldComponent({
 	// 		.values(ids, values) : return the current values from the form
 	logic:{
 
+		clear: (ids) => {
+			$$(ids.useWidth).setValue(0);
+			$$(ids.useHeight).setValue(0);
+
+			$$(ids.imageWidth).setValue('');
+			$$(ids.imageHeight).setValue('');
+		}
+
 	},
 
 	// perform any additional setup actions here.
@@ -310,7 +318,7 @@ OP.Dialog.Alert({
 	idCustomContainer(obj) {
 		return "#columnName#-#id#-image"
 			.replace('#id#', obj.id)
-			.replace('#columnName#', this.columnName);
+			.replace('#columnName#', this.columnName.replace(/ /g, '_'));
 	}
 
 
@@ -479,6 +487,11 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			    }
 			});
 			uploader.addDropZone(webixContainer.$view);
+
+			// open file upload dialog when's click
+			parentContainer.addEventListener("click", () => {
+				$$(ids.uploader).fileDialog({ rowid : row.id });
+			});
 
 		}	
 	}
