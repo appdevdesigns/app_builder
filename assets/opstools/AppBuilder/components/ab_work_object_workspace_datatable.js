@@ -51,17 +51,14 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		on: {
     			onBeforeSelect: function (data, preserve) {
 
-console.error('!! ToDo: onBeforeSelect()');
-    				// var itemNode = this.getItemNode({ row: data.row, column: data.column });
+					var selectField = CurrentObject.fields((f) => { return f.columnName == data.column; })[0];
 
-    				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-    				// if (!column || column.length < 1) {
-    				// 	console.log('System could not found this column data');
-    				// 	return false;
-    				// } else
-    				// 	column = column[0];
+					if (selectField == null) return true;
 
-    				// return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
+					var cellNode = this.getItemNode({ row: data.row, column: data.column });
+
+					return selectField.customEdit(data.row, App, cellNode);
+
     			},
     			onAfterSelect: function (data, prevent) {
     				_logic.onAfterSelect(data, prevent);
@@ -122,8 +119,8 @@ console.error('!! ToDo: onBeforeColumnDrag()');
     			},
     			onBeforeColumnDrop: function (sourceId, targetId, event) {
 console.error('!! ToDo: onBeforeColumnDrag()');
-    				// if (targetId === 'appbuilder_trash') // Remove column
-    				// 	return false;
+    				if (targetId === 'appbuilder_trash') // Remove column
+    					return false;
 
     				// if ($$(self.webixUiId.visibleButton).config.badge > 0) {
     				// 	webix.alert({
