@@ -98,8 +98,9 @@ console.error('!! ToDo: onBeforeEditStop()');
     			// onAfterLoad: function () {
     			// 	_logic.onAfterLoad();
     			// },
-    			onColumnResize: function (id, newWidth, oldWidth, user_action) {
+    			onColumnResize: function (columnName, newWidth, oldWidth, user_action) {
 console.error('!! ToDo: onColumnResize()');
+                    _logic.onColumnResize(columnName, newWidth, oldWidth, user_action);
     				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
     				// var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
     				// if (column && column[0])
@@ -478,6 +479,29 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// // Normal update data
     				// this.editCell(data.row, data.column);
     		},
+            
+
+            /**
+             * @function onColumnResize
+             * This is when a user adjusts the size of a column
+             * @param {} columnName 
+             * @param {int} newWidth
+             * @param {int} oldWidth
+             * @param {} user_action
+             * @return
+             */
+            onColumnResize: function(columnName, newWidth, oldWidth, user_action) {
+                CurrentObject.columnResize(columnName, newWidth, oldWidth)
+                .then(()=>{
+
+
+                })
+                .catch((err)=>{
+
+                    OP.Error.log('Error saving new column order:', {error:err});
+
+                });
+            },
 
 
     		/**
@@ -544,8 +568,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// freeze columns:
     				if (CurrentObject.workspaceFrozenColumnID != "") {
     					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
-    					DataTable.refreshColumns()
-    				}
+    				} else {
+                        DataTable.define('leftSplit', 0);                        
+                    }
+                    // we are going to always freeze the delete column so it is easy to get to
+                    DataTable.define('rightSplit', 1);                        
+                    DataTable.refreshColumns()
 
 
     				//// update DataTable Content
