@@ -294,7 +294,10 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		// render selectivity when link type is many
-		if (this.settings.linkType == 'many') {
+		if (this.settings.linkType == 'many' ||
+			// render selectivity with single value when 1:1 relation
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
+
 			config.template = '<div class="connect-data-values"></div>';
 		}
 		// Single select list
@@ -322,12 +325,16 @@ class ABFieldConnect extends ABFieldSelectivity {
 		if (!node) { return }
 
 		// render selectivity when link type is many
-		if (this.settings.linkType == 'many') {
+		if (this.settings.linkType == 'many' ||
+			// render selectivity with single value when 1:1 relation
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
 
 			// Get linked object
 			var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
 
 			var domNode = node.querySelector('.connect-data-values');
+
+			var multiselect = (this.settings.linkType == 'many');
 
 			// get selected values
 			var selectedData = [];
@@ -345,7 +352,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			// Render selectivity
 			this.selectivityRender(domNode, {
-				multiple: true,
+				multiple: multiselect,
 				data: selectedData,
 				ajax: {
 					url: 'It will call url in .getOptions function', // require
@@ -401,6 +408,29 @@ class ABFieldConnect extends ABFieldSelectivity {
 	}
 
 
+	/*
+	 * @function customEdit
+	 * 
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customEdit(row, App, node) {
+
+		// render selectivity when link type is many
+		if (this.settings.linkType == 'many' ||
+			// render selectivity with single value when 1:1 relation
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
+			return false;
+		}
+		else {
+			return true;
+		}
+
+	}
+
+
 	/**
 	 * @method defaultValue
 	 * insert a key=>value pair that represent the default value
@@ -421,11 +451,6 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
-		// refresh options when M:1 or 1:1 value is updated
-		// because thier values should not be choosen duplicate
-		if (this.settings.linkViaType == 'one')
-			this.cacheDcOptions();
 	}
 
 

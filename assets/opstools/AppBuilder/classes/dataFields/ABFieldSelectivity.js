@@ -30,11 +30,10 @@ export default class ABFieldSelectivity extends ABField {
 		// setting up our specific settings:
 		settings = settings || {};
 		for (var dv in defaultSettings) {
-			if (dv == 'data')
-				settings['data'] = this.prepareData(settings['data']);
-			else
-				settings[dv] = settings[dv] || defaultSettings[dv];
+			settings[dv] = settings[dv] || defaultSettings[dv];
 		}
+
+		settings['data'] = this.prepareData(settings['data'], settings.multiple);
 
 		// Prevent render selectivity duplicate
 		if (domNode.selectivity != null) {
@@ -85,9 +84,14 @@ export default class ABFieldSelectivity extends ABField {
 		}
 	}
 
-	prepareData(data) {
+	prepareData(data, multiple = true) {
 		if (typeof data == 'string' && data.length > 0)
 			data = JSON.parse(data);
+
+		// if single select, then it should be object
+		if (!multiple && Array.isArray(data)) {
+			data = data[0];
+		}
 
 		return data;
 	}

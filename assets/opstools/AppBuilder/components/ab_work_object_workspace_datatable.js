@@ -51,17 +51,15 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		on: {
     			onBeforeSelect: function (data, preserve) {
 
-console.error('!! ToDo: onBeforeSelect()');
-    				// var itemNode = this.getItemNode({ row: data.row, column: data.column });
+					var selectField = CurrentObject.fields((f) => { return f.columnName == data.column; })[0];
 
-    				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-    				// if (!column || column.length < 1) {
-    				// 	console.log('System could not found this column data');
-    				// 	return false;
-    				// } else
-    				// 	column = column[0];
+					if (selectField == null) return true;
 
-    				// return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
+					var cellNode = this.getItemNode({ row: data.row, column: data.column }),
+						rowData = this.getItem(data.row);
+
+					return selectField.customEdit(rowData, App, cellNode);
+
     			},
     			onAfterSelect: function (data, prevent) {
     				_logic.onAfterSelect(data, prevent);
