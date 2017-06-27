@@ -59,7 +59,7 @@ export default {
                         "isMultiLingual": "0",
                         "languageCode": "en"
                     }
-                ]
+                ],
                 "hiddenFields": [
                     "Noun"
                 ]
