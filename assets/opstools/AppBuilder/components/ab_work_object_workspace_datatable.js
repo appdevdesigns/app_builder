@@ -574,6 +574,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				} else {
                         DataTable.define('leftSplit', 0);                        
                     }
+                    // we are going to always freeze the delete column so it is easy to get to
+                    DataTable.define('rightSplit', 1);                        
                     DataTable.refreshColumns()
 
 
