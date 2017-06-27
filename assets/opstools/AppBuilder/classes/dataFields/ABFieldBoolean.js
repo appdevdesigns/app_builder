@@ -187,6 +187,21 @@ class ABFieldBoolean extends ABField {
 	}
 
 
+	/**
+	 * @method defaultValue
+	 * insert a key=>value pair that represent the default value
+	 * for this field.
+	 * @param {obj} values a key=>value hash of the current values.
+	 */
+	defaultValue(values) {
+
+		if (values[this.columnName] == null) {
+
+			values[this.columnName] = this.settings.default;
+
+		}
+	}
+
 
 	/**
 	 * @method isValidData

@@ -286,6 +286,12 @@ module.exports = {
             return moment(date).format('YYYY-MM-DD HH:mm:ss');
         },
 
+        /**
+         * AppBuilder.rules.SQLDateTimeRegExp
+         * 
+         * property is a regular expression to validate SQL DateTime format
+         */
+        SQLDateTimeRegExp: '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$',
 
         /**
          * AppBuilder.rules.toFieldRelationFormat
