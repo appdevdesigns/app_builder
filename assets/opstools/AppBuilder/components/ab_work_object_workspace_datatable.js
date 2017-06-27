@@ -175,17 +175,29 @@ console.error('!! ToDo: onAfterColumnHide()');
     		// NOTE: register the onAfterRender() here, so it only registers
     		// one.
     		var DataTable = $$(ids.component);
-    		var throttleOnAfterRender = null;
+    		var throttleCustomDisplay = null;
     		DataTable.attachEvent("onAfterRender", function(data){
 
-    			if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
-    			throttleOnAfterRender = setTimeout(()=>{
+    			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+    			throttleCustomDisplay = setTimeout(()=>{
     				if (CurrentObject) {
     					CurrentObject.customDisplays(data, App, DataTable);
     				}
     			}, 150);
 
     		});
+            
+            // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
+            DataTable.attachEvent("onAfterScroll", function(data){
+
+                if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+                throttleCustomDisplay = setTimeout(()=>{
+                    if (CurrentObject) {
+                        CurrentObject.customDisplays(data, App, DataTable);
+                    }
+                }, 150);
+
+            });
 
 
     		// Process our onItemClick events. 
@@ -575,7 +587,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         DataTable.define('leftSplit', 0);                        
                     }
                     // we are going to always freeze the delete column so it is easy to get to
-                    DataTable.define('rightSplit', 1);                        
+                    // DataTable.define('rightSplit', 1);                        
                     DataTable.refreshColumns()
 
 
