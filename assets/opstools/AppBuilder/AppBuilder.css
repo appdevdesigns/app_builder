@@ -580,7 +580,7 @@ div.webix_item_tab {
 /* Webix badge */
 .webix_badge {
 	line-height: 22px;
-	text-indent: -1px;
+	background-color: #666;
 }
 
 /* Webix split columns */

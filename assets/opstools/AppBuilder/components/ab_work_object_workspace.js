@@ -373,6 +373,26 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			switch(action) {
 
     				case 'hide':
+                        var newFields = [];
+                        var isHidden = CurrentObject.workspaceHiddenFields.filter((fID) => { return fID == field.columnName;}).length>0;
+                        if (isHidden) {
+                            // get remaining fields
+                            newFields = CurrentObject.workspaceHiddenFields.filter((fID)=>{ return fID != field.columnName;});
+                        } else {
+                            newFields = CurrentObject.workspaceHiddenFields;
+                            newFields.push(field.columnName);
+                        }
+
+                        // update our Object with current hidden fields
+                        CurrentObject.workspaceHiddenFields = newFields;
+                        CurrentObject.save()
+                        .then(function(){
+                            _logic.callbackFieldsVisible();
+                        })
+                        .catch(function(err){
+                            OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
+                        })
+                        break;
     				case 'filter':
     				case 'sort':
 console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+action);

@@ -33,7 +33,7 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
         var menuItems = {
             // Normally all items are available
             'default': [
-                { command: labels.component.hideField, icon: "fa-columns" },
+                { command: labels.component.hideField, icon: "fa-eye-slash" },
                 { command: labels.component.filterField, icon: "fa-filter" },
                 { command: labels.component.sortField, icon: "fa-sort" },
                 { command: labels.component.editField, icon: "fa-pencil-square-o" },
@@ -41,7 +41,7 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
             ],
             // But for imported objects, edit & delete are disabled
             'imported': [
-                { command: labels.component.hideField, icon: "fa-columns" },
+                { command: labels.component.hideField, icon: "fa-eye-slash" },
                 { command: labels.component.filterField, icon: "fa-filter" },
                 { command: labels.component.sortField, icon: "fa-sort" },
                 //{ command: labels.editField, icon: "fa-pencil-square-o" },
