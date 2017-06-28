@@ -171,7 +171,7 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
              * Show this component.
              * @param {obj} $view  the webix.$view to hover the popup around.
              */
-            show:function($view) {
+            show:function($view, columnName) {
                 $$(ids.component).show($view);
             }
         };

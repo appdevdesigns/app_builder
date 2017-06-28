@@ -395,6 +395,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         break;
     				case 'filter':
     				case 'sort':
+                        _logic.toolbarSort($$(ids.buttonSort).$view, field.columnName);
     					break;
                     case 'freeze':
                         CurrentObject.workspaceFrozenColumnID = field.columnName;
@@ -603,8 +604,8 @@ console.error('TODO: toolbarPermission()');
     		 *
     		 * show the popup to sort the datatable
     		 */
-    		toolbarSort:function($view) {
-    			PopupSortFieldComponent.show($view);
+    		toolbarSort:function($view, columnName) {
+    			PopupSortFieldComponent.show($view, columnName);
                     // self.refreshPopupData();
                     // $$(self.webixUiId.sortFieldsPopup).show($view);
                     //console.error('TODO: toolbarSort()');
