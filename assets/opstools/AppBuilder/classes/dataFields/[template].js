@@ -15,9 +15,9 @@ function L(key, altText) {
 
 
 var ABField[template]Defaults = {
-	name : '[template]', // unique key to reference this specific DataField
-	type : '[template]', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	icon : 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+	key: '[template]', // unique key to reference this specific DataField
+	type: '[template]', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 	
 	// menuName: what gets displayed in the Editor drop list
 	menuName : L('ab.dataField.[template].menuName', '*Single line text'),
