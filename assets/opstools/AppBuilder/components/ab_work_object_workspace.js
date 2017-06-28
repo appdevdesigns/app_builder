@@ -395,9 +395,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         break;
     				case 'filter':
     				case 'sort':
-console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+action);
     					break;
-
+                    case 'freeze':
+                        CurrentObject.workspaceFrozenColumnID = field.columnName;
+                        CurrentObject.save()
+                        .then(function(){
+                            _logic.callbackFrozenColumns();
+                        })
+                        .catch(function(err){
+                            OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:field.columnName });
+                        });
+    					break;
     				case 'edit':
     					// pass control on to our Popup:
     					PopupNewDataFieldComponent.show(node, field);
