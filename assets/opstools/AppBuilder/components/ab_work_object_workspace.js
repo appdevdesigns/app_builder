@@ -239,8 +239,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		// webix.extend($$(ids.form), webix.ProgressBar);
 
     		DataTable.init({
-    			onEditorMenu:_logic.callbackHeaderEditorMenu
-    		});
+    			onEditorMenu:_logic.callbackHeaderEditorMenu,
+                onColumnOrderChange:_logic.callbackColumnOrderChange
+            });
 
     		PopupDefineLabelComponent.init({
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
@@ -350,6 +351,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			_logic.callbackFrozenColumns();
     		},
 
+
+            /**
+    		 * @function callbackColumnOrderChange
+    		 *
+    		 */
+    		callbackColumnOrderChange: function(object) {
+                _logic.getBadgeHiddenFields();
+                _logic.getBadgeFrozenColumn();
+            },
+            
 
     		/**
     		 * @function callbackHeaderEditorMenu

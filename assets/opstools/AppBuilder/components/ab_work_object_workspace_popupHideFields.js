@@ -313,7 +313,7 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                         columnName: f.columnName
                     })
                 })
-
+                $$(ids.list).clearAll();
                 $$(ids.list).parse(allFields);
             },
 

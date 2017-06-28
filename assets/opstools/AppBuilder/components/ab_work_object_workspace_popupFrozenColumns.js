@@ -204,9 +204,9 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 					}
 
 					if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
-						node.style.display = "none";
+						node.style.opacity = 0.4;
 					} else {
-						node.style.display = "";
+						node.style.opacity = 1;
 					}
 
 					// next item
@@ -235,9 +235,10 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 						label: f.label,
 						$css:"hidden_fields_"+f.id
 					})
-				})
-
+				});
+				$$(ids.list).clearAll();
 				$$(ids.list).parse(listFields);
+				
 			},
 
 			/**

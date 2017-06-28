@@ -309,6 +309,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 					if (sorts.length == 0) {
 						_logic.clickAddNewSort();
 					}
+				} else {
+					// _logic.refreshFieldList();
 				}
 			},
 
