@@ -239,8 +239,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		// webix.extend($$(ids.form), webix.ProgressBar);
 
     		DataTable.init({
-    			onEditorMenu:_logic.callbackHeaderEditorMenu
-    		});
+    			onEditorMenu:_logic.callbackHeaderEditorMenu,
+                onColumnOrderChange:_logic.callbackColumnOrderChange
+            });
 
     		PopupDefineLabelComponent.init({
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
@@ -351,6 +352,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		},
 
 
+            /**
+    		 * @function callbackColumnOrderChange
+    		 *
+    		 */
+    		callbackColumnOrderChange: function(object) {
+                _logic.getBadgeHiddenFields();
+                _logic.getBadgeFrozenColumn();
+            },
+            
+
     		/**
     		 * @function callbackHeaderEditorMenu
     		 *
@@ -362,11 +373,40 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			switch(action) {
 
     				case 'hide':
+                        var newFields = [];
+                        var isHidden = CurrentObject.workspaceHiddenFields.filter((fID) => { return fID == field.columnName;}).length>0;
+                        if (isHidden) {
+                            // get remaining fields
+                            newFields = CurrentObject.workspaceHiddenFields.filter((fID)=>{ return fID != field.columnName;});
+                        } else {
+                            newFields = CurrentObject.workspaceHiddenFields;
+                            newFields.push(field.columnName);
+                        }
+
+                        // update our Object with current hidden fields
+                        CurrentObject.workspaceHiddenFields = newFields;
+                        CurrentObject.save()
+                        .then(function(){
+                            _logic.callbackFieldsVisible();
+                        })
+                        .catch(function(err){
+                            OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
+                        })
+                        break;
     				case 'filter':
     				case 'sort':
-console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+action);
+                        _logic.toolbarSort($$(ids.buttonSort).$view, field.columnName);
     					break;
-
+                    case 'freeze':
+                        CurrentObject.workspaceFrozenColumnID = field.columnName;
+                        CurrentObject.save()
+                        .then(function(){
+                            _logic.callbackFrozenColumns();
+                        })
+                        .catch(function(err){
+                            OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:field.columnName });
+                        });
+    					break;
     				case 'edit':
     					// pass control on to our Popup:
     					PopupNewDataFieldComponent.show(node, field);
@@ -564,8 +604,8 @@ console.error('TODO: toolbarPermission()');
     		 *
     		 * show the popup to sort the datatable
     		 */
-    		toolbarSort:function($view) {
-    			PopupSortFieldComponent.show($view);
+    		toolbarSort:function($view, columnName) {
+    			PopupSortFieldComponent.show($view, columnName);
                     // self.refreshPopupData();
                     // $$(self.webixUiId.sortFieldsPopup).show($view);
                     //console.error('TODO: toolbarSort()');

@@ -175,25 +175,41 @@ console.error('!! ToDo: onAfterColumnHide()');
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
     		DataTable.attachEvent("onAfterRender", function(data){
-
     			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
     			throttleCustomDisplay = setTimeout(()=>{
     				if (CurrentObject) {
-    					CurrentObject.customDisplays(data, App, DataTable);
+    					CurrentObject.customDisplays(this, App, DataTable);
+                        if (scrollStarted) clearTimeout(scrollStarted);
     				}
-    			}, 150);
+    			}, 350);
 
     		});
+
+            // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
+            var scrollStarted = null;
+            DataTable.attachEvent("onScrollY", function(){
+                if (scrollStarted) clearTimeout(scrollStarted);
+                if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+    			scrollStarted = setTimeout(()=>{
+                    if (CurrentObject) {
+    					CurrentObject.customDisplays(this, App, DataTable);
+    				}
+    			}, 1500);
+            });
+
             
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
-            DataTable.attachEvent("onAfterScroll", function(data){
-
+            var yPos = 0;
+            DataTable.attachEvent("onAfterScroll", function(){
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
                 throttleCustomDisplay = setTimeout(()=>{
-                    if (CurrentObject) {
-                        CurrentObject.customDisplays(data, App, DataTable);
+                    var scrollState = this.getScrollState();
+                    if (CurrentObject && yPos != scrollState.y) {
+                        yPos = scrollState.y;
+                        CurrentObject.customDisplays(this, App, DataTable);
+                        if (scrollStarted) clearTimeout(scrollStarted);
                     }
-                }, 150);
+                }, 350);
 
             });
 
@@ -273,7 +289,10 @@ console.error('!! ToDo: onAfterColumnHide()');
     			 * @param {ABField} field  the field to which the action is to be applied
     			 * @param {dom} node  the optional html node for this header item.
     			 */
-    			onEditorMenu: function(action, field) {  }
+    			onEditorMenu: function(action, field) {  },
+                
+                
+                onColumnOrderChange:function(object){}
     		},
 
 
@@ -336,8 +355,17 @@ console.error('!! ToDo: onAfterColumnHide()');
             onAfterColumnDrop: function (sourceId, targetId, event) {
                 CurrentObject.fieldReorder(sourceId, targetId)
                 .then(()=>{
-
-
+                    _logic.callbacks.onColumnOrderChange(CurrentObject);
+                    // freeze columns:
+                    var DataTable = $$(ids.component);
+                    if (CurrentObject.workspaceFrozenColumnID != "") {
+                        DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+                    } else {
+                        DataTable.define('leftSplit', 0);                        
+                    }
+                    // we are going to always freeze the delete column so it is easy to get to
+                    DataTable.define('rightSplit', 1);                        
+                    DataTable.refreshColumns()
                 })
                 .catch((err)=>{
 
@@ -585,7 +613,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                         DataTable.define('leftSplit', 0);                        
                     }
                     // we are going to always freeze the delete column so it is easy to get to
-                    // DataTable.define('rightSplit', 1);                        
+                    DataTable.define('rightSplit', 1);                        
                     DataTable.refreshColumns()
 
 

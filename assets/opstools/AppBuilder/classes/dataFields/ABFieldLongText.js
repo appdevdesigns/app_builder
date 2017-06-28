@@ -1,7 +1,7 @@
 /*
- * ABField[template]
+ * ABFieldLongText
  *
- * An ABField[template] defines a [template] field type.
+ * An ABFieldLongText defines a LongText field type.
  *
  */
 
@@ -14,32 +14,30 @@ function L(key, altText) {
 
 
 
-var ABField[template]Defaults = {
-	key: '[template]', // unique key to reference this specific DataField
-	type: '[template]', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
-	icon: 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+var ABFieldLongTextDefaults = {
+	key: 'LongText', // unique key to reference this specific DataField
+	type: 'longtext', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 	
 	// menuName: what gets displayed in the Editor drop list
-	menuName : L('ab.dataField.[template].menuName', '*Single line text'),
+	menuName: L('ab.dataField.LongText.menuName', '*Multiple line text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.[template].description', '*short [template] value')
+	description: L('ab.dataField.LongText.description', '*short LongText value')
 }
 
 
 
 // defaultValues: the keys must match a .name of your elements to set it's default value.
 var defaultValues = {
-	// 'useWidth':0,
-	// 'imageWidth':'',
-	// 'useHeight': 0,
-	// 'imageHeight': ''
+    'textDefault': '',
+    'supportMultilingual': 0
 }
 
 
 
 /**
- * ABField[template]Component
+ * ABFieldLongTextComponent
  *
  * Defines the UI Component for this Data Field.  The ui component is responsible
  * for displaying the properties editor, populating existing data, retrieving
@@ -48,11 +46,11 @@ var defaultValues = {
  * @param {obj} App  the current Component Application instance for the current UI.
  * @return {obj} the Component object.
  */
-var ABField[template]Component = new ABFieldComponent({
+var ABFieldLongTextComponent = new ABFieldComponent({
 
-	fieldDefaults: ABField[template]Defaults,
+	fieldDefaults: ABFieldLongTextDefaults,
 
-	elements:(App, field) => {
+	elements: (App, field) => {
 
 		// NOTE: you might not need to define your own ids, but if you do, do it like this:
 		// var ids = {
@@ -62,28 +60,28 @@ var ABField[template]Component = new ABFieldComponent({
 		// ids = field.idsUnique(ids, App);
 
 		return [
-			// {
-			// 	view: "text",
-			// 	name:'textDefault',
-			// 	labelWidth: App.config.labelWidthLarge,
-			// 	placeholder: L('ab.dataField.string.default', '*Default text')
-			// },
-			// {
-			// 	view: "checkbox",
-			// 	name:'supportMultilingual',
-			// 	labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
-			// 	labelWidth: App.config.labelWidthCheckbox,
-			// 	value: true
-			// }
+			{
+			   view: "text",
+			   name: 'textDefault',
+			   labelWidth: App.config.labelWidthLarge,
+			   placeholder: L('ab.dataField.string.default', '*Default text')
+			},
+			{
+			   view: "checkbox",
+			   name: 'supportMultilingual',
+			   labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
+			   labelWidth: App.config.labelWidthCheckbox,
+			   value: true
+			}
 		]
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues:defaultValues,
+	defaultValues: defaultValues,
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
-	rules:{
+	rules: {
 		// 'textDefault':webix.rules.isNotEmpty,
 		// 'supportMultilingual':webix.rules.isNotEmpty
 	},
@@ -112,7 +110,7 @@ var ABField[template]Component = new ABFieldComponent({
 	// 		.populate(ids, values) : populate the form with your current settings
 	// 		.show(ids)   : display the form in the editor
 	// 		.values(ids, values) : return the current values from the form
-	logic:{
+	logic: {
 
 	},
 
@@ -120,7 +118,7 @@ var ABField[template]Component = new ABFieldComponent({
 	// @param {obj} ids  the hash of id values for all the current form elements.
 	//					 it should have your elements + the default Header elements:
 	//						.label, .columnName, .fieldDescription, .showIcon
-	init:function(ids) {
+	init: function(ids) {
 		// want to hide the description? :
 		// $$(ids.fieldDescription).hide();
 	}
@@ -131,10 +129,10 @@ var ABField[template]Component = new ABFieldComponent({
 
 
 
-class ABField[template] extends ABField {
+class ABFieldLongText extends ABField {
 
     constructor(values, object) {
-    	super(values, object, ABField[template]Defaults);
+    	super(values, object, ABFieldLongTextDefaults);
 
     	/*
     	{
@@ -151,14 +149,14 @@ class ABField[template] extends ABField {
     	}
 
     	// // text to Int:
-    	// this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+    	this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
 
   	}
 
 
   	// return the default values for this DataField
   	static defaults() {
-  		return ABField[template]Defaults;
+  		return ABFieldLongTextDefaults;
   	}
 
 
@@ -172,7 +170,7 @@ class ABField[template] extends ABField {
 	 * @return {Component}
 	 */
   	static propertiesComponent(App) {
-  		return ABField[template]Component.component(App);
+  		return ABFieldLongTextComponent.component(App);
   	}
 
 
@@ -219,7 +217,7 @@ class ABField[template] extends ABField {
 	/// Working with Actual Object Values:
 	///
 
-	// return the grid column header definition for this instance of ABField[template]
+	// return the grid column header definition for this instance of ABFieldLongText
 	columnHeader (isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
@@ -250,4 +248,4 @@ class ABField[template] extends ABField {
 // }
 
 
-export default ABField[template];
+export default ABFieldLongText;

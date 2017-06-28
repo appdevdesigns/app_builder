@@ -425,10 +425,14 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
              *
              * Show this component.
              * @param {obj} $view  the webix.$view to hover the popup around.
+			 * @param {string} columnName the columnName we want to prefill the sort with
              */
-            show:function($view) {
+            show:function($view, columnName) {
                 $$(ids.component).show($view);
-            }
+				if (columnName) {
+					_logic.clickAddNewSort(columnName);
+				}
+			}
 
 
 		}
