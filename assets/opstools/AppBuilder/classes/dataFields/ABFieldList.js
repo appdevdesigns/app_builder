@@ -207,7 +207,7 @@ var ABFieldListComponent = new ABFieldComponent({
 					value: '[No Default]'
 				}
 			]);
-			$$(ids.singleDefault).setValue('none');
+			$$(ids.singleDefault).setValue(defaultValues.singleDefault);
 
 			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
 			if (domNode && domNode.selectivity) {

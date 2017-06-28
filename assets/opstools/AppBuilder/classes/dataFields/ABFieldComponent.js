@@ -358,9 +358,19 @@ export default class ABFieldComponent {
 				return;
 			}
 
+			if (e.body && e.body.cols) {
+				this.eachDeep(e.body.cols, fn);
+				return;
+			}
+
 			// or rows
 			if (e.rows) {
 				this.eachDeep(e.rows, fn);
+				return;
+			}
+
+			if (e.body && e.body.rows) {
+				this.eachDeep(e.body.rows, fn);
 				return;
 			}
 

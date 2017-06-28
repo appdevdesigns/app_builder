@@ -686,17 +686,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 
 		// }
 
-		// populate: function (ids, values) {
-		// 	if (values.settings.validation) {
-		// 		$$(ids.validateMinimum).enable();
-		// 		$$(ids.validateMaximum).enable();
-		// 	} else {
-		// 		$$(ids.validateMinimum).disable();
-		// 		$$(ids.validateMaximum).disable();
-		// 	}
+		// populate: (ids, values) => {
 		// }
 
-		show: function (ids) {
+		show: (ids) => {
 			refreshDateDisplay();
 		}
 
