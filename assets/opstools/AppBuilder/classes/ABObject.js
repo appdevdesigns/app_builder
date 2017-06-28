@@ -309,6 +309,8 @@ export default class ABObject extends ABObjectBase {
 	customDisplays(data, App, DataTable) {
 		var fields = this.fields();
 
+		if (!data || !data.getFirstId) return;
+
 		var id = data.getFirstId();
 		while(id) {
 			var row = data.getItem(id);
