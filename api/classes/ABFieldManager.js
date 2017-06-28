@@ -7,6 +7,7 @@
 var path = require('path');
 
 var ABFieldString = require( path.join(__dirname, "dataFields", "ABFieldString" ));
+var ABFieldLongText = require( path.join(__dirname, "dataFields", "ABFieldLongText" ));
 var ABFieldNumber = require( path.join(__dirname, "dataFields", "ABFieldNumber" ));
 var ABFieldDate = require( path.join(__dirname, "dataFields", "ABFieldDate" ));
 var ABFieldBoolean = require( path.join(__dirname, "dataFields", "ABFieldBoolean" ));
@@ -21,6 +22,7 @@ var ABFieldConnect = require( path.join(__dirname, "dataFields", "ABFieldConnect
  */
 var Fields = {};
 Fields[ABFieldString.defaults().key] = ABFieldString;
+Fields[ABFieldLongText.defaults().key] = ABFieldLongText;
 Fields[ABFieldNumber.defaults().key] = ABFieldNumber;
 Fields[ABFieldDate.defaults().key] = ABFieldDate;
 Fields[ABFieldBoolean.defaults().key] = ABFieldBoolean;
