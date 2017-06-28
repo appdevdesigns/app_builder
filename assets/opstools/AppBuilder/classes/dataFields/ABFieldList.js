@@ -39,8 +39,12 @@ var ids = {
 	options: 'ab-list-option'
 };
 
+// TODO : use to render selectivity to set default values
+var selectivityRender = new ABFieldSelectivity({
+	settings: {}
+}, {}, {});
 
-function updateDefaultList() {
+function updateDefaultList(ids, settings = {}) {
 	var optList = $$(ids.options).find({}).map(function (opt) {
 		return {
 			id: opt.id,
@@ -49,19 +53,18 @@ function updateDefaultList() {
 	});
 
 	// Multiple default selector
-	if (ABFieldListComponent.currentField) {
-		var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
-		ABFieldListComponent.currentField.selectivityRender(domNode, {
-			multiple: true,
-			placeholder: '[Select]',
-			items: optList.map(function (opt) {
-				return {
-					id: opt.id,
-					text: opt.value
-				}
-			})
-		});
-	}
+	var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+	selectivityRender.selectivityRender(domNode, {
+		multiple: true,
+		data: settings.multipleDefault,
+		placeholder: '[Select]',
+		items: optList.map(function (opt) {
+			return {
+				id: opt.id,
+				text: opt.value
+			}
+		})
+	});
 
 	// Single default selector
 	optList.unshift({
@@ -104,7 +107,7 @@ var ABFieldListComponent = new ABFieldComponent({
 							$$(ids.multipleDefault).hide();
 						}
 
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					}
 				}
 			},
@@ -127,13 +130,13 @@ var ABFieldListComponent = new ABFieldComponent({
 				},
 				on: {
 					onAfterAdd: () => {
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					},
 					onAfterEditStop: () => {
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					},
 					onAfterDelete: () => {
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					}
 				}
 			},
@@ -167,7 +170,12 @@ var ABFieldListComponent = new ABFieldComponent({
 				hidden: true,
 				template:
 				'<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">Default</label>' +
-				'<div class="list-data-values"></div>'
+				'<div class="list-data-values"></div>',
+				on: {
+					onAfterRender: () => {
+						updateDefaultList(ids, field.settings);
+					}
+				}
 			}
 		];
 	},
@@ -201,9 +209,7 @@ var ABFieldListComponent = new ABFieldComponent({
 			$$(ids.options).refresh();
 
 			// update single/multiple default selector
-			ABFieldListComponent.currentField = field;
-			updateDefaultList(ids);
-
+			updateDefaultList(ids, field.settings);
 		},
 
 		values: (ids, values) => {
@@ -217,12 +223,9 @@ var ABFieldListComponent = new ABFieldComponent({
 			});
 
 			// Set multiple default value
-			if (values.settings.isMultiple == true) {
-				var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
-				values.settings.multipleDefault = [];
-				// values.settings.multipleDefault = domNode.selectivity.getData() || [];
-			}
-
+			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+			values.settings.multipleDefault = domNode.selectivity.getData() || [];
+console.log('List values: ', values);
 			return values;
 		}
 

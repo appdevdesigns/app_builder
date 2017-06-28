@@ -137,45 +137,42 @@ class ABFieldList extends ABField {
 				knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 
-						// create one if it doesn't exist:
-						if (!exists) {
+						return knex.schema.table(tableName, (t) => {
 
-							return knex.schema.table(tableName, (t) => {
+							var currCol;
 
-								// multiple select list
-								if (this.settings.isMultiple == true) {
-									var newCol = t.json(this.columnName).nullable();
+							// multiple select list
+							if (this.settings.isMultiple == true) {
+								currCol = t.json(this.columnName).nullable();
 
-									// Set default to single select
-									if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
-										newCol.defaultTo(this.settings.multipleDefault);
-									}
+								// Set default to single select
+								if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
+									// TODO
+									// currCol.defaultTo(JSON.stringify(this.settings.multipleDefault));
 								}
-								// single select list
-								else {
-									var optIds = this.settings.options.map(function (opt) {
-										return opt.id;
-									});
+							}
+							// single select list
+							else {
+								var optIds = this.settings.options.map(function (opt) {
+									return opt.id;
+								});
 
-									var newCol = t.enum(this.columnName, optIds).nullable();
+								currCol = t.enum(this.columnName, optIds).nullable();
 
-									// Set default to single select
-									if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
-										newCol.defaultTo(this.settings.singleDefault);
-									}
+								// Set default to single select
+								if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
+									currCol.defaultTo(this.settings.singleDefault);
 								}
+							}
 
-							})
-								.then(() => {
-									resolve();
-								})
-								.catch(reject);
+							// create one if it doesn't exist:
+							if (exists) {
+								currCol.alter();
+							}
 
-						} else {
-
-							// there is already a column for this, so move along.
-							resolve();
-						}
+						})
+							.then(() => { resolve(); })
+							.catch(reject);
 					});
 
 			}
