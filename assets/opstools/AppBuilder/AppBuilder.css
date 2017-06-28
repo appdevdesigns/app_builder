@@ -566,3 +566,10 @@ div.webix_item_tab {
 	line-height: 22px;
 	text-indent: -1px;
 }
+
+/* Webix split columns */
+.webix_ss_left, .webix_ss_right, .webix_hs_left, .webix_hs_right {
+	box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 30px;
+	position: relative;
+	z-index: 200;
+}
