@@ -141,7 +141,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                         {
                             // Add / Or
                             view: "combo", 
-                            // value: filters.combineCondtion, 
+                            // value: filters.combineCondition, 
                             options: [
                                 {
                                     value: labels.component.and,
@@ -391,18 +391,30 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 }, viewIndex);
                 
                 if (filters) {
-                    var fieldsCombo = filter_form.getChildViews()[viewIndex].getChildViews()[0];
-                    $$(fieldsCombo).setValue(filters.combineCondtion);
-                    var fieldName = filter_form.getChildViews()[viewIndex].getChildViews()[1];
-                    $$(fieldName).setValue(filters.fieldName);
-                    var operator = filter_form.getChildViews()[viewIndex].getChildViews()[2];
-                    $$(operator).setValue(filters.operator);
-                    var inputValue = filter_form.getChildViews()[viewIndex].getChildViews()[3];
-                    $$(inputValue).setValue(filters.inputValue);
-                    var isMultiLingualCheckbox = filter_form.getChildViews()[viewIndex].getChildViews()[5];
-                    $$(isMultiLingualCheckbox).setValue(filters.isMultiLingual);
-                    var languageInput = filter_form.getChildViews()[viewIndex].getChildViews()[6];
-                    $$(languageInput).setValue(filters.languageCode);
+                    if (typeof filters.combineCondition != "undefined") {
+                        var fieldsCombo = filter_form.getChildViews()[viewIndex].getChildViews()[0];
+                        $$(fieldsCombo).setValue(filters.combineCondition);
+                    }
+                    if (typeof filters.fieldName != "undefined") {
+                        var fieldName = filter_form.getChildViews()[viewIndex].getChildViews()[1];
+                        $$(fieldName).setValue(filters.fieldName);
+                    }
+                    if (typeof filters.operator != "undefined") {
+                        var operator = filter_form.getChildViews()[viewIndex].getChildViews()[2];
+                        $$(operator).setValue(filters.operator);
+                    }
+                    if (typeof filters.inputValue != "undefined") {
+                        var inputValue = filter_form.getChildViews()[viewIndex].getChildViews()[3];
+                        $$(inputValue).setValue(filters.inputValue);
+                    }
+                    if (typeof filters.isMultiLingual != "undefined") {
+                        var isMultiLingualCheckbox = filter_form.getChildViews()[viewIndex].getChildViews()[5];
+                        $$(isMultiLingualCheckbox).setValue(filters.isMultiLingual);
+                    }
+                    if (typeof filters.languageCode != "undefined") {
+                        var languageInput = filter_form.getChildViews()[viewIndex].getChildViews()[6];
+                        $$(languageInput).setValue(filters.languageCode);
+                    }
                 }
 
                 // if (id) {
@@ -463,7 +475,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                         var condValue = view.getChildViews()[3] && view.getChildViews()[3].getValue ? view.getChildViews()[3].getValue() : ''; // Support none conditon control
                         if (view.getChildViews()[1].getValue() && view.getChildViews()[2].getValue()) {
                             filterConditions.push({
-                                combineCondtion: view.getChildViews()[0].getValue(),
+                                combineCondition: view.getChildViews()[0].getValue(),
                                 fieldName: view.getChildViews()[1].getValue(),
                                 operator: view.getChildViews()[2].getValue(),
                                 inputValue: condValue,
@@ -552,30 +564,12 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                     filters = CurrentObject.workspaceFilterConditions;
 
                 if (filters.length > 0 && filterform.getChildViews().length < 2) {
-                    var filters = CurrentObject.workspaceFilterConditions;
-                    if (filters.length > 0) {
-                        filters.forEach((f) => {
-                            _logic.clickAddNewFilter(f);
-                        });
-                    }                
+                    filters.forEach((f) => {
+                        _logic.clickAddNewFilter(f);
+                    });
                 } else if (filterform.getChildViews().length < 2) {
                     _logic.clickAddNewFilter();
                 }
-
-                
-
-                // refresh list
-                // var allFields = CurrentObject.fields();
-                // var listFields = [];
-                // allFields.forEach((f) => {
-                //     listFields.push({
-                //         id: f.id,
-                //         label: f.label,
-                //         columnName: f.columnName
-                //     })
-                // })
-                // 
-                // $$(ids.list).parse(allFields);
             },
 
             /**
@@ -583,8 +577,24 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
              *
              * Show this component.
              */
-            show:function($view) {
+            show:function($view, columnName) {
                 $$(ids.component).show($view);
+
+                if (columnName) {
+                    var filters = {
+                        combineCondition: "And",
+                        fieldName: columnName
+                    };
+
+                    var fieldName = $$(ids.filterform).getChildViews()[0].getChildViews()[1];
+                    if ($$(fieldName).getValue() == "") {
+                        var fieldsCombo = $$(ids.filterform).getChildViews()[0].getChildViews()[0];
+                        $$(fieldsCombo).setValue(filters.combineCondition);
+                        $$(fieldName).setValue(filters.fieldName);
+                    } else {
+                        _logic.clickAddNewFilter(filters);
+                    }
+                }
             }
         };
         

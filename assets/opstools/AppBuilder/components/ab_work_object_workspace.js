@@ -394,6 +394,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                         })
                         break;
     				case 'filter':
+                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.columnName);
+                        break;
     				case 'sort':
                         _logic.toolbarSort($$(ids.buttonSort).$view, field.columnName);
     					break;
@@ -579,8 +581,8 @@ console.error('TODO: Button Export()');
     		 *
     		 * show the popup to add a filter to the datatable
     		 */
-    		toolbarFilter: function($view) {
-                PopupFilterDataTableComponent.show($view);
+    		toolbarFilter: function($view, columnName) {
+                PopupFilterDataTableComponent.show($view, columnName);
     		},
 
 
