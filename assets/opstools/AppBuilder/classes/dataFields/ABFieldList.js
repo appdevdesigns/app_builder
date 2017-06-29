@@ -33,7 +33,7 @@ var defaultValues = {
 };
 
 var ids = {
-	multiSelectOption: 'ab-list-multiple-option',
+	isMultiple: 'ab-list-multiple-option',
 	singleDefault: 'ab-list-single-default',
 	multipleDefault: 'ab-list-multiple-default',
 	options: 'ab-list-option'
@@ -72,7 +72,13 @@ function updateDefaultList(ids, settings = {}) {
 		value: '[No Default]'
 	});
 	$$(ids.singleDefault).define('options', optList);
-	$$(ids.singleDefault).setValue('none');
+
+	if (settings.singleDefault)
+		$$(ids.singleDefault).setValue(settings.singleDefault);
+	else
+		$$(ids.singleDefault).setValue('none');
+
+	$$(ids.singleDefault).refresh();
 }
 
 /**
@@ -92,8 +98,8 @@ var ABFieldListComponent = new ABFieldComponent({
 			{
 				view: "checkbox",
 				name: "isMultiple",
-				id: ids.multiSelectOption,
-				labelRight: L('ab.dataField.list.multiSelectOption', 'Multiselect'),
+				id: ids.isMultiple,
+				labelRight: L('ab.dataField.list.isMultiple', 'Multiselect'),
 				labelWidth: 0,
 				value: false,
 				on: {
@@ -170,12 +176,7 @@ var ABFieldListComponent = new ABFieldComponent({
 				hidden: true,
 				template:
 				'<label style="width: 80px;text-align: left;line-height:32px;" class="webix_inp_label">Default</label>' +
-				'<div class="list-data-values"></div>',
-				on: {
-					onAfterRender: () => {
-						updateDefaultList(ids, field.settings);
-					}
-				}
+				'<div class="list-data-values"></div>'
 			}
 		];
 	},
@@ -196,6 +197,24 @@ var ABFieldListComponent = new ABFieldComponent({
 
 		// }
 
+		clear: (ids) => {
+			$$(ids.isMultiple).setValue(0);
+			$$(ids.options).clearAll();
+
+			$$(ids.singleDefault).define('options', [
+				{
+					id: 'none',
+					value: '[No Default]'
+				}
+			]);
+			$$(ids.singleDefault).setValue(defaultValues.singleDefault);
+
+			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+			if (domNode && domNode.selectivity) {
+				domNode.selectivity.setData([]);
+			}
+		},
+
 		populate: (ids, field) => {
 
 			// set options to webix list
@@ -209,7 +228,9 @@ var ABFieldListComponent = new ABFieldComponent({
 			$$(ids.options).refresh();
 
 			// update single/multiple default selector
-			updateDefaultList(ids, field.settings);
+			setTimeout(() => {
+				updateDefaultList(ids, field.settings);
+			}, 10);
 		},
 
 		values: (ids, values) => {
@@ -223,9 +244,12 @@ var ABFieldListComponent = new ABFieldComponent({
 			});
 
 			// Set multiple default value
+			values.settings.multipleDefault = [];
 			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
-			values.settings.multipleDefault = domNode.selectivity.getData() || [];
-console.log('List values: ', values);
+			if (domNode && domNode.selectivity) {
+				values.settings.multipleDefault = domNode.selectivity.getData() || [];
+			}
+
 			return values;
 		}
 

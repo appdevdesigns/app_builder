@@ -145,11 +145,13 @@ class ABFieldList extends ABField {
 							if (this.settings.isMultiple == true) {
 								currCol = t.json(this.columnName).nullable();
 
-								// Set default to single select
-								if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
-									// TODO
-									// currCol.defaultTo(JSON.stringify(this.settings.multipleDefault));
-								}
+								// TODO: Set default to multiple select
+								// MySQL - BLOB and TEXT columns cannot have DEFAULT values.
+								// Error Code: 1101. BLOB, TEXT, GEOMETRY or JSON column 'Type' can't have a default value
+
+								// if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
+								// 	currCol.defaultTo(JSON.stringify(this.settings.multipleDefault));
+								// }
 							}
 							// single select list
 							else {

@@ -175,7 +175,13 @@ var ABFieldConnectComponent = new ABFieldComponent({
 		},
 
 
-		isValid: function (ids, isValid) {
+		clear: (ids) => {
+			$$(ids.objectList).unselectAll();
+			$$(ids.linkType).setValue(defaultValues.linkType);
+			$$(ids.linkViaType).setValue(defaultValues.linkViaType);
+		},
+
+		isValid: (ids, isValid) => {
 
 			// validate require select linked object 
 			var selectedObjId = $$(ids.objectList).getSelectedId();
