@@ -7,6 +7,7 @@
 var path = require('path');
 var ABField = require(path.join(__dirname, "ABField.js"));
 var _ = require('lodash');
+var async = require('async');
 
 
 
@@ -123,57 +124,66 @@ class ABFieldString extends ABField {
 	 * @function migrateCreate
 	 * perform the necessary sql actions to ADD this column to the DB table.
 	 * @param {knex} knex the Knex connection.
+	 * @return {Promise}
 	 */
 	migrateCreate (knex) {
-		return new Promise(
-			(resolve, reject) => {
-
-				var tableName = this.object.dbTableName();
-
-				// if this is a multilingual field, then manage a json translation store:
-				if (this.settings.supportMultilingual) {
-
-					// make sure there is a 'translations' json field included:
-					knex.schema.hasColumn(tableName, 'translations')
-					.then((exists) => {
-
-						// create one if it doesn't exist:
-						if (!exists) {
-
-							knex.schema.table(tableName, (t)=>{
+		return new Promise((resolve, reject) => {
+				
+			var tableName = this.object.dbTableName();
+			
+			async.series([
+				
+				// if this is a multilingual field, then manage a json 
+				// translation store:
+				(next) => {
+					if (this.settings.supportMultilingual) {
+						// make sure there is a 'translations' json field 
+						// included:
+						knex.schema.hasColumn(tableName, 'translations')
+						.then((exists) => {
+							// create one if it doesn't exist:
+							if (!exists) {
+								knex.schema.table(tableName, (t)=>{
 									t.json('translations');
 								})
-								.then(resolve, reject);
-
-						} else {
-
-							// there is already a translations holder, so all good.
-							resolve();
-						}
-					})
-					
-				} else {
-
+								.then(() => {
+									next();
+								})
+								.catch(next);
+							} 
+							else next();
+						})
+						.catch(next);
+					}
+					else next();
+				},
+				
+				// create/alter the actual column
+				(next) => {
 					knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
-
 						knex.schema.table(tableName, (t) => {
-							var currCol = t.string(this.columnName).defaultTo(this.settings.textDefault);
+							var currCol = t.string(this.columnName)
+							.defaultTo(this.settings.textDefault);
 
 							// alter default value of column
 							if (exists)
 								currCol.alter();
 						})
-							.then(resolve, reject);
-
-
+						.then(() => {
+							next();
+						})
+						.catch(next);
 					})
-					
+					.catch(next);
 				}
-
-			}
-		)
-
+				
+			], (err) => {
+				if (err) reject(err);
+				else resolve();
+			});
+			
+		});
 	}
 
 

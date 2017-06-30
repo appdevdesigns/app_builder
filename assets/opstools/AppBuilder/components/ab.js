@@ -14,6 +14,7 @@ import AB_Choose from './ab_choose'
 import AB_Work from './ab_work'
 
 // Import our Custom Components here:
+import ActiveList from '../webix_custom_components/activelist'
 import EditTree from '../webix_custom_components/edittree'
 import EditList from '../webix_custom_components/editlist'
 import DateTimePicker from '../webix_custom_components/datetimepicker'
@@ -73,6 +74,7 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 
 
 		// make instances of our Custom Components:
+		new ActiveList(App, 'activelist');	// ->  App.custom.activelist  now exists
 		new EditList(App, 'editlist');	// ->  App.custom.editlist  now exists
 		new EditTree(App, 'edittree');	// ->  App.custom.edittree  now exists
 		new DateTimePicker(App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
