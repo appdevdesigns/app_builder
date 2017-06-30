@@ -158,7 +158,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 					.then(function(obj){
 
 						// successfully done:
-						cb();									// tell current tab component save successful
+						cb(null, obj);									// tell current tab component save successful
 						_logic.hide();							// hide our popup
 						_logic.callbacks.onDone(null, obj);		// tell parent component we're done
 					})

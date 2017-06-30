@@ -300,7 +300,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 				}
 
 				// create new object
-				var newObj = {
+				var newObjAttr = {
 					name: $$(ids.form).getValues()['name'],
 					fields: []
 				};
@@ -310,49 +310,58 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					if (item.include) {
 
 						var newField = {
+							id:  OP.Util.uuid(),
 							columnName: item.columnName,
 							label: item.columnName,
 							key: item.dataType,
 							settings: {
-								showIcon: 1
+								showIcon: 1,
+								weight: index
 							}
 						};
 
-						newObj.fields.push(newField);
+						switch (item.dataType) {
+							case 'string':
+							case 'text':
+								newField.settings.supportMultilingual = 0;
+								break;
+						}
+
+						newObjAttr.fields.push(newField);
 					}
 				});
 
 				// now send data back to be added:
-				_logic.callbacks.onSave(newObj, (validator) => {
+				_logic.callbacks.onSave(newObjAttr, (validator, newObj) => {
 
 					if (validator) {
-						validator.updateForm(Form);
+						validator.updateForm($$(ids.form));
 
 						// get notified if there was an error saving.
 						saveButton.enable();
 						return false;
 					}
 
-					// TODO: add rows to Server
-					// setTimeout(() => {
+					// add rows to Server
+					var objModel = newObj.model();
 
-					// 	dataRows.forEach((data, index) => {
-					// 		if ($$(ids.headerOnFirstLine).getValue() && index == 0) return;
+					dataRows
+						.filter((row) => row && row.length > 0)
+						.forEach((data, index) => {
+							if ($$(ids.headerOnFirstLine).getValue() && index == 0) return;
 
-					// 		var rowData = {};
-					// 		var colValues = data.split(getSeparatedBy());
-					// 		columnResults.forEach((col) => {
-					// 			if (colValues[col.weight] != null)
-					// 				rowData[col.name] = reformat(colValues[col.weight]);
-					// 		})
+							var rowData = {};
+							var colValues = data.split(getSeparatedBy());
 
-					// 		// TODO: Add row data
-					// 		// $(instance).trigger('addNewRow', { newRow: rowData });
+							newObj.fields().forEach((col) => {
+								if (colValues[col.settings.weight] != null)
+									rowData[col.columnName] = reformat(colValues[col.settings.weight]);
+							})
 
-					// 	});
+							// Add row data
+							objModel.create(rowData);
 
-					// 	next();
-					// }, 1500);
+						});
 
 
 					// if there was no error, clear the form for the next
