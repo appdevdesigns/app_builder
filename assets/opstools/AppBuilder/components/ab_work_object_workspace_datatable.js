@@ -100,27 +100,18 @@ console.error('!! ToDo: onBeforeEditStop()');
     			// 	_logic.onAfterLoad();
     			// },
     			onColumnResize: function (columnName, newWidth, oldWidth, user_action) {
-console.error('!! ToDo: onColumnResize()');
                     _logic.onColumnResize(columnName, newWidth, oldWidth, user_action);
-    				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
-    				// var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
-    				// if (column && column[0])
-    				// 	column[0].setWidth(newWidth);
-
-    				// // if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
-    				// // 	// For calculate/refresh row height
-    				// // 	$$(self.webixUiId.objectDatatable).render();
-    				// // }
+    			},
+                onRowResize: function (rowId) {
+                    _logic.onRowResize(rowId);
     			},
     			onBeforeColumnDrag: function (sourceId, event) {
-console.error('!! ToDo: onBeforeColumnDrag()');
     				if (sourceId === 'appbuilder_trash') // Remove column
     					return false;
     				else
     					return true;
     			},
     			onBeforeColumnDrop: function (sourceId, targetId, event) {
-console.error('!! ToDo: onBeforeColumnDrag()');
     				if (targetId === 'appbuilder_trash') // Remove column
     					return false;
 
@@ -135,7 +126,6 @@ console.error('!! ToDo: onBeforeColumnDrag()');
     				// }
     			},
     			onAfterColumnDrop: function (sourceId, targetId, event) {
-console.error('!! ToDo: onAfterColumnDrop()');
                     _logic.onAfterColumnDrop(sourceId, targetId, event);
     			},
     			onAfterColumnShow: function (id) {
@@ -331,7 +321,18 @@ console.error('!! ToDo: onAfterColumnHide()');
 
     			return DataTable.getColumnIndex(id);
     		},
-
+            
+            /**
+            * @function getDefaultRowHeight
+            *
+            * return the default row height based off of the fieldList information this can be overwritten by a individuals row height
+            */
+            getDefaultRowHeight: function() {
+                console.log("");
+                console.log("lets do some magic");
+                console.log(CurrentObject);
+                return 25;
+            },
 
     		/**
     		 * @function getColumnConfig
@@ -407,7 +408,6 @@ console.error('!! ToDo: onAfterColumnHide()');
 //// Question: do we submit full item updates?  or just patches?
 var patch = {};
 patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
-
     					CurrentObject.model()
     					.update(item.id, item)
 // .update(item.id, patch)
@@ -539,8 +539,40 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 })
                 .catch((err)=>{
 
-                    OP.Error.log('Error saving new column order:', {error:err});
+                    OP.Error.log('Error saving new column size:', {error:err});
 
+                });
+            },
+
+
+            /**
+             * @function onRowResize
+             * This is when a user adjusts the size of a row
+             * @param {} rowId 
+             * @param {int} newHeight
+             * @param {int} oldHeight
+             * @param {} user_action
+             * @return
+             */
+            onRowResize: function(rowId) {
+                var DataTable = $$(ids.component);
+                
+                var item = DataTable.getItem(rowId);
+                var height = item.$height;
+                
+                var properties = item.properties || {};
+                properties.height = height;
+                
+                item.properties = properties;
+
+                CurrentObject.model()
+                .update(item.id, item)
+                .then(()=>{
+                })
+                .catch((err)=>{
+                
+                    OP.Error.log('Error saving item:', {error:err});
+                
                 });
             },
 

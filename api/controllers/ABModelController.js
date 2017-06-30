@@ -429,6 +429,13 @@ console.log('... catch(err) !');
                 // this is an update operation, so ... 
                 // updateParams.updated_at = (new Date()).toISOString();
                 updateParams.updated_at = AppBuilder.rules.toSQLDateTime(new Date());
+                
+                // Check if there are any properties set otherwise let it be...let it be...let it be...yeah let it be
+                if (allParams.properties != "") {
+                    updateParams.properties = allParams.properties;
+                } else {
+                    updateParams.properties = null;
+                }
 
                 sails.log.verbose('ABModelController.update(): updateParams:', updateParams);
 
