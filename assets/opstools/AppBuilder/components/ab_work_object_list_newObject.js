@@ -16,6 +16,7 @@
  */
 
 import ABBlankObject from "./ab_work_object_list_newObject_blank"
+import ABCsvObject from "./ab_work_object_list_newObject_csv"
 
 
 
@@ -40,6 +41,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 
 
 		var BlankTab = new ABBlankObject(App);
+		var CsvTab = new ABCsvObject(App);
 
 
 		// Our webix UI definition:
@@ -56,7 +58,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 				cells: [
 					BlankTab.ui,
 					// importObjectCreator.getCreateView(),
-					// importCsvCreator.getCreateView()
+					CsvTab.ui
 				]
 			}
 		};
@@ -79,6 +81,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			}
 
 			BlankTab.init(ourCBs);
+			CsvTab.init(ourCBs);
 
 		}
 
