@@ -7,6 +7,7 @@
 
 import ABView from "./views/ABView"
 import ABViewPage from "./views/ABViewPage"
+import ABViewLabel from "./views/ABViewLabel"
 
 /* 
  * Views
@@ -15,6 +16,7 @@ import ABViewPage from "./views/ABViewPage"
 var Views = {};
 Views[ABView.common().key] = ABView;
 Views[ABViewPage.common().key] = ABViewPage;
+Views[ABViewLabel.common().key] = ABViewLabel;
 
 
 

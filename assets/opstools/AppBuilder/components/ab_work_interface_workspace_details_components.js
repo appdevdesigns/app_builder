@@ -91,7 +91,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             onBeforeDrag: function(context, ev) {
 
                 var component = $$(ids.list).getItem(context.source);
-                var label = component.common().label;
+                var label = component.common().labelKey;
                 label = L(label, label);
 
                 context.html = "<div class='ab-component-item-drag'>"
@@ -116,7 +116,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
              * compile the template for each item in the list.
              */
             template:function(obj, common) {
-                var label = obj.common().label
+                var label = obj.common().labelKey
                 label = L(label, label);
 
                 return "<i class='fa fa-#icon#' aria-hidden='true'></i> #name#"
