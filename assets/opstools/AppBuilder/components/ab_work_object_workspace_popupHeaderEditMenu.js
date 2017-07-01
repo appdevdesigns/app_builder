@@ -19,6 +19,7 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
                 hideField: L('ab.object.hideField', "*Hide field"),
                 filterField: L('ab.object.filterField', "*Filter field"),
                 sortField: L('ab.object.sortField', "*Sort field"),
+                freezeField: L('ab.object.freezeField', "*Freeze field"),
                 editField: L('ab.object.editField', "*Edit field"),
                 deleteField: L('ab.object.deleteField', "*Delete field")
             }
@@ -33,17 +34,19 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
         var menuItems = {
             // Normally all items are available
             'default': [
-                { command: labels.component.hideField, icon: "fa-columns" },
+                { command: labels.component.hideField, icon: "fa-eye-slash" },
                 { command: labels.component.filterField, icon: "fa-filter" },
                 { command: labels.component.sortField, icon: "fa-sort" },
+                { command: labels.component.freezeField, icon: "fa-thumb-tack" },
                 { command: labels.component.editField, icon: "fa-pencil-square-o" },
                 { command: labels.component.deleteField, icon: "fa-trash" }
             ],
             // But for imported objects, edit & delete are disabled
             'imported': [
-                { command: labels.component.hideField, icon: "fa-columns" },
+                { command: labels.component.hideField, icon: "fa-eye-slash" },
                 { command: labels.component.filterField, icon: "fa-filter" },
                 { command: labels.component.sortField, icon: "fa-sort" },
+                { command: labels.component.freezeField, icon: "fa-thumb-tack" },
                 //{ command: labels.editField, icon: "fa-pencil-square-o" },
             ]
         };
@@ -148,6 +151,9 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
                     case labels.component.sortField:
                         action = 'sort';
                         break;
+                    case labels.component.freezeField:
+                        action = 'freeze';
+                        break;
                     case labels.component.editField:
                         action = 'edit';
                         break;
@@ -165,7 +171,7 @@ export default class ABWorkObjectPopupHeaderEditMenu extends OP.Component {
              * Show this component.
              * @param {obj} $view  the webix.$view to hover the popup around.
              */
-            show:function($view) {
+            show:function($view, columnName) {
                 $$(ids.component).show($view);
             }
         };

@@ -111,7 +111,8 @@ export default class ABField extends ABFieldBase {
   			oldVal = oldVal || '';
 
 			if (newVal != oldVal &&
-				oldVal == $$(ids.columnName).getValue()) {
+				oldVal == $$(ids.columnName).getValue() &&
+				$$(ids.columnName).isEnabled()) {
 				$$(ids.columnName).setValue(newVal);
 			}
 		}
@@ -147,6 +148,7 @@ export default class ABField extends ABFieldBase {
 					view: "text",
 					id: ids.columnName,
 					name:'columnName',
+					disallowEdit: true,
 					label: App.labels.dataFieldColumnName, // 'Name',
 					labelWidth: App.config.labelWidthMedium,
 					placeholder: App.labels.dataFieldColumnNamePlaceholder, // 'Column name',
@@ -395,6 +397,20 @@ export default class ABField extends ABFieldBase {
 		
 	}
 
+
+	/*
+	 * @function customEdit
+	 * 
+	 * 
+	 * 
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customEdit(row, App, node) {
+		return true;
+	}
 
 
 	/**

@@ -65,7 +65,8 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                         id: ids.list,
                         autoheight: true,
                         select: false,
-                        template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
+                        // template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
+                        template: '<span style="min-width: 18px; display: inline-block;"><i class="fa ab-visible-field-icon"></i>&nbsp;</span> #label#',
                         on: {
                             onItemClick: function (id, e, node) {
                                 _logic.clickListItem(id, e, node);
@@ -211,7 +212,7 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
             iconFreezeOff: function(node) {
                 if (node) {
                     node.querySelector('.ab-visible-field-icon').classList.remove("fa-thumb-tack");
-                    node.querySelector('.ab-visible-field-icon').classList.add("fa-circle");
+                    // node.querySelector('.ab-visible-field-icon').classList.add("fa-circle");
                 }
             },
 
@@ -222,7 +223,7 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
              */
             iconFreezeOn: function(node) {
                 if (node) {
-                    node.querySelector('.ab-visible-field-icon').classList.remove("fa-circle");
+                    // node.querySelector('.ab-visible-field-icon').classList.remove("fa-circle");
                     node.querySelector('.ab-visible-field-icon').classList.add("fa-thumb-tack");
                 }
             },
@@ -235,7 +236,10 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
              */
             iconHide: function(node) {
                 if (node) {
-                    node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
+                    // node.querySelector('.ab-visible-field-icon').style.visibility = "hidden";
+                    // node.querySelector('.ab-visible-field-icon').classList.remove("fa-circle");
+                    node.querySelector('.ab-visible-field-icon').classList.add("fa-eye-slash");
+                    node.style.opacity = 0.4;
                 }
             },
 
@@ -247,7 +251,10 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
              */
             iconShow: function(node) {
                 if (node) {
-                    node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
+                    // node.querySelector('.ab-visible-field-icon').style.visibility = "visible";
+                    node.querySelector('.ab-visible-field-icon').classList.remove("fa-eye-slash");
+                    // node.querySelector('.ab-visible-field-icon').classList.add("fa-circle");
+                    node.style.opacity = 1;
                 }
             },
 
@@ -272,14 +279,13 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                         _logic.iconFreezeOn(node);
                     } else {
                         _logic.iconFreezeOff(node);
-                    }
-
-                    // if this item is not hidden, show it.
-                    if (CurrentObject.workspaceHiddenFields.indexOf(item.columnName) == -1) {
-                        _logic.iconShow(node);
-                    } else {
-                        // else hide it
-                        _logic.iconHide(node);
+                        // if this item is not hidden, show it.
+                        if (CurrentObject.workspaceHiddenFields.indexOf(item.columnName) == -1) {
+                            _logic.iconShow(node);
+                        } else {
+                            // else hide it
+                            _logic.iconHide(node);
+                        }
                     }
 
                     // next item
@@ -313,7 +319,7 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                         columnName: f.columnName
                     })
                 })
-
+                $$(ids.list).clearAll();
                 $$(ids.list).parse(allFields);
             },
 

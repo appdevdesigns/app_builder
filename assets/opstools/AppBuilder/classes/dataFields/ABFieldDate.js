@@ -98,7 +98,6 @@ var delimiterList = [
 	{ id: 'colon', value: "Colon", sign: ":" },
 ];
 
-
 /** Private methods **/
 function getDelimiterSign(text) {
 	var delimiterItem = delimiterList.filter(function (item) {
@@ -138,6 +137,12 @@ function getDateFormat(setting) {
 	}
 
 	return dateFormat;
+}
+
+function getDateDisplay(dateData, settings) {
+	var dateFormat = getDateFormat(settings);
+
+	return webix.Date.dateToStr(dateFormat)(dateData);
 }
 
 function refreshDateDisplay() {
@@ -182,6 +187,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				view: "checkbox",
 				name: "includeTime",
 				id: ids.includeTime,
+				disallowEdit: true,
 				labelRight: "Include time",
 				labelWidth: 0,
 				on: {
@@ -685,17 +691,10 @@ var ABFieldDateComponent = new ABFieldComponent({
 
 		// }
 
-		// populate: function (ids, values) {
-		// 	if (values.settings.validation) {
-		// 		$$(ids.validateMinimum).enable();
-		// 		$$(ids.validateMaximum).enable();
-		// 	} else {
-		// 		$$(ids.validateMinimum).disable();
-		// 		$$(ids.validateMaximum).disable();
-		// 	}
+		// populate: (ids, values) => {
 		// }
 
-		show: function (ids) {
+		show: (ids) => {
 			refreshDateDisplay();
 		}
 
@@ -814,9 +813,7 @@ class ABFieldDate extends ABField {
 			// convert ISO string -> Date() -> our formatted string
 
 			// pull format from settings.
-			var dateFormat = getDateFormat(this.settings);
-
-			return webix.Date.dateToStr(dateFormat)(new Date(d));
+			return getDateDisplay(new Date(d), this.settings);
 		};
 
 
@@ -887,8 +884,10 @@ class ABFieldDate extends ABField {
 
 				// Custom vaildate is here
 				if (this.settings && this.settings.validateCondition) {
-					var startDate = this.settings.validateStartDate ? new Date(this.settings.validateStartDate) : null;
-					var endDate = this.settings.validateEndDate ? new Date(this.settings.validateEndDate) : null;
+					var startDate = this.settings.validateStartDate ? new Date(this.settings.validateStartDate) : null,
+						endDate = this.settings.validateEndDate ? new Date(this.settings.validateEndDate) : null,
+						startDateDisplay = getDateDisplay(startDate, this.settings),
+						endDateDisplay = getDateDisplay(endDate, this.settings);
 
 					switch (this.settings.validateCondition) {
 						case 'dateRange':
@@ -899,51 +898,85 @@ class ABFieldDate extends ABField {
 								isValid = true;
 							else {
 								isValid = false;
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.dateRange', '*Should be in between {startdate} and {enddate}')
+										.replace('{startdate}', getDateDisplay(minDate, this.settings))
+										.replace('{enddate}', getDateDisplay(maxDate, this.settings))
+								);
 							}
 
 							break;
 						case 'between':
-						case 'notBetween':
-							if (this.settings.validateCondition == 'between' && startDate < value && value < endDate)
-								isValid = true;
-							else if (this.settings.validateCondition == 'notBetween' && value < startDate && endDate < value)
+							if (startDate < value && value < endDate)
 								isValid = true;
 							else {
 								isValid = false;
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.between', '*Should be in between {startdate} and {enddate}')
+										.replace('{startdate}', startDateDisplay)
+										.replace('{enddate}', endDateDisplay)
+								);
 							}
-
+							break;
+						case 'notBetween':
+							if (value < startDate && endDate < value)
+								isValid = true;
+							else {
+								isValid = false;
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.notBetween', '*Should not be in between {startdate} and {enddate}')
+										.replace('{startdate}', startDateDisplay)
+										.replace('{enddate}', endDateDisplay)
+								);
+							}
 							break;
 						case '=':
 							isValid = (value.getTime() == startDate.getTime());
 							if (!isValid)
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.equal', '*Should equal {startdate}')
+										.replace('{startdate}', startDateDisplay)
+								);
 							break;
 						case '<>':
 							isValid = (value.getTime() != startDate.getTime());
 							if (!isValid)
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.notEqual', '*Should not equal {startdate}')
+										.replace('{startdate}', startDateDisplay)
+								);
 							break;
 						case '>':
 							isValid = (value.getTime() > startDate.getTime());
 							if (!isValid)
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.after', '*Should after {startdate}')
+										.replace('{startdate}', startDateDisplay)
+								);
 							break;
 						case '<':
 							isValid = (value.getTime() < startDate.getTime());
 							if (!isValid)
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.before', '*Should before {startdate}')
+										.replace('{startdate}', startDateDisplay)
+								);
 							break;
 						case '>=':
 							isValid = (value.getTime() >= startDate.getTime());
 							if (!isValid)
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.afterOrEqual', '*Should after or equal {startdate}')
+										.replace('{startdate}', startDateDisplay)
+								);
 							break;
 						case '<=':
 							isValid = (value.getTime() <= startDate.getTime());
 							if (!isValid)
-								validator.addError(this.columnName, 'Should be a Date!');
+								validator.addError(this.columnName,
+									L('ab.dataField.date.error.beforeOrEqual', '*Should before or equal {startdate}')
+										.replace('{startdate}', startDateDisplay)
+								);
 							break;
 					}
 				}

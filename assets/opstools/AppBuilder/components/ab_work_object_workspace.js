@@ -9,6 +9,7 @@
 import ABApplication from "../classes/ABApplication"
 import ABWorkspaceDatatable from "./ab_work_object_workspace_datatable"
 import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
+import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
 import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
 import ABPopupHideFields from "./ab_work_object_workspace_popupHideFields"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
@@ -75,6 +76,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         // Various Popups on our page:
         var PopupDefineLabelComponent = new ABPopupDefineLabel(App);
 
+        var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App);
+
         var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App);
 
         var PopupHideFieldComponent = new ABPopupHideFields(App);
@@ -136,7 +139,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								autowidth: true,
     								badge: 0,
     								click: function () {
-    									_logic.toolbarFilter(this);
+    									_logic.toolbarFilter(this.$view);
     								}
     							},
     							{
@@ -236,11 +239,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		// webix.extend($$(ids.form), webix.ProgressBar);
 
     		DataTable.init({
-    			onEditorMenu:_logic.callbackHeaderEditorMenu
-    		});
+    			onEditorMenu:_logic.callbackHeaderEditorMenu,
+                onColumnOrderChange:_logic.callbackColumnOrderChange
+            });
 
     		PopupDefineLabelComponent.init({
     			onChange:_logic.callbackDefineLabel		// be notified when there is a change in the label
+    		});
+
+            PopupFilterDataTableComponent.init({
+    			onChange:_logic.callbackFilterDataTable		// be notified when there is a change in the filters
     		});
 
     		PopupFrozenColumnsComponent.init({
@@ -308,23 +316,28 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		},
 
+            /**
+    		 * @function callbackFilterDataTable
+    		 *
+    		 * call back for when the Define Label popup is finished.
+    		 */
+    		callbackFilterDataTable: function() {
+                // Since we are making server side requests lets offload the badge count to another function so it can be called independently
+                _logic.getBadgeFilters();
+                // this will be handled by the server side request now
+                DataTable.refresh();
+    		},
+
     		/**
     		 * @function callbackFrozenColumns
     		 *
     		 * call back for when the hidden fields have changed.
     		 */
     		callbackFrozenColumns: function() {
+                // We need to load data first because there isn't anything to look at if we don't
+                DataTable.refresh();
 
-    			var frozenID = CurrentObject.workspaceFrozenColumnID;
-
-    			if (typeof(frozenID) != "undefined") {
-    				var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
-
-    				$$(ids.buttonFrozen).define('badge', badgeNumber);
-    				$$(ids.buttonFrozen).refresh();
-    			}
-
-    			DataTable.refresh();
+                _logic.getBadgeFrozenColumn();
     		},
 
     		/**
@@ -333,20 +346,21 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the hidden fields have changed.
     		 */
     		callbackFieldsVisible: function() {
-
-    			var hiddenFields = CurrentObject.workspaceHiddenFields;
-
-    			if (typeof(hiddenFields) != "undefined") {
-    				$$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
-    				$$(ids.buttonFieldsVisible).refresh();
-
-    			}
-    			DataTable.refresh();
-
+                _logic.getBadgeHiddenFields();
     			// if you unhide a field it may fall inside the frozen columns range so lets check
     			_logic.callbackFrozenColumns();
     		},
 
+
+            /**
+    		 * @function callbackColumnOrderChange
+    		 *
+    		 */
+    		callbackColumnOrderChange: function(object) {
+                _logic.getBadgeHiddenFields();
+                _logic.getBadgeFrozenColumn();
+            },
+            
 
     		/**
     		 * @function callbackHeaderEditorMenu
@@ -359,11 +373,42 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			switch(action) {
 
     				case 'hide':
-    				case 'filter':
-    				case 'sort':
-console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+action);
-    					break;
+                        var newFields = [];
+                        var isHidden = CurrentObject.workspaceHiddenFields.filter((fID) => { return fID == field.columnName;}).length>0;
+                        if (isHidden) {
+                            // get remaining fields
+                            newFields = CurrentObject.workspaceHiddenFields.filter((fID)=>{ return fID != field.columnName;});
+                        } else {
+                            newFields = CurrentObject.workspaceHiddenFields;
+                            newFields.push(field.columnName);
+                        }
 
+                        // update our Object with current hidden fields
+                        CurrentObject.workspaceHiddenFields = newFields;
+                        CurrentObject.save()
+                        .then(function(){
+                            _logic.callbackFieldsVisible();
+                        })
+                        .catch(function(err){
+                            OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
+                        })
+                        break;
+    				case 'filter':
+                        _logic.toolbarFilter($$(ids.buttonFilter).$view, field.columnName);
+                        break;
+    				case 'sort':
+                        _logic.toolbarSort($$(ids.buttonSort).$view, field.columnName);
+    					break;
+                    case 'freeze':
+                        CurrentObject.workspaceFrozenColumnID = field.columnName;
+                        CurrentObject.save()
+                        .then(function(){
+                            _logic.callbackFrozenColumns();
+                        })
+                        .catch(function(err){
+                            OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:field.columnName });
+                        });
+    					break;
     				case 'edit':
     					// pass control on to our Popup:
     					PopupNewDataFieldComponent.show(node, field);
@@ -409,17 +454,67 @@ console.error('!! TODO: callbackHeaderEditorMenu():  unimplemented action:'+acti
     		 * call back for when the sort fields popup changes
     		 */
     		callbackSortFields: function() {
+                _logic.getBadgeSortFields();
+                DataTable.refresh();
+    		},
+            
+            /**
+    		 * @function getBadgeFilters
+    		 *
+    		 * we need to set the badge count for filters on load and after filters are added or removed
+    		 */            
+            getBadgeFilters: function() {
+                var filterConditions = CurrentObject.workspaceFilterConditions;
 
-    			var sortFields = CurrentObject.workspaceSortFields;
+                if (typeof(filterConditions) != "undefined") {
+                    $$(ids.buttonFilter).define('badge', filterConditions.length);
+                    $$(ids.buttonFilter).refresh();
+                }
+            },
+            
+            /**
+    		 * @function getBadgeFrozenColumn
+    		 *
+    		 * we need to set the badge count for frozen columns on load and after changed are added or removed
+    		 */                        
+            getBadgeFrozenColumn: function() {
+                var frozenID = CurrentObject.workspaceFrozenColumnID;
+
+                if (typeof(frozenID) != "undefined") {
+                    var badgeNumber = DataTable.getColumnIndex(frozenID) + 1;
+
+                    $$(ids.buttonFrozen).define('badge', badgeNumber);
+                    $$(ids.buttonFrozen).refresh();
+                }
+            },
+            
+            /**
+    		 * @function getBadgeHiddenFields
+    		 *
+    		 * we need to set the badge count for hidden fields on load and after fields are hidden or shown
+    		 */                        
+            getBadgeHiddenFields: function() {
+                var hiddenFields = CurrentObject.workspaceHiddenFields;
+
+                if (typeof(hiddenFields) != "undefined") {
+                    $$(ids.buttonFieldsVisible).define('badge', hiddenFields.length);
+                    $$(ids.buttonFieldsVisible).refresh();
+                }
+            },
+            
+            /**
+    		 * @function getBadgeSortFields
+    		 *
+    		 * we need to set the badge count for sorts on load and after sorts are added or removed
+    		 */                        
+            getBadgeSortFields: function() {
+                var sortFields = CurrentObject.workspaceSortFields;
 
     			if (typeof(sortFields) != "undefined") {
     				$$(ids.buttonSort).define('badge', sortFields.length);
     				$$(ids.buttonSort).refresh();
     			}
-
-    			DataTable.sortTable();
-    		},
-
+            },
 
 
     		/**
@@ -471,7 +566,6 @@ console.error('TODO: Button Export()');
     			PopupDefineLabelComponent.show($view);
     		},
 
-
     		/**
     		 * @function toolbarFieldsVisible
     		 *
@@ -487,10 +581,8 @@ console.error('TODO: Button Export()');
     		 *
     		 * show the popup to add a filter to the datatable
     		 */
-    		toolbarFilter: function($view) {
-// self.refreshPopupData();
-// $$(self.webixUiId.filterFieldsPopup).show($view);
-console.error('TODO: button filterFields()');
+    		toolbarFilter: function($view, columnName) {
+                PopupFilterDataTableComponent.show($view, columnName);
     		},
 
 
@@ -514,8 +606,8 @@ console.error('TODO: toolbarPermission()');
     		 *
     		 * show the popup to sort the datatable
     		 */
-    		toolbarSort:function($view) {
-    			PopupSortFieldComponent.show($view);
+    		toolbarSort:function($view, columnName) {
+    			PopupSortFieldComponent.show($view, columnName);
                     // self.refreshPopupData();
                     // $$(self.webixUiId.sortFieldsPopup).show($view);
                     //console.error('TODO: toolbarSort()');
@@ -561,17 +653,18 @@ console.error('TODO: toolbarPermission()');
 
     			DataTable.objectLoad(object);
 
-    			// update hiddenFields
-
     			PopupDefineLabelComponent.objectLoad(object);
+                PopupFilterDataTableComponent.objectLoad(object);
     			PopupFrozenColumnsComponent.objectLoad(object);
     			PopupHideFieldComponent.objectLoad(object);
     			PopupSortFieldComponent.objectLoad(object);
 
-    			_logic.callbackFieldsVisible();
-    			_logic.callbackFrozenColumns();
-    			_logic.callbackSortFields();
-
+    			// We can hide fields now that data is loaded
+                _logic.callbackFieldsVisible();
+                
+                // get badge counts for server side components
+                _logic.getBadgeSortFields();
+                _logic.getBadgeFilters();
     		}
 
 

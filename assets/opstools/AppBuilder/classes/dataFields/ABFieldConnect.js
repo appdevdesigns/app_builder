@@ -69,21 +69,26 @@ var ABFieldConnectComponent = new ABFieldComponent({
 			{
 				view: "list",
 				id: ids.objectList,
+				disallowEdit: true,
 				name: 'objectList',
 				select: true,
 				height: 140,
 				template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
 					onAfterSelect: function () {
-						var selectedObjLabel = this.getSelectedItem(false).label;
-						$$(ids.fieldLinkVia).setValue(selectedObjLabel);
-						$$(ids.fieldLinkVia2).setValue(selectedObjLabel);
+						var selectedObj = this.getSelectedItem(false);
+						if (selectedObj) {
+							var selectedObjLabel = selectedObj.label;
+							$$(ids.fieldLinkVia).setValue(selectedObjLabel);
+							$$(ids.fieldLinkVia2).setValue(selectedObjLabel);
+						}
 					}
 				}
 			},
 			{
 				view: 'button',
 				id: ids.objectCreateNew,
+				disallowEdit: true,
 				value: L('ab.dataField.connectObject.connectToNewObject', '*Connect to new Object'),
 				click: function () {
 					if (this.getTopParentView().createNewObjectEvent)
@@ -100,6 +105,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 					},
 					{
 						id: ids.linkType,
+						disallowEdit: true,
 						name: "linkType",
 						view: "segmented",
 						width: 165,
@@ -129,6 +135,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 					{
 						id: ids.linkViaType,
 						name: "linkViaType",
+						disallowEdit: true,
 						view: "segmented",
 						width: 165,
 						inputWidth: 160,
@@ -168,7 +175,13 @@ var ABFieldConnectComponent = new ABFieldComponent({
 		},
 
 
-		isValid: function (ids, isValid) {
+		clear: (ids) => {
+			$$(ids.objectList).unselectAll();
+			$$(ids.linkType).setValue(defaultValues.linkType);
+			$$(ids.linkViaType).setValue(defaultValues.linkViaType);
+		},
+
+		isValid: (ids, isValid) => {
 
 			// validate require select linked object 
 			var selectedObjId = $$(ids.objectList).getSelectedId();
@@ -195,8 +208,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 		populate: (ids, values) => {
 			// select linked object in list
-			if (values.settings.linkObject)
+			if (values.settings.linkObject) {
 				$$(ids.objectList).select(values.settings.linkObject);
+				$$(ids.objectList).refresh();
+			}
 		},
 
 		values: (ids, values) => {
@@ -285,15 +300,28 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		// render selectivity when link type is many
-		if (this.settings.linkType == 'many') {
+		if (this.settings.linkType == 'many' ||
+			// render selectivity with single value when 1:1 relation
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
+
 			config.template = '<div class="connect-data-values"></div>';
 		}
 		// Single select list
 		else {
-			var dcOptions = this.cacheDcOptions();
+			var dcOptions = new webix.DataCollection();
 
 			config.editor = 'richselect';
 			config.collection = dcOptions;
+
+			dcOptions.clearAll();
+			this.getOptions().then((options) => {
+				dcOptions.parse(options.map((opt) => {
+					return {
+						id: opt.id,
+						value: opt.text
+					}
+				}));
+			});
 		}
 
 		return config;
@@ -313,30 +341,42 @@ class ABFieldConnect extends ABFieldSelectivity {
 		if (!node) { return }
 
 		// render selectivity when link type is many
-		if (this.settings.linkType == 'many') {
+		if (this.settings.linkType == 'many' ||
+			// render selectivity with single value when 1:1 relation
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
 
 			// Get linked object
 			var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
 
 			var domNode = node.querySelector('.connect-data-values');
 
+			var multiselect = (this.settings.linkType == 'many');
+
 			// get selected values
 			var selectedData = [];
 			var relationName = this.relationName();
-			if (row[relationName] && row[relationName].map) {
+			if (row[relationName] != null) {
 
-				selectedData = row[relationName].map(function (d) {
-					// display label in format
-					d.text = d.text || linkedObject.displayData(d);
+				// if this select value is array
+				if (row[relationName].map) {
 
-					return d;
-				});
+					selectedData = row[relationName].map(function (d) {
+						// display label in format
+						d.text = d.text || linkedObject.displayData(d);
 
+						return d;
+					});
+
+				}
+				else {
+					selectedData = row[relationName];
+					selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
+				}
 			}
 
 			// Render selectivity
 			this.selectivityRender(domNode, {
-				multiple: true,
+				multiple: multiselect,
 				data: selectedData,
 				ajax: {
 					url: 'It will call url in .getOptions function', // require
@@ -373,7 +413,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 						values[this.relationName()] = values[this.columnName];
 
 						// update new value to item of DataTable .updateItem
-						$$(node).updateItem(row.id, values);
+						if ($$(node) && $$(node).updateItem)
+							$$(node).updateItem(row.id, values);
 					})
 					.catch((err) => {
 
@@ -386,6 +427,29 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			}, false);
 
+		}
+
+	}
+
+
+	/*
+	 * @function customEdit
+	 * 
+	 * @param {object} row is the {name=>value} hash of the current row of data.
+	 * @param {App} App the shared ui App object useful more making globally
+	 *					unique id references.
+	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	 */
+	customEdit(row, App, node) {
+
+		// render selectivity when link type is many
+		if (this.settings.linkType == 'many' ||
+			// render selectivity with single value when 1:1 relation
+			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
+			return false;
+		}
+		else {
+			return true;
 		}
 
 	}
@@ -411,32 +475,11 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * @return {array} 
 	 */
 	isValidData(data, validator) {
-
-		// refresh options when M:1 or 1:1 value is updated
-		// because thier values should not be choosen duplicate
-		if (this.settings.linkViaType == 'one')
-			this.cacheDcOptions();
 	}
 
 
 	relationName() {
 		return String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';
-	}
-
-	cacheDcOptions() {
-		var dcOptions = new webix.DataCollection();
-
-		dcOptions.clearAll();
-		this.getOptions().then((options) => {
-			dcOptions.parse(options.map((opt) => {
-				return {
-					id: opt.id,
-					value: opt.text
-				}
-			}));
-		});
-
-		return dcOptions;
 	}
 
 	getOptions() {
@@ -458,29 +501,39 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
-				// TODO : Filter
-				var filterCondition = {};
+				var where = [];
 
-				// // M:1 - get data that's only empty relation value
-				// if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
-				// 	filterCondition[this.columnName] = 'isNull';
-				// }
-				// // 1:1
-				// else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
-				// 	// 1:1 - get data is not match link id that we have
-				// 	if (this.settings.isSource == true) {
-				// 		// TODO
-				// 		filterCondition[this.columnName] = 'notHaveRelationWith';
-				// 		// value this.object.name
-				// 	}
-				// 	// 1:1 - get data that's only empty relation value by query null value from link table
-				// 	else {
-				// 		filterCondition[this.columnName] = 'isNull';
-				// 	}
-				// }
+				// M:1 - get data that's only empty relation value
+				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
+					where.push({
+						fieldName: this.columnName,
+						operator: 'is null'
+					});
+				}
+				// 1:1
+				else if (this.settings.linkType == 'one' && this.settings.linkViaType == 'one') {
+					// 1:1 - get data is not match link id that we have
+					if (this.settings.isSource == true) {
+						where.push({
+							fieldName: this.columnName,
+							operator: 'have no relation'
+						});
+					}
+					// 1:1 - get data that's only empty relation value by query null value from link table
+					else {
+						where.push({
+							fieldName: this.columnName,
+							operator: 'is null'
+						});
+					}
+				}
 
 				// Pull linked object data
-				linkedModel.findAll(filterCondition).then((result) => {
+				linkedModel.findAll({
+					where: {
+						where: where
+					}
+				}).then((result) => {
 
 					// cache linked object data
 					this._options = result.data

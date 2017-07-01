@@ -137,45 +137,44 @@ class ABFieldList extends ABField {
 				knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 
-						// create one if it doesn't exist:
-						if (!exists) {
+						return knex.schema.table(tableName, (t) => {
 
-							return knex.schema.table(tableName, (t) => {
+							var currCol;
 
-								// multiple select list
-								if (this.settings.isMultiple == true) {
-									var newCol = t.json(this.columnName).nullable();
+							// multiple select list
+							if (this.settings.isMultiple == true) {
+								currCol = t.json(this.columnName).nullable();
 
-									// Set default to single select
-									if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
-										newCol.defaultTo(this.settings.multipleDefault);
-									}
+								// TODO: Set default to multiple select
+								// MySQL - BLOB and TEXT columns cannot have DEFAULT values.
+								// Error Code: 1101. BLOB, TEXT, GEOMETRY or JSON column 'Type' can't have a default value
+
+								// if (this.settings.multipleDefault && this.settings.multipleDefault.length > 0) {
+								// 	currCol.defaultTo(JSON.stringify(this.settings.multipleDefault));
+								// }
+							}
+							// single select list
+							else {
+								var optIds = this.settings.options.map(function (opt) {
+									return opt.id;
+								});
+
+								currCol = t.enum(this.columnName, optIds).nullable();
+
+								// Set default to single select
+								if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
+									currCol.defaultTo(this.settings.singleDefault);
 								}
-								// single select list
-								else {
-									var optIds = this.settings.options.map(function (opt) {
-										return opt.id;
-									});
+							}
 
-									var newCol = t.enum(this.columnName, optIds).nullable();
+							// create one if it doesn't exist:
+							if (exists) {
+								currCol.alter();
+							}
 
-									// Set default to single select
-									if (this.settings.singleDefault && this.settings.singleDefault != 'none') {
-										newCol.defaultTo(this.settings.singleDefault);
-									}
-								}
-
-							})
-								.then(() => {
-									resolve();
-								})
-								.catch(reject);
-
-						} else {
-
-							// there is already a column for this, so move along.
-							resolve();
-						}
+						})
+							.then(() => { resolve(); })
+							.catch(reject);
 					});
 
 			}

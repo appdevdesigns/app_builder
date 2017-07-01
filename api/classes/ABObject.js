@@ -137,6 +137,9 @@ module.exports = class ABObject extends ABObjectBase {
 								fieldUpdates.push(f.migrateCreate(knex));
 
 							})
+							
+							// Adding a new field to store various item properties in JSON (ex: height)
+							fieldUpdates.push(t.text("properties"));
 
 							Promise.all(fieldUpdates)
 							.then(resolve, reject);
@@ -231,8 +234,9 @@ module.exports = class ABObject extends ABObjectBase {
 				required: [],
 				properties: {
 
-					created_at:{ type:['null', 'string'], format:'date-time' },
-					updated_at:{ type:['null', 'string'], format:'date-time' }
+					created_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
+					updated_at:{ type:['null', 'string'], pattern: AppBuilder.rules.SQLDateTimeRegExp },
+					properties:{ type:['null', 'object'] }
 
 				}
 			}

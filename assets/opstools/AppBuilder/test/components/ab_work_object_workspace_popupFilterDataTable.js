@@ -1,17 +1,17 @@
 import AB from '../../components/ab'
 import ABObject from "../../classes/ABObject"
-import AB_Work_Object_Workspace_PopupSortFields from "../../components/ab_work_object_workspace_popupSortFields"
+import AB_Work_Object_Workspace_PopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
 
 import sampleApp from "../fixtures/ABApplication"
 
-describe('ab_work_object_workspace_popupSortFields component', () => {
+describe('ab_work_object_workspace_popupFilterDataTable component', () => {
 
 	var sandbox;
 
 	var ab;
 	var mockApp;
 
-	const componentName = 'ab_work_object_workspace_popupSortFields';
+	const componentName = 'ab_work_object_workspace_popupFilterDataTable';
 	var target;
 
 	before(() => {
@@ -19,7 +19,7 @@ describe('ab_work_object_workspace_popupSortFields component', () => {
 
 		mockApp = ab._app;
 
-		target = new AB_Work_Object_Workspace_PopupSortFields(mockApp);
+		target = new AB_Work_Object_Workspace_PopupFilterDataTable(mockApp);
 	});
 
 	beforeEach(() => {
@@ -71,10 +71,34 @@ describe('ab_work_object_workspace_popupSortFields component', () => {
 
 	// Logic test cases
 	describe('Logic testing', () => {
-		it('.clickAddNewSort: should exist', () => {
-			assert.isDefined(target._logic.clickAddNewSort);
+		it('.callChangeEvent: should exist', () => {
+			assert.isDefined(target._logic.callChangeEvent);
+		});
+
+		it('.clickAddNewFilter: should exist', () => {
+			assert.isDefined(target._logic.clickAddNewFilter);
 		});
 		
+		it('.columns_setter: should exist', () => {
+			assert.isDefined(target._logic.columns_setter);
+		});
+
+		it('.dataTable_setter: should exist', () => {
+			assert.isDefined(target._logic.dataTable_setter);
+		});
+
+		it('.filter: should exist', () => {
+			assert.isDefined(target._logic.filter);
+		});
+
+		it('.getFieldList: should exist', () => {
+			assert.isDefined(target._logic.getFieldList);
+		});
+
+		it('.refreshFieldList: should exist', () => {
+			assert.isDefined(target._logic.refreshFieldList);
+		});
+
 		it('.objectLoad: should exist', () => {
 			assert.isDefined(target._logic.objectLoad);
 			assert.equal(target.objectLoad, target._logic.objectLoad);
@@ -88,17 +112,17 @@ describe('ab_work_object_workspace_popupSortFields component', () => {
 			assert.isDefined(target._logic.show);
 			assert.equal(target.show, target._logic.show);
 		});
-
-		it('.clickAddNewSort: should add a new element to UI', () => {
+		
+		it('.addNewFilter: should add a new element to UI', () => {
 			// Load first object from a sample ABApplication			
 			let mockObj = new ABObject(sampleApp.objects[0]);						
 			target.objectLoad(mockObj);
 			
 			// Set up simulated button click and spy for clickAddNewSort function
-			let addNewSortButtonClickFn = target.ui.body.elements[target.ui.body.elements.length - 1].on.onItemClick,
+			let addNewFilterButtonClickFn = target.ui.body.elements[target.ui.body.elements.length - 1].on.onItemClick,
 				onShowFn = target.ui.on.onShow,
 				spyLogicOnChange = sandbox.spy(target._logic.callbacks, 'onChange'),
-				spyLogicClickAddNewSort = sandbox.spy(target._logic, 'clickAddNewSort');
+				spyLogicClickAddNewFilter = sandbox.spy(target._logic, 'clickAddNewFilter');
 			
 			// Tell the app the save was successfull	
 			let stubSave = sandbox.stub(mockObj, 'save').callsFake(function () { 
@@ -109,22 +133,23 @@ describe('ab_work_object_workspace_popupSortFields component', () => {
 			onShowFn();
 
 			// Even if there are no sorts previously we will call this at least once to set up the old sorts
-			sandbox.assert.called(spyLogicClickAddNewSort);
+			sandbox.assert.called(spyLogicClickAddNewFilter);
 			
 			// At the end of a new sort added we call the onChange to update the data table
 			sandbox.assert.called(spyLogicOnChange);
 
 			// Make sure the functions are only called the number of times we expect
-			sandbox.assert.callCount(spyLogicClickAddNewSort, mockObj.workspaceSortFields.length);
+			sandbox.assert.callCount(spyLogicClickAddNewFilter, mockObj.workspaceFilterConditions.length);
 			sandbox.assert.callCount(spyLogicOnChange, mockObj.workspaceSortFields.length);
 			
 			// Assume clear all button is clicked
-			addNewSortButtonClickFn(null, null, null);
+			addNewFilterButtonClickFn(null, null, null);
 			
-			// Assert the number of times the click add new sort should match the number of entries in the database
-			sandbox.assert.callCount(spyLogicClickAddNewSort, mockObj.workspaceSortFields.length + 1);
+			// Assert the number of times the addNewFilter has been called should increase by 1
+			sandbox.assert.callCount(spyLogicClickAddNewFilter, mockObj.workspaceFilterConditions.length + 1);
 			
 		});
+
 
 	});
 

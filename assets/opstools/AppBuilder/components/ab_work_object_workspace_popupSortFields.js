@@ -105,7 +105,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * @function clickAddNewSort
 			 * the user clicked the add new sort buttton. I don't know what it does...will update later
 			 */
-			clickAddNewSort: function(by, dir, as, id) {
+			clickAddNewSort: function(by, dir, isMulti, id) {
 				// Prevent duplicate fields
 				var sort_popup = $$(ids.component),
 					sort_form = $$(ids.form);
@@ -120,14 +120,16 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							width: 220,
 							options: listFields,
 							on: {
-								"onChange": function (columnId) {
+								onChange: function (columnId) {
 									var el = this;
 									_logic.onChangeCombo(columnId, el);
 								}
 							}
 						},
 						{
-							view: "segmented", width: 200, options: [{ id: '', value: labels.component.selectField }],
+							view: "segmented", 
+							width: 200, 
+							options: [{ id: '', value: labels.component.selectField }],
 							on: {
 								onChange: function (newv, oldv) { // 'asc' or 'desc' values
 									_logic.saveSorts();
@@ -135,14 +137,23 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 							}
 						},
 						{
-							view: "text", width: 20, hidden: true, value: ""
+							view: "text", 
+							width: 20, 
+							hidden: true, 
+							value: ""
 						},
 						{
-							view: "button", icon: "trash", type: "icon", width: 30, click: function () {
-								sort_form.removeView(this.getParentView());
-								_logic.refreshFieldList(true);
-								_logic.saveSorts();
-							}
+							view: "button", 
+							icon: "trash", 
+							type: "icon", 
+							width: 30,
+							on: {
+								onItemClick: function() {
+									sort_form.removeView(this.getParentView());
+									_logic.refreshFieldList(true);
+									_logic.saveSorts();									
+								}
+							} 
 						}
 					]
 				}, viewIndex);
@@ -156,9 +167,9 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 					var segmentButton = sort_form.getChildViews()[viewIndex].getChildViews()[1];
 					segmentButton.setValue(dir);
 				}
-				if (as) {
-					var asField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
-					asField.setValue(as);
+				if (isMulti) {
+					var isMultilingualField = sort_form.getChildViews()[viewIndex].getChildViews()[2];
+					isMultilingualField.setValue(isMulti);
 				}
 				_logic.callbacks.onChange();
 			},
@@ -221,64 +232,6 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				return listFields;
 			},
 
-			// /**
-			//  * @function sort
-			//  * this preforms the sort on the datagrid (this may move to the datagrid once I read further)
-			//  */
-			// sort: function () {
-			// 	var sort_popup = $$(ids.component),
-			// 		sort_form = $$(ids.form),
-			// 		columnOrders = [];
-			//
-			// 	sort_form.getChildViews().forEach(function (cView, index) {
-			// 		if (sort_form.getChildViews().length - 1 <= index) // Ignore 'Add a sort' button
-			// 			return;
-			//
-			// 		var columnId = cView.getChildViews()[0].getValue();
-			// 		var order = cView.getChildViews()[1].getValue();
-			//
-			// 		if (columnId) {
-			// 			var columnConfig = sort_popup.dataTable.getColumnConfig(columnId);
-			//
-			// 			if (columnConfig) {
-			// 				columnOrders.push({
-			// 					name: columnConfig.id,
-			// 					order: order
-			// 				});
-			// 			}
-			// 		}
-			// 	});
-			//
-			// 	sort_popup.dataTable.sort(function (a, b) {
-			// 		var result = false;
-			//
-			// 		for (var i = 0; i < columnOrders.length; i++) {
-			// 			var column = columnOrders[i],
-			// 				aValue = a[column.name],
-			// 				bValue = b[column.name];
-			//
-			// 			if ($.isArray(aValue)) {
-			// 				aValue = $.map(aValue, function (item) { return item.text }).join(' ');
-			// 			}
-			//
-			// 			if ($.isArray(bValue)) {
-			// 				bValue = $.map(bValue, function (item) { return item.text }).join(' ');
-			// 			}
-			//
-			// 			if (aValue != bValue) {
-			// 				if (column.order == 'asc') {
-			// 					result = aValue > bValue ? 1 : -1;
-			// 				}
-			// 				else {
-			// 					result = aValue < bValue ? 1 : -1;
-			// 				}
-			// 				break;
-			// 			}
-			// 		}
-			//
-			// 		return result;
-			// 	});
-			// },
 
 			/**
 			 * @function objectLoad
@@ -287,27 +240,14 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 */
 			objectLoad: function(object) {
 				CurrentObject = object;
-
-				// // refresh list
-				// var allFields = CurrentObject.fields();
-				// allFields.forEach((f) => {
-				// 	alert(f.label);
-				// 	listFields.push({
-				// 		id: f.id,
-				// 		label: f.label,
-				// 		$css:"hidden_fields_"+f.id
-				// 	})
-				// })
-
-				//$$(ids.list).parse(listFields);
 			},
 			
 			onChangeCombo: function(columnId, el) {
 				var allFields = CurrentObject.fields();
 				var columnConfig = "",
 					sortDir = el.getParentView().getChildViews()[1],
-					sortAs = el.getParentView().getChildViews()[2],
-					defaultAs = null,
+					isMultiLingual = el.getParentView().getChildViews()[2],
+					isMulti = 0,
 					options = null;
 
 				allFields.forEach((f) => {
@@ -324,26 +264,26 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 						options = [
 							{ id: 'asc', value: labels.component.textAsc },
 							{ id: 'desc', value: labels.component.textDesc }];
-						defaultAs = "string";
 						break;
 					case "date":
 						options = [
 							{ id: 'asc', value: labels.component.dateAsc },
 							{ id: 'desc', value: labels.component.dateDesc }];
-						defaultAs = "date";
 						break;
 					case "number":
 						options = [
 							{ id: 'asc', value: labels.component.numberAsc },
 							{ id: 'desc', value: labels.component.numberDesc }];
-						defaultAs = "int";
 						break;
 				}
 
 				sortDir.define('options', options);
 				sortDir.refresh();
 
-				sortAs.setValue(defaultAs);
+				if (columnConfig.settings.supportMultilingual)
+					isMulti = columnConfig.settings.supportMultilingual;
+					
+				isMultiLingual.setValue(isMulti);
 
 				_logic.refreshFieldList();
 
@@ -363,7 +303,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				if (childViews.length == 1) {
 					var sorts = CurrentObject.workspaceSortFields;
 					sorts.forEach((s) => {
-						_logic.clickAddNewSort(s.by, s.dir, s.as);
+						_logic.clickAddNewSort(s.by, s.dir, s.isMulti);
 					});
 
 					if (sorts.length == 0) {
@@ -464,8 +404,8 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 						var by = cView.getChildViews()[0].getValue();
 						var dir = cView.getChildViews()[1].getValue();
-						var as = cView.getChildViews()[2].getValue();
-						sortFields.push({"by":by, "dir":dir, "as":as})
+						var isMultiLingual = cView.getChildViews()[2].getValue();
+						sortFields.push({"by":by, "dir":dir, "isMulti":isMultiLingual})
 					});
 				}
 
@@ -485,10 +425,14 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
              *
              * Show this component.
              * @param {obj} $view  the webix.$view to hover the popup around.
+			 * @param {string} columnName the columnName we want to prefill the sort with
              */
-            show:function($view) {
+            show:function($view, columnName) {
                 $$(ids.component).show($view);
-            }
+				if (columnName) {
+					_logic.clickAddNewSort(columnName);
+				}
+			}
 
 
 		}

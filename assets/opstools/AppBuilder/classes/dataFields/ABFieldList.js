@@ -33,14 +33,18 @@ var defaultValues = {
 };
 
 var ids = {
-	multiSelectOption: 'ab-list-multiple-option',
+	isMultiple: 'ab-list-multiple-option',
 	singleDefault: 'ab-list-single-default',
 	multipleDefault: 'ab-list-multiple-default',
 	options: 'ab-list-option'
 };
 
+// TODO : use to render selectivity to set default values
+var selectivityRender = new ABFieldSelectivity({
+	settings: {}
+}, {}, {});
 
-function updateDefaultList() {
+function updateDefaultList(ids, settings = {}) {
 	var optList = $$(ids.options).find({}).map(function (opt) {
 		return {
 			id: opt.id,
@@ -49,19 +53,18 @@ function updateDefaultList() {
 	});
 
 	// Multiple default selector
-	if (ABFieldListComponent.currentField) {
-		var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
-		ABFieldListComponent.currentField.selectivityRender(domNode, {
-			multiple: true,
-			placeholder: '[Select]',
-			items: optList.map(function (opt) {
-				return {
-					id: opt.id,
-					text: opt.value
-				}
-			})
-		});
-	}
+	var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+	selectivityRender.selectivityRender(domNode, {
+		multiple: true,
+		data: settings.multipleDefault,
+		placeholder: '[Select]',
+		items: optList.map(function (opt) {
+			return {
+				id: opt.id,
+				text: opt.value
+			}
+		})
+	});
 
 	// Single default selector
 	optList.unshift({
@@ -69,7 +72,13 @@ function updateDefaultList() {
 		value: '[No Default]'
 	});
 	$$(ids.singleDefault).define('options', optList);
-	$$(ids.singleDefault).setValue('none');
+
+	if (settings.singleDefault)
+		$$(ids.singleDefault).setValue(settings.singleDefault);
+	else
+		$$(ids.singleDefault).setValue('none');
+
+	$$(ids.singleDefault).refresh();
 }
 
 /**
@@ -89,8 +98,8 @@ var ABFieldListComponent = new ABFieldComponent({
 			{
 				view: "checkbox",
 				name: "isMultiple",
-				id: ids.multiSelectOption,
-				labelRight: L('ab.dataField.list.multiSelectOption', 'Multiselect'),
+				id: ids.isMultiple,
+				labelRight: L('ab.dataField.list.isMultiple', 'Multiselect'),
 				labelWidth: 0,
 				value: false,
 				on: {
@@ -104,7 +113,7 @@ var ABFieldListComponent = new ABFieldComponent({
 							$$(ids.multipleDefault).hide();
 						}
 
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					}
 				}
 			},
@@ -127,13 +136,13 @@ var ABFieldListComponent = new ABFieldComponent({
 				},
 				on: {
 					onAfterAdd: () => {
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					},
 					onAfterEditStop: () => {
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					},
 					onAfterDelete: () => {
-						updateDefaultList();
+						updateDefaultList(ids, field.settings);
 					}
 				}
 			},
@@ -188,6 +197,24 @@ var ABFieldListComponent = new ABFieldComponent({
 
 		// }
 
+		clear: (ids) => {
+			$$(ids.isMultiple).setValue(0);
+			$$(ids.options).clearAll();
+
+			$$(ids.singleDefault).define('options', [
+				{
+					id: 'none',
+					value: '[No Default]'
+				}
+			]);
+			$$(ids.singleDefault).setValue(defaultValues.singleDefault);
+
+			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+			if (domNode && domNode.selectivity) {
+				domNode.selectivity.setData([]);
+			}
+		},
+
 		populate: (ids, field) => {
 
 			// set options to webix list
@@ -201,9 +228,9 @@ var ABFieldListComponent = new ABFieldComponent({
 			$$(ids.options).refresh();
 
 			// update single/multiple default selector
-			ABFieldListComponent.currentField = field;
-			updateDefaultList(ids);
-
+			setTimeout(() => {
+				updateDefaultList(ids, field.settings);
+			}, 10);
 		},
 
 		values: (ids, values) => {
@@ -217,10 +244,10 @@ var ABFieldListComponent = new ABFieldComponent({
 			});
 
 			// Set multiple default value
-			if (values.settings.isMultiple == true) {
-				var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
-				values.settings.multipleDefault = [];
-				// values.settings.multipleDefault = domNode.selectivity.getData() || [];
+			values.settings.multipleDefault = [];
+			var domNode = $$(ids.multipleDefault).$view.querySelector('.list-data-values');
+			if (domNode && domNode.selectivity) {
+				values.settings.multipleDefault = domNode.selectivity.getData() || [];
 			}
 
 			return values;

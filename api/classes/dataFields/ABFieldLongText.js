@@ -1,7 +1,7 @@
 /*
- * ABFieldString
+ * ABFieldLongText
  *
- * An ABFieldString defines a string field type.
+ * An ABFieldLongText defines a huge string field type.
  *
  */
 var path = require('path');
@@ -16,23 +16,24 @@ function L(key, altText) {
 }
 
 
-var ABFieldStringDefaults = {
-	key : 'string', // unique key to reference this specific DataField
-	icon : 'font',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
+var ABFieldLongTextDefaults = {
+	key: 'LongText', // unique key to reference this specific DataField
+	type: 'text',
+	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-')		
 	
 	// menuName: what gets displayed in the Editor drop list
-	menuName : L('ab.dataField.string.menuName', '*Single line text'),
+	menuName : L('ab.dataField.string.menuName', '*Multiple line text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short string value')
+	description: L('ab.dataField.string.description', '*short LongText value')
 }
 
 
 
-class ABFieldString extends ABField {
+class ABFieldLongText extends ABField {
 
     constructor(values, object) {
-    	super(values, object, ABFieldStringDefaults);
+    	super(values, object, ABFieldLongTextDefaults);
 
     	/*
     	{
@@ -55,7 +56,7 @@ class ABFieldString extends ABField {
 
   	// return the default values for this DataField
   	static defaults() {
-  		return ABFieldStringDefaults;
+  		return ABFieldLongTextDefaults;
   	}
 
 
@@ -69,7 +70,7 @@ class ABFieldString extends ABField {
 	 * @return {Component}
 	 */
   	// static propertiesComponent(App) {
-  	// 	return ABFieldStringComponent.component(App);
+  	// 	return ABFieldLongTextComponent.component(App);
   	// }
 
 
@@ -123,16 +124,17 @@ class ABFieldString extends ABField {
 	/**
 	 * @function migrateCreate
 	 * perform the necessary sql actions to ADD this column to the DB table.
-	 * @param {knex} knex the Knex connection.
+	 * @param {knex} knex 
+	 *		the Knex connection.
 	 * @return {Promise}
 	 */
 	migrateCreate (knex) {
 		return new Promise((resolve, reject) => {
-				
+
 			var tableName = this.object.dbTableName();
 			
 			async.series([
-				
+			
 				// if this is a multilingual field, then manage a json 
 				// translation store:
 				(next) => {
@@ -143,7 +145,7 @@ class ABFieldString extends ABField {
 						.then((exists) => {
 							// create one if it doesn't exist:
 							if (!exists) {
-								knex.schema.table(tableName, (t)=>{
+								knex.schema.table(tableName, (t) => {
 									t.json('translations');
 								})
 								.then(() => {
@@ -163,12 +165,11 @@ class ABFieldString extends ABField {
 					knex.schema.hasColumn(tableName, this.columnName)
 					.then((exists) => {
 						knex.schema.table(tableName, (t) => {
-							var currCol = t.string(this.columnName)
+							var currCol = t.text(this.columnName, 'longtext')
 							.defaultTo(this.settings.textDefault);
 
 							// alter default value of column
-							if (exists)
-								currCol.alter();
+							if (exists) currCol.alter();
 						})
 						.then(() => {
 							next();
@@ -182,7 +183,7 @@ class ABFieldString extends ABField {
 				if (err) reject(err);
 				else resolve();
 			});
-			
+
 		});
 	}
 
@@ -237,14 +238,14 @@ class ABFieldString extends ABField {
 
 			// make sure our column is described in the 
 			if (!obj.translations.items.properties[this.columnName]) {
-				obj.translations.items.properties[this.columnName] = { type:'string' }
+				obj.translations.items.properties[this.columnName] = { type:'longtext' }
 			}
 
 		} else {
 
 			// we're not multilingual, so just tack this one on:
 			if (!obj[this.columnName]) {
-				obj[this.columnName] = { type:'string' }
+				obj[this.columnName] = { type:'longtext' }
 			}
 
 		}
@@ -313,10 +314,10 @@ class ABFieldString extends ABField {
 				//// objection.js query().
 				if (this.settings.supportMultilingual) {
 					
-					sails.log.verbose('ABFieldString.postGet(): ---> _.isString('+ data.translations +'):');	
+					sails.log.verbose('ABFieldLongText.postGet(): ---> _.isString('+ data.translations +'):');	
 					if (_.isString(data.translations)) {
 
-						sails.log.verbose('ABFieldString.postGet(): ---> JSON.parse()');
+						sails.log.verbose('ABFieldLongText.postGet(): ---> JSON.parse()');
 						data.translations = JSON.parse(data.translations);
 					}
 				}
@@ -330,4 +331,4 @@ class ABFieldString extends ABField {
 
 
 
-module.exports = ABFieldString;
+module.exports = ABFieldLongText;

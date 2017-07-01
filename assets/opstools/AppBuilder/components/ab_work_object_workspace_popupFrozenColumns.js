@@ -20,6 +20,7 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			common : App.labels,
 			component: {
 				clearAll: L('ab.frozen_fields.clearAll', "*Clear All"),
+				errorHidden: L('ab.visible_fields.errorHidden', "*Sorry, you cannot freeze a hidden column."),
 				// hideAll: L('ab.visible_fields.hideAll', "*Hide All"),
 			}
 		}
@@ -134,7 +135,15 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 				// update our Object with current frozen column id
 				var List = $$(ids.list);
 				var recordClicked = List.getItem(id);
-				var label = recordClicked.label;
+				var label = recordClicked.columnName;
+				
+				if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
+					OP.Dialog.Alert({
+						text: labels.component.errorHidden
+					});
+					return;
+				}
+				
 				CurrentObject.workspaceFrozenColumnID = label;
 				CurrentObject.save()
 				.then(function(){
@@ -183,7 +192,7 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 				var id = List.getFirstId();
 				while(id) {
 					var record = List.getItem(id);
-					var label = record.label;
+					var label = record.columnName;
 
 					// find it's HTML Node
 					var node = List.getItemNode(id);
@@ -204,9 +213,13 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 					}
 
 					if (CurrentObject.workspaceHiddenFields.indexOf(label) != -1) {
-						node.style.display = "none";
+						node.style.opacity = 0.4;
+						node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle");
+						node.querySelector('.ab-frozen-field-icon').classList.remove("fa-circle-o");
+						node.querySelector('.ab-frozen-field-icon').classList.add("fa-eye-slash");
 					} else {
-						node.style.display = "";
+						node.style.opacity = 1;
+						node.querySelector('.ab-frozen-field-icon').classList.remove("fa-eye-slash");
 					}
 
 					// next item
@@ -233,11 +246,13 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 					listFields.push({
 						id: f.id,
 						label: f.label,
+						columnName: f.columnName,
 						$css:"hidden_fields_"+f.id
 					})
-				})
-
+				});
+				$$(ids.list).clearAll();
 				$$(ids.list).parse(listFields);
+				
 			},
 
 			/**

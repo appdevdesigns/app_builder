@@ -148,6 +148,14 @@ var ABFieldImageComponent = new ABFieldComponent({
 	// 		.values(ids, values) : return the current values from the form
 	logic:{
 
+		clear: (ids) => {
+			$$(ids.useWidth).setValue(0);
+			$$(ids.useHeight).setValue(0);
+
+			$$(ids.imageWidth).setValue('');
+			$$(ids.imageHeight).setValue('');
+		}
+
 	},
 
 	// perform any additional setup actions here.
@@ -310,7 +318,7 @@ OP.Dialog.Alert({
 	idCustomContainer(obj) {
 		return "#columnName#-#id#-image"
 			.replace('#id#', obj.id)
-			.replace('#columnName#', this.columnName);
+			.replace('#columnName#', this.columnName.replace(/ /g, '_'));
 	}
 
 
@@ -480,8 +488,32 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			});
 			uploader.addDropZone(webixContainer.$view);
 
+			// open file upload dialog when's click
+			parentContainer.addEventListener("click", () => {
+			});
+
 		}	
 	}
+
+
+	/*
+	* @function customEdit
+	* 
+	* @param {object} row is the {name=>value} hash of the current row of data.
+	* @param {App} App the shared ui App object useful more making globally
+	*					unique id references.
+	* @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	*/
+	customEdit(row, App, node) {
+
+		var idBase = App.unique(this.idCustomContainer(row)),
+			idUploader = idBase + '-uploader';
+
+		$$(idUploader).fileDialog({ rowid: row.id });
+
+		return false;
+	}
+
 
 
 	imageTemplate(obj) {

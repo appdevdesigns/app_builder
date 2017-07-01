@@ -128,10 +128,11 @@ module.exports = class ABField {
 
     	this.settings = values.settings || {};
     	this.settings.showIcon = values.settings.showIcon+"" || "1";
-
+		this.settings.width = values.settings.width+"" || "0";
 
     	// convert from "0" => 0
     	this.settings.showIcon = parseInt(this.settings.showIcon);
+		this.settings.width = parseInt(this.settings.width);
 	}
 
 

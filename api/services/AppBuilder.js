@@ -6,6 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var AD = require('ad-utils');
 var _ = require('lodash');
+var moment = require('moment');
 
 var reloadTimeLimit = 10 * 1000 * 60; // 10 minutes
 
@@ -271,7 +272,26 @@ module.exports = {
         toObjectNameFormat: function (appName, objectName) {
             return (appName + '_' + AppBuilder.rules.nameFilter(objectName));
         },
+        
+        
+        /**
+         * AppBuilder.rules.toSQLDateTime
+         *
+         * return a properly formatted DateTime string for MYSQL 5.7
+         *
+         * @param {string} date  String of a date you want converted
+         * @return {string}
+         */
+        toSQLDateTime: function (date) {
+            return moment(date).format('YYYY-MM-DD HH:mm:ss');
+        },
 
+        /**
+         * AppBuilder.rules.SQLDateTimeRegExp
+         * 
+         * property is a regular expression to validate SQL DateTime format
+         */
+        SQLDateTimeRegExp: '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$',
 
         /**
          * AppBuilder.rules.toFieldRelationFormat
@@ -320,7 +340,6 @@ module.exports = {
                 .replace('{targetName}', targetTableName)
                 .replace('{colName}', colName);
         }
-
     },
 
 

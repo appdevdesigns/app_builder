@@ -26,7 +26,10 @@ export default {
 	tabWidthExtraSmall: 50,
 
 	// column types
-
+	columnWidthLarge: 250,
+	columnWidthMedium: 200,
+	columnWidthSmall: 150,
+	columnWidthExtraSmall: 100,
 
 	// spacers
 	smallSpacer: 1,

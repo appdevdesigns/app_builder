@@ -251,7 +251,7 @@ export default class ABFieldComponent {
 				ABField.editorPopulate(ids, field);
 
 				this.eachDeep(elements, function(e){
-					if (e.name != null) {
+					if (e.name != null && $$(ids[e.name]) && $$(ids[e.name]).setValue) {
 						$$(ids[e.name]).setValue(field.settings[e.name]);
 					}
 				})
@@ -358,9 +358,19 @@ export default class ABFieldComponent {
 				return;
 			}
 
+			if (e.body && e.body.cols) {
+				this.eachDeep(e.body.cols, fn);
+				return;
+			}
+
 			// or rows
 			if (e.rows) {
 				this.eachDeep(e.rows, fn);
+				return;
+			}
+
+			if (e.body && e.body.rows) {
+				this.eachDeep(e.body.rows, fn);
 				return;
 			}
 

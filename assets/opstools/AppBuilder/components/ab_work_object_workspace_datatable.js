@@ -51,37 +51,31 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		on: {
     			onBeforeSelect: function (data, preserve) {
 
-console.error('!! ToDo: onBeforeSelect()');
-    				// var itemNode = this.getItemNode({ row: data.row, column: data.column });
+					var selectField = CurrentObject.fields((f) => { return f.columnName == data.column; })[0];
 
-    				// var column = AD.classes.AppBuilder.currApp.currObj.columns.filter(function (col) { return col.name == data.column; });
-    				// if (!column || column.length < 1) {
-    				// 	console.log('System could not found this column data');
-    				// 	return false;
-    				// } else
-    				// 	column = column[0];
+					if (selectField == null) return true;
 
-    				// return dataFieldsManager.customEdit(AD.classes.AppBuilder.currApp, AD.classes.AppBuilder.currApp.currObj, column, data.row, itemNode);
+					var cellNode = this.getItemNode({ row: data.row, column: data.column }),
+						rowData = this.getItem(data.row);
+
+					return selectField.customEdit(rowData, App, cellNode);
+
     			},
     			onAfterSelect: function (data, prevent) {
     				_logic.onAfterSelect(data, prevent);
     			},
     			onCheck: function (row, col, val) { // Update checkbox data
-console.error('!! ToDo: onCheck()');
-    				// var item = $$(self.webixUiId.objectDatatable).getItem(row);
 
-    				// self.updateRowData({ value: (val > 0 ? true : false) }, { row: row, column: col }, false)
-    				// 	.fail(function (err) {
-    				// 		// Rollback
-    				// 		item[col] = !val;
-    				// 		$$(self.webixUiId.objectDatatable).updateItem(row, item);
-    				// 		$$(self.webixUiId.objectDatatable).refresh(row);
+					var state = {
+						value: val
+					};
 
-    				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-    				// 	})
-    				// 	.then(function (result) {
-    				// 		$$(self.webixUiId.objectDatatable).hideProgress();
-    				// 	});
+					var editor = {
+						row: row,
+						column: col
+					};
+
+					_logic.onAfterEditStop(state, editor);
     			},
     			onBeforeEditStop: function (state, editor) {
 console.error('!! ToDo: onBeforeEditStop()');
@@ -101,32 +95,25 @@ console.error('!! ToDo: onBeforeEditStop()');
     			onAfterEditStop: function (state, editor, ignoreUpdate) {
     				_logic.onAfterEditStop(state, editor, ignoreUpdate);
     			},
-    			onAfterLoad: function () {
-    				_logic.onAfterLoad();
+                // We are sorting with server side requests now so we can remove this
+    			// onAfterLoad: function () {
+    			// 	_logic.onAfterLoad();
+    			// },
+    			onColumnResize: function (columnName, newWidth, oldWidth, user_action) {
+                    _logic.onColumnResize(columnName, newWidth, oldWidth, user_action);
     			},
-    			onColumnResize: function (id, newWidth, oldWidth, user_action) {
-console.error('!! ToDo: onColumnResize()');
-    				// var columnConfig = $$(self.webixUiId.objectDatatable).getColumnConfig(id);
-    				// var column = self.data.columns.filter(function (col) { return col.id == columnConfig.dataId; });
-    				// if (column && column[0])
-    				// 	column[0].setWidth(newWidth);
-
-    				// // if (typeof columnConfig.template !== 'undefined' && columnConfig.template !== null) {
-    				// // 	// For calculate/refresh row height
-    				// // 	$$(self.webixUiId.objectDatatable).render();
-    				// // }
+                onRowResize: function (rowId) {
+                    _logic.onRowResize(rowId);
     			},
     			onBeforeColumnDrag: function (sourceId, event) {
-console.error('!! ToDo: onBeforeColumnDrag()');
-    				// if (sourceId === 'appbuilder_trash') // Remove column
-    				// 	return false;
-    				// else
-    				// 	return true;
+    				if (sourceId === 'appbuilder_trash') // Remove column
+    					return false;
+    				else
+    					return true;
     			},
     			onBeforeColumnDrop: function (sourceId, targetId, event) {
-console.error('!! ToDo: onBeforeColumnDrag()');
-    				// if (targetId === 'appbuilder_trash') // Remove column
-    				// 	return false;
+    				if (targetId === 'appbuilder_trash') // Remove column
+    					return false;
 
     				// if ($$(self.webixUiId.visibleButton).config.badge > 0) {
     				// 	webix.alert({
@@ -139,8 +126,7 @@ console.error('!! ToDo: onBeforeColumnDrag()');
     				// }
     			},
     			onAfterColumnDrop: function (sourceId, targetId, event) {
-console.error('!! ToDo: onAfterColumnDrop()');
-    				// self.reorderColumns();
+                    _logic.onAfterColumnDrop(sourceId, targetId, event);
     			},
     			onAfterColumnShow: function (id) {
 console.error('!! ToDo: onAfterColumnShow()');
@@ -177,17 +163,45 @@ console.error('!! ToDo: onAfterColumnHide()');
     		// NOTE: register the onAfterRender() here, so it only registers
     		// one.
     		var DataTable = $$(ids.component);
-    		var throttleOnAfterRender = null;
+    		var throttleCustomDisplay = null;
     		DataTable.attachEvent("onAfterRender", function(data){
-
-    			if (throttleOnAfterRender) clearTimeout(throttleOnAfterRender);
-    			throttleOnAfterRender = setTimeout(()=>{
+    			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+    			throttleCustomDisplay = setTimeout(()=>{
     				if (CurrentObject) {
-    					CurrentObject.customDisplays(data, App, DataTable);
+    					CurrentObject.customDisplays(this, App, DataTable);
+                        if (scrollStarted) clearTimeout(scrollStarted);
     				}
-    			}, 150);
+    			}, 350);
 
     		});
+
+            // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
+            var scrollStarted = null;
+            DataTable.attachEvent("onScrollY", function(){
+                if (scrollStarted) clearTimeout(scrollStarted);
+                if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+    			scrollStarted = setTimeout(()=>{
+                    if (CurrentObject) {
+    					CurrentObject.customDisplays(this, App, DataTable);
+    				}
+    			}, 1500);
+            });
+
+            
+            // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
+            var yPos = 0;
+            DataTable.attachEvent("onAfterScroll", function(){
+                if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
+                throttleCustomDisplay = setTimeout(()=>{
+                    var scrollState = this.getScrollState();
+                    if (CurrentObject && yPos != scrollState.y) {
+                        yPos = scrollState.y;
+                        CurrentObject.customDisplays(this, App, DataTable);
+                        if (scrollStarted) clearTimeout(scrollStarted);
+                    }
+                }, 350);
+
+            });
 
 
     		// Process our onItemClick events. 
@@ -265,7 +279,10 @@ console.error('!! ToDo: onAfterColumnHide()');
     			 * @param {ABField} field  the field to which the action is to be applied
     			 * @param {dom} node  the optional html node for this header item.
     			 */
-    			onEditorMenu: function(action, field) {  }
+    			onEditorMenu: function(action, field) {  },
+                
+                
+                onColumnOrderChange:function(object){}
     		},
 
 
@@ -281,6 +298,17 @@ console.error('!! ToDo: onAfterColumnHide()');
     			_logic.callbacks.onEditorMenu(action, EditField, EditNode);
     		},
 
+            /**
+    		 * @function getColumnConfig
+    		 *
+    		 * return the column index of a given column ID
+    		 * @param {string} id column id you want the index of
+    		 */
+    		getColumnConfig: function(id) {
+    			var DataTable = $$(ids.component);
+
+    			return DataTable.getColumnConfig(id);
+    		},
 
     		/**
     		 * @function getColumnIndex
@@ -293,7 +321,18 @@ console.error('!! ToDo: onAfterColumnHide()');
 
     			return DataTable.getColumnIndex(id);
     		},
-
+            
+            /**
+            * @function getDefaultRowHeight
+            *
+            * return the default row height based off of the fieldList information this can be overwritten by a individuals row height
+            */
+            getDefaultRowHeight: function() {
+                console.log("");
+                console.log("lets do some magic");
+                console.log(CurrentObject);
+                return 25;
+            },
 
     		/**
     		 * @function getColumnConfig
@@ -306,6 +345,35 @@ console.error('!! ToDo: onAfterColumnHide()');
 
     			return DataTable.fieldList;
     		},
+            
+            /**
+             * @function onAfterColumnDrop
+             * When an editor drops a column to save a new column order
+             * @param {string} sourceId the columnName of the item dragged
+             * @param {string} targetId the columnName of the item dropped on
+             * @param {event} event
+             */
+            onAfterColumnDrop: function (sourceId, targetId, event) {
+                CurrentObject.fieldReorder(sourceId, targetId)
+                .then(()=>{
+                    _logic.callbacks.onColumnOrderChange(CurrentObject);
+                    // freeze columns:
+                    var DataTable = $$(ids.component);
+                    if (CurrentObject.workspaceFrozenColumnID != "") {
+                        DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+                    } else {
+                        DataTable.define('leftSplit', 0);                        
+                    }
+                    // we are going to always freeze the delete column so it is easy to get to
+                    DataTable.define('rightSplit', 1);                        
+                    DataTable.refreshColumns()
+                })
+                .catch((err)=>{
+
+                    OP.Error.log('Error saving new column order:', {error:err});
+
+                });
+            },
 
 
     		/**
@@ -340,7 +408,6 @@ console.error('!! ToDo: onAfterColumnHide()');
 //// Question: do we submit full item updates?  or just patches?
 var patch = {};
 patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also condition the data for sending.state.value;
-
     					CurrentObject.model()
     					.update(item.id, item)
 // .update(item.id, patch)
@@ -415,7 +482,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
 
     		onAfterLoad: function() {
-    			_logic.sortTable();
+    			// We are going to do this with a server side call now 
+                // _logic.sortTable();
     		},
 
 
@@ -452,6 +520,61 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// // Normal update data
     				// this.editCell(data.row, data.column);
     		},
+            
+
+            /**
+             * @function onColumnResize
+             * This is when a user adjusts the size of a column
+             * @param {} columnName 
+             * @param {int} newWidth
+             * @param {int} oldWidth
+             * @param {} user_action
+             * @return
+             */
+            onColumnResize: function(columnName, newWidth, oldWidth, user_action) {
+                CurrentObject.columnResize(columnName, newWidth, oldWidth)
+                .then(()=>{
+
+
+                })
+                .catch((err)=>{
+
+                    OP.Error.log('Error saving new column size:', {error:err});
+
+                });
+            },
+
+
+            /**
+             * @function onRowResize
+             * This is when a user adjusts the size of a row
+             * @param {} rowId 
+             * @param {int} newHeight
+             * @param {int} oldHeight
+             * @param {} user_action
+             * @return
+             */
+            onRowResize: function(rowId) {
+                var DataTable = $$(ids.component);
+                
+                var item = DataTable.getItem(rowId);
+                var height = item.$height;
+                
+                var properties = item.properties || {};
+                properties.height = height;
+                
+                item.properties = properties;
+
+                CurrentObject.model()
+                .update(item.id, item)
+                .then(()=>{
+                })
+                .catch((err)=>{
+                
+                    OP.Error.log('Error saving item:', {error:err});
+                
+                });
+            },
 
 
     		/**
@@ -485,7 +608,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     			PopupHeaderEditComponent.objectLoad(object);
 
-    			_logic.refresh();
+                // supressed this because it seems to be making an extra call?
+    			// _logic.refresh();
     		},
 
 
@@ -517,8 +641,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// freeze columns:
     				if (CurrentObject.workspaceFrozenColumnID != "") {
     					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
-    					DataTable.refreshColumns()
-    				}
+    				} else {
+                        DataTable.define('leftSplit', 0);                        
+                    }
+                    // we are going to always freeze the delete column so it is easy to get to
+                    DataTable.define('rightSplit', 1);                        
+                    DataTable.refreshColumns()
 
 
     				//// update DataTable Content
@@ -527,8 +655,19 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				// use it to load the DataTable:
     				//// NOTE: this should take advantage of Webix dynamic data loading on
     				//// larger data sets.
+                    var wheres = {};
+                    if (CurrentObject.workspaceFilterConditions.length > 0) {
+                        wheres = CurrentObject.workspaceFilterConditions;
+                    }
+                    var sorts = {};
+                    if (CurrentObject.workspaceSortFields.length > 0) {
+                        sorts = CurrentObject.workspaceSortFields;
+                    }
     				CurrentObject.model()
-    				.where({})
+    				.where({
+                        where: wheres, 
+                        sort: sorts
+                    })
     				.skip(0)
     				.limit(30)
     				.loadInto(DataTable);
@@ -561,72 +700,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     			$$(ids.component).show();
     		},
-
-
-    		/**
-    		 * @function sort(dir, a, b)
-    		 *
-    		 * Sort this component.
-    		 */
-    		sort:function(dir, aValue, bValue) {
-    			var result = false;
-
-    			if (dir == 'asc') {
-    				result = aValue > bValue ? 1 : -1;
-    			}
-    			else {
-    				result = aValue < bValue ? 1 : -1;
-    			}
-    			return result;
-    		},
-
-
-    		sortNext:function(dir, a, b, sorts, index) {
-    			var index = index+1,
-    				a = a,
-    				b = b,
-    				aValue = a[sorts[index].by],
-    				bValue = b[sorts[index].by],
-    				result = false;
-
-    			if (aValue == bValue && sorts.length > index+1) {
-    				result = _logic.sortNext(sorts[index].dir, a, b, sorts, index)
-    			} else {
-    				result = _logic.sort(sorts[index].dir, aValue, bValue);
-    			}
-    			return result;
-    		},
-
-
-    		sortTable:function() {
-    			var DataTable = $$(ids.component);
-
-    			if (CurrentObject) {
-    				var sorts = CurrentObject.workspaceSortFields;
-
-    				if (sorts.length > 0) {
-    					var columnOrders = [];
-
-    					DataTable.sort(function (a, b) {
-    						var result = false,
-    							index = 0,
-    							aValue = a[sorts[index].by],
-    							bValue = b[sorts[index].by];
-
-    						if (aValue == bValue && sorts.length > index+1) {
-    							result = _logic.sortNext(sorts[index].dir, a, b, sorts, index);
-    						} else {
-    							result = _logic.sort(sorts[index].dir, aValue, bValue);
-    						}
-
-    						return result;
-    					});
-
-    				}
-    			}
-    		}
-
-
     	}
         
 
@@ -647,13 +720,13 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         this.refresh = _logic.refresh;
         this.addRow = _logic.rowAdd;
 
+        // allow getColumnConfig for sort data table component
+        this.getColumnConfig = _logic.getColumnConfig;
         // expose data for badge on frozen button
         this.getColumnIndex = _logic.getColumnIndex;
 
         // expose data for column sort UI
         this.getFieldList = _logic.getFieldList;
-        this.sortTable = _logic.sortTable;
-
     }
 
 }

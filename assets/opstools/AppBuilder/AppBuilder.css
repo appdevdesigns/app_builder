@@ -322,6 +322,22 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	/*max-width: 100px !important;*/
 }
 
+.selectivity-single-select {
+	background: transparent !important;
+}
+.selectivity-single-selected-item {
+	color: #666;
+}
+.selectivity-single-result-container {
+	top: .0em !important;
+}
+.selectivity-single-selected-item-remove {
+	padding: 10 5px !important;
+}
+.selectivity-caret {
+	top: .4em !important;
+}
+
 /* Interface tree view */
 .ab-main-container .webix_tree_item.webix_selected span {
 	padding: 0px;
@@ -564,5 +580,12 @@ div.webix_item_tab {
 /* Webix badge */
 .webix_badge {
 	line-height: 22px;
-	text-indent: -1px;
+	background-color: #666;
+}
+
+/* Webix split columns */
+.webix_ss_left, .webix_ss_right, .webix_hs_left, .webix_hs_right {
+	box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 30px;
+	position: relative;
+	z-index: 200;
 }

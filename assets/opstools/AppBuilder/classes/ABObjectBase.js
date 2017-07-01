@@ -38,12 +38,14 @@ module.exports =  class ABObjectBase {
 
 		if (typeof(attributes.objectWorkspace) != "undefined") {
 			if (typeof(attributes.objectWorkspace.sortFields) == "undefined") attributes.objectWorkspace.sortFields = [];
+            if (typeof(attributes.objectWorkspace.filterConditions) == "undefined") attributes.objectWorkspace.filterConditions = [];
 			if (typeof(attributes.objectWorkspace.frozenColumnID) == "undefined") attributes.objectWorkspace.frozenColumnID = "";
 			if (typeof(attributes.objectWorkspace.hiddenFields) == "undefined") attributes.objectWorkspace.hiddenFields = [];
 		}
 
     	this.objectWorkspace = attributes.objectWorkspace || {
 			sortFields:[], // array of columns with their sort configurations
+            filterConditions:[], // array of filters to apply to the data table
 			frozenColumnID:"", // id of column you want to stop freezing
     		hiddenFields:[], // array of [ids] to add hidden:true to
     	};
@@ -113,6 +115,24 @@ module.exports =  class ABObjectBase {
 	}
 
 
+    /**
+	 * @method columnResize()
+	 *
+	 * save the new width of a column
+	 *
+	 * @param {} id The instance of the field to save.
+     * @param {int} newWidth the new width of the field
+     * @param {int} oldWidth the old width of the field
+	 * @return {Promise}
+	 */
+	columnResize( columnName, newWidth, oldWidth ) {
+        for(var i=0; i<this._fields.length; i++) {
+            if (this._fields[i].columnName == columnName) {
+                this._fields[i].settings.width = newWidth;
+            }
+        }
+        return this.save();
+	}
 
 
 
@@ -148,7 +168,7 @@ module.exports =  class ABObjectBase {
 	 */
 	linkFields () {
 
-		return this._fields.filter((f) => { return f.key == 'connectObject'; });
+		return this.fields((f) => { return f.key == 'connectObject'; });
 	}
 
 
@@ -186,6 +206,39 @@ module.exports =  class ABObjectBase {
 		return this.save();
 	}
 
+
+    /**
+	 * @method fieldReorder()
+	 *
+	 * reorder the fields in our object
+	 *
+	 * @param {ABField} field The instance of the field to remove.
+	 * @return {Promise}
+	 */
+	fieldReorder( sourceId, targetId ) {
+        // We know what was moved and what item it has replaced/pushed forward
+        // so first we want to splice the item moved out of the array of fields
+        // and store it so we can put it somewhere else
+        let itemMoved = null;
+        for(var i=0; i<this._fields.length; i++) {
+            if (this._fields[i].columnName == sourceId) {
+                itemMoved = this._fields[i];
+                this._fields.splice(i, 1);
+                break;
+            }
+        }
+        // once we have removed/stored it we can find where its new position
+        // will be by looping back through the array and finding the item it
+        // is going to push forward
+        for(var j=0; j<this._fields.length; j++) {
+            if (this._fields[j].columnName == targetId) {
+                this._fields.splice(j, 0, itemMoved);
+                break;
+            }
+        }
+
+		return this.save();
+	}
 
 
 	/**
@@ -229,6 +282,14 @@ module.exports =  class ABObjectBase {
 	set workspaceSortFields( fields ) {
 		this.objectWorkspace.sortFields = fields;
 	}
+
+    get workspaceFilterConditions() {
+        return this.objectWorkspace.filterConditions;
+    }
+
+    set workspaceFilterConditions( filterConditions ) {
+        this.objectWorkspace.filterConditions = filterConditions;
+    }
 
 	get workspaceFrozenColumnID() {
 		return this.objectWorkspace.frozenColumnID;
