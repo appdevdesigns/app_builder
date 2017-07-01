@@ -17,7 +17,8 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             common: App.labels,
             component: {
                 // formHeader: L('ab.application.form.header', "*Application Info"),
-                components: L('ab.interface.components', '*Components')
+                components: L('ab.interface.components', '*Components'),
+                noComponents: L('ab.interface.noComponents', '*No Components')
             }
         };
         
@@ -37,9 +38,6 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             rows:[
 
 //// LEFT OFF HERE:
-// - 
-// - make editor area droppable.
-// - dragged item needs to remain in list
 // - create new Views: ABViewTitle, ABViewDescription
 
                 {
@@ -116,12 +114,25 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
              * compile the template for each item in the list.
              */
             template:function(obj, common) {
-                var label = obj.common().labelKey
-                label = L(label, label);
+                
+                // if this is one of our ABViews:
+                if (obj.common) {
 
-                return "<i class='fa fa-#icon#' aria-hidden='true'></i> #name#"
-                    .replace(/#icon#/g, obj.common().icon)
-                    .replace(/#name#/g, label);
+                    var label = obj.common().labelKey
+                    label = L(label, label);
+
+                    return "<i class='fa fa-#icon#' aria-hidden='true'></i> #name#"
+                        .replace(/#icon#/g, obj.common().icon)
+                        .replace(/#name#/g, label);
+
+                } else {
+
+                    // maybe this is simply the "No Components" placeholder
+                    return obj.label;
+                }
+                
+
+                
             },
 
 
@@ -134,7 +145,16 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             viewLoad: function(view) {
                 CurrentView = view;
 
-                var components = view.componentList()
+                var components = view.componentList();
+                if (components.length == 0) {
+                    components.push({
+                        
+                        view: 'label',
+                        // id: self.componentIds.componentToolbarHeader,
+                        label: labels.component.noComponents
+                    
+                    })
+                }
                 $$(ids.list).parse(components);
                 $$(ids.list).refresh();
             }

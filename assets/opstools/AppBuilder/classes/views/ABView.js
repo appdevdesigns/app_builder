@@ -417,9 +417,11 @@ export default class ABView  {
 				}
 			},
 			onClick: {
+				"ab-component-edit": function (e, id, trg) {
+					_logic.viewEdit(e, id, trg);
+				},
 				"ab-component-remove": function (e, id, trg) {
-					_logic.deleteView(e, id, trg);
-					
+					_logic.viewDelete(e, id, trg);
 				}
 			},
 			externalData: function (data, id, oldData) {
@@ -516,29 +518,6 @@ export default class ABView  {
 		var _logic = {
 
 
-			deleteView: (e, id, trg) => {
-				var deletedView = $$(_ui.id).getItem(id);
-
-				if (!deletedView) return false;
-
-				OP.Dialog.Confirm({
-					title: L('ab.interface.component.confirmDeleteTitle','*Delete component'), 
-					text: L('ab.interface.component.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', deletedView.label),
-					callback: function (result) {
-						if (result) {
-							deletedView.destroy()
-							.then(()=>{
-								$$(_ui.id).remove(id);
-							})
-							.catch((err)=>{
-								OP.Error.log('Error trying to delete selected View:', {error:err, view:deletedView })
-							})
-						}
-					}
-				})
-			},
-
-
 			/* 
 			 * @method externalData()
 			 * this method is called by webix on the context.from.copy() command
@@ -575,6 +554,15 @@ export default class ABView  {
 				return View;
 			},
 
+
+			/* 
+			 * @method onBeforeDrop()
+			 * this method is triggered when an element is dropped onto the 
+			 * list area. When an element is dropped, a new copy is made, 
+			 * it is .saved(), and any UI rendering is performed if necessary.
+			 * @param {} context a webix provided context object for the drag 
+			 * @param {obj} ev  event object.
+			 */
 			onBeforeDrop: (context, ev) => {
 
 				// if this was dropped from our own list, then skip
@@ -618,6 +606,13 @@ export default class ABView  {
 				return false;
 			},
 
+
+			/* 
+			 * @method template()
+			 * render the list template for the View
+			 * @param {obj} obj the current View instance
+			 * @param {obj} common  Webix provided object with common UI tools
+			 */
 			template:function(obj, common) {
 
 				var template;
@@ -629,17 +624,73 @@ export default class ABView  {
 						.replace('#icon#', obj.icon)
 						.replace('#label#', obj.label)
 				}
-			}
+			},
+
+
+			/* 
+			 * @method viewDelete()
+			 * Called when the [delete] icon for a child View is clicked.
+			 * @param {obj} e the onClick event object
+			 * @param {integer} id the id of the element to delete
+			 * @param {obj} trg  Webix provided object 
+			 */
+			viewDelete: (e, id, trg) => {
+				var deletedView = $$(_ui.id).getItem(id);
+
+				if (!deletedView) return false;
+
+				OP.Dialog.Confirm({
+					title: L('ab.interface.component.confirmDeleteTitle','*Delete component'), 
+					text: L('ab.interface.component.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', deletedView.label),
+					callback: function (result) {
+						if (result) {
+							deletedView.destroy()
+							.then(()=>{
+								$$(_ui.id).remove(id);
+							})
+							.catch((err)=>{
+								OP.Error.log('Error trying to delete selected View:', {error:err, view:deletedView })
+							})
+						}
+					}
+				});
+				e.preventDefault();
+			},
+
+
+			/* 
+			 * @method viewEdit()
+			 * Called when the [edit] icon for a child View is clicked.
+			 * @param {obj} e the onClick event object
+			 * @param {integer} id the id of the element to edit
+			 * @param {obj} trg  Webix provided object 
+			 */
+			viewEdit: (e, id, trg) => {
+				var view = $$(_ui.id).getItem(id);
+
+				if (!view) return false;
+
+				// NOTE: let webix finish this onClick event, before
+				// calling .populateInterfaceWorkspace() which will replace
+				// the interface elements with the edited view.  (apparently
+				// that causes errors.)
+				setTimeout(()=>{
+					App.actions.populateInterfaceWorkspace(view);
+				}, 50);
+				
+				e.preventDefault();
+				return false;
+			},
 		} 
 
 
 		var _template = [
 			'<div class="ab-component-in-page">',
 				'<div id="'+ids.view+'_#objID#" ></div>',
-				// '<div class="">',
-					'<i class="fa fa-edit ab-component-edit float-right"></i>',
-					'<i class="fa fa-trash ab-component-remove float-right"></i>',
-				// '</div>',
+				'<div class="">',
+					'<i class="fa fa-edit ab-component-edit "></i>',
+					'<i class="fa fa-trash ab-component-remove "></i>',
+				'</div>',
 			'</div>'
 		].join('');
 

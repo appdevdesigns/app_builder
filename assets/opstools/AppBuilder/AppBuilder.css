@@ -391,7 +391,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	overflow-x: auto;
 }
 
-.ab-component-remove {
+.ab-component-remove, .ab-component-edit {
 	position: absolute;
 	top: 5px;
 	right: 1px;
