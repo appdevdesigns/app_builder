@@ -322,18 +322,6 @@ console.error('!! ToDo: onAfterColumnHide()');
     			return DataTable.getColumnIndex(id);
     		},
             
-            /**
-            * @function getDefaultRowHeight
-            *
-            * return the default row height based off of the fieldList information this can be overwritten by a individuals row height
-            */
-            getDefaultRowHeight: function() {
-                console.log("");
-                console.log("lets do some magic");
-                console.log(CurrentObject);
-                return 25;
-            },
-
     		/**
     		 * @function getColumnConfig
     		 *
