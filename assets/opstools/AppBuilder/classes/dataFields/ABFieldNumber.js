@@ -574,6 +574,12 @@ class ABFieldNumber extends ABField {
 		decimalSign = decimalSign.sign || '';
 		thousandsSign = thousandsSign.sign || '';
 
+		// round number
+		if (this.settings.typeRounding == 'roundDown') {
+			var digit = Math.pow(10, decimalPlaces);
+			data = Math.floor(data * digit) / digit;
+		}
+
 		return '{prefix} {number} {postfix}'
 			.replace('{prefix}', prefix)
 			.replace('{postfix}', postfix)

@@ -330,6 +330,7 @@ describe("ABFieldNumber unit tests", () => {
 			target.settings.typeThousands = 'none';
 			target.settings.typeDecimals = 'period';
 			target.settings.typeDecimalPlaces = 3;
+			target.settings.typeRounding = 'none';
 
 			var value = 1000.1;
 
