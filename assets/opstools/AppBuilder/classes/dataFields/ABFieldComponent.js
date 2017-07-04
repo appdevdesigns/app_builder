@@ -337,7 +337,7 @@ export default class ABFieldComponent {
 			values: _logic.values,
 
 
-			_logic: _logic			// {obj} 	Unit Testing
+			_logic: this.logic			// {obj} 	Unit Testing
 		}
 	}
 
