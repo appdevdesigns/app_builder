@@ -22,10 +22,10 @@ var ABFieldLongTextDefaults = {
 	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-')		
 	
 	// menuName: what gets displayed in the Editor drop list
-	menuName : L('ab.dataField.string.menuName', '*Multiple line text'),
+	menuName : L('ab.dataField.string.menuName', '*Long text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short LongText value')
+	description: L('ab.dataField.string.description', '*Multiple lines of text')
 }
 
 
