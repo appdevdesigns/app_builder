@@ -15,11 +15,11 @@ function L(key, altText) {
 
 
 var ABFieldNumberDefaults = {
-	key : 'number', // unique key to reference this specific DataField
-	icon : 'slack',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
+	key: 'number', // unique key to reference this specific DataField
+	icon: 'hashtag',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	// menuName: what gets displayed in the Editor drop list
-	menuName : L('ab.dataField.number.menuName', '*Number'),
+	menuName: L('ab.dataField.number.menuName', '*Number'),
 
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.number.description', '*A Float or Integer Value')
@@ -44,51 +44,18 @@ var delimiterList = [
 ];
 
 var defaultValues = {
-	'allowRequired':0,
-	'numberDefault':'',
+	'allowRequired': 0,
+	'numberDefault': '',
 	'typeFormat': 'none',
 	'typeDecimals': 'none',
 	'typeDecimalPlaces': 'none',
-	'typeRounding' : 'none',
+	'typeRounding': 'none',
 	'typeThousands': 'none',
-	'validation':0,
-	'validateMinimum':'',
-	'validateMaximum':''
+	'validation': 0,
+	'validateMinimum': '',
+	'validateMaximum': ''
 }
 
-function getNumberFormat(settings, data) {
-	var formatSign = formatList.filter((item) => item.id == settings.typeFormat)[0],
-		thousandsSign = delimiterList.filter((item) => item.id == settings.typeThousands)[0],
-		decimalSign = delimiterList.filter((item) => item.id == settings.typeDecimals)[0],
-		decimalPlaces = settings.typeDecimalPlaces != 'none' ? parseInt(settings.typeDecimalPlaces) : 0;
-
-	var prefix = '',
-		postfix = '';
-
-	if (formatSign && formatSign.sign) {
-		switch (formatSign.position) {
-			case 'prefix':
-				prefix = formatSign.sign;
-				break;
-			case 'postfix':
-				postfix = formatSign.sign;
-				break;
-		}
-	}
-
-	decimalSign = decimalSign.sign || '';
-	thousandsSign = thousandsSign.sign || '';
-
-	return '{prefix} {number} {postfix}'
-		.replace('{prefix}', prefix)
-		.replace('{postfix}', postfix)
-		.replace('{number}', webix.Number.format(data, {
-			groupDelimiter: thousandsSign,
-			groupSize: 3,
-			decimalDelimiter: decimalSign,
-			decimalSize: decimalPlaces
-		}));
-}
 
 /**
  * ABFieldNumberComponent
@@ -104,7 +71,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 
 	fieldDefaults: ABFieldNumberDefaults,
 
-	elements:(App, field) => {
+	elements: (App, field) => {
 
 
 
@@ -117,13 +84,13 @@ var ABFieldNumberComponent = new ABFieldComponent({
 		// }
 
 		var ids = {
-			allowRequired		: '',
-			numberDefault 		: '',
-			typeDecimalPlaces 	: '',
-			typeRounding 		: '',
-			validate			: '',
-			validateMinimum 	: '',
-			validateMaximum 	: ''
+			allowRequired: '',
+			numberDefault: '',
+			typeDecimalPlaces: '',
+			typeRounding: '',
+			validate: '',
+			validateMinimum: '',
+			validateMaximum: ''
 		}
 		ids = field.idsUnique(ids, App);
 
@@ -137,7 +104,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			{
 				view: "checkbox",
 				id: ids.allowRequired,
-				name:"allowRequired",
+				name: "allowRequired",
 				labelRight: L("ab.dataField.number.required", "*Required"),
 				// inputWidth: 130,
 				labelWidth: 0,
@@ -155,7 +122,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 				label: L("ab.dataField.number.defaultValue", "*Default Value"),
 				labelWidth: App.config.labelWidthLarge,
 				id: ids.numberDefault,
-				name:"numberDefault",
+				name: "numberDefault",
 				placeholder: L('ab.dataField.number.defaultNumber', '*Default number'),
 				on: {
 					onChange: function (newVal, oldVal) {
@@ -163,7 +130,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 						if (!new RegExp('^[0-9.]*$').test(newVal)) {
 							// $$(componentIds.numberDefault).setValue(oldVal);
 							this.setValue(oldVal);
-						} 
+						}
 						// when require number, then should have default value
 						else if ($$(ids.allowRequired).getValue() && !newVal) {
 							this.setValue('0');
@@ -174,8 +141,8 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			},
 			{
 				view: "richselect",
-// id: componentIds.typeFormat,
-				name:'typeFormat',
+				// id: componentIds.typeFormat,
+				name: 'typeFormat',
 				label: L('ab.dataField.number.format', "*Format"),
 				value: 'none',
 				labelWidth: App.config.labelWidthLarge,
@@ -183,8 +150,8 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			},
 			{
 				view: "richselect",
-// id: componentIds.typeDecimals,
-				name:'typeDecimals',
+				// id: componentIds.typeDecimals,
+				name: 'typeDecimals',
 				disallowEdit: true,
 				label: L('ab.dataField.number.decimals', "*Decimals"),
 				value: 'none',
@@ -210,7 +177,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			{
 				view: "richselect",
 				id: ids.typeDecimalPlaces,
-				name:'typeDecimalPlaces',
+				name: 'typeDecimalPlaces',
 				disallowEdit: true,
 				label: "Places",
 				value: 'none',
@@ -230,7 +197,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			{
 				view: "richselect",
 				id: ids.typeRounding,
-				name:'typeRounding',
+				name: 'typeRounding',
 				label: L('ab.dataField.number.rounding', "*Rounding"),
 				value: 'none',
 				labelWidth: App.config.labelWidthLarge,
@@ -245,8 +212,8 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			},
 			{
 				view: "richselect",
-// id: componentIds.typeThousands,
-				name:'typeThousands',
+				// id: componentIds.typeThousands,
+				name: 'typeThousands',
 				label: L('ab.dataField.number.thousands', "*Thousands"),
 				value: 'none',
 				labelWidth: App.config.labelWidthLarge,
@@ -259,7 +226,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			{
 				view: 'checkbox',
 				id: ids.validate,
-				name:'validation',
+				name: 'validation',
 				labelWidth: App.config.labelWidthCheckbox,
 				labelRight: L('ab.dataField.number.validation', "*Validation"),
 				on: {
@@ -282,13 +249,13 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			{
 				view: 'text',
 				id: ids.validateMinimum,
-				name:'validateMinimum',
+				name: 'validateMinimum',
 				label: L('ab.dataField.number.minimum', "*Minimum"),
 				labelWidth: App.config.labelWidthLarge,
 				disabled: true,
 				hidden: true,
 				on: {
-					onChange: function(newVal, oldVal) {
+					onChange: function (newVal, oldVal) {
 						// Validate number
 						if (!new RegExp('^[0-9.]*$').test(newVal)) {
 							$$(ids.validateMinimum).setValue(oldVal || '');
@@ -299,7 +266,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 			{
 				view: 'text',
 				id: ids.validateMaximum,
-				name:'validateMaximum',
+				name: 'validateMaximum',
 				label: L('ab.dataField.number.maximum', "*Maximum"),
 				labelWidth: App.config.labelWidthLarge,
 				disabled: true,
@@ -318,11 +285,11 @@ var ABFieldNumberComponent = new ABFieldComponent({
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues:defaultValues,
+	defaultValues: defaultValues,
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
-	rules:{
+	rules: {
 		// 'textDefault':webix.rules.isNotEmpty,
 		// 'supportMultilingual':webix.rules.isNotEmpty
 	},
@@ -351,15 +318,15 @@ var ABFieldNumberComponent = new ABFieldComponent({
 	// 		.populate(ids, values) : populate the form with your current settings
 	// 		.show(ids)   : display the form in the editor
 	// 		.values(ids, values) : return the current values from the form
-	logic:{
+	logic: {
 
 		isValid: (ids, isValid) => {
 
 			// validate min/max values
 			if ($$(ids.validation).getValue() == true &&
-				$$(ids.validateMinimum).getValue() && 
+				$$(ids.validateMinimum).getValue() &&
 				$$(ids.validateMaximum).getValue()) {
-				
+
 				isValid = $$(ids.validateMinimum).getValue() < $$(ids.validateMaximum).getValue();
 
 				if (!isValid) {
@@ -389,7 +356,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 	// @param {obj} ids  the hash of id values for all the current form elements.
 	//					 it should have your elements + the default Header elements:
 	//						.label, .columnName, .fieldDescription, .showIcon
-	init:function(ids) {
+	init: function (ids) {
 		// want to hide the description? :
 		// $$(ids.fieldDescription).hide();
 	}
@@ -403,7 +370,7 @@ var ABFieldNumberComponent = new ABFieldComponent({
 class ABFieldNumber extends ABField {
 
     constructor(values, object) {
-    	super(values, object, ABFieldNumberDefaults);
+		super(values, object, ABFieldNumberDefaults);
 
     	/*
     	{
@@ -422,23 +389,23 @@ class ABFieldNumber extends ABField {
     	}
     	*/
 
-    	// we're responsible for setting up our specific settings:
-    	for (var dv in defaultValues) {
-    		this.settings[dv] = values.settings[dv] || defaultValues[dv];
-    	}
+		// we're responsible for setting up our specific settings:
+		for (var dv in defaultValues) {
+			this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
 
 
-    	// text to Int:
-    	this.settings.allowRequired = parseInt(this.settings.allowRequired);
-    	this.settings.validation = parseInt(this.settings.validation);
+		// text to Int:
+		this.settings.allowRequired = parseInt(this.settings.allowRequired);
+		this.settings.validation = parseInt(this.settings.validation);
 
-  	}
+	}
 
 
-  	// return the default values for this DataField
-  	static defaults() {
-  		return ABFieldNumberDefaults;
-  	}
+	// return the default values for this DataField
+	static defaults() {
+		return ABFieldNumberDefaults;
+	}
 
 
 
@@ -450,9 +417,9 @@ class ABFieldNumber extends ABField {
 	 * @param {App} App the UI App instance passed around the Components.
 	 * @return {Component}
 	 */
-  	static propertiesComponent(App) {
-  		return ABFieldNumberComponent.component(App);
-  	}
+	static propertiesComponent(App) {
+		return ABFieldNumberComponent.component(App);
+	}
 
 
 
@@ -499,14 +466,13 @@ class ABFieldNumber extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldNumber
-	columnHeader (isObjectWorkspace) {
+	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'number';		// [edit_type] simple inline editing.
-		config.sort   = 'int';			// [sort_type]
 
 		config.format = (d) => {
-			return getNumberFormat(this.settings, d);
+			return this.getNumberFormat(d);
 		};
 
 		return config;
@@ -521,7 +487,7 @@ class ABFieldNumber extends ABField {
 	 * @param {obj} values a key=>value hash of the current values.
 	 */
 	defaultValue(values) {
-		
+
 		// if no default value is set, then don't insert a value.
 		if (this.settings.numberDefault != '') {
 			values[this.columnName] = this.settings.numberDefault;
@@ -547,14 +513,14 @@ class ABFieldNumber extends ABField {
 			if (this.settings.typeDecimals == 'none') {
 
 				value = parseInt(value);
-				
+
 			} else {
 				var places = parseInt(this.settings.typeDecimalPlaces) || 2;
 				value = parseFloat(parseFloat(value).toFixed(places));
 			}
 
 			var isNumeric = (n) => {
-			  return !Number.isNaN(parseFloat(n)) && Number.isFinite(n);
+				return !Number.isNaN(parseFloat(n)) && Number.isFinite(n);
 			}
 			if (!isNumeric(value)) {
 				validator.addError(this.columnName, 'invalid number');
@@ -562,7 +528,7 @@ class ABFieldNumber extends ABField {
 
 			// validate Minimum
 			if (this.settings.validation == true &&
-				this.settings.validateMinimum != null && 
+				this.settings.validateMinimum != null &&
 				this.settings.validateMinimum > value) {
 
 				var errMessage = 'should be greater than {min}'
@@ -585,13 +551,47 @@ class ABFieldNumber extends ABField {
 
 	}
 
+	getNumberFormat(data) {
+		var formatSign = formatList.filter((item) => item.id == this.settings.typeFormat)[0],
+			thousandsSign = delimiterList.filter((item) => item.id == this.settings.typeThousands)[0],
+			decimalSign = delimiterList.filter((item) => item.id == this.settings.typeDecimals)[0],
+			decimalPlaces = this.settings.typeDecimalPlaces != 'none' ? parseInt(this.settings.typeDecimalPlaces) : 0;
+
+		var prefix = '',
+			postfix = '';
+
+		if (formatSign && formatSign.sign) {
+			switch (formatSign.position) {
+				case 'prefix':
+					prefix = formatSign.sign;
+					break;
+				case 'postfix':
+					postfix = formatSign.sign;
+					break;
+			}
+		}
+
+		decimalSign = decimalSign.sign || '';
+		thousandsSign = thousandsSign.sign || '';
+
+		return '{prefix} {number} {postfix}'
+			.replace('{prefix}', prefix)
+			.replace('{postfix}', postfix)
+			.replace('{number}', webix.Number.format(data, {
+				groupDelimiter: thousandsSign,
+				groupSize: 3,
+				decimalDelimiter: decimalSign,
+				decimalSize: decimalPlaces
+			}));
+	}
+
 }
 
 
-	// NOTE: if you need a unique [edit_type] by your returned config.editor above:
-    webix.editors.number = webix.extend({
-// TODO : Validate number only
-    }, webix.editors.text);
+// NOTE: if you need a unique [edit_type] by your returned config.editor above:
+webix.editors.number = webix.extend({
+	// TODO : Validate number only
+}, webix.editors.text);
 
 
 //// NOTE: if you need a unique [sort_type] by your returned config.sort above:
