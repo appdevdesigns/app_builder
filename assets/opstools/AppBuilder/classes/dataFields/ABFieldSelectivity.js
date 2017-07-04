@@ -24,7 +24,7 @@ export default class ABFieldSelectivity extends ABField {
 
 	}
 
-	selectivityRender(domNode, settings) {
+	selectivityRender(domNode, settings, App, row) {
 		if (domNode == null) return;
 
 		// setting up our specific settings:
@@ -49,6 +49,7 @@ export default class ABFieldSelectivity extends ABField {
 		var selectivityInput;
 		if (settings.multiple) {
 			selectivityInput = new Selectivity.Inputs.Multiple(settings);
+			this.selectivitySetBadge(domNode, App, row);
 		}
 		else {
 			selectivityInput = new Selectivity.Inputs.Single(settings);
@@ -64,7 +65,7 @@ export default class ABFieldSelectivity extends ABField {
 			return [];
 	}
 
-	selectivitySet(domNode, data) {
+	selectivitySet(domNode, data, App, row) {
 		if (domNode && domNode.selectivity) {
 
 			data = this.prepareData(data);
@@ -73,6 +74,8 @@ export default class ABFieldSelectivity extends ABField {
 				domNode.selectivity.setData(data);
 			else
 				domNode.selectivity.clear();
+				
+			this.selectivitySetBadge(domNode, App, row);
 		}
 	}
 
@@ -96,7 +99,8 @@ export default class ABFieldSelectivity extends ABField {
 		return data;
 	}
 
-	selectivitySetBadge(domNode) {
+	selectivitySetBadge(domNode, App, row) {
+		var field = this;
 		var innerHeight = domNode.clientHeight;
 		var outerHeight = domNode.parentElement.clientHeight;
 		if (innerHeight - outerHeight > 5) {
@@ -112,11 +116,17 @@ export default class ABFieldSelectivity extends ABField {
 				if (badge != null) {
 					badge.innerHTML = count;
 				} else {
+					var anchor = document.createElement("A");
+					anchor.href = "javascript:void(0);";
+					anchor.addEventListener('click', function(){
+						App.actions.onRowResizeAuto(row.id, innerHeight);
+					});
 					var node = document.createElement("SPAN");
 					var textnode = document.createTextNode(count);
 					node.classList.add("webix_badge", "selectivityBadge");
 					node.appendChild(textnode);
-					domNode.appendChild(node);
+					anchor.appendChild(node);
+					domNode.appendChild(anchor);
 				}
 			}
 		}
