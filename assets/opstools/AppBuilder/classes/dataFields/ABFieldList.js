@@ -402,7 +402,7 @@ class ABFieldList extends ABFieldSelectivity {
 				items: this.settings.options,
 				data: selectedData
 			});
-			
+
 			// Set badge
 			this.selectivitySetBadge(domNode);
 
@@ -438,8 +438,8 @@ class ABFieldList extends ABFieldSelectivity {
 		}
 
 	}
-	
-	
+
+
 	/*
 	* @function customEdit
 	* 
@@ -458,6 +458,9 @@ class ABFieldList extends ABFieldSelectivity {
 				return false;
 			}
 			return false;
+		}
+		else {
+			return super.customEdit(row, App, node);
 		}
 	}
 
