@@ -52,7 +52,7 @@ describe("ABFieldDate unit tests", () => {
 	});
 
 	/* Date field test cases */
-	describe('Date data field test cases', () => {
+	describe('Date field test cases', () => {
 
 		it('should exist date field', () => {
 			assert.isDefined(target);

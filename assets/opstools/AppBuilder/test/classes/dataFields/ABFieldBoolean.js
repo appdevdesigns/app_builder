@@ -51,14 +51,14 @@ describe("ABFieldBoolean unit tests", () => {
 			webixCom.destructor();
 	});
 
-	/* Date field test cases */
+	/* Boolean field test cases */
 	describe('Boolean field test cases', () => {
 
-		it('should exist date field', () => {
+		it('should exist boolean field', () => {
 			assert.isDefined(target);
 		});
 
-		it('should have valid date default value', () => {
+		it('should have valid default value', () => {
 			let defaultValues = ABFieldBoolean.defaults();
 
 			let menuName = L('ab.dataField.boolean.menuName', '*Checkbox');
@@ -70,10 +70,10 @@ describe("ABFieldBoolean unit tests", () => {
 			assert.equal(description, defaultValues.description);
 		});
 
-		it('.columnHeader: should return date column config', () => {
+		it('.columnHeader: should return valid column config', () => {
 			var columnConfig = target.columnHeader();
 
-			assert.equal('template', columnConfig.editor, 'should be "date" editor');
+			assert.equal('template', columnConfig.editor, 'should be "template" editor');
 			assert.equal('<div class="ab-boolean-display">{common.checkbox()}</div>', columnConfig.template);
 			assert.equal('center', columnConfig.css);
 			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
