@@ -13,8 +13,10 @@ describe("ABFieldDate unit tests", () => {
 	var mockApp;
 	var mockObject;
 
-	var dateField;
-	var dateComponent;
+	var target;
+	var targetComponent;
+
+	var webixCom;
 
 	var columnName = 'TEST_DATE_COLUMN';
 
@@ -24,12 +26,16 @@ describe("ABFieldDate unit tests", () => {
 		mockApp = ab._app;
 		mockObject = {};
 
-		dateField = new ABFieldDate({
+		target = new ABFieldDate({
 			columnName: columnName,
 			settings: {}
 		}, mockObject);
 
-		dateComponent = ABFieldDate.propertiesComponent(mockApp);
+		targetComponent = ABFieldDate.propertiesComponent(mockApp);
+
+		// render edit component
+		targetComponent.ui.container = "ab_test_div";
+		webixCom = new webix.ui(targetComponent.ui);
 	});
 
 	beforeEach(() => {
@@ -40,11 +46,16 @@ describe("ABFieldDate unit tests", () => {
 		sandbox.restore();
 	});
 
+	after(() => {
+		if (webixCom && webixCom.destructor)
+			webixCom.destructor();
+	});
+
 	/* Date field test cases */
 	describe('Date data field test cases', () => {
 
 		it('should exist date field', () => {
-			assert.isDefined(dateField);
+			assert.isDefined(target);
 		});
 
 		it('should have valid date default value', () => {
@@ -60,20 +71,20 @@ describe("ABFieldDate unit tests", () => {
 		});
 
 		it('.columnHeader: should return date column config', () => {
-			var columnConfig = dateField.columnHeader();
+			var columnConfig = target.columnHeader();
 
-			assert.equal('date', columnConfig.editor);
-			assert.equal('string', columnConfig.sort);
+			assert.equal('date', columnConfig.editor, 'should be "date" editor');
+			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
 			assert.isDefined(columnConfig.format);
 			assert.isDefined(columnConfig.editFormat);
 		});
 
 		it('.columnHeader: should return date/time column config when has includeTime setting', () => {
-			dateField.settings.includeTime = 1;
-			var columnConfig = dateField.columnHeader();
+			target.settings.includeTime = 1;
+			var columnConfig = target.columnHeader();
 
-			assert.equal('datetime', columnConfig.editor);
-			assert.equal('string', columnConfig.sort);
+			assert.equal('datetime', columnConfig.editor, 'should be "datetime" editor');
+			assert.isUndefined(columnConfig.sort, 'should not define sort in webix datatable');
 			assert.isDefined(columnConfig.format);
 			assert.isDefined(columnConfig.editFormat);
 		});
@@ -82,26 +93,27 @@ describe("ABFieldDate unit tests", () => {
 			var rowData = {};
 
 			// set setting to current date as default
-			dateField.settings.defaultCurrentDate = 1;
+			target.settings.defaultCurrentDate = 1;
 
 			// Set default value
-			dateField.defaultValue(rowData);
+			target.defaultValue(rowData);
 
 			assert.isDefined(rowData[columnName]);
+			assert.isNotNaN(Date.parse(rowData[columnName]), 'should parse valid date object');
 		});
 
 		it('.defaultValue: should set valid date to data', () => {
 			var rowData = {};
 
 			// set specific date as default
-			dateField.settings.defaultCurrentDate = 0;
-			dateField.settings.defaultDate = new Date('1986-02-28');
+			target.settings.defaultCurrentDate = 0;
+			target.settings.defaultDate = new Date('1986-02-28');
 
 			// Set default value
-			dateField.defaultValue(rowData);
+			target.defaultValue(rowData);
 
 			assert.isDefined(rowData[columnName]);
-			assert.equal(dateField.settings.defaultDate.toISOString(), rowData[columnName]);
+			assert.equal(target.settings.defaultDate.toISOString(), rowData[columnName]);
 		});
 
 		it('.isValidData - dateRange: should pass when enter date is in range', () => {
@@ -113,12 +125,12 @@ describe("ABFieldDate unit tests", () => {
 			let currentDate = new Date();
 			rowData[columnName] = currentDate;
 
-			dateField.settings.validateCondition = 'dateRange';
-			dateField.settings.validateRangeBefore = '5';
-			dateField.settings.validateRangeAfter = '5';
-			dateField.settings.validateRangeUnit = 'days';
+			target.settings.validateCondition = 'dateRange';
+			target.settings.validateRangeBefore = '5';
+			target.settings.validateRangeAfter = '5';
+			target.settings.validateRangeUnit = 'days';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.notCalled(stubAddError);
 
@@ -134,12 +146,12 @@ describe("ABFieldDate unit tests", () => {
 			// Next 6 days from current
 			rowData[columnName] = moment().add(6, 'days').toDate();
 
-			dateField.settings.validateCondition = 'dateRange';
-			dateField.settings.validateRangeBefore = '5';
-			dateField.settings.validateRangeAfter = '5';
-			dateField.settings.validateRangeUnit = 'days';
+			target.settings.validateCondition = 'dateRange';
+			target.settings.validateRangeBefore = '5';
+			target.settings.validateRangeAfter = '5';
+			target.settings.validateRangeUnit = 'days';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.calledOnce(stubAddError);
 		});
@@ -152,11 +164,11 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-02-15');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = 'between';
-			dateField.settings.validateStartDate = '1986-02-01';
-			dateField.settings.validateEndDate = '1986-02-28';
+			target.settings.validateCondition = 'between';
+			target.settings.validateStartDate = '1986-02-01';
+			target.settings.validateEndDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.notCalled(stubAddError);
 
@@ -172,11 +184,11 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-03-01');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = 'between';
-			dateField.settings.validateStartDate = '1986-02-01';
-			dateField.settings.validateEndDate = '1986-02-28';
+			target.settings.validateCondition = 'between';
+			target.settings.validateStartDate = '1986-02-01';
+			target.settings.validateEndDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.calledOnce(stubAddError);
 		});
@@ -189,10 +201,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-02-28');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '=';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '=';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.notCalled(stubAddError);
 
@@ -208,10 +220,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-03-01');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '=';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '=';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.calledOnce(stubAddError);
 		});
@@ -224,10 +236,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-02-27');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '<>';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '<>';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.notCalled(stubAddError);
 
@@ -243,10 +255,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-02-28');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '<>';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '<>';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.calledOnce(stubAddError);
 		});
@@ -259,10 +271,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-03-01');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '>';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '>';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.notCalled(stubAddError);
 
@@ -278,10 +290,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-02-28');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '>';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '>';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.calledOnce(stubAddError);
 		});
@@ -294,10 +306,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-02-27');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '<';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '<';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.notCalled(stubAddError);
 
@@ -313,10 +325,10 @@ describe("ABFieldDate unit tests", () => {
 			let enterDate = new Date('1986-02-28');
 			rowData[columnName] = enterDate;
 
-			dateField.settings.validateCondition = '<';
-			dateField.settings.validateStartDate = '1986-02-28';
+			target.settings.validateCondition = '<';
+			target.settings.validateStartDate = '1986-02-28';
 
-			dateField.isValidData(rowData, validator);
+			target.isValidData(rowData, validator);
 
 			sandbox.assert.calledOnce(stubAddError);
 		});
@@ -328,8 +340,100 @@ describe("ABFieldDate unit tests", () => {
 	describe('Date field component test cases', () => {
 
 		it('should exist date component', () => {
-			assert.isDefined(dateComponent);
+			assert.isDefined(targetComponent);
 		});
+
+		it('should exist .dateDisplay', () => {
+			assert.isDefined(targetComponent._logic.dateDisplay);
+		});
+
+		it('should valid default date format', () => {
+
+			var date = new Date('Feb 28 1986 02:12:00'),
+				// clone default settings
+				formatSettings = JSON.parse(JSON.stringify(target.settings));
+
+			formatSettings.includeTime = 1;
+
+			var expectedDate = '28/02/1986 02:12';
+
+			var result = targetComponent._logic.dateDisplay(date, formatSettings);
+
+			assert.equal(expectedDate, result);
+		});
+
+		it('should valid date format with comma delimiter', () => {
+
+			var date = new Date('Feb 28 1986 02:12:00'),
+				// clone default settings
+				formatSettings = JSON.parse(JSON.stringify(target.settings));
+
+			var expectedDate = '28,02,1986 02:12';
+
+			formatSettings.includeTime = 1;
+			formatSettings.dayDelimiter = 'comma';
+			formatSettings.monthDelimiter = 'comma';
+			formatSettings.yearDelimiter = 'comma';
+
+			var result = targetComponent._logic.dateDisplay(date, formatSettings);
+
+			assert.equal(expectedDate, result);
+		});
+
+		it('should valid date format with space delimiter no time', () => {
+
+			var date = new Date('Feb 28 1986 02:12:00'),
+				// clone default settings
+				formatSettings = JSON.parse(JSON.stringify(target.settings));
+
+			var expectedDate = '28 02 1986';
+
+			formatSettings.includeTime = 0;
+			formatSettings.dayDelimiter = 'space';
+			formatSettings.monthDelimiter = 'space';
+			formatSettings.yearDelimiter = 'space';
+
+			var result = targetComponent._logic.dateDisplay(date, formatSettings);
+
+			assert.equal(expectedDate, result);
+		});
+
+		it('should valid time format - slash delimiter', () => {
+
+			var date = new Date('Feb 28 1986 02:08:00'),
+				// clone default settings
+				formatSettings = JSON.parse(JSON.stringify(target.settings));
+
+			var expectedDate = '28/02/1986 02/08';
+
+			formatSettings.includeTime = 1;
+			formatSettings.hourFormat = '%h'; // "00 01 ... 10 11"
+			formatSettings.periodFormat = 'none';
+			formatSettings.timeDelimiter = 'slash';
+
+			var result = targetComponent._logic.dateDisplay(date, formatSettings);
+
+			assert.equal(expectedDate, result);
+		});
+
+		it('should valid time format - dash delimiter', () => {
+
+			var date = new Date('Feb 28 1986 22:08:00'),
+				// clone default settings
+				formatSettings = JSON.parse(JSON.stringify(target.settings));
+
+			var expectedDate = '28/02/1986 10-08pm';
+
+			formatSettings.includeTime = 1;
+			formatSettings.hourFormat = '%g'; // "0 1 ... 10 11"
+			formatSettings.periodFormat = '%a';
+			formatSettings.timeDelimiter = 'dash';
+
+			var result = targetComponent._logic.dateDisplay(date, formatSettings);
+
+			assert.equal(expectedDate, result);
+		});
+
 
 	});
 
