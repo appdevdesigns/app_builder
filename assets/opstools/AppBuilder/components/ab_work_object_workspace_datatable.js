@@ -56,7 +56,11 @@ export default class ABWorkObjectDatatable extends OP.Component {
                 } else {
                     tip = obj[common.column.id];
                 }
-                return tip;
+                if (tip == null) {
+                    return "";
+                } else {
+                    return tip;                    
+                }
             },
     		dragColumn: true,
     		on: {
