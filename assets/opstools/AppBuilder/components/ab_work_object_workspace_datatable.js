@@ -32,6 +32,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
 
     	}
 
+        var defaultHeight = 0;
 
         var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App);
 
@@ -608,6 +609,17 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     		objectLoad:function(object) {
 
     			CurrentObject = object;
+                
+                var DataTable = $$(ids.component);
+                var minHeight = 0;
+                CurrentObject._fields.forEach(function (f) {
+                    if (f.key == "image" && parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
+                        minHeight = parseInt(f.settings.imageHeight);
+                    }
+                });
+                if (minHeight > 0) {
+                    defaultHeight = minHeight;
+                }
 
     			PopupHeaderEditComponent.objectLoad(object);
 
@@ -669,7 +681,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				CurrentObject.model()
     				.where({
                         where: wheres, 
-                        sort: sorts
+                        sort: sorts,
+                        height: defaultHeight
                     })
     				.skip(0)
     				.limit(30)

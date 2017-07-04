@@ -224,8 +224,10 @@ export default class ABModel {
 				this.findAll(cond)
 				.then((data) => {
 					data.data.forEach((item) => {
-						if (item.properties != null && item.properties.height != "undefined" && item.properties.height > 0) {
+						if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
 							item.$height = parseInt(item.properties.height);
+						} else if (parseInt(this._where.height) > 0) {
+							item.$height = parseInt(this._where.height)
 						}
 					});
 					DT.parse(data);
@@ -248,8 +250,10 @@ export default class ABModel {
 		this.findAll(cond)
 		.then((data)=>{
 			data.data.forEach((item) => {
-				if (item.properties != null && typeof item.properties.height != "undefined" && item.properties.height > 0) {
+				if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
 					item.$height = parseInt(item.properties.height);
+				} else if (parseInt(this._where.height) > 0) {
+					item.$height = parseInt(this._where.height)
 				}
 			});
 			DT.parse(data);
