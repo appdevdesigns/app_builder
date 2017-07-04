@@ -96,5 +96,31 @@ export default class ABFieldSelectivity extends ABField {
 		return data;
 	}
 
+	selectivitySetBadge(domNode) {
+		var innerHeight = domNode.clientHeight;
+		var outerHeight = domNode.parentElement.clientHeight;
+		if (innerHeight - outerHeight > 5) {
+			var count = 0;
+			if (domNode && domNode.selectivity)
+				var values = domNode.selectivity.getValue() || [];
+			else
+				var values = [];
+			
+			count = values.length;
+			if (count > 1) {
+				var badge = domNode.querySelector('.webix_badge .selectivityBadge');
+				if (badge != null) {
+					badge.innerHTML = count;
+				} else {
+					var node = document.createElement("SPAN");
+					var textnode = document.createTextNode(count);
+					node.classList.add("webix_badge", "selectivityBadge");
+					node.appendChild(textnode);
+					domNode.appendChild(node);
+				}
+			}
+		}
+	}
+
 
 };

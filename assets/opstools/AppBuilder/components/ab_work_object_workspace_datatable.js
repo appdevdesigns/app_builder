@@ -47,6 +47,17 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		fixedRowHeight: false,
     		editaction: "custom",
     		select: "cell",
+            tooltip:function(obj, common){
+                var tip = "";
+                if (Array.isArray(obj[common.column.id])) {
+                    obj[common.column.id].forEach(function (o) {
+                        tip += o.text + "<br/>";
+                    });
+                } else {
+                    tip = obj[common.column.id];
+                }
+                return tip;
+            },
     		dragColumn: true,
     		on: {
     			onBeforeSelect: function (data, preserve) {

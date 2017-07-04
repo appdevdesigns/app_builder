@@ -280,6 +280,9 @@ class ABFieldUser extends ABFieldSelectivity {
 			// Set value to selectivity
 			this.selectivitySet(domNode, row[this.columnName]);
 
+			// Set badge
+			this.selectivitySetBadge(domNode);
+
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
 
@@ -295,6 +298,8 @@ class ABFieldUser extends ABFieldSelectivity {
 				.then(() => {
 					// update the client side data object as well so other data changes won't cause this save to be reverted
 					$$(node).updateItem(row.id, values);
+					// Set badge
+					this.selectivitySetBadge(domNode);
 				})
 				.catch((err) => {
 
