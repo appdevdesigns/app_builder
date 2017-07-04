@@ -5,7 +5,7 @@ var APP = path.resolve(__dirname);
 module.exports = {
   context: APP,
   entry: {
-    testAppBuilder: APP + '/test_app_builder.js'
+    testAppBuilder: ['babel-polyfill', APP + '/test_app_builder.js']
   },
   output: {
     path: APP + '/bin',

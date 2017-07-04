@@ -181,7 +181,6 @@ class ABFieldBoolean extends ABField {
 		config.editor = 'template';
 		config.template = '<div class="ab-boolean-display">{common.checkbox()}</div>';
 		config.css = 'center';
-		// config.sort = 'string';
 
 		return config;
 	}

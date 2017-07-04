@@ -100,7 +100,7 @@ var delimiterList = [
 
 /** Private methods **/
 function getDelimiterSign(text) {
-	var delimiterItem = delimiterList.filter(function (item) {
+	var delimiterItem = delimiterList.filter((item) => {
 		return item.id == text;
 	})[0];
 
@@ -127,7 +127,7 @@ function getDateFormat(setting) {
 	}
 
 	// Time format
-	if (setting.includeTime) {
+	if (setting.includeTime == true) {
 		dateFormat += (' {hour}{delimiter}{minute}{period}'
 			.replace('{hour}', setting.hourFormat)
 			.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
@@ -145,7 +145,7 @@ function getDateDisplay(dateData, settings) {
 	return webix.Date.dateToStr(dateFormat)(dateData);
 }
 
-function refreshDateDisplay() {
+function dateDisplayRefresh() {
 	var dateFormat = getDateFormat({
 		dayOrder: $$(ids.dayOrder).getValue(),
 		monthOrder: $$(ids.monthOrder).getValue(),
@@ -191,7 +191,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				labelRight: "Include time",
 				labelWidth: 0,
 				on: {
-					onChange: function (newVal, oldVal) {
+					onChange: (newVal, oldVal) => {
 						// Re-render default date picker
 						webix.ui({
 							view: 'datepicker',
@@ -201,7 +201,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 							disabled: $$(ids.currentToDefault).getValue() == true
 						}, $$(ids.default));
 
-						refreshDateDisplay();
+						dateDisplayRefresh();
 
 						if (newVal)
 							$$(ids.timeFormat).show();
@@ -217,7 +217,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 				labelRight: 'Set current date to default value',
 				labelWidth: 0,
 				on: {
-					onChange: function (newVal, oldVal) {
+					onChange: (newVal, oldVal) => {
 						if (newVal) {
 							$$(ids.default).disable();
 						}
@@ -277,8 +277,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 										{ id: '%l', value: "Sunday Monday ... Friday Saturday" },
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -295,8 +295,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 										{ id: 3, value: "3" }
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -310,8 +310,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 									options: delimiterList,
 									value: 'slash',
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								}
@@ -339,8 +339,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 										{ id: '%F', value: "January February ... November December" }
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -357,8 +357,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 										{ id: 3, value: "3" },
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -372,8 +372,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 									options: delimiterList,
 									value: 'slash',
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								}
@@ -399,8 +399,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -417,8 +417,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 										{ id: 3, value: "3" },
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -432,8 +432,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 									options: delimiterList,
 									value: 'slash',
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								}
@@ -462,8 +462,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 										{ id: '%G', value: "0 1 ... 22 23" }
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -480,8 +480,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 										{ id: '%A', value: "AM PM" }
 									],
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								},
@@ -495,8 +495,8 @@ var ABFieldDateComponent = new ABFieldComponent({
 									options: delimiterList,
 									value: 'colon',
 									on: {
-										'onChange': function (newValue, oldValue) {
-											refreshDateDisplay();
+										'onChange': (newValue, oldValue) => {
+											dateDisplayRefresh();
 										}
 									}
 								}
@@ -533,7 +533,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 					{ id: '<=', value: 'Less than or Equal to' }
 				],
 				on: {
-					onChange: function (newVal, oldVal) {
+					onChange: (newVal, oldVal) => {
 						switch (newVal) {
 							case 'none':
 								$$(ids.validateRange).hide();
@@ -585,7 +585,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 							{ id: 'years', value: 'Years' }
 						],
 						on: {
-							onChange: function (newVal) {
+							onChange: (newVal) => {
 								$$(ids.validateRangeBeforeLabel).refresh();
 								$$(ids.validateRangeAfterLabel).refresh();
 							}
@@ -599,7 +599,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 								align: 'left',
 								width: 140,
 								borderless: true,
-								template: function () {
+								template: () => {
 									var beforeLabel = 'Before #number# #unit#'
 										.replace('#number#', $$(ids.validateRangeBefore).getValue())
 										.replace('#unit#', $$(ids.validateRangeUnit).getValue());
@@ -618,7 +618,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 								view: 'template',
 								align: 'right',
 								borderless: true,
-								template: function () {
+								template: () => {
 									var afterLabel = 'After #number# #unit#'
 										.replace('#number#', $$(ids.validateRangeAfter).getValue())
 										.replace('#unit#', $$(ids.validateRangeUnit).getValue());
@@ -635,7 +635,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 								view: 'slider',
 								name: "validateRangeBefore",
 								on: {
-									onChange: function (newVal, oldValue) {
+									onChange: (newVal, oldValue) => {
 										$$(ids.validateRangeBeforeLabel).refresh();
 									}
 								}
@@ -645,7 +645,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 								view: 'slider',
 								name: "validateRangeAfter",
 								on: {
-									onChange: function (newVal, oldValue) {
+									onChange: (newVal, oldValue) => {
 										$$(ids.validateRangeAfterLabel).refresh();
 									}
 								}
@@ -694,9 +694,16 @@ var ABFieldDateComponent = new ABFieldComponent({
 		// populate: (ids, values) => {
 		// }
 
-		show: (ids) => {
-			refreshDateDisplay();
+		show: function (ids) {
+			dateDisplayRefresh();
+		},
+
+		dateDisplay: (date, settings) => {
+			var dateFormat = getDateFormat(settings);
+
+			return webix.Date.dateToStr(dateFormat)(date);
 		}
+
 
 	},
 
@@ -704,7 +711,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 	// @param {obj} ids  the hash of id values for all the current form elements.
 	//					 it should have your elements + the default Header elements:
 	//						.label, .columnName, .fieldDescription, .showIcon
-	init: function (ids) {
+	init: (ids) => {
 	}
 
 
@@ -797,8 +804,6 @@ class ABFieldDate extends ABField {
 			config.editor = 'datetime';
 		else
 			config.editor = 'date';
-
-		config.sort = 'string';
 
 
 		// NOTE: it seems that the default value is a string in ISO format.
