@@ -402,6 +402,9 @@ class ABFieldList extends ABFieldSelectivity {
 				items: this.settings.options,
 				data: selectedData
 			});
+			
+			// Set badge
+			this.selectivitySetBadge(domNode);
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
@@ -416,7 +419,10 @@ class ABFieldList extends ABFieldSelectivity {
 
 				this.object.model().update(row.id, values)
 					.then(() => {
-
+						// update the client side data object as well so other data changes won't cause this save to be reverted
+						$$(node).updateItem(row.id, values);
+						// Set badge
+						this.selectivitySetBadge(domNode);
 					})
 					.catch((err) => {
 
@@ -432,7 +438,28 @@ class ABFieldList extends ABFieldSelectivity {
 		}
 
 	}
+	
+	
+	/*
+	* @function customEdit
+	* 
+	* @param {object} row is the {name=>value} hash of the current row of data.
+	* @param {App} App the shared ui App object useful more making globally
+	*					unique id references.
+	* @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	*/
+	customEdit(row, App, node) {
+		if (this.settings.isMultiple == true) {
+			var domNode = node.querySelector('.list-data-values');
 
+			if (domNode.selectivity != null) {
+				// Open selectivity
+				domNode.selectivity.open();
+				return false;
+			}
+			return false;
+		}
+	}
 
 
 	/**
