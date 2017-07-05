@@ -330,16 +330,19 @@ export default class ABObject extends ABObjectBase {
 
 		if (rowData == null) return '';
 
-		var labelData = this.labelFormat || '{' + this._fields[0].columnName + '}';
+		var labelData = this.labelFormat || '{' + this._fields[0].id + '}';
 
-		// get column names in {colName} template
-		// ['{colName1}', ..., '{colNameN}']
-		var formatNames = labelData.match(/\{[^}]+\}/g);
+		// get column ids in {colId} template
+		// ['{colId1}', ..., '{colIdN}']
+		var colIds = labelData.match(/\{[^}]+\}/g);
 
-		formatNames.forEach(function(templateName) {
-			var colName = templateName.replace('{', '').replace('}', '');
+		colIds.forEach((colId) => {
+			var colIdNoBracket = colId.replace('{', '').replace('}', '');
 
-			labelData = labelData.replace(templateName, rowData[colName] || '');
+			var field = this.fields((f) => f.id == colIdNoBracket)[0]
+			if (field == null) return;
+
+			labelData = labelData.replace(colId, rowData[field.columnName] || '');
 		});
 
 		return labelData;
