@@ -162,6 +162,8 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
                 ColumnEditor.viewLoad(view);
                 ColumnDetails.viewLoad(view);
 
+                $$(ids.component).resize();
+
             }
             
         });

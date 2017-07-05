@@ -142,7 +142,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 
 
 		// our internal business logic
-		var _logic = {
+		var _logic = this._logic = {
 
 
 			/**
@@ -428,6 +428,10 @@ console.error('!! todo: onBeforeEditStop() editing');
 							// 		break;
 							// }
 
+				// now register a callback to update this display when this view is updated:
+				item.removeListener('properties.updated', _logic.refreshTemplateItem)
+                .once('properties.updated', _logic.refreshTemplateItem)
+
 				return template
 					.replace('#label#', item.label)
 					.replace('{common.icon()}', common.icon(item))
@@ -445,6 +449,12 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 				// show the new popup
 				PopupNewPageComponent.show();
+			},
+
+
+			refreshTemplateItem: function(view) {
+				// make sure this item is updated in our list:
+				$$(ids.list).updateItem(view.id, view);
 			},
 
 			// rename: function () {
@@ -489,7 +499,6 @@ console.error('!! todo: onBeforeEditStop() editing');
 			// 	}
 			// }
 		}
-		this._logic = _logic;
 
 
 		/*

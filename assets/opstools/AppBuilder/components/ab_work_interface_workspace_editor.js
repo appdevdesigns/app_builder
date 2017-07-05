@@ -138,7 +138,12 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
              * @param {ABView} view  current view instance.
              */
             viewLoad: function(view) {
+                
                 CurrentView = view;
+
+                // try to make sure we don't continually add up listeners.
+                CurrentView.removeListener('properties.updated', _logic.viewUpdate)
+                .once('properties.updated', _logic.viewUpdate)
 
                 // update the toolbar navigation map
                 var mapLabel = view.mapLabel();
@@ -163,6 +168,10 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     this.viewLoad(CurrentView);  
                 }
                   
+            },
+
+            viewUpdate: function () {
+                _logic.viewLoad(CurrentView);
             }
         };
         

@@ -37,9 +37,6 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             scroll: true,
             rows:[
 
-//// LEFT OFF HERE:
-// - create new Views: ABViewTitle, ABViewDescription
-
                 {
                     view: 'toolbar',
                     // id: self.componentIds.componentToolbar,
@@ -53,6 +50,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     id: ids.list,
                     view: 'list',
                     drag: 'source',
+                    autoheight:true,
                     template: function (obj, common) {
                         return _logic.template(obj, common);
                     },
@@ -139,7 +137,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             /* 
              * @method viewLoad
              * A new View has been selected for editing, so update
-             * our interface with the details for this View.
+             * our interface with the components allowed for this View.
              * @param {ABView} view  current view instance.
              */
             viewLoad: function(view) {
@@ -151,12 +149,19 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                         
                         view: 'label',
                         // id: self.componentIds.componentToolbarHeader,
-                        label: labels.component.noComponents
-                    
+                        label: labels.component.noComponents,
+                        // common:function(){
+                        //     return {
+                        //         icon:'',
+                        //         labelKey:'ab.interface.noComponents'
+                        //     }
+                        // }
                     })
                 }
-                $$(ids.list).parse(components);
-                $$(ids.list).refresh();
+                var List = $$(ids.list);
+                List.clearAll();
+                List.parse(components);
+                List.refresh();
             }
         };
         
