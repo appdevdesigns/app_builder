@@ -49,7 +49,7 @@ export default class ABFieldSelectivity extends ABField {
 		var selectivityInput;
 		if (settings.multiple) {
 			selectivityInput = new Selectivity.Inputs.Multiple(settings);
-			this.selectivitySetBadge(domNode, App, row);
+			// this.selectivitySetBadge(domNode, App, row);
 		}
 		else {
 			selectivityInput = new Selectivity.Inputs.Single(settings);

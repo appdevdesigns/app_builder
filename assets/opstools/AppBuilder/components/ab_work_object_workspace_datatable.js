@@ -612,6 +612,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 
                 var DataTable = $$(ids.component);
                 var minHeight = 0;
+                defaultHeight = 0;
                 CurrentObject._fields.forEach(function (f) {
                     if (f.key == "image" && parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
                         minHeight = parseInt(f.settings.imageHeight);

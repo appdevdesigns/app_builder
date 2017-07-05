@@ -596,6 +596,6 @@ div.webix_item_tab {
 	right: -5px;
 	background: #AAA;
 }
-.list-data-values {
+.list-data-values, .connect-data-values {
 	position: relative;
 }

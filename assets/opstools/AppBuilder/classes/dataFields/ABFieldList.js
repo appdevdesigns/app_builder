@@ -435,8 +435,8 @@ class ABFieldList extends ABFieldSelectivity {
 		}
 
 	}
-	
-	
+
+
 	/*
 	* @function customEdit
 	* 
@@ -455,6 +455,9 @@ class ABFieldList extends ABFieldSelectivity {
 				return false;
 			}
 			return false;
+		}
+		else {
+			return super.customEdit(row, App, node);
 		}
 	}
 
