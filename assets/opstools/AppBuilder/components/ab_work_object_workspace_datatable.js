@@ -41,8 +41,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     	this.ui = {
     		view: "datatable",
     		id: ids.component,
-    		resizeColumn: true,
-    		resizeRow: true,
+            resizeColumn: {size: 6},
+            resizeRow: {size: 6},
     		prerender: false,
     		editable: true,
     		fixedRowHeight: false,
@@ -612,6 +612,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 
                 var DataTable = $$(ids.component);
                 var minHeight = 0;
+                defaultHeight = 0;
                 CurrentObject._fields.forEach(function (f) {
                     if (f.key == "image" && parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
                         minHeight = parseInt(f.settings.imageHeight);
@@ -725,6 +726,29 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     	// Expose any globally accessible Actions:
     	this.actions({
 
+            onRowResizeAuto: function(rowId, height) {
+                var DataTable = $$(ids.component);
+                
+                var item = DataTable.getItem(rowId);
+                var height = height;
+                
+                var properties = item.properties || {};
+                properties.height = height;
+                
+                item.properties = properties;
+
+                CurrentObject.model()
+                .update(item.id, item)
+                .then(()=>{
+                    item.$height = height;
+                    DataTable.refresh();
+                })
+                .catch((err)=>{
+                
+                    OP.Error.log('Error saving item:', {error:err});
+                
+                });
+            }
 
     	})
 
