@@ -565,7 +565,21 @@ console.log('... catch(err) !');
             
         })
 
+    },
+
+
+    refresh: function (req, res) {
+
+        AppBuilder.routes.verifyAndReturnObject(req, res)
+            .then(function (object) {
+
+                object.modelRefresh();
+
+                res.AD.success({});
+
+            });
+
     }
-    
-	
+
+
 };

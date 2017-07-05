@@ -73,7 +73,11 @@ export default class ABModel {
 		.replace('#id#', id);
 	}
 
-
+	modelURLRefresh () {
+		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
+		.replace('#appID#', this.object.application.id)
+		.replace('#objID#', this.object.id);
+	}
 
 
 
@@ -333,6 +337,29 @@ console.error('!!!!!', err);
 	where(cond) {
 		this._where = cond;
 		return this;
+	}
+
+
+	/**
+	 * @method refresh
+	 * refresh model definition on the server.
+	 */
+	refresh() {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Service.put({
+					url:this.modelURLRefresh()
+				})
+				.then(()=>{
+					resolve();
+				})
+				.catch(reject);
+
+			}
+		)
+
 	}
 
 }

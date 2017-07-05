@@ -100,7 +100,8 @@ module.exports = {
     // get  url   // find   the object data
     // post url   // create the object data
     // put  url   // update the object data
-    // delete url // remove the object dat
+    // delete url // remove the object data
+    // put  url   // refresh object model
     'get /app_builder/model/application/:appID/object/:objID' : 
         'app_builder/ABModelController.find',
 
@@ -112,6 +113,9 @@ module.exports = {
 
     'delete /app_builder/model/application/:appID/object/:objID/:id' : 
         'app_builder/ABModelController.delete',
+
+    'put /app_builder/model/application/:appID/refreshobject/:objID' : 
+        'app_builder/ABModelController.refresh',
         
 
 // only for easy development/testing purposes:
