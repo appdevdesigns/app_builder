@@ -73,7 +73,11 @@ export default class ABModel {
 		.replace('#id#', id);
 	}
 
-
+	modelURLRefresh () {
+		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
+		.replace('#appID#', this.object.application.id)
+		.replace('#objID#', this.object.id);
+	}
 
 
 
@@ -224,8 +228,10 @@ export default class ABModel {
 				this.findAll(cond)
 				.then((data) => {
 					data.data.forEach((item) => {
-						if (item.properties != null && item.properties.height != "undefined" && item.properties.height > 0) {
+						if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
 							item.$height = parseInt(item.properties.height);
+						} else if (parseInt(this._where.height) > 0) {
+							item.$height = parseInt(this._where.height)
 						}
 					});
 					DT.parse(data);
@@ -248,8 +254,10 @@ export default class ABModel {
 		this.findAll(cond)
 		.then((data)=>{
 			data.data.forEach((item) => {
-				if (item.properties != null && typeof item.properties.height != "undefined" && item.properties.height > 0) {
+				if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
 					item.$height = parseInt(item.properties.height);
+				} else if (parseInt(this._where.height) > 0) {
+					item.$height = parseInt(this._where.height)
 				}
 			});
 			DT.parse(data);
@@ -329,6 +337,29 @@ console.error('!!!!!', err);
 	where(cond) {
 		this._where = cond;
 		return this;
+	}
+
+
+	/**
+	 * @method refresh
+	 * refresh model definition on the server.
+	 */
+	refresh() {
+
+		return new Promise(
+			(resolve, reject) => {
+
+				OP.Comm.Service.put({
+					url:this.modelURLRefresh()
+				})
+				.then(()=>{
+					resolve();
+				})
+				.catch(reject);
+
+			}
+		)
+
 	}
 
 }

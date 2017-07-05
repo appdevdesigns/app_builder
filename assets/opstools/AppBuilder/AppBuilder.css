@@ -589,3 +589,13 @@ div.webix_item_tab {
 	position: relative;
 	z-index: 200;
 }
+
+/* Selectivity Badges */
+.selectivityBadge {
+	top: 6px;
+	right: -5px;
+	background: #AAA;
+}
+.list-data-values, .connect-data-values {
+	position: relative;
+}

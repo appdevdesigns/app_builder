@@ -32,6 +32,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
 
     	}
 
+        var defaultHeight = 0;
 
         var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App);
 
@@ -40,13 +41,28 @@ export default class ABWorkObjectDatatable extends OP.Component {
     	this.ui = {
     		view: "datatable",
     		id: ids.component,
-    		resizeColumn: true,
-    		resizeRow: true,
+            resizeColumn: {size: 6},
+            resizeRow: {size: 6},
     		prerender: false,
     		editable: true,
     		fixedRowHeight: false,
     		editaction: "custom",
     		select: "cell",
+            tooltip:function(obj, common){
+                var tip = "";
+                if (Array.isArray(obj[common.column.id])) {
+                    obj[common.column.id].forEach(function (o) {
+                        tip += o.text + "<br/>";
+                    });
+                } else {
+                    tip = obj[common.column.id];
+                }
+                if (tip == null) {
+                    return "";
+                } else {
+                    return tip;                    
+                }
+            },
     		dragColumn: true,
     		on: {
     			onBeforeSelect: function (data, preserve) {
@@ -322,18 +338,6 @@ console.error('!! ToDo: onAfterColumnHide()');
     			return DataTable.getColumnIndex(id);
     		},
             
-            /**
-            * @function getDefaultRowHeight
-            *
-            * return the default row height based off of the fieldList information this can be overwritten by a individuals row height
-            */
-            getDefaultRowHeight: function() {
-                console.log("");
-                console.log("lets do some magic");
-                console.log(CurrentObject);
-                return 25;
-            },
-
     		/**
     		 * @function getColumnConfig
     		 *
@@ -605,6 +609,18 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     		objectLoad:function(object) {
 
     			CurrentObject = object;
+                
+                var DataTable = $$(ids.component);
+                var minHeight = 0;
+                defaultHeight = 0;
+                CurrentObject._fields.forEach(function (f) {
+                    if (f.key == "image" && parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
+                        minHeight = parseInt(f.settings.imageHeight);
+                    }
+                });
+                if (minHeight > 0) {
+                    defaultHeight = minHeight;
+                }
 
     			PopupHeaderEditComponent.objectLoad(object);
 
@@ -666,7 +682,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				CurrentObject.model()
     				.where({
                         where: wheres, 
-                        sort: sorts
+                        sort: sorts,
+                        height: defaultHeight
                     })
     				.skip(0)
     				.limit(30)
@@ -709,6 +726,29 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     	// Expose any globally accessible Actions:
     	this.actions({
 
+            onRowResizeAuto: function(rowId, height) {
+                var DataTable = $$(ids.component);
+                
+                var item = DataTable.getItem(rowId);
+                var height = height;
+                
+                var properties = item.properties || {};
+                properties.height = height;
+                
+                item.properties = properties;
+
+                CurrentObject.model()
+                .update(item.id, item)
+                .then(()=>{
+                    item.$height = height;
+                    DataTable.refresh();
+                })
+                .catch((err)=>{
+                
+                    OP.Error.log('Error saving item:', {error:err});
+                
+                });
+            }
 
     	})
 

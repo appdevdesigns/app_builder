@@ -276,9 +276,9 @@ class ABFieldUser extends ABFieldSelectivity {
 				placeholder: placeholder,
 				items: this._options.users,
 				readOnly: readOnly
-			});				
+			}, App, row);			
 			// Set value to selectivity
-			this.selectivitySet(domNode, row[this.columnName]);
+			this.selectivitySet(domNode, row[this.columnName], App, row);
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
@@ -307,6 +307,27 @@ class ABFieldUser extends ABFieldSelectivity {
 			}, false);
 		}
 		
+	}
+	
+	/*
+	* @function customEdit
+	* 
+	* @param {object} row is the {name=>value} hash of the current row of data.
+	* @param {App} App the shared ui App object useful more making globally
+	*					unique id references.
+	* @param {HtmlDOM} node  the HTML Dom object for this field's display.
+	*/
+	customEdit(row, App, node) {
+		if (this.settings.isMultiple == true) {	
+			var domNode = node.querySelector('.list-data-values');
+
+			if (domNode.selectivity != null) {
+				// Open selectivity
+				domNode.selectivity.open();
+				return false;
+			}
+			return false;
+		}
 	}
 
 	/**

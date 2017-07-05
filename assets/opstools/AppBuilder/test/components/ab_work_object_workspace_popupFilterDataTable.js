@@ -140,7 +140,6 @@ describe('ab_work_object_workspace_popupFilterDataTable component', () => {
 
 			// Make sure the functions are only called the number of times we expect
 			sandbox.assert.callCount(spyLogicClickAddNewFilter, mockObj.workspaceFilterConditions.length);
-			sandbox.assert.callCount(spyLogicOnChange, mockObj.workspaceSortFields.length);
 			
 			// Assume clear all button is clicked
 			addNewFilterButtonClickFn(null, null, null);

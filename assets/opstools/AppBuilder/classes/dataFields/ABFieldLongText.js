@@ -20,10 +20,10 @@ var ABFieldLongTextDefaults = {
 	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 	
 	// menuName: what gets displayed in the Editor drop list
-	menuName: L('ab.dataField.LongText.menuName', '*Multiple line text'),
+	menuName: L('ab.dataField.LongText.menuName', '*Long text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.LongText.description', '*short LongText value')
+	description: L('ab.dataField.LongText.description', '*Multiple lines of text')
 }
 
 
@@ -226,6 +226,25 @@ class ABFieldLongText extends ABField {
 
 		return config;
 	}
+	
+	
+	/**
+	 * @method defaultValue
+	 * insert a key=>value pair that represent the default value
+	 * for this field.
+	 * @param {obj} values a key=>value hash of the current values.
+	 */
+	defaultValue(values) {
+		if (values[this.columnName] == null) {
+			if (typeof this.settings.textDefault == 'string') {
+				values[this.columnName] = this.settings.textDefault;
+			}
+			else {
+				values[this.columnName] = '';
+			}
+		}
+	}
+	
 
 }
 

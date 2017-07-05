@@ -76,10 +76,12 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                     },
                     {
                         cols: [
+                            { fillspace: true },
                             {
                                 view: "button", 
-                                value: labels.common.cancel, 
-                                width: 100, 
+                                value: labels.common.cancel,
+                                css: "ab-cancel-button", 
+                                autowidth: true, 
                                 click: function () {
                                     _logic.buttonCancel(); 
                                 }
@@ -89,7 +91,7 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                                 id: ids.buttonSave, 
                                 label: labels.common.save, 
                                 type: "form", 
-                                width: 120, 
+                                autowidth: true, 
                                 click: function () {
                                     _logic.buttonSave();
                                 }
@@ -127,7 +129,7 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
 
 
         // internal business logic 
-        var _logic = this.logic = {
+        var _logic = this._logic = {
             buttonCancel: function() {
                 $$(ids.component).hide();
             },
@@ -189,16 +191,13 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                 List.clearAll();
                 
                 // refresh list with new set of fields
-                var allFields = _currentObject.fields();
-                var listFields = [];
-                allFields.forEach((f) => {
-                    listFields.push({
-                        id: f.name,
-                        label: f.label
-                    })
-                });
-                
-                List.parse(allFields);
+                var listFields = _currentObject
+                    .fields((f) => {
+                        // TODO: should have flag in ABField ?
+                        return f.key == 'LongText' || f.key == 'string' || f.key == 'number' || f.key == 'date' || f.key == 'boolean'
+                    });
+
+                List.parse(listFields);
             },
     
             onItemClick: function(id, e, node) {
@@ -224,7 +223,7 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                     if (labelFormat) {
                         if (List.data && List.data.count() > 0) {
                             List.data.each(function (d) {
-                                labelFormat = labelFormat.replace('{' + d.id + '}', '{' + d.label + '}');
+                                labelFormat = labelFormat.replace(new RegExp('{' + d.id + '}', 'g'), '{' + d.label + '}');
                             });
                         }
                     }

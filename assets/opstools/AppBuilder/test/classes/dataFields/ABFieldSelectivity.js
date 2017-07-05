@@ -6,7 +6,7 @@ describe("ABFieldSelectivity unit tests", () => {
 
 	var mockObject;
 	var target;
-	var domTest = document.querySelector('#test_div');
+	var domTest = document.querySelector('#ab_test_div');
 
 	const columnName = 'TEST_SELECTIVITY_COLUMN';
 
@@ -46,6 +46,10 @@ describe("ABFieldSelectivity unit tests", () => {
 
 		// Clear test div
 		target.selectivityDestroy(domTest);
+	});
+
+	after(() => {
+		// domTest;
 	});
 
 	describe('.selectivityRender', () => {
