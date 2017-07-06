@@ -140,14 +140,16 @@ class ABFieldConnect extends ABField {
 				var linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
 				var linkTableName = linkObject.dbTableName();
 
+
 				// 1:M - create a column in target table and references to id of linked table
 				// 1:1 - create a column in table, references to id of linked table and set to be unique
-				if (this.settings.linkType == 'one' &&
+				if ((this.settings.linkType == 'one') &&
 					(this.settings.linkViaType == 'many' || this.settings.linkViaType == 'one')) {
 
 					async.waterfall([
 						// check column already exist
 						(next) => {
+
 							knex.schema.hasColumn(tableName, this.columnName)
 								.then((exists) => {
 									next(null, exists);
@@ -174,6 +176,7 @@ class ABFieldConnect extends ABField {
 						}
 					],
 						(err) => {
+
 							if (err) reject(err);
 							else resolve();
 						});
@@ -200,7 +203,6 @@ class ABFieldConnect extends ABField {
 
 								t.integer(this.columnName).unsigned().nullable()
 									.references('id').inTable(tableName).onDelete('cascade');
-
 							})
 								.then(() => { next(); })
 								.catch(next);
@@ -210,13 +212,21 @@ class ABFieldConnect extends ABField {
 							if (err) reject(err);
 							else resolve();
 						});
-
 				}
 
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
-					var joinTableName = this.joinTableName();
+					var joinTableName = this.joinTableName(),
+						getFkName = (objectName) => {
+
+							var fkName = objectName + '_' + this.columnName;
+
+							if (fkName.length > 64)
+								fkName = fkName.substring(0, 64);
+
+							return fkName;
+						};
 
 					knex.schema.hasTable(joinTableName).then((exists) => {
 
@@ -230,12 +240,15 @@ class ABFieldConnect extends ABField {
 								t.charset('utf8');
 								t.collate('utf8_unicode_ci');
 
+								var sourceFkName = getFkName(this.object.name);
+								var targetFkName = getFkName(linkObject.name);
+
 								// create columns
 								t.integer(this.object.name).unsigned().nullable()
-									.references('id').inTable(tableName).onDelete('cascade');
+									.references('id').inTable(tableName).withKeyName(sourceFkName).onDelete('cascade');
 
 								t.integer(linkObject.name).unsigned().nullable()
-									.references('id').inTable(linkTableName).onDelete('cascade');
+									.references('id').inTable(linkTableName).withKeyName(targetFkName).onDelete('cascade');
 							})
 								.then(() => { resolve(); })
 								.catch(reject);
@@ -249,10 +262,6 @@ class ABFieldConnect extends ABField {
 				else {
 					resolve();
 				}
-
-				// Refresh model of objects
-				this.object.modelRefresh();
-				linkObject.modelRefresh();
 
 			}
 		);

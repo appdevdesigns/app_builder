@@ -4,7 +4,7 @@
  * An ABView defines a UI display container.
  *
  */
-
+import EventEmitter from "events"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABViewManager from "../ABViewManager"
 
@@ -22,7 +22,7 @@ var ABViewDefaults = {
 
 
 
-export default class ABView  {
+export default class ABView  extends EventEmitter {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -32,11 +32,14 @@ export default class ABView  {
 	 */
     constructor(values, application, parent, defaultValues) {
 
+    	super();
+
     	this.defaults = defaultValues || ABViewDefaults;
 
     	this.application = application;
 
     	
+
   	// 	{
   	// 		id:'uuid',					// uuid value for this obj
   	// 		key:'viewKey',				// unique key for this View Type
@@ -52,10 +55,6 @@ export default class ABView  {
   	// 	}
   		
   		this.fromValues(values);
-
-
-    	// label is a multilingual value:
-    	OP.Multilingual.translate(this, this, ['label']);
 
 
     	this.parent = parent || null;
@@ -225,14 +224,17 @@ export default class ABView  {
 
 // this.parent = values.parent || null;
 
-		values.settings = values.settings || {};
 
     	// if this is being instantiated on a read from the Property UI,
     	// .label is coming in under .settings.label
+    	values.settings = values.settings || {};
     	this.label = values.label || values.settings.label || '?label?';
 
 
     	this.translations = values.translations || [];
+    	// label is a multilingual value:
+    	OP.Multilingual.translate(this, this, ['label']);
+
 
     	this.settings = values.settings || {};
 
@@ -716,32 +718,97 @@ export default class ABView  {
 
 
 	static propertyEditorComponent(App) {
+
+		var ABViewPropertyComponent = new ABPropertyComponent({
+
+			editObject: this,	// ABView
+			
+			fieldDefaults: this.common(), // ABViewDefaults,
+
+			elements:(App, field) => {
+
+				var ids = {
+					imageWidth: '',
+					imageHeight: ''
+				}
+				ids = field.idsUnique(ids, App);
+
+				return []
+			},
+
+			// defaultValues: the keys must match a .name of your elements to set it's default value.
+			defaultValues: ABViewPropertyComponentDefaults,
+
+			// rules: basic form validation rules for webix form entry.
+			// the keys must match a .name of your .elements for it to apply
+			rules:{
+				// 'textDefault':webix.rules.isNotEmpty,
+				// 'supportMultilingual':webix.rules.isNotEmpty
+			},
+
+			// include additional behavior on default component operations here:
+			// The base routines will be processed first, then these.  Any results
+			// from the base routine, will be passed on to these: 
+			// 	@param {obj} ids  the list of ids used to generate the UI.  your 
+			//					  provided .elements will have matching .name keys
+			//					  to access them here.
+			//  @param {obj} values the current set of values provided for this instance
+			// 					  of ABField:
+			//					  {
+			//						id:'',			// if already .saved()
+			// 						label:'',
+			// 						columnName:'',
+			//						settings:{
+			//							showIcon:'',
+			//
+			//							your element key=>values here	
+			//						}
+			//					  }
+			//
+			// 		.clear(ids)  : reset the display to an empty state
+			// 		.isValid(ids, isValid): perform validation on the current editor values
+			// 		.populate(ids, ABField) : populate the form with your current settings
+			// 		.show(ids)   : display the form in the editor
+			// 		.values(ids, values) : return the current values from the form
+			logic:{
+
+			},
+
+			// perform any additional setup actions here.
+			// @param {obj} ids  the hash of id values for all the current form elements.
+			//					 it should have your elements + the default Header elements:
+			//						.label, .columnName, .fieldDescription, .showIcon
+			init:function(ids) {
+				// want to hide the description? :
+				// $$(ids.fieldDescription).hide();
+			}
+
+		})
+
 		return ABViewPropertyComponent.component(App);
 	}
 
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-		var _ui = {
-			rows: [
-				{
-					view: "text",
-					id: ids.label,
-					name:'label',
-					label: App.labels.dataFieldHeaderLabel,
-					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
-					labelWidth: App.config.labelWidthMedium,
-					css: 'ab-new-label-name',
-					on: {
-						onChange: function (newVal, oldVal) {
-							// onChange(newVal, oldVal);
-						}
-					}
-				}
-			]
-		}
+		return [
 
-		return _ui;
+			// Component Label 
+			{
+				view: "text",
+				// id: ids.label,
+				name:'label',
+				label: App.labels.dataFieldHeaderLabel,
+				placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
+				// labelWidth: App.config.labelWidthMedium,
+				css: 'ab-new-label-name',
+// 				on: {
+// 					onChange: function (newVal, oldVal) {
+// console.warn('ABView.onChange()!!!');
+// 					}
+// 				}
+			}
+		];
 
 	}
 
@@ -750,6 +817,28 @@ export default class ABView  {
 
 		$$(ids.label).setValue(view.label);
 
+	}
+
+
+	static propertyEditorValues(ids, view) {
+
+		view.label = $$(ids.label).getValue();
+
+	}
+
+
+	static propertyEditorSave(ids, view) {
+
+		this.propertyEditorValues(ids, view);
+
+		return view.save()
+		.then(function(){
+			// signal the current view has been updated.
+			view.emit('properties.updated', view);
+		})
+		.catch(function(err){
+			OP.Error.log('unable to save view:', {error:err, view:view });
+		});
 	}
 
 
@@ -822,24 +911,6 @@ export default class ABView  {
 			}
 		})
 
-// allowedComponents.push({
-// 	common:function(){
-// 		return {
-// 			key:'view',
-// 			icon:'cube',
-// 			label: 'ab.test.component.1'
-// 		}
-// 	}
-// })
-// allowedComponents.push({
-// 	common:function(){
-// 		return {
-// 			key:'page',
-// 			icon:'cubes',
-// 			label: 'ab.test.component.2'
-// 		}
-// 	}
-// })
 		return allowedComponents;
 
 	}
@@ -849,7 +920,7 @@ export default class ABView  {
 
 
 
-
+/*
 var ABViewPropertyComponent = new ABPropertyComponent({
 
 	editObject: ABView,
@@ -915,4 +986,4 @@ var ABViewPropertyComponent = new ABPropertyComponent({
 	}
 
 })
-
+*/

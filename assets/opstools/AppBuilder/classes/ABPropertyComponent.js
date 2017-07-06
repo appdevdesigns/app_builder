@@ -6,7 +6,6 @@
  *
  */
 
-
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
@@ -42,6 +41,12 @@ export default class ABPropertyComponent {
     	// this.ids = options.ids || {};
     	this.ids = {};
 
+
+    	// keep track of any onChange handlers from the provided elements.
+    	this.oldOnChange = {};  
+
+    	// flag to indicate if we are in the process of populating our form.
+    	this.isPopulating = false;
     	
   	}
 
@@ -64,8 +69,6 @@ export default class ABPropertyComponent {
 	component (App) {
 
 		// for each provided element: create an this.ids for it:
-    	var elements = this.elements(App, this);
-
 
     	////
     	//// prepare our ids
@@ -75,37 +78,8 @@ export default class ABPropertyComponent {
 
 			component: App.unique(this.idBase+'_component'),
 
-			// the common property fields
-			label: App.unique(this.idBase+'_label')
 		}
 
-    	this.eachDeep(elements, (e) => {
-    		if (e.name) {
-    			// if element has an .id, then use it in our list as is
-    			if (e.id) {
-    				ids[e.name] = e.id;
-    			}
-
-    			// otherwise create a new entry in our base list
-    			this.ids[e.name] = e.name;
-    		}
-    	})
-
-
-		// convert the entries in our base list into a globally acceptable id
-		// and use that in our ids list if it doesn't already exist
-		for (var i in this.ids) {
-			if (!ids[i]) {
-				ids[i] = App.unique(this.idBase+'_'+i);
-			}
-		}
-
-		// update our elements to include our ids as we have them now.
-		this.eachDeep(elements, (e) => {
-    		if (e.name) {
-    			e.id = ids[e.name];
-    		}
-    	})
 
 
 		////
@@ -238,6 +212,17 @@ export default class ABPropertyComponent {
 			// 	}
 			// },
 
+			onChange:(newVal, oldVal) => {
+				// ignore onChange() when populating
+				if (!this.isPopulating) {
+					this.EditObject.propertyEditorSave(ids, this.currentObject)
+					.then(()=>{
+						this.emit('properties.updated');
+					})
+					
+				}
+			},
+
 
 			/*
 			 * @function populate
@@ -248,19 +233,17 @@ export default class ABPropertyComponent {
 			 */
 			populate: (editedObject) => {
 
+				this.isPopulating = true;
+				this.currentObject = editedObject;
+
 				// populate the base ABField values:
 				this.EditObject.propertyEditorPopulate(ids, editedObject);
-
-				this.eachDeep(elements, function(e){
-					if (e.name != null) {
-						$$(ids[e.name]).setValue(editedObject.settings[e.name]);
-					}
-				})
 
 				// perform provided .populate()
 				if (this.logic.populate) {
 					this.logic.populate(ids, editedObject);
 				}
+				this.isPopulating = false;
 			},
 
 
@@ -314,8 +297,58 @@ export default class ABPropertyComponent {
 
 		// get the common UI headers entries, and insert them above ours here:
 		// NOTE: put this here so that _logic is defined.
-		var commonUI = this.EditObject.propertyEditorDefaultElements(App, ids, _logic, this.fieldDefaults);
-		_ui.elements = commonUI.rows.concat(elements);
+		var elements = this.EditObject.propertyEditorDefaultElements(App, ids, _logic, this.fieldDefaults);
+    	this.eachDeep(elements, (e) => {
+    		if (e.name) {
+    			// if element has an .id, then use it in our list as is
+    			if (e.id) {
+    				ids[e.name] = e.id;
+    			}
+
+    			// otherwise create a new entry in our base list
+    			this.ids[e.name] = e.name;
+    		}
+    	})
+
+
+		// convert the entries in our base list into a globally acceptable id
+		// and use that in our ids list if it doesn't already exist
+		for (var i in this.ids) {
+			if (!ids[i]) {
+				ids[i] = App.unique(this.idBase+'_'+i);
+			}
+		}
+
+		// update our elements to include our ids as we have them now.
+		this.eachDeep(elements, (e) => {
+    		if (e.name) {
+    			e.id = ids[e.name];
+    		}
+
+    		// while I'm at it: set some default values for common components:
+    		// set a .labelWidth for text views:
+    		if (e.view == 'text') {
+    			if (!e.labelWidth) {
+    				e.labelWidth = App.config.labelWidthMedium
+    			}
+    		}
+
+    		// all elements should have an onChange event:
+    		if (e.on && e.on.onChange) {
+    			this.oldOnChange[e.name] = e.on.onChange;
+    			e.on.onChange = (newVal, oldVal) => {
+    				if (this.oldOnChange[e.name]) this.oldOnChange[e.name](newVal, oldVal);
+    				_logic.onChange(newVal, oldVal);
+    			}
+    		} else {
+    			if (!e.on) e.on = {};
+    			if (!e.on.onChange) e.on.onChange = _logic.onChange;
+    		}
+
+    	})
+
+
+		_ui.elements = elements;
 
 		for (var r in this.rules) {
 			_ui.rules[r] = this.rules[r];

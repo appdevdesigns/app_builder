@@ -325,7 +325,11 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                 // TODO workaround : update link column id
                                 if (linkCol != null) {
                                     linkCol.settings.linkColumn = field.id;
-                                    linkCol.save();
+                                    linkCol.save().then(() => {
+
+                                        // refresh linked object model
+                                        linkCol.object.model().refresh();
+                                    });
                                 }
 
                                 $$(ids.buttonSave).enable();

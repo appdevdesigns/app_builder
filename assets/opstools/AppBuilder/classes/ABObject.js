@@ -330,6 +330,10 @@ export default class ABObject extends ABObjectBase {
 
 		if (rowData == null) return '';
 
+		// translate multilingual
+		var mlFields = this.multilingualFields();
+		OP.Multilingual.translate(rowData, rowData, mlFields);
+
 		var labelData = this.labelFormat || '{' + this._fields[0].id + '}';
 
 		// get column ids in {colId} template

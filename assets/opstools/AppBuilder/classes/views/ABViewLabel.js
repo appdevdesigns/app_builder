@@ -54,6 +54,12 @@ export default class ABViewLabel extends ABView  {
 
   	// 	}
 
+  		if (this.label == '?label?') {
+  			if (this.parent) {
+  				this.label = this.parent.label+'.label';
+  			} 
+  		}
+
   	}
 
 
@@ -154,46 +160,48 @@ export default class ABViewLabel extends ABView  {
 	}
 
 
-	static propertyEditorComponent(App) {
-		return ABViewPropertyComponent.component(App);
-	}
+
+	//
+	// Property Editor
+	// 
+
+	// static propertyEditorComponent(App) {
+	// 	return ABViewPropertyComponent.component(App);
+	// }
 
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
+		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+		
 
-		var _ui = {
-			rows: [
-				// Component Label 
-				{
-					view: "text",
-					id: ids.label,
-					name:'label',
-					label: App.labels.dataFieldHeaderLabel,
-					placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
-					labelWidth: App.config.labelWidthMedium,
-					css: 'ab-new-label-name',
-					on: {
-						onChange: function (newVal, oldVal) {
-							// onChange(newVal, oldVal);
-						}
-					}
-				},
+		// in addition to the common .label  values, we 
+		// ask for:
+		return commonUI.concat([
 
-				// The Text displayed for this label:
-				{
-					view: "text",
-					id: ids.text,
-					name:'text',
-					label: L('ab.component.label.text', '*Text'),
-					placeholder: L('ab.component.label.textPlaceholder', '*Text Placeholder'),
-					labelWidth: App.config.labelWidthMedium,
-					
-				}
-			]
-		}
+			// .text :  The Text displayed for this label
+			{
+				view: "text",
+				name:'text',
+				label: L('ab.component.label.text', '*Text'),
+				placeholder: L('ab.component.label.textPlaceholder', '*Text Placeholder'),
+				// labelWidth: App.config.labelWidthMedium,
+			},
+			{ 
+				view:"fieldset", 
+				label:L('ab.component.label.formatting','*format options:'), 
+				body:{
+			        rows:[
+// Left OFF here: 
+// implement options:  normal, title, description
+// each option adds a different css value to the _ui
 
-		return _ui;
+			            // { view:"text", label:"Login"},
+			            // { view:"text", label:"Email"}
+			        ]
+		    	}
+		    }
+		]);
 
 	}
 
@@ -203,6 +211,12 @@ export default class ABViewLabel extends ABView  {
 		$$(ids.label).setValue(view.label);
 		$$(ids.text).setValue(view.text);
 
+	}
+
+	static propertyEditorValues(ids, view) {
+
+		view.label = $$(ids.label).getValue();
+		view.text  = $$(ids.text).getValue();
 	}
 
 
@@ -228,7 +242,7 @@ export default class ABViewLabel extends ABView  {
 		}
 
 
-		// an ABView is a collection of rows:
+		// an ABViewLabel is a simple Label
 		var _ui = {
 			id: ids.component,
 			view: 'label',
@@ -261,7 +275,7 @@ export default class ABViewLabel extends ABView  {
 
 
 
-
+/*
 
 var ABViewPropertyComponent = new ABPropertyComponent({
 
@@ -329,3 +343,4 @@ var ABViewPropertyComponent = new ABPropertyComponent({
 
 })
 
+*/
