@@ -246,7 +246,7 @@ console.log('... catch(err) !');
                         var fieldName = w.fieldName;
                     }
                     // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
-                    var where = '{fieldName} {operator} {input}'
+                    var where = '`{fieldName}` {operator} {input}'
                         .replace('{fieldName}', fieldName)
                         .replace('{operator}', operator)
                         .replace('{input}', ((input != null) ? "'" + input + "'" : ''));
@@ -254,7 +254,7 @@ console.log('... catch(err) !');
                     // Now we add in all of our where statements
                     if (index == 0) {
                         query.whereRaw(where);
-                    } else if (w.combineCondtion == "Or") {
+                    } else if (w.combineCondition == "Or") {
                         query.orWhereRaw(where);
                     } else {
                         // the default whereRaw will provide an "AND" if there is already one present
@@ -278,7 +278,7 @@ console.log('... catch(err) !');
                     } else { // If we are just sorting a field it is much simpler
                         var by = o.by;
                     }
-                    query.orderByRaw(by + " " + o.dir);
+                    query.orderByRaw("`" + by + "` " + o.dir);
                 })
             }
 
