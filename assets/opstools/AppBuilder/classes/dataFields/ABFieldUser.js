@@ -21,7 +21,28 @@ var ABFieldUserDefaults = {
 	menuName : L('ab.dataField.user.menuName', '*User'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.user.description', '*Add user/s to a record.')
+	description: L('ab.dataField.user.description', '*Add user/s to a record.'),
+	isSortable: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	isFilterable: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	useAsLabel: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 }
 
 var defaultValues = {
@@ -37,7 +58,7 @@ var ids = {
 }
 
 /**
- * ABFieldStringComponent
+ * ABFieldUserComponent
  *
  * Defines the UI Component for this Data Field.  The ui component is responsible
  * for displaying the properties editor, populating existing data, retrieving

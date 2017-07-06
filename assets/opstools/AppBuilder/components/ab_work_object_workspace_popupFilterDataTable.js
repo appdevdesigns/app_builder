@@ -46,6 +46,19 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
             }
         };
         
+        var users = {};
+        
+        OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
+            var items = data.map(function(item) {
+                return {
+                    id: item.username,
+                    value: item.username
+                }
+            });
+            users = items;
+        });
+
+        
         
         // internal list of Webix IDs to reference our UI components.
         var ids = {
@@ -290,10 +303,9 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                                                     id: "does not equal"
                                                 }
                                             ];
-                                            
                                             inputView = {
                                                 view: "combo",
-                                                options: "GET USERS SOMEHOW"
+                                                options: users
                                             };
                                             break;
                                         default:
@@ -505,10 +517,12 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
 
                 // Get all columns include hidden fields
                 allFields.forEach(function (f) {
-                    fieldList.push({
-                        id: f.columnName,
-                        value: f.label
-                    });
+                    if (f.fieldIsFilterable()) {    
+                        fieldList.push({
+                            id: f.columnName,
+                            value: f.label
+                        });
+                    }
                 });
 
                 return fieldList;

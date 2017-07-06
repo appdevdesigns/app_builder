@@ -22,7 +22,28 @@ var ABFieldListDefaults = {
 	menuName: L('ab.dataField.list.menuName', '*Select list'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.list.description', '*Select list allows you to select predefined options below from a dropdown.')
+	description: L('ab.dataField.list.description', '*Select list allows you to select predefined options below from a dropdown.'),
+	isSortable: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	isFilterable: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	useAsLabel: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 };
 
 var defaultValues = {

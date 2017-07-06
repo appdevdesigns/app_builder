@@ -23,7 +23,16 @@ var ABFieldConnectDefaults = {
 	menuName: L('ab.dataField.connectObject.menuName', '*Connect to another record'),
 
 	// description: what gets displayed in the Editor description.
-	description: ''
+	description: '',
+	isSortable: (field) => {
+		return false;
+	},
+	isFilterable: (field) => {
+		return false;
+	},
+	useAsLabel: (field) => {
+		return false;
+	}
 };
 
 var defaultValues = {

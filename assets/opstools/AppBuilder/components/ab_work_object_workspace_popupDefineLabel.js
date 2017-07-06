@@ -194,7 +194,7 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                 var listFields = _currentObject
                     .fields((f) => {
                         // TODO: should have flag in ABField ?
-                        return f.key == 'LongText' || f.key == 'string' || f.key == 'number' || f.key == 'date' || f.key == 'boolean'
+                        return f.fieldUseAsLabel();
                     });
 
                 List.parse(listFields);
