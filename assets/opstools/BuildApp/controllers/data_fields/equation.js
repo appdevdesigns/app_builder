@@ -412,86 +412,93 @@ steal(
 			if (parser) {
 
 				var data = parser(rowData);
-				
-				var decimalSizeNum = 0,
-				decimalDelimiters = ".",
-				groupDelimiters = "";
 
-				if (fieldData.setting.typeDecimals && fieldData.setting.typeDecimals != 'none') {
-					if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
-						decimalSizeNum = fieldData.setting.typeDecimalPlaces;
+				if (isNaN(data)) {
+					$(itemNode).find('.ab-equation-data-field').html(data);
+				}
+				else {
+
+					var decimalSizeNum = 0,
+						decimalDelimiters = ".",
+						groupDelimiters = "";
+
+					if (fieldData.setting.typeDecimals && fieldData.setting.typeDecimals != 'none') {
+						if (fieldData.setting.typeDecimalPlaces != undefined && fieldData.setting.typeDecimalPlaces != 'none') {
+							decimalSizeNum = fieldData.setting.typeDecimalPlaces;
+						}
+						if (fieldData.setting.typeDecimals != undefined) {
+							switch (fieldData.setting.typeDecimals) {
+								case 'period':
+									decimalDelimiters = ".";
+									break;
+								case 'comma':
+									decimalDelimiters = ",";
+									break;
+							}
+						}
+
+						if (fieldData.setting.typeRounding != undefined) {
+							switch (fieldData.setting.typeRounding) {
+								case 'roundUp':
+									var num = data;
+									var precision = -decimalSizeNum;
+									var div = Math.pow(10, precision);
+									data = Math.ceil(num / div) * div;
+									break;
+								case 'roundDown':
+									var num = data;
+									var precision = -decimalSizeNum;
+									var div = Math.pow(10, precision);
+									data = Math.floor(num / div) * div;
+									break;
+							}
+						}
 					}
-					if (fieldData.setting.typeDecimals != undefined) {
-						switch (fieldData.setting.typeDecimals) {
-							case 'period':
-							decimalDelimiters = ".";
-							break;
+
+					if (fieldData.setting.typeThousands != undefined) {
+						switch (fieldData.setting.typeThousands) {
 							case 'comma':
-							decimalDelimiters = ",";
-							break;
+								groupDelimiters = ",";
+								break;
+							case 'period':
+								groupDelimiters = ".";
+								break;
+							case 'space':
+								groupDelimiters = " ";
+								break;
 						}
 					}
 
-					if (fieldData.setting.typeRounding != undefined) {
-						switch (fieldData.setting.typeRounding) {
-							case 'roundUp':
-							var num = data;
-							var precision = -decimalSizeNum;
-							var div = Math.pow(10, precision);
-							data = Math.ceil(num / div) * div;
-							break;
-							case 'roundDown':
-							var num = data;
-							var precision = -decimalSizeNum;
-							var div = Math.pow(10, precision);
-							data = Math.floor(num / div) * div;
-							break;
+					var numberFormat = webix.Number.format(data, {
+						groupDelimiter: groupDelimiters,
+						groupSize: 3,
+						decimalDelimiter: decimalDelimiters,
+						decimalSize: decimalSizeNum
+					});
+
+					//console.log("numberFormatkid: "+ numberFormat);
+					if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
+						var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
+						if (formatItem) {
+							numberFormat = (formatItem.position == 'prefix' ? formatItem.sign + ' ' + numberFormat : numberFormat + ' ' + formatItem.sign);
 						}
 					}
-				}
 
-				if (fieldData.setting.typeThousands != undefined) {
-					switch (fieldData.setting.typeThousands) {
-						case 'comma':
-						groupDelimiters = ",";
-						break;
-						case 'period':
-						groupDelimiters = ".";
-						break;
-						case 'space':
-						groupDelimiters = " ";
-						break;
+					//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
+
+					if (fieldData == null) {
+						$(itemNode).find('.ab-equation-data-field').html('');
+						return true;
 					}
+
+
+					$(itemNode).find('.ab-equation-data-field').html(numberFormat);
 				}
 
-				var numberFormat = webix.Number.format(data, {
-					groupDelimiter: groupDelimiters,
-					groupSize: 3,
-					decimalDelimiter: decimalDelimiters,
-					decimalSize: decimalSizeNum
-				});
-
-				//console.log("numberFormatkid: "+ numberFormat);
-				if (fieldData.setting.typeFormat != undefined && fieldData.setting.typeFormat != 'none') {
-					var formatItem = formatList.find(function (item) { return item.id == fieldData.setting.typeFormat });
-					if (formatItem) {
-						numberFormat = (formatItem.position == 'prefix' ? formatItem.sign + ' ' + numberFormat : numberFormat + ' ' + formatItem.sign);
-					}
-				}
-		
-				//$(itemNode).find('.ab-equation-data-field').html(numberFormat);
-				
-				if (fieldData == null) {
-					$(itemNode).find('.ab-equation-data-field').html('');
-					return true;
-				}
-		
-
-				$(itemNode).find('.ab-equation-data-field').html(numberFormat);
-			} 
+			}
 			else {
 				console.log("parser:false");
-				$(itemNode).find('.ab-equation-data-field').html('invalid equation:'+fieldData.setting.equation);
+				$(itemNode).find('.ab-equation-data-field').html('invalid equation:' + fieldData.setting.equation);
 			}
 
 			return true;
