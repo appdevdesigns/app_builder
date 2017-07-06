@@ -350,6 +350,16 @@ console.error('!! ToDo: onAfterColumnHide()');
     			return DataTable.fieldList;
     		},
             
+            freezeDeleteColumn: function() {
+                var DataTable = $$(ids.component);
+                // we are going to always freeze the delete column if the datatable is wider than the container so it is easy to get to
+                if (DataTable.$width < DataTable.Gj) {
+                    return DataTable.define('rightSplit', 1);                        
+                } else {
+                    return DataTable.define('rightSplit', 0);
+                }
+            },
+            
             /**
              * @function onAfterColumnDrop
              * When an editor drops a column to save a new column order
@@ -368,8 +378,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                     } else {
                         DataTable.define('leftSplit', 0);                        
                     }
-                    // we are going to always freeze the delete column so it is easy to get to
-                    DataTable.define('rightSplit', 1);                        
+                    _logic.freezeDeleteColumn();
                     DataTable.refreshColumns()
                 })
                 .catch((err)=>{
@@ -538,7 +547,10 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
             onColumnResize: function(columnName, newWidth, oldWidth, user_action) {
                 CurrentObject.columnResize(columnName, newWidth, oldWidth)
                 .then(()=>{
-
+                    
+                    var DataTable = $$(ids.component);
+                    _logic.freezeDeleteColumn();
+                    DataTable.refreshColumns();
 
                 })
                 .catch((err)=>{
@@ -660,10 +672,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				} else {
                         DataTable.define('leftSplit', 0);                        
                     }
-                    // we are going to always freeze the delete column so it is easy to get to
-                    DataTable.define('rightSplit', 1);                        
-                    DataTable.refreshColumns()
-
+                    _logic.freezeDeleteColumn();
+                    DataTable.refreshColumns();
 
     				//// update DataTable Content
 
