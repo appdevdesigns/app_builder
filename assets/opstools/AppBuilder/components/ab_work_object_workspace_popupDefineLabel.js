@@ -60,6 +60,7 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                     },
                     {
                         view: 'list',
+                        name: 'columnList',
                         id: ids.list,
                         width: 500,
                         maxHeight: 180,
@@ -78,7 +79,8 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                         cols: [
                             { fillspace: true },
                             {
-                                view: "button", 
+                                view: "button",
+                                name: "cancel",
                                 value: labels.common.cancel,
                                 css: "ab-cancel-button", 
                                 autowidth: true, 
@@ -88,6 +90,7 @@ export default class ABWorkObjectPopupDefineLabel extends OP.Component {
                             },
                             {
                                 view: "button", 
+                                name: "save",
                                 id: ids.buttonSave, 
                                 label: labels.common.save, 
                                 type: "form", 
