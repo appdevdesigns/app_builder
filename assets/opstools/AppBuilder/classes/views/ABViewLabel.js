@@ -14,7 +14,8 @@ function L(key, altText) {
 
 
 var ABViewLabelPropertyComponentDefaults = {
-	label:''
+	label:'',
+	format:0  	// 0 - normal, 1 - title, 2 - description
 }
 
 
@@ -46,6 +47,7 @@ export default class ABViewLabel extends ABView  {
   	// 		label:'',					// pulled from translation
 
 	//		settings: {					// unique settings for the type of field
+	//			format: x				// the display style of the text
 	//		},
 
 	// 		views:[],					// the child views contained by this view.
@@ -105,14 +107,16 @@ export default class ABViewLabel extends ABView  {
 		super.fromValues(values);
 
     	// if this is being instantiated on a read from the Property UI,
-    	// .label is coming in under .settings.label
+    	// .text is coming in under .settings.label
     	this.text = values.text || values.settings.text || '*text';
 
+    	this.settings.format = this.settings.format || ABViewLabelPropertyComponentDefaults.format;
 
     	// we are not allowed to have sub views:
     	this._views = [];
 
     	// convert from "0" => 0
+    	this.settings.format = parseInt(this.settings.format);
 
 	}
 
@@ -145,6 +149,7 @@ export default class ABViewLabel extends ABView  {
 			// css: 'ab-component-header ab-ellipses-text',
 			label: this.text || ''
 		}
+		_ui = this.uiFormatting(_ui)
 
 
 		var _init = (options) => {
@@ -188,16 +193,21 @@ export default class ABViewLabel extends ABView  {
 				// labelWidth: App.config.labelWidthMedium,
 			},
 			{ 
-				view:"fieldset", 
-				label:L('ab.component.label.formatting','*format options:'), 
+				view: "fieldset", 
+				label: L('ab.component.label.formatting','*format options:'), 
 				body:{
 			        rows:[
-// Left OFF here: 
-// implement options:  normal, title, description
-// each option adds a different css value to the _ui
-
-			            // { view:"text", label:"Login"},
-			            // { view:"text", label:"Email"}
+						{
+							view: "radio", 
+							name: "format",
+							vertical: true,
+							value: ABViewLabelPropertyComponentDefaults.format, 
+							options:[
+								{ id:0, value: L('ab.component.label.formatting.normal','*normal') },
+								{ id:1, value: L('ab.component.label.formatting.title','*title')  },
+								{ id:2, value: L('ab.component.label.formatting.description','*description') }
+			        		]
+			        	}
 			        ]
 		    	}
 		    }
@@ -208,17 +218,20 @@ export default class ABViewLabel extends ABView  {
 
 	static propertyEditorPopulate(ids, view) {
 
-		$$(ids.label).setValue(view.label);
-		$$(ids.text).setValue(view.text);
+		super.propertyEditorPopulate(ids, view);
 
+		$$(ids.text).setValue(view.text);
+		$$(ids.format).setValue(view.settings.format);
 	}
+
 
 	static propertyEditorValues(ids, view) {
 
-		view.label = $$(ids.label).getValue();
-		view.text  = $$(ids.text).getValue();
-	}
+		super.propertyEditorValues(ids, view);
 
+		view.text  = $$(ids.text).getValue();
+		view.settings.format = $$(ids.format).getValue();
+	}
 
 
 	/*
@@ -249,6 +262,7 @@ export default class ABViewLabel extends ABView  {
 			// css: 'ab-component-header ab-ellipses-text',
 			label: this.text || '*'
 		}
+		_ui = this.uiFormatting(_ui)
 
 
 		// make sure each of our child views get .init() called
@@ -269,6 +283,38 @@ export default class ABViewLabel extends ABView  {
 	 */
 	componentList() {
 		return [];
+	}
+
+
+	/*
+	 * uiFormatting
+	 * a common routine to properly update the displayed label
+	 * UI with the css formatting for the given .settings
+	 * @param {obj} _ui the current webix.ui definition
+	 * @return {obj} a properly formatted webix.ui definition
+	 */
+	uiFormatting(_ui) {
+
+		// add different css settings based upon it's format 
+		// type.
+		switch(parseInt(this.settings.format)) {
+
+			// normal
+			case 0: 
+				break;
+
+			// title
+			case 1: 
+				_ui.css = 'ab-component-header ab-ellipses-text';
+				break;
+
+			// description
+			case 2:
+				_ui.css = 'ab-component-description ab-ellipses-text';
+				break;
+		}
+
+		return _ui;
 	}
 
 }

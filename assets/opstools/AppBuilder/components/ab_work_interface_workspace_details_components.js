@@ -87,13 +87,22 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             onBeforeDrag: function(context, ev) {
 
                 var component = $$(ids.list).getItem(context.source);
-                var label = component.common().labelKey;
-                label = L(label, label);
 
-                context.html = "<div class='ab-component-item-drag'>"
-                    + "<i class='fa fa-{0}'></i> ".replace("{0}", component.common().icon)
-                    + label
-                    + "</div>";
+                // if this component is an ABView
+                if (component.common) {
+                    var label = component.common().labelKey;
+                    label = L(label, label);
+
+                    context.html = "<div class='ab-component-item-drag'>"
+                        + "<i class='fa fa-{0}'></i> ".replace("{0}", component.common().icon)
+                        + label
+                        + "</div>";
+                } else {
+
+                    // otherwise this is our "no components" placeholder
+                    // so prevent drag-n-drop
+                    return false;
+                }
             },
 
             
@@ -143,6 +152,8 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             viewLoad: function(view) {
                 CurrentView = view;
 
+                var List = $$(ids.list);
+
                 var components = view.componentList();
                 if (components.length == 0) {
                     components.push({
@@ -157,8 +168,15 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                         //     }
                         // }
                     })
+
+// NOTE: I'd like to prevent the drag from even happening, but currently
+// this doesn't seem to turn off the drag-n-drop feature;
+// TODO: try to turn off the d-n-d ability if we only have the no component placeholder
+                    List.define('drag', false);
+                } else {
+                    List.define('drag', 'source');
                 }
-                var List = $$(ids.list);
+                
                 List.clearAll();
                 List.parse(components);
                 List.refresh();

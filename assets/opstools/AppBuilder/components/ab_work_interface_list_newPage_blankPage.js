@@ -199,7 +199,7 @@ width: 400,
 				return {
 					parent: parent,
 					label: $$(ids.formName).getValue().trim(),
-					key: ABPage.defaults().key
+					key: ABPage.common().key
 				}
 
 			}
