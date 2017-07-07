@@ -576,6 +576,8 @@ export default class ABView  extends EventEmitter {
 						var uid = webix.uid();
 						context.from.copy(context.source[i], context.index, $$(_ui.id), uid);
 
+						// get the id of the item at the index we just dropped onto:
+						var newID = $$(_ui.id).getIdByIndex(context.index);
 
 						// remove the temp "drop here" marker if it exists
 						$$(_ui.id).remove('del_me');
@@ -583,7 +585,6 @@ export default class ABView  extends EventEmitter {
 
 						// find the newly inserted element & perform a .save()
 						// to persist it in our current view.
-						var newID = $$(_ui.id).getIdByIndex(context.index);
 						var droppedViewObj = $$(_ui.id).getItem(newID);
 						var templateID = droppedViewObj.id; // NOTE: this is the ID used when the template is generated.
 						droppedViewObj.id = null;
