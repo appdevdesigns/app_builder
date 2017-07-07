@@ -189,10 +189,12 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				// Get all fields include hidden fields
 				var allFields = CurrentObject.fields();
 				allFields.forEach((f) => {
-					listFields.push({
-						id: f.columnName,
-						label: f.label
-					});
+					if (f.fieldIsSortable()) {
+						listFields.push({
+							id: f.columnName,
+							label: f.label
+						});
+					}
 				})
 
 				// Remove selected field
@@ -274,6 +276,11 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 						options = [
 							{ id: 'asc', value: labels.component.numberAsc },
 							{ id: 'desc', value: labels.component.numberDesc }];
+						break;
+					default:
+						options = [
+							{ id: 'asc', value: labels.component.textAsc },
+							{ id: 'desc', value: labels.component.textDesc }];
 						break;
 				}
 

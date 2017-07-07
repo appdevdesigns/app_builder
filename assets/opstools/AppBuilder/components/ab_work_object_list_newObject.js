@@ -68,6 +68,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 		// Our init() function for setting up our UI
 		this.init = (options) => {
 			webix.ui(this.ui);
+			webix.extend($$(ids.component), webix.ProgressBar);
 
 			// register our callbacks:
 			for(var c in _logic.callbacks) {
@@ -153,6 +154,9 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 				}
 
 
+				// show progress
+				$$(ids.component).showProgress();
+
 				// if we get here, save the new Object
 				newObject.save()
 					.then(function(obj){
@@ -161,8 +165,14 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 						cb(null, obj);									// tell current tab component save successful
 						_logic.hide();							// hide our popup
 						_logic.callbacks.onDone(null, obj);		// tell parent component we're done
+
+						// hide progress
+						$$(ids.component).hideProgress();
 					})
 					.catch(function(err){
+						// hide progress
+						$$(ids.component).hideProgress();
+
 						cb(err);								// tell current Tab component there was an error
 					})
 			},

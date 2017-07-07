@@ -180,12 +180,17 @@ console.error('!! ToDo: onAfterColumnHide()');
     		// one.
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
+            var items = [];
     		DataTable.attachEvent("onAfterRender", function(data){
+                items = [];
+                data.order.each(function (i) {
+                    if (typeof i != "undefined") items.push(i);
+                });
     			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
     			throttleCustomDisplay = setTimeout(()=>{
     				if (CurrentObject) {
-    					CurrentObject.customDisplays(this, App, DataTable);
                         if (scrollStarted) clearTimeout(scrollStarted);
+    					CurrentObject.customDisplays(this, App, DataTable, items);
     				}
     			}, 350);
 
@@ -193,27 +198,24 @@ console.error('!! ToDo: onAfterColumnHide()');
 
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             var scrollStarted = null;
-            DataTable.attachEvent("onScrollY", function(){
+            DataTable.attachEvent("onScroll", function(){
                 if (scrollStarted) clearTimeout(scrollStarted);
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
     			scrollStarted = setTimeout(()=>{
                     if (CurrentObject) {
-    					CurrentObject.customDisplays(this, App, DataTable);
+    					CurrentObject.customDisplays(this, App, DataTable, items);
     				}
     			}, 1500);
             });
 
             
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
-            var yPos = 0;
             DataTable.attachEvent("onAfterScroll", function(){
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
                 throttleCustomDisplay = setTimeout(()=>{
-                    var scrollState = this.getScrollState();
-                    if (CurrentObject && yPos != scrollState.y) {
-                        yPos = scrollState.y;
-                        CurrentObject.customDisplays(this, App, DataTable);
+                    if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
+                        CurrentObject.customDisplays(this, App, DataTable, items);
                     }
                 }, 350);
 
@@ -350,6 +352,16 @@ console.error('!! ToDo: onAfterColumnHide()');
     			return DataTable.fieldList;
     		},
             
+            freezeDeleteColumn: function() {
+                var DataTable = $$(ids.component);
+                // we are going to always freeze the delete column if the datatable is wider than the container so it is easy to get to
+                if (DataTable.$width < DataTable.Gj) {
+                    return DataTable.define('rightSplit', 1);                        
+                } else {
+                    return DataTable.define('rightSplit', 0);
+                }
+            },
+            
             /**
              * @function onAfterColumnDrop
              * When an editor drops a column to save a new column order
@@ -368,8 +380,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                     } else {
                         DataTable.define('leftSplit', 0);                        
                     }
-                    // we are going to always freeze the delete column so it is easy to get to
-                    DataTable.define('rightSplit', 1);                        
+                    _logic.freezeDeleteColumn();
                     DataTable.refreshColumns()
                 })
                 .catch((err)=>{
@@ -538,7 +549,10 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
             onColumnResize: function(columnName, newWidth, oldWidth, user_action) {
                 CurrentObject.columnResize(columnName, newWidth, oldWidth)
                 .then(()=>{
-
+                    
+                    var DataTable = $$(ids.component);
+                    _logic.freezeDeleteColumn();
+                    DataTable.refreshColumns();
 
                 })
                 .catch((err)=>{
@@ -660,10 +674,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				} else {
                         DataTable.define('leftSplit', 0);                        
                     }
-                    // we are going to always freeze the delete column so it is easy to get to
-                    DataTable.define('rightSplit', 1);                        
-                    DataTable.refreshColumns()
-
+                    _logic.freezeDeleteColumn();
+                    DataTable.refreshColumns();
 
     				//// update DataTable Content
 

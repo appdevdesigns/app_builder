@@ -22,7 +22,28 @@ var ABFieldListDefaults = {
 	menuName: L('ab.dataField.list.menuName', '*Select list'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.list.description', '*Select list allows you to select predefined options below from a dropdown.')
+	description: L('ab.dataField.list.description', '*Select list allows you to select predefined options below from a dropdown.'),
+	isSortable: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	isFilterable: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	},
+	useAsLabel: (field) => {
+		if (field.settings.isMultiple) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 };
 
 var defaultValues = {
@@ -407,6 +428,8 @@ class ABFieldList extends ABFieldSelectivity {
 			
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
+				// Fixes a bug where scrolling datatable causes a change event to fire on a cell that wasn't actually changed
+				if (typeof e.added == "undefined") return false;
 
 				// update just this value on our current object.model
 				var values = {};

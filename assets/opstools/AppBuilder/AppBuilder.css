@@ -1,4 +1,4 @@
-.webix_view, .webix_el_colorpicker input, .webix_el_combo input, .webix_el_datepicker input, .webix_el_search input, .webix_el_text input, .webix_control button, .webix_control input, .webix_control textarea, .webix_el_label, .webix_inp_bottom_label, .webix_inp_label, .webix_inp_top_label {
+.webix_dt_editor input, .webix_dt_editor select, .webix_view, .webix_el_colorpicker input, .webix_el_combo input, .webix_el_datepicker input, .webix_el_search input, .webix_el_text input, .webix_control button, .webix_control input, .webix_control textarea, .webix_el_label, .webix_inp_bottom_label, .webix_inp_label, .webix_inp_top_label {
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
 }
 .ab-generated-page {

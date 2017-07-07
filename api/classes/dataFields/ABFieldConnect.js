@@ -217,7 +217,16 @@ class ABFieldConnect extends ABField {
 				// M:N - create a new table and references to id of target table and linked table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
-					var joinTableName = this.joinTableName();
+					var joinTableName = this.joinTableName(),
+						getFkName = (objectName) => {
+
+							var fkName = objectName + '_' + this.columnName;
+
+							if (fkName.length > 64)
+								fkName = fkName.substring(0, 64);
+
+							return fkName;
+						};
 
 					knex.schema.hasTable(joinTableName).then((exists) => {
 
@@ -231,12 +240,15 @@ class ABFieldConnect extends ABField {
 								t.charset('utf8');
 								t.collate('utf8_unicode_ci');
 
+								var sourceFkName = getFkName(this.object.name);
+								var targetFkName = getFkName(linkObject.name);
+
 								// create columns
 								t.integer(this.object.name).unsigned().nullable()
-									.references('id').inTable(tableName).onDelete('cascade');
+									.references('id').inTable(tableName).withKeyName(sourceFkName).onDelete('cascade');
 
 								t.integer(linkObject.name).unsigned().nullable()
-									.references('id').inTable(linkTableName).onDelete('cascade');
+									.references('id').inTable(linkTableName).withKeyName(targetFkName).onDelete('cascade');
 							})
 								.then(() => { resolve(); })
 								.catch(reject);

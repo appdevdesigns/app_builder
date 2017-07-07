@@ -51,6 +51,8 @@ describe('ab_work_object_list_newObject component', () => {
 			// Call init
 			let callbacks = { onDone: function () { } };
 			target.init(callbacks);
+
+			assert.equal(target._logic.callbacks.onDone, callbacks.onDone);
 		});
 
 

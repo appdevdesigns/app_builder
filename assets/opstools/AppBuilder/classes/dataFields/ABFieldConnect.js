@@ -23,7 +23,16 @@ var ABFieldConnectDefaults = {
 	menuName: L('ab.dataField.connectObject.menuName', '*Connect to another record'),
 
 	// description: what gets displayed in the Editor description.
-	description: ''
+	description: '',
+	isSortable: (field) => {
+		return false;
+	},
+	isFilterable: (field) => {
+		return false;
+	},
+	useAsLabel: (field) => {
+		return false;
+	}
 };
 
 var defaultValues = {
@@ -396,6 +405,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
+				// Fixes a bug where scrolling datatable causes a change event to fire on a cell that wasn't actually changed
+				if (typeof e.added == "undefined") return false;
 
 				// update just this value on our current object.model
 				var values = {};

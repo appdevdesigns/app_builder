@@ -77,13 +77,17 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 							id: ids.form,
 							autoheight: true,
 							margin: 0,
+							rules: {
+								"label": (value) => {
+									return 0 < value.length && value.length <= 20;
+								}
+							},
 							elements: [
 								//{ type: "section", template: '<span class="webix_icon fa-edit" style="max-width:32px;"></span>Information', margin: 0 },
 								{
 									name: "label",
 									view: "text",
 									label: labels.common.formName,
-									required: true,
 									placeholder: labels.component.placeholderName,
 									labelWidth: 100,
 									on: {
@@ -487,7 +491,8 @@ export default class ABChoose extends OP.Component {  // .extend(idBase, functio
 				var Form = $$(ids.form);
 				if (!Form.validate()) {
 					// TODO : Error message
-
+					
+					_logic.formReady();
 					_logic.buttonSaveEnable();
 					return false;
 				}
