@@ -216,9 +216,7 @@ export default class ABPropertyComponent {
 				// ignore onChange() when populating
 				if (!this.isPopulating) {
 					this.EditObject.propertyEditorSave(ids, this.currentObject)
-					.then(()=>{
-						this.emit('properties.updated');
-					})
+					
 					
 				}
 			},
@@ -384,6 +382,12 @@ export default class ABPropertyComponent {
 	 * @param {fn} fn function to apply to each element.
 	 */
 	eachDeep(list, fn) {
+
+		// make sure list is an array:
+		if (! Array.isArray(list)){
+			list = [list];
+		}
+
 		list.forEach((e) => {
 
 			// process sub columns
@@ -396,6 +400,11 @@ export default class ABPropertyComponent {
 			if (e.rows) {
 				this.eachDeep(e.rows, fn);
 				return;
+			}
+
+			// or a fieldset (with a body)
+			if (e.body) {
+				this.eachDeep(e.body, fn);
 			}
 
 			// or just process this element:
