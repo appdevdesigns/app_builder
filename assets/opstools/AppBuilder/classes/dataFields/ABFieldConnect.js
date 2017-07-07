@@ -405,6 +405,8 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
+				// Fixes a bug where scrolling datatable causes a change event to fire on a cell that wasn't actually changed
+				if (typeof e.added == "undefined") return false;
 
 				// update just this value on our current object.model
 				var values = {};

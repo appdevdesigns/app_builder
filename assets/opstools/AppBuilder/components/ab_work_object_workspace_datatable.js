@@ -180,12 +180,17 @@ console.error('!! ToDo: onAfterColumnHide()');
     		// one.
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
+            var items = [];
     		DataTable.attachEvent("onAfterRender", function(data){
+                items = [];
+                data.order.each(function (i) {
+                    if (typeof i != "undefined") items.push(i);
+                });
     			if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
     			throttleCustomDisplay = setTimeout(()=>{
     				if (CurrentObject) {
-    					CurrentObject.customDisplays(this, App, DataTable);
                         if (scrollStarted) clearTimeout(scrollStarted);
+    					CurrentObject.customDisplays(this, App, DataTable, items);
     				}
     			}, 350);
 
@@ -193,27 +198,24 @@ console.error('!! ToDo: onAfterColumnHide()');
 
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
             var scrollStarted = null;
-            DataTable.attachEvent("onScrollY", function(){
+            DataTable.attachEvent("onScroll", function(){
                 if (scrollStarted) clearTimeout(scrollStarted);
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
     			scrollStarted = setTimeout(()=>{
                     if (CurrentObject) {
-    					CurrentObject.customDisplays(this, App, DataTable);
+    					CurrentObject.customDisplays(this, App, DataTable, items);
     				}
     			}, 1500);
             });
 
             
             // we have some data types that have custom displays that don't look right after scrolling large data sets we need to call customDisplays again
-            var yPos = 0;
             DataTable.attachEvent("onAfterScroll", function(){
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
                 throttleCustomDisplay = setTimeout(()=>{
-                    var scrollState = this.getScrollState();
-                    if (CurrentObject && yPos != scrollState.y) {
-                        yPos = scrollState.y;
-                        CurrentObject.customDisplays(this, App, DataTable);
+                    if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
+                        CurrentObject.customDisplays(this, App, DataTable, items);
                     }
                 }, 350);
 

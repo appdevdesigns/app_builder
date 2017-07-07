@@ -306,22 +306,36 @@ export default class ABObject extends ABObjectBase {
 	// any custom display operations
 	// @param {Webix.DataStore} data a webix datastore of all the rows effected
 	//        by the render.
-	customDisplays(data, App, DataTable) {
+	customDisplays(data, App, DataTable, ids) {
 		var fields = this.fields();
 
 		if (!data || !data.getFirstId) return;
 
-		var id = data.getFirstId();
-		while(id) {
-			var row = data.getItem(id);
-			fields.forEach((f)=>{
-				if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
-					var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-					f.customDisplay(row, App, node);
-				}
-			})
-			id = data.getNextId(id);
+		if (ids != null) {
+			var ids = ids;
+			ids.forEach((id)=>{
+				var row = data.getItem(id);
+				fields.forEach((f)=>{
+					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
+						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+						f.customDisplay(row, App, node);
+					}
+				});
+			});
+		} else {
+			var id = data.getFirstId();
+			while(id) {
+				var row = data.getItem(id);
+				fields.forEach((f)=>{
+					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
+						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
+						f.customDisplay(row, App, node);
+					}
+				})
+				id = data.getNextId(id);
+			}
 		}
+
 	}
 
 
