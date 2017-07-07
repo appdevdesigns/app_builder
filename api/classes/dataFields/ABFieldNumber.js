@@ -293,14 +293,17 @@ class ABFieldNumber extends ABField {
 		var errors = [];
 
 		if (allParameters[this.columnName] != null) {
-			
+
 			var value = allParameters[this.columnName];
-			if (_.isNaN(value) || (!_.isNumber(value))) {
+			if ((value || value == 0) && // not be null, undefined or empty string
+				(_.isNaN(value) || !_.isNumber(value))) {
+
 				errors.push({
 					name:this.columnName,
 					message:'Number Required',
 					value:value
 				})
+
 			}
 		}
 
