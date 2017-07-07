@@ -157,30 +157,6 @@ msgstr "<b>{0}</b> is deleted."
 
 #. path: app_builder
 #. code: en
-#. key: ab.validate.overMaxLength
-msgid "This input value is invalid"
-msgstr "This input value is invalid"
-
-#. path: app_builder
-#. code: en
-#. key: ab.validate.overMaxLengthDescription
-msgid "Should not have number of character more than #maxLength#."
-msgstr "Should not have number of character more than #maxLength#."
-
-#. path: app_builder
-#. code: en
-#. key: ab.validate.invalidFormat
-msgid "This input value is invalid format"
-msgstr "This input value is invalid format"
-
-#. path: app_builder
-#. code: en
-#. key: ab.validate.invalidFormatDescription
-msgid "System disallow enter special character."
-msgstr "System disallow enter special character."
-
-#. path: app_builder
-#. code: en
 #. key: ab.application.application
 msgid "Application"
 msgstr "Application"
@@ -226,18 +202,6 @@ msgstr "This data is offline."
 #. key: ab.application.backToApplication
 msgid "Back to Applications page"
 msgstr "Back to Applications page"
-
-#. path: app_builder
-#. code: en
-#. key: ab.application.invalidName
-msgid "This application name is invalid"
-msgstr "This application name is invalid"
-
-#. path: app_builder
-#. code: en
-#. key: ab.application.duplicateName
-msgid "#appName# is duplicate."
-msgstr "#appName# is duplicate."
 
 #. path: app_builder
 #. code: en
@@ -386,7 +350,7 @@ msgstr "This data is unsynchronized. You can click Synchronize button to sync da
 #. path: app_builder
 #. code: en
 #. key: ab.object.noConnectedData
-msgid "No data selected"
+msgid ""
 msgstr ""
 
 #. path: app_builder
@@ -667,6 +631,18 @@ msgstr "Please register the datatable to add."
 
 #. path: app_builder
 #. code: en
+#. key: ab.add_fields.invalidFieldTitle
+msgid "Your field name is invalid format"
+msgstr "Your field name is invalid format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.add_fields.invalidFieldDescription
+msgid "System disallow enter special character to field name."
+msgstr "System disallow enter special character to field name."
+
+#. path: app_builder
+#. code: en
 #. key: ab.add_fields.duplicateFieldTitle
 msgid "Your field name is duplicate"
 msgstr "Your field name is duplicate"
@@ -932,8 +908,8 @@ msgstr "Add a new page"
 #. path: app_builder
 #. code: en
 #. key: ab.interface.placeholderPageName
-msgid "Page name"
-msgstr "Page name"
+msgid "Parent Name"
+msgstr "Parent Name"
 
 #. path: app_builder
 #. code: en
@@ -1006,3 +982,196 @@ msgstr "Choose an icon"
 #. key: ab.component.tab.addTab
 msgid "Add Tab"
 msgstr "Add Tab"
+
+#. path: app_builder
+#. code: en
+#. key: ab.validate.overMaxLength
+msgid "This input value is invalid"
+msgstr "This input value is invalid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.validate.overMaxLengthDescription
+msgid "Should not have number of character more than #maxLength#."
+msgstr "Should not have number of character more than #maxLength#."
+
+#. path: app_builder
+#. code: en
+#. key: ab.validate.invalidFormat
+msgid "This input value is invalid format"
+msgstr "This input value is invalid format"
+
+#. path: app_builder
+#. code: en
+#. key: ab.validate.invalidFormatDescription
+msgid "System disallow enter special character."
+msgstr "System disallow enter special character."
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.invalidName
+msgid "This application name is invalid"
+msgstr "This application name is invalid"
+
+#. path: app_builder
+#. code: en
+#. key: ab.application.duplicateName
+msgid "#appName# is duplicate."
+msgstr "#appName# is duplicate."
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.label
+msgid "Label"
+msgstr "Label"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.label.text
+msgid "Text"
+msgstr "Text"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.label.textPlaceholder
+msgid "Text Placeholder"
+msgstr "Text Placeholder"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.label.formatting
+msgid "format options:"
+msgstr "format options:"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.label.formatting.normal
+msgid "normal"
+msgstr "normal"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.label.formatting.title
+msgid "title"
+msgstr "title"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.label.formatting.description
+msgid "description"
+msgstr "description"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.view
+msgid "View"
+msgstr "View"
+
+#. path: app_builder
+#. code: en
+#. key: ab.validation.view.label.unique
+msgid "View label must be unique among peers."
+msgstr "View label must be unique among peers."
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.view.dropHere
+msgid "Drop Component Here"
+msgstr "Drop Component Here"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.component.confirmDeleteTitle
+msgid "Delete Component"
+msgstr "Delete Component"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.component.confirmDeleteMessage
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "Do you want to delete <b>{0}</b>?"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.properties
+msgid "Properties"
+msgstr "Properties"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.selectPage
+msgid "Select a Page to edit"
+msgstr "Select a Page to edit"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.viewModeBlock
+msgid "Block"
+msgstr "Block"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.viewModePreview
+msgid "Preview"
+msgstr "Preview"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.page.parentList
+msgid "Parent Page"
+msgstr "Parent Page"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.rootPage
+msgid "[Root Page]"
+msgstr "[Root Page]"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.components
+msgid "Components"
+msgstr "Components"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.noComponents
+msgid "No Components"
+msgstr "No Components"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.common.headerLabel
+msgid "Label"
+msgstr "Label"
+
+#. path: app_builder
+#. code: en
+#. key: ab.dataField.common.headerLabelPlaceholder
+msgid "Header Name"
+msgstr "Header Name"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.quickPage
+msgid "Quick Page"
+msgstr "Quick Page"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.blankPage
+msgid "Blank Page"
+msgstr "Blank Page"
+
+#. path: app_builder
+#. code: en
+#. key: ab.interface.title
+msgid "Interface"
+msgstr "Interface"
+
+#. path: app_builder
+#. code: en
+#. key: ab.object.selectObject
+msgid "Select an object to work with."
+msgstr "Select an object to work with."
+

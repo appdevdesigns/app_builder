@@ -157,30 +157,6 @@ msgstr "<b>{0}</b> ถูกลบแล้ว"
 
 #. path: app_builder
 #. code: th
-#. key: ab.validate.overMaxLength
-msgid "This input value is invalid"
-msgstr "ข้อมูลนี้ไม่ถูกต้อง"
-
-#. path: app_builder
-#. code: th
-#. key: ab.validate.overMaxLengthDescription
-msgid "Should not have number of character more than #maxLength#."
-msgstr "ข้อมูลไม่สามารถมีจำนวนอักขระมากกว่า #maxLength#"
-
-#. path: app_builder
-#. code: th
-#. key: ab.validate.invalidFormat
-msgid "This input value is invalid format"
-msgstr "ข้อมูลนี้มีรูปแบบไม่ถูกต้อง"
-
-#. path: app_builder
-#. code: th
-#. key: ab.validate.invalidFormatDescription
-msgid "System disallow enter special character."
-msgstr "ระบบไม่อนุญาตให้กรอกข้อมูลที่มีสัญลักษณ์อื่นๆ"
-
-#. path: app_builder
-#. code: th
 #. key: ab.application.application
 msgid "Application"
 msgstr "แอปพลิเคชั่น"
@@ -226,18 +202,6 @@ msgstr "ข้อมูลชุดนี้ยังไม่ได้ถูก
 #. key: ab.application.backToApplication
 msgid "Back to Applications page"
 msgstr "กลับไปหน้าแอปพลิเคชั่น"
-
-#. path: app_builder
-#. code: th
-#. key: ab.application.invalidName
-msgid "This application name is invalid"
-msgstr "แอปพลิเคชั่นนี้ไม่ถูกต้อง"
-
-#. path: app_builder
-#. code: th
-#. key: ab.application.duplicateName
-msgid "#appName# is duplicate."
-msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั่นอื่น"
 
 #. path: app_builder
 #. code: th
@@ -386,7 +350,7 @@ msgstr "ข้อมูลนี้ยังไม่ได้บันทึก
 #. path: app_builder
 #. code: th
 #. key: ab.object.noConnectedData
-msgid "No data selected"
+msgid ""
 msgstr ""
 
 #. path: app_builder
@@ -932,7 +896,7 @@ msgstr "เพิ่มหน้าใหม่"
 #. path: app_builder
 #. code: th
 #. key: ab.interface.placeholderPageName
-msgid "Page name"
+msgid "Parent Name"
 msgstr "ชื่อหน้า"
 
 #. path: app_builder
@@ -994,4 +958,196 @@ msgstr "[th] Choose an icon"
 #. key: ab.component.tab.addTab
 msgid "Add Tab"
 msgstr "[th] Add Tab"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.overMaxLength
+msgid "This input value is invalid"
+msgstr "ข้อมูลนี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.overMaxLengthDescription
+msgid "Should not have number of character more than #maxLength#."
+msgstr "ข้อมูลไม่สามารถมีจำนวนอักขระมากกว่า #maxLength#"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.invalidFormat
+msgid "This input value is invalid format"
+msgstr "ข้อมูลนี้มีรูปแบบไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validate.invalidFormatDescription
+msgid "System disallow enter special character."
+msgstr "ระบบไม่อนุญาตให้กรอกข้อมูลที่มีสัญลักษณ์อื่นๆ"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.invalidName
+msgid "This application name is invalid"
+msgstr "แอปพลิเคชั่นนี้ไม่ถูกต้อง"
+
+#. path: app_builder
+#. code: th
+#. key: ab.application.duplicateName
+msgid "#appName# is duplicate."
+msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั่นอื่น"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.label
+msgid "Label"
+msgstr "[th] Label"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.text
+msgid "Text"
+msgstr "[th] Text"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.textPlaceholder
+msgid "Text Placeholder"
+msgstr "[th] Text Placeholder"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting
+msgid "format options:"
+msgstr "[th] format options:"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting.normal
+msgid "normal"
+msgstr "[th] normal"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting.title
+msgid "title"
+msgstr "[th] title"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.label.formatting.description
+msgid "description"
+msgstr "[th] description"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.view
+msgid "View"
+msgstr "[th] View"
+
+#. path: app_builder
+#. code: th
+#. key: ab.validation.view.label.unique
+msgid "View label must be unique among peers."
+msgstr "[th] View label must be unique among peers."
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.view.dropHere
+msgid "Drop Component Here"
+msgstr "[th] Drop Component Here"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.component.confirmDeleteTitle
+msgid "Delete Component"
+msgstr "[th] Delete Component"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.component.confirmDeleteMessage
+msgid "Do you want to delete <b>{0}</b>?"
+msgstr "[th] Do you want to delete <b>{0}</b>?"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.properties
+msgid "Properties"
+msgstr "[th] Properties"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.selectPage
+msgid "Select a Page to edit"
+msgstr "[th] Select a Page to edit"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.viewModeBlock
+msgid "Block"
+msgstr "[th] Block"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.viewModePreview
+msgid "Preview"
+msgstr "[th] Preview"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.page.parentList
+msgid "Parent Page"
+msgstr "[th] Parent Page"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.rootPage
+msgid "[Root Page]"
+msgstr "[th] [Root Page]"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.components
+msgid "Components"
+msgstr "[th] Components"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.noComponents
+msgid "No Components"
+msgstr "[th] No Components"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.common.headerLabel
+msgid "Label"
+msgstr "[th] Label"
+
+#. path: app_builder
+#. code: th
+#. key: ab.dataField.common.headerLabelPlaceholder
+msgid "Header Name"
+msgstr "[th] Header Name"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.quickPage
+msgid "Quick Page"
+msgstr "[th] Quick Page"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.blankPage
+msgid "Blank Page"
+msgstr "[th] Blank Page"
+
+#. path: app_builder
+#. code: th
+#. key: ab.interface.title
+msgid "Interface"
+msgstr "[th] Interface"
+
+#. path: app_builder
+#. code: th
+#. key: ab.object.selectObject
+msgid "Select an object to work with."
+msgstr "[th] Select an object to work with."
 

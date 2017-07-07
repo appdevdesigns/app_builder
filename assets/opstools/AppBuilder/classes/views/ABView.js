@@ -476,13 +476,13 @@ export default class ABView  extends EventEmitter {
 				viewList.push({
 					id:'del_me',
 					icon:'',
-					label:L('drop here', 'drop here'),
+					label:L('ab.components.view.dropHere', '*drop here'),
 					component:function(app) {
 						return {
 							ui:{
 								id:'child2component',
 								view:'template',
-								template:'drop here',
+								template:L('ab.components.view.dropHere', '*drop here'),
 								height:20
 							},
 							init:function() { console.log('init child 2') }
@@ -500,7 +500,7 @@ export default class ABView  extends EventEmitter {
 				var allComponents = [];
 
 				// attach all the .UI views:
-				this.views().forEach((child) => {
+				viewList.forEach((child) => {
 					var component = child.component(App);
 					var id = ids.view + '_' + child.id;
 					component.ui.container = id;
