@@ -112,7 +112,7 @@ export default class ABFieldSelectivity extends ABField {
 			
 			count = values.length;
 			if (count > 1) {
-				var badge = domNode.querySelector('.webix_badge .selectivityBadge');
+				var badge = domNode.querySelector('.webix_badge.selectivityBadge');
 				if (badge != null) {
 					badge.innerHTML = count;
 				} else {
