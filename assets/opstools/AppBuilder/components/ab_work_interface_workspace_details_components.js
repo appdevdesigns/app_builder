@@ -34,6 +34,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
         // webix UI definition:
         this.ui = {
             id: ids.component,
+            gravity: 1,
             scroll: true,
             rows:[
 
@@ -50,7 +51,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     id: ids.list,
                     view: 'list',
                     drag: 'source',
-                    autoheight:true,
+                    // autoheight:true,
                     template: function (obj, common) {
                         return _logic.template(obj, common);
                     },
@@ -59,10 +60,6 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                             _logic.onBeforeDrag(context, ev);
                         }
                     }
-                },
-                {
-                    maxHeight: App.config.xxxLargeSpacer,
-                    hidden: App.config.hideMobile
                 }
             ]
         };

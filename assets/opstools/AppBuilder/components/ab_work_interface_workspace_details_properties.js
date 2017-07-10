@@ -33,6 +33,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
         // webix UI definition:
         this.ui = {
             id: ids.component,
+            gravity: 1,
             scroll: true,
             rows:[
                 {
@@ -44,14 +45,11 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                 },
                 {
                     view:'multiview',
+                    borderless: 0,
                     id:ids.editors,
                     rows:[
                         {id:'delme', view:'label',  label:'delme'}
                     ]
-                },
-                {
-                    maxHeight: App.config.xxxLargeSpacer,
-                    hidden: App.config.hideMobile
                 }
             ]
         };
