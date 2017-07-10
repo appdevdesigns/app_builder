@@ -260,7 +260,10 @@ export default class ABViewLabel extends ABView  {
 			id: ids.component,
 			view: 'label',
 			// css: 'ab-component-header ab-ellipses-text',
-			label: this.text || '*'
+			label: this.text || '*',
+			type: {
+				height: "auto"
+			}
 		}
 		_ui = this.uiFormatting(_ui)
 

@@ -375,6 +375,9 @@ export default class ABView  extends EventEmitter {
 			template:function(obj, common) {
 				return _logic.template(obj, common);
 			},
+			type: {
+				height: 'auto'
+			},
 			on: {
 				// onAfterRender: function () {
 				// 	self.generateComponentsInList();
@@ -482,8 +485,9 @@ export default class ABView  extends EventEmitter {
 							ui:{
 								id:'child2component',
 								view:'template',
+								borderless: 1,
 								template:L('ab.components.view.dropHere', '*drop here'),
-								height:20
+								height:36
 							},
 							init:function() { console.log('init child 2') }
 						}
@@ -690,9 +694,9 @@ export default class ABView  extends EventEmitter {
 		var _template = [
 			'<div class="ab-component-in-page">',
 				'<div id="'+ids.view+'_#objID#" ></div>',
-				'<div class="">',
-					'<i class="fa fa-edit ab-component-edit "></i>',
+				'<div class="ab-component-tools">',
 					'<i class="fa fa-trash ab-component-remove "></i>',
+					'<i class="fa fa-edit ab-component-edit "></i>',
 				'</div>',
 			'</div>'
 		].join('');
@@ -703,9 +707,9 @@ export default class ABView  extends EventEmitter {
 					'<i class="fa fa-#icon#"></i>',
 					'#label#',
 				'</div>',
-				'<div class="">',
-					'<i class="fa fa-edit ab-component-edit"></i>',
+				'<div class="ab-component-tools">',
 					'<i class="fa fa-trash ab-component-remove"></i>',
+					'<i class="fa fa-edit ab-component-edit"></i>',
 				'</div>',
 			'</div>'
 		].join('');
