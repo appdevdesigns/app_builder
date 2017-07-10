@@ -143,6 +143,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             // initialize our components
             webix.ui(this.ui);
+            webix.extend($$(ids.component), webix.ProgressBar);
 
             var Fields = ABFieldManager.allFields();
 
@@ -248,6 +249,9 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             buttonSave:function() {
 
                 $$(ids.buttonSave).disable();
+                // show progress
+				$$(ids.component).showProgress();
+
 
 
                 var editor = _currentEditor;
@@ -317,7 +321,9 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                             }
 
                             $$(ids.buttonSave).enable();
+                            $$(ids.component).hideProgress();
                         } else {
+
 
                             field.save()
                             .then(()=>{
@@ -333,6 +339,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                 }
 
                                 $$(ids.buttonSave).enable();
+                                $$(ids.component).hideProgress();
                                 _logic.hide();
                                 _currentEditor.clear();
                                 _logic.callbacks.onSave(field)
@@ -340,12 +347,14 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                             .catch((err) => {
                                 OP.Validation.isFormValidationError(err, $$(editor.ui.id));
                                 $$(ids.buttonSave).enable();
+                                $$(ids.component).hideProgress();
                             })
                         }
 
 
                     } else {
                         $$(ids.buttonSave).enable();
+                        $$(ids.component).hideProgress();
                     }
 
                 }  else {
@@ -355,6 +364,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         text: 'go tell a developer about this.'
                     })
                     $$(ids.buttonSave).enable();
+                    $$(ids.component).hideProgress();
                 }
 
     // if (!inputValidator.validateFormat(fieldInfo.name)) {

@@ -476,13 +476,13 @@ export default class ABView  extends EventEmitter {
 				viewList.push({
 					id:'del_me',
 					icon:'',
-					label:L('drop here', 'drop here'),
+					label:L('ab.components.view.dropHere', '*drop here'),
 					component:function(app) {
 						return {
 							ui:{
 								id:'child2component',
 								view:'template',
-								template:'drop here',
+								template:L('ab.components.view.dropHere', '*drop here'),
 								height:20
 							},
 							init:function() { console.log('init child 2') }
@@ -500,7 +500,7 @@ export default class ABView  extends EventEmitter {
 				var allComponents = [];
 
 				// attach all the .UI views:
-				this.views().forEach((child) => {
+				viewList.forEach((child) => {
 					var component = child.component(App);
 					var id = ids.view + '_' + child.id;
 					component.ui.container = id;
@@ -576,6 +576,8 @@ export default class ABView  extends EventEmitter {
 						var uid = webix.uid();
 						context.from.copy(context.source[i], context.index, $$(_ui.id), uid);
 
+						// get the id of the item at the index we just dropped onto:
+						var newID = $$(_ui.id).getIdByIndex(context.index);
 
 						// remove the temp "drop here" marker if it exists
 						$$(_ui.id).remove('del_me');
@@ -583,7 +585,6 @@ export default class ABView  extends EventEmitter {
 
 						// find the newly inserted element & perform a .save()
 						// to persist it in our current view.
-						var newID = $$(_ui.id).getIdByIndex(context.index);
 						var droppedViewObj = $$(_ui.id).getItem(newID);
 						var templateID = droppedViewObj.id; // NOTE: this is the ID used when the template is generated.
 						droppedViewObj.id = null;
