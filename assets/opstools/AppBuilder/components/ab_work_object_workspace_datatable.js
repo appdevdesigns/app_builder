@@ -54,6 +54,10 @@ export default class ABWorkObjectDatatable extends OP.Component {
                     obj[common.column.id].forEach(function (o) {
                         tip += o.text + "<br/>";
                     });
+                } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
+                    obj[common.column.id+"__relation"].forEach(function (o) {
+                        tip += o.text + "<br/>";
+                    });
                 } else {
                     tip = obj[common.column.id];
                 }
