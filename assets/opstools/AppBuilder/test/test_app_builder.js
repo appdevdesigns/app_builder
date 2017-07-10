@@ -9,6 +9,7 @@ import './components/ab_work_object_workspace_popupFrozenColumns'
 import './components/ab_work_object_workspace_popupSortFields'
 
 import './classes/dataFields/ABFieldBoolean'
+import './classes/dataFields/ABFieldConnect'
 import './classes/dataFields/ABFieldDate'
 import './classes/dataFields/ABFieldList'
 import './classes/dataFields/ABFieldNumber'
