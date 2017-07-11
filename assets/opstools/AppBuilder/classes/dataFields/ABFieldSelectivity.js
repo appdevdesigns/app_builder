@@ -49,13 +49,13 @@ export default class ABFieldSelectivity extends ABField {
 		var selectivityInput;
 		if (settings.multiple) {
 			selectivityInput = new Selectivity.Inputs.Multiple(settings);
-			// this.selectivitySetBadge(domNode, App, row);
+			domNode.selectivity = selectivityInput;
+			this.selectivitySetBadge(domNode, App, row);
 		}
 		else {
 			selectivityInput = new Selectivity.Inputs.Single(settings);
+			domNode.selectivity = selectivityInput;
 		}
-
-		domNode.selectivity = selectivityInput;
 	}
 
 	selectivityGet(domNode) {
@@ -74,8 +74,6 @@ export default class ABFieldSelectivity extends ABField {
 				domNode.selectivity.setData(data);
 			else
 				domNode.selectivity.clear();
-				
-			this.selectivitySetBadge(domNode, App, row);
 		}
 	}
 
@@ -112,7 +110,7 @@ export default class ABFieldSelectivity extends ABField {
 			
 			count = values.length;
 			if (count > 1) {
-				var badge = domNode.querySelector('.webix_badge .selectivityBadge');
+				var badge = domNode.querySelector('.webix_badge.selectivityBadge');
 				if (badge != null) {
 					badge.innerHTML = count;
 				} else {

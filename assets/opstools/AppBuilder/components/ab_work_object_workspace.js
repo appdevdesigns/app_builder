@@ -427,16 +427,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     								field.destroy()
     								.then(()=>{
 
-										// TODO workaround : where should I destroy a link object
-										if (field.key == "connectObject") {
-											var linkObject = CurrentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
-											var linkField = linkObject.fields((f) => f.id == field.settings.linkColumn)[0];
-
-											if (linkField) {
-												linkField.destroy().then(() => {});
-											}
-										}
-
     									DataTable.refresh();
     								});
 

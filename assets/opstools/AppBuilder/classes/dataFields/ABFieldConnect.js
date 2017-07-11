@@ -24,15 +24,10 @@ var ABFieldConnectDefaults = {
 
 	// description: what gets displayed in the Editor description.
 	description: '',
-	isSortable: (field) => {
-		return false;
-	},
-	isFilterable: (field) => {
-		return false;
-	},
-	useAsLabel: (field) => {
-		return false;
-	}
+
+	isSortable: false,
+	isFilterable: false,
+	useAsLabel: false
 };
 
 var defaultValues = {
@@ -308,30 +303,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		// render selectivity when link type is many
-		if (this.settings.linkType == 'many' ||
-			// render selectivity with single value when 1:1 relation
-			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
-
-			config.template = '<div class="connect-data-values"></div>';
-		}
-		// Single select list
-		else {
-			var dcOptions = new webix.DataCollection();
-
-			config.editor = 'richselect';
-			config.collection = dcOptions;
-
-			dcOptions.clearAll();
-			this.getOptions().then((options) => {
-				dcOptions.parse(options.map((opt) => {
-					return {
-						id: opt.id,
-						value: opt.text
-					}
-				}));
-			});
-		}
+		config.template = '<div class="connect-data-values"></div>';
 
 		return config;
 	}
@@ -349,97 +321,86 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// sanity check.
 		if (!node) { return }
 
-		// render selectivity when link type is many
-		if (this.settings.linkType == 'many' ||
-			// render selectivity with single value when 1:1 relation
-			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
+		// Get linked object
+		var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
 
-			// Get linked object
-			var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
+		var domNode = node.querySelector('.connect-data-values');
 
-			var domNode = node.querySelector('.connect-data-values');
+		var multiselect = (this.settings.linkType == 'many');
 
-			var multiselect = (this.settings.linkType == 'many');
+		// get selected values
+		var selectedData = [];
+		var relationName = this.relationName();
+		if (row[relationName] != null) {
 
-			// get selected values
-			var selectedData = [];
-			var relationName = this.relationName();
-			if (row[relationName] != null) {
+			// if this select value is array
+			if (row[relationName].map) {
 
-				// if this select value is array
-				if (row[relationName].map) {
+				selectedData = row[relationName].map(function (d) {
+					// display label in format
+					d.text = d.text || linkedObject.displayData(d);
 
-					selectedData = row[relationName].map(function (d) {
-						// display label in format
-						d.text = d.text || linkedObject.displayData(d);
+					return d;
+				});
 
-						return d;
+			}
+			else {
+				selectedData = row[relationName];
+				selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
+			}
+		}
+
+		// Render selectivity
+		this.selectivityRender(domNode, {
+			multiple: multiselect,
+			data: selectedData,
+			ajax: {
+				url: 'It will call url in .getOptions function', // require
+				minimumInputLength: 0,
+				quietMillis: 0,
+				fetch: (url, init, queryOptions) => {
+					return this.getOptions().then(function (data) {
+						return {
+							results: data
+						};
 					});
-
-				}
-				else {
-					selectedData = row[relationName];
-					selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
 				}
 			}
+		}, App, row);
 
-			// Render selectivity
-			this.selectivityRender(domNode, {
-				multiple: multiselect,
-				data: selectedData,
-				ajax: {
-					url: 'It will call url in .getOptions function', // require
-					minimumInputLength: 0,
-					quietMillis: 0,
-					fetch: (url, init, queryOptions) => {
-						return this.getOptions().then(function (data) {
-							return {
-								results: data
-							};
-						});
-					}
-				}
-			}, App, row);
-			// Set value to selectivity
-			this.selectivitySet(domNode, row[relationName], App, row);
+		// Listen event when selectivity value updates
+		domNode.addEventListener('change', (e) => {
 
-			// Listen event when selectivity value updates
-			domNode.addEventListener('change', (e) => {
-				// Fixes a bug where scrolling datatable causes a change event to fire on a cell that wasn't actually changed
-				if (typeof e.added == "undefined") return false;
+			// update just this value on our current object.model
+			var values = {};
+			values[this.columnName] = this.selectivityGet(domNode);
 
-				// update just this value on our current object.model
-				var values = {};
-				values[this.columnName] = this.selectivityGet(domNode);
+			// check data does not be changed
+			if (Object.is(values[this.columnName], row[this.columnName])) return;
 
-				// check data does not be changed
-				if (Object.is(values[this.columnName], row[this.columnName])) return;
+			// pass null because it could not put empty array in REST api
+			if (values[this.columnName].length == 0)
+				values[this.columnName] = null;
 
-				// pass null because it could not put empty array in REST api
-				if (values[this.columnName].length == 0)
-					values[this.columnName] = null;
+			this.object.model().update(row.id, values)
+				.then(() => {
+					// update values of relation to display in grid
+					values[this.relationName()] = values[this.columnName];
 
-				this.object.model().update(row.id, values)
-					.then(() => {
-						// update values of relation to display in grid
-						values[this.relationName()] = values[this.columnName];
+					// update new value to item of DataTable .updateItem
+					if ($$(node) && $$(node).updateItem)
+						$$(node).updateItem(row.id, values);
+				})
+				.catch((err) => {
 
-						// update new value to item of DataTable .updateItem
-						if ($$(node) && $$(node).updateItem)
-							$$(node).updateItem(row.id, values);
-					})
-					.catch((err) => {
+					node.classList.add('webix_invalid');
+					node.classList.add('webix_invalid_cell');
 
-						node.classList.add('webix_invalid');
-						node.classList.add('webix_invalid_cell');
+					OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+					console.error(err);
+				});
 
-						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
-						console.error(err);
-					});
-
-			}, false);
-
-		}
+		}, false);
 
 	}
 
@@ -454,15 +415,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 */
 	customEdit(row, App, node) {
 
-		// render selectivity when link type is many
-		if (this.settings.linkType == 'many' ||
-			// render selectivity with single value when 1:1 relation
-			(this.settings.linkType == 'one' && this.settings.linkViaType == 'one')) {
-			return false;
-		}
-		else {
-			return true;
-		}
+		return false;
 
 	}
 

@@ -58,7 +58,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 				{
 					view: App.custom.edittree.view,  // "editlist",
 					id: ids.list,
-					width: 250,	// TODO: @James
+					width: App.config.columnWidthLarge,
 
 					select: true,
 
@@ -71,7 +71,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 						return _logic.templateListItem(obj, common);
 					},
 					type: {
-						height: 35,
+						height: "auto",
 						iconGear: "<span class='webix_icon fa-cog'></span>"
 					},
 					on: {
