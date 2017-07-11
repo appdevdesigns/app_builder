@@ -37,7 +37,7 @@ var defaultValues = {
 
 class ABFieldConnect extends ABField {
 
-    constructor(values, object) {
+	constructor(values, object) {
 		super(values, object, ABFieldConnectDefaults);
 
 
@@ -117,6 +117,21 @@ class ABFieldConnect extends ABField {
 	// }
 
 
+	objectLink() {
+		var application = this.object.application,
+			linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
+
+		return linkObject;
+	}
+
+	fieldLink() {
+		var linkObject = this.objectLink();
+
+		if (!linkObject) return null;
+
+		return linkObject.fields((f) => f.id == this.settings.linkField)[0];
+	}
+
 
 
 	///
@@ -136,9 +151,9 @@ class ABFieldConnect extends ABField {
 				var tableName = this.object.dbTableName();
 
 				// find linked object
-				var application = this.object.application;
-				var linkObject = application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
-				var linkTableName = linkObject.dbTableName();
+				var application = this.object.application,
+					linkObject = this.objectLink(),
+					linkTableName = linkObject.dbTableName();
 
 
 				// 1:M - create a column in target table and references to id of linked table
@@ -305,12 +320,13 @@ class ABFieldConnect extends ABField {
 								.then(() => resolve(), reject);
 						})
 						//	always pass, becuase ignore not found index errors.
-						.catch(() => {
+						.catch((err) => {
 							// drop column
 							super.migrateDrop(knex)
 								.then(() => resolve(), reject);
 						});
 				}
+
 
 			}
 		)

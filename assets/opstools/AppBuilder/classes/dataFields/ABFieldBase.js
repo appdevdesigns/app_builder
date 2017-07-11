@@ -74,25 +74,46 @@ module.exports = class ABField {
   	}
 
 	// the flag to set when checking if field should be filterable
-  	fieldIsFilterable() {
-		if (typeof this.defaults.isFilterable != "undefined") return this.defaults.isFilterable(this);
+	fieldIsFilterable() {
+		if (this.defaults.isFilterable != null) {
+			if (typeof this.defaults.isFilterable === "function") {
+				return this.defaults.isFilterable(this);
+			}
+			else {
+				return this.defaults.isFilterable;
+			}
+		}
 
 		return 1;
-  	}
+	}
 
 	// the flag to set when checking if field should be sortable
-  	fieldIsSortable() {
-		if (typeof this.defaults.isSortable != "undefined") return this.defaults.isSortable(this);
+	fieldIsSortable() {
+		if (this.defaults.isSortable != null) {
+			if (typeof this.defaults.isSortable === "function") {
+				return this.defaults.isSortable(this);
+			}
+			else {
+				return this.defaults.isSortable;
+			}
+		}
 
 		return 1;
-  	}
+	}
 
 	// the flag to set when checking if the field should be used as a label
-  	fieldUseAsLabel() {
-		if (typeof this.defaults.useAsLabel != "undefined") return this.defaults.useAsLabel(this);
+	fieldUseAsLabel() {
+		if (this.defaults.useAsLabel != null) {
+			if (typeof this.defaults.useAsLabel === "function") {
+				return this.defaults.useAsLabel(this);
+			}
+			else {
+				return this.defaults.useAsLabel;
+			}
+		}
 
 		return 1;
-  	}
+	}
 
 
 
