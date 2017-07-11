@@ -155,6 +155,18 @@ export default class ABPropertyComponent {
 
 
 			/*
+			 * @function currentEditObjecct
+			 * return the last ABView object used in .populate().
+			 * @return {ABView} 
+			 */
+			currentEditObject: () => {
+				// NOTE: this.currentObject is the current object instance that is 
+				// populating the Property Editor.
+				return this.currentObject;
+			},
+
+
+			/*
 			 * @function hide
 			 *
 			 * hide this component.
@@ -216,7 +228,6 @@ export default class ABPropertyComponent {
 				// ignore onChange() when populating
 				if (!this.isPopulating) {
 					this.EditObject.propertyEditorSave(ids, this.currentObject)
-					
 					
 				}
 			},

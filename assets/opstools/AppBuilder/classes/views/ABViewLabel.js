@@ -56,12 +56,6 @@ export default class ABViewLabel extends ABView  {
 
   	// 	}
 
-  		if (this.label == '?label?') {
-  			if (this.parent) {
-  				this.label = this.parent.label+'.label';
-  			} 
-  		}
-
   	}
 
 

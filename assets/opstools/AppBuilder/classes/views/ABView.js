@@ -58,6 +58,13 @@ export default class ABView  extends EventEmitter {
 
 
     	this.parent = parent || null;
+
+    	// default value for our label
+  		if (this.label == '?label?') {
+  			if (this.parent) {
+  				this.label = this.parent.label+'.label';
+  			} 
+  		}
   	}
 
 
@@ -195,6 +202,11 @@ export default class ABView  extends EventEmitter {
 			views.push(view.toObj())
 		})
 
+		// NOTE: ensure we have a uuid() set:
+		if (!this.id) {
+			this.id = OP.Util.uuid();
+		}
+
 		return {
 			id : this.id,
 			key : this.key,
@@ -205,7 +217,6 @@ export default class ABView  extends EventEmitter {
 			settings: this.settings || {},
 			translations:this.translations || [],
 			views:views
-
 		}
 	}
 
@@ -372,6 +383,7 @@ export default class ABView  extends EventEmitter {
 			view: 'list',
 			drag: true,
 			select: false,
+			autoheight:true,
 			template:function(obj, common) {
 				return _logic.template(obj, common);
 			},
@@ -871,6 +883,7 @@ export default class ABView  extends EventEmitter {
 		// an ABView is a collection of rows:
 		var _ui = {
 			id: ids.component,
+			autoheight:true,
 			rows:[]
 		}
 		// insert each of our sub views into our rows:
@@ -884,6 +897,8 @@ export default class ABView  extends EventEmitter {
 			viewComponents.forEach((view)=>{
 				view.init();
 			})
+
+			$$(ids.component).adjust();
 		}
 
 
