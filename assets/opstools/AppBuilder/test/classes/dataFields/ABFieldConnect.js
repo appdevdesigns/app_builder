@@ -1,7 +1,7 @@
 import AB from '../../../components/ab'
 import ABFieldConnect from "../../../classes/dataFields/ABFieldConnect"
 
-describe("ABFieldBoolean unit tests", () => {
+describe("ABFieldConnect unit tests", () => {
 	function L(key, altText) {
 		return AD.lang.label.getLabel(key) || altText;
 	}
