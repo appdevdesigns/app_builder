@@ -336,7 +336,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                         // refresh linked object model
                                         linkCol.object.model().refresh();
 
-                                        // refresh sourceobject model
+                                        // refresh source object model
                                         // NOTE: M:1 relation has to refresh model after linked object's refreshed
                                         field.object.model().refresh();
                                     });
