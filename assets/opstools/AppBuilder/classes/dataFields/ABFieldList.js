@@ -423,8 +423,6 @@ class ABFieldList extends ABFieldSelectivity {
 				items: this.settings.options,
 				data: selectedData
 			}, App, row);
-			// Set value to selectivity
-			this.selectivitySet(domNode, row[this.columnName], App, row);
 			
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {

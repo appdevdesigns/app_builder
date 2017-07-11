@@ -295,11 +295,10 @@ class ABFieldUser extends ABFieldSelectivity {
 			this.selectivityRender(domNode, {
 				multiple: true,
 				placeholder: placeholder,
+				data: row[this.columnName],
 				items: this._options.users,
 				readOnly: readOnly
 			}, App, row);			
-			// Set value to selectivity
-			this.selectivitySet(domNode, row[this.columnName], App, row);
 
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
