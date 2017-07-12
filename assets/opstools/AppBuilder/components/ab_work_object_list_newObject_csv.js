@@ -81,6 +81,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					},
 					{
 						id: ids.uploadFileList,
+						name: "uploadedFile",
 						view: "list",
 						type: "uploader",
 						autoheight: true,
@@ -113,6 +114,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					{
 						id: ids.headerOnFirstLine,
 						view: "checkbox",
+						name: "headerOnFirstLine",
 						labelRight: labels.component.headerFirstLine,
 						labelWidth: 0,
 						disabled: true,
@@ -168,6 +170,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 							{ fillspace: true },
 							{
 								view: "button",
+								name: "cancel",
 								value: labels.common.cancel,
 								css: "ab-cancel-button",
 								autowidth: true,
@@ -177,6 +180,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 							},
 							{
 								view: "button",
+								name: "import",
 								id: ids.importButton,
 								value: labels.component.import,
 								disabled: true,
@@ -237,9 +241,12 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 				}
 				reader.readAsText(fileInfo.file);
 
+				return true;
+
 			},
 
 			removeCsvFile: (fileId) => {
+console.log('instance: ', $$(ids.component).getChildViews());
 				$$(ids.uploadFileList).remove(fileId);
 				_logic.formClear();
 				return true;

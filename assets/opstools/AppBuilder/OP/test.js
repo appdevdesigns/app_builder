@@ -40,6 +40,15 @@ export default {
 				result = OP.Test.findElement(elem.body.rows, condition);
 				break;
 			}
+			// or elements
+			else if (elem.elements) {
+				result = OP.Test.findElement(elem.elements, condition);
+				break;
+			}
+			else if (elem.body && elem.body.elements) {
+				result = OP.Test.findElement(elem.body.elements, condition);
+				break;
+			}
 
 		}
 

@@ -8,7 +8,7 @@
 import ABView from "./views/ABView"
 import ABViewPage from "./views/ABViewPage"
 import ABViewLabel from "./views/ABViewLabel"
-
+import ABViewLayout from "./views/ABViewLayout"
 /* 
  * Views
  * A name => ABView  hash of the different ABViews available.
@@ -17,6 +17,7 @@ var Views = {};
 Views[ABView.common().key] = ABView;
 Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
+Views[ABViewLayout.common().key] = ABViewLayout;
 
 
 
