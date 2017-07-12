@@ -383,7 +383,6 @@ export default class ABView  extends EventEmitter {
 			view: 'list',
 			drag: true,
 			select: false,
-			autoheight:true,
 			template:function(obj, common) {
 				return _logic.template(obj, common);
 			},
