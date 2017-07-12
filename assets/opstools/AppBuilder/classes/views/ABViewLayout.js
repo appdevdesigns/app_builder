@@ -198,23 +198,24 @@ export default class ABViewLayout extends ABView  {
 
 		var _template = [
 			'<div class="ab-component-in-page">',
-				'<div id="'+ids.view+'_#objID#" ></div>',
+				
 				'<div class="">',
 					'<i class="fa fa-edit ab-component-edit "></i>',
 					'<i class="fa fa-trash ab-component-remove "></i>',
 				'</div>',
+				'<div id="'+ids.view+'_#objID#" ></div>',
 			'</div>'
 		].join('');
 
 		var _templateBlock = [
 			'<div class="ab-component-in-page">',
-				'<div id="'+ids.view+'_#objID#" >',
-					'<i class="fa fa-#icon#"></i>',
-					'#label#',
-				'</div>',
 				'<div class="">',
 					'<i class="fa fa-edit ab-component-edit"></i>',
 					'<i class="fa fa-trash ab-component-remove"></i>',
+				'</div>',
+				'<div id="'+ids.view+'_#objID#" >',
+					'<i class="fa fa-#icon#"></i>',
+					'#label#',
 				'</div>',
 			'</div>'
 		].join('');

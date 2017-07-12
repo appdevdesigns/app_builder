@@ -47,6 +47,14 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     id: ids.toolbar,
                     cols: [
                         {
+                            view:'button',
+                            type:'prev',
+                            label:'back',
+                            click:function(){
+                                _logic.buttonBack();
+                            }
+                        },
+                        {
                             view: 'label',
                             id: ids.toolbarMap,
                             label: '[view map]'
@@ -98,6 +106,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
         var CurrentView = null;
         var CurrentViewMode = 'preview';
+        var PreviousViews = [];
 
         // setting up UI
         this.init = function() {
@@ -111,6 +120,17 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
         // internal business logic 
         var _logic = this.logic = {
             
+
+            buttonBack:function() {
+                if (PreviousViews.length > 0) {
+                    var view = PreviousViews.pop();
+
+                    // reset current view so it doesn't get added.
+                    CurrentView = null; 
+
+                    App.actions.populateInterfaceWorkspace(view);
+                }
+            },
 
             buttonCancel:function() {
 
@@ -139,6 +159,19 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
              */
             viewLoad: function(view) {
                 
+                // store the current view to return here on [back] button.
+                if (CurrentView) {
+                    PreviousViews.push(CurrentView);
+
+// TODO: make this a setting?
+                    // limit the number of views we store in our list.
+                    // ## lets not be memory hogs.
+                    if (PreviousViews.length > 50) {
+                        PreviousViews.shift();
+                    }
+                }
+                
+
                 CurrentView = view;
 
                 // try to make sure we don't continually add up listeners.
@@ -156,6 +189,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 editorComponent.ui.id = ids.editArea;
                 webix.ui(editorComponent.ui, $$(ids.editArea));
                 editorComponent.init();
+
 
             },
 
