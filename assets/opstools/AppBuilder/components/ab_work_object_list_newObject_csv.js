@@ -246,7 +246,6 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 			},
 
 			removeCsvFile: (fileId) => {
-console.log('instance: ', $$(ids.component).getChildViews());
 				$$(ids.uploadFileList).remove(fileId);
 				_logic.formClear();
 				return true;
