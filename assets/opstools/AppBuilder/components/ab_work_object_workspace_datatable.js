@@ -185,6 +185,9 @@ console.error('!! ToDo: onAfterColumnHide()');
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
             var items = [];
+
+			webix.extend(DataTable, webix.ProgressBar);
+
     		DataTable.attachEvent("onAfterRender", function(data){
                 items = [];
                 data.order.each(function (i) {
