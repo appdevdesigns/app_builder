@@ -344,8 +344,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                                 $$(ids.buttonSave).enable();
                                 $$(ids.component).hideProgress();
-                                _logic.hide();
                                 _currentEditor.clear();
+                                _logic.hide();
                                 _logic.callbacks.onSave(field)
                             })
                             .catch((err) => {
