@@ -341,6 +341,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 /* Interface tree view */
 .ab-main-container .webix_tree_item.webix_selected span {
 	padding: 0px;
+	margin: 0px;
 	background: #3498db !important;
 }
 
@@ -412,9 +413,22 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 
 /* Interface component list */
 .ab-component-item-drag {
-	border: 1px dotted #000 !important;
-	font-size: 35px;
+	border: 1px solid #CCC !important;
+	font-size: 15px;
+	padding: 10px;
 	background-color: #fff;
+}
+
+.webix_view .webix_drag_over, .webix_view .webix_drop_zone {
+	background: #FFF;
+}
+.webix_drag_over::before {
+	content: "";
+	display: block;
+	height: 44px;
+	background: #F8F8F8;
+	border: 1px dotted #CCC;
+	margin: -2px -10px 0;
 }
 
 /* Header component */

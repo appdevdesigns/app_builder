@@ -34,10 +34,8 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            gravity: 1,
             scroll: true,
             rows:[
-
                 {
                     view: 'toolbar',
                     // id: self.componentIds.componentToolbar,
@@ -90,7 +88,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     var label = component.common().labelKey;
                     label = L(label, label);
 
-                    context.html = "<div class='ab-component-item-drag'>"
+                    context.html = "<div style='width:"+context.from.$width+"px;' class='ab-component-item-drag'>"
                         + "<i class='fa fa-{0}'></i> ".replace("{0}", component.common().icon)
                         + label
                         + "</div>";

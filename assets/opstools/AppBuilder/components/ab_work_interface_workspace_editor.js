@@ -17,7 +17,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             common: App.labels,
             component: {
 
-                viewModeBlock: L('ab.interface.viewModeBlock', '*Block'),
+                viewModeBlock: L('ab.interface.viewModeBlock', '*Layout'),
                 viewModePreview: L('ab.interface.viewModePreview', '*Preview'),
 
                 // formHeader: L('ab.application.form.header', "*Application Info"),

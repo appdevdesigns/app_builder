@@ -382,6 +382,9 @@ export default class ABView  extends EventEmitter {
 				// onAfterRender: function () {
 				// 	self.generateComponentsInList();
 				// },
+				onBeforeDrag: function (context, ev) {
+					return _logic.onBeforeDrag(context,ev);
+				},
 				onBeforeDrop: function (context, ev) {
 					return _logic.onBeforeDrop(context,ev);
 				},
@@ -560,6 +563,29 @@ export default class ABView  extends EventEmitter {
 				return View;
 			},
 
+			/**
+             * @function onBeforeDrag
+             * when a drag event is started, update the drag element display.
+             */
+            onBeforeDrag: function(context, ev) {
+
+                var component = $$(_ui.id).getItem(context.source);
+
+                if (component.text && component.label) {
+
+                    context.html = "<div style='width:"+context.from.$width+"px;' class='ab-component-item-drag'>";
+					if (mode == 'preview') {
+						context.html += component.text;
+					} else {
+						context.html += component.label;						
+					}
+                    context.html += "</div>";
+                } else {
+                    // otherwise this is our "no components" placeholder
+                    // so prevent drag-n-drop
+                    return false;
+                }
+            },
 
 			/* 
 			 * @method onBeforeDrop()
