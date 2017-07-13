@@ -64,39 +64,6 @@ export default class ABViewLayout extends ABView  {
 
 
 
-
-
-	///
-	/// Instance Methods
-	///
-
-
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	// fromValues (values) {
-
-	// 	super.fromValues(values);
-
- //    	// if this is being instantiated on a read from the Property UI,
- //    	// .text is coming in under .settings.label
- //    	this.text = values.text || values.settings.text || '*text';
-
- //    	this.settings.format = this.settings.format || PropertyComponentDefaults.format;
-
- //    	// we are not allowed to have sub views:
- //    	this._views = [];
-
- //    	// convert from "0" => 0
- //    	this.settings.format = parseInt(this.settings.format);
-
-	// }
-
-
-
 	//
 	//	Editor Related
 	//
@@ -271,6 +238,13 @@ export default class ABViewLayout extends ABView  {
 	// 	return ABViewPropertyComponent.component(App);
 	// }
 
+
+	/*
+	 * @function addView
+	 * called when the .propertyEditorDefaultElements() button is clicked.
+	 * This method should find the current View instance and call it's .addColumn()
+	 * method.
+	 */
 	static addView (ids, _logic) {
 
 		// get current instance and .addColumn()
@@ -282,6 +256,11 @@ export default class ABViewLayout extends ABView  {
 	}
 
 
+
+	/*
+	 * @function propertyEditorDefaultElements
+	 * return the input form used in the property editor for this View.
+	 */
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
@@ -308,33 +287,19 @@ export default class ABViewLayout extends ABView  {
 			}
 
 		]);
-
 	}
 
 
+	/*
+	 * @function addColumn
+	 * method to actually add a new ABView as one of our columns.
+	 * This is called by the static .addView() method.
+	 */
 	addColumn() {
 
 		this._views.push(ABViewManager.newView({key:ABView.common().key}, this.application, this));
 
 	}
-
-
-	// static propertyEditorPopulate(ids, view) {
-
-	// 	super.propertyEditorPopulate(ids, view);
-
-	// 	$$(ids.text).setValue(view.text);
-	// 	$$(ids.format).setValue(view.settings.format);
-	// }
-
-
-	// static propertyEditorValues(ids, view) {
-
-	// 	super.propertyEditorValues(ids, view);
-
-	// 	view.text  = $$(ids.text).getValue();
-	// 	view.settings.format = $$(ids.format).getValue();
-	// }
 
 
 	/*
@@ -396,85 +361,32 @@ export default class ABViewLayout extends ABView  {
 	}
 
 
+
 	/*
 	 * @method componentList
 	 * return the list of components available on this view to display in the editor.
 	 */
 	componentList() {
-		return [];
+
+
+// NOTE: to keep things simple at the moment: the layout view will return 
+// it's parent's list of components that are able to be dropped upon it.  
+// however, when a layout is in the editor at the time, no component will be
+// dropped onto the layout view.  The editor only allows [add] ing a new 
+// column.  When you edit the column, you can then drop components onto that 
+// view.
+
+
+		// the layout view doesn't care what components are offered, it get's 
+		// the list from it's parent view.
+		// ## NOTE: layout views should not be root views.
+		if (this.parent) {
+			return this.parent.componentList();
+		} else { 
+			return [];  // really shouldn't get here!
+		}
 	}
 
 
 }
 
-
-
-/*
-
-var ABViewPropertyComponent = new ABPropertyComponent({
-
-	editObject: ABView,
-	
-	fieldDefaults: ABViewDefaults,
-
-	elements:(App, field) => {
-
-		var ids = {
-			imageWidth: '',
-			imageHeight: ''
-		}
-		ids = field.idsUnique(ids, App);
-
-		return []
-	},
-
-	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues: PropertyComponentDefaults,
-
-	// rules: basic form validation rules for webix form entry.
-	// the keys must match a .name of your .elements for it to apply
-	rules:{
-		// 'textDefault':webix.rules.isNotEmpty,
-		// 'supportMultilingual':webix.rules.isNotEmpty
-	},
-
-	// include additional behavior on default component operations here:
-	// The base routines will be processed first, then these.  Any results
-	// from the base routine, will be passed on to these: 
-	// 	@param {obj} ids  the list of ids used to generate the UI.  your 
-	//					  provided .elements will have matching .name keys
-	//					  to access them here.
-	//  @param {obj} values the current set of values provided for this instance
-	// 					  of ABField:
-	//					  {
-	//						id:'',			// if already .saved()
-	// 						label:'',
-	// 						columnName:'',
-	//						settings:{
-	//							showIcon:'',
-	//
-	//							your element key=>values here	
-	//						}
-	//					  }
-	//
-	// 		.clear(ids)  : reset the display to an empty state
-	// 		.isValid(ids, isValid): perform validation on the current editor values
-	// 		.populate(ids, ABField) : populate the form with your current settings
-	// 		.show(ids)   : display the form in the editor
-	// 		.values(ids, values) : return the current values from the form
-	logic:{
-
-	},
-
-	// perform any additional setup actions here.
-	// @param {obj} ids  the hash of id values for all the current form elements.
-	//					 it should have your elements + the default Header elements:
-	//						.label, .columnName, .fieldDescription, .showIcon
-	init:function(ids) {
-		// want to hide the description? :
-		// $$(ids.fieldDescription).hide();
-	}
-
-})
-
-*/
