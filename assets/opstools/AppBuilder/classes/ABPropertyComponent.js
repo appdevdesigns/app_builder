@@ -90,8 +90,7 @@ export default class ABPropertyComponent {
 		var _ui = {
 			view:'form',
 			id: ids.component,
-			autoheight:true,
-			borderless:true,
+			scroll: true,
 			elements: [
 				// {
 				// 	view: "text",

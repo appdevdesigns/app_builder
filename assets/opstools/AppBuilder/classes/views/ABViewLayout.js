@@ -363,7 +363,6 @@ export default class ABViewLayout extends ABView  {
 		// an ABViewLabel is a simple Label
 		var _ui = {
 			id: ids.component,
-			autoheight:true,
 			cols:[]
 		}
 		

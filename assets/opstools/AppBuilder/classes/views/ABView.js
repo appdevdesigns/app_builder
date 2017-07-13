@@ -849,7 +849,8 @@ export default class ABView  extends EventEmitter {
 // console.warn('ABView.onChange()!!!');
 // 					}
 // 				}
-			}
+			},
+			{}
 		];
 
 	}
@@ -912,7 +913,6 @@ export default class ABView  extends EventEmitter {
 		// an ABView is a collection of rows:
 		var _ui = {
 			id: ids.component,
-			autoheight:true,
 			rows:[]
 		}
 		// insert each of our sub views into our rows:
