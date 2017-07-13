@@ -33,10 +33,11 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            scroll: true,
+            // scroll: true,
             rows:[
                 {
                     view: 'toolbar',
+                    css: 'ab-data-toolbar',
                     cols: [{
                         view: 'label',
                         label: labels.component.properties
@@ -48,8 +49,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                     rows:[
                         {id:'delme', view:'label',  label:'delme'}
                     ]
-                },
-                {}
+                }
             ]
         };
         

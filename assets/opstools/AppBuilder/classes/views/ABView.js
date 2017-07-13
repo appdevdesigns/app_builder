@@ -849,7 +849,8 @@ export default class ABView  extends EventEmitter {
 // console.warn('ABView.onChange()!!!');
 // 					}
 // 				}
-			}
+			},
+			{}
 		];
 
 	}

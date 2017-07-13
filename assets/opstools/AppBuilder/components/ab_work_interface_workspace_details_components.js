@@ -34,11 +34,12 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            scroll: true,
+            // scroll: true,
             rows:[
                 {
                     view: 'toolbar',
                     // id: self.componentIds.componentToolbar,
+                    css: 'ab-data-toolbar',
                     cols: [{
                         view: 'label',
                         // id: self.componentIds.componentToolbarHeader,
@@ -49,6 +50,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     id: ids.list,
                     view: 'list',
                     drag: 'source',
+                    css: 'ab_interface_draggable',
                     // autoheight:true,
                     template: function (obj, common) {
                         return _logic.template(obj, common);

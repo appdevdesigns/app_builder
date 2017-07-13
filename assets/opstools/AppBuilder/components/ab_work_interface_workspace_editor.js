@@ -45,6 +45,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 {
                     view: 'toolbar',
                     id: ids.toolbar,
+                    css: 'ab-data-toolbar',
                     cols: [
                         {
                             view: 'label',

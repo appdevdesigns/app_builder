@@ -212,7 +212,8 @@ export default class ABViewLabel extends ABView  {
 			        	}
 			        ]
 		    	}
-		    }
+		    },
+			{}
 		]);
 
 	}

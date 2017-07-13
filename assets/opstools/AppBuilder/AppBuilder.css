@@ -421,6 +421,10 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	padding: 10px;
 	background-color: #fff;
 }
+.ab_interface_draggable .webix_list_item {
+	cursor: -webkit-grab !important;
+	cursor: -moz-grab !important;
+}
 
 .webix_view .webix_drag_over, .webix_view .webix_drop_zone {
 	background: #FFF;
@@ -622,4 +626,23 @@ div.webix_item_tab {
 }
 .list-data-values, .connect-data-values {
 	position: relative;
+}
+
+/* Legend Overrides */
+.webix_view legend {
+	margin: 0 0 -30px -10px;
+	border: 0;
+	padding: 10px 15px;
+	background: #EEE;
+	width: auto;
+	border-radius: 5px;
+}
+.webix_view fieldset {
+	padding: 20px 10px 0 10px;
+	border: 0 !important;
+	border-radius: 5px;
+	background: -moz-linear-gradient(top, rgba(238,238,238,1) 0%, rgba(238,238,238,1) 15%, rgba(238,238,238,0) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(238,238,238,1) 0%,rgba(238,238,238,1) 15%,rgba(238,238,238,0) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(238,238,238,1) 0%,rgba(238,238,238,1) 15%,rgba(238,238,238,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#00eeeeee',GradientType=0 ); /* IE6-9 */
 }
