@@ -34,7 +34,6 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
         this.ui = {
             id: ids.component,
             scroll: true,
-            type: "line",
             rows:[
                 {
                     view: 'toolbar',
@@ -49,7 +48,8 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                     rows:[
                         {id:'delme', view:'label',  label:'delme'}
                     ]
-                }
+                },
+                {}
             ]
         };
         

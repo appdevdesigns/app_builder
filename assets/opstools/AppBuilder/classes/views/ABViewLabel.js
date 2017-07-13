@@ -140,10 +140,18 @@ export default class ABViewLabel extends ABView  {
 		var _ui = {
 			id: ids.component,
 			view: 'label',
-			// css: 'ab-component-header ab-ellipses-text',
 			label: this.text || ''
 		}
-		_ui = this.uiFormatting(_ui)
+		_ui = this.uiFormatting(_ui);
+		
+		// This gives adequate space to the view
+		_ui = {
+			type: "space", // this code provides some margin between the rows so we don't have tangents
+			rows: [
+				_ui,
+				{}// this little bit provides a spacer below the content that will fill the area but we added it here so we wouldn't loose the styles applied in uiFormatting
+			]
+		};
 
 
 		var _init = (options) => {

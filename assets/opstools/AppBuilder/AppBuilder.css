@@ -52,6 +52,9 @@
 	overflow: auto !important;
 }
 
+.webix_layout_space, .webix_layout_wide {
+	background: initial;
+}
 /* == Webix datatable == */
 /* Checkbox column */
 .ab-main-container .webix_hcell.center input[type=checkbox] {
