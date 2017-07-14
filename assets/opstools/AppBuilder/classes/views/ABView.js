@@ -16,7 +16,7 @@ var ABViewPropertyComponentDefaults = {
 
 var ABViewDefaults = {
 	key: 'view',		// {string} unique key for this view
-	icon:'truck',		// {string} fa-[icon] reference for this view
+	icon:'window-maximize',		// {string} fa-[icon] reference for this view
 	labelKey:'ab.components.view' // {string} the multilingual label key for the class label
 }
 
@@ -377,18 +377,22 @@ export default class ABView  extends EventEmitter {
 // explore activeContent option:
 // - forEach child=> add ui.activeContent[child.id] = child.ui
 // - template(): <div>{common.[child.id]}</div>
-
+		var type = {};
+		if (mode == "preview") {
+			type = {
+				height: 'auto'
+			};
+		}
 
 		var _ui = {
 			view: 'list',
 			drag: true,
 			select: false,
+			css: 'ab_interface_draggable ab_layout_pane',
 			template:function(obj, common) {
 				return _logic.template(obj, common);
 			},
-			type: {
-				height: 'auto'
-			},
+			type: type,
 			on: {
 				// onAfterRender: function () {
 				// 	self.generateComponentsInList();
@@ -498,6 +502,7 @@ export default class ABView  extends EventEmitter {
 						return {
 							ui:{
 								id:'child2component',
+								css:'child2component',
 								view:'template',
 								borderless: 1,
 								template:L('ab.components.view.dropHere', '*drop here'),
@@ -514,7 +519,6 @@ export default class ABView  extends EventEmitter {
 			// in preview mode, have each child render a preview 
 			// of their content:
 			if (mode == 'preview') {
-
 				var allComponents = [];
 
 				// attach all the .UI views:
@@ -730,7 +734,7 @@ export default class ABView  extends EventEmitter {
 
 		var _template = [
 			'<div class="ab-component-in-page">',
-				'<div id="'+ids.view+'_#objID#" ></div>',
+				'<div class="ab-layout-view-space" id="'+ids.view+'_#objID#" ></div>',
 				'<div class="ab-component-tools">',
 					'<i class="fa fa-trash ab-component-remove "></i>',
 					'<i class="fa fa-edit ab-component-edit "></i>',
@@ -741,7 +745,7 @@ export default class ABView  extends EventEmitter {
 		var _templateBlock = [
 			'<div class="ab-component-in-page">',
 				'<div id="'+ids.view+'_#objID#" >',
-					'<i class="fa fa-#icon#"></i>',
+					'<i class="fa fa-#icon# webix_icon_btn"></i> ',
 					'#label#',
 				'</div>',
 				'<div class="ab-component-tools">',

@@ -125,7 +125,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     var label = obj.common().labelKey
                     label = L(label, label);
 
-                    return "<i class='fa fa-#icon#' aria-hidden='true'></i> #name#"
+                    return "<div class='ab-component-in-page'><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>"
                         .replace(/#icon#/g, obj.common().icon)
                         .replace(/#name#/g, label);
 
