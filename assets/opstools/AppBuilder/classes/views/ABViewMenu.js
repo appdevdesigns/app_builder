@@ -125,7 +125,8 @@ export default class ABViewMenu extends ABView {
 					autoheight: true,
 					minWidth: 500,
 					datatype: "json"
-				}
+				},
+				{}
 			]
 		};
 
