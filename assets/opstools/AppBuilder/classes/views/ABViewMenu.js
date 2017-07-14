@@ -14,6 +14,7 @@ function L(key, altText) {
 
 
 var ABViewMenuPropertyComponentDefaults = {
+	orientation: 'x'
 }
 
 
@@ -120,6 +121,7 @@ export default class ABViewMenu extends ABView {
 				{
 					id: ids.component,
 					view: "menu",
+					layout: (this.settings && this.settings.orientation) || 'x',
 					autoheight: true,
 					minWidth: 500,
 					datatype: "json"
@@ -128,7 +130,7 @@ export default class ABViewMenu extends ABView {
 		};
 
 		if (mode == 'block') {
-			_ui.rows.concat([
+			_ui.rows = _ui.rows.concat([
 				{
 					view: 'label',
 					label: 'Page list'
@@ -140,10 +142,11 @@ export default class ABViewMenu extends ABView {
 						return ("<div class='ab-page-list-item'>" +
 							"{common.icon()} " +
 
-							// // Hide checkbox at own page
+							// TODO : Hide checkbox at own page
 							// (item.id == AD.classes.AppBuilder.currApp.currPage.id ?
-							// 	'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
-							// 	"{common.checkbox()} ") +
+							(false ?
+								'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
+								"{common.checkbox()} ") +
 
 							"{common.folder()} #label#" +
 							"</div>")
@@ -154,16 +157,16 @@ export default class ABViewMenu extends ABView {
 					},
 					on: {
 						onItemCheck: function () {
-							// $$(componentIds.editMenu).clearAll();
+							var selectedPages = $$(ids.pages).getChecked().map((pageId) => {
 
-							// $$(componentIds.pageTree).getChecked().forEach(function (pageId) {
-							// 	var item = $$(componentIds.pageTree).getItem(pageId);
+								return {
+									id: pageId,
+									label: $$(ids.pages).getItem(pageId).label
+								}
 
-							// 	$$(componentIds.editMenu).add({
-							// 		id: pageId,
-							// 		value: item.label
-							// 	}, $$(componentIds.editMenu).count());
-							// });
+							});
+
+							_logic.updateMenuItems(selectedPages);
 						}
 					}
 				}
@@ -172,11 +175,21 @@ export default class ABViewMenu extends ABView {
 
 
 		var _init = (options) => {
-			if (mode == 'block') {
-				var pageParent = this.parent,
-					pageChildren = pageParent.views((v) => v.key == "page");
 
-				var pageItems = [],
+			if (mode == 'block') {
+
+				_logic.updatePageList(this.parent);
+
+			}
+
+		}
+
+		var _logic = {
+
+			updatePageList: (pageParent) => {
+				let pageChildren = pageParent.views((v) => v.key == "page");
+
+				let pageItems = [],
 					parentItem = {
 						id: pageParent.id,
 						label: pageParent.label,
@@ -185,19 +198,31 @@ export default class ABViewMenu extends ABView {
 
 				pageItems.push(parentItem);
 
-				// TODO
-				// $$(ids.pages).clearAll();
-				// $$(ids.pages).parse(pageItems);
-				// $$(ids.pages).openAll();
+				$$(ids.pages).clearAll();
+				$$(ids.pages).parse(pageItems);
+				$$(ids.pages).openAll();
+			},
+
+			updateMenuItems: (selectedPages) => {
+				$$(ids.component).clearAll();
+
+				selectedPages.forEach((page) => {
+
+					$$(ids.component).add({
+						id: page.id,
+						value: page.label
+					}, $$(ids.component).count());
+
+				});
+
 			}
 		}
 
-		// var _logic = {
-		// } 
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+			logic: _logic
 		}
 	}
 
@@ -216,11 +241,13 @@ export default class ABViewMenu extends ABView {
 		// ask for:
 		return commonUI.concat([
 			{
-				type: "richselect",
-				label: "Orientation",
+				name: 'orientation',
+				view: "richselect",
+				label: L('ab.component.menu.orientation','*Orientation'),
+				value: ABViewMenuPropertyComponentDefaults.orientation,
 				options: [
-					{ id: 'x', value: "Horizontal" },
-					{ id: 'y', value: "Vertical" }
+					{ id: 'x', value: L('ab.component.menu.horizontal','*Horizontal') },
+					{ id: 'y', value: L('ab.component.menu.vertical','*Vertical') }
 				]
 			}
 		]);
@@ -230,11 +257,16 @@ export default class ABViewMenu extends ABView {
 	static propertyEditorPopulate(ids, view) {
 
 		super.propertyEditorPopulate(ids, view);
+
+		$$(ids.orientation).setValue(view.settings.orientation);
+
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
+
+		view.settings.orientation = $$(ids.orientation).getValue();
 
 	}
 
