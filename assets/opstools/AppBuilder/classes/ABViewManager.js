@@ -9,6 +9,7 @@ import ABView from "./views/ABView"
 import ABViewPage from "./views/ABViewPage"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
+import ABViewMenu from "./views/ABViewMenu"
 /* 
  * Views
  * A name => ABView  hash of the different ABViews available.
@@ -18,6 +19,7 @@ Views[ABView.common().key] = ABView;
 Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
+Views[ABViewMenu.common().key] = ABViewMenu;
 
 
 
