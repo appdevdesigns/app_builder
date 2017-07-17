@@ -34,6 +34,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			component: this.unique('component'),
 
 			list: this.unique('editlist'),
+			searchText: this.unique('searchText'),
 			buttonNew: this.unique('buttonNew')
 
 		}
@@ -52,7 +53,64 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			id:ids.component,
 			rows: [
 				{
-					view: App.custom.editlist.view,  // "editlist",
+					view: "accordion",
+					multi: true,
+					collapsed: true,
+					css: "ab-object-list-filter",
+					rows: [
+						{
+							header: "Objects",
+							headerHeight: 30,
+							headerAltHeight: 30,
+							body: {
+								rows: [
+									{
+										id: ids.searchText,
+										view: "search",
+										icon: "search",
+										label: L('ab.object.list.search', "*Search"),
+										labelWidth: 80,
+										placeholder: L('ab.object.list.search.placeholder', "*Object name"),
+										height: 35,
+										keyPressTimeout: 100,
+										on: {
+											onTimedKeyPress: function() {
+												_logic.listSearch();
+											}
+										}
+									},
+									{
+										view: "segmented",
+										label: L('ab.object.list.sort', "*Sort"),
+										labelWidth: 80,
+										height: 35,
+										options: [
+											{ id: "asc", value: "A -> Z" },
+											{ id: "desc", value: "Z -> A" }
+										],
+										on: {
+											onChange: (newVal, oldVal) => {
+												_logic.listSort(newVal);
+											}
+										}
+									},
+									{
+										view: "checkbox",
+										label: L('ab.object.list.group', "*Group"),
+										labelWidth: 80,
+										on: {
+											onChange: (newVal, oldVal) => {
+												_logic.listGroup(newVal);
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				},
+				{
+					view: App.custom.editunitlist.view, // "editunitlist"
 					id: ids.list,
 					width: App.config.columnWidthLarge,
 
@@ -63,6 +121,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					editor: "text",
 					editValue: "label",
 
+					uniteBy: function(item) {
+						return "   ";
+					},
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);
 					},
@@ -153,6 +214,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					data: application.objects(),
 				});
 
+				// sort objects
+				_logic.listSort('asc');
+
 				// clear our list and display our objects:
 				var List = $$(ids.list);
 				List.clearAll();
@@ -187,6 +251,37 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 			listReady:function() {
 				$$(ids.list).hideProgress();
+			},
+
+			listSearch: function() {
+				var searchText = $$(ids.searchText).getValue().toLowerCase();
+
+				$$(ids.list).filter(function (item) {
+					return item.label.toLowerCase().indexOf(searchText) > -1;
+				});
+			},
+
+			listSort: function(sortType) {
+				if (objectList == null) return;
+
+				objectList.sort("label", sortType);
+
+				_logic.listSearch();
+			},
+
+			listGroup: function(isGroup) {
+				if (isGroup == true) {
+					$$(ids.list).define("uniteBy", (item) => {
+						return item.label.substr(0,1); 
+					});
+				}
+				else {
+					$$(ids.list).define("uniteBy", (item) => {
+						return "   "; 
+					});
+				}
+
+				$$(ids.list).refresh();
 			},
 
 			onAfterRender: function() {
@@ -319,7 +414,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 					return;
 				}
 
-				$$(ids.list).add(object);
+				objectList.add(object);
+
 				$$(ids.list).select(object.id);
 
 			},
@@ -358,7 +454,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 								.then(() => {
 									_logic.listReady();
 
-									$$(ids.list).remove(selectedObject.id);
+									objectList.remove(selectedObject.id);
+
 									App.actions.clearObjectWorkspace();
 								});
 
