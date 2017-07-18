@@ -59,7 +59,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					css: "ab-object-list-filter",
 					rows: [
 						{
-							header: "Objects",
+							header: "Settings",
 							headerHeight: 30,
 							headerAltHeight: 30,
 							body: {
@@ -284,21 +284,6 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				$$(ids.list).refresh();
 			},
 
-			onAfterRender: function() {
-console.error('!! todo: onAfterRender() editing');
-				// webix.once(function () {
-				// 	$$(self.webixUiId.objectList).data.each(function (d) {
-				// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
-				// 	});
-				// });
-
-				// // Show gear icon
-				// if (this.getSelectedId(true).length > 0) {
-				// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
-				// 	self.refreshUnsyncNumber();
-				// }
-			},
-
 			onAfterEditStop: function(state, editor, ignoreUpdate) {
 
 				_logic.showGear(editor.id);
@@ -332,21 +317,18 @@ console.error('!! todo: onAfterRender() editing');
 			},
 
 			onBeforeEditStop: function(state, editor) {
-console.error('!! todo: onBeforeEditStop() editing');
-				// if (!inputValidator.validateFormat(state.value)) {
-				// 	return false;
-				// }
 
-				// // Validation - check duplicate
-				// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
-				// 	webix.alert({
-				// 		title: self.labels.object.invalidName,
-				// 		ok: self.labels.common.ok,
-				// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
-				// 	});
+				var selectedObject = $$(ids.list).getSelectedItem(false);
+				selectedObject.label = state.value;
 
-				// 	return false;
-				// }
+				var validator = selectedObject.isValid();
+				if (validator.fail()) {
+					selectedObject.label = state.old;
+
+					return false; // stop here.
+				}
+
+				return true;
 			},
 
 
