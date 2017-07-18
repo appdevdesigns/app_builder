@@ -33,8 +33,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		var ids = {
 			component: this.unique('component'),
 
+			listSetting: this.unique('listsetting'),
 			list: this.unique('editlist'),
 			searchText: this.unique('searchText'),
+			sort: this.unique('sort'),
+			group: this.unique('group'),
 			buttonNew: this.unique('buttonNew')
 
 		}
@@ -55,10 +58,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				{
 					view: "accordion",
 					multi: true,
-					collapsed: true,
 					css: "ab-object-list-filter",
 					rows: [
 						{
+							id: ids.listSetting,
 							header: "Settings",
 							headerHeight: 30,
 							headerAltHeight: 30,
@@ -80,6 +83,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 										}
 									},
 									{
+										id: ids.sort,
 										view: "segmented",
 										label: L('ab.object.list.sort', "*Sort"),
 										labelWidth: 80,
@@ -95,6 +99,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 										}
 									},
 									{
+										id: ids.group,
 										view: "checkbox",
 										label: L('ab.object.list.group', "*Group"),
 										labelWidth: 80,
@@ -107,7 +112,15 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 								]
 							}
 						}
-					]
+					],
+					on: {
+						onAfterCollapse: (id) => {
+							_logic.listSettingCollapse();
+						},
+						onAfterExpand: (id) => {
+							_logic.listSettingExpand();
+						}
+					}
 				},
 				{
 					view: App.custom.editunitlist.view, // "editunitlist"
@@ -132,9 +145,6 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 					},
 					on: {
-						onAfterRender: function () {
-							_logic.onAfterRender();
-						},
 						onAfterSelect: function (id) {
 							_logic.selectObject(id);
 						},
@@ -214,8 +224,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					data: application.objects(),
 				});
 
-				// sort objects
-				_logic.listSort('asc');
+				// setup object list settings
+				$$(ids.listSetting).define("collapsed", CurrentApplication.objectlistIsOpen != true);
+				$$(ids.listSetting).refresh();
+				$$(ids.searchText).setValue(CurrentApplication.objectlistSearchText);
+				$$(ids.sort).setValue(CurrentApplication.objectlistSortDirection);
+				$$(ids.group).setValue(CurrentApplication.objectlistIsGroup);
+
 
 				// clear our list and display our objects:
 				var List = $$(ids.list);
@@ -226,8 +241,14 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				List.unselectAll();
 
 
+				// sort objects
+				_logic.listSort(CurrentApplication.objectlistSortDirection);
 
-				//
+				// filter object list
+				_logic.listSearch();
+
+
+				// hide progress loading cursor
 				_logic.listReady();
 
 
@@ -244,6 +265,19 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				return false;
 			},
 
+			listSettingCollapse: function() {
+				if (CurrentApplication && CurrentApplication.objectlistIsOpen != false) {
+					CurrentApplication.objectlistIsOpen = false;
+					CurrentApplication.save();
+				}
+			},
+
+			listSettingExpand: function() {
+				if (CurrentApplication && CurrentApplication.objectlistIsOpen != true) {
+					CurrentApplication.objectlistIsOpen = true;
+					CurrentApplication.save();
+				}
+			},
 
 			listBusy:function() {
 				$$(ids.list).showProgress({ type: "icon" });
@@ -259,6 +293,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				$$(ids.list).filter(function (item) {
 					return item.label.toLowerCase().indexOf(searchText) > -1;
 				});
+
+				// save to database
+				if (CurrentApplication && CurrentApplication.objectlistSearchText != searchText) {
+					CurrentApplication.objectlistSearchText = searchText;
+					CurrentApplication.save();
+				}
+
 			},
 
 			listSort: function(sortType) {
@@ -267,12 +308,20 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				objectList.sort("label", sortType);
 
 				_logic.listSearch();
+
+				// save to database
+				if (CurrentApplication && CurrentApplication.objectlistSortDirection != sortType) {
+					CurrentApplication.objectlistSortDirection = sortType;
+					CurrentApplication.save();
+				}
+
 			},
 
 			listGroup: function(isGroup) {
 				if (isGroup == true) {
 					$$(ids.list).define("uniteBy", (item) => {
-						return item.label.substr(0,1); 
+						return item.label.toUpperCase().substr(0,1);
+						// return item.label.substr(0,1);
 					});
 				}
 				else {
@@ -282,6 +331,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				}
 
 				$$(ids.list).refresh();
+
+				// save to database
+				if (CurrentApplication && CurrentApplication.objectlistIsGroup != isGroup) {
+					CurrentApplication.objectlistIsGroup = isGroup;
+					CurrentApplication.save();
+				}
+
 			},
 
 			onAfterEditStop: function(state, editor, ignoreUpdate) {
