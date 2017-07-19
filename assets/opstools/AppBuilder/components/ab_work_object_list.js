@@ -25,7 +25,13 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				addNew: L('ab.object.addNew', '*Add new object'),
 
 				confirmDeleteTitle: L('ab.object.delete.title', "*Delete object"),
-				confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
+				confirmDeleteMessage: L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?"),
+				listSearch: L('ab.object.list.search', "*Search"),
+				searchPlaceholder: L('ab.object.list.search.placeholder', "*Object name"),
+				listSort: L('ab.object.list.sort', "*Sort"),
+				listAsc: L('ab.object.list.asc', "*A -> Z"),
+				listDesc: L('ab.object.list.desc', "*Z -> A"),
+				listGroup: L('ab.object.list.group', "*Group"),
 			}
 		}
 
@@ -66,14 +72,15 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 							headerHeight: 30,
 							headerAltHeight: 30,
 							body: {
+								padding: 5,
 								rows: [
 									{
 										id: ids.searchText,
 										view: "search",
 										icon: "search",
-										label: L('ab.object.list.search', "*Search"),
+										label: labels.component.listSearch,
 										labelWidth: 80,
-										placeholder: L('ab.object.list.search.placeholder', "*Object name"),
+										placeholder: labels.component.searchPlaceholder,
 										height: 35,
 										keyPressTimeout: 100,
 										on: {
@@ -85,12 +92,12 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 									{
 										id: ids.sort,
 										view: "segmented",
-										label: L('ab.object.list.sort', "*Sort"),
+										label: labels.component.listSort,
 										labelWidth: 80,
 										height: 35,
 										options: [
-											{ id: "asc", value: "A -> Z" },
-											{ id: "desc", value: "Z -> A" }
+											{ id: "asc", value: labels.component.listAsc },
+											{ id: "desc", value: labels.component.listDesc }
 										],
 										on: {
 											onChange: (newVal, oldVal) => {
@@ -101,7 +108,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 									{
 										id: ids.group,
 										view: "checkbox",
-										label: L('ab.object.list.group', "*Group"),
+										label: labels.component.listGroup,
 										labelWidth: 80,
 										on: {
 											onChange: (newVal, oldVal) => {
