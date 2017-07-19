@@ -26,7 +26,7 @@ module.exports = class ABApplicationBase {
 
     	// ABApplication Attributes
     	this.id    = attributes.id;
-    	this.json  = attributes.json;
+    	this.json  = attributes.json || {};
     	this.name  = attributes.name || this.json.name || "";
     	this.role  = attributes.role;
 
@@ -44,7 +44,8 @@ module.exports = class ABApplicationBase {
 
 
 		// Object List Settings
-		this.objectListSettings 				= attributes.json.objectListSettings || {};
+		attributes.json.objectListSettings 		= attributes.json.objectListSettings || {};
+		this.objectListSettings 				= this.objectListSettings || {};
 		this.objectListSettings.isOpen 			= JSON.parse(attributes.json.objectListSettings.isOpen) || false;
 		this.objectListSettings.searchText 		= attributes.json.objectListSettings.searchText || "";
 		this.objectListSettings.sortDirection 	= attributes.json.objectListSettings.sortDirection || "asc";
