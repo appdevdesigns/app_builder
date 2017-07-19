@@ -127,7 +127,7 @@ export default class AB_Work_Object_List_NewObject_Csv extends OP.Component {
 					},
 					{
 						id: ids.columnList,
-						view: 'ab_custom_activelist',
+						view: App.custom.activelist.view,
 						datatype: "json",
 						multiselect: false,
 						select: false,

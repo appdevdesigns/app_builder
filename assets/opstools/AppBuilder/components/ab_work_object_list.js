@@ -33,7 +33,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		var ids = {
 			component: this.unique('component'),
 
+			listSetting: this.unique('listsetting'),
 			list: this.unique('editlist'),
+			searchText: this.unique('searchText'),
+			sort: this.unique('sort'),
+			group: this.unique('group'),
 			buttonNew: this.unique('buttonNew')
 
 		}
@@ -52,7 +56,74 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			id:ids.component,
 			rows: [
 				{
-					view: App.custom.editlist.view,  // "editlist",
+					view: "accordion",
+					multi: true,
+					css: "ab-object-list-filter",
+					rows: [
+						{
+							id: ids.listSetting,
+							header: "Settings",
+							headerHeight: 30,
+							headerAltHeight: 30,
+							body: {
+								rows: [
+									{
+										id: ids.searchText,
+										view: "search",
+										icon: "search",
+										label: L('ab.object.list.search', "*Search"),
+										labelWidth: 80,
+										placeholder: L('ab.object.list.search.placeholder', "*Object name"),
+										height: 35,
+										keyPressTimeout: 100,
+										on: {
+											onTimedKeyPress: function() {
+												_logic.listSearch();
+											}
+										}
+									},
+									{
+										id: ids.sort,
+										view: "segmented",
+										label: L('ab.object.list.sort', "*Sort"),
+										labelWidth: 80,
+										height: 35,
+										options: [
+											{ id: "asc", value: "A -> Z" },
+											{ id: "desc", value: "Z -> A" }
+										],
+										on: {
+											onChange: (newVal, oldVal) => {
+												_logic.listSort(newVal);
+											}
+										}
+									},
+									{
+										id: ids.group,
+										view: "checkbox",
+										label: L('ab.object.list.group', "*Group"),
+										labelWidth: 80,
+										on: {
+											onChange: (newVal, oldVal) => {
+												_logic.listGroup(newVal);
+											}
+										}
+									}
+								]
+							}
+						}
+					],
+					on: {
+						onAfterCollapse: (id) => {
+							_logic.listSettingCollapse();
+						},
+						onAfterExpand: (id) => {
+							_logic.listSettingExpand();
+						}
+					}
+				},
+				{
+					view: App.custom.editunitlist.view, // "editunitlist"
 					id: ids.list,
 					width: App.config.columnWidthLarge,
 
@@ -63,6 +134,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					editor: "text",
 					editValue: "label",
 
+					uniteBy: function(item) {
+						return "   ";
+					},
 					template: function(obj, common) {
 						return _logic.templateListItem(obj, common);
 					},
@@ -71,9 +145,6 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 						iconGear: "<div class='ab-object-list-edit'><span class='webix_icon fa-cog'></span></div>"
 					},
 					on: {
-						onAfterRender: function () {
-							_logic.onAfterRender();
-						},
 						onAfterSelect: function (id) {
 							_logic.selectObject(id);
 						},
@@ -153,6 +224,14 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					data: application.objects(),
 				});
 
+				// setup object list settings
+				$$(ids.listSetting).define("collapsed", CurrentApplication.objectlistIsOpen != true);
+				$$(ids.listSetting).refresh();
+				$$(ids.searchText).setValue(CurrentApplication.objectlistSearchText);
+				$$(ids.sort).setValue(CurrentApplication.objectlistSortDirection);
+				$$(ids.group).setValue(CurrentApplication.objectlistIsGroup);
+
+
 				// clear our list and display our objects:
 				var List = $$(ids.list);
 				List.clearAll();
@@ -162,8 +241,14 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				List.unselectAll();
 
 
+				// sort objects
+				_logic.listSort(CurrentApplication.objectlistSortDirection);
 
-				//
+				// filter object list
+				_logic.listSearch();
+
+
+				// hide progress loading cursor
 				_logic.listReady();
 
 
@@ -180,6 +265,19 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				return false;
 			},
 
+			listSettingCollapse: function() {
+				if (CurrentApplication && CurrentApplication.objectlistIsOpen != false) {
+					CurrentApplication.objectlistIsOpen = false;
+					CurrentApplication.save();
+				}
+			},
+
+			listSettingExpand: function() {
+				if (CurrentApplication && CurrentApplication.objectlistIsOpen != true) {
+					CurrentApplication.objectlistIsOpen = true;
+					CurrentApplication.save();
+				}
+			},
 
 			listBusy:function() {
 				$$(ids.list).showProgress({ type: "icon" });
@@ -189,19 +287,57 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				$$(ids.list).hideProgress();
 			},
 
-			onAfterRender: function() {
-console.error('!! todo: onAfterRender() editing');
-				// webix.once(function () {
-				// 	$$(self.webixUiId.objectList).data.each(function (d) {
-				// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
-				// 	});
-				// });
+			listSearch: function() {
+				var searchText = $$(ids.searchText).getValue().toLowerCase();
 
-				// // Show gear icon
-				// if (this.getSelectedId(true).length > 0) {
-				// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
-				// 	self.refreshUnsyncNumber();
-				// }
+				$$(ids.list).filter(function (item) {
+					return item.label.toLowerCase().indexOf(searchText) > -1;
+				});
+
+				// save to database
+				if (CurrentApplication && CurrentApplication.objectlistSearchText != searchText) {
+					CurrentApplication.objectlistSearchText = searchText;
+					CurrentApplication.save();
+				}
+
+			},
+
+			listSort: function(sortType) {
+				if (objectList == null) return;
+
+				objectList.sort("label", sortType);
+
+				_logic.listSearch();
+
+				// save to database
+				if (CurrentApplication && CurrentApplication.objectlistSortDirection != sortType) {
+					CurrentApplication.objectlistSortDirection = sortType;
+					CurrentApplication.save();
+				}
+
+			},
+
+			listGroup: function(isGroup) {
+				if (isGroup == true) {
+					$$(ids.list).define("uniteBy", (item) => {
+						return item.label.toUpperCase().substr(0,1);
+						// return item.label.substr(0,1);
+					});
+				}
+				else {
+					$$(ids.list).define("uniteBy", (item) => {
+						return "   "; 
+					});
+				}
+
+				$$(ids.list).refresh();
+
+				// save to database
+				if (CurrentApplication && CurrentApplication.objectlistIsGroup != isGroup) {
+					CurrentApplication.objectlistIsGroup = isGroup;
+					CurrentApplication.save();
+				}
+
 			},
 
 			onAfterEditStop: function(state, editor, ignoreUpdate) {
@@ -237,21 +373,18 @@ console.error('!! todo: onAfterRender() editing');
 			},
 
 			onBeforeEditStop: function(state, editor) {
-console.error('!! todo: onBeforeEditStop() editing');
-				// if (!inputValidator.validateFormat(state.value)) {
-				// 	return false;
-				// }
 
-				// // Validation - check duplicate
-				// if (!inputValidator.rules.preventDuplicateObjectName(state.value, editor.id) && state.value != state.old) {
-				// 	webix.alert({
-				// 		title: self.labels.object.invalidName,
-				// 		ok: self.labels.common.ok,
-				// 		text: self.labels.object.duplicateName.replace("{0}", state.value)
-				// 	});
+				var selectedObject = $$(ids.list).getSelectedItem(false);
+				selectedObject.label = state.value;
 
-				// 	return false;
-				// }
+				var validator = selectedObject.isValid();
+				if (validator.fail()) {
+					selectedObject.label = state.old;
+
+					return false; // stop here.
+				}
+
+				return true;
 			},
 
 
@@ -319,7 +452,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 					return;
 				}
 
-				$$(ids.list).add(object);
+				objectList.add(object);
+
 				$$(ids.list).select(object.id);
 
 			},
@@ -358,7 +492,8 @@ console.error('!! todo: onBeforeEditStop() editing');
 								.then(() => {
 									_logic.listReady();
 
-									$$(ids.list).remove(selectedObject.id);
+									objectList.remove(selectedObject.id);
+
 									App.actions.clearObjectWorkspace();
 								});
 

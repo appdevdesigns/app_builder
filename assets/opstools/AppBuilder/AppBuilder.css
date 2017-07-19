@@ -243,6 +243,10 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 
 /* Object list */
+.ab-object-list-filter .webix_accordionitem_header {
+	font-size: 14px;
+	line-height: 30px;
+}
 .ab-object-list-item {
 	position: relative;
 	height: 100%;

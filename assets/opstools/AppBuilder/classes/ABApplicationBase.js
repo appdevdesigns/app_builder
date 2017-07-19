@@ -43,7 +43,12 @@ module.exports = class ABApplicationBase {
 	  	this._objects = newObjects;
 
 
-
+		// Object List Settings
+		this.objectListSettings 				= attributes.json.objectListSettings || {};
+		this.objectListSettings.isOpen 			= JSON.parse(attributes.json.objectListSettings.isOpen) || false;
+		this.objectListSettings.searchText 		= attributes.json.objectListSettings.searchText || "";
+		this.objectListSettings.sortDirection 	= attributes.json.objectListSettings.sortDirection || "asc";
+		this.objectListSettings.isGroup 		= JSON.parse(attributes.json.objectListSettings.isGroup) || false;
 
   	}
 
@@ -102,6 +107,8 @@ module.exports = class ABApplicationBase {
 			currObjects.push(obj.toObj())
 		})
 		this.json.objects = currObjects;
+
+		this.json.objectListSettings = this.objectListSettings;
 
 		return {
 			id:this.id,
@@ -189,5 +196,44 @@ module.exports = class ABApplicationBase {
 
 		return this.save();
 	}
+
+
+
+
+	///
+	///	Object List Settings
+	///
+	get objectlistIsOpen() {
+		return this.objectListSettings.isOpen;
+	}
+
+	set objectlistIsOpen( isOpen ) {
+		this.objectListSettings.isOpen = isOpen;
+	}
+
+	get objectlistSearchText() {
+		return this.objectListSettings.searchText;
+	}
+
+	set objectlistSearchText( searchText ) {
+		this.objectListSettings.searchText = searchText;
+	}
+
+	get objectlistSortDirection() {
+		return this.objectListSettings.sortDirection;
+	}
+
+	set objectlistSortDirection( sortDirection ) {
+		this.objectListSettings.sortDirection = sortDirection;
+	}
+
+	get objectlistIsGroup() {
+		return this.objectListSettings.isGroup;
+	}
+
+	set objectlistIsGroup( isGroup ) {
+		this.objectListSettings.isGroup = isGroup;
+	}
+
 
 }
