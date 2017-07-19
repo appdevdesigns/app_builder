@@ -18,6 +18,8 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             component: {
                 // formHeader: L('ab.application.form.header', "*Application Info"),
                 components: L('ab.interface.components', '*Components'),
+                componentsTipText: L('ab.interface.componentsTip', '*Drag components into Layout/Preview pane.'),
+                componentsTipTitle: L('ab.interface.componentsTitle', '*Tip'),
                 noComponents: L('ab.interface.noComponents', '*No Components')
             }
         };
@@ -40,11 +42,23 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     view: 'toolbar',
                     // id: self.componentIds.componentToolbar,
                     css: 'ab-data-toolbar',
-                    cols: [{
-                        view: 'label',
-                        // id: self.componentIds.componentToolbarHeader,
-                        label: labels.component.components
-                    }]
+                    cols: [
+                        {
+                            view: 'label',
+                            // id: self.componentIds.componentToolbarHeader,
+                            label: labels.component.components
+                        },
+                        {
+                            view: "icon", 
+                            icon: "info-circle",
+                            tooltip: labels.component.componentsTipText,
+                            on: {
+                                onItemClick: function() {
+                                    _logic.infoAlert();
+                                }
+                            }
+                        }
+                    ]
                 },
                 {
                     id: ids.list,
@@ -111,7 +125,13 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             show: function() {
                 $$(ids.component).show();
             },
-
+            
+            infoAlert: function() {
+                OP.Dialog.Alert({
+                    title: labels.component.componentsTipTitle,
+                    text: labels.component.componentsTipText
+                });
+            },
             
             /**
              * @function template()

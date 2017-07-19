@@ -69,7 +69,9 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 			dataFieldColumnName: L('ab.dataField.common.columnName', '*Name'),
 			dataFieldColumnNamePlaceholder: L('ab.dataField.common.columnNamePlaceholder', '*Column Name'),
 
-			dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?')
+			dataFieldShowIcon: L('ab.dataField.common.showIcon', '*show icon?'),
+			
+			componentDropZone: L('ab.common.componentDropZone', '*drop components here')
 		}
 
 

@@ -16,6 +16,8 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
         var labels = {
             common: App.labels,
             component: {
+                propertiesTipText: L('ab.interface.propertiesTipText', "*Edit a components properties here."),
+                propertiesTipTitle: L('ab.interface.propertiesTipTitle', "*Tip"),
                 properties: L('ab.interface.properties', "*Properties"),
             }
         };
@@ -38,10 +40,22 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                 {
                     view: 'toolbar',
                     css: 'ab-data-toolbar',
-                    cols: [{
+                    cols: [
+                        {
                         view: 'label',
                         label: labels.component.properties
-                    }]
+                        },
+                        {
+                            view: "icon", 
+                            icon: "info-circle",
+                            tooltip: labels.component.propertiesTipText,
+                            on: {
+                                onItemClick: function() {
+                                    _logic.infoAlert();
+                                }
+                            }
+                        }
+                    ]
                 },
                 {
                     view:'multiview',
@@ -111,6 +125,12 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             //  $$(ids.form).hideProgress();
             // },
             
+            infoAlert: function() {
+                OP.Dialog.Alert({
+                    title: labels.component.propertiesTipTitle,
+                    text: labels.component.propertiesTipText
+                });
+            },
             
             /**
              * @function show()
