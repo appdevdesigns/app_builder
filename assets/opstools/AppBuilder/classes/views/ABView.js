@@ -377,12 +377,6 @@ export default class ABView  extends EventEmitter {
 // explore activeContent option:
 // - forEach child=> add ui.activeContent[child.id] = child.ui
 // - template(): <div>{common.[child.id]}</div>
-		var type = {};
-		if (mode == "preview") {
-			type = {
-				height: 'auto'
-			};
-		}
 
 		var _ui = {
 			view: 'list',
@@ -392,7 +386,15 @@ export default class ABView  extends EventEmitter {
 			template:function(obj, common) {
 				return _logic.template(obj, common);
 			},
-			type: type,
+			type: {
+				height: 'auto'
+			},
+			ready:function(){
+				if (!this.count()){
+					webix.extend(this, webix.OverlayBox);
+					this.showOverlay("<div class='drop-zone'><div>"+App.labels.componentDropZone+"</div></div>");
+				}
+			},
 			on: {
 				// onAfterRender: function () {
 				// 	self.generateComponentsInList();
@@ -493,26 +495,27 @@ export default class ABView  extends EventEmitter {
 			var viewList = this.views();
 
 			// if we don't have any views, then place a "drop here" placeholder
-			if (viewList.length == 0) {
-				viewList.push({
-					id:'del_me',
-					icon:'',
-					label:L('ab.components.view.dropHere', '*drop here'),
-					component:function(app) {
-						return {
-							ui:{
-								id:'child2component',
-								css:'child2component',
-								view:'template',
-								borderless: 1,
-								template:L('ab.components.view.dropHere', '*drop here'),
-								height:36
-							},
-							init:function() { console.log('init child 2') }
-						}
-					}
-				})
-			}
+			// if (viewList.length == 0) {
+				// viewList.push({
+				// 	id:'del_me',
+				// 	icon:'',
+				// 	label:L('ab.components.view.dropHere', '*drop here'),
+				// 	component:function(app) {
+				// 		return {
+				// 			ui:{
+				// 				id:'child2component',
+				// 				css:'child2component',
+				// 				view:'template',
+				// 				borderless: 1,
+				// 				template:L('ab.components.view.dropHere', '*drop here'),
+				// 				height:36
+				// 			},
+				// 			init:function() { console.log('init child 2') }
+				// 		}
+				// 	}
+				// })
+				// this.showOverlay("<div>Drop components here.</div>");
+			// }
 			var List = $$(_ui.id);
 			List.parse(viewList);
 
@@ -585,21 +588,37 @@ export default class ABView  extends EventEmitter {
             onBeforeDrag: function(context, ev) {
 
                 var component = $$(_ui.id).getItem(context.source);
+				var node = $$(_ui.id).getItemNode(context.source);
+				
+				// console.log(node);
+				
+				var cln = node.cloneNode(true);
 
-                if (component.text && component.label) {
+				var dragDiv = document.createElement("div");
+				dragDiv.classList.add("dragContainer");
+				dragDiv.appendChild(cln);
 
-                    context.html = "<div style='width:"+context.from.$width+"px;' class='ab-component-item-drag'>";
-					if (mode == 'preview') {
-						context.html += component.text;
-					} else {
-						context.html += component.label;						
-					}
-                    context.html += "</div>";
-                } else {
-                    // otherwise this is our "no components" placeholder
-                    // so prevent drag-n-drop
-                    return false;
-                }
+				context.html = dragDiv.outerHTML;
+				
+
+				// console.log(component);
+				// console.log(context);
+				// console.log(ev);
+
+                // if (component.text && component.label) {
+				// 
+                //     context.html = "<div style='width:"+context.from.$width+"px;' class='ab-component-item-drag'>";
+				// 	if (mode == 'preview') {
+				// 		context.html += component.text;
+				// 	} else {
+				// 		context.html += component.label;						
+				// 	}
+                //     context.html += "</div>";
+                // } else {
+                //     // otherwise this is our "no components" placeholder
+                //     // so prevent drag-n-drop
+                //     return false;
+                // }
             },
 
 			/* 
@@ -625,8 +644,8 @@ export default class ABView  extends EventEmitter {
 						var newID = $$(_ui.id).getIdByIndex(context.index);
 
 						// remove the temp "drop here" marker if it exists
-						$$(_ui.id).remove('del_me');
-
+						// $$(_ui.id).remove('del_me');
+						$$(_ui.id).hideOverlay();
 
 						// find the newly inserted element & perform a .save()
 						// to persist it in our current view.
@@ -695,6 +714,12 @@ export default class ABView  extends EventEmitter {
 							deletedView.destroy()
 							.then(()=>{
 								$$(_ui.id).remove(id);
+								
+								// if we don't have any views, then place a "drop here" placeholder
+								if ($$(_ui.id).count() == 0) {
+									webix.extend($$(_ui.id), webix.OverlayBox);
+									$$(_ui.id).showOverlay("<div class='drop-zone'><div>"+App.labels.componentDropZone+"</div></div>");
+								}
 							})
 							.catch((err)=>{
 								OP.Error.log('Error trying to delete selected View:', {error:err, view:deletedView })

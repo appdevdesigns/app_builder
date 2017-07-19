@@ -32,6 +32,7 @@ export default {
 	columnWidthExtraSmall: 100,
 
 	// spacers
+	xSmallSpacer: 1,
 	smallSpacer: 1,
 	mediumSpacer: 10,
 	largeSpacer: 20,

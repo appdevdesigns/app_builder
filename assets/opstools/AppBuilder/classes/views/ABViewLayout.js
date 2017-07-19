@@ -389,7 +389,7 @@ export default class ABViewLayout extends ABView  {
 		// an ABViewLayout is a container with X number of columns
 		var _ui = {
 			id: ids.component,
-			type: "space",
+			// type: "space",
 			cols:[]
 		}
 		

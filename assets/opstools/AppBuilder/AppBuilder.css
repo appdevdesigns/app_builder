@@ -1,6 +1,17 @@
 .webix_dt_editor input, .webix_dt_editor select, .webix_view, .webix_el_colorpicker input, .webix_el_combo input, .webix_el_datepicker input, .webix_el_search input, .webix_el_text input, .webix_control button, .webix_control input, .webix_control textarea, .webix_el_label, .webix_inp_bottom_label, .webix_inp_label, .webix_inp_top_label {
 	font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
 }
+.webix_segment_0, .webix_segment_1, .webix_segment_N {
+	background: #888;
+	border-color: #888;
+}
+.webix_segment_0.webix_selected, .webix_segment_1.webix_selected, .webix_segment_N.webix_selected,
+.webix_selected.webix_segment_0:hover, .webix_selected.webix_segment_1:hover, .webix_selected.webix_segment_N:hover,
+.webix_selected.webix_segment_0:active, .webix_selected.webix_segment_0:focus, .webix_selected.webix_segment_1:active, .webix_selected.webix_segment_1:focus, .webix_selected.webix_segment_N:active, .webix_selected.webix_segment_N:focus,
+.webix_inp_counter_next:active, .webix_inp_counter_prev:active, .webix_segment_0:active, .webix_segment_1:active, .webix_segment_N:active, .webixbutton:active, .webixtype_base:active {
+	background: #3498db;
+	border-color: #3498db;	
+}
 .ab-generated-page {
 	overflow-y: auto;
 }
@@ -52,9 +63,6 @@
 	overflow: auto !important;
 }
 
-.webix_layout_space, .webix_layout_wide {
-	background: initial;
-}
 /* == Webix datatable == */
 /* Checkbox column */
 .ab-main-container .webix_hcell.center input[type=checkbox] {
@@ -410,7 +418,10 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	color: white;
 	text-align: center;
 }
-
+.ab-component-remove:hover, .ab-component-edit:hover {
+	cursor: pointer;
+	opacity: 0.8;
+}
 .ab-component-remove {
 	margin: -2px -10px 0 0;
 	background: #FF5722;
@@ -419,6 +430,9 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .ab-component-edit {
 	margin: -2px 1px 0 0;
 	background: #27ae60;
+}
+.dragContainer .ab-component-edit, .dragContainer .ab-component-remove {
+	display: none;
 }
 
 .ab-layout-view .ab-component-remove {
@@ -429,6 +443,11 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	color: #003B7E;
 	text-decoration: underline;
 	cursor: pointer;
+}
+
+.ab-view-chooser {
+	/*background: #EEE;*/
+	/*padding: 5px 0;*/
 }
 
 /* Interface component list */
@@ -482,12 +501,35 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 .webix_view .webix_drag_over, .webix_view .webix_drop_zone {
 	background: #FFF;
 }
+.webix_overlay {
+	padding: 0 !important;
+}
+.webix_overlay .drop-zone {
+    font-size: 12px;
+    color: #666;
+    height: 90%;
+    background: #EFEFEF;
+    margin: 3%;
+    border-radius: 20px;
+    border: 3px dashed #CCC;
+	position: relative;
+}
+.webix_overlay .drop-zone div {
+    position: absolute;
+    top: 50%;
+    /* adjust top up half the height of a single line */
+    margin-top: -0.5em;
+    /* force content to always be a single line */
+    overflow: hidden;
+    white-space: nowrap;
+    width: 100%;
+    text-overflow: ellipsis;
+	color: #666;
+}
 .webix_drag_over::before {
-	content: "drop here";
-	text-align: center;
+	content: "";
 	display: block;
 	height: 50px;
-	line-height: 48px;
 	background: #F8F8F8;
 	color: #999;
 	border: 2px dashed #CCC;
@@ -513,7 +555,10 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 
 /* Object toolbar */
 .ab-data-toolbar {
-	background: #aaa !important;
+	background: rgb(170,170,170) !important; /* Old browsers */
+	background: -moz-linear-gradient(left, rgba(170,170,170,1) 50%, rgba(136,136,136,1) 100%) !important; /* FF3.6-15 */
+	background: -webkit-linear-gradient(left, rgba(170,170,170,1) 50%,rgba(136,136,136,1) 100%) !important; /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to right, rgba(170,170,170,1) 50%,rgba(136,136,136,1) 100%) !important; /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
 }
 .ab-data-toolbar button {
 	text-align: center;

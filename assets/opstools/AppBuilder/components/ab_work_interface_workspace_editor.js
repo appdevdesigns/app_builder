@@ -17,8 +17,11 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             common: App.labels,
             component: {
 
+                editorTipText: L('ab.interface.editorTipText', '*Choose Layout or Preview mode. Drag and drop componenents to reorder.'),
+                editorTipTitle: L('ab.interface.editorTipTitle', '*Tip'),
                 viewModeBlock: L('ab.interface.viewModeBlock', '*Layout'),
                 viewModePreview: L('ab.interface.viewModePreview', '*Preview'),
+                editorPlaceholder: L('ab.interface.editorPlaceholder', '*Drag and drop components to build interface.')
 
                 // formHeader: L('ab.application.form.header', "*Application Info"),
             }
@@ -34,6 +37,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             toolbarViewMode: this.unique('toolbarViewMode'),
 
             editArea: this.unique('editArea'),
+            noContent: this.unique('noContent')
         };
         
         
@@ -41,6 +45,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
         this.ui = {
             view: 'layout',
             id: ids.component,
+            borderless: false,
             rows: [
                 {
                     view: 'toolbar',
@@ -53,20 +58,15 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             label: '[view map]'
                         },
                         {
-                            view: "segmented",
-                            id: ids.toolbarViewMode,
-                            width: 200,
-                            inputWidth: 200,
-                            options: [
-                                { id: "block", value: labels.component.viewModeBlock },
-                                { id: "preview", value: labels.component.viewModePreview }
-                            ],
+                            view: "icon", 
+                            icon: "info-circle",
+                            tooltip: labels.component.editorTipText,
                             on: {
-                                onChange: function (newValue, oldValue) {
-                                    _logic.viewModeChange(newValue, oldValue);
+                                onItemClick: function() {
+                                    _logic.infoAlert();
                                 }
                             }
-                        },
+                        }
                         // {
                         //     view: 'button',
                         //     id: ids.toolbarButtonSave,
@@ -87,7 +87,38 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         // }
                     ]
                 },
-
+                // {
+                //     maxHeight: App.config.xSmallSpacer,
+                //     hidden: App.config.hideMobile
+                // },
+                {
+                    view: "layout",
+                    type: "space",
+                    cols: [
+                        {
+                            view: "segmented",
+                            id: ids.toolbarViewMode,
+                            css: "ab-view-chooser",
+                            options: [
+                                { id: "block", value: labels.component.viewModeBlock },
+                                { id: "preview", value: labels.component.viewModePreview }
+                            ],
+                            inputWidth: 200,
+                            align: "center",
+                            on: {
+                                onChange: function (newValue, oldValue) {
+                                    _logic.viewModeChange(newValue, oldValue);
+                                }
+                            }
+                        }                        
+                    ]
+                },
+                // {
+                //     id: ids.noContent,
+                //     view: 'label',
+                //     align: 'center',
+                //     label: labels.component.editorPlaceholder
+                // },
                 {
                     view:'template',
                     id:ids.editArea,
@@ -121,6 +152,13 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
             },
             
+            
+            infoAlert: function() {
+                OP.Dialog.Alert({
+                    title: labels.component.editorTipTitle,
+                    text: labels.component.editorTipText
+                });
+            },            
             
             /**
              * @function show()
