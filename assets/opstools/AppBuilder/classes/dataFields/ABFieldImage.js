@@ -466,7 +466,8 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 						values[this.columnName] = response.data.uuid
 						this.object.model().update(row.id, values)
 						.then(()=>{
-
+							// update the client side data object as well so other data changes won't cause this save to be reverted
+							$$(node).updateItem(row.id, values);
 						})
 						.catch((err)=>{
 
