@@ -466,7 +466,8 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 						values[this.columnName] = response.data.uuid
 						this.object.model().update(row.id, values)
 						.then(()=>{
-
+							// update the client side data object as well so other data changes won't cause this save to be reverted
+							$$(node).updateItem(row.id, values);
 						})
 						.catch((err)=>{
 
@@ -532,7 +533,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		}
 
 		return [
-			'<div class="image-data-field-icon" style="text-align: center; '+iconDisplay+'"><i class="fa fa-file-image-o fa-2x"></i></div>',
+			'<div class="image-data-field-icon" style="text-align: center; height: 100%; position: relative; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; position: absolute; top: 50%; margin-top: -15px; right: 50%; margin-right: -10px;"></i></div>',
 			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'"></div>',
 		].join('');
 

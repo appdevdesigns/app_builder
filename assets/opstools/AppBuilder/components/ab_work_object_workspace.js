@@ -85,6 +85,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         var PopupNewDataFieldComponent = new ABPopupNewDataField(App);
 
         var PopupSortFieldComponent = new ABPopupSortField(App);
+        
+        var view = "button";
 
     	// Our webix UI definition:
     	this.ui = {
@@ -119,93 +121,93 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     						css: "ab-data-toolbar",
     						cols: [
     							{
-    								view: "button",
+    								view: view,
     								id: ids.buttonFieldsVisible,
     								label: labels.component.hideFields,
     								icon: "eye-slash",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								badge: 0,
     								click: function () {
     									_logic.toolbarFieldsVisible(this.$view);
     								}
     							},
     							{
-    								view: 'button',
+    								view: view,
     								id: ids.buttonFilter,
     								label: labels.component.filterFields,
     								icon: "filter",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								badge: 0,
     								click: function () {
     									_logic.toolbarFilter(this.$view);
     								}
     							},
     							{
-    								view: 'button',
+    								view: view,
     								id: ids.buttonSort,
     								label: labels.component.sortFields,
     								icon: "sort",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								badge: 0,
     								click: function () {
     									_logic.toolbarSort(this.$view);
     								}
     							},
     							{
-    								view: 'button',
+    								view: view,
     								id: ids.buttonFrozen,
     								label: labels.component.frozenColumns,
     								icon: "thumb-tack",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								badge: 0,
     								click: function(){
     									_logic.toolbarFrozen(this.$view);
     								}
     							},
     							{
-    								view: 'button',
+    								view: view,
     								id: ids.buttonLabel,
     								label: labels.component.defineLabel,
     								icon: "crosshairs",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								click: function () {
     									_logic.toolbarDefineLabel(this.$view);
     								}
     							},
     							{
-    								view: 'button',
+    								view: view,
     								label: labels.component.permission,
     								icon: "lock",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								click: function() {
     									_logic.toolbarPermission(this.$view);
     								}
 
     							},
     							{
-    								view: 'button',
+    								view: view,
     								id: ids.buttonAddField,
     								label: labels.component.addFields,
     								icon: "plus",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								click:function() {
     									_logic.toolbarAddFields(this.$view);
     								}
     							},
     							{
-    								view: 'button',
+    								view: view,
     								id: ids.buttonExport,
     								label: labels.component.export,
     								icon: "download",
     								type: "icon",
-    								autowidth: true,
+    								// autowidth: true,
     								click: function() {
     									_logic.toolbarButtonExport(this.$view);
     								}

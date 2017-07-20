@@ -35,6 +35,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
         var defaultHeight = 0;
 
         var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App);
+        
+        var imageFields = [];
 
 
     	// Our webix UI definition:
@@ -58,6 +60,20 @@ export default class ABWorkObjectDatatable extends OP.Component {
                     obj[common.column.id+"__relation"].forEach(function (o) {
                         tip += o.text + "<br/>";
                     });
+                } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
+                    tip = obj[common.column.id+"__relation"].text;
+                } else if (imageFields.indexOf(common.column.id) != -1) {
+                    tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[common.column.id]+"' />";                
+                } else if (common.column.editor == "richselect") {
+                    CurrentObject._fields.forEach(function (f) {
+                        if (f.columnName == common.column.id) {
+                            f.settings.options.forEach(function (o) {
+                                if (o.id == obj[common.column.id]) {
+                                    tip = o.text;
+                                }
+                            })
+                        }
+                    })
                 } else {
                     tip = obj[common.column.id];
                 }
@@ -637,6 +653,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 CurrentObject._fields.forEach(function (f) {
                     if (f.key == "image" && parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
                         minHeight = parseInt(f.settings.imageHeight);
+                        imageFields.push(f.columnName);
                     }
                 });
                 if (minHeight > 0) {
