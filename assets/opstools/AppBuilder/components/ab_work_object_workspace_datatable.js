@@ -60,6 +60,16 @@ export default class ABWorkObjectDatatable extends OP.Component {
                     });
                 } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
                     tip = obj[common.column.id+"__relation"].text;
+                } else if (common.column.editor == "richselect") {
+                    CurrentObject._fields.forEach(function (f) {
+                        if (f.columnName == common.column.id) {
+                            f.settings.options.forEach(function (o) {
+                                if (o.id == obj[common.column.id]) {
+                                    tip = o.text;
+                                }
+                            })
+                        }
+                    })
                 } else {
                     tip = obj[common.column.id];
                 }
