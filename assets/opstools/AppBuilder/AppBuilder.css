@@ -751,3 +751,13 @@ div.webix_item_tab {
 .webix_layout_toolbar.webix_toolbar .webix_selected.webix_segment_0, .webix_layout_toolbar.webix_toolbar .webix_selected.webix_segment_1, .webix_layout_toolbar.webix_toolbar .webix_selected.webix_segment_N {
 	background-color: #3498db !important;
 }
+/*Tool Tip Override*/
+.webix_tooltip {
+    background-color: rgba(0,0,0,0.7) !important;
+    padding: 10px 15px !important;
+    border: 0 !important;
+    font-family: inherit !important; 
+    color: #fff !important;
+    box-shadow: none !important; 
+    border-radius: 10px !important;
+}
