@@ -321,7 +321,6 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 				if (isGroup == true) {
 					$$(ids.list).define("uniteBy", (item) => {
 						return item.label.toUpperCase().substr(0,1);
-						// return item.label.substr(0,1);
 					});
 				}
 				else {
@@ -397,11 +396,6 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 				var object = $$(ids.list).getItem(id);
 				App.actions.populateObjectWorkspace(object);
-
-	//// TODO: do we need these?
-
-				// // Refresh unsync number
-				// self.refreshUnsyncNumber();
 
 				_logic.showGear(id);
 			},
@@ -523,7 +517,6 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 		var _templateListItem = [
 			"<div class='ab-object-list-item'>",
 				"#label#",
-				// "{common.unsyncNumber}",
 				"{common.iconGear}",
 			"</div>",
 		].join('');
