@@ -674,6 +674,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     			if (CurrentObject) {
 
     				var DataTable = $$(ids.component);
+                    DataTable.define('leftSplit', 0);
+                    DataTable.define('rightSplit', 0);
     				DataTable.clearAll();
 
 
