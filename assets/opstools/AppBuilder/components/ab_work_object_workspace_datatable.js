@@ -51,37 +51,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		editaction: "custom",
     		select: "cell",
             tooltip:function(obj, common){
-                var tip = "";
-                if (Array.isArray(obj[common.column.id])) {
-                    obj[common.column.id].forEach(function (o) {
-                        tip += o.text + "<br/>";
-                    });
-                } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
-                    obj[common.column.id+"__relation"].forEach(function (o) {
-                        tip += o.text + "<br/>";
-                    });
-                } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
-                    tip = obj[common.column.id+"__relation"].text;
-                } else if (imageFields.indexOf(common.column.id) != -1) {
-                    tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[common.column.id]+"' />";                
-                } else if (common.column.editor == "richselect") {
-                    CurrentObject._fields.forEach(function (f) {
-                        if (f.columnName == common.column.id) {
-                            f.settings.options.forEach(function (o) {
-                                if (o.id == obj[common.column.id]) {
-                                    tip = o.text;
-                                }
-                            })
-                        }
-                    })
-                } else {
-                    tip = obj[common.column.id];
-                }
-                if (tip == null) {
-                    return "";
-                } else {
-                    return tip;                    
-                }
+                return _logic.toolTip(obj, common);
             },
     		dragColumn: true,
     		on: {
@@ -755,6 +725,54 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     			$$(ids.component).show();
     		},
+            
+            
+            /**
+             * @function toolTip()
+             *
+             * Retrieve the items toolTip
+             */
+            toolTip:function(obj, common) {
+                var tip = "";
+                console.log(obj);
+                console.log(common);
+                if (Array.isArray(obj[common.column.id])) {
+                    obj[common.column.id].forEach(function (o) {
+                        tip += o.text + "<br/>";
+                    });
+                } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
+                    obj[common.column.id+"__relation"].forEach(function (o) {
+                        tip += o.text + "<br/>";
+                    });
+                } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
+                    tip = obj[common.column.id+"__relation"].text;
+                } else if (imageFields.indexOf(common.column.id) != -1) {
+                    if (obj[common.column.id] == null) {
+                        return "";
+                    } else {
+                        tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[common.column.id]+"' />";                
+                    }
+                } else if (common.column.editor == "date") {
+                    tip = common.column.format(obj[common.column.id]);
+                } else if (common.column.editor == "richselect") {
+                    CurrentObject._fields.forEach(function (f) {
+                        if (f.columnName == common.column.id) {
+                            f.settings.options.forEach(function (o) {
+                                if (o.id == obj[common.column.id]) {
+                                    tip = o.text;
+                                }
+                            })
+                        }
+                    })
+                } else {
+                    tip = obj[common.column.id];
+                }
+                if (tip == null) {
+                    return "";
+                } else {
+                    return tip;                    
+                }
+            }
     	}
         
 
