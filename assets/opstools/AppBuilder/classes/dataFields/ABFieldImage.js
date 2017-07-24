@@ -397,6 +397,7 @@ OP.Dialog.Alert({
 			// do this so I can use the progress spinner
 			var webixContainer = webix.ui({
 				view:'template',
+				css:'ab-image-holder',
 				id: ids.container,
 				container: idBase,
 				
