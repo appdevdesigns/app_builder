@@ -179,17 +179,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     									_logic.toolbarDefineLabel(this.$view);
     								}
     							},
-    							{
-    								view: view,
-    								label: labels.component.permission,
-    								icon: "lock",
-    								type: "icon",
-    								// autowidth: true,
-    								click: function() {
-    									_logic.toolbarPermission(this.$view);
-    								}
-
-    							},
+    							// {
+    							// 	view: view,
+    							// 	label: labels.component.permission,
+    							// 	icon: "lock",
+    							// 	type: "icon",
+    							// 	// autowidth: true,
+    							// 	click: function() {
+    							// 		_logic.toolbarPermission(this.$view);
+    							// 	}
+                                // 
+    							// },
     							{
     								view: view,
     								id: ids.buttonAddField,
