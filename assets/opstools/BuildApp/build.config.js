@@ -10,6 +10,7 @@ module.exports = {
 			"deps": [
 				"async",
 				"webix",
+				"js/webix/extras/tinymce",
 				"js/selectivity/selectivity.min",
 				"OpsPortal/classes/OpsWebixDataCollection",
 				"opstools/BuildApp/OP_Bundle"

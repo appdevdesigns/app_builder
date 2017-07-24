@@ -36,7 +36,7 @@ export default class ABViewMenu extends ABView {
 
 		super(values, application, parent, ABMenuDefaults);
 
-		OP.Multilingual.translate(this, this, ['text']);
+		// OP.Multilingual.translate(this, this, ['text']);
 
 		// 	{
 		// 		id:'uuid',					// uuid value for this obj
