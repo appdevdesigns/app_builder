@@ -645,7 +645,8 @@ export default class ABView  extends EventEmitter {
 
 						// remove the temp "drop here" marker if it exists
 						// $$(_ui.id).remove('del_me');
-						$$(_ui.id).hideOverlay();
+						if ($$(_ui.id).hideOverlay)
+							$$(_ui.id).hideOverlay();
 
 						// find the newly inserted element & perform a .save()
 						// to persist it in our current view.
@@ -974,7 +975,10 @@ export default class ABView  extends EventEmitter {
 	componentList() {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = [ 'view', 'page' ];
+		var viewsToIgnore = [ 'view', 'page' ,
+		// not allowed Form's widgets
+		// 'button', 'textbox'
+		];
 
 		var allComponents = ABViewManager.allViews();
 		var allowedComponents = [];

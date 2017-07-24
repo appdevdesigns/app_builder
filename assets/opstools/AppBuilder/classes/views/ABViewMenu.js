@@ -287,7 +287,6 @@ export default class ABViewMenu extends ABView {
 		}
 
 
-		// an ABMenuLabel is a simple Label
 		var _ui = {
 			id: ids.component,
 			view: "menu",

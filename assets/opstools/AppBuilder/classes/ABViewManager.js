@@ -11,6 +11,9 @@ import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
 import ABViewMenu from "./views/ABViewMenu"
 
+import ABViewForm from "./views/ABViewForm"
+import ABViewButton from "./views/ABViewButton"
+import ABViewSelect from "./views/ABViewSelect"
 import ABViewTextbox from "./views/ABViewTextbox"
 /* 
  * Views
@@ -22,6 +25,10 @@ Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
 Views[ABViewMenu.common().key] = ABViewMenu;
+
+Views[ABViewForm.common().key] = ABViewForm;
+Views[ABViewButton.common().key] = ABViewButton;
+Views[ABViewSelect.common().key] = ABViewSelect;
 Views[ABViewTextbox.common().key] = ABViewTextbox;
 
 
