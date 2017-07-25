@@ -43,8 +43,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     	this.ui = {
     		view: "datatable",
     		id: ids.component,
-            resizeColumn: {size: 6},
-            resizeRow: {size: 6},
+            resizeColumn: {size: 10},
+            resizeRow: {size: 10},
     		prerender: false,
     		editable: true,
     		fixedRowHeight: false,
@@ -621,9 +621,11 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 var minHeight = 0;
                 defaultHeight = 0;
                 CurrentObject._fields.forEach(function (f) {
-                    if (f.key == "image" && parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
-                        minHeight = parseInt(f.settings.imageHeight);
+                    if (f.key == "image") {                
                         imageFields.push(f.columnName);
+                        if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
+                            minHeight = parseInt(f.settings.imageHeight);
+                        }
                     }
                 });
                 if (minHeight > 0) {
@@ -734,8 +736,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
              */
             toolTip:function(obj, common) {
                 var tip = "";
-                console.log(obj);
-                console.log(common);
                 if (Array.isArray(obj[common.column.id])) {
                     obj[common.column.id].forEach(function (o) {
                         tip += o.text + "<br/>";
