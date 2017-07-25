@@ -645,6 +645,7 @@ export default class ABView  extends EventEmitter {
 
 						// remove the temp "drop here" marker if it exists
 						// $$(_ui.id).remove('del_me');
+						webix.extend($$(_ui.id), webix.OverlayBox);
 						$$(_ui.id).hideOverlay();
 
 						// find the newly inserted element & perform a .save()
