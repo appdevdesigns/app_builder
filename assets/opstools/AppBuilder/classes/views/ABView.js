@@ -977,7 +977,7 @@ export default class ABView  extends EventEmitter {
 		// views not allowed to drop onto this View:
 		var viewsToIgnore = [ 'view', 'page' ,
 		// not allowed Form's widgets
-		// 'button', 'textbox'
+		'button', 'textbox', 'selectsingle'
 		];
 
 		var allComponents = ABViewManager.allViews();

@@ -13,7 +13,7 @@ import ABViewMenu from "./views/ABViewMenu"
 
 import ABViewForm from "./views/ABViewForm"
 import ABViewButton from "./views/ABViewButton"
-import ABViewSelect from "./views/ABViewSelect"
+import ABViewSelectSingle from "./views/ABViewSelectSingle"
 import ABViewTextbox from "./views/ABViewTextbox"
 /* 
  * Views
@@ -28,7 +28,7 @@ Views[ABViewMenu.common().key] = ABViewMenu;
 
 Views[ABViewForm.common().key] = ABViewForm;
 Views[ABViewButton.common().key] = ABViewButton;
-Views[ABViewSelect.common().key] = ABViewSelect;
+Views[ABViewSelectSingle.common().key] = ABViewSelectSingle;
 Views[ABViewTextbox.common().key] = ABViewTextbox;
 
 

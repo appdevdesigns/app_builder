@@ -1,7 +1,7 @@
 /*
- * ABViewSelect
+ * ABViewSelectSingle
  *
- * An ABViewSelect defines a UI text box component.
+ * An ABViewSelectSingle defines a UI text box component.
  *
  */
 
@@ -13,17 +13,18 @@ function L(key, altText) {
 }
 
 
-var ABViewSelectPropertyComponentDefaults = {
+var ABViewSelectSinglePropertyComponentDefaults = {
+	type: 'richselect'
 }
 
 
-var ABSelectDefaults = {
-	key: 'select',		// {string} unique key for this view
+var ABSelectSingleDefaults = {
+	key: 'selectsingle',		// {string} unique key for this view
 	icon: 'list-ul',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.select' // {string} the multilingual label key for the class label
+	labelKey: 'ab.components.selectsingle' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewSelect extends ABView {
+export default class ABViewSelectSingle extends ABView {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -32,7 +33,7 @@ export default class ABViewSelect extends ABView {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABSelectDefaults);
+		super(values, application, parent, ABSelectSingleDefaults);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -56,7 +57,7 @@ export default class ABViewSelect extends ABView {
 
 
 	static common() {
-		return ABSelectDefaults;
+		return ABSelectSingleDefaults;
 	}
 	///
 	/// Instance Methods
@@ -106,7 +107,7 @@ export default class ABViewSelect extends ABView {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewSelectEditorComponent';
+		var idBase = 'ABViewSelectSingleEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component'),
 			options: App.unique(idBase + '_option'),
@@ -159,7 +160,7 @@ export default class ABViewSelect extends ABView {
 					{
 						view: 'button',
 						width: 160,
-						value: L('ab.component.select.addNewOption', '*Add a new option'),
+						value: L('ab.component.selectsingle.addNewOption', '*Add a new option'),
 						click: () => {
 							_logic.addNewOption();
 						}
@@ -218,6 +219,19 @@ export default class ABViewSelect extends ABView {
 		// ask for:
 		return commonUI.concat([
 			{
+				name: 'type',
+				view: 'richselect',
+				label: L('ab.component.selectsingle.type', '*Type'),
+				options: [
+					{
+						id: 'richselect',
+						value: L('ab.component.selectsingle.selectlist', '*Select list')
+					},
+					{
+						id: 'radio',
+						value: L('ab.component.selectsingle.radio', '*Radio')
+					}
+				]
 			}
 		]);
 
@@ -227,12 +241,15 @@ export default class ABViewSelect extends ABView {
 
 		super.propertyEditorPopulate(ids, view);
 
+		$$(ids.type).setValue(view.settings.type || ABViewSelectSinglePropertyComponentDefaults.type);
 
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
+
+		view.settings.type = $$(ids.type).getValue();
 
 	}
 
@@ -246,17 +263,25 @@ export default class ABViewSelect extends ABView {
 	 */
 	component(App) {
 
-		var idBase = 'ABSelectLabel_' + this.id;
+		var idBase = 'ABSelectSingleLabel_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
 
 		var _ui = {
-			view: 'richselect'
+			view: this.settings.type || ABViewSelectSinglePropertyComponentDefaults.type
 		};
 
 		_ui.options = this.settings.options || [];
+
+		// radio element could not be empty options
+		if (_ui.view == 'radio' && _ui.options.length < 1) {
+			_ui.options.push({
+				id: 'temp',
+				value: 'Option'
+			});
+		}
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {

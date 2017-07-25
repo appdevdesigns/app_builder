@@ -115,108 +115,20 @@ export default class ABViewMenu extends ABView {
 			pages: App.unique(idBase + '_pages')
 		}
 
+		var menu = this.component(App).ui;
+		menu.id = ids.component;
 
 		var _ui = {
 			rows: [
-				{
-					id: ids.component,
-					view: "menu",
-					layout: (this.settings && this.settings.orientation) || 'x',
-					autoheight: true,
-					minWidth: 500,
-					datatype: "json"
-				},
+				menu,
 				{}
 			]
 		};
 
-		if (mode == 'block') {
-			_ui.rows = _ui.rows.concat([
-				{
-					view: 'label',
-					label: 'Page list'
-				},
-				{
-					id: ids.pages,
-					view: 'tree',
-					template: function (item, common) {
-						return ("<div class='ab-page-list-item'>" +
-							"{common.icon()} " +
-
-							// TODO : Hide checkbox at own page
-							// (item.id == AD.classes.AppBuilder.currApp.currPage.id ?
-							(false ?
-								'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
-								"{common.checkbox()} ") +
-
-							"{common.folder()} #label#" +
-							"</div>")
-							.replace('{common.icon()}', common.icon(item))
-							.replace('{common.checkbox()}', common.checkbox(item, false))
-							.replace('{common.folder()}', common.folder(item))
-							.replace('#label#', item.label);
-					},
-					on: {
-						onItemCheck: function () {
-							var selectedPages = $$(ids.pages).getChecked().map((pageId) => {
-
-								return {
-									id: pageId,
-									label: $$(ids.pages).getItem(pageId).label
-								}
-
-							});
-
-							_logic.updateMenuItems(selectedPages);
-						}
-					}
-				}
-			]);
-		}
-
-
 		var _init = (options) => {
-
-			if (mode == 'block') {
-
-				_logic.updatePageList(this.parent);
-
-			}
-
 		}
 
 		var _logic = {
-
-			updatePageList: (pageParent) => {
-				let pageChildren = pageParent.views((v) => v.key == "page");
-
-				let pageItems = [],
-					parentItem = {
-						id: pageParent.id,
-						label: pageParent.label,
-						data: []
-					};
-
-				pageItems.push(parentItem);
-
-				$$(ids.pages).clearAll();
-				$$(ids.pages).parse(pageItems);
-				$$(ids.pages).openAll();
-			},
-
-			updateMenuItems: (selectedPages) => {
-				$$(ids.component).clearAll();
-
-				selectedPages.forEach((page) => {
-
-					$$(ids.component).add({
-						id: page.id,
-						value: page.label
-					}, $$(ids.component).count());
-
-				});
-
-			}
 		}
 
 
@@ -238,20 +150,51 @@ export default class ABViewMenu extends ABView {
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
 
-		// in addition to the common .label  values, we 
-		// ask for:
 		return commonUI.concat([
 			{
 				name: 'orientation',
 				view: "richselect",
-				label: L('ab.component.menu.orientation','*Orientation'),
+				label: L('ab.component.menu.orientation', '*Orientation'),
 				value: ABViewMenuPropertyComponentDefaults.orientation,
 				options: [
-					{ id: 'x', value: L('ab.component.menu.horizontal','*Horizontal') },
-					{ id: 'y', value: L('ab.component.menu.vertical','*Vertical') }
+					{ id: 'x', value: L('ab.component.menu.horizontal', '*Horizontal') },
+					{ id: 'y', value: L('ab.component.menu.vertical', '*Vertical') }
 				]
+			},
+			{
+				view: 'label',
+				label: 'Page list',
+				height: 20
+			},
+			{
+				name: "pages",
+				view: 'tree',
+				template: function (item, common) {
+					return ("<div class='ab-page-list-item'>" +
+						"{common.icon()} " +
+
+						// TODO : Hide checkbox at own page
+						// (item.id == AD.classes.AppBuilder.currApp.currPage.id ?
+						(false ?
+							'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
+							"{common.checkbox()} ") +
+
+						"{common.folder()} #label#" +
+						"</div>")
+						.replace('{common.icon()}', common.icon(item))
+						.replace('{common.checkbox()}', common.checkbox(item, false))
+						.replace('{common.folder()}', common.folder(item))
+						.replace('#label#', item.label);
+				},
+				on: {
+					onItemCheck: function () {
+						// trigger to save settings
+						_logic.onChange();
+					}
+				}
 			}
 		]);
+
 
 	}
 
@@ -259,8 +202,29 @@ export default class ABViewMenu extends ABView {
 
 		super.propertyEditorPopulate(ids, view);
 
-		$$(ids.orientation).setValue(view.settings.orientation);
+		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 
+		// Set available pages to tree view
+		var pageParent = view.parent,
+			pageChildren = pageParent.views((v) => v.key == "page"),
+			pageItems = [],
+			parentItem = {
+				id: pageParent.id,
+				label: pageParent.label,
+				data: []
+			};
+		pageItems.push(parentItem);
+
+		$$(ids.pages).clearAll();
+		$$(ids.pages).parse(pageItems);
+		$$(ids.pages).openAll();
+
+		// Select pages
+		if (view.settings.pages && view.settings.pages.forEach) {
+			view.settings.pages.forEach((p) => {
+				$$(ids.pages).checkItem(p.id);
+			});
+		}
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -268,6 +232,13 @@ export default class ABViewMenu extends ABView {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.orientation = $$(ids.orientation).getValue();
+		view.settings.pages = $$(ids.pages).getChecked().map((pageId) => {
+			return {
+				id: pageId,
+				value: $$(ids.pages).getItem(pageId).label
+			}
+		});
+
 
 	}
 
@@ -292,15 +263,13 @@ export default class ABViewMenu extends ABView {
 			view: "menu",
 			autoheight: true,
 			minWidth: 500,
-			datatype: "json"
+			datatype: "json",
+			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
+			data: this.settings.pages || []
 		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-			// TODO: populate menu items
-			$$(ids.component).define('data', [
-				{ id: 1, value: 'TEST' }
-			]);
 		}
 
 
