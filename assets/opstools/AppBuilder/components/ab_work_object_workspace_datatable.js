@@ -804,7 +804,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
              */
             toolTipOnAfterRender: function(){
                 var node = $$(ids.tooltip).getNode();
-                if (node.firstChild.nodeName == "IMG") {
+                if (node.firstChild != null && node.firstChild.nodeName == "IMG") {
                     setTimeout(function() {
                         var imgBottom = parseInt(node.style.top.replace("px", "")) + 500;
                         var imgRight = parseInt(node.style.left.replace("px", "")) + 500;
