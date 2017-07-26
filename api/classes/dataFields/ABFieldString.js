@@ -24,7 +24,11 @@ var ABFieldStringDefaults = {
 	menuName : L('ab.dataField.string.menuName', '*Single line text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short string value')
+	description: L('ab.dataField.string.description', '*short string value'),
+	
+	// what types of Sails ORM attributes can be imported into this data type?
+	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	compatibleOrmTypes: ['string'],
 }
 
 
@@ -42,10 +46,12 @@ class ABFieldString extends ABField {
 			}
     	}
     	*/
+    	
+    	this.settings = values.settings || {};
 
     	// we're responsible for setting up our specific settings:
-    	this.settings.textDefault = values.settings.textDefault || '';
-    	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "1";
+    	this.settings.textDefault = this.settings.textDefault || '';
+    	this.settings.supportMultilingual = this.settings.supportMultilingual+"" || "1";
 
     	// text to Int:
     	this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);

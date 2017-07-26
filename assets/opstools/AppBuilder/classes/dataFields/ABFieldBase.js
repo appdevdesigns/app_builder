@@ -57,6 +57,22 @@ module.exports = class ABField {
   	fieldKey() {
   		return this.defaults.key;
   	}
+  	
+  	/**
+  	 * Sails ORM data types that can be imported to this DataField
+  	 * @return {Array}
+  	 */
+  	fieldOrmTypes() {
+  		if (this.defaults.compatibleOrmTypes) {
+  			if (Array.isArray(this.defaults.compatibleOrmTypes)) {
+  				return this.defaults.compatibleOrmTypes;
+  			} else {
+  				return [this.defaults.compatibleOrmTypes];
+  			}
+  		} else {
+  			return [];
+  		}
+  	}
 
   	// font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
   	fieldIcon() {
