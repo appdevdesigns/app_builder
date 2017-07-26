@@ -406,39 +406,7 @@ export default class ABView  extends EventEmitter {
 					return _logic.onBeforeDrop(context,ev);
 				},
 				onAfterDrop: function (context, ev) {
-					// if (context.from.config.id === self.componentIds.componentList) {
-					// 	$$(self.componentIds.componentList).showProgress({ type: 'icon' });
-
-					// 	var componentIndexes = [];
-
-					// 	// Sort data
-					// 	for (var index = 0; index < $$(self.componentIds.componentList).count(); index++) {
-					// 		var comId = $$(self.componentIds.componentList).getIdByIndex(index),
-					// 			com = AD.classes.AppBuilder.currApp.currPage.components.filter(function (c) { return c.id == comId });
-
-					// 		if (com && com.length > 0) {
-					// 			componentIndexes.push({
-					// 				id: com[0].id,
-					// 				index: index
-					// 			});
-
-					// 		}
-					// 	}
-
-					// 	// Call sort components api
-					// 	AD.classes.AppBuilder.currApp.currPage.sortComponents(componentIndexes, function (err, result) {
-					// 		$$(self.componentIds.componentList).hideProgress();
-
-					// 		if (err) {
-					// 			// TODO : show error message
-					// 		}
-					// 		else {
-					// 			self.element.trigger(self.options.sortComponentEvent, {
-					// 				page: AD.classes.AppBuilder.currApp.currPage
-					// 			});
-					// 		}
-					// 	});
-					// }
+					_logic.onAfterDrop(context, ev);
 				}
 			},
 			onClick: {
@@ -645,6 +613,7 @@ export default class ABView  extends EventEmitter {
 
 						// remove the temp "drop here" marker if it exists
 						// $$(_ui.id).remove('del_me');
+
 						webix.extend($$(_ui.id), webix.OverlayBox);
 						$$(_ui.id).hideOverlay();
 
@@ -672,6 +641,31 @@ export default class ABView  extends EventEmitter {
 				}
 
 				return false;
+			},
+
+
+			/* 
+			 * @method onAfterDrop()
+			 * this method is triggered when an element is dropped onto the 
+			 * list area. When an element is dropped, reorder an element is dropped, 
+			 * it is .saved(), and any UI rendering is performed if necessary.
+			 * @param {} context a webix provided context object for the drag 
+			 * @param {obj} ev  event object.
+			 */
+			onAfterDrop: (context, ev) => {
+				if (context.from.config.id === _ui.id) {
+
+					var from = this._views.findIndex((v) => v.id == context.start);
+					if (from < 0) return;
+
+					var to = context.index;
+
+					// move drag item to 'to' position
+					this._views.splice(to, 0, this._views.splice(from, 1)[0]);
+
+					// save to database
+					this.save();
+				}
 			},
 
 
@@ -879,8 +873,7 @@ export default class ABView  extends EventEmitter {
 // console.warn('ABView.onChange()!!!');
 // 					}
 // 				}
-			},
-			{}
+			}
 		];
 
 	}
