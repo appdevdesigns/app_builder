@@ -273,6 +273,17 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                             // get a new instance of a field:
                             field = _currentObject.fieldNew(values);
 
+                            // Provide a default width based on the column label
+                            var width = 20 + (field.label.length * 8);
+                            if (field.settings.showIcon) {
+                                width = width + 20;
+                            }
+                            if (width < 100) {
+                                width = 100;
+                            }
+                            
+                            field.settings.width = width;
+
                             // TODO workaround : where should I add a new link field to link object
                             if (field.key == 'connectObject') {
 
@@ -292,7 +303,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                         linkObject: field.object.id,
                                         linkType: field.settings.linkViaType,
                                         linkViaType: field.settings.linkType,
-                                        isSource: 0
+                                        isSource: 0,
+                                        width: width
                                     }
                                 });
 
