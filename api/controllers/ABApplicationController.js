@@ -363,7 +363,8 @@ console.log('*** !!! Run full reload again');
         var appID = req.param('appID');
         var result = [];
         var application, appName;
-        var appModels = [];
+        var appObjects = [];
+        var appObjectsByName = {};
         
         async.series([
             // Find application
@@ -377,11 +378,20 @@ console.log('*** !!! Run full reload again');
                     else {
                         application = list[0];
                         appName = AppBuilder.rules.toApplicationNameFormat(application.name);
+                        
+                        var json = list[0].json;
+                        if (Array.isArray(json.objects)) {
+                            appObjects = json.objects.concat();
+                            appObjects.forEach((obj) => {
+                                appObjectsByName[obj.name] = obj;
+                            });
+                        }
                         next();
                     }
                 });
             },
             
+            /*
             // Find all objects within this application
             function(next) {
                 ABObject.find()
@@ -402,11 +412,23 @@ console.log('*** !!! Run full reload again');
                     }
                 });
             },
+            */
             
             function(next) {
                 // Result is all the sails models that are not currently in
                 // this application.
                 var sailsModels = Object.keys(sails.models);
+                
+                sailsModels.forEach((modelName) => {
+                    if (!appObjectsByName[modelName]) {
+                        result.push({
+                            objectId: null,
+                            modelName
+                        });
+                    }
+                });
+                
+                /*
                 result = _.difference(sailsModels, appModels);
                 result = _.map(result, function(r) {
                     return { 
@@ -414,10 +436,12 @@ console.log('*** !!! Run full reload again');
                         modelName: r
                     };
                 });
+                */
 
                 next();
             },
-
+            
+            /*
             // Get object id to model
             function (next) {
                 ABObject.find({ application: { '!': appID }, isImported: { '!': 1 } })
@@ -439,8 +463,9 @@ console.log('*** !!! Run full reload again');
                         next();
                     });
             }
+            */
         
-        ], function(err) {
+        ], (err) => {
             if (err) res.AD.error(err);
             else res.AD.success(result);
         });
@@ -455,11 +480,11 @@ console.log('*** !!! Run full reload again');
         var columns = req.param('columns') || [];
         
         AppBuilder.modelToObject(appID, modelObjectId, modelName, columns)
-        .fail(function(err) {
+        .fail((err) => {
             res.AD.error(err);
         })
-        .done(function(object) {
-            res.AD.success(object);
+        .done(() => {
+            res.AD.success({});
         });
     
     },
