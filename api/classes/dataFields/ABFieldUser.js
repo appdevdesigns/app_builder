@@ -20,7 +20,11 @@ var ABFieldUserDefaults = {
 	menuName : L('ab.dataField.user.menuName', '*User'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.user.description', '*Add user/s to a record.')
+	description: L('ab.dataField.user.description', '*Add user/s to a record.'),
+	
+	// what types of Sails ORM attributes can be imported into this data type?
+	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	compatibleOrmTypes: [],
 }
 
 var defaultValues = {

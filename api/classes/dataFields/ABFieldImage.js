@@ -20,7 +20,11 @@ var ABFieldImageDefaults = {
 	menuName : L('ab.dataField.image.menuName', '*Image Attachment'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.image.description', '*Attach an image to this object.')
+	description: L('ab.dataField.image.description', '*Attach an image to this object.'),
+	
+	// what types of Sails ORM attributes can be imported into this data type?
+	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	compatibleOrmTypes: [],
 }
 
 

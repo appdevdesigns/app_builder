@@ -22,7 +22,11 @@ var ABFieldNumberDefaults = {
 	menuName : L('ab.dataField.number.menuName', '*Number'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.number.description', '*A Float or Integer Value')
+	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
+	
+	// what types of Sails ORM attributes can be imported into this data type?
+	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	compatibleOrmTypes: ['integer', 'float'],
 }
 
 
