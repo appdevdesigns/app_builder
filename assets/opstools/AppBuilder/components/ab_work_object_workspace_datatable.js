@@ -29,7 +29,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
     		component: this.unique('component'),
-
+            tooltip: this.unique('tooltip')
     	}
 
         var defaultHeight = 0;
@@ -50,8 +50,20 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		fixedRowHeight: false,
     		editaction: "custom",
     		select: "cell",
-            tooltip:function(obj, common){
-                return _logic.toolTip(obj, common);
+            tooltip: {
+                id: ids.tooltip,
+                template: function(obj, common){
+                    return _logic.toolTip(obj, common);
+                },
+                on: {
+                    // When showing a larger image preview the tooltip sometime displays part of the image off the screen...this attempts to fix that problem
+                    onBeforeRender: function() {
+                        _logic.toolTipOnBeforeRender();
+                    },
+                    onAfterRender: function(data){
+                        _logic.toolTipOnAfterRender();
+                    }
+                }
             },
     		dragColumn: true,
     		on: {
@@ -771,6 +783,45 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     return "";
                 } else {
                     return tip;                    
+                }
+            },
+            
+            /**
+             * @function toolTipOnBeforeRender()
+             *
+             * Add visibility "hidden" to all tooltips before render so we can move to a new location without the visual jump
+             */
+            toolTipOnBeforeRender: function(){
+                var node = $$(ids.tooltip).getNode();
+                node.style.visibility = "hidden";
+            },
+
+
+            /**
+             * @function toolTipOnAfterRender()
+             *
+             * If the tooltip is displaying off the screen we want to try to reposition it for a better experience
+             */
+            toolTipOnAfterRender: function(){
+                var node = $$(ids.tooltip).getNode();
+                if (node.firstChild.nodeName == "IMG") {
+                    setTimeout(function() {
+                        var imgBottom = parseInt(node.style.top.replace("px", "")) + 500;
+                        var imgRight = parseInt(node.style.left.replace("px", "")) + 500;
+                        if ( imgBottom > window.innerHeight ) {
+                            var imgOffsetY = imgBottom - window.innerHeight;
+                            var newTop = parseInt(node.style.top.replace("px", "")) - imgOffsetY;
+                            node.style.top = newTop + "px";
+                        }
+                        if ( imgRight > window.innerWidth ) {
+                            var imgOffsetX = imgRight - window.innerWidth;
+                            var newLeft = parseInt(node.style.left.replace("px", "")) - imgOffsetX;
+                            node.style.left = newLeft + "px";                                    
+                        }
+                        node.style.visibility = "visible";
+                    }, 250);
+                } else {
+                    node.style.visibility = "visible";                            
                 }
             }
     	}
