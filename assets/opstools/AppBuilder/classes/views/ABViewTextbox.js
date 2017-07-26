@@ -63,35 +63,6 @@ export default class ABViewTextbox extends ABView {
 	/// Instance Methods
 	///
 
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABViewLabel instance
-	 * into the values needed for saving.
-	 *
-	 * @return {json}
-	 */
-	toObj() {
-
-	}
-
-
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues(values) {
-
-		super.fromValues(values);
-
-	}
-
-
-
-
 	//
 	//	Editor Related
 	//

@@ -67,33 +67,6 @@ export default class ABViewMenu extends ABView {
 	/// Instance Methods
 	///
 
-
-	/**
-	 * @method toObj()
-	 *
-	 * properly compile the current state of this ABViewLabel instance
-	 * into the values needed for saving.
-	 *
-	 * @return {json}
-	 */
-	toObj() {
-
-	}
-
-
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues(values) {
-
-		super.fromValues(values);
-
-	}
-
-
 	//
 	//	Editor Related
 	//
@@ -173,9 +146,8 @@ export default class ABViewMenu extends ABView {
 					return ("<div class='ab-page-list-item'>" +
 						"{common.icon()} " +
 
-						// TODO : Hide checkbox at own page
-						// (item.id == AD.classes.AppBuilder.currApp.currPage.id ?
-						(false ?
+						// Hide checkbox at own page
+						(item.id == _logic.currentEditObject().parent.id ?
 							'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
 							"{common.checkbox()} ") +
 

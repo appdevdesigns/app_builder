@@ -68,7 +68,7 @@ export default  {
 			return new Views[values.key](values, application, parent);
 		} else {
 			var err = new Error('unknown view key');
-			OP.Error.log('Unknown view key ['+values.key+']:', {error:err, values:value, application: application });
+			OP.Error.log('Unknown view key ['+values.key+']:', {error:err, values:values, application: application });
 			return null;
 		}
 
