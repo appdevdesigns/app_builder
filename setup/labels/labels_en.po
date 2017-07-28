@@ -387,7 +387,7 @@ msgstr "This data is unsynchronized. You can click Synchronize button to sync da
 #. code: en
 #. key: ab.object.noConnectedData
 msgid "No data selected"
-msgstr ""
+msgstr "Select"
 
 #. path: app_builder
 #. code: en
