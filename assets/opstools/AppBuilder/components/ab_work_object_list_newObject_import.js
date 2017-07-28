@@ -4,15 +4,15 @@
  * Display the form for importing an existing object into the application.
  *
  */
-import ABApplication from '../data/ABApplication.js';
 
+import ABObject from '../classes/ABObject.js';
 
 export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
 
     constructor(App) {
         super(App, 'ab_work_object_list_newObject_import');
         var L = this.Label;
-        var currentAppID = 0;
+        var currentApp = null;
 
         var labels = {
             common: App.labels,
@@ -86,12 +86,12 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
             },
             
             
-            initModelList: function(appID) {
-                currentAppID = appID;
+            initModelList: function(app) {
+                currentApp = app;
                 _logic.formClear();
                 _logic.busyStart();
                 OP.Comm.Service.get({ 
-                    url: '/app_builder/application/' + appID + '/findModels'
+                    url: '/app_builder/application/' + app.id + '/findModels'
                 })
                 .then((list) => {
                     // Convert server results into Webix list format
@@ -212,29 +212,19 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                 }
                 
                 OP.Comm.Service.post({
-                    url: '/app_builder/application/' + currentAppID + '/importModel',
+                    url: '/app_builder/application/' + currentApp.id + '/importModel',
                     data: {
                         objectID,
                         columns,
                         model: selectedModel.modelName
                     }
                 })
-                .then(() => {
+                .then((objValues) => {
                     saveButton.enable();
                     _logic.busyEnd();
-                    _logic.callbacks.onDone({});
-                    return;
                     
-                    console.log('ABApplication', ABApplication);
-                    
-                    // Call find() so that the framework will be updated.
-                    ABApplication.find({ id: currentAppID })
-                    .then((results) => {
-                        console.log('find() results', results);
-                        saveButton.enable();
-                        _logic.busyEnd();
-                        _logic.callbacks.onDone(results[0]);
-                    });
+                    var object = new ABObject(currentApp, objValues);
+                    _logic.callbacks.onDone(object);
                 })
                 .catch((err) => {
                     console.log('ERROR:', err);

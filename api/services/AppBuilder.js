@@ -2114,12 +2114,10 @@ linkModel(fullName, function(err){
         }
         else {
             var application;
-            var appName, moduleName, appPath;
             var objectData = {};
             var languages = [];
             var columns = [];
             var associations = [];
-            var multilingualFields = [];
             var modelURL = '';
 
             async.series([
@@ -2170,9 +2168,6 @@ linkModel(fullName, function(err){
                         }
                         else {
                             application = list[0];
-                            appName = AppBuilder.rules.toApplicationNameFormat(application.name);
-                            moduleName = appName.toLowerCase();
-                            appPath = path.join('node_modules', moduleName);
                             next();
                         }
                     });
@@ -2414,7 +2409,6 @@ linkModel(fullName, function(err){
                             next(new Error('Application not updated'));
                         }
                         else {
-                            console.log('UPDATED:', updated);
                             next();
                         }
                     });
@@ -2423,7 +2417,7 @@ linkModel(fullName, function(err){
             ], function (err) {
                 if (err) dfd.reject(err);
                 else {
-                    dfd.resolve();
+                    dfd.resolve(objectData);
                 }
             });
         }

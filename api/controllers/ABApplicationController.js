@@ -483,8 +483,8 @@ console.log('*** !!! Run full reload again');
         .fail((err) => {
             res.AD.error(err);
         })
-        .done(() => {
-            res.AD.success({});
+        .done((obj) => {
+            res.AD.success(obj);
         });
     
     },

@@ -66,7 +66,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			on: {
 				onBeforeShow: () => {
 					if (currentApplication) {
-						ImportTab._logic.initModelList(currentApplication.id);
+						ImportTab._logic.initModelList(currentApplication);
 					}
 				}
 			}
@@ -159,7 +159,6 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			 * @param {object} obj
 			 */
 			done: (obj) => {
-				console.log('DONE');
 				_logic.hideBusy();
 				_logic.hide();							// hide our popup
 				_logic.callbacks.onDone(null, obj);		// tell parent component we're done
