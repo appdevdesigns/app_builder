@@ -223,7 +223,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                     saveButton.enable();
                     _logic.busyEnd();
                     
-                    var object = new ABObject(currentApp, objValues);
+                    var object = new ABObject(objValues, currentApp);
                     _logic.callbacks.onDone(object);
                 })
                 .catch((err) => {
