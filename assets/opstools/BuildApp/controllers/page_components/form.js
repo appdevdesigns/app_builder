@@ -504,6 +504,8 @@ steal(
 								});
 
 								self.data.columns = result;
+								self.data.columns.sort(function (a, b) { return a.weight - b.weight; });
+
 								next();
 							});
 					},
