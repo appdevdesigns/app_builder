@@ -560,6 +560,16 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	background: -webkit-linear-gradient(left, rgba(170,170,170,1) 50%,rgba(136,136,136,1) 100%) !important; /* Chrome10-25,Safari5.1-6 */
 	background: linear-gradient(to right, rgba(170,170,170,1) 50%,rgba(136,136,136,1) 100%) !important; /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
 }
+.ab-data-toolbar .webix_list-x {
+	color: #fff;
+	background-color: inherit;
+}
+.ab-data-toolbar .webix_list-x .webix_list_item {
+	border-right: none !important;
+}
+.ab-data-toolbar .webix_list-x .webix_list_item:hover {
+	text-decoration: underline;
+}
 .ab-data-toolbar button {
 	text-align: center;
 	font-size: 14px;
