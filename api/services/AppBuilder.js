@@ -7,15 +7,23 @@ var path = require('path');
 var AD = require('ad-utils');
 var _ = require('lodash');
 var moment = require('moment');
+var uuid = require('node-uuid');
+
+// Build a reference of AB defaults for all supported Sails data field types
+var FieldManager = require(path.join('..', 'classes', 'ABFieldManager.js'));
+var sailsToAppBuilderReference = {};
+FieldManager.allFields().forEach((Field) => {
+    let field = new Field({ settings: {} }, {});
+    field.fieldOrmTypes().forEach((type) => {
+        sailsToAppBuilderReference[type] = {
+            key: field.key,
+            icon: field.icon,
+            settings: field.settings,
+        };
+    });
+});
 
 var reloadTimeLimit = 10 * 1000 * 60; // 10 minutes
-
-// var cliCommand = path.join(
-//     process.cwd(),
-//     'node_modules', 'app_builder',
-//     'node_modules', 'appdev',
-//     'bin', 'appDev.js'
-// );
 var cliCommand = 'appdev';  // use the global appdev command
 
 
@@ -2086,7 +2094,6 @@ linkModel(fullName, function(err){
     /**
      * Imports an existing Sails model for use in an AB application.
      * An AB object will be created for that model.
-     * New client side model files will be generated for that object.
      *
      * @param integer appID
      * @param integer modelObjectId
@@ -2106,85 +2113,112 @@ linkModel(fullName, function(err){
             dfd.reject(new Error('unrecognized model: ' + modelName));
         }
         else {
-            var application, object;
-            var appName, moduleName, clientPath, appPath;
+            var application;
+            var objectData = {};
+            var languages = [];
             var columns = [];
             var associations = [];
-            var multilingualFields = [];
-            var controllerInfo;
             var modelURL = '';
-            var modelFileName = ''; // client side model file
 
             async.series([
                 // Make sure model has an 'id' primary key field
-                function (next) {
+                (next) => {
                     if (!model.attributes.id) {
                         next(new Error('Model ' + modelName + ' does not have an "id" column'));
                     }
                     else next();
                 },
-
-                // Find app in database
-                function (next) {
-                    ABApplication.find({ id: appID })
-                        .exec(function (err, list) {
-                            if (err) {
-                                next(err);
-                            }
-                            else if (!list || !list[0]) {
-                                next(new Error('application not found: ' + appID));
-                            }
-                            else {
-                                application = list[0];
-                                appName = AppBuilder.rules.toApplicationNameFormat(application.name);
-                                moduleName = appName.toLowerCase();
-                                clientPath = path.join('node_modules', moduleName, 'assets', 'opstools', appName);
-                                appPath = path.join('node_modules', moduleName);
-                                modelFileName = `${appName}_${modelName}`;
-                                next();
-                            }
+                
+                // Find server side controller & blueprints URL
+                (next) => {
+                    var lcModelName = modelName.toLowerCase();
+                    var controllerInfo = _.find(sails.controllers, (c) => {
+                        // 1st try: look for `model` config in the controllers
+                        if (c._config && c._config.model == lcModelName)
+                            return true;
+                        else
+                            return false;
+                    });
+                    if (!controllerInfo) {
+                        // 2nd try: look for matching controoler-model name
+                        controllerInfo = _.find(sails.controllers, (c) => {
+                            if (!c.identity) return false;
+                            var nameParts = c.identity.split('/');
+                            var finalName = nameParts[nameParts.length - 1];
+                            if (finalName == lcModelName)
+                                return true;
+                            else
+                                return false;
                         });
+                    }
+                    
+                    modelURL = controllerInfo && controllerInfo.identity || '';
+                    next();
                 },
 
-                // Make sure application directory exists
-                // (it needs to have been synced at least once before a model
-                //  can be imported into it)
-                function (next) {
-                    fs.stat(appPath, function (err, status) {
+                // Find app in database
+                (next) => {
+                    ABApplication.find({ id: appID })
+                    .exec(function (err, list) {
                         if (err) {
-                            sails.log(`${appPath} not found`);
-                            next(new Error("The application directory could not be accessed. Have you synchronized it yet?"));
+                            next(err);
                         }
-                        else next();
+                        else if (!list || !list[0]) {
+                            next(new Error('application not found: ' + appID));
+                        }
+                        else {
+                            application = list[0];
+                            next();
+                        }
+                    });
+                },
+                
+                // Find site languages
+                (next) => {
+                    SiteMultilingualLanguage.find()
+                    .exec((err, list) => {
+                        if (err) next(err);
+                        else if (!list || !list[0]) {
+                            languages = ['en'];
+                            next();
+                        }
+                        else {
+                            list.forEach((lang) => {
+                                languages.push(lang.language_code);
+                            });
+                            next();
+                        }
                     });
                 },
 
-                // Create Object in database
-                function (next) {
-                    var objData = {
-                        application: appID,
+                // Prepare object
+                (next) => {
+                    objectData = {
+                        id: uuid.v4(),
                         name: modelName,
-                        label: modelName,
-                        isImported: true
+                        labelFormat: "",
+                        isImported: true,
+                        urlPath: modelURL,
+                        importFromObject: "",
+                        translations: [],
+                        fields: []
                     };
-
-                    if (modelObjectId)
-                        objData.importFromObject = modelObjectId;
-
-                    Multilingual.model.create({
-                        model: ABObject,
-                        data: objData
-                    })
-                        .fail(next)
-                        .done(function (result) {
-                            object = result;
-                            next();
+                    
+                    // Add label translations
+                    languages.forEach((langCode) => {
+                        objectData.translations.push({
+                            language_code: langCode,
+                            label: modelName
                         });
+                    });
+                    
+                    next();
                 },
 
-                // Create Columns in database
-                function (next) {
-                    async.forEachOfSeries(model.attributes, function (col, colName, colDone) {
+                // Prepare object fields
+                (next) => {
+                    for (var colName in model.attributes) {
+                        var col = model.attributes[colName];
 
                         // In Sails models, there is a `definition` object and
                         // an `attributes` object. The `definition` uses the
@@ -2195,74 +2229,53 @@ linkModel(fullName, function(err){
                         // Skip these columns
                         var ignore = ['id', 'createdAt', 'updatedAt'];
                         if (ignore.indexOf(colName) >= 0) {
-                            return colDone();
+                            continue;
                         }
 
                         // Skip foreign keys.
                         // They will be handled as associations later.
                         if (!def || col.model || col.collection || def.foreignKey) {
-                            return colDone();
+                            continue;
                         }
 
                         // Skip if column name is not match in list
                         var allowCol = columnList.filter(function (c) { return c.name == realName })[0];
                         if (allowCol == null) {
-                            return colDone();
+                            continue;
+                        }
+                        
+                        // Check if the column's type is supported
+                        if (!sailsToAppBuilderReference[ col.type ]) {
+                            return next(new Error(`${modelName} contains a column "${colName}" that is of an unsupported type: ${col.type}`));
                         }
 
                         var defaultValue = col.default;
                         if (typeof col.default == 'function') {
                             defaultValue = col.default();
                         }
-
-                        // For the client side model
-                        columns.push({
-                            name: colName,
-                            type: col.type
-                        });
-
-                        var colData = {
-                            name: colName,
-                            label: allowCol.label,
-                            object: object.id,
-                            required: def.required || col.required,
-                            unique: def.unique || col.unique,
-                            isSynced: true // Import object has synced columns by default
-                        };
-
-                        var typeMap = {
-                            integer: 'number',
-                            float: 'number',
-                            datetime: 'date',
-                            json: 'text',
-                        };
-                        var fieldType = typeMap[col.type] || col.type;
-
-                        // Special case for float type
-                        if (col.type == 'float') {
-                            fieldType = 'number';
-                            colData.type = 'float';
-                        }
-
-                        var validTypes = ABColumn.getValidTypes();
-                        if (validTypes.indexOf(fieldType) < 0) {
-                            return colDone(new Error(`${modelName} contains a column "${colName}" that is of an unsupported type: ${fieldType}`));
-                        }
-
-                        // This will allow the column name to have > 20 characters
-                        colData.setting = colData.setting || {};
-                        colData.setting.isImported = 1;
-
-                        ABColumn.createColumn(fieldType, colData)
-                            .fail(colDone)
-                            .done(function (column) {
-                                colDone();
+                        
+                        // Clone the reference defaults for this type
+                        var colData = _.cloneDeep(sailsToAppBuilderReference[col.type]);
+                        // Populate with imported values
+                        colData.id = uuid.v4();
+                        colData.columnName = colName;
+                        colData.settings.default = defaultValue;
+                        colData.settings.imported = true;
+                        
+                        // Label translations
+                        colData.translations = [];
+                        languages.forEach((langCode) => {
+                            colData.translations.push({
+                                language_code: langCode,
+                                label: colName
                             });
-
-                    }, function (err) {
-                        if (err) next(err);
-                        else next();
-                    });
+                        });
+                        
+                        console.log('Adding column:', colData);
+                        
+                        objectData.fields.push(colData);
+                    }
+                    next();
                 },
 
                 // Create column associations in database
@@ -2282,36 +2295,9 @@ linkModel(fullName, function(err){
                             }
                         ]
                     */
-
+                    
                     async.forEach(model.associations, function (assoc, assocDone) {
-
-                        // Multilingual translations aren't treated like normal
-                        // associations. The associated text fields will be
-                        // created as local multilingual columns later.
-                        if (assoc.alias == 'translations' && assoc.type == 'collection') {
-                            var transModelName = assoc.collection.toLowerCase();
-                            var transModel = sails.models[transModelName];
-                            for (var colName in transModel.definition) {
-                                if (colName == 'language_code') continue;
-                                var col = transModel.definition[colName];
-                                if (col.type == 'string' || col.type == 'text') {
-                                    // For later steps
-                                    multilingualFields.push({
-                                        name: colName,
-                                        type: col.type
-                                    });
-                                }
-                            }
-                            assocDone();
-                            return;
-                        }
-
-                        // For the client side model
-                        associations.push({
-                            name: assoc.alias,
-                            model: assoc.collection || assoc.model
-                        });
-
+                        
                         var targetLinkName, targetRelation, targetModelName;
 
                         if (assoc.type == 'model') {
@@ -2325,7 +2311,7 @@ linkModel(fullName, function(err){
                         var targetModel = sails.models[targetModelName];
                         var sourceRelation = 'one';
                         if (Array.isArray(targetModel.associations)) {
-                            targetModel.associations.forEach(function (targetModelAssoc) {
+                            targetModel.associations.forEach((targetModelAssoc) => {
                                 if (targetModelAssoc.collection == modelName.toLowerCase()) {
                                     sourceRelation = 'many';
                                     targetLinkName = targetModelAssoc.alias;
@@ -2336,219 +2322,109 @@ linkModel(fullName, function(err){
                             });
                         }
 
-                        // Look for target object within AppBuilder
-                        ABObject.find()
-                            .where({ name: targetModelName })
-                            .where({ application: appID })
-                            .exec(function (err, list) {
-                                if (err) {
-                                    assocDone(err);
-                                }
-                                else if (!list || !list[0]) {
-                                    // Target model has not been imported into
-                                    // this AppBuilder app
-                                    return assocDone();
-                                }
-                                else {
-                                    // Target model already in AppBuilder.
-                                    // Create connection links now.
-                                    ABColumn.createLink({
-                                        name: assoc.alias,
-                                        sourceObjectID: object.id,
-                                        targetObjectID: list[0].id,
-                                        sourceRelation: sourceRelation,
-                                        targetRelation: targetRelation,
-                                        targetName: targetLinkName,
-                                        isSynced: true
-                                    })
-                                        .fail(assocDone)
-                                        .done(function (sourceColumn, targetColumn) {
-                                            assocDone();
-                                        });
-                                }
+                        // Look for target object within application
+                        var targetObject;
+                        for (var i=0; i<application.json.objects.length; i++) {
+                            if (application.json.objects[i].name == targetModelName) {
+                                targetObject = application.json.objects[i];
+                                break;
+                            }
+                        };
+                        
+                        // Skip if the target object has not been imported into
+                        // this application yet.
+                        if (!targetObject) return assocDone();
+                        
+                        //// Create the new connection columns:
+                        // Clone the reference defaults
+                        var sourceColData = _.cloneDeep(sailsToAppBuilderReference.connectObject);
+                        var targetColData = _.cloneDeep(sailsToAppBuilderReference.connectObject);
+                        
+                        // Populate with imported values:
+                        sourceColData.id = uuid.v4();
+                        targetColData.id = uuid.v4();
+                        
+                        // Source column
+                        sourceColData.columnName = assoc.alias;
+                        sourceColData.settings.imported = true;
+                        sourceColData.settings.linkType = sourceRelation;
+                        sourceColData.settings.linkViaType = targetRelation;
+                        sourceColData.settings.linkObject = targetObject.id;
+                        sourceColData.settings.linkColumn = targetColData.id;
+                        sourceColData.translations = [];
+                        languages.forEach((langCode) => {
+                            sourceColData.translations.push({
+                                language_code: langCode,
+                                label: assoc.alias
                             });
-
-                    }, function (err) {
-                        if (err) next(err);
-                        else next();
-                    });
-                },
-
-                // Create multilingual columns
-                // (these were from the 'translations' association earlier)
-                function (next) {
-                    async.forEach(multilingualFields, function (col, colDone) {
-                        // Skip if column name is not match in list
-                        var allowCol = columnList.filter(function (c) { return c.name == col.name; })[0];
-                        if (allowCol == null) {
-                            return colDone();
-                        }
-
-                        ABColumn.createColumn(col.type, {
-                            name: col.name,
-                            label: allowCol.label,
-                            object: object.id,
-                            setting: {
-                                supportMultilingual: '1',
-                                isImported: 1 // allow longer column name
-                            },
-                            isSynced: true
-                        })
-                            .fail(colDone)
-                            .done(function (result) {
-                                colDone();
-                            });
-                    }, function (err) {
-                        if (err) next(err);
-                        else next();
-                    });
-                },
-
-                // Find server side controller
-                function (next) {
-                    controllerInfo = _.find(sails.controllers, function (c) {
-                        // 1st try: look for `model` config in the controllers
-                        if (c._config && c._config.model == modelName.toLowerCase()) return true;
-                        return false;
-                    });
-                    if (!controllerInfo) {
-                        // 2nd try: look for matching controller-model name
-                        controllerInfo = _.find(sails.controllers, function (c) {
-                            if (!c.identity) return false;
-                            var nameParts = c.identity.split('/');
-                            var finalName = nameParts[nameParts.length - 1];
-                            if (finalName == modelName.toLowerCase()) return true;
-                            return false;
                         });
-                    }
+                        
+                        // Target column
+                        targetColData.columnName = targetLinkName;
+                        targetColData.settings.imported = true;
+                        targetColData.settings.linkType = targetRelation;
+                        targetColData.settings.linkViaType = sourceRelation;
+                        targetColData.settings.linkObject = objectData.id;
+                        targetColData.settings.linkColumn = sourceColData.id;
+                        targetColData.translations = [];
+                        languages.forEach((langCode) => {
+                            targetColData.translations.push({
+                                language_code: langCode,
+                                label: targetLinkName
+                            });
+                        });
+                        
+                        // Add columns to the object being created
+                        console.log('Adding column link:', sourceColData);
+                        objectData.fields.push(sourceColData);
+                        targetObject.fields.push(targetColData);
+                        
+                        console.log('Adding object:', objectData);
+                        
+                        // ( `targetObject` is already a reference to the
+                        //   existing object in `application.json.objects` )
+                        
+                        return assocDone();
 
-                    // Determine the model blueprints base URL
-                    modelURL = controllerInfo && controllerInfo.identity || '';
-
-                    next();
+                    }, (err) => {
+                        if (err) next(err);
+                        else next();
+                    });
                 },
-
-                // Create server side controller if needed
-                function (next) {
-                    if (modelURL) return next();
-
-                    AD.spawn.command({
-                        command: 'sails',
-                        options: ['generate', 'controller', modelName],
-                        spawnOpts: { cwd: appPath }
-                    })
-                        .fail(next)
-                        .done(function () {
+                
+                // Save to database
+                (next) => {
+                    application.json.objects.push(objectData);
+                    
+                    ABApplication.update(
+                        { id: appID }, 
+                        { json: application.json }
+                    ).exec((err, updated) => {
+                        if (err) {
+                            console.log('ERROR: ', err);
+                            next(err);
+                        }
+                        else if (!updated || !updated[0]) {
+                            console.log('ERROR: app not updated');
+                            next(new Error('Application not updated'));
+                        }
+                        else {
                             next();
-                        });
-                },
-                function (next) {
-                    if (modelURL) return next();
-
-                    // Patch the newly created controller file to add
-                    // the _config property.
-                    var controllerFile = path.join(appPath, 'api', 'controllers', _.upperFirst(modelName) + 'Controller.js');
-                    fs.readFile(controllerFile, 'utf8', function (err, data) {
-                        if (err) next(err);
-                        else {
-                            var lcModelName = modelName.toLowerCase();
-                            var patchData = `
-
-    _config: {
-        model: "${lcModelName}", // all lowercase model name
-        actions: false,
-        shortcuts: false,
-        rest: true
-    },
-`;
-                            data = data.replace(/^module\.exports = \{$/m, '$&' + patchData);
-                            modelURL = `${moduleName}/${lcModelName}`;
-                            fs.writeFile(controllerFile, data, next);
                         }
                     });
                 },
-
-                // Save the model's blueprints base URL
-                function (next) {
-                    if (!modelURL) return next();
-
-                    object.urlPath = modelURL;
-                    ABObject.update({ id: object.id }, { urlPath: modelURL })
-                        .exec(function (err, results) {
-                            if (err) next(err);
-                            else next();
-                        });
-                },
-
-                // Create client side model base directory if needed
-                function (next) {
-                    fs.mkdir(path.join(clientPath, 'models', 'base'), function (err) {
-                        if (!err || err.code == 'EEXIST') next();
-                        else next(err);
-                    });
-                },
-
-                // Create client side models
-                function (next) {
-                    // Find fieldLabel field
-                    var fieldLabel = 'id';
-                    for (var colName in model.definition) {
-                        var column = model.definition[colName];
-                        if (fieldLabel != 'id') continue;
-                        if (column.type == 'string' || column.type == 'text') {
-                            fieldLabel = colName;
-                        }
-                    }
-
-                    sails.renderView(path.join('app_builder', 'clientModelBase'), {
-                        layout: false,
-                        appName: appName,
-                        objectName: modelName,
-                        fieldLabel: fieldLabel,
-                        modelURL: modelURL,
-                        columns: columns,
-                        associations: associations,
-                        multilingualFields: multilingualFields,
-
-                    }, function (err, output) {
-                        if (err) next(err);
-                        else {
-                            var dest = path.join(clientPath, 'models', 'base', modelFileName) + '.js';
-                            fs.writeFile(dest, output, function (err) {
-                                if (err) next(err);
-                                else next();
-                            });
-                        }
-                    });
-                },
-                function (next) {
-                    sails.renderView(path.join('app_builder', 'clientModel'), {
-                        layout: false,
-                        appName,
-                        objectName: modelName,
-                        modelFileName
-                    }, function (err, output) {
-                        if (err) next(err);
-                        else {
-                            var dest = path.join(clientPath, 'models', modelFileName) + '.js';
-                            fs.writeFile(dest, output, function (err) {
-                                if (err) next(err);
-                                else next();
-                            });
-                        }
-                    });
-                }
 
             ], function (err) {
                 if (err) dfd.reject(err);
                 else {
-                    dfd.resolve(object);
+                    dfd.resolve(objectData);
                 }
             });
         }
 
         return dfd;
     },
+    
 
     findModelAttributes: function (modelName) {
         var dfd = AD.sal.Deferred();
@@ -2574,6 +2450,25 @@ linkModel(fullName, function(err){
                         type: col.type
                     };
                 }
+            }
+        }
+        
+        // Check if column types are supported by AppBuilder
+        var validTypes = ABColumn.getValidTypes();
+        for (var colName in columns) {
+            if (typeof columns[colName] == 'string') {
+                // Sometimes the column definition is a simple string instead
+                // of an object. Change it to object format.
+                columns[colName] = {
+                    type: columns[colName]
+                };
+            } 
+            
+            var type = String(columns[colName].type).toLowerCase();
+            if (sailsToAppBuilderReference[type]) {
+                columns[colName].supported = true;
+            } else {
+                columns[colName].supported = false;
             }
         }
 

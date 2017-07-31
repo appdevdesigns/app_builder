@@ -17,6 +17,7 @@
 
 import ABBlankObject from "./ab_work_object_list_newObject_blank"
 import ABCsvObject from "./ab_work_object_list_newObject_csv"
+import ABImportObject from "./ab_work_object_list_newObject_import"
 
 
 
@@ -30,8 +31,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 		var labels = {
 			common : App.labels,
 			component: {
-				addNew: L('ab.object.addNew', '*Add new object')
-			}
+				addNew: L('ab.object.addNew', '*Add new object')			}
 		}
 
 		// internal list of Webix IDs to reference our UI components.
@@ -42,6 +42,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 
 		var BlankTab = new ABBlankObject(App);
 		var CsvTab = new ABCsvObject(App);
+		var ImportTab = new ABImportObject(App);
 
 
 		// Our webix UI definition:
@@ -58,8 +59,16 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 				cells: [
 					BlankTab.ui,
 					// importObjectCreator.getCreateView(),
-					CsvTab.ui
+					CsvTab.ui,
+					ImportTab.ui
 				]
+			},
+			on: {
+				onBeforeShow: () => {
+					if (currentApplication) {
+						ImportTab._logic.initModelList(currentApplication);
+					}
+				}
 			}
 		};
 
@@ -78,11 +87,15 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 
 			var ourCBs = {
 				onCancel: _logic.hide,
-				onSave: _logic.save
+				onSave: _logic.save,
+				onDone: _logic.done,
+				onBusyStart: _logic.showBusy,
+				onBusyEnd: _logic.hideBusy
 			}
 
 			BlankTab.init(ourCBs);
 			CsvTab.init(ourCBs);
+			ImportTab.init(ourCBs);
 
 		}
 
@@ -118,6 +131,37 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			hide: function() {
 				if ($$(ids.component))
 					$$(ids.component).hide();
+			},
+			
+			
+			/**
+			 * Show the busy indicator
+			 */
+			showBusy: () => {
+				if ($$(ids.component)) {
+					$$(ids.component).showProgress();
+				}
+			},
+			
+			
+			/**
+			 * Hide the busy indicator
+			 */
+			hideBusy: () => {
+				if ($$(ids.component)) {
+					$$(ids.component).hideProgress();
+				}
+			},
+			
+			
+			/**
+			 * Finished saving, so hide the popup and clean up.
+			 * @param {object} obj
+			 */
+			done: (obj) => {
+				_logic.hideBusy();
+				_logic.hide();							// hide our popup
+				_logic.callbacks.onDone(null, obj);		// tell parent component we're done
 			},
 
 
@@ -155,7 +199,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 
 
 				// show progress
-				$$(ids.component).showProgress();
+				_logic.showBusy();
 
 				// if we get here, save the new Object
 				newObject.save()
@@ -163,15 +207,11 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 
 						// successfully done:
 						cb(null, obj);									// tell current tab component save successful
-						_logic.hide();							// hide our popup
-						_logic.callbacks.onDone(null, obj);		// tell parent component we're done
-
-						// hide progress
-						$$(ids.component).hideProgress();
+						_logic.done(obj);
 					})
 					.catch(function(err){
 						// hide progress
-						$$(ids.component).hideProgress();
+						_logic.hideBusy();
 
 						cb(err);								// tell current Tab component there was an error
 					})
