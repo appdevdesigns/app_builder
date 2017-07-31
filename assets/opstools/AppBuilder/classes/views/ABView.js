@@ -267,7 +267,32 @@ export default class ABView  extends EventEmitter {
 	}
 
 
+    /**
+    * @method allParents()
+    *
+    * return an flatten array of all the ABViews parents
+    *
+    * @method allParents()
+    *
+    * return an flatten array of all the ABViews parents
+    *
+    * @return {array}      array of ABViews
+    */
+    allParents() {
+        var parents = [];
+        var curView = this;
 
+        // add current view to array
+        parents.unshift(curView);
+
+        while (!curView.isRoot() && curView.parent) {
+        	parents.unshift(curView.parent);
+
+            curView = curView.parent;
+        }
+
+        return parents;
+	}
 
 
 	///
@@ -1058,3 +1083,4 @@ var ABViewPropertyComponent = new ABPropertyComponent({
 
 })
 */
+
