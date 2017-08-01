@@ -52,10 +52,30 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     id: ids.toolbar,
                     css: 'ab-data-toolbar',
                     cols: [
+                        // {
+                        //     view: 'label',
+                        //     id: ids.toolbarMap,
+                        //     label: '[view map]'
+                        // },
                         {
-                            view: 'label',
+                            view: 'list',
+                            layout: 'x',
                             id: ids.toolbarMap,
-                            label: '[view map]'
+                            borderless: true,
+                            multiselect: false,
+                            select: false,
+                            scroll: false,
+                            padding: 0,
+                            template: function(item) {
+                                return '<i class="fa fa-chevron-right" aria-hidden="true"></i> ' + item.label;
+                            },
+                            on: {
+                                onItemClick: function(id, e, node){
+                                    var clickedView = this.getItem(id);
+
+                                    App.actions.populateInterfaceWorkspace(clickedView);
+                                }
+                            }
                         },
                         {
                             view: "icon", 
@@ -185,8 +205,10 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 .once('properties.updated', _logic.viewUpdate)
 
                 // update the toolbar navigation map
-                var mapLabel = view.mapLabel();
-                $$(ids.toolbarMap).define('label', mapLabel);
+                // var mapLabel = view.mapLabel();
+                // $$(ids.toolbarMap).define('label', mapLabel);
+                $$(ids.toolbarMap).clearAll();
+                $$(ids.toolbarMap).parse(view.allParents());
                 $$(ids.toolbarMap).refresh();
 
 
@@ -197,7 +219,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 editorComponent.init();
 
             },
-
 
             viewModeChange: function(newV, oldV) {
                 if (newV == oldV) return;
