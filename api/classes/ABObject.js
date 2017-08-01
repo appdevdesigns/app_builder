@@ -100,7 +100,18 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 	dbTableName() {
-		return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+		if (!this.isImported) {
+			return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+		}
+		else {
+			var modelName = this.name.toLowerCase();
+			if (!sails.models[modelName]) {
+				throw new Error(`Imported object model not found: ${modelName}`);
+			}
+			else {
+				return sails.models[modelName].waterline.schema[modelName].tableName;
+			}
+		}
 	}
 
 
