@@ -73,7 +73,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                 onItemClick: function(id, e, node){
                                     var clickedView = this.getItem(id);
 
-                                    _logic.viewLoad(clickedView);
+                                    App.actions.populateInterfaceWorkspace(clickedView);
                                 }
                             }
                         },
