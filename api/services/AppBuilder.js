@@ -2140,7 +2140,7 @@ linkModel(fullName, function(err){
                             return false;
                     });
                     if (!controllerInfo) {
-                        // 2nd try: look for matching controoler-model name
+                        // 2nd try: look for matching controller-model name
                         controllerInfo = _.find(sails.controllers, (c) => {
                             if (!c.identity) return false;
                             var nameParts = c.identity.split('/');
@@ -2346,7 +2346,7 @@ linkModel(fullName, function(err){
                         
                         // Source column
                         sourceColData.columnName = assoc.alias;
-                        sourceColData.settings.imported = true;
+                        sourceColData.settings.isImported = true;
                         sourceColData.settings.linkType = sourceRelation;
                         sourceColData.settings.linkViaType = targetRelation;
                         sourceColData.settings.linkObject = targetObject.id;
@@ -2361,7 +2361,7 @@ linkModel(fullName, function(err){
                         
                         // Target column
                         targetColData.columnName = targetLinkName;
-                        targetColData.settings.imported = true;
+                        targetColData.settings.isImported = true;
                         targetColData.settings.linkType = targetRelation;
                         targetColData.settings.linkViaType = sourceRelation;
                         targetColData.settings.linkObject = objectData.id;
@@ -2375,11 +2375,8 @@ linkModel(fullName, function(err){
                         });
                         
                         // Add columns to the object being created
-                        console.log('Adding column link:', sourceColData);
                         objectData.fields.push(sourceColData);
                         targetObject.fields.push(targetColData);
-                        
-                        console.log('Adding object:', objectData);
                         
                         // ( `targetObject` is already a reference to the
                         //   existing object in `application.json.objects` )
