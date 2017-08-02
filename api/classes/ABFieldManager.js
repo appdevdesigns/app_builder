@@ -58,7 +58,7 @@ module.exports = {
 	 */
 	newField: function (values, object) {
 
-console.log(values);
+// console.log(values);
 		if (values.key) {
 			return new Fields[values.key](values, object);
 		} else {

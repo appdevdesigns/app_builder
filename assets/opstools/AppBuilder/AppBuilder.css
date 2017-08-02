@@ -793,3 +793,11 @@ a.ab-delete-photo:hover {
     box-shadow: none !important; 
     border-radius: 10px !important;
 }
+
+.ab-component-form-fields-component-info {
+	background-color: #ddd;
+	border-radius: 8px;
+	color: #666;
+	float: right;
+	padding: 0 8px;
+}

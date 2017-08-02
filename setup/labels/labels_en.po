@@ -1021,6 +1021,18 @@ msgstr "#appName# is duplicate."
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.button
+msgid "Button"
+msgstr "Button"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.form
+msgid "Form"
+msgstr "Form"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.label
 msgid "Label"
 msgstr "Label"
@@ -1060,6 +1072,30 @@ msgstr "title"
 #. key: ab.component.label.formatting.description
 msgid "description"
 msgstr "description"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.layout
+msgid "Layout"
+msgstr "Layout"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.menu
+msgid "Menu"
+msgstr "Menu"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.selectsingle
+msgid "Single Select"
+msgstr "Single Select"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.textbox
+msgid "Textbox"
+msgstr "Textbox"
 
 #. path: app_builder
 #. code: en

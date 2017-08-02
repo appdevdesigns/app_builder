@@ -27,7 +27,9 @@ var ABFieldConnectDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	formComponentKey: 'selectmultiple'
 };
 
 var defaultValues = {

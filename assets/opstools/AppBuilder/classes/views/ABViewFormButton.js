@@ -1,11 +1,11 @@
 /*
- * ABViewTextbox
+ * ABViewFormButton
  *
- * An ABViewTextbox defines a UI text box component.
+ * An ABViewFormButton defines a UI form component.
  *
  */
 
-import ABView from "./ABView"
+import ABViewFormField from "./ABViewFormField"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -13,18 +13,18 @@ function L(key, altText) {
 }
 
 
-var ABViewTextboxPropertyComponentDefaults = {
-	type: 'single'
+var ABViewFormButtonPropertyComponentDefaults = {
+	type: 'submit',
+	width: 150
 }
 
-
-var ABTextboxDefaults = {
-	key: 'textbox',		// {string} unique key for this view
-	icon: 'i-cursor',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.textbox' // {string} the multilingual label key for the class label
+var ABViewFormButtonDefaults = {
+	key: 'button',		// {string} unique key for this view
+	icon: 'square-o',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.button' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewTextbox extends ABView {
+export default class ABViewFormButton extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,7 +33,7 @@ export default class ABViewTextbox extends ABView {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABTextboxDefaults);
+		super(values, application, parent, ABViewFormButtonDefaults);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -57,11 +57,15 @@ export default class ABViewTextbox extends ABView {
 
 
 	static common() {
-		return ABTextboxDefaults;
+		return ABViewFormButtonDefaults;
 	}
+
+
+
 	///
 	/// Instance Methods
 	///
+
 
 	//
 	//	Editor Related
@@ -78,40 +82,33 @@ export default class ABViewTextbox extends ABView {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewTextboxEditorComponent';
+		var idBase = 'ABViewFormButtonEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
-
-		var textboxElem = {
-			id: ids.component
-		};
-
-		switch (this.settings.type) {
-			case 'single':
-				textboxElem.view = "text";
-				break;
-			case 'multiple':
-				textboxElem.view = "textarea";
-				break;
-			case 'rich':
-				webix.codebase = "/js/webix/extras/";
-				textboxElem.view = "tinymce-editor";
-				break;
-		}
+		var button = this.component(App).ui;
+		button.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textboxElem,
+				{
+					cols: [
+						{},
+						button,
+						{}
+					]
+				},
 				{}
 			]
 		};
+
 
 		var _init = (options) => {
 		}
 
 		var _logic = {
+
 		}
 
 
@@ -132,21 +129,28 @@ export default class ABViewTextbox extends ABView {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
 			{
 				name: 'type',
-				view: "radio",
-				label: L('ab.component.textbox.type', '*Type'),
-				value: ABViewTextboxPropertyComponentDefaults.type,
-				vertical: true,
+				view: 'richselect',
+				label: L('ab.component.button.type', '*Type'),
 				options: [
-					{ id: 'single', value: L('ab.component.textbox.single', '*Single line') },
-					{ id: 'multiple', value: L('ab.component.textbox.multiple', '*Multiple lines') },
-					{ id: 'rich', value: L('ab.component.textbox.rich', '*Rich editor') }
+					{
+						id: 'submit',
+						value: L('ab.component.button.type.submit', '*Submit')
+					},
+					{
+						id: 'cancel',
+						value: L('ab.component.button.type.cancel', '*Cancel')
+					}
 				]
+			},
+			{
+				name: 'width',
+				view: 'text',
+				label: L('ab.component.button.width', '*Width')
 			}
 		]);
 
@@ -156,9 +160,8 @@ export default class ABViewTextbox extends ABView {
 
 		super.propertyEditorPopulate(ids, view);
 
-
-		$$(ids.type).setValue(view.settings.type);
-
+		$$(ids.type).setValue(view.settings.type || ABViewFormButtonPropertyComponentDefaults.type);
+		$$(ids.width).setValue(view.settings.width || ABViewFormButtonPropertyComponentDefaults.width);
 
 	}
 
@@ -166,8 +169,8 @@ export default class ABViewTextbox extends ABView {
 
 		super.propertyEditorValues(ids, view);
 
-
 		view.settings.type = $$(ids.type).getValue();
+		view.settings.width = parseInt($$(ids.width).getValue() || 0);
 
 	}
 
@@ -181,15 +184,32 @@ export default class ABViewTextbox extends ABView {
 	 */
 	component(App) {
 
-		var idBase = 'ABTextboxLabel_' + this.id;
+		var idBase = 'ABViewFormButton_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
 
-		// an ABTextboxLabel is a simple Label
 		var _ui = {
+			id: ids.component,
+			view: "button"
 		};
+
+		_ui.width = this.settings.width || ABViewFormButtonPropertyComponentDefaults.width;
+
+		var buttonType = this.settings.type || ABViewFormButtonPropertyComponentDefaults.type;
+		// Submit
+		if (buttonType == 'submit') {
+			_ui.type = "form";
+			_ui.value = L('ab.component.button.save', '*Save');
+		}
+		// Cancel
+		else {
+			_ui.type = "standard";
+			_ui.css = "ab-cancel-button";
+			_ui.value = L('ab.component.button.cancel', '*Cancel');
+		}
+
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {

@@ -1,40 +1,31 @@
 /*
  * ABViewForm
  *
- * An ABViewForm defines a UI form component.
+ * An ABViewFormPanel that represents a "Form" in the system.
+ *
  *
  */
 
-import ABView from "./ABView"
-import ABPropertyComponent from "../ABPropertyComponent"
-import ABViewManager from "../ABViewManager"
+import ABViewFormPanel from "./ABViewFormPanel"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
 
-var ABViewFormPropertyComponentDefaults = {
-}
-
-var ABFormDefaults = {
-	key: 'form',		// {string} unique key for this view
-	icon: 'list-alt',		// {string} fa-[icon] reference for this view
+var ABViewFormDefaults = {
+	key: 'form',		// unique key identifier for this ABViewForm
+	icon: 'list-alt',		// icon reference: (without 'fa-' )
 	labelKey: 'ab.components.form' // {string} the multilingual label key for the class label
+
 }
 
-export default class ABViewForm extends ABView {
+export default class ABViewForm extends ABViewFormPanel {
 
-	/**
-	 * @param {obj} values  key=>value hash of ABView values
-	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABView} parent the ABView this view is a child of. (can be null)
-	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABFormDefaults);
+		super(values, application, parent, ABViewFormDefaults);
 
-		// OP.Multilingual.translate(this, this, ['text']);
 
 		// 	{
 		// 		id:'uuid',					// uuid value for this obj
@@ -43,121 +34,22 @@ export default class ABViewForm extends ABView {
 		// 		label:'',					// pulled from translation
 
 		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
 		//		},
 
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
+		//		translations:[]
 		// 	}
+
 
 	}
 
 
 	static common() {
-		return ABFormDefaults;
+		return ABViewFormDefaults;
 	}
-
-
 
 	///
 	/// Instance Methods
 	///
-
-	//
-	//	Editor Related
-	//
-
-
-	/** 
-	 * @method editorComponent
-	 * return the Editor for this UI component.
-	 * the editor should display either a "block" view or "preview" of 
-	 * the current layout of the view.
-	 * @param {string} mode what mode are we in ['block', 'preview']
-	 * @return {Component} 
-	 */
-	editorComponent(App, mode) {
-
-		var idBase = 'ABViewFormEditorComponent';
-		var ids = {
-			component: App.unique(idBase + '_component'),
-			pages: App.unique(idBase + '_pages')
-		}
-
-
-		var _ui;
-
-		if (mode == 'block') {
-			_ui = super.editorComponent(App, mode).ui;
-		}
-		else {
-			_ui = {
-				rows: [
-					{
-						id: ids.component,
-						view: "form",
-						elements: [],
-						autoheight: true
-					},
-					{}
-				]
-			};
-		}
-
-
-		var _init = (options) => {
-
-			if (mode == 'block') {
-
-			}
-
-		}
-
-		var _logic = {
-
-		}
-
-
-		return {
-			ui: _ui,
-			init: _init,
-			logic: _logic
-		}
-	}
-
-
-
-	//
-	// Property Editor
-	// 
-
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
-
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-
-
-		// in addition to the common .label  values, we 
-		// ask for:
-		return commonUI.concat([
-		]);
-
-	}
-
-	static propertyEditorPopulate(ids, view) {
-
-		super.propertyEditorPopulate(ids, view);
-
-	}
-
-	static propertyEditorValues(ids, view) {
-
-		super.propertyEditorValues(ids, view);
-
-	}
-
-
 
 	/*
 	 * @component()
@@ -167,22 +59,38 @@ export default class ABViewForm extends ABView {
 	 */
 	component(App) {
 
-		var idBase = 'ABFormLabel_' + this.id;
-		var ids = {
-			component: App.unique(idBase + '_component'),
-		}
+		// get a UI component for each of our child views
+		var viewComponents = [];
+		this.views().forEach((v) => {
+			viewComponents.push(v.component(App));
+		})
+
+		var idBase = 'ABViewForm_' + this.id,
+			ids = {
+				component: App.unique(idBase + '_component'),
+			};
 
 
+		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			id: ids.component,
-			view: "form",
-			elements: [],
-			autoheight: true,
-		};
+			view: 'form',
+			elements: []
+		}
+
+		// insert each of our sub views into our rows:
+		viewComponents.forEach((view) => {
+			_ui.elements.push(view.ui);
+		})
+
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			viewComponents.forEach((view) => {
+				view.init();
+			})
 
+			$$(ids.component).adjust();
 		}
 
 
@@ -192,19 +100,4 @@ export default class ABViewForm extends ABView {
 		}
 	}
 
-
-	/*
-	 * @method componentList
-	 * return the list of components available on this view to display in the editor.
-	 */
-	componentList() {
-		var viewsToIgnore = ['view', 'page', 'form', 'menu'],
-			allComponents = ABViewManager.allViews();
-
-		return allComponents.filter((c) => {
-			return viewsToIgnore.indexOf(c.common().key) < 0;
-		});
-	}
-
-
-};
+}

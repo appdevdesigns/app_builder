@@ -43,7 +43,15 @@ var ABFieldListDefaults = {
 		} else {
 			return true;
 		}
-	}
+	},
+
+	formComponentKey: (field) => {
+		if (field.settings.isMultiple) {
+			return 'selectmultiple';
+		} else {
+			return 'selectsingle';
+		}
+	},
 };
 
 var defaultValues = {

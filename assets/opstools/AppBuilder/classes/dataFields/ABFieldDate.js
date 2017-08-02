@@ -24,7 +24,9 @@ var ABFieldDateDefaults = {
 	menuName: L('ab.dataField.date.menuName', '*Date'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.date.description', '*Pick one from a calendar.')
+	description: L('ab.dataField.date.description', '*Pick one from a calendar.'),
+
+	formComponentKey: 'date'
 }
 
 var defaultValues = {

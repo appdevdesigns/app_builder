@@ -23,7 +23,9 @@ var ABFieldLongTextDefaults = {
 	menuName: L('ab.dataField.LongText.menuName', '*Long text'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.LongText.description', '*Multiple lines of text')
+	description: L('ab.dataField.LongText.description', '*Multiple lines of text'),
+
+	formComponentKey: 'textbox'
 }
 
 

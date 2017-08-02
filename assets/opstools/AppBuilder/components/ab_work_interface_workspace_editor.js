@@ -67,7 +67,9 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             scroll: false,
                             padding: 0,
                             template: function(item) {
-                                return '<i class="fa fa-chevron-right" aria-hidden="true"></i> ' + item.label;
+                                return '<i class="fa fa-chevron-right" aria-hidden="true"></i> ' + 
+                                    '<i class="fa fa-#icon#" aria-hidden="true"></i> '.replace('#icon#', item.icon) +
+                                    item.label;
                             },
                             on: {
                                 onItemClick: function(id, e, node){

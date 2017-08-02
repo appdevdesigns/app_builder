@@ -5,7 +5,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewFormField from "./ABViewFormField"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -24,7 +24,7 @@ var ABSelectSingleDefaults = {
 	labelKey: 'ab.components.selectsingle' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewSelectSingle extends ABView {
+export default class ABViewSelectSingle extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -79,7 +79,7 @@ export default class ABViewSelectSingle extends ABView {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewSelectSingleEditorComponent';
+		var idBase = 'ABViewFormSelectSingleEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component'),
 			options: App.unique(idBase + '_option'),
@@ -90,82 +90,15 @@ export default class ABViewSelectSingle extends ABView {
 
 		var _ui = {
 			rows: [
-				selectlist
+				selectlist,
+				{}
 			]
 		};
-
-		if (mode == 'block') {
-			// options list
-			_ui.rows.push({
-				id: ids.options,
-				name: 'options',
-				view: App.custom.editlist.view,
-				template: "<div style='position: relative;'>#value#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
-				autoheight: true,
-				drag: true,
-				editable: true,
-				editor: "text",
-				editValue: "value",
-				onClick: {
-					"ab-new-field-remove": function (e, itemId, trg) {
-						// Remove option item
-						$$(ids.options).remove(itemId);
-					}
-				},
-				on: {
-					onAfterAdd: () => {
-						_logic.updateSelectOptions();
-					},
-					onAfterEditStop: () => {
-						_logic.updateSelectOptions();
-					},
-					onAfterDelete: () => {
-						_logic.updateSelectOptions();
-					}
-				}
-			});
-
-			// 'Add a option' button
-			_ui.rows.push({
-				cols: [
-					{},
-					{
-						view: 'button',
-						width: 160,
-						value: L('ab.component.selectsingle.addNewOption', '*Add a new option'),
-						click: () => {
-							_logic.addNewOption();
-						}
-					}
-				]
-			});
-		}
-
-		_ui.rows.push({});
 
 		var _init = (options) => {
 		}
 
 		var _logic = {
-
-			updateSelectOptions: () => {
-				var options = $$(ids.options).find({}).map(function (opt) {
-					return {
-						id: opt.id,
-						value: opt.value
-					}
-				});
-
-				$$(ids.component).define('options', options);
-				$$(ids.component).refresh();
-			},
-
-			addNewOption: () => {
-				var itemId = webix.uid();
-				$$(ids.options).add({ id: itemId, value: '' }, $$(ids.options).count());
-				$$(ids.options).edit(itemId);
-			}
-
 		}
 
 
@@ -186,7 +119,6 @@ export default class ABViewSelectSingle extends ABView {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
@@ -205,6 +137,7 @@ export default class ABViewSelectSingle extends ABView {
 					}
 				]
 			}
+
 		]);
 
 	}
@@ -235,7 +168,7 @@ export default class ABViewSelectSingle extends ABView {
 	 */
 	component(App) {
 
-		var idBase = 'ABSelectSingleLabel_' + this.id;
+		var idBase = 'ABViewFormSelectSingle_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
