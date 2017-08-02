@@ -738,7 +738,29 @@ div.webix_item_tab {
 .list-data-values, .connect-data-values {
 	position: relative;
 }
-
+.ab-image-holder .webix_template {
+	position: relative;
+}
+.ab-delete-photo {
+	position: absolute; 
+	top: 5px; 
+	right: 5px;
+	background: red; 
+	color: white; 
+	opacity: 1;
+	line-height: 25px;
+	opacity: 0.8;
+}
+.ab-delete-photo i {
+	padding: 5px;
+}
+.ab-delete-photo:focus {
+	color: white;
+}
+a.ab-delete-photo:hover {
+	color: white;
+	opacity: 1;
+}
 /* Legend Overrides */
 .webix_view legend {
 	margin: 0 0 -30px -10px;
