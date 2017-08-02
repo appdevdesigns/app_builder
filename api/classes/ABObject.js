@@ -186,6 +186,12 @@ module.exports = class ABObject extends ABObjectBase {
 		return new Promise(
 			(resolve, reject) => {
 				sails.log.silly('.... .migrateDropTable()  before knex:');
+				
+				if (this.isImported) {
+					sails.log.silly('.... aborted drop of imported table');
+					reject(new Error('Cannot drop an imported object'));
+					return;
+				}
 
 				//BEFORE we just go drop the table, let's give each of our
 				// fields the chance to perform any clean up actions related
