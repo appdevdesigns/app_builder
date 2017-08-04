@@ -5,7 +5,7 @@
  *
  */
 
-import ABViewFormField from "./ABViewFormField"
+import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -14,8 +14,9 @@ function L(key, altText) {
 
 
 var ABViewFormButtonPropertyComponentDefaults = {
-	type: 'submit',
-	width: 150
+	includeSave: true,
+	includeCancel: true,
+	alignment: 'right'
 }
 
 var ABViewFormButtonDefaults = {
@@ -24,7 +25,7 @@ var ABViewFormButtonDefaults = {
 	labelKey: 'ab.components.button' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewFormButton extends ABViewFormField {
+export default class ABViewFormButton extends ABView {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -92,13 +93,7 @@ export default class ABViewFormButton extends ABViewFormField {
 
 		var _ui = {
 			rows: [
-				{
-					cols: [
-						{},
-						button,
-						{}
-					]
-				},
+				button,
 				{}
 			]
 		};
@@ -133,24 +128,24 @@ export default class ABViewFormButton extends ABViewFormField {
 		// ask for:
 		return commonUI.concat([
 			{
-				name: 'type',
-				view: 'richselect',
-				label: L('ab.component.button.type', '*Type'),
-				options: [
-					{
-						id: 'submit',
-						value: L('ab.component.button.type.submit', '*Submit')
-					},
-					{
-						id: 'cancel',
-						value: L('ab.component.button.type.cancel', '*Cancel')
-					}
-				]
+				name: 'includeSave',
+				view: 'checkbox',
+				label: L('ab.component.button.includeSave', '*Save')
 			},
 			{
-				name: 'width',
-				view: 'text',
-				label: L('ab.component.button.width', '*Width')
+				name: 'includeCancel',
+				view: 'checkbox',
+				label: L('ab.component.button.includeCancel', '*Cancel')
+			},
+			{
+				name: 'alignment',
+				view: 'richselect',
+				label: L('ab.component.button.alignment', '*Alignment'),
+				options: [
+					{ id: 'left', value: L('ab.component.button.alignment.left', '*Left') },
+					{ id: 'center', value: L('ab.component.button.alignment.center', '*Center') },
+					{ id: 'right', value: L('ab.component.button.alignment.right', '*Right') }
+				]
 			}
 		]);
 
@@ -160,8 +155,9 @@ export default class ABViewFormButton extends ABViewFormField {
 
 		super.propertyEditorPopulate(ids, view);
 
-		$$(ids.type).setValue(view.settings.type || ABViewFormButtonPropertyComponentDefaults.type);
-		$$(ids.width).setValue(view.settings.width || ABViewFormButtonPropertyComponentDefaults.width);
+		$$(ids.includeSave).setValue(view.settings.includeSave != null ? view.settings.includeSave : ABViewFormButtonPropertyComponentDefaults.includeSave);
+		$$(ids.includeCancel).setValue(view.settings.includeCancel != null ? view.settings.includeCancel : ABViewFormButtonPropertyComponentDefaults.includeCancel);
+		$$(ids.alignment).setValue(view.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment);
 
 	}
 
@@ -169,8 +165,9 @@ export default class ABViewFormButton extends ABViewFormField {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.type = $$(ids.type).getValue();
-		view.settings.width = parseInt($$(ids.width).getValue() || 0);
+		view.settings.includeSave = $$(ids.includeSave).getValue();
+		view.settings.includeCancel = $$(ids.includeCancel).getValue();
+		view.settings.alignment = $$(ids.alignment).getValue();
 
 	}
 
@@ -192,33 +189,70 @@ export default class ABViewFormButton extends ABViewFormField {
 
 		var _ui = {
 			id: ids.component,
-			view: "button"
+			cols: []
 		};
 
-		_ui.width = this.settings.width || ABViewFormButtonPropertyComponentDefaults.width;
+		var alignment = this.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment;
 
-		var buttonType = this.settings.type || ABViewFormButtonPropertyComponentDefaults.type;
-		// Submit
-		if (buttonType == 'submit') {
-			_ui.type = "form";
-			_ui.value = L('ab.component.button.save', '*Save');
-		}
-		// Cancel
-		else {
-			_ui.type = "standard";
-			_ui.css = "ab-cancel-button";
-			_ui.value = L('ab.component.button.cancel', '*Cancel');
+		// spacer
+		if (alignment == 'center' || alignment == 'right') {
+			_ui.cols.push({});
 		}
 
+		// cancel button
+		if (this.settings.includeCancel != null ? this.settings.includeCancel : ABViewFormButtonPropertyComponentDefaults.includeCancel) {
+			_ui.cols.push({
+				view: "button",
+				type: "standard",
+				css: "ab-cancel-button",
+				width: 80,
+				value: L('ab.component.button.cancel', '*Cancel'),
+				click: function () {
+					_logic.onCancel(this);
+				}
+			});
+		}
+
+		// save button
+		if (this.settings.includeSave != null ? this.settings.includeSave : ABViewFormButtonPropertyComponentDefaults.includeSave) {
+			_ui.cols.push({
+				view: "button",
+				type: "form",
+				width: 80,
+				value: L('ab.component.button.save', '*Save'),
+				click: function() {
+					_logic.onSave(this);
+				}
+			});
+		}
+
+		// spacer
+		if (alignment == 'center' || alignment == 'left') {
+			_ui.cols.push({});
+		}
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-		}
+		};
+
+		var _logic = {
+
+			onCancel: function (cancelButton) {
+				if (cancelButton.getFormView())
+					cancelButton.getFormView().clear();
+			},
+
+			onSave: (saveButton) => {
+				if (saveButton.getFormView())
+					saveButton.getFormView().validate();
+			}
+		};
 
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+			logic: _logic
 		}
 	}
 

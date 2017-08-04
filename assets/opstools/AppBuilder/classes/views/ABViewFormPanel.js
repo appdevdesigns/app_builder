@@ -7,18 +7,15 @@
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABViewManager from "../ABViewManager"
+import ABViewFormField from "./ABViewFormField"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-
-var ABViewFormPanelPropertyComponentDefaults = {
-}
-
 var ABFormPanelDefaults = {
 	key: 'formpanel',		// {string} unique key for this view
-	icon: 'list-alt',		// {string} fa-[icon] reference for this view
+	icon: 'newspaper-o',	// {string} fa-[icon] reference for this view
 }
 
 
@@ -72,78 +69,8 @@ export default class ABViewFormPanel extends ABView {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-		return commonUI.concat([
-			{
-				name: 'object',
-				view: 'richselect',
-				label: L('ab.components.form.objects', "*Objects")
-			},
-			{
-				view: 'button',
-				value: L('ab.components.form.addField', "*Add a new field"),
-				click: () => {
-					// open a popup
-					var FormView = _logic.currentEditObject();
-					FormView.openNewFieldPopup();
-				}
-			}
-		]);
-
-
-	}
-
-	static propertyEditorPopulate(ids, view) {
-
-		super.propertyEditorPopulate(ids, view);
-
-		var objects = view.application.objects().map((obj) => {
-			// label option of webix richselect
-			obj.value = obj.label;
-			return obj;
-		});
-
-		$$(ids.object).define('options', objects);
-		$$(ids.object).refresh();
-
-		$$(ids.object).setValue(view.settings.object);
-	}
-
-	static propertyEditorValues(ids, view) {
-
-		super.propertyEditorValues(ids, view);
-
-		view.settings.object = $$(ids.object).getValue();
-
-	}
-
-	/*
-	 * @method componentList
-	 * return the list of components available on this view to display in the editor.
-	 */
-	componentList() {
-		var viewsToAllow = ['label', 'layout'],
-			allComponents = ABViewManager.allViews();
-
-		return allComponents.filter((c) => {
-			return viewsToAllow.indexOf(c.common().key) > -1;
-		});
-	}
-
-
-	openNewFieldPopup() {
-
-		var object = this.application.objects((obj) => obj.id == this.settings.object)[0];
-
-		if (object == null) {
-			// TODO:
-			alert('No select object');
-			return;
-		}
-
-		var fields = object.fields();
-		// TODO: prevent duplicate fields
-
-		webix.ui({
+		// "Add new field" popup UI
+		var popup = {
 			id: "ab-component-form-add-new-field-popup",
 			view: "window",
 			height: 400,
@@ -154,10 +81,12 @@ export default class ABViewFormPanel extends ABView {
 			body: {
 				rows: [
 					{
+						id: "ab-component-form-select-field",
 						view: 'list',
 						select: true,
-						data: fields,
-						template: function (item) {
+						template: function (item, common) {
+							// prevent add duplicate field
+							common.disabled = item.disabled;
 
 							var formComponent = ABViewManager.allViews((v) => v.common().key == item.fieldFormComponentKey())[0];
 
@@ -165,6 +94,17 @@ export default class ABViewFormPanel extends ABView {
 								.replace("#label#", item.label)
 								.replace("#icon#", (formComponent ? formComponent.common().icon : "fw"))
 								.replace("#component#", (formComponent ? L(formComponent.common().labelKey, "") : ""));
+						},
+						scheme: {
+							$init: function (item) {
+								if (item.disabled)
+									item.$css = "disabled";
+							}
+						},
+						on: {
+							onBeforeSelect: function (id) {
+								return !this.getItem(id).disabled;
+							}
 						}
 					},
 					// action buttons
@@ -176,8 +116,8 @@ export default class ABViewFormPanel extends ABView {
 								value: L('ab.common.cancel', "*Cancel"),
 								css: "ab-cancel-button",
 								autowidth: true,
-								click: function () {
-									$$("ab-component-form-add-new-field-popup").hide();
+								click: () => {
+									_logic.closeNewFieldPopup();
 								}
 							},
 							{
@@ -185,16 +125,150 @@ export default class ABViewFormPanel extends ABView {
 								value: L('ab.components.form.addField', "*Add a new field"),
 								autowidth: true,
 								type: "form",
-								click: function () {
+								click: () => {
+									var field = $$("ab-component-form-select-field").getSelectedItem(false);
+
+									_logic.addNewField(field);
 								}
 							}
 						]
 					}
 				]
 			}
-		}).show();
+		};
+
+
+
+		// _logic functions
+
+		_logic.openNewFieldPopup = () => {
+
+			var FormView = _logic.currentEditObject();
+
+			var object = FormView.formComponent().object();
+			if (object == null) {
+				// TODO:
+				alert('No select object');
+				return;
+			}
+
+			// show 'add new field' popup
+			webix.ui(popup).show();
+
+			var existsFields = FormView.formComponent().fieldComponents();
+
+			var fields = object.fields().map((f) => {
+				// prevent duplicate fields
+				f.disabled = existsFields.filter((com) => {
+					return f.id == com.settings.fieldId;
+				}).length > 0;
+
+				return f;
+			});
+			$$("ab-component-form-select-field").parse(fields);
+		}
+
+		_logic.closeNewFieldPopup = () => {
+			if ($$("ab-component-form-add-new-field-popup"))
+				$$("ab-component-form-add-new-field-popup").hide();
+		}
+
+		_logic.addNewField = (field) => {
+
+			if (field == null)
+				return _logic.closeNewFieldPopup();
+
+			var formComponent = ABViewManager.allViews((v) => v.common().key == field.fieldFormComponentKey())[0];
+			if (formComponent == null)
+				return _logic.closeNewFieldPopup();
+
+			var FormView = _logic.currentEditObject();
+
+			FormView._views.push(ABViewManager.newView({
+				key: formComponent.common().key,
+				settings: {
+					fieldId: field.id
+				}
+			}, FormView.application, FormView));
+
+			_logic.closeNewFieldPopup();
+
+			// trigger a save()
+			this.propertyEditorSave(ids, FormView);
+		}
+
+
+
+
+		// Properties UI
+		return commonUI.concat([
+			{
+				view: 'button',
+				value: L('ab.components.form.addField', "*Add a new field"),
+				click: () => {
+					_logic.openNewFieldPopup();
+				}
+			}
+		]);
+
 
 	}
+
+	static propertyEditorPopulate(ids, view) {
+
+		super.propertyEditorPopulate(ids, view);
+
+	}
+
+	static propertyEditorValues(ids, view) {
+
+		super.propertyEditorValues(ids, view);
+
+	}
+
+	/*
+	 * @method componentList
+	 * return the list of components available on this view to display in the editor.
+	 */
+	componentList() {
+		var viewsToAllow = ['label', 'layout', 'button'],
+			allComponents = ABViewManager.allViews();
+
+		return allComponents.filter((c) => {
+			return viewsToAllow.indexOf(c.common().key) > -1;
+		});
+	}
+
+
+
+	formComponent() {
+		var form = null;
+
+		var curr = this;
+		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
+			curr = curr.parent;
+		}
+
+		if (curr.key == 'form') {
+			form = curr;
+		}
+
+		return form;
+	}
+
+	fieldComponents() {
+
+		var fieldComponents = [];
+		var curr = this;
+
+		curr._views.forEach((v) => {
+console.log('PONG: ', v instanceof ABViewFormField);
+		});
+
+
+		return fieldComponents;
+	}
+
 
 
 };

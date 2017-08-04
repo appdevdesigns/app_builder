@@ -20,6 +20,11 @@ var ABViewFormDefaults = {
 
 }
 
+var ABViewFormPropertyComponentDefaults = {
+	showLabel: true,
+	labelPosition: 'left'
+}
+
 export default class ABViewForm extends ABViewFormPanel {
 
 	constructor(values, application, parent) {
@@ -50,6 +55,75 @@ export default class ABViewForm extends ABViewFormPanel {
 	///
 	/// Instance Methods
 	///
+
+	//
+	// Property Editor
+	// 
+
+	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+
+		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		return commonUI.concat([
+			{
+				name: 'object',
+				view: 'richselect',
+				label: L('ab.components.form.objects', "*Objects")
+			},
+			{
+				name: 'showLabel',
+				view: 'checkbox',
+				label: L('ab.components.form.showlabel', "*Display Label")
+			},
+			{
+				name: 'labelPosition',
+				view: 'richselect',
+				label: L('ab.components.form.labelPosition', "*Label Position"),
+				options: [
+					{
+						id: 'left',
+						value: L('ab.components.form.left', "*Left")
+					},
+					{
+						id: 'top',
+						value: L('ab.components.form.top', "*Top")
+					}
+				]
+			}
+		]);
+
+	}
+
+	static propertyEditorPopulate(ids, view) {
+
+		super.propertyEditorPopulate(ids, view);
+
+		var objects = view.application.objects().map((obj) => {
+			// label option of webix richselect
+			obj.value = obj.label;
+			return obj;
+		});
+
+		$$(ids.object).define('options', objects);
+		$$(ids.object).refresh();
+
+		$$(ids.object).setValue(view.settings.object);
+		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewFormPropertyComponentDefaults.showLabel);
+		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
+	}
+
+	static propertyEditorValues(ids, view) {
+
+		super.propertyEditorValues(ids, view);
+
+		view.settings.object = $$(ids.object).getValue();
+		view.settings.showLabel = $$(ids.showLabel).getValue();
+		view.settings.labelPosition = $$(ids.labelPosition).getValue();
+
+	}
+
+
+
 
 	/*
 	 * @component()
@@ -99,5 +173,14 @@ export default class ABViewForm extends ABViewFormPanel {
 			init: _init
 		}
 	}
+
+
+	object() {
+		return this.application.objects((obj) => obj.id == this.settings.object)[0];
+	}
+
+
+
+
 
 }

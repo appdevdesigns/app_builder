@@ -97,6 +97,10 @@
 .webix_column>div.webix_row_select {
 	background-color: #3498db !important;
 }
+.webix_list_item.disabled {
+	background-color: #eee;
+	color: #aaa;
+}
 
 /* Webix message */
 .webix_success {
@@ -606,6 +610,14 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 }
 
 /* Form component */
+.ab-component-form-fields-component-info {
+	background-color: #ddd;
+	border-radius: 8px;
+	color: #666;
+	float: right;
+    padding: 0 6px;
+    font-size: 12px;
+}
 .ab-standard-button button, .ab-standard-button button:hover, .ab-standard-button button:active, .ab-standard-button .webix_icon_btn {
 	background: transparent !important;
 	border-color: transparent !important;
@@ -792,12 +804,4 @@ a.ab-delete-photo:hover {
     color: #fff !important;
     box-shadow: none !important; 
     border-radius: 10px !important;
-}
-
-.ab-component-form-fields-component-info {
-	background-color: #ddd;
-	border-radius: 8px;
-	color: #666;
-	float: right;
-	padding: 0 8px;
 }
