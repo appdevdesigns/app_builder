@@ -258,15 +258,25 @@ export default class ABViewFormPanel extends ABView {
 
 	fieldComponents() {
 
-		var fieldComponents = [];
-		var curr = this;
+		var flattenComponents = (views) => {
+			var components = [];
 
-		curr._views.forEach((v) => {
-console.log('PONG: ', v instanceof ABViewFormField);
-		});
+			_.each(views, (comp) => {
+				components.push(comp);
+				comp._views && (components = _.union(components, flattenComponents(comp._views)))
+			});
 
+			return components
+		}
 
-		return fieldComponents;
+		if (this._views && this._views.length > 0) {
+			var allComponents = flattenComponents(this._views);
+
+			return allComponents.filter((comp) => comp instanceof ABViewFormField);
+		}
+		else {
+			return [];
+		}
 	}
 
 
