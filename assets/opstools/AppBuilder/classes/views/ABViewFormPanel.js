@@ -99,6 +99,8 @@ export default class ABViewFormPanel extends ABView {
 							$init: function (item) {
 								if (item.disabled)
 									item.$css = "disabled";
+								else
+									item.$css = "";
 							}
 						},
 						on: {
@@ -186,6 +188,7 @@ export default class ABViewFormPanel extends ABView {
 
 			FormView._views.push(ABViewManager.newView({
 				key: formComponent.common().key,
+				label: field.label,
 				settings: {
 					fieldId: field.id
 				}
@@ -243,8 +246,8 @@ export default class ABViewFormPanel extends ABView {
 
 	formComponent() {
 		var form = null;
-
 		var curr = this;
+
 		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
 			curr = curr.parent;
 		}

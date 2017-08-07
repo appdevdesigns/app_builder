@@ -1075,6 +1075,18 @@ msgstr "description"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.checkbox
+msgid "Checkbox"
+msgstr "Checkbox"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "Date Picker"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.layout
 msgid "Layout"
 msgstr "Layout"

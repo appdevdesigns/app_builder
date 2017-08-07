@@ -1051,6 +1051,18 @@ msgstr "[th] description"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.checkbox
+msgid "Checkbox"
+msgstr "[th] Checkbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "[th] Date Picker"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.layout
 msgid "Layout"
 msgstr "[th] Layout"

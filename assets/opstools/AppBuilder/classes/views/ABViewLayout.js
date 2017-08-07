@@ -422,7 +422,8 @@ export default class ABViewLayout extends ABView  {
 		var _init = (options) => {
 
 			viewComponents.forEach((view)=>{
-				view.init();
+				if (view.init)
+					view.init();
 			})
 
 			$$(ids.component).adjust();

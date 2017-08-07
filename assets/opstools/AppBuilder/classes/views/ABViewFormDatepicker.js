@@ -1,7 +1,7 @@
 /*
- * ABViewTextbox
+ * ABViewDatepicker
  *
- * An ABViewTextbox defines a UI text box component.
+ * An ABViewDatepicker defines a UI date picker component.
  *
  */
 
@@ -13,18 +13,17 @@ function L(key, altText) {
 }
 
 
-var ABViewFormTextboxPropertyComponentDefaults = {
-	type: 'single'
+var ABViewFormDatepickerPropertyComponentDefaults = {
 }
 
 
-var ABViewFormTextboxDefaults = {
-	key: 'textbox',		// {string} unique key for this view
-	icon: 'i-cursor',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.textbox' // {string} the multilingual label key for the class label
+var ABViewFormDatepickerDefaults = {
+	key: 'datepicker',		// {string} unique key for this view
+	icon: 'calendar',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.datepicker' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewTextbox extends ABViewFormField {
+export default class ABViewDatepicker extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,7 +32,7 @@ export default class ABViewTextbox extends ABViewFormField {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABViewFormTextboxDefaults);
+		super(values, application, parent, ABViewFormDatepickerDefaults);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -57,7 +56,7 @@ export default class ABViewTextbox extends ABViewFormField {
 
 
 	static common() {
-		return ABViewFormTextboxDefaults;
+		return ABViewFormDatepickerDefaults;
 	}
 	///
 	/// Instance Methods
@@ -66,6 +65,7 @@ export default class ABViewTextbox extends ABViewFormField {
 	//
 	//	Editor Related
 	//
+
 
 
 	/** 
@@ -78,18 +78,18 @@ export default class ABViewTextbox extends ABViewFormField {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewFormTextboxEditorComponent';
+		var idBase = 'ABViewFormDatepickerEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var textboxElem = this.component(App).ui;
-		textboxElem.id = ids.component;
+		var datepickerElem = this.component(App).ui;
+		datepickerElem.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textboxElem,
+				datepickerElem,
 				{}
 			]
 		};
@@ -109,55 +109,6 @@ export default class ABViewTextbox extends ABViewFormField {
 	}
 
 
-
-	//
-	// Property Editor
-	// 
-
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
-
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-
-
-		// in addition to the common .label  values, we 
-		// ask for:
-		return commonUI.concat([
-			{
-				name: 'type',
-				view: "radio",
-				label: L('ab.component.textbox.type', '*Type'),
-				vertical: true,
-				options: [
-					{ id: 'single', value: L('ab.component.textbox.single', '*Single line') },
-					{ id: 'multiple', value: L('ab.component.textbox.multiple', '*Multiple lines') },
-					{ id: 'rich', value: L('ab.component.textbox.rich', '*Rich editor') }
-				]
-			}
-		]);
-
-	}
-
-	static propertyEditorPopulate(ids, view) {
-
-		super.propertyEditorPopulate(ids, view);
-
-
-		$$(ids.type).setValue(view.settings.type || ABViewFormTextboxPropertyComponentDefaults.type);
-
-
-	}
-
-	static propertyEditorValues(ids, view) {
-
-		super.propertyEditorValues(ids, view);
-
-
-		view.settings.type = $$(ids.type).getValue();
-
-	}
-
-
-
 	/*
 	 * @component()
 	 * return a UI component based upon this view.
@@ -167,30 +118,28 @@ export default class ABViewTextbox extends ABViewFormField {
 	component(App) {
 
 		var component = super.component(App);
+		var field = this.field();
 
-		var idBase = 'ABViewFormTextbox_' + this.id;
+		var idBase = 'ABViewFormDatepicker_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
-
 		component.ui.id = ids.component;
+		component.ui.view = "datepicker";
 
-		switch (this.settings.type || ABViewFormTextboxPropertyComponentDefaults.type) {
-			case 'single':
-				component.ui.view = "text";
-				break;
-			case 'multiple':
-				component.ui.view = "textarea";
-				component.ui.height = 200;
-				break;
-			case 'rich':
-				webix.codebase = "/js/webix/extras/";
-				component.ui.view = "tinymce-editor";
-				component.ui.height = 200;
-				break;
+		if (field != null) {
+			component.ui.timepicker = field.settings.includeTime;
+
+			// default value
+			if (component.ui.value && !(component.ui.value instanceof Date)) {
+				component.ui.value = new Date(component.ui.value);
+			}
+
+			component.ui.format = (d) => {
+				return field.format(d);
+			};
 		}
-
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {

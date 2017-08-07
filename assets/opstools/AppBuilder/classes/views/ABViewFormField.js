@@ -54,15 +54,24 @@ export default class ABViewFormField extends ABView {
 			field = this.field(),
 			label = '';
 
-		if (form.settings.showLabel == true && field != null) {
-			label = field.label;
-		}
-
 		var _ui = {
 			labelPosition: form.settings.labelPosition,
 			label: label
 		};
 
+		if (field != null) {
+
+			_ui.name = field.columnName;
+
+			// default value
+			var data = {};
+			field.defaultValue(data);
+			_ui.value = data[field.columnName];
+
+			if (form.settings.showLabel == true) {
+				_ui.label = field.label;
+			}
+		}
 
 		return {
 			ui: _ui
@@ -89,7 +98,10 @@ export default class ABViewFormField extends ABView {
 	}
 
 	field() {
-		var object = this.formComponent().object();
+		var form = this.formComponent();
+		if (form == null) return null;
+
+		var object = form.object();
 		if (object == null) return null;
 
 		var field = object.fields((v) => v.id == this.settings.fieldId)[0];

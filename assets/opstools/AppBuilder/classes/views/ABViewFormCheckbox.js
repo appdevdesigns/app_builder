@@ -1,7 +1,7 @@
 /*
- * ABViewTextbox
+ * ABViewCheckbox
  *
- * An ABViewTextbox defines a UI text box component.
+ * An ABViewCheckbox defines a UI check box component.
  *
  */
 
@@ -13,18 +13,17 @@ function L(key, altText) {
 }
 
 
-var ABViewFormTextboxPropertyComponentDefaults = {
-	type: 'single'
+var ABViewFormCheckboxPropertyComponentDefaults = {
 }
 
 
-var ABViewFormTextboxDefaults = {
-	key: 'textbox',		// {string} unique key for this view
-	icon: 'i-cursor',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.textbox' // {string} the multilingual label key for the class label
+var ABViewFormCheckboxDefaults = {
+	key: 'checkbox',		// {string} unique key for this view
+	icon: 'check-square-o',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.checkbox' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewTextbox extends ABViewFormField {
+export default class ABViewCheckbox extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,7 +32,7 @@ export default class ABViewTextbox extends ABViewFormField {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABViewFormTextboxDefaults);
+		super(values, application, parent, ABViewFormCheckboxDefaults);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -57,7 +56,7 @@ export default class ABViewTextbox extends ABViewFormField {
 
 
 	static common() {
-		return ABViewFormTextboxDefaults;
+		return ABViewFormCheckboxDefaults;
 	}
 	///
 	/// Instance Methods
@@ -66,6 +65,7 @@ export default class ABViewTextbox extends ABViewFormField {
 	//
 	//	Editor Related
 	//
+
 
 
 	/** 
@@ -78,18 +78,18 @@ export default class ABViewTextbox extends ABViewFormField {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewFormTextboxEditorComponent';
+		var idBase = 'ABViewFormCheckboxEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var textboxElem = this.component(App).ui;
-		textboxElem.id = ids.component;
+		var checkboxElem = this.component(App).ui;
+		checkboxElem.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textboxElem,
+				checkboxElem,
 				{}
 			]
 		};
@@ -109,55 +109,6 @@ export default class ABViewTextbox extends ABViewFormField {
 	}
 
 
-
-	//
-	// Property Editor
-	// 
-
-	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
-
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-
-
-		// in addition to the common .label  values, we 
-		// ask for:
-		return commonUI.concat([
-			{
-				name: 'type',
-				view: "radio",
-				label: L('ab.component.textbox.type', '*Type'),
-				vertical: true,
-				options: [
-					{ id: 'single', value: L('ab.component.textbox.single', '*Single line') },
-					{ id: 'multiple', value: L('ab.component.textbox.multiple', '*Multiple lines') },
-					{ id: 'rich', value: L('ab.component.textbox.rich', '*Rich editor') }
-				]
-			}
-		]);
-
-	}
-
-	static propertyEditorPopulate(ids, view) {
-
-		super.propertyEditorPopulate(ids, view);
-
-
-		$$(ids.type).setValue(view.settings.type || ABViewFormTextboxPropertyComponentDefaults.type);
-
-
-	}
-
-	static propertyEditorValues(ids, view) {
-
-		super.propertyEditorValues(ids, view);
-
-
-		view.settings.type = $$(ids.type).getValue();
-
-	}
-
-
-
 	/*
 	 * @component()
 	 * return a UI component based upon this view.
@@ -168,28 +119,14 @@ export default class ABViewTextbox extends ABViewFormField {
 
 		var component = super.component(App);
 
-		var idBase = 'ABViewFormTextbox_' + this.id;
+		var idBase = 'ABViewFormCheckbox_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
 
 		component.ui.id = ids.component;
-
-		switch (this.settings.type || ABViewFormTextboxPropertyComponentDefaults.type) {
-			case 'single':
-				component.ui.view = "text";
-				break;
-			case 'multiple':
-				component.ui.view = "textarea";
-				component.ui.height = 200;
-				break;
-			case 'rich':
-				webix.codebase = "/js/webix/extras/";
-				component.ui.view = "tinymce-editor";
-				component.ui.height = 200;
-				break;
-		}
+		component.ui.view = "checkbox";
 
 
 		// make sure each of our child views get .init() called

@@ -26,7 +26,7 @@ var ABFieldDateDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.date.description', '*Pick one from a calendar.'),
 
-	formComponentKey: 'date'
+	formComponentKey: 'datepicker'
 }
 
 var defaultValues = {
@@ -814,13 +814,7 @@ class ABFieldDate extends ABField {
 		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
 		config.format = (d) => {
-			if ((d == '') || (d == null)) {
-				return '';
-			}
-			// convert ISO string -> Date() -> our formatted string
-
-			// pull format from settings.
-			return getDateDisplay(new Date(d), this.settings);
+			return this.format(d);
 		};
 
 
@@ -1001,6 +995,17 @@ class ABFieldDate extends ABField {
 			}
 		}
 
+	}
+
+
+	format(d) {
+		if ((d == '') || (d == null)) {
+			return '';
+		}
+		// convert ISO string -> Date() -> our formatted string
+
+		// pull format from settings.
+		return getDateDisplay(new Date(d), this.settings);
 	}
 
 }

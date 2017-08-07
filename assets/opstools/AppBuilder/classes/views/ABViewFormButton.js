@@ -21,7 +21,7 @@ var ABViewFormButtonPropertyComponentDefaults = {
 
 var ABViewFormButtonDefaults = {
 	key: 'button',		// {string} unique key for this view
-	icon: 'square-o',		// {string} fa-[icon] reference for this view
+	icon: 'square',		// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.button' // {string} the multilingual label key for the class label
 }
 
@@ -200,7 +200,7 @@ export default class ABViewFormButton extends ABView {
 		}
 
 		// cancel button
-		if (this.settings.includeCancel != null ? this.settings.includeCancel : ABViewFormButtonPropertyComponentDefaults.includeCancel) {
+		if (this.settings.includeCancel != null ? JSON.parse(this.settings.includeCancel) : ABViewFormButtonPropertyComponentDefaults.includeCancel) {
 			_ui.cols.push({
 				view: "button",
 				type: "standard",
@@ -214,7 +214,7 @@ export default class ABViewFormButton extends ABView {
 		}
 
 		// save button
-		if (this.settings.includeSave != null ? this.settings.includeSave : ABViewFormButtonPropertyComponentDefaults.includeSave) {
+		if (this.settings.includeSave != null ? JSON.parse(this.settings.includeSave) : ABViewFormButtonPropertyComponentDefaults.includeSave) {
 			_ui.cols.push({
 				view: "button",
 				type: "form",
