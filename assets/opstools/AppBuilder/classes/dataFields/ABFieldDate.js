@@ -29,7 +29,9 @@ var ABFieldDateDefaults = {
 	formComponent: (field) => {
 		return {
 			key: 'datepicker',
-			timepicker: field.settings.includeTime
+			settings: {
+				timepicker: field.settings.includeTime
+			}
 		};
 	}
 }

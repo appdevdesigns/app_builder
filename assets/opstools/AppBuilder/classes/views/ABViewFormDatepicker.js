@@ -63,6 +63,22 @@ export default class ABViewDatepicker extends ABViewFormField {
 	/// Instance Methods
 	///
 
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// convert from "0" => 0
+		this.settings.timepicker = parseInt(this.settings.timepicker);
+
+	}
+
+
 	//
 	//	Editor Related
 	//
