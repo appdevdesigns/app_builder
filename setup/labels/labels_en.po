@@ -1099,6 +1099,12 @@ msgstr "Menu"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.number
+msgid "Number"
+msgstr "Number"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.selectsingle
 msgid "Single Select"
 msgstr "Single Select"

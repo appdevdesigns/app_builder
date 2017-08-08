@@ -1075,6 +1075,12 @@ msgstr "[th] Menu"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.number
+msgid "Number"
+msgstr "[th] Number"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.selectsingle
 msgid "Single Select"
 msgstr "[th] Single Select"
