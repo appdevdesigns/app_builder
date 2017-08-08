@@ -45,12 +45,16 @@ var ABFieldListDefaults = {
 		}
 	},
 
-	formComponentKey: (field) => {
-		if (field.settings.isMultiple) {
-			return 'selectmultiple';
-		} else {
-			return 'selectsingle';
-		}
+	formComponent: (field) => {
+		return {
+			key: (field.settings.isMultiple ? 'selectmultiple' : 'selectsingle'),
+			options: field.settings.options.map(function (opt) {
+				return {
+					id: opt.id,
+					value: opt.text
+				}
+			})
+		};
 	},
 };
 
@@ -347,6 +351,8 @@ class ABFieldList extends ABFieldSelectivity {
 			});
 		}
 
+		this.settings.isMultiple = parseInt(this.settings.isMultiple);
+
 	}
 
 
@@ -431,7 +437,7 @@ class ABFieldList extends ABFieldSelectivity {
 				items: this.settings.options,
 				data: selectedData
 			}, App, row);
-			
+
 			// Listen event when selectivity value updates
 			domNode.addEventListener('change', (e) => {
 

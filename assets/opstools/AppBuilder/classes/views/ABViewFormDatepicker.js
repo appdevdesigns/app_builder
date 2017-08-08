@@ -14,6 +14,7 @@ function L(key, altText) {
 
 
 var ABViewFormDatepickerPropertyComponentDefaults = {
+	timepicker: false
 }
 
 
@@ -129,7 +130,7 @@ export default class ABViewDatepicker extends ABViewFormField {
 		component.ui.view = "datepicker";
 
 		if (field != null) {
-			component.ui.timepicker = field.settings.includeTime;
+			component.ui.timepicker = this.settings.timepicker;
 
 			// default value
 			if (component.ui.value && !(component.ui.value instanceof Date)) {

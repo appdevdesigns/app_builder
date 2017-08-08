@@ -25,7 +25,9 @@ var ABFieldBooleanDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.boolean.description', '*A single checkbox that can be checked or unchecked.'),
 
-	formComponentKey: 'checkbox'
+	formComponent: {
+		key: 'checkbox'
+	}
 }
 
 

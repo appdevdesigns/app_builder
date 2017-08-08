@@ -18,22 +18,27 @@ var ABFieldLongTextDefaults = {
 	key: 'LongText', // unique key to reference this specific DataField
 	type: 'longtext', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
 	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
-	
+
 	// menuName: what gets displayed in the Editor drop list
 	menuName: L('ab.dataField.LongText.menuName', '*Long text'),
-	
+
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.LongText.description', '*Multiple lines of text'),
 
-	formComponentKey: 'textbox'
+	formComponent: {
+		key: 'textbox',
+		settings: {
+			type: 'multiple'
+		}
+	}
 }
 
 
 
 // defaultValues: the keys must match a .name of your elements to set it's default value.
 var defaultValues = {
-    'textDefault': '',
-    'supportMultilingual': 0
+	'textDefault': '',
+	'supportMultilingual': 0
 }
 
 
@@ -63,17 +68,17 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 
 		return [
 			{
-			   view: "text",
-			   name: 'textDefault',
-			   labelWidth: App.config.labelWidthLarge,
-			   placeholder: L('ab.dataField.string.default', '*Default text')
+				view: "text",
+				name: 'textDefault',
+				labelWidth: App.config.labelWidthLarge,
+				placeholder: L('ab.dataField.string.default', '*Default text')
 			},
 			{
-			   view: "checkbox",
-			   name: 'supportMultilingual',
-			   labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
-			   labelWidth: App.config.labelWidthCheckbox,
-			   value: true
+				view: "checkbox",
+				name: 'supportMultilingual',
+				labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
+				labelWidth: App.config.labelWidthCheckbox,
+				value: true
 			}
 		]
 	},
@@ -120,7 +125,7 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 	// @param {obj} ids  the hash of id values for all the current form elements.
 	//					 it should have your elements + the default Header elements:
 	//						.label, .columnName, .fieldDescription, .showIcon
-	init: function(ids) {
+	init: function (ids) {
 		// want to hide the description? :
 		// $$(ids.fieldDescription).hide();
 	}
@@ -133,8 +138,8 @@ var ABFieldLongTextComponent = new ABFieldComponent({
 
 class ABFieldLongText extends ABField {
 
-    constructor(values, object) {
-    	super(values, object, ABFieldLongTextDefaults);
+	constructor(values, object) {
+		super(values, object, ABFieldLongTextDefaults);
 
     	/*
     	{
@@ -145,21 +150,21 @@ class ABFieldLongText extends ABField {
     	}
     	*/
 
-    	// we're responsible for setting up our specific settings:
-    	for (var dv in defaultValues) {
-    		this.settings[dv] = values.settings[dv] || defaultValues[dv];
-    	}
+		// we're responsible for setting up our specific settings:
+		for (var dv in defaultValues) {
+			this.settings[dv] = values.settings[dv] || defaultValues[dv];
+		}
 
-    	// // text to Int:
-    	this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
+		// // text to Int:
+		this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
 
-  	}
+	}
 
 
-  	// return the default values for this DataField
-  	static defaults() {
-  		return ABFieldLongTextDefaults;
-  	}
+	// return the default values for this DataField
+	static defaults() {
+		return ABFieldLongTextDefaults;
+	}
 
 
 
@@ -171,9 +176,9 @@ class ABFieldLongText extends ABField {
 	 * @param {App} App the UI App instance passed around the Components.
 	 * @return {Component}
 	 */
-  	static propertiesComponent(App) {
-  		return ABFieldLongTextComponent.component(App);
-  	}
+	static propertiesComponent(App) {
+		return ABFieldLongTextComponent.component(App);
+	}
 
 
 
@@ -220,16 +225,16 @@ class ABFieldLongText extends ABField {
 	///
 
 	// return the grid column header definition for this instance of ABFieldLongText
-	columnHeader (isObjectWorkspace) {
+	columnHeader(isObjectWorkspace) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'text';  // '[edit_type]'   for your unique situation
-		config.sort   = 'string' // '[sort_type]'   for your unique situation
+		config.sort = 'string' // '[sort_type]'   for your unique situation
 
 		return config;
 	}
-	
-	
+
+
 	/**
 	 * @method defaultValue
 	 * insert a key=>value pair that represent the default value
@@ -246,7 +251,7 @@ class ABFieldLongText extends ABField {
 			}
 		}
 	}
-	
+
 
 }
 

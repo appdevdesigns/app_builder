@@ -26,7 +26,12 @@ var ABFieldDateDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.date.description', '*Pick one from a calendar.'),
 
-	formComponentKey: 'datepicker'
+	formComponent: (field) => {
+		return {
+			key: 'datepicker',
+			timepicker: field.settings.includeTime
+		};
+	}
 }
 
 var defaultValues = {

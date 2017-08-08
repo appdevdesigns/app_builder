@@ -14,7 +14,7 @@ function L(key, altText) {
 
 
 var ABViewFormTextboxPropertyComponentDefaults = {
-	type: 'single'
+	type: 'single' // 'single', 'multiple' or 'rich'
 }
 
 

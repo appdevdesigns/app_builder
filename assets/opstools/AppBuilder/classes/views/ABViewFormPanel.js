@@ -88,7 +88,11 @@ export default class ABViewFormPanel extends ABView {
 							// prevent add duplicate field
 							common.disabled = item.disabled;
 
-							var formComponent = ABViewManager.allViews((v) => v.common().key == item.fieldFormComponentKey())[0];
+							var formComponent;
+							var formComponentInfo = item.fieldFormComponent();
+
+							if (formComponentInfo)
+								formComponent = ABViewManager.allViews((v) => v.common().key == formComponentInfo.key)[0];
 
 							return "#label# <div class='ab-component-form-fields-component-info'> <i class='fa fa-#icon#'></i> #component# </div>"
 								.replace("#label#", item.label)
@@ -180,18 +184,24 @@ export default class ABViewFormPanel extends ABView {
 			if (field == null)
 				return _logic.closeNewFieldPopup();
 
-			var formComponent = ABViewManager.allViews((v) => v.common().key == field.fieldFormComponentKey())[0];
+			var formComponentInfo = field.fieldFormComponent();
+			if (formComponentInfo == null)
+				return _logic.closeNewFieldPopup();
+
+			var formComponent = ABViewManager.allViews((v) => v.common().key == formComponentInfo.key)[0];
 			if (formComponent == null)
 				return _logic.closeNewFieldPopup();
 
 			var FormView = _logic.currentEditObject();
 
+			// set settings to component
+			var settings = formComponentInfo.settings || {};
+			settings.fieldId = field.id;
+
 			FormView._views.push(ABViewManager.newView({
 				key: formComponent.common().key,
 				label: field.label,
-				settings: {
-					fieldId: field.id
-				}
+				settings: settings
 			}, FormView.application, FormView));
 
 			_logic.closeNewFieldPopup();

@@ -132,17 +132,17 @@ module.exports = class ABField {
 	}
 
 	//
-	fieldFormComponentKey() {
-		if (this.defaults.formComponentKey != null) {
-			if (typeof this.defaults.formComponentKey === "function") {
-				return this.defaults.formComponentKey(this);
+	fieldFormComponent() {
+		if (this.defaults.formComponent != null) {
+			if (typeof this.defaults.formComponent === "function") {
+				return this.defaults.formComponent(this);
 			}
 			else {
-				return this.defaults.formComponentKey;
+				return this.defaults.formComponent;
 			}
 		}
 
-		return 1;
+		return null;
 	}
 
 

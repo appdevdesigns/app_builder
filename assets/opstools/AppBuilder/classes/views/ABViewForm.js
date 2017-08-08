@@ -161,7 +161,8 @@ export default class ABViewForm extends ABViewFormPanel {
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 			viewComponents.forEach((view) => {
-				view.init();
+				if (view.init)
+					view.init();
 			})
 
 			$$(ids.component).adjust();

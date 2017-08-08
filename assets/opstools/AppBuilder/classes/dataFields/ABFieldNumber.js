@@ -24,7 +24,10 @@ var ABFieldNumberDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
 
-	formComponentKey: 'number'
+	formComponent: {
+		key: 'number'
+		// TODO : validate
+	}
 }
 
 

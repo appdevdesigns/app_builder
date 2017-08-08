@@ -26,7 +26,12 @@ var ABFieldStringDefaults = {
 	// description: what gets displayed in the Editor description.
 	description: L('ab.dataField.string.description', '*short string value'),
 
-	formComponentKey: 'textbox'
+	formComponent: {
+		key: 'textbox',
+		settings: {
+			type: 'single'
+		}
+	}
 }
 
 

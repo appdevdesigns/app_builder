@@ -14,7 +14,7 @@ function L(key, altText) {
 
 
 var ABViewSelectSinglePropertyComponentDefaults = {
-	type: 'richselect'
+	type: 'richselect' // 'richselect' or 'radio'
 }
 
 
@@ -168,35 +168,37 @@ export default class ABViewSelectSingle extends ABViewFormField {
 	 */
 	component(App) {
 
+		var component = super.component(App);
+		var field = this.field();
+
 		var idBase = 'ABViewFormSelectSingle_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
 
-		var _ui = {
-			view: this.settings.type || ABViewSelectSinglePropertyComponentDefaults.type
-		};
+		component.ui.view = this.settings.type || ABViewSelectSinglePropertyComponentDefaults.type;
 
-		_ui.options = this.settings.options || [];
+		component.ui.options = field.settings.options.map((opt) => {
+			return {
+				id: opt.id,
+				value: opt.text
+			};
+		})
 
 		// radio element could not be empty options
-		if (_ui.view == 'radio' && _ui.options.length < 1) {
-			_ui.options.push({
+		if (component.ui.view == 'radio' && component.ui.options.length < 1) {
+			component.ui.options.push({
 				id: 'temp',
 				value: 'Option'
 			});
 		}
 
 		// make sure each of our child views get .init() called
-		var _init = (options) => {
+		component.init = (options) => {
 		}
 
-
-		return {
-			ui: _ui,
-			init: _init
-		}
+		return component;
 	}
 
 
