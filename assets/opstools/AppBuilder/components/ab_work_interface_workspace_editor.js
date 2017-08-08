@@ -142,9 +142,10 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 //     label: labels.component.editorPlaceholder
                 // },
                 {
-                    view:'template',
+                    // view:'template',
+                    view: 'spacer',
                     id:ids.editArea,
-                    template:'[edit Area]'
+                    // template:'[edit Area]'
                 }
             ]
         };
@@ -216,8 +217,11 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
                 // load the component's editor in our editArea
                 var editorComponent = view.editorComponent(App, CurrentViewMode);
-                editorComponent.ui.id = ids.editArea;
-                webix.ui(editorComponent.ui, $$(ids.editArea));
+                // editorComponent.ui.id = ids.editArea;
+                // webix.ui(editorComponent.ui, $$(ids.editArea));
+                $$(ids.editArea).$view.innerHTML = '';
+                editorComponent.ui.container = $$(ids.editArea).$view;
+                webix.ui(editorComponent.ui);
                 editorComponent.init();
 
             },
