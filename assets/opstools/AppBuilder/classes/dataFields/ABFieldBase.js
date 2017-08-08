@@ -184,7 +184,8 @@ module.exports = class ABField {
 	 */
 	fromValues (values) {
 
- 		this.id = values.id;			// NOTE: only exists after .save()
+		if (!this.id)
+ 			this.id = values.id;			// NOTE: only exists after .save()
     	this.key = values.key || this.fieldKey();
     	this.icon = values.icon || this.fieldIcon();
 
