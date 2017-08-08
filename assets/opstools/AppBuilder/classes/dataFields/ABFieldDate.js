@@ -198,6 +198,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 						webix.ui({
 							view: 'datepicker',
 							label: "Default",
+							name: 'defaultDate',
 							id: ids.default,
 							timepicker: newVal ? true : false,
 							disabled: $$(ids.currentToDefault).getValue() == true
