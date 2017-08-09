@@ -143,11 +143,17 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 // },
                 {
                     // view:'template',
-                    view: 'spacer',
+                    view: 'layout',
                     id:ids.editArea,
+                    rows: []
                     // template:'[edit Area]'
                 }
-            ]
+            ],
+            on: {
+                onViewResize: function() {
+                    _logic.onViewResize();
+                }
+            }
         };
         
 
@@ -214,14 +220,16 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarMap).parse(view.allParents());
                 $$(ids.toolbarMap).refresh();
 
+                // clear edit area
+                $$(ids.editArea).getChildViews().forEach((childView) => {
+                    $$(ids.editArea).removeView(childView);
+                });
 
                 // load the component's editor in our editArea
                 var editorComponent = view.editorComponent(App, CurrentViewMode);
                 // editorComponent.ui.id = ids.editArea;
                 // webix.ui(editorComponent.ui, $$(ids.editArea));
-                $$(ids.editArea).$view.innerHTML = '';
-                editorComponent.ui.container = $$(ids.editArea).$view;
-                webix.ui(editorComponent.ui);
+                $$(ids.editArea).addView(editorComponent.ui);
                 editorComponent.init();
 
             },
@@ -238,6 +246,10 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
             viewUpdate: function () {
                 _logic.viewLoad(CurrentView);
+            },
+
+            onViewResize: function() {
+                $$(ids.editArea).resizeChildren();
             }
         };
         
@@ -274,6 +286,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
         // Interface methods for parent component:
         this.show = _logic.show;
         this.viewLoad = _logic.viewLoad;
-        
+
     }
 }
