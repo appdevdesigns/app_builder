@@ -10,6 +10,7 @@ import ABViewPage from "./views/ABViewPage"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
 import ABViewMenu from "./views/ABViewMenu"
+import ABViewGrid from "./views/ABViewGrid"
 
 import ABViewForm from "./views/ABViewForm"
 import ABViewButton from "./views/ABViewButton"
@@ -25,6 +26,7 @@ Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
 Views[ABViewMenu.common().key] = ABViewMenu;
+Views[ABViewGrid.common().key] = ABViewGrid;
 
 Views[ABViewForm.common().key] = ABViewForm;
 Views[ABViewButton.common().key] = ABViewButton;
