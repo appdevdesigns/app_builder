@@ -22,7 +22,12 @@ var ABFieldNumberDefaults = {
 	menuName: L('ab.dataField.number.menuName', '*Number'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.number.description', '*A Float or Integer Value')
+	description: L('ab.dataField.number.description', '*A Float or Integer Value'),
+
+	formComponent: {
+		key: 'number'
+		// TODO : validate
+	}
 }
 
 

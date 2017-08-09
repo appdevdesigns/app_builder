@@ -272,10 +272,6 @@ export default class ABView  extends EventEmitter {
     *
     * return an flatten array of all the ABViews parents
     *
-    * @method allParents()
-    *
-    * return an flatten array of all the ABViews parents
-    *
     * @return {array}      array of ABViews
     */
     allParents() {
@@ -292,6 +288,22 @@ export default class ABView  extends EventEmitter {
         }
 
         return parents;
+	}
+
+
+	rootPage() {
+		var rootPage;
+		var curView = this;
+
+		while (!curView.isRoot() && curView.parent) {
+			curView = curView.parent;
+		}
+
+		if (curView.isRoot() && curView.key == 'page') {
+			rootPage = curView;
+		}
+
+		return rootPage;
 	}
 
 
@@ -993,9 +1005,9 @@ export default class ABView  extends EventEmitter {
 	componentList() {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = [ 'view', 'page' ,
+		var viewsToIgnore = [ 'view', 'page' , 'formpanel',
 		// not allowed Form's widgets
-		'button', 'textbox', 'selectsingle'
+		'button', 'checkbox', 'datepicker', 'textbox', 'number', 'selectsingle'
 		];
 
 		var allComponents = ABViewManager.allViews();

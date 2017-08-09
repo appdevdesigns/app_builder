@@ -997,6 +997,18 @@ msgstr "#appName# ซ้ำกับชื่อแอปพลิเคชั�
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.button
+msgid "Button"
+msgstr "[th] Button"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.form
+msgid "Form"
+msgstr "[th] Form"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.label
 msgid "Label"
 msgstr "[th] Label"
@@ -1036,6 +1048,48 @@ msgstr "[th] title"
 #. key: ab.component.label.formatting.description
 msgid "description"
 msgstr "[th] description"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.checkbox
+msgid "Checkbox"
+msgstr "[th] Checkbox"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.datepicker
+msgid "Date Picker"
+msgstr "[th] Date Picker"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.layout
+msgid "Layout"
+msgstr "[th] Layout"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.menu
+msgid "Menu"
+msgstr "[th] Menu"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.number
+msgid "Number"
+msgstr "[th] Number"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.selectsingle
+msgid "Single Select"
+msgstr "[th] Single Select"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.textbox
+msgid "Textbox"
+msgstr "[th] Textbox"
 
 #. path: app_builder
 #. code: th

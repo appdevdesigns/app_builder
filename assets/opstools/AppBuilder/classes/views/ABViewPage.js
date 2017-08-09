@@ -19,7 +19,7 @@ function L(key, altText) {
 
 var ABViewDefaults = {
 	key: 'page',		// unique key identifier for this ABView
-	icon: 'cube',		// icon reference: (without 'fa-' )
+	icon: 'file',		// icon reference: (without 'fa-' )
 
 }
 

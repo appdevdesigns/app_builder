@@ -23,7 +23,9 @@ var ABFieldImageDefaults = {
 	menuName : L('ab.dataField.image.menuName', '*Image Attachment'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.image.description', '*Attach an image to this object.')
+	description: L('ab.dataField.image.description', '*Attach an image to this object.'),
+
+	formComponentKey: 'image'
 }
 
 
@@ -491,7 +493,10 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			uploader.addDropZone(webixContainer.$view);
 
 			// open file upload dialog when's click
-			parentContainer.addEventListener("click", () => {
+			parentContainer.addEventListener("click", (e) => {
+				if (e.target.className.indexOf('delete-image') > -1) {
+					this.deleteImage(e);
+				}
 			});
 
 		}	
@@ -508,10 +513,44 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	*/
 	customEdit(row, App, node) {
 
-		var idBase = App.unique(this.idCustomContainer(row)),
-			idUploader = idBase + '-uploader';
+		
+		if (this.deleteImage == true) {
+			// remove the property because it is only needed to prevent the file dialog from showing
+			delete this.deleteImage;
+			
+			// Ask the user if they really want to delete the photo
+			OP.Dialog.Confirm({
+				title: "",
+				message: L('ab.dataField.image.removeImageDescription', '*Are you sure you want to remove this photo?'),
+				callback: (result) => {
+					var confirmDelete = result ? 1: 0;
+					if (confirmDelete) {
+						// update just this value on our current object.model
+						var values = {};
+						values[this.columnName] = ""; // removing the reference to the image here
+						this.object.model().update(row.id, values)
+						.then(()=>{
+							// update the client side data object as well so other data changes won't cause this save to be reverted
+							$$(node).updateItem(row.id, values);
+						})
+						.catch((err)=>{
 
-		$$(idUploader).fileDialog({ rowid: row.id });
+							node.classList.add('webix_invalid');
+							node.classList.add('webix_invalid_cell');
+						
+							OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
+							console.error(err);
+						})
+					}
+				}
+			})
+			
+		} else {
+			var idBase = App.unique(this.idCustomContainer(row)),
+				idUploader = idBase + '-uploader';
+
+			$$(idUploader).fileDialog({ rowid: row.id });
+		}
 
 		return false;
 	}
@@ -536,6 +575,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		return [
 			'<div class="image-data-field-icon" style="text-align: center; height: 100%; position: relative; '+iconDisplay+'"><i class="fa fa-picture-o fa-2x" style="opacity: 0.6; position: absolute; top: 50%; margin-top: -15px; right: 50%; margin-right: -10px;"></i></div>',
 			'<div class="image-data-field-image" style="'+imageDisplay+' width:100%; height:100%; background-repeat: no-repeat; background-position: center center; background-size: cover; '+imageURL+'"></div>',
+			'<a style="'+imageDisplay+'" class="ab-delete-photo" href="javascript:void(0);"><i class="fa fa-times delete-image"></i></a>'
 		].join('');
 
 	}
@@ -551,6 +591,10 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+uuid+"')";
 
 		}
+	}
+	
+	deleteImage(e) {
+		this.deleteImage = true;
 	}
 
 

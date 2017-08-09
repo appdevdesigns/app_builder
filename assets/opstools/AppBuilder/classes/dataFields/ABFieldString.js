@@ -24,7 +24,14 @@ var ABFieldStringDefaults = {
 	menuName : L('ab.dataField.string.menuName', '*Single line text'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.string.description', '*short string value')
+	description: L('ab.dataField.string.description', '*short string value'),
+
+	formComponent: {
+		key: 'textbox',
+		settings: {
+			type: 'single'
+		}
+	}
 }
 
 

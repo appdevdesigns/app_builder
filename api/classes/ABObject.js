@@ -100,7 +100,18 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 	dbTableName() {
-		return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+		if (!this.isImported) {
+			return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
+		}
+		else {
+			var modelName = this.name.toLowerCase();
+			if (!sails.models[modelName]) {
+				throw new Error(`Imported object model not found: ${modelName}`);
+			}
+			else {
+				return sails.models[modelName].waterline.schema[modelName].tableName;
+			}
+		}
 	}
 
 
@@ -175,6 +186,12 @@ module.exports = class ABObject extends ABObjectBase {
 		return new Promise(
 			(resolve, reject) => {
 				sails.log.silly('.... .migrateDropTable()  before knex:');
+				
+				if (this.isImported) {
+					sails.log.silly('.... aborted drop of imported table');
+					reject(new Error('Cannot drop an imported object'));
+					return;
+				}
 
 				//BEFORE we just go drop the table, let's give each of our
 				// fields the chance to perform any clean up actions related

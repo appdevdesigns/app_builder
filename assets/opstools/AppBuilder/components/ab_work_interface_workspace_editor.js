@@ -67,7 +67,9 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             scroll: false,
                             padding: 0,
                             template: function(item) {
-                                return '<i class="fa fa-chevron-right" aria-hidden="true"></i> ' + item.label;
+                                return '<i class="fa fa-chevron-right" aria-hidden="true"></i> ' + 
+                                    '<i class="fa fa-#icon#" aria-hidden="true"></i> '.replace('#icon#', item.icon) +
+                                    item.label;
                             },
                             on: {
                                 onItemClick: function(id, e, node){
@@ -140,9 +142,10 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 //     label: labels.component.editorPlaceholder
                 // },
                 {
-                    view:'template',
+                    // view:'template',
+                    view: 'spacer',
                     id:ids.editArea,
-                    template:'[edit Area]'
+                    // template:'[edit Area]'
                 }
             ]
         };
@@ -214,8 +217,11 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
                 // load the component's editor in our editArea
                 var editorComponent = view.editorComponent(App, CurrentViewMode);
-                editorComponent.ui.id = ids.editArea;
-                webix.ui(editorComponent.ui, $$(ids.editArea));
+                // editorComponent.ui.id = ids.editArea;
+                // webix.ui(editorComponent.ui, $$(ids.editArea));
+                $$(ids.editArea).$view.innerHTML = '';
+                editorComponent.ui.container = $$(ids.editArea).$view;
+                webix.ui(editorComponent.ui);
                 editorComponent.init();
 
             },

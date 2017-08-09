@@ -27,7 +27,13 @@ var ABFieldConnectDefaults = {
 
 	isSortable: false,
 	isFilterable: false,
-	useAsLabel: false
+	useAsLabel: false,
+
+	formComponent: (field) => {
+		return {
+			key: (field.settings.linkType == 'one' ? 'selectsingle' : 'selectmultiple')
+		};
+	}
 };
 
 var defaultValues = {

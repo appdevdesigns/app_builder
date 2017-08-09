@@ -24,7 +24,16 @@ var ABFieldDateDefaults = {
 	menuName: L('ab.dataField.date.menuName', '*Date'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.date.description', '*Pick one from a calendar.')
+	description: L('ab.dataField.date.description', '*Pick one from a calendar.'),
+
+	formComponent: (field) => {
+		return {
+			key: 'datepicker',
+			settings: {
+				timepicker: field.settings.includeTime
+			}
+		};
+	}
 }
 
 var defaultValues = {
@@ -196,6 +205,7 @@ var ABFieldDateComponent = new ABFieldComponent({
 						webix.ui({
 							view: 'datepicker',
 							label: "Default",
+							name: 'defaultDate',
 							id: ids.default,
 							timepicker: newVal ? true : false,
 							disabled: $$(ids.currentToDefault).getValue() == true
@@ -812,13 +822,7 @@ class ABFieldDate extends ABField {
 		// config.map = '(date)#'+this.columnName+'#';   // so don't use this.
 
 		config.format = (d) => {
-			if ((d == '') || (d == null)) {
-				return '';
-			}
-			// convert ISO string -> Date() -> our formatted string
-
-			// pull format from settings.
-			return getDateDisplay(new Date(d), this.settings);
+			return this.format(d);
 		};
 
 
@@ -999,6 +1003,17 @@ class ABFieldDate extends ABField {
 			}
 		}
 
+	}
+
+
+	format(d) {
+		if ((d == '') || (d == null)) {
+			return '';
+		}
+		// convert ISO string -> Date() -> our formatted string
+
+		// pull format from settings.
+		return getDateDisplay(new Date(d), this.settings);
 	}
 
 }

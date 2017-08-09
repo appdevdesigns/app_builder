@@ -20,7 +20,7 @@ var ABViewMenuPropertyComponentDefaults = {
 
 var ABMenuDefaults = {
 	key: 'menu',		// {string} unique key for this view
-	icon: 'th-list',		// {string} fa-[icon] reference for this view
+	icon: 'th-large',		// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.menu' // {string} the multilingual label key for the class label
 }
 
@@ -146,8 +146,9 @@ export default class ABViewMenu extends ABView {
 					return ("<div class='ab-page-list-item'>" +
 						"{common.icon()} " +
 
-						// Hide checkbox at own page
-						(item.id == _logic.currentEditObject().parent.id ?
+						// TODO : Hide checkbox at own page
+						// (item.id == _logic.currentEditObject().parent.id ?
+						(false ?
 							'<input type="checkbox" class="webix_tree_checkbox" disabled="disabled">' :
 							"{common.checkbox()} ") +
 
@@ -177,15 +178,15 @@ export default class ABViewMenu extends ABView {
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 
 		// Set available pages to tree view
-		var pageParent = view.parent,
-			pageChildren = pageParent.views((v) => v.key == "page"),
-			pageItems = [],
-			parentItem = {
-				id: pageParent.id,
-				label: pageParent.label,
-				data: []
-			};
-		pageItems.push(parentItem);
+		// 	parentItem = {
+		// 		id: pageParent.id,
+		// 		label: pageParent.label,
+		// 		data: []
+		// 	};
+		var pageItems = [];
+		pageItems.push(view.rootPage());
+
+		// TODO : get children pages
 
 		$$(ids.pages).clearAll();
 		$$(ids.pages).parse(pageItems);

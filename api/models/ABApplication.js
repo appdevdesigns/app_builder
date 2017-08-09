@@ -124,7 +124,7 @@ module.exports = {
          // if we have a proper ABApplication.id given:
         if ((updatedRecord)
             && (updatedRecord.id)) {
-console.log('... update application: ', updatedRecord);
+// console.log('... update application: ', updatedRecord);
             AppBuilder.updateApplication(updatedRecord.id);
         }
 

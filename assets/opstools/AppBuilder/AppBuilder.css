@@ -97,6 +97,10 @@
 .webix_column>div.webix_row_select {
 	background-color: #3498db !important;
 }
+.webix_list_item.disabled {
+	background-color: #eee;
+	color: #aaa;
+}
 
 /* Webix message */
 .webix_success {
@@ -151,6 +155,11 @@
 .ab-component-view-edit-field .webix_segment_N {
 	color: #3498db;
 	background: #fff;
+}
+
+/* Webix counter */
+.webix_el_counter .webix_inp_counter_value {
+	width: 220px;
 }
 
 /* Add new columns popup */
@@ -606,6 +615,14 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 }
 
 /* Form component */
+.ab-component-form-fields-component-info {
+	background-color: #ddd;
+	border-radius: 8px;
+	color: #666;
+	float: right;
+    padding: 0 6px;
+    font-size: 12px;
+}
 .ab-standard-button button, .ab-standard-button button:hover, .ab-standard-button button:active, .ab-standard-button .webix_icon_btn {
 	background: transparent !important;
 	border-color: transparent !important;
@@ -738,7 +755,29 @@ div.webix_item_tab {
 .list-data-values, .connect-data-values {
 	position: relative;
 }
-
+.ab-image-holder .webix_template {
+	position: relative;
+}
+.ab-delete-photo {
+	position: absolute; 
+	top: 5px; 
+	right: 5px;
+	background: red; 
+	color: white; 
+	opacity: 1;
+	line-height: 25px;
+	opacity: 0.8;
+}
+.ab-delete-photo i {
+	padding: 5px;
+}
+.ab-delete-photo:focus {
+	color: white;
+}
+a.ab-delete-photo:hover {
+	color: white;
+	opacity: 1;
+}
 /* Legend Overrides */
 .webix_view legend {
 	margin: 0 0 -30px -10px;

@@ -131,6 +131,20 @@ module.exports = class ABField {
 		return 1;
 	}
 
+	//
+	fieldFormComponent() {
+		if (this.defaults.formComponent != null) {
+			if (typeof this.defaults.formComponent === "function") {
+				return this.defaults.formComponent(this);
+			}
+			else {
+				return this.defaults.formComponent;
+			}
+		}
+
+		return null;
+	}
+
 
 
 	///
@@ -170,7 +184,8 @@ module.exports = class ABField {
 	 */
 	fromValues (values) {
 
- 		this.id = values.id;			// NOTE: only exists after .save()
+		if (!this.id)
+ 			this.id = values.id;			// NOTE: only exists after .save()
     	this.key = values.key || this.fieldKey();
     	this.icon = values.icon || this.fieldIcon();
 

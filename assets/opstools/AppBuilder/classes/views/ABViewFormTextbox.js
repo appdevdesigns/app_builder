@@ -5,7 +5,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewFormField from "./ABViewFormField"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -13,18 +13,18 @@ function L(key, altText) {
 }
 
 
-var ABViewTextboxPropertyComponentDefaults = {
-	type: 'single'
+var ABViewFormTextboxPropertyComponentDefaults = {
+	type: 'single' // 'single', 'multiple' or 'rich'
 }
 
 
-var ABTextboxDefaults = {
+var ABViewFormTextboxDefaults = {
 	key: 'textbox',		// {string} unique key for this view
 	icon: 'i-cursor',		// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.textbox' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewTextbox extends ABView {
+export default class ABViewTextbox extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,7 +33,7 @@ export default class ABViewTextbox extends ABView {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABTextboxDefaults);
+		super(values, application, parent, ABViewFormTextboxDefaults);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -57,7 +57,7 @@ export default class ABViewTextbox extends ABView {
 
 
 	static common() {
-		return ABTextboxDefaults;
+		return ABViewFormTextboxDefaults;
 	}
 	///
 	/// Instance Methods
@@ -78,28 +78,14 @@ export default class ABViewTextbox extends ABView {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewTextboxEditorComponent';
+		var idBase = 'ABViewFormTextboxEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var textboxElem = {
-			id: ids.component
-		};
-
-		switch (this.settings.type) {
-			case 'single':
-				textboxElem.view = "text";
-				break;
-			case 'multiple':
-				textboxElem.view = "textarea";
-				break;
-			case 'rich':
-				webix.codebase = "/js/webix/extras/";
-				textboxElem.view = "tinymce-editor";
-				break;
-		}
+		var textboxElem = this.component(App).ui;
+		textboxElem.id = ids.component;
 
 		var _ui = {
 			rows: [
@@ -140,7 +126,6 @@ export default class ABViewTextbox extends ABView {
 				name: 'type',
 				view: "radio",
 				label: L('ab.component.textbox.type', '*Type'),
-				value: ABViewTextboxPropertyComponentDefaults.type,
 				vertical: true,
 				options: [
 					{ id: 'single', value: L('ab.component.textbox.single', '*Single line') },
@@ -157,7 +142,7 @@ export default class ABViewTextbox extends ABView {
 		super.propertyEditorPopulate(ids, view);
 
 
-		$$(ids.type).setValue(view.settings.type);
+		$$(ids.type).setValue(view.settings.type || ABViewFormTextboxPropertyComponentDefaults.type);
 
 
 	}
@@ -181,25 +166,38 @@ export default class ABViewTextbox extends ABView {
 	 */
 	component(App) {
 
-		var idBase = 'ABTextboxLabel_' + this.id;
+		var component = super.component(App);
+
+		var idBase = 'ABViewFormTextbox_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
 
-		// an ABTextboxLabel is a simple Label
-		var _ui = {
-		};
+		component.ui.id = ids.component;
+
+		switch (this.settings.type || ABViewFormTextboxPropertyComponentDefaults.type) {
+			case 'single':
+				component.ui.view = "text";
+				break;
+			case 'multiple':
+				component.ui.view = "textarea";
+				component.ui.height = 200;
+				break;
+			case 'rich':
+				webix.codebase = "/js/webix/extras/";
+				component.ui.view = "tinymce-editor";
+				component.ui.height = 200;
+				break;
+		}
+
 
 		// make sure each of our child views get .init() called
-		var _init = (options) => {
+		component.init = (options) => {
 		}
 
 
-		return {
-			ui: _ui,
-			init: _init
-		}
+		return component;
 	}
 
 
