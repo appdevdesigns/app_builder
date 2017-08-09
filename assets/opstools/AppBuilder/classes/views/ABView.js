@@ -659,7 +659,11 @@ export default class ABView  extends EventEmitter {
 						var droppedViewObj = $$(_ui.id).getItem(newID);
 						var templateID = droppedViewObj.id; // NOTE: this is the ID used when the template is generated.
 						droppedViewObj.id = null;
-						droppedViewObj.save();
+						droppedViewObj.save()
+							.then(() => {
+								// change id of list's item
+								$$(_ui.id).data.changeId(newID, droppedViewObj.id);
+							});
 
 
 						// if we are in preview mode, then render this View's 
