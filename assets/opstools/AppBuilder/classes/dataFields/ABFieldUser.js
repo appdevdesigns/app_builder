@@ -46,11 +46,15 @@ var ABFieldUserDefaults = {
 
 	formComponentKey: (field) => {
 		if (field.settings.isMultiple) {
-			return 'selectmultiple';
+			return {
+				key: 'fieldcustom'
+			};
 		} else {
-			return 'selectsingle';
+			return {
+				key: 'selectsingle'
+			}
 		}
-	}, 
+	},
 }
 
 var defaultValues = {

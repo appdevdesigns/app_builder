@@ -1,7 +1,6 @@
 /*
- * ABViewFormDatepicker
+ * ABViewFormCustom
  *
- * An ABViewFormDatepicker defines a UI date picker component.
  *
  */
 
@@ -13,18 +12,17 @@ function L(key, altText) {
 }
 
 
-var ABViewFormDatepickerPropertyComponentDefaults = {
-	timepicker: false
+var ABViewFormCustomPropertyComponentDefaults = {
 }
 
 
-var ABViewFormDatepickerDefaults = {
-	key: 'datepicker',		// {string} unique key for this view
-	icon: 'calendar',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.datepicker' // {string} the multilingual label key for the class label
+var ABViewFormCustomDefaults = {
+	key: 'fieldcustom',		// {string} unique key for this view
+	icon: 'object-ungroup',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.custom' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewFormDatepicker extends ABViewFormField {
+export default class ABViewFormCustom extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,7 +31,7 @@ export default class ABViewFormDatepicker extends ABViewFormField {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABViewFormDatepickerDefaults);
+		super(values, application, parent, ABViewFormCustomDefaults);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -57,27 +55,11 @@ export default class ABViewFormDatepicker extends ABViewFormField {
 
 
 	static common() {
-		return ABViewFormDatepickerDefaults;
+		return ABViewFormCustomDefaults;
 	}
 	///
 	/// Instance Methods
 	///
-
-	/**
-	 * @method fromValues()
-	 *
-	 * initialze this object with the given set of values.
-	 * @param {obj} values
-	 */
-	fromValues(values) {
-
-		super.fromValues(values);
-
-		// convert from "0" => 0
-		this.settings.timepicker = parseInt(this.settings.timepicker);
-
-	}
-
 
 	//
 	//	Editor Related
@@ -95,18 +77,18 @@ export default class ABViewFormDatepicker extends ABViewFormField {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewFormDatepickerEditorComponent';
+		var idBase = 'ABViewFormCustomEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var datepickerElem = this.component(App).ui;
-		datepickerElem.id = ids.component;
+		var templateElem = this.component(App).ui;
+		templateElem.id = ids.component;
 
 		var _ui = {
 			rows: [
-				datepickerElem,
+				templateElem,
 				{}
 			]
 		};
@@ -137,29 +119,28 @@ export default class ABViewFormDatepicker extends ABViewFormField {
 		var component = super.component(App);
 		var field = this.field();
 
-		var idBase = 'ABViewFormDatepicker_' + this.id;
+		var idBase = 'ABViewFormCustom_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
+		var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
+			.replace(/#width#/g, 100)
+			.replace(/#label#/g, field.label)
+			.replace(/#template#/g, field.columnHeader().template);
+
 		component.ui.id = ids.component;
-		component.ui.view = "datepicker";
-
-		if (field != null) {
-			component.ui.timepicker = this.settings.timepicker;
-
-			// default value
-			if (component.ui.value && !(component.ui.value instanceof Date)) {
-				component.ui.value = new Date(component.ui.value);
-			}
-
-			component.ui.format = (d) => {
-				return field.format(d);
-			};
-		}
+		component.ui.view = "template";
+		component.ui.minHeight = 45;
+		component.ui.borderless = true;
+		component.ui.template = template;
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
+			var rowData = {},
+				node = $$(ids.component).$view;
+
+			field.customDisplay(rowData, App, node);
 		}
 
 

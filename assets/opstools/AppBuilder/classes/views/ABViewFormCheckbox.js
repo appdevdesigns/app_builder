@@ -1,7 +1,7 @@
 /*
- * ABViewCheckbox
+ * ABViewFormCheckbox
  *
- * An ABViewCheckbox defines a UI check box component.
+ * An ABViewFormCheckbox defines a UI check box component.
  *
  */
 
@@ -23,7 +23,7 @@ var ABViewFormCheckboxDefaults = {
 	labelKey: 'ab.components.checkbox' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewCheckbox extends ABViewFormField {
+export default class ABViewFormCheckbox extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values

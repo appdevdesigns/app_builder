@@ -31,7 +31,7 @@ var ABFieldConnectDefaults = {
 
 	formComponent: (field) => {
 		return {
-			key: (field.settings.linkType == 'one' ? 'selectsingle' : 'selectmultiple')
+			key: 'fieldcustom'
 		};
 	}
 };
