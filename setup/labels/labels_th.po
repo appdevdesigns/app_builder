@@ -1093,6 +1093,12 @@ msgstr "[th] Single Select"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.tab
+msgid "Tab"
+msgstr "[th] Tab"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.textbox
 msgid "Textbox"
 msgstr "[th] Textbox"

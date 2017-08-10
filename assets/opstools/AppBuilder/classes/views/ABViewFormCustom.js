@@ -18,7 +18,7 @@ var ABViewFormCustomPropertyComponentDefaults = {
 
 var ABViewFormCustomDefaults = {
 	key: 'fieldcustom',		// {string} unique key for this view
-	icon: 'object-ungroup',		// {string} fa-[icon] reference for this view
+	icon: 'object-group',		// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.custom' // {string} the multilingual label key for the class label
 }
 
