@@ -22,7 +22,8 @@ var ABViewFormDefaults = {
 
 var ABViewFormPropertyComponentDefaults = {
 	showLabel: true,
-	labelPosition: 'left'
+	labelPosition: 'left',
+	labelWidth: 80
 }
 
 export default class ABViewForm extends ABViewFormPanel {
@@ -55,6 +56,21 @@ export default class ABViewForm extends ABViewFormPanel {
 	///
 	/// Instance Methods
 	///
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// convert from "0" => 0
+		this.settings.labelWidth = parseInt(this.settings.labelWidth);
+
+	}
 
 	//
 	// Property Editor
@@ -89,7 +105,13 @@ export default class ABViewForm extends ABViewFormPanel {
 						value: L('ab.components.form.top', "*Top")
 					}
 				]
+			},
+			{
+				name: 'labelWidth',
+				view: 'counter',
+				label: L('ab.components.form.labelWidth', "*Label Width"),
 			}
+
 		]);
 
 	}
@@ -110,6 +132,7 @@ export default class ABViewForm extends ABViewFormPanel {
 		$$(ids.object).setValue(view.settings.object);
 		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewFormPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
+		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -119,6 +142,7 @@ export default class ABViewForm extends ABViewFormPanel {
 		view.settings.object = $$(ids.object).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
+		view.settings.labelWidth = $$(ids.labelWidth).getValue();
 
 	}
 

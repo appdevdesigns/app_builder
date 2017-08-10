@@ -118,20 +118,28 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 		var component = super.component(App);
 		var field = this.field();
+		var form = this.formComponent();
 
 		var idBase = 'ABViewFormCustom_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
-		var template = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#template#"
-			.replace(/#width#/g, 100)
+		var templateLabel;
+		if (form.settings.labelPosition == 'top')
+			templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
+		else
+			templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
+
+		var template = (templateLabel + "#template#")
+			.replace(/#width#/g, form.settings.labelWidth)
 			.replace(/#label#/g, field.label)
 			.replace(/#template#/g, field.columnHeader().template);
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
 		component.ui.minHeight = 45;
+		component.ui.height = 60;
 		component.ui.borderless = true;
 		component.ui.template = template;
 
