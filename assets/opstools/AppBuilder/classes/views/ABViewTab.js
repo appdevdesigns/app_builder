@@ -142,46 +142,49 @@ export default class ABViewTab extends ABView {
 
 		var tabElem = this.component(App).ui;
 		tabElem.id = ids.component;
-		tabElem.cells.forEach((tabView) => {
-			var tab = this.views(v => v.id == tabView.id)[0];
+		if (tabElem.cells && tabElem.cells.length > 0) {
+			tabElem.cells.forEach((tabView) => {
+				var tab = this.views(v => v.id == tabView.id)[0];
 
-			if (mode == 'block') {
+				if (mode == 'block') {
 
+					tabView.body = {
+						view: 'list',
+						data: tab.views(),
+						autoheight: true,
+						template: (tab, common) => {
+							return _logic.templateBlock(tab, common);
+						}
+					};
+
+				}
+
+				// Add actions buttons - Edit , Delete
 				tabView.body = {
-					view: 'list',
-					data: tab.views(),
-					autoheight: true,
-					template: (tab, common) => {
-						return _logic.templateBlock(tab, common);
-					}
-				};
-
-			}
-
-			// Add actions buttons - Edit , Delete
-			tabView.body = {
-				rows: [
-					tabView.body,
-					{
-						view: 'template',
-						type: 'clean',
-						template: '<div class="ab-component-tools ab-layout-view">' +
-						'<i class="fa fa-trash ab-component-remove"></i>' +
-						'<i class="fa fa-edit ab-component-edit"></i>' +
-						'</div>',
-						onClick: {
-							"ab-component-edit": function (e, id, trg) {
-								_logic.tabEdit(e, tabView.id, trg);
-							},
-							"ab-component-remove": function (e, id, trg) {
-								_logic.tabRemove(e, tabView.id, trg);
+					rows: [
+						tabView.body,
+						{
+							view: 'template',
+							type: 'clean',
+							template: '<div class="ab-component-tools ab-layout-view">' +
+							'<i class="fa fa-trash ab-component-remove"></i>' +
+							'<i class="fa fa-edit ab-component-edit"></i>' +
+							'</div>',
+							onClick: {
+								"ab-component-edit": function (e, id, trg) {
+									_logic.tabEdit(e, tabView.id, trg);
+								},
+								"ab-component-remove": function (e, id, trg) {
+									_logic.tabRemove(e, tabView.id, trg);
+								}
 							}
 						}
-					}
-				]
-			}
+					]
+				}
 
-		});
+			});
+
+		}
 
 		var _ui = {
 			rows: [
