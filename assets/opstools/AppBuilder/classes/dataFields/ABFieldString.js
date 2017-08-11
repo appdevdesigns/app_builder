@@ -7,7 +7,7 @@
 
 import ABField from "./ABField"
 import ABFieldComponent from "./ABFieldComponent"
-
+import ABViewFormText from "../views/ABViewFormText"
 
 
 function L(key, altText) {
@@ -257,6 +257,54 @@ class ABFieldString extends ABField {
 		return this.settings.supportMultilingual == 1;
 	}
 
+
+
+	/*
+	 * @funciton formComponent
+	 * returns a drag and droppable component that is used on the UI
+	 * interface builder to place form components related to this ABField.
+	 * 
+	 * an ABField defines which form component is used to edit it's contents.
+	 * However, what is returned here, needs to be able to create an instance of
+	 * the component that will be stored with the ABViewForm.
+	 */
+	formComponent() {
+
+		// NOTE: what is being returned here needs to mimic an ABView CLASS.
+		// primarily the .common() and .newInstance() methods.
+		
+		return {
+			
+
+			// .common() is used to create the display in the list
+			common:()=>{
+				return {
+					label: this.object.label+'.'+this.label, // 'ABField.label',
+					icon:  'square'
+				}
+			},
+
+
+			// .newInstance() is used to create the view instance when the component
+			// 		is dropped onto the ABView list.
+			newInstance:(application, parent) => {
+
+				var ABFieldPlaceholder = ABViewFormText.newInstance( application, parent);
+				ABFieldPlaceholder.formLabel = this.label;
+
+				ABFieldPlaceholder.fieldPointer(this.urlPointer());
+
+				ABFieldPlaceholder.columnName = this.columnName;
+
+
+				// NOTE: if we add properties like .maxLength to the string field,
+				// then we should pass that configuration onto the Text input as well.
+
+				return ABFieldPlaceholder;			
+			}
+
+		}
+	}
 
 
 }

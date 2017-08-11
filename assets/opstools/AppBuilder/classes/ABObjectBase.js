@@ -143,7 +143,6 @@ module.exports =  class ABObjectBase {
 
 
 
-
 	/**
 	 * @method fields()
 	 *
@@ -343,6 +342,30 @@ module.exports =  class ABObjectBase {
 
 		return validator;
 	}
+
+
+
+	/**
+	 * @method urlPointer()
+	 * return the url pointer that references this object.  This url pointer
+	 * should be able to be used by this.application.urlResolve() to return 
+	 * this object.
+	 * @return {string} 
+	 */
+	urlPointer() {
+		return this.application.urlObject()+this.id;
+	}
+
+
+
+	/**
+	 * @method urlField
+	 * return a string pointer to this object's fields
+	 * @return {string}
+	 */
+	 urlField() {
+	 	return this.urlPointer() +'/_fields/'
+	 }
 
 
 }

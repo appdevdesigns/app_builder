@@ -161,13 +161,17 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 
                 // store the current view to return here on [back] button.
                 if (CurrentView) {
-                    PreviousViews.push(CurrentView);
+
+                    // don't keep storing the same view over and over:
+                    if (view.id != CurrentView.id) {
+                        PreviousViews.push(CurrentView);
 
 // TODO: make this a setting?
-                    // limit the number of views we store in our list.
-                    // ## lets not be memory hogs.
-                    if (PreviousViews.length > 50) {
-                        PreviousViews.shift();
+                        // limit the number of views we store in our list.
+                        // ## lets not be memory hogs.
+                        if (PreviousViews.length > 50) {
+                            PreviousViews.shift();
+                        }
                     }
                 }
                 
@@ -189,7 +193,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 editorComponent.ui.id = ids.editArea;
                 webix.ui(editorComponent.ui, $$(ids.editArea));
                 editorComponent.init();
-
 
             },
 

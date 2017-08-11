@@ -62,7 +62,7 @@ export default class ABView  extends EventEmitter {
     	// default value for our label
   		if (this.label == '?label?') {
   			if (this.parent) {
-  				this.label = this.parent.label+'.label';
+  				this.label = this.parent.label+'.'+this.defaults.key;
   			} 
   		}
   	}
@@ -71,6 +71,21 @@ export default class ABView  extends EventEmitter {
   	static common() {
   		return ABViewDefaults;
   	}
+
+
+  	/**
+  	 * @method newInstance()
+  	 * return a new instance of this ABView.  
+  	 * @param {ABApplication} application  	: the root ABApplication this view is under
+  	 * @param {ABView/ABApplication} parent	: the parent object of this ABView.
+  	 * @return {ABView} 
+  	 */
+  	static newInstance(application, parent) {
+  		
+  		// return a new instance from ABViewManager:
+  		return ABViewManager.newView({ key: this.common().key }, application, parent);
+  	}
+
 
   	viewKey() {
   		return this.defaults.key;
@@ -373,11 +388,6 @@ export default class ABView  extends EventEmitter {
 			view: App.unique(idBase+'_view')
 		}
 
-//// TODO:
-// explore activeContent option:
-// - forEach child=> add ui.activeContent[child.id] = child.ui
-// - template(): <div>{common.[child.id]}</div>
-
 
 		var _ui = {
 			view: 'list',
@@ -547,13 +557,31 @@ export default class ABView  extends EventEmitter {
 			externalData:  (data, id, oldData) => {
 
 				// if oldData is an instance of our ABView object,
-				// then we have already made the instance and should return that:
+				// then we have already made the instance and should return that:			
 				if (oldData instanceof ABView) {
 					return oldData;
 				}
 
 
-				// otherwise this is our 1st time through:
+				//// otherwise this is our 1st time through:
+
+
+				// this is a form component that should be initialized in 
+				// conjunction with a Datafield
+				if (oldData.newInstance) {
+console.warn('... .newInstance()');
+					var View = oldData.newInstance(this.application, this);
+					return View;
+				}
+
+
+
+// Yeah, this is the OLD way. If you keep creating ABViews that 
+// don't offer .newInstance() then you'll be buying the team 
+// lunch on Tuesdays ...
+
+console.error('... Depreciated! manually calling ABViewManager.newView()');
+				// this is a standard Component that is initialized normally
 				// find the key to make a new instance from:
 				var key;
 
@@ -660,6 +688,13 @@ export default class ABView  extends EventEmitter {
 			template:function(obj, common) {
 
 				var template;
+
+				// handle the empty placeholder
+				if (obj.id == 'del_me') {
+					return _templatePlaceholder.replace('#objID#', obj.id);
+				}
+
+
 				if (mode == 'preview'){
 					return _template.replace('#objID#', obj.id);
 				} else {
@@ -714,6 +749,10 @@ export default class ABView  extends EventEmitter {
 
 				if (!view) return false;
 
+				// yeah, if the empty placeholder fires an [edit] event,
+				// then ignore it.
+				if (view.id == 'del_me') return false;
+
 				// NOTE: let webix finish this onClick event, before
 				// calling .populateInterfaceWorkspace() which will replace
 				// the interface elements with the edited view.  (apparently
@@ -748,6 +787,12 @@ export default class ABView  extends EventEmitter {
 					'<i class="fa fa-trash ab-component-remove"></i>',
 					'<i class="fa fa-edit ab-component-edit"></i>',
 				'</div>',
+			'</div>'
+		].join('');
+
+		var _templatePlaceholder = [
+			'<div class="ab-component-in-page">',
+				'<div id="'+ids.view+'_#objID#" ></div>',
 			'</div>'
 		].join('');
 
@@ -912,13 +957,22 @@ export default class ABView  extends EventEmitter {
 		// an ABView is a collection of rows:
 		var _ui = {
 			id: ids.component,
-			autoheight:true,
+			// autoheight:true,
 			rows:[]
 		}
 		// insert each of our sub views into our rows:
 		viewComponents.forEach((view)=>{
 			_ui.rows.push(view.ui);
 		})
+
+
+		// if this form is empty, then force a minimal row height
+		// so the component isn't completely hidden on the screen.
+		// (important in the editor so we don't loose the ability to edit the 
+		// component)
+		if (_ui.rows.length == 0) {
+			_ui.height = 30;
+		}
 
 
 		// make sure each of our child views get .init() called
@@ -948,13 +1002,9 @@ export default class ABView  extends EventEmitter {
 		var viewsToIgnore = [ 'view', 'page' ];
 
 		var allComponents = ABViewManager.allViews();
-		var allowedComponents = [];
-
-		allComponents.forEach((c)=>{
-			if (viewsToIgnore.indexOf(c.common().key) == -1) {
-				allowedComponents.push(c);
-			}
-		})
+		var allowedComponents = allComponents.filter((c)=>{
+			return (viewsToIgnore.indexOf(c.common().key) == -1)
+		});
 
 		return allowedComponents;
 

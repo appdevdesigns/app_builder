@@ -85,8 +85,18 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
 
                 // if this component is an ABView
                 if (component.common) {
-                    var label = component.common().labelKey;
-                    label = L(label, label);
+
+                    // see if a .label field is present 
+                    // note: components from form fields have .label
+                    // values.
+                    var label = component.common().label;
+
+                    // if not, then pull the label from the .labelKey
+                    if (!label) {
+                        label = component.common().labelKey;
+                        label = L(label, label);
+                    }
+                    
 
                     context.html = "<div style='width:"+context.from.$width+"px;' class='ab-component-item-drag'>"
                         + "<i class='fa fa-{0}'></i> ".replace("{0}", component.common().icon)
@@ -120,8 +130,14 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                 // if this is one of our ABViews:
                 if (obj.common) {
 
-                    var label = obj.common().labelKey
-                    label = L(label, label);
+                    // see if a .label field is present
+                    var label = obj.common().label;
+
+                    // if not, then pull a multilingual field:
+                    if (!label) {
+                        label = obj.common().labelKey;
+                        label = L(label, label);
+                    }
 
                     return "<i class='fa fa-#icon#' aria-hidden='true'></i> #name#"
                         .replace(/#icon#/g, obj.common().icon)

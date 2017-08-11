@@ -34,13 +34,13 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 		// setup the common labels for our AppBuilder Application.
 		App.labels = {
 			add: L('ab.common.add', "*Add"),
-			create: L('ab.common.create', "*Create"),
+			create:   L('ab.common.create', "*Create"),
 			"delete": L('ab.common.delete', "*Delete"),
 			edit: 	  L('ab.common.edit', "*Edit"),
 			"export": L('ab.common.export', "*Export"),
 			formName: L('ab.common.form.name', "*Name"),
 			"import": L('ab.common.import', "*Import"),
-			rename: L('ab.common.rename', "*Rename"),
+			rename:   L('ab.common.rename', "*Rename"),
 			ok: 	  L('ab.common.ok', "*Ok"),
 
 			cancel:   L('ab.common.cancel', "*Cancel"),
@@ -48,6 +48,8 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 
 			yes: 	  L('ab.common.yes', "*Yes"),
 			no: 	  L('ab.common.no', "*No"),
+
+			none: 	  L('ab.common.none', "*None"),
 
 			createErrorMessage:   L('ab.common.create.error', "*System could not create <b>{0}</b>."),
 			createSuccessMessage: L('ab.common.create.success', "*<b>{0}</b> is created."),
