@@ -37,22 +37,6 @@ export default class ABViewTab extends ABView {
 
 		super(values, application, parent, ABViewTabDefaults);
 
-
-		// 	{
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
-
 	}
 
 
@@ -85,35 +69,51 @@ export default class ABViewTab extends ABView {
 
 		var idBase = 'ABViewTabEditorComponent';
 		var ids = {
-			component: App.unique(idBase + '_component')
-		};
-
-		var tabElem = this.component(App).ui;
-		tabElem.id = ids.component;
-		tabElem.tabbar = {
-			close: true,
-			on: {
-				onBeforeTabClose: (id, e) => {
-					_logic.tabRemove(id);
-
-					return false;
-				}
-			}
-		};
-
-
-		var _ui = {
-			rows: [
-				tabElem,
-				{}
-			]
+			component: App.unique(idBase + '_component'),
+			view: App.unique(idBase + '_view')
 		};
 
 		var _init = (options) => {
 		}
 
 		var _logic = {
-			tabRemove: (id) => {
+
+			templateBlock: (tab) => {
+				var _template = [
+					'<div class="ab-component-in-page">',
+					'<div id="' + ids.view + '_#objID#" >',
+					'<i class="fa fa-#icon#"></i>',
+					' #label#',
+					'</div>',
+					'</div>'
+				].join('');
+
+				return _template
+					.replace('#objID#', tab.id)
+					.replace('#icon#', tab.icon)
+					.replace('#label#', tab.label);
+			},
+
+			tabEdit: (e, id, trg) => {
+
+				var view = this.views(function (v) { return v.id == id; })[0];
+
+				if (!view) return false;
+
+				// NOTE: let webix finish this onClick event, before
+				// calling .populateInterfaceWorkspace() which will replace
+				// the interface elements with the edited view.  (apparently
+				// that causes errors.)
+				setTimeout(() => {
+					App.actions.populateInterfaceWorkspace(view);
+				}, 50);
+
+				e.preventDefault();
+				return false;
+
+			},
+
+			tabRemove: (e, id, trg) => {
 
 				var deletedView = this.views((v) => v.id == id)[0];
 				if (deletedView) {
@@ -126,15 +126,69 @@ export default class ABViewTab extends ABView {
 								this.viewDestroy(deletedView);
 
 								// remove tab option
-								$$(ids.component).getTabbar().removeOption(id);
+								$$(ids.component).removeView(id);
 							}
 						}
 					});
 
 				}
 
+				e.preventDefault();
+				return false;
+
 			}
-		}
+		};
+
+
+		var tabElem = this.component(App).ui;
+		tabElem.id = ids.component;
+		tabElem.cells.forEach((tabView) => {
+			var tab = this.views(v => v.id == tabView.id)[0];
+
+			if (mode == 'block') {
+
+				tabView.body = {
+					view: 'list',
+					data: tab.views(),
+					autoheight: true,
+					template: (tab, common) => {
+						return _logic.templateBlock(tab, common);
+					}
+				};
+
+			}
+
+			// Add actions buttons - Edit , Delete
+			tabView.body = {
+				rows: [
+					tabView.body,
+					{
+						view: 'template',
+						type: 'clean',
+						template: '<div class="ab-component-tools ab-layout-view">' +
+						'<i class="fa fa-trash ab-component-remove"></i>' +
+						'<i class="fa fa-edit ab-component-edit"></i>' +
+						'</div>',
+						onClick: {
+							"ab-component-edit": function (e, id, trg) {
+								_logic.tabEdit(e, tabView.id, trg);
+							},
+							"ab-component-remove": function (e, id, trg) {
+								_logic.tabRemove(e, tabView.id, trg);
+							}
+						}
+					}
+				]
+			}
+
+		});
+
+		var _ui = {
+			rows: [
+				tabElem,
+				{}
+			]
+		};
 
 
 		return {
@@ -179,7 +233,7 @@ export default class ABViewTab extends ABView {
 		// ask for:
 		return commonUI.concat([
 
-			// [button] : add column
+			// [button] : add tab
 			{
 				view: 'button',
 				value: L('ab.component.tab.addTab', '*Add Tab'),
@@ -205,24 +259,6 @@ export default class ABViewTab extends ABView {
 	}
 
 
-	// static propertyEditorPopulate(ids, view) {
-
-	// 	super.propertyEditorPopulate(ids, view);
-
-	// 	$$(ids.text).setValue(view.text);
-	// 	$$(ids.format).setValue(view.settings.format);
-	// }
-
-
-	// static propertyEditorValues(ids, view) {
-
-	// 	super.propertyEditorValues(ids, view);
-
-	// 	view.text  = $$(ids.text).getValue();
-	// 	view.settings.format = $$(ids.format).getValue();
-	// }
-
-
 	/*
 	 * @component()
 	 * return a UI component based upon this view.
@@ -231,6 +267,15 @@ export default class ABViewTab extends ABView {
 	 */
 	component(App) {
 
+		// get a UI component for each of our child views
+		var viewComponents = [];
+		this.views().forEach((v) => {
+			viewComponents.push({
+				view: v,
+				component: v.component(App)
+			});
+		})
+
 		var idBase = 'ABViewTab_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -238,16 +283,20 @@ export default class ABViewTab extends ABView {
 
 		var _ui = {};
 
-		var tabs = this.views() || [];
-
-		if (tabs.length > 0) {
+		if (viewComponents.length > 0) {
 			_ui = {
 				view: 'tabview',
 				id: ids.component,
-				cells: tabs.map((t) => {
-					t.header = t.label;
+				cells: viewComponents.map((v) => {
 
-					return t;
+					var tabUi = v.component.ui;
+					tabUi.id = v.view.id;
+
+					return {
+						id: v.view.id,
+						header: v.view.label,
+						body: tabUi
+					};
 				})
 			}
 		}
