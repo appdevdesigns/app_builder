@@ -15,6 +15,7 @@ function L(key, altText) {
 
 
 var ABViewTabPropertyComponentDefaults = {
+	height: 300
 }
 
 
@@ -52,6 +53,22 @@ export default class ABViewTab extends ABView {
 	/// Instance Methods
 	///
 
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// convert from "0" => 0
+		this.settings.height = parseInt(this.settings.height);
+
+	}
+
+
 	//
 	//	Editor Related
 	//
@@ -73,8 +90,67 @@ export default class ABViewTab extends ABView {
 			view: App.unique(idBase + '_view')
 		};
 
-		var _init = (options) => {
+
+		var tabElem = this.component(App).ui;
+		tabElem.id = ids.component;
+
+		// Display list of items in 'block' mode
+		if (tabElem.cells && tabElem.cells.length > 0 && mode == 'block') {
+			tabElem.cells.forEach((tabView) => {
+
+				var tab = this.views(v => v.id == tabView.id)[0];
+
+				tabView.body = {
+					id: tab.id,
+					view: 'list',
+					data: tab.views(),
+					scroll: 'y',
+					select: false,
+					multiselect: false,
+					template: (tabItem, common) => {
+						return _logic.templateBlock(tabItem, common);
+					}
+				};
+
+			});
+
 		}
+
+		var _ui = {
+			rows: [
+				tabElem,
+				{}
+			]
+		};
+
+
+		var _init = (options) => {
+
+			// Add actions buttons - Edit , Delete
+			webix.ui({
+				container: $$(ids.component).getMultiview().$view,
+				view: 'template',
+				type: 'clean',
+				autoheight: false,
+				borderless: true,
+				height: 1,
+				width: 0,
+				template: '<div class="ab-component-tools ab-layout-view">' +
+				'<i class="fa fa-trash ab-component-remove"></i>' +
+				'<i class="fa fa-edit ab-component-edit"></i>' +
+				'</div>',
+				onClick: {
+					"ab-component-edit": function (e, id, trg) {
+						_logic.tabEdit(e, id, trg);
+					},
+					"ab-component-remove": function (e, id, trg) {
+						_logic.tabRemove(e, id, trg);
+					}
+				}
+			});
+
+		}
+
 
 		var _logic = {
 
@@ -94,9 +170,10 @@ export default class ABViewTab extends ABView {
 					.replace('#label#', tab.label);
 			},
 
-			tabEdit: (e, id, trg) => {
+			tabEdit: (e, nodeId, trg) => {
 
-				var view = this.views(function (v) { return v.id == id; })[0];
+				var tabId = $$(ids.component).getValue();
+				var view = this.views(function (v) { return v.id == tabId; })[0];
 
 				if (!view) return false;
 
@@ -113,9 +190,10 @@ export default class ABViewTab extends ABView {
 
 			},
 
-			tabRemove: (e, id, trg) => {
+			tabRemove: (e, nodeId, trg) => {
 
-				var deletedView = this.views((v) => v.id == id)[0];
+				var tabId = $$(ids.component).getValue();
+				var deletedView = this.views((v) => v.id == tabId)[0];
 				if (deletedView) {
 
 					OP.Dialog.Confirm({
@@ -126,7 +204,7 @@ export default class ABViewTab extends ABView {
 								this.viewDestroy(deletedView);
 
 								// remove tab option
-								$$(ids.component).removeView(id);
+								$$(ids.component).removeView(tabId);
 							}
 						}
 					});
@@ -137,60 +215,6 @@ export default class ABViewTab extends ABView {
 				return false;
 
 			}
-		};
-
-
-		var tabElem = this.component(App).ui;
-		tabElem.id = ids.component;
-		if (tabElem.cells && tabElem.cells.length > 0) {
-			tabElem.cells.forEach((tabView) => {
-				var tab = this.views(v => v.id == tabView.id)[0];
-
-				if (mode == 'block') {
-
-					tabView.body = {
-						view: 'list',
-						data: tab.views(),
-						autoheight: true,
-						template: (tab, common) => {
-							return _logic.templateBlock(tab, common);
-						}
-					};
-
-				}
-
-				// Add actions buttons - Edit , Delete
-				tabView.body = {
-					rows: [
-						tabView.body,
-						{
-							view: 'template',
-							type: 'clean',
-							template: '<div class="ab-component-tools ab-layout-view">' +
-							'<i class="fa fa-trash ab-component-remove"></i>' +
-							'<i class="fa fa-edit ab-component-edit"></i>' +
-							'</div>',
-							onClick: {
-								"ab-component-edit": function (e, id, trg) {
-									_logic.tabEdit(e, tabView.id, trg);
-								},
-								"ab-component-remove": function (e, id, trg) {
-									_logic.tabRemove(e, tabView.id, trg);
-								}
-							}
-						}
-					]
-				}
-
-			});
-
-		}
-
-		var _ui = {
-			rows: [
-				tabElem,
-				{}
-			]
 		};
 
 
@@ -235,7 +259,11 @@ export default class ABViewTab extends ABView {
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
-
+			{
+				view: 'counter',
+				name: 'height',
+				label: L('ab.component.tab.height', '*Height')
+			},
 			// [button] : add tab
 			{
 				view: 'button',
@@ -244,8 +272,25 @@ export default class ABViewTab extends ABView {
 			}
 
 		]);
-
 	}
+
+
+	static propertyEditorPopulate(ids, view) {
+
+		super.propertyEditorPopulate(ids, view);
+
+		$$(ids.height).setValue(view.settings.height || ABViewTabPropertyComponentDefaults.height);
+	}
+
+
+	static propertyEditorValues(ids, view) {
+
+		super.propertyEditorValues(ids, view);
+
+		view.settings.height = $$(ids.height).getValue();
+	}
+
+
 
 
 	addTab() {
@@ -290,10 +335,17 @@ export default class ABViewTab extends ABView {
 			_ui = {
 				view: 'tabview',
 				id: ids.component,
+				multiview: {
+					height: this.settings.height
+				},
 				cells: viewComponents.map((v) => {
 
-					var tabUi = v.component.ui;
-					tabUi.id = v.view.id;
+					// able to 'scroll' in tab view
+					var tabUi = {
+						id: v.view.id,
+						view: 'scrollview',
+						body: v.component.ui
+					};
 
 					return {
 						id: v.view.id,

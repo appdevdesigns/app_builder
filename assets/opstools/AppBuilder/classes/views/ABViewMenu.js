@@ -235,7 +235,6 @@ export default class ABViewMenu extends ABView {
 			id: ids.component,
 			view: "menu",
 			autoheight: true,
-			minWidth: 500,
 			datatype: "json",
 			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
 			data: this.settings.pages || []

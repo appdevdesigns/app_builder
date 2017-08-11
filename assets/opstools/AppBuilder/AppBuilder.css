@@ -157,11 +157,6 @@
 	background: #fff;
 }
 
-/* Webix counter */
-.webix_el_counter .webix_inp_counter_value {
-	width: 220px;
-}
-
 /* Add new columns popup */
 .ab-add-fields-popup {
 	overflow-y: auto;
