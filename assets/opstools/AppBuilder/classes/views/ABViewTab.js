@@ -93,24 +93,46 @@ export default class ABViewTab extends ABView {
 
 		var tabElem = this.component(App).ui;
 		tabElem.id = ids.component;
+		tabElem.tabbar = {
+			on: {
+				onItemClick: (id, e) => {
+
+					// click at 'edit' icon
+					if (e.target.classList.contains('rename')) {
+
+						var tab = this.views(v => v.id == $$(ids.component).getValue())[0];
+
+						ABViewTab.showPopup(tab);
+
+					}
+
+				}
+			}
+		};
 
 		// Display list of items in 'block' mode
-		if (tabElem.cells && tabElem.cells.length > 0 && mode == 'block') {
+		if (tabElem.cells && tabElem.cells.length > 0) {
 			tabElem.cells.forEach((tabView) => {
 
-				var tab = this.views(v => v.id == tabView.id)[0];
+				tabView.header += ' <i class="fa fa-pencil-square-o rename"></i>';
 
-				tabView.body = {
-					id: tab.id,
-					view: 'list',
-					data: tab.views(),
-					scroll: 'y',
-					select: false,
-					multiselect: false,
-					template: (tabItem, common) => {
-						return _logic.templateBlock(tabItem, common);
-					}
-				};
+				if (mode == 'block') {
+
+					var tab = this.views(v => v.id == tabView.id)[0];
+
+					tabView.body = {
+						id: tab.id,
+						view: 'list',
+						data: tab.views(),
+						scroll: 'y',
+						select: false,
+						multiselect: false,
+						template: (tabItem, common) => {
+							return _logic.templateBlock(tabItem, common);
+						}
+					};
+
+				}
 
 			});
 
@@ -231,30 +253,147 @@ export default class ABViewTab extends ABView {
 	// Property Editor
 	// 
 
-	static addTab(ids, _logic) {
+	static addTab(ids, _logic, tabName) {
 
-		// get current instance and .addColumn()
+		// get current instance and .addTab()
 		var LayoutView = _logic.currentEditObject();
-		LayoutView.addTab();
+		LayoutView.addTab(tabName);
 
 		// trigger a save()
 		this.propertyEditorSave(ids, LayoutView);
 	}
 
 
+	static editTab(ids, _logic, tabId, tabName) {
+
+		// get current instance and rename tab
+		var LayoutView = _logic.currentEditObject();
+		var editTab = LayoutView.views(v => v.id == tabId)[0];
+
+		if (editTab) {
+			editTab.label = tabName;
+
+			// trigger a save()
+			this.propertyEditorSave(ids, LayoutView);
+		}
+
+	}
+
+
+	static showPopup(tab) {
+
+		var popup = $$("ab-component-tab-add-new-tab-popup");
+		var form = $$("ab-component-tab-add-new-tab-form");
+		var button = $$("ab-component-tab-save-button");
+
+		if (popup) {
+
+			// Edit tab
+			if (tab) {
+				form.setValues({
+					id: tab.id,
+					label: tab.label
+				});
+
+				popup.getHead().setHTML(L('ab.component.tab.editTab', '*Edit Tab'));
+				button.setValue(L('ab.common.edit', "*Edit"));
+			}
+			// Add new tab
+			else {
+				form.setValues({
+					id: null,
+					label: ""
+				});
+
+				popup.getHead().setHTML(L('ab.component.tab.addTab', '*Add Tab'));
+				button.setValue(L('ab.common.add', "*Add"));
+			}
+
+			button.refresh();
+
+			// show 'add new field' popup
+			popup.show();
+
+		}
+
+	}
+
+	static closePopup() {
+
+		var popup = $$("ab-component-tab-add-new-tab-popup");
+
+		if (popup)
+			popup.hide();
+
+	}
+
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
+		// create 'add new tab' popup
+		webix.ui({
+			id: 'ab-component-tab-add-new-tab-popup',
+			view: "window",
+			height: 150,
+			width: 300,
+			modal: true,
+			position: "center",
+			head: ' ',
+			body: {
+				id: 'ab-component-tab-add-new-tab-form',
+				view: 'form',
+				elements: [
+					{
+						view: 'text',
+						name: 'label',
+						id: 'ab-component-tab-name',
+						label: L('ab.component.tab.label', '*Label'),
+						required: true
+					},
+					// action buttons
+					{
+						cols: [
+							{ fillspace: true },
+							{
+								view: "button",
+								value: L('ab.common.cancel', "*Cancel"),
+								css: "ab-cancel-button",
+								autowidth: true,
+								click: () => {
+									this.closePopup();
+								}
+							},
+							{
+								id: 'ab-component-tab-save-button',
+								view: "button",
+								value: L('ab.component.tab.addTab', '*Add Tab'),
+								autowidth: true,
+								type: "form",
+								click: () => {
 
-		// if I don't create my own propertyEditorComponent, then I need to 
-		// create the onClick handler that will cause the current view instance
-		// to create a vew sub view/ column
-		if (!_logic.onClick) {
-			_logic.onClick = () => {
-				this.addTab(ids, _logic)
+									var form = $$('ab-component-tab-add-new-tab-form');
+									if (form.validate()) {
+
+										var vals = form.getValues();
+
+										if (vals.id == null)
+											this.addTab(ids, _logic, vals.label);
+										else
+											this.editTab(ids, _logic, vals.id, vals.label);
+
+										this.closePopup();
+
+									}
+
+								}
+							}
+						]
+					}
+				]
 			}
-		}
+
+		}).hide();
 
 		// in addition to the common .label  values, we 
 		// ask for:
@@ -268,7 +407,9 @@ export default class ABViewTab extends ABView {
 			{
 				view: 'button',
 				value: L('ab.component.tab.addTab', '*Add Tab'),
-				click: _logic.onClick
+				click: () => {
+					this.showPopup();
+				}
 			}
 
 		]);
@@ -293,11 +434,7 @@ export default class ABViewTab extends ABView {
 
 
 
-	addTab() {
-
-		var tabName = "#name# #index#"
-			.replace('#name#', L('ab.components.tab', '*Tab'))
-			.replace('#index#', this._views.length + 1);
+	addTab(tabName) {
 
 		this._views.push(ABViewManager.newView({
 			key: ABView.common().key,
