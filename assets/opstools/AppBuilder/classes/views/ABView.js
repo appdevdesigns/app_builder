@@ -367,6 +367,30 @@ export default class ABView  extends EventEmitter {
 
 
 
+	/**
+	 * @method viewReorder()
+	 *
+	 * persist the current ABView in our list of ._views.
+	 *
+	 * @param {ABView} object
+	 * @param {to} int - to Position
+	 * @return {Promise}
+	 */
+	viewReorder( view, to ) {
+
+		var from = this._views.findIndex((v) => v.id == view.id);
+		if (from < 0) return;
+
+		// move drag item to 'to' position
+		this._views.splice(to, 0, this._views.splice(from, 1)[0]);
+
+		// save to database
+		this.save();
+
+	}
+
+
+
 
 
 
@@ -696,16 +720,10 @@ export default class ABView  extends EventEmitter {
 			onAfterDrop: (context, ev) => {
 				if (context.from.config.id === _ui.id) {
 
-					var from = this._views.findIndex((v) => v.id == context.start);
-					if (from < 0) return;
-
+					var viewId = context.start;
 					var to = context.index;
 
-					// move drag item to 'to' position
-					this._views.splice(to, 0, this._views.splice(from, 1)[0]);
-
-					// save to database
-					this.save();
+					this.viewReorder( { id: viewId }, to );
 				}
 			},
 
