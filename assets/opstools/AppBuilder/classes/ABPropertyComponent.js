@@ -90,8 +90,7 @@ export default class ABPropertyComponent {
 		var _ui = {
 			view:'form',
 			id: ids.component,
-			autoheight:true,
-			borderless:true,
+			scroll: true,
 			elements: [
 				// {
 				// 	view: "text",
@@ -358,6 +357,9 @@ export default class ABPropertyComponent {
 
 
 		_ui.elements = elements;
+
+		// add empty element to fill layout space 
+		_ui.elements.push({});
 
 		for (var r in this.rules) {
 			_ui.rules[r] = this.rules[r];

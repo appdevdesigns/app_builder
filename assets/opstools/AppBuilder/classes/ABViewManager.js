@@ -10,8 +10,9 @@ import ABViewPage from "./views/ABViewPage"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
 import ABViewForm from "./views/ABViewForm"
-
 import ABViewFormText from "./views/ABViewFormText"
+import ABViewMenu from "./views/ABViewMenu"
+
 
 /* 
  * Views
@@ -23,8 +24,9 @@ Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
 Views[ABViewForm.common().key] = ABViewForm;
-
 Views[ABViewFormText.common().key] = ABViewFormText;
+Views[ABViewMenu.common().key] = ABViewMenu;
+
 
 
 export default  {
@@ -62,7 +64,7 @@ export default  {
 			return new Views[values.key](values, application, parent);
 		} else {
 			var err = new Error('unknown view key');
-			OP.Error.log('Unknown view key ['+values.key+']:', {error:err, values:value, application: application });
+			OP.Error.log('Unknown view key ['+values.key+']:', {error:err, values:values, application: application });
 			return null;
 		}
 

@@ -225,6 +225,9 @@ export default class ABModel {
 					skip:start
 				}
 
+				if (DT.showProgress)
+					DT.showProgress({ type: "icon" });
+
 				this.findAll(cond)
 				.then((data) => {
 					data.data.forEach((item) => {
@@ -235,6 +238,10 @@ export default class ABModel {
 						}
 					});
 					DT.parse(data);
+
+					if (DT.hideProgress)
+						DT.hideProgress();
+
 				})
 			  
 				return false;	// <-- prevent the default "onDataRequest"
@@ -251,6 +258,9 @@ export default class ABModel {
 		if (this._limit != null) cond.limit = this._limit;
 		if (this._skip  != null) cond.skip  = this._skip;
 
+		if (DT.showProgress)
+			DT.showProgress({ type: "icon" });
+
 		this.findAll(cond)
 		.then((data)=>{
 			data.data.forEach((item) => {
@@ -261,6 +271,10 @@ export default class ABModel {
 				}
 			});
 			DT.parse(data);
+
+			if (DT.hideProgress)
+				DT.hideProgress();
+
 		})
 		.catch((err)=>{
 console.error('!!!!!', err);

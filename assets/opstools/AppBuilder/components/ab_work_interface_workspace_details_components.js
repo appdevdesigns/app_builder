@@ -18,6 +18,8 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             component: {
                 // formHeader: L('ab.application.form.header', "*Application Info"),
                 components: L('ab.interface.components', '*Components'),
+                componentsTipText: L('ab.interface.componentsTip', '*Drag components into Layout/Preview pane.'),
+                componentsTipTitle: L('ab.interface.componentsTitle', '*Tip'),
                 noComponents: L('ab.interface.noComponents', '*No Components')
             }
         };
@@ -34,21 +36,35 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            scroll: true,
+            // scroll: true,
             rows:[
                 {
                     view: 'toolbar',
                     // id: self.componentIds.componentToolbar,
-                    cols: [{
-                        view: 'label',
-                        // id: self.componentIds.componentToolbarHeader,
-                        label: labels.component.components
-                    }]
+                    css: 'ab-data-toolbar',
+                    cols: [
+                        {
+                            view: 'label',
+                            // id: self.componentIds.componentToolbarHeader,
+                            label: labels.component.components
+                        },
+                        {
+                            view: "icon", 
+                            icon: "info-circle",
+                            tooltip: labels.component.componentsTipText,
+                            on: {
+                                onItemClick: function() {
+                                    _logic.infoAlert();
+                                }
+                            }
+                        }
+                    ]
                 },
                 {
                     id: ids.list,
                     view: 'list',
                     drag: 'source',
+                    css: 'ab_interface_draggable',
                     // autoheight:true,
                     template: function (obj, common) {
                         return _logic.template(obj, common);
@@ -119,7 +135,13 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             show: function() {
                 $$(ids.component).show();
             },
-
+            
+            infoAlert: function() {
+                OP.Dialog.Alert({
+                    title: labels.component.componentsTipTitle,
+                    text: labels.component.componentsTipText
+                });
+            },
             
             /**
              * @function template()
@@ -139,7 +161,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                         label = L(label, label);
                     }
 
-                    return "<i class='fa fa-#icon#' aria-hidden='true'></i> #name#"
+                    return "<div class='ab-component-in-page'><i class='fa fa-#icon# webix_icon_btn' aria-hidden='true'></i> #name#</div>"
                         .replace(/#icon#/g, obj.common().icon)
                         .replace(/#name#/g, label);
 

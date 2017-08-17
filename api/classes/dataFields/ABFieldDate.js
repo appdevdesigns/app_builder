@@ -21,7 +21,11 @@ var ABFieldDateDefaults = {
 	menuName: L('ab.dataField.date.menuName', '*Date'),
 
 	// description: what gets displayed in the Editor description.
-	description: ''
+	description: '',
+	
+	// what types of Sails ORM attributes can be imported into this data type?
+	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	compatibleOrmTypes: ['date', 'datetime'],
 }
 
 var defaultValues = {

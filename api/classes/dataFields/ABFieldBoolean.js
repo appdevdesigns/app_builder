@@ -20,7 +20,11 @@ var ABFieldBooleanDefaults = {
 	menuName: L('ab.dataField.boolean.menuName', '*Checkbox'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.boolean.description', '*A single checkbox that can be checked or unchecked.')
+	description: L('ab.dataField.boolean.description', '*A single checkbox that can be checked or unchecked.'),
+	
+	// what types of Sails ORM attributes can be imported into this data type?
+	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	compatibleOrmTypes: ['boolean'],
 };
 
 var defaultValues = {

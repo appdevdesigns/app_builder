@@ -89,7 +89,6 @@ export default class ABViewLayout extends ABView  {
 		var _init = (options) => {
 
 			if (mode == 'preview') {
-
 				var allComponents = [];
 
 				// attach all the .UI views:
@@ -99,12 +98,12 @@ export default class ABViewLayout extends ABView  {
 					component.ui.container = id;
 					webix.ui(component.ui);
 					allComponents.push(component);
-				})
-
+				});
+				
 				// perform any init setups for the content:
 				allComponents.forEach((component) => {
 					component.init();
-				})
+				});
 			}
 		}
 
@@ -165,10 +164,10 @@ export default class ABViewLayout extends ABView  {
 
 		var _template = [
 			'<div class="ab-component-in-page">',
-				
-				'<div class="">',
-					'<i class="fa fa-edit ab-component-edit "></i>',
+				'<div class="ab-layout-view-cols" id="'+ids.view+'_#objID#" ></div>',
+				'<div class="ab-component-tools ab-layout-view">',
 					'<i class="fa fa-trash ab-component-remove "></i>',
+					'<i class="fa fa-edit ab-component-edit "></i>',
 				'</div>',
 				'<div id="'+ids.view+'_#objID#" ></div>',
 			'</div>'
@@ -176,9 +175,13 @@ export default class ABViewLayout extends ABView  {
 
 		var _templateBlock = [
 			'<div class="ab-component-in-page">',
-				'<div class="">',
-					'<i class="fa fa-edit ab-component-edit"></i>',
+				'<div id="'+ids.view+'_#objID#" >',
+					'<i class="fa fa-#icon#"></i>',
+					'#label#',
+				'</div>',
+				'<div class="ab-component-tools ab-layout-view">',
 					'<i class="fa fa-trash ab-component-remove"></i>',
+					'<i class="fa fa-edit ab-component-edit"></i>',
 				'</div>',
 				'<div id="'+ids.view+'_#objID#" >',
 					'<i class="fa fa-#icon#"></i>',
@@ -189,15 +192,31 @@ export default class ABViewLayout extends ABView  {
 
 
 		//// Now setup the UI configuration:
-		var _ui = {
-			id: ids.component,
-			cols: [],
-			
-		}
+		// var _ui = {
+		// 	type: "space",
+		// 	id: ids.component,
+		// 	cols: [],
+		// }
+		// var _ui = {
+		// 	type: "space",
+		// 	rows: [
+		// 		{
+		// 			id: ids.component,
+		// 			cols: [],
+		// 		},
+		// 		{}
+		// 	]
+		// }
 
 		var viewList = this.views();
 
 		if (viewList.length > 0) {
+			var _ui = {
+				type: "space",
+				id: ids.component,
+				cols: [],
+			}
+
 			viewList.forEach((view)=>{
 				_ui.cols.push({
 					template: _logic.template(view),
@@ -212,13 +231,24 @@ export default class ABViewLayout extends ABView  {
 				})
 			})
 		} else {
+			var _ui = {
+				type: "space",
+				rows: [
+					{
+						id: ids.component,
+						cols: [],
+					},
+					{}
+				]
+			}
 
 			// no views currently defined, so add a placeholder:
-			_ui.cols.push({
+			_ui.rows[0].cols.push({
 				id:'del_me',
 				view:'label',
-				label:L('ab.component.layout.addView', '*Add a View')
-			})
+				align:'center',
+				label:L('ab.component.layout.addView', '*Add a column from the properties panel.')
+			});
 		}
 
 
@@ -326,20 +356,26 @@ export default class ABViewLayout extends ABView  {
 		}
 
 
-		// an ABViewLabel is a simple Label
+		// an ABViewLayout is a container with X number of columns
 		var _ui = {
 			id: ids.component,
-			autoheight:true,
+			// type: "space",
 			cols:[]
 		}
 		
+		if (viewComponents.length > 0) {
+			// insert each of our sub views into our columns:
+			viewComponents.forEach((view)=>{
 
-		// insert each of our sub views into our columns:
-		viewComponents.forEach((view)=>{
-
-//// TODO: track column widths?
-			_ui.cols.push(view.ui);
-		})
+	//// TODO: track column widths?
+				_ui.cols.push(view.ui);
+			});
+		} else {
+			_ui.cols.push({
+				view: "label",
+				label: L('ab.interface.component.noColumnsYet','*No columns have been added yet.')
+			});
+		}
 
 
 

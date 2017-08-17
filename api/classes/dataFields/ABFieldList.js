@@ -20,7 +20,11 @@ var ABFieldListDefaults = {
 	menuName: L('ab.dataField.list.menuName', '*Select list'),
 
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.list.description', '*Select list allows you to select predefined options below from a dropdown.')
+	description: L('ab.dataField.list.description', '*Select list allows you to select predefined options below from a dropdown.'),
+	
+	// what types of Sails ORM attributes can be imported into this data type?
+	// http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	compatibleOrmTypes: [],
 }
 
 var defaultValues = {

@@ -29,42 +29,40 @@ export default class ABWorkObjectDatatable extends OP.Component {
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
     		component: this.unique('component'),
-
+            tooltip: this.unique('tooltip')
     	}
 
         var defaultHeight = 0;
 
         var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App);
+        
+        var imageFields = [];
 
 
     	// Our webix UI definition:
     	this.ui = {
     		view: "datatable",
     		id: ids.component,
-            resizeColumn: {size: 6},
-            resizeRow: {size: 6},
+            resizeColumn: {size: 10},
+            resizeRow: {size: 10},
     		prerender: false,
     		editable: true,
     		fixedRowHeight: false,
     		editaction: "custom",
     		select: "cell",
-            tooltip:function(obj, common){
-                var tip = "";
-                if (Array.isArray(obj[common.column.id])) {
-                    obj[common.column.id].forEach(function (o) {
-                        tip += o.text + "<br/>";
-                    });
-                } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
-                    obj[common.column.id+"__relation"].forEach(function (o) {
-                        tip += o.text + "<br/>";
-                    });
-                } else {
-                    tip = obj[common.column.id];
-                }
-                if (tip == null) {
-                    return "";
-                } else {
-                    return tip;                    
+            tooltip: {
+                id: ids.tooltip,
+                template: function(obj, common){
+                    return _logic.toolTip(obj, common);
+                },
+                on: {
+                    // When showing a larger image preview the tooltip sometime displays part of the image off the screen...this attempts to fix that problem
+                    onBeforeRender: function() {
+                        _logic.toolTipOnBeforeRender();
+                    },
+                    onAfterRender: function(data){
+                        _logic.toolTipOnAfterRender();
+                    }
                 }
             },
     		dragColumn: true,
@@ -185,6 +183,9 @@ console.error('!! ToDo: onAfterColumnHide()');
     		var DataTable = $$(ids.component);
     		var throttleCustomDisplay = null;
             var items = [];
+
+			webix.extend(DataTable, webix.ProgressBar);
+
     		DataTable.attachEvent("onAfterRender", function(data){
                 items = [];
                 data.order.each(function (i) {
@@ -632,8 +633,11 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 var minHeight = 0;
                 defaultHeight = 0;
                 CurrentObject._fields.forEach(function (f) {
-                    if (f.key == "image" && parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
-                        minHeight = parseInt(f.settings.imageHeight);
+                    if (f.key == "image") {                
+                        imageFields.push(f.columnName);
+                        if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
+                            minHeight = parseInt(f.settings.imageHeight);
+                        }
                     }
                 });
                 if (minHeight > 0) {
@@ -654,6 +658,8 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     			if (CurrentObject) {
 
     				var DataTable = $$(ids.component);
+                    DataTable.define('leftSplit', 0);
+                    DataTable.define('rightSplit', 0);
     				DataTable.clearAll();
 
 
@@ -733,6 +739,91 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     			$$(ids.component).show();
     		},
+            
+            
+            /**
+             * @function toolTip()
+             *
+             * Retrieve the items toolTip
+             */
+            toolTip:function(obj, common) {
+                var tip = "";
+                if (Array.isArray(obj[common.column.id])) {
+                    obj[common.column.id].forEach(function (o) {
+                        tip += o.text + "<br/>";
+                    });
+                } else if (typeof obj[common.column.id] == "undefined" && typeof obj[common.column.id+"__relation"] != "undefined") {
+                    obj[common.column.id+"__relation"].forEach(function (o) {
+                        tip += o.text + "<br/>";
+                    });
+                } else if (typeof obj[common.column.id+"__relation"] != "undefined" && typeof obj[common.column.id] == "number") {
+                    tip = obj[common.column.id+"__relation"].text;
+                } else if (imageFields.indexOf(common.column.id) != -1) {
+                    if (obj[common.column.id] == null) {
+                        return "";
+                    } else {
+                        tip = "<img style='max-width: 500px; max-height: 500px;' src='/opsportal/image/" + CurrentObject.application.name+"/"+obj[common.column.id]+"' />";                
+                    }
+                } else if (common.column.editor == "date") {
+                    tip = common.column.format(obj[common.column.id]);
+                } else if (common.column.editor == "richselect") {
+                    CurrentObject._fields.forEach(function (f) {
+                        if (f.columnName == common.column.id) {
+                            f.settings.options.forEach(function (o) {
+                                if (o.id == obj[common.column.id]) {
+                                    tip = o.text;
+                                }
+                            })
+                        }
+                    })
+                } else {
+                    tip = obj[common.column.id];
+                }
+                if (tip == null) {
+                    return "";
+                } else {
+                    return tip;                    
+                }
+            },
+            
+            /**
+             * @function toolTipOnBeforeRender()
+             *
+             * Add visibility "hidden" to all tooltips before render so we can move to a new location without the visual jump
+             */
+            toolTipOnBeforeRender: function(){
+                var node = $$(ids.tooltip).getNode();
+                node.style.visibility = "hidden";
+            },
+
+
+            /**
+             * @function toolTipOnAfterRender()
+             *
+             * If the tooltip is displaying off the screen we want to try to reposition it for a better experience
+             */
+            toolTipOnAfterRender: function(){
+                var node = $$(ids.tooltip).getNode();
+                if (node.firstChild != null && node.firstChild.nodeName == "IMG") {
+                    setTimeout(function() {
+                        var imgBottom = parseInt(node.style.top.replace("px", "")) + 500;
+                        var imgRight = parseInt(node.style.left.replace("px", "")) + 500;
+                        if ( imgBottom > window.innerHeight ) {
+                            var imgOffsetY = imgBottom - window.innerHeight;
+                            var newTop = parseInt(node.style.top.replace("px", "")) - imgOffsetY;
+                            node.style.top = newTop + "px";
+                        }
+                        if ( imgRight > window.innerWidth ) {
+                            var imgOffsetX = imgRight - window.innerWidth;
+                            var newLeft = parseInt(node.style.left.replace("px", "")) - imgOffsetX;
+                            node.style.left = newLeft + "px";                                    
+                        }
+                        node.style.visibility = "visible";
+                    }, 250);
+                } else {
+                    node.style.visibility = "visible";                            
+                }
+            }
     	}
         
 

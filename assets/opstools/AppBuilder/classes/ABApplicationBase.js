@@ -26,7 +26,7 @@ module.exports = class ABApplicationBase {
 
     	// ABApplication Attributes
     	this.id    = attributes.id;
-    	this.json  = attributes.json;
+    	this.json  = attributes.json || {};
     	this.name  = attributes.name || this.json.name || "";
     	this.role  = attributes.role;
 
@@ -43,7 +43,13 @@ module.exports = class ABApplicationBase {
 	  	this._objects = newObjects;
 
 
-
+		// Object List Settings
+		attributes.json.objectListSettings 		= attributes.json.objectListSettings || {};
+		this.objectListSettings 				= this.objectListSettings || {};
+		this.objectListSettings.isOpen 			= JSON.parse(attributes.json.objectListSettings.isOpen || false);
+		this.objectListSettings.searchText 		= attributes.json.objectListSettings.searchText || "";
+		this.objectListSettings.sortDirection 	= attributes.json.objectListSettings.sortDirection || "asc";
+		this.objectListSettings.isGroup 		= JSON.parse(attributes.json.objectListSettings.isGroup || false);
 
   	}
 
@@ -102,6 +108,8 @@ module.exports = class ABApplicationBase {
 			currObjects.push(obj.toObj())
 		})
 		this.json.objects = currObjects;
+
+		this.json.objectListSettings = this.objectListSettings;
 
 		return {
 			id:this.id,
@@ -203,6 +211,7 @@ module.exports = class ABApplicationBase {
 
 
 
+
 	/**
 	 * @method urlResolve()
 	 * given an object pointer, return the specific object referenced.
@@ -264,7 +273,11 @@ module.exports = class ABApplicationBase {
 	}
 
 
-
+	/**
+	 * @method urlPointer()
+	 * return the url pointer for this application.
+	 * @return {string} 
+	 */
 	urlPointer() {
 		// NOTE: if we need to expand this to search across 
 		// applications, then add in this application.id here:
@@ -273,9 +286,50 @@ module.exports = class ABApplicationBase {
 	}
 
 
-
+	/**
+	 * @method urlObject()
+	 * return the url pointer for objects in this application.
+	 * @return {string} 
+	 */
 	urlObject() {
 		return this.urlPointer() + '_objects/'
+	}
+
+
+
+	///
+	///	Object List Settings
+	///
+	get objectlistIsOpen() {
+		return this.objectListSettings.isOpen;
+	}
+
+	set objectlistIsOpen( isOpen ) {
+		this.objectListSettings.isOpen = isOpen;
+	}
+
+	get objectlistSearchText() {
+		return this.objectListSettings.searchText;
+	}
+
+	set objectlistSearchText( searchText ) {
+		this.objectListSettings.searchText = searchText;
+	}
+
+	get objectlistSortDirection() {
+		return this.objectListSettings.sortDirection;
+	}
+
+	set objectlistSortDirection( sortDirection ) {
+		this.objectListSettings.sortDirection = sortDirection;
+	}
+
+	get objectlistIsGroup() {
+		return this.objectListSettings.isGroup;
+	}
+
+	set objectlistIsGroup( isGroup ) {
+		this.objectListSettings.isGroup = isGroup;
 	}
 
 }

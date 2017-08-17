@@ -22,11 +22,17 @@ describe('ab_work_object_list_newObject_csv component', () => {
 
 		target = new ABImportCsv(mockApp);
 
-		// render edit component
-		target.ui.container = "ab_test_div";
-		webixCom = webix.ui(target.ui);
-
-// console.log(document.getElementById("ab_test_div").innerHTML);
+		// render Import CSV file popup
+		var ui = {
+			view: "window",
+			position: "center",
+			modal: true,
+			body: {
+				view: "tabview",
+				cells: [target.ui]
+			}
+		};
+		webixCom = webix.ui(ui);
 
 	});
 
@@ -183,14 +189,16 @@ describe('ab_work_object_list_newObject_csv component', () => {
 
 		});
 
-		// it(".removeCsvFile - should remove file in uploader component", () => {
+		it(".removeCsvFile - should remove file in uploader component", () => {
 
-		// 	var fileId = "MOCK_FILE_ID";
+			let fileId = "MOCK_FILE_ID",
+				spyFormClear = sandbox.spy(target._logic, "formClear");
 
-		// 	var result = target._logic.removeCsvFile(fileId);
+			let result = target._logic.removeCsvFile(fileId);
 
-		// 	assert.isTrue(result);
-		// });
+			sandbox.assert.calledOnce(spyFormClear);
+			assert.isTrue(result);
+		});
 
 	});
 
