@@ -245,6 +245,13 @@ console.log('... catch(err) !');
                     } else { // If we are just searching a field it is much simpler
                         var fieldName = w.fieldName;
                     }
+
+                    var field = object._fields.filter(field => field.columnName == fieldName);
+                    if (typeof(field[0].settings.options) != 'undefined') {
+                        var inputID = field[0].settings.options.filter(option => option.text == input);
+                        input = inputID[0].id;
+                    }
+
                     // We are going to use the 'raw' queries for knex becuase the '.' for JSON searching is misinterpreted as a sql identifier
                     var where = '`{fieldName}` {operator} {input}'
                         .replace('{fieldName}', fieldName)
