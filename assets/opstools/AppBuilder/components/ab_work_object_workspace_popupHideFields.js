@@ -9,8 +9,8 @@
 
 export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Component {  
 
-    constructor(App) {
-        super(App, 'ab_work_object_workspace_popupHideFields');
+    constructor(App, idBase) {
+        super(App, idBase || 'ab_work_object_workspace_popupHideFields');
         var L = this.Label;
 
         var labels = {
@@ -35,7 +35,7 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
             view:"popup",
             id: ids.component,
             // modal: true,
-            autoheight:true,
+            // autoheight:true,
             body: {
                 rows: [
                     {
@@ -63,7 +63,8 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                     {
                         view: 'list',
                         id: ids.list,
-                        autoheight: true,
+                        maxHeight: 350,
+                        // autoheight: true,
                         select: false,
                         // template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle ab-visible-field-icon"></i>&nbsp;</span> #label#',
                         template: '<span style="min-width: 18px; display: inline-block;"><i class="fa ab-visible-field-icon"></i>&nbsp;</span> #label#',
@@ -97,7 +98,7 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
 
 
         var CurrentObject = null;
-
+        var CurrentView = null;
 
         // our internal business logic
         var _logic = this._logic = {
@@ -130,15 +131,20 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                 })
 
                 // store that
-                CurrentObject.workspaceHiddenFields = newHidden;
-                CurrentObject.save()
-                .then(function(){
-                    _logic.iconsReset()
-                    _logic.callbacks.onChange()
-                })
-                .catch(function(err){
-                    OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newHidden });
-                })
+                if (CurrentView != null) {
+                    CurrentView.settings.objectWorkspace.hiddenFields = newHidden;
+                    _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                } else {
+                    CurrentObject.workspaceHiddenFields = newHidden;
+                    CurrentObject.save()
+                    .then(function(){
+                        _logic.iconsReset()
+                        _logic.callbacks.onChange()
+                    })
+                    .catch(function(err){
+                        OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newHidden });
+                    })
+                }
             },
 
 
@@ -149,15 +155,20 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
             clickShowAll: function () {
 
                 // store an empty array of hidden fields
-                CurrentObject.workspaceHiddenFields = [];
-                CurrentObject.save()
-                .then(function(){
-                    _logic.iconsReset();
-                    _logic.callbacks.onChange()
-                })
-                .catch(function(err){
-                    OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newHidden });
-                })
+                if (CurrentView != null) {
+                    CurrentView.settings.objectWorkspace.hiddenFields = [];
+                    _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                } else {
+                    CurrentObject.workspaceHiddenFields = [];
+                    CurrentObject.save()
+                    .then(function(){
+                        _logic.iconsReset();
+                        _logic.callbacks.onChange()
+                    })
+                    .catch(function(err){
+                        OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newHidden });
+                    })
+                }
             },
 
 
@@ -194,14 +205,19 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
                 }
 
                 // update our Object with current hidden fields
-                CurrentObject.workspaceHiddenFields = newFields;
-                CurrentObject.save()
-                .then(function(){
-                    _logic.callbacks.onChange()
-                })
-                .catch(function(err){
-                    OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
-                })
+                if (CurrentView != null) {
+                    CurrentView.settings.objectWorkspace.hiddenFields = newFields;
+                    _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                } else {
+                    CurrentObject.workspaceHiddenFields = newFields;
+                    CurrentObject.save()
+                    .then(function(){
+                        _logic.callbacks.onChange()
+                    })
+                    .catch(function(err){
+                        OP.Error.log('Error trying to save workspaceHiddenFields', {error:err, fields:newFields });
+                    })
+                }
             },
 
             /**
@@ -299,9 +315,11 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
              * @function objectLoad
              * Ready the Popup according to the current object
              * @param {ABObject} object  the currently selected object.
+             * @param {ABObject} currView  the custom settings for a view if editing in interface builder
              */
-            objectLoad: function(object) {
+            objectLoad: function(object, currView) {
                 CurrentObject = object;
+                if (currView != null) CurrentView = currView;
             },
 
             /**
@@ -329,8 +347,12 @@ export default class AB_Work_Object_Workspace_PopupHideFields extends OP.Compone
              * Show this component.
              * @param {obj} $view  the webix.$view to hover the popup around.
              */
-            show:function($view) {
-                $$(ids.component).show($view);
+            show:function($view, options) {
+                if (options != null) {
+                    $$(ids.component).show($view, options);
+                } else {
+                    $$(ids.component).show($view);
+                }
             }
 
         }

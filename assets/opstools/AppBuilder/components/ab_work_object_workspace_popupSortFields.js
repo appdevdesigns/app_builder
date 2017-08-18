@@ -9,8 +9,8 @@
 
 export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Component {   //.extend(idBase, function(App) {
 
-	constructor(App) {
-		super(App, 'ab_work_object_workspace_popupSortFields');
+	constructor(App, idBase) {
+        super(App, idBase || 'ab_work_object_workspace_popupSortFields');
 		var L = this.Label;
 
 		var labels = {
@@ -44,12 +44,12 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 		this.ui = {
 			view:"popup",
 			id: ids.component,
-			autoheight:true,
+			// autoheight:true,
 			width: 500,
 			body: {
 				view: "form",
 				id: ids.form,
-				autoheight: true,
+				// autoheight: true,
 				borderless: true,
 				elements: [
 					{
@@ -84,6 +84,7 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 
 
 		var CurrentObject = null;
+		var CurrentView = null;
 
 		// our internal business logic
 		var _logic = this._logic = {
@@ -239,9 +240,11 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 			 * @function objectLoad
 			 * Ready the Popup according to the current object
 			 * @param {ABObject} object  the currently selected object.
-			 */
-			objectLoad: function(object) {
-				CurrentObject = object;
+			 * @param {ABObject} currView  the custom settings for a view if editing in interface builder
+             */
+            objectLoad: function(object, currView) {
+                CurrentObject = object;
+                if (currView != null) CurrentView = currView;
 			},
 			
 			onChangeCombo: function(columnId, el) {
@@ -416,14 +419,19 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 					});
 				}
 
-				CurrentObject.workspaceSortFields = sortFields;
-				CurrentObject.save()
-				.then(function(){
-					_logic.callbacks.onChange();
-				})
-				.catch(function(err){
-					OP.Error.log('Error trying to save workspaceSortFields', {error:err, fields:sortFields });
-				});
+				if (CurrentView != null) {
+					CurrentView.settings.objectWorkspace.sortFields = sortFields;
+					_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+				} else {
+					CurrentObject.workspaceSortFields = sortFields;
+					CurrentObject.save()
+					.then(function(){
+						_logic.callbacks.onChange();
+					})
+					.catch(function(err){
+						OP.Error.log('Error trying to save workspaceSortFields', {error:err, fields:sortFields });
+					});
+				}
 			},
 
 
@@ -434,8 +442,12 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
              * @param {obj} $view  the webix.$view to hover the popup around.
 			 * @param {string} columnName the columnName we want to prefill the sort with
              */
-            show:function($view, columnName) {
-                $$(ids.component).show($view);
+            show:function($view, columnName, options) {
+                if (options != null) {
+                    $$(ids.component).show($view, options);
+                } else {
+                    $$(ids.component).show($view);
+                }
 				if (columnName) {
 					_logic.clickAddNewSort(columnName);
 				}

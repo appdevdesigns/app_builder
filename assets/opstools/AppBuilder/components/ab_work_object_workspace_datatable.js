@@ -11,8 +11,8 @@ import AB_Work_HeaderEditMenu from "./ab_work_object_workspace_popupHeaderEditMe
 
 export default class ABWorkObjectDatatable extends OP.Component {
     
-    constructor(App) {
-        super(App, 'ab_work_object_workspace_datatable');
+    constructor(App, idBase, isReadOnly) {
+        super(App, idBase || 'ab_work_object_workspace_datatable');
         var L = this.Label;
         
         var labels = {
@@ -38,6 +38,10 @@ export default class ABWorkObjectDatatable extends OP.Component {
         
         var imageFields = [];
 
+        var editable = true;
+        if (isReadOnly != null && isReadOnly == true) {
+            editable = false;
+        }
 
     	// Our webix UI definition:
     	this.ui = {
@@ -46,7 +50,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
             resizeColumn: {size: 10},
             resizeRow: {size: 10},
     		prerender: false,
-    		editable: true,
+    		editable: editable,
     		fixedRowHeight: false,
     		editaction: "custom",
     		select: "cell",
@@ -69,18 +73,22 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		on: {
     			onBeforeSelect: function (data, preserve) {
 
-					var selectField = CurrentObject.fields((f) => { return f.columnName == data.column; })[0];
+                    if (editable) {
+    					var selectField = CurrentObject.fields((f) => { return f.columnName == data.column; })[0];
 
-					if (selectField == null) return true;
+    					if (selectField == null) return true;
 
-					var cellNode = this.getItemNode({ row: data.row, column: data.column }),
-						rowData = this.getItem(data.row);
+    					var cellNode = this.getItemNode({ row: data.row, column: data.column }),
+    						rowData = this.getItem(data.row);
 
-					return selectField.customEdit(rowData, App, cellNode);
+    					return selectField.customEdit(rowData, App, cellNode);
+                    }
 
     			},
     			onAfterSelect: function (data, prevent) {
-    				_logic.onAfterSelect(data, prevent);
+                    if (editable) {
+        				_logic.onAfterSelect(data, prevent);
+                    }
     			},
     			onCheck: function (row, col, val) { // Update checkbox data
 
@@ -360,7 +368,7 @@ console.error('!! ToDo: onAfterColumnHide()');
             freezeDeleteColumn: function() {
                 var DataTable = $$(ids.component);
                 // we are going to always freeze the delete column if the datatable is wider than the container so it is easy to get to
-                if (DataTable.$width < DataTable.Gj) {
+                if (editable && DataTable.$width < DataTable.Gj) {
                     return DataTable.define('rightSplit', 1);                        
                 } else {
                     return DataTable.define('rightSplit', 0);
@@ -668,13 +676,15 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				var columnHeaders = CurrentObject.columnHeaders(true);
 
     				// add the delete / Trash column
-    				columnHeaders.push({
-    					id: "appbuilder_trash",
-    					header: "",
-    					width: 40,
-    					template: "<span class='trash'>{common.trashIcon()}</span>",
-    					css: { 'text-align': 'center' }
-    				})
+                    if (editable) {
+        				columnHeaders.push({
+        					id: "appbuilder_trash",
+        					header: "",
+        					width: 40,
+        					template: "<span class='trash'>{common.trashIcon()}</span>",
+        					css: { 'text-align': 'center' }
+        				})
+                    }
     				DataTable.refreshColumns(columnHeaders)
 
 

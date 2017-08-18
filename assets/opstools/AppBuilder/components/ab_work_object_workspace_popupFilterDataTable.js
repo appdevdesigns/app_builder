@@ -9,8 +9,8 @@
 
 export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Component {
     
-    constructor(App) {
-        super(App, 'ab_work_object_workspace_popupFilterDataTable');
+    constructor(App, idBase) {
+        super(App, idBase || 'ab_work_object_workspace_popupFilterDataTable');
         
         var L = this.Label;
         
@@ -73,7 +73,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
             view:"popup",
             id: ids.component,
             width: 800,
-            autoheight:true,
+            // autoheight:true,
             body: {
                 view: "form",
                 id: ids.filterform,
@@ -108,6 +108,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
         };
         
         var CurrentObject = null;
+        var CurrentView = null;
 
         // internal business logic 
         var _logic = this._logic = {
@@ -139,7 +140,11 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 });
 
                 // this.getTopParentView().callEvent('onChange', [filter_popup.dataTable.config.id, conditionNumber]);
-                _logic.callbacks.onChange();
+                if (CurrentView != null) {
+                    _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                } else {
+                    _logic.callbacks.onChange();                    
+                }
             },            
 
             clickAddNewFilter: function (filters) {
@@ -366,7 +371,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                                 "onChange": function () {
                                     // filter_popup.filter();
                                     _logic.filter();
-                                    _logic.callChangeEvent();
+                                    // _logic.callChangeEvent();
                                 }
                             }
                         },
@@ -384,7 +389,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                                 _logic.filter();
 
                                 // this.getTopParentView().callChangeEvent();
-                                _logic.callChangeEvent();
+                                // _logic.callChangeEvent();
                             }
                         },
                         // isMultiLingual
@@ -435,7 +440,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 // }
 
                 // this.getTopParentView().callChangeEvent();
-                _logic.callChangeEvent();
+                _logic.filter();
             },
             
             columns_setter: function (columns) {
@@ -484,13 +489,13 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 filter_form.getChildViews().forEach(function (view, index, viewList) {
 
                     if (index < viewList.length - 1) { // Ignore 'Add a filter' button
-                        var condValue = view.getChildViews()[3] && view.getChildViews()[3].getValue ? view.getChildViews()[3].getValue() : ''; // Support none conditon control
                         if (view.getChildViews()[1].getValue() && view.getChildViews()[2].getValue()) {
+                            // var condValue = (view.getChildViews()[3] && view.getChildViews()[3].getValue) ? view.getChildViews()[3].getValue() : ''; // Support none conditon control
                             filterConditions.push({
                                 combineCondition: view.getChildViews()[0].getValue(),
                                 fieldName: view.getChildViews()[1].getValue(),
                                 operator: view.getChildViews()[2].getValue(),
-                                inputValue: condValue,
+                                inputValue: (view.getChildViews()[3] && view.getChildViews()[3].getValue) ? view.getChildViews()[3].getValue() : '',
                                 isMultiLingual: view.getChildViews()[5].getValue(),
                                 languageCode: view.getChildViews()[6].getValue()
                             });
@@ -498,15 +503,21 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                     }
                 });
                 
-                CurrentObject.workspaceFilterConditions = filterConditions;
-                CurrentObject.save()
-                .then(function(){
-                    _logic.callbacks.onChange();
-                })
-                .catch(function(err){
-                    OP.Error.log('Error trying to save filterConditions', {error:err, fields:filterConditions });
-                });
-
+                
+                if (CurrentView != null) {
+                    CurrentView.settings.objectWorkspace.filterConditions = filterConditions;
+                    _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                } else {
+                    CurrentObject.workspaceFilterConditions = filterConditions;
+                    CurrentObject.save()
+                    .then(function(){
+                        _logic.callbacks.onChange();
+                    })
+                    .catch(function(err){
+                        OP.Error.log('Error trying to save filterConditions', {error:err, fields:filterConditions });
+                    });
+                }
+                _logic.callChangeEvent();
             },
 
 
@@ -565,8 +576,9 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
              * Ready the Popup according to the current object
              * @param {ABObject} object  the currently selected object.
              */
-            objectLoad: function(object) {
+            objectLoad: function(object, currView) {
                 CurrentObject = object;
+                if (currView != null) CurrentView = currView;
             },
             
             /**
@@ -591,8 +603,13 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
              *
              * Show this component.
              */
-            show:function($view, columnName) {
-                $$(ids.component).show($view);
+            show:function($view, columnName, options) {
+                if (options != null) {
+                    $$(ids.component).show($view, options);
+                } else {
+                    $$(ids.component).show($view);
+                }
+
 
                 if (columnName) {
                     var filters = {

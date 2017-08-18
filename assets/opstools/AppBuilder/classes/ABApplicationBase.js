@@ -145,7 +145,63 @@ module.exports = class ABApplicationBase {
 
 	}
 
+	/**
+	 * @method connectedObjects()
+	 *
+	 * return an array of all the connected ABObjects for this ABApplication.
+	 *
+	 * @param {id} id  	an ID of an ABObject
+	 *
+	 * @return {array} 	array of options for webix select
+	 */
+	connectedObjects (obj) {
+		if (obj == "") return [];
 
+		// Determine the object from the ID
+		var myObj = this.objects((o) => o.id == obj);
+		
+		// Get all the connected Fields for that object
+		var connectedFields = myObj[0].fields((f) => f.key == "connectObject");
+		// Store the related fields associatively inside their related Objects ID
+		var connectedObj = [];
+		connectedFields.forEach((f) => {
+			connectedObj[f.settings.linkObject] = this.objects((co) => co.id == f.settings.linkObject);
+		});
+		// Look up the objects by their ID and push them in an options array
+		var linkedObjects = [];
+		Object.keys(connectedObj).forEach(function(key, index) {
+			linkedObjects.push({id:this[key][0].id, value:this[key][0].label});
+		}, connectedObj);
+		
+		return linkedObjects;
+	}
+	
+	
+	/**
+	 * @method connectedFields()
+	 *
+	 * return an array of all the connected ABFields for a given ABObject
+	 *
+	 * @param {currObj} id		an ID of the current ABObject
+	 *
+	 * @param {linkedObject} id	an ID of the linked ABObject
+	 *
+	 * @return {array}			array of options for webix select
+	 */
+	connectedFields (currObj, linkedObject) {
+		// Determine the object from the currObj
+		var myObj = this.objects((o) => o.id == currObj);
+		
+		// Get all the connected Fields for our object that match the linkedObject
+		var connectedFields = myObj[0].fields((f) => (f.key == "connectObject" && f.settings.linkObject == linkedObject));
+		// Build an arry of options for the webix select
+		var linkedFields = [];
+		connectedFields.forEach((f)=>{
+			linkedFields.push({id:f.columnName, value:f.label});
+		});
+
+		return linkedFields;
+	}
 
 	/**
 	 * @method objectNew()

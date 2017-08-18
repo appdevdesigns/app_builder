@@ -9,10 +9,8 @@
 
 export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Component {   //.extend(idBase, function(App) {
 
-
-	constructor(App) {
-		super(App, 'ab_work_object_workspace_popupFrozenColumns');
-
+	constructor(App, idBase) {
+        super(App, idBase || 'ab_work_object_workspace_popupFrozenColumns');
 		var L = this.Label;
 
 
@@ -38,7 +36,7 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			view:"popup",
 			id: ids.component,
 			// modal: true,
-			autoheight:true,
+			// autoheight:true,
 			width: 500,
 			body: {
 				rows: [
@@ -55,7 +53,8 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 						view: 'list',
 						id: ids.list,
 						width: 250,
-						autoheight: true,
+						// autoheight: true,
+						maxHeight: 350,
 						select: false,
 						template: '<span style="min-width: 18px; display: inline-block;"><i class="fa fa-circle-o ab-frozen-field-icon"></i>&nbsp;</span> #label#',
 						on: {
@@ -89,6 +88,7 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 
 
 		var CurrentObject = null;
+		var CurrentView = null;
 
 		// our internal business logic
 		var _logic = this._logic = {
@@ -113,17 +113,23 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			 */
 			clickClearAll: function () {
 				// store empty string to not freeze any columns
-				CurrentObject.workspaceFrozenColumnID = "";
-				CurrentObject.save()
-				.then(function(){
+				if (CurrentView != null) {
+					CurrentView.settings.objectWorkspace.frozenColumnID = "";
+					_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
 					_logic.iconsReset();
-					_logic.callbacks.onChange();
-					return false;
-				})
-				.catch(function(err){
-					OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:"" });
-					return false;
-				})
+				} else {
+					CurrentObject.workspaceFrozenColumnID = "";
+					CurrentObject.save()
+					.then(function(){
+						_logic.iconsReset();
+						_logic.callbacks.onChange();
+						return false;
+					})
+					.catch(function(err){
+						OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:"" });
+						return false;
+					})
+				}
 			},
 
 
@@ -143,16 +149,22 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 					});
 					return;
 				}
-				
-				CurrentObject.workspaceFrozenColumnID = label;
-				CurrentObject.save()
-				.then(function(){
+
+				if (CurrentView != null) {
+					CurrentView.settings.objectWorkspace.frozenColumnID = label;
+					_logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
 					_logic.iconsReset();
-					_logic.callbacks.onChange()
-				})
-				.catch(function(err){
-					OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:label });
-				})
+				} else {
+					CurrentObject.workspaceFrozenColumnID = label;
+					CurrentObject.save()
+					.then(function(){
+						_logic.iconsReset();
+						_logic.callbacks.onChange()
+					})
+					.catch(function(err){
+						OP.Error.log('Error trying to save workspaceFrozenColumnID', {error:err, fields:label });
+					})
+				}
 			},
 
 			/**
@@ -233,9 +245,11 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 			 * @function objectLoad
 			 * Ready the Popup according to the current object
 			 * @param {ABObject} object  the currently selected object.
-			 */
-			objectLoad: function(object) {
-				CurrentObject = object;
+			 * @param {ABObject} currView  the custom settings for a view if editing in interface builder
+             */
+            objectLoad: function(object, currView) {
+                CurrentObject = object;
+                if (currView != null) CurrentView = currView;
 			},
 
 			onShow: function() {
@@ -261,8 +275,12 @@ export default class AB_Work_Object_Workspace_PopupFrozenColumns extends OP.Comp
 	         * Show this component.
 	         * @param {obj} $view  the webix.$view to hover the popup around.
 	         */
-	        show:function($view) {
-	            $$(ids.component).show($view);
+			show:function($view, options) {
+                if (options != null) {
+                    $$(ids.component).show($view, options);
+                } else {
+                    $$(ids.component).show($view);
+                }
 	        }
 
 		}
