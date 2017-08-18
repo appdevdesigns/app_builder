@@ -5,6 +5,9 @@
 	background: #888;
 	border-color: #888;
 }
+.webix_window {
+	box-shadow: 1px 3px 30px rgba(0,0,0,0.8);
+}
 .webix_segment_0.webix_selected, .webix_segment_1.webix_selected, .webix_segment_N.webix_selected,
 .webix_selected.webix_segment_0:hover, .webix_selected.webix_segment_1:hover, .webix_selected.webix_segment_N:hover,
 .webix_selected.webix_segment_0:active, .webix_selected.webix_segment_0:focus, .webix_selected.webix_segment_1:active, .webix_selected.webix_segment_1:focus, .webix_selected.webix_segment_N:active, .webix_selected.webix_segment_N:focus,
