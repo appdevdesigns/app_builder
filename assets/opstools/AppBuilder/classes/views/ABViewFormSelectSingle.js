@@ -1,7 +1,7 @@
 /*
- * ABViewSelectSingle
+ * ABViewFormSelectSingle
  *
- * An ABViewSelectSingle defines a UI text box component.
+ * An ABViewFormSelectSingle defines a UI text box component.
  *
  */
 
@@ -13,7 +13,7 @@ function L(key, altText) {
 }
 
 
-var ABViewSelectSinglePropertyComponentDefaults = {
+var ABViewFormSelectSinglePropertyComponentDefaults = {
 	type: 'richselect' // 'richselect' or 'radio'
 }
 
@@ -24,7 +24,7 @@ var ABSelectSingleDefaults = {
 	labelKey: 'ab.components.selectsingle' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewSelectSingle extends ABViewFormField {
+export default class ABViewFormSelectSingle extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -146,7 +146,7 @@ export default class ABViewSelectSingle extends ABViewFormField {
 
 		super.propertyEditorPopulate(ids, view);
 
-		$$(ids.type).setValue(view.settings.type || ABViewSelectSinglePropertyComponentDefaults.type);
+		$$(ids.type).setValue(view.settings.type || ABViewFormSelectSinglePropertyComponentDefaults.type);
 
 	}
 
@@ -177,7 +177,7 @@ export default class ABViewSelectSingle extends ABViewFormField {
 		}
 
 
-		component.ui.view = this.settings.type || ABViewSelectSinglePropertyComponentDefaults.type;
+		component.ui.view = this.settings.type || ABViewFormSelectSinglePropertyComponentDefaults.type;
 
 		component.ui.options = field.settings.options.map((opt) => {
 			return {

@@ -1,7 +1,7 @@
 /*
- * ABViewNumber
+ * ABViewFormNumber
  *
- * An ABViewNumber defines a UI check box component.
+ * An ABViewFormNumber defines a UI check box component.
  *
  */
 
@@ -23,7 +23,7 @@ var ABViewFormNumberDefaults = {
 	labelKey: 'ab.components.number' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewNumber extends ABViewFormField {
+export default class ABViewFormNumber extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values

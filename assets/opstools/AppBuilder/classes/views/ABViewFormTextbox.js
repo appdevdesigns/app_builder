@@ -1,7 +1,7 @@
 /*
- * ABViewTextbox
+ * ABViewFormTextbox
  *
- * An ABViewTextbox defines a UI text box component.
+ * An ABViewFormTextbox defines a UI text box component.
  *
  */
 
@@ -24,7 +24,7 @@ var ABViewFormTextboxDefaults = {
 	labelKey: 'ab.components.textbox' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewTextbox extends ABViewFormField {
+export default class ABViewFormTextbox extends ABViewFormField {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values

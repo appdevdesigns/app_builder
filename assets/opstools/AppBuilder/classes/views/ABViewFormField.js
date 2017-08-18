@@ -56,6 +56,7 @@ export default class ABViewFormField extends ABView {
 
 		var _ui = {
 			labelPosition: form.settings.labelPosition,
+			labelWidth: form.settings.labelWidth,
 			label: label
 		};
 

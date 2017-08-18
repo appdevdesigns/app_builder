@@ -1057,6 +1057,12 @@ msgstr "[th] Checkbox"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.custom
+msgid "Custom"
+msgstr "[th] Custom"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "[th] Date Picker"
@@ -1084,6 +1090,12 @@ msgstr "[th] Number"
 #. key: ab.components.selectsingle
 msgid "Single Select"
 msgstr "[th] Single Select"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.tab
+msgid "Tab"
+msgstr "[th] Tab"
 
 #. path: app_builder
 #. code: th

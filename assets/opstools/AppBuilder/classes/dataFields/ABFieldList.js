@@ -47,7 +47,7 @@ var ABFieldListDefaults = {
 
 	formComponent: (field) => {
 		return {
-			key: (field.settings.isMultiple ? 'selectmultiple' : 'selectsingle'),
+			key: (field.settings.isMultiple ? 'fieldcustom' : 'selectsingle'),
 			options: field.settings.options.map(function (opt) {
 				return {
 					id: opt.id,

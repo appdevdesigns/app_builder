@@ -11,11 +11,12 @@ import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
 import ABViewMenu from "./views/ABViewMenu"
 import ABViewGrid from "./views/ABViewGrid"
-
+import ABViewTab from "./views/ABViewTab"
 import ABViewFormPanel from "./views/ABViewFormPanel"
 import ABViewForm from "./views/ABViewForm"
 import ABViewFormButton from "./views/ABViewFormButton"
 import ABViewFormCheckbox from "./views/ABViewFormCheckbox"
+import ABViewFormCustom from "./views/ABViewFormCustom"
 import ABViewFormDatepicker from "./views/ABViewFormDatepicker"
 import ABViewFormNumber from "./views/ABViewFormNumber"
 import ABViewFormSelectSingle from "./views/ABViewFormSelectSingle"
@@ -31,11 +32,12 @@ Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;
 Views[ABViewMenu.common().key] = ABViewMenu;
 Views[ABViewGrid.common().key] = ABViewGrid;
-
+Views[ABViewTab.common().key] = ABViewTab;
 Views[ABViewFormPanel.common().key] = ABViewFormPanel;
 Views[ABViewForm.common().key] = ABViewForm;
 Views[ABViewFormButton.common().key] = ABViewFormButton;
 Views[ABViewFormCheckbox.common().key] = ABViewFormCheckbox;
+Views[ABViewFormCustom.common().key] = ABViewFormCustom;
 Views[ABViewFormDatepicker.common().key] = ABViewFormDatepicker;
 Views[ABViewFormNumber.common().key] = ABViewFormNumber;
 Views[ABViewFormSelectSingle.common().key] = ABViewFormSelectSingle;
