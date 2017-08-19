@@ -172,27 +172,30 @@ export default class ABViewTab extends ABView {
 		var _init = (options) => {
 
 			// Add actions buttons - Edit , Delete
-			webix.ui({
-				container: $$(ids.component).getMultiview().$view,
-				view: 'template',
-				type: 'clean',
-				autoheight: false,
-				borderless: true,
-				height: 1,
-				width: 0,
-				template: '<div class="ab-component-tools ab-layout-view">' +
-				'<i class="fa fa-trash ab-component-remove"></i>' +
-				'<i class="fa fa-edit ab-component-edit"></i>' +
-				'</div>',
-				onClick: {
-					"ab-component-edit": function (e, id, trg) {
-						_logic.tabEdit(e, id, trg);
-					},
-					"ab-component-remove": function (e, id, trg) {
-						_logic.tabRemove(e, id, trg);
+			if ($$(ids.component) && 
+				$$(ids.component).config.view == "tabview") {
+				webix.ui({
+					container: $$(ids.component).getMultiview().$view,
+					view: 'template',
+					type: 'clean',
+					autoheight: false,
+					borderless: true,
+					height: 1,
+					width: 0,
+					template: '<div class="ab-component-tools ab-layout-view">' +
+					'<i class="fa fa-trash ab-component-remove"></i>' +
+					'<i class="fa fa-edit ab-component-edit"></i>' +
+					'</div>',
+					onClick: {
+						"ab-component-edit": function (e, id, trg) {
+							_logic.tabEdit(e, id, trg);
+						},
+						"ab-component-remove": function (e, id, trg) {
+							_logic.tabRemove(e, id, trg);
+						}
 					}
-				}
-			});
+				});
+			}
 
 		}
 
