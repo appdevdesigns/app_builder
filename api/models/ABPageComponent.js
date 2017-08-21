@@ -19,7 +19,7 @@ module.exports = {
     // this will pull in the translations using .populate('translations')
     translations: {
       collection: 'ABPageComponentTrans',
-      via: 'abpage'
+      via: 'abpagecomponent'
     },
 
     translate: function (code) {
