@@ -231,7 +231,7 @@ steal(
 																	if (!item.setting) item.setting = {};
 
 																	componentManager.setEditInstance(self.data.components[item_id]);
-																	componentManager.editInstance.populateSettings(item.setting, false, item);
+																	componentManager.editInstance.populateSettings(item.setting, false);
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();

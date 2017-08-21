@@ -658,6 +658,15 @@ steal(
 						columnView.id = componentIds.columns.replace('#viewId#', self.viewId);
 						webix.ui([columnView], $$(self.viewId));
 
+						var title;
+						var description;
+						var currPage = application.pages.filter(function (p) { return p.id == rootPageId })[0];
+						if (currPage) {
+							var editItem = currPage.components.filter(function (c) { return c.id == componentId; })[0];
+							title = editItem ? (editItem.title || '') : '';
+							description = editItem ? (editItem.description || '') : '';
+						}
+
 						// Title
 						if (editable) {
 							header.rows.push({
@@ -665,7 +674,7 @@ steal(
 								view: 'text',
 								placeholder: 'Title',
 								css: 'ab-component-header',
-								value: setting.title || '',
+								value: title,
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
@@ -677,11 +686,11 @@ steal(
 								}
 							});
 						}
-						else if (setting.title) {
+						else if (title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header',
-								label: setting.title || ''
+								label: title
 							});
 						}
 
@@ -692,7 +701,7 @@ steal(
 								view: 'textarea',
 								placeholder: 'Description',
 								css: 'ab-component-description',
-								value: setting.description || '',
+								value: description,
 								inputHeight: 60,
 								height: 70,
 								on: {
@@ -707,11 +716,11 @@ steal(
 
 							});
 						}
-						else if (setting.description) {
+						else if (description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description',
-								label: setting.description || ''
+								label: description
 							});
 						}
 
@@ -873,10 +882,12 @@ steal(
 				return settings;
 			};
 
-			this.populateSettings = function (setting, showAll, editItem) {
+			this.populateSettings = function (setting, showAll) {
 				var self = this,
 					dataCollection,
 					linkedToDataCollection;
+
+				var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
 
 				async.series([
 					// Get data collection

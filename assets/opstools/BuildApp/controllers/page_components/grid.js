@@ -296,13 +296,24 @@ steal(
 
 						$$(componentIds.editView).removeView(componentIds.editHeader);
 
+						var title;
+						var description;
+						var currPage = application.pages.filter(function (p) { return p.id == rootPageId })[0];
+						if (currPage) {
+
+							var editItem = currPage.components.filter(function (c) { return c.id == componentId; })[0];
+							title = editItem ? (editItem.title || '') : '';
+							description = editItem ? (editItem.description || '') : '';
+
+						}
+
 						// Title
 						header.rows.push({
 							id: componentIds.editTitle,
 							view: 'text',
 							placeholder: 'Title',
 							css: 'ab-component-header',
-							value: setting.title || '',
+							value: title,
 							on: {
 								onChange: function (newv, oldv) {
 									if (newv != oldv) {
@@ -320,7 +331,7 @@ steal(
 							view: 'textarea',
 							placeholder: 'Description',
 							css: 'ab-component-description',
-							value: setting.description || '',
+							value: description,
 							inputHeight: 60,
 							height: 60,
 							on: {
@@ -339,19 +350,19 @@ steal(
 						header.id = componentIds.header.replace('{id}', viewId);
 						header.width = 2100;
 
-						if (setting.title) {
+						if (title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header ab-ellipses-text',
-								label: setting.title || ''
+								label: title
 							});
 						}
 
-						if (setting.description) {
+						if (description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description ab-ellipses-text',
-								label: setting.description || ''
+								label: description
 							});
 						}
 					}
@@ -642,7 +653,7 @@ steal(
 				return settings;
 			};
 
-			this.populateSettings = function (setting, selectAll, editCompItem) {
+			this.populateSettings = function (setting, selectAll) {
 				webix.extend($$(componentIds.columnList), webix.ProgressBar);
 
 				var self = this,
@@ -840,9 +851,11 @@ steal(
 						if (setting.editPage && setting.editForm)
 							editForm = setting.editPage + '|' + setting.editForm;
 
+						var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
+
 						$$(componentIds.propertyView).setValues({
-							title: editCompItem ? (editCompItem.title || '') : '',
-							description: editCompItem ? (editCompItem.description || '') : '',
+							title: editItem ? (editItem.title || '') : '',
+							description: editItem ? (editItem.description || '') : '',
 							object: setting.object,
 							linkedTo: setting.linkedTo,
 							linkedField: setting.linkedField,
