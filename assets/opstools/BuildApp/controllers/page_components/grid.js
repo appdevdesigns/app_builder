@@ -172,7 +172,7 @@ steal(
 			this.editViewId = componentIds.editDataTable;
 			this.data = data;
 
-			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection) {
+			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection, currComponent) {
 				var self = this,
 					columns = [],
 					q = $.Deferred();
@@ -296,16 +296,6 @@ steal(
 
 						$$(componentIds.editView).removeView(componentIds.editHeader);
 
-						var title;
-						var description;
-						var currPage = application.pages.filter(function (p) { return p.id == rootPageId })[0];
-						if (currPage) {
-
-							var editItem = currPage.components.filter(function (c) { return c.id == componentId; })[0];
-							title = editItem ? (editItem.title || '') : '';
-							description = editItem ? (editItem.description || '') : '';
-
-						}
 
 						// Title
 						header.rows.push({
@@ -313,7 +303,7 @@ steal(
 							view: 'text',
 							placeholder: 'Title',
 							css: 'ab-component-header',
-							value: title,
+							value: currComponent.title || '',
 							on: {
 								onChange: function (newv, oldv) {
 									if (newv != oldv) {
@@ -331,7 +321,7 @@ steal(
 							view: 'textarea',
 							placeholder: 'Description',
 							css: 'ab-component-description',
-							value: description,
+							value: currComponent.description || '',
 							inputHeight: 60,
 							height: 60,
 							on: {
@@ -350,19 +340,19 @@ steal(
 						header.id = componentIds.header.replace('{id}', viewId);
 						header.width = 2100;
 
-						if (title) {
+						if (currComponent.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header ab-ellipses-text',
-								label: title
+								label: currComponent.title || ''
 							});
 						}
 
-						if (description) {
+						if (currComponent.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description ab-ellipses-text',
-								label: description
+								label: currComponent.description || ''
 							});
 						}
 					}
