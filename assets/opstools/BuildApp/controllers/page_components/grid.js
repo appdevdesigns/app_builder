@@ -651,6 +651,8 @@ steal(
 					dataCollection,
 					linkedToDataCollection;
 
+				var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
+
 				async.series([
 					// Get data collection
 					function (next) {
@@ -690,7 +692,7 @@ steal(
 					},
 					// Render dataTable component
 					function (next) {
-						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection).done(function () {
+						self.render(setting, true, selectAll, dataCollection, linkedToDataCollection, editItem).done(function () {
 							// Columns list
 							$$(componentIds.columnList).showProgress({ type: 'icon' });
 							bindColumnList.call(self, setting.object, selectAll);
@@ -840,8 +842,6 @@ steal(
 
 						if (setting.editPage && setting.editForm)
 							editForm = setting.editPage + '|' + setting.editForm;
-
-						var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
 
 						$$(componentIds.propertyView).setValues({
 							title: editItem ? (editItem.title || '') : '',

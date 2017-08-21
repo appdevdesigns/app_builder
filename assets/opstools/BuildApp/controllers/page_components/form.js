@@ -935,7 +935,7 @@ steal(
 					},
 					// Render form component
 					function (next) {
-						self.render(setting, true, showAll, dataCollection, linkedToDataCollection)
+						self.render(setting, true, showAll, dataCollection, linkedToDataCollection, editItem)
 							.fail(next)
 							.done(function () { next(); });
 					},

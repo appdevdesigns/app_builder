@@ -694,7 +694,7 @@ steal(
 									},
 									// Render component
 									function (next) {
-										self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection)
+										self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection, com)
 											.fail(next)
 											.then(function () {
 												next();
