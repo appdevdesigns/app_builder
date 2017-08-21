@@ -44,18 +44,15 @@ steal(
 					return false;
 				}
 
-				// Remove special characters
-				input = input.replace(/[!@#$%-[\]{}()*+?.,\\^|=]/g, '');
-
-				// // Validate format field name
-				// if (!/^[a-zA-Z]{1}[a-zA-Z0-9\s]*$/.test(input)) {
-				// 	webix.alert({
-				// 		title: labels.invalidFormat,
-				// 		text: labels.invalidFormatDescription,
-				// 		ok: labels.ok
-				// 	});
-				// 	return false;
-				// }
+				// Validate format field name - disallow special characters
+				if (/[!@#$%-[\]{}()*+?.,\\^|=]/g.test(input)) {
+					webix.alert({
+						title: labels.invalidFormat,
+						text: labels.invalidFormatDescription,
+						ok: labels.ok
+					});
+					return false;
+				}
 
 				return true;
 			}
