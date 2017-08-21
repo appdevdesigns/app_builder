@@ -642,7 +642,7 @@ steal(
 				return settings;
 			};
 
-			this.populateSettings = function (setting, selectAll) {
+			this.populateSettings = function (setting, selectAll, editCompItem) {
 				webix.extend($$(componentIds.columnList), webix.ProgressBar);
 
 				var self = this,
@@ -841,8 +841,8 @@ steal(
 							editForm = setting.editPage + '|' + setting.editForm;
 
 						$$(componentIds.propertyView).setValues({
-							title: self.title || '',
-							description: self.description || '',
+							title: editCompItem ? (editCompItem.title || '') : '',
+							description: editCompItem ? (editCompItem.description || '') : '',
 							object: setting.object,
 							linkedTo: setting.linkedTo,
 							linkedField: setting.linkedField,

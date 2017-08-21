@@ -873,7 +873,7 @@ steal(
 				return settings;
 			};
 
-			this.populateSettings = function (setting, showAll) {
+			this.populateSettings = function (setting, showAll, editItem) {
 				var self = this,
 					dataCollection,
 					linkedToDataCollection;
@@ -1014,8 +1014,8 @@ steal(
 
 					// Set property values
 					var propValues = {};
-					propValues[componentIds.editTitle] = self.title || '';
-					propValues[componentIds.editDescription] = self.description || '';
+					propValues[componentIds.editTitle] = editItem ? (editItem.title || '') : '';
+					propValues[componentIds.editDescription] = editItem ? (editItem.description || '') : '';
 					propValues[componentIds.selectObject] = setting.object;
 					propValues[componentIds.linkedTo] = setting.linkedTo;
 					propValues[componentIds.linkField] = setting.linkField;

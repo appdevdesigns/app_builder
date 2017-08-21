@@ -231,7 +231,7 @@ steal(
 																	if (!item.setting) item.setting = {};
 
 																	componentManager.setEditInstance(self.data.components[item_id]);
-																	componentManager.editInstance.populateSettings(item.setting);
+																	componentManager.editInstance.populateSettings(item.setting, false, item);
 
 																	$$(self.componentIds.layoutToolbarHeader).define('label', item.component.capitalize() + ' View');
 																	$$(self.componentIds.layoutToolbarHeader).refresh();
@@ -558,6 +558,10 @@ steal(
 									AD.error.log('Get components in page : Error get components', { error: err });
 								})
 								.then(function (result) {
+									result.forEach(function(r) {
+										if (r.translate) r.translate();
+									});
+
 									AD.classes.AppBuilder.currApp.currPage.attr('components', result);
 
 									var components = result.attr();
