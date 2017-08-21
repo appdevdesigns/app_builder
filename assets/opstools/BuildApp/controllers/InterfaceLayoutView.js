@@ -134,7 +134,13 @@ steal(
 
 													componentManager.editStop();
 
-													editedComponent.attr('setting', componentManager.editInstance.getSettings());
+													// settings
+													var settings = componentManager.editInstance.getSettings();
+													editedComponent.attr('setting', settings);
+
+													// title & description
+													editedComponent.attr('title', settings.title || '');
+													editedComponent.attr('description', settings.description || '');
 
 													var savedComponent;
 													async.series([

@@ -16,6 +16,24 @@ module.exports = {
 
   attributes: {
 
+    // this will pull in the translations using .populate('translations')
+    translations: {
+      collection: 'ABPageComponentTrans',
+      via: 'abpage'
+    },
+
+    translate: function (code) {
+      return ADCore.model.translate({
+        model: this,                // this instance of a Model
+        code: code,                 // the language code of the translation to use.
+        ignore: ['abpagecomponent'] // don't include this field when translating
+      });
+    },
+
+    _Klass: function () {
+      return ABPageComponent;
+    },
+
     page: { model: 'ABPage' },
 
     component: { type: 'string' },

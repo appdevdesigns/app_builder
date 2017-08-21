@@ -841,8 +841,8 @@ steal(
 							editForm = setting.editPage + '|' + setting.editForm;
 
 						$$(componentIds.propertyView).setValues({
-							title: setting.title || '',
-							description: setting.description || '',
+							title: self.title || '',
+							description: self.description || '',
 							object: setting.object,
 							linkedTo: setting.linkedTo,
 							linkedField: setting.linkedField,

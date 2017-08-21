@@ -1014,8 +1014,8 @@ steal(
 
 					// Set property values
 					var propValues = {};
-					propValues[componentIds.editTitle] = setting.title || '';
-					propValues[componentIds.editDescription] = setting.description || '';
+					propValues[componentIds.editTitle] = self.title || '';
+					propValues[componentIds.editDescription] = self.description || '';
 					propValues[componentIds.selectObject] = setting.object;
 					propValues[componentIds.linkedTo] = setting.linkedTo;
 					propValues[componentIds.linkField] = setting.linkField;

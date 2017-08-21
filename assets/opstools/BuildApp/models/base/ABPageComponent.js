@@ -12,13 +12,13 @@ steal(function() {
 				destroy: 'DELETE /app_builder/abpagecomponent/{id}',
 				describe: function() { return { 'page':'ABPage', 'component':'string', 'weight':'integer', 'setting':'json' };  },
 				// associations:['field1', 'field2', ..., 'fieldN'],
-				// multilingualFields:[ 'field', 'field2' ],
+				multilingualFields:[ 'title', 'description' ],
 				// validations: {
 				//     "role_label" : [ 'notEmpty' ],
 				//     "role_description" : [ 'notEmpty' ]
 				// },
 				fieldId: 'id',
-				fieldLabel: 'component'
+				fieldLabel: 'title'
 			}, {
 				// model: function() {
 				//     return AD.Model.get('opstools.BuildApp.ABPageComponent'); //AD.models.opstools.BuildApp.ABPageComponent;
