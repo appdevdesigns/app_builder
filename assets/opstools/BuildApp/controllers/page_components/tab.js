@@ -112,9 +112,13 @@ steal(
                         // add a cell to the template
                     setting.tabs.forEach(function(tab){
                         if ((tab.checked === true) || (tab.checked == 'true')) {
+
+                            var tabPage = application.pages.filter(function(p) { return p.name == tab.uuid; })[0];
+                            var label = tabPage ? tabPage.label : '';
+
                             view.cells.push(
                                 {
-                                  header: "<i class='fa "+tab.icon+"'></i> "+tab.label,
+                                  header: "<i class='fa "+tab.icon+"'></i> "+label,
                                   body: {
                                     view: "template", 
                                     css: 'ab-scroll-y',
@@ -279,11 +283,15 @@ steal(
                 var tabs = setting.tabs || [];
                 tabs.forEach(function(tab){
 
+                    var tabPage = application.pages.filter(function(p) { return p.name == tab.uuid; })[0];
+                    var label = tabPage ? tabPage.label : '';
+
+
                     // make a copy of tab so changes don't persist unless 
                     // we click [save]
                     var cTab = {
                         icon: tab.icon,
-                        label: tab.label,
+                        label: label,
                         uuid: tab.uuid,
                         tabID: componentId
                     }

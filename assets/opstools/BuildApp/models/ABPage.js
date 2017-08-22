@@ -158,7 +158,7 @@ steal(
 									},
 									// Render component
 									function (next) {
-										if (page.attr('comInstances.' + item.id)) {
+										if (page.attr('comInstances.' + item.id) && page.attr('comInstances.' + item.id).render) {
 											page.attr('comInstances.' + item.id).render(item.setting, editable, showAll, dataCollection, linkedDataCollection, item)
 												.then(function () { next(); }, next);
 										}

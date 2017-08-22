@@ -776,7 +776,8 @@ steal(
 						// in a buried Tab component.
 						// var parentId = application.currPage.parent ? application.currPage.parent.attr('id') : application.currPage.attr('id');
 						// application.getPages({ or: [{ id: parentId }, { parent: parentId }] })
-						application.getApplicationPages(application.currPage)
+						// application.getApplicationPages(application.currPage)
+						application.getAllApplicationPages()
 							.fail(function (err) { next(err); })
 							.then(function (pages) {
 								var viewComponents = [],
@@ -785,16 +786,30 @@ steal(
 								pages.forEach(function (p) {
 									if (p.translate) p.translate();
 
+									var pageId = p.id;
+									var pageLabel = p.label;
+
+									// if there is a component in a tab
+									if (p.type == 'tab') {
+
+										var parentPage = pages.filter(function(page) { return page.id == p.parent.id })[0];
+										if (parentPage) {
+											pageId = p.parent.id;
+											pageLabel = parentPage.label + ' - ' + p.label
+										}
+									}
+
 									// Details view components
 									var detailsViews = p.components.filter(function (c) {
 										return c.component === "view" && c.setting && c.setting.object === setting.object;
 									});
 
 									if (detailsViews && detailsViews.length > 0) {
+
 										viewComponents = viewComponents.concat($.map(detailsViews, function (v) {
 											return [{
-												id: p.id + '|' + v.id,
-												value: p.label + ' - ' + v.component
+												id: pageId + '|' + v.id,
+												value: pageLabel + ' - ' + v.component
 											}];
 										}));
 									}
@@ -807,8 +822,8 @@ steal(
 									if (forms && forms.length > 0) {
 										formComponents = formComponents.concat($.map(forms, function (f) {
 											return [{
-												id: p.id + '|' + f.id,
-												value: p.label + ' - ' + f.component
+												id: pageId + '|' + f.id,
+												value: pageLabel + ' - ' + f.component
 											}];
 										}));
 									}

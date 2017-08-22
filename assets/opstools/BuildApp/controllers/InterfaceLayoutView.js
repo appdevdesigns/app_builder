@@ -558,7 +558,7 @@ steal(
 									AD.error.log('Get components in page : Error get components', { error: err });
 								})
 								.then(function (result) {
-									result.forEach(function(r) {
+									result.forEach(function (r) {
 										if (r.translate) r.translate();
 									});
 
@@ -694,12 +694,16 @@ steal(
 									},
 									// Render component
 									function (next) {
-										self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection, com)
-											.fail(next)
-											.then(function () {
-												next();
-											});
-
+										if (self.data.components[com.attr('id')] && self.data.components[com.attr('id')].render) {
+											self.data.components[com.attr('id')].render(com.attr('setting'), editable, showAll, dataCollection, linkedDataCollection, com)
+												.fail(next)
+												.then(function () {
+													next();
+												});
+										}
+										else {
+											next();
+										}
 									}
 								], function (err) {
 									if (err)

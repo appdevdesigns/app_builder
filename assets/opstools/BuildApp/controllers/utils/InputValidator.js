@@ -45,7 +45,7 @@ steal(
 				}
 
 				// Validate format field name - disallow special characters
-				if (/[!@#$%-[\]{}()*+?.,\\^|=]/g.test(input)) {
+				if (/[!@#$%-()*+?.,\\^|=]/g.test(input)) {
 					webix.alert({
 						title: labels.invalidFormat,
 						text: labels.invalidFormatDescription,

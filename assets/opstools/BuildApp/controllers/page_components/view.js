@@ -119,7 +119,7 @@ steal(
 			this.viewId = viewId;
 			this.editViewId = componentIds.editView;
 
-			this.render = function (setting, editable, showAll, dataCollection) {
+			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection, currComponent) {
 				var q = $.Deferred(),
 					self = this,
 					fields = [],
@@ -278,7 +278,7 @@ steal(
 								view: 'text',
 								placeholder: 'Title',
 								css: 'ab-component-header',
-								value: setting.title || '',
+								value: currComponent.title ||'',
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
@@ -290,11 +290,11 @@ steal(
 								}
 							});
 						}
-						else if (setting.title) {
+						else if (currComponent.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header',
-								label: setting.title || ''
+								label: currComponent.title ||''
 							});
 						}
 
@@ -305,7 +305,7 @@ steal(
 								view: 'textarea',
 								placeholder: 'Description',
 								css: 'ab-component-description',
-								value: setting.description || '',
+								value: currComponent.description ||'',
 								inputHeight: 60,
 								height: 70,
 								on: {
@@ -320,11 +320,11 @@ steal(
 
 							});
 						}
-						else if (setting.description) {
+						else if (currComponent.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description',
-								label: setting.description || ''
+								label: currComponent.description ||''
 							});
 						}
 
@@ -397,6 +397,8 @@ steal(
 				var self = this,
 					editable = true;
 
+				var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
+
 				async.waterfall([
 					// Get data collection
 					function (next) {
@@ -417,7 +419,7 @@ steal(
 					},
 					// Render form component
 					function (dataCollection, next) {
-						self.render(setting, editable, showAll, dataCollection)
+						self.render(setting, editable, showAll, dataCollection, null, editItem)
 							.fail(next)
 							.then(function () {
 								next(null, dataCollection);
@@ -485,8 +487,8 @@ steal(
 
 						// Set property values
 						var propValues = {};
-						propValues[componentIds.editTitle] = setting.title || '';
-						propValues[componentIds.editDescription] = setting.description || '';
+						propValues[componentIds.editTitle] = editItem ? (editItem.title || '') : '';
+						propValues[componentIds.editDescription] = editItem ? (editItem.description || '') : '';
 						propValues[componentIds.selectObject] = setting.object;
 						propValues[componentIds.selectColumns] = setting.columns;
 						propValues[componentIds.recordFilter] = setting.recordFilter || '';

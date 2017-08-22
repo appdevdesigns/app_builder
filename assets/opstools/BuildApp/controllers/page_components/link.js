@@ -16,14 +16,14 @@ steal(
 			this.editViewId = componentIds.editLink;
 
 			// Instance functions
-			this.render = function (setting) {
+			this.render = function (setting, editable, showAll, dataCollection, linkedToDataCollection, currComponent) {
 				var q = $.Deferred(),
 					self = this;
 
 				var view = $.extend(true, {}, linkComponent.getView());
 				view.id = self.viewId;
 				view.data = {
-					title: setting.title || ''
+					title: currComponent.title || setting.title || ''
 				};
 				view.onClick = {
 					'ab-component-link': function (e, id, trg) {
@@ -59,8 +59,11 @@ steal(
 			};
 
 			this.populateSettings = function (setting) {
+
+				var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
+
 				// Render link
-				this.render(setting);
+				this.render(setting, null, null, null, null, editItem);
 
 				// Properties
 				if (!$$(componentIds.propertyView)) return;
@@ -96,7 +99,7 @@ steal(
 							});
 
 							$$(componentIds.propertyView).setValues({
-								title: setting.title || '',
+								title: editItem.title || setting.title || '',
 								linkTo: setting.linkTo
 							});
 
@@ -105,7 +108,7 @@ steal(
 				}
 				else {
 					$$(componentIds.propertyView).setValues({
-						title: setting.title || '',
+						title: editItem.title || setting.title || '',
 						linkTo: setting.linkTo
 					});
 
@@ -193,7 +196,8 @@ steal(
 							case 'title':
 							case 'linkTo':
 								var setting = componentManager.editInstance.getSettings();
-								componentManager.editInstance.render(setting);
+								var editItem = application.currPage.components.filter(function (c) { return c.id == componentId; })[0];
+								componentManager.editInstance.render(setting, null, null, null, null, editItem);
 								break;
 						}
 					}
