@@ -665,7 +665,7 @@ steal(
 								view: 'text',
 								placeholder: 'Title',
 								css: 'ab-component-header',
-								value: currComponent.title || '',
+								value: currComponent.title || setting.title || '',
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
@@ -677,11 +677,11 @@ steal(
 								}
 							});
 						}
-						else if (currComponent.title) {
+						else if (currComponent.title || setting.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header',
-								label: currComponent.title || ''
+								label: currComponent.title || setting.title || '',
 							});
 						}
 
@@ -692,7 +692,7 @@ steal(
 								view: 'textarea',
 								placeholder: 'Description',
 								css: 'ab-component-description',
-								value: currComponent.description || '',
+								value: currComponent.description || setting.description || '',
 								inputHeight: 60,
 								height: 70,
 								on: {
@@ -707,11 +707,11 @@ steal(
 
 							});
 						}
-						else if (currComponent.description) {
+						else if (currComponent.description || setting.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description',
-								label: currComponent.description || ''
+								label: currComponent.description || setting.description || ''
 							});
 						}
 
@@ -749,7 +749,7 @@ steal(
 								id: saveButtonId,
 								view: "button",
 								type: "form",
-								value: setting.saveLabel || "Save",
+								value: AD.lang.label.getLabel('ab.common.save') || "Save",
 								width: 90,
 								inputWidth: 80,
 								disabled: editable,
@@ -782,7 +782,7 @@ steal(
 							actionButtons.cols.push({
 								id: cancelButtonId,
 								view: "button",
-								value: setting.cancelLabel || "Cancel",
+								value: AD.lang.label.getLabel('ab.common.cancel') || "Cancel",
 								width: 90,
 								inputWidth: 80,
 								disabled: editable,

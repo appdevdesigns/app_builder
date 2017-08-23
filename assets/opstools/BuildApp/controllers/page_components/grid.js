@@ -303,7 +303,7 @@ steal(
 							view: 'text',
 							placeholder: 'Title',
 							css: 'ab-component-header',
-							value: currComponent.title || '',
+							value: currComponent.title || setting.title || '',
 							on: {
 								onChange: function (newv, oldv) {
 									if (newv != oldv) {
@@ -321,7 +321,7 @@ steal(
 							view: 'textarea',
 							placeholder: 'Description',
 							css: 'ab-component-description',
-							value: currComponent.description || '',
+							value: currComponent.description || setting.description || '',
 							inputHeight: 60,
 							height: 60,
 							on: {
@@ -340,19 +340,19 @@ steal(
 						header.id = componentIds.header.replace('{id}', viewId);
 						header.width = 2100;
 
-						if (currComponent.title) {
+						if (currComponent.title || setting.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header ab-ellipses-text',
-								label: currComponent.title || ''
+								label: currComponent.title || setting.title || ''
 							});
 						}
 
-						if (currComponent.description) {
+						if (currComponent.description || setting.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description ab-ellipses-text',
-								label: currComponent.description || ''
+								label: currComponent.description || setting.description || ''
 							});
 						}
 					}

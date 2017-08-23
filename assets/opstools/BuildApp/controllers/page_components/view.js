@@ -278,7 +278,7 @@ steal(
 								view: 'text',
 								placeholder: 'Title',
 								css: 'ab-component-header',
-								value: currComponent.title ||'',
+								value: currComponent.title || setting.title ||'',
 								on: {
 									onChange: function (newv, oldv) {
 										if (newv != oldv) {
@@ -290,11 +290,11 @@ steal(
 								}
 							});
 						}
-						else if (currComponent.title) {
+						else if (currComponent.title || setting.title) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-header',
-								label: currComponent.title ||''
+								label: currComponent.title || setting.title ||''
 							});
 						}
 
@@ -305,7 +305,7 @@ steal(
 								view: 'textarea',
 								placeholder: 'Description',
 								css: 'ab-component-description',
-								value: currComponent.description ||'',
+								value: currComponent.description || setting.description ||'',
 								inputHeight: 60,
 								height: 70,
 								on: {
@@ -320,11 +320,11 @@ steal(
 
 							});
 						}
-						else if (currComponent.description) {
+						else if (currComponent.description || setting.description) {
 							header.rows.push({
 								view: 'label',
 								css: 'ab-component-description',
-								label: currComponent.description ||''
+								label: currComponent.description || setting.description ||''
 							});
 						}
 
