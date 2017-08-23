@@ -100,7 +100,7 @@ module.exports = class ABObject extends ABObjectBase {
 	///
 
 	dbTableName() {
-		if (!this.isImported) {
+		if (!JSON.parse(this.isImported || 0)) {
 			return AppBuilder.rules.toObjectNameFormat(this.application.dbApplicationName(), this.name);
 		}
 		else {
