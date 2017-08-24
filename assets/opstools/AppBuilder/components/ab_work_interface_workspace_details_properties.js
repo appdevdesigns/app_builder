@@ -8,11 +8,11 @@
 import ABViewManager from "../classes/ABViewManager"
 
 export default class AB_Work_Interface_Workspace_Details_Properties extends OP.Component {
-    
+
     constructor(App) {
         super(App, 'ab_work_interface_workspace_details_properties');
         var L = this.Label;
-        
+
         var labels = {
             common: App.labels,
             component: {
@@ -21,69 +21,59 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
                 properties: L('ab.interface.properties', "*Properties"),
             }
         };
-        
-        
+
+
         // internal list of Webix IDs to reference our UI components.
         var ids = {
             component: this.unique('component'),
-            
-            editors:this.unique('editors'),
-            form:this.unique('propertyList')
+
+            editors: this.unique('editors'),
+            form: this.unique('propertyList')
         };
-        
-        
+
+
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            // scroll: true,
-            rows:[
-                {
-                    view: 'toolbar',
-                    css: 'ab-data-toolbar',
-                    cols: [
-                        {
-                        view: 'label',
-                        label: labels.component.properties
-                        },
-                        {
-                            view: "icon", 
-                            icon: "info-circle",
-                            tooltip: labels.component.propertiesTipText,
-                            on: {
-                                onItemClick: function() {
-                                    _logic.infoAlert();
-                                }
-                            }
-                        }
-                    ]
-                },
-                {
-                    view:'multiview',
-                    id:ids.editors,
-                    rows:[
-                        {id:'delme', view:'label',  label:'delme'}
-                    ]
+            collapsed: true,
+            header: function () {
+                return labels.component.properties + ' <i class="info-tip fa fa-info-circle"></i>';
+            },
+            // css: 'ab-data-toolbar',
+            // tooltip: labels.component.propertiesTipText,
+            onClick: {
+                "info-tip": function () {
+                    _logic.infoAlert();
+
+                    return false;
                 }
-            ]
+            },
+            body: {
+                view: 'multiview',
+                id: ids.editors,
+                rows: [
+                    { id: 'delme', view: 'label', label: 'delme' }
+                ]
+            }
         };
-        
+
         var CurrentView = null;
         var _editorsByType = {};
-        
+
         // setting up UI
-        this.init = function() {
+        this.init = function () {
             // webix.extend($$(ids.form), webix.ProgressBar);
 
             var newEditorList = {
-                view:'multiview',
-                id:ids.editors,
-                rows:[
+                view: 'multiview',
+                id: ids.editors,
+                rows: [
                 ]
             }
 
             // Load in ALL the property editors for our known Views:
             var allViews = ABViewManager.allViews();
-            allViews.forEach((view)=>{
+            allViews.forEach((view) => {
 
                 var propertyComponent = view.propertyEditorComponent(App);
 
@@ -97,13 +87,13 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
 
             // now remove the 'del_me' definition editor placeholder.
             webix.ui(newEditorList, $$(ids.editors));
-            
+
         };
 
 
         // internal business logic 
         var _logic = this.logic = {
-            
+
             // /**
             //  * @function formBusy
             //  *
@@ -111,11 +101,11 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             //  * progress.
             //  */
             // formBusy: function() {
-    
+
             //  $$(ids.form).showProgress({ type: 'icon' });
             // },
-            
-            
+
+
             // /**
             //  * @function formReady()
             //  *
@@ -124,20 +114,20 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             // formReady: function() {
             //  $$(ids.form).hideProgress();
             // },
-            
-            infoAlert: function() {
+
+            infoAlert: function () {
                 OP.Dialog.Alert({
                     title: labels.component.propertiesTipTitle,
                     text: labels.component.propertiesTipText
                 });
             },
-            
+
             /**
              * @function show()
              *
              * Show this component.
              */
-            show: function() {
+            show: function () {
                 $$(ids.component).show();
             },
 
@@ -148,10 +138,10 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
              * our interface with the details for this View.
              * @param {ABView} view  current view instance.
              */
-            viewLoad: function(view) {
+            viewLoad: function (view) {
                 CurrentView = view;
 
-                for(var e in _editorsByType) {
+                for (var e in _editorsByType) {
 
                     if (e == view.key) {
                         _editorsByType[e].populate(view);
@@ -163,11 +153,11 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
 
             },
         };
-        
-        
+
+
         // Expose any globally accessible Actions:
         this.actions({
-            
+
             /**
              * @function populateApplicationForm()
              *
@@ -181,7 +171,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
              *      [optional] The current ABApplication we are working with.
              */
             // populateApplicationForm: function(Application){
-                
+
             // 	_logic.formReset();
             // 	if (Application) {
             // 		// populate Form here:
@@ -190,13 +180,13 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
             // 	_logic.permissionPopulate(Application);
             // 	_logic.show();
             // }
-            
+
         });
-        
-        
+
+
         // Interface methods for parent component:
         this.show = _logic.show;
         this.viewLoad = _logic.viewLoad;
-        
+
     }
 }

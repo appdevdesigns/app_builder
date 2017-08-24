@@ -82,11 +82,6 @@ export default class ABViewForm extends ABViewFormPanel {
 
 		return commonUI.concat([
 			{
-				name: 'object',
-				view: 'richselect',
-				label: L('ab.components.form.objects', "*Objects")
-			},
-			{
 				name: 'showLabel',
 				view: 'checkbox',
 				label: L('ab.components.form.showlabel', "*Display Label")
@@ -120,16 +115,7 @@ export default class ABViewForm extends ABViewFormPanel {
 
 		super.propertyEditorPopulate(ids, view);
 
-		var objects = view.application.objects().map((obj) => {
-			// label option of webix richselect
-			obj.value = obj.label;
-			return obj;
-		});
-
-		$$(ids.object).define('options', objects);
-		$$(ids.object).refresh();
-
-		$$(ids.object).setValue(view.settings.object);
+		$$(ids.object).enable();
 		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewFormPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);

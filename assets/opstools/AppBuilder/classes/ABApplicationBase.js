@@ -203,6 +203,19 @@ module.exports = class ABApplicationBase {
 		return linkedFields;
 	}
 
+
+	/**
+	 * @method objectByID()
+	 * return the specific object requested by the provided id.
+	 * @param {string} id
+	 * @return {obj}
+	 */
+	objectByID (id) {
+	 
+		return this.objects((o)=>{ return o.id == id; })[0];
+	}
+
+	
 	/**
 	 * @method objectNew()
 	 *

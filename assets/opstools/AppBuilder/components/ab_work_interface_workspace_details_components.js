@@ -8,11 +8,11 @@
 
 
 export default class AB_Work_Interface_Workspace_Details_Components extends OP.Component {
-    
+
     constructor(App) {
         super(App, 'ab_work_interface_workspace_details_components');
         var L = this.Label;
-        
+
         var labels = {
             common: App.labels,
             component: {
@@ -23,67 +23,54 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                 noComponents: L('ab.interface.noComponents', '*No Components')
             }
         };
-        
-        
+
+
         // internal list of Webix IDs to reference our UI components.
         var ids = {
             component: this.unique('component'),
             list: this.unique('list'),
-            
+
         };
-        
-        
+
+
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            // scroll: true,
-            rows:[
-                {
-                    view: 'toolbar',
-                    // id: self.componentIds.componentToolbar,
-                    css: 'ab-data-toolbar',
-                    cols: [
-                        {
-                            view: 'label',
-                            // id: self.componentIds.componentToolbarHeader,
-                            label: labels.component.components
-                        },
-                        {
-                            view: "icon", 
-                            icon: "info-circle",
-                            tooltip: labels.component.componentsTipText,
-                            on: {
-                                onItemClick: function() {
-                                    _logic.infoAlert();
-                                }
-                            }
-                        }
-                    ]
+            header: function () {
+                return labels.component.components + ' <i class="info-tip fa fa-info-circle"></i>';
+            },
+            // css: 'ab-data-toolbar',
+            // tooltip: labels.component.componentsTipText,
+            onClick: {
+                "info-tip": function () {
+                    _logic.infoAlert();
+
+                    return false;
+                }
+            },
+            body: {
+                id: ids.list,
+                view: 'list',
+                drag: 'source',
+                css: 'ab_interface_draggable',
+                // autoheight:true,
+                template: function (obj, common) {
+                    return _logic.template(obj, common);
                 },
-                {
-                    id: ids.list,
-                    view: 'list',
-                    drag: 'source',
-                    css: 'ab_interface_draggable',
-                    // autoheight:true,
-                    template: function (obj, common) {
-                        return _logic.template(obj, common);
-                    },
-                    on: {
-                        onBeforeDrag: function (context, ev) {
-                            _logic.onBeforeDrag(context, ev);
-                        }
+                on: {
+                    onBeforeDrag: function (context, ev) {
+                        _logic.onBeforeDrag(context, ev);
                     }
                 }
-            ]
+            }
         };
-        
+
         var CurrentView = null;
 
         // setting up UI
-        this.init = function() {
+        this.init = function () {
             // webix.extend($$(ids.form), webix.ProgressBar);
-            
+
         };
 
 
@@ -95,7 +82,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
              * @function onBeforeDrag
              * when a drag event is started, update the drag element display.
              */
-            onBeforeDrag: function(context, ev) {
+            onBeforeDrag: function (context, ev) {
 
                 var component = $$(ids.list).getItem(context.source);
 
@@ -104,7 +91,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     var label = component.common().labelKey;
                     label = L(label, label);
 
-                    context.html = "<div style='width:"+context.from.$width+"px;' class='ab-component-item-drag'>"
+                    context.html = "<div style='width:" + context.from.$width + "px;' class='ab-component-item-drag'>"
                         + "<i class='fa fa-{0}'></i> ".replace("{0}", component.common().icon)
                         + label
                         + "</div>";
@@ -116,29 +103,29 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                 }
             },
 
-            
+
             /**
              * @function show()
              *
              * Show this component.
              */
-            show: function() {
+            show: function () {
                 $$(ids.component).show();
             },
-            
-            infoAlert: function() {
+
+            infoAlert: function () {
                 OP.Dialog.Alert({
                     title: labels.component.componentsTipTitle,
                     text: labels.component.componentsTipText
                 });
             },
-            
+
             /**
              * @function template()
              * compile the template for each item in the list.
              */
-            template:function(obj, common) {
-                
+            template: function (obj, common) {
+
                 // if this is one of our ABViews:
                 if (obj.common) {
 
@@ -154,9 +141,9 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                     // maybe this is simply the "No Components" placeholder
                     return obj.label;
                 }
-                
 
-                
+
+
             },
 
 
@@ -166,7 +153,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
              * our interface with the components allowed for this View.
              * @param {ABView} view  current view instance.
              */
-            viewLoad: function(view) {
+            viewLoad: function (view) {
                 CurrentView = view;
 
                 var List = $$(ids.list);
@@ -174,7 +161,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                 var components = view.componentList();
                 if (components.length == 0) {
                     components.push({
-                        
+
                         view: 'label',
                         // id: self.componentIds.componentToolbarHeader,
                         label: labels.component.noComponents,
@@ -186,24 +173,24 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                         // }
                     })
 
-// NOTE: I'd like to prevent the drag from even happening, but currently
-// this doesn't seem to turn off the drag-n-drop feature;
-// TODO: try to turn off the d-n-d ability if we only have the no component placeholder
+                    // NOTE: I'd like to prevent the drag from even happening, but currently
+                    // this doesn't seem to turn off the drag-n-drop feature;
+                    // TODO: try to turn off the d-n-d ability if we only have the no component placeholder
                     List.define('drag', false);
                 } else {
                     List.define('drag', 'source');
                 }
-                
+
                 List.clearAll();
                 List.parse(components);
                 List.refresh();
             }
         };
-        
-        
+
+
         // Expose any globally accessible Actions:
         this.actions({
-            
+
             /**
              * @function populateApplicationForm()
              *
@@ -217,7 +204,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
              *      [optional] The current ABApplication we are working with.
              */
             // populateApplicationForm: function(Application){
-                
+
             // 	_logic.formReset();
             // 	if (Application) {
             // 		// populate Form here:
@@ -226,13 +213,13 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
             // 	_logic.permissionPopulate(Application);
             // 	_logic.show();
             // }
-            
+
         });
-        
-        
+
+
         // Interface methods for parent component:
         this.show = _logic.show;
         this.viewLoad = _logic.viewLoad;
-        
+
     }
 }
