@@ -528,6 +528,16 @@ steal(
 												}
 											});
 
+											// sort options
+											if (col.setting && col.setting.options) {
+												var optIds = col.setting.options.map(function (opt) { return opt.id.toString() });
+
+												listOptions[col.id].sort(function (a, b) {
+													return optIds.indexOf(a.id.toString()) - optIds.indexOf(b.id.toString());
+												})
+											}
+
+
 											callback();
 										});
 								});
@@ -547,7 +557,7 @@ steal(
 
 							var element = {
 								name: col.name, // Field name
-								labelWidth: 100
+								labelWidth: 200
 							};
 							element.label = col.label;
 
