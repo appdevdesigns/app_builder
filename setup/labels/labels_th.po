@@ -967,6 +967,30 @@ msgstr "คุณต้องการลบ<b>{0}</b>หรือไม่"
 
 #. path: app_builder
 #. code: th
+#. key: ab.component.grid.updateRecords
+msgid "Update records"
+msgstr "แก้ไขข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.grid.deleteRecords
+msgid "Delete records"
+msgstr "ลบข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.grid.addFilter
+msgid "Add filters"
+msgstr "กรองข้อมูล"
+
+#. path: app_builder
+#. code: th
+#. key: ab.component.grid.applySort
+msgid "Apply sort"
+msgstr "เรียงข้อมูล"
+
+#. path: app_builder
+#. code: th
 #. key: ab.component.tab.addPage
 msgid "Add a tab below"
 msgstr "[th] Add a tab below"

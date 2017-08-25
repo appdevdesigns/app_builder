@@ -363,7 +363,7 @@ steal(
 						var object = application.objects.filter(function (obj) { return obj.id == self.data.setting.object });
 
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-update-items-button', label: 'Update records', icon: "pencil", type: "icon", width: 140,
+							view: 'button', id: self.viewId + '-update-items-button', label: AD.lang.label.getLabel('ab.component.grid.updateRecords') ||'Update records', icon: "pencil", type: "icon", width: 140,
 							click: function () {
 								if ($$('ab-update-records-popup')) {
 									$$('ab-update-records-popup').define('application', application);
@@ -379,7 +379,7 @@ steal(
 
 					if (setting.selectable == 'enable' && setting.removable === 'enable') {
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-delete-items-button', label: 'Delete records', icon: "trash", type: "icon", width: 140,
+							view: 'button', id: self.viewId + '-delete-items-button', label: AD.lang.label.getLabel('ab.component.grid.deleteRecords') || 'Delete records', icon: "trash", type: "icon", width: 140,
 							click: function () {
 								if ($$('ab-delete-records-popup')) {
 									$$('ab-delete-records-popup').define('objectModel', object[0]);
@@ -394,7 +394,7 @@ steal(
 
 					if (setting.filter === 'enable') {
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-filter-button', label: 'Add filters', icon: "filter", type: "icon", width: 120, badge: 0,
+							view: 'button', id: self.viewId + '-filter-button', label: AD.lang.label.getLabel('ab.component.grid.addFilter') || 'Add filters', icon: "filter", type: "icon", width: 120, badge: 0,
 							click: function () {
 								if ($$('ab-filter-popup')) {
 									$$('ab-filter-popup').define('dataTable', $$(self.viewId));
@@ -417,7 +417,7 @@ steal(
 
 					if (setting.sort === 'enable') {
 						action_buttons.push({
-							view: 'button', id: self.viewId + '-sort-button', label: 'Apply sort', icon: "sort", type: "icon", width: 120, badge: 0,
+							view: 'button', id: self.viewId + '-sort-button', label: AD.lang.label.getLabel('ab.component.grid.applySort') || 'Apply sort', icon: "sort", type: "icon", width: 120, badge: 0,
 							click: function () {
 								if ($$('ab-sort-popup')) {
 									$$('ab-sort-popup').define('dataTable', $$(self.viewId));

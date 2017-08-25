@@ -979,6 +979,30 @@ msgstr "Do you want to delete <b>{0}</b>?"
 
 #. path: app_builder
 #. code: en
+#. key: ab.component.grid.updateRecords
+msgid "Update records"
+msgstr "Update records"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.grid.deleteRecords
+msgid "Delete records"
+msgstr "Delete records"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.grid.addFilter
+msgid "Add filters"
+msgstr "Add filters"
+
+#. path: app_builder
+#. code: en
+#. key: ab.component.grid.applySort
+msgid "Apply sort"
+msgstr "Apply sort"
+
+#. path: app_builder
+#. code: en
 #. key: ab.component.tab.addPage
 msgid "Add a tab below"
 msgstr "Add a tab below"
