@@ -71,20 +71,53 @@ export default class ABViewFormPanel extends ABView {
 
 		// _logic functions
 
-		_logic.listTemplate = (field, common) => {
-			var formComponent;
-			var formComponentInfo = field.fieldFormComponent();
+		_logic.selectObject = (objId, oldObjId) => {
 
-			if (formComponentInfo)
-				formComponent = ABViewManager.allViews((v) => v.common().key == formComponentInfo.key)[0];
+			// if first time, then we don't need to clear sub-components
+			if (oldObjId == null)
+				return;
+
+			// TODO : warning message
+
+			var currView = _logic.currentEditObject();
+			var formView = currView.formComponent();
+
+			// remove all old field components
+			formView.clearFieldComponents();
+
+			// Update field options in property
+			this.propertyUpdateFieldOptions(ids, currView, objId);
+
+			// add all fields to editor by default
+			var fields = $$(ids.fields).find({});
+			fields.forEach((f) => {
+
+				if (!f.selected) { 
+
+					_logic.addFieldToForm(f);
+
+					// update item to UI list
+					f.selected = 1;
+					$$(ids.fields).updateItem(f.id, f);
+				}
+
+			});
+
+		};
+
+		_logic.listTemplate = (field, common) => {
+
+			var formComponent = ABViewManager.allViews((v) => v.common().key == field.componentKey)[0];
 
 			return common.markCheckbox(field) + " #label# <div class='ab-component-form-fields-component-info'> <i class='fa fa-#icon#'></i> #component# </div>"
 				.replace("#label#", field.label)
 				.replace("#icon#", (formComponent ? formComponent.common().icon : "fw"))
 				.replace("#component#", (formComponent ? L(formComponent.common().labelKey, "") : ""));
+
 		};
 
 		_logic.check = (e, fieldId) => {
+
 			var currView = _logic.currentEditObject();
 
 			// update UI list
@@ -116,25 +149,28 @@ export default class ABViewFormPanel extends ABView {
 			if (field == null)
 				return;
 
-			var formComponentInfo = field.fieldFormComponent();
-			if (formComponentInfo == null)
-				return;
-
-			var formComponent = ABViewManager.allViews((v) => v.common().key == formComponentInfo.key)[0];
+			var formComponent = ABViewManager.allViews((v) => v.common().key == field.componentKey)[0];
 			if (formComponent == null)
 				return;
 
 			var FormView = _logic.currentEditObject();
 
 			// set settings to component
-			var settings = formComponentInfo.settings || {};
-			settings.fieldId = field.id;
+			var settings = {
+				// TODO : Default settings
+				fieldId: field.id
+			};
 
-			FormView._views.push(ABViewManager.newView({
+			// add a new component
+			var newView = ABViewManager.newView({
 				key: formComponent.common().key,
 				label: field.label,
 				settings: settings
-			}, FormView.application, FormView));
+			}, FormView.application, FormView);
+			FormView._views.push(newView);
+
+			// update properties when a sub-view is destroyed
+			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, FormView); });
 
 		}
 
@@ -144,12 +180,10 @@ export default class ABViewFormPanel extends ABView {
 			{
 				name: 'object',
 				view: 'richselect',
-				label: L('ab.components.form.objects', "*Objects")
-				// ,on: {
-				// 	onChange: () => {
-				// 		this.propertyEditorPopulate(ids, view);
-				// 	}
-				// }
+				label: L('ab.components.form.objects', "*Objects"),
+				on: {
+					onChange: _logic.selectObject
+				}
 			},
 			{
 				name: 'fields',
@@ -178,29 +212,14 @@ export default class ABViewFormPanel extends ABView {
 		var formComponent = view.formComponent();
 		var objectId = formComponent.settings.object;
 
-		// Pull object list
+		// Pull object list to options
 		var objectOptions = view.application.objects().map((obj) => {
 
-			// label option of webix richselect
-			obj.value = obj.label;
-			return obj;
+			return {
+				id: obj.id,
+				value: obj.label
+			};
 		});
-
-		// Pull field list
-		var object = view.application.objectByID(objectId);
-		var existsFields = formComponent.fieldComponents();
-		var fieldOptions = [];
-		if (object != null) {
-			fieldOptions = object.fields().map((f) => {
-
-				// prevent duplicate fields
-				f.selected = existsFields.filter((com) => {
-					return f.id == com.settings.fieldId;
-				}).length > 0;
-
-				return f;
-			});
-		}
 
 		$$(ids.object).define('options', objectOptions);
 		$$(ids.object).refresh();
@@ -210,12 +229,45 @@ export default class ABViewFormPanel extends ABView {
 		// We can select object in form component only
 		$$(ids.object).disable();
 
-		$$(ids.fields).parse(fieldOptions);
+		this.propertyUpdateFieldOptions(ids, view, objectId);
+
+		// update properties when a field component is deleted
+		view.views().forEach((v) => {
+			if (v instanceof ABViewFormField)
+				v.once('destroyed', () => this.propertyEditorPopulate(ids, view));
+		});
+
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
+
+	}
+
+	static propertyUpdateFieldOptions(ids, view, objectId) {
+
+		var formComponent = view.formComponent();
+		var object = view.application.objectByID(objectId);
+		var existsFields = formComponent.fieldComponents();
+
+		// Pull field list
+		var fieldOptions = [];
+		if (object != null) {
+			fieldOptions = object.fields().map((f) => {
+
+				return {
+					id: f.id,
+					label: f.label,
+					componentKey: f.fieldFormComponent().key,
+					selected: existsFields.filter((com) => { return f.id == com.settings.fieldId; }).length > 0
+				}
+
+			});
+		}
+
+		$$(ids.fields).clearAll();
+		$$(ids.fields).parse(fieldOptions);
 
 	}
 
@@ -234,6 +286,13 @@ export default class ABViewFormPanel extends ABView {
 
 
 
+	/**
+	 * @method formComponent()
+	 *
+	 * return a form component
+	 *
+	 * @return {ABViewForm}
+	 */
 	formComponent() {
 		var form = null;
 		var curr = this;
@@ -249,6 +308,13 @@ export default class ABViewFormPanel extends ABView {
 		return form;
 	}
 
+	/**
+	 * @method fieldComponents()
+	 *
+	 * return an array of all the ABViewFormField children
+	 *
+	 * @return {array} 	array of ABViewFormField
+	 */
 	fieldComponents() {
 
 		var flattenComponents = (views) => {
@@ -270,6 +336,12 @@ export default class ABViewFormPanel extends ABView {
 		else {
 			return [];
 		}
+	}
+
+	clearFieldComponents() {
+		this.fieldComponents().forEach((comp) => {
+			comp.destroy();
+		});
 	}
 
 

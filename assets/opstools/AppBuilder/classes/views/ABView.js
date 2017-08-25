@@ -768,7 +768,11 @@ export default class ABView  extends EventEmitter {
 							deletedView.destroy()
 							.then(()=>{
 								$$(_ui.id).remove(id);
-								
+
+								// signal the current view has been deleted.
+								deletedView.emit('destroyed', deletedView);
+	
+
 								// if we don't have any views, then place a "drop here" placeholder
 								if ($$(_ui.id).count() == 0) {
 									webix.extend($$(_ui.id), webix.OverlayBox);

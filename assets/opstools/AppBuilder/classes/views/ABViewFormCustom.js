@@ -125,11 +125,13 @@ export default class ABViewFormCustom extends ABViewFormField {
 			component: App.unique(idBase + '_component'),
 		}
 
-		var templateLabel;
-		if (form.settings.labelPosition == 'top')
-			templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
-		else
-			templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
+		var templateLabel = '';
+		if (form.settings.showLabel == true) {
+			if (form.settings.labelPosition == 'top')
+				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
+			else
+				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
+		}
 
 		var template = (templateLabel + "#template#")
 			.replace(/#width#/g, form.settings.labelWidth)
