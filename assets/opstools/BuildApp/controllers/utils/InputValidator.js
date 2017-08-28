@@ -34,7 +34,7 @@ steal(
 
 			validateFormat: function (input) {
 				// Validate maximum length of field name
-				var maxNameLength = 20;
+				var maxNameLength = 40;
 				if (input && input.length > maxNameLength) {
 					webix.alert({
 						title: labels.overMaxLength,

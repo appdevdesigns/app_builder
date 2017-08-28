@@ -544,19 +544,45 @@ steal(
 
 							// Question: should we do a resize() after all the components are rendered?
 
-							async.each(self.activePage.components, function(item, nextComponent) {
+							var components = [];
 
-								self.activePage.renderComponent(self.data.application, item)
-								.done(function (isNew) {
-									self.bindComponentEvents(page.comInstances[item.id], item);
-									self.bindComponentEventsInTab(item);
-									nextComponent();
-								});
+							async.series([
+								function(next) {
+									self.activePage.getComponents()
+										.done(function(result) {
 
-							}, function(err) {
-								// self.resize() // <-- doesn't do the trick
-								AD.comm.hub.publish('opsportal.resize', { height: self.height });
-							});
+											result.forEach(function(r){ 
+												if (r.translate) r.translate();
+											});
+
+											components = result;
+
+											next();
+										})
+										.fail(next);
+								},
+
+								function(next) {
+									async.each(components, function(item, nextComponent) {
+										
+										self.activePage.renderComponent(self.data.application, item)
+										.done(function (isNew) {
+											self.bindComponentEvents(page.comInstances[item.id], item);
+											self.bindComponentEventsInTab(item);
+											nextComponent();
+										});
+		
+									}, function(err) {
+										// self.resize() // <-- doesn't do the trick
+										AD.comm.hub.publish('opsportal.resize', { height: self.height });
+
+										next(err);
+									});
+										
+								}
+
+							])
+
 						},
 
 						bindComponentEvents: function (comInstance, itemInfo) {

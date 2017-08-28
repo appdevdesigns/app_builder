@@ -69,22 +69,43 @@ steal(
 						display: function (application) {
 							var page = this,
 								q = $.Deferred(),
-								tasks = [];
+								tasks = [],
+								components = [];
 
-							page.components.forEach(function (item) {
-								tasks.push(function (next) {
-									page.renderComponent(application, item).then(function () {
-										next();
-									}, next);
-								});
-							});
+							async.series([
+								function(ok) {
+									page.getComponents()
+									.fail(ok)
+									.done(function(result) {
+										components = result;
 
-							async.series(tasks, function (err) {
-								if (err)
-									q.reject(err);
-								else
-									q.resolve();
-							});
+										ok();
+									});
+								},
+
+								function(ok) {
+
+									components.forEach(function (item) {
+										if (item.translate) item.translate();
+
+										tasks.push(function (next) {
+											page.renderComponent(application, item).then(function () {
+												next();
+											}, next);
+										});
+									});
+		
+									async.series(tasks, function (err) {
+										if (err)
+											q.reject(err);
+										else
+											q.resolve();
+
+										ok();
+									});
+		
+								}
+							]);
 
 							return q;
 						},

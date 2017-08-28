@@ -67,6 +67,12 @@ msgstr "Search"
 
 #. path: app_builder
 #. code: en
+#. key: ab.common.select
+msgid "Select"
+msgstr "Select"
+
+#. path: app_builder
+#. code: en
 #. key: ab.common.close
 msgid "Close"
 msgstr "Close"

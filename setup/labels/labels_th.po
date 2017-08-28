@@ -67,6 +67,12 @@ msgstr "ค้นหา"
 
 #. path: app_builder
 #. code: th
+#. key: ab.common.select
+msgid "Select"
+msgstr "เลือก"
+
+#. path: app_builder
+#. code: th
 #. key: ab.common.close
 msgid "Close"
 msgstr "ปิด"
