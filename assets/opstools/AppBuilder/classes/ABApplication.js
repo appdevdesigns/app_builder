@@ -98,6 +98,31 @@ export default class ABApplication extends ABApplicationBase {
 
 
   	/**
+  	 * @function getApplicationById
+  	 *
+  	 *
+  	 * @return {Promise}
+  	 */
+	  static getApplicationById(id) {
+		return new Promise(
+			(resolve, reject) => {
+
+				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
+				ModelApplication.Models(ABApplication); // set the Models  setting.
+
+				ModelApplication.findAll({ id: id })
+					.then(function(data){
+
+						resolve(data.getItem(data.getFirstId()));
+					})
+					.catch(reject);
+
+			}
+		)
+	}
+
+
+  	/**
   	 * @function create
   	 *
   	 * take the initial values and create an instance of ABApplication.
@@ -455,3 +480,6 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 }
+
+// export to ABLiveTool
+window.ABApplication = ABApplication;

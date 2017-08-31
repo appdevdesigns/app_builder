@@ -1,16 +1,13 @@
-
 steal(
 	// List your Controller's dependencies here:
 	'opstools/BuildApp/controllers/utils/DataHelper.js',
 	'opstools/BuildApp/controllers/utils/ModelCreator.js',
-	'opstools/BuildApp/models/ABApplication.js',
 
-	function (dataHelper, modelCreator, ABApplication) {
+	function (dataHelper, modelCreator) {
 		System.import('appdev').then(function () {
 			System.import('opstools/BuildApp').then(function () {
 				steal.import('appdev/ad',
 					'appdev/control/control'
-					//'opstools/BuildApp/models/ABApplication'
 				).then(function () {
 
 					// Namespacing conventions:
@@ -31,12 +28,12 @@ steal(
 
 							// Validate
 							if (options.app == null || options.app < 0) {
-								self.invalidApp();
+								AD.error.log('Application id is invalid.');
 								return;
 							}
 
 							if (options.page == null || options.page < 0) {
-								self.invalidPage();
+								AD.error.log('Page id is invalid.');
 								return;
 							}
 
@@ -44,7 +41,9 @@ steal(
 
 							self.debounceResize = false;
 							self.resizeValues = { height: 0, width: 0 };
-							
+
+							self.App = new OP.Component(null, self.containerDomID).App;
+
 							// Has this app been selected by the user yet?
 							self.activated = false;
 
@@ -53,18 +52,10 @@ steal(
 							self.initPage();
 						},
 
-						invalidApp: function () {
-							AD.error.log('Application id is invalid.');
-						},
-
-						invalidPage: function () {
-							AD.error.log('Page id is invalid.');
-						},
-
 						initDOM: function () {
 							console.log('... creating ABLiveTool <div> ');
 
-							this.element.html('<div id="#domID#"></div>'.replace(/#domID#/g, this.containerDomID));
+							this.element.html('<div style="background-color: #fff !important" id="#domID#"></div>'.replace(/#domID#/g, this.containerDomID));
 
 							// this.element.html(
 							// 	('<div id="#domID#"></div>' +
@@ -74,7 +65,7 @@ steal(
 
 						initModels: function () {
 							this.Models = {};
-							this.Models.ABApplication = AD.Model.get('opstools.BuildApp.ABApplication');
+							this.Models.ABApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 						},
 
 						initPage: function () {
@@ -110,7 +101,7 @@ steal(
 							async.series([
 								// Get application data
 								function (next) {
-									self.Models.ABApplication.findOne({ id: self.options.app })
+									ABApplication.getApplicationById(self.options.app)
 										.then(function (result) {
 											self.data.application = result;
 
@@ -219,7 +210,7 @@ steal(
 										},
 										body: {
 											scroll: true,
-											template: page.getItemTemplate()
+											template: '' // page.getItemTemplate()
 										}
 									};
 
@@ -238,55 +229,14 @@ steal(
 									webix.ui(popupTemplate).hide();
 
 									break;
-								case 'tab':
-									// don't render tabs.  The component will do that.
-
-									// refresh tab view when update
-									var parentPage = self.data.pages.filter(function (p) { return p.id == page.parent.id })[0];
-									if (parentPage == null) break;
-
-									parentPage.components.forEach(function (com) {
-										if (parentPage.comInstances == null ||
-											parentPage.comInstances[com.id] == null ||
-											com.component !== 'tab' ||
-											com.setting.tabs == null ||
-											com.setting.tabs.filter(function (t) { return t.uuid == page.name; }).length < 1)
-											return;
-
-										var tabViewId = self.unique('ab_live_item', parentPage.id, com.id);
-										if ($$(tabViewId) == null) return;
-
-										// Get index of selected tab view
-										var selectedIndex = $$(tabViewId).getTabbar().optionIndex($$(tabViewId).getValue());
-
-										// force a refresh on component
-										parentPage.removeAttr('comInstances.' + com.id);
-
-										// Rerender the tab component
-										parentPage.renderComponent(self.data.application, com)
-											.done(function () {
-												var selectedTabView = $$(tabViewId).getTabbar().config.options[selectedIndex];
-
-												if ($$(tabViewId).getValue() == selectedTabView.id)
-													self.bindComponentEventsInTab(com);
-
-												// Switch to selected tab
-												$$(tabViewId).setValue(selectedTabView.id);
-											});
-									});
-
-									break;
 								case 'page':
 								default:
 									var pageTemplate = {
-										view: "template",
+										view: 'layout',
 										id: pageDomId,
-										template: page.getItemTemplate(),
-										minWidth: 700,
-										autoheight: true,
-										scroll: true
-									};
-
+										rows: []
+									}
+					
 									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
 										if ($$(pageDomId).config.view == 'window') {
@@ -330,86 +280,19 @@ steal(
 
 							// Question: should we do a resize() after all the components are rendered?
 							
-							async.each(self.activePage.components, function(item, nextComponent) {
+							async.each(self.activePage.views(), function(com, ok) {
 
-								self.activePage.renderComponent(self.data.application, item)
-								.done(function (isNew) {
-									self.bindComponentEvents(page.comInstances[item.id], item);
-									self.bindComponentEventsInTab(item);
-									nextComponent();
-								});
+								var comInstance = com.component(self.App);
+
+								$$(pageDomId).addView(comInstance.ui);
+
+								if (comInstance.init) 
+									comInstance.init();
 
 							}, function(err) {
 								// self.resize() // <-- doesn't do the trick
 								AD.comm.hub.publish('opsportal.resize', { height: self.height });
 							});
-						},
-
-						bindComponentEvents: function (comInstance, itemInfo) {
-							var self = this;
-
-							// Listen component events
-							$(comInstance).off('renderComplete');
-							$(comInstance).on('renderComplete', function (event, data) {
-								var rootPageDomId = self.getPageDomID(self.rootPage);
-								$$(rootPageDomId).adjust();
-
-								if ($$(itemInfo.domID))
-									$$(itemInfo.domID).adjust();
-
-								// if (_this.activePage.comInstances) {
-								// 	_this.activePage.components.forEach(function (item) {
-								// 		if (_this.activePage.comInstances[item.id] && _this.activePage.comInstances[item.id].onDisplay)
-								// 			_this.activePage.comInstances[item.id].onDisplay();
-								// 	});
-								// }
-
-							});
-
-							$(comInstance).off('changePage');
-							$(comInstance).on('changePage', function (event, data) {
-								// Redirect to another page
-								if (data.previousPage)
-									self.showPage(self.previousPage);
-								else if (self.activePage.id != data.pageId && data.pageId) {
-
-									var redirectPage = self.data.pages.filter(function (p) { return p.id == data.pageId; });
-
-									if (redirectPage && redirectPage.length > 0)
-										self.showPage(redirectPage[0]);
-								}
-							});
-
-							if (itemInfo.component === 'tab') {
-
-								// make sure an embedded tab's component gets bound now.
-								self.bindComponentEventsInTab(itemInfo);
-
-								// when the tab changes, be sure to rebind it's current
-								// components:
-								$(comInstance).off('changeTab');
-								$(comInstance).on('changeTab', function (event, data) {
-									self.bindComponentEventsInTab(itemInfo);
-								});
-							}
-						},
-
-						bindComponentEventsInTab: function (item) {
-							var self = this;
-
-							// Bind events of components in tab
-							if (item.component == 'tab' && item.setting && item.setting.tabs) {
-								item.setting.tabs.forEach(function (tab) {
-									var tabPage = self.data.application.views(function (p) { return p.name == tab.uuid; })[0];
-
-									if (tabPage == null || tabPage.components == null || tabPage.comInstances == null) return;
-
-									tabPage.components.forEach(function (itemInTab) {
-										self.bindComponentEvents(tabPage.comInstances[itemInTab.id], itemInTab);
-									});
-
-								});
-							}
 						},
 
 						resize: function (height) {
@@ -518,6 +401,7 @@ steal(
 							else
 								return '';
 						},
+						
 
 						unique: function () {
 							var args = Array.prototype.slice.call(arguments); // Convert to Array

@@ -17,6 +17,7 @@
 }
 .ab-generated-page {
 	overflow-y: auto;
+	background: #fff !important;
 }
 .ab-main-container {
 	position: relative;
