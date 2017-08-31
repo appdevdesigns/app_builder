@@ -125,7 +125,44 @@ module.exports = {
         if ((updatedRecord)
             && (updatedRecord.id)) {
 // console.log('... update application: ', updatedRecord);
-            AppBuilder.updateApplication(updatedRecord.id);
+
+            Promise.resolve()
+
+                // Update Nav bar area
+                .then(() => {
+                    return AppBuilder.updateNavBarArea(updatedRecord.id);
+                })
+
+                // pull ABApplication
+                .then(() => {
+                    return new Promise((resolve, reject) => {
+
+                        ABApplication.findOne({ id: updatedRecord.id })
+                            .exec((err, result) => {
+                                if (err) reject(err);
+                                else resolve(result);
+                            });
+
+                    });
+                })
+
+                .then((Application) => {
+
+                    var buildPageTasks = [];
+
+                    // TODO : should clear old pages from nav
+
+                    // get .views
+                    (updatedRecord.json.views || []).forEach((view) => {
+
+                        buildPageTasks.push(AppBuilder.updateNavView(Application, view));
+
+                    });
+
+                    return Promise.all(buildPageTasks);
+
+                });
+
         }
 
         cb();

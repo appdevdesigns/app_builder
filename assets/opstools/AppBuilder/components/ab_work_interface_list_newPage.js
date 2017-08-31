@@ -90,9 +90,12 @@ maxHeight: 500,
 					{
 						margin: 5,
 						cols: [
+							{ fillspace: true },
 							{
 								view: "button",
 								value: labels.common.cancel,
+								css: "ab-cancel-button",
+								autowidth: true,
 								click: function () { 
 									_logic.buttonCancel();  
 								}
@@ -101,7 +104,8 @@ maxHeight: 500,
 								id: ids.buttonSave,
 								view: "button",
 								value: labels.common.add,
-// type: "form",
+								autowidth: true,
+								type: "form",
 								click: function() {
 									_logic.buttonSave();
 								} 

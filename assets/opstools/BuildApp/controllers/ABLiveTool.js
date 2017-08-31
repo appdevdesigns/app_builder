@@ -63,10 +63,13 @@ steal(
 
 						initDOM: function () {
 							console.log('... creating ABLiveTool <div> ');
-							this.element.html(
-								('<div id="#domID#"></div>' +
-									'<i id="#domID#-reload-button" class="fa fa-refresh ab-reload-page-button" aria-hidden="true"></i>')
-									.replace(/#domID#/g, this.containerDomID));
+
+							this.element.html('<div id="#domID#"></div>'.replace(/#domID#/g, this.containerDomID));
+
+							// this.element.html(
+							// 	('<div id="#domID#"></div>' +
+							// 		'<i id="#domID#-reload-button" class="fa fa-refresh ab-reload-page-button" aria-hidden="true"></i>')
+							// 		.replace(/#domID#/g, this.containerDomID));
 						},
 
 						initModels: function () {
@@ -87,8 +90,8 @@ steal(
 								self.initEvents();
 
 								// Store the root page
-								self.rootPage = self.data.pages.filter(function (page) {
-									return page.id == self.options.page
+								self.rootPage = self.data.application.views(function(v) {
+									return v.id == self.options.page;
 								})[0];
 
 								self.renderPageContainer();
@@ -132,41 +135,11 @@ steal(
 										
 										subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
 										subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
+
+										next();
 									}
-								},
-								
-								// Get objects data
-								function (next) {
-									self.data.application.getObjects()
-										.then(function (result) {
-											result.forEach(function (page) {
-												if (page.translate) page.translate();
-											});
-
-											self.data.application.objects = result;
-
-											next();
-										}, next);
-								},
-								// Get pages data
-								function (next) {
-									// self.data.application.getPages({
-									// 	or: [
-									// 		{ id: self.options.page },
-									// 		{ parent: self.options.page }
-									// 	]
-									// }).then(function (result) {
-									self.data.application.getAllApplicationPages()
-										.then(function (result) {
-											result.forEach(function (page) {
-												if (page.translate) page.translate();
-											});
-
-											self.data.pages = result;
-
-											next();
-										}, next);
 								}
+
 							], function (err) {
 								if (err) q.reject(err);
 								else q.resolve();
@@ -178,179 +151,6 @@ steal(
 						initEvents: function () {
 							var self = this;
 
-							$('#{domID}-reload-button'.replace('{domID}', self.containerDomID)).off('click');
-							$('#{domID}-reload-button'.replace('{domID}', self.containerDomID)).on('click', function () {
-								$('#' + self.containerDomID).html('');
-
-								self.initPage();
-							});
-
-							AD.comm.hub.subscribe('ab.interface.add', function (msg, data) {
-								if (data.app == self.options.app
-									&& (data.page == self.options.page || data.parent == self.options.page)) {
-
-									// Get the new page data
-									self.data.application.getPage(data.page)
-										.then(function (newPage) {
-											if (newPage.translate) newPage.translate();
-
-											var exists = false;
-
-											self.data.pages.forEach(function (page, index) {
-												// Update exists page
-												if (page.id == data.page) {
-													// #Hack! Fix the ModelUpdate() syncing
-													self.data.pages.attr(index, newPage.attr());
-													exists = true;
-												}
-											});
-
-											// Add new page to list
-											if (!exists) self.data.pages.push(newPage);
-
-											// Render the new page
-											self.renderPage(newPage);
-
-											// Set root page
-											if (data.page == self.options.page) {
-												self.rootPage = newPage;
-
-												// Refresh components of root page
-												if (self.activePage && data.page == self.activePage.id)
-													self.showPage(newPage);
-											}
-										});
-								}
-							});
-
-
-							AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
-								var page = self.data.pages.filter(function (p) {
-									if (p.id == data.page) {
-										// Check sub-pages or tabs
-										if (p.id != self.options.page) {
-											var isChildPage = false,
-												parentPage = p.parent;
-
-											// Recursive to get the root page
-											do {
-												if (parentPage) {
-													if ((parentPage.id || parentPage) == self.options.page && !isChildPage)
-														isChildPage = true;
-
-													parentPage = parentPage.parent;
-												}
-											} while (parentPage != null && !isChildPage)
-
-											return isChildPage;
-										}
-										// a root page is updated
-										else {
-											return true;
-										}
-									}
-									else {
-										return false;
-									}
-								})[0];
-
-								if ((data.app == self.options.app) && (page != null)) {
-
-									// Get the page data
-									self.data.application.getPage(data.page)
-										.then(function (page) {
-											var updatePage;
-
-											if (page.translate) page.translate();
-
-											// Update page in list
-											self.data.pages.forEach(function (p, index) {
-												if (p.id == page.id) {
-													// #Hack! Fix the ModelUpdate() syncing
-													self.data.pages.attr(index, page.attr());
-
-													// Find the updated page in list
-													updatePage = self.data.pages[index];
-												}
-											});
-
-											if (updatePage == null) return;
-
-											// rebuild our display
-											self.renderPage(updatePage);
-
-											// Update the active page
-											if (self.activePage.id == updatePage.id)
-												self.activePage = updatePage;
-
-											// Refresh components
-											self.showPage(self.activePage);
-
-										});
-								}
-							});
-
-
-							AD.comm.hub.subscribe('ab.interface.remove', function (msg, data) {
-
-								if (data.app == self.options.app) {
-
-									// If the deleted page is showing, then switch to previous page.
-									if (self.activePage && self.activePage.id == data.page && self.previousPage)
-										self.showPage(self.previousPage);
-
-									self.data.pages.slice(0).forEach(function (page, index) {
-										if (data.page != page.id) return;
-
-										var pageDomId = self.getPageDomID(page);
-
-										// Remove sub-page
-										if ($$(pageDomId)) {
-											// View type
-											if ($$(self.containerDomID).getChildViews().filter(function (view) { return view.config.id == pageDomId }).length > 0) {
-												$$(self.containerDomID).removeView(pageDomId);
-											}
-											// Popup type
-											else {
-												$$(pageDomId).destructor();
-											}
-										}
-
-										// Remove from self.data.pages
-										self.data.pages.splice(index, 1);
-									});
-
-									// Re-render menu and link components
-									self.activePage.components.forEach(function (item) {
-										switch (item.component) {
-											case 'menu':
-												if (item.setting &&
-													item.setting.pageIds &&
-													item.setting.pageIds.filter(function (pId) { return pId == data.page; }).length > 0) {
-													delete self.activePage.comInstances[item.id];
-
-													self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
-														self.bindComponentEvents(self.activePage.comInstances[item.id], item);
-													});
-												}
-												break;
-											case 'link':
-												if (item.setting &&
-													item.setting.linkTo &&
-													item.setting.linkTo == data.page) {
-													delete self.activePage.comInstances[item.id];
-
-													self.activePage.renderComponent(self.data.application, item).done(function (isNew) {
-														self.bindComponentEvents(self.activePage.comInstances[item.id], item);
-													});
-												}
-												break;
-										}
-									});
-
-								}
-							});
-
 							AD.comm.hub.subscribe('opsportal.tool.show', function (message, data) {
 								self.resize(self.height);
 							});
@@ -358,8 +158,7 @@ steal(
 						},
 
 						renderPageContainer: function () {
-							var self = this,
-								pages = self.data.pages;
+							var self = this;
 
 							// Clear UI content
 							var rootDomId = self.getPageDomID(self.rootPage);
@@ -380,20 +179,8 @@ steal(
 								}
 							});
 
-							// Sort pages
-							if (pages.sort) {
-								pages.sort(function (a, b) {
-									if (a.parent)
-										return 1;
-									else if (b.parent)
-										return -1;
-									else
-										return a.weight - b.weight;
-								});
-							}
-
 							// Render pages
-							pages.forEach(function (page) {
+							self.data.application.views().forEach(function (page) {
 								if (page.id == self.rootPage.id || (page.parent && page.parent.id == self.rootPage.id))
 									self.renderPage(page);
 							});
@@ -613,7 +400,7 @@ steal(
 							// Bind events of components in tab
 							if (item.component == 'tab' && item.setting && item.setting.tabs) {
 								item.setting.tabs.forEach(function (tab) {
-									var tabPage = self.data.pages.filter(function (p) { return p.name == tab.uuid; })[0];
+									var tabPage = self.data.application.views(function (p) { return p.name == tab.uuid; })[0];
 
 									if (tabPage == null || tabPage.components == null || tabPage.comInstances == null) return;
 

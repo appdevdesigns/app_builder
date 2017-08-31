@@ -755,7 +755,7 @@ module.exports = {
 
                 // if we get here, we start building this app:
                 // So mark that it is in progress:
-                appsBuildInProgress[appID] = dfd;
+                // appsBuildInProgress[appID] = dfd;
 
                 async.series([
                     function (next) {
@@ -836,66 +836,252 @@ module.exports = {
         )
 
 
-        return dfd;
     },
 
 
     /**
      * Update NavBar.area label
      */
-    updateApplication: function (appID) {
-        var dfd = AD.sal.Deferred(),
-            Application;
+    updateNavBarArea: function (appID) {
 
-        async.series([
-            function (next) {
-                ABApplication.find({ id: appID })
-                    .populate('translations')
-                    .then(function (list) {
-                        if (!list || !list[0]) {
-                            throw new Error('Application not found');
+        return new Promise(
+            (resolve, reject) => {
+                var Application;
+
+                async.series([
+                    function (next) {
+                        ABApplication.find({ id: appID })
+                            .populate('translations')
+                            .then(function (list) {
+                                if (!list || !list[0]) {
+                                    throw new Error('Application not found');
+                                }
+                                var obj = list[0];
+                                // Only numbers and alphabets will be used
+                                Application = obj;
+                                appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
+        
+                                next();
+                                return null;
+                            })
+                            .catch(function (err) {
+                                next(err);
+                                return null;
+                            });
+        
+                    },
+                    function (next) {
+                        var areaName = Application.name;
+                        var areaKey = Application.areaKey();
+                        var label = areaName;  // default if no translations provided
+                        Application.translations.some(function (trans) {
+                            if (label == areaName) {
+                                label = trans.label;
+                                return true;  // stops the looping.
+                            }
+                        })
+                        var updateArea = {
+                            key: areaKey,
+                            label: label,
                         }
-                        var obj = list[0];
-                        // Only numbers and alphabets will be used
-                        Application = obj;
-                        appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
-
-                        next();
-                        return null;
-                    })
-                    .catch(function (err) {
-                        next(err);
-                        return null;
-                    });
-
-            },
-            function (next) {
-                var areaName = Application.name;
-                var areaKey = Application.areaKey();
-                var label = areaName;  // default if no translations provided
-                Application.translations.some(function (trans) {
-                    if (label == areaName) {
-                        label = trans.label;
-                        return true;  // stops the looping.
+        
+                        OPSPortal.NavBar.Area.update(updateArea)
+                            .then(function (err) {
+                                next(err);
+                            })
+        
                     }
-                })
-                var updateArea = {
-                    key: areaKey,
-                    label: label,
-                }
-
-                OPSPortal.NavBar.Area.update(updateArea, function (err) {
-
-                    next(err);
-                })
+                ], function (err) {
+                    if (err) reject(err);
+                    else resolve();
+                });
 
             }
-        ], function (err) {
-            if (err) dfd.reject(err);
-            else dfd.resolve();
+        );
+
+    },
+
+
+    updateNavView: function(application, page) {
+
+        if (!page) return Promise.reject(new Error('invalid page'));
+
+        // find page name
+        var pageName;
+        page.translations.forEach((trans) => {
+            if (trans.language_code == 'en') {
+                pageName = AppBuilder.rules.nameFilter(trans.label);
+            }
         });
 
-        return dfd;
+        var appID = application.id,
+            appName = AppBuilder.rules.toApplicationNameFormat(application.name),
+            toolLabel = pageName,
+            pageKey = getPageKey(appName, pageName),
+            pagePermsAction = pageKey + '.view',
+            pagePerms = 'adcore.admin,' + pagePermsAction,
+            controllerIncludes = [
+                {
+                    // Switching to the new ABLiveTool controller:
+                    key: 'opstools.BuildApp.ABLiveTool',
+                    path: 'opstools/BuildApp/controllers/ABLiveTool.js',
+                    init: {
+                        app: application.id,
+                        page: page.id
+                    }
+                }
+            ];
+
+        var roles = [];
+        var objectIncludes = [];
+        var pages = {};
+        var modelNames = [];
+
+        return Promise.resolve()
+
+            // Create Page's permission action
+            .then(() => {
+                return new Promise((resolve, reject) => {
+
+                    // var page = pages[pageID];
+                    // page.permissionActionKey = pagePermsAction;
+
+                    Permissions.action.create({
+                        key: pagePermsAction,
+                        description: 'Allow the user to view the ' + appName + "'s " + pageName + ' page',
+                        language_code: 'en'
+                    })
+                        .always(function () {
+                            // If permission action already exists, that's fine.
+                            resolve();
+                        });
+
+                });
+            })
+
+            // Find assign roles
+            .then(() => {
+                return new Promise((resolve, reject) => {
+
+                    // 'opstools.' + appName + '.view';
+                    var action_key = application.actionKeyName(); 
+
+                    Permissions.getRolesByActionKey(action_key)
+                        .then(function (result) {
+
+                            roles = result;
+
+                            resolve();
+                        }, reject);
+
+                });
+            })
+
+            // Assign Page's permission action to assign roles
+            .then(() => {
+                return new Promise((resolve, reject) => {
+
+                    var assignActionTasks = [];
+                    
+                    roles.forEach(function (r) {
+                        assignActionTasks.push(function (callback) {
+                            Permissions.assignAction(r.id, pagePermsAction)
+                                .fail(function (err) { callback(err); })
+                                .then(function () { callback(); });
+                        });
+                    });
+    
+                    async.parallel(assignActionTasks, function (err) {
+                        if (err) {
+                            reject(err);
+                        }
+                        else {
+                            resolve();
+                        }
+                    });
+
+                });
+            })
+
+            // Create OPView entry
+            .then(() => {
+                return new Promise((resolve, reject) => {
+                    OPSPortal.View.createOrUpdate(
+                        pageKey,
+                        objectIncludes,
+                        controllerIncludes
+                    )
+                        .fail(reject)
+                        .done(function () {
+                            resolve();
+                        });
+                });
+            })
+
+            // create a Tool Definition for the OP Portal Navigation
+            .then(() => {
+                return new Promise((resolve, reject) => {                    
+                    // sails.log('create tool definition')
+                    var areaName = application.name;
+                    var areaKey = application.areaKey();
+
+                    var def = {
+                        key: _.kebabCase(pageKey),
+                        permissions: pagePerms,
+                        icon: page.icon,
+                        label: toolLabel,
+                        // context: pageKey,
+                        controller: 'OPView',
+                        isController: false,
+                        options: { url: '/opsportal/view/' + pageKey },
+                        version: '0'
+                    }
+
+                    OPSPortal.NavBar.ToolDefinition.create(def, function (err, toolDef) {
+                        if (err) reject(err);
+                        else resolve();
+                    })
+
+                });
+            })
+
+            // make sure our ToolDefinition is linked to our Area Definition.
+            .then(() => {
+
+                return new Promise((resolve, reject) => {
+                    // sails.log('... todo: link tooldef to area');
+
+                    OPSPortal.NavBar.Area.link({
+                        keyArea: application.areaKey(),
+                        keyTool: _.kebabCase(pageKey),
+                        instance: {
+                            icon: 'fa-cube',
+                            permissions: pagePerms,
+                            options: {
+                                is: 'there'
+                            }
+                        }
+                    }, function (err) {
+                        if (err) {
+                            if (err.code == 'E_AREANOTFOUND') {
+                                console.log('... Area[' + application.areaKey() + '] not found.  Move along ... ');
+                                // this probably means that they deleted this default area
+                                // using the Navigation Editor.
+                                // no problem here:
+                                resolve();
+                                return;
+                            }
+
+                            reject(err);
+                        }
+
+                        resolve();
+                    });
+
+                });
+
+            });
+
     },
 
 
