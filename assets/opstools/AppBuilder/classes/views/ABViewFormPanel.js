@@ -107,7 +107,8 @@ export default class ABViewFormPanel extends ABView {
 
 		_logic.listTemplate = (field, common) => {
 
-			var formComponent = ABViewManager.allViews((v) => v.common().key == field.componentKey)[0];
+			var componentKey = field.formComponent().common().key;
+			var formComponent = ABViewManager.allViews((v) => v.common().key == componentKey)[0];
 
 			return common.markCheckbox(field) + " #label# <div class='ab-component-form-fields-component-info'> <i class='fa fa-#icon#'></i> #component# </div>"
 				.replace("#label#", field.label)

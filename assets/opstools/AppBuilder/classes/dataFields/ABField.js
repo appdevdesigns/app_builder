@@ -473,7 +473,7 @@ export default class ABField extends ABFieldBase {
 		return {
 
 			// .common() is used to create the display in the list
-			common:function(){
+			common: () => {
 				return {
 					
 					// NOTE: form components should return .label:
@@ -489,13 +489,20 @@ export default class ABField extends ABFieldBase {
 
 			// .newInstance() is used to create the view instance when the component
 			// 		is dropped onto the ABView list.
-			newInstance:function(application, parent) {
+			newInstance: (application, parent) => {
 
 				// NOTE: in case you were wondering, the base ABField
 				// 		 will just return a label with 'ABFieldPlaceholder' 
 				// 		 as the text.  Any sub class of ABField should overwrite
 				// 		 this and return an actual Form Component.
-				var ABFieldPlaceholder = ABViewManager.newView(this.common(), application, parent);
+
+				// 
+				var values = this.formComponent().common();
+				values.settings = values.settings || {};
+				values.settings.objectId = this.object.id;
+				values.settings.fieldId = this.id;
+
+				var ABFieldPlaceholder = ABViewManager.newView(values, application, parent);
 				// ABFieldPlaceholder.formatTitle();
 				// ABFieldPlaceholder.text = "ABFieldPlaceholder";
 
