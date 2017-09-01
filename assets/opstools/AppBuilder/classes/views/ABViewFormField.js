@@ -54,9 +54,13 @@ export default class ABViewFormField extends ABView {
 			field = this.field(),
 			label = '';
 
+		var settings = {};
+		if (form)
+			settings = form.settings;
+
 		var _ui = {
-			labelPosition: form.settings.labelPosition,
-			labelWidth: form.settings.labelWidth,
+			labelPosition: settings.labelPosition,
+			labelWidth: settings.labelWidth,
 			label: label
 		};
 
@@ -69,7 +73,7 @@ export default class ABViewFormField extends ABView {
 			field.defaultValue(data);
 			_ui.value = data[field.columnName];
 
-			if (form.settings.showLabel == true) {
+			if (settings.showLabel == true) {
 				_ui.label = field.label;
 			}
 		}
