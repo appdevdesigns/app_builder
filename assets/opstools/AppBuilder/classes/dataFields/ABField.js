@@ -495,7 +495,7 @@ export default class ABField extends ABFieldBase {
 				// 		 will just return a label with 'ABFieldPlaceholder' 
 				// 		 as the text.  Any sub class of ABField should overwrite
 				// 		 this and return an actual Form Component.
-				var ABFieldPlaceholder = ABViewManager.newView({ key: this.common().key }, application, parent);
+				var ABFieldPlaceholder = ABViewManager.newView(this.common(), application, parent);
 				// ABFieldPlaceholder.formatTitle();
 				// ABFieldPlaceholder.text = "ABFieldPlaceholder";
 

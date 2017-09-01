@@ -1016,7 +1016,10 @@ class ABFieldDate extends ABField {
 		// .common() is used to create the display in the list
 		formComponentSetting.common = () => {
 			return {
-				key: 'datepicker'
+				key: 'datepicker',
+				settings: {
+					timepicker: this.settings.includeTime
+				}
 			}
 		};
 
