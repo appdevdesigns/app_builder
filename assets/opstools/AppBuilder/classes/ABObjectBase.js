@@ -59,6 +59,10 @@ module.exports =  class ABObjectBase {
 	  	this._fields = newFields;
 
 
+	  	// convert '0' to 0
+	  	this.isImported = parseInt(this.isImported);
+	  	
+
 	  	// link me to my parent ABApplication
 	  	this.application = application;
   	}

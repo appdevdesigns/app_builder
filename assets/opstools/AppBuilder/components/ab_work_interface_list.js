@@ -160,9 +160,22 @@ export default class AB_Work_Interface_List extends OP.Component {
 
 				CurrentApplication = application;
 
+
+// @Pong: redo this so it looks right/indented in a tree view:
+var pages = [];
+var addPage = function (page) {
+	pages.push(page);
+	page.pages().forEach((p)=>{
+		addPage(p);
+	})
+}
+application.pages().forEach((p)=>{
+	addPage(p);
+})
+
 				// get a DataCollection of all our objects
 				viewList = new webix.DataCollection({
-					data: application.views(),
+					data: pages // application.pages(),
 				});
 
 				// clear our list and display our objects:

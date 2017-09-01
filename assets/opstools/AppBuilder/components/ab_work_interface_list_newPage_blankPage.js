@@ -94,8 +94,16 @@ width: 400,
 				CurrentApplication = application;
 
 				var options = [{ id: '-', value: labels.component.rootPage }];
-				application.views((v)=>{ return v.isRoot(); }).forEach(function (page) {
-						options.push({ id: page.id, value: page.label });
+
+				var addPage = function(page, indent) {
+					indent = indent || '';
+					options.push({ id: page.urlPointer(), value: indent+page.label });
+					page.pages().forEach(function(p) {
+						addPage(p, indent+'-');
+					})
+				}
+				application.pages().forEach(function (page) {
+						addPage(page,'');
 				});
 
 				$$(ids.parentList).define('options', options);
@@ -193,11 +201,11 @@ width: 400,
 
 				// convert a parent .id value to the actual object (or undefined if not found)
 				if (parent) {
-					CurrentApplication.views((v)=>{ return v.id == parent; })[0];
+					parent = CurrentApplication.urlResolve(parent);
 				}
 
 				return {
-					parent: parent,
+					parent: parent, // should be either null or an {}
 					label: $$(ids.formName).getValue().trim(),
 					key: ABPage.common().key
 				}

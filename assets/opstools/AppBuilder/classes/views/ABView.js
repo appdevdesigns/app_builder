@@ -110,17 +110,19 @@ export default class ABView  extends EventEmitter {
 
 		// // labels must be unique among views on the same parent
 		var parent = this.parent;
-		if (!parent) { parent = this.application; }
+// if (!parent) { parent = this.application; }
 
+		// if we have a parent component:
+		if (parent) {
 
-		var isNameUnique = (parent.views((v)=>{
-			return (v.id != this.id)
-					&& (v.label.toLowerCase() == this.label.toLowerCase() );
-		}).length == 0);
-		if (!isNameUnique) {
-			validator.addError('label', L('ab.validation.view.label.unique', '*View label must be unique among peers.'));
+			var isNameUnique = (parent.views((v)=>{
+				return (v.id != this.id)
+						&& (v.label.toLowerCase() == this.label.toLowerCase() );
+			}).length == 0);
+			if (!isNameUnique) {
+				validator.addError('label', L('ab.validation.view.label.unique', '*View label must be unique among peers.'));
+			}
 		}
-
 		return validator;
 	}
 
@@ -171,7 +173,7 @@ export default class ABView  extends EventEmitter {
 	/**
 	 * @method save()
 	 *
-	 * persist this instance of ABField with it's parent ABObject
+	 * persist this instance of ABView with it's parent
 	 *
 	 *
 	 * @return {Promise}
@@ -189,7 +191,7 @@ export default class ABView  extends EventEmitter {
 				// if this is not a child of another view then tell it's
 				// application to save this view.
 				var parent = this.parent;
-				if (!parent) parent = this.application;
+// if (!parent) parent = this.application;
 
 				parent.viewSave(this)
 				.then(resolve)
@@ -202,7 +204,7 @@ export default class ABView  extends EventEmitter {
 	/**
 	 * @method toObj()
 	 *
-	 * properly compile the current state of this ABField instance
+	 * properly compile the current state of this ABView instance
 	 * into the values needed for saving to the DB.
 	 *
 	 * @return {json}
@@ -1058,6 +1060,34 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 		return allowedComponents;
 
 	}
+
+
+
+	/**
+	 * @method urlPointer()
+	 * return the url pointer that references this view.  This url pointer
+	 * should be able to be used by this.application.urlResolve() to return 
+	 * this view object.
+	 * @return {string} 
+	 */
+	urlPointer() {
+		if (this.parent) {
+			return this.parent.urlView() + this.id;
+		} else {
+			return this.application.urlView() + this.id;
+		}
+	}
+
+
+
+	/**
+	 * @method urlView
+	 * return a string pointer to this object's views.
+	 * @return {string}
+	 */
+	 urlView() {
+	 	return this.urlPointer() + '/_views/';
+	 }
 
 }
 

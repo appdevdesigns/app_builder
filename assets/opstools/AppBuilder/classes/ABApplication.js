@@ -4,6 +4,7 @@ import ABApplicationBase from "./ABApplicationBase"
 import "../data/ABApplication"
 import ABObject from "./ABObject"
 import ABViewManager from "./ABViewManager"
+import ABViewPage from "./views/ABViewPage"
 
 
 var _AllApplications = [];
@@ -38,11 +39,11 @@ export default class ABApplication extends ABApplicationBase {
 
 	  	// import all our ABViews
 	  	// We only work with ABViews on the client side.
-	  	var newViews = [];
-	  	(attributes.json.views || []).forEach((view) => {
-	  		newViews.push( this.viewNew(view, null) );  
+	  	var newPages = [];
+	  	(attributes.json.pages || []).forEach((page) => {
+	  		newPages.push( this.pageNew(page, null) );  
 	  	})
-	  	this._views = newViews;
+	  	this._pages = newPages;
 
 
 	  	// instance keeps a link to our Model for .save() and .destroy();
@@ -250,11 +251,11 @@ export default class ABApplication extends ABApplicationBase {
 
 
 		// for each View: compile to json
-		var currViews = [];
-		this._views.forEach((view) => {
-			currViews.push(view.toObj())
+		var currPages = [];
+		this._pages.forEach((page) => {
+			currPages.push(page.toObj())
 		})
-		this.json.views = currViews;
+		this.json.pages = currPages;
 
 
 		return super.toObj();
@@ -380,78 +381,92 @@ export default class ABApplication extends ABApplicationBase {
 
 
 	///
-	/// Views
+	/// Pages
 	///
 
 
 	/**
-	 * @method views()
+	 * @method pages()
 	 *
-	 * return an array of all the ABViews for this ABApplication.
+	 * return an array of all the ABViewPages for this ABApplication.
 	 *
-	 * @param {fn} filter  	a filter fn to return a set of ABViews that this fn
+	 * @param {fn} filter  	a filter fn to return a set of ABViewPages that this fn
 	 *						returns true for.
-	 * @return {array} 	array of ABViews
+	 * @return {array} 	array of ABViewPages
 	 */
-	views (filter) {
+	pages (filter) {
 
 		filter = filter || function() {return true; };
 
-		return this._views.filter(filter);
-
+		return this._pages.filter(filter);
 	}
 
 
 
 	/**
-	 * @method viewNew()
+	 * @method pageNew()
 	 *
-	 * return an instance of a new (unsaved) ABView that is tied to this
+	 * return an instance of a new (unsaved) ABViewPage that is tied to this
 	 * ABApplication.
 	 *
-	 * NOTE: this new view is not included in our this.views until a .save()
-	 * is performed on the view.
+	 * NOTE: this new page is not included in our this.pages until a .save()
+	 * is performed on the page.
 	 *
-	 * @return {ABViews}
+	 * @return {ABViewPage}
 	 */
-	viewNew( values ) {
+	pageNew( values ) {
+
+		// make sure this is an ABViewPage description
+		values.key = ABViewPage.common().key;
+
 		return new ABViewManager.newView(values, this, null);
 	}
 
 
 
 	/**
-	 * @method viewDestroy()
+	 * @method pageDestroy()
 	 *
-	 * remove the current ABView from our list of ._views.
+	 * remove the current ABViewPage from our list of ._pages.
 	 *
-	 * @param {ABView} view
+	 * @param {ABViewPage} page
 	 * @return {Promise}
 	 */
-	viewDestroy( view ) {
+	pageDestroy( page ) {
 
-		var remainingViews = this.views(function(v) { return v.id != view.id;})
-		this._views = remainingViews;
+		var remainingPages = this.pages(function(p) { return p.id != page.id;})
+		this._pages = remainingPages;
 		return this.save();
 	}
 
 
 
 	/**
-	 * @method viewSave()
+	 * @method pageSave()
 	 *
-	 * persist the current ABView in our list of ._views.
+	 * persist the current ABViewPage in our list of ._pages.
 	 *
-	 * @param {ABView} object
+	 * @param {ABViewPage} object
 	 * @return {Promise}
 	 */
-	viewSave( view ) {
-		var isIncluded = (this.views(function(v){ return v.id == view.id }).length > 0);
+	pageSave( page ) {
+		var isIncluded = (this.pages(function(p){ return p.id == page.id }).length > 0);
 		if (!isIncluded) {
-			this._views.push(view);
+			this._pages.push(page);
 		}
 
 		return this.save();
+	}
+
+
+
+	/**
+	 * @method urlPage()
+	 * return the url pointer for pages in this application.
+	 * @return {string} 
+	 */
+	urlPage() {
+		return this.urlPointer() + '_pages/'
 	}
 
 }

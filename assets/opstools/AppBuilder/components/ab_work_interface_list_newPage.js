@@ -165,9 +165,9 @@ maxHeight: 500,
 				// this interface only creates Root Pages, or pages related to 
 				var page = null;
 				if(values.parent) {
-					page = values.parent.newChild(values);
+					page = values.parent.pageNew(values);
 				} else {
-					page = CurrentApplication.viewNew(values);
+					page = CurrentApplication.pageNew(values);
 				}
 
 				var validator = page.isValid(values);
