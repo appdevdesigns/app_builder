@@ -23,11 +23,8 @@ var ABFieldImageDefaults = {
 	menuName : L('ab.dataField.image.menuName', '*Image Attachment'),
 	
 	// description: what gets displayed in the Editor description.
-	description: L('ab.dataField.image.description', '*Attach an image to this object.'),
+	description: L('ab.dataField.image.description', '*Attach an image to this object.')
 
-	formComponent: {
-		key: 'fieldcustom'
-	}
 }
 
 
@@ -557,6 +554,31 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		return false;
 	}
 
+
+	/*
+	* @funciton formComponent
+	* returns a drag and droppable component that is used on the UI
+	* interface builder to place form components related to this ABField.
+	* 
+	* an ABField defines which form component is used to edit it's contents.
+	* However, what is returned here, needs to be able to create an instance of
+	* the component that will be stored with the ABViewForm.
+	*/
+	formComponent() {
+		
+		// NOTE: what is being returned here needs to mimic an ABView CLASS.
+		// primarily the .common() and .newInstance() methods.
+		var formComponentSetting = super.formComponent();
+
+		// .common() is used to create the display in the list
+		formComponentSetting.common = () => {
+			return {
+				key: 'fieldcustom'
+			}
+		};
+
+		return formComponentSetting; 
+	}
 
 
 	imageTemplate(obj) {

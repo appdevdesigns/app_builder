@@ -6,6 +6,7 @@
  */
 
 import ABFieldBase from "./ABFieldBase"
+import ABViewManager from "../ABViewManager"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -451,6 +452,57 @@ export default class ABField extends ABFieldBase {
 	 */
 	isMultilingual() {
 		return false;
+	}
+
+
+
+	/*
+	 * @funciton formComponent
+	 * returns a drag and droppable component that is used on the UI
+	 * interface builder to place form components related to this ABField.
+	 * 
+	 * an ABField defines which form component is used to edit it's contents.
+	 * However, what is returned here, needs to be able to create an instance of
+	 * the component that will be stored with the ABViewForm.
+	 */
+	formComponent() {
+		
+		// NOTE: what is being returned here needs to mimic an ABView CLASS.
+		// primarily the .common() and .newInstance() methods.
+		
+		return {
+
+			// .common() is used to create the display in the list
+			common:function(){
+				return {
+					
+					// NOTE: form components should return .label:
+					// label: 'PlaceHolder',  // form components should return .label
+
+					// but since this is a common place holder: use the 
+					// multilingual label here:
+					labelKey: 'ab.abfield.labelPlaceholder',
+					icon:  'square'
+				}
+			},
+
+
+			// .newInstance() is used to create the view instance when the component
+			// 		is dropped onto the ABView list.
+			newInstance:function(application, parent) {
+
+				// NOTE: in case you were wondering, the base ABField
+				// 		 will just return a label with 'ABFieldPlaceholder' 
+				// 		 as the text.  Any sub class of ABField should overwrite
+				// 		 this and return an actual Form Component.
+				var ABFieldPlaceholder = ABViewManager.newView({ key: this.common().key }, application, parent);
+				// ABFieldPlaceholder.formatTitle();
+				// ABFieldPlaceholder.text = "ABFieldPlaceholder";
+
+				return ABFieldPlaceholder;
+			}
+
+		}
 	}
 
 

@@ -376,7 +376,7 @@ steal(
 									// I went ahead and refactored ABPage to have a .resize()
 									// it is not exactly the right solution, but it is close
 									// see notes on ABPage.js .resize()
-									_this.activePage.resize();
+									// _this.activePage.resize();
 									////  OLD Logic:
 									//
 									// // Resize components

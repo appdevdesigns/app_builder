@@ -149,24 +149,18 @@ export default class ABViewFormPanel extends ABView {
 			if (field == null)
 				return;
 
-			var formComponent = ABViewManager.allViews((v) => v.common().key == field.componentKey)[0];
-			if (formComponent == null)
-				return;
-
 			var FormView = _logic.currentEditObject();
 
+			var newView = field.formComponent().newInstance(FormView.application, FormView);
+			if (newView == null)
+				return;
+
 			// set settings to component
-			var settings = {
-				// TODO : Default settings
-				fieldId: field.id
-			};
+			newView.settings = newView.settings || {};
+			newView.settings.fieldId = field.id;
+			// TODO : Default settings
 
 			// add a new component
-			var newView = ABViewManager.newView({
-				key: formComponent.common().key,
-				label: field.label,
-				settings: settings
-			}, FormView.application, FormView);
 			FormView._views.push(newView);
 
 			// update properties when a sub-view is destroyed
@@ -256,12 +250,9 @@ export default class ABViewFormPanel extends ABView {
 		if (object != null) {
 			fieldOptions = object.fields().map((f) => {
 
-				return {
-					id: f.id,
-					label: f.label,
-					componentKey: f.fieldFormComponent().key,
-					selected: existsFields.filter((com) => { return f.id == com.settings.fieldId; }).length > 0
-				}
+				f.selected = existsFields.filter((com) => { return f.id == com.settings.fieldId; }).length > 0;
+
+				return f;
 
 			});
 		}

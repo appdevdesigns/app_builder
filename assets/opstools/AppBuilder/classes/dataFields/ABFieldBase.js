@@ -131,20 +131,6 @@ module.exports = class ABField {
 		return 1;
 	}
 
-	//
-	fieldFormComponent() {
-		if (this.defaults.formComponent != null) {
-			if (typeof this.defaults.formComponent === "function") {
-				return this.defaults.formComponent(this);
-			}
-			else {
-				return this.defaults.formComponent;
-			}
-		}
-
-		return null;
-	}
-
 
 
 	///
