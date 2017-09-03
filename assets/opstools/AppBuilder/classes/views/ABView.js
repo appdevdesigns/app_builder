@@ -1043,21 +1043,32 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 	}
 
 
+
 	/*
 	 * @method componentList
 	 * return the list of components available on this view to display in the editor.
+	 * @param {bool} isEdited  is this component currently in the Interface Editor
+	 * @return {array} of ABView objects.
 	 */
-	componentList() {
+	componentList( isEdited ) {
 
-		// views not allowed to drop onto this View:
-		var viewsToIgnore = [ 'view', 'page' ];
+		if (this.parent) {
 
-		var allComponents = ABViewManager.allViews();
-		var allowedComponents = allComponents.filter((c)=>{
-			return (viewsToIgnore.indexOf(c.common().key) == -1)
-		});
+			return this.parent.componentList(false);
 
-		return allowedComponents;
+		} else {
+
+			// views not allowed to drop onto this View:
+			var viewsToIgnore = [ 'view', 'page' ];
+
+			var allComponents = ABViewManager.allViews();
+			var allowedComponents = allComponents.filter((c)=>{
+				return (viewsToIgnore.indexOf(c.common().key) == -1)
+			});
+
+			return allowedComponents;
+
+		}
 
 	}
 

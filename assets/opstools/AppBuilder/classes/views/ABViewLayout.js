@@ -401,26 +401,31 @@ export default class ABViewLayout extends ABView  {
 	/*
 	 * @method componentList
 	 * return the list of components available on this view to display in the editor.
+	 * @param {bool} isEdited  is this component currently in the Interface Editor
+	 * @return {array} of ABView objects.
 	 */
-	componentList() {
+	componentList(isEdited) {
 
 
-// NOTE: to keep things simple at the moment: the layout view will return 
-// it's parent's list of components that are able to be dropped upon it.  
-// however, when a layout is in the editor at the time, no component will be
-// dropped onto the layout view.  The editor only allows [add] ing a new 
-// column.  When you edit the column, you can then drop components onto that 
-// view.
+		if (isEdited) {
 
+			// if the layout component is being edited in the editor (isEdited == true)
+			// then we return [];
+			return [];
 
-		// the layout view doesn't care what components are offered, it get's 
-		// the list from it's parent view.
-		// ## NOTE: layout views should not be root views.
-		if (this.parent) {
-			return this.parent.componentList();
-		} else { 
-			return [];  // really shouldn't get here!
+		} else {
+
+			// the layout view doesn't care what components are offered, it get's 
+			// the list from it's parent view.
+			// ## NOTE: layout views should not be root views.
+			if (this.parent) {
+				return this.parent.componentList(false);
+			} else {
+				return [];
+			}
+
 		}
+		
 	}
 
 

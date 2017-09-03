@@ -307,8 +307,10 @@ export default class ABViewForm extends ABView  {
 	 * return the list of components available on this view to display in the editor.
 	 * A Form component only displays a few  of the common components, and a component
 	 * for each of the linked object's fields 
+	 * @param {bool} isEdited  is this component currently in the Interface Editor
+	 * @return {array} of ABView objects.
 	 */
-	componentList() {
+	componentList( isEdited ) {
 		var viewsAllowed = [ 'label', 'layout'];
 
 		var allComponents = ABViewManager.allViews();
