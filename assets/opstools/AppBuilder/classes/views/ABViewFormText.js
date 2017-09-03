@@ -146,13 +146,19 @@ export default class ABViewFormText extends ABViewFormComponent  {
 			component: App.unique(idBase+'_component')
 		}
 
-		// get the field object we are connected to:
-		var field = this.application.urlResolve(this.settings.fieldPointer);
+		var name = this.formLabel;  // default for name if no fieldPointer set
+
+		if (this.settings.fieldPointer) {
+
+			// get the field object we are connected to:
+			var field = this.application.urlResolve(this.settings.fieldPointer);
+			name = field.columnName;
+		}
 
 		var _ui = {
 			view:"text", 
 			value:"", 
-			name:field.columnName,    // get this from the attached DataField
+			name:name,    // get this from the attached DataField
 			label:this.formLabel
     	}
 
@@ -330,13 +336,19 @@ export default class ABViewFormText extends ABViewFormComponent  {
 			component: App.unique(idBase+'_component'),
 		}
 
-		var field = this.application.urlResolve(this.settings.fieldPointer);
+		var name = this.formLabel; // default to the formLabel
 
+		// if a fieldPointer is set, then use columnName for name:
+		if ( this.settings.fieldPointer) {
+			var field = this.application.urlResolve(this.settings.fieldPointer);
+			name = field.columnName;
+		}
+		
 		// an ABViewFormText is a simple text input
 		var _ui = {
 			id: ids.component,
 			view: 'text',
-			name:field.columnName,    // get this from the attached DataField
+			name:name,    // get this from the attached DataField
 			
 			// css: 'ab-component-header ab-ellipses-text',
 			label: this.formLabel || '* formLabel'
