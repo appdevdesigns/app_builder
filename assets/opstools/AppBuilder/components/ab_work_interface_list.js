@@ -86,12 +86,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 
 						},
 						onAfterClose: function () {
-							var ids = this.getSelectedId(true);
-
-							// Show gear icon
-							ids.forEach(function (id) {
-								self.showGear(id);
-							});
+							_logic.onAfterClose();
 						},
 						onBeforeEditStop: function (state, editor) {
 							_logic.onBeforeEditStop(state, editor);
@@ -160,10 +155,20 @@ export default class AB_Work_Interface_List extends OP.Component {
 
 				CurrentApplication = application;
 
-				// get a DataCollection of all our objects
-				viewList = new webix.DataCollection({
-					data: application.views(),
-				});
+
+				// this so it looks right/indented in a tree view:
+				viewList = new webix.TreeCollection();
+
+				var addPage = function (page, index, parentId) {
+					viewList.add(page, index, parentId);
+
+					page.pages().forEach((childPage, childIndex)=>{
+						addPage(childPage, childIndex, page.id);
+					})
+				}
+				application.pages().forEach((p, index)=>{
+					addPage(p, index);
+				})
 
 				// clear our list and display our objects:
 				var List = $$(ids.list);
@@ -236,13 +241,12 @@ export default class AB_Work_Interface_List extends OP.Component {
 
 
 			onAfterClose: function() {
-console.error('!! todo: onAfterClose()');
-													// var ids = this.getSelectedId(true);
+				var selectedIds = $$(ids.list).getSelectedId(true);
 
-													// // Show gear icon
-													// ids.forEach(function (id) {
-													// 	self.showGear(id);
-													// });
+				// Show gear icon
+				selectedIds.forEach((id) => {
+					_logic.showGear(id);
+				});
 			},
 
 
@@ -292,16 +296,10 @@ console.error('!! todo: onAfterOpen() ');
 
 			onAfterRender: function() {
 console.error('!! todo: onAfterRender() editing');
-				// webix.once(function () {
-				// 	$$(self.webixUiId.objectList).data.each(function (d) {
-				// 		$($$(self.webixUiId.objectList).getItemNode(d.id)).find('.ab-object-unsync-number').html(99);
-				// 	});
-				// });
 
 				// // Show gear icon
 				// if (this.getSelectedId(true).length > 0) {
 				// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
-				// 	self.refreshUnsyncNumber();
 				// }
 			},
 
@@ -373,9 +371,14 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 
 			showGear: function(id) {
-				var gearIcon = $$(ids.list).getItemNode(id).querySelector('.ab-page-list-edit');
-				gearIcon.style.visibility = "visible";
-				gearIcon.style.display = "block";
+				var domNode = $$(ids.list).getItemNode(id);
+				if (domNode) {
+
+					var gearIcon = domNode.querySelector('.ab-page-list-edit');
+					gearIcon.style.visibility = "visible";
+					gearIcon.style.display = "block";
+
+				}
 			},
 
 			/**

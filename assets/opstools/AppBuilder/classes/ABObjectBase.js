@@ -59,6 +59,10 @@ module.exports =  class ABObjectBase {
 	  	this._fields = newFields;
 
 
+	  	// convert '0' to 0
+	  	this.isImported = parseInt(this.isImported);
+	  	
+
 	  	// link me to my parent ABApplication
 	  	this.application = application;
   	}
@@ -140,7 +144,6 @@ module.exports =  class ABObjectBase {
 	///
 	/// Fields
 	///
-
 
 
 
@@ -343,6 +346,30 @@ module.exports =  class ABObjectBase {
 
 		return validator;
 	}
+
+
+
+	/**
+	 * @method urlPointer()
+	 * return the url pointer that references this object.  This url pointer
+	 * should be able to be used by this.application.urlResolve() to return 
+	 * this object.
+	 * @return {string} 
+	 */
+	urlPointer() {
+		return this.application.urlObject()+this.id;
+	}
+
+
+
+	/**
+	 * @method urlField
+	 * return a string pointer to this object's fields
+	 * @return {string}
+	 */
+	 urlField() {
+	 	return this.urlPointer() +'/_fields/'
+	 }
 
 
 }

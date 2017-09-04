@@ -809,3 +809,7 @@ a.ab-delete-photo:hover {
     box-shadow: none !important; 
     border-radius: 10px !important;
 }
+
+.webixtype_prev {
+	background-color: #3498db !important;
+}

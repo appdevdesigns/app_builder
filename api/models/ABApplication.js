@@ -121,6 +121,7 @@ module.exports = {
     },
 
     afterUpdate: function (updatedRecord, cb) {
+
          // if we have a proper ABApplication.id given:
         if ((updatedRecord)
             && (updatedRecord.id)) {
@@ -152,12 +153,14 @@ module.exports = {
 
                     // TODO : should clear old pages from nav
 
-                    // get .views
-                    (updatedRecord.json.views || []).forEach((view) => {
+                    // get .pages
+                    if (Application.json.pages) {
+                        Application.json.pages.forEach(function(page) {
 
-                        buildPageTasks.push(AppBuilder.updateNavView(Application, view));
+                            buildPageTasks.push(AppBuilder.updateNavView(Application, page));
 
-                    });
+                        });
+                    }
 
                     return Promise.all(buildPageTasks);
 

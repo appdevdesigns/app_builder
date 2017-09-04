@@ -70,18 +70,18 @@ steal(
 
 						initPage: function () {
 							var self = this;
-							
+
 							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
 								self.height = data.height;
 								self.resize(data.height);
 							});
-							
+
 							self.getData().then(function () {
 
 								self.initEvents();
 
 								// Store the root page
-								self.rootPage = self.data.application.views(function(v) {
+								self.rootPage = self.data.application.pages(function (v) {
 									return v.id == self.options.page;
 								})[0];
 
@@ -108,14 +108,14 @@ steal(
 											next();
 										}, next);
 								},
-								
+
 								// Wait until the tool's area has been shown
 								function (next) {
 									if (self.activated) next();
 									else {
 										var areaKey = 'ab-' + self.data.application.name;
 										var subID1, subID2;
-										var callback = function(message, data) {
+										var callback = function (message, data) {
 											if (!self.activated && data.area == areaKey) {
 												self.activated = true;
 												subID1 && AD.comm.hub.unsubscribe(subID1);
@@ -123,7 +123,7 @@ steal(
 												next();
 											}
 										};
-										
+
 										subID1 = AD.comm.hub.subscribe('opsportal.tool.show', callback);
 										subID2 = AD.comm.hub.subscribe('opsportal.area.show', callback);
 
@@ -171,7 +171,7 @@ steal(
 							});
 
 							// Render pages
-							self.data.application.views().forEach(function (page) {
+							self.data.application.pages().forEach(function (page) {
 								if (page.id == self.rootPage.id || (page.parent && page.parent.id == self.rootPage.id))
 									self.renderPage(page);
 							});
@@ -236,7 +236,7 @@ steal(
 										id: pageDomId,
 										rows: []
 									}
-					
+
 									if ($$(pageDomId)) {
 										// Change page type (Popup -> Page)
 										if ($$(pageDomId).config.view == 'window') {
@@ -279,20 +279,23 @@ steal(
 							self.activePage = page;
 
 							// Question: should we do a resize() after all the components are rendered?
-							
-							async.each(self.activePage.views(), function(com, ok) {
 
-								var comInstance = com.component(self.App);
+							if (self.activePage) {
+								async.each(self.activePage.pages(), function (com, ok) {
 
-								$$(pageDomId).addView(comInstance.ui);
+									var comInstance = com.component(self.App);
 
-								if (comInstance.init) 
-									comInstance.init();
+									$$(pageDomId).addView(comInstance.ui);
 
-							}, function(err) {
-								// self.resize() // <-- doesn't do the trick
-								AD.comm.hub.publish('opsportal.resize', { height: self.height });
-							});
+									if (comInstance.init)
+										comInstance.init();
+
+								}, function (err) {
+									// self.resize() // <-- doesn't do the trick
+									AD.comm.hub.publish('opsportal.resize', { height: self.height });
+								});
+							}
+
 						},
 
 						resize: function (height) {
@@ -401,7 +404,7 @@ steal(
 							else
 								return '';
 						},
-						
+
 
 						unique: function () {
 							var args = Array.prototype.slice.call(arguments); // Convert to Array

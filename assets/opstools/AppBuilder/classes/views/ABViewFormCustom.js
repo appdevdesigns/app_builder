@@ -143,7 +143,14 @@ export default class ABViewFormCustom extends ABViewFormField {
 		component.ui.minHeight = 45;
 		component.ui.height = 60;
 		component.ui.borderless = true;
-		component.ui.template = template;
+		component.ui.template = '<div class="customField">' + template + '</div>';
+		component.ui.onClick = {
+			"customField": function(id, e, trg) {
+				alert('YES !!!');
+
+				// field.customEdit(
+			}
+		};
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {

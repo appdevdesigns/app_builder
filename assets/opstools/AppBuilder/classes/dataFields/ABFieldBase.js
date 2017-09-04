@@ -194,6 +194,18 @@ module.exports = class ABField {
 
 
 	/**
+	 * @method urlPointer()
+	 * return a string pointer to decode this object from the root application
+	 * object.
+	 * @return {string} pointer reference
+	 */
+	urlPointer() {
+		return this.object.urlField() + this.id;
+	}
+
+
+
+	/**
 	 * @method defaultValue
 	 * insert a key=>value pair that represent the default value
 	 * for this field.

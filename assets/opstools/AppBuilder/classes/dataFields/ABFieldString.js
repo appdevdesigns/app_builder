@@ -7,7 +7,7 @@
 
 import ABField from "./ABField"
 import ABFieldComponent from "./ABFieldComponent"
-
+import ABViewFormText from "../views/ABViewFormText"
 
 
 function L(key, altText) {
@@ -286,6 +286,7 @@ class ABFieldString extends ABField {
 
 		return formComponentSetting; 
 	}
+
 
 
 }

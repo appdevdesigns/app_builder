@@ -1064,7 +1064,7 @@ module.exports = {
                     }, function (err) {
                         if (err) {
                             if (err.code == 'E_AREANOTFOUND') {
-                                console.log('... Area[' + application.areaKey() + '] not found.  Move along ... ');
+sails.log.info('... Area[' + application.areaKey() + '] not found.  Move along ... ');
                                 // this probably means that they deleted this default area
                                 // using the Navigation Editor.
                                 // no problem here:

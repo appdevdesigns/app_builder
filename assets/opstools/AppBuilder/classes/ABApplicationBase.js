@@ -203,7 +203,18 @@ module.exports = class ABApplicationBase {
 		return linkedFields;
 	}
 
+	/**
+	 * @method objectByID()
+	 * return the specific object requested by the provided id.
+	 * @param {string} id
+	 * @return {obj}
+	 */
+	objectByID (id) {
 
+		return this.objects((o)=>{ return o.id == id; })[0];
+	}
+
+	
 	/**
 	 * @method objectByID()
 	 * return the specific object requested by the provided id.
@@ -270,6 +281,91 @@ module.exports = class ABApplicationBase {
 
 
 
+	/**
+	 * @method urlResolve()
+	 * given an object pointer, return the specific object referenced.
+	 * pointer must start with a '#', use '/' as delimiters, and either 
+	 * reference an object's .id, or an object's .property.
+	 * for example:
+	 * #/_objects   : resolves to the array of ._objects pointed to by this 
+	 * 				  application.
+	 * #/_objects/[object.id] : reolved to a specific object 
+	 * #/_objects/[object.id]/_fields/[field.id] : resolves to a specific data field
+	 * 				  refereced by object.id.
+	 *
+	 * @param {string} pointer : the string url referencing the object you want
+	 * 							 to retrieve.
+	 * @return {obj} 
+	 */
+	urlResolve(pointer) {
+
+		var parts = pointer.split('/');
+
+		var parseStep = (obj, steps) => {
+
+			// we're done.  obj is what we are looking for:
+			if (steps.length == 0) {
+				return obj;
+			}
+
+			// pull the next step key:
+			var key = steps.shift();
+
+			// special case, "#" makes sure we are talking about the 
+			// Application object
+			if (key == '#') {
+				return parseStep(this, steps);
+			}
+
+			// if obj is an [], then key should be an .id reference to
+			// lookup:
+			if (Array.isArray(obj)) {
+
+				obj = obj.filter(function(o){ return o.id == key;})[0];
+				return parseStep(obj, steps);
+			}
+
+			// otherwise obj should be an {} and key a property:
+			if (obj[key]) {
+				return parseStep(obj[key], steps);
+			}
+
+
+			// if we got here, there is an error!
+			console.error('!!! failed to lookup url:'+pointer);
+			return null;
+
+		}
+
+		return parseStep(this, parts)
+
+	}
+
+
+	/**
+	 * @method urlPointer()
+	 * return the url pointer for this application.
+	 * @return {string} 
+	 */
+	urlPointer() {
+		// NOTE: if we need to expand this to search across 
+		// applications, then add in this application.id here:
+		// return '#/'+ this.id + '/'
+		return '#/';
+	}
+
+
+	/**
+	 * @method urlObject()
+	 * return the url pointer for objects in this application.
+	 * @return {string} 
+	 */
+	urlObject() {
+		return this.urlPointer() + '_objects/'
+	}
+
+
+
 	///
 	///	Object List Settings
 	///
@@ -304,6 +400,5 @@ module.exports = class ABApplicationBase {
 	set objectlistIsGroup( isGroup ) {
 		this.objectListSettings.isGroup = isGroup;
 	}
-
 
 }

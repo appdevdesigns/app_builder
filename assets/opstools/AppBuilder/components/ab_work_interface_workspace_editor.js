@@ -58,8 +58,18 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         //     label: '[view map]'
                         // },
                         {
+                            view:'button',
+                            type:'prev',
+                            label:'back',
+                            width: 60,
+                            click:function(){
+                                _logic.buttonBack();
+                            }
+                        },
+                        {
                             view: 'list',
                             layout: 'x',
+
                             id: ids.toolbarMap,
                             borderless: true,
                             multiselect: false,
@@ -159,6 +169,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
         var CurrentView = null;
         var CurrentViewMode = 'preview';
+        var PreviousViews = [];
 
         // setting up UI
         this.init = function() {
@@ -172,6 +183,17 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
         // internal business logic 
         var _logic = this.logic = {
             
+
+            buttonBack:function() {
+                if (PreviousViews.length > 0) {
+                    var view = PreviousViews.pop();
+
+                    // reset current view so it doesn't get added.
+                    CurrentView = null; 
+
+                    App.actions.populateInterfaceWorkspace(view);
+                }
+            },
 
             buttonCancel:function() {
 
@@ -207,6 +229,23 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
              */
             viewLoad: function(view) {
                 
+                // store the current view to return here on [back] button.
+                if (CurrentView) {
+
+                    // don't keep storing the same view over and over:
+                    if (view.id != CurrentView.id) {
+                        PreviousViews.push(CurrentView);
+
+// TODO: make this a setting?
+                        // limit the number of views we store in our list.
+                        // ## lets not be memory hogs.
+                        if (PreviousViews.length > 50) {
+                            PreviousViews.shift();
+                        }
+                    }
+                }
+                
+
                 CurrentView = view;
 
                 // try to make sure we don't continually add up listeners.

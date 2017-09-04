@@ -496,7 +496,7 @@ export default class ABField extends ABFieldBase {
 				// 		 as the text.  Any sub class of ABField should overwrite
 				// 		 this and return an actual Form Component.
 
-				// 
+				// store object id and field id to field component
 				var values = this.formComponent().common();
 				values.settings = values.settings || {};
 				values.settings.objectId = this.object.id;
@@ -511,6 +511,5 @@ export default class ABField extends ABFieldBase {
 
 		}
 	}
-
 
 }

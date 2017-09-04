@@ -11,6 +11,8 @@
  */
 
 import ABView from "./ABView"
+import ABViewManager from "../ABViewManager"
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -27,7 +29,7 @@ export default class ABViewPage extends ABView  {
 
     constructor(values, application, parent) {
 
-    	super( values, application, parent, ABViewDefaults );
+        super( values, application, parent, ABViewDefaults );
 
     	
   	// 	{
@@ -42,13 +44,248 @@ export default class ABViewPage extends ABView  {
 	//		translations:[]
   	// 	}
   		
-
+        this.parentPage = null;  // will be set by the pageNew() that creates this obj.
   	}
 
 
   	static common() {
-  		return ABViewDefaults;
+  		  return ABViewDefaults;
   	}
+
+
+    /**
+     * @method toObj()
+     *
+     * properly compile the current state of this ABViewPage instance
+     * into the values needed for saving to the DB.
+     *
+     * @return {json}
+     */
+    toObj () {
+
+        var obj = super.toObj();
+
+        // compile our pages
+        var pages = [];
+        this._pages.forEach((page) => {
+          pages.push(page.toObj())
+        })
+
+        obj.pages = pages;
+
+        return obj;
+    }
+
+
+
+    /**
+     * @method fromValues()
+     *
+     * initialze this object with the given set of values.
+     * @param {obj} values
+     */
+    fromValues (values) {
+
+        super.fromValues(values);
+
+        // now properly handle our sub pages.
+        var pages = [];
+        (values.pages || []).forEach((child) => {
+          pages.push(this.pageNew(child));  // ABViewManager.newView(child, this.application, this));
+        })
+        this._pages = pages;
+
+        // convert from "0" => 0
+
+    }
+
+
+    /**
+     * @method destroy()
+     *
+     * destroy the current instance of ABApplication
+     *
+     * also remove it from our _AllApplications
+     *
+     * @return {Promise}
+     */
+    destroy () {
+        return new Promise(
+            (resolve, reject) => {
+
+                // verify we have been .save()d before:
+                if (this.id) {
+
+                    var parent = this.parentPage;
+                    if (!parent) parent = this.application;
+
+                    parent.pageDestroy(this)
+                    .then(resolve)
+                    .catch(reject);
+
+                } else {
+
+                    resolve();  // nothing to do really
+                }
+
+            }
+        )
+
+    }
+
+
+    /**
+     * @method save()
+     *
+     * persist this instance of ABViewPage with it's parent
+     *
+     *
+     * @return {Promise}
+     *         .resolve( {this} )
+     */
+    save () {
+        return new Promise(
+            (resolve, reject) => {
+
+                // if this is our initial save()
+                if (!this.id) {
+                    this.id = OP.Util.uuid();   // setup default .id
+                }
+
+                // if this is not a child of another view then tell it's
+                // application to save this view.
+                var parent = this.parentPage;
+                if (!parent) parent = this.application;
+
+                parent.pageSave(this)
+                .then(resolve)
+                .catch(reject)
+            }
+        )
+    }
+
+
+
+    ///
+    /// Pages
+    ///
+
+
+    /**
+     * @method pages()
+     *
+     * return an array of all the ABViewPages for this page.
+     *
+     * @param {fn} filter   a filter fn to return a set of ABViewPages that this fn
+     *                      returns true for.
+     * @return {array}  array of ABViewPages
+     */
+    pages (filter) {
+
+        filter = filter || function() {return true; };
+
+        return this._pages.filter(filter);
+    }
+
+
+
+    /**
+     * @method pageNew()
+     *
+     * return an instance of a new (unsaved) ABViewPage that is tied to this
+     * ABViewPage.
+     *
+     * NOTE: this new page is not included in our this.pages until a .save()
+     * is performed on the page.
+     *
+     * @return {ABViewPage}
+     */
+    pageNew( values ) {
+
+        // make sure this is an ABViewPage description
+        values.key = ABViewDefaults.key;
+
+        // NOTE: this returns a new ABView component.  
+        // when creating a new page, the 3rd param should be null, to signify 
+        // the top level component.
+        var page =  new ABViewManager.newView(values, this.application, null);
+        page.parentPage = this;
+        return page;
+    }
+
+
+
+    /**
+     * @method pageDestroy()
+     *
+     * remove the current ABViewPage from our list of ._pages.
+     *
+     * @param {ABViewPage} page
+     * @return {Promise}
+     */
+    pageDestroy( page ) {
+
+        var remainingPages = this.pages(function(p) { return p.id != page.id;})
+        this._pages = remainingPages;
+        return this.save();
+    }
+
+
+
+    /**
+     * @method pageSave()
+     *
+     * persist the current ABViewPage in our list of ._pages.
+     *
+     * @param {ABViewPage} object
+     * @return {Promise}
+     */
+    pageSave( page ) {
+        var isIncluded = (this.pages(function(p){ return p.id == page.id }).length > 0);
+        if (!isIncluded) {
+            this._pages.push(page);
+        }
+
+        return this.save();
+    }
+
+
+
+    /**
+     * @method urlView()
+     * return the url pointer for views in this application.
+     * @return {string} 
+     */
+    urlPage() {
+        return this.urlPointer() + '/_pages/'
+    }
+
+
+    /**
+     * @method urlPointer()
+     * return the url pointer that references this view.  This url pointer
+     * should be able to be used by this.application.urlResolve() to return 
+     * this view object.
+     * @return {string} 
+     */
+    urlPointer() {
+        if (this.parentPage) {
+            return this.parentPage.urlPage() + this.id;
+        } else {
+            return this.application.urlPage() + this.id;
+        }
+    }
+
+
+
+    /**
+     * @method urlView
+     * return a string pointer to this object's views.
+     * @return {string}
+     */
+     urlView() {
+        return this.urlPointer() + '/_views/';
+     }
 
 
 

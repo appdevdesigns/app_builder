@@ -1,50 +1,51 @@
 /*
- * ABViewLabel
+ * ABViewFormText
  *
- * An ABViewLabel defines a UI label display component.
+ * An ABViewFormComponent defines a UI component that is intended to be part of
+ * a form.   These components are tied to an Object's data field.
  *
  */
 
 import ABView from "./ABView"
-import ABPropertyComponent from "../ABPropertyComponent"
+// import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
 
-var ABViewLabelPropertyComponentDefaults = {
+var PropertyComponentDefaults = {
 	label:'',
-	format:0  	// 0 - normal, 1 - title, 2 - description
 }
 
 
 var ABViewDefaults = {
-	key: 'label',		// {string} unique key for this view
+	key: 'form.component',		// {string} unique key for this view
 	icon:'font',		// {string} fa-[icon] reference for this view
-	labelKey:'ab.components.label' // {string} the multilingual label key for the class label
+	labelKey:'ab.components.form.component' // {string} the multilingual label key for the class label
 }
 
 
 
-export default class ABViewLabel extends ABView  {
+export default class ABViewFormComponent extends ABView  {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-    constructor(values, application, parent) {
+    constructor(values, application, parent, defaults) {
 
-    	super( values, application, parent, ABViewDefaults );
+    	super( values, application, parent, defaults );
 
-    	OP.Multilingual.translate(this, this, ['text']);
+    	OP.Multilingual.translate(this, this, ['formLabel']);
 
   	// 	{
   	// 		id:'uuid',					// uuid value for this obj
   	// 		key:'viewKey',				// unique key for this View Type
   	// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
   	// 		label:'',					// pulled from translation
+  	//		formLabel:''				// [multilingual] the label that is displayed on the UI
 
 	//		settings: {					// unique settings for the type of field
 	//			format: x				// the display style of the text
@@ -64,6 +65,12 @@ export default class ABViewLabel extends ABView  {
   	}
 
 
+  	static newInstance (application, parent) {
+  		return new this({}, application,parent);
+ // console.error('ABViewFormComponent.newInstance()  should be overridden by its child component.');
+ // return null;
+  	}
+
 
 
 
@@ -75,17 +82,17 @@ export default class ABViewLabel extends ABView  {
 	/**
 	 * @method toObj()
 	 *
-	 * properly compile the current state of this ABViewLabel instance
+	 * properly compile the current state of this ABViewFormText instance
 	 * into the values needed for saving.
 	 *
 	 * @return {json}
 	 */
 	toObj () {
 
-		OP.Multilingual.unTranslate(this, this, ['label', 'text']);
+		OP.Multilingual.unTranslate(this, this, ['label', 'formLabel']);
 
 		var obj = super.toObj();
-		obj.views = [];
+		obj.views = [];			// no subviews
 		return obj;
 	}
 
@@ -102,18 +109,22 @@ export default class ABViewLabel extends ABView  {
 
     	// if this is being instantiated on a read from the Property UI,
     	// .text is coming in under .settings.label
-    	this.text = values.text || values.settings.text || '*text';
+    	this.formLabel = values.formLabel || values.settings.formLabel || '**formLabel';
 
-    	this.settings.format = this.settings.format || ABViewLabelPropertyComponentDefaults.format;
+// this.settings.format = this.settings.format || PropertyComponentDefaults.format;
 
     	// we are not allowed to have sub views:
     	this._views = [];
 
     	// convert from "0" => 0
-    	this.settings.format = parseInt(this.settings.format);
+// this.settings.format = parseInt(this.settings.format);
 
 	}
 
+
+	fieldPointer(pointer) {
+		this.settings.fieldPointer = pointer;
+	}
 
 
 	//
@@ -131,27 +142,24 @@ export default class ABViewLabel extends ABView  {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewLabelEditorComponent';
+		var idBase = 'ABViewFormTextEditorComponent';
 		var ids = {
 			component: App.unique(idBase+'_component')
 		}
 
+// var field = this.application.objectFromURL(this.settings.dataFieldURL);
+var field = { columnName:'columnNameToDo'}
 
 		var _ui = {
-			id: ids.component,
-			view: 'label',
-			label: this.text || ''
-		}
-		_ui = this.uiFormatting(_ui);
-		
-		// This gives adequate space to the view
-		_ui = {
-			type: "space", // this code provides some margin between the rows so we don't have tangents
-			rows: [
-				_ui,
-				{}// this little bit provides a spacer below the content that will fill the area but we added it here so we wouldn't loose the styles applied in uiFormatting
-			]
-		};
+			view:"text", 
+			value:"", 
+			name:field.columnName,    // get this from the attached DataField
+			label:this.formLabel, 
+			inputAlign:"left", 
+    		labelAlign:"left"
+    	}
+
+		_ui = this.uiFormatting(_ui)
 
 
 		var _init = (options) => {
@@ -179,61 +187,51 @@ export default class ABViewLabel extends ABView  {
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-		
-
 		// in addition to the common .label  values, we 
 		// ask for:
-		return commonUI.concat([
+		return [
 
 			// .text :  The Text displayed for this label
 			{
 				view: "text",
-				name:'text',
-				label: L('ab.component.label.text', '*Text'),
-				placeholder: L('ab.component.label.textPlaceholder', '*Text Placeholder'),
+				name:'formLabel',
+				label: L('ab.component.form.text.label', '*Label'),
+				placeholder: L('ab.component.form.text.labelPlaceholder', '*label Placeholder'),
 				// labelWidth: App.config.labelWidthMedium,
 			},
-			{ 
-				view: "fieldset", 
-				label: L('ab.component.label.formatting','*format options:'), 
-				body:{
-			        rows:[
-						{
-							view: "radio", 
-							name: "format",
-							vertical: true,
-							value: ABViewLabelPropertyComponentDefaults.format, 
-							options:[
-								{ id:0, value: L('ab.component.label.formatting.normal','*normal') },
-								{ id:1, value: L('ab.component.label.formatting.title','*title')  },
-								{ id:2, value: L('ab.component.label.formatting.description','*description') }
-			        		]
-			        	}
-			        ]
-		    	}
-		    },
-			{}
-		]);
+			// { 
+			// 	view: "fieldset", 
+			// 	label: L('ab.component.label.formatting','*format options:'), 
+			// 	body:{
+			//         rows:[
+			// 			{
+			// 				view: "radio", 
+			// 				name: "format",
+			// 				vertical: true,
+			// 				value: PropertyComponentDefaults.format, 
+			// 				options:[
+			// 					{ id:0, value: L('ab.component.label.formatting.normal','*normal') },
+			// 					{ id:1, value: L('ab.component.label.formatting.title','*title')  },
+			// 					{ id:2, value: L('ab.component.label.formatting.description','*description') }
+			//         		]
+			//         	}
+			//         ]
+		 //    	}
+		 //    }
+		];
 
 	}
 
 
 	static propertyEditorPopulate(ids, view) {
 
-		super.propertyEditorPopulate(ids, view);
-
-		$$(ids.text).setValue(view.text);
-		$$(ids.format).setValue(view.settings.format);
+		$$(ids.formLabel).setValue(view.formLabel);
 	}
 
 
 	static propertyEditorValues(ids, view) {
 
-		super.propertyEditorValues(ids, view);
-
-		view.text  = $$(ids.text).getValue();
-		view.settings.format = $$(ids.format).getValue();
+		view.formLabel  = $$(ids.formLabel).getValue();
 	}
 
 
@@ -245,30 +243,21 @@ export default class ABViewLabel extends ABView  {
 	 */
 	component(App) {
 
-		// get a UI component for each of our child views
-		var viewComponents = [];
-		this.views().forEach((v)=>{
-			viewComponents.push(v.component(App));
-		})
 
-
-		var idBase = 'ABViewLabel_'+this.id;
+		var idBase = 'ABViewFormText_'+this.id;
 		var ids = {
 			component: App.unique(idBase+'_component'),
 		}
 
 
-		// an ABViewLabel is a simple Label
+		// an ABViewFormText is a simple text input
 		var _ui = {
 			id: ids.component,
-			view: 'label',
+			view: 'text',
 			// css: 'ab-component-header ab-ellipses-text',
-			label: this.text || '*',
-			type: {
-				height: "auto"
-			}
+			label: this.formLabel || '* formLabel'
 		}
-		_ui = this.uiFormatting(_ui)
+		// _ui = this.uiFormatting(_ui)
 
 
 		// make sure each of our child views get .init() called
@@ -286,6 +275,7 @@ export default class ABViewLabel extends ABView  {
 	/*
 	 * @method componentList
 	 * return the list of components available on this view to display in the editor.
+	 * in the case of a Form Text field => no components.
 	 */
 	componentList() {
 		return [];
@@ -299,56 +289,29 @@ export default class ABViewLabel extends ABView  {
 	 * @param {obj} _ui the current webix.ui definition
 	 * @return {obj} a properly formatted webix.ui definition
 	 */
-	uiFormatting(_ui) {
+	// uiFormatting(_ui) {
 
-		// add different css settings based upon it's format 
-		// type.
-		switch(parseInt(this.settings.format)) {
+	// 	// add different css settings based upon it's format 
+	// 	// type.
+	// 	switch(parseInt(this.settings.format)) {
 
-			// normal
-			case 0: 
-				break;
+	// 		// normal
+	// 		case 0: 
+	// 			break;
 
-			// title
-			case 1: 
-				_ui.css = 'ab-component-header ab-ellipses-text';
-				break;
+	// 		// title
+	// 		case 1: 
+	// 			_ui.css = 'ab-component-header ab-ellipses-text';
+	// 			break;
 
-			// description
-			case 2:
-				_ui.css = 'ab-component-description ab-ellipses-text';
-				break;
-		}
+	// 		// description
+	// 		case 2:
+	// 			_ui.css = 'ab-component-description ab-ellipses-text';
+	// 			break;
+	// 	}
 
-		return _ui;
-	}
-
-
-	//// Allow external interface to manipulate our settings:
-
-	/**
-	 * @method formatNormal
-	 * display text in the normal format.
-	 */
-	formatNormal() {
-		this.settings.format = 0;
-	}
-
-	/**
-	 * @method formatTitle
-	 * display text as a Title.
-	 */
-	formatTitle() {
-		this.settings.format = 1;
-	}
-
-	/**
-	 * @method formatDescription
-	 * display text as a description.
-	 */
-	formatDescription() {
-		this.settings.format = 2;
-	}
+	// 	return _ui;
+	// }
 
 }
 
@@ -374,7 +337,7 @@ var ABViewPropertyComponent = new ABPropertyComponent({
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues: ABViewLabelPropertyComponentDefaults,
+	defaultValues: PropertyComponentDefaults,
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply

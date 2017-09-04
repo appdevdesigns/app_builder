@@ -1,8 +1,8 @@
 /*
  * ABViewForm
  *
- * An ABViewFormPanel that represents a "Form" in the system.
- *
+ * An ABViewForm is an ABView that allows you to choose an object and create 
+ * special form controls for each of the Object's properties.
  *
  */
 
@@ -56,6 +56,25 @@ export default class ABViewForm extends ABViewFormPanel {
 	///
 	/// Instance Methods
 	///
+
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABViewLabel instance
+	 * into the values needed for saving.
+	 *
+	 * @return {json}
+	 */
+	// toObj () {
+
+	// 	OP.Multilingual.unTranslate(this, this, ['label', 'text']);
+
+	// 	var obj = super.toObj();
+	// 	obj.views = [];
+	// 	return obj;
+	// }
+
 
 	/**
 	 * @method fromValues()
