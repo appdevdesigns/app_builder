@@ -281,7 +281,7 @@ steal(
 							// Question: should we do a resize() after all the components are rendered?
 
 							if (self.activePage) {
-								async.each(self.activePage.pages(), function (com, ok) {
+								async.each(self.activePage.views(), function (com, ok) {
 
 									var comInstance = com.component(self.App);
 
