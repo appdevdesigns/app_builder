@@ -281,6 +281,9 @@ export default class AB_Work_Interface_List extends OP.Component {
 						.then(function () {
 							_logic.listReady();
 
+							// refresh the root page list
+							PopupNewPageComponent.applicationLoad(CurrentApplication);
+
 							// TODO : should use message box
 							OP.Dialog.Alert({
 								text: labels.common.renameSuccessMessage.replace("{0}", state.value)
@@ -370,7 +373,11 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 									
 									viewList.remove(selectedPage.id);
-	// App.actions.clearObjectWorkspace();
+
+									// refresh the root page list
+									PopupNewPageComponent.applicationLoad(CurrentApplication);
+
+// App.actions.clearObjectWorkspace();
 								});
 
 						}
