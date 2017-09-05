@@ -88,7 +88,9 @@ export default class ABViewMenu extends ABView {
 			pages: App.unique(idBase + '_pages')
 		}
 
-		var menu = this.component(App).ui;
+		var component = this.component(App);
+
+		var menu = component.ui;
 		menu.id = ids.component;
 
 		var _ui = {
@@ -99,6 +101,9 @@ export default class ABViewMenu extends ABView {
 		};
 
 		var _init = (options) => {
+
+			this.AddPagesToView(this.application, $$(ids.component), this.settings.pages);
+
 		}
 
 		var _logic = {
@@ -177,25 +182,34 @@ export default class ABViewMenu extends ABView {
 
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 
-		// Set available pages to tree view
-		// 	parentItem = {
-		// 		id: pageParent.id,
-		// 		label: pageParent.label,
-		// 		data: []
-		// 	};
-		var pageItems = [];
-		pageItems.push(view.rootPage());
+		var pageTree = new webix.TreeCollection();
+		var currentPage = view.pageParent();
 
-		// TODO : get children pages
+		// Add parent of current page
+		if (currentPage.parentPage)
+			pageTree.add(currentPage.parentPage);
+
+		// Add current page
+		pageTree.add(currentPage, 0, (currentPage.parentPage ? currentPage.parentPage.id : null));
+
+		// get sub-pages of parent
+		currentPage.pages().forEach((page, index) => {
+			pageTree.add(page, index, currentPage.id);
+		});
 
 		$$(ids.pages).clearAll();
-		$$(ids.pages).parse(pageItems);
+		$$(ids.pages).data.unsync();
+		$$(ids.pages).data.sync(pageTree);
+		$$(ids.pages).refresh();
 		$$(ids.pages).openAll();
 
 		// Select pages
 		if (view.settings.pages && view.settings.pages.forEach) {
-			view.settings.pages.forEach((p) => {
-				$$(ids.pages).checkItem(p.id);
+			view.settings.pages.forEach((pageId) => {
+
+				if ($$(ids.pages).exists(pageId))
+					$$(ids.pages).checkItem(pageId);
+
 			});
 		}
 	}
@@ -205,13 +219,7 @@ export default class ABViewMenu extends ABView {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.orientation = $$(ids.orientation).getValue();
-		view.settings.pages = $$(ids.pages).getChecked().map((pageId) => {
-			return {
-				id: pageId,
-				value: $$(ids.pages).getItem(pageId).label
-			}
-		});
-
+		view.settings.pages = $$(ids.pages).getChecked() || [];
 
 	}
 
@@ -236,12 +244,14 @@ export default class ABViewMenu extends ABView {
 			view: "menu",
 			autoheight: true,
 			datatype: "json",
-			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
-			data: this.settings.pages || []
+			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation
 		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+
+			this.AddPagesToView(this.application, $$(ids.component), this.settings.pages);
+
 		}
 
 
@@ -258,6 +268,30 @@ export default class ABViewMenu extends ABView {
 	 */
 	componentList() {
 		return [];
+	}
+
+
+
+	AddPagesToView(parent, domNode, pageIds) {
+
+		if (!parent || !parent.pages || !domNode || !pageIds) return;
+
+		var pages = parent.pages() || [];
+
+		pages.forEach((page) => {
+
+			if (pageIds.indexOf(page.id) > -1){
+				domNode.add({
+					id: page.id,
+					value: page.label
+				});
+			}
+
+			this.AddPagesToView(page, domNode, pageIds);
+
+		});
+
+		domNode.refresh();
 	}
 
 

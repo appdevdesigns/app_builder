@@ -308,20 +308,22 @@ export default class ABView  extends EventEmitter {
 	}
 
 
-	rootPage() {
-		var rootPage;
-		var curView = this;
 
-		while (!curView.isRoot() && curView.parent) {
-			curView = curView.parent;
+	pageParent() {
+		var parentPage = this.parent;
+
+		// if current page is the root page, then return itself.
+		if (this.isRoot()) {
+			return this;
 		}
 
-		if (curView.isRoot() && curView.key == 'page') {
-			rootPage = curView;
+		while (parentPage && parentPage.key != 'page') {
+			parentPage = parentPage.parent;
 		}
 
-		return rootPage;
+		return parentPage;
 	}
+
 
 
 	///
