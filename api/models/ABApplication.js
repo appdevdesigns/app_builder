@@ -149,13 +149,14 @@ module.exports = {
 
                 .then((Application) => {
 
-                    var buildPageTasks = [];
+                    var buildPageTasks = [],
+                        appliationClass = Application.toABClass();
 
                     // TODO : should clear old pages from nav
 
                     // get .pages
-                    if (Application.json.pages) {
-                        Application.json.pages.forEach(function(page) {
+                    if (appliationClass._pages && appliationClass._pages.forEach) {
+                        appliationClass._pages.forEach(function(page) {
 
                             buildPageTasks.push(AppBuilder.updateNavView(Application, page));
 

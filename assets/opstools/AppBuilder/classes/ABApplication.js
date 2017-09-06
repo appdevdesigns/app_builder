@@ -37,16 +37,6 @@ export default class ABApplication extends ABApplicationBase {
     	OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
 
-		// import all our ABViews
-		// We only work with ABViews on the client side.
-		var newPages = [];
-		(attributes.json.pages || []).forEach((page) => {
-			newPages.push( this.pageNew(page, null) );  
-		})
-		this._pages = newPages;
-
-
-
 	  	// instance keeps a link to our Model for .save() and .destroy();
 	  	this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
 	  	this.Model.Models(ABApplication);

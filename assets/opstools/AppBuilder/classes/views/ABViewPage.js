@@ -278,15 +278,4 @@ export default class ABViewPage extends ABView  {
 
 
 
-    /**
-     * @method urlView
-     * return a string pointer to this object's views.
-     * @return {string}
-     */
-     urlView() {
-        return this.urlPointer() + '/_views/';
-     }
-
-
-
 }

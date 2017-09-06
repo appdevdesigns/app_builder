@@ -4,7 +4,7 @@
  * An ABView defines a UI display container.
  *
  */
-import EventEmitter from "events"
+import ABViewBase from "./ABViewBase"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABViewManager from "../ABViewManager"
 
@@ -22,7 +22,7 @@ var ABViewDefaults = {
 
 
 
-export default class ABView  extends EventEmitter {
+export default class ABView  extends ABViewBase {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -32,11 +32,9 @@ export default class ABView  extends EventEmitter {
 	 */
     constructor(values, application, parent, defaultValues) {
 
-    	super();
+    	super(values, application, parent);
 
     	this.defaults = defaultValues || ABViewDefaults;
-
-    	this.application = application;
 
     	
 
@@ -54,17 +52,6 @@ export default class ABView  extends EventEmitter {
 	//		translations:[]
   	// 	}
   		
-  		this.fromValues(values);
-
-
-    	this.parent = parent || null;
-
-    	// default value for our label
-  		if (this.label == '?label?') {
-  			if (this.parent) {
-  				this.label = this.parent.label+'.'+this.defaults.key;
-  			} 
-  		}
   	}
 
 
@@ -246,25 +233,21 @@ export default class ABView  extends EventEmitter {
 	 */
 	fromValues (values) {
 
- 		this.id = values.id;			// NOTE: only exists after .save()
-    	this.key = values.key || this.viewKey();
-    	this.icon = values.icon || this.viewIcon();
+		super.fromValues(values);
 
-// this.parent = values.parent || null;
+		this.key = values.key || this.viewKey();
+		this.icon = values.icon || this.viewIcon();
 
-
-    	// if this is being instantiated on a read from the Property UI,
-    	// .label is coming in under .settings.label
-    	values.settings = values.settings || {};
-    	this.label = values.label || values.settings.label || '?label?';
-
-
-    	this.translations = values.translations || [];
-    	// label is a multilingual value:
+		// label is a multilingual value:
     	OP.Multilingual.translate(this, this, ['label']);
 
 
-    	this.settings = values.settings || {};
+		// default value for our label
+		if (this.label == '?label?') {
+			if (this.parent) {
+				this.label = this.parent.label + '.' + this.defaults.key;
+			}
+		}
 
 
     	var views = [];
@@ -1115,33 +1098,6 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 
 	}
 
-
-
-	/**
-	 * @method urlPointer()
-	 * return the url pointer that references this view.  This url pointer
-	 * should be able to be used by this.application.urlResolve() to return 
-	 * this view object.
-	 * @return {string} 
-	 */
-	urlPointer() {
-		if (this.parent) {
-			return this.parent.urlView() + this.id;
-		} else {
-			return this.application.urlView() + this.id;
-		}
-	}
-
-
-
-	/**
-	 * @method urlView
-	 * return a string pointer to this object's views.
-	 * @return {string}
-	 */
-	 urlView() {
-	 	return this.urlPointer() + '/_views/';
-	 }
 
 }
 

@@ -40,7 +40,15 @@ module.exports = class ABApplicationBase {
 	  	(attributes.json.objects || []).forEach((obj) => {
 	  		newObjects.push( this.objectNew(obj) );  
 	  	})
-	  	this._objects = newObjects;
+		this._objects = newObjects;
+		  
+
+		// import all our ABViews
+		var newPages = [];
+		(attributes.json.pages || []).forEach((page) => {
+			newPages.push( this.pageNew(page) );  
+		})
+		this._pages = newPages;
 
 
 		// Object List Settings
@@ -364,6 +372,14 @@ module.exports = class ABApplicationBase {
 		return this.urlPointer() + '_objects/'
 	}
 
+	/**
+	 * @method urlView()
+	 * return the url pointer for views in this application.
+	 * @return {string} 
+	 */
+	urlView() {
+		return this.urlPointer() + '_views/'
+	}
 
 
 	///

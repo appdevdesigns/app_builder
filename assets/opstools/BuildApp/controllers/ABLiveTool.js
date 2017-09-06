@@ -81,9 +81,7 @@ steal(
 								self.initEvents();
 
 								// Store the root page
-								self.rootPage = self.data.application.pages(function (v) {
-									return v.id == self.options.page;
-								})[0];
+								self.rootPage = self.data.application.urlResolve(self.options.page);
 
 								self.renderPageContainer();
 
@@ -238,16 +236,16 @@ steal(
 									}
 
 									if ($$(pageDomId)) {
-										// Change page type (Popup -> Page)
-										if ($$(pageDomId).config.view == 'window') {
-											$$(pageDomId).destructor();
+										// // Change page type (Popup -> Page)
+										// if ($$(pageDomId).config.view == 'window') {
+										// 	$$(pageDomId).destructor();
 
-											$$(self.containerDomID).addView(pageTemplate);
-										}
-										// Rebuild
-										else {
-											webix.ui(pageTemplate, $$(pageDomId));
-										}
+										// 	$$(self.containerDomID).addView(pageTemplate);
+										// }
+										// // Rebuild
+										// else {
+										webix.ui(pageTemplate, $$(pageDomId));
+										// }
 									}
 									// Add to multi-view
 									else if ($$(self.containerDomID))

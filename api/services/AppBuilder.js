@@ -927,7 +927,7 @@ module.exports = {
                     path: 'opstools/BuildApp/controllers/ABLiveTool.js',
                     init: {
                         app: application.id,
-                        page: page.id
+                        page: page.urlPointer()
                     }
                 }
             ];
