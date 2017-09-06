@@ -374,11 +374,11 @@ module.exports = class ABApplicationBase {
 
 	/**
 	 * @method urlView()
-	 * return the url pointer for views in this application.
+	 * return the url pointer for pages in this application.
 	 * @return {string} 
 	 */
-	urlView() {
-		return this.urlPointer() + '_views/'
+	urlPage() {
+		return this.urlPointer() + '_pages/'
 	}
 
 

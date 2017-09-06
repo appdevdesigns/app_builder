@@ -244,7 +244,12 @@ export default class ABViewMenu extends ABView {
 			view: "menu",
 			autoheight: true,
 			datatype: "json",
-			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation
+			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
+			on: {
+				onItemClick: (id, e, node) => {
+					this.emit('changePage', id);
+				}
+			}
 		};
 
 		// make sure each of our child views get .init() called

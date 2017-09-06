@@ -32,11 +32,9 @@ export default class ABView  extends ABViewBase {
 	 */
     constructor(values, application, parent, defaultValues) {
 
-    	super(values, application, parent);
+    	super(values, application, parent, (defaultValues || ABViewDefaults));
 
-    	this.defaults = defaultValues || ABViewDefaults;
 
-    	
 
   	// 	{
   	// 		id:'uuid',					// uuid value for this obj
@@ -1053,9 +1051,19 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 		var _init = (options) => {
 			viewComponents.forEach((view)=>{
 				view.init();
-			})
+			});
 
 			$$(ids.component).adjust();
+
+			// Listen events of children components
+			this.views().forEach((v) => {
+
+				// Trigger 'changePage' event to parent
+				v.on('changePage', (pageId) => {
+					this.emit('changePage', pageId);
+				});
+
+			});
 		}
 
 

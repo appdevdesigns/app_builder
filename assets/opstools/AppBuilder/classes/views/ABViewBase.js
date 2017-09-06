@@ -22,9 +22,11 @@ module.exports = class ABViewBase extends EventEmitter {
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-	constructor(values, application, parent) {
+	constructor(values, application, parent, defaultValues) {
 
 		super();
+
+		this.defaults = defaultValues || ABViewBaseDefaults;
 
 		this.application = application;
 
@@ -71,7 +73,7 @@ module.exports = class ABViewBase extends EventEmitter {
 		if (this.parent) {
 			return this.parent.urlView() + this.id;
 		} else {
-			return this.application.urlView() + this.id;
+			return this.application.urlPage() + this.id;
 		}
 	}
 

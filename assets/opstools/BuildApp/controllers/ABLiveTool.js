@@ -137,20 +137,20 @@ steal(
 							return q;
 						},
 
-						initEvents: function () {
-							var self = this;
+						// initEvents: function () {
+						// 	var self = this;
 
-							AD.comm.hub.subscribe('opsportal.tool.show', function (message, data) {
-								self.resize(self.height);
-							});
+						// 	AD.comm.hub.subscribe('opsportal.tool.show', function (message, data) {
+						// 		self.resize(self.height);
+						// 	});
 
-						},
+						// },
 
 						renderPageContainer: function () {
 							var self = this;
 
 							// Clear UI content
-							var rootDomId = self.getPageDomID(self.rootPage);
+							var rootDomId = self.getPageDomID(self.rootPage.id);
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
@@ -168,17 +168,24 @@ steal(
 								}
 							});
 
-							// Render pages
-							self.data.application.pages().forEach(function (page) {
-								if (page.id == self.rootPage.id || (page.parent && page.parent.id == self.rootPage.id))
-									self.renderPage(page);
-							});
+							// Render the root page
+							self.renderPage(self.rootPage);
+
+							// Render children pages
+							self.rootPage.pages().forEach(function (subpage) {
+								self.renderPage(subpage);
+							}, this);
 
 						},
 
 						renderPage: function (page) {
 							var self = this,
-								pageDomId = this.getPageDomID(page);
+								pageDomId = this.getPageDomID(page.id),
+								component = page.component(self.App),
+								ui = component.ui;
+
+							// Define page id to be batch id of webix.multiview
+							ui.batch = page.id;
 
 							switch (page.type) {
 								case 'modal':
@@ -229,12 +236,6 @@ steal(
 									break;
 								case 'page':
 								default:
-									var pageTemplate = {
-										view: 'layout',
-										id: pageDomId,
-										rows: []
-									}
-
 									if ($$(pageDomId)) {
 										// // Change page type (Popup -> Page)
 										// if ($$(pageDomId).config.view == 'window') {
@@ -244,15 +245,21 @@ steal(
 										// }
 										// // Rebuild
 										// else {
-										webix.ui(pageTemplate, $$(pageDomId));
+										webix.ui(ui, $$(pageDomId));
 										// }
 									}
 									// Add to multi-view
 									else if ($$(self.containerDomID))
-										$$(self.containerDomID).addView(pageTemplate);
+										$$(self.containerDomID).addView(ui);
 
 									break;
 							}
+
+							// Initial UI components
+							component.init();
+
+							// handle events
+							self.initEvents(page);
 						},
 
 						/**
@@ -260,41 +267,43 @@ steal(
 						*      Optional page. Default is to show
 						*      the root page.
 						*/
-						showPage: function (page) {
+						showPage: function (pageId) {
 							var self = this;
 
-							page = page || self.rootPage;
+							pageId = pageId || self.rootPage.id;
 
 							// Hide page popup
-							var activePageDomId = self.getPageDomID(self.activePage);
+							var activePageDomId = self.getPageDomID(self.activePageId);
 							if (self.activePage && $$(activePageDomId) && $$(activePageDomId).hide)
 								$$(activePageDomId).hide();
 
-							var pageDomId = self.getPageDomID(page);
+							// Show page popup
+							var pageDomId = self.getPageDomID(pageId);
 							if ($$(pageDomId))
 								$$(pageDomId).show();
-							self.previousPage = self.activePage;
-							self.activePage = page;
+
+							self.previousPageId = self.activePageId;
+							self.activePageId = pageId;
 
 							// Question: should we do a resize() after all the components are rendered?
 
-							if (self.activePage) {
-								async.each(self.activePage.views(), function (com, ok) {
-
-									var comInstance = com.component(self.App);
-
-									$$(pageDomId).addView(comInstance.ui);
-
-									if (comInstance.init)
-										comInstance.init();
-
-								}, function (err) {
-									// self.resize() // <-- doesn't do the trick
-									AD.comm.hub.publish('opsportal.resize', { height: self.height });
-								});
-							}
-
+							// Change page by batch id
+							$$(self.containerDomID).showBatch(pageId);
 						},
+
+
+						initEvents(page) {
+							var self = this;
+
+							if (page == null) return;
+
+							page.on('changePage', (pageId) => {
+
+								self.showPage(pageId);
+
+							});
+						},
+
 
 						resize: function (height) {
 							var _this = this;
@@ -396,11 +405,8 @@ steal(
 
 						},
 
-						getPageDomID: function (page) {
-							if (page)
-								return this.unique('ab_live_page', this.options.app, page.id);
-							else
-								return '';
+						getPageDomID: function (pageId) {
+							return this.unique('ab_live_page', this.options.app, pageId);
 						},
 
 
