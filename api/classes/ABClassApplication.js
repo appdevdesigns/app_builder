@@ -74,7 +74,7 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	 * @return {ABViewPage}
 	 */
 	pageNew( values ) {
-		return new ABViewBase(values, this, this);
+		return new ABViewBase(values, this);
 	}
 
 

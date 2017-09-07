@@ -370,38 +370,40 @@ class ABFieldConnect extends ABFieldSelectivity {
 		}, App, row);
 
 		// Listen event when selectivity value updates
-		domNode.addEventListener('change', (e) => {
+		if (domNode) {
+			domNode.addEventListener('change', (e) => {
 
-			// update just this value on our current object.model
-			var values = {};
-			values[this.columnName] = this.selectivityGet(domNode);
+				// update just this value on our current object.model
+				var values = {};
+				values[this.columnName] = this.selectivityGet(domNode);
 
-			// check data does not be changed
-			if (Object.is(values[this.columnName], row[this.columnName])) return;
+				// check data does not be changed
+				if (Object.is(values[this.columnName], row[this.columnName])) return;
 
-			// pass null because it could not put empty array in REST api
-			if (values[this.columnName].length == 0)
-				values[this.columnName] = null;
+				// pass null because it could not put empty array in REST api
+				if (values[this.columnName].length == 0)
+					values[this.columnName] = null;
 
-			this.object.model().update(row.id, values)
-				.then(() => {
-					// update values of relation to display in grid
-					values[this.relationName()] = values[this.columnName];
+				this.object.model().update(row.id, values)
+					.then(() => {
+						// update values of relation to display in grid
+						values[this.relationName()] = values[this.columnName];
 
-					// update new value to item of DataTable .updateItem
-					if ($$(node) && $$(node).updateItem)
-						$$(node).updateItem(row.id, values);
-				})
-				.catch((err) => {
+						// update new value to item of DataTable .updateItem
+						if ($$(node) && $$(node).updateItem)
+							$$(node).updateItem(row.id, values);
+					})
+					.catch((err) => {
 
-					node.classList.add('webix_invalid');
-					node.classList.add('webix_invalid_cell');
+						node.classList.add('webix_invalid');
+						node.classList.add('webix_invalid_cell');
 
-					OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
-					console.error(err);
-				});
+						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+						console.error(err);
+					});
 
-		}, false);
+			}, false);
+		}
 
 	}
 
@@ -454,7 +456,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	* the component that will be stored with the ABViewForm.
 	*/
 	formComponent() {
-		
+
 		// NOTE: what is being returned here needs to mimic an ABView CLASS.
 		// primarily the .common() and .newInstance() methods.
 		var formComponentSetting = super.formComponent();
@@ -466,7 +468,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 			}
 		};
 
-		return formComponentSetting; 
+		return formComponentSetting;
 	}
 
 

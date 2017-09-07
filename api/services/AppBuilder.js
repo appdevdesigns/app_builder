@@ -884,12 +884,31 @@ module.exports = {
                             key: areaKey,
                             label: label,
                         }
+
+                        OPSPortal.NavBar.Area.exists(areaKey)
+                            .then(function(exists) {
+
+                                if (exists) {
+
+                                    OPSPortal.NavBar.Area.update(updateArea)
+                                    .then(function (err) {
+                                        next(err);
+                                    })
+
+                                }
+                                else {
+
+                                    AppBuilder.registerNavBarArea(appID)
+                                    .then(function () {
+                                        next();
+                                    })
+                                    .catch(next);
         
-                        OPSPortal.NavBar.Area.update(updateArea)
-                            .then(function (err) {
-                                next(err);
-                            })
-        
+                                }
+
+                            }, next);
+
+
                     }
                 ], function (err) {
                     if (err) reject(err);
