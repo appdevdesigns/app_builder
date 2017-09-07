@@ -73,35 +73,36 @@ export default class ABViewFormPanel extends ABView {
 
 		_logic.selectObject = (objId, oldObjId) => {
 
-			// if first time, then we don't need to clear sub-components
-			if (oldObjId == null)
-				return;
-
 			// TODO : warning message
 
 			var currView = _logic.currentEditObject();
 			var formView = currView.formComponent();
 
 			// remove all old field components
-			formView.clearFieldComponents();
+			if (oldObjId != null)
+				formView.clearFieldComponents();
 
 			// Update field options in property
 			this.propertyUpdateFieldOptions(ids, currView, objId);
 
 			// add all fields to editor by default
-			var fields = $$(ids.fields).find({});
-			fields.forEach((f) => {
+			if (oldObjId != null) {
 
-				if (!f.selected) { 
+				var fields = $$(ids.fields).find({});
+				fields.forEach((f) => {
 
-					_logic.addFieldToForm(f);
+					if (!f.selected) {
 
-					// update item to UI list
-					f.selected = 1;
-					$$(ids.fields).updateItem(f.id, f);
-				}
+						_logic.addFieldToForm(f);
 
-			});
+						// update item to UI list
+						f.selected = 1;
+						$$(ids.fields).updateItem(f.id, f);
+					}
+
+				});
+
+			}
 
 		};
 
@@ -141,7 +142,7 @@ export default class ABViewFormPanel extends ABView {
 			}
 
 			// trigger a save()
-			currView.emit('properties.updated', currView);
+			this.propertyEditorSave(ids, currView);
 
 		};
 
