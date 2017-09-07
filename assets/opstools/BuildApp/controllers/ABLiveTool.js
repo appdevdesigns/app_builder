@@ -170,12 +170,6 @@ steal(
 
 							// Render the root page
 							self.renderPage(self.rootPage);
-
-							// Render children pages
-							self.rootPage.pages().forEach(function (subpage) {
-								self.renderPage(subpage);
-							}, this);
-
 						},
 
 						renderPage: function (page) {
@@ -260,6 +254,14 @@ steal(
 
 							// handle events
 							self.initEvents(page);
+
+							// Render children pages
+							if (page.pages) {
+								(page.pages() || []).forEach(function (subpage) {
+									self.renderPage(subpage);
+								});
+							}
+							
 						},
 
 						/**
