@@ -149,6 +149,8 @@ steal(
 						renderPageContainer: function () {
 							var self = this;
 
+							if (self.rootPage == null) return;
+
 							// Clear UI content
 							var rootDomId = self.getPageDomID(self.rootPage.id);
 							if ($$(rootDomId))
@@ -272,7 +274,9 @@ steal(
 						showPage: function (pageId) {
 							var self = this;
 
-							pageId = pageId || self.rootPage.id;
+							pageId = pageId || (self.rootPage ? self.rootPage.id : null);
+
+							if (pageId == null) return;
 
 							// Hide page popup
 							var activePageDomId = self.getPageDomID(self.activePageId);
@@ -304,6 +308,7 @@ steal(
 								self.showPage(pageId);
 
 							});
+
 						},
 
 
