@@ -1083,26 +1083,24 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 	 */
 	componentList( isEdited ) {
 
-		if (this.parent) {
+		// if (this.parent) {
+		// 	return this.parent.componentList(false);
+		// } else {
 
-			return this.parent.componentList(false);
+		// views not allowed to drop onto this View:
+		var viewsToIgnore = [ 'view', 'page' , 'formpanel',
+		// not allowed Form's widgets
+		'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'number', 'selectsingle'
+		];
 
-		} else {
+		var allComponents = ABViewManager.allViews();
+		var allowedComponents = allComponents.filter((c)=>{
+			return (viewsToIgnore.indexOf(c.common().key) == -1)
+		});
 
-			// views not allowed to drop onto this View:
-			var viewsToIgnore = [ 'view', 'page' , 'formpanel',
-			// not allowed Form's widgets
-			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'number', 'selectsingle'
-			];
+		return allowedComponents;
 
-			var allComponents = ABViewManager.allViews();
-			var allowedComponents = allComponents.filter((c)=>{
-				return (viewsToIgnore.indexOf(c.common().key) == -1)
-			});
-
-			return allowedComponents;
-
-		}
+		// }
 
 	}
 

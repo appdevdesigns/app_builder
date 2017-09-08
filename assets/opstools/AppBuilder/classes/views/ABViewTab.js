@@ -527,6 +527,11 @@ export default class ABViewTab extends ABView {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+
+			viewComponents.forEach((v) => {
+				v.component.init(options);
+			});
+
 		}
 
 
