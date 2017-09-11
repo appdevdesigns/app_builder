@@ -453,6 +453,11 @@ export default class ABField extends ABFieldBase {
 	isMultilingual() {
 		return false;
 	}
+	
+	getValue(application, object, fieldData, itemNode, rowData, item) {
+		console.log(item);
+		return item.getValue();
+	};
 
 
 
@@ -501,6 +506,7 @@ export default class ABField extends ABFieldBase {
 				values.settings = values.settings || {};
 				values.settings.objectId = this.object.id;
 				values.settings.fieldId = this.id;
+				values.id = this.id;
 
 				var ABFieldPlaceholder = ABViewManager.newView(values, application, parent);
 				// ABFieldPlaceholder.formatTitle();

@@ -464,21 +464,23 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 // TODO: delete previous image from our OPsPortal service?
 						
 						// update just this value on our current object.model
-						var values = {};
-						values[this.columnName] = response.data.uuid
-						this.object.model().update(row.id, values)
-						.then(()=>{
-							// update the client side data object as well so other data changes won't cause this save to be reverted
-							$$(node).updateItem(row.id, values);
-						})
-						.catch((err)=>{
+						if (row.id) {
+							var values = {};
+							values[this.columnName] = response.data.uuid
+							this.object.model().update(row.id, values)
+							.then(()=>{
+								// update the client side data object as well so other data changes won't cause this save to be reverted
+								$$(node).updateItem(row.id, values);
+							})
+							.catch((err)=>{
 
-							node.classList.add('webix_invalid');
-							node.classList.add('webix_invalid_cell');
-						
-							OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
-							console.error(err);
-						})
+								node.classList.add('webix_invalid');
+								node.classList.add('webix_invalid_cell');
+							
+								OP.Error.log('Error updating our entry.', {error:err, row:row, values:values });
+								console.error(err);
+							})
+						}
 
 					},
 
@@ -613,14 +615,30 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			var image = parentContainer.querySelector('.image-data-field-image');
 			image.style.display = '';
 			image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+uuid+"')";
-
+			image.setAttribute('image-uuid', uuid );
+			
 		}
 	}
 	
 	deleteImage(e) {
 		this.deleteImage = true;
 	}
-
+	
+	getValue(application, object, fieldData, itemNode, rowData, item) {
+		var image = itemNode.querySelector('.image-data-field-image');
+		return image.getAttribute('image-uuid');
+	}
+	
+	/**
+	 * @method isValidData
+	 * Parse through the given data and return an error if this field's
+	 * data seems invalid.
+	 * @param {obj} data  a key=>value hash of the inputs to parse.
+	 * @param {OPValidator} validator  provided Validator fn
+	 * @return {array} 
+	 */
+	isValidData(data, validator) {
+	}
 
 }
 

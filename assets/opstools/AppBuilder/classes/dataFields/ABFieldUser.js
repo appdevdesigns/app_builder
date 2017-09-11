@@ -311,7 +311,8 @@ class ABFieldUser extends ABFieldSelectivity {
 				if (values[this.columnName].length == 0)
 					values[this.columnName] = null;
 
-				this.object.model().update(row.id, values)
+				if (row.id) {
+					this.object.model().update(row.id, values)
 					.then(() => {
 						// update the client side data object as well so other data changes won't cause this save to be reverted
 						$$(node).updateItem(row.id, values);
@@ -323,6 +324,7 @@ class ABFieldUser extends ABFieldSelectivity {
 
 						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
 					});
+				}
 
 			}, false);
 		}
@@ -397,13 +399,23 @@ class ABFieldUser extends ABFieldSelectivity {
 		// .common() is used to create the display in the list
 		formComponentSetting.common = () => {
 			return {
-				key: field.settings.isMultiple ? 'fieldcustom' : 'selectsingle'
+				key: this.settings.isMultiple ? 'fieldcustom' : 'selectsingle',
+				settings: {
+					options: this._options.users
+				}
 			}
 		};
 
 		return formComponentSetting; 
 	}
 
+	getValue(application, object, fieldData, itemNode, rowData, item) {
+		var values = {};
+		var domNode = itemNode.querySelector('.list-data-values');
+		values = this.selectivityGet(domNode);
+		// console.log(values);
+		return values;
+	}
 
 }
 
