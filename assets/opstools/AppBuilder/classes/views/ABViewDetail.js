@@ -135,6 +135,12 @@ export default class ABViewDetail extends ABViewDetailPanel {
 	*/
 	component(App) {
 
+		// get a UI component for each of our child views
+		var viewComponents = [];
+		this.views().forEach((v) => {
+			viewComponents.push(v.component(App));
+		})
+
 		var idBase = 'ABViewDetail_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -146,9 +152,20 @@ export default class ABViewDetail extends ABViewDetailPanel {
 			rows: []
 		};
 
+		// insert each of our sub views into our rows:
+		viewComponents.forEach((view) => {
+			_ui.rows.push(view.ui);
+		})
+
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-		};
+			viewComponents.forEach((view) => {
+				if (view.init)
+					view.init();
+			})
+
+			// $$(ids.component).adjust();
+		}
 
 		var _logic = {
 		};

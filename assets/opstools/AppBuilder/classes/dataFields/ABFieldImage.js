@@ -580,6 +580,19 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		return formComponentSetting; 
 	}
 
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailcustom'
+			}
+		};
+
+		return detailComponentSetting;
+	}
+
 
 	imageTemplate(obj) {
 

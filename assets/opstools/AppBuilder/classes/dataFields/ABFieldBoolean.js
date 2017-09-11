@@ -237,7 +237,21 @@ class ABFieldBoolean extends ABField {
 			}
 		};
 
-		return formComponentSetting; 
+		return formComponentSetting;
+	}
+
+
+	detailComponent() {
+
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailtext'
+			}
+		};
+
+		return detailComponentSetting;
 	}
 
 }

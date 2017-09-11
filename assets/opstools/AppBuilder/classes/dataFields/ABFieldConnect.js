@@ -471,6 +471,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 		return formComponentSetting;
 	}
 
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailcustom'
+			}
+		};
+
+		return detailComponentSetting;
+	}
+
 
 	relationName() {
 		return String(this.columnName).replace(/[^a-z0-9]/gi, '') + '__relation';

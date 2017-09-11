@@ -59,6 +59,7 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	static common() {
 		return ABViewFormTextboxDefaults;
 	}
+
 	///
 	/// Instance Methods
 	///

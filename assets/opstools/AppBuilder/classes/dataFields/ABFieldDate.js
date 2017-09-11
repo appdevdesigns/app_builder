@@ -1027,6 +1027,20 @@ class ABFieldDate extends ABField {
 	}
 
 
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailtext'
+			}
+		};
+
+		return detailComponentSetting;
+	}
+
+
 	format(d) {
 		if ((d == '') || (d == null)) {
 			return '';

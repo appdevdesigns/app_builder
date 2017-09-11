@@ -551,6 +551,20 @@ class ABFieldList extends ABFieldSelectivity {
 		return formComponentSetting;
 	}
 
+
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailcustom'
+			}
+		};
+
+		return detailComponentSetting;
+	}
+
 }
 
 

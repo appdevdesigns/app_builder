@@ -579,6 +579,20 @@ class ABFieldNumber extends ABField {
 	}
 
 
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailtext'
+			}
+		};
+
+		return detailComponentSetting;
+	}
+
+
 	getNumberFormat(data) {
 		var formatSign = formatList.filter((item) => item.id == this.settings.typeFormat)[0],
 			thousandsSign = delimiterList.filter((item) => item.id == this.settings.typeThousands)[0],
