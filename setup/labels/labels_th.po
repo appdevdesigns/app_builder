@@ -1063,9 +1063,21 @@ msgstr "[th] Custom"
 
 #. path: app_builder
 #. code: th
+#. key: ab.components.detail
+msgid "Detail"
+msgstr "[th] Detail"
+
+#. path: app_builder
+#. code: th
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "[th] Date Picker"
+
+#. path: app_builder
+#. code: th
+#. key: ab.components.grid
+msgid "Grid"
+msgstr "[th] Grid"
 
 #. path: app_builder
 #. code: th

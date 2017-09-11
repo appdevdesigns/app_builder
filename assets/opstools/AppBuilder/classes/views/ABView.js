@@ -1089,6 +1089,8 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 
 		// views not allowed to drop onto this View:
 		var viewsToIgnore = [ 'view', 'page' , 'formpanel',
+		// not allowed Detail's widgets
+		'detailtext', 'detailcustom',
 		// not allowed Form's widgets
 		'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'number', 'selectsingle'
 		];

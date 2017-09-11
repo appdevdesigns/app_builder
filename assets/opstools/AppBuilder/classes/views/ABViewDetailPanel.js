@@ -1,25 +1,28 @@
 /*
- * ABViewFormPanel
- * 
+ * ABViewDetailPanel
+ *
+ *
  *
  */
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
-import ABViewManager from "../ABViewManager"
-import ABViewFormField from "./ABViewFormField"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-var ABFormPanelDefaults = {
-	key: 'formpanel',		// {string} unique key for this view
-	icon: 'list-alt',	// {string} fa-[icon] reference for this view
+
+var ABViewDetailPropertyComponentDefaults = {
 }
 
+var ABViewDetailDefaults = {
+	key: 'detail',		// {string} unique key for this view
+	icon: 'file-text-o',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.detail' // {string} the multilingual label key for the class label
+}
 
-export default class ABViewFormPanel extends ABView {
+export default class ABViewDetailPanel extends ABView {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -28,38 +31,13 @@ export default class ABViewFormPanel extends ABView {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABFormPanelDefaults);
-
-		// OP.Multilingual.translate(this, this, ['text']);
-
-		// 	{
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
+		super(values, application, parent, ABViewDetailDefaults);
 
 	}
-
 
 	static common() {
-		return ABFormPanelDefaults;
+		return ABViewDetailDefaults;
 	}
-
-
-
-	///
-	/// Instance Methods
-	///
 
 	//
 	// Property Editor
@@ -69,6 +47,7 @@ export default class ABViewFormPanel extends ABView {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
+
 		// _logic functions
 
 		_logic.selectObject = (objId, oldObjId) => {
@@ -76,11 +55,11 @@ export default class ABViewFormPanel extends ABView {
 			// TODO : warning message
 
 			var currView = _logic.currentEditObject();
-			var formView = currView.formComponent();
+			var detailView = currView.detailComponent();
 
 			// remove all old field components
 			if (oldObjId != null)
-				formView.clearFieldComponents();
+				detailView.clearFieldComponents();
 
 			// Update field options in property
 			this.propertyUpdateFieldOptions(ids, currView, objId);
@@ -104,13 +83,8 @@ export default class ABViewFormPanel extends ABView {
 
 		_logic.listTemplate = (field, common) => {
 
-			var componentKey = field.formComponent().common().key;
-			var formComponent = ABViewManager.allViews((v) => v.common().key == componentKey)[0];
-
-			return common.markCheckbox(field) + " #label# <div class='ab-component-form-fields-component-info'> <i class='fa fa-#icon#'></i> #component# </div>"
-				.replace("#label#", field.label)
-				.replace("#icon#", (formComponent ? formComponent.common().icon : "fw"))
-				.replace("#component#", (formComponent ? L(formComponent.common().labelKey, "") : ""));
+			return common.markCheckbox(field) + " #label#"
+				.replace("#label#", field.label);
 
 		};
 
@@ -129,8 +103,8 @@ export default class ABViewFormPanel extends ABView {
 			}
 			// remove field in the form
 			else {
-				var formView = currView.formComponent();
-				var fieldView = formView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
+				var detailView = currView.detailComponent();
+				var fieldView = detailView.fieldComponents().filter(c => c.settings.fieldId == fieldId)[0];
 
 				if (fieldView)
 					fieldView.destroy();
@@ -142,14 +116,15 @@ export default class ABViewFormPanel extends ABView {
 
 		};
 
+
 		_logic.addFieldToForm = (field) => {
 
 			if (field == null)
 				return;
 
-			var FormView = _logic.currentEditObject();
+			var detailView = _logic.currentEditObject();
 
-			var newView = field.formComponent().newInstance(FormView.application, FormView);
+			var newView = field.detailComponent().newInstance(detailView.application, detailView);
 			if (newView == null)
 				return;
 
@@ -159,20 +134,21 @@ export default class ABViewFormPanel extends ABView {
 			// TODO : Default settings
 
 			// add a new component
-			FormView._views.push(newView);
+			detailView._views.push(newView);
 
 			// update properties when a sub-view is destroyed
-			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, FormView); });
+			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, detailView); });
 
 		}
 
 
-		// Properties UI
+		// in addition to the common .label  values, we 
+		// ask for:
 		return commonUI.concat([
 			{
 				name: 'object',
 				view: 'richselect',
-				label: L('ab.components.form.objects', "*Objects"),
+				label: L('ab.components.detail.objects', "*Objects"),
 				on: {
 					onChange: _logic.selectObject
 				}
@@ -194,15 +170,14 @@ export default class ABViewFormPanel extends ABView {
 			}
 		]);
 
-
 	}
 
 	static propertyEditorPopulate(ids, view) {
 
 		super.propertyEditorPopulate(ids, view);
 
-		var detailCom = view.formComponent();
-		var objectId = detailCom.settings.object;
+		var detailComponent = view.detailComponent();
+		var objectId = detailComponent.settings.object;
 
 		// Pull object list to options
 		var objectOptions = view.application.objects().map((obj) => {
@@ -239,9 +214,9 @@ export default class ABViewFormPanel extends ABView {
 
 	static propertyUpdateFieldOptions(ids, view, objectId) {
 
-		var formComponent = view.formComponent();
+		var detailComponent = view.detailComponent();
 		var object = view.application.objectByID(objectId);
-		var existsFields = formComponent.fieldComponents();
+		var existsFields = detailComponent.fieldComponents();
 
 		// Pull field list
 		var fieldOptions = [];
@@ -261,48 +236,43 @@ export default class ABViewFormPanel extends ABView {
 	}
 
 	/*
-	 * @method componentList
-	 * return the list of components available on this view to display in the editor.
-	 */
+	* @method componentList
+	* return the list of components available on this view to display in the editor.
+	*/
 	componentList() {
-		var viewsToAllow = ['label', 'layout', 'button'],
-			allComponents = ABViewManager.allViews();
-
-		return allComponents.filter((c) => {
-			return viewsToAllow.indexOf(c.common().key) > -1;
-		});
+		return [];
 	}
 
 
-
 	/**
-	 * @method formComponent()
+	 * @method detailComponent()
 	 *
-	 * return a form component
+	 * return a detail component
 	 *
 	 * @return {ABViewForm}
 	 */
-	formComponent() {
+	detailComponent() {
 		var form = null;
 		var curr = this;
 
-		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
+		while (curr.key != 'detail' && !curr.isRoot() && curr.parent) {
 			curr = curr.parent;
 		}
 
-		if (curr.key == 'form') {
+		if (curr.key == 'detail') {
 			form = curr;
 		}
 
 		return form;
 	}
 
+
 	/**
 	 * @method fieldComponents()
 	 *
-	 * return an array of all the ABViewFormField children
+	 * return an array of all the children
 	 *
-	 * @return {array} 	array of ABViewFormField
+	 * @return {array} 	array
 	 */
 	fieldComponents() {
 
@@ -335,4 +305,5 @@ export default class ABViewFormPanel extends ABView {
 
 
 
-};
+
+}

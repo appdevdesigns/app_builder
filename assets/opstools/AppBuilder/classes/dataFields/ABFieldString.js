@@ -288,6 +288,19 @@ class ABFieldString extends ABField {
 	}
 
 
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailtext'
+			}
+		};
+
+		return detailComponentSetting;
+	}
+
 
 }
 

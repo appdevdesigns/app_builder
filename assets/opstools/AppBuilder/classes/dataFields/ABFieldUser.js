@@ -417,6 +417,20 @@ class ABFieldUser extends ABFieldSelectivity {
 		return values;
 	}
 
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailcustom'
+			}
+		};
+
+		return detailComponentSetting;
+	}
+
+
 }
 
 export default ABFieldUser;

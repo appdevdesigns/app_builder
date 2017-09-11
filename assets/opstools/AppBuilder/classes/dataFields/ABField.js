@@ -518,4 +518,40 @@ export default class ABField extends ABFieldBase {
 		}
 	}
 
+
+
+	/*
+	 * @funciton detailComponent
+	 */
+	detailComponent() {
+		
+		return {
+
+			common: () => {
+				return {
+					icon:  'square'
+				}
+			},
+
+
+			// .newInstance() is used to create the view instance when the component
+			// 		is dropped onto the ABView list.
+			newInstance: (application, parent) => {
+
+				// store object id and field id to field component
+				var values = this.detailComponent().common();
+				values.settings = values.settings || {};
+				values.settings.objectId = this.object.id;
+				values.settings.fieldId = this.id;
+
+				var ABFieldPlaceholder = ABViewManager.newView(values, application, parent);
+
+				return ABFieldPlaceholder;
+			}
+
+		}
+	}
+
+
+
 }

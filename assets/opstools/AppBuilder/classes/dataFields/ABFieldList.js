@@ -428,31 +428,33 @@ class ABFieldList extends ABFieldSelectivity {
 			}, App, row);
 
 			// Listen event when selectivity value updates
-			domNode.addEventListener('change', (e) => {
+			if (domNode) {
+				domNode.addEventListener('change', (e) => {
 
-				// update just this value on our current object.model
-				var values = {};
-				values[this.columnName] = this.selectivityGet(domNode);
+					// update just this value on our current object.model
+					var values = {};
+					values[this.columnName] = this.selectivityGet(domNode);
 
-				// pass null because it could not put empty array in REST api
-				if (values[this.columnName].length == 0)
-					values[this.columnName] = null;
+					// pass null because it could not put empty array in REST api
+					if (values[this.columnName].length == 0)
+						values[this.columnName] = null;
 
-				this.object.model().update(row.id, values)
-					.then(() => {
-						// update the client side data object as well so other data changes won't cause this save to be reverted
-						$$(node).updateItem(row.id, values);
-					})
-					.catch((err) => {
+					this.object.model().update(row.id, values)
+						.then(() => {
+							// update the client side data object as well so other data changes won't cause this save to be reverted
+							$$(node).updateItem(row.id, values);
+						})
+						.catch((err) => {
 
-						node.classList.add('webix_invalid');
-						node.classList.add('webix_invalid_cell');
+							node.classList.add('webix_invalid');
+							node.classList.add('webix_invalid_cell');
 
-						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
-						console.error(err);
-					});
+							OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+							console.error(err);
+						});
 
-			}, false);
+				}, false);
+			}
 
 		}
 
@@ -546,7 +548,21 @@ class ABFieldList extends ABFieldSelectivity {
 			}
 		};
 
-		return formComponentSetting; 
+		return formComponentSetting;
+	}
+
+
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: 'detailcustom'
+			}
+		};
+
+		return detailComponentSetting;
 	}
 
 }

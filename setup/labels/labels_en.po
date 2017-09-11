@@ -1087,9 +1087,21 @@ msgstr "Custom"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.detail
+msgid "Detail"
+msgstr "Detail"
+
+#. path: app_builder
+#. code: en
 #. key: ab.components.datepicker
 msgid "Date Picker"
 msgstr "Date Picker"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.grid
+msgid "Grid"
+msgstr "Grid"
 
 #. path: app_builder
 #. code: en

@@ -1,11 +1,11 @@
 /*
- * ABViewFormTextbox
+ * ABViewDetailText
  *
- * An ABViewFormTextbox defines a UI text box component.
+ * An ABViewDetailText defines a UI string component in the detail component.
  *
  */
 
-import ABViewFormField from "./ABViewFormField"
+import ABViewDetailComponent from "./ABViewDetailComponent"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -13,18 +13,18 @@ function L(key, altText) {
 }
 
 
-var ABViewFormTextboxPropertyComponentDefaults = {
-	type: 'single' // 'single', 'multiple' or 'rich'
+var ABViewDetailTextPropertyComponentDefaults = {
 }
 
 
-var ABViewFormTextboxDefaults = {
-	key: 'textbox',		// {string} unique key for this view
-	icon: 'i-cursor',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.textbox' // {string} the multilingual label key for the class label
+var ABViewDetailTextDefaults = {
+	key: 'detailtext',		// {string} unique key for this view
+	icon: 'etsy',			// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.detail.text' // {string} the multilingual label key for the class label
 }
 
-export default class ABViewFormTextbox extends ABViewFormField {
+
+export default class ABViewDetailText extends ABViewDetailComponent {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,7 +33,7 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABViewFormTextboxDefaults);
+		super(values, application, parent, ABViewDetailTextDefaults);
 
 		// OP.Multilingual.translate(this, this, ['text']);
 
@@ -57,7 +57,7 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 
 	static common() {
-		return ABViewFormTextboxDefaults;
+		return ABViewDetailTextDefaults;
 	}
 
 	///
@@ -79,18 +79,18 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewFormTextboxEditorComponent';
+		var idBase = 'ABViewDetailTextEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var textboxElem = this.component(App).ui;
-		textboxElem.id = ids.component;
+		var textElem = this.component(App).ui;
+		textElem.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textboxElem,
+				textElem,
 				{}
 			]
 		};
@@ -123,17 +123,6 @@ export default class ABViewFormTextbox extends ABViewFormField {
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
-			{
-				name: 'type',
-				view: "radio",
-				label: L('ab.component.textbox.type', '*Type'),
-				vertical: true,
-				options: [
-					{ id: 'single', value: L('ab.component.textbox.single', '*Single line') },
-					{ id: 'multiple', value: L('ab.component.textbox.multiple', '*Multiple lines') },
-					{ id: 'rich', value: L('ab.component.textbox.rich', '*Rich editor') }
-				]
-			}
 		]);
 
 	}
@@ -142,18 +131,11 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 		super.propertyEditorPopulate(ids, view);
 
-
-		$$(ids.type).setValue(view.settings.type || ABViewFormTextboxPropertyComponentDefaults.type);
-
-
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
-
-
-		view.settings.type = $$(ids.type).getValue();
 
 	}
 
@@ -168,30 +150,34 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	component(App) {
 
 		var component = super.component(App);
+		var field = this.field();
+		var detailView = this.detailComponent();
 
-		var idBase = 'ABViewFormTextbox_' + this.id;
+		var idBase = 'ABViewDetailText_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
-
-		component.ui.id = ids.component;
-
-		switch (this.settings.type || ABViewFormTextboxPropertyComponentDefaults.type) {
-			case 'single':
-				component.ui.view = "text";
-				break;
-			case 'multiple':
-				component.ui.view = "textarea";
-				component.ui.height = 200;
-				break;
-			case 'rich':
-				webix.codebase = "/js/webix/extras/";
-				component.ui.view = "tinymce-editor";
-				component.ui.height = 200;
-				break;
+		var templateLabel = '';
+		if (detailView.settings.showLabel == true) {
+			if (detailView.settings.labelPosition == 'top')
+				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
+			else
+				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
 		}
 
+		// var template = (templateLabel + "#result#")
+		var template = (templateLabel)
+			.replace(/#width#/g, detailView.settings.labelWidth)
+			.replace(/#label#/g, field.label);
+			// .replace(/#result#/g, field.columnHeader().template);
+
+		component.ui.id = ids.component;
+		component.ui.view = "template";
+		component.ui.minHeight = 45;
+		component.ui.height = 60;
+		component.ui.borderless = true;
+		component.ui.template = template;
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
@@ -211,4 +197,4 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	}
 
 
-};
+}
