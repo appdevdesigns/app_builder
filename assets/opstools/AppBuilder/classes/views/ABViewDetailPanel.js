@@ -7,6 +7,7 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
+import ABViewDetailComponent from "./ABViewDetailComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -290,7 +291,7 @@ export default class ABViewDetailPanel extends ABView {
 		if (this._views && this._views.length > 0) {
 			var allComponents = flattenComponents(this._views);
 
-			return allComponents.filter((comp) => comp instanceof ABViewFormField);
+			return allComponents.filter((comp) => comp instanceof ABViewDetailComponent);
 		}
 		else {
 			return [];
