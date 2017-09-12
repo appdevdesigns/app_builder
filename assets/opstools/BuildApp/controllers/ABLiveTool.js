@@ -44,6 +44,14 @@ steal(
 
 							self.App = new OP.Component(null, self.containerDomID).App;
 
+							// Store page/sub page .components()
+							// These values will be defined in .renderPage()
+							// 	{
+							// 		id: 'uuid',				// page/sub page id
+							// 		component: {obj},		// .component() of page
+							// 	}
+							self.pageComponents = {};
+
 							// Has this app been selected by the user yet?
 							self.activated = false;
 
@@ -178,9 +186,13 @@ steal(
 
 						renderPage: function (page) {
 							var self = this,
-								pageDomId = this.getPageDomID(page.id),
-								component = page.component(self.App),
-								ui = component.ui;
+								pageDomId = this.getPageDomID(page.id);
+
+							var component = page.component(self.App);
+							var ui = component.ui;
+
+							// Keep the page component
+							self.pageComponents[page.id] = component;
 
 							// Define page id to be batch id of webix.multiview
 							ui.batch = page.id;
@@ -253,9 +265,6 @@ steal(
 									break;
 							}
 
-							// Initial UI components
-							component.init();
-
 							// handle events
 							self.initEvents(page);
 
@@ -297,6 +306,17 @@ steal(
 
 							// Change page by batch id
 							$$(self.containerDomID).showBatch(pageId);
+
+							// Initial UI components
+							setTimeout(function () {
+
+								var component = self.pageComponents[pageId];
+								if (component) {
+									component.init();
+								}
+
+							}, 50);
+
 						},
 
 
