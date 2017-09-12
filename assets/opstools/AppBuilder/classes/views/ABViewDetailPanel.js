@@ -66,19 +66,23 @@ export default class ABViewDetailPanel extends ABView {
 			this.propertyUpdateFieldOptions(ids, currView, objId);
 
 			// add all fields to editor by default
-			var fields = $$(ids.fields).find({});
-			fields.forEach((f) => {
+			if (currView._views.length < 1) {
 
-				if (!f.selected) {
+				var fields = $$(ids.fields).find({});
+				fields.forEach((f) => {
 
-					_logic.addFieldToForm(f);
+					if (!f.selected) {
 
-					// update item to UI list
-					f.selected = 1;
-					$$(ids.fields).updateItem(f.id, f);
-				}
+						_logic.addFieldToForm(f);
 
-			});
+						// update item to UI list
+						f.selected = 1;
+						$$(ids.fields).updateItem(f.id, f);
+					}
+
+				});
+
+			}
 
 		};
 
