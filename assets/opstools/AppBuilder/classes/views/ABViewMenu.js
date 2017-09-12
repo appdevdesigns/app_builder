@@ -282,6 +282,13 @@ export default class ABViewMenu extends ABView {
 
 		if (!parent || !parent.pages || !domNode || !pageIds) return;
 
+		// clear menu items
+		if (domNode.count() > 1) {
+			domNode.find({}).forEach((item) => {
+				domNode.remove(item.id);
+			});
+		}
+
 		var pages = parent.pages() || [];
 
 		pages.forEach((page) => {
@@ -297,7 +304,6 @@ export default class ABViewMenu extends ABView {
 
 		});
 
-		domNode.refresh();
 	}
 
 
