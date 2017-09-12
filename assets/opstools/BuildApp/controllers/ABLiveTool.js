@@ -156,19 +156,21 @@ steal(
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
-							// Create sub pages
-							webix.ui({
-								view: "multiview",
-								container: self.containerDomID,
-								css: "ab-main-container ab-generated-page",
-								id: self.containerDomID,
-								cells: [{}],
-								on: {
-									onViewChange: function (prevId, nextId) {
-										self.resize();
+							// Create a sub pages container
+							if (!$$(self.containerDomID)) {
+								webix.ui({
+									view: "multiview",
+									container: self.containerDomID,
+									css: "ab-main-container ab-generated-page",
+									id: self.containerDomID,
+									cells: [{}],
+									on: {
+										onViewChange: function (prevId, nextId) {
+											self.resize();
+										}
 									}
-								}
-							});
+								});
+							}
 
 							// Render the root page
 							self.renderPage(self.rootPage);
@@ -263,7 +265,7 @@ steal(
 									self.renderPage(subpage);
 								});
 							}
-							
+
 						},
 
 						/**
