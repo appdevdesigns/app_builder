@@ -201,6 +201,7 @@ export default class ABViewMenu extends ABView {
 		$$(ids.pages).data.unsync();
 		$$(ids.pages).data.sync(pageTree);
 		$$(ids.pages).refresh();
+		$$(ids.pages).uncheckAll();
 		$$(ids.pages).openAll();
 
 		// Select pages
