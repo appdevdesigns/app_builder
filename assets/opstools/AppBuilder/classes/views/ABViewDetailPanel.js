@@ -201,7 +201,7 @@ export default class ABViewDetailPanel extends ABView {
 
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
-			if (v instanceof ABViewFormField)
+			if (v instanceof ABViewDetailComponent)
 				v.once('destroyed', () => this.propertyEditorPopulate(ids, view));
 		});
 
