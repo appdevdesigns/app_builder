@@ -319,9 +319,9 @@ console.error('!!!!!', err);
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		if (mlFields.length) {
-			if (values.translations) {
-				OP.Multilingual.unTranslate(values, values, mlFields);
-			}
+			// if (values.translations) { // Remove it because a new row does not have .translations
+			OP.Multilingual.unTranslate(values, values, mlFields);
+			// }
 		}
 
 		return new Promise(

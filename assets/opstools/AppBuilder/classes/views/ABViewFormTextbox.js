@@ -35,6 +35,8 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 		super(values, application, parent, ABViewFormTextboxDefaults);
 
+		webix.codebase = "/js/webix/extras/";
+
 		// OP.Multilingual.translate(this, this, ['text']);
 
 		// 	{
@@ -82,20 +84,23 @@ export default class ABViewFormTextbox extends ABViewFormField {
 		var idBase = 'ABViewFormTextboxEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
-		}
+		};
+		var textView = this.component(App);
 
-
-		var textboxElem = this.component(App).ui;
-		textboxElem.id = ids.component;
+		var textUi = textView.ui;
+		textUi.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textboxElem,
+				textUi,
 				{}
 			]
 		};
 
 		var _init = (options) => {
+
+			textView.init(options);
+
 		}
 
 		var _logic = {
@@ -186,8 +191,9 @@ export default class ABViewFormTextbox extends ABViewFormField {
 				component.ui.height = 200;
 				break;
 			case 'rich':
-				webix.codebase = "/js/webix/extras/";
-				component.ui.view = "tinymce-editor";
+				// TODO: TinyMCE editor does not have 'label' configuration
+				// Should it apply in 'webix_custom_components' ? If yes, how to add 'webix_custom_components' to the live display
+				component.ui.view = 'tinymce-editor';
 				component.ui.height = 200;
 				break;
 		}
@@ -195,6 +201,23 @@ export default class ABViewFormTextbox extends ABViewFormField {
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
+
+
+			// WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
+			// https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
+			if (this.settings.type && this.settings.type == 'rich') {
+				if ($$(component.ui.id)) {
+
+					// recreate
+					webix.ui({
+						view: 'tinymce-editor',
+						height: 200
+					}, $$(component.ui.id));
+
+				}
+			}
+
+
 		}
 
 

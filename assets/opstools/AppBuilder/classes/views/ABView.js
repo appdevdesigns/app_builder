@@ -1059,17 +1059,26 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			this.views().forEach((v) => {
 
 				// Trigger 'changePage' event to parent
-				v.on('changePage', (pageId) => {
-					this.emit('changePage', pageId);
-				});
+				v.removeListener('changePage', _logic.changePage)
+					.once('changePage', _logic.changePage);
 
 			});
-		}
+		};
+
+
+		var _logic = {
+
+			changePage: (pageId) => {
+				this.emit('changePage', pageId);
+			}
+
+		};
 
 
 		return {
 			ui:_ui,
-			init:_init
+			init:_init,
+			logic:_logic
 		}
 	}
 

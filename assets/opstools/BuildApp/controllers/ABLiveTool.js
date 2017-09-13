@@ -44,6 +44,14 @@ steal(
 
 							self.App = new OP.Component(null, self.containerDomID).App;
 
+							// Store page/sub page .components()
+							// These values will be defined in .renderPage()
+							// 	{
+							// 		id: 'uuid',				// page/sub page id
+							// 		component: {obj},		// .component() of page
+							// 	}
+							self.pageComponents = {};
+
 							// Has this app been selected by the user yet?
 							self.activated = false;
 
@@ -156,19 +164,21 @@ steal(
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
-							// Create sub pages
-							webix.ui({
-								view: "multiview",
-								container: self.containerDomID,
-								css: "ab-main-container ab-generated-page",
-								id: self.containerDomID,
-								cells: [{}],
-								on: {
-									onViewChange: function (prevId, nextId) {
-										self.resize();
+							// Create a sub pages container
+							if (!$$(self.containerDomID)) {
+								webix.ui({
+									view: "multiview",
+									container: self.containerDomID,
+									css: "ab-main-container ab-generated-page",
+									id: self.containerDomID,
+									cells: [{}],
+									on: {
+										onViewChange: function (prevId, nextId) {
+											self.resize();
+										}
 									}
-								}
-							});
+								});
+							}
 
 							// Render the root page
 							self.renderPage(self.rootPage);
@@ -176,9 +186,13 @@ steal(
 
 						renderPage: function (page) {
 							var self = this,
-								pageDomId = this.getPageDomID(page.id),
-								component = page.component(self.App),
-								ui = component.ui;
+								pageDomId = this.getPageDomID(page.id);
+
+							var component = page.component(self.App);
+							var ui = component.ui;
+
+							// Keep the page component
+							self.pageComponents[page.id] = component;
 
 							// Define page id to be batch id of webix.multiview
 							ui.batch = page.id;
@@ -251,9 +265,6 @@ steal(
 									break;
 							}
 
-							// Initial UI components
-							component.init();
-
 							// handle events
 							self.initEvents(page);
 
@@ -263,7 +274,7 @@ steal(
 									self.renderPage(subpage);
 								});
 							}
-							
+
 						},
 
 						/**
@@ -295,6 +306,17 @@ steal(
 
 							// Change page by batch id
 							$$(self.containerDomID).showBatch(pageId);
+
+							// Initial UI components
+							setTimeout(function () {
+
+								var component = self.pageComponents[pageId];
+								if (component) {
+									component.init();
+								}
+
+							}, 50);
+
 						},
 
 

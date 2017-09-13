@@ -7,6 +7,7 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
+import ABViewDetailComponent from "./ABViewDetailComponent"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -65,19 +66,23 @@ export default class ABViewDetailPanel extends ABView {
 			this.propertyUpdateFieldOptions(ids, currView, objId);
 
 			// add all fields to editor by default
-			var fields = $$(ids.fields).find({});
-			fields.forEach((f) => {
+			if (currView._views.length < 1) {
 
-				if (!f.selected) {
+				var fields = $$(ids.fields).find({});
+				fields.forEach((f) => {
 
-					_logic.addFieldToForm(f);
+					if (!f.selected) {
 
-					// update item to UI list
-					f.selected = 1;
-					$$(ids.fields).updateItem(f.id, f);
-				}
+						_logic.addFieldToForm(f);
 
-			});
+						// update item to UI list
+						f.selected = 1;
+						$$(ids.fields).updateItem(f.id, f);
+					}
+
+				});
+
+			}
 
 		};
 
@@ -200,7 +205,7 @@ export default class ABViewDetailPanel extends ABView {
 
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
-			if (v instanceof ABViewFormField)
+			if (v instanceof ABViewDetailComponent)
 				v.once('destroyed', () => this.propertyEditorPopulate(ids, view));
 		});
 
@@ -290,7 +295,7 @@ export default class ABViewDetailPanel extends ABView {
 		if (this._views && this._views.length > 0) {
 			var allComponents = flattenComponents(this._views);
 
-			return allComponents.filter((comp) => comp instanceof ABViewFormField);
+			return allComponents.filter((comp) => comp instanceof ABViewDetailComponent);
 		}
 		else {
 			return [];
