@@ -139,6 +139,12 @@
 	font-weight: bold !important;
 	border-bottom: 0px !important;
 }
+.webix_view.webix_control .webix_disabled_box .webix_input_icon, .webix_view.webix_control .webix_disabled_box button, .webix_view.webix_control .webix_disabled_box label {
+	color: #CCC;
+}
+.webix_control .webix_disabled_box .webix_img_btn_text, .webix_disabled_view.webix_control .webix_icon, .webix_disabled_view.webix_control .webix_icon_btn, .webix_layout_toolbar.webix_toolbar .webix_disabled_view.webix_control .webix_disabled_box .webix_img_btn_text, .webix_layout_toolbar.webix_toolbar .webix_disabled_view.webix_control .webix_icon, .webix_layout_toolbar.webix_toolbar .webix_disabled_view.webix_control .webix_icon_btn {
+	color: #CCC;
+}
 
 /* Webix segmented */
 .ab-form-component-item .webix_segment_0.webix_selected,
@@ -337,7 +343,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	background: none !important;
 	padding: 0px !important;
 	overflow: hidden !important;
-	/*max-height: 100% !important;*/
+	max-height: 100% !important;
 }
 .selectivity-multiple-selected-item {
 	background: #3498db !important;
@@ -377,6 +383,12 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 
 .ab-interface-new-quick-page .webix_inp_checkbox_border label {
 	font-weight: normal; /* Override bootstrap*/
+}
+.webix_hcell input[type=checkbox] {
+	width: 20px;
+	height: 20px;
+	position: relative;
+	top: 5px;
 }
 
 /* Interface page layout */

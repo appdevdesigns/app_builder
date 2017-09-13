@@ -11,7 +11,26 @@ import AB_Work_HeaderEditMenu from "./ab_work_object_workspace_popupHeaderEditMe
 
 export default class ABWorkObjectDatatable extends OP.Component {
     
-    constructor(App, idBase, isReadOnly) {
+    constructor(App, idBase, params) {
+
+        if (params) {
+            var settings = {
+    			allowDelete: params.allowDelete,
+    			detailsView: params.detailsView || null,
+    			editView: params.editView || null,
+    			isEditable: params.isEditable,
+    			massUpdate: params.massUpdate
+    		}
+        } else {
+            var settings = {
+    			allowDelete: true,
+    			detailsView: null,
+    			editView: null,
+    			isEditable: true,
+    			massUpdate: true
+    		}
+        }
+
         super(App, idBase || 'ab_work_object_workspace_datatable');
         var L = this.Label;
         
@@ -25,7 +44,6 @@ export default class ABWorkObjectDatatable extends OP.Component {
             }
         };
 
-
     	// internal list of Webix IDs to reference our UI components.
     	var ids = {
     		component: this.unique('component'),
@@ -33,15 +51,12 @@ export default class ABWorkObjectDatatable extends OP.Component {
     	}
 
         var defaultHeight = 0;
+        var imageFields = [];
+        var selectedItems = [];
+        var columnSplitRight = 0;
+        var columnSplitLeft = 0;
 
         var PopupHeaderEditComponent = new AB_Work_HeaderEditMenu(App);
-        
-        var imageFields = [];
-
-        var editable = true;
-        if (isReadOnly != null && isReadOnly == true) {
-            editable = false;
-        }
 
     	// Our webix UI definition:
     	this.ui = {
@@ -50,7 +65,7 @@ export default class ABWorkObjectDatatable extends OP.Component {
             resizeColumn: {size: 10},
             resizeRow: {size: 10},
     		prerender: false,
-    		editable: editable,
+    		editable: settings.isEditable,
     		fixedRowHeight: false,
     		editaction: "custom",
     		select: "cell",
@@ -72,8 +87,10 @@ export default class ABWorkObjectDatatable extends OP.Component {
     		dragColumn: true,
     		on: {
     			onBeforeSelect: function (data, preserve) {
-
-                    if (editable) {
+                    var skippable = ["appbuilder_select_item", "appbuilder_view_detail", "appbuilder_view_detail", "appbuilder_view_edit", "appbuilder_trash"];
+                    if (skippable.indexOf(data.column) != -1) {
+                        return false;
+                    } else if (settings.isEditable) {
     					var selectField = CurrentObject.fields((f) => { return f.columnName == data.column; })[0];
 
     					if (selectField == null) return true;
@@ -86,22 +103,30 @@ export default class ABWorkObjectDatatable extends OP.Component {
 
     			},
     			onAfterSelect: function (data, prevent) {
-                    if (editable) {
+                    if (settings.isEditable) {
         				_logic.onAfterSelect(data, prevent);
                     }
     			},
+                onBeforeEditStart:function(id){ 
+                    if(!this.getItem(id) == "appbuilder_select_item")
+                        return false;
+                },
     			onCheck: function (row, col, val) { // Update checkbox data
+                    if (col == "appbuilder_select_item") {
+                        // do nothing because we will parse the table once we decide if we are deleting or updating rows
+                        _logic.toggleUpdateDelete();
+                    } else {
+                        // if the colum is not the select item column move on to the next step to save
+                        var state = {
+                            value: val
+                        };
 
-					var state = {
-						value: val
-					};
-
-					var editor = {
-						row: row,
-						column: col
-					};
-
-					_logic.onAfterEditStop(state, editor);
+                        var editor = {
+                            row: row,
+                            column: col
+                        };
+                        _logic.onAfterEditStop(state, editor);                        
+                    }
     			},
     			onBeforeEditStop: function (state, editor) {
 console.error('!! ToDo: onBeforeEditStop()');
@@ -241,8 +266,19 @@ console.error('!! ToDo: onAfterColumnHide()');
 
     			// make sure we have an object selected before processing this.
     			if (!CurrentObject) { return; }
-
-
+                
+                if (settings.isEditable == 0) {
+                    // console.log(e);
+                    // console.log(id);
+                    // console.log(node);
+                    // console.log(DataTable.getItem(id));
+                    var items = DataTable.getItem(id)
+                }
+                // if this was our edit icon:
+                // console.log(e.target.className);
+    			if (e.target.className.indexOf('pencil') > -1) {
+                    alert("edit");
+                }
     			// if this was our trash icon:
     			if (e.target.className.indexOf('trash') > -1) {
 
@@ -313,7 +349,9 @@ console.error('!! ToDo: onAfterColumnHide()');
     			onEditorMenu: function(action, field) {  },
                 
                 
-                onColumnOrderChange:function(object){}
+                onColumnOrderChange:function(object){},
+                
+                onCheckboxChecked:function(state){}
     		},
 
 
@@ -328,6 +366,21 @@ console.error('!! ToDo: onAfterColumnHide()');
     			PopupHeaderEditComponent.hide();
     			_logic.callbacks.onEditorMenu(action, EditField, EditNode);
     		},
+            
+            toggleUpdateDelete: function() {
+                var DataTable = $$(ids.component);
+                var checkedItems = 0;
+                DataTable.data.each(function(obj){
+                    if (typeof(obj) != "undefined" && obj.hasOwnProperty("appbuilder_select_item") && obj.appbuilder_select_item == 1) {
+                        checkedItems++;
+                    }
+                });
+                if (checkedItems > 0) {
+                    _logic.callbacks.onCheckboxChecked("enable");
+                } else {
+                    _logic.callbacks.onCheckboxChecked("disable");
+                }
+            },
 
             /**
     		 * @function getColumnConfig
@@ -368,11 +421,8 @@ console.error('!! ToDo: onAfterColumnHide()');
             freezeDeleteColumn: function() {
                 var DataTable = $$(ids.component);
                 // we are going to always freeze the delete column if the datatable is wider than the container so it is easy to get to
-                if (editable && DataTable.$width < DataTable.Gj) {
-                    return DataTable.define('rightSplit', 1);                        
-                } else {
-                    return DataTable.define('rightSplit', 0);
-                }
+                // console.log("right split: " + columnSplitRight);
+                return DataTable.define('rightSplit', columnSplitRight);                        
             },
             
             /**
@@ -389,9 +439,9 @@ console.error('!! ToDo: onAfterColumnHide()');
                     // freeze columns:
                     var DataTable = $$(ids.component);
                     if (CurrentObject.workspaceFrozenColumnID != "") {
-                        DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+                        DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + columnSplitLeft);
                     } else {
-                        DataTable.define('leftSplit', 0);                        
+                        DataTable.define('leftSplit', columnSplitLeft);                        
                     }
                     _logic.freezeDeleteColumn();
                     DataTable.refreshColumns()
@@ -661,38 +711,69 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     		// rebuild the data table view:
     		refresh: function() {
-
+                
+                columnSplitRight = 0;
     			// wait until we have an Object defined:
     			if (CurrentObject) {
-
     				var DataTable = $$(ids.component);
                     DataTable.define('leftSplit', 0);
                     DataTable.define('rightSplit', 0);
     				DataTable.clearAll();
 
-
     				//// update DataTable structure:
     				// get column list from our CurrentObject
     				var columnHeaders = CurrentObject.columnHeaders(true);
 
-    				// add the delete / Trash column
-                    if (editable) {
+                    if (settings.massUpdate) {
+                        columnHeaders.unshift({
+                            id: "appbuilder_select_item",
+        					header: { content:"masterCheckbox", contentId:"mch" },
+        					width: 40,
+        					template: "<div class='singleSelect'>{common.checkbox()}</div>",
+        					css: { 'text-align': 'center' }                            
+                        });
+                        columnSplitLeft = 1;
+                    } else {
+                        columnSplitLeft = 0;
+                    }
+                    if (settings.detailsView != null) {
+                        columnHeaders.push({
+                            id: "appbuilder_view_detail",
+        					header: "",
+        					width: 40,
+        					template: "<div class='details'>{common.viewIcon()}</div>",
+        					css: { 'text-align': 'center' }                            
+                        });
+                        columnSplitRight++;
+                    }
+                    if (settings.editView != null) {
+                        columnHeaders.push({
+                            id: "appbuilder_view_edit",
+        					header: "",
+        					width: 40,
+        					template: "<div class='edit'>{common.editIcon()}</div>",
+        					css: { 'text-align': 'center' }                            
+                        });
+                        columnSplitRight++;
+                    }
+                    if (settings.allowDelete) {
         				columnHeaders.push({
         					id: "appbuilder_trash",
         					header: "",
         					width: 40,
-        					template: "<span class='trash'>{common.trashIcon()}</span>",
+        					template: "<div class='trash'>{common.trashIcon()}</div>",
         					css: { 'text-align': 'center' }
-        				})
+        				});
+                        columnSplitRight++;
                     }
     				DataTable.refreshColumns(columnHeaders)
 
 
     				// freeze columns:
     				if (CurrentObject.workspaceFrozenColumnID != "") {
-    					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
+    					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + columnSplitLeft);
     				} else {
-                        DataTable.define('leftSplit', 0);                        
+                        DataTable.define('leftSplit', columnSplitLeft);
                     }
                     _logic.freezeDeleteColumn();
                     DataTable.refreshColumns();
@@ -779,11 +860,13 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 } else if (common.column.editor == "richselect") {
                     CurrentObject._fields.forEach(function (f) {
                         if (f.columnName == common.column.id) {
-                            f.settings.options.forEach(function (o) {
-                                if (o.id == obj[common.column.id]) {
-                                    tip = o.text;
-                                }
-                            })
+                            if (f.settings.options) {
+                                f.settings.options.forEach(function (o) {
+                                    if (o.id == obj[common.column.id]) {
+                                        tip = o.text;
+                                    }
+                                })                                
+                            }
                         }
                     })
                 } else {

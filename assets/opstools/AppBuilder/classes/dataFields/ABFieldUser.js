@@ -177,36 +177,71 @@ class ABFieldUser extends ABFieldSelectivity {
 		this.settings.isMultiple = parseInt(this.settings.isMultiple);
 		this.settings.isCurrentUser = parseInt(this.settings.isCurrentUser);
 
-		OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
-			if (this.settings.isMultiple == true) {
-				var items = data.map(function (item) {
-					return {
-						id: item.username,
-						text: item.username
+		this._users = function(config) {
+			if (typeof window._users == "undefined") {
+				OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
+					var items1 = data.map(function (item) {
+						return {
+							id: item.username,
+							text: item.username
+						}
+					});
+					var items2 = data.map(function (item) {
+						return {
+							id: item.username,
+							value: item.username
+						}
+					});
+					window._users = {
+						selectivity: items1,
+						webix: items2
+					};
+					if (this.settings.isMultiple) {
+						return window._users.selectivity;						
+					} else {
+						if (config != null) {
+							config.options = window._users.webix;
+						} else {
+ 							return window._users.webix;
+						}
 					}
-				});
+				});							
 			} else {
-				var items = data.map(function (item) {
-					return {
-						id: item.username,
-						value: item.username
+				if (this.settings.isMultiple) {
+					return window._users.selectivity;						
+				} else {
+					if (config != null) {
+						config.options = window._users.webix;
+					} else {
+						return window._users.webix;
 					}
-				});
+				}
 			}
-			this._options = {
-				users: items,
-			};
-		});
-		OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
-			if (this.settings.isMultiple == true) {
-				var user = [{ id: data.user.username, text: data.user.username }];
+		}
+		this._currentUser = function() {
+			if (typeof window._currentUser == "undefined") {
+				OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
+					var user1 = [{ id: data.user.username, text: data.user.username }];
+					var user2 = data.user.username
+					window._currentUser = {
+						selectivity: user1,
+						webix: user2
+					};
+					if (this.settings.isMultiple) {
+						return window._currentUser.selectivity;						
+					} else {
+						return window._currentUser.webix;
+					}
+				});			
 			} else {
-				var user = data.user.username
+				if (this.settings.isMultiple) {
+					return window._currentUser.selectivity;						
+				} else {
+					return window._currentUser.webix;
+				}				
 			}
-			this._currentUser = {
-				user: user
-			};
-		});
+
+		}
 	}
 
 
@@ -262,7 +297,7 @@ class ABFieldUser extends ABFieldSelectivity {
 		else {
 			if (this.settings.editable) {
 				config.editor = 'richselect';
-				config.options = this._options.users;
+				config.options = this._users(config);
 			}
 		}
 
@@ -297,7 +332,7 @@ class ABFieldUser extends ABFieldSelectivity {
 				multiple: true,
 				placeholder: placeholder,
 				data: row[this.columnName],
-				items: this._options.users,
+				items: this._users(),
 				readOnly: readOnly
 			}, App, row);
 
@@ -360,7 +395,7 @@ class ABFieldUser extends ABFieldSelectivity {
 	 */
 	defaultValue(values) {
 		if (this.settings.isCurrentUser) {
-			values[this.columnName] = this._currentUser.user;
+			values[this.columnName] = this._currentUser();
 		}
 	}
 
@@ -401,7 +436,7 @@ class ABFieldUser extends ABFieldSelectivity {
 			return {
 				key: this.settings.isMultiple ? 'fieldcustom' : 'selectsingle',
 				settings: {
-					options: this._options.users
+					options: this._users()
 				}
 			}
 		};
@@ -411,25 +446,15 @@ class ABFieldUser extends ABFieldSelectivity {
 
 	getValue(application, object, fieldData, itemNode, rowData, item) {
 		var values = {};
-		var domNode = itemNode.querySelector('.list-data-values');
-		values = this.selectivityGet(domNode);
-		// console.log(values);
+		if (this.settings.isMultiple) {
+			var domNode = itemNode.querySelector('.list-data-values');
+			values = this.selectivityGet(domNode);
+			// console.log(values);
+		} else {
+			values = $$(item).getValue();
+		}
 		return values;
 	}
-
-	detailComponent() {
-		
-		var detailComponentSetting = super.detailComponent();
-
-		detailComponentSetting.common = () => {
-			return {
-				key: 'detailcustom'
-			}
-		};
-
-		return detailComponentSetting;
-	}
-
 
 }
 

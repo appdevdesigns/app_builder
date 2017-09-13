@@ -124,26 +124,40 @@ export default class ABViewFormCustom extends ABViewFormField {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
+		
+		var settings = {};
+		if (form)
+			settings = form.settings;
 
 		var templateLabel = '';
-		if (form.settings.showLabel == true) {
-			if (form.settings.labelPosition == 'top')
+		if (settings.showLabel == true) {
+			if (settings.labelPosition == 'top')
 				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
 			else
 				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
 		}
 
 		var template = (templateLabel + "#template#")
-			.replace(/#width#/g, form.settings.labelWidth)
+			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
 			.replace(/#template#/g, field.columnHeader().template);
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
-		component.ui.minHeight = 45;
-		component.ui.height = 60;
+		if (typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
+			component.ui.height = parseInt(field.settings.imageHeight);
+		}
+		// component.ui.minHeight = 45;
+		// component.ui.height = 60;
 		component.ui.borderless = true;
-		component.ui.template = template;
+		component.ui.template =  '<div class="customField">' + template + '</div>';
+		component.ui.onClick = {
+			"customField": function(id, e, trg) {
+				var rowData = {},
+					node = $$(ids.component).$view;
+				field.customEdit(rowData, App, node);
+			}
+		};
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
@@ -151,6 +165,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 				node = $$(ids.component).$view;
 
 			field.customDisplay(rowData, App, node);
+			
 		}
 
 

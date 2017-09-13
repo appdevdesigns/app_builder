@@ -579,6 +579,9 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
             objectLoad: function(object, currView) {
                 CurrentObject = object;
                 if (currView != null) CurrentView = currView;
+                // console.log(CurrentObject);
+                // console.log(currView);
+                // console.log("stuff above");
             },
             
             /**

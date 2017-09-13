@@ -12,6 +12,7 @@ import ABPopupDefineLabel from "./ab_work_object_workspace_popupDefineLabel"
 import ABPopupFilterDataTable from "./ab_work_object_workspace_popupFilterDataTable"
 import ABPopupFrozenColumns from "./ab_work_object_workspace_popupFrozenColumns"
 import ABPopupHideFields from "./ab_work_object_workspace_popupHideFields"
+import ABPopupMassUpdate from "./ab_work_object_workspace_popupMassUpdate"
 import ABPopupNewDataField from "./ab_work_object_workspace_popupNewDataField"
 import ABPopupSortField from "./ab_work_object_workspace_popupSortFields"
 
@@ -31,7 +32,9 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 addNewRow: L('ab.object.addNewRow', "*Add new row"),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
+                deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete Records"),
                 hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
+                massUpdate: L('ab.object.toolbar.massUpdate', "*Edit fields"),
                 filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
                 sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
                 frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen columns"),
@@ -51,11 +54,13 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		component: this.unique('component'),
 
     		buttonAddField: this.unique('buttonAddField'),
+            buttonDeleteSelected: this.unique('deleteSelected'),
     		buttonExport: this.unique('buttonExport'),
     		buttonFieldsVisible: this.unique('buttonFieldsVisible'),
     		buttonFilter: this.unique('buttonFilter'),
     		buttonFrozen: this.unique('buttonFrozen'),
     		buttonLabel: this.unique('buttonLabel'),
+            buttonMassUpdate: this.unique('buttonMassUpdate'),
     		buttonRowNew: this.unique('buttonRowNew'),
     		buttonSort: this.unique('buttonSort'),
 
@@ -81,6 +86,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
         var PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App);
 
         var PopupHideFieldComponent = new ABPopupHideFields(App);
+
+        var PopupMassUpdateComponent = new ABPopupMassUpdate(App);
 
         var PopupNewDataFieldComponent = new ABPopupNewDataField(App);
 
@@ -120,6 +127,32 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     						hidden: true,
     						css: "ab-data-toolbar",
     						cols: [
+                                {
+    								view: view,
+    								id: ids.buttonMassUpdate,
+    								label: labels.component.massUpdate,
+    								icon: "pencil-square-o",
+    								type: "icon",
+    								// autowidth: true,
+    								badge: 0,
+                                    disabled:true,
+    								click: function () {
+    									_logic.toolbarMassUpdate(this.$view);
+    								}
+    							},
+                                {
+    								view: view,
+    								id: ids.buttonDeleteSelected,
+    								label: labels.component.deleteSelected,
+    								icon: "trash",
+    								type: "icon",
+    								// autowidth: true,
+    								badge: 0,
+                                    disabled:true,
+    								click: function () {
+    									_logic.toolbarDeleteSelected(this.$view);
+    								}
+    							},
     							{
     								view: view,
     								id: ids.buttonFieldsVisible,
@@ -242,7 +275,8 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		DataTable.init({
     			onEditorMenu:_logic.callbackHeaderEditorMenu,
-                onColumnOrderChange:_logic.callbackColumnOrderChange
+                onColumnOrderChange:_logic.callbackColumnOrderChange,
+                onCheckboxChecked:_logic.callbackCheckboxChecked
             });
 
     		PopupDefineLabelComponent.init({
@@ -259,6 +293,10 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     		PopupHideFieldComponent.init({
     			onChange:_logic.callbackFieldsVisible		// be notified when there is a change in the hidden fields
+    		});
+
+            PopupMassUpdateComponent.init({
+    			// onSave:_logic.callbackAddFields			// be notified of something...who knows...
     		});
 
     		PopupNewDataFieldComponent.init({
@@ -353,6 +391,18 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			_logic.callbackFrozenColumns();
     		},
 
+            /**
+    		 * @function callbackCheckboxChecked
+    		 *
+    		 * call back for when the checkbox of datatable is checked
+    		 */            
+            callbackCheckboxChecked: function(state) {
+                if (state == "enable") {
+                    _logic.enableUpdateDelete();
+                } else {
+                    _logic.disableUpdateDelete();
+                }
+            },
 
             /**
     		 * @function callbackColumnOrderChange
@@ -439,6 +489,16 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     			}
 
     		},
+            
+            /**
+             * @function callbackMassUpdate
+             *
+             * call back for when the mass update is fired
+             */
+            callbackMassUpdate: function() {
+                // _logic.getBadgeSortFields();
+                DataTable.refresh();
+            },
 
     		/**
     		 * @function callbackSortFields
@@ -449,6 +509,28 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 _logic.getBadgeSortFields();
                 DataTable.refresh();
     		},
+            
+            /**
+             * @function enableUpdateDelete
+             * 
+             * enable the update or delete buttons in the toolbar if there are any items selected
+             * we will make this externally accessible so we can call it from within the datatable component
+             */
+            enableUpdateDelete: function() {
+                $$(ids.buttonMassUpdate).enable();
+                $$(ids.buttonDeleteSelected).enable();
+            },
+
+            /**
+             * @function enableUpdateDelete
+             * 
+             * disable the update or delete buttons in the toolbar if there no items selected
+             * we will make this externally accessible so we can call it from within the datatable component
+             */
+            disableUpdateDelete: function() {
+                $$(ids.buttonMassUpdate).disable();
+                $$(ids.buttonDeleteSelected).disable();
+            },
             
             /**
     		 * @function getBadgeFilters
@@ -547,6 +629,48 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 console.error('TODO: Button Export()');
     		},
 
+            toolbarDeleteSelected: function($view) {
+                var deleteTasks = [];
+                $$(DataTable.ui.id).data.each(function(obj){
+                    if (typeof(obj) != "undefined" && obj.hasOwnProperty("appbuilder_select_item") && obj.appbuilder_select_item == 1) {
+                        deleteTasks.push(function (next) {
+                            CurrentObject.model()
+                            .delete(obj.id)
+                            .then((response)=>{
+                                if (response.numRows > 0) {
+                                    $$(DataTable.ui.id).remove(obj.id);
+                                }
+                                next();
+                            }, next);
+                        });
+                    }
+                });
+
+                if (deleteTasks.length > 0) {
+                    OP.Dialog.Confirm({
+                        title: "Delete Multiple Records",
+                        text:  "Are you sure you want to delete the selected records?",
+                        callback: function (result) {
+                            if (result) {
+                                async.parallel(deleteTasks, function (err) {
+                                    if (err) {
+                                        // TODO : Error message
+                                    } else {
+                                        // Anything we need to do after we are done.
+                                        _logic.disableUpdateDelete();
+                                    }
+                                });
+                            }
+                        }
+                    });                    
+                } else {
+                    OP.Dialog.Alert({
+						title: 'No Records Selected',
+						text: 'You need to select at least one record...did you drink your coffee today?'
+					});
+                }
+
+            },
 
     		/**
     		 * @function toolbarDefineLabel
@@ -592,6 +716,9 @@ console.error('TODO: Button Export()');
 console.error('TODO: toolbarPermission()');
     		},
 
+            toolbarMassUpdate: function ($view) {
+                PopupMassUpdateComponent.show($view);
+            },
 
     		/**
     		 * @function toolbarSort
@@ -649,6 +776,7 @@ console.error('TODO: toolbarPermission()');
                 PopupFilterDataTableComponent.objectLoad(object);
     			PopupFrozenColumnsComponent.objectLoad(object);
     			PopupHideFieldComponent.objectLoad(object);
+                PopupMassUpdateComponent.objectLoad(object, DataTable);
     			PopupSortFieldComponent.objectLoad(object);
 
     			// We can hide fields now that data is loaded

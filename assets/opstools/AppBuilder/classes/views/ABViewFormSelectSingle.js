@@ -176,10 +176,11 @@ export default class ABViewFormSelectSingle extends ABViewFormField {
 			component: App.unique(idBase + '_component'),
 		}
 
-
 		component.ui.view = this.settings.type || ABViewFormSelectSinglePropertyComponentDefaults.type;
+		
+		var options = field.settings.options || this.settings.options || [];
 
-		component.ui.options = field.settings.options.map((opt) => {
+		component.ui.options = options.map((opt) => {
 			return {
 				id: opt.id,
 				value: opt.text

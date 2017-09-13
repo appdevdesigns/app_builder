@@ -417,9 +417,17 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
 	customEdit(row, App, node) {
+		if (this.settings.linkType == "many") {
+			var domNode = node.querySelector('.connect-data-values');
 
+			if (domNode.selectivity != null) {
+				// Open selectivity
+				domNode.selectivity.open();
+				return false;
+			}
+			return false;
+		}
 		return false;
-
 	}
 
 
@@ -560,6 +568,19 @@ class ABFieldConnect extends ABFieldSelectivity {
 			}
 		);
 	}
+
+	getValue(application, object, fieldData, itemNode, rowData, item) {
+		var values = {};
+		if (this.settings.linkType == "many") {
+			var domNode = itemNode.querySelector('.connect-data-values');
+			values = this.selectivityGet(domNode);
+			// console.log(values);
+		} else {
+			values = $$(item).getValue();
+		}
+		return values;
+	}
+
 
 
 };
