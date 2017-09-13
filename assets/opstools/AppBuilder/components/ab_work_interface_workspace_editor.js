@@ -61,9 +61,10 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         // },
                         {
                             view:'button',
-                            type:'prev',
-                            label:'back',
-                            width: 60,
+                            type:'htmlbutton',
+                            css:'marginLeft10',
+                            label:'<span class="webix_icon fa-arrow-left"></span>',
+                            autowidth: true,
                             click:function(){
                                 _logic.buttonBack();
                             }
@@ -71,16 +72,16 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         {
                             view: 'list',
                             layout: 'x',
-
                             id: ids.toolbarMap,
                             borderless: true,
                             multiselect: false,
                             select: false,
                             scroll: false,
                             padding: 0,
+                            css: 'ab_breadcrumb',
                             template: function(item) {
-                                return '<i class="fa fa-chevron-right" aria-hidden="true"></i> ' + 
-                                    '<i class="fa fa-#icon#" aria-hidden="true"></i> '.replace('#icon#', item.icon) +
+                                return '<span class="fa fa-chevron-right" aria-hidden="true"></span> ' + 
+                                    // '<i class="fa fa-#icon#" aria-hidden="true"></i> '.replace('#icon#', item.icon) +
                                     item.label;
                             },
                             on: {

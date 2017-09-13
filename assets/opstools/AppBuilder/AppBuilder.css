@@ -825,3 +825,10 @@ a.ab-delete-photo:hover {
 .webixtype_prev {
 	background-color: #3498db !important;
 }
+.marginLeft10 {
+	margin-left: 10px !important;
+}
+.ab_breadcrumb .webix_list_item {
+	line-height: 35px !important;
+	height: 38px !important;
+}
