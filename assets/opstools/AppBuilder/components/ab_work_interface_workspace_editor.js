@@ -19,7 +19,8 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
                 editorTipText: L('ab.interface.editorTipText', '*Choose Layout or Preview mode. Drag and drop componenents to reorder.'),
                 editorTipTitle: L('ab.interface.editorTipTitle', '*Tip'),
-                viewModeBlock: L('ab.interface.viewModeBlock', '*Layout'),
+                viewModeLayout: L('ab.interface.viewModeLayout', '*Layout'),
+                viewModeData: L('ab.interface.viewModeData', '*Data'),
                 viewModePreview: L('ab.interface.viewModePreview', '*Preview'),
                 editorPlaceholder: L('ab.interface.editorPlaceholder', '*Drag and drop components to build interface.')
 
@@ -35,6 +36,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             toolbar: this.unique('toolbar'),
             toolbarMap: this.unique('toolbarMap'),
             toolbarViewMode: this.unique('toolbarViewMode'),
+            toolbarViewPage: this.unique('toolbarViewPage'),
 
             editArea: this.unique('editArea'),
             noContent: this.unique('noContent')
@@ -129,14 +131,27 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     cols: [
                         {
                             view: "segmented",
-                            id: ids.toolbarViewMode,
+                            id: ids.toolbarViewPage,
                             css: "ab-view-chooser",
                             options: [
-                                { id: "block", value: labels.component.viewModeBlock },
-                                { id: "preview", value: labels.component.viewModePreview }
+                                { id: "layout", value: labels.component.viewModeLayout },
+                                { id: "data", value: labels.component.viewModeData }
                             ],
                             inputWidth: 200,
-                            align: "center",
+                            align: "left",
+                            on: {
+                                onChange: function (newValue, oldValue) {
+                                    // _logic.viewModeChange(newValue, oldValue);
+                                }
+                            }
+                        },
+                        {
+                            view: "checkbox",
+                            id: ids.toolbarViewMode,
+                            labelRight: labels.component.viewModePreview,
+                            labelWidth: App.config.labelWidthCheckbox,
+                            align: "right",
+                            autowidth: true,
                             on: {
                                 onChange: function (newValue, oldValue) {
                                     _logic.viewModeChange(newValue, oldValue);
@@ -168,7 +183,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
         
 
         var CurrentView = null;
-        var CurrentViewMode = 'preview';
+        var CurrentViewMode = 1; // preview mode by default
         var PreviousViews = [];
 
         // setting up UI
@@ -276,6 +291,11 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             viewModeChange: function(newV, oldV) {
                 if (newV == oldV) return;
 
+                if (newV == 1) {
+                    newV = "preview";
+                } else {
+                    newV = "block";
+                }
                 CurrentViewMode = newV;
                 if (CurrentView) {
                     this.viewLoad(CurrentView);  
