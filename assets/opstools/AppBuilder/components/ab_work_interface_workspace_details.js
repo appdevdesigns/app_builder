@@ -110,6 +110,23 @@ export default class AB_Work_Interface_Workspace_Details extends OP.Component {
         
         // Expose any globally accessible Actions:
         this.actions({
+
+            /**
+             * @function showComponentList()
+             *
+             */
+            showComponentList: function() {
+                ComponentList.show();
+            },
+
+            /**
+             * @function hideComponentList()
+             *
+             */
+            hideComponentList: function() {
+                PropertiesList.show();
+                ComponentList.hide();
+            }
             
             /**
              * @function populateApplicationForm()

@@ -123,6 +123,16 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
                 $$(ids.component).show();
             },
 
+            /**
+             * @function hide()
+             *
+             * Hide this component.
+             */
+            hide: function () {
+                $$(ids.component).hide();
+            },
+
+
             infoAlert: function () {
                 OP.Dialog.Alert({
                     title: labels.component.componentsTipTitle,
@@ -235,6 +245,7 @@ export default class AB_Work_Interface_Workspace_Details_Components extends OP.C
 
         // Interface methods for parent component:
         this.show = _logic.show;
+        this.hide = _logic.hide;
         this.viewLoad = _logic.viewLoad;
 
     }

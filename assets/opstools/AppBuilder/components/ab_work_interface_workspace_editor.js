@@ -6,6 +6,8 @@
  *
  */
 
+import ABEditorLayout from "./ab_work_interface_workspace_editor_layout"
+import ABEditorData from "./ab_work_interface_workspace_editor_data"
 
 export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
     
@@ -37,10 +39,14 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             toolbarMap: this.unique('toolbarMap'),
             toolbarViewMode: this.unique('toolbarViewMode'),
             toolbarViewPage: this.unique('toolbarViewPage'),
+            toolbarNewDataSource: this.unique('toolbarNewDataSource'),
 
-            editArea: this.unique('editArea'),
-            noContent: this.unique('noContent')
+            noContent: this.unique('noContent'),
+            editArea: this.unique('editArea')
         };
+
+        var EditorLayout = new ABEditorLayout(App);
+        var EditorData = new ABEditorData(App);
         
         
         // webix UI definition:
@@ -142,7 +148,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             align: "left",
                             on: {
                                 onChange: function (newValue, oldValue) {
-                                    // _logic.viewModeChange(newValue, oldValue);
+                                    _logic.viewPartChange(newValue, oldValue);
                                 }
                             }
                         },
@@ -158,7 +164,22 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                     _logic.viewModeChange(newValue, oldValue);
                                 }
                             }
-                        }                        
+                        },
+                        {
+                            view: "button",
+                            type: "icon", 
+                            icon: "plus",
+                            label: 'New Data Source',
+                            id: ids.toolbarNewDataSource,
+                            align: "right",
+                            autowidth: true,
+                            hidden: true,
+                            on: {
+                                onItemClick: function(id, e) {
+                                    _logic.newDataSource();
+                                }
+                            }
+                        }
                     ]
                 },
                 // {
@@ -168,11 +189,12 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 //     label: labels.component.editorPlaceholder
                 // },
                 {
-                    // view:'template',
-                    view: 'layout',
-                    id:ids.editArea,
-                    rows: []
-                    // template:'[edit Area]'
+                    view: 'multiview',
+                    id: ids.editArea,
+                    cols: [
+                        EditorLayout.ui,
+                        EditorData.ui
+                    ]
                 }
             ],
             on: {
@@ -184,6 +206,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
         
 
         var CurrentView = null;
+        var CurrentViewPart = 'layout';
         var CurrentViewMode = 1; // preview mode by default
         var PreviousViews = [];
 
@@ -275,17 +298,39 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarMap).parse(view.allParents());
                 $$(ids.toolbarMap).refresh();
 
-                // clear edit area
-                $$(ids.editArea).getChildViews().forEach((childView) => {
-                    $$(ids.editArea).removeView(childView);
-                });
+                // 
+                if (CurrentViewPart == 'data') {
+                    EditorData.pageLoad(view);
+                }
+                else {
+                    EditorLayout.viewLoad(view);
+                }
 
-                // load the component's editor in our editArea
-                var editorComponent = view.editorComponent(App, CurrentViewMode);
-                // editorComponent.ui.id = ids.editArea;
-                // webix.ui(editorComponent.ui, $$(ids.editArea));
-                $$(ids.editArea).addView(editorComponent.ui);
-                editorComponent.init();
+            },
+
+            viewPartChange: function(newV, oldV) {
+                if (newV == oldV) return;
+
+                CurrentViewPart = newV;
+
+                if (CurrentViewPart == 'data') {
+                    EditorData.show();
+                    EditorData.pageLoad(CurrentView);
+
+                    _logic.hidePreviewCheck();
+                    _logic.showNewDataSource();
+
+                    App.actions.hideComponentList();
+                }
+                else {
+                    EditorLayout.show();
+                    EditorLayout.viewLoad(CurrentView);
+
+                    _logic.showPreviewCheck();
+                    _logic.hideNewDataSource();
+
+                    App.actions.showComponentList();
+                }
 
             },
 
@@ -298,18 +343,42 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                     newV = "block";
                 }
                 CurrentViewMode = newV;
+
+                // pass view mode to the 'layout' view
+                EditorLayout.viewModeChange(CurrentViewMode);
+
                 if (CurrentView) {
                     this.viewLoad(CurrentView);  
                 }
-                  
+
             },
 
             viewUpdate: function () {
                 _logic.viewLoad(CurrentView);
             },
 
+            newDataSource: function() {
+                EditorData.newDataSource();
+            },
+
             onViewResize: function() {
                 $$(ids.editArea).resizeChildren();
+            },
+
+            showPreviewCheck: function() {
+                $$(ids.toolbarViewMode).show();
+            },
+
+            hidePreviewCheck: function() {
+                $$(ids.toolbarViewMode).hide();
+            },
+
+            showNewDataSource: function() {
+                $$(ids.toolbarNewDataSource).show();
+            },
+
+            hideNewDataSource: function() {
+                $$(ids.toolbarNewDataSource).hide();
             }
         };
         

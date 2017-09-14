@@ -73,6 +73,15 @@ export default class ABViewPage extends ABView  {
 
         obj.pages = pages;
 
+
+        // compile our data sources
+        var dataSources = [];
+        this._dataSources.forEach((data) => {
+            dataSources.push(data.toObj())
+        })
+
+        obj.dataSources = dataSources;
+
         return obj;
     }
 
@@ -94,6 +103,15 @@ export default class ABViewPage extends ABView  {
           pages.push(this.pageNew(child));  // ABViewManager.newView(child, this.application, this));
         })
         this._pages = pages;
+
+
+        // now properly handle our data sources.
+        var dataSources = [];
+        (values.dataSources || []).forEach((data) => {
+            dataSources.push(this.dataSourceNew(data));
+        })
+        this._dataSources = dataSources;
+
 
         // convert from "0" => 0
 
@@ -174,7 +192,7 @@ export default class ABViewPage extends ABView  {
 	/**
 	 * @method pages()
 	 *
-	 * return an array of all the ABViewPages for this ABApplication.
+	 * return an array of all the ABViewPages for this ABViewPage.
 	 *
 	 * @param {fn} filter		a filter fn to return a set of ABViewPages that this fn
 	 *							returns true for.
@@ -278,6 +296,90 @@ export default class ABViewPage extends ABView  {
 
         return this.save();
     }
+
+
+    ///
+    /// Data sources
+    ///
+
+	/**
+	 * @method dataSources()
+	 *
+	 * return an array of all the ABViewDataSource for this ABViewPage.
+	 *
+	 * @param {fn} filter		a filter fn to return a set of ABViewDataSource that this fn
+	 *							returns true for.
+	 * 
+	 * @return {array}			array of ABViewDataSource
+	 */
+	dataSources (filter) {
+
+        filter = filter || function() { return true; };
+
+        return this._dataSources.filter(filter);
+
+    }
+
+
+
+    /**
+     * @method dataSourceNew()
+     *
+     * return an instance of a new (unsaved) ABViewDataSource that is tied to this
+     * ABViewPage.
+     *
+     * NOTE: this new data source is not included in our this.dataSources until a .save()
+     * is performed on the page.
+     *
+     * @return {ABViewPage}
+     */
+    dataSourceNew() {
+
+        // NOTE: this returns a new ABViewDataSource component.  
+        // when creating a new page, the 3rd param should be null, to signify 
+        // the top level component.
+        var dataSource =  new ABViewManager.newView({ key: 'datasource' }, this.application, this);
+        dataSource.parentPage = this;
+
+        return dataSource;
+    }
+
+
+
+    /**
+     * @method dataSourceDestroy()
+     *
+     * remove the current ABViewDataSource from our list of ._dataSources.
+     *
+     * @param {ABViewDataSource} dataSource
+     * @return {Promise}
+     */
+    dataSourceDestroy( dataSource ) {
+
+        var remainingDataSources = this.dataSources(function(data) { return data.id != dataSource.id;})
+        this._dataSources = remainingDataSources;
+        return this.save();
+    }
+
+
+
+    /**
+     * @method dataSourceSave()
+     *
+     * persist the current ABViewDataSource in our list of ._dataSources.
+     *
+     * @param {ABViewDataSource} object
+     * @return {Promise}
+     */
+    dataSourceSave( dataSource ) {
+        var isIncluded = (this.dataSources(function(data){ return data.id == dataSource.id }).length > 0);
+        if (!isIncluded) {
+            this._dataSources.push(dataSource);
+        }
+
+        return this.save();
+    }
+
 
 
 

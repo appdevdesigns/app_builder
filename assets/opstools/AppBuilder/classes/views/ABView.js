@@ -1097,7 +1097,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 		// } else {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = [ 'view', 'page' , 'formpanel',
+		var viewsToIgnore = [ 'view', 'page' , 'formpanel', 'datasource',
 		// not allowed Detail's widgets
 		'detailtext', 'detailcustom',
 		// not allowed Form's widgets

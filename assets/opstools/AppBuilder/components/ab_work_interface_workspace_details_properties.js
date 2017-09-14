@@ -128,7 +128,7 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
              * Show this component.
              */
             show: function () {
-                $$(ids.component).show();
+                $$(ids.component).expand();
             },
 
 
