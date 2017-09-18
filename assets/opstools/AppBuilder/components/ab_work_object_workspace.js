@@ -32,15 +32,15 @@ export default class ABWorkObjectWorkspace extends OP.Component {
                 addNewRow: L('ab.object.addNewRow', "*Add new row"),
                 selectObject: L('ab.object.selectObject', "*Select an object to work with."),
                 // formHeader: L('ab.application.form.header', "*Application Info"),
-                deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete Records"),
+                deleteSelected: L('ab.object.toolbar.deleteRecords', "*Delete records"),
                 hideFields: L('ab.object.toolbar.hideFields', "*Hide fields"),
-                massUpdate: L('ab.object.toolbar.massUpdate', "*Edit fields"),
+                massUpdate: L('ab.object.toolbar.massUpdate', "*Edit records"),
                 filterFields: L('ab.object.toolbar.filterFields', "*Add filters"),
                 sortFields: L('ab.object.toolbar.sortFields', "*Apply sort"),
-                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen columns"),
+                frozenColumns: L('ab.object.toolbar.frozenColumns', "*Frozen fields"),
                 defineLabel: L('ab.object.toolbar.defineLabel', "*Define label"),
                 permission: L('ab.object.toolbar.permission', "*Permission"),
-                addFields: L('ab.object.toolbar.addFields', "*Add new column"),
+                addFields: L('ab.object.toolbar.addFields', "*Add field"),
                 "export": L('ab.object.toolbar.export', "*Export"),
                 confirmDeleteTitle : L('ab.object.delete.title', "*Delete data field"),
                 confirmDeleteMessage : L('ab.object.delete.message', "*Do you want to delete <b>{0}</b>?")
@@ -127,6 +127,17 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     						hidden: true,
     						css: "ab-data-toolbar",
     						cols: [
+                                {
+    								view: view,
+    								id: ids.buttonAddField,
+    								label: labels.component.addFields,
+    								icon: "plus",
+    								type: "icon",
+    								// autowidth: true,
+    								click:function() {
+    									_logic.toolbarAddFields(this.$view);
+    								}
+    							},
                                 {
     								view: view,
     								id: ids.buttonMassUpdate,
@@ -223,17 +234,6 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     							// 	}
                                 // 
     							// },
-    							{
-    								view: view,
-    								id: ids.buttonAddField,
-    								label: labels.component.addFields,
-    								icon: "plus",
-    								type: "icon",
-    								// autowidth: true,
-    								click:function() {
-    									_logic.toolbarAddFields(this.$view);
-    								}
-    							},
     							{
     								view: view,
     								id: ids.buttonExport,

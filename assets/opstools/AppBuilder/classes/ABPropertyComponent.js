@@ -225,9 +225,8 @@ export default class ABPropertyComponent {
 
 			onChange:(newVal, oldVal) => {
 				// ignore onChange() when populating
-				if (!this.isPopulating) {
+				if (!this.isPopulating && typeof this.currentObject != "undefined") {
 					this.EditObject.propertyEditorSave(ids, this.currentObject)
-					
 				}
 			},
 

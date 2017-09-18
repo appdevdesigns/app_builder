@@ -38,7 +38,9 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 		var ids = {
 			component: this.unique('component'),
 		}
-
+		
+		var selectNew = true;
+		var callback = null;
 
 		var BlankTab = new ABBlankObject(App);
 		var CsvTab = new ABCsvObject(App);
@@ -161,7 +163,7 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			done: (obj) => {
 				_logic.hideBusy();
 				_logic.hide();							// hide our popup
-				_logic.callbacks.onDone(null, obj);		// tell parent component we're done
+				_logic.callbacks.onDone(null, obj, selectNew, callback);		// tell parent component we're done
 			},
 
 
@@ -223,8 +225,11 @@ export default class AB_Work_Object_List_NewObject extends OP.Component {   //.e
 			 *
 			 * Show this component.
 			 */
-			show:function() {
-
+			show:function(shouldSelectNew, callbackFunction) {
+				if (shouldSelectNew != null) {
+					selectNew = shouldSelectNew;
+					callback = callbackFunction;
+				}
 				if ($$(ids.component))
 					$$(ids.component).show();
 			}

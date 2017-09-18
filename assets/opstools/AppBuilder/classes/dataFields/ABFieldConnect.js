@@ -23,7 +23,7 @@ var ABFieldConnectDefaults = {
 	menuName: L('ab.dataField.connectObject.menuName', '*Connect to another record'),
 
 	// description: what gets displayed in the Editor description.
-	description: '',
+	description: L('ab.dataField.connectObject.description', '*Connect two data objects together'),
 
 	isSortable: false,
 	isFilterable: false,
@@ -49,9 +49,35 @@ var ids = {
 	linkViaType: 'ab-add-field-link-type-from',
 	fieldLinkVia: 'ab-add-field-link-to',
 	fieldLinkVia2: 'ab-add-field-link-to-2',
+	
+	link1: 'ab-link1-field-options',
+	link2: 'ab-link2-field-options',
 
 	connectDataPopup: 'ab-connect-object-data-popup'
 };
+
+function populateSelect(populate, callback) {
+	var options = [];
+	ABFieldConnectComponent.CurrentApplication.objects().forEach((o) => {
+		options.push({ id: o.id, value: o.label });
+	});
+
+	$$(ids.objectList).define("options", options);
+	$$(ids.objectList).refresh();
+	if (populate != null && populate == true) {
+		$$(ids.objectList).setValue(options[options.length-1].id);
+		$$(ids.objectList).refresh();
+		var selectedObj = $$(ids.objectList).getList().getItem(options[options.length-1].id);
+		if (selectedObj) {
+			var selectedObjLabel = selectedObj.value;
+			$$(ids.fieldLinkVia).setValue("<b>"+selectedObjLabel + "</b> entry.");
+			$$(ids.fieldLinkVia2).setValue("Each <b>" + selectedObjLabel + "</b> entry connects with ");
+			$$(ids.link1).show();
+			$$(ids.link2).show();
+		}
+		callback();
+	}
+}
 
 /**
  * ABFieldConnectComponent
@@ -68,24 +94,30 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 		return [
 			{
-				view: "label",
-				label: L('ab.dataField.connectObject.connectToObject', "*Connect to Object")
-			},
-			{
-				view: "list",
+				view: "richselect",
+				label: L('ab.dataField.connectObject.connectToObject', "*Connected to:"),
 				id: ids.objectList,
 				disallowEdit: true,
 				name: 'objectList',
-				select: true,
-				height: 140,
-				template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
+				labelWidth: App.config.labelWidthLarge,
+				placeholder: L('ab.dataField.connectObject.connectToObjectPlaceholder', "*select object"),
+				// select: true,
+				// height: 140,
+				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
-					onAfterSelect: function () {
-						var selectedObj = this.getSelectedItem(false);
+					onChange: function (newV, oldV) {
+						if (newV == "") {
+							$$(ids.link1).hide();
+							$$(ids.link2).hide();							
+						}
+						if (newV == oldV) return;
+						var selectedObj = this.getList().getItem(newV);
 						if (selectedObj) {
-							var selectedObjLabel = selectedObj.label;
-							$$(ids.fieldLinkVia).setValue(selectedObjLabel);
-							$$(ids.fieldLinkVia2).setValue(selectedObjLabel);
+							var selectedObjLabel = selectedObj.value;
+							$$(ids.fieldLinkVia).setValue("<b>"+selectedObjLabel + "</b> entry.");
+							$$(ids.fieldLinkVia2).setValue("Each <b>" + selectedObjLabel + "</b> entry connects with ");
+							$$(ids.link1).show();
+							$$(ids.link2).show();
 						}
 					}
 				}
@@ -96,63 +128,99 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				disallowEdit: true,
 				value: L('ab.dataField.connectObject.connectToNewObject', '*Connect to new Object'),
 				click: function () {
-					if (this.getTopParentView().createNewObjectEvent)
-						this.getTopParentView().createNewObjectEvent();
+					if (App.actions.addNewObject) {
+						async.series([
+							function(callback) {
+								App.actions.addNewObject(false, callback); // pass false because after it is created we do not want it to select it in the object list
+							},
+							function(callback) {
+								populateSelect(true, callback); // pass true because we want it to select the last item in the list that was just created								
+							}
+						], function(err) {
+							// console.log('all functions complete')
+						})
+					} else {
+						// alert("that didn't work");
+					}
 				}
 			},
 			{
 				view: 'layout',
+				id: ids.link1,
+				hidden: true,
 				cols: [
 					{
 						id: ids.fieldLink,
 						view: 'label',
-						width: 110
+						width: 300
 					},
 					{
 						id: ids.linkType,
 						disallowEdit: true,
 						name: "linkType",
-						view: "segmented",
-						width: 165,
-						inputWidth: 160,
+						view: "richselect",
+						value: defaultValues.linkType,
+						width: 95,
 						options: [
-							{ id: "many", value: L('ab.dataField.connectObject.hasMany', "*Has many") },
-							{ id: "one", value: L('ab.dataField.connectObject.belongTo', "*Belong to") }
-						]
+							{ id: "many", value: L('ab.dataField.connectObject.hasMany', "*many") },
+							{ id: "one", value: L('ab.dataField.connectObject.belongTo', "*one") }
+						],
+						on: {
+							onChange: function(newV, oldV) {
+								if (newV == "many") {
+									$$(ids.fieldLinkVia).define("label", $$(ids.fieldLinkVia).getValue().replace("entry", "entries"));
+								} else {
+									$$(ids.fieldLinkVia).define("label", $$(ids.fieldLinkVia).getValue().replace("entries", "entry"));									
+								}
+								$$(ids.fieldLinkVia).refresh();
+							}
+						}
 					},
 					{
 						id: ids.fieldLinkVia,
 						view: 'label',
-						label: '[Select object]',
-						width: 110
+						label: '[Select object] entry.',
+						width: 200
 					},
 				]
 			},
 			{
 				view: 'layout',
+				id: ids.link2,
+				hidden: true,
 				cols: [
 					{
 						id: ids.fieldLinkVia2,
 						view: 'label',
-						label: '[Select object]',
-						width: 110
+						label: 'Each [Select object] entry connects with ',
+						width: 300
 					},
 					{
 						id: ids.linkViaType,
 						name: "linkViaType",
 						disallowEdit: true,
-						view: "segmented",
-						width: 165,
-						inputWidth: 160,
+						view: "richselect",
+						value: defaultValues.linkViaType,
+						width: 95,
 						options: [
-							{ id: "many", value: L('ab.dataField.connectObject.hasMany', "*Has many") },
-							{ id: "one", value: L('ab.dataField.connectObject.belongTo', "*Belong to") }
-						]
+							{ id: "many", value: L('ab.dataField.connectObject.hasMany', "*many") },
+							{ id: "one", value: L('ab.dataField.connectObject.belongTo', "*one") }
+						],
+						on: {
+							onChange: function(newV, oldV) {
+								if (newV == "many") {
+									$$(ids.fieldLink2).define("label", $$(ids.fieldLink2).getValue().replace("entry", "entries"));
+								} else {
+									$$(ids.fieldLink2).define("label", $$(ids.fieldLink2).getValue().replace("entries", "entry"));									
+								}
+								$$(ids.fieldLink2).refresh();
+							}
+						}
 					},
 					{
 						id: ids.fieldLink2,
 						view: 'label',
-						width: 110
+						width: 200
 					},
 				]
 			}
@@ -181,15 +249,14 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 
 		clear: (ids) => {
-			$$(ids.objectList).unselectAll();
-			$$(ids.linkType).setValue(defaultValues.linkType);
-			$$(ids.linkViaType).setValue(defaultValues.linkViaType);
+			// $$(ids.objectList).unselectAll();
+			$$(ids.objectList).setValue(defaultValues.linkObject);
 		},
 
 		isValid: (ids, isValid) => {
 
 			// validate require select linked object 
-			var selectedObjId = $$(ids.objectList).getSelectedId();
+			var selectedObjId = $$(ids.objectList).getValue();
 			if (!selectedObjId) {
 				webix.html.addCss($$(ids.objectList).$view, "webix_invalid");
 				isValid = false;
@@ -203,26 +270,28 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 		show: (pass_ids) => {
 			// add objects to list 
-			$$(pass_ids.objectList).clearAll();
-			$$(pass_ids.objectList).parse(ABFieldConnectComponent.CurrentApplication.objects());
+			// $$(pass_ids.objectList).clearAll();
+			// $$(pass_ids.objectList).parse(ABFieldConnectComponent.CurrentApplication.objects());
+			populateSelect(false);
 
 			// show current object name
-			$$(ids.fieldLink).setValue(ABFieldConnectComponent.CurrentObject.label);
-			$$(ids.fieldLink2).setValue(ABFieldConnectComponent.CurrentObject.label);
+			$$(ids.fieldLink).setValue("Each <b>" + ABFieldConnectComponent.CurrentObject.label + "</b> entry connects with ");
+			$$(ids.fieldLink2).setValue("<b>"+ABFieldConnectComponent.CurrentObject.label + "</b> entries.");
 		},
 
 		populate: (ids, values) => {
 			// select linked object in list
 			if (values.settings.linkObject) {
-				$$(ids.objectList).select(values.settings.linkObject);
-				$$(ids.objectList).refresh();
+				$$(ids.objectList).setValue(values.settings.linkObject);
+
+				// $$(ids.objectList).refresh();
 			}
 		},
 
 		values: (ids, values) => {
 
 			// get select linked object id
-			values.settings.linkObject = $$(ids.objectList).getSelectedId();
+			values.settings.linkObject = $$(ids.objectList).getValue();
 
 			// for 1:1 relation case, flag column is in this object
 			values.settings.isSource = 1;
