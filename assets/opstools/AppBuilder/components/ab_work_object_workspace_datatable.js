@@ -279,6 +279,10 @@ console.error('!! ToDo: onAfterColumnHide()');
     			if (e.target.className.indexOf('pencil') > -1) {
                     alert("edit");
                 }
+                // if this was our view icon:
+    			if (e.target.className.indexOf('eye') > -1) {
+                    alert("view");
+                }
     			// if this was our trash icon:
     			if (e.target.className.indexOf('trash') > -1) {
 
@@ -741,7 +745,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                             id: "appbuilder_view_detail",
         					header: "",
         					width: 40,
-        					template: "<div class='details'>{common.viewIcon()}</div>",
+                            template: function(obj, common){
+                                return "<div class='detailsView'><span class='webix_icon fa-eye'></span></div>";
+                            },
         					css: { 'text-align': 'center' }                            
                         });
                         columnSplitRight++;

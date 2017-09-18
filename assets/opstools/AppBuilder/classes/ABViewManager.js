@@ -24,8 +24,10 @@ import ABViewFormCheckbox from "./views/ABViewFormCheckbox"
 import ABViewFormCustom from "./views/ABViewFormCustom"
 import ABViewFormDatepicker from "./views/ABViewFormDatepicker"
 import ABViewFormNumber from "./views/ABViewFormNumber"
+import ABViewFormPanel from "./views/ABViewFormPanel"
 import ABViewFormSelectSingle from "./views/ABViewFormSelectSingle"
 import ABViewFormTextbox from "./views/ABViewFormTextbox"
+
 // import ABViewFormText from "./views/ABViewFormText"
 
 /* 
@@ -52,6 +54,7 @@ Views[ABViewFormCheckbox.common().key] = ABViewFormCheckbox;
 Views[ABViewFormCustom.common().key] = ABViewFormCustom;
 Views[ABViewFormDatepicker.common().key] = ABViewFormDatepicker;
 Views[ABViewFormNumber.common().key] = ABViewFormNumber;
+Views[ABViewFormPanel.common().key] = ABViewFormPanel;
 Views[ABViewFormSelectSingle.common().key] = ABViewFormSelectSingle;
 Views[ABViewFormTextbox.common().key] = ABViewFormTextbox;
 // Views[ABViewForm.common().key] = ABViewForm;

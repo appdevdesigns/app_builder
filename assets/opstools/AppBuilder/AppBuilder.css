@@ -832,3 +832,6 @@ a.ab-delete-photo:hover {
 	line-height: 35px !important;
 	height: 38px !important;
 }
+.webix_view .webix_selected .webix_tree_close, .webix_view .webix_selected .webix_tree_open {
+	color: #FFF;
+}

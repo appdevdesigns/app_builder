@@ -173,7 +173,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 					id: ids.buttonNew,
 					value: labels.component.addNew,
 					click: function () {
-						_logic.clickNewObject();
+						_logic.clickNewObject(true); // pass true so it will select the new object after you created it
 					}
 				}
 			]
@@ -446,7 +446,7 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			 *
 			 * Once a New Object was created in the Popup, follow up with it here.
 			 */
-			callbackNewObject:function(err, object){
+			callbackNewObject:function(err, object, selectNew, callback){
 
 				if (err) {
 					OP.Error.log('Error creating New Object', {error: err});
@@ -455,7 +455,11 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 
 				objectList.add(object);
 
-				$$(ids.list).select(object.id);
+				if (selectNew != null && selectNew == true) {
+					$$(ids.list).select(object.id);
+				} else {
+					callback();
+				}
 
 			},
 
@@ -465,10 +469,9 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			 *
 			 * Manages initiating the transition to the new Object Popup window
 			 */
-			clickNewObject:function() {
-
+			clickNewObject:function(selectNew, callback) {
 				// show the new popup
-				PopupNewObjectComponent.show();
+				PopupNewObjectComponent.show(selectNew, callback);
 			},
 
 			rename: function () {
@@ -543,6 +546,10 @@ export default class AB_Work_Object_List extends OP.Component {   //.extend(idBa
 			getSelectedObject:function() {
 				return $$(ids.list).getSelectedItem();
 			},
+
+			addNewObject:function(selectNew, callback) {
+				_logic.clickNewObject(selectNew, callback);
+			}
 
 		})
 
