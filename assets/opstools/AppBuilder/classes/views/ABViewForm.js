@@ -134,7 +134,7 @@ export default class ABViewForm extends ABViewFormPanel {
 
 		super.propertyEditorPopulate(ids, view);
 
-		$$(ids.object).enable();
+		$$(ids.datacollection).enable();
 		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewFormPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewFormPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewFormPropertyComponentDefaults.labelWidth);
@@ -144,7 +144,7 @@ export default class ABViewForm extends ABViewFormPanel {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.object = $$(ids.object).getValue();
+		view.settings.datacollection = $$(ids.datacollection).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue();
@@ -154,8 +154,8 @@ export default class ABViewForm extends ABViewFormPanel {
 
 
 
-	/*
-	 * @component()
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
 	 * @return {obj} UI component
@@ -189,12 +189,20 @@ export default class ABViewForm extends ABViewFormPanel {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+			var Form = $$(ids.component);
+
 			viewComponents.forEach((view) => {
 				if (view.init)
 					view.init();
-			})
+			});
 
-			$$(ids.component).adjust();
+			// bind a data collection to form component
+			var dc = this.dataCollection();
+			if (dc) {
+				dc.bind(Form);
+			}
+
+			Form.adjust();
 		}
 
 
@@ -204,9 +212,14 @@ export default class ABViewForm extends ABViewFormPanel {
 		}
 	}
 
-
-	object() {
-		return this.application.objects((obj) => obj.id == this.settings.object)[0];
+	/**
+	 * @method dataCollection
+	 * return ABViewDataCollection of this form
+	 * 
+	 * @return {ABViewDataCollection}
+	 */
+	dataCollection() {
+		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
 
 

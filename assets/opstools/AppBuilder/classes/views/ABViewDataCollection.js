@@ -38,22 +38,6 @@ export default class ABViewDataCollection extends ABView {
 		// refresh a data collection
 		this.init();
 
-		// 	{
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
-
 	}
 
 
@@ -145,8 +129,7 @@ export default class ABViewDataCollection extends ABView {
 						});
 
 						DataTable.define("columns", columns);
-						// DataTable.data.sync(dc);
-						DataTable.bind(dc);
+						DataTable.data.sync(dc);
 						DataTable.refresh();
 					}
 
@@ -175,24 +158,11 @@ export default class ABViewDataCollection extends ABView {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		_logic.selectObject = (objectId) => {
-
-			// if (newv != oldv) {
-			// 	_logic.newObject();
-			// 	$$(ids.linkedObject).setValue("");
-			// 	$$(ids.linkedField).setValue("");
-			// 	$$(ids.linkedPage).setValue("");
-			// 	$$(ids.linkedPageView).setValue("");
-			// 	$$(ids.linkedEditPage).setValue("");
-			// 	$$(ids.linkedEditPageForm).setValue("");
-			// }
-
-			// $$(ids.linkedObject).define("options", objects);
-			// $$(ids.linkedObject).refresh();
-
+			// TODO
 		};
 
 		_logic.selectLinkDc = (dataCollectionId) => {
-
+			// TODO
 		};
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
@@ -218,29 +188,30 @@ export default class ABViewDataCollection extends ABView {
 								}
 							}
 						},
-						{
-							view: "select",
-							name: "linkedObject",
-							label: L('ab.component.datacollection.linkedObject', '*Linked To:'),
-							labelWidth: App.config.labelWidthLarge,
-							options: [],
-							// hidden: 1,
-							on: {
-								onChange: function (newv, oldv) {
-									if (newv == oldv) return;
+						// TODO : link to another data collection
+						// {
+						// 	view: "select",
+						// 	name: "linkedObject",
+						// 	label: L('ab.component.datacollection.linkedObject', '*Linked To:'),
+						// 	labelWidth: App.config.labelWidthLarge,
+						// 	options: [],
+						// 	// hidden: 1,
+						// 	on: {
+						// 		onChange: function (newv, oldv) {
+						// 			if (newv == oldv) return;
 
-									_logic.selectLinkDc(newv);
-								}
-							}
-						},
-						{
-							view: "select",
-							name: "linkedField",
-							label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
-							labelWidth: App.config.labelWidthLarge,
-							options: [],
-							hidden: 1
-						}
+						// 			_logic.selectLinkDc(newv);
+						// 		}
+						// 	}
+						// },
+						// {
+						// 	view: "select",
+						// 	name: "linkedField",
+						// 	label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
+						// 	labelWidth: App.config.labelWidthLarge,
+						// 	options: [],
+						// 	hidden: 1
+						// }
 					]
 				}
 			},
@@ -425,7 +396,7 @@ export default class ABViewDataCollection extends ABView {
 	* @method dataCollection
 	* return a webix's data collection to match object id of this component.
 	*
-	* @return {ABObject}
+	* @return {Object}
 	*/
 	dataCollection() {
 		return this.__dataCollection;
@@ -436,18 +407,36 @@ export default class ABViewDataCollection extends ABView {
 	 * @method bind
 	 * 
 	 * 
-	 * @param {obj} component - a webix element instance
+	 * @param {Object} component - a webix element instance
 	*/
 	bind(component) {
 
+		var dc = this.dataCollection();
+
 		if (component.config.view == 'datatable') {
-			component.data.sync(this.dataCollection());
+			if (dc)
+				component.data.sync(dc);
+			else
+				component.data.unsync();
 		}
 		else if (component.bind) {
-			component.bind(this.dataCollection());
+			if (dc)
+				component.bind(dc);
+			else
+				component.unbind();
 		}
 
 		component.refresh();
+
+	}
+
+
+	setCursor(rowId) {
+
+		var dc = this.dataCollection();
+		if (dc) {
+			dc.setCursor(rowId);
+		}
 
 	}
 

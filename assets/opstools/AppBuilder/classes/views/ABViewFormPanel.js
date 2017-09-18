@@ -71,19 +71,20 @@ export default class ABViewFormPanel extends ABView {
 
 		// _logic functions
 
-		_logic.selectObject = (objId, oldObjId) => {
+		_logic.selectSource = (dcId, oldDcId) => {
 
 			// TODO : warning message
 
 			var currView = _logic.currentEditObject();
 			var formView = currView.formComponent();
+			var dc = currView.pageRoot().dataCollections(dc => dc.id == dcId)[0];
 
 			// remove all old field components
-			if (oldObjId != null)
+			if (oldDcId != null)
 				formView.clearFieldComponents();
 
 			// Update field options in property
-			this.propertyUpdateFieldOptions(ids, currView, objId);
+			this.propertyUpdateFieldOptions(ids, currView, dc);
 
 			// add all fields to editor by default
 			if (currView._views.length < 1) {
@@ -174,11 +175,11 @@ export default class ABViewFormPanel extends ABView {
 		// Properties UI
 		return commonUI.concat([
 			{
-				name: 'object',
+				name: 'datacollection',
 				view: 'richselect',
-				label: L('ab.components.form.objects', "*Objects"),
+				label: L('ab.components.form.dataSource', "*Data Source"),
 				on: {
-					onChange: _logic.selectObject
+					onChange: _logic.selectSource
 				}
 			},
 			{
@@ -205,27 +206,28 @@ export default class ABViewFormPanel extends ABView {
 
 		super.propertyEditorPopulate(ids, view);
 
+		var SourceSelector = $$(ids.datacollection);
 		var detailCom = view.formComponent();
-		var objectId = detailCom.settings.object;
+		var dataCollectionId = detailCom.settings.datacollection;
 
-		// Pull object list to options
-		var objectOptions = view.application.objects().map((obj) => {
+		// Pull data collections to options
+		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
 
 			return {
-				id: obj.id,
-				value: obj.label
+				id: dc.id,
+				value: dc.label
 			};
 		});
 
-		$$(ids.object).define('options', objectOptions);
-		$$(ids.object).refresh();
-		$$(ids.object).setValue(objectId);
+		SourceSelector.define('options', objectOptions);
+		SourceSelector.refresh();
+		SourceSelector.setValue(dataCollectionId);
 
 		// Disable to select object in layout
 		// We can select object in form component only
-		$$(ids.object).disable();
+		SourceSelector.disable();
 
-		this.propertyUpdateFieldOptions(ids, view, objectId);
+		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
 
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
@@ -241,15 +243,24 @@ export default class ABViewFormPanel extends ABView {
 
 	}
 
-	static propertyUpdateFieldOptions(ids, view, objectId) {
+	/**
+	 * @method propertyUpdateFieldOptions
+	 * Populate fields of object to select list in property
+	 * 
+	 * @param {Object} ids 
+	 * @param {ABViewFormPanel} view - the current component
+	 * @param {ABViewDataCollection} dc
+	 */
+	static propertyUpdateFieldOptions(ids, view, dc) {
 
 		var formComponent = view.formComponent();
-		var object = view.application.objectByID(objectId);
 		var existsFields = formComponent.fieldComponents();
-
+		var object = dc ? dc.datasource : null;
+		
 		// Pull field list
 		var fieldOptions = [];
 		if (object != null) {
+
 			fieldOptions = object.fields().map((f) => {
 
 				f.selected = existsFields.filter((com) => { return f.id == com.settings.fieldId; }).length > 0;
