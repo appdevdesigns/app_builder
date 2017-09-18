@@ -23,8 +23,6 @@ function L(key, altText) {
 var ABViewGridPropertyComponentDefaults = {
 	label:'',	// label is required and you can add more if the component needs them
 	// format:0  	// 0 - normal, 1 - title, 2 - description
-	title:'',
-	description:'',
 	dataSource:'',
 	isEditable:0,
 	massUpdate:0,
@@ -108,8 +106,6 @@ export default class ABViewGrid extends ABView  {
 		super.fromValues(values);
 
     	// if this is being instantiated on a read from the Property UI,
-		this.settings.title = this.settings.title || ABViewGridPropertyComponentDefaults.title;
-		this.settings.description = this.settings.description || ABViewGridPropertyComponentDefaults.description;
     	this.settings.dataSource = this.settings.dataSource || ABViewGridPropertyComponentDefaults.dataSource;
 		this.settings.isEditable = this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable;
 		this.settings.massUpdate = this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate;
@@ -280,20 +276,6 @@ export default class ABViewGrid extends ABView  {
 				labelWidth: App.config.labelWidthLarge,
 				body:{
 					rows:[
-
-						{
-							view:"text", 
-							label:L('ab.component.label.title', '*Title'),
-							labelPosition: "top",
-							name:"title"
-						},
-						{
-							view:"textarea", 
-							label:L('ab.component.label.description', '*Description'),
-							labelPosition: "top",
-							height: 120,
-							name:"description"
-						},
 						{
 							view:"checkbox",
 							name:"isEditable",
@@ -518,8 +500,6 @@ export default class ABViewGrid extends ABView  {
 		
 		this.view = view;
 		
-		$$(ids.title).setValue(view.settings.title);
-		$$(ids.description).setValue(view.settings.description);
 		$$(ids.dataSource).setValue(view.settings.dataSource);
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
@@ -548,8 +528,6 @@ export default class ABViewGrid extends ABView  {
 		super.propertyEditorValues(ids, view);
 
 		// Retrive the values of your properties from Webix and store them in the view
-		view.settings.title = $$(ids.title).getValue();
-		view.settings.description = $$(ids.description).getValue();
 		view.settings.dataSource = $$(ids.dataSource).getValue();
 		view.settings.isEditable = $$(ids.isEditable).getValue();
 		view.settings.massUpdate = $$(ids.massUpdate).getValue();
@@ -677,16 +655,6 @@ export default class ABViewGrid extends ABView  {
 			tableUI = {
 				type: "space",
 				rows: [
-					{ 
-						view: "label",
-						css: "ab-component-header ab-ellipses-text",
-						label: this.settings.title,
-					},
-					{ 
-						view: "label",
-						css: "ab-component-description ab-ellipses-text",
-						label: this.settings.description,
-					},
 					{
 						view: 'toolbar',
 						id: ids.toolbar,
@@ -917,23 +885,7 @@ export default class ABViewGrid extends ABView  {
 		var detailViews = [
 			{id:'', value:L('ab.component.label.noLinkedView', '*No linked view')}
 		];
-		console.log(view.application);
-		detailViews = view.loopPages(view, view.application._pages, detailViews);
-		console.log(detailViews);
-		// view.application._pages.forEach((o)=>{
-		// 	o._pages.forEach((p)=>{
-		// 		p._views.forEach((k)=>{
-		// 			if (k.key == "view" && k.settings.object == view.settings.dataSource) {
-		// 				detailViews.push({id:k.parent.id+"|"+k.id, value:k.label});				
-		// 			}
-		// 		});				
-		// 	});
-		// 	o._views.forEach((j)=>{
-		// 		if (j.key == "view" && j.settings.object == view.settings.dataSource) {
-		// 			detailViews.push({id:j.parent.id+"|"+j.id, value:j.label});				
-		// 		}
-		// 	});
-		// });
+		detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
 		$$(ids.detailsView).define("options", detailViews);
 		$$(ids.detailsView).refresh();
 		// console.log("populate details view dropdown");
@@ -945,6 +897,7 @@ export default class ABViewGrid extends ABView  {
 		var editForms = [
 			{id:'', value:L('ab.component.label.noLinkedForm', '*No linked form')}
 		];
+		editForms = view.loopPages(view, view.application._pages, editForms, "form");
 		view.application._pages.forEach((o)=>{
 			o._views.forEach((j)=>{
 				if (j.key == "form" && j.settings.object == view.settings.dataSource) {
@@ -975,22 +928,27 @@ export default class ABViewGrid extends ABView  {
 		}
 	}
 	
-	loopPages(view, o, detailViews) {
-		if (typeof o[0]._pages == "array") {
-			o[0]._pages.forEach((p)=>{
-				detailViews = view.loopPages(view, p, detailViews);
-				detailViews = view.loopViews(view, p, detailViews);
+	loopPages(view, o, detailViews, type) {
+		console.log(typeof o);
+		if (typeof o == "array" || typeof o == "object") {
+			o.forEach((p)=>{
+				console.log("page below");
+				console.log(p);
+				detailViews = view.loopPages(view, p._pages, detailViews, type);
+				detailViews = view.loopViews(view, p._views, detailViews, type);
 			});
 		}
 		detailViews = view.loopViews(view, o, detailViews);
 		return detailViews;
 	}
 	
-	loopViews(view, o, detailViews) {
-		if (typeof o[0]._views == "array") {
-			o[0]._views.forEach((j)=>{
+	loopViews(view, o, detailViews, type) {
+		console.log(typeof o);
+		if (typeof o == "array" || typeof o == "object") {
+			o.forEach((j)=>{
+				console.log("view below");
 				console.log(j);
-				if (j.key == "view" && j.settings.object == view.settings.dataSource) {
+				if (j.key == type && j.settings.object == view.settings.dataSource) {
 					detailViews.push({id:j.parent.id+"|"+j.id, value:j.label});				
 				}
 			});
