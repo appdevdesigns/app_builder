@@ -106,7 +106,9 @@ export default class ABViewDataCollection extends ABView {
 		var _init = (options) => {
 
 			var DataTable = $$(ids.component);
-			webix.extend(DataTable, webix.ProgressBar);
+
+			if (DataTable.showProgress == null)
+				webix.extend(DataTable, webix.ProgressBar);
 
 			DataTable.clearAll();
 			DataTable.showProgress({ type: 'icon' });
@@ -129,7 +131,10 @@ export default class ABViewDataCollection extends ABView {
 						});
 
 						DataTable.define("columns", columns);
-						DataTable.data.sync(dc);
+
+						if (DataTable.data)
+							DataTable.data.sync(dc);
+
 						DataTable.refresh();
 					}
 
@@ -294,7 +299,12 @@ export default class ABViewDataCollection extends ABView {
 		// get object url
 		if (view.settings.object) {
 			var obj = view.application.objects(obj => obj.id == view.settings.object)[0];
+
 			view.settings.objectUrl = obj.urlPointer();
+
+			// update label
+			view.label = obj.label;
+			// super.propertyEditorPopulate(ids, view);
 		}
 		else {
 			delete view.settings.objectUrl;

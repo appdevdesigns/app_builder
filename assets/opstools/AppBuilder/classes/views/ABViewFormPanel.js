@@ -77,14 +77,13 @@ export default class ABViewFormPanel extends ABView {
 
 			var currView = _logic.currentEditObject();
 			var formView = currView.formComponent();
-			var dc = currView.pageRoot().dataCollections(dc => dc.id == dcId)[0];
 
 			// remove all old field components
 			if (oldDcId != null)
 				formView.clearFieldComponents();
 
 			// Update field options in property
-			this.propertyUpdateFieldOptions(ids, currView, dc);
+			this.propertyUpdateFieldOptions(ids, currView, dcId);
 
 			// add all fields to editor by default
 			if (currView._views.length < 1) {
@@ -249,14 +248,15 @@ export default class ABViewFormPanel extends ABView {
 	 * 
 	 * @param {Object} ids 
 	 * @param {ABViewFormPanel} view - the current component
-	 * @param {ABViewDataCollection} dc
+	 * @param {string} dcId - id of ABViewDataCollection
 	 */
-	static propertyUpdateFieldOptions(ids, view, dc) {
+	static propertyUpdateFieldOptions(ids, view, dcId) {
 
 		var formComponent = view.formComponent();
 		var existsFields = formComponent.fieldComponents();
-		var object = dc ? dc.datasource : null;
-		
+		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
+
 		// Pull field list
 		var fieldOptions = [];
 		if (object != null) {
