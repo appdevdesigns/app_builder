@@ -1,4 +1,4 @@
-import ABViewPage from "../classes/views/ABViewPage"
+import ABViewDataCollection from "../classes/views/ABViewDataCollection"
 
 export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Component {
 
@@ -16,22 +16,25 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-			component: this.unique('dataSource'),
-			view: this.unique('view')
+			component: this.unique('editor_data'),
+
+			editDataCollection: this.unique('editDataCollection'),
+			dataCollections: this.unique('dataCollections')
 		};
 
 		var _template = [
 			'<div class="ab-component-in-page">',
 			'<i class="fa fa-trash ab-component-remove"></i>' +
 			'<i class="fa fa-edit ab-component-edit"></i>' +
-			'<div id="' + ids.view + '_#objID#" >',
+			'<div id="' + ids.component + '_#objID#" >',
 			'<i class="fa fa-#icon#"></i>',
 			' #label#',
 			'</div>',
 			'</div>'
 		].join('');
 
-		var CurrentPage = null;
+		var CurrentView = null;
+		var CurrentRootPage = null;
 
 
 		// setting up UI
@@ -56,35 +59,57 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 			* @method viewLoad
 			* A new View has been selected for editing, so update
 			* our interface with the details for this View.
-			* @param {ABViewPage} page  current view instance.
+			* @param {ABView} view  current view instance.
 			*/
-			pageLoad: function (page) {
+			viewLoad: function (view) {
 
-				if (!(page instanceof ABViewPage)) return;
+				CurrentView = view;
+				CurrentRootPage = view.pageRoot();
 
-				CurrentPage = page;
+				// clear edit area
+				$$(ids.editDataCollection).getChildViews().forEach((childView) => {
+					$$(ids.editDataCollection).removeView(childView);
+				});
 
 				// clear list
-				$$(ids.component).clearAll();
+				$$(ids.dataCollections).clearAll();
 
+				// render editor ui
+				if (CurrentView instanceof ABViewDataCollection) {
+
+					$$(ids.dataCollections).hide();
+					$$(ids.editDataCollection).show();
+
+					var editorComponent = CurrentView.editorComponent(App, 'preview');
+					$$(ids.editDataCollection).addView(editorComponent.ui);
+					editorComponent.init();
+
+				}
 				// load view's data sources in list
-				$$(ids.component).parse(page.dataSources());
+				else {
+
+					$$(ids.dataCollections).show();
+					$$(ids.editDataCollection).hide();
+
+					$$(ids.dataCollections).parse(CurrentRootPage.dataCollections());
+
+				}
 
 			},
 
 
 			/**
-			 * @method newDataSource
-			 * Add a new ABViewDataSource to current page
+			 * @method newDataCollection
+			 * Add a new ABViewDataCollection to current page
 			 */
-			newDataSource: function () {
+			newDataCollection: function () {
 
-				var newDataSource = CurrentPage.dataSourceNew();
+				var newDataCollection = CurrentRootPage.dataCollectionNew();
 
-				newDataSource.save()
+				newDataCollection.save()
 					.then(() => {
 
-						_logic.pageLoad(CurrentPage);
+						_logic.viewLoad(CurrentView);
 
 					});
 
@@ -92,21 +117,21 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 
 
 			/**
-			 * @method dataSourceEdit
+			 * @method dataCollectionEdit
 			 * 
 			 */
-			dataSourceEdit: function (e, id, trg) {
+			dataCollectionEdit: function (e, id, trg) {
 
-				var datasource = CurrentPage.dataSources(function (data) { return data.id == id; })[0];
+				var datacollection = CurrentRootPage.dataCollections(function (data) { return data.id == id; })[0];
 
-				if (!datasource) return false;
+				if (!datacollection) return false;
 
 				// NOTE: let webix finish this onClick event, before
 				// calling .populateInterfaceWorkspace() which will replace
 				// the interface elements with the edited view.  (apparently
 				// that causes errors.)
 				setTimeout(() => {
-					App.actions.populateInterfaceWorkspace(datasource);
+					App.actions.populateInterfaceWorkspace(datacollection);
 				}, 50);
 
 				e.preventDefault();
@@ -116,24 +141,24 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 
 
 			/**
-			 * @method dataSourceRemove
+			 * @method dataCollectionRemove
 			 * 
 			 */
-			dataSourceRemove: function (e, id, trg) {
+			dataCollectionRemove: function (e, id, trg) {
 
 
-				var datasource = CurrentPage.dataSources(function (data) { return data.id == id; })[0];
-				if (datasource) {
+				var datacollection = CurrentRootPage.dataCollections(function (data) { return data.id == id; })[0];
+				if (datacollection) {
 
 					OP.Dialog.Confirm({
-						title: L('ab.interface.component.datasource.confirmDeleteTitle', '*Delete Data Source'),
-						text: L('ab.interface.component.datasource.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', datasource.label),
+						title: L('ab.interface.component.datacollection.confirmDeleteTitle', '*Delete Data Source'),
+						text: L('ab.interface.component.datacollection.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', datacollection.label),
 						callback: (result) => {
 							if (result) {
-								CurrentPage.dataSourceDestroy(datasource);
+								CurrentView.dataCollectionDestroy(datacollection);
 
 								// remove tab option
-								$$(ids.component).remove(id);
+								$$(ids.dataCollections).remove(id);
 							}
 						}
 					});
@@ -150,12 +175,12 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 			 * @method listTemplate
 			 * 
 			 */
-			listTemplate: function (dataSource) {
+			listTemplate: function (dataCollection) {
 
 				return _template
-					.replace('#objID#', dataSource.id)
-					.replace('#icon#', dataSource.icon)
-					.replace('#label#', dataSource.label);
+					.replace('#objID#', dataCollection.id)
+					.replace('#icon#', dataCollection.icon)
+					.replace('#label#', dataCollection.label);
 
 			}
 
@@ -166,17 +191,27 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 		// webix UI definition:
 		this.ui = {
 			id: ids.component,
-			view: 'list',
-			template: _logic.listTemplate,
-			select: false,
-			onClick: {
-				"ab-component-edit": function (e, id, trg) {
-					_logic.dataSourceEdit(e, id, trg);
+			rows: [
+				{
+					id: ids.dataCollections,
+					view: 'list',
+					template: _logic.listTemplate,
+					select: false,
+					onClick: {
+						"ab-component-edit": function (e, id, trg) {
+							_logic.dataCollectionEdit(e, id, trg);
+						},
+						"ab-component-remove": function (e, id, trg) {
+							_logic.dataCollectionRemove(e, id, trg);
+						}
+					}
 				},
-				"ab-component-remove": function (e, id, trg) {
-					_logic.dataSourceRemove(e, id, trg);
+				{
+					id: ids.editDataCollection,
+					view: 'layout',
+					rows: []
 				}
-			}
+			]
 		};
 
 
@@ -187,8 +222,8 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 
 		// Interface methods for parent component:
 		this.show = _logic.show;
-		this.pageLoad = _logic.pageLoad;
-		this.newDataSource = _logic.newDataSource;
+		this.viewLoad = _logic.viewLoad;
+		this.newDataCollection = _logic.newDataCollection;
 
 
 	}

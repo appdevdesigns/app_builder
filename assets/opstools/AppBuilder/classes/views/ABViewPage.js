@@ -75,12 +75,12 @@ export default class ABViewPage extends ABView  {
 
 
         // compile our data sources
-        var dataSources = [];
-        this._dataSources.forEach((data) => {
-            dataSources.push(data.toObj())
+        var dataCollections = [];
+        this._dataCollections.forEach((data) => {
+            dataCollections.push(data.toObj())
         })
 
-        obj.dataSources = dataSources;
+        obj.dataCollections = dataCollections;
 
         return obj;
     }
@@ -106,11 +106,11 @@ export default class ABViewPage extends ABView  {
 
 
         // now properly handle our data sources.
-        var dataSources = [];
-        (values.dataSources || []).forEach((data) => {
-            dataSources.push(this.dataSourceNew(data));
+        var dataCollections = [];
+        (values.dataCollections || []).forEach((data) => {
+            dataCollections.push(this.dataCollectionNew(data));
         })
-        this._dataSources = dataSources;
+        this._dataCollections = dataCollections;
 
 
         // convert from "0" => 0
@@ -303,78 +303,81 @@ export default class ABViewPage extends ABView  {
     ///
 
 	/**
-	 * @method dataSources()
+	 * @method dataCollections()
 	 *
-	 * return an array of all the ABViewDataSource for this ABViewPage.
+	 * return an array of all the ABViewDataCollection for this ABViewPage.
 	 *
-	 * @param {fn} filter		a filter fn to return a set of ABViewDataSource that this fn
+	 * @param {fn} filter		a filter fn to return a set of ABViewDataCollection that this fn
 	 *							returns true for.
 	 * 
-	 * @return {array}			array of ABViewDataSource
+	 * @return {array}			array of ABViewDataCollection
 	 */
-	dataSources (filter) {
+	dataCollections (filter) {
 
         filter = filter || function() { return true; };
 
-        return this._dataSources.filter(filter);
+        return this._dataCollections.filter(filter);
 
     }
 
 
 
     /**
-     * @method dataSourceNew()
+     * @method dataCollectionNew()
      *
-     * return an instance of a new (unsaved) ABViewDataSource that is tied to this
+     * return an instance of a new (unsaved) ABViewDataCollection that is tied to this
      * ABViewPage.
      *
-     * NOTE: this new data source is not included in our this.dataSources until a .save()
+     * NOTE: this new data source is not included in our this.dataCollections until a .save()
      * is performed on the page.
      *
      * @return {ABViewPage}
      */
-    dataSourceNew() {
+    dataCollectionNew( values ) {
 
-        // NOTE: this returns a new ABViewDataSource component.  
+        values = values || {};
+        values.key = 'datacollection';
+
+        // NOTE: this returns a new ABViewDataCollection component.  
         // when creating a new page, the 3rd param should be null, to signify 
         // the top level component.
-        var dataSource =  new ABViewManager.newView({ key: 'datasource' }, this.application, this);
-        dataSource.parentPage = this;
+        var dataCollection =  new ABViewManager.newView(values, this.application, this);
+        dataCollection.parentPage = this;
 
-        return dataSource;
+        return dataCollection;
     }
 
 
 
     /**
-     * @method dataSourceDestroy()
+     * @method dataCollectionDestroy()
      *
-     * remove the current ABViewDataSource from our list of ._dataSources.
+     * remove the current ABViewDataCollection from our list of ._dataCollections.
      *
-     * @param {ABViewDataSource} dataSource
+     * @param {ABViewDataCollection} dataCollection
      * @return {Promise}
      */
-    dataSourceDestroy( dataSource ) {
+    dataCollectionDestroy( dataCollection ) {
 
-        var remainingDataSources = this.dataSources(function(data) { return data.id != dataSource.id;})
-        this._dataSources = remainingDataSources;
+        var remainingDataCollections = this.dataCollections(function(data) { return data.id != dataCollection.id;})
+        this._dataCollections = remainingDataCollections;
         return this.save();
     }
 
 
 
     /**
-     * @method dataSourceSave()
+     * @method dataCollectionSave()
      *
-     * persist the current ABViewDataSource in our list of ._dataSources.
+     * persist the current ABViewDataCollection in our list of ._dataCollections.
      *
-     * @param {ABViewDataSource} object
+     * @param {ABViewDataCollection} object
      * @return {Promise}
      */
-    dataSourceSave( dataSource ) {
-        var isIncluded = (this.dataSources(function(data){ return data.id == dataSource.id }).length > 0);
+    dataCollectionSave( dataCollection ) {
+        var isIncluded = (this.dataCollections(function(data){ return data.id == dataCollection.id }).length > 0);
         if (!isIncluded) {
-            this._dataSources.push(dataSource);
+            this._dataCollections.push(dataCollection);
         }
 
         return this.save();

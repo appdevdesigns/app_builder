@@ -6,7 +6,7 @@
  */
 
 import ABView from "./views/ABView"
-import ABViewDataSource from "./views/ABViewDataSource"
+import ABViewDataCollection from "./views/ABViewDataCollection"
 import ABViewPage from "./views/ABViewPage"
 import ABViewLabel from "./views/ABViewLabel"
 import ABViewLayout from "./views/ABViewLayout"
@@ -34,7 +34,7 @@ import ABViewFormTextbox from "./views/ABViewFormTextbox"
  */
 var Views = {};
 Views[ABView.common().key] = ABView;
-Views[ABViewDataSource.common().key] = ABViewDataSource;
+Views[ABViewDataCollection.common().key] = ABViewDataCollection;
 Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
 Views[ABViewLayout.common().key] = ABViewLayout;

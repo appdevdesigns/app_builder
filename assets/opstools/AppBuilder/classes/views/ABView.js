@@ -306,6 +306,16 @@ export default class ABView  extends ABViewBase {
 	}
 
 
+	pageRoot() {
+		var rootPage = this.pageParent();
+
+		while (!rootPage.isRoot()) {
+			rootPage = rootPage.pageParent();
+		}
+
+		return rootPage;
+	}
+
 
 	///
 	/// Views
@@ -1097,7 +1107,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 		// } else {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = [ 'view', 'page' , 'formpanel', 'datasource',
+		var viewsToIgnore = [ 'view', 'page' , 'formpanel', 'datacollection',
 		// not allowed Detail's widgets
 		'detailtext', 'detailcustom',
 		// not allowed Form's widgets

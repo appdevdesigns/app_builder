@@ -376,4 +376,21 @@ console.error('!!!!!', err);
 
 	}
 
+
+	dataCollectionNew(data) {
+		// get a webix data collection
+		var dc = toDC(data || []);
+
+		// Apply this data collection to support multi-selection
+		// https://docs.webix.com/api__refs__selectionmodel.html
+		webix.extend(dc, webix.SelectionModel);
+
+		// override unused functions of selection model
+		dc.addCss = function() {};
+		dc.removeCss = function() {};
+		dc.render = function() {};
+
+		return dc;
+	}
+
 }

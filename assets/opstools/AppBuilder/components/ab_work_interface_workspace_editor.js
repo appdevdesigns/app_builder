@@ -39,7 +39,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             toolbarMap: this.unique('toolbarMap'),
             toolbarViewMode: this.unique('toolbarViewMode'),
             toolbarViewPage: this.unique('toolbarViewPage'),
-            toolbarNewDataSource: this.unique('toolbarNewDataSource'),
+            toolbarNewDataCollection: this.unique('toolbarNewDataCollection'),
 
             noContent: this.unique('noContent'),
             editArea: this.unique('editArea')
@@ -170,13 +170,13 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                             type: "icon", 
                             icon: "plus",
                             label: 'New Data Source',
-                            id: ids.toolbarNewDataSource,
+                            id: ids.toolbarNewDataCollection,
                             align: "right",
                             autowidth: true,
                             hidden: true,
                             on: {
                                 onItemClick: function(id, e) {
-                                    _logic.newDataSource();
+                                    _logic.newDataCollection();
                                 }
                             }
                         }
@@ -300,7 +300,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
                 // 
                 if (CurrentViewPart == 'data') {
-                    EditorData.pageLoad(view);
+                    EditorData.viewLoad(view);
                 }
                 else {
                     EditorLayout.viewLoad(view);
@@ -313,23 +313,28 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
                 CurrentViewPart = newV;
 
+                // data
                 if (CurrentViewPart == 'data') {
                     EditorData.show();
-                    EditorData.pageLoad(CurrentView);
 
                     _logic.hidePreviewCheck();
-                    _logic.showNewDataSource();
+                    _logic.showNewDataCollection();
 
                     App.actions.hideComponentList();
-                }
-                else {
-                    EditorLayout.show();
-                    EditorLayout.viewLoad(CurrentView);
 
+                    App.actions.populateInterfaceWorkspace(CurrentView.pageRoot());
+                }
+                // layout
+                else {
+
+                    EditorLayout.show();
                     _logic.showPreviewCheck();
-                    _logic.hideNewDataSource();
+                    _logic.hideNewDataCollection();
 
                     App.actions.showComponentList();
+
+                    App.actions.populateInterfaceWorkspace(CurrentView.pageRoot());
+
                 }
 
             },
@@ -357,8 +362,8 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 _logic.viewLoad(CurrentView);
             },
 
-            newDataSource: function() {
-                EditorData.newDataSource();
+            newDataCollection: function() {
+                EditorData.newDataCollection();
             },
 
             onViewResize: function() {
@@ -373,12 +378,12 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarViewMode).hide();
             },
 
-            showNewDataSource: function() {
-                $$(ids.toolbarNewDataSource).show();
+            showNewDataCollection: function() {
+                $$(ids.toolbarNewDataCollection).show();
             },
 
-            hideNewDataSource: function() {
-                $$(ids.toolbarNewDataSource).hide();
+            hideNewDataCollection: function() {
+                $$(ids.toolbarNewDataCollection).hide();
             }
         };
         
