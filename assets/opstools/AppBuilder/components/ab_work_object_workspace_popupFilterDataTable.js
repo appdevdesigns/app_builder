@@ -506,18 +506,20 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 
                 if (CurrentView != null) {
                     CurrentView.settings.objectWorkspace.filterConditions = filterConditions;
-                    _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                    // _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                    _logic.callChangeEvent();
                 } else {
                     CurrentObject.workspaceFilterConditions = filterConditions;
                     CurrentObject.save()
                     .then(function(){
-                        _logic.callbacks.onChange();
+                        // _logic.callbacks.onChange();
+                        _logic.callChangeEvent();
                     })
                     .catch(function(err){
                         OP.Error.log('Error trying to save filterConditions', {error:err, fields:filterConditions });
                     });
                 }
-                _logic.callChangeEvent();
+                // _logic.callChangeEvent();
             },
 
 
@@ -592,7 +594,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 var filterform = $$(ids.filterform),
                     filters = CurrentObject.workspaceFilterConditions;
 
-                if (filters.length > 0 && filterform.getChildViews().length < 2) {
+                if (filters && filters.length > 0 && filterform.getChildViews().length < 2) {
                     filters.forEach((f) => {
                         _logic.clickAddNewFilter(f);
                     });

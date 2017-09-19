@@ -6,6 +6,8 @@
 
 import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
+import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
+import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -13,6 +15,12 @@ function L(key, altText) {
 
 
 var ABViewPropertyComponentDefaults = {
+	object: '', // id of ABObject
+	objectUrl: '', // url of ABObject
+	objectWorkspace: {
+		filterConditions: [], // array of filters to apply to the data table
+		sortFields: [] // array of columns with their sort configurations
+	}
 }
 
 
@@ -21,6 +29,9 @@ var ABViewDefaults = {
 	icon: 'database',		// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.datacollection' // {string} the multilingual label key for the class label
 }
+
+var PopupFilterDataTableComponent = null;
+var PopupSortFieldComponent = null;
 
 export default class ABViewDataCollection extends ABView {
 
@@ -79,6 +90,27 @@ export default class ABViewDataCollection extends ABView {
 	/// Instance Methods
 	///
 
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+		// if this is being instantiated on a read from the Property UI,
+		this.settings.object = this.settings.object || ABViewPropertyComponentDefaults.object;
+		this.settings.objectUrl = this.settings.objectUrl || ABViewPropertyComponentDefaults.objectUrl;
+		this.settings.objectWorkspace = this.settings.objectWorkspace || {
+			filterConditions: ABViewPropertyComponentDefaults.objectWorkspace.filterConditions,
+			sortFields: ABViewPropertyComponentDefaults.objectWorkspace.sortFields
+		};
+
+	}
+
+
 	//
 	//	Editor Related
 	//
@@ -107,41 +139,25 @@ export default class ABViewDataCollection extends ABView {
 
 			var DataTable = $$(ids.component);
 
-			if (DataTable.showProgress == null)
-				webix.extend(DataTable, webix.ProgressBar);
-
 			DataTable.clearAll();
-			DataTable.showProgress({ type: 'icon' });
 
-			// refresh a data collection
-			this.init()
-				.then(() => {
+			// get data collection & object
+			var dc = this.dataCollection();
+			var object = this.datasource;
 
-					// get data collection & object
-					var dc = this.dataCollection();
-					var object = this.datasource;
+			if (dc != null && object != null) {
 
-					if (dc != null && object != null) {
-
-						var columns = object.fields().map((f) => {
-							return {
-								id: f.columnName,
-								header: f.label
-							};
-						});
-
-						DataTable.define("columns", columns);
-
-						if (DataTable.data)
-							DataTable.data.sync(dc);
-
-						DataTable.refresh();
-					}
-
-					DataTable.hideProgress();
-
-
+				var columns = object.fields().map((f) => {
+					return {
+						id: f.columnName,
+						header: f.label
+					};
 				});
+
+				DataTable.define("columns", columns);
+				DataTable.data.sync(dc);
+				DataTable.refresh();
+			}
 
 		};
 
@@ -162,6 +178,26 @@ export default class ABViewDataCollection extends ABView {
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
+		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+		var idBase = 'ABViewDataCollectionPropertyEditor';
+
+		PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase + "_filter");
+		PopupFilterDataTableComponent.init({
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			onChange: _logic.onChange
+		});
+
+		PopupSortFieldComponent = new ABPopupSortField(App, idBase + "_sort");
+		PopupSortFieldComponent.init({
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			onChange: _logic.onChange
+		});
+
+
+
+		// == Logic ==
+
 		_logic.selectObject = (objectId) => {
 			// TODO
 		};
@@ -170,7 +206,13 @@ export default class ABViewDataCollection extends ABView {
 			// TODO
 		};
 
-		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+		_logic.toolbarFilter = ($view) => {
+			PopupFilterDataTableComponent.show($view, null, { pos: "top" });
+		}
+
+		_logic.toolbarSort = ($view) => {
+			PopupSortFieldComponent.show($view, null, { pos: "top" });
+		}
 
 		return commonUI.concat([
 			{
@@ -240,7 +282,7 @@ export default class ABViewDataCollection extends ABView {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										// _logic.toolbarFilter(this.$view);
+										_logic.toolbarFilter(this.$view);
 									}
 								}
 							]
@@ -259,7 +301,7 @@ export default class ABViewDataCollection extends ABView {
 									type: "icon",
 									badge: 0,
 									click: function () {
-										// _logic.toolbarSort(this.$view);
+										_logic.toolbarSort(this.$view);
 									}
 								}
 							]
@@ -288,11 +330,29 @@ export default class ABViewDataCollection extends ABView {
 		$$(ids.dataSource).refresh();
 		$$(ids.dataSource).setValue(view.settings.object || '');
 
+		// initial populate of popups
+		this.populatePopupEditors(view);
+
+		// when a change is made in the properties the popups need to reflect the change
+		view.addListener('properties.updated', () => {
+			this.populatePopupEditors(view);
+		});
+
+
+
 	}
 
 	static propertyEditorValues(ids, view) {
 
 		super.propertyEditorValues(ids, view);
+
+
+		// if object is changed, then clear filter & sort settings
+		if (view.settings.object != $$(ids.dataSource).getValue()) {
+			view.settings.objectWorkspace = ABViewPropertyComponentDefaults.objectWorkspace;
+			this.populatePopupEditors(view);
+		}
+
 
 		view.settings.object = $$(ids.dataSource).getValue();
 
@@ -304,11 +364,29 @@ export default class ABViewDataCollection extends ABView {
 
 			// update label
 			view.label = obj.label;
-			// super.propertyEditorPopulate(ids, view);
+			$$(ids.label).define('value', obj.label);
+			$$(ids.label).refresh();
 		}
 		else {
 			delete view.settings.objectUrl;
 		}
+
+		// refresh data collection
+		view.init();
+
+	}
+
+
+	static populatePopupEditors(view) {
+		if (view.datasource == null) return;
+
+		// Clone ABObject
+		var objectCopy = _.cloneDeep(view.datasource);
+		objectCopy.objectWorkspace = view.settings.objectWorkspace;
+
+		// Populate data to popups
+		PopupFilterDataTableComponent.objectLoad(objectCopy, view);
+		PopupSortFieldComponent.objectLoad(objectCopy, view);
 
 	}
 
@@ -385,13 +463,32 @@ export default class ABViewDataCollection extends ABView {
 				var obj = this.datasource;
 				if (obj == null) return resolve(null);
 
+				// get ABModel
 				var model = obj.model();
 
-				model.findAll({/* TODO : add filter condition */ })
+				// get data to data collection
+				model.findAll({
+					where: {
+						where: this.settings.objectWorkspace.filterConditions || {},
+						sort: this.settings.objectWorkspace.sortFields || {},
+						// height: defaultHeight
+					}
+				})
 					.catch(reject)
 					.then((data) => {
 
-						this.__dataCollection = model.dataCollectionNew(data);
+						var dc = this.dataCollection();
+
+						// create new data collection
+						if (dc == null) {
+							this.__dataCollection = model.dataCollectionNew(data);
+						}
+						// update data in exists data collection
+						else {
+							dc.clearAll();
+							dc.parse(data);
+							dc.refresh();
+						}
 
 						resolve();
 

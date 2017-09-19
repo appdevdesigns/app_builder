@@ -246,9 +246,9 @@ console.log('... catch(err) !');
                         var fieldName = w.fieldName;
                     }
 
-                    var field = object._fields.filter(field => field.columnName == fieldName);
-                    if (typeof(field[0].settings.options) != 'undefined') {
-                        var inputID = field[0].settings.options.filter(option => option.text == input);
+                    var field = object._fields.filter(field => field.columnName == fieldName)[0];
+                    if (field && field.settings && field.settings.options && field.settings.options.filter) {
+                        var inputID = field.settings.options.filter(option => option.text == input);
                         input = inputID[0].id;
                     }
 

@@ -312,11 +312,13 @@ export default class AB_Work_Object_Workspace_PopupSortFields extends OP.Compone
 				var childViews = sort_form.getChildViews();
 				if (childViews.length == 1) {
 					var sorts = CurrentObject.workspaceSortFields;
-					sorts.forEach((s) => {
-						_logic.clickAddNewSort(s.by, s.dir, s.isMulti);
-					});
+					if (sorts && sorts.forEach) {
+						sorts.forEach((s) => {
+							_logic.clickAddNewSort(s.by, s.dir, s.isMulti);
+						});
+					}
 
-					if (sorts.length == 0) {
+					if (sorts == null || sorts.length == 0) {
 						_logic.clickAddNewSort();
 					}
 				}
