@@ -104,8 +104,8 @@ export default class ABViewDataCollection extends ABView {
 		this.settings.object = this.settings.object || ABViewPropertyComponentDefaults.object;
 		this.settings.objectUrl = this.settings.objectUrl || ABViewPropertyComponentDefaults.objectUrl;
 		this.settings.objectWorkspace = this.settings.objectWorkspace || {
-			filterConditions: ABViewPropertyComponentDefaults.objectWorkspace.filterConditions,
-			sortFields: ABViewPropertyComponentDefaults.objectWorkspace.sortFields
+			filterConditions: [],
+			sortFields: []
 		};
 
 	}
@@ -180,26 +180,18 @@ export default class ABViewDataCollection extends ABView {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
-		var idBase = 'ABViewDataCollectionPropertyEditor';
 
-		PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase + "_filter");
-		PopupFilterDataTableComponent.init({
-			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
-			onChange: _logic.onChange
-		});
-
-		PopupSortFieldComponent = new ABPopupSortField(App, idBase + "_sort");
-		PopupSortFieldComponent.init({
-			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
-			onChange: _logic.onChange
-		});
-
+		// create filter & sort popups
+		this.initPopupEditors(App, _logic);
 
 
 		// == Logic ==
 
 		_logic.selectObject = (objectId) => {
-			// TODO
+
+			// re-create filter & sort popups
+			this.initPopupEditors(App, _logic);
+
 		};
 
 		_logic.selectLinkDc = (dataCollectionId) => {
@@ -349,7 +341,12 @@ export default class ABViewDataCollection extends ABView {
 
 		// if object is changed, then clear filter & sort settings
 		if (view.settings.object != $$(ids.dataSource).getValue()) {
-			view.settings.objectWorkspace = ABViewPropertyComponentDefaults.objectWorkspace;
+
+			view.settings.objectWorkspace = {
+				filterConditions: [],
+				sortFields: []
+			};
+
 			this.populatePopupEditors(view);
 		}
 
@@ -373,6 +370,25 @@ export default class ABViewDataCollection extends ABView {
 
 		// refresh data collection
 		view.init();
+
+	}
+
+
+	static initPopupEditors(App, _logic) {
+
+		var idBase = 'ABViewDataCollectionPropertyEditor';
+
+		PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase + "_filter");
+		PopupFilterDataTableComponent.init({
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			onChange: _logic.onChange
+		});
+
+		PopupSortFieldComponent = new ABPopupSortField(App, idBase + "_sort");
+		PopupSortFieldComponent.init({
+			// when we make a change in the popups we want to make sure we save the new workspace to the properties to do so just fire an onChange event
+			onChange: _logic.onChange
+		});
 
 	}
 
