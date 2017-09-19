@@ -102,7 +102,10 @@ export default class ABViewMenu extends ABView {
 
 		var _init = (options) => {
 
-			this.AddPagesToView(this.application, $$(ids.component), this.settings.pages);
+			var Menu = $$(ids.component);
+
+			this.ClearPagesInView(Menu);
+			this.AddPagesToView(this.application, Menu, this.settings.pages);
 
 		}
 
@@ -256,7 +259,10 @@ export default class ABViewMenu extends ABView {
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			this.AddPagesToView(this.application, $$(ids.component), this.settings.pages);
+			var Menu = $$(ids.component);
+
+			this.ClearPagesInView(Menu);
+			this.AddPagesToView(this.application, Menu, this.settings.pages);
 
 		}
 
@@ -277,30 +283,31 @@ export default class ABViewMenu extends ABView {
 	}
 
 
-
-	AddPagesToView(parent, domNode, pageIds) {
-
-		if (!parent || !parent.pages || !domNode || !pageIds) return;
-
+	ClearPagesInView(menu) {
 		// clear menu items
-		if (domNode.count() > 1) {
-			domNode.find({}).forEach((item) => {
-				domNode.remove(item.id);
+		if (menu.count() > 1) {
+			menu.find({}).forEach((item) => {
+				menu.remove(item.id);
 			});
 		}
+	}
+
+	AddPagesToView(parent, menu, pageIds) {
+
+		if (!parent || !parent.pages || !menu || !pageIds) return;
 
 		var pages = parent.pages() || [];
 
 		pages.forEach((page) => {
 
-			if (pageIds.indexOf(page.id) > -1){
-				domNode.add({
+			if (pageIds.indexOf(page.id) > -1) {
+				menu.add({
 					id: page.id,
 					value: page.label
 				});
 			}
 
-			this.AddPagesToView(page, domNode, pageIds);
+			this.AddPagesToView(page, menu, pageIds);
 
 		});
 
