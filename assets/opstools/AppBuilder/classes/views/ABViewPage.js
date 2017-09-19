@@ -44,7 +44,7 @@ export default class ABViewPage extends ABView  {
 	//		translations:[]
   	// 	}
   		
-        this.parentPage = null;  // will be set by the pageNew() that creates this obj.
+        this.parent = null;  // will be set by the pageNew() that creates this obj.
   	}
 
 
@@ -134,7 +134,7 @@ export default class ABViewPage extends ABView  {
                 // verify we have been .save()d before:
                 if (this.id) {
 
-                    var parent = this.parentPage;
+                    var parent = this.parent;
                     if (!parent) parent = this.application;
 
                     parent.pageDestroy(this)
@@ -172,7 +172,7 @@ export default class ABViewPage extends ABView  {
 
                 // if this is not a child of another view then tell it's
                 // application to save this view.
-                var parent = this.parentPage;
+                var parent = this.parent;
                 if (!parent) parent = this.application;
 
                 parent.pageSave(this)
@@ -257,7 +257,7 @@ export default class ABViewPage extends ABView  {
         // when creating a new page, the 3rd param should be null, to signify 
         // the top level component.
         var page =  new ABViewManager.newView(values, this.application, null);
-        page.parentPage = this;
+        page.parent = this;
         return page;
     }
 
@@ -342,7 +342,7 @@ export default class ABViewPage extends ABView  {
         // when creating a new page, the 3rd param should be null, to signify 
         // the top level component.
         var dataCollection =  new ABViewManager.newView(values, this.application, this);
-        dataCollection.parentPage = this;
+        dataCollection.parent = this;
 
         return dataCollection;
     }
@@ -404,8 +404,8 @@ export default class ABViewPage extends ABView  {
      * @return {string} 
      */
     urlPointer() {
-        if (this.parentPage) {
-            return this.parentPage.urlPage() + this.id;
+        if (this.parent) {
+            return this.parent.urlPage() + this.id;
         } else {
             return this.application.urlPage() + this.id;
         }

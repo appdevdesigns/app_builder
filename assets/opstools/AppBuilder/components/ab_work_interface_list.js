@@ -197,7 +197,8 @@ export default class AB_Work_Interface_List extends OP.Component {
 			 */
 			callbackNewPage:function(page){
 
-				var parentPageId = (page.parentPage ? page.parentPage.id : null);
+				var parentPage = page.parentPage();
+				var parentPageId = (parentPage ? parentPage.id : null);
 				viewList.add(page, null, parentPageId);
 
 				$$(ids.list).refresh();

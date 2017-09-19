@@ -261,7 +261,7 @@ export default class ABView  extends ABViewBase {
 
 
 	isRoot() {
-		return this.parent == null && this.parentPage == null;;
+		return this.parent == null;
 	}
 
 

@@ -75,7 +75,7 @@ export default class ABViewDataCollection extends ABView {
 					this.id = OP.Util.uuid();   // setup default .id
 				}
 
-				var parent = this.parentPage;
+				var parent = this.parent;
 
 				parent.dataCollectionSave(this)
 					.then(resolve)
@@ -466,7 +466,7 @@ export default class ABViewDataCollection extends ABView {
 
 	/**
 	* @method dataCollectionRefresh
-	* get a data collection to cache
+	* create a data collection to cache
 	*
 	* @return {Promise}
 	*			.resolve()
