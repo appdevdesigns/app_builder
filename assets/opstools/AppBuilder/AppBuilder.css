@@ -50,6 +50,9 @@
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
+.ab-background-white {
+	background-color: #fff !important;
+}
 .float-left {
 	float: left;
 }
@@ -443,7 +446,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	opacity: 0.8;
 }
 .ab-component-remove {
-	margin: -2px -10px 0 0;
+	margin: -2px 0 0 0;
 	background: #FF5722;
 }
 
@@ -834,4 +837,31 @@ a.ab-delete-photo:hover {
 }
 .webix_view .webix_selected .webix_tree_close, .webix_view .webix_selected .webix_tree_open {
 	color: #FFF;
+}
+
+/* Interface Editor */
+.ab-porlet-header {
+	background-color: #c5c5c5;
+}
+.ab-main-container .portlet_drag {
+    position: absolute;
+    z-index: 1;
+    top: 0px;
+    right: 68px;
+    width: 33px;
+    opacity: 1;
+    cursor: pointer;
+    background-color: #f7f717;
+    height: 31px;
+    color: #fff;
+}
+.ab-main-container .portlet_drag:hover {
+	cursor: pointer;
+	opacity: 0.8;
+}
+.ab-main-container .portlet_drag .webix_icon {
+	line-height: 28px;
+    width: 33px;
+    height: 33px;
+    text-align: center;
 }

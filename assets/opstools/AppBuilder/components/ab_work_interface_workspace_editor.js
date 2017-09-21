@@ -6,6 +6,7 @@
  *
  */
 
+import ABComponentMenu from "./ab_work_interface_workspace_editor_components"
 import ABEditorLayout from "./ab_work_interface_workspace_editor_layout"
 import ABEditorData from "./ab_work_interface_workspace_editor_data"
 
@@ -24,7 +25,9 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 viewModeLayout: L('ab.interface.viewModeLayout', '*Layout'),
                 viewModeData: L('ab.interface.viewModeData', '*Data'),
                 viewModePreview: L('ab.interface.viewModePreview', '*Preview'),
-                editorPlaceholder: L('ab.interface.editorPlaceholder', '*Drag and drop components to build interface.')
+                editorPlaceholder: L('ab.interface.editorPlaceholder', '*Drag and drop components to build interface.'),
+
+                newDataSource: L('ab.interface.newDataSource', '*New Data Source')
 
                 // formHeader: L('ab.application.form.header', "*Application Info"),
             }
@@ -45,6 +48,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
             editArea: this.unique('editArea')
         };
 
+        var ComponentMenu = new ABComponentMenu(App);
         var EditorLayout = new ABEditorLayout(App);
         var EditorData = new ABEditorData(App);
         
@@ -165,12 +169,13 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                 }
                             }
                         },
+
                         {
+                            id: ids.toolbarNewDataCollection,
                             view: "button",
                             type: "icon", 
                             icon: "plus",
-                            label: 'New Data Source',
-                            id: ids.toolbarNewDataCollection,
+                            label: labels.component.newDataSource,
                             align: "right",
                             autowidth: true,
                             hidden: true,
@@ -179,7 +184,9 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                     _logic.newDataCollection();
                                 }
                             }
-                        }
+                        },
+
+                        ComponentMenu.ui
                     ]
                 },
                 // {
@@ -216,6 +223,14 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
 //// TODO: save the last CurrentViewMode in the workspace data and use that here:
             $$(ids.toolbarViewMode).setValue(CurrentViewMode);
+
+            ComponentMenu.init({
+                onAddWidget: () => {
+
+                    // refresh editor page when a widget is added
+                    _logic.viewLoad(CurrentView);
+                }
+            });
         };
         
         
@@ -298,6 +313,8 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarMap).parse(view.allParents());
                 $$(ids.toolbarMap).refresh();
 
+                ComponentMenu.viewLoad(view);
+
                 // 
                 if (CurrentViewPart == 'data') {
                     EditorData.viewLoad(view);
@@ -317,10 +334,8 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 if (CurrentViewPart == 'data') {
                     EditorData.show();
 
-                    _logic.hidePreviewCheck();
+                    _logic.hideLayoutButtons();
                     _logic.showNewDataCollection();
-
-                    App.actions.hideComponentList();
 
                     App.actions.populateInterfaceWorkspace(CurrentView.pageRoot());
                 }
@@ -328,10 +343,8 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 else {
 
                     EditorLayout.show();
-                    _logic.showPreviewCheck();
+                    _logic.showLayoutButtons();
                     _logic.hideNewDataCollection();
-
-                    App.actions.showComponentList();
 
                     App.actions.populateInterfaceWorkspace(CurrentView.pageRoot());
 
@@ -370,12 +383,14 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.editArea).resizeChildren();
             },
 
-            showPreviewCheck: function() {
+            showLayoutButtons: function() {
                 $$(ids.toolbarViewMode).show();
+                ComponentMenu.show();
             },
 
-            hidePreviewCheck: function() {
+            hideLayoutButtons: function() {
                 $$(ids.toolbarViewMode).hide();
+                ComponentMenu.hide();
             },
 
             showNewDataCollection: function() {

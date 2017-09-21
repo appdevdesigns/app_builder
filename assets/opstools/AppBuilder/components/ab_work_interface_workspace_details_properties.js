@@ -35,26 +35,36 @@ export default class AB_Work_Interface_Workspace_Details_Properties extends OP.C
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            collapsed: true,
-            header: function () {
-                return labels.component.properties + ' <i class="info-tip fa fa-info-circle"></i>';
-            },
-            // css: 'ab-data-toolbar',
-            // tooltip: labels.component.propertiesTipText,
-            onClick: {
-                "info-tip": function () {
-                    _logic.infoAlert();
-
-                    return false;
+            // scroll: true,
+            rows:[
+                {
+                    view: 'toolbar',
+                    css: 'ab-data-toolbar',
+                    cols: [
+                        {
+                        view: 'label',
+                        label: labels.component.properties
+                        },
+                        {
+                            view: "icon", 
+                            icon: "info-circle",
+                            tooltip: labels.component.propertiesTipText,
+                            on: {
+                                onItemClick: function() {
+                                    _logic.infoAlert();
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    view:'multiview',
+                    id:ids.editors,
+                    rows:[
+                        {id:'delme', view:'label',  label:'delme'}
+                    ]
                 }
-            },
-            body: {
-                view: 'multiview',
-                id: ids.editors,
-                rows: [
-                    { id: 'delme', view: 'label', label: 'delme' }
-                ]
-            }
+            ]
         };
 
         var CurrentView = null;

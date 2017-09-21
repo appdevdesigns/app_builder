@@ -142,10 +142,9 @@ export default class ABViewDataCollection extends ABView {
 			DataTable.clearAll();
 
 			// get data collection & object
-			var dc = this.dataCollection();
 			var object = this.datasource;
 
-			if (dc != null && object != null) {
+			if (object != null) {
 
 				var columns = object.fields().map((f) => {
 					return {
@@ -155,8 +154,9 @@ export default class ABViewDataCollection extends ABView {
 				});
 
 				DataTable.define("columns", columns);
-				DataTable.data.sync(dc);
-				DataTable.refresh();
+
+				// bind a data collection to the display grid
+				this.bind(DataTable);
 			}
 
 		};
