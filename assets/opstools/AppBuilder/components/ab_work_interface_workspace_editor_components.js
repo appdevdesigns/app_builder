@@ -180,11 +180,20 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 				CurrentView = view;
 
 				var List = $$(ids.list);
+				var Menu = $$(ids.component);
 
 				var components = CurrentView.componentList();
 
 				List.clearAll();
-				List.parse(components);
+
+				if (components && components.length > 0) {
+					List.parse(components);
+					Menu.show();
+				}
+				else {
+					Menu.hide();
+				}
+
 				List.refresh();
 
 			}

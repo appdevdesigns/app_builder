@@ -313,14 +313,13 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 $$(ids.toolbarMap).parse(view.allParents());
                 $$(ids.toolbarMap).refresh();
 
-                ComponentMenu.viewLoad(view);
-
                 // 
                 if (CurrentViewPart == 'data') {
                     EditorData.viewLoad(view);
                 }
                 else {
                     EditorLayout.viewLoad(view);
+                    ComponentMenu.viewLoad(view);
                 }
 
             },
