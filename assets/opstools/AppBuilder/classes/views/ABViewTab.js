@@ -110,7 +110,7 @@ export default class ABViewTab extends ABView {
 					// Reorder back
 					else if (e.target.classList.contains('move-back')) {
 
-						this.viewReorder(tab, currIndex - 1);
+						this.viewReorder(tabId, currIndex - 1);
 
 						this.emit('properties.updated', this);
 
@@ -118,7 +118,7 @@ export default class ABViewTab extends ABView {
 					// Reorder next
 					else if (e.target.classList.contains('move-next')) {
 
-						this.viewReorder(tab, currIndex + 1);
+						this.viewReorder(tabId, currIndex + 1);
 
 						this.emit('properties.updated', this);
 

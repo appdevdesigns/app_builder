@@ -19,6 +19,7 @@ import DateTimePicker from '../webix_custom_components/datetimepicker'
 import EditList from '../webix_custom_components/editlist'
 import EditTree from '../webix_custom_components/edittree'
 import EditUnitList from '../webix_custom_components/editunitlist'
+import SavableLayout from '../webix_custom_components/savablelayout'
 
 import style from "../AppBuilder.css"
 
@@ -83,7 +84,8 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 		new DateTimePicker(App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
 		new EditList(App, 'editlist');	// ->  App.custom.editlist  now exists
 		new EditTree(App, 'edittree');	// ->  App.custom.edittree  now exists
-		new EditUnitList(App, 'editunitlist');	// ->  App.custom.editunitlist  now exists		
+		new EditUnitList(App, 'editunitlist');	// ->  App.custom.editunitlist  now exists
+		new SavableLayout(App, 'savablelayout');	// ->  App.custom.savablelayout  now exists
 
 
 		var ids = {

@@ -47,7 +47,10 @@ export default class ABView extends ABViewBase {
 
 		// 		views:[],					// the child views contained by this view.
 
-		//		translations:[]
+		//		translations:[],
+
+		//		template: {					// UI template definition from portlet
+		// 		}
 		// 	}
 
 	}
@@ -134,7 +137,7 @@ export default class ABView extends ABViewBase {
 		return new Promise(
 			(resolve, reject) => {
 
-				// verify we have been .save()d before:
+				// verify we have been .save() before:
 				if (this.id) {
 
 					var parent = this.parent;
@@ -380,19 +383,19 @@ export default class ABView extends ABViewBase {
 	/**
 	 * @method viewReorder()
 	 *
-	 * persist the current ABView in our list of ._views.
+	 * reorder the current ABView in our list of ._views.
 	 *
-	 * @param {ABView} object
-	 * @param {to} int - to Position
+	 * @param {string} viewId - id of the active view
+	 * @param {string} toPosition - 'to' postion
 	 * @return {Promise}
 	 */
-	viewReorder(view, to) {
+	viewReorder(viewId, toPosition) {
 
-		var from = this._views.findIndex((v) => v.id == view.id);
+		var from = this._views.findIndex((v) => v.id == viewId);
 		if (from < 0) return;
 
 		// move drag item to 'to' position
-		this._views.splice(to, 0, this._views.splice(from, 1)[0]);
+		this._views.splice(toPosition, 0, this._views.splice(from, 1)[0]);
 
 		// save to database
 		this.save();
@@ -494,7 +497,7 @@ export default class ABView extends ABViewBase {
 			rows: [
 				{
 					id: ids.component,
-					view: 'layout',
+					view: App.custom.savablelayout.view,
 					type: 'space',
 					rows: []
 				},
@@ -511,15 +514,21 @@ export default class ABView extends ABViewBase {
 
 			var allComponents = [];
 
+			// set Portlet layout template to webix.layout
+			Layout.setState(this.template, idBase);
+
 			// attach all the .UI views:
 			viewList.forEach((child) => {
 
 				var component = child.component(App);
+				// TODO
+				// var comId = (idBase + child.id);
+				var comId = (child.id);
 
 				var porletUI = {
-					id: child.id,
+					id: comId,
 					view: "portlet",
-					css: "ab-background-white",
+					css: "ab-interface-component",
 					borderless: true,
 					layoutType: "head", // Drag on icon
 					body: {
@@ -543,10 +552,17 @@ export default class ABView extends ABViewBase {
 					}
 				};
 
-				Layout.addView(porletUI);
+				// replace component to layout
+				if ($$(comId)) {
+					webix.ui(porletUI, $$(comId));
+				}
+				// add component to rows
+				else {
+					Layout.addView(porletUI);
+				}
 
 				allComponents.push(component);
-			})
+			});
 
 			// in preview mode, have each child render a preview 
 			// of their content:
@@ -558,6 +574,28 @@ export default class ABView extends ABViewBase {
 				});
 
 			}
+
+			App.eventIds = App.eventIds || {};
+
+			// prevent .attachEvent multiple times
+			if (App.eventIds['onAfterPortletMove']) webix.detachEvent("onAfterPortletMove");
+
+			// listen a event of the porlet when layout is changed
+			App.eventIds['onAfterPortletMove'] = webix.attachEvent("onAfterPortletMove", (source, parent, active, target, mode) => {
+
+				// save template layout to ABPageView
+				this.template = Layout.getState();
+
+				this.save();
+
+				// // Reorder
+				// var viewId = active.config.id;
+				// var targetId = target.config.id;
+
+				// var toPosition = this._views.findIndex((v) => v.id == targetId);
+
+				// this.viewReorder(viewId, toPosition);
+			});
 
 		}
 
@@ -785,6 +823,7 @@ export default class ABView extends ABViewBase {
 				}, 50);
 
 				e.preventDefault();
+
 				return false;
 			},
 		}
