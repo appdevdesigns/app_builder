@@ -6,7 +6,7 @@
  *
  */
 
-import ABWorkspaceComponents from "./ab_work_interface_workspace_details_components"
+// import ABWorkspaceComponents from "./ab_work_interface_workspace_details_components"
 import ABWorkspaceProperties from "./ab_work_interface_workspace_details_properties"
 
 export default class AB_Work_Interface_Workspace_Details extends OP.Component {
@@ -28,23 +28,20 @@ export default class AB_Work_Interface_Workspace_Details extends OP.Component {
             component: this.unique('component'),
             
         };
-        
-        var ComponentList = new ABWorkspaceComponents(App);
+
+        // var ComponentList = new ABWorkspaceComponents(App);
         var PropertiesList = new ABWorkspaceProperties(App);
-        
+
         // webix UI definition:
         this.ui = {
             id: ids.component,
-            multi:false,
-            view:"accordion",
             width: 300,
             // scroll: true,
             rows: [
-                ComponentList.ui,
                 PropertiesList.ui
             ]
         };
-        
+
 
         var CurrentView = null;
 
@@ -52,7 +49,7 @@ export default class AB_Work_Interface_Workspace_Details extends OP.Component {
         this.init = function() {
             // webix.extend($$(ids.form), webix.ProgressBar);
 
-            ComponentList.init();
+            // ComponentList.init();
             PropertiesList.init();
             
         };
@@ -101,7 +98,7 @@ export default class AB_Work_Interface_Workspace_Details extends OP.Component {
              */
             viewLoad: function(view) {
                 CurrentView = view;
-                ComponentList.viewLoad(view);
+                // ComponentList.viewLoad(view);
                 PropertiesList.viewLoad(view);
 
             },
@@ -111,23 +108,6 @@ export default class AB_Work_Interface_Workspace_Details extends OP.Component {
         // Expose any globally accessible Actions:
         this.actions({
 
-            /**
-             * @function showComponentList()
-             *
-             */
-            showComponentList: function() {
-                ComponentList.show();
-            },
-
-            /**
-             * @function hideComponentList()
-             *
-             */
-            hideComponentList: function() {
-                PropertiesList.show();
-                ComponentList.hide();
-            }
-            
             /**
              * @function populateApplicationForm()
              *

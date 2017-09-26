@@ -15,10 +15,11 @@ import AB_Work from './ab_work'
 
 // Import our Custom Components here:
 import ActiveList from '../webix_custom_components/activelist'
+import DateTimePicker from '../webix_custom_components/datetimepicker'
 import EditList from '../webix_custom_components/editlist'
 import EditTree from '../webix_custom_components/edittree'
 import EditUnitList from '../webix_custom_components/editunitlist'
-import DateTimePicker from '../webix_custom_components/datetimepicker'
+import SavableLayout from '../webix_custom_components/savablelayout'
 
 import style from "../AppBuilder.css"
 
@@ -80,10 +81,11 @@ export default class AB extends OP.Component {    //('ab', function(App) {
 
 		// make instances of our Custom Components:
 		new ActiveList(App, 'activelist');	// ->  App.custom.activelist  now exists
+		new DateTimePicker(App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
 		new EditList(App, 'editlist');	// ->  App.custom.editlist  now exists
 		new EditTree(App, 'edittree');	// ->  App.custom.edittree  now exists
-		new EditUnitList(App, 'editunitlist');	// ->  App.custom.editunitlist  now exists		
-		new DateTimePicker(App, 'datetimepicker'); // ->  App.custom.datetimepicker  now exists
+		new EditUnitList(App, 'editunitlist');	// ->  App.custom.editunitlist  now exists
+		new SavableLayout(App, 'savablelayout');	// ->  App.custom.savablelayout  now exists
 
 
 		var ids = {

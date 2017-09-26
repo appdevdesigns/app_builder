@@ -10,19 +10,19 @@ import ABViewManager from "../ABViewManager"
 
 
 var ABViewPropertyComponentDefaults = {
-	label:''
+	label: ''
 }
 
 
 var ABViewDefaults = {
 	key: 'view',		// {string} unique key for this view
-	icon:'window-maximize',		// {string} fa-[icon] reference for this view
-	labelKey:'ab.components.view' // {string} the multilingual label key for the class label
+	icon: 'window-maximize',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.view' // {string} the multilingual label key for the class label
 }
 
 
 
-export default class ABView  extends ABViewBase {
+export default class ABView extends ABViewBase {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -30,79 +30,82 @@ export default class ABView  extends ABViewBase {
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 * @param {obj} defaultValues special sub class defined default values.
 	 */
-    constructor(values, application, parent, defaultValues) {
+	constructor(values, application, parent, defaultValues) {
 
-    	super(values, application, parent, (defaultValues || ABViewDefaults));
-
-
-
-  	// 	{
-  	// 		id:'uuid',					// uuid value for this obj
-  	// 		key:'viewKey',				// unique key for this View Type
-  	// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-  	// 		label:'',					// pulled from translation
-
-	//		settings: {					// unique settings for the type of field
-	//		},
-
-	// 		views:[],					// the child views contained by this view.
-
-	//		translations:[]
-  	// 	}
-  		
-  	}
+		super(values, application, parent, (defaultValues || ABViewDefaults));
 
 
-  	static common() {
-  		return ABViewDefaults;
-  	}
+
+		// 	{
+		// 		id:'uuid',					// uuid value for this obj
+		// 		key:'viewKey',				// unique key for this View Type
+		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
+		// 		label:'',					// pulled from translation
+
+		//		settings: {					// unique settings for the type of field
+		//		},
+
+		// 		views:[],					// the child views contained by this view.
+
+		//		translations:[],
+
+		//		template: {					// UI template definition from portlet
+		// 		}
+		// 	}
+
+	}
 
 
-  	/**
-  	 * @method newInstance()
-  	 * return a new instance of this ABView.  
-  	 * @param {ABApplication} application  	: the root ABApplication this view is under
-  	 * @param {ABView/ABApplication} parent	: the parent object of this ABView.
-  	 * @return {ABView} 
-  	 */
-  	static newInstance(application, parent) {
-  		
-  		// return a new instance from ABViewManager:
-  		return ABViewManager.newView({ key: this.common().key }, application, parent);
-  	}
+	static common() {
+		return ABViewDefaults;
+	}
 
 
-  	viewKey() {
-  		return this.defaults.key;
-  	}
+	/**
+	 * @method newInstance()
+	 * return a new instance of this ABView.  
+	 * @param {ABApplication} application  	: the root ABApplication this view is under
+	 * @param {ABView/ABApplication} parent	: the parent object of this ABView.
+	 * @return {ABView} 
+	 */
+	static newInstance(application, parent) {
+
+		// return a new instance from ABViewManager:
+		return ABViewManager.newView({ key: this.common().key }, application, parent);
+	}
 
 
-  	viewIcon() {
-  		return this.defaults.icon;
-  	}
+	viewKey() {
+		return this.defaults.key;
+	}
 
 
-  	/*
-  	 * @method isValid
-  	 * check the current values to make sure they are valid.
-  	 * Here we check the default values provided by ABView.
-  	 *
-  	 * @return {OP.Validation.validator()}
-  	 */
+	viewIcon() {
+		return this.defaults.icon;
+	}
+
+
+	/*
+	 * @method isValid
+	 * check the current values to make sure they are valid.
+	 * Here we check the default values provided by ABView.
+	 *
+	 * @return {OP.Validation.validator()}
+	 */
 	isValid() {
 
 		var validator = OP.Validation.validator();
 
 		// // labels must be unique among views on the same parent
 		var parent = this.parent;
-// if (!parent) { parent = this.application; }
+		// if (!parent) { parent = this.application; }
 
 		// if we have a parent component:
 		if (parent) {
 
-			var isNameUnique = (parent.views((v)=>{
+			var isNameUnique = (parent.views((v) => {
 				return (v.id != this.id)
-						&& (v.label.toLowerCase() == this.label.toLowerCase() );
+					&& (v.label.toLowerCase() == this.label.toLowerCase());
 			}).length == 0);
 			if (!isNameUnique) {
 				validator.addError('label', L('ab.validation.view.label.unique', '*View label must be unique among peers.'));
@@ -130,19 +133,19 @@ export default class ABView  extends ABViewBase {
 	 *
 	 * @return {Promise}
 	 */
-	destroy () {
+	destroy() {
 		return new Promise(
 			(resolve, reject) => {
 
-				// verify we have been .save()d before:
+				// verify we have been .save() before:
 				if (this.id) {
 
 					var parent = this.parent;
 					if (!parent) parent = this.application;
 
 					parent.viewDestroy(this)
-					.then(resolve)
-					.catch(reject);
+						.then(resolve)
+						.catch(reject);
 
 				} else {
 
@@ -164,7 +167,7 @@ export default class ABView  extends ABViewBase {
 	 * @return {Promise}
 	 *						.resolve( {this} )
 	 */
-	save () {
+	save() {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -176,11 +179,11 @@ export default class ABView  extends ABViewBase {
 				// if this is not a child of another view then tell it's
 				// application to save this view.
 				var parent = this.parent;
-// if (!parent) parent = this.application;
+				// if (!parent) parent = this.application;
 
 				parent.viewSave(this)
-				.then(resolve)
-				.catch(reject)
+					.then(resolve)
+					.catch(reject)
 			}
 		)
 	}
@@ -194,7 +197,7 @@ export default class ABView  extends ABViewBase {
 	 *
 	 * @return {json}
 	 */
-	toObj () {
+	toObj() {
 
 		OP.Multilingual.unTranslate(this, this, ['label']);
 
@@ -210,15 +213,15 @@ export default class ABView  extends ABViewBase {
 		}
 
 		return {
-			id : this.id,
-			key : this.key,
-			icon : this.icon,
+			id: this.id,
+			key: this.key,
+			icon: this.icon,
 
-// parent: this.parent,
+			// parent: this.parent,
 
 			settings: this.settings || {},
-			translations:this.translations || [],
-			views:views
+			translations: this.translations || [],
+			views: views
 		}
 	}
 
@@ -229,7 +232,7 @@ export default class ABView  extends ABViewBase {
 	 * initialze this object with the given set of values.
 	 * @param {obj} values
 	 */
-	fromValues (values) {
+	fromValues(values) {
 
 		super.fromValues(values);
 
@@ -237,7 +240,7 @@ export default class ABView  extends ABViewBase {
 		this.icon = values.icon || this.viewIcon();
 
 		// label is a multilingual value:
-    	OP.Multilingual.translate(this, this, ['label']);
+		OP.Multilingual.translate(this, this, ['label']);
 
 
 		// default value for our label
@@ -248,13 +251,13 @@ export default class ABView  extends ABViewBase {
 		}
 
 
-    	var views = [];
-    	(values.views || []).forEach((child) => {
-    		views.push(ABViewManager.newView(child, this.application, this));
-    	})
-    	this._views = views;
+		var views = [];
+		(values.views || []).forEach((child) => {
+			views.push(ABViewManager.newView(child, this.application, this));
+		})
+		this._views = views;
 
-    	// convert from "0" => 0
+		// convert from "0" => 0
 
 	}
 
@@ -272,20 +275,20 @@ export default class ABView  extends ABViewBase {
     *
     * @return {array}      array of ABViews
     */
-    allParents() {
-        var parents = [];
-        var curView = this;
+	allParents() {
+		var parents = [];
+		var curView = this;
 
-        // add current view to array
-        parents.unshift(curView);
+		// add current view to array
+		parents.unshift(curView);
 
-        while (!curView.isRoot() && curView.parent) {
-        	parents.unshift(curView.parent);
+		while (!curView.isRoot() && curView.parent) {
+			parents.unshift(curView.parent);
 
-            curView = curView.parent;
-        }
+			curView = curView.parent;
+		}
 
-        return parents;
+		return parents;
 	}
 
 
@@ -331,9 +334,9 @@ export default class ABView  extends ABViewBase {
 	 *						returns true for.
 	 * @return {array} 	array of ABViews
 	 */
-	views (filter) {
+	views(filter) {
 
-		filter = filter || function() {return true; };
+		filter = filter || function () { return true; };
 
 		return this._views.filter(filter);
 
@@ -349,9 +352,9 @@ export default class ABView  extends ABViewBase {
 	 * @param {ABView} view
 	 * @return {Promise}
 	 */
-	viewDestroy( view ) {
+	viewDestroy(view) {
 
-		var remainingViews = this.views(function(v) { return v.id != view.id;})
+		var remainingViews = this.views(function (v) { return v.id != view.id; })
 		this._views = remainingViews;
 		return this.save();
 	}
@@ -366,8 +369,8 @@ export default class ABView  extends ABViewBase {
 	 * @param {ABView} object
 	 * @return {Promise}
 	 */
-	viewSave( view ) {
-		var isIncluded = (this.views(function(v){ return v.id == view.id }).length > 0);
+	viewSave(view) {
+		var isIncluded = (this.views(function (v) { return v.id == view.id }).length > 0);
 		if (!isIncluded) {
 			this._views.push(view);
 		}
@@ -380,19 +383,19 @@ export default class ABView  extends ABViewBase {
 	/**
 	 * @method viewReorder()
 	 *
-	 * persist the current ABView in our list of ._views.
+	 * reorder the current ABView in our list of ._views.
 	 *
-	 * @param {ABView} object
-	 * @param {to} int - to Position
+	 * @param {string} viewId - id of the active view
+	 * @param {string} toPosition - 'to' postion
 	 * @return {Promise}
 	 */
-	viewReorder( view, to ) {
+	viewReorder(viewId, toPosition) {
 
-		var from = this._views.findIndex((v) => v.id == view.id);
+		var from = this._views.findIndex((v) => v.id == viewId);
 		if (from < 0) return;
 
 		// move drag item to 'to' position
-		this._views.splice(to, 0, this._views.splice(from, 1)[0]);
+		this._views.splice(toPosition, 0, this._views.splice(from, 1)[0]);
 
 		// save to database
 		this.save();
@@ -440,139 +443,159 @@ export default class ABView  extends ABViewBase {
 
 		var idBase = 'ABViewEditorComponent';
 		var ids = {
-			component: App.unique(idBase+'_component'),
-			view: App.unique(idBase+'_view')
+			component: App.unique(idBase + '_component'),
+			view: App.unique(idBase + '_view')
 		}
 
+
+		// var _ui = {
+		// 	view: 'list',
+		// 	drag: true,
+		// 	select: false,
+		// 	css: 'ab_interface_draggable ab_layout_pane',
+		// 	template:function(obj, common) {
+		// 		return _logic.template(obj, common);
+		// 	},
+		// 	type: {
+		// 		height: 'auto'
+		// 	},
+		// 	ready:function(){
+		// 		if (!this.count()){
+		// 			webix.extend(this, webix.OverlayBox);
+		// 			this.showOverlay("<div class='drop-zone'><div>"+App.labels.componentDropZone+"</div></div>");
+		// 		}
+		// 	},
+		// 	on: {
+		// 		// onAfterRender: function () {
+		// 		// 	self.generateComponentsInList();
+		// 		// },
+		// 		onBeforeDrag: function (context, ev) {
+		// 			return _logic.onBeforeDrag(context,ev);
+		// 		},
+		// 		onBeforeDrop: function (context, ev) {
+		// 			return _logic.onBeforeDrop(context,ev);
+		// 		},
+		// 		onAfterDrop: function (context, ev) {
+		// 			_logic.onAfterDrop(context, ev);
+		// 		}
+		// 	},
+		// 	onClick: {
+		// 		"ab-component-edit": function (e, id, trg) {
+		// 			_logic.viewEdit(e, id, trg);
+		// 		},
+		// 		"ab-component-remove": function (e, id, trg) {
+		// 			_logic.viewDelete(e, id, trg);
+		// 		}
+		// 	},
+		// 	externalData: function (data, id, oldData) {
+		// 		return _logic.externalData(data, id, oldData);
+		// 	}
+
+		// }
 
 		var _ui = {
-			view: 'list',
-			drag: true,
-			select: false,
-			css: 'ab_interface_draggable ab_layout_pane',
-			template:function(obj, common) {
-				return _logic.template(obj, common);
-			},
-			type: {
-				height: 'auto'
-			},
-			ready:function(){
-				if (!this.count()){
-					webix.extend(this, webix.OverlayBox);
-					this.showOverlay("<div class='drop-zone'><div>"+App.labels.componentDropZone+"</div></div>");
-				}
-			},
-			on: {
-				// onAfterRender: function () {
-				// 	self.generateComponentsInList();
-				// },
-				onBeforeDrag: function (context, ev) {
-					return _logic.onBeforeDrag(context,ev);
+			rows: [
+				{
+					id: ids.component,
+					view: App.custom.savablelayout.view,
+					type: 'space',
+					rows: []
 				},
-				onBeforeDrop: function (context, ev) {
-					return _logic.onBeforeDrop(context,ev);
-				},
-				onAfterDrop: function (context, ev) {
-					_logic.onAfterDrop(context, ev);
-				}
-			},
-			onClick: {
-				"ab-component-edit": function (e, id, trg) {
-					_logic.viewEdit(e, id, trg);
-				},
-				"ab-component-remove": function (e, id, trg) {
-					_logic.viewDelete(e, id, trg);
-				}
-			},
-			externalData: function (data, id, oldData) {
-				return _logic.externalData(data, id, oldData);
-			}
-
-		}
+				{}
+			]
+		};
 
 
 		var _init = (options) => {
 
-// this.children = [
-// 	{
-// 		id:'child1',
-// 		icon: 'cube',
-// 		label: 'Child 1',
-// 		component:function(app) {
-// 			return {
-// 				ui:{
-// 					id:'child1component',
-// 					view:'template',
-// 					template:'template child 1',
-// 					height:20
-// 				},
-// 				init:function() { console.log('init child 1') }
-// 			}
-// 		}
-// 	},
-// 	{
-// 		id:'child2',
-// 		icon: 'cubes',
-// 		label: 'Child 2',
-// 		component:function(app) {
-// 			return {
-// 				ui:{
-// 					id:'child2component',
-// 					view:'template',
-// 					template:'template child 2',
-// 					height:20
-// 				},
-// 				init:function() { console.log('init child 2') }
-// 			}
-// 		}
-// 	}
-// ]
 			var viewList = this.views();
 
-			// if we don't have any views, then place a "drop here" placeholder
-			// if (viewList.length == 0) {
-				// viewList.push({
-				// 	id:'del_me',
-				// 	icon:'',
-				// 	label:L('ab.components.view.dropHere', '*drop here'),
-				// 	component:function(app) {
-				// 		return {
-				// 			ui:{
-				// 				id:'child2component',
-				// 				css:'child2component',
-				// 				view:'template',
-				// 				borderless: 1,
-				// 				template:L('ab.components.view.dropHere', '*drop here'),
-				// 				height:36
-				// 			},
-				// 			init:function() { console.log('init child 2') }
-				// 		}
-				// 	}
-				// })
-				// this.showOverlay("<div>Drop components here.</div>");
-			// }
-			var List = $$(_ui.id);
-			List.parse(viewList);
+			var Layout = $$(ids.component);
+
+			var allComponents = [];
+
+			// set Portlet layout template to webix.layout
+			Layout.setState(this.template, idBase);
+
+			// attach all the .UI views:
+			viewList.forEach((child) => {
+
+				var component = child.component(App);
+				// TODO
+				// var comId = (idBase + child.id);
+				var comId = (child.id);
+
+				var porletUI = {
+					id: comId,
+					view: "portlet",
+					css: "ab-interface-component",
+					borderless: true,
+					layoutType: "head", // Drag on icon
+					body: {
+						rows: [
+							{
+								view: 'template',
+								height: 40,
+								css: "ab-porlet-header",
+								template: _logic.template(child),
+								onClick: {
+									"ab-component-edit": (e, id, trg) => {
+										_logic.viewEdit(e, child.id, trg);
+									},
+									"ab-component-remove": (e, id, trg) => {
+										_logic.viewDelete(e, child.id, trg);
+									}
+								}
+							},
+							(mode == 'preview' ? component.ui : {})
+						]
+					}
+				};
+
+				// replace component to layout
+				if ($$(comId)) {
+					webix.ui(porletUI, $$(comId));
+				}
+				// add component to rows
+				else {
+					Layout.addView(porletUI);
+				}
+
+				allComponents.push(component);
+			});
 
 			// in preview mode, have each child render a preview 
 			// of their content:
 			if (mode == 'preview') {
-				var allComponents = [];
-
-				// attach all the .UI views:
-				viewList.forEach((child) => {
-					var component = child.component(App);
-					var id = ids.view + '_' + child.id;
-					component.ui.container = id;
-					webix.ui(component.ui);
-					allComponents.push(component);
-				})
 
 				// perform any init setups for the content:
 				allComponents.forEach((component) => {
 					component.init();
-				})
+				});
+
 			}
+
+			App.eventIds = App.eventIds || {};
+
+			// prevent .attachEvent multiple times
+			if (App.eventIds['onAfterPortletMove']) webix.detachEvent("onAfterPortletMove");
+
+			// listen a event of the porlet when layout is changed
+			App.eventIds['onAfterPortletMove'] = webix.attachEvent("onAfterPortletMove", (source, parent, active, target, mode) => {
+
+				// save template layout to ABPageView
+				this.template = Layout.getState();
+
+				this.save();
+
+				// // Reorder
+				// var viewId = active.config.id;
+				// var targetId = target.config.id;
+
+				// var toPosition = this._views.findIndex((v) => v.id == targetId);
+
+				// this.viewReorder(viewId, toPosition);
+			});
 
 		}
 
@@ -586,7 +609,7 @@ export default class ABView  extends ABViewBase {
 			 * in .onBeforeDrop() event.  It is for you to create a new instance
 			 * of the item being dropped.
 			 */
-			externalData:  (data, id, oldData) => {
+			externalData: (data, id, oldData) => {
 
 				// if oldData is an instance of our ABView object,
 				// then we have already made the instance and should return that:			
@@ -601,18 +624,18 @@ export default class ABView  extends ABViewBase {
 				// this is a form component that should be initialized in 
 				// conjunction with a Datafield
 				if (oldData.newInstance) {
-console.warn('... .newInstance()');
+					console.warn('... .newInstance()');
 					var View = oldData.newInstance(this.application, this);
 					return View;
 				}
 
 
 
-// Yeah, this is the OLD way. If you keep creating ABViews that 
-// don't offer .newInstance() then you'll be buying the team 
-// lunch on Tuesdays ...
+				// Yeah, this is the OLD way. If you keep creating ABViews that 
+				// don't offer .newInstance() then you'll be buying the team 
+				// lunch on Tuesdays ...
 
-console.error('... Depreciated! manually calling ABViewManager.newView()');
+				console.error('... Depreciated! manually calling ABViewManager.newView()');
 				// this is a standard Component that is initialized normally
 				// find the key to make a new instance from:
 				var key;
@@ -634,46 +657,6 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 				return View;
 			},
 
-			/**
-             * @function onBeforeDrag
-             * when a drag event is started, update the drag element display.
-             */
-            onBeforeDrag: function(context, ev) {
-
-                var component = $$(_ui.id).getItem(context.source);
-				var node = $$(_ui.id).getItemNode(context.source);
-				
-				// console.log(node);
-				
-				var cln = node.cloneNode(true);
-
-				var dragDiv = document.createElement("div");
-				dragDiv.classList.add("dragContainer");
-				dragDiv.appendChild(cln);
-
-				context.html = dragDiv.outerHTML;
-				
-
-				// console.log(component);
-				// console.log(context);
-				// console.log(ev);
-
-                // if (component.text && component.label) {
-				// 
-                //     context.html = "<div style='width:"+context.from.$width+"px;' class='ab-component-item-drag'>";
-				// 	if (mode == 'preview') {
-				// 		context.html += component.text;
-				// 	} else {
-				// 		context.html += component.label;						
-				// 	}
-                //     context.html += "</div>";
-                // } else {
-                //     // otherwise this is our "no components" placeholder
-                //     // so prevent drag-n-drop
-                //     return false;
-                // }
-            },
-
 			/* 
 			 * @method onBeforeDrop()
 			 * this method is triggered when an element is dropped onto the 
@@ -685,32 +668,32 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			onBeforeDrop: (context, ev) => {
 
 				// if this was dropped from our own list, then skip
-				if (context.from.config.id === _ui.id) {
+				if (context.from.config.id === ids.component) {
 					return true;
 				} else {
 
 					for (var i = 0; i < context.source.length; i++) {
 						var uid = webix.uid();
-						context.from.copy(context.source[i], context.index, $$(_ui.id), uid);
+						context.from.copy(context.source[i], context.index, $$(ids.component), uid);
 
 						// get the id of the item at the index we just dropped onto:
-						var newID = $$(_ui.id).getIdByIndex(context.index);
+						var newID = $$(ids.component).getIdByIndex(context.index);
 
 						// remove the temp "drop here" marker if it exists
-						// $$(_ui.id).remove('del_me');
+						// $$(ids.component).remove('del_me');
 
-						webix.extend($$(_ui.id), webix.OverlayBox);
-						$$(_ui.id).hideOverlay();
+						webix.extend($$(ids.component), webix.OverlayBox);
+						$$(ids.component).hideOverlay();
 
 						// find the newly inserted element & perform a .save()
 						// to persist it in our current view.
-						var droppedViewObj = $$(_ui.id).getItem(newID);
+						var droppedViewObj = $$(ids.component).getItem(newID);
 						var templateID = droppedViewObj.id; // NOTE: this is the ID used when the template is generated.
 						droppedViewObj.id = null;
 						droppedViewObj.save()
 							.then(() => {
 								// change id of list's item
-								$$(_ui.id).data.changeId(newID, droppedViewObj.id);
+								$$(ids.component).data.changeId(newID, droppedViewObj.id);
 							});
 
 
@@ -742,12 +725,12 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			 * @param {obj} ev  event object.
 			 */
 			onAfterDrop: (context, ev) => {
-				if (context.from.config.id === _ui.id) {
+				if (context.from.config.id === ids.component) {
 
 					var viewId = context.start;
 					var to = context.index;
 
-					this.viewReorder( { id: viewId }, to );
+					this.viewReorder({ id: viewId }, to);
 				}
 			},
 
@@ -758,24 +741,19 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			 * @param {obj} obj the current View instance
 			 * @param {obj} common  Webix provided object with common UI tools
 			 */
-			template:function(obj, common) {
+			template: function (child) {
 
-				var template;
+				return ('<div>' +
+					'<i class="fa fa-#icon# webix_icon_btn"></i> ' +
+					' #label#' +
+					'<div class="ab-component-tools">' +
+					'<i class="fa fa-trash ab-component-remove"></i>' +
+					'<i class="fa fa-edit ab-component-edit"></i>' +
+					'</div>' +
+					'</div>')
+					.replace('#icon#', child.icon)
+					.replace('#label#', child.label);
 
-				// handle the empty placeholder
-				if (obj.id == 'del_me') {
-					return _templatePlaceholder.replace('#objID#', obj.id);
-				}
-
-
-				if (mode == 'preview'){
-					return _template.replace('#objID#', obj.id);
-				} else {
-					return _templateBlock
-						.replace('#objID#', obj.id)
-						.replace('#icon#', obj.icon)
-						.replace('#label#', obj.label)
-				}
 			},
 
 
@@ -787,32 +765,32 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			 * @param {obj} trg  Webix provided object 
 			 */
 			viewDelete: (e, id, trg) => {
-				var deletedView = $$(_ui.id).getItem(id);
+				var deletedView = this.views(v => v.id == id)[0];
 
 				if (!deletedView) return false;
 
 				OP.Dialog.Confirm({
-					title: L('ab.interface.component.confirmDeleteTitle','*Delete component'), 
+					title: L('ab.interface.component.confirmDeleteTitle', '*Delete component'),
 					text: L('ab.interface.component.confirmDeleteMessage', 'Do you want to delete <b>{0}</b>?').replace('{0}', deletedView.label),
 					callback: function (result) {
 						if (result) {
 							deletedView.destroy()
-							.then(()=>{
-								$$(_ui.id).remove(id);
+								.then(() => {
+									$$(ids.component).removeView(id);
 
-								// signal the current view has been deleted.
-								deletedView.emit('destroyed', deletedView);
-	
+									// signal the current view has been deleted.
+									deletedView.emit('destroyed', deletedView);
 
-								// if we don't have any views, then place a "drop here" placeholder
-								if ($$(_ui.id).count() == 0) {
-									webix.extend($$(_ui.id), webix.OverlayBox);
-									$$(_ui.id).showOverlay("<div class='drop-zone'><div>"+App.labels.componentDropZone+"</div></div>");
-								}
-							})
-							.catch((err)=>{
-								OP.Error.log('Error trying to delete selected View:', {error:err, view:deletedView })
-							})
+
+									// if we don't have any views, then place a "drop here" placeholder
+									if ($$(ids.component).getChildViews().length == 0) {
+										webix.extend($$(ids.component), webix.OverlayBox);
+										$$(ids.component).showOverlay("<div class='drop-zone'><div>" + App.labels.componentDropZone + "</div></div>");
+									}
+								})
+								.catch((err) => {
+									OP.Error.log('Error trying to delete selected View:', { error: err, view: deletedView })
+								})
 						}
 					}
 				});
@@ -828,7 +806,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			 * @param {obj} trg  Webix provided object 
 			 */
 			viewEdit: (e, id, trg) => {
-				var view = $$(_ui.id).getItem(id);
+				var view = this.views(v => v.id == id)[0];
 
 				if (!view) return false;
 
@@ -840,49 +818,50 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 				// calling .populateInterfaceWorkspace() which will replace
 				// the interface elements with the edited view.  (apparently
 				// that causes errors.)
-				setTimeout(()=>{
+				setTimeout(() => {
 					App.actions.populateInterfaceWorkspace(view);
 				}, 50);
-				
+
 				e.preventDefault();
+
 				return false;
 			},
-		} 
+		}
 
 
 		var _template = [
 			'<div class="ab-component-in-page">',
-				'<div class="ab-layout-view-space" id="'+ids.view+'_#objID#" ></div>',
-				'<div class="ab-component-tools">',
-					'<i class="fa fa-trash ab-component-remove "></i>',
-					'<i class="fa fa-edit ab-component-edit "></i>',
-				'</div>',
+			'<div class="ab-layout-view-space" id="' + ids.view + '_#objID#" ></div>',
+			'<div class="ab-component-tools">',
+			'<i class="fa fa-trash ab-component-remove "></i>',
+			'<i class="fa fa-edit ab-component-edit "></i>',
+			'</div>',
 			'</div>'
 		].join('');
 
 		var _templateBlock = [
 			'<div class="ab-component-in-page">',
-				'<div id="'+ids.view+'_#objID#" >',
-					'<i class="fa fa-#icon# webix_icon_btn"></i> ',
-					'#label#',
-				'</div>',
-				'<div class="ab-component-tools">',
-					'<i class="fa fa-trash ab-component-remove"></i>',
-					'<i class="fa fa-edit ab-component-edit"></i>',
-				'</div>',
+			'<div id="' + ids.view + '_#objID#" >',
+			'<i class="fa fa-#icon# webix_icon_btn"></i> ',
+			'#label#',
+			'</div>',
+			'<div class="ab-component-tools">',
+			'<i class="fa fa-trash ab-component-remove"></i>',
+			'<i class="fa fa-edit ab-component-edit"></i>',
+			'</div>',
 			'</div>'
 		].join('');
 
 		var _templatePlaceholder = [
 			'<div class="ab-component-in-page">',
-				'<div id="'+ids.view+'_#objID#" ></div>',
+			'<div id="' + ids.view + '_#objID#" ></div>',
 			'</div>'
 		].join('');
 
 
 		return {
-			ui:_ui,
-			init:_init
+			ui: _ui,
+			init: _init
 		}
 	}
 
@@ -892,10 +871,10 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 		var ABViewPropertyComponent = new ABPropertyComponent({
 
 			editObject: this,	// ABView
-			
+
 			fieldDefaults: this.common(), // ABViewDefaults,
 
-			elements:(App, field) => {
+			elements: (App, field) => {
 
 				var ids = {
 					imageWidth: '',
@@ -911,7 +890,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 
 			// rules: basic form validation rules for webix form entry.
 			// the keys must match a .name of your .elements for it to apply
-			rules:{
+			rules: {
 				// 'textDefault':webix.rules.isNotEmpty,
 				// 'supportMultilingual':webix.rules.isNotEmpty
 			},
@@ -940,7 +919,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			// 		.populate(ids, ABField) : populate the form with your current settings
 			// 		.show(ids)   : display the form in the editor
 			// 		.values(ids, values) : return the current values from the form
-			logic:{
+			logic: {
 
 			},
 
@@ -948,7 +927,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			// @param {obj} ids  the hash of id values for all the current form elements.
 			//					 it should have your elements + the default Header elements:
 			//						.label, .columnName, .fieldDescription, .showIcon
-			init:function(ids) {
+			init: function (ids) {
 				// want to hide the description? :
 				// $$(ids.fieldDescription).hide();
 			}
@@ -967,16 +946,16 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			{
 				view: "text",
 				// id: ids.label,
-				name:'label',
+				name: 'label',
 				label: App.labels.dataFieldHeaderLabel,
 				placeholder: App.labels.dataFieldHeaderLabelPlaceholder,
 				// labelWidth: App.config.labelWidthMedium,
 				css: 'ab-new-label-name',
-// 				on: {
-// 					onChange: function (newVal, oldVal) {
-// console.warn('ABView.onChange()!!!');
-// 					}
-// 				}
+				// 				on: {
+				// 					onChange: function (newVal, oldVal) {
+				// console.warn('ABView.onChange()!!!');
+				// 					}
+				// 				}
 			}
 		];
 
@@ -1002,13 +981,13 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 		this.propertyEditorValues(ids, view);
 
 		return view.save()
-		.then(function(){
-			// signal the current view has been updated.
-			view.emit('properties.updated', view);
-		})
-		.catch(function(err){
-			OP.Error.log('unable to save view:', {error:err, view:view });
-		});
+			.then(function () {
+				// signal the current view has been updated.
+				view.emit('properties.updated', view);
+			})
+			.catch(function (err) {
+				OP.Error.log('unable to save view:', { error: err, view: view });
+			});
 	}
 
 
@@ -1023,7 +1002,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 
 		// get a UI component for each of our child views
 		var viewComponents = [];
-		this.views().forEach((v)=>{
+		this.views().forEach((v) => {
 			viewComponents.push(v.component(App));
 		})
 
@@ -1031,19 +1010,19 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 			return AD.lang.label.getLabel(key) || altText;
 		}
 
-		var idBase = 'ABView_'+this.id;
+		var idBase = 'ABView_' + this.id;
 		var ids = {
-			component: App.unique(idBase+'_component'),
+			component: App.unique(idBase + '_component'),
 		}
 
 
 		// an ABView is a collection of rows:
 		var _ui = {
 			id: ids.component,
-			rows:[]
+			rows: []
 		}
 		// insert each of our sub views into our rows:
-		viewComponents.forEach((view)=>{
+		viewComponents.forEach((view) => {
 			_ui.rows.push(view.ui);
 		})
 
@@ -1059,7 +1038,7 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-			viewComponents.forEach((view)=>{
+			viewComponents.forEach((view) => {
 				view.init();
 			});
 
@@ -1086,9 +1065,9 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 
 
 		return {
-			ui:_ui,
-			init:_init,
-			logic:_logic
+			ui: _ui,
+			init: _init,
+			logic: _logic
 		}
 	}
 
@@ -1100,22 +1079,22 @@ console.error('... Depreciated! manually calling ABViewManager.newView()');
 	 * @param {bool} isEdited  is this component currently in the Interface Editor
 	 * @return {array} of ABView objects.
 	 */
-	componentList( isEdited ) {
+	componentList(isEdited) {
 
 		// if (this.parent) {
 		// 	return this.parent.componentList(false);
 		// } else {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = [ 'view', 'page' , 'formpanel', 'datacollection',
-		// not allowed Detail's widgets
-		'detailtext', 'detailcustom',
-		// not allowed Form's widgets
-		'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'number', 'selectsingle'
+		var viewsToIgnore = ['view', 'page', 'formpanel', 'datacollection',
+			// not allowed Detail's widgets
+			'detailtext', 'detailcustom',
+			// not allowed Form's widgets
+			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'number', 'selectsingle'
 		];
 
 		var allComponents = ABViewManager.allViews();
-		var allowedComponents = allComponents.filter((c)=>{
+		var allowedComponents = allComponents.filter((c) => {
 			return (viewsToIgnore.indexOf(c.common().key) == -1)
 		});
 

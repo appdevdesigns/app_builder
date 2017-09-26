@@ -191,8 +191,8 @@ export default class ABViewFormTextbox extends ABViewFormField {
 				component.ui.height = 200;
 				break;
 			case 'rich':
-				// TODO: TinyMCE editor does not have 'label' configuration
-				// Should it apply in 'webix_custom_components' ? If yes, how to add 'webix_custom_components' to the live display
+				// TODO: TinyMCE editor does not have 'label' configuration - use 'forminput'
+				// https://docs.webix.com/samples/13_form/01_controls/24_forminput.html
 				component.ui.view = 'tinymce-editor';
 				component.ui.height = 200;
 				break;
