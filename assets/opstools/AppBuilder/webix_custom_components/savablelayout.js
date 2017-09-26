@@ -76,7 +76,21 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 				// Add rows/cols definition
 				views.forEach((v) => {
 
-					this.addView(v);
+					// Ignore empty element
+					if (!v.id && !v.rows && !v.cols)
+						return;
+
+					var copyv = Object.assign(v, {});
+
+					if (!copyv.view) {
+						copyv.gravity = 0;
+						copyv.width = 0;
+						copyv.height = 0;
+						copyv.maxWidth = 0;
+						copyv.maxHeight = 0;
+					}
+
+					this.addView(copyv);
 				});
 
 			}
