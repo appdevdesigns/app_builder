@@ -343,6 +343,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 * call back for when the Define Label popup is finished.
     		 */
     		callbackAddFields:function(field) {
+                DataTable.refreshHeader();
     			DataTable.refresh();
     		},
 
@@ -375,6 +376,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 */
     		callbackFrozenColumns: function() {
                 // We need to load data first because there isn't anything to look at if we don't
+                DataTable.refreshHeader();
                 DataTable.refresh();
 
                 _logic.getBadgeFrozenColumn();
@@ -507,6 +509,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
     		 */
     		callbackSortFields: function() {
                 _logic.getBadgeSortFields();
+                DataTable.refreshHeader();
                 DataTable.refresh();
     		},
             

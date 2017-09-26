@@ -473,45 +473,9 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	init() {
 
-		return new Promise(
-			(resolve, reject) => {
-
-				var obj = this.datasource;
-				if (obj == null) return resolve(null);
-
-				// get ABModel
-				var model = obj.model();
-
-				// get data to data collection
-				model.findAll({
-					where: {
-						where: this.settings.objectWorkspace.filterConditions || {},
-						sort: this.settings.objectWorkspace.sortFields || {},
-						// height: defaultHeight
-					}
-				})
-					.catch(reject)
-					.then((data) => {
-
-						var dc = this.dataCollection();
-
-						// create new data collection
-						if (dc == null) {
-							this.__dataCollection = model.dataCollectionNew(data);
-						}
-						// update data in exists data collection
-						else {
-							dc.clearAll();
-							dc.parse(data);
-							dc.refresh();
-						}
-
-						resolve();
-
-					});
-
-			}
-		);
+		var dc =  new webix.DataCollection();
+		
+		this.__dataCollection = dc;
 
 	}
 
@@ -537,16 +501,96 @@ export default class ABViewDataCollection extends ABView {
 		var dc = this.dataCollection();
 
 		if (component.config.view == 'datatable') {
-			if (dc)
+			if (dc) {
+				component.define("datafetch", 20);
+				component.define("datathrottle", 500);
+				
 				component.data.sync(dc);
-			else
+
+				var obj = this.datasource;
+				
+				var defaultHeight = 0;
+				var minHeight = 0;
+                obj._fields.forEach(function (f) {
+                    if (f.key == "image") {
+                        if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
+                            minHeight = parseInt(f.settings.imageHeight);
+                        }
+                    }
+                });
+                if (minHeight > 0) {
+                    defaultHeight = minHeight;
+                }
+		
+				// get ABModel
+				var model = obj.model();
+				
+				var where = this.settings.objectWorkspace.filterConditions || {};
+		
+				// get data to data collection
+				var cond = {
+					where:where,
+					limit:20,
+					skip:0
+				}
+
+				if (component.showProgress)
+					component.showProgress({ type: "icon" });
+
+				model.findAll(cond)
+				.then((data) => {
+					data.data.forEach((item) => {
+						if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
+							item.$height = parseInt(item.properties.height);
+						} else if (defaultHeight > 0) {
+							item.$height = defaultHeight;
+						}
+					});
+					dc.parse(data);
+
+					if (component.hideProgress)
+						component.hideProgress();
+
+				})
+
+				component.attachEvent("onDataRequest", function (start, count) {
+					var cond = {
+						where:where,
+						limit:count,
+						skip:start
+					}
+
+					if (component.showProgress)
+						component.showProgress({ type: "icon" });
+
+					model.findAll(cond)
+					.then((data) => {
+						data.data.forEach((item) => {
+							if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
+								item.$height = parseInt(item.properties.height);
+							} else if (defaultHeight > 0) {
+								item.$height = defaultHeight;
+							}
+						});
+						dc.parse(data);
+
+						if (component.hideProgress)
+							component.hideProgress();
+
+					})
+				  
+					return false;	// <-- prevent the default "onDataRequest"
+				});
+			} else {
 				component.data.unsync();
+			}
 		}
 		else if (component.bind) {
-			if (dc)
+			if (dc) {
 				component.bind(dc);
-			else
+			} else {
 				component.unbind();
+			}
 		}
 
 		component.refresh();

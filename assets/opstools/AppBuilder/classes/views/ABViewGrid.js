@@ -27,12 +27,14 @@ var ABViewGridPropertyComponentDefaults = {
 	isEditable:0,
 	massUpdate:0,
 	allowDelete:0,
-	linkedObject:'',
-	linkedField:'',
-	linkedPage:'',
-	linkedPageView:'',
-	linkedEditPage:'',
-	linkedEditPageForm:'',
+	// linkedObject:'',
+	// linkedField:'',
+	// linkedPage:'',
+	// linkedPageView:'',
+	// linkedEditPage:'',
+	// linkedEditPageForm:'',
+	detailsPage:'',
+	editPage:'',
 	objectWorkspace: {
 		sortFields:[], // array of columns with their sort configurations
 		filterConditions:[], // array of filters to apply to the data table
@@ -110,12 +112,14 @@ export default class ABViewGrid extends ABView  {
 		this.settings.isEditable = this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable;
 		this.settings.massUpdate = this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate;
 		this.settings.allowDelete = this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete;
-		this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
-		this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
-		this.settings.linkedPage = this.settings.linkedPage || ABViewGridPropertyComponentDefaults.linkedPage;
-		this.settings.linkedPageView = this.settings.linkedPageView || ABViewGridPropertyComponentDefaults.linkedPageView;
-		this.settings.linkedEditPage = this.settings.linkedEditPage || ABViewGridPropertyComponentDefaults.linkedEditPage;
-		this.settings.linkedEditPageForm = this.settings.linkedEditPageForm || ABViewGridPropertyComponentDefaults.linkedEditPageForm;
+		// this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
+		// this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
+		// this.settings.linkedPage = this.settings.linkedPage || ABViewGridPropertyComponentDefaults.linkedPage;
+		// this.settings.linkedPageView = this.settings.linkedPageView || ABViewGridPropertyComponentDefaults.linkedPageView;
+		// this.settings.linkedEditPage = this.settings.linkedEditPage || ABViewGridPropertyComponentDefaults.linkedEditPage;
+		// this.settings.linkedEditPageForm = this.settings.linkedEditPageForm || ABViewGridPropertyComponentDefaults.linkedEditPageForm;
+		this.settings.detailsPage = this.settings.detailsPage || ABViewGridPropertyComponentDefaults.detailsPage;
+		this.settings.editPage = this.settings.editPage || ABViewGridPropertyComponentDefaults.editPage;
 		
 		this.settings.objectWorkspace = this.settings.objectWorkspace || ABViewGridPropertyComponentDefaults.objectWorkspace;
 		
@@ -219,35 +223,35 @@ export default class ABViewGrid extends ABView  {
 			_logic.onChange();
 		}
 		
-		_logic.updateDetailsView = (value) => {
-			if (value != "") {
-				var vals = value.split("|");
-				var page = vals[0];
-				var component = vals[1];
-				// console.log("updateDetailsView");
-				// console.log(value);
-				$$(ids.linkedPage).setValue(page);
-				$$(ids.linkedPageView).setValue(component);
-			} else {
-				$$(ids.linkedPage).setValue("");
-				$$(ids.linkedPageView).setValue("");
-			}
-		}
-
-		_logic.updateEditForm = (value) => {
-			if (value != "") {
-				var vals = value.split("|");
-				var page = vals[0];
-				var component = vals[1];
-				// console.log("updateEditForm");
-				// console.log(value);
-				$$(ids.linkedEditPage).setValue(page);
-				$$(ids.linkedEditPageForm).setValue(component);
-			} else {
-				$$(ids.linkedEditPage).setValue("");
-				$$(ids.linkedEditPageForm).setValue("");
-			}
-		}
+		// _logic.updateDetailsView = (value) => {
+		// 	if (value != "") {
+		// 		var vals = value.split("|");
+		// 		var page = vals[0];
+		// 		var component = vals[1];
+		// 		// console.log("updateDetailsView");
+		// 		// console.log(value);
+		// 		$$(ids.linkedPage).setValue(page);
+		// 		$$(ids.linkedPageView).setValue(component);
+		// 	} else {
+		// 		$$(ids.linkedPage).setValue("");
+		// 		$$(ids.linkedPageView).setValue("");
+		// 	}
+		// }
+		// 
+		// _logic.updateEditForm = (value) => {
+		// 	if (value != "") {
+		// 		var vals = value.split("|");
+		// 		var page = vals[0];
+		// 		var component = vals[1];
+		// 		// console.log("updateEditForm");
+		// 		// console.log(value);
+		// 		$$(ids.linkedEditPage).setValue(page);
+		// 		$$(ids.linkedEditPageForm).setValue(component);
+		// 	} else {
+		// 		$$(ids.linkedEditPage).setValue("");
+		// 		$$(ids.linkedEditPageForm).setValue("");
+		// 	}
+		// }
 		
 		PopupHideFieldComponent.init({
 			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
@@ -312,92 +316,94 @@ export default class ABViewGrid extends ABView  {
 								onChange: function(newv, oldv) {
 									if (newv != oldv) {
 										_logic.newObject();
-										$$(ids.linkedObject).setValue("");
-										$$(ids.linkedField).setValue("");
-										$$(ids.linkedPage).setValue("");
-										$$(ids.linkedPageView).setValue("");
-										$$(ids.linkedEditPage).setValue("");
-										$$(ids.linkedEditPageForm).setValue("");
+										// $$(ids.linkedObject).setValue("");
+										// $$(ids.linkedField).setValue("");
+										// $$(ids.linkedPage).setValue("");
+										// $$(ids.linkedPageView).setValue("");
+										// $$(ids.linkedEditPage).setValue("");
+										// $$(ids.linkedEditPageForm).setValue("");
+										$$(ids.detailsPage).setValue("");
+										$$(ids.editPage).setValue("");
 									}
 								}
 							}
 						},
-						{
-							view:"select",
-							name:"linkedObject",
-							label: L('ab.component.label.linkedObject', '*Linked To:'), 
-							labelWidth: App.config.labelWidthLarge,
-							hidden: 1,
-							on: {
-								onChange: function(newv, oldv) {
-									if (newv != oldv) {
-										$$(ids.linkedField).setValue("");
-									}
-								}
-							}
-						},
-						{
-							view:"select",
-							name:"linkedField",
-							label: L('ab.component.label.linkedField', '*Linked Field:'),
-							labelWidth: App.config.labelWidthLarge,
-							hidden: 1
-						}
+						// {
+						// 	view:"select",
+						// 	name:"linkedObject",
+						// 	label: L('ab.component.label.linkedObject', '*Linked To:'), 
+						// 	labelWidth: App.config.labelWidthLarge,
+						// 	hidden: 1,
+						// 	on: {
+						// 		onChange: function(newv, oldv) {
+						// 			if (newv != oldv) {
+						// 				$$(ids.linkedField).setValue("");
+						// 			}
+						// 		}
+						// 	}
+						// },
+						// {
+						// 	view:"select",
+						// 	name:"linkedField",
+						// 	label: L('ab.component.label.linkedField', '*Linked Field:'),
+						// 	labelWidth: App.config.labelWidthLarge,
+						// 	hidden: 1
+						// }
 			        ]
 		    	}
 		    },
 			{ 
 				view: "fieldset", 
-				label: L('ab.component.label.dataSource', '*Linked Views:'),
+				label: L('ab.component.label.linkedPages', '*Linked Pages:'),
 				labelWidth: App.config.labelWidthLarge,
 				body:{
 			        rows:[
 						{
 							view:"select",
-							name:"detailsView",
-							label: L('ab.component.label.dataSource', '*Details View:'),
+							name:"detailsPage",
+							label: L('ab.component.label.detailsPage', '*Details Page:'),
 							labelWidth: App.config.labelWidthLarge,
 							on: {
 								onChange: function(newv, oldv) {
 									if (newv != oldv) {
-										_logic.updateDetailsView(newv);
+										// _logic.updateDetailsView(newv);
 									}
 								}
 							}
 						},
-						{
-							view:"text",
-							name:"linkedPage",
-							height:0
-						},
-						{
-							view:"text",
-							name:"linkedPageView",
-							height:0
-						},
+						// {
+						// 	view:"text",
+						// 	name:"linkedPage",
+						// 	height:0
+						// },
+						// {
+						// 	view:"text",
+						// 	name:"linkedPageView",
+						// 	height:0
+						// },
 						{
 							view:"select",
-							name:"editForm",
-							label: L('ab.component.label.linkedObject', '*Edit Form:'), 
+							name:"editPage",
+							label: L('ab.component.label.editForm', '*Edit Form:'), 
 							labelWidth: App.config.labelWidthLarge,
 							on: {
 								onChange: function(newv, oldv) {
 									if (newv != oldv) {
-										_logic.updateEditForm(newv);
+										// _logic.updateEditForm(newv);
 									}
 								}
 							}
 						},
-						{
-							view:"text",
-							name:"linkedEditPage",
-							height:0
-						},
-						{
-							view:"text",
-							name:"linkedEditPageForm",
-							height:0
-						}
+						// {
+						// 	view:"text",
+						// 	name:"linkedEditPage",
+						// 	height:0
+						// },
+						// {
+						// 	view:"text",
+						// 	name:"linkedEditPageForm",
+						// 	height:0
+						// }
 			        ]
 		    	}
 		    },
@@ -504,12 +510,14 @@ export default class ABViewGrid extends ABView  {
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
 		$$(ids.allowDelete).setValue(view.settings.allowDelete);
-		$$(ids.linkedObject).setValue(view.settings.linkedObject);
-		$$(ids.linkedField).setValue(view.settings.linkedField);
-		$$(ids.linkedPage).setValue(view.settings.linkedPage);
-		$$(ids.linkedPageView).setValue(view.settings.linkedPageView);
-		$$(ids.linkedEditPage).setValue(view.settings.linkedEditPage);
-		$$(ids.linkedEditPageForm).setValue(view.settings.linkedEditPageForm);
+		// $$(ids.linkedObject).setValue(view.settings.linkedObject);
+		// $$(ids.linkedField).setValue(view.settings.linkedField);
+		// $$(ids.linkedPage).setValue(view.settings.linkedPage);
+		// $$(ids.linkedPageView).setValue(view.settings.linkedPageView);
+		// $$(ids.linkedEditPage).setValue(view.settings.linkedEditPage);
+		// $$(ids.linkedEditPageForm).setValue(view.settings.linkedEditPageForm);
+		$$(ids.detailsPage).setValue(view.settings.detailsPage);
+		$$(ids.editPage).setValue(view.settings.editPage);
 		
 		// initial populate of properties and popups
 		view.populateEditor(ids, view);
@@ -532,13 +540,14 @@ export default class ABViewGrid extends ABView  {
 		view.settings.isEditable = $$(ids.isEditable).getValue();
 		view.settings.massUpdate = $$(ids.massUpdate).getValue();
 		view.settings.allowDelete = $$(ids.allowDelete).getValue();
-		view.settings.linkedObject = $$(ids.linkedObject).getValue();
-		view.settings.linkedField = $$(ids.linkedField).getValue();
-		view.settings.linkedPage = $$(ids.linkedPage).getValue();
-		view.settings.linkedPageView = $$(ids.linkedPageView).getValue();
-		view.settings.linkedEditPage = $$(ids.linkedEditPage).getValue();
-		view.settings.linkedEditPageForm = $$(ids.linkedEditPageForm).getValue();
-		
+		// view.settings.linkedObject = $$(ids.linkedObject).getValue();
+		// view.settings.linkedField = $$(ids.linkedField).getValue();
+		// view.settings.linkedPage = $$(ids.linkedPage).getValue();
+		// view.settings.linkedPageView = $$(ids.linkedPageView).getValue();
+		// view.settings.linkedEditPage = $$(ids.linkedEditPage).getValue();
+		// view.settings.linkedEditPageForm = $$(ids.linkedEditPageForm).getValue();
+		view.settings.detailsPage = $$(ids.detailsPage).getValue();
+		view.settings.editPage = $$(ids.editPage).getValue();
 	}
 
 
@@ -564,15 +573,15 @@ export default class ABViewGrid extends ABView  {
 		
 		var CurrentObject = null;
 		
-		var linkedPage = null;
-		if (this.settings.linkedPage != "undefined" && this.settings.linkedPage != "" && this.settings.linkedPageView != "undefined" && this.settings.linkedPageView != "") {
-			linkedPage = this.settings.linkedPage+"|"+this.settings.linkedPageView;
-		}
-
-		var linkedEditPage = null;
-		if (this.settings.linkedEditPage != "undefined" && this.settings.linkedEditPage != "" && this.settings.linkedEditPageForm != "undefined" && this.settings.linkedEditPageForm != "") {
-			linkedEditPage = this.settings.linkedEditPage+"|"+this.settings.linkedEditPageForm;
-		}
+		// var linkedPage = null;
+		// if (this.settings.linkedPage != "undefined" && this.settings.linkedPage != "" && this.settings.linkedPageView != "undefined" && this.settings.linkedPageView != "") {
+		// 	linkedPage = this.settings.linkedPage+"|"+this.settings.linkedPageView;
+		// }
+		// 
+		// var linkedEditPage = null;
+		// if (this.settings.linkedEditPage != "undefined" && this.settings.linkedEditPage != "" && this.settings.linkedEditPageForm != "undefined" && this.settings.linkedEditPageForm != "") {
+		// 	linkedEditPage = this.settings.linkedEditPage+"|"+this.settings.linkedEditPageForm;
+		// }
 		
 		// there must be a better way...
 		if (this.settings.allowDelete == "1") {
@@ -592,8 +601,8 @@ export default class ABViewGrid extends ABView  {
 		}
 		var settings = {
 			allowDelete: this.settings.allowDelete,
-			detailsView: linkedPage,
-			editView: linkedEditPage,
+			detailsView: this.settings.detailsPage,
+			editView: this.settings.editPage,
 			isEditable: this.settings.isEditable,
 			massUpdate: this.settings.massUpdate
 		}
@@ -606,7 +615,8 @@ export default class ABViewGrid extends ABView  {
 			if (this.settings.dataSource != "") {
 				DataTable.init({
 					onCheckboxChecked: _logic.callbackCheckboxChecked
-				});			
+				});
+				
 
 				PopupMassUpdateComponent.init({
 					// onSave:_logic.callbackAddFields			// be notified of something...who knows...
@@ -616,24 +626,38 @@ export default class ABViewGrid extends ABView  {
 					onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
 				});
 
-				var dataSource = this.application.objects((o)=>{
-					return o.id == this.settings.dataSource;
-				});
+				// var dataSource = this.application.objects((o)=>{
+				// 	return o.id == this.settings.dataSource;
+				// });
+				var dc = this.dataCollection();
+				
+				if (dc) {
 
-				var dataCopy = _.cloneDeep(dataSource[0]);
-				dataCopy.objectWorkspace = this.settings.objectWorkspace;
-				CurrentObject = dataCopy;
-				// console.log("dataCopy");
-				// console.log(dataCopy);
+					// var dataCopy = _.cloneDeep(dc.datasource);
+					// dataCopy.objectWorkspace = this.settings.objectWorkspace;
+					CurrentObject = dc.datasource;
 
-				if (dataSource.length > 0) {
-					DataTable.objectLoad(dataCopy);
-					PopupMassUpdateComponent.objectLoad(dataCopy, DataTable);
-					PopupFilterDataTableComponent.objectLoad(dataCopy);
-					DataTable.refresh();
+					DataTable.objectLoad(dc.datasource);
+					PopupMassUpdateComponent.objectLoad(dc.datasource, DataTable);
+					PopupFilterDataTableComponent.objectLoad(dc.datasource);
+					DataTable.refreshHeader();
+					
+					dc.bind($$(ids.component));
+
+					var editPage = this.settings.editPage;
+					$$(ids.component).attachEvent("onItemClick", function (id, e, node) {
+						if (e.target.className.indexOf('pencil') > -1) {
+							var item = id;
+							console.log(item);
+							// dc.setCursor(item.id)
+							// this.emit('changePage', editPage);
+							_logic.changePage(dc, item);
+						}
+					});
+
+					$$(ids.component).adjust();
 				}
 				
-				$$(ids.component).adjust();
 				
 			}	
 			
@@ -740,6 +764,12 @@ export default class ABViewGrid extends ABView  {
                 }
 			},
 			
+			changePage: (dc, id) => {
+				dc.setCursor(id)
+				console.log(this.settings.editPage);
+				this.emit('changePage', this.settings.editPage);
+			},
+			
 			/**
 			 * @function enableUpdateDelete
 			 * 
@@ -833,65 +863,71 @@ export default class ABViewGrid extends ABView  {
 
 	populateEditor(ids, view) {
 		// Set the objects you can choose from in the list
-		var objects = [
-			{id:'', value:L('ab.component.label.selectObject', '*Select an object')}
-		];
-		view.application._objects.forEach((o)=>{
-			objects.push({id:o.id, value:o.label});
+		var defaultOption = {id:'', value:L('ab.component.label.selectObject', '*Select an object')};
+		// view.application._objects.forEach((o)=>{
+		// 	objects.push({id:o.id, value:o.label});
+		// });
+		// Pull data collections to options
+		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+			return {
+				id: dc.id,
+				value: dc.label
+			};
 		});
-		$$(ids.dataSource).define("options", objects);
+		objectOptions.unshift(defaultOption);
+		$$(ids.dataSource).define("options", objectOptions);
 		$$(ids.dataSource).refresh();
 		// console.log("getting data source");
 		// console.log($$(ids.dataSource).getValue());
 		// console.log(view.settings.dataSource);
 		if (view.settings.dataSource != '') {
 			$$(ids.dataSource).setValue(view.settings.dataSource);
-			$$(ids.linkedObject).show();
+			// $$(ids.linkedObject).show();
 		} else {
 			$$(ids.dataSource).setValue('');
-			$$(ids.linkedObject).hide();
+			// $$(ids.linkedObject).hide();
 		}
 
 		// Set the connected objects you can choose from in the list
-		var linkedObjects = [];
-		var linkedObjectsOptions = {id:'', value:L('ab.component.label.noLinkedObject', '*No linked object')};
-		linkedObjects = view.application.connectedObjects(view.settings.dataSource);
-		linkedObjects.unshift(linkedObjectsOptions);
-
-		$$(ids.linkedObject)
-		$$(ids.linkedObject).define("options", linkedObjects);
-		$$(ids.linkedObject).refresh();
-		if (view.settings.linkedObject != '') {
-			$$(ids.linkedObject).setValue(view.settings.linkedObject);
-			$$(ids.linkedField).show();
-		} else {
-			$$(ids.linkedObject).setValue('');
-			$$(ids.linkedField).hide();
-		}
+		// var linkedObjects = [];
+		// var linkedObjectsOptions = {id:'', value:L('ab.component.label.noLinkedObject', '*No linked object')};
+		// linkedObjects = view.application.connectedObjects(view.settings.dataSource);
+		// linkedObjects.unshift(linkedObjectsOptions);
+		// 
+		// $$(ids.linkedObject)
+		// $$(ids.linkedObject).define("options", linkedObjects);
+		// $$(ids.linkedObject).refresh();
+		// if (view.settings.linkedObject != '') {
+		// 	$$(ids.linkedObject).setValue(view.settings.linkedObject);
+		// 	$$(ids.linkedField).show();
+		// } else {
+		// 	$$(ids.linkedObject).setValue('');
+		// 	$$(ids.linkedField).hide();
+		// }
 
 		// 	Set the connected fields you can choose from in the list
-		var connectedFields = [];
-		// var connectedFieldsOptions = {id:'', value:L('ab.component.label.selectField', '*Select a field')};
-		if (view.settings.linkedObject != '') {
-			connectedFields = view.application.connectedFields(view.settings.dataSource, view.settings.linkedObject);
-			// connectedFields.unshift(connectedFieldsOptions);			
-		}
-
-		$$(ids.linkedField).define("options", connectedFields);
-		$$(ids.linkedField).refresh();
-		$$(ids.linkedField).setValue(view.settings.linkedField);
+		// var connectedFields = [];
+		// // var connectedFieldsOptions = {id:'', value:L('ab.component.label.selectField', '*Select a field')};
+		// if (view.settings.linkedObject != '') {
+		// 	connectedFields = view.application.connectedFields(view.settings.dataSource, view.settings.linkedObject);
+		// 	// connectedFields.unshift(connectedFieldsOptions);			
+		// }
+		// 
+		// $$(ids.linkedField).define("options", connectedFields);
+		// $$(ids.linkedField).refresh();
+		// $$(ids.linkedField).setValue(view.settings.linkedField);
 		
 		// Set the options of the possible detail views
 		var detailViews = [
 			{id:'', value:L('ab.component.label.noLinkedView', '*No linked view')}
 		];
 		detailViews = view.loopPages(view, view.application._pages, detailViews, "detail");
-		$$(ids.detailsView).define("options", detailViews);
-		$$(ids.detailsView).refresh();
+		$$(ids.detailsPage).define("options", detailViews);
+		$$(ids.detailsPage).refresh();
 		// console.log("populate details view dropdown");
-		if (view.settings.linkedPage != "" && view.settings.linkedPageView != "") {
-			$$(ids.detailsView).setValue(view.settings.linkedPage+"|"+view.settings.linkedPageView);
-		}
+		// if (view.settings.linkedPage != "" && view.settings.linkedPageView != "") {
+		// 	$$(ids.detailsPage).setValue(view.settings.linkedPage+"|"+view.settings.linkedPageView);
+		// }
 
 		// Set the options of the possible edit forms
 		var editForms = [
@@ -901,15 +937,16 @@ export default class ABViewGrid extends ABView  {
 		view.application._pages.forEach((o)=>{
 			o._views.forEach((j)=>{
 				if (j.key == "form" && j.settings.object == view.settings.dataSource) {
-					editForms.push({id:j.parent.id+"|"+j.id, value:j.label});				
+					// editForms.push({id:j.parent.id+"|"+j.id, value:j.label});
+					editForms.push({id:j.parent.id, value:j.label});				
 				}
 			});
 		});
-		$$(ids.editForm).define("options", editForms);
-		$$(ids.editForm).refresh();
-		if (view.settings.linkedEditPage != "" && view.settings.linkedEditPageForm != "") {
-			$$(ids.editForm).setValue(view.settings.linkedEditPage+"|"+view.settings.linkedEditPageForm);
-		}
+		$$(ids.editPage).define("options", editForms);
+		$$(ids.editPage).refresh();
+		// if (view.settings.linkedEditPage != "" && view.settings.linkedEditPageForm != "") {
+		// 	$$(ids.editForm).setValue(view.settings.linkedEditPage+"|"+view.settings.linkedEditPageForm);
+		// }
 	}
 	
 	populatePopupEditors(view) {
@@ -917,7 +954,8 @@ export default class ABViewGrid extends ABView  {
 			var dataSource = view.application.objects((o)=>{
 				return o.id == view.settings.dataSource;
 			});
-			var dataCopy = _.cloneDeep(dataSource[0]);
+			var dataSource = this.dataCollection();
+			var dataCopy = _.cloneDeep(dataSource.datasource);
 			
 			dataCopy.objectWorkspace = view.settings.objectWorkspace;
 			
@@ -929,12 +967,11 @@ export default class ABViewGrid extends ABView  {
 	}
 	
 	loopPages(view, o, detailViews, type) {
-		console.log(typeof o);
 		if (typeof o == "array" || typeof o == "object") {
 			o.forEach((p)=>{
-				console.log("page below");
-				console.log(p);
-				detailViews = view.loopPages(view, p._pages, detailViews, type);
+				if (p._pages.length > 0) {
+					detailViews = view.loopPages(view, p._pages, detailViews, type);
+				}
 				detailViews = view.loopViews(view, p._views, detailViews, type);
 			});
 		}
@@ -943,18 +980,25 @@ export default class ABViewGrid extends ABView  {
 	}
 	
 	loopViews(view, o, detailViews, type) {
-		console.log(typeof o);
 		if (typeof o == "array" || typeof o == "object") {
 			o.forEach((j)=>{
-				console.log("view below");
-				console.log(j);
-				if (j.key == type && j.settings.object == view.settings.dataSource) {
-					detailViews.push({id:j.parent.id+"|"+j.id, value:j.label});				
+				if (j.key == type && j.settings.datacollection == view.settings.dataSource) {
+					detailViews.push({id:j.parent.id, value:j.label});				
 				}
 			});
 			return detailViews;			
 		}
 		return detailViews;
+	}
+	
+	/**
+	 * @method dataCollection
+	 * return ABViewDataCollection of this form
+	 * 
+	 * @return {ABViewDataCollection}
+	 */
+	dataCollection() {
+		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}
 
 	// Custom functions needed for UI

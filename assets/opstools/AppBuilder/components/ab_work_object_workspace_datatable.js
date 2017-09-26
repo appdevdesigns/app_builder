@@ -277,7 +277,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                 // if this was our edit icon:
                 // console.log(e.target.className);
     			if (e.target.className.indexOf('pencil') > -1) {
-                    alert("edit");
+                    // alert("edit");
                 }
                 // if this was our view icon:
     			if (e.target.className.indexOf('eye') > -1) {
@@ -716,6 +716,42 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     		// rebuild the data table view:
     		refresh: function() {
                 
+    			// wait until we have an Object defined:
+    			if (CurrentObject) {
+                    var DataTable = $$(ids.component);
+    				//// update DataTable Content
+
+    				// Set the Model object with a condition / skip / limit, then
+    				// use it to load the DataTable:
+    				//// NOTE: this should take advantage of Webix dynamic data loading on
+    				//// larger data sets.
+                    var wheres = {};
+                    if (CurrentObject.workspaceFilterConditions.length > 0) {
+                        wheres = CurrentObject.workspaceFilterConditions;
+                    }
+                    var sorts = {};
+                    if (CurrentObject.workspaceSortFields.length > 0) {
+                        sorts = CurrentObject.workspaceSortFields;
+                    }
+    				CurrentObject.model()
+    				.where({
+                        where: wheres, 
+                        sort: sorts,
+                        height: defaultHeight
+                    })
+    				.skip(0)
+    				.limit(30)
+    				.loadInto(DataTable);
+    			}
+    		},
+
+            /**
+    		 * @function refreshHeader()
+    		 *
+    		 * refresh the header for the table apart from the refresh() command
+    		 */
+            refreshHeader:function() {
+                
                 columnSplitRight = 0;
     			// wait until we have an Object defined:
     			if (CurrentObject) {
@@ -784,32 +820,9 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     _logic.freezeDeleteColumn();
                     DataTable.refreshColumns();
 
-    				//// update DataTable Content
-
-    				// Set the Model object with a condition / skip / limit, then
-    				// use it to load the DataTable:
-    				//// NOTE: this should take advantage of Webix dynamic data loading on
-    				//// larger data sets.
-                    var wheres = {};
-                    if (CurrentObject.workspaceFilterConditions.length > 0) {
-                        wheres = CurrentObject.workspaceFilterConditions;
-                    }
-                    var sorts = {};
-                    if (CurrentObject.workspaceSortFields.length > 0) {
-                        sorts = CurrentObject.workspaceSortFields;
-                    }
-    				CurrentObject.model()
-    				.where({
-                        where: wheres, 
-                        sort: sorts,
-                        height: defaultHeight
-                    })
-    				.skip(0)
-    				.limit(30)
-    				.loadInto(DataTable);
     			}
-    		},
-
+                
+            },
 
     		/**
     		 * @function rowAdd()
@@ -947,6 +960,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 .update(item.id, item)
                 .then(()=>{
                     item.$height = height;
+                    DataTable.refreshHeader();
                     DataTable.refresh();
                 })
                 .catch((err)=>{
@@ -964,6 +978,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         // 
         this.objectLoad = _logic.objectLoad;
         this.refresh = _logic.refresh;
+        this.refreshHeader = _logic.refreshHeader;
         this.addRow = _logic.rowAdd;
 
         // allow getColumnConfig for sort data table component
