@@ -221,7 +221,11 @@ export default class ABView extends ABViewBase {
 
 			settings: this.settings || {},
 			translations: this.translations || [],
-			views: views
+			views: views,
+
+			// portlet template
+			template: this.template || {}
+
 		}
 	}
 
@@ -256,6 +260,10 @@ export default class ABView extends ABViewBase {
 			views.push(ABViewManager.newView(child, this.application, this));
 		})
 		this._views = views;
+
+
+		this.template = values.template || {};
+
 
 		// convert from "0" => 0
 
@@ -515,18 +523,39 @@ export default class ABView extends ABViewBase {
 			var allComponents = [];
 
 			// set Portlet layout template to webix.layout
-			Layout.setState(this.template, idBase);
+			Layout.setState(this.template);
+
+
+			App.eventIds = App.eventIds || {};
+
+			// prevent .attachEvent multiple times
+			if (App.eventIds['onAfterPortletMove']) webix.detachEvent("onAfterPortletMove");
+
+			// listen a event of the porlet when layout is changed
+			App.eventIds['onAfterPortletMove'] = webix.attachEvent("onAfterPortletMove", (source, parent, active, target, mode) => {
+
+				// save template layout to ABPageView
+				this.template = Layout.getState();
+
+				this.save();
+
+				// // Reorder
+				// var viewId = active.config.id;
+				// var targetId = target.config.id;
+
+				// var toPosition = this._views.findIndex((v) => v.id == targetId);
+
+				// this.viewReorder(viewId, toPosition);
+			});
+
 
 			// attach all the .UI views:
 			viewList.forEach((child) => {
 
 				var component = child.component(App);
-				// TODO
-				// var comId = (idBase + child.id);
-				var comId = (child.id);
 
 				var porletUI = {
-					id: comId,
+					id: child.id,
 					view: "portlet",
 					css: "ab-interface-component",
 					borderless: true,
@@ -552,9 +581,16 @@ export default class ABView extends ABViewBase {
 					}
 				};
 
-				// replace component to layout
-				if ($$(comId)) {
-					webix.ui(porletUI, $$(comId));
+
+				// If webix element is not exists in html, then destroy it.
+				// NOTE : webix does not know html is missing when we redraw layout at .setState
+				if ($$(child.id) && !document.body.contains($$(child.id).$view))
+					$$(child.id).destructor();
+
+
+				if ($$(child.id)) {
+					// replace component to layout
+					webix.ui(porletUI, $$(child.id));
 				}
 				// add component to rows
 				else {
@@ -574,28 +610,6 @@ export default class ABView extends ABViewBase {
 				});
 
 			}
-
-			App.eventIds = App.eventIds || {};
-
-			// prevent .attachEvent multiple times
-			if (App.eventIds['onAfterPortletMove']) webix.detachEvent("onAfterPortletMove");
-
-			// listen a event of the porlet when layout is changed
-			App.eventIds['onAfterPortletMove'] = webix.attachEvent("onAfterPortletMove", (source, parent, active, target, mode) => {
-
-				// save template layout to ABPageView
-				this.template = Layout.getState();
-
-				this.save();
-
-				// // Reorder
-				// var viewId = active.config.id;
-				// var targetId = target.config.id;
-
-				// var toPosition = this._views.findIndex((v) => v.id == targetId);
-
-				// this.viewReorder(viewId, toPosition);
-			});
 
 		}
 

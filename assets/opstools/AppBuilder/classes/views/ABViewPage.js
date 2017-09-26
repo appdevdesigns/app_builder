@@ -83,9 +83,6 @@ export default class ABViewPage extends ABView  {
         obj.dataCollections = dataCollections;
 
 
-        // portlet template
-        obj.template = this.template || {}
-
         return obj;
     }
 
@@ -115,8 +112,6 @@ export default class ABViewPage extends ABView  {
             dataCollections.push(this.dataCollectionNew(data));
         })
         this._dataCollections = dataCollections;
-
-        this.template = values.template || {};
 
         // convert from "0" => 0
 
