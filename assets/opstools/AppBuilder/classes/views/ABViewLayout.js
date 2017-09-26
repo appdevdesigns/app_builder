@@ -446,7 +446,8 @@ export default class ABViewLayout extends ABView  {
 					view.init();
 			})
 
-			$$(ids.component).adjust();
+			if ($$(ids.component) && $$(ids.component).adjust)
+				$$(ids.component).adjust();
 		}
 
 

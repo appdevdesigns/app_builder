@@ -66,32 +66,17 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 
 				return result;
 			},
-			// TODO : prefix to sub child
-			// setState: function (state, prefix) {
-			setState: function (state) {
+			setState: function (state, prefix) {
 
 				var views = state ? (state.rows || state.cols || []) : [];
 
-				// TODO: clear old rows/cols
+				// rebuild layout
 				this.reconstruct();
-				// this.getChildViews().forEach(function (v) {
-				// 	this.removeView(v);
-				// });
 
 				// Add rows/cols definition
 				views.forEach((v) => {
 
-					var viewId = v.id;
-
-					// // add prefix to id
-					// if (prefix && v.id) {
-					// 	viewId = prefix + v.id;
-					// }
-
-					// clone
-					var copyv = Object.assign(v, { id: viewId });
-
-					this.addView(copyv);
+					this.addView(v);
 				});
 
 			}
