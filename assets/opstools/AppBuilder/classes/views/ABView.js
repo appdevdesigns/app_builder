@@ -529,13 +529,13 @@ export default class ABView extends ABViewBase {
 					id: comId,
 					view: "portlet",
 					css: "ab-interface-component",
-					borderless: true,
+					// borderless: true,
 					layoutType: "head", // Drag on icon
 					body: {
 						rows: [
 							{
 								view: 'template',
-								height: 40,
+								height: 30,
 								css: "ab-porlet-header",
 								template: _logic.template(child),
 								onClick: {
