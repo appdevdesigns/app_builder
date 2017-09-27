@@ -508,8 +508,7 @@ export default class ABView extends ABViewBase {
 					view: App.custom.savablelayout.view,
 					type: 'space',
 					rows: []
-				},
-				{}
+				}
 			]
 		};
 
