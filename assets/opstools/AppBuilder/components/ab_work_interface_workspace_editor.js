@@ -197,6 +197,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 // },
                 {
                     view: 'multiview',
+                    fitBiggest: true,
                     id: ids.editArea,
                     cols: [
                         EditorLayout.ui,
