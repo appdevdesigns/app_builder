@@ -22,11 +22,18 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 
 		// webix UI definition:
 		this.ui = {
-			// view:'template',
-			view: 'layout',
-			id: ids.editArea,
-			rows: []
-			// template:'[edit Area]'
+			view: 'scrollview',
+			body: {
+				rows: [
+					{
+						// view:'template',
+						view: 'layout',
+						id: ids.editArea,
+						rows: [],
+						// template:'[edit Area]'							
+					}
+				]
+			}
 		};
 
 		var CurrentView = null;
