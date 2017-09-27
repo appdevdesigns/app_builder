@@ -52,6 +52,7 @@
 }
 .ab-interface-component {
 	background-color: #fff !important;
+	box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
 }
 .float-left {
 	float: left;

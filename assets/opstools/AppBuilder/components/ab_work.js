@@ -140,6 +140,7 @@ export default class AB_Work extends OP.Component {  // ('ab_work', function(App
 									id: ids.tabbar,
 									value: ids.tab_object,
 									multiview: true,
+									fitBiggest: true,
 									options: [
 										{
 											id: ids.tab_object,

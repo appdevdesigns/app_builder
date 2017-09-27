@@ -14,7 +14,8 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 
 		// internal list of Webix IDs to reference our UI components.
 		var ids = {
-
+			
+			component: this.unique('component'),
 			editArea: this.unique('editArea')
 
 		};
@@ -22,11 +23,19 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 
 		// webix UI definition:
 		this.ui = {
-			// view:'template',
-			view: 'layout',
-			id: ids.editArea,
-			rows: []
-			// template:'[edit Area]'
+			view: 'scrollview',
+			id: ids.component,
+			body: {
+				rows: [
+					{
+						// view:'template',
+						view: 'layout',
+						id: ids.editArea,
+						rows: [],
+						// template:'[edit Area]'							
+					}
+				]
+			}
 		};
 
 		var CurrentView = null;
@@ -47,7 +56,7 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
              * Show this component.
              */
 			show: function () {
-				$$(ids.editArea).show();
+				$$(ids.component).show();
 			},
 
 
