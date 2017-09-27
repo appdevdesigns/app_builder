@@ -539,18 +539,8 @@ export default class ABView extends ABViewBase {
 			// listen a event of the porlet when layout is changed
 			App.eventIds['onAfterPortletMove'] = webix.attachEvent("onAfterPortletMove", (source, parent, active, target, mode) => {
 
-				// save template layout to ABPageView
-				this.template = Layout.getState();
+				_logic.onAfterPortletMove();
 
-				this.save();
-
-				// // Reorder
-				// var viewId = active.config.id;
-				// var targetId = target.config.id;
-
-				// var toPosition = this._views.findIndex((v) => v.id == targetId);
-
-				// this.viewReorder(viewId, toPosition);
 			});
 
 
@@ -626,7 +616,7 @@ export default class ABView extends ABViewBase {
 		var _logic = {
 
 
-			/* 
+			/**
 			 * @method template()
 			 * render the list template for the View
 			 * @param {obj} obj the current View instance
@@ -648,7 +638,7 @@ export default class ABView extends ABViewBase {
 			},
 
 
-			/* 
+			/**
 			 * @method viewDelete()
 			 * Called when the [delete] icon for a child View is clicked.
 			 * @param {obj} e the onClick event object
@@ -666,9 +656,12 @@ export default class ABView extends ABViewBase {
 					callback: function (result) {
 						if (result) {
 
-							// TODO
-							$$(ids.component).removeView(id);
-							// Layout.getState();
+							// remove UI of this component in template
+							if ($$(id))
+								$$(ids.component).destroyView($$(id));
+
+							// update/refresh template to ABView
+							_logic.refreshTemplate();
 
 							deletedView.destroy()
 								.then(() => {
@@ -694,7 +687,7 @@ export default class ABView extends ABViewBase {
 			},
 
 
-			/* 
+			/**
 			 * @method viewEdit()
 			 * Called when the [edit] icon for a child View is clicked.
 			 * @param {obj} e the onClick event object
@@ -722,37 +715,32 @@ export default class ABView extends ABViewBase {
 
 				return false;
 			},
+
+			onAfterPortletMove: () => {
+
+				_logic.refreshTemplate();
+
+				// save template layout to ABPageView
+				this.save();
+
+				// // Reorder
+				// var viewId = active.config.id;
+				// var targetId = target.config.id;
+
+				// var toPosition = this._views.findIndex((v) => v.id == targetId);
+
+				// this.viewReorder(viewId, toPosition);
+
+			},
+
+			refreshTemplate: () => {
+
+				// get portlet template UI to ABView
+				this.template = $$(ids.component).getState();
+
+			}
+
 		}
-
-
-		var _template = [
-			'<div class="ab-component-in-page">',
-			'<div class="ab-layout-view-space" id="' + ids.view + '_#objID#" ></div>',
-			'<div class="ab-component-tools">',
-			'<i class="fa fa-trash ab-component-remove "></i>',
-			'<i class="fa fa-edit ab-component-edit "></i>',
-			'</div>',
-			'</div>'
-		].join('');
-
-		var _templateBlock = [
-			'<div class="ab-component-in-page">',
-			'<div id="' + ids.view + '_#objID#" >',
-			'<i class="fa fa-#icon# webix_icon_btn"></i> ',
-			'#label#',
-			'</div>',
-			'<div class="ab-component-tools">',
-			'<i class="fa fa-trash ab-component-remove"></i>',
-			'<i class="fa fa-edit ab-component-edit"></i>',
-			'</div>',
-			'</div>'
-		].join('');
-
-		var _templatePlaceholder = [
-			'<div class="ab-component-in-page">',
-			'<div id="' + ids.view + '_#objID#" ></div>',
-			'</div>'
-		].join('');
 
 
 		return {

@@ -39,6 +39,8 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 		// Our webix UI definition:
 		var _ui = {
 			name: ComponentKey,
+
+
 			getState: function () {
 
 				var store = new webix.TreeCollection();
@@ -66,6 +68,8 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 
 				return result;
 			},
+
+
 			setState: function (state, prefix) {
 
 				var views = state ? (state.rows || state.cols || []) : [];
@@ -92,8 +96,23 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 
 					this.addView(copyv);
 				});
+			},
+
+
+			destroyView: function (deleteView) {
+
+				if (typeof deleteView == 'string') {
+					deleteView = $$(deleteView);
+				}
+
+				if (deleteView == null)
+					return;
+
+				var parent = deleteView.getParentView();
+				parent.removeView(deleteView);
 
 			}
+
 		};
 		this.view = ComponentKey;
 
@@ -153,7 +172,7 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 				store.data.eachChild(item.id, function (subitem) {
 					var subResult = _logic.normalize(store, subitem);
 					children.push(subResult);
-				});
+				}, store.data, false);
 
 				// If the element has .rows property
 				if ('rows' in item) {
