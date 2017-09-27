@@ -139,6 +139,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                 {
                     view: "layout",
                     type: "space",
+                    css: "gray",
                     cols: [
                         {
                             view: "segmented",
@@ -173,7 +174,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                         {
                             id: ids.toolbarNewDataCollection,
                             view: "button",
-                            type: "icon", 
+                            type: "iconButton", 
                             icon: "plus",
                             label: labels.component.newDataSource,
                             align: "right",
@@ -185,7 +186,6 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
                                 }
                             }
                         },
-
                         ComponentMenu.ui
                     ]
                 },

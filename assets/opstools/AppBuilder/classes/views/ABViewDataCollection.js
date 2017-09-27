@@ -499,6 +499,23 @@ export default class ABViewDataCollection extends ABView {
 	bind(component) {
 
 		var dc = this.dataCollection();
+		var obj = this.datasource;
+
+		var defaultHeight = 0;
+		var minHeight = 0;
+		obj._fields.forEach(function (f) {
+			if (f.key == "image") {
+				if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
+					minHeight = parseInt(f.settings.imageHeight);
+				}
+			}
+		});
+		if (minHeight > 0) {
+			defaultHeight = minHeight;
+		}
+
+		// get ABModel
+		var model = obj.model();
 
 		if (component.config.view == 'datatable') {
 			if (dc) {
@@ -506,27 +523,9 @@ export default class ABViewDataCollection extends ABView {
 				component.define("datathrottle", 500);
 				
 				component.data.sync(dc);
-
-				var obj = this.datasource;
-				
-				var defaultHeight = 0;
-				var minHeight = 0;
-                obj._fields.forEach(function (f) {
-                    if (f.key == "image") {
-                        if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
-                            minHeight = parseInt(f.settings.imageHeight);
-                        }
-                    }
-                });
-                if (minHeight > 0) {
-                    defaultHeight = minHeight;
-                }
-		
-				// get ABModel
-				var model = obj.model();
 				
 				var where = this.settings.objectWorkspace.filterConditions || {};
-		
+
 				// get data to data collection
 				var cond = {
 					where:where,
@@ -534,8 +533,8 @@ export default class ABViewDataCollection extends ABView {
 					skip:0
 				}
 
-				if (component.showProgress)
-					component.showProgress({ type: "icon" });
+				// if (component.showProgress)
+				// 	component.showProgress({ type: "icon" });
 
 				model.findAll(cond)
 				.then((data) => {
@@ -548,8 +547,8 @@ export default class ABViewDataCollection extends ABView {
 					});
 					dc.parse(data);
 
-					if (component.hideProgress)
-						component.hideProgress();
+					// if (component.hideProgress)
+					// 	component.hideProgress();
 
 				})
 
@@ -587,6 +586,7 @@ export default class ABViewDataCollection extends ABView {
 		}
 		else if (component.bind) {
 			if (dc) {
+				// Do I need to check if there is any data in the collection before binding?
 				component.bind(dc);
 			} else {
 				component.unbind();

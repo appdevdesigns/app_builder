@@ -243,8 +243,18 @@ export default class ABViewFormButton extends ABView {
 			},
 
 			onSave: (saveButton) => {
-				if (saveButton.getFormView())
-					saveButton.getFormView().validate();
+				alert("saving");
+				console.log(saveButton.getFormView());
+				if (saveButton.getFormView()) {
+					alert("in here");
+					if (saveButton.getFormView().validate()) {
+						alert("is valid");
+						saveButton.getFormView().save();
+					} else {
+						alert("didn't work");
+						webix.message({ type:"error", text:"Form data is invalid" });
+					}
+				}
 			}
 		};
 

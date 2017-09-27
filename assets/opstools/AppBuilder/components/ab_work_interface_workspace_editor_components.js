@@ -35,7 +35,7 @@ export default class AB_Work_Interface_Workspace_Editor_Components extends OP.Co
 		this.ui = {
 			id: ids.component,
 			view: "button",
-			type: "icon",
+			type: "iconButton",
 			icon: "plus",
 			label: labels.component.addWidget,
 			align: "right",

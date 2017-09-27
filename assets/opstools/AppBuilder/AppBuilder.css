@@ -144,9 +144,11 @@
 }
 .webix_view.webix_control .webix_disabled_box .webix_input_icon, .webix_view.webix_control .webix_disabled_box button, .webix_view.webix_control .webix_disabled_box label {
 	color: #CCC;
+	background: transparent;
 }
-.webix_control .webix_disabled_box .webix_img_btn_text, .webix_disabled_view.webix_control .webix_icon, .webix_disabled_view.webix_control .webix_icon_btn, .webix_layout_toolbar.webix_toolbar .webix_disabled_view.webix_control .webix_disabled_box .webix_img_btn_text, .webix_layout_toolbar.webix_toolbar .webix_disabled_view.webix_control .webix_icon, .webix_layout_toolbar.webix_toolbar .webix_disabled_view.webix_control .webix_icon_btn {
+.webix_control .webix_disabled_box .webix_el_arrow, .webix_control .webix_disabled_box .webix_img_btn, .webix_control .webix_disabled_box .webixtype_base, .webix_control .webix_disabled_box .webixtype_danger, .webix_control .webix_disabled_box .webixtype_form, .webix_control .webix_disabled_box .webixtype_next, .webix_control .webix_disabled_box .webixtype_prev {
 	color: #CCC;
+	background: transparent;
 }
 
 /* Webix segmented */
@@ -841,7 +843,7 @@ a.ab-delete-photo:hover {
 
 /* Interface Editor */
 .ab-porlet-header {
-	background-color: #f5f5f5;
+	background-color: #DDD;
 }
 .ab-main-container .portlet_drag {
     position: absolute;
@@ -850,13 +852,12 @@ a.ab-delete-photo:hover {
     right: 68px;
     width: 33px;
     opacity: 1;
-    cursor: pointer;
-    background-color: #f7f717;
+    cursor: move;
+    background-color: #AAA;
     height: 31px;
     color: #fff;
 }
 .ab-main-container .portlet_drag:hover {
-	cursor: pointer;
 	opacity: 0.8;
 }
 .ab-main-container .portlet_drag .webix_icon {
@@ -864,4 +865,16 @@ a.ab-delete-photo:hover {
     width: 33px;
     height: 33px;
     text-align: center;
+}
+.gray {
+	background: #DDD !important;
+}
+.webix_el_checkbox .webix_label_right {
+	padding-top: 0;
+}
+.webix_multiview .webix_layout_space {
+	background: #f5f5f5;
+}
+.webix_multiview .webix_layout_space .webix_layout_space {
+	background: #FFF;
 }
