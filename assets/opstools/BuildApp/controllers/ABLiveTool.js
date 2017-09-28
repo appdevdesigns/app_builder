@@ -275,6 +275,13 @@ steal(
 								});
 							}
 
+							// Initial UI components
+							setTimeout(function () {
+
+								component.init();
+
+							}, 50);
+
 						},
 
 						/**
@@ -306,16 +313,6 @@ steal(
 
 							// Change page by batch id
 							$$(self.containerDomID).showBatch(pageId);
-
-							// Initial UI components
-							setTimeout(function () {
-
-								var component = self.pageComponents[pageId];
-								if (component) {
-									component.init();
-								}
-
-							}, 50);
 
 						},
 
