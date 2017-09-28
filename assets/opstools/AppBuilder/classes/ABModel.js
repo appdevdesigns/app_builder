@@ -19,64 +19,61 @@
 //		.limit(XX)
 //		.loadInto(DataTable);
 
+import EventEmitter from "events"
 
 
-function toDC( data ) {
+function toDC(data) {
 	return new webix.DataCollection({
 		data: data,
-
-		// on: {
-		// 	onAfterDelete: function(id) {
-
-		// 	}
-		// }
 	});
 }
 
 
-export default class ABModel {
+export default class ABModel extends EventEmitter {
 
-    constructor(object) {
+	constructor(object) {
 
-	  	// link me to my parent ABApplication
-	  	this.object = object;
+		super();
 
-	  	this._where = null;
-	  	this._skip = null;
-	  	this._limit = null;
-  	}
+		// link me to my parent ABApplication
+		this.object = object;
+
+		this._where = null;
+		this._skip = null;
+		this._limit = null;
+	}
 
 
 
-  	///
-  	/// Static Methods
-  	///
-  	/// Available to the Class level object.  These methods are not dependent
-  	/// on the instance values of the Application.
-  	///
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
 
 
 
 	///
 	/// Instance Methods
 	///
-	modelURL () {
+	modelURL() {
 		return '/app_builder/model/application/#appID#/object/#objID#'
-		.replace('#appID#', this.object.application.id)
-		.replace('#objID#', this.object.id)
+			.replace('#appID#', this.object.application.id)
+			.replace('#objID#', this.object.id)
 	}
 
-	modelURLItem ( id ) {
+	modelURLItem(id) {
 		return '/app_builder/model/application/#appID#/object/#objID#/#id#'
-		.replace('#appID#', this.object.application.id)
-		.replace('#objID#', this.object.id)
-		.replace('#id#', id);
+			.replace('#appID#', this.object.application.id)
+			.replace('#objID#', this.object.id)
+			.replace('#id#', id);
 	}
 
-	modelURLRefresh () {
+	modelURLRefresh() {
 		return '/app_builder/model/application/#appID#/refreshobject/#objID#'
-		.replace('#appID#', this.object.application.id)
-		.replace('#objID#', this.object.id);
+			.replace('#appID#', this.object.application.id)
+			.replace('#objID#', this.object.id);
 	}
 
 
@@ -103,14 +100,17 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service.post({
-					url:this.modelURL(),
-					params:values
+					url: this.modelURL(),
+					params: values
 				})
-				.then((data)=>{
+					.then((data) => {
 
-					resolve(data);
-				})
-				.catch(reject);
+						resolve(data);
+
+						// trigger a create event
+						this.emit('create', data);
+					})
+					.catch(reject);
 
 			}
 		)
@@ -130,12 +130,16 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service['delete']({
-					url:this.modelURLItem(id)
+					url: this.modelURLItem(id)
 				})
-				.then((data)=>{
-					resolve(data);
-				})
-				.catch(reject);
+					.then((data) => {
+						resolve(data);
+
+						// trigger a delete event
+						this.emit('delete', data);
+
+					})
+					.catch(reject);
 
 			}
 		)
@@ -169,23 +173,23 @@ export default class ABModel {
 			(resolve, reject) => {
 
 				OP.Comm.Service.get({
-					url:this.modelURL(),
-					params:newCond
+					url: this.modelURL(),
+					params: newCond
 				})
-				.then((data)=>{
+					.then((data) => {
 
-					// if this object has some multilingual fields, translate the data:
-					var mlFields = this.object.multilingualFields();
-					if (mlFields.length) {
+						// if this object has some multilingual fields, translate the data:
+						var mlFields = this.object.multilingualFields();
+						if (mlFields.length) {
 
-						data.data.forEach((d)=>{
-							OP.Multilingual.translate(d,d, mlFields);
-						})
-					}
+							data.data.forEach((d) => {
+								OP.Multilingual.translate(d, d, mlFields);
+							})
+						}
 
-					resolve(data);
-				})
-				.catch(reject);
+						resolve(data);
+					})
+					.catch(reject);
 
 			}
 		)
@@ -198,14 +202,14 @@ export default class ABModel {
 	 * loads the current values into the provided Webix DataTable
 	 * @param {DataTable} DT  A Webix component that can dynamically load data.
 	 */
-	loadInto( DT ) {
-		
+	loadInto(DT) {
+
 		// if a limit was applied, then this component should be loading dynamically
 		if (this._limit) {
 
 			DT.define('datafetch', this._limit);
-			DT.define('datathrottle',  250 );  // 250ms???
-		
+			DT.define('datathrottle', 250);  // 250ms???
+
 
 			// catch the event where data is requested:
 			// here we will do our own findAll() so we can persist
@@ -214,36 +218,36 @@ export default class ABModel {
 			// oh yeah, and make sure to remove any existing event handler when we 
 			// perform a new .loadInto()
 			DT.___AD = DT.___AD || {};
-			if( DT.___AD.onDataRequestEvent) {
+			if (DT.___AD.onDataRequestEvent) {
 				DT.detachEvent(DT.___AD.onDataRequestEvent);
 			}
 			DT.___AD.onDataRequestEvent = DT.attachEvent("onDataRequest", (start, count) => {
-				
+
 				var cond = {
-					where:this._where,
-					limit:count,
-					skip:start
+					where: this._where,
+					limit: count,
+					skip: start
 				}
 
 				if (DT.showProgress)
 					DT.showProgress({ type: "icon" });
 
 				this.findAll(cond)
-				.then((data) => {
-					data.data.forEach((item) => {
-						if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
-							item.$height = parseInt(item.properties.height);
-						} else if (parseInt(this._where.height) > 0) {
-							item.$height = parseInt(this._where.height)
-						}
-					});
-					DT.parse(data);
+					.then((data) => {
+						data.data.forEach((item) => {
+							if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
+								item.$height = parseInt(item.properties.height);
+							} else if (parseInt(this._where.height) > 0) {
+								item.$height = parseInt(this._where.height)
+							}
+						});
+						DT.parse(data);
 
-					if (DT.hideProgress)
-						DT.hideProgress();
+						if (DT.hideProgress)
+							DT.hideProgress();
 
-				})
-			  
+					})
+
 				return false;	// <-- prevent the default "onDataRequest"
 			});
 
@@ -256,29 +260,29 @@ export default class ABModel {
 		var cond = {};
 		if (this._where) cond.where = this._where;
 		if (this._limit != null) cond.limit = this._limit;
-		if (this._skip  != null) cond.skip  = this._skip;
+		if (this._skip != null) cond.skip = this._skip;
 
 		if (DT.showProgress)
 			DT.showProgress({ type: "icon" });
 
 		this.findAll(cond)
-		.then((data)=>{
-			data.data.forEach((item) => {
-				if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
-					item.$height = parseInt(item.properties.height);
-				} else if (parseInt(this._where.height) > 0) {
-					item.$height = parseInt(this._where.height)
-				}
-			});
-			DT.parse(data);
+			.then((data) => {
+				data.data.forEach((item) => {
+					if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
+						item.$height = parseInt(item.properties.height);
+					} else if (parseInt(this._where.height) > 0) {
+						item.$height = parseInt(this._where.height)
+					}
+				});
+				DT.parse(data);
 
-			if (DT.hideProgress)
-				DT.hideProgress();
+				if (DT.hideProgress)
+					DT.hideProgress();
 
-		})
-		.catch((err)=>{
-console.error('!!!!!', err);
-		})
+			})
+			.catch((err) => {
+				console.error('!!!!!', err);
+			})
 
 
 	}
@@ -328,13 +332,17 @@ console.error('!!!!!', err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url:this.modelURLItem( id ),
-					params:values
+					url: this.modelURLItem(id),
+					params: values
 				})
-				.then((data)=>{
-					resolve(data);
-				})
-				.catch(reject);
+					.then((data) => {
+						resolve(data);
+
+						// trigger a update event
+						this.emit('update', data);
+
+					})
+					.catch(reject);
 
 			}
 		)
@@ -364,12 +372,12 @@ console.error('!!!!!', err);
 			(resolve, reject) => {
 
 				OP.Comm.Service.put({
-					url:this.modelURLRefresh()
+					url: this.modelURLRefresh()
 				})
-				.then(()=>{
-					resolve();
-				})
-				.catch(reject);
+					.then(() => {
+						resolve();
+					})
+					.catch(reject);
 
 			}
 		)
@@ -386,9 +394,22 @@ console.error('!!!!!', err);
 		webix.extend(dc, webix.SelectionModel);
 
 		// override unused functions of selection model
-		dc.addCss = function() {};
-		dc.removeCss = function() {};
-		dc.render = function() {};
+		dc.addCss = function () { };
+		dc.removeCss = function () { };
+		dc.render = function () { };
+
+		// events
+		this.on('create', (data) => {
+			// TODO
+		});
+
+		this.on('update', (data) => {
+			// TODO
+		});
+
+		this.on('delete', (data) => {
+			// TODO
+		});
 
 		return dc;
 	}
