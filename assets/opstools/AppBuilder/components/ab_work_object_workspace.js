@@ -771,16 +771,16 @@ console.error('TODO: toolbarPermission()');
 
     			CurrentObject = object;
 
-    			App.actions.populateObjectPopupAddDataField(object);
+    			App.actions.populateObjectPopupAddDataField(CurrentObject);
 
-    			DataTable.objectLoad(object);
+    			DataTable.objectLoad(CurrentObject);
 
-    			PopupDefineLabelComponent.objectLoad(object);
-                PopupFilterDataTableComponent.objectLoad(object);
-    			PopupFrozenColumnsComponent.objectLoad(object);
-    			PopupHideFieldComponent.objectLoad(object);
-                PopupMassUpdateComponent.objectLoad(object, DataTable);
-    			PopupSortFieldComponent.objectLoad(object);
+    			PopupDefineLabelComponent.objectLoad(CurrentObject);
+                PopupFilterDataTableComponent.objectLoad(CurrentObject);
+    			PopupFrozenColumnsComponent.objectLoad(CurrentObject);
+    			PopupHideFieldComponent.objectLoad(CurrentObject);
+                PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
+    			PopupSortFieldComponent.objectLoad(CurrentObject);
 
     			// We can hide fields now that data is loaded
                 _logic.callbackFieldsVisible();

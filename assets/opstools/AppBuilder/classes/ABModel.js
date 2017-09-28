@@ -106,7 +106,6 @@ export default class ABModel extends EventEmitter {
 					.then((data) => {
 
 						resolve(data);
-
 						// trigger a create event
 						this.emit('create', data);
 					})
@@ -134,9 +133,8 @@ export default class ABModel extends EventEmitter {
 				})
 					.then((data) => {
 						resolve(data);
-
 						// trigger a delete event
-						this.emit('delete', data);
+						this.emit('delete', id);
 
 					})
 					.catch(reject);
@@ -337,9 +335,8 @@ export default class ABModel extends EventEmitter {
 				})
 					.then((data) => {
 						resolve(data);
-
 						// trigger a update event
-						this.emit('update', data);
+						this.emit('update', values);
 
 					})
 					.catch(reject);
@@ -403,12 +400,16 @@ export default class ABModel extends EventEmitter {
 			// TODO
 		});
 
-		this.on('update', (data) => {
-			// TODO
+		this.on('update', (values) => {
+			if(dc.exists(values.id)) {
+				dc.updateItem(values.id, values);
+			}
 		});
 
-		this.on('delete', (data) => {
-			// TODO
+		this.on('delete', (id) => {
+			if(dc.exists(id)) {
+				dc.remove(id);
+			}
 		});
 
 		return dc;
