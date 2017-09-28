@@ -162,12 +162,6 @@ export default class ABViewForm extends ABViewFormPanel {
 	 */
 	component(App) {
 
-		// get a UI component for each of our child views
-		var viewComponents = [];
-		this.views().forEach((v) => {
-			viewComponents.push(v.component(App));
-		})
-
 		var idBase = 'ABViewForm_' + this.id,
 			ids = {
 				component: App.unique(idBase + '_component'),
@@ -178,29 +172,45 @@ export default class ABViewForm extends ABViewFormPanel {
 		var _ui = {
 			id: ids.component,
 			view: 'form',
-			elements: []
+			elements: this.template.rows || []
 		}
-
-		// insert each of our sub views into our rows:
-		viewComponents.forEach((view) => {
-			_ui.elements.push(view.ui);
-		})
-
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+
 			var Form = $$(ids.component);
 
-			viewComponents.forEach((view) => {
-				if (view.init)
-					view.init();
-			});
+			// get a UI component for each of our child views
+			var viewComponents = [];
+			this.views().forEach((v) => {
+
+				var subComponent = v.component(App);
+
+
+				// get element in template
+				var elem = Form.queryView({ viewId: v.id });
+				if (elem) {
+					// replace component to layout
+					webix.ui(subComponent.ui, elem);
+				}
+				// add component to rows
+				else {
+					Form.addView(subComponent.ui);
+				}
+
+
+				// initialize
+				subComponent.init();
+
+			})
+
 
 			// bind a data collection to form component
 			var dc = this.dataCollection();
 			if (dc) {
 				dc.bind(Form);
 			}
+
 
 			Form.adjust();
 		}

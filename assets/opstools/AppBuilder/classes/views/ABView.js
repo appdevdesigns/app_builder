@@ -461,52 +461,6 @@ export default class ABView extends ABViewBase {
 			view: App.unique(idBase + '_view')
 		}
 
-
-		// var _ui = {
-		// 	view: 'list',
-		// 	drag: true,
-		// 	select: false,
-		// 	css: 'ab_interface_draggable ab_layout_pane',
-		// 	template:function(obj, common) {
-		// 		return _logic.template(obj, common);
-		// 	},
-		// 	type: {
-		// 		height: 'auto'
-		// 	},
-		// 	ready:function(){
-		// 		if (!this.count()){
-		// 			webix.extend(this, webix.OverlayBox);
-		// 			this.showOverlay("<div class='drop-zone'><div>"+App.labels.componentDropZone+"</div></div>");
-		// 		}
-		// 	},
-		// 	on: {
-		// 		// onAfterRender: function () {
-		// 		// 	self.generateComponentsInList();
-		// 		// },
-		// 		onBeforeDrag: function (context, ev) {
-		// 			return _logic.onBeforeDrag(context,ev);
-		// 		},
-		// 		onBeforeDrop: function (context, ev) {
-		// 			return _logic.onBeforeDrop(context,ev);
-		// 		},
-		// 		onAfterDrop: function (context, ev) {
-		// 			_logic.onAfterDrop(context, ev);
-		// 		}
-		// 	},
-		// 	onClick: {
-		// 		"ab-component-edit": function (e, id, trg) {
-		// 			_logic.viewEdit(e, id, trg);
-		// 		},
-		// 		"ab-component-remove": function (e, id, trg) {
-		// 			_logic.viewDelete(e, id, trg);
-		// 		}
-		// 	},
-		// 	externalData: function (data, id, oldData) {
-		// 		return _logic.externalData(data, id, oldData);
-		// 	}
-
-		// }
-
 		var _ui = {
 			rows: [
 				{
@@ -520,8 +474,6 @@ export default class ABView extends ABViewBase {
 
 
 		var _init = (options) => {
-
-			var viewList = this.views();
 
 			var Layout = $$(ids.component);
 
@@ -545,12 +497,12 @@ export default class ABView extends ABViewBase {
 
 
 			// attach all the .UI views:
-			viewList.forEach((child) => {
+			this.views().forEach((child) => {
 
 				var component = child.component(App);
 
 				var porletUI = {
-					id: child.id,
+					viewId: child.id, // set id to .viewId, the layout template
 					view: "portlet",
 					css: "ab-interface-component",
 					// borderless: true,
@@ -581,15 +533,19 @@ export default class ABView extends ABViewBase {
 				};
 
 
+				// get element in template
+				var elem = Layout.queryView({ viewId: child.id });
+
+
 				// If webix element is not exists in html, then destroy it.
 				// NOTE : webix does not know html is missing when we redraw layout at .setState
-				if ($$(child.id) && !document.body.contains($$(child.id).$view))
-					$$(child.id).destructor();
+				if (elem && !document.body.contains(elem.$view))
+					elem.destructor();
 
 
-				if ($$(child.id)) {
+				if (elem) {
 					// replace component to layout
-					webix.ui(porletUI, $$(child.id));
+					webix.ui(porletUI, elem);
 				}
 				// add component to rows
 				else {
@@ -656,16 +612,18 @@ export default class ABView extends ABViewBase {
 					callback: function (result) {
 						if (result) {
 
+							var Layout = $$(ids.component);
+
 							// remove UI of this component in template
-							if ($$(id))
-								$$(ids.component).destroyView($$(id));
+							var deletedElem = Layout.queryView({ viewId: id });
+							if (deletedElem)
+								$$(ids.component).destroyView(deletedElem);
 
 							// update/refresh template to ABView
 							_logic.refreshTemplate();
 
 							deletedView.destroy()
 								.then(() => {
-									$$(ids.component).removeView(id);
 
 									// signal the current view has been deleted.
 									deletedView.emit('destroyed', deletedView);
@@ -884,16 +842,6 @@ export default class ABView extends ABViewBase {
 	 */
 	component(App) {
 
-		// get a UI component for each of our child views
-		var viewComponents = [];
-		this.views().forEach((v) => {
-			viewComponents.push(v.component(App));
-		})
-
-		function L(key, altText) {
-			return AD.lang.label.getLabel(key) || altText;
-		}
-
 		var idBase = 'ABView_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
@@ -903,12 +851,10 @@ export default class ABView extends ABViewBase {
 		// an ABView is a collection of rows:
 		var _ui = {
 			id: ids.component,
-			rows: []
-		}
-		// insert each of our sub views into our rows:
-		viewComponents.forEach((view) => {
-			_ui.rows.push(view.ui);
-		})
+			view: 'layout',
+			type: 'space',
+			rows: this.template.rows || []
+		};
 
 
 		// if this form is empty, then force a minimal row height
@@ -922,20 +868,36 @@ export default class ABView extends ABViewBase {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-			viewComponents.forEach((view) => {
-				view.init();
-			});
 
-			$$(ids.component).adjust();
+			var Layout = $$(ids.component);
 
-			// Listen events of children components
-			this.views().forEach((v) => {
+			// attach all the .UI views:
+			this.views().forEach((child) => {
+
+				var component = child.component(App);
+
+				// get element in template
+				var elem = Layout.queryView({ viewId: child.id });
+				if (elem) {
+					// replace component to layout
+					webix.ui(component.ui, elem);
+				}
+				// add component to rows
+				else {
+					Layout.addView(component.ui);
+				}
+
+				// Initial component
+				component.init();
 
 				// Trigger 'changePage' event to parent
-				v.removeListener('changePage', _logic.changePage)
+				child.removeListener('changePage', _logic.changePage)
 					.once('changePage', _logic.changePage);
 
 			});
+
+			Layout.adjust();
+
 		};
 
 

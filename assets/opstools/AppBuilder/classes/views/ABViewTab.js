@@ -89,9 +89,9 @@ export default class ABViewTab extends ABView {
 			component: App.unique(idBase + '_component'),
 			view: App.unique(idBase + '_view')
 		};
+		var component = this.component(App);
 
-
-		var tabElem = this.component(App).ui;
+		var tabElem = component.ui;
 		tabElem.id = ids.component;
 		tabElem.tabbar = {
 			on: {
@@ -128,7 +128,7 @@ export default class ABViewTab extends ABView {
 			}
 		};
 
-		// Display list of items in 'block' mode
+		// Add action buttons
 		if (tabElem.cells && tabElem.cells.length > 0) {
 			tabElem.cells.forEach((tabView) => {
 
@@ -138,24 +138,6 @@ export default class ABViewTab extends ABView {
 				tabView.header += ' <i class="fa fa-pencil-square-o rename"></i>';
 				// Add 'move next' icon
 				tabView.header += ' <i class="fa fa-caret-right move-next" style="float: right; padding-right: 10px;"></i>';
-
-				if (mode == 'block') {
-
-					var tab = this.views(v => v.id == tabView.id)[0];
-
-					tabView.body = {
-						id: tab.id,
-						view: 'list',
-						data: tab.views(),
-						scroll: 'y',
-						select: false,
-						multiselect: false,
-						template: (tabItem, common) => {
-							return _logic.templateBlock(tabItem, common);
-						}
-					};
-
-				}
 
 			});
 
@@ -170,6 +152,8 @@ export default class ABViewTab extends ABView {
 
 
 		var _init = (options) => {
+
+			component.init(options);
 
 			// Add actions buttons - Edit , Delete
 			if ($$(ids.component) && 

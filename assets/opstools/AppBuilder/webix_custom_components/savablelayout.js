@@ -133,7 +133,7 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 				var vals = {};
 
 				// get required properties
-				['id', 'rows', 'cols'].forEach(function (propName) {
+				['id', 'viewId', 'rows', 'cols'].forEach(function (propName) {
 					if (propName in elem.config)
 						vals[propName] = elem.config[propName];
 				});
@@ -167,6 +167,10 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 
 				var result = {};
 
+				if (item.viewId) {
+					result.viewId = item.viewId;
+				}
+
 				// get sub-children
 				var children = [];
 				store.data.eachChild(item.id, function (subitem) {
@@ -182,12 +186,6 @@ export default class ABCustomSavableLayout extends OP.CustomComponent {
 				else if ('cols' in item) {
 					result.cols = children;
 				}
-
-				// Check if it is id of a component, then should set to result
-				// Check by uuid format
-				var uuidFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-				if (uuidFormat.test(item.id))
-					result.id = item.id;
 
 				return result;
 
