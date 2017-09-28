@@ -115,11 +115,10 @@ export default class AB_Work_Object_Workspace_PopupMassUpdate extends OP.Compone
 
 
 					                        updateTasks.push(function (next) {
-											
 								                CurrentObject.model()
 								                .update(object.id, object)
 								                .then(()=>{
-								                    DataTable.refresh();
+								                    DataTable.refresh(); // We need this in the object builder
 													next();
 								                }, next);
 											

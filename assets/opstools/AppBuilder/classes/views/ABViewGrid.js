@@ -800,9 +800,6 @@ export default class ABViewGrid extends ABView  {
 							CurrentObject.model()
 							.delete(obj.id)
 							.then((response)=>{
-								if (response.numRows > 0) {
-									$$(DataTable.ui.id).remove(obj.id);
-								}
 								next();
 							}, next);
 						});

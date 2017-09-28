@@ -473,9 +473,14 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	init() {
 
-		var dc =  new webix.DataCollection();
-		
-		this.__dataCollection = dc;
+		var obj = this.datasource;
+
+		if (obj) {
+
+			var model = obj.model();
+
+			this.__dataCollection = model.dataCollectionNew();
+		}
 
 	}
 

@@ -291,9 +291,10 @@ console.error('!! ToDo: onAfterColumnHide()');
     					text:  labels.component.confirmDeleteRowMessage,
     					callback: function (result) {
     						if (result) {
-
+                                alert(id);
+                                console.log(id);
     							CurrentObject.model()
-    							.delete(id)
+    							.delete(id.row)
     							.then((response)=>{
 
     								if (response.numRows > 0) {
@@ -304,7 +305,7 @@ console.error('!! ToDo: onAfterColumnHide()');
     									OP.Dialog.Alert({
     										text:'No rows were effected.  This does not seem right.'
     									})
-//// TODO: what do we do here?
+
     								}
     							})
     							.catch((err)=>{

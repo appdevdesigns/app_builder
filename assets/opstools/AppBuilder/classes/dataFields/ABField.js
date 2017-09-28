@@ -455,7 +455,6 @@ export default class ABField extends ABFieldBase {
 	}
 	
 	getValue(application, object, fieldData, itemNode, rowData, item) {
-		console.log(item);
 		return item.getValue();
 	};
 

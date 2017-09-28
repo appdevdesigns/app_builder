@@ -379,7 +379,10 @@ export default class ABObject extends ABObjectBase {
 	 * this ABObject.
 	 */
 	model() {
-		return new ABModel(this);
+		if (!this._model) 
+			this._model = new ABModel(this);
+
+		return this._model;
 	}
 
 
