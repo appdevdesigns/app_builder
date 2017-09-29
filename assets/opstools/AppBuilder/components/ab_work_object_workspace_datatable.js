@@ -228,7 +228,7 @@ console.error('!! ToDo: onAfterColumnHide()');
     			throttleCustomDisplay = setTimeout(()=>{
     				if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
-    					CurrentObject.customDisplays(this, App, DataTable, items);
+    					CurrentObject.customDisplays(this.data, App, DataTable, items);
     				}
     			}, 350);
 
@@ -241,7 +241,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
     			scrollStarted = setTimeout(()=>{
                     if (CurrentObject) {
-    					CurrentObject.customDisplays(this, App, DataTable, items);
+    					CurrentObject.customDisplays(this.data, App, DataTable, items);
     				}
     			}, 1500);
             });
@@ -253,7 +253,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                 throttleCustomDisplay = setTimeout(()=>{
                     if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
-                        CurrentObject.customDisplays(this, App, DataTable, items);
+                        CurrentObject.customDisplays(this.data, App, DataTable, items);
                     }
                 }, 350);
 
@@ -291,8 +291,6 @@ console.error('!! ToDo: onAfterColumnHide()');
     					text:  labels.component.confirmDeleteRowMessage,
     					callback: function (result) {
     						if (result) {
-                                alert(id);
-                                console.log(id);
     							CurrentObject.model()
     							.delete(id.row)
     							.then((response)=>{
@@ -449,7 +447,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                         DataTable.define('leftSplit', columnSplitLeft);                        
                     }
                     _logic.freezeDeleteColumn();
-                    DataTable.refreshColumns()
+                    DataTable.refreshColumns();
                 })
                 .catch((err)=>{
 
@@ -774,8 +772,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
         					css: { 'text-align': 'center' }                            
                         });
                         columnSplitLeft = 1;
-                    } else {
-                        columnSplitLeft = 0;
                     }
                     if (settings.detailsView != null) {
                         columnHeaders.push({
@@ -814,13 +810,12 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
 
     				// freeze columns:
     				if (CurrentObject.workspaceFrozenColumnID != "") {
-    					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + columnSplitLeft);
+    					DataTable.define('leftSplit', DataTable.getColumnIndex(CurrentObject.workspaceFrozenColumnID) + 1);
     				} else {
                         DataTable.define('leftSplit', columnSplitLeft);
                     }
                     _logic.freezeDeleteColumn();
                     DataTable.refreshColumns();
-
     			}
                 
             },
