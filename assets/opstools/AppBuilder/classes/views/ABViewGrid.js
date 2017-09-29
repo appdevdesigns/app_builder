@@ -10,7 +10,7 @@ import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
 import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
-import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
+// import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
 import ABPopupFrozenColumns from "../../components/ab_work_object_workspace_popupFrozenColumns"
 import ABPopupMassUpdate from "../../components/ab_work_object_workspace_popupMassUpdate"
 
@@ -186,8 +186,8 @@ export default class ABViewGrid extends ABView  {
 
 		// initialize our popup editors with unique names so we don't overwrite the previous editor each time
 		PopupHideFieldComponent = new ABPopupHideFields(App, idBase+"_hide");
-		PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase+"_filter");
-		PopupSortFieldComponent = new ABPopupSortField(App, idBase+"_sort");
+		// PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase+"_filter");
+		// PopupSortFieldComponent = new ABPopupSortField(App, idBase+"_sort");
 		PopupFrozenColumnsComponent = new ABPopupFrozenColumns(App, idBase+"_freeze");
 		
 		_logic.newObject = () => {
@@ -206,13 +206,13 @@ export default class ABViewGrid extends ABView  {
 			PopupHideFieldComponent.show($view, {pos:"top"});
 		}
 		
-		_logic.toolbarFilter = ($view) => {
-			PopupFilterDataTableComponent.show($view, null, {pos:"top"});
-		}
+		// _logic.toolbarFilter = ($view) => {
+		// 	PopupFilterDataTableComponent.show($view, null, {pos:"top"});
+		// }
 		
-		_logic.toolbarSort = ($view) => {
-			PopupSortFieldComponent.show($view, null, {pos:"top"});
-		}
+		// _logic.toolbarSort = ($view) => {
+		// 	PopupSortFieldComponent.show($view, null, {pos:"top"});
+		// }
 		
 		_logic.toolbarFrozen = ($view) => {
 			PopupFrozenColumnsComponent.show($view, {pos:"top"});
@@ -257,13 +257,13 @@ export default class ABViewGrid extends ABView  {
 			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
 		});
 		
-		PopupFilterDataTableComponent.init({
-			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
-		});
+		// PopupFilterDataTableComponent.init({
+		// 	onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
+		// });
 		
-		PopupSortFieldComponent.init({
-			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
-		});
+		// PopupSortFieldComponent.init({
+		// 	onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
+		// });
 		
 		PopupFrozenColumnsComponent.init({
 			onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
@@ -315,7 +315,7 @@ export default class ABViewGrid extends ABView  {
 							on: {
 								onChange: function(newv, oldv) {
 									if (newv != oldv) {
-										_logic.newObject();
+										// _logic.newObject();
 										// $$(ids.linkedObject).setValue("");
 										// $$(ids.linkedField).setValue("");
 										// $$(ids.linkedPage).setValue("");
@@ -363,13 +363,13 @@ export default class ABViewGrid extends ABView  {
 							name:"detailsPage",
 							label: L('ab.component.label.detailsPage', '*Details Page:'),
 							labelWidth: App.config.labelWidthLarge,
-							on: {
-								onChange: function(newv, oldv) {
-									if (newv != oldv) {
-										// _logic.updateDetailsView(newv);
-									}
-								}
-							}
+							// on: {
+							// 	onChange: function(newv, oldv) {
+							// 		if (newv != oldv) {
+							// 			_logic.updateDetailsView(newv);
+							// 		}
+							// 	}
+							// }
 						},
 						// {
 						// 	view:"text",
@@ -386,13 +386,13 @@ export default class ABViewGrid extends ABView  {
 							name:"editPage",
 							label: L('ab.component.label.editForm', '*Edit Form:'), 
 							labelWidth: App.config.labelWidthLarge,
-							on: {
-								onChange: function(newv, oldv) {
-									if (newv != oldv) {
-										// _logic.updateEditForm(newv);
-									}
-								}
-							}
+							// on: {
+							// 	onChange: function(newv, oldv) {
+							// 		if (newv != oldv) {
+							// 			_logic.updateEditForm(newv);
+							// 		}
+							// 	}
+							// }
 						},
 						// {
 						// 	view:"text",
@@ -433,45 +433,45 @@ export default class ABViewGrid extends ABView  {
 								}
 							]
 						},
-						{
-							cols: [
-								{ 
-								    view:"label", 
-								    label: L("ab.component.label.filterData", "*Filter Data:"),
-									width: App.config.labelWidthLarge,
-								},
-								{
-									view: view,
-									// id: ids.buttonFilter,
-									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
-									type: "icon",
-									badge: 0,
-									click: function () {
-										_logic.toolbarFilter(this.$view);
-									}
-								}
-							]
-						},
-						{
-							cols: [
-								{ 
-								    view:"label", 
-								    label: L("ab.component.label.sortData", "*Sort Data:"),
-									width: App.config.labelWidthLarge,
-								},
-								{
-									view: view,
-									label: L("ab.component.label.settings", "*Settings"),
-									icon: "gear",
-									type: "icon",
-									badge: 0,
-									click: function () {
-										_logic.toolbarSort(this.$view);
-									}
-								}
-							]
-						},
+						// {
+						// 	cols: [
+						// 		{ 
+						// 		    view:"label", 
+						// 		    label: L("ab.component.label.filterData", "*Filter Data:"),
+						// 			width: App.config.labelWidthLarge,
+						// 		},
+						// 		{
+						// 			view: view,
+						// 			// id: ids.buttonFilter,
+						// 			label: L("ab.component.label.settings", "*Settings"),
+						// 			icon: "gear",
+						// 			type: "icon",
+						// 			badge: 0,
+						// 			click: function () {
+						// 				_logic.toolbarFilter(this.$view);
+						// 			}
+						// 		}
+						// 	]
+						// },
+						// {
+						// 	cols: [
+						// 		{ 
+						// 		    view:"label", 
+						// 		    label: L("ab.component.label.sortData", "*Sort Data:"),
+						// 			width: App.config.labelWidthLarge,
+						// 		},
+						// 		{
+						// 			view: view,
+						// 			label: L("ab.component.label.settings", "*Settings"),
+						// 			icon: "gear",
+						// 			type: "icon",
+						// 			badge: 0,
+						// 			click: function () {
+						// 				_logic.toolbarSort(this.$view);
+						// 			}
+						// 		}
+						// 	]
+						// },
 						{
 							cols: [
 								{ 
@@ -565,9 +565,9 @@ export default class ABViewGrid extends ABView  {
 			toolbar: App.unique(idBase+'_toolbar'),
 			buttonDeleteSelected: App.unique('deleteSelected'),
 			// buttonExport: App.unique('buttonExport'),
-			buttonFilter: App.unique('buttonFilter'),
+			// buttonFilter: App.unique('buttonFilter'),
 			buttonMassUpdate: App.unique('buttonMassUpdate'),
-			buttonSort: App.unique('buttonSort'),
+			// buttonSort: App.unique('buttonSort'),
 
 		}
 		
@@ -633,13 +633,13 @@ export default class ABViewGrid extends ABView  {
 				
 				if (dc) {
 
-					// var dataCopy = _.cloneDeep(dc.datasource);
-					// dataCopy.objectWorkspace = this.settings.objectWorkspace;
-					CurrentObject = dc.datasource;
+					var dataCopy = _.cloneDeep(dc.datasource);
+					dataCopy.objectWorkspace = this.settings.objectWorkspace;
+					CurrentObject = dataCopy;
 
-					DataTable.objectLoad(dc.datasource);
-					PopupMassUpdateComponent.objectLoad(dc.datasource, DataTable);
-					PopupFilterDataTableComponent.objectLoad(dc.datasource);
+					DataTable.objectLoad(CurrentObject);
+					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
+					PopupFilterDataTableComponent.objectLoad(CurrentObject);
 					DataTable.refreshHeader();
 					
 					dc.bind($$(ids.component));
@@ -765,8 +765,7 @@ export default class ABViewGrid extends ABView  {
 			},
 			
 			changePage: (dc, id) => {
-				dc.setCursor(id)
-				console.log(this.settings.editPage);
+				dc.setCursor(id);
 				this.emit('changePage', this.settings.editPage);
 			},
 			
@@ -946,21 +945,26 @@ export default class ABViewGrid extends ABView  {
 		// }
 	}
 	
-	populatePopupEditors(view) {
-		if (view.settings.dataSource != "") {
-			var dataSource = view.application.objects((o)=>{
-				return o.id == view.settings.dataSource;
-			});
-			var dataSource = this.dataCollection();
-			var dataCopy = _.cloneDeep(dataSource.datasource);
-			
-			dataCopy.objectWorkspace = view.settings.objectWorkspace;
-			
+	populatePopupEditors(view, dataSource) {
+		var dc = this.dataCollection();
+		
+		var dataCopy = _.cloneDeep(dc.datasource);
+		dataCopy.objectWorkspace = view.settings.objectWorkspace;
+
+		// if (view.settings.dataSource != "") {
+			// var dataSource = view.application.objects((o)=>{
+			// 	return o.id == view.settings.dataSource;
+			// });
+			// var dataSource = this.dataCollection();
+			// var dataCopy = _.cloneDeep(dataSource.datasource);
+			// console.log(view);
+			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
+			console.log(dataCopy.objectWorkspace);
 			PopupHideFieldComponent.objectLoad(dataCopy, view);
-			PopupFilterDataTableComponent.objectLoad(dataCopy, view);
-			PopupSortFieldComponent.objectLoad(dataCopy, view);
+			// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
+			// PopupSortFieldComponent.objectLoad(dataCopy, view);
 			PopupFrozenColumnsComponent.objectLoad(dataCopy, view);
-		}
+		// }
 	}
 	
 	loopPages(view, o, detailViews, type) {
