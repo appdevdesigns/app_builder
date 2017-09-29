@@ -71,7 +71,8 @@ export default class ABViewFormField extends ABView {
 			// default value
 			var data = {};
 			field.defaultValue(data);
-			_ui.value = data[field.columnName];
+			if (data[field.columnName])
+				_ui.value = data[field.columnName];
 
 			if (settings.showLabel == true) {
 				_ui.label = field.label;

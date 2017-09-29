@@ -191,10 +191,11 @@ export default class ABViewFormTextbox extends ABViewFormField {
 				component.ui.height = 200;
 				break;
 			case 'rich':
-				// TODO: TinyMCE editor does not have 'label' configuration - use 'forminput'
-				// https://docs.webix.com/samples/13_form/01_controls/24_forminput.html
-				component.ui.view = 'tinymce-editor';
+				component.ui.view = 'forminput';
 				component.ui.height = 200;
+				component.ui.body = {
+					view: 'tinymce-editor'
+				};
 				break;
 		}
 
@@ -203,19 +204,22 @@ export default class ABViewFormTextbox extends ABViewFormField {
 		component.init = (options) => {
 
 
-			// WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
-			// https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
-			if (this.settings.type && this.settings.type == 'rich') {
-				if ($$(component.ui.id)) {
+			// // WORKAROUND : to fix breaks TinyMCE when switch pages/tabs
+			// // https://forum.webix.com/discussion/6772/switching-tabs-breaks-tinymce
+			// if (this.settings.type && this.settings.type == 'rich') {
+			// 	if ($$(component.ui.id)) {
 
-					// recreate
-					webix.ui({
-						view: 'tinymce-editor',
-						height: 200
-					}, $$(component.ui.id));
+			// 		// recreate rich editor
+			// 		webix.ui({
+			// 			view: 'forminput',
+			// 			height: 200,
+			// 			body: {
+			// 				view: 'tinymce-editor'
+			// 			}
+			// 		}, $$(component.ui.id));
 
-				}
-			}
+			// 	}
+			// }
 
 
 		}

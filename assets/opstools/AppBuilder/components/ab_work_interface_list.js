@@ -56,7 +56,7 @@ export default class AB_Work_Interface_List extends OP.Component {
 			id:ids.component,
 			rows: [
 				{
-					view: App.custom.edittree.view,  // "editlist",
+					view: App.custom.edittree.view,  // "edittree",
 					id: ids.list,
 					width: App.config.columnWidthLarge,
 
@@ -296,23 +296,22 @@ export default class AB_Work_Interface_List extends OP.Component {
 
 
 			onAfterOpen: function() {
-console.error('!! todo: onAfterOpen() ');
-							// var ids = this.getSelectedId(true);
 
-							// // Show gear icon
-							// ids.forEach(function (id) {
-							// 	self.showGear(id);
-							// });
+				var id = $$(ids.list).getSelectedId(false);
+				if (id) {
+					_logic.showGear(id);
+				}
+
 			},
 
 
 			onAfterRender: function() {
-console.error('!! todo: onAfterRender() editing');
 
-				// // Show gear icon
-				// if (this.getSelectedId(true).length > 0) {
-				// 	$(this.getItemNode(this.getSelectedId(false))).find('.ab-object-list-edit').show();
-				// }
+				var id = $$(ids.list).getSelectedId(false);
+				if (id) {
+					_logic.showGear(id);
+				}
+
 			},
 
 

@@ -892,7 +892,7 @@ export default class ABView extends ABViewBase {
 
 				// Trigger 'changePage' event to parent
 				child.removeListener('changePage', _logic.changePage)
-					.once('changePage', _logic.changePage);
+					.on('changePage', _logic.changePage);
 
 			});
 
@@ -901,12 +901,11 @@ export default class ABView extends ABViewBase {
 		};
 
 
-		var _logic = {
+		var _logic = { 
 
 			changePage: (pageId) => {
-				this.emit('changePage', pageId);
+				this.changePage(pageId);
 			}
-
 		};
 
 
@@ -950,6 +949,10 @@ export default class ABView extends ABViewBase {
 
 	}
 
+
+	changePage(pageId) {
+		this.emit('changePage', pageId);
+	}
 
 }
 

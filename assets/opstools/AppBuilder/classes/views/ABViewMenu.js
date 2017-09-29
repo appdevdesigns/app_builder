@@ -187,13 +187,14 @@ export default class ABViewMenu extends ABView {
 
 		var pageTree = new webix.TreeCollection();
 		var currentPage = view.pageParent();
+		var parentPage = currentPage.pageParent();
 
 		// Add parent of current page
-		if (currentPage.parentPage)
-			pageTree.add(currentPage.parentPage);
+		if (parentPage)
+			pageTree.add(parentPage);
 
 		// Add current page
-		pageTree.add(currentPage, 0, (currentPage.parentPage ? currentPage.parentPage.id : null));
+		pageTree.add(currentPage, 0, (parentPage ? parentPage.id : null));
 
 		// get sub-pages of parent
 		currentPage.pages().forEach((page, index) => {
@@ -251,7 +252,7 @@ export default class ABViewMenu extends ABView {
 			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
 			on: {
 				onItemClick: (id, e, node) => {
-					this.emit('changePage', id);
+					this.changePage(id);
 				}
 			}
 		};
