@@ -206,11 +206,11 @@ export default class ABViewFormPanel extends ABView {
 		super.propertyEditorPopulate(ids, view);
 
 		var SourceSelector = $$(ids.datacollection);
-		var detailCom = view.formComponent();
-		var dataCollectionId = detailCom.settings.datacollection;
+		var formCom = view.formComponent();
+		var dataCollectionId = formCom.settings.datacollection;
 
 		// Pull data collections to options
-		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
 
 			return {
 				id: dc.id,
@@ -218,12 +218,12 @@ export default class ABViewFormPanel extends ABView {
 			};
 		});
 
-		SourceSelector.define('options', objectOptions);
+		SourceSelector.define('options', dcOptions);
 		SourceSelector.refresh();
 		SourceSelector.setValue(dataCollectionId);
 
-		// Disable to select object in layout
-		// We can select object in form component only
+		// Disable to select a data collection in layout
+		// We can select a data collection in form component only
 		SourceSelector.disable();
 
 		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);

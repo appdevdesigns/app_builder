@@ -110,7 +110,7 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 		super.propertyEditorPopulate(ids, view);
 
-		$$(ids.object).enable();
+		$$(ids.datacollection).enable();
 		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth);
@@ -120,7 +120,7 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 		super.propertyEditorValues(ids, view);
 
-		view.settings.object = $$(ids.object).getValue();
+		view.settings.datacollection = $$(ids.datacollection).getValue();
 		view.settings.showLabel = $$(ids.showLabel).getValue();
 		view.settings.labelPosition = $$(ids.labelPosition).getValue();
 		view.settings.labelWidth = $$(ids.labelWidth).getValue();
@@ -148,26 +148,70 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 
 		var _ui = {
+			id: ids.component,
 			view: 'layout',
-			rows: []
+			rows: this.template.rows || []
 		};
-
-		// insert each of our sub views into our rows:
-		viewComponents.forEach((view) => {
-			_ui.rows.push(view.ui);
-		})
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-			viewComponents.forEach((view) => {
-				if (view.init)
-					view.init();
+
+			var Detail = $$(ids.component);
+
+			// get a UI component for each of our child views
+			var viewComponents = [];
+			this.views().forEach((v) => {
+
+				var subComponent = v.component(App);
+
+
+				// get element in template
+				var elem = Detail.queryView({ viewId: v.id });
+				if (elem) {
+					// replace component to layout
+					webix.ui(subComponent.ui, elem);
+				}
+				// add component to rows
+				else {
+					Detail.addView(subComponent.ui);
+				}
+
+
+				// initialize
+				subComponent.init();
+
 			})
 
-			// $$(ids.component).adjust();
+
+			// listen DC events
+			var dc = this.dataCollection();
+			if (dc) {
+
+				dc.removeListener('changeCursor', _logic.displayData)
+					.on('changeCursor', _logic.displayData);
+
+			}
+
+
+			Detail.adjust();
+
 		}
 
 		var _logic = {
+
+			displayData: (data) => {
+
+				this.fieldComponents().forEach((f) => {
+
+					var colName = f.field().columnName;
+					var val = data[colName];
+
+					f.setValue(val);
+
+				});
+
+			}
+
 		};
 
 
@@ -179,10 +223,15 @@ export default class ABViewDetail extends ABViewDetailPanel {
 	}
 
 
-	object() {
-		return this.application.objects((obj) => obj.id == this.settings.object)[0];
+	/**
+	 * @method dataCollection
+	 * return ABViewDataCollection of this detail
+	 * 
+	 * @return {ABViewDataCollection}
+	 */
+	dataCollection() {
+		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
-
 
 
 

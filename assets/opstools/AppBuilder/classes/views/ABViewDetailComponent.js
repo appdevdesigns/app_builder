@@ -98,4 +98,8 @@ export default class ABViewDetailComponent extends ABView {
 		return field;
 	}
 
+
+	setValue(val) {
+	}
+
 }

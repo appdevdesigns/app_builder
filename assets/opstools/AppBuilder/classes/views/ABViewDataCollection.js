@@ -497,6 +497,13 @@ export default class ABViewDataCollection extends ABView {
 		if (model) {
 
 			this.__dataCollection = model.dataCollectionNew();
+			this.__dataCollection.attachEvent("onAfterCursorChange", () => {
+
+				var currData = this.getCursor();
+
+				this.emit("changeCursor", currData);
+
+			});
 
 		}
 
