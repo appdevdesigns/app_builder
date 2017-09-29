@@ -180,6 +180,8 @@ export default class ABViewForm extends ABViewFormPanel {
 
 			var Form = $$(ids.component);
 
+			webix.extend(Form, webix.ProgressBar);
+
 			// get a UI component for each of our child views
 			var viewComponents = [];
 			this.views().forEach((v) => {
@@ -230,6 +232,102 @@ export default class ABViewForm extends ABViewFormPanel {
 	 */
 	dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
+	}
+
+
+
+	/**
+	 * @method saveData
+	 * save data in to database
+	 * @param formView - webix's form element
+	 * 
+	 * @return {Promise}
+	 */
+	saveData(formView) {
+
+		// form validate
+		if (formView && formView.validate()) {
+
+			// get ABViewDataCollection
+			var dc = this.dataCollection();
+			if (dc == null) return Promise.resolve();
+
+			// get ABObject
+			var obj = dc.datasource;
+
+			// get ABModel
+			var model = dc.model;
+
+			// get update data
+			var formVals = formView.getValues();
+
+			// TODO : get custom values
+
+			// clear undefined values
+			for (var prop in formVals) {
+				if (formVals[prop] == undefined)
+					delete formVals[prop];
+				else if (formVals[prop] == null)
+					formVals[prop] = '';
+			}
+
+			// validate
+			var validator = obj.isValidData(formVals);
+			if (validator.pass()) {
+
+				// show progress icon
+				if (formView.showProgress)
+					formView.showProgress({ type: "icon" });
+
+				// form ready function
+				var formReady = () => {
+					if (formView.hideProgress)
+						formView.hideProgress();
+				}
+
+				return new Promise(
+					(resolve, reject) => {
+
+						// update exists row
+						if (formVals.id) {
+							model.update(formVals.id, formVals)
+								.catch((err) => {
+									formReady();
+									reject(err);
+								})
+								.then(() => {
+									formReady();
+									resolve();
+								});
+						}
+						// add new row
+						else {
+							model.create(formVals)
+								.catch((err) => {
+									formReady();
+									reject(err);
+								})
+								.then(() => {
+									formReady();
+									resolve();
+								});
+						}
+					}
+				);
+
+			}
+			else {
+				// TODO : error message
+
+				return Promise.resolve();
+			}
+
+		}
+		else {
+			// TODO : error message
+
+			return Promise.resolve();
+		}
 	}
 
 

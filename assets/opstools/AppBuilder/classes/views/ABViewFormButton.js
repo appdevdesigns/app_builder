@@ -173,8 +173,8 @@ export default class ABViewFormButton extends ABView {
 
 
 
-	/*
-	 * @component()
+	/**
+	 * @method component()
 	 * return a UI component based upon this view.
 	 * @param {obj} App 
 	 * @return {obj} UI component
@@ -220,7 +220,7 @@ export default class ABViewFormButton extends ABView {
 				type: "form",
 				width: 80,
 				value: L('ab.component.button.save', '*Save'),
-				click: function() {
+				click: function () {
 					_logic.onSave(this);
 				}
 			});
@@ -237,25 +237,38 @@ export default class ABViewFormButton extends ABView {
 
 		var _logic = {
 
-			onCancel: function (cancelButton) {
+			onCancel: (cancelButton) => {
+				// get form component
+				var form = this.formComponent();
+
+				// get ABViewDataCollection
+				var dc = form.dataCollection();
+
+				// clear cursor of DC
+				if (dc) {
+					dc.setCursor(null);
+				}
+
 				if (cancelButton.getFormView())
 					cancelButton.getFormView().clear();
 			},
 
 			onSave: (saveButton) => {
-				alert("saving");
-				console.log(saveButton.getFormView());
-				if (saveButton.getFormView()) {
-					alert("in here");
-					if (saveButton.getFormView().validate()) {
-						alert("is valid");
-						saveButton.getFormView().save();
-					} else {
-						alert("didn't work");
-						webix.message({ type:"error", text:"Form data is invalid" });
-					}
-				}
-			}
+
+				// get form component
+				var form = this.formComponent();
+				var formView = saveButton.getFormView();
+
+				// disable the save button
+				saveButton.disable();
+
+				// save data
+				form.saveData(formView)
+					.catch(() => { saveButton.enable(); })
+					.then(() => { saveButton.enable(); });
+
+			},
+
 		};
 
 
@@ -267,13 +280,34 @@ export default class ABViewFormButton extends ABView {
 	}
 
 
-	/*
+	/**
 	 * @method componentList
 	 * return the list of components available on this view to display in the editor.
 	 */
 	componentList() {
 		return [];
 	}
+
+
+	/**
+	 * @method formComponent
+	 * return the list of components available on this view to display in the editor.
+	 */
+	formComponent() {
+		var form = null;
+
+		var curr = this;
+		while (curr.key != 'form' && !curr.isRoot() && curr.parent) {
+			curr = curr.parent;
+		}
+
+		if (curr.key == 'form') {
+			form = curr;
+		}
+
+		return form;
+	}
+
 
 
 };
