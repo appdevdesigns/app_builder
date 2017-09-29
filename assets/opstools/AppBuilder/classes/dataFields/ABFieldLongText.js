@@ -16,7 +16,7 @@ function L(key, altText) {
 
 var ABFieldLongTextDefaults = {
 	key: 'LongText', // unique key to reference this specific DataField
-	type: 'longtext', // http://sailsjs.org/documentation/concepts/models-and-orm/attributes#?attribute-options
+	type: 'longtext', 
 	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'		
 
 	// menuName: what gets displayed in the Editor drop list

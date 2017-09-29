@@ -18,7 +18,7 @@ function L(key, altText) {
 
 var ABFieldLongTextDefaults = {
 	key: 'LongText', // unique key to reference this specific DataField
-	type: 'text',
+	type: 'longtext',
 	icon: 'align-right',   // font-awesome icon reference.  (without the 'fa-')		
 	
 	// menuName: what gets displayed in the Editor drop list
@@ -279,6 +279,7 @@ class ABFieldLongText extends ABField {
 			}
 			
 		} else {
+
 			myParameter = super.requestParam(allParameters);
 		}
 
