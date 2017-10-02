@@ -189,6 +189,8 @@ export default class ABViewDataCollection extends ABView {
 
 		_logic.selectObject = (objectId) => {
 
+			var view = _logic.currentEditObject();
+
 			// re-create filter & sort popups
 			this.initPopupEditors(App, _logic);
 
@@ -227,30 +229,30 @@ export default class ABViewDataCollection extends ABView {
 								}
 							}
 						},
-						// TODO : link to another data collection
-						// {
-						// 	view: "select",
-						// 	name: "linkedObject",
-						// 	label: L('ab.component.datacollection.linkedObject', '*Linked To:'),
-						// 	labelWidth: App.config.labelWidthLarge,
-						// 	options: [],
-						// 	// hidden: 1,
-						// 	on: {
-						// 		onChange: function (newv, oldv) {
-						// 			if (newv == oldv) return;
+						// link to another data collection
+						{
+							view: "select",
+							name: "linkDataSource",
+							label: L('ab.component.datacollection.linkDataSource', '*Linked To:'),
+							labelWidth: App.config.labelWidthLarge,
+							options: [],
+							hidden: 1,
+							on: {
+								onChange: function (newv, oldv) {
+									if (newv == oldv) return;
 
-						// 			_logic.selectLinkDc(newv);
-						// 		}
-						// 	}
-						// },
-						// {
-						// 	view: "select",
-						// 	name: "linkedField",
-						// 	label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
-						// 	labelWidth: App.config.labelWidthLarge,
-						// 	options: [],
-						// 	hidden: 1
-						// }
+									_logic.selectLinkDc(newv);
+								}
+							}
+						},
+						{
+							view: "select",
+							name: "linkField",
+							label: L('ab.component.datacollection.linkedField', '*Linked Field:'),
+							labelWidth: App.config.labelWidthLarge,
+							options: [],
+							hidden: 1
+						}
 					]
 				}
 			},
@@ -322,6 +324,11 @@ export default class ABViewDataCollection extends ABView {
 		$$(ids.dataSource).refresh();
 		$$(ids.dataSource).setValue(view.settings.object || '');
 
+
+		// populate link data collection options
+		this.initLinkDataCollectionOptions(ids, view);
+
+
 		// initial populate of popups
 		this.populatePopupEditors(view);
 
@@ -348,6 +355,7 @@ export default class ABViewDataCollection extends ABView {
 			};
 
 			this.populatePopupEditors(view);
+
 		}
 
 
@@ -368,8 +376,58 @@ export default class ABViewDataCollection extends ABView {
 			delete view.settings.objectUrl;
 		}
 
+		view.settings.linkDataCollection = $$(ids.linkDataSource).getValue();
+
+		if (!view.settings.linkDataCollection)
+			delete view.settings.linkDataCollection;
+
+		// populate link data collections
+		this.initLinkDataCollectionOptions(ids, view);
+
 		// refresh data collection
 		view.init();
+
+	}
+
+
+	static initLinkDataCollectionOptions(ids, view) {
+
+		// get linked data collection list
+		var rootPage = view.pageRoot();
+		var objSource = view.datasource;
+		if (objSource != null) {
+			var linkFields = objSource.linkFields();
+			var linkObjectIds = linkFields.map((f) => f.settings.linkObject);
+
+			var linkDcOptions = [];
+
+			// pull data collections that are link to object
+			var linkDcs = rootPage.dataCollections((dc) => {
+
+				return linkObjectIds.filter((objId) => dc.settings.object == objId).length > 0;
+
+			});
+
+			// set dc to options
+			linkDcs.forEach((dc) => {
+				linkDcOptions.push({
+					id: dc.id,
+					value: dc.label
+				});
+			});
+
+			linkDcOptions.unshift({ id: '', value: L('ab.component.datacollection.selectLinkSource', '*Select a link source') });
+
+			$$(ids.linkDataSource).show();
+			$$(ids.linkDataSource).define("options", linkDcOptions);
+			$$(ids.linkDataSource).refresh();
+			$$(ids.linkDataSource).setValue(view.settings.linkDataCollection || '');
+
+		}
+		else {
+			$$(ids.linkDataSource).hide();
+			$$(ids.linkField).hide();
+		}
 
 	}
 
@@ -551,48 +609,22 @@ export default class ABViewDataCollection extends ABView {
 			if (dc) {
 				component.define("datafetch", 20);
 				component.define("datathrottle", 500);
-				
+
 				component.data.sync(dc);
-				
+
 				var where = this.settings.objectWorkspace.filterConditions || {};
 
 				// get data to data collection
 				var cond = {
-					where:where,
-					limit:20,
-					skip:0
+					where: where,
+					limit: 20,
+					skip: 0
 				}
 
 				// if (component.showProgress)
 				// 	component.showProgress({ type: "icon" });
 
 				model.findAll(cond)
-				.then((data) => {
-					data.data.forEach((item) => {
-						if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
-							item.$height = parseInt(item.properties.height);
-						} else if (defaultHeight > 0) {
-							item.$height = defaultHeight;
-						}
-					});
-					dc.parse(data);
-
-					// if (component.hideProgress)
-					// 	component.hideProgress();
-
-				})
-
-				component.attachEvent("onDataRequest", function (start, count) {
-					var cond = {
-						where:where,
-						limit:count,
-						skip:start
-					}
-
-					if (component.showProgress)
-						component.showProgress({ type: "icon" });
-
-					model.findAll(cond)
 					.then((data) => {
 						data.data.forEach((item) => {
 							if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
@@ -603,11 +635,37 @@ export default class ABViewDataCollection extends ABView {
 						});
 						dc.parse(data);
 
-						if (component.hideProgress)
-							component.hideProgress();
+						// if (component.hideProgress)
+						// 	component.hideProgress();
 
 					})
-				  
+
+				component.attachEvent("onDataRequest", function (start, count) {
+					var cond = {
+						where: where,
+						limit: count,
+						skip: start
+					}
+
+					if (component.showProgress)
+						component.showProgress({ type: "icon" });
+
+					model.findAll(cond)
+						.then((data) => {
+							data.data.forEach((item) => {
+								if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
+									item.$height = parseInt(item.properties.height);
+								} else if (defaultHeight > 0) {
+									item.$height = defaultHeight;
+								}
+							});
+							dc.parse(data);
+
+							if (component.hideProgress)
+								component.hideProgress();
+
+						})
+
 					return false;	// <-- prevent the default "onDataRequest"
 				});
 			} else {
@@ -651,7 +709,7 @@ export default class ABViewDataCollection extends ABView {
 		else {
 			return null;
 		}
-		
+
 	}
 
 

@@ -567,6 +567,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 	}
 
 
+	/**
+	 * @method getOptions
+	 * show options list in selectivity 
+	 * 
+	 * @return {Promise}
+	 */
 	getOptions() {
 		return new Promise(
 			(resolve, reject) => {
