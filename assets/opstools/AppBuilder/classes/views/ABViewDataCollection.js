@@ -529,18 +529,19 @@ export default class ABViewDataCollection extends ABView {
 				
 				component.data.sync(dc);
 				
-				var where = this.settings.objectWorkspace.filterConditions || {};
+				var wheres = this.settings.objectWorkspace.filterConditions || {};
+				var sorts = this.settings.objectWorkspace.sortConditions || {};
 
 				// get data to data collection
 				var cond = {
-					where:where,
+					where:{
+                        where: wheres, 
+                        sort: sorts,
+                        height: defaultHeight
+                    },
 					limit:20,
 					skip:0
 				}
-
-				// if (component.showProgress)
-				// 	component.showProgress({ type: "icon" });
-
 				model.findAll(cond)
 				.then((data) => {
 					data.data.forEach((item) => {
@@ -551,15 +552,19 @@ export default class ABViewDataCollection extends ABView {
 						}
 					});
 					dc.parse(data);
+				});
 
-					// if (component.hideProgress)
-					// 	component.hideProgress();
-
-				})
-
+				component.___AD = component.___AD || {};
+				if (component.___AD.onDataRequestEvent) {
+					component.detachEvent(component.___AD.onDataRequestEvent);
+				}
 				component.attachEvent("onDataRequest", function (start, count) {
 					var cond = {
-						where:where,
+						where:{
+	                        where: wheres, 
+	                        sort: sorts,
+	                        height: defaultHeight
+	                    },
 						limit:count,
 						skip:start
 					}
