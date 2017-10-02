@@ -565,11 +565,43 @@ export default class ABViewGrid extends ABView  {
 			toolbar: App.unique(idBase+'_toolbar'),
 			buttonDeleteSelected: App.unique('deleteSelected'),
 			// buttonExport: App.unique('buttonExport'),
-			// buttonFilter: App.unique('buttonFilter'),
+			buttonFilter: App.unique('buttonFilter'),
 			buttonMassUpdate: App.unique('buttonMassUpdate'),
 			// buttonSort: App.unique('buttonSort'),
 
 		}
+		
+		var labels = {
+			common: App.labels,
+			component: {
+				and: L('ab.filter_fields.and', "And"),
+				or: L('ab.filter_fields.or', "Or"),
+				addNewFilter: L('ab.filter_fields.addNewFilter', "Add a filter"),
+
+				containsCondition: L('ab.filter_fields.containsCondition', "contains"),
+				notContainCondition: L('ab.filter_fields.notContainCondition', "doesn't contain"),
+				isCondition: L('ab.filter_fields.isCondition', "is"),
+				isNotCondition: L('ab.filter_fields.isNotCondition', "is not"),
+
+				beforeCondition: L('ab.filter_fields.beforeCondition', "is before"),
+				afterCondition: L('ab.filter_fields.afterCondition', "is after"),
+				onOrBeforeCondition: L('ab.filter_fields.onOrBeforeCondition', "is on or before"),
+				onOrAfterCondition: L('ab.filter_fields.onOrAfterCondition', "is on or after"),
+
+				equalCondition: L('ab.filter_fields.equalCondition', ":"),
+				notEqualCondition: L('ab.filter_fields.notEqualCondition', "≠"),
+				lessThanCondition: L('ab.filter_fields.lessThanCondition', "<"),
+				moreThanCondition: L('ab.filter_fields.moreThanCondition', ">"),
+				lessThanOrEqualCondition: L('ab.filter_fields.lessThanOrEqualCondition', "≤"),
+				moreThanOrEqualCondition: L('ab.filter_fields.moreThanOrEqualCondition', "≥"),
+
+				equalListCondition: L('ab.filter_fields.equalListCondition', "equals"),
+				notEqualListCondition: L('ab.filter_fields.notEqualListCondition', "does not equal"),
+
+				checkedCondition: L('ab.filter_fields.checkedCondition', "is checked"),
+				notCheckedCondition: L('ab.filter_fields.notCheckedCondition', "is not checked")
+			}
+		};
 		
 		var CurrentObject = null;
 		
@@ -606,6 +638,11 @@ export default class ABViewGrid extends ABView  {
 			isEditable: this.settings.isEditable,
 			massUpdate: this.settings.massUpdate
 		}
+		
+		var isFiltered = false,
+			waitMilliseconds = 50,
+			filterTimeoutId;
+
 		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
 		var PopupMassUpdateComponent = new ABPopupMassUpdate(App, idBase+"_mass");
 		var PopupFilterDataTableComponent = new ABPopupFilterDataTable(App, idBase+"_filter");
@@ -616,14 +653,13 @@ export default class ABViewGrid extends ABView  {
 				DataTable.init({
 					onCheckboxChecked: _logic.callbackCheckboxChecked
 				});
-				
 
 				PopupMassUpdateComponent.init({
 					// onSave:_logic.callbackAddFields			// be notified of something...who knows...
 				});
 				
 				PopupFilterDataTableComponent.init({
-					onChange:_logic.callbackSaveWorkspace		// be notified when there is a change in the hidden fields
+					onChange:_logic.callbackFilterData		// be notified when there is a change in the hidden fields
 				});
 
 				// var dataSource = this.application.objects((o)=>{
@@ -639,7 +675,7 @@ export default class ABViewGrid extends ABView  {
 
 					DataTable.objectLoad(CurrentObject);
 					PopupMassUpdateComponent.objectLoad(CurrentObject, DataTable);
-					PopupFilterDataTableComponent.objectLoad(CurrentObject);
+					PopupFilterDataTableComponent.objectLoad(CurrentObject, this);
 					DataTable.refreshHeader();
 					
 					dc.bind($$(ids.component));
@@ -652,12 +688,13 @@ export default class ABViewGrid extends ABView  {
 						}
 						else if (e.target.className.indexOf('pencil') > -1) {
 							var item = id;
-							console.log(item);
-							// dc.setCursor(item.id)
-							// this.emit('changePage', editPage);
 							_logic.changePage(dc, item);
 						}
 					});
+
+					$$(DataTable.ui.id).attachEvent('onBeforeRender', function (data) {
+						_logic.clientSideDataFilter(data);
+					});					
 
 					$$(ids.component).adjust();
 				}
@@ -768,9 +805,160 @@ export default class ABViewGrid extends ABView  {
                 }
 			},
 			
+			callbackFilterData: (data) => {
+				
+				$$(DataTable.ui.id).custom_filters = $$(DataTable.ui.id).custom_filters || {};
+				$$(DataTable.ui.id).custom_filters['filter_popup'] = function (obj) {
+
+					if (typeof obj == "undefined") return;
+
+					// var combineCond = (data.filterConditions && data.filterConditions.length > 0 ? data.filterConditions[0].combineCondtion : labels.component.and);
+					var combineCond = data.filterConditions[0] ? data.filterConditions[0].combineCondition : labels.component.and;
+					var isValid = (combineCond === labels.component.and ? true : false);
+					
+					if (data.filterConditions.length) {
+						_.forEach(data.filterConditions, function(cond) {
+
+                            var condResult;
+                            var objValue = $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value ? $$(DataTable.ui.id).getColumnConfig(cond.fieldName).filter_value(obj) : obj[cond.fieldName];
+
+                            // Empty value
+                            if (!objValue) {
+                                if (cond.inputValue) {
+                                    isValid = (combineCond === labels.component.and ? false : true);
+                                }
+
+                                return;
+                            }
+
+                            if ($.isArray(objValue))
+                                objValue = $.map(objValue, function (o) { return o.text; }).join(' ');
+
+                            if (objValue.trim)
+                                objValue = objValue.trim().toLowerCase();
+
+                            switch (cond.operator) {
+                                // Text filter
+                                case labels.component.containsCondition:
+                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) > -1;
+                                    break;
+                                case labels.component.notContainCondition:
+                                    condResult = objValue.indexOf(cond.inputValue.trim().toLowerCase()) < 0;
+                                    break;
+                                case labels.component.isCondition:
+                                    condResult = objValue == cond.inputValue.trim().toLowerCase();
+                                    break;
+                                case labels.component.isNotCondition:
+                                    condResult = objValue != cond.inputValue.trim().toLowerCase();
+                                    break;
+                                // Date filter
+                                case labels.component.beforeCondition:
+                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                    condResult = objValue < cond.inputValue;
+                                    break;
+                                case labels.component.afterCondition:
+                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                    condResult = objValue > cond.inputValue;
+                                    break;
+                                case labels.component.onOrBeforeCondition:
+                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                    condResult = objValue <= cond.inputValue;
+                                    break;
+                                case labels.component.onOrAfterCondition:
+                                    if (!(objValue instanceof Date)) objValue = new Date(objValue);
+                                    condResult = objValue >= cond.inputValue;
+                                    break;
+                                // Number filter
+                                case labels.component.equalCondition:
+                                    condResult = Number(objValue) == Number(cond.inputValue);
+                                    break;
+                                case labels.component.notEqualCondition:
+                                    condResult = Number(objValue) != Number(cond.inputValue);
+                                    break;
+                                case labels.component.lessThanCondition:
+                                    condResult = Number(objValue) < Number(cond.inputValue);
+                                    break;
+                                case labels.component.moreThanCondition:
+                                    condResult = Number(objValue) > Number(cond.inputValue);
+                                    break;
+                                case labels.component.lessThanOrEqualCondition:
+                                    condResult = Number(objValue) <= Number(cond.inputValue);
+                                    break;
+                                case labels.component.moreThanOrEqualCondition:
+                                    condResult = Number(objValue) >= Number(cond.inputValue);
+                                    break;
+                                // List filter
+                                case labels.component.equalListCondition:
+                                    if (objValue)
+                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) > -1;
+                                    break;
+                                case labels.component.notEqualListCondition:
+                                    if (objValue)
+                                        condResult = cond.inputValue.toLowerCase().indexOf(objValue) < 0;
+                                    else
+                                        condResult = true;
+                                    break;
+                                // Boolean/Checkbox filter
+                                case labels.component.checkedCondition:
+                                    condResult = (objValue === true || objValue === 1);
+                                    break;
+                                case labels.component.notCheckedCondition:
+                                    condResult = !objValue;
+                                    break;
+                            }
+                            if (combineCond === labels.component.and) {
+                                isValid = isValid && condResult;
+                            } else {
+                                isValid = isValid || condResult;
+                            }
+                        });
+
+                        return isValid;
+					} else {
+						return isValid;
+					}
+				}
+				_logic.clientSideDataFilter($$(DataTable.ui.id).data);
+			},
+			
 			changePage: (dc, id) => {
 				dc.setCursor(id);
 				this.emit('changePage', this.settings.editPage);
+			},
+			
+			clientSideDataFilter: (data) => {
+				
+				if (filterTimeoutId) clearTimeout(filterTimeoutId);
+
+				filterTimeoutId = setTimeout(function () {
+					// Prevent repeat filter
+					if (isFiltered == false) {
+						isFiltered = true;
+
+						if ($$(DataTable.ui.id).custom_filters && Object.keys($$(DataTable.ui.id).custom_filters).length > 0) {
+							$$(DataTable.ui.id).filter(function (item) {
+								var isVisible = true;
+								Object.keys($$(DataTable.ui.id).custom_filters).forEach(function (filter_key) {
+									if (isVisible == false) return;
+
+									isVisible = isVisible && $$(DataTable.ui.id).custom_filters[filter_key](item);
+								});
+
+								return isVisible;
+							});
+						}
+						else {
+							$$(DataTable.ui.id).filter(function (item) { return true });
+						}
+
+						setTimeout(function () {
+							isFiltered = false
+						}, waitMilliseconds + 100);
+					}
+				}, waitMilliseconds);
+
+				return isFiltered;
+
 			},
 			
 			/**
@@ -965,7 +1153,6 @@ export default class ABViewGrid extends ABView  {
 			// var dataCopy = _.cloneDeep(dataSource.datasource);
 			// console.log(view);
 			// dataCopy.objectWorkspace = view.settings.objectWorkspace;
-			console.log(dataCopy.objectWorkspace);
 			PopupHideFieldComponent.objectLoad(dataCopy, view);
 			// PopupFilterDataTableComponent.objectLoad(dataCopy, view);
 			// PopupSortFieldComponent.objectLoad(dataCopy, view);
