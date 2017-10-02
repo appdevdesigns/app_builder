@@ -718,6 +718,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     			// wait until we have an Object defined:
     			if (CurrentObject) {
                     var DataTable = $$(ids.component);
+                    DataTable.clearAll();
     				//// update DataTable Content
 
     				// Set the Model object with a condition / skip / limit, then

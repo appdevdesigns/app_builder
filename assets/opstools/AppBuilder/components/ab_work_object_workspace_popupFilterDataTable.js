@@ -126,7 +126,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 onChange:function(){}
             },
             
-            callChangeEvent: function () {
+            callChangeEvent: function (objectWorkspace) {
                 var filter_popup = $$(ids.component),
                     filter_form = $$(ids.filterform),
                     conditionNumber = 0;
@@ -141,7 +141,8 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
 
                 // this.getTopParentView().callEvent('onChange', [filter_popup.dataTable.config.id, conditionNumber]);
                 if (CurrentView != null) {
-                    _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
+                    // alert("saving here");
+                    _logic.callbacks.onChange(objectWorkspace);
                 } else {
                     _logic.callbacks.onChange();                    
                 }
@@ -228,8 +229,9 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
 
                                             inputView = { view: "datepicker" };
 
-                                            if (columnConfig.format)
-                                                inputView.format = columnConfig.format;
+                                            if (columnConfig.settings) {
+                                                inputView.format = columnConfig.getDateFormat(columnConfig.settings);
+                                            }
 
                                             break;
                                         case "number":
@@ -507,7 +509,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
                 if (CurrentView != null) {
                     CurrentView.settings.objectWorkspace.filterConditions = filterConditions;
                     // _logic.callbacks.onChange(CurrentView.settings.objectWorkspace);
-                    _logic.callChangeEvent();
+                    _logic.callChangeEvent(CurrentView.settings.objectWorkspace);
                 } else {
                     CurrentObject.workspaceFilterConditions = filterConditions;
                     CurrentObject.save()

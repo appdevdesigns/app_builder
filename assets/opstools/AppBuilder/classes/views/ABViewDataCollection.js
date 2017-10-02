@@ -611,40 +611,45 @@ export default class ABViewDataCollection extends ABView {
 				component.define("datathrottle", 500);
 
 				component.data.sync(dc);
-
-				var where = this.settings.objectWorkspace.filterConditions || {};
+				
+				var wheres = this.settings.objectWorkspace.filterConditions || {};
+				var sorts = this.settings.objectWorkspace.sortConditions || {};
 
 				// get data to data collection
 				var cond = {
-					where: where,
-					limit: 20,
-					skip: 0
+					where:{
+                        where: wheres, 
+                        sort: sorts,
+                        height: defaultHeight
+                    },
+					limit:20,
+					skip:0
 				}
-
-				// if (component.showProgress)
-				// 	component.showProgress({ type: "icon" });
-
 				model.findAll(cond)
-					.then((data) => {
-						data.data.forEach((item) => {
-							if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
-								item.$height = parseInt(item.properties.height);
-							} else if (defaultHeight > 0) {
-								item.$height = defaultHeight;
-							}
-						});
-						dc.parse(data);
+				.then((data) => {
+					data.data.forEach((item) => {
+						if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
+							item.$height = parseInt(item.properties.height);
+						} else if (defaultHeight > 0) {
+							item.$height = defaultHeight;
+						}
+					});
+					dc.parse(data);
+				});
 
-						// if (component.hideProgress)
-						// 	component.hideProgress();
-
-					})
-
+				component.___AD = component.___AD || {};
+				if (component.___AD.onDataRequestEvent) {
+					component.detachEvent(component.___AD.onDataRequestEvent);
+				}
 				component.attachEvent("onDataRequest", function (start, count) {
 					var cond = {
-						where: where,
-						limit: count,
-						skip: start
+						where:{
+	                        where: wheres, 
+	                        sort: sorts,
+	                        height: defaultHeight
+	                    },
+						limit:count,
+						skip:start
 					}
 
 					if (component.showProgress)
