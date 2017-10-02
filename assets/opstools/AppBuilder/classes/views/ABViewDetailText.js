@@ -161,9 +161,9 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		var templateLabel = '';
 		if (detailView.settings.showLabel == true) {
 			if (detailView.settings.labelPosition == 'top')
-				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
+				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>#text#";
 			else
-				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
+				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#text#";
 		}
 
 		// var template = (templateLabel + "#result#")
@@ -181,8 +181,16 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
+			component.logic.setValue('');
 		}
 
+		component.logic = {
+
+			setValue: (val) => {
+				$$(ids.component).setValues({ text: val });
+			}
+
+		}
 
 		return component;
 	}
@@ -194,12 +202,6 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	componentList() {
 		return [];
-	}
-
-
-
-	setValue(val) {
-		alert('text' + val);
 	}
 
 

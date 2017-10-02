@@ -70,8 +70,14 @@ export default class ABViewDetailComponent extends ABView {
 			}
 		}
 
+		var _logic = {
+			setValue: (val) => {
+			}
+		};
+
 		return {
-			ui: _ui
+			ui: _ui,
+			logic: _logic
 		}
 	}
 
@@ -98,8 +104,5 @@ export default class ABViewDetailComponent extends ABView {
 		return field;
 	}
 
-
-	setValue(val) {
-	}
 
 }

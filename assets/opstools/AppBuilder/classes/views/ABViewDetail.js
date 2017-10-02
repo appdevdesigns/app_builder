@@ -136,10 +136,7 @@ export default class ABViewDetail extends ABViewDetailPanel {
 	component(App) {
 
 		// get a UI component for each of our child views
-		var viewComponents = [];
-		this.views().forEach((v) => {
-			viewComponents.push(v.component(App));
-		})
+		var viewComponents = {}; // { viewId: viewComponent }
 
 		var idBase = 'ABViewDetail_' + this.id;
 		var ids = {
@@ -159,10 +156,11 @@ export default class ABViewDetail extends ABViewDetailPanel {
 			var Detail = $$(ids.component);
 
 			// get a UI component for each of our child views
-			var viewComponents = [];
 			this.views().forEach((v) => {
 
 				var subComponent = v.component(App);
+
+				viewComponents[v.id] = subComponent;
 
 
 				// get element in template
@@ -206,7 +204,8 @@ export default class ABViewDetail extends ABViewDetailPanel {
 					var colName = f.field().columnName;
 					var val = data[colName];
 
-					f.setValue(val);
+					// set value to each components
+					viewComponents[f.id].logic.setValue(val);
 
 				});
 
