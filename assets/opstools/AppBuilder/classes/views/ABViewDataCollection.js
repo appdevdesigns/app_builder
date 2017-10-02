@@ -465,6 +465,25 @@ export default class ABViewDataCollection extends ABView {
 
 
 	/**
+	 * @property model
+	 * return a source model
+	 * 
+	 * @return ABModel
+	 */
+	get model() {
+		var obj = this.datasource;
+
+		if (obj) {
+			return obj.model();
+		}
+		else {
+			return null;
+		}
+
+	}
+
+
+	/**
 	* @method dataCollectionRefresh
 	* create a data collection to cache
 	*
@@ -473,13 +492,19 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	init() {
 
-		var obj = this.datasource;
+		var model = this.model;
 
-		if (obj) {
-
-			var model = obj.model();
+		if (model) {
 
 			this.__dataCollection = model.dataCollectionNew();
+			this.__dataCollection.attachEvent("onAfterCursorChange", () => {
+
+				var currData = this.getCursor();
+
+				this.emit("changeCursor", currData);
+
+			});
+
 		}
 
 	}
@@ -615,6 +640,23 @@ export default class ABViewDataCollection extends ABView {
 			dc.setCursor(rowId);
 		}
 
+	}
+
+
+	getCursor() {
+
+		var dc = this.dataCollection();
+		if (dc) {
+
+			var currId = dc.getCursor();
+			var currItem = dc.getItem(currId);
+
+			return currItem;
+		}
+		else {
+			return null;
+		}
+		
 	}
 
 

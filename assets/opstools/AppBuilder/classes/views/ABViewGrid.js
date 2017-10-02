@@ -646,7 +646,11 @@ export default class ABViewGrid extends ABView  {
 
 					var editPage = this.settings.editPage;
 					$$(ids.component).attachEvent("onItemClick", function (id, e, node) {
-						if (e.target.className.indexOf('pencil') > -1) {
+
+						if (e.target.className.indexOf('eye') > -1) {
+							dc.setCursor(id);
+						}
+						else if (e.target.className.indexOf('pencil') > -1) {
 							var item = id;
 							console.log(item);
 							// dc.setCursor(item.id)
@@ -947,7 +951,9 @@ export default class ABViewGrid extends ABView  {
 	
 	populatePopupEditors(view, dataSource) {
 		var dc = this.dataCollection();
-		
+
+		if (!dc) return;
+
 		var dataCopy = _.cloneDeep(dc.datasource);
 		dataCopy.objectWorkspace = view.settings.objectWorkspace;
 

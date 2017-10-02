@@ -51,7 +51,7 @@ export default class ABViewDetailPanel extends ABView {
 
 		// _logic functions
 
-		_logic.selectObject = (objId, oldObjId) => {
+		_logic.selectSource = (dcId, oldDcId) => {
 
 			// TODO : warning message
 
@@ -59,11 +59,11 @@ export default class ABViewDetailPanel extends ABView {
 			var detailView = currView.detailComponent();
 
 			// remove all old field components
-			if (oldObjId != null)
+			if (oldDcId != null)
 				detailView.clearFieldComponents();
 
 			// Update field options in property
-			this.propertyUpdateFieldOptions(ids, currView, objId);
+			this.propertyUpdateFieldOptions(ids, currView, dcId);
 
 			// add all fields to editor by default
 			if (currView._views.length < 1) {
@@ -73,7 +73,7 @@ export default class ABViewDetailPanel extends ABView {
 
 					if (!f.selected) {
 
-						_logic.addFieldToForm(f);
+						_logic.addFieldToView(f);
 
 						// update item to UI list
 						f.selected = 1;
@@ -104,7 +104,7 @@ export default class ABViewDetailPanel extends ABView {
 
 			// add a field to the form
 			if (item.selected) {
-				_logic.addFieldToForm(item);
+				_logic.addFieldToView(item);
 			}
 			// remove field in the form
 			else {
@@ -122,7 +122,7 @@ export default class ABViewDetailPanel extends ABView {
 		};
 
 
-		_logic.addFieldToForm = (field) => {
+		_logic.addFieldToView = (field) => {
 
 			if (field == null)
 				return;
@@ -151,11 +151,11 @@ export default class ABViewDetailPanel extends ABView {
 		// ask for:
 		return commonUI.concat([
 			{
-				name: 'object',
+				name: 'datacollection',
 				view: 'richselect',
-				label: L('ab.components.detail.objects', "*Objects"),
+				label: L('ab.components.detail.dataSource', "*Data Source"),
 				on: {
-					onChange: _logic.selectObject
+					onChange: _logic.selectSource
 				}
 			},
 			{
@@ -181,27 +181,29 @@ export default class ABViewDetailPanel extends ABView {
 
 		super.propertyEditorPopulate(ids, view);
 
+		var SourceSelector = $$(ids.datacollection);
 		var detailComponent = view.detailComponent();
-		var objectId = detailComponent.settings.object;
+		var dataCollectionId = detailComponent.settings.datacollection;
 
-		// Pull object list to options
-		var objectOptions = view.application.objects().map((obj) => {
+		// Pull data collections to options
+		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
 
 			return {
-				id: obj.id,
-				value: obj.label
+				id: dc.id,
+				value: dc.label
 			};
 		});
 
-		$$(ids.object).define('options', objectOptions);
-		$$(ids.object).refresh();
-		$$(ids.object).setValue(objectId);
+		SourceSelector.define('options', dcOptions);
+		SourceSelector.refresh();
+		SourceSelector.setValue(dataCollectionId);
+
 
 		// Disable to select object in layout
 		// We can select object in form component only
-		$$(ids.object).disable();
+		SourceSelector.disable();
 
-		this.propertyUpdateFieldOptions(ids, view, objectId);
+		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
 
 		// update properties when a field component is deleted
 		view.views().forEach((v) => {
@@ -217,11 +219,13 @@ export default class ABViewDetailPanel extends ABView {
 
 	}
 
-	static propertyUpdateFieldOptions(ids, view, objectId) {
+	static propertyUpdateFieldOptions(ids, view, dcId) {
 
 		var detailComponent = view.detailComponent();
-		var object = view.application.objectByID(objectId);
 		var existsFields = detailComponent.fieldComponents();
+		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
+
 
 		// Pull field list
 		var fieldOptions = [];
