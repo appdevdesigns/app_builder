@@ -1050,6 +1050,39 @@ class ABFieldDate extends ABField {
 		// pull format from settings.
 		return getDateDisplay(new Date(d), this.settings);
 	}
+	
+	getDateFormat(setting) {
+		var dateFormat = "";
+
+		// Date format
+		for (var i = 1; i <= 3; i++) {
+			if (setting.dayOrder == i) {
+				dateFormat += setting.dayFormat;
+				dateFormat += (i != 3) ? getDelimiterSign(setting.dayDelimiter) : '';
+			}
+			if (setting.monthOrder == i) {
+				dateFormat += setting.monthFormat;
+				dateFormat += (i != 3) ? getDelimiterSign(setting.monthDelimiter) : '';
+			}
+			if (setting.yearOrder == i) {
+				dateFormat += setting.yearFormat;
+				dateFormat += (i != 3) ? getDelimiterSign(setting.yearDelimiter) : '';
+			}
+		}
+
+		// Time format
+		if (setting.includeTime == true) {
+			dateFormat += (' {hour}{delimiter}{minute}{period}'
+				.replace('{hour}', setting.hourFormat)
+				.replace('{delimiter}', getDelimiterSign(setting.timeDelimiter))
+				.replace('{minute}', '%i')
+				.replace('{period}', setting.periodFormat != 'none' ? setting.periodFormat : '')
+			);
+		}
+
+		return dateFormat;
+
+	}
 
 }
 
