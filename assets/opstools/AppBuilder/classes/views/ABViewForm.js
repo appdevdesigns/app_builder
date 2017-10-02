@@ -204,6 +204,11 @@ export default class ABViewForm extends ABViewFormPanel {
 				// initialize
 				subComponent.init();
 
+
+				// Trigger 'changePage' event to parent
+				v.removeListener('changePage', _logic.changePage)
+					.on('changePage', _logic.changePage);
+
 			})
 
 
@@ -217,10 +222,19 @@ export default class ABViewForm extends ABViewFormPanel {
 			Form.adjust();
 		}
 
+		var _logic = {
+
+			changePage: (pageId) => {
+				this.changePage(pageId);
+			}
+
+		};
+
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+			logic: _logic
 		}
 	}
 
