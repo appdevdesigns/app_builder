@@ -314,6 +314,8 @@ export default class ABViewPage extends ABView  {
 	 */
 	dataCollections (filter) {
 
+        if (!this._dataCollections) return [];
+
         filter = filter || function() { return true; };
 
         return this._dataCollections.filter(filter);
