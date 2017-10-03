@@ -113,6 +113,13 @@ export default class ABViewPage extends ABView  {
         })
         this._dataCollections = dataCollections;
 
+
+        // initialize data sources
+        this._dataCollections.forEach((data) => {
+            data.init();
+        });
+
+
         // convert from "0" => 0
 
     }

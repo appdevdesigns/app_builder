@@ -47,7 +47,7 @@ export default class ABViewDataCollection extends ABView {
 		// OP.Multilingual.translate(this, this, ['label']);
 
 		// refresh a data collection
-		this.init();
+		// this.init();
 
 	}
 
@@ -449,16 +449,14 @@ export default class ABViewDataCollection extends ABView {
 			});
 		}
 
-		linkFieldOptions.unshift({ id: '', value: L('ab.component.datacollection.selectField', '*Select a link field') });
-
-		if (linkFieldOptions.length > 1)
+		if (linkFieldOptions.length > 0)
 			$$(ids.linkField).show();
 		else
 			$$(ids.linkField).hide();
 
 		$$(ids.linkField).define("options", linkFieldOptions);
 		$$(ids.linkField).refresh();
-		$$(ids.linkField).setValue(view.settings.linkField || '');
+		$$(ids.linkField).setValue(view.settings.linkField || (linkFieldOptions[0] ? linkFieldOptions[0].id : ''));
 
 	}
 
@@ -603,8 +601,11 @@ export default class ABViewDataCollection extends ABView {
 			this.filterLinkCursor(linkData);
 
 			// add listeners when cursor of link data collection is changed
-			linkDc.removeListener("changeCursor", this.filterLinkCursor)
-				.on("changeCursor", this.filterLinkCursor);
+			// linkDc.removeListener("changeCursor", this.filterLinkCursor)
+			// 	.on("changeCursor", this.filterLinkCursor);
+			linkDc.on("changeCursor", (currData) => {
+				this.filterLinkCursor(currData);
+			});
 
 		}
 
@@ -630,7 +631,10 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	get fieldLink() {
 		var linkDc = this.dataCollectionLink;
+		if (!linkDc) return null;
+
 		var object = linkDc.datasource;
+		if (!object) return null;
 
 		return object.fields((f) => f.id == this.settings.linkField)[0];
 	}
@@ -789,14 +793,18 @@ export default class ABViewDataCollection extends ABView {
 		if (this.__dataCollection && fieldLink) {
 			this.__dataCollection.filter((item) => {
 
-				var linkField = item[fieldLink.columnName];
+				// if cursor is not be set.
+				if (linkCursor == null) return true;
+
+				var linkField = item[fieldLink.relationName()];
+				if (linkField == null) return false;
 
 				// array - 1:M , M:N
 				if (linkField.filter) {
-					return linkField.filter((obj) => obj == linkCursor.id).length > 0;
+					return linkField.filter((obj) => obj.id == linkCursor.id).length > 0;
 				}
 				else {
-					return linkField == linkCursor.id;
+					return (linkField.id || linkField) == linkCursor.id;
 				}
 
 			});
