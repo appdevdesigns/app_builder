@@ -57,7 +57,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 				disallowEdit: true,
 				labelRight: L('ab.dataField.string.supportMultilingual', '*Support multilingual'),
 				labelWidth: App.config.labelWidthCheckbox,
-				value: true
+				value: false
 			}
 		]
 	},
@@ -65,7 +65,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
 	defaultValues:{
 		'textDefault': '',
-		'supportMultilingual':1
+		'supportMultilingual':0
 	},
 
 	// rules: basic form validation rules for webix form entry.
@@ -134,7 +134,7 @@ class ABFieldString extends ABField {
 
     	// we're responsible for setting up our specific settings:
     	this.settings.textDefault = values.settings.textDefault || '';
-    	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "1";
+    	this.settings.supportMultilingual = values.settings.supportMultilingual+"" || "0";
 
     	// text to Int:
     	this.settings.supportMultilingual = parseInt(this.settings.supportMultilingual);
