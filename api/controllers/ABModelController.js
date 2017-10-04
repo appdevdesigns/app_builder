@@ -18,6 +18,55 @@ const ValidationError = require('objection').ValidationError;
 var reloading = null;
 
 
+function updateRelationValues(query, id, updateRelationParams) {
+
+    var updateTasks = [];
+
+    // NOTE : There is a error when update values and foreign keys at same time
+    // - Error: Double call to a write method. You can only call one of the write methods 
+    // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
+    if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
+
+        for (var colName in updateRelationParams) {
+
+            var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
+
+            // clear relation values of relation
+            updateTasks.push(query.where('id', id).first()
+                .then(record => {
+
+                    if (record == null) return record;
+
+                    record = record.$relatedQuery(relationName).unrelate();
+
+                    return record;
+                }));
+
+            // convert relation data to array
+            if (!Array.isArray(updateRelationParams[colName])) {
+                updateRelationParams[colName] = [updateRelationParams[colName]];
+            }
+
+            // We could not insert many relation values at same time
+            // NOTE : Error: batch insert only works with Postgresql
+            updateRelationParams[colName].forEach(val => {
+                // insert relation values of relation
+                updateTasks.push(query.where('id', id).first()
+                    .then(record => {
+                        if (record == null) return record;
+
+                        record = record.$relatedQuery(relationName).relate(val);
+
+                        return record;
+                    }));
+            });
+
+
+        }
+    }
+
+    return updateTasks;
+}
 
 
 
@@ -36,6 +85,9 @@ module.exports = {
             // return the parameters from the input params that relate to this object
             var createParams = object.requestParams(allParams);  
 
+            // return the parameters of connectObject data field values 
+            var updateRelationParams = object.requestRelationParams(allParams);
+
 
             var validationErrors = object.isValidData(createParams);
             if (validationErrors.length == 0) {
@@ -51,7 +103,20 @@ module.exports = {
                 query.insert(createParams)
                 .then((newObj)=>{
 
-                    res.AD.success(newObj);
+                    // create a new query when use same query, then new data are created duplicate
+                    var query2 = object.model().query();
+                    var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
+
+                    return Promise.all(updateTasks)
+                        .catch(Promise.reject)
+                        .then((values)=>{
+
+                            res.AD.success(newObj);
+
+                            Promise.resolve();
+
+                        });
+
 
                 }, (err)=>{
 
@@ -450,48 +515,8 @@ console.log('... catch(err) !');
 
                 var updateTasks = [];
 
-                // NOTE : There is a error when update values and foreign keys at same time
-                // - Error: Double call to a write method. You can only call one of the write methods 
-                // - (insert, update, patch, delete, relate, unrelate, increment, decrement) and only once per query builder
-                if (updateRelationParams != null && Object.keys(updateRelationParams).length > 0) {
-
-                    for (var colName in updateRelationParams) {
-
-                        var relationName = AppBuilder.rules.toFieldRelationFormat(colName);
-
-                        // clear relation values of relation
-                        updateTasks.push(query.where('id', id).first()
-                            .then(record => {
-
-                                if (record == null) return record;
-
-                                record = record.$relatedQuery(relationName).unrelate();
-
-                                return record;
-                            }));
-
-                        // convert relation data to array
-                        if (!Array.isArray(updateRelationParams[colName])) {
-                            updateRelationParams[colName] = [updateRelationParams[colName]];
-                        }
-
-                        // We could not insert many relation values at same time
-                        // NOTE : Error: batch insert only works with Postgresql
-                        updateRelationParams[colName].forEach(val => {
-                            // insert relation values of relation
-                            updateTasks.push(query.where('id', id).first()
-                                .then(record => {
-                                    if (record == null) return record;
-
-                                    record = record.$relatedQuery(relationName).relate(val);
-
-                                    return record;
-                                }));
-                        });
-
-
-                    }
-                }
+                // update relation values
+                updateTasks = updateTasks.concat(updateRelationValues(query, id, updateRelationParams));
 
                 // update record values
                 if (updateParams != null && Object.keys(updateParams).length > 0) {
@@ -573,6 +598,7 @@ console.log('... catch(err) !');
         })
 
     },
+
 
 
     refresh: function (req, res) {
