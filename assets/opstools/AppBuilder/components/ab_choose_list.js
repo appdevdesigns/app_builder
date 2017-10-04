@@ -377,6 +377,8 @@ export default class ABChooseList extends OP.Component {
 				appList.data.unsync();
 				appList.data.sync(_data.listApplications);
 
+				appList.sort("label", "asc");
+
 				_logic.refreshOverlay();
 
 				appList.refresh();
@@ -527,6 +529,7 @@ export default class ABChooseList extends OP.Component {
 			 * Trigger our List component to show
 			 */
 			transitionApplicationList:function() {
+				_logic.refreshList();
 				$$(ids.component).show();
 			}
 		})
