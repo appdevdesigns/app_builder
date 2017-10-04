@@ -124,7 +124,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
-		
+
 		var settings = {};
 		if (form)
 			settings = form.settings;
@@ -150,9 +150,9 @@ export default class ABViewFormCustom extends ABViewFormField {
 		// component.ui.minHeight = 45;
 		// component.ui.height = 60;
 		component.ui.borderless = true;
-		component.ui.template =  '<div class="customField">' + template + '</div>';
+		component.ui.template = '<div class="customField">' + template + '</div>';
 		component.ui.onClick = {
-			"customField": function(id, e, trg) {
+			"customField": function (id, e, trg) {
 				var rowData = {},
 					node = $$(ids.component).$view;
 				field.customEdit(rowData, App, node);
@@ -165,8 +165,30 @@ export default class ABViewFormCustom extends ABViewFormField {
 				node = $$(ids.component).$view;
 
 			field.customDisplay(rowData, App, node);
-			
+
 		}
+
+		component.logic = {
+
+			getValue: (rowData) => {
+
+				var application = this.application,
+					object = field.object,
+					elem = $$(ids.component),
+					dom = $$(ids.component).$view;
+
+
+				return field.getValue(application,
+					object,
+					field,
+					dom,
+					rowData,
+					elem
+				);
+
+			}
+
+		};
 
 
 		return component;
