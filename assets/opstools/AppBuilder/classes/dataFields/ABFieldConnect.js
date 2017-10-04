@@ -106,6 +106,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
 					onChange: function (newV, oldV) {
+						if (typeof oldV == "undefined") return;
 						if (newV == "") {
 							$$(ids.link1).hide();
 							$$(ids.link2).hide();							
