@@ -317,9 +317,11 @@ export default class ABViewFormPanel extends ABView {
 	 *
 	 * return an array of all the ABViewFormField children
 	 *
+	 * @param {fn} filter  	a filter fn to return a set of ABViewFormField that this fn
+	 *						returns true for.
 	 * @return {array} 	array of ABViewFormField
 	 */
-	fieldComponents() {
+	fieldComponents(filter) {
 
 		var flattenComponents = (views) => {
 			var components = [];
@@ -335,7 +337,11 @@ export default class ABViewFormPanel extends ABView {
 		if (this._views && this._views.length > 0) {
 			var allComponents = flattenComponents(this._views);
 
-			return allComponents.filter((comp) => comp instanceof ABViewFormField);
+			if (filter == null) {
+				filter = (comp) => comp instanceof ABViewFormField;
+			}
+
+			return allComponents.filter(filter);
 		}
 		else {
 			return [];
