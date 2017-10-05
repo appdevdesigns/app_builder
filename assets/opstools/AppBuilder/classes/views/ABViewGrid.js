@@ -27,6 +27,8 @@ var ABViewGridPropertyComponentDefaults = {
 	isEditable:0,
 	massUpdate:0,
 	allowDelete:0,
+	isFilterable:0,
+	isSortable:0,
 	// linkedObject:'',
 	// linkedField:'',
 	// linkedPage:'',
@@ -112,6 +114,8 @@ export default class ABViewGrid extends ABView  {
 		this.settings.isEditable = this.settings.isEditable || ABViewGridPropertyComponentDefaults.isEditable;
 		this.settings.massUpdate = this.settings.massUpdate || ABViewGridPropertyComponentDefaults.massUpdate;
 		this.settings.allowDelete = this.settings.allowDelete || ABViewGridPropertyComponentDefaults.allowDelete;
+		this.settings.isFilterable = this.settings.isFilterable || ABViewGridPropertyComponentDefaults.isFilterable;
+		this.settings.isSortable = this.settings.isSortable || ABViewGridPropertyComponentDefaults.isSortable;
 		// this.settings.linkedObject = this.settings.linkedObject || ABViewGridPropertyComponentDefaults.linkedObject;
 		// this.settings.linkedField = this.settings.linkedField || ABViewGridPropertyComponentDefaults.linkedField;
 		// this.settings.linkedPage = this.settings.linkedPage || ABViewGridPropertyComponentDefaults.linkedPage;
@@ -297,7 +301,19 @@ export default class ABViewGrid extends ABView  {
 							name:"allowDelete",
 							labelRight: L('ab.component.label.allowDelete', '*User can delete records.'),
 							labelWidth: App.config.labelWidthCheckbox
-						}
+						},
+						{
+							view:"checkbox",
+							name:"isFilterable",
+							labelRight: L('ab.component.label.isFilterable', '*User can filter records.'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
+						{
+							view:"checkbox",
+							name:"isSortable",
+							labelRight: L('ab.component.label.isSortable', '*User can sort records.'),
+							labelWidth: App.config.labelWidthCheckbox
+						},
 					]
 				}
 			},
@@ -510,6 +526,8 @@ export default class ABViewGrid extends ABView  {
 		$$(ids.isEditable).setValue(view.settings.isEditable);
 		$$(ids.massUpdate).setValue(view.settings.massUpdate);
 		$$(ids.allowDelete).setValue(view.settings.allowDelete);
+		$$(ids.isFilterable).setValue(view.settings.isFilterable);
+		$$(ids.isSortable).setValue(view.settings.isSortable);
 		// $$(ids.linkedObject).setValue(view.settings.linkedObject);
 		// $$(ids.linkedField).setValue(view.settings.linkedField);
 		// $$(ids.linkedPage).setValue(view.settings.linkedPage);
@@ -540,6 +558,8 @@ export default class ABViewGrid extends ABView  {
 		view.settings.isEditable = $$(ids.isEditable).getValue();
 		view.settings.massUpdate = $$(ids.massUpdate).getValue();
 		view.settings.allowDelete = $$(ids.allowDelete).getValue();
+		view.settings.isFilterable = $$(ids.isFilterable).getValue();
+		view.settings.isSortable = $$(ids.isSortable).getValue();
 		// view.settings.linkedObject = $$(ids.linkedObject).getValue();
 		// view.settings.linkedField = $$(ids.linkedField).getValue();
 		// view.settings.linkedPage = $$(ids.linkedPage).getValue();
@@ -567,7 +587,7 @@ export default class ABViewGrid extends ABView  {
 			// buttonExport: App.unique('buttonExport'),
 			buttonFilter: App.unique('buttonFilter'),
 			buttonMassUpdate: App.unique('buttonMassUpdate'),
-			// buttonSort: App.unique('buttonSort'),
+			buttonSort: App.unique('buttonSort'),
 
 		}
 		
@@ -661,6 +681,27 @@ export default class ABViewGrid extends ABView  {
 				PopupFilterDataTableComponent.init({
 					onChange:_logic.callbackFilterData		// be notified when there is a change in the hidden fields
 				});
+				
+				if (this.settings.massUpdate == false && this.settings.isFilterable == false && this.settings.isSortable == false) {
+					$$(ids.toolbar).hide();			
+				}
+				
+				if (this.settings.massUpdate == false) {
+					$$(ids.buttonMassUpdate).hide();
+					$$(ids.buttonDeleteSelected).hide();
+				}
+
+				if (this.settings.allowDelete == false) {
+					$$(ids.buttonDeleteSelected).hide();
+				}
+				
+				if (this.settings.isFilterable == false) {
+					$$(ids.buttonFilter).hide();
+				}
+				
+				if (this.settings.isSortable == false) {
+					$$(ids.buttonSort).hide();
+				}
 
 				// var dataSource = this.application.objects((o)=>{
 				// 	return o.id == this.settings.dataSource;
