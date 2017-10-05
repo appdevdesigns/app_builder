@@ -1051,7 +1051,8 @@ class ABFieldDate extends ABField {
 		return getDateDisplay(new Date(d), this.settings);
 	}
 	
-	getDateFormat(setting) {
+	getDateFormat() {
+		var setting = this.settings;
 		var dateFormat = "";
 
 		// Date format
