@@ -687,6 +687,10 @@ export default class ABViewDataCollection extends ABView {
 					limit: 20,
 					skip: 0
 				}
+				var dateFields = [];
+				model.object._fields.forEach((item) => {
+					if (item.key == "date") dateFields.push(item.columnName);
+				});
 				model.findAll(cond)
 					.then((data) => {
 						data.data.forEach((item) => {
@@ -695,6 +699,9 @@ export default class ABViewDataCollection extends ABView {
 							} else if (defaultHeight > 0) {
 								item.$height = defaultHeight;
 							}
+							dateFields.forEach((key) => {
+								item[key] = new Date(item[key]);
+							});
 						});
 						dc.parse(data);
 					});
