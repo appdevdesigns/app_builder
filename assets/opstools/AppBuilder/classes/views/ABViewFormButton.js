@@ -15,7 +15,10 @@ function L(key, altText) {
 
 var ABViewFormButtonPropertyComponentDefaults = {
 	includeSave: true,
+	saveLabel: '*save',
 	includeCancel: true,
+	cancelLabel: '*cancel',
+	afterSave: null,
 	alignment: 'right'
 }
 
@@ -133,9 +136,27 @@ export default class ABViewFormButton extends ABView {
 				label: L('ab.component.button.includeSave', '*Save')
 			},
 			{
+				name:'saveLabel',
+				view: "text",
+				label: L('ab.component.button.saveLabel', '*Save'),
+				placeholder: L('ab.component.button.saveLabelPlaceholder', '*Save Placeholder'),
+			},
+			{
 				name: 'includeCancel',
 				view: 'checkbox',
 				label: L('ab.component.button.includeCancel', '*Cancel')
+			},
+			{
+				name:'cancelLabel',
+				view: "text",
+				label: L('ab.component.button.cancelLabel', '*Cancel'),
+				placeholder: L('ab.component.button.cancelLabelPlaceholder', '*Cancel Placeholder'),
+			},			
+			{
+				name: 'afterSave',
+				view: 'richselect',
+				label: L('ab.component.button.alignment', '*Alignment')
+				// options: []
 			},
 			{
 				name: 'alignment',
@@ -155,8 +176,23 @@ export default class ABViewFormButton extends ABView {
 
 		super.propertyEditorPopulate(ids, view);
 
+		var pagesList = [];
+		var allPage = view.application._pages;
+		view.AddPagesToList(pagesList, view.application);
+
+		var opts = pagesList.map(function (opt) {
+			return {
+				id: opt.id,
+				value: opt.value
+			}
+		});
+		$$(ids.afterSave).define('options', opts);
+
 		$$(ids.includeSave).setValue(view.settings.includeSave != null ? view.settings.includeSave : ABViewFormButtonPropertyComponentDefaults.includeSave);
+		$$(ids.saveLabel).setValue(view.settings.saveLabel != null ? view.settings.saveLabel : ABViewFormButtonPropertyComponentDefaults.saveLabel);
 		$$(ids.includeCancel).setValue(view.settings.includeCancel != null ? view.settings.includeCancel : ABViewFormButtonPropertyComponentDefaults.includeCancel);
+		$$(ids.cancelLabel).setValue(view.settings.cancelLabel != null ? view.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel);
+		$$(ids.afterSave).setValue(view.settings.afterSave || ABViewFormButtonPropertyComponentDefaults.afterSave);
 		$$(ids.alignment).setValue(view.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment);
 
 	}
@@ -166,7 +202,10 @@ export default class ABViewFormButton extends ABView {
 		super.propertyEditorValues(ids, view);
 
 		view.settings.includeSave = $$(ids.includeSave).getValue();
+		view.settings.saveLabel = $$(ids.saveLabel).getValue();
 		view.settings.includeCancel = $$(ids.includeCancel).getValue();
+		view.settings.cancelLabel = $$(ids.cancelLabel).getValue();
+		view.settings.afterSave = $$(ids.afterSave).getValue();
 		view.settings.alignment = $$(ids.alignment).getValue();
 
 	}
@@ -193,6 +232,7 @@ export default class ABViewFormButton extends ABView {
 		};
 
 		var alignment = this.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment;
+		var aftersave = this.settings.afterSave || ABViewFormButtonPropertyComponentDefaults.afterSave;
 
 		// spacer
 		if (alignment == 'center' || alignment == 'right') {
@@ -206,7 +246,7 @@ export default class ABViewFormButton extends ABView {
 				type: "standard",
 				css: "ab-cancel-button",
 				width: 80,
-				value: L('ab.component.button.cancel', '*Cancel'),
+				value: this.settings.cancelLabel != null ? this.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel,
 				click: function () {
 					_logic.onCancel(this);
 				}
@@ -219,12 +259,13 @@ export default class ABViewFormButton extends ABView {
 				view: "button",
 				type: "form",
 				width: 80,
-				value: L('ab.component.button.save', '*Save'),
+				value: this.settings.saveLabel != null ? this.settings.saveLabel : ABViewFormButtonPropertyComponentDefaults.saveLabel,
 				click: function () {
 					_logic.onSave(this);
 				}
 			});
 		}
+
 
 		// spacer
 		if (alignment == 'center' || alignment == 'left') {
@@ -233,6 +274,7 @@ export default class ABViewFormButton extends ABView {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
+
 		};
 
 		var _logic = {
@@ -267,6 +309,7 @@ export default class ABViewFormButton extends ABView {
 					.catch(() => { saveButton.enable(); })
 					.then(() => { saveButton.enable(); });
 
+				super.changePage(this.settings.afterSave);
 			},
 
 		};
@@ -308,6 +351,21 @@ export default class ABViewFormButton extends ABView {
 		return form;
 	}
 
+	AddPagesToList(pagesList, parent) {
+	
+		if (!parent || !parent.pages || !pagesList) return;
 
+		var pages = parent.pages() || [];
+
+		pages.forEach((page) => {
+			pagesList.push({
+				id: page.id,
+				value: page.label
+			});
+
+			this.AddPagesToList(pagesList, page);
+
+		});
+	}
 
 };
