@@ -155,7 +155,7 @@ export default class ABViewFormButton extends ABView {
 			{
 				name: 'afterSave',
 				view: 'richselect',
-				label: L('ab.component.button.alignment', '*Alignment')
+				label: L('ab.component.button.afterSave', '*After Save')
 				// options: []
 			},
 			{
@@ -178,7 +178,7 @@ export default class ABViewFormButton extends ABView {
 
 		var pagesList = [];
 		var allPage = view.application._pages;
-		view.AddPagesToList(pagesList, view.application);
+		view.AddPagesToList(pagesList, view.application, view.pageRoot().id);
 
 		var opts = pagesList.map(function (opt) {
 			return {
@@ -351,19 +351,22 @@ export default class ABViewFormButton extends ABView {
 		return form;
 	}
 
-	AddPagesToList(pagesList, parent) {
+	AddPagesToList(pagesList, parent, rootPageId) {
 	
 		if (!parent || !parent.pages || !pagesList) return;
 
 		var pages = parent.pages() || [];
 
 		pages.forEach((page) => {
-			pagesList.push({
-				id: page.id,
-				value: page.label
-			});
+			if (page.parent != null || page.id == rootPageId) {
+				pagesList.push({
+					id: page.id,
+					value: page.label
+				});
 
-			this.AddPagesToList(pagesList, page);
+				this.AddPagesToList(pagesList, page, page.id);
+
+			};
 
 		});
 	}
