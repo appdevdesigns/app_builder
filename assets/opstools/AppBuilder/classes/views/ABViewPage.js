@@ -113,6 +113,13 @@ export default class ABViewPage extends ABView  {
         })
         this._dataCollections = dataCollections;
 
+
+        // initialize data sources
+        this._dataCollections.forEach((data) => {
+            data.init();
+        });
+
+
         // convert from "0" => 0
 
     }
@@ -313,6 +320,8 @@ export default class ABViewPage extends ABView  {
 	 * @return {array}			array of ABViewDataCollection
 	 */
 	dataCollections (filter) {
+
+        if (!this._dataCollections) return [];
 
         filter = filter || function() { return true; };
 

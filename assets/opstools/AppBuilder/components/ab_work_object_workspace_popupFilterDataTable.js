@@ -229,9 +229,7 @@ export default class AB_Work_Object_Workspace_PopupFilterDataTable extends OP.Co
 
                                             inputView = { view: "datepicker" };
 
-                                            if (columnConfig.settings) {
-                                                inputView.format = columnConfig.getDateFormat(columnConfig.settings);
-                                            }
+                                            inputView.format = columnConfig.getDateFormat();
 
                                             break;
                                         case "number":

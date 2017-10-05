@@ -49,7 +49,7 @@ var ids = {
 	linkViaType: 'ab-add-field-link-type-from',
 	fieldLinkVia: 'ab-add-field-link-to',
 	fieldLinkVia2: 'ab-add-field-link-to-2',
-	
+
 	link1: 'ab-link1-field-options',
 	link2: 'ab-link2-field-options',
 
@@ -65,12 +65,12 @@ function populateSelect(populate, callback) {
 	$$(ids.objectList).define("options", options);
 	$$(ids.objectList).refresh();
 	if (populate != null && populate == true) {
-		$$(ids.objectList).setValue(options[options.length-1].id);
+		$$(ids.objectList).setValue(options[options.length - 1].id);
 		$$(ids.objectList).refresh();
-		var selectedObj = $$(ids.objectList).getList().getItem(options[options.length-1].id);
+		var selectedObj = $$(ids.objectList).getList().getItem(options[options.length - 1].id);
 		if (selectedObj) {
 			var selectedObjLabel = selectedObj.value;
-			$$(ids.fieldLinkVia).setValue("<b>"+selectedObjLabel + "</b> entry.");
+			$$(ids.fieldLinkVia).setValue("<b>" + selectedObjLabel + "</b> entry.");
 			$$(ids.fieldLinkVia2).setValue("Each <b>" + selectedObjLabel + "</b> entry connects with ");
 			$$(ids.link1).show();
 			$$(ids.link2).show();
@@ -106,15 +106,16 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
 					onChange: function (newV, oldV) {
+						if (typeof oldV == "undefined") return;
 						if (newV == "") {
 							$$(ids.link1).hide();
-							$$(ids.link2).hide();							
+							$$(ids.link2).hide();
 						}
 						if (newV == oldV) return;
 						var selectedObj = this.getList().getItem(newV);
 						if (selectedObj) {
 							var selectedObjLabel = selectedObj.value;
-							$$(ids.fieldLinkVia).setValue("<b>"+selectedObjLabel + "</b> entry.");
+							$$(ids.fieldLinkVia).setValue("<b>" + selectedObjLabel + "</b> entry.");
 							$$(ids.fieldLinkVia2).setValue("Each <b>" + selectedObjLabel + "</b> entry connects with ");
 							$$(ids.link1).show();
 							$$(ids.link2).show();
@@ -130,13 +131,13 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				click: function () {
 					if (App.actions.addNewObject) {
 						async.series([
-							function(callback) {
+							function (callback) {
 								App.actions.addNewObject(false, callback); // pass false because after it is created we do not want it to select it in the object list
 							},
-							function(callback) {
+							function (callback) {
 								populateSelect(true, callback); // pass true because we want it to select the last item in the list that was just created								
 							}
-						], function(err) {
+						], function (err) {
 							// console.log('all functions complete')
 						})
 					} else {
@@ -166,11 +167,11 @@ var ABFieldConnectComponent = new ABFieldComponent({
 							{ id: "one", value: L('ab.dataField.connectObject.belongTo', "*one") }
 						],
 						on: {
-							onChange: function(newV, oldV) {
+							onChange: function (newV, oldV) {
 								if (newV == "many") {
 									$$(ids.fieldLinkVia).define("label", $$(ids.fieldLinkVia).getValue().replace("entry", "entries"));
 								} else {
-									$$(ids.fieldLinkVia).define("label", $$(ids.fieldLinkVia).getValue().replace("entries", "entry"));									
+									$$(ids.fieldLinkVia).define("label", $$(ids.fieldLinkVia).getValue().replace("entries", "entry"));
 								}
 								$$(ids.fieldLinkVia).refresh();
 							}
@@ -207,11 +208,11 @@ var ABFieldConnectComponent = new ABFieldComponent({
 							{ id: "one", value: L('ab.dataField.connectObject.belongTo', "*one") }
 						],
 						on: {
-							onChange: function(newV, oldV) {
+							onChange: function (newV, oldV) {
 								if (newV == "many") {
 									$$(ids.fieldLink2).define("label", $$(ids.fieldLink2).getValue().replace("entry", "entries"));
 								} else {
-									$$(ids.fieldLink2).define("label", $$(ids.fieldLink2).getValue().replace("entries", "entry"));									
+									$$(ids.fieldLink2).define("label", $$(ids.fieldLink2).getValue().replace("entries", "entry"));
 								}
 								$$(ids.fieldLink2).refresh();
 							}
@@ -276,7 +277,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 			// show current object name
 			$$(ids.fieldLink).setValue("Each <b>" + ABFieldConnectComponent.CurrentObject.label + "</b> entry connects with ");
-			$$(ids.fieldLink2).setValue("<b>"+ABFieldConnectComponent.CurrentObject.label + "</b> entries.");
+			$$(ids.fieldLink2).setValue("<b>" + ABFieldConnectComponent.CurrentObject.label + "</b> entries.");
 		},
 
 		populate: (ids, values) => {
@@ -391,34 +392,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// sanity check.
 		if (!node) { return }
 
-		// Get linked object
-		var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
-
 		var domNode = node.querySelector('.connect-data-values');
 
 		var multiselect = (this.settings.linkType == 'many');
 
 		// get selected values
-		var selectedData = [];
-		var relationName = this.relationName();
-		if (row[relationName] != null) {
-
-			// if this select value is array
-			if (row[relationName].map) {
-
-				selectedData = row[relationName].map(function (d) {
-					// display label in format
-					d.text = d.text || linkedObject.displayData(d);
-
-					return d;
-				});
-
-			}
-			else {
-				selectedData = row[relationName];
-				selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
-			}
-		}
+		var selectedData = this.pullRelationValues(row);
 
 		// Render selectivity
 		this.selectivityRender(domNode, {
@@ -549,12 +528,12 @@ class ABFieldConnect extends ABFieldSelectivity {
 	}
 
 	detailComponent() {
-		
+
 		var detailComponentSetting = super.detailComponent();
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailcustom'
+				key: 'detailselectivity'
 			}
 		};
 
@@ -643,6 +622,47 @@ class ABFieldConnect extends ABFieldSelectivity {
 			}
 		);
 	}
+
+
+
+	/**
+	 * @method pullRelationValues
+	 * 
+	 * 
+	 * @param {*} row 
+	 * 
+	 * @return {array}
+	 */
+	pullRelationValues(row) {
+
+		var selectedData = [];
+
+		// Get linked object
+		var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
+
+		var relationName = this.relationName();
+		if (row[relationName] != null) {
+
+			// if this select value is array
+			if (row[relationName].map) {
+
+				selectedData = row[relationName].map(function (d) {
+					// display label in format
+					d.text = d.text || linkedObject.displayData(d);
+
+					return d;
+				});
+
+			}
+			else {
+				selectedData = row[relationName];
+				selectedData.text = (selectedData.text || linkedObject.displayData(selectedData));
+			}
+		}
+
+		return selectedData;
+	}
+
 
 	getValue(application, object, fieldData, itemNode, rowData, item) {
 		var values = {};

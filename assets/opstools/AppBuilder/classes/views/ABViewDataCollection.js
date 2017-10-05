@@ -47,7 +47,7 @@ export default class ABViewDataCollection extends ABView {
 		// OP.Multilingual.translate(this, this, ['label']);
 
 		// refresh a data collection
-		this.init();
+		// this.init();
 
 	}
 
@@ -189,15 +189,9 @@ export default class ABViewDataCollection extends ABView {
 
 		_logic.selectObject = (objectId) => {
 
-			var view = _logic.currentEditObject();
-
 			// re-create filter & sort popups
 			this.initPopupEditors(App, _logic);
 
-		};
-
-		_logic.selectLinkDc = (dataCollectionId) => {
-			// TODO
 		};
 
 		_logic.toolbarFilter = ($view) => {
@@ -236,14 +230,7 @@ export default class ABViewDataCollection extends ABView {
 							label: L('ab.component.datacollection.linkDataSource', '*Linked To:'),
 							labelWidth: App.config.labelWidthLarge,
 							options: [],
-							hidden: 1,
-							on: {
-								onChange: function (newv, oldv) {
-									if (newv == oldv) return;
-
-									_logic.selectLinkDc(newv);
-								}
-							}
+							hidden: 1
 						},
 						{
 							view: "select",
@@ -328,6 +315,8 @@ export default class ABViewDataCollection extends ABView {
 		// populate link data collection options
 		this.initLinkDataCollectionOptions(ids, view);
 
+		// populate link fields
+		this.initLinkFieldOptions(ids, view);
 
 		// initial populate of popups
 		this.populatePopupEditors(view);
@@ -376,13 +365,22 @@ export default class ABViewDataCollection extends ABView {
 			delete view.settings.objectUrl;
 		}
 
+		// set id of link data collection
 		view.settings.linkDataCollection = $$(ids.linkDataSource).getValue();
-
 		if (!view.settings.linkDataCollection)
 			delete view.settings.linkDataCollection;
 
+		// set id of link field
+		view.settings.linkField = $$(ids.linkField).getValue();
+		if (!view.settings.linkField)
+			delete view.settings.linkField;
+
+
 		// populate link data collections
 		this.initLinkDataCollectionOptions(ids, view);
+
+		// populate link fields
+		this.initLinkFieldOptions(ids, view);
 
 		// refresh data collection
 		view.init();
@@ -408,7 +406,7 @@ export default class ABViewDataCollection extends ABView {
 
 			});
 
-			// set dc to options
+			// set data collections to options
 			linkDcs.forEach((dc) => {
 				linkDcOptions.push({
 					id: dc.id,
@@ -428,6 +426,37 @@ export default class ABViewDataCollection extends ABView {
 			$$(ids.linkDataSource).hide();
 			$$(ids.linkField).hide();
 		}
+
+	}
+
+
+	static initLinkFieldOptions(ids, view) {
+
+		var linkFieldOptions = [];
+
+		// get fields that link to our ABObject
+		if (view.dataCollectionLink) {
+			var object = view.datasource;
+			var linkObject = view.dataCollectionLink.datasource;
+			var linkFields = linkObject.linkFields().filter((link) => link.settings.linkObject == object.id);
+
+			// pull fields to options
+			linkFields.forEach((f) => {
+				linkFieldOptions.push({
+					id: f.id,
+					value: f.label
+				});
+			});
+		}
+
+		if (linkFieldOptions.length > 0)
+			$$(ids.linkField).show();
+		else
+			$$(ids.linkField).hide();
+
+		$$(ids.linkField).define("options", linkFieldOptions);
+		$$(ids.linkField).refresh();
+		$$(ids.linkField).setValue(view.settings.linkField || (linkFieldOptions[0] ? linkFieldOptions[0].id : ''));
 
 	}
 
@@ -551,7 +580,6 @@ export default class ABViewDataCollection extends ABView {
 	init() {
 
 		var model = this.model;
-
 		if (model) {
 
 			this.__dataCollection = model.dataCollectionNew();
@@ -565,16 +593,50 @@ export default class ABViewDataCollection extends ABView {
 
 		}
 
+		var linkDc = this.dataCollectionLink;
+		if (linkDc) {
+
+			// filter data by match link data collection
+			var linkData = linkDc.getCursor();
+			this.filterLinkCursor(linkData);
+
+			// add listeners when cursor of link data collection is changed
+			// linkDc.removeListener("changeCursor", this.filterLinkCursor)
+			// 	.on("changeCursor", this.filterLinkCursor);
+			linkDc.on("changeCursor", (currData) => {
+				this.filterLinkCursor(currData);
+			});
+
+		}
+
 	}
 
 	/**
-	* @method dataCollection
-	* return a webix's data collection to match object id of this component.
+	* @method dataCollectionLink
+	* return a ABViewDataCollection that link of this.
 	*
-	* @return {Object}
+	* @return {ABViewDataCollection}
 	*/
-	dataCollection() {
-		return this.__dataCollection;
+	get dataCollectionLink() {
+		return this
+			.pageRoot()
+			.dataCollections((dc) => dc.id == this.settings.linkDataCollection)[0];
+	}
+
+	/**
+	* @method fieldLink
+	* return a ABFieldConnect field that link of this.
+	*
+	* @return {ABFieldConnect}
+	*/
+	get fieldLink() {
+		var linkDc = this.dataCollectionLink;
+		if (!linkDc) return null;
+
+		var object = linkDc.datasource;
+		if (!object) return null;
+
+		return object.fields((f) => f.id == this.settings.linkField)[0];
 	}
 
 
@@ -586,7 +648,7 @@ export default class ABViewDataCollection extends ABView {
 	*/
 	bind(component) {
 
-		var dc = this.dataCollection();
+		var dc = this.__dataCollection;
 		var obj = this.datasource;
 
 		var defaultHeight = 0;
@@ -611,31 +673,38 @@ export default class ABViewDataCollection extends ABView {
 				component.define("datathrottle", 500);
 
 				component.data.sync(dc);
-				
+
 				var wheres = this.settings.objectWorkspace.filterConditions || {};
 				var sorts = this.settings.objectWorkspace.sortConditions || {};
 
 				// get data to data collection
 				var cond = {
-					where:{
-                        where: wheres, 
-                        sort: sorts,
-                        height: defaultHeight
-                    },
-					limit:20,
-					skip:0
+					where: {
+						where: wheres,
+						sort: sorts,
+						height: defaultHeight
+					},
+					limit: 20,
+					skip: 0
 				}
-				model.findAll(cond)
-				.then((data) => {
-					data.data.forEach((item) => {
-						if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
-							item.$height = parseInt(item.properties.height);
-						} else if (defaultHeight > 0) {
-							item.$height = defaultHeight;
-						}
-					});
-					dc.parse(data);
+				var dateFields = [];
+				model.object._fields.forEach((item) => {
+					if (item.key == "date") dateFields.push(item.columnName);
 				});
+				model.findAll(cond)
+					.then((data) => {
+						data.data.forEach((item) => {
+							if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
+								item.$height = parseInt(item.properties.height);
+							} else if (defaultHeight > 0) {
+								item.$height = defaultHeight;
+							}
+							dateFields.forEach((key) => {
+								item[key] = new Date(item[key]);
+							});
+						});
+						dc.parse(data);
+					});
 
 				component.___AD = component.___AD || {};
 				if (component.___AD.onDataRequestEvent) {
@@ -643,13 +712,13 @@ export default class ABViewDataCollection extends ABView {
 				}
 				component.attachEvent("onDataRequest", function (start, count) {
 					var cond = {
-						where:{
-	                        where: wheres, 
-	                        sort: sorts,
-	                        height: defaultHeight
-	                    },
-						limit:count,
-						skip:start
+						where: {
+							where: wheres,
+							sort: sorts,
+							height: defaultHeight
+						},
+						limit: count,
+						skip: start
 					}
 
 					if (component.showProgress)
@@ -693,7 +762,7 @@ export default class ABViewDataCollection extends ABView {
 
 	setCursor(rowId) {
 
-		var dc = this.dataCollection();
+		var dc = this.__dataCollection;
 		if (dc) {
 			dc.setCursor(rowId);
 		}
@@ -703,7 +772,7 @@ export default class ABViewDataCollection extends ABView {
 
 	getCursor() {
 
-		var dc = this.dataCollection();
+		var dc = this.__dataCollection;
 		if (dc) {
 
 			var currId = dc.getCursor();
@@ -713,6 +782,39 @@ export default class ABViewDataCollection extends ABView {
 		}
 		else {
 			return null;
+		}
+
+	}
+
+
+	/**
+	 * @method filterLinkCursor
+	 * filter data in data collection by match id of link data collection
+	 * 
+	 * @param {Object} - current data of link data collection
+	 */
+	filterLinkCursor(linkCursor) {
+
+		var fieldLink = this.fieldLink;
+
+		if (this.__dataCollection && fieldLink) {
+			this.__dataCollection.filter((item) => {
+
+				// if cursor is not be set.
+				if (linkCursor == null) return true;
+
+				var linkField = item[fieldLink.relationName()];
+				if (linkField == null) return false;
+
+				// array - 1:M , M:N
+				if (linkField.filter) {
+					return linkField.filter((obj) => obj.id == linkCursor.id).length > 0;
+				}
+				else {
+					return (linkField.id || linkField) == linkCursor.id;
+				}
+
+			});
 		}
 
 	}

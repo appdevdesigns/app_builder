@@ -1,7 +1,7 @@
 /*
- * ABViewDetailText
+ * ABViewDetailImage
  *
- * An ABViewDetailText defines a UI string component in the detail component.
+ * An ABViewDetailImage defines a UI string component in the detail component.
  *
  */
 
@@ -13,18 +13,18 @@ function L(key, altText) {
 }
 
 
-var ABViewDetailTextPropertyComponentDefaults = {
+var ABViewDetailImagePropertyComponentDefaults = {
 }
 
 
-var ABViewDetailTextDefaults = {
-	key: 'detailtext',		// {string} unique key for this view
-	icon: 'etsy',			// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.detail.text' // {string} the multilingual label key for the class label
+var ABViewDetailImageDefaults = {
+	key: 'detailimage',		// {string} unique key for this view
+	icon: 'image',			// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.detail.image' // {string} the multilingual label key for the class label
 }
 
 
-export default class ABViewDetailText extends ABViewDetailComponent {
+export default class ABViewDetailImage extends ABViewDetailComponent {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,31 +33,13 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABViewDetailTextDefaults);
-
-		// OP.Multilingual.translate(this, this, ['text']);
-
-		// 	{
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
+		super(values, application, parent, ABViewDetailImageDefaults);
 
 	}
 
 
 	static common() {
-		return ABViewDetailTextDefaults;
+		return ABViewDetailImageDefaults;
 	}
 
 	///
@@ -79,18 +61,18 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewDetailTextEditorComponent';
+		var idBase = 'ABViewDetailImageEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var textElem = this.component(App).ui;
-		textElem.id = ids.component;
+		var elem = this.component(App).ui;
+		elem.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textElem,
+				elem,
 				{}
 			]
 		};
@@ -153,26 +135,39 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		var field = this.field();
 		var detailView = this.detailComponent();
 
-		var idBase = 'ABViewDetailText_' + this.id;
+		var idBase = 'ABViewDetailImage_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
 
 		component.ui.id = ids.component;
 
+		var _logic = {
+
+			setValue: (val) => {
+
+				var imageTemplate = '';
+
+				if (val) {
+					var imageUrl = "/opsportal/image/" + this.application.name + "/" + val;
+
+					imageTemplate = '<div style="background-image:url(\'#imageUrl#\');  background-size: #width#px #height#px; width: #width#px; height: #height#px"></div>'
+						.replace("#imageUrl#", imageUrl)
+						.replace(/#width#/g, field.settings.imageWidth || 50)
+						.replace(/#height#/g, field.settings.imageHeight || 50);
+				}
+
+				component.logic.setValue(ids.component, imageTemplate);
+
+			}
+
+		};
+
 		return {
 			ui: component.ui,
 			init: component.init,
 
-			logic: {
-
-				setValue: (val) => {
-
-					component.logic.setValue(ids.component, val);
-
-				}
-
-			}
+			logic: _logic
 		};
 	}
 

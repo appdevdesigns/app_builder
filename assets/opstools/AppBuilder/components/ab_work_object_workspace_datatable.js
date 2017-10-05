@@ -281,7 +281,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                 }
                 // if this was our view icon:
     			if (e.target.className.indexOf('eye') > -1) {
-                    alert("view");
+                    // alert("view");
                 }
     			// if this was our trash icon:
     			if (e.target.className.indexOf('trash') > -1) {

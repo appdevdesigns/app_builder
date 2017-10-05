@@ -1,7 +1,7 @@
 /*
- * ABViewDetailText
+ * ABViewDetailCheckbox
  *
- * An ABViewDetailText defines a UI string component in the detail component.
+ * An ABViewDetailCheckbox defines a UI string component in the detail component.
  *
  */
 
@@ -13,18 +13,18 @@ function L(key, altText) {
 }
 
 
-var ABViewDetailTextPropertyComponentDefaults = {
+var ABViewDetailCheckboxPropertyComponentDefaults = {
 }
 
 
-var ABViewDetailTextDefaults = {
-	key: 'detailtext',		// {string} unique key for this view
-	icon: 'etsy',			// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.detail.text' // {string} the multilingual label key for the class label
+var ABViewDetailCheckboxDefaults = {
+	key: 'detailcheckbox',		// {string} unique key for this view
+	icon: 'check-square-o',		// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.detail.checkbox' // {string} the multilingual label key for the class label
 }
 
 
-export default class ABViewDetailText extends ABViewDetailComponent {
+export default class ABViewDetailCheckbox extends ABViewDetailComponent {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,31 +33,13 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABViewDetailTextDefaults);
-
-		// OP.Multilingual.translate(this, this, ['text']);
-
-		// 	{
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
+		super(values, application, parent, ABViewDetailCheckboxDefaults);
 
 	}
 
 
 	static common() {
-		return ABViewDetailTextDefaults;
+		return ABViewDetailCheckboxDefaults;
 	}
 
 	///
@@ -79,18 +61,18 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewDetailTextEditorComponent';
+		var idBase = 'ABViewDetailCheckboxEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var textElem = this.component(App).ui;
-		textElem.id = ids.component;
+		var checkboxElem = this.component(App).ui;
+		checkboxElem.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textElem,
+				checkboxElem,
 				{}
 			]
 		};
@@ -153,7 +135,7 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		var field = this.field();
 		var detailView = this.detailComponent();
 
-		var idBase = 'ABViewDetailText_' + this.id;
+		var idBase = 'ABViewDetailCheckbox_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
@@ -168,7 +150,16 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 
 				setValue: (val) => {
 
-					component.logic.setValue(ids.component, val);
+					var checkbox = '';
+
+					// Check
+					if (JSON.parse(val))
+						checkbox = '<span class="check webix_icon fa-check-square-o"></span>';
+					// Uncheck
+					else
+						checkbox = '<span class="check webix_icon fa-square-o"></span>';
+
+					component.logic.setValue(ids.component, checkbox);
 
 				}
 

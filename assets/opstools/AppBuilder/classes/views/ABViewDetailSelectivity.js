@@ -1,7 +1,7 @@
 /*
- * ABViewDetailText
+ * ABViewDetailSelectivity
  *
- * An ABViewDetailText defines a UI string component in the detail component.
+ * An ABViewDetailSelectivity defines a UI string component in the detail component.
  *
  */
 
@@ -13,18 +13,18 @@ function L(key, altText) {
 }
 
 
-var ABViewDetailTextPropertyComponentDefaults = {
+var ABViewDetailPropertyComponentDefaults = {
 }
 
 
-var ABViewDetailTextDefaults = {
-	key: 'detailtext',		// {string} unique key for this view
-	icon: 'etsy',			// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.detail.text' // {string} the multilingual label key for the class label
+var ABViewDefaults = {
+	key: 'detailselectivity',	// {string} unique key for this view
+	icon: 'tasks',				// {string} fa-[icon] reference for this view
+	labelKey: 'ab.components.detail.selectivity' // {string} the multilingual label key for the class label
 }
 
 
-export default class ABViewDetailText extends ABViewDetailComponent {
+export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -33,31 +33,13 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	constructor(values, application, parent) {
 
-		super(values, application, parent, ABViewDetailTextDefaults);
-
-		// OP.Multilingual.translate(this, this, ['text']);
-
-		// 	{
-		// 		id:'uuid',					// uuid value for this obj
-		// 		key:'viewKey',				// unique key for this View Type
-		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-		// 		label:'',					// pulled from translation
-
-		//		settings: {					// unique settings for the type of field
-		//			format: x				// the display style of the text
-		//		},
-
-		// 		views:[],					// the child views contained by this view.
-
-		//		translations:[]				// text: the actual text being displayed by this label.
-
-		// 	}
+		super(values, application, parent, ABViewDefaults);
 
 	}
 
 
 	static common() {
-		return ABViewDetailTextDefaults;
+		return ABViewDefaults;
 	}
 
 	///
@@ -79,18 +61,18 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewDetailTextEditorComponent';
+		var idBase = 'ABViewDetailSelectivityEditorComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		}
 
 
-		var textElem = this.component(App).ui;
-		textElem.id = ids.component;
+		var elem = this.component(App).ui;
+		elem.id = ids.component;
 
 		var _ui = {
 			rows: [
-				textElem,
+				elem,
 				{}
 			]
 		};
@@ -153,26 +135,65 @@ export default class ABViewDetailText extends ABViewDetailComponent {
 		var field = this.field();
 		var detailView = this.detailComponent();
 
-		var idBase = 'ABViewDetailText_' + this.id;
+		var idBase = 'ABViewDetailSelectivity_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
-		}
+		};
+		var className = 'ab-detail-selectivity';
+
 
 		component.ui.id = ids.component;
 
-		return {
-			ui: component.ui,
-			init: component.init,
 
-			logic: {
+		var _init = (options) => {
 
-				setValue: (val) => {
+			component.init(options);
 
-					component.logic.setValue(ids.component, val);
 
+			// add div of selectivity to detail
+			var divSelectivity = '<div class="#className#"></div>'.replace("#className#", className);
+			component.logic.setValue(ids.component, divSelectivity);
+
+			// get selectivity dom
+			var domSelectivity = _logic.getDomSelectivity();
+
+			// render selectivity to html dom
+			var selectivitySettings = {
+				multiple: true,
+				readOnly: true
+			};
+			field.selectivityRender(domSelectivity, selectivitySettings, App, {});
+
+		};
+
+		var _logic = {
+
+			getDomSelectivity: () => {
+				return $$(ids.component).$view.getElementsByClassName(className)[0];
+			},
+
+			setValue: (val) => {
+
+				// convert value to array
+				if (val != null && !(val instanceof Array)) {
+					val = [val];
 				}
 
+				// get selectivity dom
+				var domSelectivity = _logic.getDomSelectivity();
+
+				// set value to selectivity
+				field.selectivitySet(domSelectivity, val, App);
+
 			}
+
+		};
+
+		return {
+			ui: component.ui,
+
+			init: _init,
+			logic: _logic
 		};
 	}
 

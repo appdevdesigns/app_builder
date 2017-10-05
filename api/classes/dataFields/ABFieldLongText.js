@@ -242,14 +242,14 @@ class ABFieldLongText extends ABField {
 
 			// make sure our column is described in the 
 			if (!obj.translations.items.properties[this.columnName]) {
-				obj.translations.items.properties[this.columnName] = { type:'longtext' }
+				obj.translations.items.properties[this.columnName] = { type:'string', maxLength: 5000 }
 			}
 
 		} else {
 
 			// we're not multilingual, so just tack this one on:
 			if (!obj[this.columnName]) {
-				obj[this.columnName] = { type:'longtext' }
+				obj[this.columnName] = { type:'string', maxLength: 5000 }
 			}
 
 		}

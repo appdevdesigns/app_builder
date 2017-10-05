@@ -7,6 +7,7 @@
  */
 
 import ABViewFormPanel from "./ABViewFormPanel"
+import ABViewFormCustom from "./ABViewFormCustom"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -168,6 +169,8 @@ export default class ABViewForm extends ABViewFormPanel {
 			};
 
 
+		this.viewComponents = {}; // { viewId: viewComponent }
+
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			id: ids.component,
@@ -183,11 +186,11 @@ export default class ABViewForm extends ABViewFormPanel {
 			webix.extend(Form, webix.ProgressBar);
 
 			// get a UI component for each of our child views
-			var viewComponents = [];
 			this.views().forEach((v) => {
 
 				var subComponent = v.component(App);
 
+				this.viewComponents[v.id] = subComponent;
 
 				// get element in template
 				var elem = Form.queryView({ viewId: v.id });
@@ -275,7 +278,16 @@ export default class ABViewForm extends ABViewFormPanel {
 			// get update data
 			var formVals = formView.getValues();
 
-			// TODO : get custom values
+			// get custom values
+			var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+			customFields.forEach((f) => {
+
+				var vComponent = this.viewComponents[f.id];
+				if (vComponent == null) return;
+
+				formVals[f.field().columnName] = vComponent.logic.getValue();
+
+			});
 
 			// clear undefined values
 			for (var prop in formVals) {

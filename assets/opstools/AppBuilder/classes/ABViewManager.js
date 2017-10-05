@@ -15,7 +15,10 @@ import ABViewGrid from "./views/ABViewGrid"
 import ABViewTab from "./views/ABViewTab"
 
 import ABViewDetail from "./views/ABViewDetail"
+import ABViewDetailCheckbox from "./views/ABViewDetailCheckbox"
 import ABViewDetailCustom from "./views/ABViewDetailCustom"
+import ABViewDetailImage from "./views/ABViewDetailImage"
+import ABViewDetailSelectivity from "./views/ABViewDetailSelectivity"
 import ABViewDetailText from "./views/ABViewDetailText"
 
 import ABViewForm from "./views/ABViewForm"
@@ -45,7 +48,10 @@ Views[ABViewGrid.common().key] = ABViewGrid;
 Views[ABViewTab.common().key] = ABViewTab;
 
 Views[ABViewDetail.common().key] = ABViewDetail;
+Views[ABViewDetailCheckbox.common().key] = ABViewDetailCheckbox;
 Views[ABViewDetailCustom.common().key] = ABViewDetailCustom;
+Views[ABViewDetailImage.common().key] = ABViewDetailImage;
+Views[ABViewDetailSelectivity.common().key] = ABViewDetailSelectivity;
 Views[ABViewDetailText.common().key] = ABViewDetailText;
 
 Views[ABViewForm.common().key] = ABViewForm;

@@ -367,10 +367,13 @@ class ABFieldConnect extends ABField {
 	 * @return {obj} or undefined
 	 */
 	requestParam(allParameters) {
+
 		var myParameter;
 
 		myParameter = super.requestParam(allParameters);
 
+		// remove relation column value
+		// We need to update it separately
 		if (myParameter != null)
 			delete myParameter[this.columnName];
 
