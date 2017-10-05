@@ -186,20 +186,18 @@ export default class ABViewMenu extends ABView {
 		$$(ids.orientation).setValue(view.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation);
 
 		var pageTree = new webix.TreeCollection();
-		var currentPage = view.pageParent();
-		var parentPage = currentPage.pageParent();
+		var application = view.application;
+		
+		var addPage = function (page, index, parentId) {
+			pageTree.add(page, index, parentId);
 
-		// Add parent of current page
-		if (parentPage)
-			pageTree.add(parentPage);
-
-		// Add current page
-		pageTree.add(currentPage, 0, (parentPage ? parentPage.id : null));
-
-		// get sub-pages of parent
-		currentPage.pages().forEach((page, index) => {
-			pageTree.add(page, index, currentPage.id);
-		});
+			page.pages().forEach((childPage, childIndex)=>{
+				addPage(childPage, childIndex, page.id);
+			})
+		}
+		application.pages().forEach((p, index)=>{
+			addPage(p, index);
+		})
 
 		$$(ids.pages).clearAll();
 		$$(ids.pages).data.unsync();
