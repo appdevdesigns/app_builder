@@ -588,7 +588,7 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailcustom'
+				key: 'detailimage'
 			}
 		};
 

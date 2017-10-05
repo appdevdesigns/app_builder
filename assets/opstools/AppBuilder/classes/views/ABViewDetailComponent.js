@@ -57,28 +57,49 @@ export default class ABViewDetailComponent extends ABView {
 		if (detailView)
 			settings = detailView.settings;
 
+
+		var templateLabel = '';
+		if (settings.showLabel == true) {
+			if (settings.labelPosition == 'top')
+				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>#display#";
+			else
+				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>#display#";
+		}
+
+		var template = (templateLabel)
+			.replace(/#width#/g, settings.labelWidth)
+			.replace(/#label#/g, field.label);
+
 		var _ui = {
-			labelPosition: settings.labelPosition,
-			labelWidth: settings.labelWidth,
-			label: label
+			view: "template",
+			minHeight: 45,
+			height: 60,
+			borderless: true,
+			template: template,
+			data: { display: '' } // show empty data in template
 		};
 
-		if (field != null) {
-
-			if (settings.showLabel == true) {
-				_ui.label = field.label;
-			}
+		// make sure each of our child views get .init() called
+		var _init = (options) => {
 		}
 
 		var _logic = {
-			setValue: (val) => {
+
+			setValue: (componentId, val) => {
+
+				if ($$(componentId))
+					$$(componentId).setValues({ display: val });
+
 			}
-		};
+
+		}
 
 		return {
 			ui: _ui,
+			init: _init,
 			logic: _logic
 		}
+
 	}
 
 	detailComponent() {

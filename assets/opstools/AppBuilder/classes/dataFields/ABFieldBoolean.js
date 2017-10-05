@@ -247,7 +247,7 @@ class ABFieldBoolean extends ABField {
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailtext'
+				key: 'detailcheckbox'
 			}
 		};
 

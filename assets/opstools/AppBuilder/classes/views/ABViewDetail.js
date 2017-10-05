@@ -201,8 +201,17 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 				this.fieldComponents().forEach((f) => {
 
-					var colName = f.field().columnName;
-					var val = data[colName];
+					var field = f.field();
+					var val;
+
+					// get value of relation when field is a connect field
+					if (field.key == "connectObject") {
+						val = field.pullRelationValues(data);
+					}
+					else {
+						val = data[field.columnName];
+					}
+
 
 					// set value to each components
 					viewComponents[f.id].logic.setValue(val);

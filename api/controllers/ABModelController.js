@@ -107,6 +107,7 @@ module.exports = {
                     var query2 = object.model().query();
                     var updateTasks = updateRelationValues(query2, newObj.id, updateRelationParams);
 
+                    // update relation values
                     return Promise.all(updateTasks)
                         .catch(Promise.reject)
                         .then((values)=>{

@@ -934,6 +934,7 @@ export default class ABView extends ABViewBase {
 		var viewsToIgnore = ['view', 'page', 'formpanel', 'datacollection',
 			// not allowed Detail's widgets
 			'detailtext', 'detailcustom',
+			'detailtext', 'detailcustom',
 			// not allowed Form's widgets
 			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'number', 'selectsingle'
 		];
