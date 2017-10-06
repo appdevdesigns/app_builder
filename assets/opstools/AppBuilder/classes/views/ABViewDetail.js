@@ -146,7 +146,7 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 		var _ui = {
 			id: ids.component,
-			view: 'layout',
+			type: 'space',
 			rows: this.template.rows || []
 		};
 

@@ -362,7 +362,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 }
 .webix_template .selectivity-single-select {
 	padding: 0;
-	border: 1px solid #ddd;
+	border: 1px solid #CCC;
 	border-radius: 6px;
 }
 .selectivity-single-select input {
