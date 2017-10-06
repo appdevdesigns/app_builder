@@ -5,7 +5,11 @@
  *
  */
 
-import ABViewDetailPanel from "./ABViewDetailPanel"
+import ABView from "./ABView"
+import ABPropertyComponent from "../ABPropertyComponent"
+import ABViewDetailComponent from "./ABViewDetailComponent"
+import ABViewManager from "../ABViewManager"
+
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -23,7 +27,7 @@ var ABViewDetailPropertyComponentDefaults = {
 	labelWidth: 80
 }
 
-export default class ABViewDetail extends ABViewDetailPanel {
+export default class ABViewDetail extends ABView {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -75,7 +79,126 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
 
+
+		// _logic functions
+
+		_logic.selectSource = (dcId, oldDcId) => {
+
+			// TODO : warning message
+
+			var currView = _logic.currentEditObject();
+
+			// remove all old field components
+			if (oldDcId != null)
+				this.clearFieldComponents();
+
+			// Update field options in property
+			this.propertyUpdateFieldOptions(ids, currView, dcId);
+
+			// add all fields to editor by default
+			if (currView._views.length < 1) {
+
+				var fields = $$(ids.fields).find({});
+				fields.forEach((f) => {
+
+					if (!f.selected) {
+
+						_logic.addFieldToView(f);
+
+						// update item to UI list
+						f.selected = 1;
+						$$(ids.fields).updateItem(f.id, f);
+					}
+
+				});
+
+			}
+
+		};
+
+		_logic.listTemplate = (field, common) => {
+
+			return common.markCheckbox(field) + " #label#"
+				.replace("#label#", field.label);
+
+		};
+
+		_logic.check = (e, fieldId) => {
+
+			var currView = _logic.currentEditObject();
+
+			// update UI list
+			var item = $$(ids.fields).getItem(fieldId);
+			item.selected = item.selected ? 0 : 1;
+			$$(ids.fields).updateItem(fieldId, item);
+
+			// add a field to the form
+			if (item.selected) {
+				_logic.addFieldToView(item);
+			}
+			// remove field in the form
+			else {
+				var fieldView = currView.views(c => c.settings.fieldId == fieldId)[0];
+
+				if (fieldView)
+					fieldView.destroy();
+
+			}
+
+			// trigger a save()
+			this.propertyEditorSave(ids, currView);
+
+		};
+
+
+		_logic.addFieldToView = (field) => {
+
+			if (field == null)
+				return;
+
+			var detailView = _logic.currentEditObject();
+
+			var newView = field.detailComponent().newInstance(detailView.application, detailView);
+			if (newView == null)
+				return;
+
+			// set settings to component
+			newView.settings = newView.settings || {};
+			newView.settings.fieldId = field.id;
+			// TODO : Default settings
+
+			// add a new component
+			detailView._views.push(newView);
+
+			// update properties when a sub-view is destroyed
+			newView.once('destroyed', () => { this.propertyEditorPopulate(ids, detailView); });
+
+		}
+
 		return commonUI.concat([
+			{
+				name: 'datacollection',
+				view: 'richselect',
+				label: L('ab.components.detail.dataSource', "*Data Source"),
+				on: {
+					onChange: _logic.selectSource
+				}
+			},
+			{
+				name: 'fields',
+				view: 'list',
+				select: false,
+				minHeight: 200,
+				template: _logic.listTemplate,
+				type: {
+					markCheckbox: function (item) {
+						return "<span class='check webix_icon fa-" + (item.selected ? "check-" : "") + "square-o'></span>";
+					}
+				},
+				onClick: {
+					"check": _logic.check
+				}
+			},
 			{
 				name: 'showLabel',
 				view: 'checkbox',
@@ -110,10 +233,34 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 		super.propertyEditorPopulate(ids, view);
 
-		$$(ids.datacollection).enable();
+		var SourceSelector = $$(ids.datacollection);
+		var dataCollectionId = view.settings.datacollection;
+
+		// Pull data collections to options
+		var dcOptions = view.pageRoot().dataCollections().map((dc) => {
+
+			return {
+				id: dc.id,
+				value: dc.label
+			};
+		});
+
+		SourceSelector.define('options', dcOptions);
+		SourceSelector.refresh();
+		SourceSelector.setValue(dataCollectionId);
+
+
+		this.propertyUpdateFieldOptions(ids, view, dataCollectionId);
+
 		$$(ids.showLabel).setValue(view.settings.showLabel || ABViewDetailPropertyComponentDefaults.showLabel);
 		$$(ids.labelPosition).setValue(view.settings.labelPosition || ABViewDetailPropertyComponentDefaults.labelPosition);
 		$$(ids.labelWidth).setValue(view.settings.labelWidth || ABViewDetailPropertyComponentDefaults.labelWidth);
+
+		// update properties when a field component is deleted
+		view.views().forEach((v) => {
+			if (v instanceof ABViewDetailComponent)
+				v.once('destroyed', () => this.propertyEditorPopulate(ids, view));
+		});
 	}
 
 	static propertyEditorValues(ids, view) {
@@ -127,8 +274,31 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 	}
 
-	/*
-	* @component()
+	static propertyUpdateFieldOptions(ids, view, dcId) {
+
+		var datacollection = view.pageRoot().dataCollections(dc => dc.id == dcId)[0];
+		var object = datacollection ? datacollection.datasource : null;
+
+
+		// Pull field list
+		var fieldOptions = [];
+		if (object != null) {
+			fieldOptions = object.fields().map((f) => {
+
+				f.selected = view.views((com) => { return f.id == com.settings.fieldId; }).length > 0;
+
+				return f;
+
+			});
+		}
+
+		$$(ids.fields).clearAll();
+		$$(ids.fields).parse(fieldOptions);
+
+	}
+
+	/**
+	* @method component()
 	* return a UI component based upon this view.
 	* @param {obj } App 
 	* @return {obj } UI component
@@ -199,7 +369,7 @@ export default class ABViewDetail extends ABViewDetailPanel {
 
 			displayData: (data) => {
 
-				this.fieldComponents().forEach((f) => {
+				this.views().forEach((f) => {
 
 					var field = f.field();
 					var val;
@@ -231,6 +401,22 @@ export default class ABViewDetail extends ABViewDetailPanel {
 	}
 
 
+
+	/**
+	* @method componentList
+	* return the list of components available on this view to display in the editor.
+	*/
+	componentList() {
+		var viewsToAllow = ['label'],
+			allComponents = ABViewManager.allViews();
+
+		return allComponents.filter((c) => {
+			return viewsToAllow.indexOf(c.common().key) > -1;
+		});
+	}
+
+
+
 	/**
 	 * @method dataCollection
 	 * return ABViewDataCollection of this detail
@@ -240,6 +426,14 @@ export default class ABViewDetail extends ABViewDetailPanel {
 	dataCollection() {
 		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.datacollection)[0];
 	}
+
+
+	clearFieldComponents() {
+		this.views().forEach((comp) => {
+			comp.destroy();
+		});
+	}
+
 
 
 
