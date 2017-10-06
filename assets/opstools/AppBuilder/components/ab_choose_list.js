@@ -501,6 +501,7 @@ export default class ABChooseList extends OP.Component {
 
 				app.destroy()
 					.then(function (result) {
+						_logic.refreshList();
 						_logic.reset();
 						_logic.ready();
 
