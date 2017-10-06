@@ -642,6 +642,11 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 		return image.getAttribute('image-uuid');
 	}
 	
+	setValue(item, value) {
+		var image = item.$view.querySelector('.image-data-field-image');
+		image.setAttribute('image-uuid', value);
+	}
+	
 	/**
 	 * @method isValidData
 	 * Parse through the given data and return an error if this field's

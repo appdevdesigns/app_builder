@@ -473,6 +473,18 @@ export default class ABField extends ABFieldBase {
 		return item.getValue();
 	};
 
+	/**
+	 * @method setValue
+	 * this function uses for form component and mass update popup
+	 * to get value of fields that apply custom editor
+	 * 
+	 * @param {Object} item - Webix element
+	 * 
+	 * @return {Object}
+	 */
+	setValue(item, value) {
+		return item.setValue(value);
+	};
 
 
 	/*
