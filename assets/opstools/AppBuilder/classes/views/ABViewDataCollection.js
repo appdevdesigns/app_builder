@@ -656,7 +656,7 @@ export default class ABViewDataCollection extends ABView {
 		obj._fields.forEach(function (f) {
 			if (f.key == "image") {
 				if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
-					minHeight = parseInt(f.settings.imageHeight);
+					minHeight = parseInt(f.settings.imageHeight) + 20;
 				}
 			}
 		});

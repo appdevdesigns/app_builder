@@ -789,6 +789,7 @@ div.webix_item_tab {
 }
 .webix_template {
 	line-height: 33px;
+	padding: 0px;
 }
 .ab-delete-photo {
 	position: absolute; 
@@ -893,4 +894,10 @@ a.ab-delete-photo:hover {
 }
 .webix_multiview .webix_layout_space .webix_layout_space {
 	background: #FFF;
+}
+.ab-image-data-field {
+	padding: 10px 0;
+}
+.detailView {
+	padding: 10px;
 }

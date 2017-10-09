@@ -132,9 +132,9 @@ export default class ABViewFormCustom extends ABViewFormField {
 		var templateLabel = '';
 		if (settings.showLabel == true) {
 			if (settings.labelPosition == 'top')
-				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
+				templateLabel = "<label style='display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;' class='webix_inp_top_label'>#label#</label>";
 			else
-				templateLabel = "<label style='width: #width#px; display: inline-block; line-height: 32px;'>#label#</label>";
+				templateLabel = "<label style='width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;'>#label#</label>";
 		}
 
 		var template = (templateLabel + "#template#")
@@ -144,11 +144,12 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
+		component.ui.css = "webix_el_box";
 		if (typeof field.settings.useHeight != "undefined" && field.settings.useHeight == 1) {
 			component.ui.height = parseInt(field.settings.imageHeight);
+		} else {
+			component.ui.height = 38;
 		}
-		// component.ui.minHeight = 45;
-		// component.ui.height = 60;
 		component.ui.borderless = true;
 		component.ui.template = '<div class="customField">' + template + '</div>';
 		component.ui.onClick = {
