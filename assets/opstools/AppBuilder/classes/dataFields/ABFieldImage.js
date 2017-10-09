@@ -359,7 +359,7 @@ OP.Dialog.Alert({
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
 
@@ -492,6 +492,11 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			    }
 			});
 			uploader.addDropZone(webixContainer.$view);
+
+			if (editable == false) {
+				var domNode = parentContainer.querySelector(".delete-image");
+				domNode.style.display = "none";
+			}
 
 			// open file upload dialog when's click
 			parentContainer.addEventListener("click", (e) => {
