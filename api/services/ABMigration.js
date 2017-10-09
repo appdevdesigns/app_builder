@@ -28,6 +28,12 @@ module.exports = {
                     port : sails.config.connections.appBuilder.port, 
                     password : sails.config.connections.appBuilder.password, // ||  'your_database_password',
                     database : sails.config.connections.appBuilder.database, // ||  'appbuilder'
+                },
+                // FIX : ER_CON_COUNT_ERROR: Too many connections
+                // https://github.com/tgriesser/knex/issues/1027
+                pool: {
+                    min: 2,
+                    max: 20
                 }
             });
         }
