@@ -665,15 +665,16 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 
 	getValue(application, object, fieldData, itemNode, rowData, item) {
-		var values = {};
-		if (this.settings.linkType == "many") {
-			var domNode = itemNode.querySelector('.connect-data-values');
-			values = this.selectivityGet(domNode);
-			// console.log(values);
-		} else {
-			values = $$(item).getValue();
-		}
+		var domNode = itemNode.querySelector('.connect-data-values');
+		var values = this.selectivityGet(domNode);
 		return values;
+	}
+	
+	setValue(item, value) {
+		// get selectivity dom
+		var domSelectivity = item.$view.querySelector('.connect-data-values');
+		// set value to selectivity
+		this.selectivitySet(domSelectivity, value, this.App);
 	}
 
 

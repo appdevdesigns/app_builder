@@ -456,6 +456,15 @@ class ABFieldUser extends ABFieldSelectivity {
 		return values;
 	}
 
+	setValue(item, value) {
+		if (this.settings.linkType == "many") {
+			var domNode = item.$view.querySelector('.list-data-values');
+			this.selectivitySet(value);
+		} else {
+			item.setValue(value);
+		}
+	}
+
 }
 
 export default ABFieldUser;

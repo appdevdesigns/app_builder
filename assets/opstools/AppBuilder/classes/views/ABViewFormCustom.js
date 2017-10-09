@@ -134,7 +134,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 			if (settings.labelPosition == 'top')
 				templateLabel = "<label style='display:block; text-align: left;' class='webix_inp_top_label'>#label#</label>";
 			else
-				templateLabel = "<label style='width: #width#px; display: inline-block; float: left; line-height: 32px;'>#label#</label>";
+				templateLabel = "<label style='width: #width#px; display: inline-block; line-height: 32px;'>#label#</label>";
 		}
 
 		var template = (templateLabel + "#template#")

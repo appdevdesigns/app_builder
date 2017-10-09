@@ -360,6 +360,15 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .selectivity-single-select {
 	background: transparent !important;
 }
+.webix_template .selectivity-single-select {
+	padding: 0;
+	border: 1px solid #CCC;
+	border-radius: 6px;
+}
+.selectivity-single-select input {
+	padding: 0;
+	border: 0;
+}
 .selectivity-single-selected-item {
 	color: #666;
 }
@@ -772,8 +781,14 @@ div.webix_item_tab {
 .list-data-values, .connect-data-values {
 	position: relative;
 }
+.customField .connect-data-values {
+	display: inline-block;
+}
 .ab-image-holder .webix_template {
 	position: relative;
+}
+.webix_template {
+	line-height: 33px;
 }
 .ab-delete-photo {
 	position: absolute; 
