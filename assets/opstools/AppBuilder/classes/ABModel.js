@@ -321,9 +321,15 @@ export default class ABModel extends EventEmitter {
 		// if this object has some multilingual fields, translate the data:
 		var mlFields = this.object.multilingualFields();
 		if (mlFields.length) {
-			// if (values.translations) { // Remove it because a new row does not have .translations
+			// if (values.translations) { // Comment out it because a new row does not have .translations
 			OP.Multilingual.unTranslate(values, values, mlFields);
 			// }
+		}
+
+		// remove empty properties
+		for (var key in values) {
+			if (values[key] == null)
+				delete values[key];
 		}
 
 		return new Promise(
