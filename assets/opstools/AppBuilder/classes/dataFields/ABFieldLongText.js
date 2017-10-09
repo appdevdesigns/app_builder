@@ -191,6 +191,16 @@ class ABFieldLongText extends ABField {
 	}
 
 
+	/*
+	 * @function isMultilingual
+	 * does this field represent multilingual data?
+	 * @return {bool}
+	 */
+	isMultilingual() {
+		return this.settings.supportMultilingual == 1;
+	}
+
+
 	/**
 	 * @method toObj()
 	 *
