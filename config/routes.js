@@ -8,25 +8,6 @@
 
 module.exports = {
 
-    /* Synchronize application */
-    'post /app_builder/fullReload/:id': 
-        'app_builder/ABApplicationController.fullReload',
-        
-    'post /app_builder/reloadORM/:id': 
-        'app_builder/ABApplicationController.reloadORM',
-
-    'get /app_builder/reloadStatus': 
-        'app_builder/ABApplicationController.reloadStatus',
-    
-    'post /app_builder/prepareObject/:id': 
-        'app_builder/ABObjectController.prepare',
-    
-    'post /app_builder/prepareApp/:id': 
-        'app_builder/ABApplicationController.prepare',
-    
-    'post /app_builder/preparePage/:id': 
-        'app_builder/ABPageController.prepare',
-
     /*  */
     'put /app_builder/object/sortColumns/:id': 
         'app_builder/ABObjectController.sortColumns',
@@ -72,9 +53,6 @@ module.exports = {
     'post /app_builder/application/:appID/importModel':
         'app_builder/ABApplicationController.importModel',
     
-    'get /app_builder/application/findModelAttributes':
-        'app_builder/ABApplicationController.findModelAttributes',
-
 
     /* Migration Services */
     // app_builder/migrate/application/:appID/object/:objID

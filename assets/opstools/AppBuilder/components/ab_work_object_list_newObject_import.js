@@ -94,16 +94,30 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                     url: '/app_builder/application/' + app.id + '/findModels'
                 })
                 .then((list) => {
-                    // Convert server results into Webix list format
-                    var listData = [];
-                    for (var i=0; i<list.length; i++) {
-                        listData.push({
-                            id: list[i].objectId || list[i].modelName,
-                            modelName: list[i].modelName
-                        });
-                    }
-                    $$(ids.modelList).parse(listData, 'json');
+
+
+                    list.forEach((data) => {
+
+                        // translate label of objects
+                        OP.Multilingual.translate(data, data, ['label']);
+
+                        // translate label of application
+                        OP.Multilingual.translate(data.application, data.application, ['label']);
+
+                        // translate label of fields
+                        if (data.fields && data.fields.forEach) {
+                            data.fields.forEach((f) => {
+                                OP.Multilingual.translate(f, f, ['label']);
+                            });
+                        }
+
+                    });
+
+
+                    $$(ids.modelList).parse(list, 'json');
+
                     _logic.busyEnd();
+
                 })
                 .catch((err) => {
                     _logic.busyEnd();
@@ -111,50 +125,38 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
             },
             
             
-            modelSelect: function(selectedIDs) {
+            modelSelect: function() {
                 $$(ids.columnList).clearAll();
-                
-                if (selectedIDs && selectedIDs.length > 0) {
-                    var ignore = ['id', 'createdAt', 'updatedAt'];
+
+                var selectedObj = $$(ids.modelList).getSelectedItem(false);
+                if (selectedObj) {
+
                     _logic.busyStart();
-                    
-                    var modelItem = $$(ids.modelList).data.find({ 
-                        id: selectedIDs[0] 
-                    })[0];
-                    
-                    // Fetch model's columns from server
-                    OP.Comm.Service.get({
-                        url: '/app_builder/application/findModelAttributes',
-                        data: {
-                            model: modelItem.modelName
-                        }
-                    })
-                    .then((cols) => {
-                        var colNames = [];
-                        
-                        // Parse results and update column list
-                        for (var colName in cols) {
-                            var col = cols[colName];
-                            
+
+                    var colNames = [];
+
+                    // Parse results and update column list
+                    if (selectedObj.fields && selectedObj.fields.forEach) {
+                        selectedObj.fields.forEach((f) => {
+
                             // Skip these columns
-                            if (ignore.indexOf(colName) >= 0) continue;
-                            if (col.model) continue;
-                            if (col.collection) continue;
-                            
+                            // TODO : skip connect field
+                            // if (col.model) continue;
+                            // if (col.collection) continue;
+
                             colNames.push({
-                                include: col.supported,
-                                id: colName,
-                                label: colName,
-                                disabled: !col.supported
+                                include: f.supported, // TODO
+                                id: f.id,
+                                label: f.label,
+                                disabled: !f.supported  // TODO
                             });
-                        }
-                        
-                        $$(ids.columnList).parse(colNames);
-                        _logic.busyEnd();
-                    })
-                    .catch((err) => {
-                        _logic.busyEnd();
-                    });
+
+                        });
+                    }
+
+                    $$(ids.columnList).parse(colNames);
+
+                    _logic.busyEnd();
                 }
             },
             
@@ -281,7 +283,7 @@ export default class AB_Work_Object_List_NewObject_Import extends OP.Component {
                         minHeight: 250,
                         maxHeight: 250,
                         data: [],
-                        template: '<div>#modelName#</div>',
+                        template: '<div>#label#</div>',
                         on: {
                             onSelectChange: _logic.modelSelect
                         },
