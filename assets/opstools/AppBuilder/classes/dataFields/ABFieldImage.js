@@ -359,7 +359,7 @@ OP.Dialog.Alert({
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
 
@@ -492,6 +492,11 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 			    }
 			});
 			uploader.addDropZone(webixContainer.$view);
+
+			if (editable == false) {
+				var domNode = parentContainer.querySelector(".delete-image");
+				domNode.style.display = "none";
+			}
 
 			// open file upload dialog when's click
 			parentContainer.addEventListener("click", (e) => {
@@ -643,8 +648,12 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	}
 	
 	setValue(item, value) {
-		var image = item.$view.querySelector('.image-data-field-image');
-		image.setAttribute('image-uuid', value);
+		var domNode = item.$view;
+		domNode.querySelector('.image-data-field-icon').style.display = 'none';
+		var image = domNode.querySelector('.image-data-field-image');
+		image.style.display = '';
+		image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+value+"')";
+		image.setAttribute('image-uuid', value );
 	}
 	
 	/**

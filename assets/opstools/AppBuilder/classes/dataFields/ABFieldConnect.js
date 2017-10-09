@@ -388,7 +388,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
 
@@ -398,11 +398,17 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		// get selected values
 		var selectedData = this.pullRelationValues(row);
+		
+		var readOnly = false;
+		if (editable != null && editable == false) {
+			readOnly = true;
+		}
 
 		// Render selectivity
 		this.selectivityRender(domNode, {
 			multiple: multiselect,
 			data: selectedData,
+			readOnly: readOnly,
 			ajax: {
 				url: 'It will call url in .getOptions function', // require
 				minimumInputLength: 0,

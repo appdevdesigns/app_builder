@@ -151,7 +151,7 @@ export default class ABViewDetailImage extends ABViewDetailComponent {
 				if (val) {
 					var imageUrl = "/opsportal/image/" + this.application.name + "/" + val;
 
-					imageTemplate = '<div style="background-image:url(\'#imageUrl#\');  background-size: #width#px #height#px; width: #width#px; height: #height#px"></div>'
+					imageTemplate = '<div class="ab-image-data-field"><div style="float: left; background-size: cover; background-position: center center; background-image:url(\'#imageUrl#\');  width: #width#px; height: #height#px;"></div></div>'
 						.replace("#imageUrl#", imageUrl)
 						.replace(/#width#/g, field.settings.imageWidth || 50)
 						.replace(/#height#/g, field.settings.imageHeight || 50);

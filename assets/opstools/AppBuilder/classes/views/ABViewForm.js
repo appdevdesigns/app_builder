@@ -173,9 +173,12 @@ export default class ABViewForm extends ABViewFormPanel {
 
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
-			id: ids.component,
-			view: 'form',
-			elements: this.template.rows || []
+			view: "scrollview",
+			body: {
+				id: ids.component,
+				view: 'form',
+				elements: this.template.rows || []				
+			}
 		}
 
 		// make sure each of our child views get .init() called

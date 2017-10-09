@@ -306,7 +306,7 @@ export default class ABObject extends ABObjectBase {
 	// any custom display operations
 	// @param {Webix.DataStore} data a webix datastore of all the rows effected
 	//        by the render.
-	customDisplays(data, App, DataTable, ids) {
+	customDisplays(data, App, DataTable, ids, isEditable) {
 		var fields = this.fields();
 
 		if (!data || !data.getFirstId) return;
@@ -318,7 +318,7 @@ export default class ABObject extends ABObjectBase {
 				fields.forEach((f)=>{
 					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
 						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node);
+						f.customDisplay(row, App, node, isEditable);
 					}
 				});
 			});
@@ -329,7 +329,7 @@ export default class ABObject extends ABObjectBase {
 				fields.forEach((f)=>{
 					if (this.objectWorkspace.hiddenFields.indexOf(f.columnName) == -1) {
 						var node = DataTable.getItemNode({ row: row.id, column: f.columnName });
-						f.customDisplay(row, App, node);
+						f.customDisplay(row, App, node, isEditable);
 					}
 				})
 				id = data.getNextId(id);

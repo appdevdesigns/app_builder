@@ -315,9 +315,13 @@ export default class ABViewDetail extends ABView {
 
 
 		var _ui = {
-			id: ids.component,
-			type: 'space',
-			rows: this.template.rows || []
+			view: "scrollview",
+			body: {
+				id: ids.component,
+				type: 'space',
+				css: 'detailView',
+				rows: this.template.rows || []				
+			}
 		};
 
 		// make sure each of our child views get .init() called
