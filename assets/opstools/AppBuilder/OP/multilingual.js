@@ -27,6 +27,9 @@ export default {
 	 */
 	translate:function(obj, json, fields) {
 
+		json = json || {};
+		fields = fields || [];
+
 		if (!json.translations) {
 			json.translations = [];
 		}

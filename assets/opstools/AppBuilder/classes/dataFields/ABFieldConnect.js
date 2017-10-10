@@ -436,7 +436,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// pass null because it could not put empty array in REST api
 				if (values[this.columnName].length == 0)
-					values[this.columnName] = null;
+					values[this.columnName] = '';
 
 				this.object.model().update(row.id, values)
 					.then(() => {
@@ -652,7 +652,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
 
 		var relationName = this.relationName();
-		if (row[relationName] != null) {
+		if (row[relationName]) {
 
 			// if this select value is array
 			if (row[relationName].map) {
