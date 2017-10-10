@@ -163,13 +163,13 @@ module.exports =  class ABObjectBase {
 
 
 	/**
-	 * @method linkFields()
+	 * @method connectFields()
 	 *
 	 * return an array of the ABFields that is connect object fields.
 	 *
 	 * @return {array}
 	 */
-	linkFields () {
+	connectFields () {
 
 		return this.fields((f) => { return f.key == 'connectObject'; });
 	}

@@ -394,7 +394,7 @@ export default class ABViewDataCollection extends ABView {
 		var rootPage = view.pageRoot();
 		var objSource = view.datasource;
 		if (objSource != null) {
-			var linkFields = objSource.linkFields();
+			var linkFields = objSource.connectFields();
 			var linkObjectIds = linkFields.map((f) => f.settings.linkObject);
 
 			var linkDcOptions = [];
@@ -438,7 +438,7 @@ export default class ABViewDataCollection extends ABView {
 		if (view.dataCollectionLink) {
 			var object = view.datasource;
 			var linkObject = view.dataCollectionLink.datasource;
-			var linkFields = linkObject.linkFields().filter((link) => link.settings.linkObject == object.id);
+			var linkFields = linkObject.connectFields().filter((link) => link.settings.linkObject == object.id);
 
 			// pull fields to options
 			linkFields.forEach((f) => {

@@ -289,13 +289,16 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                                 var linkObject = _currentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
 
+                                // TODO : should check duplicate column
+                                var linkColumnName = _currentObject.name;
+
                                 linkCol = linkObject.fieldNew({
                                     id: OP.Util.uuid(),
 
                                     key: field.key,
 
-                                    columnName: field.columnName,
-                                    label: field.label,
+                                    columnName: linkColumnName,
+                                    label: _currentObject.label,
 
                                     settings: {
                                         showIcon: field.settings.showIcon,

@@ -35,7 +35,7 @@ var defaultValues = {
 	linkObject: '', // ABObject.id
 	linkType: 'one', // one, many
 	linkViaType: 'many', // one, many
-	linkColumn: '', // ABObject.id
+	linkColumn: '', // ABField.id
 	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
 };
 
@@ -574,6 +574,11 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// System could not found the linked object - It may be deleted ?
 				if (linkedObj == null) return reject();
 
+				var linkedCol = linkedObj.fields((f) => f.id == this.settings.linkColumn)[0];
+
+				// System could not found the linked object - It may be deleted ?
+				if (linkedCol == null) return reject();
+				
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
@@ -582,7 +587,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
 					where.push({
-						fieldName: this.columnName,
+						fieldName: linkedCol.columnName,
 						operator: 'is null'
 					});
 				}
@@ -591,14 +596,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 					// 1:1 - get data is not match link id that we have
 					if (this.settings.isSource == true) {
 						where.push({
-							fieldName: this.columnName,
+							fieldName: linkedCol.columnName,
 							operator: 'have no relation'
 						});
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
 						where.push({
-							fieldName: this.columnName,
+							fieldName: linkedCol.columnName,
 							operator: 'is null'
 						});
 					}

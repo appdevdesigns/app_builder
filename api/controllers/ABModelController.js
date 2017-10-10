@@ -367,7 +367,7 @@ console.log('... catch(err) !');
             }            
             
             // query relation data
-            var relationNames = object.linkFields().map((f) => { return f.relationName(); });
+            var relationNames = object.connectFields().map((f) => { return f.relationName(); });
             if (relationNames.length > 0)
                 query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
                 

@@ -20,7 +20,7 @@ module.exports = {
 
         if (!knexConn) {
 
-            var knexConn = require('knex')({
+            knexConn = require('knex')({
                 client: 'mysql',
                 connection: {
                     host : sails.config.connections.appBuilder.host, // ||  '127.0.0.1',

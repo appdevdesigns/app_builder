@@ -289,13 +289,13 @@ module.exports = class ABObject extends ABObjectBase {
 				// Compile our relations from our DataFields
 				var relationMappings = {};
 
-				var linkedFields = currObject.linkFields();
+				var connectFields = currObject.connectFields();
 
 				// linkObject: '', // ABObject.id
 				// linkType: 'one', // one, many
 				// linkViaType: 'many' // one, many
 
-				linkedFields.forEach((f) => {
+				connectFields.forEach((f) => {
 					// find linked object name
 					var linkObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
 					if (linkObject == null) return;
@@ -308,17 +308,20 @@ module.exports = class ABObject extends ABObjectBase {
 
 						var sourceTable,
 							targetTable,
-							relation;
+							relation,
+							columnName;
 
 						if (f.settings.isSource == true) {
 							sourceTable = tableName;
 							targetTable = linkObject.dbTableName();
 							relation = Model.BelongsToOneRelation;
+							columnName = f.columnName;
 						}
 						else {
 							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
 							relation = Model.HasOneRelation;
+							columnName = f.fieldLink().columnName;
 						}
 
 						relationMappings[relationName] = {
@@ -330,7 +333,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 								to: '{sourceTable}.{field}'
 									.replace('{sourceTable}', sourceTable)
-									.replace('{field}', f.columnName)
+									.replace('{field}', columnName)
 							}
 						};
 					}
@@ -404,7 +407,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 								to: '{targetTable}.{field}'
 									.replace('{targetTable}', linkObject.dbTableName())
-									.replace('{field}', f.columnName)
+									.replace('{field}', f.fieldLink().columnName)
 							}
 						};
 					}
@@ -460,7 +463,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 	requestRelationParams(allParameters) {
 		var usefulParameters = {};
-		this.linkFields().forEach((f) => {
+		this.connectFields().forEach((f) => {
 
 			if (f.requestRelationParam) {
 				var p = f.requestRelationParam(allParameters);
