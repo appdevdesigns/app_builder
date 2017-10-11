@@ -313,6 +313,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 			this.settings[dv] = (values.settings[dv] != null ? values.settings[dv] : defaultValues[dv]);
 		}
 
+		// text to Int:
+		this.settings.isSource = parseInt(this.settings.isSource || 0);
+
 	}
 
 	// return the default values for this DataField

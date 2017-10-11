@@ -58,6 +58,10 @@ class ABFieldConnect extends ABField {
 		for (var dv in defaultValues) {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
+
+		// text to Int:
+		this.settings.isSource = parseInt(this.settings.isSource || 0);
+
 	}
 
 
@@ -435,23 +439,20 @@ class ABFieldConnect extends ABField {
 
 	joinTableName() {
 		var sourceObjectName,
-			sourceTableName,
 			targetObjectName,
-			targetTableName;
+			columnName;
 
 		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
 
 		if (this.settings.isSource == true) {
 			sourceObjectName = this.object.name;
-			sourceTableName = this.object.dbTableName();
 			targetObjectName = linkObject.name;
-			targetTableName = linkObject.dbTableName();
+			columnName = this.columnName;
 		}
 		else {
 			sourceObjectName = linkObject.name;
-			sourceTableName = linkObject.dbTableName();
 			targetObjectName = this.object.name;
-			targetTableName = this.object.dbTableName();
+			columnName = this.fieldLink().columnName;
 		}
 
 		// return join table name
@@ -459,7 +460,7 @@ class ABFieldConnect extends ABField {
 			this.object.application.name, // application name
 			sourceObjectName, // table name
 			targetObjectName, // linked table name
-			this.columnName); // column name
+			columnName); // column name
 	}
 
 }
