@@ -98,7 +98,7 @@ module.exports = {
 
                     // remove
                     if (indexObj > 0) {
-                        delete app.json.objects[indexObj];
+                        app.json.objects.splice(indexObj, 1);
                     }
 
                     // save to database
@@ -198,7 +198,7 @@ module.exports = {
 
                     // remove
                     if (indexPage > 0) {
-                        delete app.json.pages[indexPage];
+                        app.json.pages.splice(indexPage, 1);
                     }
 
                     // save to database

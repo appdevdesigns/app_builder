@@ -12,14 +12,14 @@ module.exports = {
     'put /app_builder/application/:appID/object':
         'app_builder/ABApplicationController.objectSave',
 
-    'delete /app_builder/application/:appID/object':
+    'delete /app_builder/application/:appID/object/:id':
         'app_builder/ABApplicationController.objectDestroy',
 
     /* Application Pages */
     'put /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageSave',
 
-    'delete /app_builder/application/:appID/page':
+    'delete /app_builder/application/:appID/page/:id':
         'app_builder/ABApplicationController.pageDestroy',
 
     /* Application permissions */
