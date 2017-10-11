@@ -8,21 +8,19 @@
 
 module.exports = {
 
-    /*  */
-    'put /app_builder/object/sortColumns/:id': 
-        'app_builder/ABObjectController.sortColumns',
+    /* Application Objects */
+    'put /app_builder/application/:appID/object':
+        'app_builder/ABApplicationController.objectSave',
 
-    'put /app_builder/page/sortComponents/:id': 
-        'app_builder/ABPageController.sortComponents',
+    'delete /app_builder/application/:appID/object':
+        'app_builder/ABApplicationController.objectDestroy',
 
-    'put /app_builder/column/:id/width': 
-        'app_builder/ABColumnController.saveWidth',
-        
-    'post /app_builder/column/createColumn':
-        'app_builder/ABColumnController.createColumn',
-    
-    'post /app_builder/column/createLink':
-        'app_builder/ABColumnController.createLink',
+    /* Application Pages */
+    'put /app_builder/application/:appID/page':
+        'app_builder/ABApplicationController.pageSave',
+
+    'delete /app_builder/application/:appID/page':
+        'app_builder/ABApplicationController.pageDestroy',
 
     /* Application permissions */
     'get /app_builder/user/roles':

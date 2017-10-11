@@ -20,6 +20,205 @@ module.exports = {
         rest: true
     },
 
+    /* Objects */
+
+    /**
+     * PUT /app_builder/application/:appID
+     * 
+     * Add/Update a object into ABApplication
+     */
+    objectSave: function (req, res) {
+        var appID = req.param('appID');
+        var object = req.body.object;
+
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
+
+                if (app) {
+
+                    var indexObj = -1;
+                    var updateObj = app.json.objects.filter(function (obj, index) {
+
+                        var isExists = obj.id == object.id;
+                        if (isExists) indexObj = index;
+
+                        return isExists;
+                    })[0];
+
+                    // update
+                    if (updateObj) {
+                        app.json.objects[indexObj] = object;
+                    }
+                    // add new
+                    else {
+                        app.json.objects.push(object);
+                    }
+
+                    // save to database
+                    app.save(function (err) {
+                        if (err)
+                            res.AD.error(true);
+                        else
+                            res.AD.success(true);
+                    });
+                }
+                else {
+                    res.AD.success(true);
+                }
+
+
+            });
+
+    },
+
+    /**
+     * DELETE /app_builder/application/:appID/object/:id
+     * 
+     * Delete a object in ABApplication
+     */
+    objectDestroy: function (req, res) {
+        var appID = req.param('appID');
+        var objectID = req.param('id');
+
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
+
+                if (app) {
+
+                    var indexObj = -1;
+                    var updateObj = app.json.objects.filter(function (obj, index) {
+
+                        var isExists = obj.id == objectID;
+                        if (isExists) indexObj = index;
+
+                        return isExists;
+                    })[0];
+
+                    // remove
+                    if (indexObj > 0) {
+                        delete app.json.objects[indexObj];
+                    }
+
+                    // save to database
+                    app.save(function (err) {
+                        if (err)
+                            res.AD.error(true);
+                        else
+                            res.AD.success(true);
+                    });
+                }
+                else {
+                    res.AD.success(true);
+                }
+
+
+            });
+
+    },
+
+
+
+    /* Pages */
+
+    /**
+     * PUT /app_builder/application/:appID
+     * 
+     * Add/Update a page into ABApplication
+     */
+    pageSave: function (req, res) {
+        var appID = req.param('appID');
+        var page = req.body.page;
+
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
+
+                if (app) {
+
+                    var indexPage = -1;
+                    var updatePage = app.json.pages.filter(function (p, index) {
+
+                        var isExists = p.id == page.id;
+                        if (isExists) indexPage = index;
+
+                        return isExists;
+                    })[0];
+
+                    // update
+                    if (updatePage) {
+                        app.json.pages[indexPage] = page;
+                    }
+                    // add new
+                    else {
+                        app.json.pages.push(page);
+                    }
+
+                    // save to database
+                    app.save(function (err) {
+                        if (err)
+                            res.AD.error(true);
+                        else
+                            res.AD.success(true);
+                    });
+                }
+                else {
+                    res.AD.success(true);
+                }
+
+
+            });
+
+    },
+
+    /**
+     * DELETE /app_builder/application/:appID/page/:id
+     * 
+     * Delete a page in ABApplication
+     */
+    pageDestroy: function (req, res) {
+        var appID = req.param('appID');
+        var pageID = req.param('id');
+
+        ABApplication.findOne({ id: appID })
+            .fail(res.AD.error)
+            .then(function (app) {
+
+                if (app) {
+
+                    var indexPage = -1;
+                    var updatePage = app.json.pages.filter(function (page, index) {
+
+                        var isExists = page.id == pageID;
+                        if (isExists) indexPage = index;
+
+                        return isExists;
+                    })[0];
+
+                    // remove
+                    if (indexPage > 0) {
+                        delete app.json.pages[indexPage];
+                    }
+
+                    // save to database
+                    app.save(function (err) {
+                        if (err)
+                            res.AD.error(true);
+                        else
+                            res.AD.success(true);
+                    });
+                }
+                else {
+                    res.AD.success(true);
+                }
+
+
+            });
+
+    },
+
+
     /**
      * GET /app_builder/appJSON/:id?download=1
      * 

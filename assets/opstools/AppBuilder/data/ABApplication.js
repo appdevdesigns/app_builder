@@ -17,11 +17,101 @@
 OP.Model.extend('opstools.BuildApp.ABApplication',
 	{
 		useSockets: true,
-		restURL: '/app_builder/abapplication'
+		restURL: '/app_builder/abapplication',
+
+		// ** Objects
+
+		objectSave: function (appId, object) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					AD.comm.service.put({
+						url: '/app_builder/application/' + appId + '/object',
+						data: {
+							object: object
+						}
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+				}
+
+			);
+		},
+
+		objectDestroy: function (appId, objectId) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					AD.comm.service.delete({
+						url: '/app_builder/application/' + appId + '/object/' + objectId
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+
+				}
+
+			);
+
+		},
+
+
+		// ** Pages
+
+		pageSave: function (appId, page) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					AD.comm.service.put({
+						url: '/app_builder/application/' + appId + '/page',
+						data: {
+							page: page
+						}
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+				}
+
+			);
+		},
+
+		pageDestroy: function (appId, pageId) {
+
+			return new Promise(
+				(resolve, reject) => {
+
+					AD.comm.service.delete({
+						url: '/app_builder/application/' + appId + '/page/' + pageId
+					}, function (err, result) {
+						if (err)
+							reject(err);
+						else
+							resolve(result);
+					});
+
+				}
+
+			);
+
+		},
+
+
+
 	},
 	{
 		// instance Methods
+
 	}
 );
-		
-		
+

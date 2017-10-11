@@ -252,42 +252,6 @@ module.exports = class ABApplicationBase {
 
 
 
-	/**
-	 * @method objectDestroy()
-	 *
-	 * remove the current ABObject from our list of ._objects.
-	 *
-	 * @param {ABObject} object
-	 * @return {Promise}
-	 */
-	objectDestroy( object ) {
-
-		var remaininObjects = this.objects(function(o) { return o.id != object.id;})
-		this._objects = remaininObjects;
-		return this.save();
-	}
-
-
-
-	/**
-	 * @method objectSave()
-	 *
-	 * persist the current ABObject in our list of ._objects.
-	 *
-	 * @param {ABObject} object
-	 * @return {Promise}
-	 */
-	objectSave( object ) {
-		var isIncluded = (this.objects(function(o){ return o.id == object.id }).length > 0);
-		if (!isIncluded) {
-			this._objects.push(object);
-		}
-
-		return this.save();
-	}
-
-
-
 
 	/**
 	 * @method urlResolve()
