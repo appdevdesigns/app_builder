@@ -171,7 +171,7 @@ module.exports =  class ABObjectBase {
 	 */
 	connectFields () {
 
-		return this.fields((f) => { return f.key == 'connectObject'; });
+		return this.fields(function(f) { return f.key == 'connectObject'; });
 	}
 
 

@@ -36,7 +36,7 @@ var defaultValues = {
 
 	// These values are defined at server side
 	linkColumn: '', // ABColumn.id
-	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
+	isSource: null // bit
 };
 
 class ABFieldConnect extends ABField {

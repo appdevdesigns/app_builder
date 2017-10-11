@@ -302,7 +302,9 @@ export default class ABField extends ABFieldBase {
 				this.object.fieldSave(this)
 				.then(() => {
 
-					if (isAdd) {
+					if (isAdd &&
+						this.key != "connectObject" // does not .migrateCreate, we have to wait until the link column will finish
+						) {
 
 						this.migrateCreate()
 						.then(()=>{

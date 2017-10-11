@@ -242,7 +242,7 @@ module.exports = class ABObject extends ABObjectBase {
 		var tableName = this.dbTableName();
 
 		if (!__ModelPool[tableName]) {
-			
+
 			var knex = ABMigration.connection();
 
 			// Compile our jsonSchema from our DataFields
@@ -259,7 +259,7 @@ module.exports = class ABObject extends ABObjectBase {
 			}
 			var currObject = this;
 			var allFields = this.fields();
-			allFields.forEach((f)=>{
+			allFields.forEach(function(f) {
 				f.jsonSchemaProperties(jsonSchema.properties);
 			})
 
@@ -290,7 +290,7 @@ module.exports = class ABObject extends ABObjectBase {
 				var relationMappings = {};
 
 				var connectFields = currObject.connectFields();
-
+console.log('relationMappings connectFields: ', tableName, connectFields);
 				// linkObject: '', // ABObject.id
 				// linkType: 'one', // one, many
 				// linkViaType: 'many' // one, many
@@ -301,7 +301,7 @@ module.exports = class ABObject extends ABObjectBase {
 					if (linkObject == null) return;
 
 					var linkModel = linkObject.model();
-					var relationName = AppBuilder.rules.toFieldRelationFormat(f.columnName);
+					var relationName = f.relationName();
 
 					// 1:1
 					if (f.settings.linkType == 'one' && f.settings.linkViaType == 'one') {
@@ -436,6 +436,8 @@ module.exports = class ABObject extends ABObjectBase {
 
 		var tableName = this.dbTableName();
 		delete __ModelPool[tableName];
+console.log('modelRefresh: ', tableName);
+
 	}
 
 

@@ -36,7 +36,7 @@ var defaultValues = {
 	linkType: 'one', // one, many
 	linkViaType: 'many', // one, many
 	linkColumn: '', // ABField.id
-	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
+	isSource: null // bit
 };
 
 var ids = {
@@ -293,9 +293,6 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 			// get select linked object id
 			values.settings.linkObject = $$(ids.objectList).getValue();
-
-			// for 1:1 relation case, flag column is in this object
-			values.settings.isSource = 1;
 
 			return values;
 		}
