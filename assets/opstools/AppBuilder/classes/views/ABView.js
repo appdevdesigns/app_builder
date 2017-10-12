@@ -935,7 +935,7 @@ export default class ABView extends ABViewBase {
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext',
 			// not allowed Form's widgets
-			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'number', 'selectsingle'
+			'button', 'checkbox', 'datepicker', 'fieldcustom', 'textbox', 'numberbox', 'selectsingle'
 		];
 
 		var allComponents = ABViewManager.allViews();

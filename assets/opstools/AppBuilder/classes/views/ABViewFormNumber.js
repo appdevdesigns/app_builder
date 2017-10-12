@@ -18,7 +18,7 @@ var ABViewFormNumberPropertyComponentDefaults = {
 
 
 var ABViewFormNumberDefaults = {
-	key: 'number',		// {string} unique key for this view
+	key: 'numberbox',		// {string} unique key for this view
 	icon: 'hashtag',		// {string} fa-[icon] reference for this view
 	labelKey: 'ab.components.number' // {string} the multilingual label key for the class label
 }
