@@ -290,7 +290,7 @@ module.exports = class ABObject extends ABObjectBase {
 				var relationMappings = {};
 
 				var connectFields = currObject.connectFields();
-console.log('relationMappings connectFields: ', tableName, connectFields);
+
 				// linkObject: '', // ABObject.id
 				// linkType: 'one', // one, many
 				// linkViaType: 'many' // one, many
@@ -436,7 +436,8 @@ console.log('relationMappings connectFields: ', tableName, connectFields);
 
 		var tableName = this.dbTableName();
 		delete __ModelPool[tableName];
-console.log('modelRefresh: ', tableName);
+
+		ABMigration.refreshObject(tableName);
 
 	}
 

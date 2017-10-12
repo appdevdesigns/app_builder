@@ -16,6 +16,7 @@ function L(key, altText) {
 
 var ABFieldNumberDefaults = {
 	key: 'number', // unique key to reference this specific DataField
+
 	icon: 'hashtag',   // font-awesome icon reference.  (without the 'fa-').  so 'user'  to reference 'fa-user'
 
 	// menuName: what gets displayed in the Editor drop list
@@ -571,7 +572,7 @@ class ABFieldNumber extends ABField {
 		// .common() is used to create the display in the list
 		formComponentSetting.common = () => {
 			return {
-				key: 'number'
+				key: 'numberbox'
 			}
 		};
 
