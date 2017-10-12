@@ -57,6 +57,17 @@ module.exports = {
 
     },
 
+    /**
+     * @method refreshObject
+     * delete a model in knex, then it will be initialized
+     */
+    refreshObject: function(tableName) {
+
+        var knex = ABMigration.connection();
+
+        delete knex.$$objection.boundModels[tableName];
+
+    },
 
     createField:function(field) {
 
