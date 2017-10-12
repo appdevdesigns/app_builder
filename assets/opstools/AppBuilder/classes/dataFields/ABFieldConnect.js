@@ -63,7 +63,11 @@ function populateSelect(populate, callback) {
 	});
 
 	// sort by object's label  A -> Z
-	options.sort((a, b) => a.value > b.value );
+	options.sort((a, b) => {
+		if (a.value < b.value) return -1;
+		if (a.value > b.value) return 1;
+		return 0;
+	});
 
 	$$(ids.objectList).define("options", options);
 	$$(ids.objectList).refresh();
@@ -400,7 +404,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		// get selected values
 		var selectedData = this.pullRelationValues(row);
-		
+
 		var readOnly = false;
 		if (editable != null && editable == false) {
 			readOnly = true;
@@ -580,7 +584,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// System could not found the linked object - It may be deleted ?
 				if (linkedCol == null) return reject();
-				
+
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
@@ -682,7 +686,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var values = this.selectivityGet(domNode);
 		return values;
 	}
-	
+
 	setValue(item, value) {
 		// get selectivity dom
 		var domSelectivity = item.$view.querySelector('.connect-data-values');
