@@ -371,10 +371,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldConnect
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, width) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.template = '<div class="connect-data-values"></div>';
+		if (typeof width != "undefined") {
+			config.template = '<div style="margin-left: '+width+'px" class="connect-data-values"></div>';			
+		} else {
+			config.template = '<div class="connect-data-values"></div>';
+		}
 
 		return config;
 	}
@@ -424,7 +428,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		}, App, row);
 
 		// Listen event when selectivity value updates
-		if (domNode) {
+		if (domNode && row.id && node) {
 			domNode.addEventListener('change', (e) => {
 
 				// update just this value on our current object.model

@@ -10,6 +10,17 @@ AD.Control.OpsTool.extend('BuildApp', {
 
 	init: function (element, options) {
 		var self = this;
+		
+		if (typeof window._currentUser == "undefined") {
+			OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
+				var user1 = [{ id: data.user.username, text: data.user.username }];
+				var user2 = data.user.username
+				window._currentUser = {
+					selectivity: user1,
+					webix: user2
+				};
+			});			
+		}
 
 		options = AD.defaults({
 			templateDOM: '/opstools/BuildApp/views/BuildApp/BuildApp.ejs',

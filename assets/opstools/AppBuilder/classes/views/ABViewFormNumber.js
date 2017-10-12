@@ -118,6 +118,7 @@ export default class ABViewFormNumber extends ABViewFormField {
 	component(App) {
 
 		var component = super.component(App);
+		var field = this.field();
 
 		var idBase = 'ABViewFormNumber_' + this.id;
 		var ids = {

@@ -376,12 +376,16 @@ class ABFieldList extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldList
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, width) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		// Multiple select list
 		if (this.settings.isMultiple == true) {
-			config.template = '<div class="list-data-values"></div>';
+			if (typeof width != "undefined") {
+				config.template = '<div style="margin-left: '+width+'px;" class="list-data-values"></div>';				
+			} else {
+				config.template = '<div class="list-data-values"></div>';				
+			}
 		}
 		// Single select list
 		else {
@@ -423,12 +427,13 @@ class ABFieldList extends ABFieldSelectivity {
 			// Render selectivity
 			this.selectivityRender(domNode, {
 				multiple: true,
+				placeholder: L('ab.dataField.list.placeholder', '*Select items'),
 				items: this.settings.options,
 				data: selectedData
 			}, App, row);
 
 			// Listen event when selectivity value updates
-			if (domNode) {
+			if (domNode && row.id && node) {
 				domNode.addEventListener('change', (e) => {
 
 					// update just this value on our current object.model
@@ -437,12 +442,13 @@ class ABFieldList extends ABFieldSelectivity {
 
 					// pass null because it could not put empty array in REST api
 					if (values[this.columnName].length == 0)
-						values[this.columnName] = null;
+						values[this.columnName] = [];
 
 					this.object.model().update(row.id, values)
 						.then(() => {
 							// update the client side data object as well so other data changes won't cause this save to be reverted
-							$$(node).updateItem(row.id, values);
+							if ($$(node) && $$(node).updateItem)
+								$$(node).updateItem(row.id, values);
 						})
 						.catch((err) => {
 
@@ -564,6 +570,30 @@ class ABFieldList extends ABFieldSelectivity {
 
 		return detailComponentSetting;
 	}
+	
+	getValue(application, object, fieldData, itemNode, rowData, item) {
+		var values = {};
+		if (this.settings.isMultiple) {
+			var domNode = itemNode.querySelector('.list-data-values');
+			values = this.selectivityGet(domNode);
+		} else {
+			values = $$(item).getValue();
+		}
+		return values;
+	}
+
+
+	setValue(item, value) {
+		if (this.settings.isMultiple) {
+			// get selectivity dom
+			var domSelectivity = item.$view.querySelector('.list-data-values');
+			// set value to selectivity
+			this.selectivitySet(domSelectivity, value, this.App);
+		} else {
+			item.setValue();
+		}
+	}
+
 
 }
 

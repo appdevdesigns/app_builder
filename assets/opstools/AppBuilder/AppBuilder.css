@@ -781,9 +781,10 @@ div.webix_item_tab {
 .list-data-values, .connect-data-values {
 	position: relative;
 }
-.customField .connect-data-values {
+/*
+.customField .connect-data-values, .customField .list-data-values {
 	display: inline-block;
-}
+}*/
 .ab-image-holder .webix_template {
 	position: relative;
 }

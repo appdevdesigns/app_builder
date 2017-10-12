@@ -248,16 +248,47 @@ export default class ABViewForm extends ABViewFormPanel {
 				customFields.forEach((f) => {
 
 					var colName = f.field().columnName;
-					var val = data[colName];
+					var val = data[colName];					
 
 					if (f.field().key == "connectObject") {
 						val = f.field().pullRelationValues(data);
 					}
 
 					// set value to each components
-					f.field().setValue($$(this.viewComponents[f.id].ui.id), val);
-
+					if (val != null) {
+						f.field().setValue($$(this.viewComponents[f.id].ui.id), val);						
+					} else {
+						// var default =
+						var values = {};
+						f.field().defaultValue(values);
+						var columnName = colName;
+						if ( typeof values[columnName] != "undefined" )
+							f.field().setValue($$(this.viewComponents[f.id].ui.id), values[columnName]);
+					}
 				});
+
+				var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
+				normalFields.forEach((f) => {
+
+					if (f.key != "button") {
+						var colName = f.field().columnName;
+						var val = data[colName];
+						
+						console.log(colName);
+						console.log(val);
+						
+						// set value to each components
+						if (val == null || val == "") {
+							var values = {};
+							f.field().defaultValue(values);
+							var columnName = colName;
+							console.log(values);
+							if ( typeof values[columnName] != "undefined" )
+								f.field().setValue($$(this.viewComponents[f.id].ui.id), values[columnName]);
+						}
+					} 
+				});
+
 
 			}
 
