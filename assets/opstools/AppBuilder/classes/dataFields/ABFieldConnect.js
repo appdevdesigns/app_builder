@@ -62,6 +62,9 @@ function populateSelect(populate, callback) {
 		options.push({ id: o.id, value: o.label });
 	});
 
+	// sort by object's label  A -> Z
+	options.sort((a, b) => a.value > b.value );
+
 	$$(ids.objectList).define("options", options);
 	$$(ids.objectList).refresh();
 	if (populate != null && populate == true) {
@@ -106,8 +109,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
 					onChange: function (newV, oldV) {
-						if (typeof oldV == "undefined") return;
-						if (newV == "") {
+						if (!newV) {
 							$$(ids.link1).hide();
 							$$(ids.link2).hide();
 						}
