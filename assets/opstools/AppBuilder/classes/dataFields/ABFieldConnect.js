@@ -230,6 +230,16 @@ var ABFieldConnectComponent = new ABFieldComponent({
 						width: 200
 					},
 				]
+			},
+			{ 
+				name: 'linkColumn',
+				view: 'text',
+				hidden: true
+			},
+			{ 
+				name: 'isSource',
+				view: 'text',
+				hidden: true
 			}
 		];
 	},
@@ -293,6 +303,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 				// $$(ids.objectList).refresh();
 			}
+
 		},
 
 		values: (ids, values) => {

@@ -345,8 +345,29 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                             field.save()
                                 .then(() => {
 
+                                    var finishUpdateField = () => {
+                                        $$(ids.buttonSave).enable();
+                                        $$(ids.component).hideProgress();
+                                        _currentEditor.clear();
+                                        _logic.hide();
+                                        _logic.callbacks.onSave(field);
+                                    };
+
+
                                     // TODO workaround : update link column id
                                     if (linkCol != null) {
+
+                                        var refreshModels = () => {
+
+                                            // refresh linked object model
+                                            linkCol.object.model().refresh();
+
+                                            // refresh source object model
+                                            // NOTE: M:1 relation has to refresh model after linked object's refreshed
+                                            field.object.model().refresh();
+
+                                        };
+
                                         linkCol.settings.linkColumn = field.id;
                                         linkCol.save().then(() => {
 
@@ -359,33 +380,23 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                                                     .then(() => linkCol.migrateCreate())
                                                     .then(() => {
 
-                                                        // refresh linked object model
-                                                        linkCol.object.model().refresh();
-
-                                                        // refresh source object model
-                                                        // NOTE: M:1 relation has to refresh model after linked object's refreshed
-                                                        field.object.model().refresh();
+                                                        refreshModels();
+                                                        finishUpdateField();
                                                     });
                                             }
                                             else {
 
-                                                // refresh linked object model
-                                                linkCol.object.model().refresh();
-
-                                                // refresh source object model
-                                                // NOTE: M:1 relation has to refresh model after linked object's refreshed
-                                                field.object.model().refresh();
+                                                refreshModels();
+                                                finishUpdateField();
 
                                             }
 
                                         });
                                     }
+                                    else {
+                                        finishUpdateField();
+                                    }
 
-                                    $$(ids.buttonSave).enable();
-                                    $$(ids.component).hideProgress();
-                                    _currentEditor.clear();
-                                    _logic.hide();
-                                    _logic.callbacks.onSave(field)
                                 })
                                 .catch((err) => {
                                     OP.Validation.isFormValidationError(err, $$(editor.ui.id));
