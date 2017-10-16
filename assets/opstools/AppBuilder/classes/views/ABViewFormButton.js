@@ -18,7 +18,10 @@ var ABViewFormButtonPropertyComponentDefaults = {
 	saveLabel: '*save',
 	includeCancel: true,
 	cancelLabel: '*cancel',
+	includeReset: true,
+	resetLabel: '*reset',
 	afterSave: null,
+	afterCancel: null,
 	alignment: 'right'
 }
 
@@ -151,11 +154,28 @@ export default class ABViewFormButton extends ABView {
 				view: "text",
 				label: L('ab.component.button.cancelLabel', '*Cancel'),
 				placeholder: L('ab.component.button.cancelLabelPlaceholder', '*Cancel Placeholder'),
-			},			
+			},
+			{
+				name: 'includeReset',
+				view: 'checkbox',
+				label: L('ab.component.button.includeReset', '*Reset')
+			},
+			{
+				name:'resetLabel',
+				view: "text",
+				label: L('ab.component.button.resetLabel', '*Reset'),
+				placeholder: L('ab.component.button.resetLabelPlaceholder', '*Reset Placeholder'),
+			},
 			{
 				name: 'afterSave',
 				view: 'richselect',
 				label: L('ab.component.button.afterSave', '*After Save')
+				// options: []
+			},
+			{
+				name: 'afterCancel',
+				view: 'richselect',
+				label: L('ab.component.button.afterCancel', '*After Cancel')
 				// options: []
 			},
 			{
@@ -187,12 +207,16 @@ export default class ABViewFormButton extends ABView {
 			}
 		});
 		$$(ids.afterSave).define('options', opts);
+		$$(ids.afterCancel).define('options', opts);
 
 		$$(ids.includeSave).setValue(view.settings.includeSave != null ? view.settings.includeSave : ABViewFormButtonPropertyComponentDefaults.includeSave);
 		$$(ids.saveLabel).setValue(view.settings.saveLabel != null ? view.settings.saveLabel : ABViewFormButtonPropertyComponentDefaults.saveLabel);
 		$$(ids.includeCancel).setValue(view.settings.includeCancel != null ? view.settings.includeCancel : ABViewFormButtonPropertyComponentDefaults.includeCancel);
 		$$(ids.cancelLabel).setValue(view.settings.cancelLabel != null ? view.settings.cancelLabel : ABViewFormButtonPropertyComponentDefaults.cancelLabel);
+		$$(ids.includeReset).setValue(view.settings.includeReset != null ? view.settings.includeReset : ABViewFormButtonPropertyComponentDefaults.includeReset);
+		$$(ids.resetLabel).setValue(view.settings.resetLabel != null ? view.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel);
 		$$(ids.afterSave).setValue(view.settings.afterSave || ABViewFormButtonPropertyComponentDefaults.afterSave);
+		$$(ids.afterCancel).setValue(view.settings.afterCancel || ABViewFormButtonPropertyComponentDefaults.afterCancel);
 		$$(ids.alignment).setValue(view.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment);
 
 	}
@@ -205,7 +229,10 @@ export default class ABViewFormButton extends ABView {
 		view.settings.saveLabel = $$(ids.saveLabel).getValue();
 		view.settings.includeCancel = $$(ids.includeCancel).getValue();
 		view.settings.cancelLabel = $$(ids.cancelLabel).getValue();
+		view.settings.includeReset = $$(ids.includeReset).getValue();
+		view.settings.resetLabel = $$(ids.resetLabel).getValue();
 		view.settings.afterSave = $$(ids.afterSave).getValue();
+		view.settings.afterCancel = $$(ids.afterCancel).getValue();
 		view.settings.alignment = $$(ids.alignment).getValue();
 
 	}
@@ -233,6 +260,7 @@ export default class ABViewFormButton extends ABView {
 
 		var alignment = this.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment;
 		var aftersave = this.settings.afterSave || ABViewFormButtonPropertyComponentDefaults.afterSave;
+		var aftersave = this.settings.afterCancel || ABViewFormButtonPropertyComponentDefaults.afterCancel;
 
 		// spacer
 		if (alignment == 'center' || alignment == 'right') {
@@ -266,6 +294,18 @@ export default class ABViewFormButton extends ABView {
 			});
 		}
 
+		// reset button
+		if (this.settings.includeReset != null ? JSON.parse(this.settings.includeReset) : ABViewFormButtonPropertyComponentDefaults.includeReset) {
+			_ui.cols.push({
+				view: "button",
+				type: "form",
+				width: 80,
+				value: this.settings.resetLabel != null ? this.settings.resetLabel : ABViewFormButtonPropertyComponentDefaults.resetLabel,
+				click: function () {
+					_logic.onClear(this);
+				}
+			});
+		}
 
 		// spacer
 		if (alignment == 'center' || alignment == 'left') {
@@ -293,8 +333,27 @@ export default class ABViewFormButton extends ABView {
 
 				if (cancelButton.getFormView())
 					cancelButton.getFormView().clear();
+
+				super.changePage(this.settings.afterCancel);
 			},
 
+			onClear: (resetButton) => {
+				// get form component
+				var form = this.formComponent();
+
+				// get ABViewDataCollection
+				var dc = form.dataCollection();
+
+				// clear cursor of DC
+				if (dc) {
+					dc.setCursor(null);
+				}
+
+				if (resetButton.getFormView())
+					resetButton.getFormView().clear();
+				
+			},
+			
 			onSave: (saveButton) => {
 
 				// get form component
