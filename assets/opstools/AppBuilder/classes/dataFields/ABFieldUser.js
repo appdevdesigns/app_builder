@@ -424,14 +424,29 @@ class ABFieldUser extends ABFieldSelectivity {
 		formComponentSetting.common = () => {
 			return {
 				key: (this.settings.isMultiple ? 'fieldcustom' : 'selectsingle'),
-				options:  [{
-					id: 1,
-					value: "item"
-				}]
+				options: this.settings.options.map(function (opt) {
+					return {
+						id: opt.id,
+						value: opt.text
+					}
+				})
 			}
 		};
 
 		return formComponentSetting;
+	}
+	
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: (this.settings.isMultiple ? 'detailselectivity' : 'detailtext')
+			}
+		};
+
+		return detailComponentSetting;
 	}
 
 	getValue(application, object, fieldData, itemNode, rowData, item) {

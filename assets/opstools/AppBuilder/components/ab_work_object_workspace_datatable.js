@@ -118,16 +118,26 @@ export default class ABWorkObjectDatatable extends OP.Component {
                         // do nothing because we will parse the table once we decide if we are deleting or updating rows
                         _logic.toggleUpdateDelete();
                     } else {
-                        // if the colum is not the select item column move on to the next step to save
-                        var state = {
-                            value: val
-                        };
+                        if (settings.isEditable) {
+                            // if the colum is not the select item column move on to the next step to save
+                            var state = {
+                                value: val
+                            };
 
-                        var editor = {
-                            row: row,
-                            column: col
-                        };
-                        _logic.onAfterEditStop(state, editor);                        
+                            var editor = {
+                                row: row,
+                                column: col
+                            };
+                            _logic.onAfterEditStop(state, editor);
+                        } else {
+                            var node = this.getItemNode({ row: row, column: col });
+                            var checkbox = node.querySelector('input[type="checkbox"]');
+                            if (val == 1) {
+                                checkbox.checked = false;                                
+                            } else {
+                                checkbox.checked = true;
+                            }
+                        }
                     }
     			},
     			onBeforeEditStop: function (state, editor) {
@@ -765,6 +775,21 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
     				//// update DataTable structure:
     				// get column list from our CurrentObject
     				var columnHeaders = CurrentObject.columnHeaders(true);
+                    
+                    if (settings.isEditable == 0) {
+                        columnHeaders.forEach(function(col) {
+                            
+                            if (col.template == '<div class="ab-boolean-display">{common.checkbox()}</div>') {
+                                col.template = function(obj, common, value){
+                                    if (value)
+                                        return "<div class='webix_icon fa-check-square-o'></div>";
+                                    else
+                                        return "<div class='webix_icon fa-square-o'></div>";
+                                }
+                            }
+                                
+                        })
+                    }
 
                     if (settings.massUpdate) {
                         columnHeaders.unshift({

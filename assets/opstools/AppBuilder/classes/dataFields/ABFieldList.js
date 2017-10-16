@@ -411,9 +411,16 @@ class ABFieldList extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
+
+		var placeholder = L('ab.dataField.list.placeholder', '*Select items');
+		var readOnly = false;
+		if (editable != null && editable == false) {
+			readOnly = true;
+			placeholder = "";
+		}
 
 		if (this.settings.isMultiple == true) {
 			var domNode = node.querySelector('.list-data-values');
@@ -427,7 +434,8 @@ class ABFieldList extends ABFieldSelectivity {
 			// Render selectivity
 			this.selectivityRender(domNode, {
 				multiple: true,
-				placeholder: L('ab.dataField.list.placeholder', '*Select items'),
+				readOnly: readOnly,
+				placeholder: placeholder,
 				items: this.settings.options,
 				data: selectedData
 			}, App, row);
@@ -564,7 +572,7 @@ class ABFieldList extends ABFieldSelectivity {
 
 		detailComponentSetting.common = () => {
 			return {
-				key: 'detailcustom'
+				key: (this.settings.isMultiple ? 'detailselectivity' : 'detailtext'),
 			}
 		};
 

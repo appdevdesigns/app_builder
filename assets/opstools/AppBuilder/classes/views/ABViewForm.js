@@ -295,9 +295,9 @@ export default class ABViewForm extends ABViewFormPanel {
 						}
 
 						// set value to each components
-						if (val != null) {
+						// if (val != null) {
 							f.field().setValue($$(this.viewComponents[f.id].ui.id), val);						
-						}
+						// }
 					});					
 				}
 			}
