@@ -8,6 +8,7 @@
 
 import ABViewFormPanel from "./ABViewFormPanel"
 import ABViewFormCustom from "./ABViewFormCustom"
+import ABViewFormDatepicker from "./ABViewFormDatepicker"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -232,7 +233,7 @@ export default class ABViewForm extends ABViewFormPanel {
 
 			}
 
-			console.log("here");
+			// do this for the initial form display so we can see defaults
 			_logic.displayData(null);
 
 			Form.adjust();
@@ -245,9 +246,7 @@ export default class ABViewForm extends ABViewFormPanel {
 			},
 			
 			displayData: (data) => {
-				console.log(data);
 				if (data == null) {
-					console.log("made it this far");
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
 						var colName = f.field().columnName;
@@ -274,6 +273,17 @@ export default class ABViewForm extends ABViewFormPanel {
 						} 
 					});					
 				} else {
+					var dateFields = this.fieldComponents((comp) => comp instanceof ABViewFormDatepicker);
+					dateFields.forEach((f) => {
+						var colName = f.field().columnName;
+						// var format = f.field().getDateFormat();
+						
+						// set value to each components
+						if (data[colName] != null) {
+							var val = new Date(data[colName]);
+							$$(this.viewComponents[f.id].ui.id).setValue(val);
+						}
+					});
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
 
@@ -288,8 +298,7 @@ export default class ABViewForm extends ABViewFormPanel {
 						if (val != null) {
 							f.field().setValue($$(this.viewComponents[f.id].ui.id), val);						
 						}
-					});
-					
+					});					
 				}
 			}
 
