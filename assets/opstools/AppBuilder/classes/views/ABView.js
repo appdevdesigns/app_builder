@@ -868,51 +868,11 @@ export default class ABView extends ABViewBase {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-
-			var Layout = $$(ids.component);
-
-			// attach all the .UI views:
-			this.views().forEach((child) => {
-
-				var component = child.component(App);
-
-				// get element in template
-				var elem = Layout.queryView({ viewId: child.id });
-				if (elem) {
-					// replace component to layout
-					webix.ui(component.ui, elem);
-				}
-				// add component to rows
-				else {
-					Layout.addView(component.ui);
-				}
-
-				// Initial component
-				component.init();
-
-				// Trigger 'changePage' event to parent
-				child.removeListener('changePage', _logic.changePage)
-					.on('changePage', _logic.changePage);
-
-			});
-
-			Layout.adjust();
-
 		};
-
-
-		var _logic = { 
-
-			changePage: (pageId) => {
-				this.changePage(pageId);
-			}
-		};
-
 
 		return {
 			ui: _ui,
-			init: _init,
-			logic: _logic
+			init: _init
 		}
 	}
 
