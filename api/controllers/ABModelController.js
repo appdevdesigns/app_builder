@@ -367,7 +367,10 @@ console.log('... catch(err) !');
             }            
             
             // query relation data
-            var relationNames = object.linkFields().map((f) => { return f.relationName(); });
+            var relationNames = object.connectFields()
+                .filter((f) => f.fieldLink() != null )
+                .map((f) => f.relationName() );
+
             if (relationNames.length > 0)
                 query.eager('[#fieldNames#]'.replace('#fieldNames#', relationNames.join(', ')));
                 
@@ -514,24 +517,26 @@ console.log('... catch(err) !');
 
                 var query = object.model().query();
 
-                var updateTasks = [];
-
-                // update relation values
-                updateTasks = updateTasks.concat(updateRelationValues(query, id, updateRelationParams));
-
-                // update record values
-                if (updateParams != null && Object.keys(updateParams).length > 0) {
-                    updateTasks.push(query.patch(updateParams).where('id', id));
-                }
-
-
                 // Do Knex update data tasks
-                Promise.all(updateTasks)
+                query.patch(updateParams || {}).where('id', id)
                 .then((values)=>{
 
-                    var numRows = values[0];
+                    // create a new query when use same query, then new data are created duplicate
+                    var query2 = object.model().query();
+                    var updateTasks = updateRelationValues(query2, id, updateRelationParams);
 
-                    res.AD.success({numRows:numRows});
+                    // update relation values
+                    return Promise.all(updateTasks)
+                        .catch(Promise.reject)
+                        .then((values)=>{
+
+                            var numRows = values[0];
+
+                            res.AD.success({numRows:numRows});
+
+                            Promise.resolve();
+
+                        });
 
                 }, (err)=>{
 

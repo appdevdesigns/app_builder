@@ -173,9 +173,12 @@ export default class ABViewForm extends ABViewFormPanel {
 
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
-			id: ids.component,
-			view: 'form',
-			elements: this.template.rows || []
+			view: "scrollview",
+			body: {
+				id: ids.component,
+				view: 'form',
+				elements: this.template.rows || []				
+			}
 		}
 
 		// make sure each of our child views get .init() called
@@ -220,6 +223,14 @@ export default class ABViewForm extends ABViewFormPanel {
 			if (dc) {
 				dc.bind(Form);
 			}
+			
+			// listen DC events
+			if (dc) {
+
+				dc.removeListener('changeCursor', _logic.displayData)
+					.on('changeCursor', _logic.displayData);
+
+			}
 
 
 			Form.adjust();
@@ -229,6 +240,25 @@ export default class ABViewForm extends ABViewFormPanel {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
+			},
+			
+			displayData: (data) => {
+
+				var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+				customFields.forEach((f) => {
+
+					var colName = f.field().columnName;
+					var val = data[colName];
+
+					if (f.field().key == "connectObject") {
+						val = f.field().pullRelationValues(data);
+					}
+
+					// set value to each components
+					f.field().setValue($$(this.viewComponents[f.id].ui.id), val);
+
+				});
+
 			}
 
 		};

@@ -35,8 +35,8 @@ var defaultValues = {
 	linkObject: '', // ABObject.id
 	linkType: 'one', // one, many
 	linkViaType: 'many', // one, many
-	linkColumn: '', // ABObject.id
-	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
+	linkColumn: '', // ABField.id
+	isSource: null // bit
 };
 
 var ids = {
@@ -60,6 +60,13 @@ function populateSelect(populate, callback) {
 	var options = [];
 	ABFieldConnectComponent.CurrentApplication.objects().forEach((o) => {
 		options.push({ id: o.id, value: o.label });
+	});
+
+	// sort by object's label  A -> Z
+	options.sort((a, b) => {
+		if (a.value < b.value) return -1;
+		if (a.value > b.value) return 1;
+		return 0;
 	});
 
 	$$(ids.objectList).define("options", options);
@@ -106,8 +113,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
 					onChange: function (newV, oldV) {
-						if (typeof oldV == "undefined") return;
-						if (newV == "") {
+						if (!newV) {
 							$$(ids.link1).hide();
 							$$(ids.link2).hide();
 						}
@@ -224,6 +230,16 @@ var ABFieldConnectComponent = new ABFieldComponent({
 						width: 200
 					},
 				]
+			},
+			{ 
+				name: 'linkColumn',
+				view: 'text',
+				hidden: true
+			},
+			{ 
+				name: 'isSource',
+				view: 'text',
+				hidden: true
 			}
 		];
 	},
@@ -287,15 +303,13 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 				// $$(ids.objectList).refresh();
 			}
+
 		},
 
 		values: (ids, values) => {
 
 			// get select linked object id
 			values.settings.linkObject = $$(ids.objectList).getValue();
-
-			// for 1:1 relation case, flag column is in this object
-			values.settings.isSource = 1;
 
 			return values;
 		}
@@ -312,6 +326,9 @@ class ABFieldConnect extends ABFieldSelectivity {
 		for (var dv in defaultValues) {
 			this.settings[dv] = (values.settings[dv] != null ? values.settings[dv] : defaultValues[dv]);
 		}
+
+		// text to Int:
+		this.settings.isSource = parseInt(this.settings.isSource || 0);
 
 	}
 
@@ -388,7 +405,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
 
@@ -399,10 +416,16 @@ class ABFieldConnect extends ABFieldSelectivity {
 		// get selected values
 		var selectedData = this.pullRelationValues(row);
 
+		var readOnly = false;
+		if (editable != null && editable == false) {
+			readOnly = true;
+		}
+
 		// Render selectivity
 		this.selectivityRender(domNode, {
 			multiple: multiselect,
 			data: selectedData,
+			readOnly: readOnly,
 			ajax: {
 				url: 'It will call url in .getOptions function', // require
 				minimumInputLength: 0,
@@ -430,7 +453,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// pass null because it could not put empty array in REST api
 				if (values[this.columnName].length == 0)
-					values[this.columnName] = null;
+					values[this.columnName] = '';
 
 				this.object.model().update(row.id, values)
 					.then(() => {
@@ -568,6 +591,11 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// System could not found the linked object - It may be deleted ?
 				if (linkedObj == null) return reject();
 
+				var linkedCol = linkedObj.fields((f) => f.id == this.settings.linkColumn)[0];
+
+				// System could not found the linked object - It may be deleted ?
+				if (linkedCol == null) return reject();
+
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
@@ -576,7 +604,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// M:1 - get data that's only empty relation value
 				if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
 					where.push({
-						fieldName: this.columnName,
+						fieldName: linkedCol.columnName,
 						operator: 'is null'
 					});
 				}
@@ -585,14 +613,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 					// 1:1 - get data is not match link id that we have
 					if (this.settings.isSource == true) {
 						where.push({
-							fieldName: this.columnName,
+							fieldName: linkedCol.columnName,
 							operator: 'have no relation'
 						});
 					}
 					// 1:1 - get data that's only empty relation value by query null value from link table
 					else {
 						where.push({
-							fieldName: this.columnName,
+							fieldName: linkedCol.columnName,
 							operator: 'is null'
 						});
 					}
@@ -641,7 +669,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var linkedObject = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
 
 		var relationName = this.relationName();
-		if (row[relationName] != null) {
+		if (row[relationName]) {
 
 			// if this select value is array
 			if (row[relationName].map) {
@@ -665,15 +693,16 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 
 	getValue(application, object, fieldData, itemNode, rowData, item) {
-		var values = {};
-		if (this.settings.linkType == "many") {
-			var domNode = itemNode.querySelector('.connect-data-values');
-			values = this.selectivityGet(domNode);
-			// console.log(values);
-		} else {
-			values = $$(item).getValue();
-		}
+		var domNode = itemNode.querySelector('.connect-data-values');
+		var values = this.selectivityGet(domNode);
 		return values;
+	}
+
+	setValue(item, value) {
+		// get selectivity dom
+		var domSelectivity = item.$view.querySelector('.connect-data-values');
+		// set value to selectivity
+		this.selectivitySet(domSelectivity, value, this.App);
 	}
 
 

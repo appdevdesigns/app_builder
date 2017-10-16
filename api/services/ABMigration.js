@@ -20,7 +20,7 @@ module.exports = {
 
         if (!knexConn) {
 
-            var knexConn = require('knex')({
+            knexConn = require('knex')({
                 client: 'mysql',
                 connection: {
                     host : sails.config.connections.appBuilder.host, // ||  '127.0.0.1',
@@ -28,6 +28,12 @@ module.exports = {
                     port : sails.config.connections.appBuilder.port, 
                     password : sails.config.connections.appBuilder.password, // ||  'your_database_password',
                     database : sails.config.connections.appBuilder.database, // ||  'appbuilder'
+                },
+                // FIX : ER_CON_COUNT_ERROR: Too many connections
+                // https://github.com/tgriesser/knex/issues/1027
+                pool: {
+                    min: 2,
+                    max: 20
                 }
             });
         }
@@ -51,6 +57,17 @@ module.exports = {
 
     },
 
+    /**
+     * @method refreshObject
+     * delete a model in knex, then it will be initialized
+     */
+    refreshObject: function(tableName) {
+
+        var knex = ABMigration.connection();
+
+        delete knex.$$objection.boundModels[tableName];
+
+    },
 
     createField:function(field) {
 

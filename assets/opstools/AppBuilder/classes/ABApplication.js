@@ -18,7 +18,7 @@ function toArray(DC) {
 	var ary = [];
 
 	var id = DC.getFirstId();
-	while(id) {
+	while (id) {
 		var element = DC.getItem(id);
 		ary.push(element);
 		id = DC.getNextId(id);
@@ -29,44 +29,44 @@ function toArray(DC) {
 
 export default class ABApplication extends ABApplicationBase {
 
-    constructor(attributes) {
-    	super(attributes);
+	constructor(attributes) {
+		super(attributes);
 
 
-    	// multilingual fields: label, description
-    	OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
+		// multilingual fields: label, description
+		OP.Multilingual.translate(this, this.json, ABApplication.fieldsMultilingual());
 
 
-	  	// instance keeps a link to our Model for .save() and .destroy();
-	  	this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
-	  	this.Model.Models(ABApplication);
-  	}
+		// instance keeps a link to our Model for .save() and .destroy();
+		this.Model = OP.Model.get('opstools.BuildApp.ABApplication');
+		this.Model.Models(ABApplication);
+	}
 
 
 
-  	///
-  	/// Static Methods
-  	///
-  	/// Available to the Class level object.  These methods are not dependent
-  	/// on the instance values of the Application.
-  	///
+	///
+	/// Static Methods
+	///
+	/// Available to the Class level object.  These methods are not dependent
+	/// on the instance values of the Application.
+	///
 
 
-  	/**
-  	 * @function allApplications
-  	 *
-  	 * return a DataCollection that contains all the ABApplications this user
-  	 * can see (based upon server side permissions);
-  	 *
-  	 * NOTE: this manages the results in the _AllApplications dataCollection
-  	 * store.  Any future .create(), .destroy(), .updates() modify values in
-  	 * that collection.
-  	 *
-  	 * Any webix ui components synced to that collection will be automatically
-  	 * updated.
-  	 *
-  	 * @return {Promise}
-  	 */
+	/**
+	 * @function allApplications
+	 *
+	 * return a DataCollection that contains all the ABApplications this user
+	 * can see (based upon server side permissions);
+	 *
+	 * NOTE: this manages the results in the _AllApplications dataCollection
+	 * store.  Any future .create(), .destroy(), .updates() modify values in
+	 * that collection.
+	 *
+	 * Any webix ui components synced to that collection will be automatically
+	 * updated.
+	 *
+	 * @return {Promise}
+	 */
 	static allApplications() {
 		return new Promise(
 			(resolve, reject) => {
@@ -75,7 +75,7 @@ export default class ABApplication extends ABApplicationBase {
 				ModelApplication.Models(ABApplication); // set the Models  setting.
 
 				ModelApplication.findAll()
-					.then(function(data){
+					.then(function (data) {
 
 						// NOTE: data is already a DataCollection from .findAll()
 						_AllApplications = data;
@@ -89,13 +89,13 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
-  	/**
-  	 * @function getApplicationById
-  	 *
-  	 *
-  	 * @return {Promise}
-  	 */
-	  static getApplicationById(id) {
+	/**
+	 * @function getApplicationById
+	 *
+	 *
+	 * @return {Promise}
+	 */
+	static getApplicationById(id) {
 		return new Promise(
 			(resolve, reject) => {
 
@@ -103,7 +103,7 @@ export default class ABApplication extends ABApplicationBase {
 				ModelApplication.Models(ABApplication); // set the Models  setting.
 
 				ModelApplication.findAll({ id: id })
-					.then(function(data){
+					.then(function (data) {
 
 						resolve(data.getItem(data.getFirstId()));
 					})
@@ -114,16 +114,16 @@ export default class ABApplication extends ABApplicationBase {
 	}
 
 
-  	/**
-  	 * @function create
-  	 *
-  	 * take the initial values and create an instance of ABApplication.
-  	 *
-  	 * @return {Promise}
-  	 */
+	/**
+	 * @function create
+	 *
+	 * take the initial values and create an instance of ABApplication.
+	 *
+	 * @return {Promise}
+	 */
 	static create(values) {
 		return new Promise(
-			function(resolve, reject) {
+			function (resolve, reject) {
 
 				var newApp = {}
 				OP.Multilingual.unTranslate(values, newApp, ABApplication.fieldsMultilingual());
@@ -132,15 +132,15 @@ export default class ABApplication extends ABApplicationBase {
 
 				var ModelApplication = OP.Model.get('opstools.BuildApp.ABApplication');
 				ModelApplication.create(values)
-				.then(function(app){
+					.then(function (app) {
 
-					// return an instance of ABApplication
-					var App = new ABApplication(app);
+						// return an instance of ABApplication
+						var App = new ABApplication(app);
 
-					_AllApplications.add(App,0);
-					resolve(App);
-				})
-				.catch(reject)
+						_AllApplications.add(App, 0);
+						resolve(App);
+					})
+					.catch(reject)
 			}
 		)
 	}
@@ -148,43 +148,43 @@ export default class ABApplication extends ABApplicationBase {
 
 
 
-//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
+	//// TODO: Refactor isValid() to ignore op and not error if duplicateName is own .id
 
 	static isValid(op, values) {
 
-			var validator = OP.Validation.validator();
+		var validator = OP.Validation.validator();
 
-			// during an ADD operation
-			if (op == 'add') {
+		// during an ADD operation
+		if (op == 'add') {
 
-				// label/name must be unique:
-				var arrayApplications = toArray(_AllApplications);
+			// label/name must be unique:
+			var arrayApplications = toArray(_AllApplications);
 
-				var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
-				var matchingApps = arrayApplications.filter(function (app) {
-					return app.name.trim().toLowerCase() == nameMatch;
-				})
-				if (matchingApps && matchingApps.length > 0) {
+			var nameMatch = values.label.trim().replace(/ /g, '_').toLowerCase();
+			var matchingApps = arrayApplications.filter(function (app) {
+				return app.name.trim().toLowerCase() == nameMatch;
+			})
+			if (matchingApps && matchingApps.length > 0) {
 
-					validator.addError('label', L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch) )
-					// var errors = OP.Form.validationError({
-					// 	name:'label',
-					// 	message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
-					// }, errors);
-				}
-
+				validator.addError('label', L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch))
+				// var errors = OP.Form.validationError({
+				// 	name:'label',
+				// 	message:L('ab_form_application_duplicate_name', "*Name (#name#) is already in use").replace('#name#', nameMatch),
+				// }, errors);
 			}
 
-
-			// Check the common validations:
-// TODO:
-// if (!inputValidator.validate(values.label)) {
-// 	_logic.buttonSaveEnable();
-// 	return false;
-// }
+		}
 
 
-			return validator;
+		// Check the common validations:
+		// TODO:
+		// if (!inputValidator.validate(values.label)) {
+		// 	_logic.buttonSaveEnable();
+		// 	return false;
+		// }
+
+
+		return validator;
 	}
 
 
@@ -206,10 +206,10 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {Promise}
 	 */
-	destroy () {
+	destroy() {
 		if (this.id) {
 			return this.Model.destroy(this.id)
-				.then(()=>{
+				.then(() => {
 					_AllApplications.remove(this.id);
 				});
 		}
@@ -225,7 +225,7 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {Promise}
 	 */
-	save () {
+	save() {
 
 		var values = this.toObj();
 
@@ -233,18 +233,18 @@ export default class ABApplication extends ABApplicationBase {
 		if (values.id) {
 
 			return this.Model.update(values.id, values)
-					.then(() => {
-						_AllApplications.updateItem(values.id, this);
-					});
+				.then(() => {
+					_AllApplications.updateItem(values.id, this);
+				});
 
 		} else {
 
 			// must be a CREATE:
 			return this.Model.create(values)
-					.then((data) => {
-						this.id = data.id;
-						_AllApplications.add(this, 0);
-					});
+				.then((data) => {
+					this.id = data.id;
+					_AllApplications.add(this, 0);
+				});
 		}
 
 	}
@@ -261,7 +261,7 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {json}
 	 */
-	toObj () {
+	toObj() {
 
 		OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
 
@@ -292,7 +292,7 @@ export default class ABApplication extends ABApplicationBase {
 	 * 							ABApplication should match.
 	 * @return {Promise}
 	 */
-	assignPermissions (permItems) {
+	assignPermissions(permItems) {
 		return new Promise(
 			(resolve, reject) => {
 				AD.comm.service.put({
@@ -301,8 +301,8 @@ export default class ABApplication extends ABApplicationBase {
 						roles: permItems
 					}
 				})
-				.fail(reject)
-				.done(resolve);
+					.fail(reject)
+					.done(resolve);
 			}
 		)
 	}
@@ -316,14 +316,14 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {Promise} 	resolve(list) : list {array} Role assignments
 	 */
-	getPermissions () {
+	getPermissions() {
 
 		return new Promise(
 			(resolve, reject) => {
 
 				AD.comm.service.get({ url: '/app_builder/' + this.id + '/role' })
-				.fail(reject)
-				.done(resolve)
+					.fail(reject)
+					.done(resolve)
 			}
 		);
 	}
@@ -336,15 +336,15 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {Promise}
 	 */
-	createPermission () {
+	createPermission() {
 		return new Promise(
 			(resolve, reject) => {
 
-// TODO: need to take created role and store as : .json.applicationRole = role.id
+				// TODO: need to take created role and store as : .json.applicationRole = role.id
 
 				AD.comm.service.post({ url: '/app_builder/' + this.id + '/role' })
-				.fail(reject)
-				.done(resolve)
+					.fail(reject)
+					.done(resolve)
 
 			}
 		);
@@ -359,14 +359,14 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {Promise}
 	 */
-	deletePermission () {
+	deletePermission() {
 		return new Promise(
 			(resolve, reject) => {
 
-// TODO: need to remove created role from : .json.applicationRole
+				// TODO: need to remove created role from : .json.applicationRole
 				AD.comm.service.delete({ url: '/app_builder/' + this.id + '/role' })
-				.fail(reject)
-				.done(resolve)
+					.fail(reject)
+					.done(resolve)
 
 			}
 		);
@@ -390,9 +390,51 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {ABObject}
 	 */
-	objectNew( values ) {
+	objectNew(values) {
 		return new ABObject(values, this);
 	}
+
+
+	/**
+	 * @method objectDestroy()
+	 *
+	 * remove the current ABObject from our list of ._objects.
+	 *
+	 * @param {ABObject} object
+	 * @return {Promise}
+	 */
+	objectDestroy(object) {
+
+		var remaininObjects = this.objects(function (o) { return o.id != object.id; })
+		this._objects = remaininObjects;
+
+		return this.Model.staticData.objectDestroy(this.id, object.id)
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+	}
+
+
+	/**
+	 * @method objectSave()
+	 *
+	 * persist the current ABObject in our list of ._objects.
+	 *
+	 * @param {ABObject} object
+	 * @return {Promise}
+	 */
+	objectSave(object) {
+		var isIncluded = (this.objects(function (o) { return o.id == object.id }).length > 0);
+		if (!isIncluded) {
+			this._objects.push(object);
+		}
+
+		return this.Model.staticData.objectSave(this.id, object.toObj())
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+	}
+
 
 
 
@@ -412,7 +454,7 @@ export default class ABApplication extends ABApplicationBase {
 	 * 
 	 * @return {array}			array of ABViewPages
 	 */
-	pages (filter, deep) {
+	pages(filter, deep) {
 
 		var result = [];
 
@@ -437,7 +479,7 @@ export default class ABApplication extends ABApplicationBase {
 		// find root pages
 		else {
 
-			filter = filter || function() {return true; };
+			filter = filter || function () { return true; };
 
 			result = this._pages.filter(filter);
 
@@ -460,7 +502,7 @@ export default class ABApplication extends ABApplicationBase {
 	 *
 	 * @return {ABViewPage}
 	 */
-	pageNew( values ) {
+	pageNew(values) {
 
 		// make sure this is an ABViewPage description
 		values.key = ABViewPage.common().key;
@@ -478,11 +520,17 @@ export default class ABApplication extends ABApplicationBase {
 	 * @param {ABViewPage} page
 	 * @return {Promise}
 	 */
-	pageDestroy( page ) {
+	pageDestroy(page) {
 
-		var remainingPages = this.pages(function(p) { return p.id != page.id;})
+		var remainingPages = this.pages(function (p) { return p.id != page.id; })
 		this._pages = remainingPages;
-		return this.save();
+		// return this.save();
+
+		return this.Model.staticData.pageDestroy(this.id, page.id)
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+
 	}
 
 
@@ -495,13 +543,18 @@ export default class ABApplication extends ABApplicationBase {
 	 * @param {ABViewPage} object
 	 * @return {Promise}
 	 */
-	pageSave( page ) {
-		var isIncluded = (this.pages(function(p){ return p.id == page.id }).length > 0);
+	pageSave(page) {
+		var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
 		if (!isIncluded) {
 			this._pages.push(page);
 		}
 
-		return this.save();
+		// return this.save();
+		return this.Model.staticData.pageSave(this.id, page.toObj())
+			.then(() => {
+				// TODO : Should update _AllApplications in 
+			});
+
 	}
 
 

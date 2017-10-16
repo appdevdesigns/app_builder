@@ -8,40 +8,19 @@
 
 module.exports = {
 
-    /* Synchronize application */
-    'post /app_builder/fullReload/:id': 
-        'app_builder/ABApplicationController.fullReload',
-        
-    'post /app_builder/reloadORM/:id': 
-        'app_builder/ABApplicationController.reloadORM',
+    /* Application Objects */
+    'put /app_builder/application/:appID/object':
+        'app_builder/ABApplicationController.objectSave',
 
-    'get /app_builder/reloadStatus': 
-        'app_builder/ABApplicationController.reloadStatus',
-    
-    'post /app_builder/prepareObject/:id': 
-        'app_builder/ABObjectController.prepare',
-    
-    'post /app_builder/prepareApp/:id': 
-        'app_builder/ABApplicationController.prepare',
-    
-    'post /app_builder/preparePage/:id': 
-        'app_builder/ABPageController.prepare',
+    'delete /app_builder/application/:appID/object/:id':
+        'app_builder/ABApplicationController.objectDestroy',
 
-    /*  */
-    'put /app_builder/object/sortColumns/:id': 
-        'app_builder/ABObjectController.sortColumns',
+    /* Application Pages */
+    'put /app_builder/application/:appID/page':
+        'app_builder/ABApplicationController.pageSave',
 
-    'put /app_builder/page/sortComponents/:id': 
-        'app_builder/ABPageController.sortComponents',
-
-    'put /app_builder/column/:id/width': 
-        'app_builder/ABColumnController.saveWidth',
-        
-    'post /app_builder/column/createColumn':
-        'app_builder/ABColumnController.createColumn',
-    
-    'post /app_builder/column/createLink':
-        'app_builder/ABColumnController.createLink',
+    'delete /app_builder/application/:appID/page/:id':
+        'app_builder/ABApplicationController.pageDestroy',
 
     /* Application permissions */
     'get /app_builder/user/roles':
@@ -72,9 +51,6 @@ module.exports = {
     'post /app_builder/application/:appID/importModel':
         'app_builder/ABApplicationController.importModel',
     
-    'get /app_builder/application/findModelAttributes':
-        'app_builder/ABApplicationController.findModelAttributes',
-
 
     /* Migration Services */
     // app_builder/migrate/application/:appID/object/:objID

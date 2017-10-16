@@ -16,7 +16,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         var L = this.Label;
 
         var labels = {
-            common : App.labels,
+            common: App.labels,
             component: {
                 fieldType: L('ab.add_fields.fieldType', "*Field type"),
                 label: L('ab.add_fields.label', "*Label"),
@@ -39,16 +39,16 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
         // Our webix UI definition:
         this.ui = {
-            view:"popup",
+            view: "popup",
             id: ids.component,
             modal: true,
-            autoheight:true,
+            autoheight: true,
             // maxHeight: 420,
 
-    // ready: function () {
-    //  console.error('ready() called!!!')
-    //  _logic.resetState();
-    // },
+            // ready: function () {
+            //  console.error('ready() called!!!')
+            //  _logic.resetState();
+            // },
 
             body: {
                 css: 'ab-add-fields-popup',
@@ -61,7 +61,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         labelWidth: App.config.labelWidthLarge,
                         options: [
                             //We will add these later
-                            { id:'temporary', view:'temporary' }
+                            { id: 'temporary', view: 'temporary' }
                         ],
                         on: {
                             onChange: function (id, ev, node) {
@@ -74,10 +74,10 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         type: "line"
                     },
                     {
-                        view:'multiview',
+                        view: 'multiview',
                         id: ids.editDefinitions,
                         // NOTE: can't leave this an empty []. We redefine this value later.
-                        cells: [ { id:'del_me', view:'label', label:'edit definition here' } ]
+                        cells: [{ id: 'del_me', view: 'label', label: 'edit definition here' }]
                     },
                     { height: 10 },
                     {
@@ -136,7 +136,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         this.init = (options) => {
 
             // register our callbacks:
-            for(var c in _logic.callbacks) {
+            for (var c in _logic.callbacks) {
                 _logic.callbacks[c] = options[c] || _logic.callbacks[c];
             }
 
@@ -154,18 +154,18 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
 
             var newEditorList = {
-                view:'multiview',
-                id:ids.editDefinitions,
-                rows:[]
+                view: 'multiview',
+                id: ids.editDefinitions,
+                rows: []
             }
 
-            Fields.forEach(function(F){
+            Fields.forEach(function (F) {
 
-                var menuName = F.defaults().menuName ;
+                var menuName = F.defaults().menuName;
                 var key = F.defaults().key;
 
                 // add a submenu for the fields multilingual key
-                submenus.push( {"id":menuName, "value":menuName} );
+                submenus.push({ "id": menuName, "value": menuName });
 
 
                 // Add the Field's definition editor here:
@@ -177,9 +177,9 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                 newEditorList.rows.push(editorComponent.ui);
 
 
-                _objectHash[ menuName ] = F;
-                _componentHash[ menuName ] = editorComponent;
-                _componentsByType[ key ]  = editorComponent;
+                _objectHash[menuName] = F;
+                _componentHash[menuName] = editorComponent;
+                _componentsByType[key] = editorComponent;
 
             })
 
@@ -191,14 +191,14 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             //  value: labels.component.chooseType,
             //  submenu: submenus
             // })
-            $$(ids.types).define("options",submenus);
+            $$(ids.types).define("options", submenus);
             $$(ids.types).refresh();
 
             // now remove the 'del_me' definition editor placeholder.
             webix.ui(newEditorList, $$(ids.editDefinitions));
 
             // hide all the unused editors:
-            for (var c in _componentHash){
+            for (var c in _componentHash) {
                 _componentHash[c].hide();
             }
 
@@ -210,7 +210,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
             // $$(ids.editDefinitions).show();
 
-// $$(ids.editDefinitions).cells() // define the edit Definitions here.
+            // $$(ids.editDefinitions).cells() // define the edit Definitions here.
         }
 
 
@@ -232,7 +232,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             },
 
 
-            buttonCancel:function() {
+            buttonCancel: function () {
 
                 _logic.resetState();
 
@@ -246,11 +246,11 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             },
 
 
-            buttonSave:function() {
+            buttonSave: function () {
 
                 $$(ids.buttonSave).disable();
                 // show progress
-				$$(ids.component).showProgress();
+                $$(ids.component).showProgress();
 
 
 
@@ -281,21 +281,26 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                             if (width < 100) {
                                 width = 100;
                             }
-                            
+
                             field.settings.width = width;
 
                             // TODO workaround : where should I add a new link field to link object
                             if (field.key == 'connectObject') {
 
+                                field.settings.isSource = 1;
+
                                 var linkObject = _currentApplication.objects((obj) => obj.id == field.settings.linkObject)[0];
+
+                                // TODO : should check duplicate column
+                                var linkColumnName = _currentObject.name;
 
                                 linkCol = linkObject.fieldNew({
                                     id: OP.Util.uuid(),
 
                                     key: field.key,
 
-                                    columnName: field.columnName,
-                                    label: field.label,
+                                    columnName: linkColumnName,
+                                    label: _currentObject.label,
 
                                     settings: {
                                         showIcon: field.settings.showIcon,
@@ -325,7 +330,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         var validator = field.isValid();
                         if (validator.fail()) {
                             validator.updateForm($$(editor.ui.id))
-    // OP.Form.isValidationError(errors, $$(editor.ui.id));
+                            // OP.Form.isValidationError(errors, $$(editor.ui.id));
 
                             // keep our old data
                             if (oldData) {
@@ -338,33 +343,66 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
 
                             field.save()
-                            .then(()=>{
+                                .then(() => {
 
-                                // TODO workaround : update link column id
-                                if (linkCol != null) {
-                                    linkCol.settings.linkColumn = field.id;
-                                    linkCol.save().then(() => {
+                                    var finishUpdateField = () => {
+                                        $$(ids.buttonSave).enable();
+                                        $$(ids.component).hideProgress();
+                                        _currentEditor.clear();
+                                        _logic.hide();
+                                        _logic.callbacks.onSave(field);
+                                    };
 
-                                        // refresh linked object model
-                                        linkCol.object.model().refresh();
 
-                                        // refresh source object model
-                                        // NOTE: M:1 relation has to refresh model after linked object's refreshed
-                                        field.object.model().refresh();
-                                    });
-                                }
+                                    // TODO workaround : update link column id
+                                    if (linkCol != null) {
 
-                                $$(ids.buttonSave).enable();
-                                $$(ids.component).hideProgress();
-                                _currentEditor.clear();
-                                _logic.hide();
-                                _logic.callbacks.onSave(field)
-                            })
-                            .catch((err) => {
-                                OP.Validation.isFormValidationError(err, $$(editor.ui.id));
-                                $$(ids.buttonSave).enable();
-                                $$(ids.component).hideProgress();
-                            })
+                                        var refreshModels = () => {
+
+                                            // refresh linked object model
+                                            linkCol.object.model().refresh();
+
+                                            // refresh source object model
+                                            // NOTE: M:1 relation has to refresh model after linked object's refreshed
+                                            field.object.model().refresh();
+
+                                        };
+
+                                        linkCol.settings.linkColumn = field.id;
+                                        linkCol.save().then(() => {
+
+                                            var migrateTasks = [];
+
+                                            // when add new link fields, then run create migrate fields here
+                                            if (!_editField) {
+                                                Promise.resolve()
+                                                    .then(() => field.migrateCreate())
+                                                    .then(() => linkCol.migrateCreate())
+                                                    .then(() => {
+
+                                                        refreshModels();
+                                                        finishUpdateField();
+                                                    });
+                                            }
+                                            else {
+
+                                                refreshModels();
+                                                finishUpdateField();
+
+                                            }
+
+                                        });
+                                    }
+                                    else {
+                                        finishUpdateField();
+                                    }
+
+                                })
+                                .catch((err) => {
+                                    OP.Validation.isFormValidationError(err, $$(editor.ui.id));
+                                    $$(ids.buttonSave).enable();
+                                    $$(ids.component).hideProgress();
+                                })
                         }
 
 
@@ -373,7 +411,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                         $$(ids.component).hideProgress();
                     }
 
-                }  else {
+                } else {
 
                     OP.Dialog.Alert({
                         title: '! Could not find the current editor.',
@@ -383,54 +421,54 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
                     $$(ids.component).hideProgress();
                 }
 
-    // if (!inputValidator.validateFormat(fieldInfo.name)) {
-    //  self.enable();
-    //  return;
-    // }
+                // if (!inputValidator.validateFormat(fieldInfo.name)) {
+                //  self.enable();
+                //  return;
+                // }
 
-    // // Validate duplicate field name
-    // var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
-    // if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
-    //  webix.alert({
-    //      title: labels.add_fields.duplicateFieldTitle,
-    //      text: labels.add_fields.duplicateFieldDescription,
-    //      ok: labels.common.ok
-    //  });
-    //  this.enable();
-    //  return;
-    // }
+                // // Validate duplicate field name
+                // var existsColumn = $.grep(dataTable.config.columns, function (c) { return c.id == fieldInfo.name.replace(/ /g, '_'); });
+                // if (existsColumn && existsColumn.length > 0 && !data.editFieldId) {
+                //  webix.alert({
+                //      title: labels.add_fields.duplicateFieldTitle,
+                //      text: labels.add_fields.duplicateFieldDescription,
+                //      ok: labels.common.ok
+                //  });
+                //  this.enable();
+                //  return;
+                // }
 
-    // if (fieldInfo.weight == null)
-    //  fieldInfo.weight = dataTable.config.columns.length;
+                // if (fieldInfo.weight == null)
+                //  fieldInfo.weight = dataTable.config.columns.length;
 
-    // // Call callback function
-    // if (base.saveFieldCallback && base.fieldName) {
-    //  base.saveFieldCallback(base.fieldName, fieldInfo)
-    //      .then(function () {
-    //          self.enable();
-    //          base.resetState();
-    //          base.hide();
-    //      });
-    // }
+                // // Call callback function
+                // if (base.saveFieldCallback && base.fieldName) {
+                //  base.saveFieldCallback(base.fieldName, fieldInfo)
+                //      .then(function () {
+                //          self.enable();
+                //          base.resetState();
+                //          base.hide();
+                //      });
+                // }
 
 
             },
 
 
-            callbacks:{
-                onCancel: function() { console.warn('NO onCancel()!') },
-                onSave  : function(field) { console.warn('NO onSave()!') },
+            callbacks: {
+                onCancel: function () { console.warn('NO onCancel()!') },
+                onSave: function (field) { console.warn('NO onSave()!') },
             },
 
 
 
-            hide:function() {
+            hide: function () {
                 $$(ids.component).hide();
             },
 
 
 
-            modeAdd:function() {
+            modeAdd: function () {
 
                 // show default editor:
                 defaultEditorComponent.show(false, false);
@@ -445,13 +483,13 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
             },
 
 
-            modeEdit: function(field) {
+            modeEdit: function (field) {
 
                 if (_currentEditor) _currentEditor.hide();
 
                 // switch to this field's editor:
                 // hide the rest
-                for(var c in _componentsByType) {
+                for (var c in _componentsByType) {
                     if (c == field.key) {
                         _componentsByType[c].show(false, false);
                         _componentsByType[c].populate(field);
@@ -525,7 +563,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
 
 
-            resetState: function() {
+            resetState: function () {
 
                 // enable elements that disallow to edit
                 if (_currentEditor && _currentEditor.ui && _currentEditor.ui.elements) {
@@ -573,7 +611,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
              * @param {ABField} field the ABField to edit.  If not provided, then
              *                        this is an ADD operation.
              */
-            show:function($view, field) {
+            show: function ($view, field) {
 
                 _editField = field;
 
@@ -592,7 +630,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
 
 
-            typeClick:function() {
+            typeClick: function () {
                 // NOTE: for functional testing we need a way to display the submenu
                 // (functional tests don't do .hover very well)
                 // so this routine is to enable .click() to show the submenu.
@@ -616,7 +654,7 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
         // Expose any globally accessible Actions:
         this.actions({
 
-            populateObjectPopupAddDataField: function(object) {
+            populateObjectPopupAddDataField: function (object) {
                 _currentObject = object;
 
                 // TODO : should load current object to data field popup here ?

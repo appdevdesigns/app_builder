@@ -302,7 +302,9 @@ export default class ABField extends ABFieldBase {
 				this.object.fieldSave(this)
 				.then(() => {
 
-					if (isAdd) {
+					if (isAdd &&
+						this.key != "connectObject" // does not .migrateCreate, we have to wait until the link column will finish
+						) {
 
 						this.migrateCreate()
 						.then(()=>{
@@ -473,6 +475,18 @@ export default class ABField extends ABFieldBase {
 		return item.getValue();
 	};
 
+	/**
+	 * @method setValue
+	 * this function uses for form component and mass update popup
+	 * to get value of fields that apply custom editor
+	 * 
+	 * @param {Object} item - Webix element
+	 * 
+	 * @return {Object}
+	 */
+	setValue(item, value) {
+		return item.setValue(value);
+	};
 
 
 	/*

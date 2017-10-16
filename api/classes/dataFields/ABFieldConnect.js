@@ -36,7 +36,7 @@ var defaultValues = {
 
 	// These values are defined at server side
 	linkColumn: '', // ABColumn.id
-	isSource: 1 // bit - NOTE : for 1:1 relation case, flag column is in which object
+	isSource: null // bit
 };
 
 class ABFieldConnect extends ABField {
@@ -58,6 +58,10 @@ class ABFieldConnect extends ABField {
 		for (var dv in defaultValues) {
 			this.settings[dv] = values.settings[dv] || defaultValues[dv];
 		}
+
+		// text to Int:
+		this.settings.isSource = parseInt(this.settings.isSource || 0);
+
 	}
 
 
@@ -133,7 +137,7 @@ class ABFieldConnect extends ABField {
 
 		if (!linkObject) return null;
 
-		return linkObject.fields((f) => f.id == this.settings.linkField)[0];
+		return linkObject.fields((f) => f.id == this.settings.linkColumn)[0];
 	}
 
 
@@ -157,11 +161,13 @@ class ABFieldConnect extends ABField {
 				// find linked object
 				var application = this.object.application,
 					linkObject = this.objectLink(),
-					linkTableName = linkObject.dbTableName();
+					linkTableName = linkObject.dbTableName(),
+					// TODO : should check duplicate column
+					linkColumnName = this.object.name;
 
 
-				// 1:M - create a column in target table and references to id of linked table
-				// 1:1 - create a column in table, references to id of linked table and set to be unique
+				// 1:M - create a column in the table and references to id of the link table
+				// 1:1 - create a column in the table, references to id of the link table and set to be unique
 				if ((this.settings.linkType == 'one') &&
 					(this.settings.linkViaType == 'many' || this.settings.linkViaType == 'one')) {
 
@@ -202,13 +208,13 @@ class ABFieldConnect extends ABField {
 
 				}
 
-				// M:1 - create a column in linked table and references to id of target table
+				// M:1 - create a column in the link table and references to id of the target table
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'one') {
 
 					async.waterfall([
 						// check column already exist
 						(next) => {
-							knex.schema.hasColumn(linkTableName, this.columnName)
+							knex.schema.hasColumn(linkTableName, linkColumnName)
 								.then((exists) => {
 									next(null, exists);
 								})
@@ -220,7 +226,7 @@ class ABFieldConnect extends ABField {
 
 							knex.schema.table(linkTableName, (t) => {
 
-								t.integer(this.columnName).unsigned().nullable()
+								t.integer(linkColumnName).unsigned().nullable()
 									.references('id').inTable(tableName).onDelete('cascade');
 							})
 								.then(() => { next(); })
@@ -237,9 +243,9 @@ class ABFieldConnect extends ABField {
 				else if (this.settings.linkType == 'many' && this.settings.linkViaType == 'many') {
 
 					var joinTableName = this.joinTableName(),
-						getFkName = (objectName) => {
+						getFkName = (objectName, columnName) => {
 
-							var fkName = objectName + '_' + this.columnName;
+							var fkName = objectName + '_' + columnName;
 
 							if (fkName.length > 64)
 								fkName = fkName.substring(0, 64);
@@ -259,8 +265,8 @@ class ABFieldConnect extends ABField {
 								t.charset('utf8');
 								t.collate('utf8_unicode_ci');
 
-								var sourceFkName = getFkName(this.object.name);
-								var targetFkName = getFkName(linkObject.name);
+								var sourceFkName = getFkName(this.object.name, this.columnName);
+								var targetFkName = getFkName(linkObject.name, linkColumnName);
 
 								// create columns
 								t.integer(this.object.name).unsigned().nullable()
@@ -433,23 +439,20 @@ class ABFieldConnect extends ABField {
 
 	joinTableName() {
 		var sourceObjectName,
-			sourceTableName,
 			targetObjectName,
-			targetTableName;
+			columnName;
 
 		var linkObject = this.object.application.objects((obj) => { return obj.id == this.settings.linkObject; })[0];
 
 		if (this.settings.isSource == true) {
 			sourceObjectName = this.object.name;
-			sourceTableName = this.object.dbTableName();
 			targetObjectName = linkObject.name;
-			targetTableName = linkObject.dbTableName();
+			columnName = this.columnName;
 		}
 		else {
 			sourceObjectName = linkObject.name;
-			sourceTableName = linkObject.dbTableName();
 			targetObjectName = this.object.name;
-			targetTableName = this.object.dbTableName();
+			columnName = this.fieldLink().columnName;
 		}
 
 		// return join table name
@@ -457,7 +460,7 @@ class ABFieldConnect extends ABField {
 			this.object.application.name, // application name
 			sourceObjectName, // table name
 			targetObjectName, // linked table name
-			this.columnName); // column name
+			columnName); // column name
 	}
 
 }

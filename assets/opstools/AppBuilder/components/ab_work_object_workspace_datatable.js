@@ -99,6 +99,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     						rowData = this.getItem(data.row);
 
     					return selectField.customEdit(rowData, App, cellNode);
+                    } else {
+                        return false;
                     }
 
     			},
@@ -228,7 +230,7 @@ console.error('!! ToDo: onAfterColumnHide()');
     			throttleCustomDisplay = setTimeout(()=>{
     				if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
-    					CurrentObject.customDisplays(this.data, App, DataTable, items);
+    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
     				}
     			}, 350);
 
@@ -241,7 +243,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                 if (throttleCustomDisplay) clearTimeout(throttleCustomDisplay);
     			scrollStarted = setTimeout(()=>{
                     if (CurrentObject) {
-    					CurrentObject.customDisplays(this.data, App, DataTable, items);
+    					CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
     				}
     			}, 1500);
             });
@@ -253,7 +255,7 @@ console.error('!! ToDo: onAfterColumnHide()');
                 throttleCustomDisplay = setTimeout(()=>{
                     if (CurrentObject) {
                         if (scrollStarted) clearTimeout(scrollStarted);
-                        CurrentObject.customDisplays(this.data, App, DataTable, items);
+                        CurrentObject.customDisplays(this.data, App, DataTable, items, settings.isEditable);
                     }
                 }, 350);
 
@@ -697,7 +699,7 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                     if (f.key == "image") {                
                         imageFields.push(f.columnName);
                         if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
-                            minHeight = parseInt(f.settings.imageHeight);
+                            minHeight = parseInt(f.settings.imageHeight) + 20;
                         }
                     }
                 });
