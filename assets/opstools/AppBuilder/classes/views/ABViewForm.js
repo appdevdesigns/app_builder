@@ -232,6 +232,8 @@ export default class ABViewForm extends ABViewFormPanel {
 
 			}
 
+			console.log("here");
+			_logic.displayData(null);
 
 			Form.adjust();
 		}
@@ -243,53 +245,52 @@ export default class ABViewForm extends ABViewFormPanel {
 			},
 			
 			displayData: (data) => {
-
-				var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
-				customFields.forEach((f) => {
-
-					var colName = f.field().columnName;
-					var val = data[colName];					
-
-					if (f.field().key == "connectObject") {
-						val = f.field().pullRelationValues(data);
-					}
-
-					// set value to each components
-					if (val != null) {
-						f.field().setValue($$(this.viewComponents[f.id].ui.id), val);						
-					} else {
-						// var default =
+				console.log(data);
+				if (data == null) {
+					console.log("made it this far");
+					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					customFields.forEach((f) => {
+						var colName = f.field().columnName;
+						
+						// set value to each components
 						var values = {};
 						f.field().defaultValue(values);
 						var columnName = colName;
 						if ( typeof values[columnName] != "undefined" )
 							f.field().setValue($$(this.viewComponents[f.id].ui.id), values[columnName]);
-					}
-				});
-
-				var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
-				normalFields.forEach((f) => {
-
-					if (f.key != "button") {
-						var colName = f.field().columnName;
-						var val = data[colName];
-						
-						console.log(colName);
-						console.log(val);
-						
-						// set value to each components
-						if (val == null || val == "") {
+					});					
+					var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
+					normalFields.forEach((f) => {
+					
+						if (f.key != "button") {
+							var colName = f.field().columnName;
+							
+							// set value to each components
 							var values = {};
 							f.field().defaultValue(values);
 							var columnName = colName;
-							console.log(values);
 							if ( typeof values[columnName] != "undefined" )
-								f.field().setValue($$(this.viewComponents[f.id].ui.id), values[columnName]);
+								$$(this.viewComponents[f.id].ui.id).setValue(values[columnName]);
+						} 
+					});					
+				} else {
+					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+					customFields.forEach((f) => {
+
+						var colName = f.field().columnName;
+						var val = data[colName];					
+
+						if (f.field().key == "connectObject") {
+							val = f.field().pullRelationValues(data);
 						}
-					} 
-				});
 
-
+						// set value to each components
+						if (val != null) {
+							f.field().setValue($$(this.viewComponents[f.id].ui.id), val);						
+						}
+					});
+					
+				}
 			}
 
 		};
