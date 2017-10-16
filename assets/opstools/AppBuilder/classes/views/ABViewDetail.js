@@ -386,6 +386,16 @@ export default class ABViewDetail extends ABView {
 						val = data[field.columnName];
 					}
 
+					if (field.key == "date") {
+						val = field.format(data[field.columnName]);
+					}
+
+					if (field.key == "list" && field.settings.isMultiple == 0) {
+						let selected = field.settings.options.filter(function(options){
+							return options.id = val;
+						});
+						val = selected[0].text;
+					}
 
 					// set value to each components
 					viewComponents[f.id].logic.setValue(val);

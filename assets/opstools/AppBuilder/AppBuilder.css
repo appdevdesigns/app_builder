@@ -356,7 +356,10 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	padding-right: 5px;
 	/*max-width: 100px !important;*/
 }
-
+.customField .selectivity-multiple-input-container {
+	border: 1px solid #CCC;
+	border-radius: 6px;
+}
 .selectivity-single-select {
 	background: transparent !important;
 }
