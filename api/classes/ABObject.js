@@ -300,6 +300,9 @@ module.exports = class ABObject extends ABObjectBase {
 					var linkObject = currObject.application.objects((obj) => { return obj.id == f.settings.linkObject; })[0];
 					if (linkObject == null) return;
 
+					var linkField = f.fieldLink();
+					if (linkField == null) return;
+
 					var linkModel = linkObject.model();
 					var relationName = f.relationName();
 
@@ -321,7 +324,7 @@ module.exports = class ABObject extends ABObjectBase {
 							sourceTable = linkObject.dbTableName();
 							targetTable = tableName;
 							relation = Model.HasOneRelation;
-							columnName = f.fieldLink().columnName;
+							columnName = linkField.columnName;
 						}
 
 						relationMappings[relationName] = {
@@ -407,7 +410,7 @@ module.exports = class ABObject extends ABObjectBase {
 
 								to: '{targetTable}.{field}'
 									.replace('{targetTable}', linkObject.dbTableName())
-									.replace('{field}', f.fieldLink().columnName)
+									.replace('{field}', linkField.columnName)
 							}
 						};
 					}

@@ -62,6 +62,13 @@ function populateSelect(populate, callback) {
 		options.push({ id: o.id, value: o.label });
 	});
 
+	// sort by object's label  A -> Z
+	options.sort((a, b) => {
+		if (a.value < b.value) return -1;
+		if (a.value > b.value) return 1;
+		return 0;
+	});
+
 	$$(ids.objectList).define("options", options);
 	$$(ids.objectList).refresh();
 	if (populate != null && populate == true) {
@@ -106,8 +113,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 				// template: "<div class='ab-new-connectObject-list-item'>#label#</div>",
 				on: {
 					onChange: function (newV, oldV) {
-						if (typeof oldV == "undefined") return;
-						if (newV == "") {
+						if (!newV) {
 							$$(ids.link1).hide();
 							$$(ids.link2).hide();
 						}
@@ -224,6 +230,16 @@ var ABFieldConnectComponent = new ABFieldComponent({
 						width: 200
 					},
 				]
+			},
+			{ 
+				name: 'linkColumn',
+				view: 'text',
+				hidden: true
+			},
+			{ 
+				name: 'isSource',
+				view: 'text',
+				hidden: true
 			}
 		];
 	},
@@ -287,6 +303,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 				// $$(ids.objectList).refresh();
 			}
+
 		},
 
 		values: (ids, values) => {
@@ -402,7 +419,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 		// get selected values
 		var selectedData = this.pullRelationValues(row);
-		
+
 		var readOnly = false;
 		if (editable != null && editable == false) {
 			readOnly = true;
@@ -582,7 +599,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 
 				// System could not found the linked object - It may be deleted ?
 				if (linkedCol == null) return reject();
-				
+
 				// Get linked object model
 				var linkedModel = linkedObj.model();
 
@@ -684,7 +701,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		var values = this.selectivityGet(domNode);
 		return values;
 	}
-	
+
 	setValue(item, value) {
 		// get selectivity dom
 		var domSelectivity = item.$view.querySelector('.connect-data-values');
