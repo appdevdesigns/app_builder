@@ -959,7 +959,6 @@ patch[editor.column] = item[editor.column];  // NOTE: isValidData() might also c
                 .update(item.id, item)
                 .then(()=>{
                     item.$height = height;
-                    DataTable.refreshHeader();
                     DataTable.refresh();
                 })
                 .catch((err)=>{

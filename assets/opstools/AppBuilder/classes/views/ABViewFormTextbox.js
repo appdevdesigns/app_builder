@@ -173,6 +173,7 @@ export default class ABViewFormTextbox extends ABViewFormField {
 	component(App) {
 
 		var component = super.component(App);
+		var field = this.field();
 
 		var idBase = 'ABViewFormTextbox_' + this.id;
 		var ids = {
