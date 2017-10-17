@@ -480,7 +480,7 @@ export default class ABWorkObjectWorkspace extends OP.Component {
 
     								field.destroy()
     								.then(()=>{
-
+                                        DataTable.refreshHeader();
     									DataTable.refresh();
     								});
 

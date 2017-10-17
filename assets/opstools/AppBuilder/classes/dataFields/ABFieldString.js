@@ -210,7 +210,7 @@ class ABFieldString extends ABField {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'text';
-		config.sort   = 'string'
+		// config.sort   = 'string'
 
 		return config;
 	}

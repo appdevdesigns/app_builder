@@ -328,7 +328,7 @@ OP.Dialog.Alert({
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = false;  // 'text';  // '[edit_type]'   for your unique situation
-		config.sort   = 'string' // '[sort_type]'   for your unique situation
+		// config.sort   = 'string' // '[sort_type]'   for your unique situation
 
 		if (this.settings.useWidth) {
 			config.width = this.settings.imageWidth;
