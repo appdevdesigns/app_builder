@@ -8,6 +8,7 @@ import ABView from "./ABView"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABPopupFilterDataTable from "../../components/ab_work_object_workspace_popupFilterDataTable"
 import ABPopupSortField from "../../components/ab_work_object_workspace_popupSortFields"
+import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -125,38 +126,40 @@ export default class ABViewDataCollection extends ABView {
 	 */
 	editorComponent(App, mode) {
 
-		var idBase = 'ABViewDataCollectionEditorComponent';
+		var idBase = 'ABViewDataCollectionDataComponent';
 		var ids = {
 			component: App.unique(idBase + '_component')
 		};
+		
+		var settings = {
+			allowDelete: 0,
+			detailsView: "",
+			editView: "",
+			isEditable: 0,
+			massUpdate: 0
+		}
 
-		var _ui = {
-			id: ids.component,
-			view: 'datatable'
-		};
+		var DataTable = new ABWorkspaceDatatable(App, idBase, settings);
+
+		var _ui = DataTable.ui;
 
 		var _init = (options) => {
-
-			var DataTable = $$(ids.component);
-
-			DataTable.clearAll();
+			
+			DataTable.init({
+			});
 
 			// get data collection & object
 			var object = this.datasource;
 
 			if (object != null) {
 
-				var columns = object.fields().map((f) => {
-					return {
-						id: f.columnName,
-						header: f.label
-					};
-				});
-
-				DataTable.define("columns", columns);
+				DataTable.objectLoad(object);
+				DataTable.refreshHeader();
 
 				// bind a data collection to the display grid
-				this.bind(DataTable);
+				this.bind($$(DataTable.ui.id));
+				
+				$$(DataTable.ui.id).adjust();
 			}
 
 		};
