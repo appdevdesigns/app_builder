@@ -394,8 +394,10 @@ export default class ABViewDetail extends ABView {
 						let selected = field.settings.options.filter(function(options){
 							return options.id = val;
 						});
-						if (selected[0])
+						if (selected[0] && selected[0].text != null) 
 							val = selected[0].text;
+						else
+							val = "";
 					}
 					
 					if (field.key == "number") {
