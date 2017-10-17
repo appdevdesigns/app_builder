@@ -72,7 +72,10 @@ export default class AB_Work_Interface_Workspace_Editor_Layout extends OP.Compon
 
 				// clear edit area
 				$$(ids.editArea).getChildViews().forEach((childView) => {
-					$$(ids.editArea).removeView(childView);
+
+					if ($$(ids.editArea).removeView)
+						$$(ids.editArea).removeView(childView);
+
 				});
 
 				// load the component's editor in our editArea

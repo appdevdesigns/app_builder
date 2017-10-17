@@ -6,13 +6,13 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewWidget from "./ABViewWidget"
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
 }
 
-export default class ABViewDetailComponent extends ABView {
+export default class ABViewDetailComponent extends ABViewWidget {
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 

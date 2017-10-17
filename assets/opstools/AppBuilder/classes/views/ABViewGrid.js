@@ -5,7 +5,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABWorkspaceDatatable from "../../components/ab_work_object_workspace_datatable"
 import ABPopupHideFields from "../../components/ab_work_object_workspace_popupHideFields"
@@ -57,12 +57,12 @@ var PopupFilterDataTableComponent = null;
 var PopupSortFieldComponent = null;
 var PopupFrozenColumnsComponent = null;
 
-export default class ABViewGrid extends ABView  {
+export default class ABViewGrid extends ABViewWidget  {
 	
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
 	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABView} parent the ABView this view is a child of. (can be null)
+	 * @param {ABViewWidget} parent the ABViewWidget this view is a child of. (can be null)
 	 */
     constructor(values, application, parent) {
 

@@ -10,7 +10,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewContainer from "./ABViewContainer"
 import ABViewManager from "../ABViewManager"
 
 
@@ -25,7 +25,7 @@ var ABViewDefaults = {
 
 }
 
-export default class ABViewPage extends ABView  {
+export default class ABViewPage extends ABViewContainer  {
 
     constructor(values, application, parent) {
 
@@ -120,6 +120,9 @@ export default class ABViewPage extends ABView  {
         });
 
 
+        // the default columns of ABView is 1
+        this.settings.columns = this.settings.columns || 1;
+
         // convert from "0" => 0
 
     }
@@ -138,7 +141,7 @@ export default class ABViewPage extends ABView  {
         return new Promise(
             (resolve, reject) => {
 
-                // verify we have been .save()d before:
+                // verify we have been .save() before:
                 if (this.id) {
 
                     var parent = this.parent;
