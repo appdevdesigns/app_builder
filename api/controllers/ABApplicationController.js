@@ -97,7 +97,7 @@ module.exports = {
                     })[0];
 
                     // remove
-                    if (indexObj > 0) {
+                    if (indexObj > -1) {
                         app.json.objects.splice(indexObj, 1);
                     }
 
@@ -197,7 +197,7 @@ module.exports = {
                     })[0];
 
                     // remove
-                    if (indexPage > 0) {
+                    if (indexPage > -1) {
                         app.json.pages.splice(indexPage, 1);
                     }
 
