@@ -42,15 +42,19 @@ export default class ABView extends ABViewBase {
 		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
 		// 		label:'',					// pulled from translation
 
+		//		position: {					// view state
+		//			x: 0,					// X position in webix.dashboard
+		//			y: 0,					// Y position in webix.dashboard
+		//			dx: 1,					// the number of column span
+		//			dy: 1					// the number of row span
+		//		}
+
 		//		settings: {					// unique settings for the type of field
 		//		},
 
 		// 		views:[],					// the child views contained by this view.
 
-		//		translations:[],
-
-		//		template: {					// UI template definition from portlet
-		// 		}
+		//		translations:[]
 		// 	}
 
 	}
@@ -219,12 +223,10 @@ export default class ABView extends ABViewBase {
 
 			// parent: this.parent,
 
+			position: this.position || {},
 			settings: this.settings || {},
 			translations: this.translations || [],
 			views: views,
-
-			// portlet template
-			template: this.template || {}
 
 		}
 	}
@@ -262,10 +264,13 @@ export default class ABView extends ABViewBase {
 		this._views = views;
 
 
-		this.template = values.template || {};
-
-
 		// convert from "0" => 0
+		if (this.position) {
+			this.position.x = parseInt(this.position.x || 0);
+			this.position.y = parseInt(this.position.y || 0);
+			this.position.dx = parseInt(this.position.dx || 1);
+			this.position.dy = parseInt(this.position.dy || 1);
+		}
 
 	}
 
@@ -364,11 +369,6 @@ export default class ABView extends ABViewBase {
 
 		var remainingViews = this.views(function (v) { return v.id != view.id; })
 		this._views = remainingViews;
-
-		// remove view in template
-		if (this.template) {
-			this.template
-		}
 
 		return this.save();
 	}
@@ -478,9 +478,6 @@ export default class ABView extends ABViewBase {
 			var Layout = $$(ids.component);
 
 			var allComponents = [];
-
-			// set Portlet layout template to webix.layout
-			Layout.setState(this.template);
 
 
 			App.eventIds = App.eventIds || {};
@@ -853,7 +850,7 @@ export default class ABView extends ABViewBase {
 			id: ids.component,
 			view: 'layout',
 			type: 'space',
-			rows: this.template.rows || []
+			rows: []
 		};
 
 

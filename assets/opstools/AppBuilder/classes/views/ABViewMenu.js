@@ -5,7 +5,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -25,7 +25,7 @@ var ABMenuDefaults = {
 }
 
 
-export default class ABViewMenu extends ABView {
+export default class ABViewMenu extends ABViewWidget {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values

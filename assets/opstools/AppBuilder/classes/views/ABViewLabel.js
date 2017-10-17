@@ -5,7 +5,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -27,12 +27,12 @@ var ABViewDefaults = {
 
 
 
-export default class ABViewLabel extends ABView  {
+export default class ABViewLabel extends ABViewWidget  {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
 	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABView} parent the ABView this view is a child of. (can be null)
+	 * @param {ABViewWidget} parent the ABViewWidget this view is a child of. (can be null)
 	 */
     constructor(values, application, parent) {
 

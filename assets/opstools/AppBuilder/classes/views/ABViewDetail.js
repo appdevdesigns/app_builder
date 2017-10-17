@@ -5,7 +5,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewContainer from "./ABViewContainer"
 import ABPropertyComponent from "../ABPropertyComponent"
 import ABViewDetailComponent from "./ABViewDetailComponent"
 import ABViewManager from "../ABViewManager"
@@ -27,7 +27,7 @@ var ABViewDetailPropertyComponentDefaults = {
 	labelWidth: 80
 }
 
-export default class ABViewDetail extends ABView {
+export default class ABViewDetail extends ABViewContainer {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -90,7 +90,7 @@ export default class ABViewDetail extends ABView {
 
 			// remove all old field components
 			if (oldDcId != null)
-				this.clearFieldComponents();
+				currView.clearFieldComponents();
 
 			// Update field options in property
 			this.propertyUpdateFieldOptions(ids, currView, dcId);
@@ -313,46 +313,19 @@ export default class ABViewDetail extends ABView {
 			component: App.unique(idBase + '_component'),
 		}
 
+		// get webix.dashboard
+		var container = super.component(App);
 
 		var _ui = {
 			view: "scrollview",
-			body: {
-				id: ids.component,
-				type: 'space',
-				css: 'detailView',
-				rows: this.template.rows || []				
-			}
+			body: container.ui
 		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			var Detail = $$(ids.component);
-
-			// get a UI component for each of our child views
-			this.views().forEach((v) => {
-
-				var subComponent = v.component(App);
-
-				viewComponents[v.id] = subComponent;
-
-
-				// get element in template
-				var elem = Detail.queryView({ viewId: v.id });
-				if (elem) {
-					// replace component to layout
-					webix.ui(subComponent.ui, elem);
-				}
-				// add component to rows
-				else {
-					Detail.addView(subComponent.ui);
-				}
-
-
-				// initialize
-				subComponent.init();
-
-			})
+			// populate .views to webix.dashboard
+			container.init(options);
 
 
 			// listen DC events
@@ -363,9 +336,6 @@ export default class ABViewDetail extends ABView {
 					.on('changeCursor', _logic.displayData);
 
 			}
-
-
-			Detail.adjust();
 
 		}
 
@@ -391,13 +361,13 @@ export default class ABViewDetail extends ABView {
 					}
 
 					if (field.key == "list" && field.settings.isMultiple == 0) {
-						let selected = field.settings.options.filter(function(options){
+						let selected = field.settings.options.filter(function (options) {
 							return options.id = val;
 						});
 						if (selected[0])
 							val = selected[0].text;
 					}
-					
+
 					if (field.key == "number") {
 						val = field.getNumberFormat(data[field.columnName]);
 					}

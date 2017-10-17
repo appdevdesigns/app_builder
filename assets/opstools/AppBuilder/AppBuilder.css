@@ -866,7 +866,7 @@ a.ab-delete-photo:hover {
 .ab-widget-header {
 	background-color: #DDD;
 }
-.ab-main-container .portlet_drag {
+.ab-main-container .widget_drag {
     position: absolute;
     z-index: 1;
     top: 0px;
@@ -878,10 +878,10 @@ a.ab-delete-photo:hover {
     height: 31px;
     color: #fff;
 }
-.ab-main-container .portlet_drag:hover {
+.ab-main-container .widget_drag:hover {
 	opacity: 0.8;
 }
-.ab-main-container .portlet_drag .webix_icon {
+.ab-main-container .widget_drag .webix_icon {
 	line-height: 28px;
     width: 33px;
     height: 33px;

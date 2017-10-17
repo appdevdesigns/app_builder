@@ -14,8 +14,7 @@ function L(key, altText) {
 
 
 var ABPropertyComponentDefaults = {
-	columns: 2,
-	rows: 6
+	columns: 2
 }
 
 
@@ -60,7 +59,6 @@ export default class ABViewContainer extends ABView {
 
 		// convert from "0" => 0
 		this.settings.columns = parseInt(this.settings.columns || 0);
-		this.settings.rows = parseInt(this.settings.rows || 0);
 
 	}
 
@@ -85,14 +83,21 @@ export default class ABViewContainer extends ABView {
 			component: App.unique(idBase + '_component')
 		}
 
-		var _ui = this.component(App, mode).ui;
-		_ui.id = ids.component;
 
+		var _ui = {
+			rows: [{
+				id: ids.component,
+				view: "dashboard",
+				gridColumns: this.settings.columns || ABPropertyComponentDefaults.columns
+			}]
+		};
 
 		var _init = (options) => {
 
 
 			var Dashboard = $$(ids.component);
+			webix.extend(Dashboard, webix.OverlayBox);
+
 
 			// attach all the .UI views:
 			this.views().forEach((child) => {
@@ -100,7 +105,11 @@ export default class ABViewContainer extends ABView {
 				var component = child.component(App);
 
 				Dashboard.addView({
+
 					view: 'widget',
+
+					// specific viewId to .name, it will be used to save view position
+					name: child.id,
 
 					body: {
 						rows: [
@@ -126,21 +135,35 @@ export default class ABViewContainer extends ABView {
 						]
 					},
 
-					dx: child.position.dx,
-					dy: child.position.dy,
-					x: child.position.x,
-					y: child.position.y
+					dx: child.position.dx || 1,
+					dy: child.position.dy || 1,
+					x: child.position.x || 0,
+					y: child.position.y || 0
+
 				});
 
-				// Initial component
+
+				// initial sub-component
 				component.init();
 
 			});
+
+
+			// listen onChange event
+			// NOTE: listen after populate views by .addView
+			if (this._onChangeId) Dashboard.detachEvent(this._onChangeId);
+			this._onChangeId = Dashboard.attachEvent("onChange", () => {
+				_logic.onChange();
+			});
+
+
+			// show "drop here" panel
+			_logic.showEmptyPlaceholder();
+
 		};
 
 
 		var _logic = {
-
 
 			/**
 			 * @method template()
@@ -185,13 +208,12 @@ export default class ABViewContainer extends ABView {
 
 							var Dashboard = $$(ids.component);
 
-							// remove UI of this component in template
-							var deletedElem = Dashboard.queryView({ viewId: id });
-							if (deletedElem)
-								Dashboard.destroyView(deletedElem);
 
-							// update/refresh template to ABView
-							_logic.refreshTemplate();
+							// remove UI of this component in template
+							var deletedElem = Dashboard.queryView({ name: id });
+							if (deletedElem)
+								Dashboard.removeView(deletedElem);
+
 
 							deletedView.destroy()
 								.then(() => {
@@ -200,11 +222,8 @@ export default class ABViewContainer extends ABView {
 									deletedView.emit('destroyed', deletedView);
 
 
-									// if we don't have any views, then place a "drop here" placeholder
-									if (Dashboard.getChildViews().length == 0) {
-										webix.extend(Dashboard, webix.OverlayBox);
-										Dashboard.showOverlay("<div class='drop-zone'><div>" + App.labels.componentDropZone + "</div></div>");
-									}
+									_logic.showEmptyPlaceholder();
+
 								})
 								.catch((err) => {
 									OP.Error.log('Error trying to delete selected View:', { error: err, view: deletedView })
@@ -242,27 +261,37 @@ export default class ABViewContainer extends ABView {
 				return false;
 			},
 
-			onAfterPortletMove: () => {
+			onChange: () => {
 
-				_logic.refreshTemplate();
+				var Dashboard = $$(ids.component);
+
+				var viewState = Dashboard.serialize();
+
+				// save view position state to views
+				this.views().forEach((v) => {
+
+					var state = viewState.filter((vs) => vs.name == v.id)[0];
+					if (state) {
+
+						v.position.x = state.x;
+						v.position.y = state.y;
+					}
+
+				});
 
 				// save template layout to ABPageView
 				this.save();
 
-				// // Reorder
-				// var viewId = active.config.id;
-				// var targetId = target.config.id;
-
-				// var toPosition = this._views.findIndex((v) => v.id == targetId);
-
-				// this.viewReorder(viewId, toPosition);
-
 			},
 
-			refreshTemplate: () => {
+			showEmptyPlaceholder: () => {
 
-				// get portlet template UI to ABView
-				this.template = $$(ids.component).getState();
+				var Dashboard = $$(ids.component);
+
+				// if we don't have any views, then place a "drop here" placeholder
+				if (Dashboard.getChildViews().length == 0) {
+					Dashboard.showOverlay("<div class='drop-zone'><div>" + App.labels.componentDropZone + "</div></div>");
+				}
 
 			}
 
@@ -299,11 +328,6 @@ export default class ABViewContainer extends ABView {
 				name: 'columns',
 				view: 'counter',
 				label: L('ab.components.container.columns', "*Columns"),
-			},
-			{
-				name: 'rows',
-				view: 'counter',
-				label: L('ab.components.container.rows', "*Rows"),
 			}
 		]);
 
@@ -314,8 +338,7 @@ export default class ABViewContainer extends ABView {
 
 		super.propertyEditorPopulate(ids, view);
 
-		$$(ids.columns).setValue(view.columns || ABPropertyComponentDefaults.columns);
-		$$(ids.rows).setValue(view.rows || ABPropertyComponentDefaults.rows);
+		$$(ids.columns).setValue(view.settings.columns || ABPropertyComponentDefaults.columns);
 
 	}
 
@@ -324,8 +347,7 @@ export default class ABViewContainer extends ABView {
 
 		super.propertyEditorValues(ids, view);
 
-		view.columns = $$(ids.columns).getValue();
-		view.rows = $$(ids.rows).getValue();
+		view.settings.columns = $$(ids.columns).getValue();
 
 	}
 
@@ -347,45 +369,7 @@ export default class ABViewContainer extends ABView {
 		var _ui = {
 			id: ids.component,
 			view: "dashboard",
-			gridColumns: this.settings.columns,
-			gridRows: this.settings.rows,
-		};
-
-
-		// make sure each of our child views get .init() called
-		var _init = (options) => {
-
-
-			var Dashboard = $$(ids.component);
-
-			// attach all the .UI views:
-			this.views().forEach((child) => {
-
-				var component = child.component(App);
-
-				Dashboard.addView({
-					view: 'layout',
-
-					body: component.ui,
-
-					dx: child.position.dx,
-					dy: child.position.dy,
-					x: child.position.x,
-					y: child.position.y
-				});
-
-
-				// Initial component
-				component.init();
-
-
-				// Trigger 'changePage' event to parent
-				child.removeListener('changePage', _logic.changePage)
-					.on('changePage', _logic.changePage);
-
-
-			});
-
+			gridColumns: this.settings.columns
 		};
 
 
@@ -397,6 +381,37 @@ export default class ABViewContainer extends ABView {
 
 		};
 
+
+		// make sure each of our child views get .init() called
+		var _init = (options) => {
+
+			var Dashboard = $$(ids.component);
+
+			// attach all the .UI views:
+			this.views().forEach((child) => {
+				var component = child.component(App);
+
+				Dashboard.addView({
+					view: 'layout',
+
+					rows: [component.ui],
+
+					dx: child.position.dx || 1,
+					dy: child.position.dy || 1,
+					x: child.position.x || 0,
+					y: child.position.y || 0
+				});
+
+				// Initial component
+				component.init();
+
+				// Trigger 'changePage' event to parent
+				child.removeListener('changePage', _logic.changePage)
+					.on('changePage', _logic.changePage);
+
+			});
+
+		};
 
 		return {
 			ui: _ui,
