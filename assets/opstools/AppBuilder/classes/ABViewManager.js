@@ -6,6 +6,7 @@
  */
 
 import ABView from "./views/ABView"
+import ABViewContainer from "./views/ABViewContainer"
 import ABViewDataCollection from "./views/ABViewDataCollection"
 import ABViewPage from "./views/ABViewPage"
 import ABViewLabel from "./views/ABViewLabel"
@@ -27,7 +28,6 @@ import ABViewFormCheckbox from "./views/ABViewFormCheckbox"
 import ABViewFormCustom from "./views/ABViewFormCustom"
 import ABViewFormDatepicker from "./views/ABViewFormDatepicker"
 import ABViewFormNumber from "./views/ABViewFormNumber"
-import ABViewFormPanel from "./views/ABViewFormPanel"
 import ABViewFormSelectSingle from "./views/ABViewFormSelectSingle"
 import ABViewFormTextbox from "./views/ABViewFormTextbox"
 
@@ -39,6 +39,7 @@ import ABViewFormTextbox from "./views/ABViewFormTextbox"
  */
 var Views = {};
 Views[ABView.common().key] = ABView;
+Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataCollection.common().key] = ABViewDataCollection;
 Views[ABViewPage.common().key] = ABViewPage;
 Views[ABViewLabel.common().key] = ABViewLabel;
@@ -60,7 +61,6 @@ Views[ABViewFormCheckbox.common().key] = ABViewFormCheckbox;
 Views[ABViewFormCustom.common().key] = ABViewFormCustom;
 Views[ABViewFormDatepicker.common().key] = ABViewFormDatepicker;
 Views[ABViewFormNumber.common().key] = ABViewFormNumber;
-Views[ABViewFormPanel.common().key] = ABViewFormPanel;
 Views[ABViewFormSelectSingle.common().key] = ABViewFormSelectSingle;
 Views[ABViewFormTextbox.common().key] = ABViewFormTextbox;
 // Views[ABViewForm.common().key] = ABViewForm;

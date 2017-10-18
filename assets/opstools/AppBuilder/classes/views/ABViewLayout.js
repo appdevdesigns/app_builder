@@ -6,7 +6,6 @@
  */
 
 import ABView from "./ABView"
-import ABViewFormPanel from "./ABViewFormPanel"
 import ABViewManager from "../ABViewManager"
 
 
@@ -380,11 +379,7 @@ export default class ABViewLayout extends ABView  {
 
 		var viewKey;
 
-		// if the layout is in form component, then it should add a form view.
-		if (this.parent.key == 'form')
-			viewKey = ABViewFormPanel.common().key;
-		else
-			viewKey = ABView.common().key;
+		viewKey = ABView.common().key;
 
 		this._views.push(ABViewManager.newView({ key: viewKey }, this.application, this));
 

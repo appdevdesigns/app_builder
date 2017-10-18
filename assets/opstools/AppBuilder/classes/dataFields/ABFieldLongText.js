@@ -233,7 +233,7 @@ class ABFieldLongText extends ABField {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		config.editor = 'text';  // '[edit_type]'   for your unique situation
-		config.sort = 'string' // '[sort_type]'   for your unique situation
+		// config.sort = 'string' // '[sort_type]'   for your unique situation
 
 		return config;
 	}

@@ -42,15 +42,19 @@ export default class ABView extends ABViewBase {
 		// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
 		// 		label:'',					// pulled from translation
 
+		//		position: {					// view state
+		//			x: 0,					// X position in webix.dashboard
+		//			y: 0,					// Y position in webix.dashboard
+		//			dx: 1,					// the number of column span
+		//			dy: 1					// the number of row span
+		//		}
+
 		//		settings: {					// unique settings for the type of field
 		//		},
 
 		// 		views:[],					// the child views contained by this view.
 
-		//		translations:[],
-
-		//		template: {					// UI template definition from portlet
-		// 		}
+		//		translations:[]
 		// 	}
 
 	}
@@ -219,12 +223,10 @@ export default class ABView extends ABViewBase {
 
 			// parent: this.parent,
 
+			position: this.position || {},
 			settings: this.settings || {},
 			translations: this.translations || [],
 			views: views,
-
-			// portlet template
-			template: this.template || {}
 
 		}
 	}
@@ -262,10 +264,13 @@ export default class ABView extends ABViewBase {
 		this._views = views;
 
 
-		this.template = values.template || {};
-
-
 		// convert from "0" => 0
+		if (this.position) {
+			this.position.x = parseInt(this.position.x || 0);
+			this.position.y = parseInt(this.position.y || 0);
+			this.position.dx = parseInt(this.position.dx || 1);
+			this.position.dy = parseInt(this.position.dy || 1);
+		}
 
 	}
 
@@ -364,11 +369,6 @@ export default class ABView extends ABViewBase {
 
 		var remainingViews = this.views(function (v) { return v.id != view.id; })
 		this._views = remainingViews;
-
-		// remove view in template
-		if (this.template) {
-			this.template
-		}
 
 		return this.save();
 	}
@@ -478,9 +478,6 @@ export default class ABView extends ABViewBase {
 			var Layout = $$(ids.component);
 
 			var allComponents = [];
-
-			// set Portlet layout template to webix.layout
-			Layout.setState(this.template);
 
 
 			App.eventIds = App.eventIds || {};
@@ -853,7 +850,7 @@ export default class ABView extends ABViewBase {
 			id: ids.component,
 			view: 'layout',
 			type: 'space',
-			rows: this.template.rows || []
+			rows: []
 		};
 
 
@@ -868,51 +865,11 @@ export default class ABView extends ABViewBase {
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
-
-			var Layout = $$(ids.component);
-
-			// attach all the .UI views:
-			this.views().forEach((child) => {
-
-				var component = child.component(App);
-
-				// get element in template
-				var elem = Layout.queryView({ viewId: child.id });
-				if (elem) {
-					// replace component to layout
-					webix.ui(component.ui, elem);
-				}
-				// add component to rows
-				else {
-					Layout.addView(component.ui);
-				}
-
-				// Initial component
-				component.init();
-
-				// Trigger 'changePage' event to parent
-				child.removeListener('changePage', _logic.changePage)
-					.on('changePage', _logic.changePage);
-
-			});
-
-			Layout.adjust();
-
 		};
-
-
-		var _logic = { 
-
-			changePage: (pageId) => {
-				this.changePage(pageId);
-			}
-		};
-
 
 		return {
 			ui: _ui,
-			init: _init,
-			logic: _logic
+			init: _init
 		}
 	}
 
@@ -931,7 +888,7 @@ export default class ABView extends ABViewBase {
 		// } else {
 
 		// views not allowed to drop onto this View:
-		var viewsToIgnore = ['view', 'page', 'formpanel', 'datacollection',
+		var viewsToIgnore = ['view', 'page', 'formpanel', 'datacollection', 'viewcontainer',
 			// not allowed Detail's widgets
 			'detailcheckbox', 'detailcustom', 'detailimage', 'detailselectivity', 'detailtext',
 			// not allowed Form's widgets

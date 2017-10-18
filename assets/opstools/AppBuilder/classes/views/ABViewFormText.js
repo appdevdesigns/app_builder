@@ -330,6 +330,8 @@ export default class ABViewFormText extends ABViewFormComponent  {
 	 */
 	component(App) {
 
+		var component = super.component(App);
+		var field = this.field();
 
 		var idBase = 'ABViewFormText_'+this.id;
 		var ids = {

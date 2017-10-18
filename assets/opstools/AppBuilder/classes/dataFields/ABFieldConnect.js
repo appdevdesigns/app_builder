@@ -40,7 +40,7 @@ var defaultValues = {
 };
 
 var ids = {
-	objectList: 'ab-new-connectObject-list-item',
+	linkObject: 'ab-new-connectObject-list-item',
 	objectCreateNew: 'ab-new-connectObject-create-new',
 
 	fieldLink: 'ab-add-field-link-from',
@@ -69,12 +69,12 @@ function populateSelect(populate, callback) {
 		return 0;
 	});
 
-	$$(ids.objectList).define("options", options);
-	$$(ids.objectList).refresh();
+	$$(ids.linkObject).define("options", options);
+	$$(ids.linkObject).refresh();
 	if (populate != null && populate == true) {
-		$$(ids.objectList).setValue(options[options.length - 1].id);
-		$$(ids.objectList).refresh();
-		var selectedObj = $$(ids.objectList).getList().getItem(options[options.length - 1].id);
+		$$(ids.linkObject).setValue(options[options.length - 1].id);
+		$$(ids.linkObject).refresh();
+		var selectedObj = $$(ids.linkObject).getList().getItem(options[options.length - 1].id);
 		if (selectedObj) {
 			var selectedObjLabel = selectedObj.value;
 			$$(ids.fieldLinkVia).setValue("<b>" + selectedObjLabel + "</b> entry.");
@@ -103,9 +103,9 @@ var ABFieldConnectComponent = new ABFieldComponent({
 			{
 				view: "richselect",
 				label: L('ab.dataField.connectObject.connectToObject', "*Connected to:"),
-				id: ids.objectList,
+				id: ids.linkObject,
 				disallowEdit: true,
-				name: 'objectList',
+				name: 'linkObject',
 				labelWidth: App.config.labelWidthLarge,
 				placeholder: L('ab.dataField.connectObject.connectToObjectPlaceholder', "*select object"),
 				// select: true,
@@ -266,20 +266,20 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 
 		clear: (ids) => {
-			// $$(ids.objectList).unselectAll();
-			$$(ids.objectList).setValue(defaultValues.linkObject);
+			// $$(ids.linkObject).unselectAll();
+			$$(ids.linkObject).setValue(defaultValues.linkObject);
 		},
 
 		isValid: (ids, isValid) => {
 
 			// validate require select linked object 
-			var selectedObjId = $$(ids.objectList).getValue();
+			var selectedObjId = $$(ids.linkObject).getValue();
 			if (!selectedObjId) {
-				webix.html.addCss($$(ids.objectList).$view, "webix_invalid");
+				webix.html.addCss($$(ids.linkObject).$view, "webix_invalid");
 				isValid = false;
 			}
 			else {
-				webix.html.removeCss($$(ids.objectList).$view, "webix_invalid");
+				webix.html.removeCss($$(ids.linkObject).$view, "webix_invalid");
 			}
 
 			return isValid;
@@ -287,8 +287,8 @@ var ABFieldConnectComponent = new ABFieldComponent({
 
 		show: (pass_ids) => {
 			// add objects to list 
-			// $$(pass_ids.objectList).clearAll();
-			// $$(pass_ids.objectList).parse(ABFieldConnectComponent.CurrentApplication.objects());
+			// $$(pass_ids.linkObject).clearAll();
+			// $$(pass_ids.linkObject).parse(ABFieldConnectComponent.CurrentApplication.objects());
 			populateSelect(false);
 
 			// show current object name
@@ -297,19 +297,10 @@ var ABFieldConnectComponent = new ABFieldComponent({
 		},
 
 		populate: (ids, values) => {
-			// select linked object in list
-			if (values.settings.linkObject) {
-				$$(ids.objectList).setValue(values.settings.linkObject);
-
-				// $$(ids.objectList).refresh();
-			}
 
 		},
 
 		values: (ids, values) => {
-
-			// get select linked object id
-			values.settings.linkObject = $$(ids.objectList).getValue();
 
 			return values;
 		}
@@ -388,10 +379,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldConnect
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, width) {
 		var config = super.columnHeader(isObjectWorkspace);
 
-		config.template = '<div class="connect-data-values"></div>';
+		if (typeof width != "undefined") {
+			config.template = '<div style="margin-left: '+width+'px" class="connect-data-values"></div>';			
+		} else {
+			config.template = '<div class="connect-data-values"></div>';
+		}
 
 		return config;
 	}
@@ -441,7 +436,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 		}, App, row);
 
 		// Listen event when selectivity value updates
-		if (domNode) {
+		if (domNode && row.id && node) {
 			domNode.addEventListener('change', (e) => {
 
 				// update just this value on our current object.model

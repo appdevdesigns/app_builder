@@ -47,7 +47,7 @@ var ABFieldUserDefaults = {
 }
 
 var defaultValues = {
-	editable: 0,
+	editable: 1,
 	isMultiple: 0,
 	isCurrentUser: 0
 };
@@ -176,48 +176,7 @@ class ABFieldUser extends ABFieldSelectivity {
 		this.settings.editable = parseInt(this.settings.editable);
 		this.settings.isMultiple = parseInt(this.settings.isMultiple);
 		this.settings.isCurrentUser = parseInt(this.settings.isCurrentUser);
-
-		this._users = function(config) {
-			if (typeof window._users == "undefined") {
-				OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
-					var items1 = data.map(function (item) {
-						return {
-							id: item.username,
-							text: item.username
-						}
-					});
-					var items2 = data.map(function (item) {
-						return {
-							id: item.username,
-							value: item.username
-						}
-					});
-					window._users = {
-						selectivity: items1,
-						webix: items2
-					};
-					if (this.settings.isMultiple) {
-						return window._users.selectivity;						
-					} else {
-						if (config != null) {
-							config.options = window._users.webix;
-						} else {
- 							return window._users.webix;
-						}
-					}
-				});							
-			} else {
-				if (this.settings.isMultiple) {
-					return window._users.selectivity;						
-				} else {
-					if (config != null) {
-						config.options = window._users.webix;
-					} else {
-						return window._users.webix;
-					}
-				}
-			}
-		}
+		
 		this._currentUser = function() {
 			if (typeof window._currentUser == "undefined") {
 				OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
@@ -242,8 +201,9 @@ class ABFieldUser extends ABFieldSelectivity {
 			}
 
 		}
+		var currentUser = this._currentUser();
+		
 	}
-
 
 	// return the default values for this DataField
 	static defaults() {
@@ -286,21 +246,26 @@ class ABFieldUser extends ABFieldSelectivity {
 	///
 
 	// return the grid column header definition for this instance of ABFieldUser
-	columnHeader(isObjectWorkspace) {
+	columnHeader(isObjectWorkspace, width) {
 		var config = super.columnHeader(isObjectWorkspace);
 
 		// Multiple select list
 		if (this.settings.isMultiple) {
-			config.template = '<div class="list-data-values"></div>';
+			if (typeof width != "undefined") {
+				config.template = '<div style="margin-left: '+width+'px" class="list-data-values"></div>';				
+			} else {
+				config.template = '<div class="list-data-values"></div>';
+			}
 		}
 		// Single select list
 		else {
-			if (this.settings.editable) {
+			if (this.settings.editable = 1) {
 				config.editor = 'richselect';
-				config.options = this._users(config);
+				this.getUsers().then(function (data) {
+					config.options = data;
+				});
 			}
 		}
-
 		return config;
 
 	}
@@ -308,23 +273,28 @@ class ABFieldUser extends ABFieldSelectivity {
 	/*
 	 * @function customDisplay
 	 * perform any custom display modifications for this field.  
-	 * @param {object} row is the {name=>value} hash of the current row of data.
+		 * @param {object} row is the {name=>value} hash of the current row of data.
 	 * @param {App} App the shared ui App object useful more making globally
 	 *					unique id references.
 	 * @param {HtmlDOM} node  the HTML Dom object for this field's display.
 	 */
-	customDisplay(row, App, node) {
+	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
+		
+		var readOnly = false;
+		if (editable != null && editable == false) {
+			readOnly = true;
+		}
 
 		if (this.settings.isMultiple) {
 
 			var domNode = node.querySelector('.list-data-values');
 
-			var readOnly = true;
+			// var readOnly = true;
 			var placeholder = "";
-			if (this.settings.editable) {
-				readOnly = false;
+			if (this.settings.editable && readOnly == false) {
+				// readOnly = false;
 				placeholder = L('ab.dataField.user.placeHolder', '*Select users');
 			}
 
@@ -332,36 +302,51 @@ class ABFieldUser extends ABFieldSelectivity {
 				multiple: true,
 				placeholder: placeholder,
 				data: row[this.columnName],
-				items: this._users(),
+				// items: this._users(),
+				ajax: {
+					url: 'It will call url in .getOptions function', // require
+					minimumInputLength: 0,
+					quietMillis: 0,
+					fetch: (url, init, queryOptions) => {
+						return this.getUsers().then(function (data) {
+							return {
+								results: data
+							};
+						});
+					}
+				},
 				readOnly: readOnly
 			}, App, row);
 
-			// Listen event when selectivity value updates
-			domNode.addEventListener('change', (e) => {
-				// update just this value on our current this.model
-				var values = {};
-				values[this.columnName] = this.selectivityGet(domNode);
+			if (domNode && row.id && node) {
+				// Listen event when selectivity value updates
+				domNode.addEventListener('change', (e) => {
+					// update just this value on our current this.model
+					var values = {};
+					values[this.columnName] = this.selectivityGet(domNode);
 
-				// pass null because it could not put empty array in REST api
-				if (values[this.columnName].length == 0)
-					values[this.columnName] = null;
+					// pass null because it could not put empty array in REST api
+					if (values[this.columnName].length == 0)
+						values[this.columnName] = [];
 
-				if (row.id) {
-					this.object.model().update(row.id, values)
-					.then(() => {
-						// update the client side data object as well so other data changes won't cause this save to be reverted
-						$$(node).updateItem(row.id, values);
-					})
-					.catch((err) => {
+					if (row.id) {
+						this.object.model().update(row.id, values)
+						.then(() => {
+							// update the client side data object as well so other data changes won't cause this save to be reverted
+							if ($$(node) && $$(node).updateItem)
+								$$(node).updateItem(row.id, values);
+						})
+						.catch((err) => {
 
-						node.classList.add('webix_invalid');
-						node.classList.add('webix_invalid_cell');
+							node.classList.add('webix_invalid');
+							node.classList.add('webix_invalid_cell');
 
-						OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
-					});
-				}
+							OP.Error.log('Error updating our entry.', { error: err, row: row, values: values });
+						});
+					}
 
-			}, false);
+				}, false);				
+			}
 		}
 
 	}
@@ -395,7 +380,11 @@ class ABFieldUser extends ABFieldSelectivity {
 	 */
 	defaultValue(values) {
 		if (this.settings.isCurrentUser) {
-			values[this.columnName] = this._currentUser();
+			if (this.settings.isMultiple) {
+				values[this.columnName] = window._currentUser.selectivity;				
+			} else {
+				values[this.columnName] = window._currentUser.webix;								
+			}
 		}
 	}
 
@@ -434,14 +423,30 @@ class ABFieldUser extends ABFieldSelectivity {
 		// .common() is used to create the display in the list
 		formComponentSetting.common = () => {
 			return {
-				key: this.settings.isMultiple ? 'fieldcustom' : 'selectsingle',
-				settings: {
-					options: this._users()
-				}
+				key: (this.settings.isMultiple ? 'fieldcustom' : 'selectsingle'),
+				options: this.settings.options.map(function (opt) {
+					return {
+						id: opt.id,
+						value: opt.text
+					}
+				})
 			}
 		};
 
-		return formComponentSetting; 
+		return formComponentSetting;
+	}
+	
+	detailComponent() {
+		
+		var detailComponentSetting = super.detailComponent();
+
+		detailComponentSetting.common = () => {
+			return {
+				key: (this.settings.isMultiple ? 'detailselectivity' : 'detailtext')
+			}
+		};
+
+		return detailComponentSetting;
 	}
 
 	getValue(application, object, fieldData, itemNode, rowData, item) {
@@ -449,21 +454,62 @@ class ABFieldUser extends ABFieldSelectivity {
 		if (this.settings.isMultiple) {
 			var domNode = itemNode.querySelector('.list-data-values');
 			values = this.selectivityGet(domNode);
-			// console.log(values);
 		} else {
 			values = $$(item).getValue();
 		}
 		return values;
 	}
 
+
 	setValue(item, value) {
-		if (this.settings.linkType == "many") {
-			var domNode = item.$view.querySelector('.list-data-values');
-			this.selectivitySet(value);
+		if (this.settings.isMultiple) {
+			// get selectivity dom
+			var domSelectivity = item.$view.querySelector('.list-data-values');
+			// set value to selectivity
+			this.selectivitySet(domSelectivity, value, this.App);
 		} else {
-			item.setValue(value);
+			item.setValue();
 		}
 	}
+	
+	getUsers() {
+		return new Promise(
+			(resolve, reject) => {
+				if (typeof window._users == "undefined") {
+					OP.Comm.Service.get({ url: "/appdev-core/siteuser" }).then((data) => {
+						var items1 = data.map(function (item) {
+							return {
+								id: item.username,
+								text: item.username
+							}
+						});
+						var items2 = data.map(function (item) {
+							return {
+								id: item.username,
+								value: item.username
+							}
+						});
+						window._users = {
+							selectivity: items1,
+							webix: items2
+						};
+						if (this.settings.isMultiple) {
+							resolve(window._users.selectivity);								
+						} else {
+							resolve(window._users.webix);
+						}
+					});							
+				} else {
+					if (this.settings.isMultiple) {
+						resolve(window._users.selectivity);								
+					} else {
+						resolve(window._users.webix);
+					}
+				}
+			}
+		);
+	}
+
 
 }
 

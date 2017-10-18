@@ -5,7 +5,8 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewContainer from "./ABViewContainer"
+import ABViewWidget from "./ABViewWidget"
 import ABViewManager from "../ABViewManager"
 
 
@@ -27,12 +28,12 @@ var ABViewTabDefaults = {
 
 
 
-export default class ABViewTab extends ABView {
+export default class ABViewTab extends ABViewWidget {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
 	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABView} parent the ABView this view is a child of. (can be null)
+	 * @param {ABViewWidget} parent the ABViewWidget this view is a child of. (can be null)
 	 */
 	constructor(values, application, parent) {
 
@@ -447,7 +448,7 @@ export default class ABViewTab extends ABView {
 	addTab(tabName) {
 
 		this._views.push(ABViewManager.newView({
-			key: ABView.common().key,
+			key: ABViewContainer.common().key,
 			label: tabName
 		}, this.application, this));
 

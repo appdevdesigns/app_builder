@@ -356,7 +356,10 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	padding-right: 5px;
 	/*max-width: 100px !important;*/
 }
-
+.customField .selectivity-multiple-input-container {
+	border: 1px solid #CCC;
+	border-radius: 6px;
+}
 .selectivity-single-select {
 	background: transparent !important;
 }
@@ -470,6 +473,9 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	display: none;
 }
 
+.ab-layout-view {
+	z-index: 999;
+}
 .ab-layout-view .ab-component-remove {
 	margin: -2px -2px 0 0;
 }
@@ -781,9 +787,10 @@ div.webix_item_tab {
 .list-data-values, .connect-data-values {
 	position: relative;
 }
-.customField .connect-data-values {
+/*
+.customField .connect-data-values, .customField .list-data-values {
 	display: inline-block;
-}
+}*/
 .ab-image-holder .webix_template {
 	position: relative;
 }
@@ -859,10 +866,10 @@ a.ab-delete-photo:hover {
 }
 
 /* Interface Editor */
-.ab-porlet-header {
+.ab-widget-header {
 	background-color: #DDD;
 }
-.ab-main-container .portlet_drag {
+.ab-main-container .widget_drag {
     position: absolute;
     z-index: 1;
     top: 0px;
@@ -874,10 +881,10 @@ a.ab-delete-photo:hover {
     height: 31px;
     color: #fff;
 }
-.ab-main-container .portlet_drag:hover {
+.ab-main-container .widget_drag:hover {
 	opacity: 0.8;
 }
-.ab-main-container .portlet_drag .webix_icon {
+.ab-main-container .widget_drag .webix_icon {
 	line-height: 28px;
     width: 33px;
     height: 33px;

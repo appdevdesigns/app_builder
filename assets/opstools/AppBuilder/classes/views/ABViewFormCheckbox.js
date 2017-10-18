@@ -118,6 +118,7 @@ export default class ABViewFormCheckbox extends ABViewFormField {
 	component(App) {
 
 		var component = super.component(App);
+		var field = this.field();
 
 		var idBase = 'ABViewFormCheckbox_' + this.id;
 		var ids = {

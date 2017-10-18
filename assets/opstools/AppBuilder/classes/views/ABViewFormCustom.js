@@ -140,7 +140,7 @@ export default class ABViewFormCustom extends ABViewFormField {
 		var template = (templateLabel + "#template#")
 			.replace(/#width#/g, settings.labelWidth)
 			.replace(/#label#/g, field.label)
-			.replace(/#template#/g, field.columnHeader().template);
+			.replace(/#template#/g, field.columnHeader(null, settings.labelWidth).template);
 
 		component.ui.id = ids.component;
 		component.ui.view = "template";
