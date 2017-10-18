@@ -29,6 +29,11 @@ var ABFieldStringDefaults = {
 }
 
 
+var defaultValues = {
+	textDefault: '',
+	supportMultilingual: 0
+};
+
 
 
 /**
@@ -63,10 +68,7 @@ var ABFieldStringComponent = new ABFieldComponent({
 	},
 
 	// defaultValues: the keys must match a .name of your elements to set it's default value.
-	defaultValues:{
-		'textDefault': '',
-		'supportMultilingual':0
-	},
+	defaultValues: defaultValues,
 
 	// rules: basic form validation rules for webix form entry.
 	// the keys must match a .name of your .elements for it to apply
