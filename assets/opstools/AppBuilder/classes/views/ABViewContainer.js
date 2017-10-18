@@ -36,7 +36,7 @@ export default class ABViewContainer extends ABView {
 	 */
 	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, ABViewDefaults);
+		super(values, application, parent, (defaultValues || ABViewDefaults));
 
 	}
 
@@ -58,7 +58,7 @@ export default class ABViewContainer extends ABView {
 		super.fromValues(values);
 
 		// convert from "0" => 0
-		this.settings.columns = parseInt(this.settings.columns || 0);
+		this.settings.columns = parseInt(this.settings.columns || ABPropertyComponentDefaults.columns);
 
 	}
 
@@ -135,10 +135,10 @@ export default class ABViewContainer extends ABView {
 						]
 					},
 
-					dx: child.position.dx || 1,
-					dy: child.position.dy || 1,
-					x: child.position.x || 0,
-					y: child.position.y || 0
+					dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
+					dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
+					x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
+					y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
 
 				});
 
@@ -293,7 +293,19 @@ export default class ABViewContainer extends ABView {
 					Dashboard.showOverlay("<div class='drop-zone'><div>" + App.labels.componentDropZone + "</div></div>");
 				}
 
+			},
+
+			validatePosition: (curPosition, minPosition, maxPosition) => {
+
+				if (curPosition < minPosition)
+					return minPosition;
+				if (curPosition > maxPosition)
+					return maxPosition;
+				else
+					return curPosition;
+
 			}
+
 
 		};
 
@@ -377,6 +389,17 @@ export default class ABViewContainer extends ABView {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
+			},
+
+			validatePosition: (curPosition, minPosition, maxPosition) => {
+
+				if (curPosition < minPosition)
+					return minPosition;
+				if (curPosition > maxPosition)
+					return maxPosition;
+				else
+					return curPosition;
+
 			}
 
 		};
@@ -396,10 +419,10 @@ export default class ABViewContainer extends ABView {
 
 					rows: [component.ui],
 
-					dx: child.position.dx || 1,
-					dy: child.position.dy || 1,
-					x: child.position.x || 0,
-					y: child.position.y || 0
+					dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
+					dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
+					x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
+					y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
 				});
 
 				// Initial component
