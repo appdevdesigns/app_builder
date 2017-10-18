@@ -187,6 +187,8 @@ export default class ABViewMenu extends ABViewWidget {
 
 		var pageTree = new webix.TreeCollection();
 		var application = view.application;
+		var currentPage = view.pageParent();
+		var parentPage = currentPage.pageParent();
 		
 		var addPage = function (page, index, parentId) {
 			pageTree.add(page, index, parentId);
@@ -196,16 +198,18 @@ export default class ABViewMenu extends ABViewWidget {
 			})
 		}
 		application.pages().forEach((p, index)=>{
-			addPage(p, index);
+			if ( (parentPage && p == parentPage) || p == currentPage ) {
+				addPage(p, index);				
+			}
 		})
 
 		$$(ids.pages).clearAll();
-		$$(ids.pages).data.unsync();
-		$$(ids.pages).data.sync(pageTree);
+		// $$(ids.pages).data.unsync();
+		$$(ids.pages).data.importData(pageTree);
 		$$(ids.pages).refresh();
-		$$(ids.pages).uncheckAll();
+		// $$(ids.pages).uncheckAll();
 		$$(ids.pages).openAll();
-
+		
 		// Select pages
 		if (view.settings.pages && view.settings.pages.forEach) {
 			view.settings.pages.forEach((pageId) => {
