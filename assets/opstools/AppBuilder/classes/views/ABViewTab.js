@@ -5,6 +5,7 @@
  *
  */
 
+import ABViewContainer from "./ABViewContainer"
 import ABViewWidget from "./ABViewWidget"
 import ABViewManager from "../ABViewManager"
 
@@ -447,7 +448,7 @@ export default class ABViewTab extends ABViewWidget {
 	addTab(tabName) {
 
 		this._views.push(ABViewManager.newView({
-			key: ABViewWidget.common().key,
+			key: ABViewContainer.common().key,
 			label: tabName
 		}, this.application, this));
 

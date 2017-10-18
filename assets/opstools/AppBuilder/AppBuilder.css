@@ -473,6 +473,9 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	display: none;
 }
 
+.ab-layout-view {
+	z-index: 999;
+}
 .ab-layout-view .ab-component-remove {
 	margin: -2px -2px 0 0;
 }

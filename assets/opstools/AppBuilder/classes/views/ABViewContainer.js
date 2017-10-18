@@ -58,7 +58,7 @@ export default class ABViewContainer extends ABView {
 		super.fromValues(values);
 
 		// convert from "0" => 0
-		this.settings.columns = parseInt(this.settings.columns || 0);
+		this.settings.columns = parseInt(this.settings.columns || ABPropertyComponentDefaults.columns);
 
 	}
 
