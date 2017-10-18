@@ -210,7 +210,7 @@ export default class ABViewMenu extends ABViewWidget {
 		// $$(ids.pages).uncheckAll();
 		$$(ids.pages).openAll();
 		
-]		// Select pages
+		// Select pages
 		if (view.settings.pages && view.settings.pages.forEach) {
 			view.settings.pages.forEach((pageId) => {
 
