@@ -37,6 +37,8 @@ module.exports = {
 
                 if (app) {
 
+                    app.json.objects = app.json.objects || [];
+
                     var indexObj = -1;
                     var updateObj = app.json.objects.filter(function (obj, index) {
 
@@ -86,6 +88,8 @@ module.exports = {
             .then(function (app) {
 
                 if (app) {
+
+                    app.json.objects = app.json.objects || [];
 
                     var indexObj = -1;
                     var updateObj = app.json.objects.filter(function (obj, index) {
@@ -137,6 +141,8 @@ module.exports = {
 
                 if (app) {
 
+                    app.json.pages = app.json.pages || [];
+
                     var indexPage = -1;
                     var updatePage = app.json.pages.filter(function (p, index) {
 
@@ -186,6 +192,8 @@ module.exports = {
             .then(function (app) {
 
                 if (app) {
+
+                    app.json.pages = app.json.pages || []
 
                     var indexPage = -1;
                     var updatePage = app.json.pages.filter(function (page, index) {
