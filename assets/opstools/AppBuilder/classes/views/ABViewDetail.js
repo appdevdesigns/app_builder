@@ -375,7 +375,8 @@ export default class ABViewDetail extends ABViewContainer {
 					}
 
 					// set value to each components
-					viewComponents[f.id].logic.setValue(val);
+					var vComponent = f.component(App);
+					vComponent.logic.setValue(val);
 
 				});
 
