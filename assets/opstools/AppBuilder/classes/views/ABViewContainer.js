@@ -36,7 +36,7 @@ export default class ABViewContainer extends ABView {
 	 */
 	constructor(values, application, parent, defaultValues) {
 
-		super(values, application, parent, ABViewDefaults);
+		super(values, application, parent, (defaultValues || ABViewDefaults));
 
 	}
 
