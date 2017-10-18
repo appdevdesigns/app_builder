@@ -424,7 +424,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 
 .ab-component-tools {
 	position: absolute;
-	right: 0;
+	right: 34px;
 	top: 0;
 }
 
@@ -870,7 +870,7 @@ a.ab-delete-photo:hover {
     position: absolute;
     z-index: 1;
     top: 0px;
-    right: 68px;
+    right: 0px;
     width: 33px;
     opacity: 1;
     cursor: move;
