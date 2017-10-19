@@ -63,6 +63,7 @@ export default class ABViewWidget extends ABView {
 			{
 				name: 'columnSpan',
 				view: 'counter',
+				min: 1,
 				label: L('ab.components.container.columnSpan', "*Column Span"),
 
 				hidden: true // TODO
@@ -70,6 +71,7 @@ export default class ABViewWidget extends ABView {
 			{
 				name: 'rowSpan',
 				view: 'counter',
+				min: 1,
 				label: L('ab.components.container.rowSpan', "*Row Span"),
 
 				hidden: true // TODO
