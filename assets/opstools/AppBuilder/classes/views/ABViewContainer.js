@@ -88,6 +88,7 @@ export default class ABViewContainer extends ABView {
 			rows: [{
 				id: ids.component,
 				view: "dashboard",
+				scroll: true,
 				gridColumns: this.settings.columns || ABPropertyComponentDefaults.columns
 			}]
 		};
@@ -381,6 +382,7 @@ export default class ABViewContainer extends ABView {
 		var _ui = {
 			id: ids.component,
 			view: "dashboard",
+			scroll: true,
 			gridColumns: this.settings.columns
 		};
 
