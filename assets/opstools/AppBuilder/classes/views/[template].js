@@ -5,7 +5,7 @@
  *
  */
 
-import ABView from "./ABView"
+import ABViewWidget from "./ABViewWidget"
 import ABPropertyComponent from "../ABPropertyComponent"
 
 function L(key, altText) {
@@ -20,14 +20,14 @@ var ABView[template]PropertyComponentDefaults = {
 
 
 var ABViewDefaults = {
-	key: 'label',		// {string} unique key for this view
+	key: '[template]',		// {string} unique key for this view
 	icon: 'font',		// {string} fa-[icon] reference for this view
-	labelKey: 'ab.components.label' // {string} the multilingual label key for the class label
+	labelKey: 'ab.components.[template]' // {string} the multilingual label key for the class label
 }
 
 
 
-export default class ABView[template] extends ABView  {
+export default class ABView[template] extends ABViewWidget  {
 
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
@@ -38,7 +38,7 @@ export default class ABView[template] extends ABView  {
 
     	super( values, application, parent, ABViewDefaults );
 
-    	OP.Multilingual.translate(this, this, ['text']);
+    	// OP.Multilingual.translate(this, this, ['text']);
 
   	}
 
@@ -61,10 +61,10 @@ export default class ABView[template] extends ABView  {
 	 */
 	toObj () {
 
-		OP.Multilingual.unTranslate(this, this, ['label', 'text']);
+		// OP.Multilingual.unTranslate(this, this, ['label', 'text']);
 
 		var obj = super.toObj();
-		obj.views = [];
+
 		return obj;
 	}
 
@@ -81,12 +81,12 @@ export default class ABView[template] extends ABView  {
 
     	// if this is being instantiated on a read from the Property UI,
     	// .text is coming in under .settings.label
-    	this.text = values.text || values.settings.text || '*text';
+    	// this.text = values.text || values.settings.text || '*text';
 
     	// this.settings.format = this.settings.format || ABViewLabelPropertyComponentDefaults.format;
 
     	// we are not allowed to have sub views:
-    	this._views = [];
+    	// this._views = [];
 
     	// convert from "0" => 0
     	// this.settings.format = parseInt(this.settings.format);
@@ -137,12 +137,13 @@ export default class ABView[template] extends ABView  {
 		var _init = (options) => {
 		}
 
-		// var _logic = {
-		// } 
+		var _logic = {
+		} 
 
 		return {
 			ui:_ui,
-			init:_init
+			init:_init,
+			logic:_logic
 		}
 	}
 
@@ -151,11 +152,6 @@ export default class ABView[template] extends ABView  {
 	//
 	// Property Editor
 	// 
-
-	// static propertyEditorComponent(App) {
-	// 	return ABViewPropertyComponent.component(App);
-	// }
-
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
@@ -258,9 +254,14 @@ export default class ABView[template] extends ABView  {
 		}
 
 
+		var _logic = {
+		}
+
+
 		return {
 			ui:_ui,
-			init:_init
+			init:_init,
+			logic:_logic
 		}
 	}
 

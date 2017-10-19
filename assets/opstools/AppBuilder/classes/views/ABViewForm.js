@@ -125,11 +125,12 @@ export default class ABViewForm extends ABViewContainer {
 			if (currView._views.length < 1) {
 
 				var fields = $$(ids.fields).find({});
-				fields.forEach((f) => {
+				fields.reverse();
+				fields.forEach((f, index) => {
 
 					if (!f.selected) {
 
-						_logic.addFieldToForm(f);
+						_logic.addFieldToForm(f, index);
 
 						// update item to UI list
 						f.selected = 1;
@@ -182,7 +183,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		};
 
-		_logic.addFieldToForm = (field) => {
+		_logic.addFieldToForm = (field, yPosition) => {
 
 			if (field == null)
 				return;
@@ -197,6 +198,9 @@ export default class ABViewForm extends ABViewContainer {
 			newView.settings = newView.settings || {};
 			newView.settings.fieldId = field.id;
 			// TODO : Default settings
+
+			if (yPosition != null)
+				newView.position.y = yPosition;
 
 			// add a new component
 			FormView._views.push(newView);
@@ -437,12 +441,25 @@ export default class ABViewForm extends ABViewContainer {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
+			},
+
+
+			validatePosition: (curPosition, minPosition, maxPosition) => {
+
+				if (curPosition < minPosition)
+					return minPosition;
+				if (curPosition > maxPosition)
+					return maxPosition;
+				else
+					return curPosition;
+
 			}
 
 		};
 
 		// attach all the .UI views:
-		this.views().forEach((child) => {
+		var subviews = this.views();
+		subviews.forEach((child) => {
 
 			var component = child.component(App);
 
@@ -453,10 +470,10 @@ export default class ABViewForm extends ABViewContainer {
 
 				rows: [component.ui],
 
-				dx: child.position.dx || 1,
-				dy: child.position.dy || 1,
-				x: child.position.x || 0,
-				y: child.position.y || 0
+				dx: _logic.validatePosition(child.position.dx, 1, this.settings.columns),
+				dy: _logic.validatePosition(child.position.dy, 1, subviews.length),
+				x: _logic.validatePosition(child.position.x, 0, this.settings.columns - 1),
+				y: _logic.validatePosition(child.position.y, 0, subviews.length - 1)
 			});
 
 			// Trigger 'changePage' event to parent

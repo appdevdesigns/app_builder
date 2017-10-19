@@ -162,8 +162,11 @@ export default class ABViewFormCustom extends ABViewFormField {
 
 		// make sure each of our child views get .init() called
 		component.init = (options) => {
+			var elem = $$(ids.component);
+			if (!elem) return;
+
 			var rowData = {},
-				node = $$(ids.component).$view;
+				node = elem.$view;
 
 			field.customDisplay(rowData, App, node);
 

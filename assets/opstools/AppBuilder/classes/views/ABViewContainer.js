@@ -88,6 +88,7 @@ export default class ABViewContainer extends ABView {
 			rows: [{
 				id: ids.component,
 				view: "dashboard",
+				scroll: true,
 				gridColumns: this.settings.columns || ABPropertyComponentDefaults.columns
 			}]
 		};
@@ -159,6 +160,8 @@ export default class ABViewContainer extends ABView {
 
 			// show "drop here" panel
 			_logic.showEmptyPlaceholder();
+
+			Dashboard.adjust();
 
 		};
 
@@ -339,6 +342,7 @@ export default class ABViewContainer extends ABView {
 			{
 				name: 'columns',
 				view: 'counter',
+				min:1,
 				label: L('ab.components.container.columns', "*Columns"),
 			}
 		]);
@@ -381,6 +385,7 @@ export default class ABViewContainer extends ABView {
 		var _ui = {
 			id: ids.component,
 			view: "dashboard",
+			scroll: true,
 			gridColumns: this.settings.columns
 		};
 
