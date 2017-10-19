@@ -504,7 +504,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	background: #EEE;
 }
 
-.ab_layout_pane.ab_interface_draggable .webix_list_item .ab-component-in-page:hover::before {
+/*.ab_layout_pane.ab_interface_draggable .webix_list_item .ab-component-in-page:hover::before {
 	background: #666;
 	content: "\f07d";
 }
@@ -526,7 +526,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	float: left;
 	margin: -2px 10px 0 -10px;
 	background: #CCC;
-}
+}*/
 
 .remove-tools {
 	
@@ -555,19 +555,20 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
     border: 3px dashed #CCC;
 	position: relative;
 }
+.widget_target {
+	z-index:3000;
+}
 .webix_overlay .drop-zone div {
     position: absolute;
     top: 50%;
-    /* adjust top up half the height of a single line */
     margin-top: -0.5em;
-    /* force content to always be a single line */
     overflow: hidden;
     white-space: nowrap;
     width: 100%;
     text-overflow: ellipsis;
 	color: #666;
 }
-.webix_drag_over::before {
+/*.webix_drag_over::before {
 	content: "";
 	display: block;
 	height: 50px;
@@ -575,7 +576,7 @@ div[view_id='ab-interface-layout-page'] .webix_list_item,
 	color: #999;
 	border: 2px dashed #CCC;
 	margin: -2px -10px 0;
-}
+}*/
 
 /* Header component */
 .ab-component-header {
