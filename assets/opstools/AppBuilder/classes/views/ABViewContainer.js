@@ -161,6 +161,8 @@ export default class ABViewContainer extends ABView {
 			// show "drop here" panel
 			_logic.showEmptyPlaceholder();
 
+			Dashboard.adjust();
+
 		};
 
 
