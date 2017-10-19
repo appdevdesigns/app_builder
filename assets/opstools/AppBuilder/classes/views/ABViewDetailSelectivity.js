@@ -156,6 +156,7 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 
 			// get selectivity dom
 			var domSelectivity = _logic.getDomSelectivity();
+			if (!domSelectivity) return;
 
 			// render selectivity to html dom
 			var selectivitySettings = {
@@ -169,7 +170,10 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 		var _logic = {
 
 			getDomSelectivity: () => {
-				return $$(ids.component).$view.getElementsByClassName(className)[0];
+				var elem = $$(ids.component);
+				if (!elem) return;
+
+				return elem.$view.getElementsByClassName(className)[0];
 			},
 
 			setValue: (val) => {
@@ -181,6 +185,7 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 
 				// get selectivity dom
 				var domSelectivity = _logic.getDomSelectivity();
+				if (!domSelectivity) return;
 
 				// set value to selectivity
 				field.selectivitySet(domSelectivity, val, App);
