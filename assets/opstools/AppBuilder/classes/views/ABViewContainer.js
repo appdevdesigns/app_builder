@@ -14,7 +14,7 @@ function L(key, altText) {
 
 
 var ABPropertyComponentDefaults = {
-	columns: 2
+	columns: 2,
 }
 
 
@@ -88,7 +88,6 @@ export default class ABViewContainer extends ABView {
 			rows: [{
 				id: ids.component,
 				view: "dashboard",
-				scroll: true,
 				gridColumns: this.settings.columns || ABPropertyComponentDefaults.columns
 			}]
 		};
@@ -342,7 +341,7 @@ export default class ABViewContainer extends ABView {
 			{
 				name: 'columns',
 				view: 'counter',
-				min:1,
+				min: 1,
 				label: L('ab.components.container.columns', "*Columns"),
 			}
 		]);
@@ -385,7 +384,6 @@ export default class ABViewContainer extends ABView {
 		var _ui = {
 			id: ids.component,
 			view: "dashboard",
-			scroll: true,
 			gridColumns: this.settings.columns
 		};
 
