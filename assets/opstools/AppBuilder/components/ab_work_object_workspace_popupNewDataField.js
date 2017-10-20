@@ -39,11 +39,13 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
         // Our webix UI definition:
         this.ui = {
-            view: "popup",
+            view: "window",
+            position:"center",
             id: ids.component,
-            modal: true,
             autoheight: true,
-            // maxHeight: 420,
+            maxHeight: 500,
+            minWidth: 350,
+            head:"Add new field",
 
             // ready: function () {
             //  console.error('ready() called!!!')
@@ -625,7 +627,8 @@ export default class AB_Work_Object_Workspace_PopupNewDataField extends OP.Compo
 
                 }
 
-                $$(ids.component).show($view);
+                // $$(ids.component).show($view);
+                $$(ids.component).show();
             },
 
 
