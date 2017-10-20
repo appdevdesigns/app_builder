@@ -130,7 +130,9 @@ export default class ABViewForm extends ABViewContainer {
 
 					if (!f.selected) {
 
-						_logic.addFieldToForm(f, index);
+						var yPosition = (fields.length - index - 1);
+
+						_logic.addFieldToForm(f, yPosition);
 
 						// update item to UI list
 						f.selected = 1;
@@ -260,7 +262,6 @@ export default class ABViewForm extends ABViewContainer {
 				view: 'counter',
 				label: L('ab.components.form.labelWidth', "*Label Width"),
 			}
-
 		]);
 
 	}
@@ -482,6 +483,9 @@ export default class ABViewForm extends ABViewContainer {
 
 		});
 
+		// Pull number of rows by get max of y position
+		var numberOfRows = Math.max.apply(null, fieldCells.map((c) => c.y)) + 1;
+
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
 			view: "scrollview",
@@ -492,10 +496,13 @@ export default class ABViewForm extends ABViewContainer {
 					id: ids.layout,
 					view: "dashboard",
 					gridColumns: this.settings.columns,
+					gridRows: numberOfRows,
+
 					cells: fieldCells
 				}]
 			}
-		}
+		};
+
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
