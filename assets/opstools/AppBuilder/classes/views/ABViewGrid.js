@@ -722,14 +722,16 @@ export default class ABViewGrid extends ABViewWidget  {
 					dc.bind($$(ids.component));
 
 					var editPage = this.settings.editPage;
+					var detailsPage = this.settings.detailsPage;
 					$$(ids.component).attachEvent("onItemClick", function (id, e, node) {
 
 						if (e.target.className.indexOf('eye') > -1) {
-							dc.setCursor(id);
+							var item = id;
+							_logic.changePage(dc, item, detailsPage);
 						}
 						else if (e.target.className.indexOf('pencil') > -1) {
 							var item = id;
-							_logic.changePage(dc, item);
+							_logic.changePage(dc, item, editPage);
 						}
 					});
 
@@ -962,9 +964,9 @@ export default class ABViewGrid extends ABViewWidget  {
 				_logic.clientSideDataFilter($$(DataTable.ui.id).data);
 			},
 			
-			changePage: (dc, id) => {
+			changePage: (dc, id, page) => {
 				dc.setCursor(id);
-				this.emit('changePage', this.settings.editPage);
+				this.emit('changePage', page);
 			},
 			
 			clientSideDataFilter: (data) => {
