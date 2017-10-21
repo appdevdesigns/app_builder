@@ -343,7 +343,7 @@ export default class ABViewChartPie extends ABViewChart {
 		if (!dc) return null;
 
 		var obj = dc.datasource;
-		
+
 		return obj.fields((f) => f.id == this.settings.columnLabel)[0]
 	}
 
@@ -352,7 +352,7 @@ export default class ABViewChartPie extends ABViewChart {
 		if (!dc) return null;
 
 		var obj = dc.datasource;
-		
+
 		return obj.fields((f) => f.id == this.settings.columnValue)[0]
 	}
 
@@ -387,8 +387,14 @@ export default class ABViewChartPie extends ABViewChart {
 
 			if (sumData[labelKey] == null) {
 
-				// TODO:
 				var label = labelKey;
+
+				// Get label of the connect field
+				if (labelCol.key == "connectObject") {
+					var relateValues = labelCol.pullRelationValues(item);
+					if (relateValues != null)
+						label = relateValues.text;
+				}
 
 				sumData[labelKey] = {
 					label: label,
