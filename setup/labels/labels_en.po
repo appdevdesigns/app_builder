@@ -1159,6 +1159,18 @@ msgstr "Drop Component Here"
 
 #. path: app_builder
 #. code: en
+#. key: ab.components.chart
+msgid "Chart"
+msgstr "Chart"
+
+#. path: app_builder
+#. code: en
+#. key: ab.components.chart.pie
+msgid "Pie"
+msgstr "Pie Chart"
+
+#. path: app_builder
+#. code: en
 #. key: ab.interface.component.confirmDeleteTitle
 msgid "Delete Component"
 msgstr "Delete Component"

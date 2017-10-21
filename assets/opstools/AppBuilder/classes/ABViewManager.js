@@ -6,6 +6,8 @@
  */
 
 import ABView from "./views/ABView"
+import ABViewChart from "./views/ABViewChart"
+import ABViewChartPie from "./views/ABViewChartPie"
 import ABViewContainer from "./views/ABViewContainer"
 import ABViewDataCollection from "./views/ABViewDataCollection"
 import ABViewPage from "./views/ABViewPage"
@@ -39,6 +41,7 @@ import ABViewFormTextbox from "./views/ABViewFormTextbox"
  */
 var Views = {};
 Views[ABView.common().key] = ABView;
+Views[ABViewChartPie.common().key] = ABViewChartPie;
 Views[ABViewContainer.common().key] = ABViewContainer;
 Views[ABViewDataCollection.common().key] = ABViewDataCollection;
 Views[ABViewPage.common().key] = ABViewPage;
