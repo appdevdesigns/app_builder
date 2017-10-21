@@ -14,7 +14,7 @@ function L(key, altText) {
 
 
 var ABViewChartPiePropertyComponentDefaults = {
-	dataObject: null,
+	dataSource: null,
 	columnValue: null,
 	columnLabel: null,
 	isPercentage: true,
@@ -40,18 +40,18 @@ export default class ABViewChartPie extends ABViewChart {
 	 * @param {ABApplication} application the application object this view is under
 	 * @param {ABView} parent the ABView this view is a child of. (can be null)
 	 */
-    constructor(values, application, parent) {
+	constructor(values, application, parent) {
 
-    	super( values, application, parent, ABViewDefaults );
+		super(values, application, parent, ABViewDefaults);
 
-    	OP.Multilingual.translate(this, this, ['pieLabel']);
+		OP.Multilingual.translate(this, this, ['pieLabel']);
 
-  	}
+	}
 
 
-  	static common() {
-  		return ABViewDefaults;
-  	}
+	static common() {
+		return ABViewDefaults;
+	}
 
 	///
 	/// Instance Methods
@@ -63,10 +63,12 @@ export default class ABViewChartPie extends ABViewChart {
 	 * initialze this object with the given set of values.
 	 * @param {obj} values
 	 */
-	fromValues (values) {
+	fromValues(values) {
 
 		super.fromValues(values);
 
+		this.settings.isPercentage = JSON.parse(this.settings.isPercentage || ABViewPropertyComponentDefaults.isPercentage);
+		this.settings.isLegend = JSON.parse(this.settings.isLegend || ABViewPropertyComponentDefaults.isLegend);
 	}
 
 
@@ -88,7 +90,7 @@ export default class ABViewChartPie extends ABViewChart {
 
 		var idBase = 'ABViewChartPieEditorComponent';
 		var ids = {
-			component: App.unique(idBase+'_component')
+			component: App.unique(idBase + '_component')
 		}
 		var component = this.component(App);
 		var _ui = component.ui;
@@ -98,12 +100,12 @@ export default class ABViewChartPie extends ABViewChart {
 			component.init(options);
 		}
 
-		var _logic = component.logic; 
+		var _logic = component.logic;
 
 		return {
-			ui:_ui,
-			init:_init,
-			logic:_logic
+			ui: _ui,
+			init: _init,
+			logic: _logic
 		}
 	}
 
@@ -116,15 +118,15 @@ export default class ABViewChartPie extends ABViewChart {
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 
 		var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
-		
+
 
 		// in addition to the common .label  values, we 
 		// ask for:
 		return commonUI.concat([
 			{
-				name: 'dataObject',
+				name: 'dataSource',
 				view: 'richselect',
-				label: L('ab.component.chart.pie.dataObject', '*Chart Data')
+				label: L('ab.component.chart.pie.dataSource', '*Chart Data')
 			},
 			{
 				name: 'columnValue',
@@ -165,15 +167,15 @@ export default class ABViewChartPie extends ABViewChart {
 	static propertyEditorPopulate(ids, view) {
 
 		super.propertyEditorPopulate(ids, view);
-		this.view = view;
-		
-		$$(ids.dataObject).setValue(view.settings.dataObject);
 
-		view.populateEditor(ids, view);
+		this.populateDataCollection(ids, view);
+		this.populateFieldOptions(ids, view);
+
+		$$(ids.dataSource).setValue(view.settings.dataSource);
 
 		// Make sure you set the values for this property editor in Webix
 		$$(ids.isPercentage).setValue(view.settings.isPercentage != null ? view.settings.isPercentage : ABViewChartPiePropertyComponentDefaults.isPercentage);
-		$$(ids.dataObject).setValue(view.settings.dataObject || ABViewChartPiePropertyComponentDefaults.dataObject);
+		$$(ids.dataSource).setValue(view.settings.dataSource || ABViewChartPiePropertyComponentDefaults.dataSource);
 		$$(ids.columnValue).setValue(view.settings.columnValue || ABViewChartPiePropertyComponentDefaults.columnValue);
 		$$(ids.columnLabel).setValue(view.settings.columnLabel || ABViewChartPiePropertyComponentDefaults.columnLabel);
 		$$(ids.pieType).setValue(view.settings.pieType != null ? view.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType);
@@ -187,11 +189,75 @@ export default class ABViewChartPie extends ABViewChart {
 
 		// Retrive the values of your properties from Webix and store them in the view
 		view.settings.isPercentage = $$(ids.isPercentage).getValue();
-		view.settings.dataObject = $$(ids.dataObject).getValue();
+		view.settings.dataSource = $$(ids.dataSource).getValue();
 		view.settings.columnValue = $$(ids.columnValue).getValue();
 		view.settings.columnLabel = $$(ids.columnLabel).getValue();
 		view.settings.pieType = $$(ids.pieType).getValue();
 		view.settings.isLegend = $$(ids.isLegend).getValue();
+
+		this.populateFieldOptions(ids, view);
+	}
+
+	static populateDataCollection(ids, view) {
+
+		// Set the objects you can choose from in the list
+		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
+			return {
+				id: dc.id,
+				value: dc.label
+			};
+		});
+
+		// Add a default option
+		var defaultOption = { id: '', value: L('ab.component.label.selectObject', '*Select an object') };
+		objectOptions.unshift(defaultOption);
+
+		$$(ids.dataSource).define("options", objectOptions);
+		$$(ids.dataSource).refresh();
+
+	}
+
+	static populateFieldOptions(ids, view) {
+
+		// clear options
+		$$(ids.columnLabel).define("options", []);
+		$$(ids.columnLabel).refresh();
+
+		$$(ids.columnValue).define("options", []);
+		$$(ids.columnValue).refresh();
+
+
+		var dc = view.dataCollection();
+		if (dc == null) return;
+
+		var obj = dc.datasource;
+		var allFields = obj.fields();
+		var numFields = obj.fields((f) => f.key == 'number');
+
+
+		var convertOption = (opt) => {
+			return {
+				id: opt.id,
+				value: opt.columnName,
+				key: opt.key
+			}
+		};
+
+		var columnLabelOptions = allFields.map(convertOption);
+		var columnValueOptions = numFields.map(convertOption);
+
+
+		var defaultOption = { id: '', value: L('ab.component.label.selectColumn', '*Select a column'), key: '' };
+		columnLabelOptions.unshift(defaultOption);
+		columnValueOptions.unshift(defaultOption);
+
+
+		$$(ids.columnLabel).define("options", columnLabelOptions);
+		$$(ids.columnLabel).refresh();
+
+		$$(ids.columnValue).define("options", columnValueOptions);
+		$$(ids.columnValue).refresh();
+
 	}
 
 
@@ -205,14 +271,14 @@ export default class ABViewChartPie extends ABViewChart {
 
 		// get a UI component for each of our child views
 		var viewComponents = [];
-		this.views().forEach((v)=>{
+		this.views().forEach((v) => {
 			viewComponents.push(v.component(App));
 		})
 
 
-		var idBase = 'ABViewChartPie_'+this.id;
+		var idBase = 'ABViewChartPie_' + this.id;
 		var ids = {
-			component: App.unique(idBase+'_component'),
+			component: App.unique(idBase + '_component'),
 		}
 
 		var _ui = {
@@ -220,28 +286,21 @@ export default class ABViewChartPie extends ABViewChart {
 			cols: []
 		};
 
+		var reportData = this.getReportData();
+
 		// if (this.settings.pieType != null ? JSON.parse(this.settings.pieType) : ABViewChartPiePropertyComponentDefaults.pieType) {
-			_ui.cols.push({
-				view: "chart",
-				type: this.settings.pieType != null ? this.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType,
-				value: "#value#",
-				color: "#color#",
-				legend: this.settings.isLegend == true ? "#label#" : "",
-				pieInnerText: "#value#",
-				shadow: 1,
-				height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartPiePropertyComponentDefaults.chartHeight,
-				width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
-				data:
-				[
-					{ value:"20", label:"Jan", color: "#ee3639" },
-					{ value:"30", label:"Feb", color: "#ee9e36" },
-					{ value:"50", label:"Mar", color: "#eeea36" },
-					{ value:"40", label:"Apr", color: "#a9ee36" },
-					{ value:"70", label:"May", color: "#36d3ee" },
-					{ value:"80", label:"Jun", color: "#367fee" },
-					{ value:"60", label:"Jul", color: "#9b36ee" }
-				]
-			});
+		_ui.cols.push({
+			view: "chart",
+			type: this.settings.pieType != null ? this.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType,
+			value: "#value#",
+			color: "#color#",
+			legend: this.settings.isLegend == true ? "#label#" : "",
+			pieInnerText: "#value#",
+			shadow: 1,
+			height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartPiePropertyComponentDefaults.chartHeight,
+			width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
+			data: reportData
+		});
 		// }
 
 		// make sure each of our child views get .init() called
@@ -254,9 +313,9 @@ export default class ABViewChartPie extends ABViewChart {
 
 
 		return {
-			ui:_ui,
-			init:_init,
-			logic:_logic
+			ui: _ui,
+			init: _init,
+			logic: _logic
 		}
 	}
 
@@ -269,117 +328,105 @@ export default class ABViewChartPie extends ABViewChart {
 		return [];
 	}
 
-	// Custom functions needed for UI
-
-	/*
-	 * uiFormatting
-	 * a common routine to properly update the displayed label
-	 * UI with the css formatting for the given .settings
-	 * @param {obj} _ui the current webix.ui definition
-	 * @return {obj} a properly formatted webix.ui definition
+	/**
+	 * @method dataCollection
+	 * return ABViewDataCollection of this form
+	 * 
+	 * @return {ABViewDataCollection}
 	 */
-	// uiFormatting(_ui) {
-	// 
-	// 	// add different css settings based upon it's format 
-	// 	// type.
-	// 	switch(parseInt(this.settings.format)) {
-	// 
-	// 		// normal
-	// 		case 0: 
-	// 			break;
-	// 
-	// 		// title
-	// 		case 1: 
-	// 			_ui.css = 'ab-component-header ab-ellipses-text';
-	// 			break;
-	// 
-	// 		// description
-	// 		case 2:
-	// 			_ui.css = 'ab-component-description ab-ellipses-text';
-	// 			break;
-	// 	}
-	// 
-	// 	return _ui;
-	// }
-
-	populateEditor(ids, view) {
-
-		// Set the objects you can choose from in the list
-		var defaultOption = {id:'', value:L('ab.component.label.selectObject', '*Select an object')};
-
-		var objectOptions = view.pageRoot().dataCollections().map((dc) => {
-			return {
-				id: dc.id,
-				value: dc.label
-			};
-		});
-		objectOptions.unshift(defaultOption);
-		$$(ids.dataObject).define("options", objectOptions);
-		$$(ids.dataObject).refresh();
-
-		if (view.settings.dataObject != '') {
-			$$(ids.dataObject).setValue(view.settings.dataObject);
-		} else {
-			$$(ids.dataObject).setValue('');
-		}
-		view.populateColumnEditor(ids,view);
+	dataCollection() {
+		return this.pageRoot().dataCollections((dc) => dc.id == this.settings.dataSource)[0];
 	}
 
-	populateColumnEditor(ids,view) {
+	labelField() {
+		var dc = this.dataCollection();
+		if (!dc) return null;
 
-		var defaultOption = {id:'', value:L('ab.component.label.selectColumn', '*Select a column'), key:''};
-		var dc = view.pageRoot().dataCollections().map((dc) => {
-			return {
-				id: dc.id,
-				value: dc.label,
-				datasource: dc.datasource
-			};
+		var obj = dc.datasource;
+		
+		return obj.fields((f) => f.id == this.settings.columnLabel)[0]
+	}
+
+	valueField() {
+		var dc = this.dataCollection();
+		if (!dc) return null;
+
+		var obj = dc.datasource;
+		
+		return obj.fields((f) => f.id == this.settings.columnValue)[0]
+	}
+
+
+	getReportData() {
+
+		var dc = this.dataCollection();
+		if (dc == null) return [];
+
+		var obj = dc.datasource;
+		var dInfo = dc.getData();
+
+		var colorList = ["#ee4339", "#ee9336", "#eed236", "#d3ee36", "#a7ee70", "#58dccd", "#36abee", "#476cee", "#a244ea", "#e33fc7"];
+
+		var labelCol = this.labelField();
+		var valueCol = this.valueField();
+
+		if (!labelCol || !valueCol) return [];
+
+		var labelColName = labelCol.columnName;
+		var numberColName = valueCol.columnName;
+
+
+		var result = [];
+		var sumData = {};
+		var sumNumber = 0;
+
+		dInfo.forEach((item) => {
+
+			var labelKey = item[labelColName];
+			var numberVal = item[numberColName];
+
+			if (sumData[labelKey] == null) {
+
+				// TODO:
+				var label = labelKey;
+
+				sumData[labelKey] = {
+					label: label,
+					value: 0
+				};
+			}
+
+			sumData[labelKey].value += numberVal;
+
+			sumNumber += numberVal;
+
 		});
 
-		var columnValueOptions = [];
-		var columnLabelOptions = [];
+		var index = 0;
+		for (var key in sumData) {
 
-		dc.forEach((data) => {
-			var value = data.datasource.fields((f) => f.key == 'number').map((opt) => {
-				return {
-					id: opt.id,
-					value: opt.columnName,
-					key: opt.key
-				}
+			var val = sumData[key].value;
+			if (val <= 0) continue;
+
+			// Display to percent values
+			if (this.settings.isPercentage) {
+				val = (val / sumNumber * 100);
+				val = Math.round(val * 100) / 100; // round decimal 2 digits
+				val = val + ' %';
+			}
+
+
+
+			result.push({
+				label: sumData[key].label,
+				value: val,
+				color: colorList[index % colorList.length]
 			});
-			columnValueOptions = value;
 
-			var label = data.datasource.fields().map((opt) => {
-				return {
-					id: opt.id,
-					value: opt.columnName,
-					key: opt.key
-				}
-			});
-			columnLabelOptions = label;
-		});
-
-		columnValueOptions.unshift(defaultOption);
-
-		$$(ids.columnValue).define("options", columnValueOptions);
-		$$(ids.columnValue).refresh();
-
-		if (view.settings.columnValue != '') {
-			$$(ids.columnValue).setValue(view.settings.columnValue);
-		} else {
-			$$(ids.columnValue).setValue('');
+			index += 1;
 		}
 
-		columnLabelOptions.unshift(defaultOption);
-
-		$$(ids.columnLabel).define("options", columnLabelOptions);
-		$$(ids.columnLabel).refresh();
-
-		if (view.settings.columnLabel != '') {
-			$$(ids.columnLabel).setValue(view.settings.columnLabel);
-		} else {
-			$$(ids.columnLabel).setValue('');
-		}
+		return result;
 	}
 
 }
