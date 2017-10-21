@@ -117,7 +117,7 @@ var ABFieldConnectComponent = new ABFieldComponent({
 							$$(ids.link1).hide();
 							$$(ids.link2).hide();
 						}
-						if (newV == oldV) return;
+						if (newV == oldV || newV == "") return;
 						var selectedObj = this.getList().getItem(newV);
 						if (selectedObj) {
 							var selectedObjLabel = selectedObj.value;
