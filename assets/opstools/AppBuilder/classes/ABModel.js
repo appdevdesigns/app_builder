@@ -178,11 +178,29 @@ export default class ABModel extends EventEmitter {
 
 						// if this object has some multilingual fields, translate the data:
 						var mlFields = this.object.multilingualFields();
-						if (mlFields.length) {
+
+						// if this object has some date fields, convert the data to date object:
+						var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
+						
+						if (mlFields.length > 0 || dateFields.length > 0) {
 
 							data.data.forEach((d) => {
-								OP.Multilingual.translate(d, d, mlFields);
-							})
+
+
+								if (mlFields.length) {
+									OP.Multilingual.translate(d, d, mlFields);
+								}
+
+
+								// convert the data to date object
+								dateFields.forEach((date) => {
+									if (d[date.columnName] != null)
+										d[date.columnName] = new Date(d[date.columnName]);
+								});
+
+
+							});
+
 						}
 
 						resolve(data);

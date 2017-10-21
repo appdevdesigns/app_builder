@@ -21,7 +21,8 @@ var ABViewPropertyComponentDefaults = {
 	objectWorkspace: {
 		filterConditions: [], // array of filters to apply to the data table
 		sortFields: [] // array of columns with their sort configurations
-	}
+	},
+	loadAll: false
 }
 
 
@@ -91,6 +92,22 @@ export default class ABViewDataCollection extends ABView {
 	/// Instance Methods
 	///
 
+
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABViewLabel instance
+	 * into the values needed for saving.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		var obj = super.toObj();
+
+		return obj;
+	}
+
 	/**
 	 * @method fromValues()
 	 *
@@ -108,6 +125,7 @@ export default class ABViewDataCollection extends ABView {
 			filterConditions: [],
 			sortFields: []
 		};
+		this.settings.loadAll = JSON.parse(this.settings.loadAll || ABViewPropertyComponentDefaults.loadAll);
 
 	}
 
@@ -130,7 +148,7 @@ export default class ABViewDataCollection extends ABView {
 		var ids = {
 			component: App.unique(idBase + '_component')
 		};
-		
+
 		var settings = {
 			allowDelete: 0,
 			detailsView: "",
@@ -144,7 +162,7 @@ export default class ABViewDataCollection extends ABView {
 		var _ui = DataTable.ui;
 
 		var _init = (options) => {
-			
+
 			DataTable.init({
 			});
 
@@ -158,7 +176,7 @@ export default class ABViewDataCollection extends ABView {
 
 				// bind a data collection to the display grid
 				this.bind($$(DataTable.ui.id));
-				
+
 				$$(DataTable.ui.id).adjust();
 			}
 
@@ -289,6 +307,20 @@ export default class ABViewDataCollection extends ABView {
 									}
 								}
 							]
+						},
+						{
+							cols: [
+								{
+									view: "label",
+									label: L("ab.component.datacollection.loadAll", "*Load all:"),
+									width: App.config.labelWidthLarge,
+								},
+								{
+									view: "checkbox",
+									name: "loadAll",
+									label: ""
+								}
+							]
 						}
 					]
 				}
@@ -323,6 +355,9 @@ export default class ABViewDataCollection extends ABView {
 
 		// initial populate of popups
 		this.populatePopupEditors(view);
+
+		// set .loadAll flag
+		$$(ids.loadAll).setValue(view.settings.loadAll != null ? view.settings.loadAll : ABViewPropertyComponentDefaults.loadAll);
 
 		// when a change is made in the properties the popups need to reflect the change
 		view.addListener('properties.updated', () => {
@@ -384,6 +419,9 @@ export default class ABViewDataCollection extends ABView {
 
 		// populate link fields
 		this.initLinkFieldOptions(ids, view);
+
+		// set loadAll flag
+		view.settings.loadAll = $$(ids.loadAll).getValue();
 
 		// refresh data collection
 		view.init();
@@ -594,6 +632,9 @@ export default class ABViewDataCollection extends ABView {
 
 			});
 
+			// load data to initial the data collection
+			this.loadData();
+
 		}
 
 		var linkDc = this.dataCollectionLink;
@@ -654,21 +695,6 @@ export default class ABViewDataCollection extends ABView {
 		var dc = this.__dataCollection;
 		var obj = this.datasource;
 
-		var defaultHeight = 0;
-		var minHeight = 0;
-		obj._fields.forEach(function (f) {
-			if (f.key == "image") {
-				if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
-					minHeight = parseInt(f.settings.imageHeight) + 20;
-				}
-			}
-		});
-		if (minHeight > 0) {
-			defaultHeight = minHeight;
-		}
-
-		// get ABModel
-		var model = obj.model();
 
 		if (component.config.view == 'datatable') {
 			if (dc) {
@@ -677,74 +703,30 @@ export default class ABViewDataCollection extends ABView {
 
 				component.data.sync(dc);
 
-				var wheres = this.settings.objectWorkspace.filterConditions || {};
-				var sorts = this.settings.objectWorkspace.sortConditions || {};
+				// Implement .onDataRequestonDataRequest for paging loading
+				if (!this.settings.loadAll) {
 
-				// get data to data collection
-				var cond = {
-					where: {
-						where: wheres,
-						sort: sorts,
-						height: defaultHeight
-					},
-					limit: 20,
-					skip: 0
-				}
-				var dateFields = [];
-				model.object._fields.forEach((item) => {
-					if (item.key == "date") dateFields.push(item.columnName);
-				});
-				model.findAll(cond)
-					.then((data) => {
-						data.data.forEach((item) => {
-							if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
-								item.$height = parseInt(item.properties.height);
-							} else if (defaultHeight > 0) {
-								item.$height = defaultHeight;
-							}
-							dateFields.forEach((key) => {
-								item[key] = new Date(item[key]);
+					component.___AD = component.___AD || {};
+					if (component.___AD.onDataRequestEvent) component.detachEvent(component.___AD.onDataRequestEvent);
+					component.___AD.onDataRequestEvent = component.attachEvent("onDataRequest", (start, count) => {
+
+						if (component.showProgress)
+							component.showProgress({ type: "icon" });
+
+						// load more data to the data collection
+						this.loadData(start, count)
+							.then((data) => {
+
+								if (component.hideProgress)
+									component.hideProgress();
+
 							});
-						});
-						dc.parse(data);
+
+						return false;	// <-- prevent the default "onDataRequest"
 					});
 
-				component.___AD = component.___AD || {};
-				if (component.___AD.onDataRequestEvent) {
-					component.detachEvent(component.___AD.onDataRequestEvent);
 				}
-				component.attachEvent("onDataRequest", function (start, count) {
-					var cond = {
-						where: {
-							where: wheres,
-							sort: sorts,
-							height: defaultHeight
-						},
-						limit: count,
-						skip: start
-					}
 
-					if (component.showProgress)
-						component.showProgress({ type: "icon" });
-
-					model.findAll(cond)
-						.then((data) => {
-							data.data.forEach((item) => {
-								if (item.properties != null && item.properties.height != "undefined" && parseInt(item.properties.height) > 0) {
-									item.$height = parseInt(item.properties.height);
-								} else if (defaultHeight > 0) {
-									item.$height = defaultHeight;
-								}
-							});
-							dc.parse(data);
-
-							if (component.hideProgress)
-								component.hideProgress();
-
-						})
-
-					return false;	// <-- prevent the default "onDataRequest"
-				});
 			} else {
 				component.data.unsync();
 			}
@@ -785,6 +767,82 @@ export default class ABViewDataCollection extends ABView {
 		}
 		else {
 			return null;
+		}
+
+	}
+
+	loadData(start, limit) {
+
+		var obj = this.datasource;
+		var model = obj.model();
+		var dc = this.__dataCollection;
+
+		if (obj == null || model == null || dc == null)
+			return Promise.resolve([]);
+
+		var wheres = this.settings.objectWorkspace.filterConditions || {};
+		var sorts = this.settings.objectWorkspace.sortConditions || {};
+
+		// calculate default value of $height of rows
+		var defaultHeight = 0;
+		var minHeight = 0;
+		var imageFields = obj.fields((f) => f.key == 'image');
+		imageFields.forEach(function (f) {
+			if (parseInt(f.settings.useHeight) == 1 && parseInt(f.settings.imageHeight) > minHeight) {
+				minHeight = parseInt(f.settings.imageHeight) + 20;
+			}
+		});
+		if (minHeight > 0) {
+			defaultHeight = minHeight;
+		}
+
+		// set query condition
+		var cond = {
+			where: {
+				where: wheres,
+				sort: sorts,
+				height: defaultHeight
+			},
+			limit: limit || 20,
+			skip: start || 0
+		};
+
+		// load all data
+		if (this.settings.loadAll) {
+			delete cond.limit;
+			delete cond.skip;
+		}
+
+		// get data to data collection
+		return model.findAll(cond)
+			.then((data) => {
+
+				data.data.forEach((d) => {
+
+					// define $height of rows to render in webix elements
+					if (d.properties != null && d.properties.height != "undefined" && parseInt(d.properties.height) > 0) {
+						d.$height = parseInt(d.properties.height);
+					} else if (defaultHeight > 0) {
+						d.$height = defaultHeight;
+					}
+
+				});
+
+				dc.parse(data);
+
+			});
+
+	}
+
+	getData(filter) {
+
+		var dc = this.__dataCollection;
+		if (dc) {
+
+			return dc.find(filter || {});
+		}
+		else {
+			return [];
 		}
 
 	}

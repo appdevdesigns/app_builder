@@ -165,7 +165,7 @@ module.exports =  class ABObjectBase {
 	/**
 	 * @method connectFields()
 	 *
-	 * return an array of the ABFields that is connect object fields.
+	 * return an array of the ABFieldConnect that is connect object fields.
 	 *
 	 * @return {array}
 	 */
@@ -173,6 +173,7 @@ module.exports =  class ABObjectBase {
 
 		return this.fields(function(f) { return f.key == 'connectObject'; });
 	}
+
 
 
 
