@@ -20,8 +20,11 @@ var ABViewChartPiePropertyComponentDefaults = {
 	isPercentage: true,
 	pieType: 'pie',
 	isLegend: true,
-	chartWidth: 600,
-	chartHeight: 400
+	// chartWidth: 600,
+	// chartHeight: 400,
+	innerFontSize: 12,
+	labelFontSize: 12,
+
 }
 
 
@@ -67,8 +70,15 @@ export default class ABViewChartPie extends ABViewChart {
 
 		super.fromValues(values);
 
-		this.settings.isPercentage = JSON.parse(this.settings.isPercentage || ABViewPropertyComponentDefaults.isPercentage);
-		this.settings.isLegend = JSON.parse(this.settings.isLegend || ABViewPropertyComponentDefaults.isLegend);
+		this.settings.isPercentage = JSON.parse(this.settings.isPercentage || ABViewChartPiePropertyComponentDefaults.isPercentage);
+		this.settings.isLegend = JSON.parse(this.settings.isLegend || ABViewChartPiePropertyComponentDefaults.isLegend);
+
+		// this.settings.chartWidth = parseInt(this.settings.chartWidth || ABViewChartPiePropertyComponentDefaults.chartWidth);
+		// this.settings.chartHeight = parseInt(this.settings.chartHeight || ABViewChartPiePropertyComponentDefaults.chartHeight);
+
+		this.settings.innerFontSize = parseInt(this.settings.innerFontSize || ABViewChartPiePropertyComponentDefaults.innerFontSize);
+		this.settings.labelFontSize = parseInt(this.settings.labelFontSize || ABViewChartPiePropertyComponentDefaults.labelFontSize);
+
 	}
 
 
@@ -129,16 +139,6 @@ export default class ABViewChartPie extends ABViewChart {
 				label: L('ab.component.chart.pie.dataSource', '*Chart Data')
 			},
 			{
-				name: 'columnValue',
-				view: 'richselect',
-				label: L('ab.component.chart.pie.columnValue', '*Value Column')
-			},
-			{
-				name: 'columnLabel',
-				view: 'richselect',
-				label: L('ab.component.chart.pie.columnLabel', '*Label Column')
-			},
-			{
 				name: 'pieType',
 				view: 'richselect',
 				label: L('ab.component.chart.pie.pieType', '*Chart Type'),
@@ -147,6 +147,40 @@ export default class ABViewChartPie extends ABViewChart {
 					{ id: 'pie3D', value: L('ab.component.chart.pie.pie3d', '*Pie3D') },
 					{ id: 'donut', value: L('ab.component.chart.pie.donut', '*Donut') }
 				]
+			},
+			{
+				name: 'columnLabel',
+				view: 'richselect',
+				label: L('ab.component.chart.pie.columnLabel', '*Label Column')
+			},
+			{
+				name: 'columnValue',
+				view: 'richselect',
+				label: L('ab.component.chart.pie.columnValue', '*Value Column')
+			},
+			// {
+			// 	name: 'chartWidth',
+			// 	view: 'counter',
+			// 	min: 1,
+			// 	label: L('ab.component.chart.pie.chartWidth', '*Width')
+			// },
+			// {
+			// 	name: 'chartHeight',
+			// 	view: 'counter',
+			// 	min: 1,
+			// 	label: L('ab.component.chart.pie.chartHeight', '*Height')
+			// },
+			{
+				name: 'innerFontSize',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.pie.innerFontSize', '*Inner Font Size')
+			},			
+			{
+				name: 'labelFontSize',
+				view: 'counter',
+				min: 1,
+				label: L('ab.component.chart.pie.labelFontSize', '*Label Font Size')
 			},
 			{
 				name: 'isPercentage',
@@ -178,6 +212,10 @@ export default class ABViewChartPie extends ABViewChart {
 		$$(ids.dataSource).setValue(view.settings.dataSource || ABViewChartPiePropertyComponentDefaults.dataSource);
 		$$(ids.columnValue).setValue(view.settings.columnValue || ABViewChartPiePropertyComponentDefaults.columnValue);
 		$$(ids.columnLabel).setValue(view.settings.columnLabel || ABViewChartPiePropertyComponentDefaults.columnLabel);
+		// $$(ids.chartWidth).setValue(view.settings.chartWidth != null ? view.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth);
+		// $$(ids.chartHeight).setValue(view.settings.chartHeight != null ? view.settings.chartHeight : ABViewChartPiePropertyComponentDefaults.chartHeight);
+		$$(ids.innerFontSize).setValue(view.settings.innerFontSize != null ? view.settings.innerFontSize : ABViewChartPiePropertyComponentDefaults.innerFontSize);
+		$$(ids.labelFontSize).setValue(view.settings.labelFontSize != null ? view.settings.labelFontSize : ABViewChartPiePropertyComponentDefaults.labelFontSize);
 		$$(ids.pieType).setValue(view.settings.pieType != null ? view.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType);
 		$$(ids.isLegend).setValue(view.settings.isLegend != null ? view.settings.isLegend : ABViewChartPiePropertyComponentDefaults.isLegend);
 	}
@@ -194,6 +232,10 @@ export default class ABViewChartPie extends ABViewChart {
 		view.settings.columnLabel = $$(ids.columnLabel).getValue();
 		view.settings.pieType = $$(ids.pieType).getValue();
 		view.settings.isLegend = $$(ids.isLegend).getValue();
+		// view.settings.chartWidth = $$(ids.chartWidth).getValue();
+		// view.settings.chartHeight = $$(ids.chartHeight).getValue();
+		view.settings.innerFontSize = $$(ids.innerFontSize).getValue();
+		view.settings.labelFontSize = $$(ids.labelFontSize).getValue();
 
 		this.populateFieldOptions(ids, view);
 	}
@@ -294,11 +336,11 @@ export default class ABViewChartPie extends ABViewChart {
 			type: this.settings.pieType != null ? this.settings.pieType : ABViewChartPiePropertyComponentDefaults.pieType,
 			value: "#value#",
 			color: "#color#",
-			legend: this.settings.isLegend == true ? "#label#" : "",
-			pieInnerText: "#value#",
+			legend: this.settings.isLegend == true ? "<div style='font-size:" + this.settings.labelFontSize + "px;'>#label#</div>" : "",
+			pieInnerText: "<div style='font-size:" + this.settings.innerFontSize + "px;'>#value#</div>",
 			shadow: 1,
-			height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartPiePropertyComponentDefaults.chartHeight,
-			width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
+			// height: this.settings.chartHeight != null ? this.settings.chartHeight : ABViewChartPiePropertyComponentDefaults.chartHeight,
+			// width: this.settings.chartWidth != null ? this.settings.chartWidth : ABViewChartPiePropertyComponentDefaults.chartWidth,
 			data: reportData
 		});
 		// }
@@ -343,7 +385,7 @@ export default class ABViewChartPie extends ABViewChart {
 		if (!dc) return null;
 
 		var obj = dc.datasource;
-
+		
 		return obj.fields((f) => f.id == this.settings.columnLabel)[0]
 	}
 
@@ -352,7 +394,7 @@ export default class ABViewChartPie extends ABViewChart {
 		if (!dc) return null;
 
 		var obj = dc.datasource;
-
+		
 		return obj.fields((f) => f.id == this.settings.columnValue)[0]
 	}
 
@@ -383,10 +425,11 @@ export default class ABViewChartPie extends ABViewChart {
 		dInfo.forEach((item) => {
 
 			var labelKey = item[labelColName];
-			var numberVal = item[numberColName];
+			var numberVal = parseFloat(item[numberColName]);
 
 			if (sumData[labelKey] == null) {
 
+				// TODO:
 				var label = labelKey;
 
 				// Get label of the connect field
