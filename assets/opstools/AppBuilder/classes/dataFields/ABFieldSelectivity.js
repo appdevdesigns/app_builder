@@ -48,7 +48,31 @@ export default class ABFieldSelectivity extends ABField {
 		// Render selectivity
 		var selectivityInput;
 		if (settings.multiple) {
+			settings.templates = {
+				multipleSelectedItem: function(options) {
+			        var extraClass = options.highlighted ? ' highlighted' : '';
+			        return (
+			            '<span class="selectivity-multiple-selected-item' +
+			            	extraClass +
+			            	'" ' +
+							'style="background-color:' +
+							options.hex +
+							' !important;"' +
+			            	'data-item-id="' +
+			            	options.id +
+			            '">' +
+			            (options.removable
+			                ? '<a class="selectivity-multiple-selected-item-remove">' +
+			                  '<i class="fa fa-remove"></i>' +
+			                  '</a>'
+			                : '') +
+			            	options.text +
+			            '</span>'
+			        );
+			    }
+			}
 			selectivityInput = new Selectivity.Inputs.Multiple(settings);
+
 			domNode.selectivity = selectivityInput;
 			this.selectivitySetBadge(domNode, App, row);
 		}

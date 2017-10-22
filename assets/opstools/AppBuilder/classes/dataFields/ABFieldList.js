@@ -43,12 +43,20 @@ var ABFieldListDefaults = {
 		} else {
 			return true;
 		}
+	},
+	hasColors: (field) => {
+		if (field.settings.hasColors) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 };
 
 var defaultValues = {
 	isMultiple: 0,
+	hasColors: 0,
 	options: [],
 	singleDefault: 'none',
 	multipleDefault: []
@@ -56,21 +64,64 @@ var defaultValues = {
 
 var ids = {
 	isMultiple: 'ab-list-multiple-option',
+	hasColors: 'ab-list-colors-option',
 	singleDefault: 'ab-list-single-default',
 	multipleDefault: 'ab-list-multiple-default',
-	options: 'ab-list-option'
+	options: 'ab-list-option',
+	colorboard: 'ab-colorboard'
 };
+
+var colors = [
+	["#FF9800", "#F44336", "#E91E63"],
+	["#9C27B0", "#673AB7", "#3F51B5"],
+	["#2196F3", "#03A9F4", "#00BCD4"]
+];
 
 // TODO : use to render selectivity to set default values
 var selectivityRender = new ABFieldSelectivity({
 	settings: {}
 }, {}, {});
 
+function getNextHex() {
+	var options = $$(ids.options);
+	var usedColors = [];
+	options.data.each(function(item) {
+		usedColors.push(item.hex);
+	})
+	var allColors = [];
+	colors.forEach(function(c) {
+		if (typeof c == "object") {
+			c.forEach(function(j) {
+				allColors.push(j);
+			});
+		}
+	});
+	var newHex = "#3498db";
+	for (var i = 0; i < allColors.length; i++) {
+		if (usedColors.indexOf(allColors[i]) == -1) {
+			newHex = allColors[i];
+			break;
+		}
+	}
+	return newHex;
+}
+
+function toggleColorControl(value) {
+	var colorPickers = $$(ids.options).$view.querySelectorAll(".ab-color-picker");
+	colorPickers.forEach(function (itm) {
+		if (value == 1)
+			itm.classList.remove("hide");
+		else
+			itm.classList.add("hide");
+	})
+}
+
 function updateDefaultList(ids, settings = {}) {
 	var optList = $$(ids.options).find({}).map(function (opt) {
 		return {
 			id: opt.id,
-			value: opt.value
+			value: opt.value,
+			hex: opt.hex
 		}
 	});
 
@@ -83,7 +134,8 @@ function updateDefaultList(ids, settings = {}) {
 		items: optList.map(function (opt) {
 			return {
 				id: opt.id,
-				text: opt.value
+				text: opt.value,
+				hex: opt.hex
 			}
 		})
 	});
@@ -139,21 +191,64 @@ var ABFieldListComponent = new ABFieldComponent({
 					}
 				}
 			},
+			{
+				view: "checkbox",
+				name: "hasColors",
+				id: ids.hasColors,
+				labelRight: L('ab.dataField.list.hasColors', 'Customize Colors'),
+				labelWidth: 0,
+				value: false,
+				on: {
+					onChange: (newV, oldV) => {
+						if (newV == oldV) return false;
+					
+						toggleColorControl(newV);
+					}
+				}
+			},
 			{ view: "label", label: "<b>Options</b>" },
 			{
 				id: ids.options,
 				name: 'options',
+				css: 'padList',
 				view: App.custom.editlist.view,
-				template: "<div style='position: relative;'>#value#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
+				template: "<div style='position: relative;'><i class='ab-color-picker fa fa-lg fa-chevron-circle-down' style=\'color:#hex#\'></i> #value#<i class='ab-new-field-remove fa fa-remove' style='position: absolute; top: 7px; right: 7px;'></i></div>",
 				autoheight: true,
 				drag: true,
 				editable: true,
+				hex: "",
 				editor: "text",
 				editValue: "value",
 				onClick: {
 					"ab-new-field-remove": function (e, itemId, trg) {
 						// Remove option item
 						$$(ids.options).remove(itemId);
+					},
+					"ab-color-picker": function (e, itemId, trg) {
+						// alert("open color picker");
+						var item = itemId;
+						webix.ui({
+							id:ids.colorboard,
+							view:"popup", 
+							body:{
+								view:"colorboard",
+								id:"color",
+								width:100,
+								height:100,
+								palette:colors,
+								left:100,
+								top:100,
+								on: {
+									onSelect: (hex) => {
+										var vals = $$(ids.options).getItem(item);
+										vals.hex = hex;
+										$$(ids.options).updateItem(item, vals);
+										$$(ids.colorboard).hide();
+									}
+								}
+							}
+						}).show(trg, {x:-7});
+						return false;
 					}
 				},
 				on: {
@@ -165,6 +260,9 @@ var ABFieldListComponent = new ABFieldComponent({
 					},
 					onAfterDelete: () => {
 						updateDefaultList(ids, field.settings);
+					},
+					onAfterRender: () => {
+						toggleColorControl($$(ids.hasColors).getValue());
 					}
 				}
 			},
@@ -173,7 +271,8 @@ var ABFieldListComponent = new ABFieldComponent({
 				value: "Add new option",
 				click: function () {
 					var itemId = webix.uid();
-					$$(ids.options).add({ id: itemId, value: '' }, $$(ids.options).count());
+					var nextHex = getNextHex();
+					$$(ids.options).add({ id: itemId, value: '', hex: nextHex }, $$(ids.options).count());
 					$$(ids.options).edit(itemId);
 				}
 			},
@@ -221,6 +320,7 @@ var ABFieldListComponent = new ABFieldComponent({
 
 		clear: (ids) => {
 			$$(ids.isMultiple).setValue(0);
+			$$(ids.hasColors).setValue(0);
 			$$(ids.options).clearAll();
 
 			$$(ids.singleDefault).define('options', [
@@ -243,7 +343,8 @@ var ABFieldListComponent = new ABFieldComponent({
 			var opts = field.settings.options.map(function (opt) {
 				return {
 					id: opt.id,
-					value: opt.text
+					value: opt.text,
+					hex: opt.hex
 				}
 			});
 			$$(ids.options).parse(opts);
@@ -261,7 +362,8 @@ var ABFieldListComponent = new ABFieldComponent({
 			values.settings.options = $$(ids.options).find({}).map(function (opt) {
 				return {
 					id: opt.id,
-					text: opt.value
+					text: opt.value,
+					hex: opt.hex
 				}
 			});
 
@@ -341,6 +443,7 @@ class ABFieldList extends ABFieldSelectivity {
 		}
 
 		this.settings.isMultiple = parseInt(this.settings.isMultiple);
+		this.settings.hasColors = parseInt(this.settings.hasColors);
 
 	}
 
@@ -393,7 +496,8 @@ class ABFieldList extends ABFieldSelectivity {
 			config.options = this.settings.options.map(function (opt) {
 				return {
 					id: opt.id,
-					value: opt.text
+					value: opt.text,
+					hex: opt.hex
 				};
 			});
 		}
@@ -429,6 +533,12 @@ class ABFieldList extends ABFieldSelectivity {
 			var selectedData = [];
 			if (row[this.columnName] != null) {
 				selectedData = row[this.columnName];
+			}
+
+			if (this.settings.hasColors == 0) {
+				selectedData.forEach(function(i) {
+					i.hex = "";
+				});
 			}
 
 			// Render selectivity
@@ -556,7 +666,8 @@ class ABFieldList extends ABFieldSelectivity {
 				options: this.settings.options.map(function (opt) {
 					return {
 						id: opt.id,
-						value: opt.text
+						value: opt.text,
+						hex: opt.hex
 					}
 				})
 			}
