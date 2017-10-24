@@ -32,6 +32,17 @@ export default class ABFieldSelectivity extends ABField {
 		for (var dv in defaultSettings) {
 			settings[dv] = settings[dv] || defaultSettings[dv];
 		}
+		
+		if (settings.multiple && settings.items && settings.data) {
+			settings.data.forEach(function(d) {
+				var myHex = "#333333";
+				d.hex = myHex; // Default hex to show that an option has been deleted
+				var matchHex = settings.items.map(function(i) {
+					if (i.id == d.id)
+						d.hex = i.hex;
+				});
+			});
+		}
 
 		settings['data'] = this.prepareData(settings['data'], settings.multiple);
 

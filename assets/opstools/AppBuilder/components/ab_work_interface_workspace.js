@@ -19,7 +19,7 @@ export default class AB_Work_Interface_Workspace extends OP.Component {
             common: App.labels,
             component: {
                 // formHeader: L('ab.application.form.header', "*Application Info"),
-                selectPage: L('ab.interface.selectPage', "*Select a Page to edit")
+                selectPage: L('ab.interface.selectPage', "*Select a page to edit")
             }
         };
         
