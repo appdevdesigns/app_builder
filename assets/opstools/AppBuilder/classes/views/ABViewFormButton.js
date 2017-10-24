@@ -259,8 +259,6 @@ export default class ABViewFormButton extends ABView {
 		};
 
 		var alignment = this.settings.alignment || ABViewFormButtonPropertyComponentDefaults.alignment;
-		var aftersave = this.settings.afterSave || ABViewFormButtonPropertyComponentDefaults.afterSave;
-		var aftersave = this.settings.afterCancel || ABViewFormButtonPropertyComponentDefaults.afterCancel;
 
 		// spacer
 		if (alignment == 'center' || alignment == 'right') {
