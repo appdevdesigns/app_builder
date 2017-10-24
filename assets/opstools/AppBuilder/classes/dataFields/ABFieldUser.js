@@ -281,13 +281,13 @@ class ABFieldUser extends ABFieldSelectivity {
 	customDisplay(row, App, node, editable) {
 		// sanity check.
 		if (!node) { return }
-		
-		var readOnly = false;
-		if (editable != null && editable == false) {
-			readOnly = true;
-		}
 
 		if (this.settings.isMultiple) {
+
+			var readOnly = false;
+			if (editable != null && editable == false) {
+				readOnly = true;
+			}
 
 			var domNode = node.querySelector('.list-data-values');
 
@@ -303,6 +303,7 @@ class ABFieldUser extends ABFieldSelectivity {
 				placeholder: placeholder,
 				data: row[this.columnName],
 				// items: this._users(),
+				isUsers: true,
 				ajax: {
 					url: 'It will call url in .getOptions function', // require
 					minimumInputLength: 0,
@@ -346,6 +347,12 @@ class ABFieldUser extends ABFieldSelectivity {
 					}
 
 				}, false);				
+			}
+		} else {
+			var hasRendered = node.querySelector('.rendered');
+			
+			if (hasRendered == null && node.innerHTML != "") {
+				node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+node.innerHTML+'</span>';
 			}
 		}
 

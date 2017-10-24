@@ -351,11 +351,17 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	overflow: hidden !important;
 	max-height: 100% !important;
 }
-.selectivity-multiple-selected-item {
+.selectivity-multiple-selected-item, .selectivity-single-selected-item {
 	background: #3498db !important;
 	padding: 0 10px;
 	border-radius: 15px;
+	color: #FFF !important;
+	line-height: 2em;
+	display: inline-block;
 	/*max-width: 100px !important;*/
+}
+.selectivity-single-selected-item-remove {
+	color: #FFF;
 }
 .customField .selectivity-multiple-input-container {
 	border: 1px solid #CCC;

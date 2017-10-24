@@ -519,14 +519,14 @@ class ABFieldList extends ABFieldSelectivity {
 		// sanity check.
 		if (!node) { return }
 
-		var placeholder = L('ab.dataField.list.placeholder', '*Select items');
-		var readOnly = false;
-		if (editable != null && editable == false) {
-			readOnly = true;
-			placeholder = "";
-		}
-
 		if (this.settings.isMultiple == true) {
+			var placeholder = L('ab.dataField.list.placeholder', '*Select items');
+			var readOnly = false;
+			if (editable != null && editable == false) {
+				readOnly = true;
+				placeholder = "";
+			}
+
 			var domNode = node.querySelector('.list-data-values');
 
 			// get selected values
@@ -535,17 +535,12 @@ class ABFieldList extends ABFieldSelectivity {
 				selectedData = row[this.columnName];
 			}
 
-			if (this.settings.hasColors == 0) {
-				selectedData.forEach(function(i) {
-					i.hex = "";
-				});
-			}
-
 			// Render selectivity
 			this.selectivityRender(domNode, {
 				multiple: true,
 				readOnly: readOnly,
 				placeholder: placeholder,
+				hasColors: this.settings.hasColors,
 				items: this.settings.options,
 				data: selectedData
 			}, App, row);
@@ -580,6 +575,19 @@ class ABFieldList extends ABFieldSelectivity {
 				}, false);
 			}
 
+		} else {
+			var hasRendered = node.querySelector('.rendered');
+			
+			if (hasRendered == null) {
+				if (this.settings.hasColors) {
+					var myHex = "#66666";
+					this.settings.options.forEach(function(h) {
+						if (h.text == node.innerHTML)
+							myHex = h.hex;
+					});
+					node.innerHTML = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+node.innerHTML+'</span>';
+				}				
+			}
 		}
 
 	}

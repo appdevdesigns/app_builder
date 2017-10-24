@@ -35,8 +35,6 @@ export default class ABFieldSelectivity extends ABField {
 		
 		if (settings.multiple && settings.items && settings.data) {
 			settings.data.forEach(function(d) {
-				var myHex = "#333333";
-				d.hex = myHex; // Default hex to show that an option has been deleted
 				var matchHex = settings.items.map(function(i) {
 					if (i.id == d.id)
 						d.hex = i.hex;
@@ -59,28 +57,52 @@ export default class ABFieldSelectivity extends ABField {
 		// Render selectivity
 		var selectivityInput;
 		if (settings.multiple) {
-			settings.templates = {
-				multipleSelectedItem: function(options) {
-			        var extraClass = options.highlighted ? ' highlighted' : '';
-			        return (
-			            '<span class="selectivity-multiple-selected-item' +
-			            	extraClass +
-			            	'" ' +
-							'style="background-color:' +
-							options.hex +
-							' !important;"' +
-			            	'data-item-id="' +
-			            	options.id +
-			            '">' +
-			            (options.removable
-			                ? '<a class="selectivity-multiple-selected-item-remove">' +
-			                  '<i class="fa fa-remove"></i>' +
-			                  '</a>'
-			                : '') +
-			            	options.text +
-			            '</span>'
-			        );
-			    }
+			if (settings.isUsers) {
+				settings.templates = {
+					multipleSelectedItem: function(options) {
+				        var extraClass = options.highlighted ? ' highlighted' : '';
+				        return (
+				            '<span class="selectivity-multiple-selected-item' +
+				            	extraClass +
+				            	'" ' +
+								'style="background-color: #eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"' +
+				            	'data-item-id="' +
+				            	options.id +
+				            '">' +
+							'<i class="fa fa-user" style="color: #666; opacity: 0.6;"></i> ' + options.text +
+				            (options.removable
+				                ? ' <a class="selectivity-multiple-selected-item-remove" style="color: #333;">' +
+				                  '<i class="fa fa-remove"></i>' +
+				                  '</a>'
+				                : '') +
+				            '</span>'
+				        );
+				    }
+				}
+			} else {
+				settings.templates = {
+					multipleSelectedItem: function(options) {
+				        var extraClass = options.highlighted ? ' highlighted' : '';
+				        return (
+				            '<span class="selectivity-multiple-selected-item' +
+				            	extraClass +
+				            	'" ' +
+								'style="background-color:' +
+								options.hex +
+								' !important;"' +
+				            	'data-item-id="' +
+				            	options.id +
+				            '">' +
+							options.text +
+				            (options.removable
+				                ? ' <a class="selectivity-multiple-selected-item-remove">' +
+				                  '<i class="fa fa-remove"></i>' +
+				                  '</a>'
+				                : '') +
+				            '</span>'
+				        );
+				    }
+				}				
 			}
 			selectivityInput = new Selectivity.Inputs.Multiple(settings);
 
