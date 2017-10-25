@@ -424,12 +424,11 @@ export default class ABViewChartPie extends ABViewChart {
 
 		dInfo.forEach((item) => {
 
-			var labelKey = item[labelColName];
-			var numberVal = parseFloat(item[numberColName]);
+			var labelKey = item[labelColName] || item.id;
+			var numberVal = parseFloat(item[numberColName] || 0);
 
 			if (sumData[labelKey] == null) {
 
-				// TODO:
 				var label = labelKey;
 
 				// Get label of the connect field
@@ -440,7 +439,7 @@ export default class ABViewChartPie extends ABViewChart {
 				}
 
 				sumData[labelKey] = {
-					label: label,
+					label: label || item.id,
 					value: 0
 				};
 			}
