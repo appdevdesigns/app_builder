@@ -552,7 +552,14 @@ export default class ABApplication extends ABApplicationBase {
 		// return this.save();
 		return this.Model.staticData.pageSave(this.id, page.toObj())
 			.then(() => {
+
 				// TODO : Should update _AllApplications in 
+
+				// Trigger a update event to the live display page
+				AD.comm.hub.publish('ab.interface.update', {
+					rootPage: page.id	// id of the root page
+				});
+
 			});
 
 	}

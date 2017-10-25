@@ -49,6 +49,8 @@ module.exports = class ABViewBase extends EventEmitter {
 
 		// this.parent = values.parent || null;
 
+		this.name = values.name;
+
 		this.position = values.position || {};
 
 		// if this is being instantiated on a read from the Property UI,

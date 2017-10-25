@@ -135,16 +135,32 @@ module.exports = {
         var appID = req.param('appID');
         var page = req.body.page;
 
-        ABApplication.findOne({ id: appID })
-            .fail(res.AD.error)
-            .then(function (app) {
+        Promise.resolve()
+            .catch((err) => { res.AD.error(err); })
+            .then(() => {
 
-                if (app) {
+                // Pull a application
+                return new Promise((resolve, reject) => {
 
-                    app.json.pages = app.json.pages || [];
+                    ABApplication.findOne({ id: appID })
+                        .exec((err, result) => {
+                            if (err) reject(err);
+                            else resolve(result);
+                        });
+
+                });
+            })
+            .then((Application) => {
+
+                // Update page info to application
+                return new Promise((resolve, reject) => {
+
+                    if (Application == null) return resolve();
+
+                    Application.json.pages = Application.json.pages || [];
 
                     var indexPage = -1;
-                    var updatePage = app.json.pages.filter(function (p, index) {
+                    var updatePage = Application.json.pages.filter(function (p, index) {
 
                         var isExists = p.id == page.id;
                         if (isExists) indexPage = index;
@@ -154,26 +170,53 @@ module.exports = {
 
                     // update
                     if (updatePage) {
-                        app.json.pages[indexPage] = page;
+                        Application.json.pages[indexPage] = page;
                     }
                     // add new
                     else {
-                        app.json.pages.push(page);
+                        Application.json.pages.push(page);
                     }
 
                     // save to database
-                    app.save(function (err) {
+                    Application.save(function (err) {
                         if (err)
-                            res.AD.error(true);
+                            reject(true);
                         else
-                            res.AD.success(true);
+                            resolve(Application);
                     });
-                }
-                else {
+
+
+                });
+            })
+            .then((Application) => {
+
+                // Update page's nav view
+                return new Promise((resolve, reject) => {
+
+                    if (Application == null) return resolve();
+
+                    var appliationClass = Application.toABClass();
+                    var pageClass = appliationClass._pages.filter(p => p.id == page.id)[0];
+
+                    if (pageClass)
+                        return AppBuilder.updateNavView(Application, pageClass)
+                            .catch(reject)
+                            .then(resolve);
+                    else
+                        resolve();
+
+                });
+
+            })
+            .then(() => {
+
+                // Finish
+                return new Promise((resolve, reject) => {
+
                     res.AD.success(true);
-                }
+                    resolve();
 
-
+                });
             });
 
     },
@@ -187,16 +230,32 @@ module.exports = {
         var appID = req.param('appID');
         var pageID = req.param('id');
 
-        ABApplication.findOne({ id: appID })
-            .fail(res.AD.error)
-            .then(function (app) {
+        Promise.resolve()
+            .catch((err) => { res.AD.error(err); })
+            .then(() => {
 
-                if (app) {
+                // Pull a application
+                return new Promise((resolve, reject) => {
 
-                    app.json.pages = app.json.pages || []
+                    ABApplication.findOne({ id: appID })
+                        .exec((err, result) => {
+                            if (err) reject(err);
+                            else resolve(result);
+                        });
+
+                });
+            })
+            .then((Application) => {
+
+                // Remove a page in the list
+                return new Promise((resolve, reject) => {
+
+                    if (Application == null) return resolve();
+
+                    Application.json.pages = Application.json.pages || []
 
                     var indexPage = -1;
-                    var updatePage = app.json.pages.filter(function (page, index) {
+                    var updatePage = Application.json.pages.filter(function (page, index) {
 
                         var isExists = page.id == pageID;
                         if (isExists) indexPage = index;
@@ -206,23 +265,45 @@ module.exports = {
 
                     // remove
                     if (indexPage > -1) {
-                        app.json.pages.splice(indexPage, 1);
+
+                        pageName = updatePage.name;
+                        Application.json.pages.splice(indexPage, 1);
                     }
 
                     // save to database
-                    app.save(function (err) {
+                    Application.save(function (err) {
                         if (err)
-                            res.AD.error(true);
+                            reject(err);
                         else
-                            res.AD.success(true);
+                            resolve(Application);
                     });
-                }
-                else {
+                });
+
+            })
+            .then((Application) => {
+
+                // Remove page's nav view
+                return new Promise((resolve, reject) => {
+
+                    if (Application == null) return resolve();
+
+                    return AppBuilder.removeNavView(Application, pageName)
+                        .catch(reject)
+                        .then(resolve);
+                });
+
+            })
+            .then(() => {
+
+                // Finish
+                return new Promise((resolve, reject) => {
+
                     res.AD.success(true);
-                }
+                    resolve();
 
-
+                });
             });
+
 
     },
 

@@ -15,42 +15,45 @@ import ABViewManager from "../ABViewManager"
 
 
 function L(key, altText) {
-	return AD.lang.label.getLabel(key) || altText;
+    return AD.lang.label.getLabel(key) || altText;
 }
 
 
 var ABViewDefaults = {
-	key: 'page',		// unique key identifier for this ABView
-	icon: 'file',		// icon reference: (without 'fa-' )
+    key: 'page',		// unique key identifier for this ABView
+    icon: 'file',		// icon reference: (without 'fa-' )
 
 }
 
-export default class ABViewPage extends ABViewContainer  {
+export default class ABViewPage extends ABViewContainer {
 
     constructor(values, application, parent) {
 
-        super( values, application, parent, ABViewDefaults );
+        super(values, application, parent, ABViewDefaults);
 
-    	
-  	// 	{
-  	// 		id:'uuid',					// uuid value for this obj
-  	// 		key:'viewKey',				// unique key for this View Type
-  	// 		icon:'font',				// fa-[icon] reference for an icon for this View Type
-  	// 		label:'',					// pulled from translation
 
-	//		settings: {					// unique settings for the type of field
-	//		},
+        // 	{
+        // 		id:'uuid',					// uuid value for this obj
+        // 		key:'viewKey',				// unique key for this View Type
+        // 		icon:'font',				// fa-[icon] reference for an icon for this View Type
 
-	//		translations:[]
-  	// 	}
-  		
+        //		name: '',					// unique page name
+
+        // 		label:'',					// pulled from translation
+
+        //		settings: {					// unique settings for the type of field
+        //		},
+
+        //		translations:[]
+        // 	}
+
         this.parent = null;  // will be set by the pageNew() that creates this obj.
-  	}
+    }
 
 
-  	static common() {
-  		  return ABViewDefaults;
-  	}
+    static common() {
+        return ABViewDefaults;
+    }
 
 
     /**
@@ -61,14 +64,20 @@ export default class ABViewPage extends ABViewContainer  {
      *
      * @return {json}
      */
-    toObj () {
+    toObj() {
 
         var obj = super.toObj();
+
+        obj.name = this.name;
+
+        // set label of the page
+        if (!this.label || this.label == '?label?')
+            obj.label = obj.name;
 
         // compile our pages
         var pages = [];
         this._pages.forEach((page) => {
-          pages.push(page.toObj())
+            pages.push(page.toObj())
         })
 
         obj.pages = pages;
@@ -94,14 +103,18 @@ export default class ABViewPage extends ABViewContainer  {
      * initialze this object with the given set of values.
      * @param {obj} values
      */
-    fromValues (values) {
+    fromValues(values) {
 
         super.fromValues(values);
+
+        // set label of the page
+        if (!this.label || this.label == '?label?')
+            this.label = this.name;
 
         // now properly handle our sub pages.
         var pages = [];
         (values.pages || []).forEach((child) => {
-          pages.push(this.pageNew(child));  // ABViewManager.newView(child, this.application, this));
+            pages.push(this.pageNew(child));  // ABViewManager.newView(child, this.application, this));
         })
         this._pages = pages;
 
@@ -137,7 +150,7 @@ export default class ABViewPage extends ABViewContainer  {
      *
      * @return {Promise}
      */
-    destroy () {
+    destroy() {
         return new Promise(
             (resolve, reject) => {
 
@@ -148,8 +161,8 @@ export default class ABViewPage extends ABViewContainer  {
                     if (!parent) parent = this.application;
 
                     parent.pageDestroy(this)
-                    .then(resolve)
-                    .catch(reject);
+                        .then(resolve)
+                        .catch(reject);
 
                 } else {
 
@@ -171,7 +184,7 @@ export default class ABViewPage extends ABViewContainer  {
      * @return {Promise}
      *         .resolve( {this} )
      */
-    save () {
+    save() {
         return new Promise(
             (resolve, reject) => {
 
@@ -186,8 +199,8 @@ export default class ABViewPage extends ABViewContainer  {
                 if (!parent) parent = this.application;
 
                 parent.pageSave(this)
-                .then(resolve)
-                .catch(reject)
+                    .then(resolve)
+                    .catch(reject)
             }
         )
     }
@@ -210,40 +223,40 @@ export default class ABViewPage extends ABViewContainer  {
 	 * 
 	 * @return {array}			array of ABViewPages
 	 */
-	pages (filter, deep) {
+    pages(filter, deep) {
 
-		var result = [];
+        var result = [];
 
-		// find into sub-pages recursively
-		if (filter && deep) {
-			
-			if (this._pages && this._pages.length > 0) {
+        // find into sub-pages recursively
+        if (filter && deep) {
 
-				result = this._pages.filter(filter);
+            if (this._pages && this._pages.length > 0) {
 
-				if (result.length < 1) {
-					this._pages.forEach((p) => {
-						var subPages = p.pages(filter, deep);
-						if (subPages && subPages.length > 0) {
-							result = subPages;
-						}
-					});
-				}
-			}
+                result = this._pages.filter(filter);
 
-		}
-		// find root pages
-		else {
+                if (result.length < 1) {
+                    this._pages.forEach((p) => {
+                        var subPages = p.pages(filter, deep);
+                        if (subPages && subPages.length > 0) {
+                            result = subPages;
+                        }
+                    });
+                }
+            }
 
-			filter = filter || function() {return true; };
+        }
+        // find root pages
+        else {
 
-			result = this._pages.filter(filter);
+            filter = filter || function () { return true; };
 
-		}
+            result = this._pages.filter(filter);
 
-		return result;
+        }
 
-	}
+        return result;
+
+    }
 
 
 
@@ -258,7 +271,7 @@ export default class ABViewPage extends ABViewContainer  {
      *
      * @return {ABViewPage}
      */
-    pageNew( values ) {
+    pageNew(values) {
 
         // make sure this is an ABViewPage description
         values.key = ABViewDefaults.key;
@@ -266,7 +279,7 @@ export default class ABViewPage extends ABViewContainer  {
         // NOTE: this returns a new ABView component.  
         // when creating a new page, the 3rd param should be null, to signify 
         // the top level component.
-        var page =  new ABViewManager.newView(values, this.application, null);
+        var page = new ABViewManager.newView(values, this.application, null);
         page.parent = this;
         return page;
     }
@@ -281,9 +294,9 @@ export default class ABViewPage extends ABViewContainer  {
      * @param {ABViewPage} page
      * @return {Promise}
      */
-    pageDestroy( page ) {
+    pageDestroy(page) {
 
-        var remainingPages = this.pages(function(p) { return p.id != page.id;})
+        var remainingPages = this.pages(function (p) { return p.id != page.id; })
         this._pages = remainingPages;
         return this.save();
     }
@@ -298,8 +311,8 @@ export default class ABViewPage extends ABViewContainer  {
      * @param {ABViewPage} object
      * @return {Promise}
      */
-    pageSave( page ) {
-        var isIncluded = (this.pages(function(p){ return p.id == page.id }).length > 0);
+    pageSave(page) {
+        var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
         if (!isIncluded) {
             this._pages.push(page);
         }
@@ -322,11 +335,11 @@ export default class ABViewPage extends ABViewContainer  {
 	 * 
 	 * @return {array}			array of ABViewDataCollection
 	 */
-	dataCollections (filter) {
+    dataCollections(filter) {
 
         if (!this._dataCollections) return [];
 
-        filter = filter || function() { return true; };
+        filter = filter || function () { return true; };
 
         return this._dataCollections.filter(filter);
 
@@ -345,7 +358,7 @@ export default class ABViewPage extends ABViewContainer  {
      *
      * @return {ABViewPage}
      */
-    dataCollectionNew( values ) {
+    dataCollectionNew(values) {
 
         values = values || {};
         values.key = 'datacollection';
@@ -353,7 +366,7 @@ export default class ABViewPage extends ABViewContainer  {
         // NOTE: this returns a new ABViewDataCollection component.  
         // when creating a new page, the 3rd param should be null, to signify 
         // the top level component.
-        var dataCollection =  new ABViewManager.newView(values, this.application, this);
+        var dataCollection = new ABViewManager.newView(values, this.application, this);
         dataCollection.parent = this;
 
         return dataCollection;
@@ -369,9 +382,9 @@ export default class ABViewPage extends ABViewContainer  {
      * @param {ABViewDataCollection} dataCollection
      * @return {Promise}
      */
-    dataCollectionDestroy( dataCollection ) {
+    dataCollectionDestroy(dataCollection) {
 
-        var remainingDataCollections = this.dataCollections(function(data) { return data.id != dataCollection.id;})
+        var remainingDataCollections = this.dataCollections(function (data) { return data.id != dataCollection.id; })
         this._dataCollections = remainingDataCollections;
         return this.save();
     }
@@ -386,8 +399,8 @@ export default class ABViewPage extends ABViewContainer  {
      * @param {ABViewDataCollection} object
      * @return {Promise}
      */
-    dataCollectionSave( dataCollection ) {
-        var isIncluded = (this.dataCollections(function(data){ return data.id == dataCollection.id }).length > 0);
+    dataCollectionSave(dataCollection) {
+        var isIncluded = (this.dataCollections(function (data) { return data.id == dataCollection.id }).length > 0);
         if (!isIncluded) {
             this._dataCollections.push(dataCollection);
         }

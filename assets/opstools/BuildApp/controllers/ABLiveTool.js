@@ -58,6 +58,14 @@ steal(
 							self.initDOM();
 							self.initModels();
 							self.initPage();
+
+
+							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
+								self.height = data.height;
+								self.resize(data.height);
+							});
+
+
 						},
 
 						initDOM: function () {
@@ -79,14 +87,7 @@ steal(
 						initPage: function () {
 							var self = this;
 
-							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
-								self.height = data.height;
-								self.resize(data.height);
-							});
-
 							self.getData().then(function () {
-
-								self.initEvents();
 
 								// Store the root page
 								self.rootPage = self.data.application.urlResolve(self.options.page);
@@ -96,6 +97,9 @@ steal(
 								webix.ready(function () {
 									self.showPage();
 								});
+
+								self.initEvents(self.rootPage);
+
 							});
 						},
 
@@ -145,40 +149,35 @@ steal(
 							return q;
 						},
 
-						// initEvents: function () {
-						// 	var self = this;
-
-						// 	AD.comm.hub.subscribe('opsportal.tool.show', function (message, data) {
-						// 		self.resize(self.height);
-						// 	});
-
-						// },
-
 						renderPageContainer: function () {
 							var self = this;
 
 							if (self.rootPage == null) return;
+
 
 							// Clear UI content
 							var rootDomId = self.getPageDomID(self.rootPage.id);
 							if ($$(rootDomId))
 								webix.ui({}, $$(rootDomId));
 
+
 							// Create a sub pages container
-							if (!$$(self.containerDomID)) {
-								webix.ui({
-									view: "multiview",
-									container: self.containerDomID,
-									css: "ab-main-container ab-generated-page",
-									id: self.containerDomID,
-									cells: [{}],
-									on: {
-										onViewChange: function (prevId, nextId) {
-											self.resize();
-										}
-									}
-								});
+							if ($$(self.containerDomID)) {
+								$$(self.containerDomID).destructor();
 							}
+							webix.ui({
+								view: "multiview",
+								container: self.containerDomID,
+								css: "ab-main-container ab-generated-page",
+								id: self.containerDomID,
+								cells: [{}],
+								on: {
+									onViewChange: function (prevId, nextId) {
+										self.resize();
+									}
+								}
+							});
+
 
 							// Render the root page
 							self.renderPage(self.rootPage);
@@ -312,7 +311,10 @@ steal(
 							// Question: should we do a resize() after all the components are rendered?
 
 							// Change page by batch id
-							$$(self.containerDomID).showBatch(pageId);
+							var childViews = $$(self.containerDomID).getChildViews(),
+								batchExist = childViews.filter(function(v) { return v.config.batch == pageId; })[0];
+							if (batchExist)
+								$$(self.containerDomID).showBatch(pageId);
 
 						},
 
@@ -327,6 +329,28 @@ steal(
 								self.showPage(pageId);
 
 							});
+
+
+							if (!self.updatePageEventId && page.isRoot()) {
+
+								/**
+								 * @event ab.interface.update
+								 * This event is triggered when the root page is updated
+								 * 
+								 * @param data.rootPage {uuid} - id of the root page
+								 */
+								self.updatePageEventId = AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
+
+									if (page.id == data.rootPage) {
+
+										// re-render this page
+										self.initPage();
+
+									}
+
+								});
+							}
+
 
 						},
 
@@ -428,6 +452,25 @@ steal(
 								}, 5);
 
 							}
+
+						},
+
+						removePage: function (pageId) {
+
+							var pageCom = this.pageComponents[pageId];
+							var pageElemId = pageCom.ui.id;
+
+							// swtich the page before it will be removed
+							if (this.activePageId == pageId) {
+								this.showPage(this.rootPage.id);
+							}
+
+							// remove from .multiview
+							$$(this.containerDomID).removeView(pageElemId);
+
+							// destroy view's modal
+							if ($$(pageElemId))
+								$$(pageElemId).destructor();
 
 						},
 

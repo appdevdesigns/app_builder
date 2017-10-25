@@ -135,10 +135,15 @@ export default class ABViewContainer extends ABView {
 						]
 					},
 
-					dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
-					dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
-					x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
-					y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
+					// dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
+					// dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
+					// x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
+					// y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
+
+					dx: child.position.dx || 1,
+					dy: child.position.dy || 1,
+					x: child.position.x || 0,
+					y: child.position.y || 0,
 
 				});
 
@@ -281,7 +286,7 @@ export default class ABViewContainer extends ABView {
 
 				});
 
-				// save template layout to ABPageView
+				// save template layout
 				this.save();
 
 			},
@@ -380,7 +385,6 @@ export default class ABViewContainer extends ABView {
 			component: App.unique(idBase + '_component'),
 		}
 
-
 		var _ui = {
 			id: ids.component,
 			view: "dashboard",
@@ -422,10 +426,16 @@ export default class ABViewContainer extends ABView {
 
 					rows: [component.ui],
 
-					dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
-					dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
-					x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
-					y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
+					// dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
+					// dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
+					// x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
+					// y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
+
+					dx: child.position.dx || 1,
+					dy: child.position.dy || 1,
+					x: child.position.x || 0,
+					y: child.position.y || 0,
+
 				});
 
 				// Initial component

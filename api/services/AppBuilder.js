@@ -99,27 +99,27 @@ function getPageKey(appName, pageName) {
 
 module.exports = {
 
-    buildDirectory:{
+    buildDirectory: {
 
-        init:function(){
+        init: function () {
             if (!__dfdBuildDirectoryCreated) {
                 __dfdBuildDirectoryCreated = AD.sal.Deferred();
             }
 
 
             var bd = require('./build_directory/build_directory.js');
-            bd(function(err){
+            bd(function (err) {
                 sails.log.info('AppBuilder:buildDirectory:init()   started.');
                 if (err) {
-// console.log('... rejected!');
+                    // console.log('... rejected!');
                     ADCore.error.log('AppBuilder:buildDirectory.init(): exited with an error', {
-                        error:err,
+                        error: err,
                         message: err.message || 'no message provided',
-                        stack: err.stack || [ 'no stack trace ']
+                        stack: err.stack || ['no stack trace ']
                     });
                     __dfdBuildDirectoryCreated.reject(err);
                 } else {
-// console.log('... resolved.');
+                    // console.log('... resolved.');
                     sails.log.info('AppBuilder:buildDirectory:init()  completed.');
                     __dfdBuildDirectoryCreated.resolve();
                 }
@@ -128,7 +128,7 @@ module.exports = {
 
         },
 
-        ready:function(){
+        ready: function () {
             if (!__dfdBuildDirectoryCreated) {
                 __dfdBuildDirectoryCreated = AD.sal.Deferred();
             }
@@ -143,7 +143,7 @@ module.exports = {
      */
     paths: {
 
-        sailsBuildDir:function(){
+        sailsBuildDir: function () {
             return path.join(sails.config.appPath, 'data', 'app_builder', 'sailsAlter');
         }
     },
@@ -166,8 +166,8 @@ module.exports = {
                     var appID = req.param('appID', -1);
                     var objID = req.param('objID', -1);
 
-                    sails.log.verbose('... appID:'+appID);
-                    sails.log.verbose('... objID:'+objID);
+                    sails.log.verbose('... appID:' + appID);
+                    sails.log.verbose('... objID:' + objID);
 
                     // Verify input params are valid:
                     var invalidError = null;
@@ -179,37 +179,37 @@ module.exports = {
                         invalidError = ADCore.error.fromKey('E_MISSINGPARAM');
                         invalidError.details = 'missing object.id';
                     }
-                    if(invalidError) {
+                    if (invalidError) {
                         sails.log.error(invalidError);
                         res.AD.error(invalidError, 400);
                         reject();
                     }
 
 
-                    ABApplication.findOne({id: appID})
-                    .then(function(app) {
+                    ABApplication.findOne({ id: appID })
+                        .then(function (app) {
 
-                        if( app ) {
+                            if (app) {
 
-                            var Application = app.toABClass();
-                            var object = Application.objects((o) => { return o.id == objID; })[0];
+                                var Application = app.toABClass();
+                                var object = Application.objects((o) => { return o.id == objID; })[0];
 
-                            if (object) {
+                                if (object) {
 
-                                resolve( object );
+                                    resolve(object);
+
+                                } else {
+
+                                    // error: object not found!
+                                    var err = ADCore.error.fromKey('E_NOTFOUND');
+                                    err.message = "Object not found.";
+                                    err.objid = objID;
+                                    sails.log.error(err);
+                                    res.AD.error(err, 404);
+                                    reject();
+                                }
 
                             } else {
-
-                                // error: object not found!
-                                var err = ADCore.error.fromKey('E_NOTFOUND');
-                                err.message = "Object not found.";
-                                err.objid = objID;
-                                sails.log.error(err);
-                                res.AD.error(err, 404);
-                                reject();
-                            }
-
-                        } else {
 
                                 // error: couldn't find the application
                                 var err = ADCore.error.fromKey('E_NOTFOUND');
@@ -218,14 +218,14 @@ module.exports = {
                                 sails.log.error(err);
                                 res.AD.error(err, 404);
                                 reject();
-                        }
+                            }
 
-                    })
-                    .catch(function(err) {
-                        ADCore.error.log('ABApplication.findOne() failed:', { error:err, message:err.message, id:appID });
-                        res.AD.error(err);
-                        reject();
-                    });
+                        })
+                        .catch(function (err) {
+                            ADCore.error.log('ABApplication.findOne() failed:', { error: err, message: err.message, id: appID });
+                            res.AD.error(err);
+                            reject();
+                        });
 
                 }
             )
@@ -280,8 +280,8 @@ module.exports = {
         toObjectNameFormat: function (appName, objectName) {
             return (appName + '_' + AppBuilder.rules.nameFilter(objectName));
         },
-        
-        
+
+
         /**
          * AppBuilder.rules.toSQLDateTime
          *
@@ -311,7 +311,7 @@ module.exports = {
          * @return {string}
          */
         toFieldRelationFormat: function (colName) {
-            return  AppBuilder.rules.nameFilter(colName) + '__relation';
+            return AppBuilder.rules.nameFilter(colName) + '__relation';
         },
 
 
@@ -379,7 +379,7 @@ module.exports = {
 
 
             // lift sails in our new build directory:
-            alterModels: [ 'setup', function(next) {
+            alterModels: ['setup', function (next) {
 
 
                 var cwd = process.cwd();
@@ -390,14 +390,14 @@ module.exports = {
 
 
                 AD.spawn.command({
-                    command:'sails',
-                    options:[ 'lift'],
-                    shouldEcho:false,
-                    onStdErr:function(data){
+                    command: 'sails',
+                    options: ['lift'],
+                    shouldEcho: false,
+                    onStdErr: function (data) {
 
                         if (data.indexOf('Error:') != -1) {
                             var lines = data.split('\n');
-                            lines.forEach(function(line){
+                            lines.forEach(function (line) {
                                 if (line.indexOf('Error:') != -1) {
                                     errors.push(line);
                                 }
@@ -406,22 +406,22 @@ module.exports = {
                     }
                     // exitTrigger:'Server lifted'
                 })
-                .fail(function(err){
-                    AD.log.error('<red> sails lift exited with an error</red>');
-                    AD.log(err);
-                    process.chdir(cwd);
-                    next(err);
-                })
-                .then(function(code){
-// console.log('... exited with code:', code);
-                    var error = undefined;
+                    .fail(function (err) {
+                        AD.log.error('<red> sails lift exited with an error</red>');
+                        AD.log(err);
+                        process.chdir(cwd);
+                        next(err);
+                    })
+                    .then(function (code) {
+                        // console.log('... exited with code:', code);
+                        var error = undefined;
 
-                    if (code > 0) {
-                        error = new Error(errors.join(''));
-                    }
-                    process.chdir(cwd);
-                    next(error);
-                });
+                        if (code > 0) {
+                            error = new Error(errors.join(''));
+                        }
+                        process.chdir(cwd);
+                        next(error);
+                    });
 
 
             }],
@@ -484,7 +484,7 @@ module.exports = {
                 });
             }],
 
-            controllers: ['setup',  function (next) {
+            controllers: ['setup', function (next) {
                 sails.log('Reloading controllers');
 
                 notifyToClients(true, 'reloadControllers', 'start');
@@ -520,7 +520,7 @@ module.exports = {
                 // Temporarily set environment to development so Waterline will
                 // respect the migrate:alter setting
 
-// NOTE: now we manuall lift sails in another process to do this:
+                // NOTE: now we manuall lift sails in another process to do this:
                 // sails.config.environment = 'development';
                 // process.env.NODE_ENV = 'developement';
 
@@ -555,7 +555,7 @@ module.exports = {
             if (err) {
 
                 notifyToClients(true, '', 'fail', {
-                    error: err.message.replace('Error:','').replace('error:',''),
+                    error: err.message.replace('Error:', '').replace('error:', ''),
                     requestData: { appID: appID }
                 });
 
@@ -569,7 +569,7 @@ module.exports = {
                 //// Client remains unaware of the updated status.
                 //// Here we set a timeout to give the client a chance to reconnect before
                 //// we send the message.
-                setTimeout(function(){
+                setTimeout(function () {
                     notifyToClients(false, '', 'finish');
                 }, 3000);
 
@@ -584,164 +584,164 @@ module.exports = {
     /**
      * Generate the application directory structure
      */
-//     buildApplication: function (appID) {
-//         var dfd = AD.sal.Deferred();
-//         var cwd = process.cwd();
+    //     buildApplication: function (appID) {
+    //         var dfd = AD.sal.Deferred();
+    //         var cwd = process.cwd();
 
-//         var pluginExists = false;
+    //         var pluginExists = false;
 
-//         var appName, moduleName, areaName, areaKey;
+    //         var appName, moduleName, areaName, areaKey;
 
-//         var Application = null;
+    //         var Application = null;
 
-//         // if we are currently building it:
-//         if (appsBuildInProgress[appID]) {
-//             // console.log('... App Build in progress : waiting!');
-//             return appsBuildInProgress[appID];
-//         }
-
-
-//         // if we get here, we start building this app:
-//         // So mark that it is in progress:
-//         appsBuildInProgress[appID] = dfd;
-
-//         async.series([
-//             function (next) {
-//                 ABApplication.find({ id: appID })
-//                     .populate('translations')
-//                     .then(function (list) {
-//                         if (!list || !list[0]) {
-//                             throw new Error('Application not found');
-//                         }
-//                         var obj = list[0];
-//                         // Only numbers and alphabets will be used
-//                         Application = obj;
-//                         appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
-//                         moduleName = appName.toLowerCase();
-//                         next();
-//                         return null;
-//                     })
-//                     .catch(function (err) {
-//                         next(err);
-//                         return null;
-//                     });
-
-//             },
-
-//             // Check if plugin already exists
-//             function (next) {
-//                 process.chdir('node_modules'); // sails/node_modules/
-//                 fs.stat(moduleName, function (err, stat) {
-//                     if (!err) {
-//                         pluginExists = true;
-//                     }
-//                     next();
-//                 });
-//             },
-
-//             // Create opstool plugin with appdev-cli
-//             function (next) {
-
-//                 if (pluginExists) {
-//                     // Skip this step if plugin already exists
-//                     return next();
-//                 }
-//                 AD.spawn.command({
-//                     command: cliCommand,
-//                     options: [
-//                         'opstoolplugin',
-//                         appName,
-//                         '1' // isOPView
-//                     ],
-//                     shouldEcho: true,
-//                     responses: {
-//                         'unit test capabilities': 'no\n',
-//                         'author': 'AppBuilder\n',
-//                         'description': '\n',
-//                         'version': '\n',
-//                         'repository': '\n',
-//                     }
-//                 })
-//                     .fail(next)
-//                     .done(function () {
-//                         next();
-//                     });
-//             },
-
-//             // Delete old .adn file
-//             function (next) {
-//
-//                 process.chdir(moduleName); // sails/node_modules/ab_{appName}/
-//                 async.each(['.adn'], function (target, ok) {
-//                     // Delete file if it exists
-//                     fs.unlink(target, function (err) {
-//                         // Ignore errors. If file does not exist, that's fine.
-//                         ok();
-//                     });
-//                 }, function (err) {
-//                     next();
-//                 });
-//             },
-
-//             // Symlink the .adn file
-//             function (next) {
-//                 fs.symlink(path.join(cwd, '.adn'), '.adn', next);
-//             },
+    //         // if we are currently building it:
+    //         if (appsBuildInProgress[appID]) {
+    //             // console.log('... App Build in progress : waiting!');
+    //             return appsBuildInProgress[appID];
+    //         }
 
 
-//             // make sure OpsPortal navigation has an area for this application defined:
-//             function (next) {
+    //         // if we get here, we start building this app:
+    //         // So mark that it is in progress:
+    //         appsBuildInProgress[appID] = dfd;
 
-//                 // if this was our first time to create the App,
-//                 // then create an area.
-//                 // Dont keep creating one since they might want to remove it using the
-//                 // Live Navigation Editor
-//                 if (!pluginExists) {
+    //         async.series([
+    //             function (next) {
+    //                 ABApplication.find({ id: appID })
+    //                     .populate('translations')
+    //                     .then(function (list) {
+    //                         if (!list || !list[0]) {
+    //                             throw new Error('Application not found');
+    //                         }
+    //                         var obj = list[0];
+    //                         // Only numbers and alphabets will be used
+    //                         Application = obj;
+    //                         appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
+    //                         moduleName = appName.toLowerCase();
+    //                         next();
+    //                         return null;
+    //                     })
+    //                     .catch(function (err) {
+    //                         next(err);
+    //                         return null;
+    //                     });
 
-//                     var areaName = Application.name;
-//                     var areaKey = Application.areaKey();
-//                     var label = areaName;  // default if no translations provided
-//                     Application.translations.some(function (trans) {
-//                         if (label == areaName) {
-//                             label = trans.label;
-//                             return true;  // stops the looping.
-//                         }
-//                     })
-//                     var defaultArea = {
-//                         key: areaKey,
-//                         icon: 'fa-cubes',
-//                         isDefault: false,
-//                         label: label,
-//                         context: areaKey
-//                     }
+    //             },
 
-//                     // Note: this will only create it if it doesn't already exist.
-//                     OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
+    //             // Check if plugin already exists
+    //             function (next) {
+    //                 process.chdir('node_modules'); // sails/node_modules/
+    //                 fs.stat(moduleName, function (err, stat) {
+    //                     if (!err) {
+    //                         pluginExists = true;
+    //                     }
+    //                     next();
+    //                 });
+    //             },
 
-//                         // area is null if already existed,
-//                         // not null if just created:
+    //             // Create opstool plugin with appdev-cli
+    //             function (next) {
 
-//                         next(err);
-//                     })
+    //                 if (pluginExists) {
+    //                     // Skip this step if plugin already exists
+    //                     return next();
+    //                 }
+    //                 AD.spawn.command({
+    //                     command: cliCommand,
+    //                     options: [
+    //                         'opstoolplugin',
+    //                         appName,
+    //                         '1' // isOPView
+    //                     ],
+    //                     shouldEcho: true,
+    //                     responses: {
+    //                         'unit test capabilities': 'no\n',
+    //                         'author': 'AppBuilder\n',
+    //                         'description': '\n',
+    //                         'version': '\n',
+    //                         'repository': '\n',
+    //                     }
+    //                 })
+    //                     .fail(next)
+    //                     .done(function () {
+    //                         next();
+    //                     });
+    //             },
 
-//                 } else {
-//                     next();
-//                 }
+    //             // Delete old .adn file
+    //             function (next) {
+    //
+    //                 process.chdir(moduleName); // sails/node_modules/ab_{appName}/
+    //                 async.each(['.adn'], function (target, ok) {
+    //                     // Delete file if it exists
+    //                     fs.unlink(target, function (err) {
+    //                         // Ignore errors. If file does not exist, that's fine.
+    //                         ok();
+    //                     });
+    //                 }, function (err) {
+    //                     next();
+    //                 });
+    //             },
 
-//             }
+    //             // Symlink the .adn file
+    //             function (next) {
+    //                 fs.symlink(path.join(cwd, '.adn'), '.adn', next);
+    //             },
 
-//         ], function (err) {
-//             process.chdir(cwd);
-//             if (err) dfd.reject(err);
-//             else dfd.resolve({});
 
-//             // now remove our flag:
-//             // console.log('... App Build finished!');
-//             delete appsBuildInProgress[appID];
-//         });
+    //             // make sure OpsPortal navigation has an area for this application defined:
+    //             function (next) {
 
-//         return dfd;
-//     },
+    //                 // if this was our first time to create the App,
+    //                 // then create an area.
+    //                 // Dont keep creating one since they might want to remove it using the
+    //                 // Live Navigation Editor
+    //                 if (!pluginExists) {
+
+    //                     var areaName = Application.name;
+    //                     var areaKey = Application.areaKey();
+    //                     var label = areaName;  // default if no translations provided
+    //                     Application.translations.some(function (trans) {
+    //                         if (label == areaName) {
+    //                             label = trans.label;
+    //                             return true;  // stops the looping.
+    //                         }
+    //                     })
+    //                     var defaultArea = {
+    //                         key: areaKey,
+    //                         icon: 'fa-cubes',
+    //                         isDefault: false,
+    //                         label: label,
+    //                         context: areaKey
+    //                     }
+
+    //                     // Note: this will only create it if it doesn't already exist.
+    //                     OPSPortal.NavBar.Area.create(defaultArea, function (err, area) {
+
+    //                         // area is null if already existed,
+    //                         // not null if just created:
+
+    //                         next(err);
+    //                     })
+
+    //                 } else {
+    //                     next();
+    //                 }
+
+    //             }
+
+    //         ], function (err) {
+    //             process.chdir(cwd);
+    //             if (err) dfd.reject(err);
+    //             else dfd.resolve({});
+
+    //             // now remove our flag:
+    //             // console.log('... App Build finished!');
+    //             delete appsBuildInProgress[appID];
+    //         });
+
+    //         return dfd;
+    //     },
 
 
 
@@ -765,8 +765,8 @@ module.exports = {
 
                                 if (!list || !list[0]) {
                                     var err = new Error('Application not found');
-                                    ADCore.error.log('Application not found ', {error:err, appID:appID });
-                                    next( err );
+                                    ADCore.error.log('Application not found ', { error: err, appID: appID });
+                                    next(err);
                                     return;
                                 }
 
@@ -860,7 +860,7 @@ module.exports = {
                                 // Only numbers and alphabets will be used
                                 Application = obj;
                                 appName = AppBuilder.rules.toApplicationNameFormat(obj.name);
-        
+
                                 next();
                                 return null;
                             })
@@ -868,7 +868,7 @@ module.exports = {
                                 next(err);
                                 return null;
                             });
-        
+
                     },
                     function (next) {
                         var areaName = Application.name;
@@ -886,24 +886,24 @@ module.exports = {
                         }
 
                         OPSPortal.NavBar.Area.exists(areaKey)
-                            .then(function(exists) {
+                            .then(function (exists) {
 
                                 if (exists) {
 
                                     OPSPortal.NavBar.Area.update(updateArea)
-                                    .then(function (err) {
-                                        next(err);
-                                    })
+                                        .then(function (err) {
+                                            next(err);
+                                        })
 
                                 }
                                 else {
 
                                     AppBuilder.registerNavBarArea(appID)
-                                    .then(function () {
-                                        next();
-                                    })
-                                    .catch(next);
-        
+                                        .then(function () {
+                                            next();
+                                        })
+                                        .catch(next);
+
                                 }
 
                             }, next);
@@ -921,22 +921,24 @@ module.exports = {
     },
 
 
-    updateNavView: function(application, page) {
+    updateNavView: function (application, page) {
 
         if (!page) return Promise.reject(new Error('invalid page'));
 
-        // find page name
-        var pageName;
-        page.translations.forEach((trans) => {
-            if (trans.language_code == 'en') {
-                pageName = AppBuilder.rules.nameFilter(trans.label);
-            }
-        });
+         // find page name
+         var pageLabel;
+         page.translations.forEach((trans) => {
+             if (trans.language_code == 'en') {
+                pageLabel = AppBuilder.rules.nameFilter(trans.label);
+             }
+         });
 
         var appID = application.id,
             appName = AppBuilder.rules.toApplicationNameFormat(application.name),
-            toolLabel = pageName,
+            pageName = AppBuilder.rules.nameFilter(page.name),
             pageKey = getPageKey(appName, pageName),
+            toolKey = _.kebabCase(pageKey),
+            toolLabel = pageLabel,
             pagePermsAction = pageKey + '.view',
             pagePerms = 'adcore.admin,' + pagePermsAction,
             controllerIncludes = [
@@ -983,7 +985,7 @@ module.exports = {
                 return new Promise((resolve, reject) => {
 
                     // 'opstools.' + appName + '.view';
-                    var action_key = application.actionKeyName(); 
+                    var action_key = application.actionKeyName();
 
                     Permissions.getRolesByActionKey(action_key)
                         .then(function (result) {
@@ -1001,7 +1003,7 @@ module.exports = {
                 return new Promise((resolve, reject) => {
 
                     var assignActionTasks = [];
-                    
+
                     roles.forEach(function (r) {
                         assignActionTasks.push(function (callback) {
                             Permissions.assignAction(r.id, pagePermsAction)
@@ -1009,7 +1011,7 @@ module.exports = {
                                 .then(function () { callback(); });
                         });
                     });
-    
+
                     async.parallel(assignActionTasks, function (err) {
                         if (err) {
                             reject(err);
@@ -1039,13 +1041,13 @@ module.exports = {
 
             // create a Tool Definition for the OP Portal Navigation
             .then(() => {
-                return new Promise((resolve, reject) => {                    
+                return new Promise((resolve, reject) => {
                     // sails.log('create tool definition')
                     var areaName = application.name;
                     var areaKey = application.areaKey();
 
                     var def = {
-                        key: _.kebabCase(pageKey),
+                        key: toolKey,
                         permissions: pagePerms,
                         icon: page.icon,
                         label: toolLabel,
@@ -1072,7 +1074,7 @@ module.exports = {
 
                     OPSPortal.NavBar.Area.link({
                         keyArea: application.areaKey(),
-                        keyTool: _.kebabCase(pageKey),
+                        keyTool: toolKey,
                         instance: {
                             icon: 'fa-cube',
                             permissions: pagePerms,
@@ -1083,7 +1085,7 @@ module.exports = {
                     }, function (err) {
                         if (err) {
                             if (err.code == 'E_AREANOTFOUND') {
-sails.log.info('... Area[' + application.areaKey() + '] not found.  Move along ... ');
+                                sails.log.info('... Area[' + application.areaKey() + '] not found.  Move along ... ');
                                 // this probably means that they deleted this default area
                                 // using the Navigation Editor.
                                 // no problem here:
@@ -1096,6 +1098,72 @@ sails.log.info('... Area[' + application.areaKey() + '] not found.  Move along .
 
                         resolve();
                     });
+
+                });
+
+            });
+
+    },
+
+
+
+    removeNavView: function (application, pageName) {
+
+        if (!pageName) return Promise.reject(new Error('invalid page'));
+
+        pageName = AppBuilder.rules.nameFilter(pageName);
+
+        var appID = application.id,
+            appName = AppBuilder.rules.toApplicationNameFormat(application.name),
+            pageKey = getPageKey(appName, pageName),
+            toolKey = _.kebabCase(pageKey),
+            pagePermsAction = pageKey + '.view';
+
+        return Promise.resolve()
+
+            .then(() => {
+
+                return new Promise((resolve, reject) => {
+
+                    OPConfigTool.destroy({ key: toolKey })
+                        .then(function (result) {
+                            resolve();
+                        }, reject);
+
+                });
+            })
+            .then(() => {
+
+                // Remove OPView entry
+                return new Promise((resolve, reject) => {
+
+                    OPSPortal.View.remove(pageKey)
+                        .then(function () {
+                            resolve();
+                        }, reject);
+
+                });
+            })
+            .then(() => {
+
+                // Remove a Tool Definition for the OP Portal Navigation
+                return new Promise((resolve, reject) => {
+
+                    OPSPortal.NavBar.ToolDefinition.remove(toolKey)
+                        .then(function () {
+                            resolve();
+                        }, reject);
+                });
+            })
+            .then(() => {
+
+                // Remove permissions of pages
+                return new Promise((resolve, reject) => {
+
+                    Permissions.action.destroyKeys([pagePermsAction])
+                        .then(function (data) {
+                            resolve();
+                        }, reject);
 
                 });
 
@@ -1318,7 +1386,7 @@ sails.log.info('... Area[' + application.areaKey() + '] not found.  Move along .
 
 
             // add build links for this and any connected models:
-            function(next) {
+            function (next) {
 
                 // hash of currently existing models:  'modelName' => modelDescription
                 var hashCurrModels = {};
@@ -1336,20 +1404,20 @@ sails.log.info('... Area[' + application.areaKey() + '] not found.  Move along .
                 ////  calculate the relative offset for our original (live) model file:
                 function calcOffsetPath(fileName, currPath) {
 
-                   ////  calculate the relative offset for our original (live) model file:
-                    var offsetDir = currPath.replace(sails.config.appPath+path.sep, '');
-// console.log('... offsetDir:'+offsetDir);
+                    ////  calculate the relative offset for our original (live) model file:
+                    var offsetDir = currPath.replace(sails.config.appPath + path.sep, '');
+                    // console.log('... offsetDir:'+offsetDir);
 
                     var parts = offsetDir.split(path.sep);
 
                     // remove the final model name and have only the path now.
-                    if (parts[parts.length-1].indexOf('.js') != -1) {
+                    if (parts[parts.length - 1].indexOf('.js') != -1) {
                         parts.pop();
                     }
 
                     // for each path directory, add a '..' offset
                     var offsets = [];
-                    parts.forEach(function(){
+                    parts.forEach(function () {
                         offsets.push('..');
                     })
 
@@ -1363,185 +1431,185 @@ sails.log.info('... Area[' + application.areaKey() + '] not found.  Move along .
                 function linkModel(name, cb) {
 
                     // find the build destination path for this model:
-                    var destPath = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models', name+'.js')
-// console.log('... symlink for: '+ destPath);
+                    var destPath = path.join(AppBuilder.paths.sailsBuildDir(), 'api', 'models', name + '.js')
+                    // console.log('... symlink for: '+ destPath);
 
 
                     var livePath = calcOffsetPath(path.join(modelsPath, name) + '.js', destPath);
-// console.log('... livePath:'+livePath);
-// console.log('... cwd:', process.cwd() );
+                    // console.log('... livePath:'+livePath);
+                    // console.log('... cwd:', process.cwd() );
 
-                    var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
-// console.log('... currLivePath:'+currLivePath);
+                    var currLivePath = calcOffsetPath(path.join(modelsPath, name) + '.js', process.cwd());
+                    // console.log('... currLivePath:'+currLivePath);
 
 
                     // if livePath Exists:
-                    fs.readFile(currLivePath,function(err, data){
+                    fs.readFile(currLivePath, function (err, data) {
                         if (!err) {
-// console.log('    +++ making symlink!');
+                            // console.log('    +++ making symlink!');
                             // now make the symlink:
-                            fs.symlink(livePath, destPath, function(err){
+                            fs.symlink(livePath, destPath, function (err) {
                                 cb(err);
                             });
                         } else {
-// console.log('... no symlink.  err:', err);
+                            // console.log('... no symlink.  err:', err);
                             cb();
                         }
                     })
 
                 }
 
-// function forceCrash(name, cb) {
+                // function forceCrash(name, cb) {
 
-//     var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
+                //     var currLivePath = calcOffsetPath(path.join(modelsPath, name)+'.js', process.cwd());
 
-//     fs.readFile(currLivePath, 'utf8', function(err, data){
-//         if (!err) {
-//             var code = [
-//                 "attributes: {",
-//                 "something:{ model:'notThere' },"
-//             ].join('\n');
+                //     fs.readFile(currLivePath, 'utf8', function(err, data){
+                //         if (!err) {
+                //             var code = [
+                //                 "attributes: {",
+                //                 "something:{ model:'notThere' },"
+                //             ].join('\n');
 
-//             data = data.replace(/attributes\s*:\s*{/g, code);
-//             // now make the symlink:
-//             fs.writeFile(currLivePath, data, function(err){
-//                 cb(err);
-//             });
-//         } else {
-//             cb();
-//         }
-//     })
-// }
+                //             data = data.replace(/attributes\s*:\s*{/g, code);
+                //             // now make the symlink:
+                //             fs.writeFile(currLivePath, data, function(err){
+                //                 cb(err);
+                //             });
+                //         } else {
+                //             cb();
+                //         }
+                //     })
+                // }
 
-//// TODO:
-// sails is lowercasing all our models info in .collection and .model references.
-// we need to be able to revert to the proper upper case for our FileNames.
-// the current lowercase versions work on MacOS, but not on Linux.
+                //// TODO:
+                // sails is lowercasing all our models info in .collection and .model references.
+                // we need to be able to revert to the proper upper case for our FileNames.
+                // the current lowercase versions work on MacOS, but not on Linux.
 
-// until it is fixed:  just attempt model and modelTrans:
-linkModel(fullName, function(err){
-    linkModel(fullName+'Trans', function(err){
+                // until it is fixed:  just attempt model and modelTrans:
+                linkModel(fullName, function (err) {
+                    linkModel(fullName + 'Trans', function (err) {
 
-// forceCrash(fullName, function(err){
-        next();
-// })
+                        // forceCrash(fullName, function(err){
+                        next();
+                        // })
 
-    })
-});
-
-
-//// This should work once we fix the fileNames and be able to handle
-//// any embedded model associations:
-
-//                 async.series([
-
-//                     // find the current models in the directory:
-//                     function(ok){
-
-//                         // scan this directory:
-//                         fs.readdir(pathModelDir, function(err, files){
-
-//                             if (err) {
-//                                 ok(err);
-//                                 return;
-//                             }
-
-//                             files.forEach(function(file){
-
-//                                 importModel(file);
-
-//                             })
-// console.log('... hashCurrModels:', _.keys(hashCurrModels));
-
-//                             ok();
-//                         });
-//                     },
-
-//                     function(ok){
+                    })
+                });
 
 
-//                         // check the current model name
-//                         // make sure it is linked, then find any associated models
-//                         // and make sure they are linked.
-//                         // when the current model is fully processed, call cb().
-//                         function checkModel(name, cb) {
+                //// This should work once we fix the fileNames and be able to handle
+                //// any embedded model associations:
 
-//                             // if not already linked LINK IT and try again:
-//                             if (!hashCurrModels[name]) {
+                //                 async.series([
 
-//                                 // add link
-//                                 linkModel(name, function(err){
-//                                     if (err) {
-//                                         cb(err);
-//                                     } else{
+                //                     // find the current models in the directory:
+                //                     function(ok){
 
-//                                         importModel(name+'.js'); // <-- use file name
+                //                         // scan this directory:
+                //                         fs.readdir(pathModelDir, function(err, files){
 
-//                                         // try it again.
-//                                         checkModel(name,cb);
-//                                     }
-//                                 })
+                //                             if (err) {
+                //                                 ok(err);
+                //                                 return;
+                //                             }
 
-//                             } else {
+                //                             files.forEach(function(file){
 
-//                                 // scan attributes for additional models to import:
-//                                 // each found model is .push() into associatedModels
-//                                 var model = hashCurrModels[name];
-//                                 var associatedModels = [];
-//                                 for(var a in model.attributes) {
-//                                     var field = model.attributes[a];
-//                                     if (field.collection) {
-//                                         associatedModels.push(field.collection);
-//                                     }
-//                                     if (field.model) {
-//                                         associatedModels.push(field.model);
-//                                     }
-//                                 }
+                //                                 importModel(file);
+
+                //                             })
+                // console.log('... hashCurrModels:', _.keys(hashCurrModels));
+
+                //                             ok();
+                //                         });
+                //                     },
+
+                //                     function(ok){
 
 
-//                                 // recursively process associatedModels and make sure
-//                                 // they are also linked.
-//                                 function processModel(models, pm_cb) {
-//                                     if (models.length == 0) {
-//                                         pm_cb();
-//                                     } else {
+                //                         // check the current model name
+                //                         // make sure it is linked, then find any associated models
+                //                         // and make sure they are linked.
+                //                         // when the current model is fully processed, call cb().
+                //                         function checkModel(name, cb) {
 
-//                                         var model = models.shift();
-//                                         if (hashCurrModels[model]) {
-//                                             // we can skip this one:
-//                                             processModel(models, pm_cb);
-//                                         } else {
-//                                             checkModel(model, function(err){
+                //                             // if not already linked LINK IT and try again:
+                //                             if (!hashCurrModels[name]) {
 
-//                                                 // that model is now done.  So try the next:
-//                                                 processModel(models, pm_cb);
-//                                             })
-//                                         }
-//                                     }
-//                                 }
-// console.log('... associatedModels:', associatedModels);
-//                                 processModel(associatedModels, function(err){
+                //                                 // add link
+                //                                 linkModel(name, function(err){
+                //                                     if (err) {
+                //                                         cb(err);
+                //                                     } else{
 
-//                                     // all our associated models have been checked:
-//                                     // we're done:
-//                                     cb(err);
-//                                 })
+                //                                         importModel(name+'.js'); // <-- use file name
+
+                //                                         // try it again.
+                //                                         checkModel(name,cb);
+                //                                     }
+                //                                 })
+
+                //                             } else {
+
+                //                                 // scan attributes for additional models to import:
+                //                                 // each found model is .push() into associatedModels
+                //                                 var model = hashCurrModels[name];
+                //                                 var associatedModels = [];
+                //                                 for(var a in model.attributes) {
+                //                                     var field = model.attributes[a];
+                //                                     if (field.collection) {
+                //                                         associatedModels.push(field.collection);
+                //                                     }
+                //                                     if (field.model) {
+                //                                         associatedModels.push(field.model);
+                //                                     }
+                //                                 }
 
 
-//                             }
+                //                                 // recursively process associatedModels and make sure
+                //                                 // they are also linked.
+                //                                 function processModel(models, pm_cb) {
+                //                                     if (models.length == 0) {
+                //                                         pm_cb();
+                //                                     } else {
 
-//                         } // end checkModel()
+                //                                         var model = models.shift();
+                //                                         if (hashCurrModels[model]) {
+                //                                             // we can skip this one:
+                //                                             processModel(models, pm_cb);
+                //                                         } else {
+                //                                             checkModel(model, function(err){
 
-//                         // kick the process off with the current model :
-//                         // NOTE: lower case our model name for our build files.
-//                         checkModel(fullName, function(err){
-//                             ok(err);
-//                         })
+                //                                                 // that model is now done.  So try the next:
+                //                                                 processModel(models, pm_cb);
+                //                                             })
+                //                                         }
+                //                                     }
+                //                                 }
+                // console.log('... associatedModels:', associatedModels);
+                //                                 processModel(associatedModels, function(err){
 
-//                     }], function(err){
-//                     next(err);
+                //                                     // all our associated models have been checked:
+                //                                     // we're done:
+                //                                     cb(err);
+                //                                 })
 
-//                 }) // end async.series()
+
+                //                             }
+
+                //                         } // end checkModel()
+
+                //                         // kick the process off with the current model :
+                //                         // NOTE: lower case our model name for our build files.
+                //                         checkModel(fullName, function(err){
+                //                             ok(err);
+                //                         })
+
+                //                     }], function(err){
+                //                     next(err);
+
+                //                 }) // end async.series()
 
             }
 
@@ -2333,7 +2401,7 @@ linkModel(fullName, function(err){
                     }
                     else next();
                 },
-                
+
                 // Find server side controller & blueprints URL
                 (next) => {
                     var lcModelName = modelName.toLowerCase();
@@ -2356,7 +2424,7 @@ linkModel(fullName, function(err){
                                 return false;
                         });
                     }
-                    
+
                     modelURL = controllerInfo && controllerInfo.identity || '';
                     next();
                 },
@@ -2364,36 +2432,36 @@ linkModel(fullName, function(err){
                 // Find app in database
                 (next) => {
                     ABApplication.find({ id: appID })
-                    .exec(function (err, list) {
-                        if (err) {
-                            next(err);
-                        }
-                        else if (!list || !list[0]) {
-                            next(new Error('application not found: ' + appID));
-                        }
-                        else {
-                            application = list[0];
-                            next();
-                        }
-                    });
+                        .exec(function (err, list) {
+                            if (err) {
+                                next(err);
+                            }
+                            else if (!list || !list[0]) {
+                                next(new Error('application not found: ' + appID));
+                            }
+                            else {
+                                application = list[0];
+                                next();
+                            }
+                        });
                 },
-                
+
                 // Find site languages
                 (next) => {
                     SiteMultilingualLanguage.find()
-                    .exec((err, list) => {
-                        if (err) next(err);
-                        else if (!list || !list[0]) {
-                            languages = ['en'];
-                            next();
-                        }
-                        else {
-                            list.forEach((lang) => {
-                                languages.push(lang.language_code);
-                            });
-                            next();
-                        }
-                    });
+                        .exec((err, list) => {
+                            if (err) next(err);
+                            else if (!list || !list[0]) {
+                                languages = ['en'];
+                                next();
+                            }
+                            else {
+                                list.forEach((lang) => {
+                                    languages.push(lang.language_code);
+                                });
+                                next();
+                            }
+                        });
                 },
 
                 // Prepare object
@@ -2408,7 +2476,7 @@ linkModel(fullName, function(err){
                         translations: [],
                         fields: []
                     };
-                    
+
                     // Add label translations
                     languages.forEach((langCode) => {
                         objectData.translations.push({
@@ -2416,7 +2484,7 @@ linkModel(fullName, function(err){
                             label: modelName
                         });
                     });
-                    
+
                     next();
                 },
 
@@ -2448,9 +2516,9 @@ linkModel(fullName, function(err){
                         if (allowCol == null) {
                             continue;
                         }
-                        
+
                         // Check if the column's type is supported
-                        if (!sailsToAppBuilderReference[ col.type ]) {
+                        if (!sailsToAppBuilderReference[col.type]) {
                             return next(new Error(`${modelName} contains a column "${colName}" that is of an unsupported type: ${col.type}`));
                         }
 
@@ -2458,7 +2526,7 @@ linkModel(fullName, function(err){
                         if (typeof col.default == 'function') {
                             defaultValue = col.default();
                         }
-                        
+
                         // Clone the reference defaults for this type
                         var colData = _.cloneDeep(sailsToAppBuilderReference[col.type]);
                         // Populate with imported values
@@ -2466,7 +2534,7 @@ linkModel(fullName, function(err){
                         colData.columnName = colName;
                         colData.settings.default = defaultValue;
                         colData.settings.imported = true;
-                        
+
                         // Label translations
                         colData.translations = [];
                         languages.forEach((langCode) => {
@@ -2475,9 +2543,9 @@ linkModel(fullName, function(err){
                                 label: colName
                             });
                         });
-                        
+
                         console.log('Adding column:', colData);
-                        
+
                         objectData.fields.push(colData);
                     }
                     next();
@@ -2500,9 +2568,9 @@ linkModel(fullName, function(err){
                             }
                         ]
                     */
-                    
+
                     async.forEach(model.associations, function (assoc, assocDone) {
-                        
+
                         var targetLinkName, targetRelation, targetModelName;
 
                         if (assoc.type == 'model') {
@@ -2529,26 +2597,26 @@ linkModel(fullName, function(err){
 
                         // Look for target object within application
                         var targetObject;
-                        for (var i=0; i<application.json.objects.length; i++) {
+                        for (var i = 0; i < application.json.objects.length; i++) {
                             if (application.json.objects[i].name == targetModelName) {
                                 targetObject = application.json.objects[i];
                                 break;
                             }
                         };
-                        
+
                         // Skip if the target object has not been imported into
                         // this application yet.
                         if (!targetObject) return assocDone();
-                        
+
                         //// Create the new connection columns:
                         // Clone the reference defaults
                         var sourceColData = _.cloneDeep(sailsToAppBuilderReference.connectObject);
                         var targetColData = _.cloneDeep(sailsToAppBuilderReference.connectObject);
-                        
+
                         // Populate with imported values:
                         sourceColData.id = uuid.v4();
                         targetColData.id = uuid.v4();
-                        
+
                         // Source column
                         sourceColData.columnName = assoc.alias;
                         sourceColData.settings.isImported = true;
@@ -2563,7 +2631,7 @@ linkModel(fullName, function(err){
                                 label: assoc.alias
                             });
                         });
-                        
+
                         // Target column
                         targetColData.columnName = targetLinkName;
                         targetColData.settings.isImported = true;
@@ -2578,14 +2646,14 @@ linkModel(fullName, function(err){
                                 label: targetLinkName
                             });
                         });
-                        
+
                         // Add columns to the object being created
                         objectData.fields.push(sourceColData);
                         targetObject.fields.push(targetColData);
-                        
+
                         // ( `targetObject` is already a reference to the
                         //   existing object in `application.json.objects` )
-                        
+
                         return assocDone();
 
                     }, (err) => {
@@ -2593,13 +2661,13 @@ linkModel(fullName, function(err){
                         else next();
                     });
                 },
-                
+
                 // Save to database
                 (next) => {
                     application.json.objects.push(objectData);
-                    
+
                     ABApplication.update(
-                        { id: appID }, 
+                        { id: appID },
                         { json: application.json }
                     ).exec((err, updated) => {
                         if (err) {
@@ -2626,7 +2694,7 @@ linkModel(fullName, function(err){
 
         return dfd;
     },
-    
+
 
     findModelAttributes: function (modelName) {
         var dfd = AD.sal.Deferred();
@@ -2654,7 +2722,7 @@ linkModel(fullName, function(err){
                 }
             }
         }
-        
+
         // Check if column types are supported by AppBuilder
         var validTypes = ABColumn.getValidTypes();
         for (var colName in columns) {
@@ -2664,8 +2732,8 @@ linkModel(fullName, function(err){
                 columns[colName] = {
                     type: columns[colName]
                 };
-            } 
-            
+            }
+
             var type = String(columns[colName].type).toLowerCase();
             if (sailsToAppBuilderReference[type]) {
                 columns[colName].supported = true;

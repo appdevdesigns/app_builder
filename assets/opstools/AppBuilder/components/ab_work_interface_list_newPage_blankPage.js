@@ -61,7 +61,7 @@ width: 400,
 					view: "text", 
 					id: ids.formName,
 					label: labels.common.formName, 
-					name: "label", 
+					name: "name", 
 					required: true, 
 					placeholder: labels.component.placeholderPageName, 
 					labelWidth: 110 
@@ -204,9 +204,11 @@ width: 400,
 					parent = CurrentApplication.urlResolve(parent);
 				}
 
+				// TODO : validate unique page's name 
+
 				return {
 					parent: parent, // should be either null or an {}
-					label: $$(ids.formName).getValue().trim(),
+					name: $$(ids.formName).getValue().trim(),
 					key: ABPage.common().key
 				}
 
