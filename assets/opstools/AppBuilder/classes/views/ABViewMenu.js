@@ -288,7 +288,7 @@ export default class ABViewMenu extends ABViewWidget {
 
 	ClearPagesInView(menu) {
 		// clear menu items
-		if (menu.count() > 1) {
+		if (menu && menu.count() > 1) {
 			menu.find({}).forEach((item) => {
 				menu.remove(item.id);
 			});
