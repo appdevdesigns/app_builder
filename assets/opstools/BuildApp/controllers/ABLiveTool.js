@@ -57,7 +57,14 @@ steal(
 
 							self.initDOM();
 							self.initModels();
-							self.initPage();
+
+							self.getData().then(function () {
+
+								// Store the root page
+								self.rootPage = self.data.application.urlResolve(self.options.page);
+
+								self.initPage();
+							});
 
 
 							AD.comm.hub.subscribe('opsportal.resize', function (message, data) {
@@ -87,20 +94,14 @@ steal(
 						initPage: function () {
 							var self = this;
 
-							self.getData().then(function () {
+							self.renderPageContainer();
 
-								// Store the root page
-								self.rootPage = self.data.application.urlResolve(self.options.page);
-
-								self.renderPageContainer();
-
-								webix.ready(function () {
-									self.showPage();
-								});
-
-								self.initEvents(self.rootPage);
-
+							webix.ready(function () {
+								self.showPage();
 							});
+
+							self.initEvents(self.rootPage);
+
 						},
 
 						getData: function () {
@@ -312,7 +313,7 @@ steal(
 
 							// Change page by batch id
 							var childViews = $$(self.containerDomID).getChildViews(),
-								batchExist = childViews.filter(function(v) { return v.config.batch == pageId; })[0];
+								batchExist = childViews.filter(function (v) { return v.config.batch == pageId; })[0];
 							if (batchExist)
 								$$(self.containerDomID).showBatch(pageId);
 
@@ -341,7 +342,10 @@ steal(
 								 */
 								self.updatePageEventId = AD.comm.hub.subscribe('ab.interface.update', function (msg, data) {
 
-									if (page.id == data.rootPage) {
+									if (page.id == data.rootPage.id) {
+
+										// update the root page instance
+										self.rootPage = data.rootPage;
 
 										// re-render this page
 										self.initPage();

@@ -557,7 +557,7 @@ export default class ABApplication extends ABApplicationBase {
 
 				// Trigger a update event to the live display page
 				AD.comm.hub.publish('ab.interface.update', {
-					rootPage: page.id	// id of the root page
+					rootPage: page	// instance of the root page
 				});
 
 			});
