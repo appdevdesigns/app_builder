@@ -377,7 +377,7 @@ console.error('!! todo: onBeforeEditStop() editing');
 									// refresh the root page list
 									PopupNewPageComponent.applicationLoad(CurrentApplication);
 
-// App.actions.clearObjectWorkspace();
+									App.actions.clearInterfaceWorkspace();
 								});
 
 						}
