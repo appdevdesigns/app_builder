@@ -197,8 +197,8 @@ steal(
 							// Define page id to be batch id of webix.multiview
 							ui.batch = page.id;
 
-							switch (page.type) {
-								case 'modal':
+							switch (page.settings.type) {
+								case 'popup':
 									var popupTemplate = {
 										view: "window",
 										id: pageDomId,
@@ -215,17 +215,19 @@ steal(
 												{
 													view: "button", label: "Close", width: 100, align: "right",
 													click: function () {
-														if (self.previousPage.type === 'modal')
-															self.showPage();
-														else
+
+														if (self.previousPage && self.previousPage.settings.type != 'popup')
 															self.showPage(self.previousPage);
+														else
+															self.showPage();
 													}
 												}
 											]
 										},
 										body: {
+											view: "scrollview",
 											scroll: true,
-											template: '' // page.getItemTemplate()
+											body: ui
 										}
 									};
 
@@ -298,7 +300,7 @@ steal(
 
 							// Hide page popup
 							var activePageDomId = self.getPageDomID(self.activePageId);
-							if (self.activePage && $$(activePageDomId) && $$(activePageDomId).hide)
+							if ($$(activePageDomId) && $$(activePageDomId).hide)
 								$$(activePageDomId).hide();
 
 							// Show page popup

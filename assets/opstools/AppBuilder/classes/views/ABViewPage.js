@@ -18,6 +18,9 @@ function L(key, altText) {
     return AD.lang.label.getLabel(key) || altText;
 }
 
+var ABPropertyComponentDefaults = {
+    type: 'page',
+}
 
 var ABViewDefaults = {
     key: 'page',		// unique key identifier for this ABView
@@ -137,6 +140,52 @@ export default class ABViewPage extends ABViewContainer {
         this.settings.columns = this.settings.columns || 1;
 
         // convert from "0" => 0
+
+    }
+
+
+    static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
+
+        var commonUI = super.propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults);
+
+
+        // in addition to the common .label  values, we 
+        // ask for:
+        return commonUI.concat([
+            {
+                name: 'type',
+                view: 'richselect',
+                label: L('ab.components.page.type', "*Type"),
+                options: [
+                    { id: 'page', value: L('ab.components.page.page', "*Page") },
+                    { id: 'popup', value: L('ab.components.page.popup', "*Popup") }
+                ]
+            }
+        ]);
+
+    }
+
+
+    static propertyEditorPopulate(ids, view) {
+
+        super.propertyEditorPopulate(ids, view);
+
+        $$(ids.type).setValue(view.settings.type || ABPropertyComponentDefaults.type);
+
+        // Disable select type of page when this page is root 
+        if (view.isRoot())
+            $$(ids.type).disable();
+        else 
+            $$(ids.type).enable();
+
+    }
+
+
+    static propertyEditorValues(ids, view) {
+
+        super.propertyEditorValues(ids, view);
+
+        view.settings.type = $$(ids.type).getValue();
 
     }
 
