@@ -383,14 +383,8 @@ export default class ABViewContainer extends ABView {
 		var idBase = 'ABViewContainer_' + this.id;
 		var ids = {
 			component: App.unique(idBase + '_component'),
-		}
-
-		var _ui = {
-			id: ids.component,
-			view: "dashboard",
-			gridColumns: this.settings.columns
 		};
-
+		var subComponents = [];
 
 		var _logic = {
 
@@ -398,52 +392,81 @@ export default class ABViewContainer extends ABView {
 				this.changePage(pageId);
 			},
 
-			validatePosition: (curPosition, minPosition, maxPosition) => {
+			sortByPosition: (views) => {
 
-				if (curPosition < minPosition)
-					return minPosition;
-				if (curPosition > maxPosition)
-					return maxPosition;
-				else
-					return curPosition;
+				// Sort views from y, x positions
+				return views.sort((a, b) => {
+					if (a.position.y == b.position.y) return a.position.x - b.position.x;
+					return a.position.y - b.position.y;
+				});
 
+			},
+
+			getElements: (views) => {
+				var rows = [];
+				var curRowIndex;
+				var curColIndex;
+
+				views.forEach((v) => {
+
+					var component = v.component(App);
+					subComponents.push(component);
+
+					// Create a new row
+					if (v.position.y != curRowIndex) {
+						curRowIndex = v.position.y;
+						curColIndex = 0;
+
+						var rowNew = { cols: [] }
+
+						// Create columns following setting value
+						var colNumber = this.settings.columns || ABPropertyComponentDefaults.columns;
+						for (var i = 0; i < colNumber; i++) {
+							rowNew.cols.push({});
+						}
+
+						rows.push(rowNew);
+					}
+
+					// Get the last row
+					var curRow = rows[rows.length - 1];
+
+					// Add ui of sub-view to column
+					curRow.cols[v.position.x] = component.ui;
+
+					curColIndex += 1;
+
+					// Trigger 'changePage' event to parent
+					v.removeListener('changePage', _logic.changePage)
+						.on('changePage', _logic.changePage);
+
+				});
+
+				return rows;
 			}
 
+		};
+
+		// Generate rows & cols of views to .layout
+		var views = _logic.sortByPosition(this.views());
+		var rowViews = _logic.getElements(views);
+
+
+		var _ui = {
+			id: ids.component,
+			view: "layout",
+			rows: rowViews
 		};
 
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
-			var Dashboard = $$(ids.component);
-
 			// attach all the .UI views:
-			this.views().forEach((child) => {
-				var component = child.component(App);
-
-				Dashboard.addView({
-					view: 'layout',
-
-					rows: [component.ui],
-
-					// dx: _logic.validatePosition(child.position.dx, 1, Dashboard.config.gridColumns),
-					// dy: _logic.validatePosition(child.position.dy, 1, Dashboard.config.gridRows),
-					// x: _logic.validatePosition(child.position.x, 0, Dashboard.config.gridColumns - 1),
-					// y: _logic.validatePosition(child.position.y, 0, Dashboard.config.gridRows - 1)
-
-					dx: child.position.dx || 1,
-					dy: child.position.dy || 1,
-					x: child.position.x || 0,
-					y: child.position.y || 0,
-
-				});
+			subComponents.forEach((component) => {
 
 				// Initial component
 				component.init();
-
-				// Trigger 'changePage' event to parent
-				child.removeListener('changePage', _logic.changePage)
-					.on('changePage', _logic.changePage);
 
 			});
 
