@@ -157,11 +157,16 @@ export default class ABViewDetailSelectivity extends ABViewDetailComponent {
 			// get selectivity dom
 			var domSelectivity = _logic.getDomSelectivity();
 			if (!domSelectivity) return;
+			
+			var isUsers = false;
+			if (component.ui.isUsers)
+				isUsers = component.ui.isUsers;
 
 			// render selectivity to html dom
 			var selectivitySettings = {
 				multiple: true,
-				readOnly: true
+				readOnly: true,
+				isUsers: isUsers
 			};
 			field.selectivityRender(domSelectivity, selectivitySettings, App, {});
 

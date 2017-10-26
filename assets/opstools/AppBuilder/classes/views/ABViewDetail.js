@@ -362,17 +362,30 @@ export default class ABViewDetail extends ABViewContainer {
 					}
 
 					if (field.key == "list" && field.settings.isMultiple == 0) {
-						let selected = field.settings.options.filter(function (options) {
-							return options.id = val;
+						let myVal = "";
+						let selected = field.settings.options.forEach(function (options) {
+							if (options.id == val)
+								myVal = options.text;
 						});
-						if (selected[0] && selected[0].text != null) 
-							val = selected[0].text;
-						else
-							val = "";
+						
+						if (field.settings.hasColors) {
+							let myHex = "#66666";
+							field.settings.options.forEach(function(h) {
+								if (h.text == myVal)
+									myHex = h.hex;
+							});
+							myVal = '<span class="selectivity-multiple-selected-item rendered" style="background-color:'+myHex+' !important;">'+myVal+'</span>';
+						}				
+						
+						val = myVal;
 					}
 
 					if (field.key == "number") {
 						val = field.getNumberFormat(data[field.columnName]);
+					}
+
+					if (field.key == "user" && field.settings.isMultiple == 0 && val != "") {
+						val = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+val+'</span>';
 					}
 
 					// set value to each components

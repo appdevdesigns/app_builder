@@ -57,6 +57,9 @@ export default class ABViewDetailComponent extends ABViewWidget {
 		if (detailView)
 			settings = detailView.settings;
 
+		var isUsers = false;
+		if (field.key == "user")
+			isUsers = true;
 
 		var templateLabel = '';
 		if (settings.showLabel == true) {
@@ -79,6 +82,7 @@ export default class ABViewDetailComponent extends ABViewWidget {
 			view: "template",
 			borderless: true,
 			height: height,
+			isUsers: isUsers,
 			template: template,
 			data: { display: '' } // show empty data in template
 		};
