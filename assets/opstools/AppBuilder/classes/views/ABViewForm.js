@@ -405,11 +405,11 @@ export default class ABViewForm extends ABViewContainer {
 			var subviews = this.views();
 			subviews.forEach((child) => {
 
-				var component = child.component(App);
+				var subComponent = child.component(App);
 
-				this.viewComponents[child.id] = component;
+				this.viewComponents[child.id] = subComponent;
 
-				component.init();
+				subComponent.init();
 
 			});
 
