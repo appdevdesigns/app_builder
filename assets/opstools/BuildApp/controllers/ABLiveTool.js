@@ -249,16 +249,16 @@ steal(
 								case 'page':
 								default:
 									if ($$(pageDomId)) {
-										// // Change page type (Popup -> Page)
-										// if ($$(pageDomId).config.view == 'window') {
-										// 	$$(pageDomId).destructor();
+										// Change page type (Popup -> Page)
+										if ($$(pageDomId).config.view == 'window') {
+											$$(pageDomId).destructor();
 
-										// 	$$(self.containerDomID).addView(pageTemplate);
-										// }
-										// // Rebuild
-										// else {
-										webix.ui(ui, $$(pageDomId));
-										// }
+											$$(self.containerDomID).addView(ui);
+										}
+										// Rebuild
+										else {
+											webix.ui(ui, $$(pageDomId));
+										}
 									}
 									// Add to multi-view
 									else if ($$(self.containerDomID))

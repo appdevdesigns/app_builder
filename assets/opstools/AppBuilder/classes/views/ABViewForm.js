@@ -376,10 +376,60 @@ export default class ABViewForm extends ABViewContainer {
 				layout: App.unique(idBase + '_form_layout'),
 			};
 
-
-		var fieldCells = [];
+		var component = super.component(App);
 
 		this.viewComponents = {}; // { viewId: viewComponent }
+
+
+		// an ABViewForm_ is a collection of rows:
+		var _ui = {
+			view: "scrollview",
+			body: {
+				id: ids.component,
+				view: 'form',
+				rows: component.ui.rows
+			}
+		};
+
+
+		// make sure each of our child views get .init() called
+		var _init = (options) => {
+
+			component.init(options);
+
+			var Form = $$(ids.component);
+			webix.extend(Form, webix.ProgressBar);
+
+
+			// attach all the .UI views:
+			var subviews = this.views();
+			subviews.forEach((child) => {
+
+				var component = child.component(App);
+
+				this.viewComponents[child.id] = component;
+
+				component.init();
+
+			});
+
+
+			// bind a data collection to form component
+			var dc = this.dataCollection();
+			if (dc) {
+
+				dc.bind(Form);
+
+				// listen DC events
+				dc.removeListener('changeCursor', _logic.displayData)
+					.on('changeCursor', _logic.displayData);
+			}
+
+			// do this for the initial form display so we can see defaults
+			_logic.displayData(null);
+			Form.adjust();
+		}
+
 
 		var _logic = {
 
@@ -442,94 +492,9 @@ export default class ABViewForm extends ABViewContainer {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
-			},
-
-
-			validatePosition: (curPosition, minPosition, maxPosition) => {
-
-				if (curPosition < minPosition)
-					return minPosition;
-				if (curPosition > maxPosition)
-					return maxPosition;
-				else
-					return curPosition;
-
 			}
 
 		};
-
-		// attach all the .UI views:
-		var subviews = this.views();
-		subviews.forEach((child) => {
-
-			var component = child.component(App);
-
-			this.viewComponents[child.id] = component;
-
-			fieldCells.push({
-				view: 'layout',
-
-				rows: [component.ui],
-
-				dx: _logic.validatePosition(child.position.dx, 1, this.settings.columns),
-				dy: _logic.validatePosition(child.position.dy, 1, subviews.length),
-				x: _logic.validatePosition(child.position.x, 0, this.settings.columns - 1),
-				y: _logic.validatePosition(child.position.y, 0, subviews.length - 1)
-			});
-
-			// Trigger 'changePage' event to parent
-			child.removeListener('changePage', _logic.changePage)
-				.on('changePage', _logic.changePage);
-
-		});
-
-		// Pull number of rows by get max of y position
-		var numberOfRows = Math.max.apply(null, fieldCells.map((c) => c.y)) + 1;
-
-		// an ABViewForm_ is a collection of rows:
-		var _ui = {
-			view: "scrollview",
-			body: {
-				id: ids.component,
-				view: 'form',
-				rows: [{
-					id: ids.layout,
-					view: "dashboard",
-					gridColumns: this.settings.columns,
-					gridRows: numberOfRows,
-
-					cells: fieldCells
-				}]
-			}
-		};
-
-
-		// make sure each of our child views get .init() called
-		var _init = (options) => {
-
-			var Form = $$(ids.component);
-			webix.extend(Form, webix.ProgressBar);
-
-			// Initial sub-components
-			for (var key in this.viewComponents) {
-				this.viewComponents[key].init();
-			}
-
-			// bind a data collection to form component
-			var dc = this.dataCollection();
-			if (dc) {
-
-				dc.bind(Form);
-
-				// listen DC events
-				dc.removeListener('changeCursor', _logic.displayData)
-					.on('changeCursor', _logic.displayData);
-			}
-
-			// do this for the initial form display so we can see defaults
-			_logic.displayData(null);
-			Form.adjust();
-		}
 
 
 		return {
