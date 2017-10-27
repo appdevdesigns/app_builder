@@ -100,11 +100,13 @@ export default class ABViewDetail extends ABViewContainer {
 
 				var fields = $$(ids.fields).find({});
 				fields.reverse();
-				fields.forEach((f) => {
+				fields.forEach((f, index) => {
 
 					if (!f.selected) {
 
-						_logic.addFieldToView(f);
+						var yPosition = (fields.length - index - 1);
+
+						_logic.addFieldToView(f, yPosition);
 
 						// update item to UI list
 						f.selected = 1;
@@ -152,7 +154,7 @@ export default class ABViewDetail extends ABViewContainer {
 		};
 
 
-		_logic.addFieldToView = (field) => {
+		_logic.addFieldToView = (field, yPosition) => {
 
 			if (field == null)
 				return;
@@ -167,6 +169,8 @@ export default class ABViewDetail extends ABViewContainer {
 			newView.settings = newView.settings || {};
 			newView.settings.fieldId = field.id;
 			// TODO : Default settings
+
+			newView.position.y = yPosition;
 
 			// add a new component
 			detailView._views.push(newView);
