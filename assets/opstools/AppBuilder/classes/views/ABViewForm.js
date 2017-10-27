@@ -434,6 +434,7 @@ export default class ABViewForm extends ABViewContainer {
 		var _logic = {
 
 			displayData: (data) => {
+				// Set default values
 				if (data == null) {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
@@ -442,9 +443,9 @@ export default class ABViewForm extends ABViewContainer {
 						// set value to each components
 						var values = {};
 						f.field().defaultValue(values);
-						var columnName = colName;
-						if (typeof values[columnName] != "undefined")
-							f.field().setValue($$(this.viewComponents[f.id].ui.id), values[columnName]);
+
+						if (values[colName] != null)
+							f.field().setValue($$(this.viewComponents[f.id].ui.id), values[colName]);
 					});
 					var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
 					normalFields.forEach((f) => {
@@ -455,23 +456,15 @@ export default class ABViewForm extends ABViewContainer {
 							// set value to each components
 							var values = {};
 							f.field().defaultValue(values);
-							var columnName = colName;
-							if (typeof values[columnName] != "undefined")
-								$$(this.viewComponents[f.id].ui.id).setValue(values[columnName]);
-						}
-					});
-				} else {
-					var dateFields = this.fieldComponents((comp) => comp instanceof ABViewFormDatepicker);
-					dateFields.forEach((f) => {
-						var colName = f.field().columnName;
-						// var format = f.field().getDateFormat();
 
-						// set value to each components
-						if (data[colName] != null) {
-							var val = new Date(data[colName]);
-							$$(this.viewComponents[f.id].ui.id).setValue(val);
+							if (values[colName] != null)
+								$$(this.viewComponents[f.id].ui.id).setValue(values[colName]);
 						}
 					});
+				} 
+
+				// Populate value to custom fields
+				else {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
 

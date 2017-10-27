@@ -118,6 +118,8 @@ export default class ABModel {
 				})
 					.then((data) => {
 
+						this.normalizeData(data);
+
 						resolve(data);
 
 						// trigger a create event
@@ -192,32 +194,7 @@ export default class ABModel {
 				})
 					.then((data) => {
 
-						// if this object has some multilingual fields, translate the data:
-						var mlFields = this.object.multilingualFields();
-
-						// if this object has some date fields, convert the data to date object:
-						var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
-						
-						if (mlFields.length > 0 || dateFields.length > 0) {
-
-							data.data.forEach((d) => {
-
-
-								if (mlFields.length) {
-									OP.Multilingual.translate(d, d, mlFields);
-								}
-
-
-								// convert the data to date object
-								dateFields.forEach((date) => {
-									if (d[date.columnName] != null)
-										d[date.columnName] = new Date(d[date.columnName]);
-								});
-
-
-							});
-
-						}
+						this.normalizeData(data.data);
 
 						resolve(data);
 					})
@@ -375,7 +352,12 @@ export default class ABModel {
 					params: values
 				})
 					.then((data) => {
-						resolve(data);
+
+						// .data is an empty object ?? 
+
+						this.normalizeData(values);
+
+						resolve(values);
 
 						// trigger a update event
 						triggerEvent('update', this.object, values);
@@ -421,6 +403,41 @@ export default class ABModel {
 			}
 		)
 
+	}
+
+
+	normalizeData(data) {
+
+		// convert to array
+		if (!(data instanceof Array))
+			data = [data];
+
+		// if this object has some multilingual fields, translate the data:
+		var mlFields = this.object.multilingualFields();
+		
+		// if this object has some date fields, convert the data to date object:
+		var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
+		
+		if (mlFields.length > 0 || dateFields.length > 0) {
+
+			data.forEach((d) => {
+
+
+				if (mlFields.length) {
+					OP.Multilingual.translate(d, d, mlFields);
+				}
+
+
+				// convert the data to date object
+				dateFields.forEach((date) => {
+					if (d[date.columnName] != null)
+						d[date.columnName] = new Date(d[date.columnName]);
+				});
+
+
+			});
+
+		}
 	}
 
 
