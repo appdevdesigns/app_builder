@@ -425,7 +425,7 @@ console.error('!! todo: onBeforeEditStop() editing');
 
 
 				template = template.replace("#iconGear#", "<div class='ab-page-list-edit'>{common.iconGear}</div>");
-				template = template.replace('#typeIcon#', 'fa-file-o');
+				template = template.replace('#typeIcon#', item.settings.type == 'popup' ? 'fa-clone fa-flip-horizontal' : 'fa-file-o');
 
 
 							// // Disallow rename/delete on Tabs
