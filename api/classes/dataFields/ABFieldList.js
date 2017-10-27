@@ -233,7 +233,9 @@ class ABFieldList extends ABField {
 			}
 			else {
 				// storing the uuid as a string.
-				obj[this.columnName] = { type: 'string' }
+				obj[this.columnName] = { 
+					type: ["string", "null"]
+				}
 			}
 
 		}
@@ -252,6 +254,12 @@ class ABFieldList extends ABField {
 		var myParameter;
 
 		myParameter = super.requestParam(allParameters);
+
+		// '' (empty string) to null
+		if (myParameter[this.columnName] != undefined && 
+			myParameter[this.columnName] == '') {
+			myParameter[this.columnName] = null;
+		}
 
 		return myParameter;
 	}
