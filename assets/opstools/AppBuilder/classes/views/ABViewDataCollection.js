@@ -479,10 +479,10 @@ export default class ABViewDataCollection extends ABView {
 		if (view.dataCollectionLink) {
 			var object = view.datasource;
 			var linkObject = view.dataCollectionLink.datasource;
-			var linkFields = linkObject.connectFields().filter((link) => link.settings.linkObject == object.id);
+			var relationFields = object.connectFields().filter((link) => link.settings.linkObject == linkObject.id);
 
 			// pull fields to options
-			linkFields.forEach((f) => {
+			relationFields.forEach((f) => {
 				linkFieldOptions.push({
 					id: f.id,
 					value: f.label
@@ -621,79 +621,81 @@ export default class ABViewDataCollection extends ABView {
 	init() {
 
 		var model = this.model;
-		if (model) {
+		if (model == null) return;
 
-			this.__dataCollection = model.dataCollectionNew();
+		this.__dataCollection = model.dataCollectionNew();
 
 
-			this.__dataCollection.attachEvent("onAfterCursorChange", () => {
+		this.__dataCollection.attachEvent("onAfterCursorChange", () => {
 
-				var currData = this.getCursor();
+			var currData = this.getCursor();
 
-				this.emit("changeCursor", currData);
+			this.emit("changeCursor", currData);
 
-			});
+		});
 
-			// events
-			AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
+		// events
+		AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
 
-				if (this.datasource.id != data.objectId) return;
+			if (this.datasource.id != data.objectId) return;
 
-				// TODO : filter before add 
+			// TODO : filter before add 
 
-				var rowData = data.data;
+			var rowData = data.data;
 
-				if (!this.__dataCollection.exists(rowData.id)) {
-					this.__dataCollection.add(rowData, 0);
+			if (!this.__dataCollection.exists(rowData.id)) {
+				this.__dataCollection.add(rowData, 0);
+			}
+
+		});
+
+		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
+
+			if (this.datasource.id != data.objectId) return;
+
+			// updated values
+			var values = data.data;
+
+			if (this.__dataCollection.exists(values.id)) {
+				this.__dataCollection.updateItem(values.id, values);
+			}
+		});
+
+		AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
+
+			if (this.datasource.id != data.objectId) return;
+
+			// id of a deleted item
+			var deleteId = data.data;
+
+			if (this.__dataCollection.exists(deleteId)) {
+				this.__dataCollection.remove(deleteId);
+			}
+		});
+
+
+		// load data to initial the data collection
+		this.loadData()
+			.then(() => {
+
+				var linkDc = this.dataCollectionLink;
+				if (linkDc) {
+
+					// filter data by match link data collection
+					var linkData = linkDc.getCursor();
+					this.filterLinkCursor(linkData);
+
+					// add listeners when cursor of link data collection is changed
+					// linkDc.removeListener("changeCursor", this.filterLinkCursor)
+					// 	.on("changeCursor", this.filterLinkCursor);
+					linkDc.on("changeCursor", (currData) => {
+						this.filterLinkCursor(currData);
+					});
+
 				}
 
 			});
 
-			AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
-
-				if (this.datasource.id != data.objectId) return;
-
-				// updated values
-				var values = data.data;
-
-				if (this.__dataCollection.exists(values.id)) {
-					this.__dataCollection.updateItem(values.id, values);
-				}
-			});
-
-			AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
-
-				if (this.datasource.id != data.objectId) return;
-
-				// id of a deleted item
-				var deleteId = data.data;
-
-				if (this.__dataCollection.exists(deleteId)) {
-					this.__dataCollection.remove(deleteId);
-				}
-			});
-
-
-			// load data to initial the data collection
-			this.loadData();
-
-		}
-
-		var linkDc = this.dataCollectionLink;
-		if (linkDc) {
-
-			// filter data by match link data collection
-			var linkData = linkDc.getCursor();
-			this.filterLinkCursor(linkData);
-
-			// add listeners when cursor of link data collection is changed
-			// linkDc.removeListener("changeCursor", this.filterLinkCursor)
-			// 	.on("changeCursor", this.filterLinkCursor);
-			linkDc.on("changeCursor", (currData) => {
-				this.filterLinkCursor(currData);
-			});
-
-		}
 
 	}
 
@@ -716,10 +718,8 @@ export default class ABViewDataCollection extends ABView {
 	* @return {ABFieldConnect}
 	*/
 	get fieldLink() {
-		var linkDc = this.dataCollectionLink;
-		if (!linkDc) return null;
 
-		var object = linkDc.datasource;
+		var object = this.datasource;
 		if (!object) return null;
 
 		return object.fields((f) => f.id == this.settings.linkField)[0];
@@ -903,18 +903,18 @@ export default class ABViewDataCollection extends ABView {
 		if (this.__dataCollection && fieldLink) {
 			this.__dataCollection.filter((item) => {
 
-				// if cursor is not be set.
-				if (linkCursor == null) return true;
+				// the parent's cursor is not set.
+				if (linkCursor == null) return false;
 
-				var linkField = item[fieldLink.relationName()];
-				if (linkField == null) return false;
+				var linkVal = item[fieldLink.relationName()];
+				if (linkVal == null) return false;
 
 				// array - 1:M , M:N
-				if (linkField.filter) {
-					return linkField.filter((obj) => obj.id == linkCursor.id).length > 0;
+				if (linkVal.filter) {
+					return linkVal.filter((obj) => obj.id == linkCursor.id).length > 0;
 				}
 				else {
-					return (linkField.id || linkField) == linkCursor.id;
+					return (linkVal.id || linkVal) == linkCursor.id;
 				}
 
 			});
