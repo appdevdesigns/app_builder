@@ -456,7 +456,7 @@ export default class ABViewForm extends ABViewContainer {
 							var values = {};
 							f.field().defaultValue(values);
 							var columnName = colName;
-							if (typeof values[columnName] != "undefined")
+							if (typeof values[columnName] != "undefined" && this.viewComponents[f.id].ui.id)
 								$$(this.viewComponents[f.id].ui.id).setValue(values[columnName]);
 						}
 					});
