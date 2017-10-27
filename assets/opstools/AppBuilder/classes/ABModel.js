@@ -19,8 +19,6 @@
 //		.limit(XX)
 //		.loadInto(DataTable);
 
-import EventEmitter from "events"
-
 
 function toDC(data) {
 	return new webix.DataCollection({
@@ -28,12 +26,27 @@ function toDC(data) {
 	});
 }
 
+/**
+ * @method triggerEvent 
+ * Publish a event when data in the model is changed
+ * 
+ * @param {string} action - create, update, delete
+ * @param {ABObject} object
+ * @param {*} data 
+ */
+function triggerEvent(action, object, data) {
 
-export default class ABModel extends EventEmitter {
+	// Trigger a event to data collections of application and the live display pages
+	AD.comm.hub.publish('ab.datacollection.' + action, {
+		objectId: object.id,
+		data: data
+	});
+	
+}
+
+export default class ABModel {
 
 	constructor(object) {
-
-		super();
 
 		// link me to my parent ABApplication
 		this.object = object;
@@ -106,8 +119,10 @@ export default class ABModel extends EventEmitter {
 					.then((data) => {
 
 						resolve(data);
+
 						// trigger a create event
-						this.emit('create', data);
+						triggerEvent('create', this.object, data);
+
 					})
 					.catch(reject);
 
@@ -133,8 +148,9 @@ export default class ABModel extends EventEmitter {
 				})
 					.then((data) => {
 						resolve(data);
+
 						// trigger a delete event
-						this.emit('delete', id);
+						triggerEvent('delete', this.object, id);
 
 					})
 					.catch(reject);
@@ -360,8 +376,9 @@ export default class ABModel extends EventEmitter {
 				})
 					.then((data) => {
 						resolve(data);
+
 						// trigger a update event
-						this.emit('update', values);
+						triggerEvent('update', this.object, values);
 
 					})
 					.catch(reject);
@@ -419,23 +436,6 @@ export default class ABModel extends EventEmitter {
 		dc.addCss = function () { };
 		dc.removeCss = function () { };
 		dc.render = function () { };
-
-		// events
-		this.on('create', (data) => {
-			// TODO
-		});
-
-		this.on('update', (values) => {
-			if(dc.exists(values.id)) {
-				dc.updateItem(values.id, values);
-			}
-		});
-
-		this.on('delete', (id) => {
-			if(dc.exists(id)) {
-				dc.remove(id);
-			}
-		});
 
 		return dc;
 	}

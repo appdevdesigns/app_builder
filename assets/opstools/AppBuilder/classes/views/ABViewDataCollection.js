@@ -624,6 +624,8 @@ export default class ABViewDataCollection extends ABView {
 		if (model) {
 
 			this.__dataCollection = model.dataCollectionNew();
+
+
 			this.__dataCollection.attachEvent("onAfterCursorChange", () => {
 
 				var currData = this.getCursor();
@@ -631,6 +633,46 @@ export default class ABViewDataCollection extends ABView {
 				this.emit("changeCursor", currData);
 
 			});
+
+			// events
+			AD.comm.hub.subscribe('ab.datacollection.create', (msg, data) => {
+
+				if (this.datasource.id != data.objectId) return;
+
+				// TODO : filter before add 
+
+				var rowData = data.data;
+
+				if (!this.__dataCollection.exists(rowData.id)) {
+					this.__dataCollection.add(rowData, 0);
+				}
+
+			});
+
+			AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
+
+				if (this.datasource.id != data.objectId) return;
+
+				// updated values
+				var values = data.data;
+
+				if (this.__dataCollection.exists(values.id)) {
+					this.__dataCollection.updateItem(values.id, values);
+				}
+			});
+
+			AD.comm.hub.subscribe('ab.datacollection.update', (msg, data) => {
+
+				if (this.datasource.id != data.objectId) return;
+
+				// id of a deleted item
+				var deleteId = data.data;
+
+				if (this.__dataCollection.exists(deleteId)) {
+					this.__dataCollection.remove(deleteId);
+				}
+			});
+
 
 			// load data to initial the data collection
 			this.loadData();
