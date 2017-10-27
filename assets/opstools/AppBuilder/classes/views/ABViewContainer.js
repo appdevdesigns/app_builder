@@ -14,7 +14,7 @@ function L(key, altText) {
 
 
 var ABPropertyComponentDefaults = {
-	columns: 2,
+	columns: 1,
 }
 
 

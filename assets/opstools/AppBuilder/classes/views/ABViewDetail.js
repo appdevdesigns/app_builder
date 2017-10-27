@@ -318,8 +318,14 @@ export default class ABViewDetail extends ABViewContainer {
 		var container = super.component(App);
 
 		var _ui = {
-			view: "scrollview",
-			body: container.ui
+			type: "form",
+			borderless: true,
+			rows: [
+				{
+					view: "scrollview",
+					body: container.ui					
+				}
+			]
 		};
 
 		// make sure each of our child views get .init() called
@@ -385,7 +391,11 @@ export default class ABViewDetail extends ABViewContainer {
 					}
 
 					if (field.key == "user" && field.settings.isMultiple == 0 && val != "") {
-						val = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+val+'</span>';
+						if (val == null) {
+							val = "";
+						} else {
+							val = '<span class="selectivity-multiple-selected-item rendered" style="background-color:#eee !important; color: #666 !important; box-shadow: inset 0px 1px 1px #333;"><i style="opacity: 0.6;" class="fa fa-user"></i> '+val+'</span>';
+						}
 					}
 
 					// set value to each components
