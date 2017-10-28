@@ -581,12 +581,7 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// if (this._options != null) return resolve(this._options);
 
 
-				var linkedObj = this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
-
-				// System could not found the linked object - It may be deleted ?
-				if (linkedObj == null) return reject();
-
-				var linkedCol = linkedObj.fields((f) => f.id == this.settings.linkColumn)[0];
+				var linkedCol = this.fieldLink;
 
 				// System could not found the linked object - It may be deleted ?
 				if (linkedCol == null) return reject();
@@ -646,6 +641,18 @@ class ABFieldConnect extends ABFieldSelectivity {
 		);
 	}
 
+
+	get datasourceLink() {
+		return this.object.application.objects((obj) => obj.id == this.settings.linkObject)[0];
+	}
+
+
+	get fieldLink() {
+		var objectLink = this. datasourceLink;
+		if (!objectLink) return null
+
+		return objectLink.fields((f) => f.id == this.settings.linkColumn)[0];
+	}
 
 
 	/**
