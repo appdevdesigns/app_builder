@@ -254,7 +254,7 @@ export default class ABViewMenu extends ABViewWidget {
 			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
 			on: {
 				onItemClick: (id, e, node) => {
-					super.changePage(id);
+					this.changePage(id);
 				}
 			}
 		};

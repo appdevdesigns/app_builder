@@ -323,7 +323,7 @@ steal(
 									self.pageComponents[pageId].onShow)
 									self.pageComponents[pageId].onShow();
 
-							}, 2000);
+							}, 50);
 
 						},
 
