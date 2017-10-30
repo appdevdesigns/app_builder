@@ -394,10 +394,15 @@ export default class ABViewDataCollection extends ABView {
 
 			view.settings.objectUrl = obj.urlPointer();
 
+
+			var defaultLabel = view.parent.label + '.' + view.defaults.key;
+
 			// update label
-			view.label = obj.label;
-			$$(ids.label).define('value', obj.label);
-			$$(ids.label).refresh();
+			if (view.label == '?label?' || view.label == defaultLabel) {
+				view.label = obj.label;
+				$$(ids.label).define('value', obj.label);
+				$$(ids.label).refresh();
+			}
 		}
 		else {
 			delete view.settings.objectUrl;
