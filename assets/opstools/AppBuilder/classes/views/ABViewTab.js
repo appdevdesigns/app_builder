@@ -157,7 +157,7 @@ export default class ABViewTab extends ABViewWidget {
 			component.init(options);
 
 			// Add actions buttons - Edit , Delete
-			if ($$(ids.component) && 
+			if ($$(ids.component) &&
 				$$(ids.component).config.view == "tabview") {
 				webix.ui({
 					container: $$(ids.component).getMultiview().$view,
@@ -510,11 +510,25 @@ export default class ABViewTab extends ABViewWidget {
 		}
 
 
+		var _logic = {
+
+			changePage: (pageId) => {
+				this.changePage(pageId);
+			}
+
+		};
+
+
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
 			viewComponents.forEach((v) => {
 				v.component.init(options);
+
+				// Trigger 'changePage' event to parent
+				v.view.removeListener('changePage', _logic.changePage)
+					.on('changePage', _logic.changePage);
+
 			});
 
 		}
@@ -522,7 +536,8 @@ export default class ABViewTab extends ABViewWidget {
 
 		return {
 			ui: _ui,
-			init: _init
+			init: _init,
+			logic: _logic
 		}
 	}
 
