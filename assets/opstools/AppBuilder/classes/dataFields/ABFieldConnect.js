@@ -580,10 +580,14 @@ class ABFieldConnect extends ABFieldSelectivity {
 				// if options was cached
 				// if (this._options != null) return resolve(this._options);
 
+				var linkedObj = this.datasourceLink;
+
+				// System could not found the linked object - It may be deleted ?
+				if (linkedObj == null) return reject();
 
 				var linkedCol = this.fieldLink;
 
-				// System could not found the linked object - It may be deleted ?
+				// System could not found the linked field - It may be deleted ?
 				if (linkedCol == null) return reject();
 
 				// Get linked object model
