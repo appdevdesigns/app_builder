@@ -351,6 +351,12 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	overflow: hidden !important;
 	max-height: 100% !important;
 }
+.selectivity-multiple-input, input[type=text].selectivity-multiple-input, .selectivity-multiple-input-container {
+	height: 35px !important;
+}
+.selectivity-single-result-container {
+	left: 2px;
+}
 .selectivity-multiple-selected-item, .selectivity-single-selected-item {
 	background: #3498db !important;
 	padding: 0 10px;
@@ -366,6 +372,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 .customField .selectivity-multiple-input-container {
 	border: 1px solid #CCC;
 	border-radius: 6px;
+	margin-right: 4px;
 }
 .selectivity-single-select {
 	background: transparent !important;
@@ -374,6 +381,7 @@ div[view_id='ab-frozen-field-list'] div.webix_list_item:hover {
 	padding: 0;
 	border: 1px solid #CCC;
 	border-radius: 6px;
+	margin-right: 4px;
 }
 .selectivity-single-select input {
 	padding: 0;
