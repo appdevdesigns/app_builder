@@ -378,8 +378,7 @@ export default class ABViewForm extends ABViewContainer {
 
 		var component = super.component(App);
 
-		this.viewComponents = {}; // { viewId: viewComponent }
-
+		this.viewComponents = this.viewComponents || {}; // { viewId: viewComponent }
 
 		// an ABViewForm_ is a collection of rows:
 		var _ui = {
@@ -436,9 +435,8 @@ export default class ABViewForm extends ABViewContainer {
 
 			}
 
-			// do this for the initial form display so we can see defaults
-			_logic.displayData(null);
-			Form.adjust();
+			_onShow();
+
 		}
 
 
@@ -524,12 +522,40 @@ export default class ABViewForm extends ABViewContainer {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
-			},
-
-			onShow: function() {
-				$$(ids.component).adjust();
 			}
 
+		};
+
+		var _onShow = () => {
+
+			var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
+			customFields.forEach((f) => {
+
+				var component = this.viewComponents[f.id];
+				if (!component) return;
+
+				var colName = f.field().columnName;
+
+				// call .customDisplay again here
+				component.onShow();
+
+				// set value to each components
+				var values = {};
+				f.field().defaultValue(values);
+
+				if (values[colName] != null)
+					f.field().setValue($$(component.ui.id), values[colName]);
+			});
+
+			var data = null;
+			var dc = this.dataCollection();
+			if (dc) {
+				data = dc.getCursor();
+			}
+
+			// do this for the initial form display so we can see defaults
+			_logic.displayData(data);
+			$$(ids.component).adjust();
 
 		};
 
@@ -539,7 +565,7 @@ export default class ABViewForm extends ABViewContainer {
 			init: _init,
 			logic: _logic,
 
-			onShow: _logic.onShow
+			onShow: _onShow
 
 		}
 	}

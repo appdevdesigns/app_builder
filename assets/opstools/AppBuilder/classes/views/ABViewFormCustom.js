@@ -160,8 +160,8 @@ export default class ABViewFormCustom extends ABViewFormField {
 			}
 		};
 
-		// make sure each of our child views get .init() called
-		component.init = (options) => {
+		component.onShow = () => {
+
 			var elem = $$(ids.component);
 			if (!elem) return;
 
@@ -169,6 +169,13 @@ export default class ABViewFormCustom extends ABViewFormField {
 				node = elem.$view;
 
 			field.customDisplay(rowData, App, node);
+
+		};
+
+		// make sure each of our child views get .init() called
+		component.init = (options) => {
+
+			component.onShow();
 
 		}
 
