@@ -533,11 +533,23 @@ export default class ABViewTab extends ABViewWidget {
 
 		}
 
+		var _onShow = () => {
+			viewComponents.forEach((v) => {
+
+				if (v.component &&
+					v.component.onShow)
+					v.component.onShow();
+
+			});
+		}
+
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 

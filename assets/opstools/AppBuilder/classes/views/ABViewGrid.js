@@ -966,7 +966,7 @@ export default class ABViewGrid extends ABViewWidget  {
 			
 			changePage: (dc, id, page) => {
 				dc.setCursor(id);
-				this.emit('changePage', page);
+				super.changePage(page);
 			},
 			
 			clientSideDataFilter: (data) => {
