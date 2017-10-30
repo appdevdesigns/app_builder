@@ -649,11 +649,13 @@ webix.message("Only ["+acceptableTypes.join(", ")+"] images are supported");
 	
 	setValue(item, value) {
 		var domNode = item.$view;
-		domNode.querySelector('.image-data-field-icon').style.display = 'none';
-		var image = domNode.querySelector('.image-data-field-image');
-		image.style.display = '';
-		image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+value+"')";
-		image.setAttribute('image-uuid', value );
+		if (domNode.querySelector('.image-data-field-icon')) {
+			domNode.querySelector('.image-data-field-icon').style.display = 'none';
+			var image = domNode.querySelector('.image-data-field-image');
+			image.style.display = '';
+			image.style.backgroundImage = "url('/opsportal/image/" + this.object.application.name+"/"+value+"')";
+			image.setAttribute('image-uuid', value );			
+		}
 	}
 	
 	/**
