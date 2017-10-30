@@ -443,6 +443,21 @@ export default class ABViewContainer extends ABView {
 				});
 
 				return rows;
+			},
+
+			onShow: () => {
+
+				this.views().forEach((v) => {
+
+					var component = v.component(App);
+
+					if (component &&
+						component.onShow) {
+						component.onShow();
+					}
+
+				});
+
 			}
 
 		};
@@ -475,7 +490,9 @@ export default class ABViewContainer extends ABView {
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _logic.onShow
 		};
 	}
 

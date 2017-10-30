@@ -524,7 +524,12 @@ export default class ABViewForm extends ABViewContainer {
 
 			changePage: (pageId) => {
 				this.changePage(pageId);
+			},
+
+			onShow: function() {
+				$$(ids.component).adjust();
 			}
+
 
 		};
 
@@ -532,7 +537,10 @@ export default class ABViewForm extends ABViewContainer {
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _logic.onShow
+
 		}
 	}
 

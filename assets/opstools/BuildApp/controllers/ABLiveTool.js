@@ -46,11 +46,7 @@ steal(
 
 							// Store page/sub page .components()
 							// These values will be defined in .renderPage()
-							// 	{
-							// 		id: 'uuid',				// page/sub page id
-							// 		component: {obj},		// .component() of page
-							// 	}
-							self.pageComponents = {};
+							self.pageComponents = {}; // { pageId: component }
 
 							// Has this app been selected by the user yet?
 							self.activated = false;
@@ -303,13 +299,13 @@ steal(
 							if ($$(activePageDomId) && $$(activePageDomId).hide)
 								$$(activePageDomId).hide();
 
+							self.previousPageId = self.activePageId;
+							self.activePageId = pageId;
+
 							// Show page popup
 							var pageDomId = self.getPageDomID(pageId);
 							if ($$(pageDomId))
 								$$(pageDomId).show();
-
-							self.previousPageId = self.activePageId;
-							self.activePageId = pageId;
 
 							// Question: should we do a resize() after all the components are rendered?
 
@@ -318,6 +314,12 @@ steal(
 								batchExist = childViews.filter(function (v) { return v.config.batch == pageId; })[0];
 							if (batchExist)
 								$$(self.containerDomID).showBatch(pageId);
+
+
+							// Trigger .onShow to the component
+							if (self.pageComponents[pageId] && 
+								self.pageComponents[pageId].onShow)
+								self.pageComponents[pageId].onShow();
 
 						},
 
