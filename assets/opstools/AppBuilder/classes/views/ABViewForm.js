@@ -423,6 +423,17 @@ export default class ABViewForm extends ABViewContainer {
 				// listen DC events
 				dc.removeListener('changeCursor', _logic.displayData)
 					.on('changeCursor', _logic.displayData);
+
+				// bind the cursor event of the parent DC
+				var linkDc = dc.dataCollectionLink;
+				if (linkDc) {
+
+					// update the value of link field when data of the parent dc is changed
+					linkDc.removeListener('changeCursor', _logic.displayParentData)
+						.on('changeCursor', _logic.displayParentData);
+
+				}
+
 			}
 
 			// do this for the initial form display so we can see defaults
@@ -434,6 +445,7 @@ export default class ABViewForm extends ABViewContainer {
 		var _logic = {
 
 			displayData: (data) => {
+				// Set default values
 				if (data == null) {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
@@ -442,9 +454,9 @@ export default class ABViewForm extends ABViewContainer {
 						// set value to each components
 						var values = {};
 						f.field().defaultValue(values);
-						var columnName = colName;
-						if (typeof values[columnName] != "undefined")
-							f.field().setValue($$(this.viewComponents[f.id].ui.id), values[columnName]);
+
+						if (values[colName] != null)
+							f.field().setValue($$(this.viewComponents[f.id].ui.id), values[colName]);
 					});
 					var normalFields = this.fieldComponents((comp) => !(comp instanceof ABViewFormCustom));
 					normalFields.forEach((f) => {
@@ -455,23 +467,15 @@ export default class ABViewForm extends ABViewContainer {
 							// set value to each components
 							var values = {};
 							f.field().defaultValue(values);
-							var columnName = colName;
-							if (typeof values[columnName] != "undefined" && this.viewComponents[f.id].ui.id)
-								$$(this.viewComponents[f.id].ui.id).setValue(values[columnName]);
-						}
-					});
-				} else {
-					var dateFields = this.fieldComponents((comp) => comp instanceof ABViewFormDatepicker);
-					dateFields.forEach((f) => {
-						var colName = f.field().columnName;
-						// var format = f.field().getDateFormat();
 
-						// set value to each components
-						if (data[colName] != null) {
-							var val = new Date(data[colName]);
-							$$(this.viewComponents[f.id].ui.id).setValue(val);
+							if (values[colName] != null)
+								$$(this.viewComponents[f.id].ui.id).setValue(values[colName]);
 						}
 					});
+				}
+
+				// Populate value to custom fields
+				else {
 					var customFields = this.fieldComponents((comp) => comp instanceof ABViewFormCustom);
 					customFields.forEach((f) => {
 
@@ -488,6 +492,34 @@ export default class ABViewForm extends ABViewContainer {
 						// }
 					});
 				}
+			},
+
+			displayParentData: (data) => {
+
+				var dc = this.dataCollection();
+				var currCursor = dc.getCursor();
+
+				// If the cursor is selected, then it will not update value of the parent field
+				if (currCursor != null) return;
+
+				var Form = $$(ids.component),
+					relationField = dc.fieldLink,
+					relationElem = $$(this.viewComponents[relationField.id].ui.id),
+					relationName = relationField.relationName();
+
+				// pull data of parent's dc
+				var formData = {};
+				formData[relationName] = data;
+
+				// convert to array
+				if (relationField.settings.linkType == 'many')
+					formData[relationName] = [formData[relationName]];
+
+				var val = relationField.pullRelationValues(formData);
+
+				// set data of parent to default value
+				relationField.setValue(relationElem, val);
+
 			},
 
 			changePage: (pageId) => {

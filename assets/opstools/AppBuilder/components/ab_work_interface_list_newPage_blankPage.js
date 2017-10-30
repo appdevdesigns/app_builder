@@ -9,7 +9,7 @@
 import ABPage from '../classes/views/ABViewPage'
 
 
-export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {  
+export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Component {
 
 	constructor(App) {
 		super(App, 'ab_work_interface_list_newPage_blankPage');
@@ -17,7 +17,7 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 		var L = this.Label;
 
 		var labels = {
-			common : App.labels,
+			common: App.labels,
 			component: {
 
 				// formHeader: L('ab.application.form.header', "*Application Info"),
@@ -45,26 +45,26 @@ export default class AB_Work_Interface_List_NewPage_BlankPage extends OP.Compone
 			view: "form",
 			id: ids.component,
 
-//// TODO: @James
-width: 400,
+			//// TODO: @James
+			width: 400,
 
 			elements: [
-				{ 
-					view: "select", 
-					id: ids.parentList, 
-					label: labels.component.parentPage, 
-					name: "parent", 
-					labelWidth: 110, 
-					options: [] 
+				{
+					view: "select",
+					id: ids.parentList,
+					label: labels.component.parentPage,
+					name: "parent",
+					labelWidth: 110,
+					options: []
 				},
-				{ 
-					view: "text", 
+				{
+					view: "text",
 					id: ids.formName,
-					label: labels.common.formName, 
-					name: "name", 
-					required: true, 
-					placeholder: labels.component.placeholderPageName, 
-					labelWidth: 110 
+					label: labels.common.formName,
+					name: "name",
+					required: true,
+					placeholder: labels.component.placeholderPageName,
+					labelWidth: 110
 				}
 			]
 
@@ -73,8 +73,9 @@ width: 400,
 
 
 		// Our init() function for setting up our UI
-		this.init = function() {
-			// webix.extend($$(ids.form), webix.ProgressBar);
+		this.init = function () {
+
+			webix.extend($$(ids.component), webix.ProgressBar);
 
 		}
 
@@ -84,26 +85,26 @@ width: 400,
 		// our internal business logic 
 		var _logic = this._logic = {
 
-			
+
 			/**
 			 * @function applicationLoad()
 			 *
 			 * Prepare our New Popups with the current Application
 			 */
-			applicationLoad: function(application) {
+			applicationLoad: function (application) {
 				CurrentApplication = application;
 
 				var options = [{ id: '-', value: labels.component.rootPage }];
 
-				var addPage = function(page, indent) {
+				var addPage = function (page, indent) {
 					indent = indent || '';
-					options.push({ id: page.urlPointer(), value: indent+page.label });
-					page.pages().forEach(function(p) {
-						addPage(p, indent+'-');
+					options.push({ id: page.urlPointer(), value: indent + page.label });
+					page.pages().forEach(function (p) {
+						addPage(p, indent + '-');
 					})
 				}
 				application.pages().forEach(function (page) {
-						addPage(page,'');
+					addPage(page, '');
 				});
 
 				$$(ids.parentList).define('options', options);
@@ -116,7 +117,7 @@ width: 400,
 			 *
 			 * Clear our form
 			 */
-			clear:function() {
+			clear: function () {
 				$$(ids.component).clearValidation();
 				$$(ids.component).clear();
 				$$(ids.parentList).setValue('-');
@@ -161,40 +162,40 @@ width: 400,
 			 *
 			 * Show this component.
 			 */
-			show:function() {
+			show: function () {
 
-					// $$(componentId.addNewForm).clearValidation();
-					// $$(componentId.addNewForm).clear();
+				// $$(componentId.addNewForm).clearValidation();
+				// $$(componentId.addNewForm).clear();
 
-					// var options = [{ id: '', value: '[Root page]' }];
-					// application.pages.each(function (d) {
-					// 	if (!d.parent) { // Get only root pages
-					// 		options.push({ id: d.id, value: d.label });
-					// 	}
-					// });
+				// var options = [{ id: '', value: '[Root page]' }];
+				// application.pages.each(function (d) {
+				// 	if (!d.parent) { // Get only root pages
+				// 		options.push({ id: d.id, value: d.label });
+				// 	}
+				// });
 
-					// $$(componentId.addNewParentList).define('options', options);
+				// $$(componentId.addNewParentList).define('options', options);
 
-					// // Default select parent page
-					// if (selectedPage) {
-					// 	var selected_page_id = selectedPage.id;
+				// // Default select parent page
+				// if (selectedPage) {
+				// 	var selected_page_id = selectedPage.id;
 
-					// 	if (selectedPage.parent)
-					// 		selected_page_id = selectedPage.parent.id || selectedPage.parent;
+				// 	if (selectedPage.parent)
+				// 		selected_page_id = selectedPage.parent.id || selectedPage.parent;
 
-					// 	$$(componentId.addNewParentList).setValue(selected_page_id);
-					// }
-					// else
-					// 	$$(componentId.addNewParentList).setValue('');
+				// 	$$(componentId.addNewParentList).setValue(selected_page_id);
+				// }
+				// else
+				// 	$$(componentId.addNewParentList).setValue('');
 
-					// $$(componentId.addNewParentList).render();
+				// $$(componentId.addNewParentList).render();
 
 
 				$$(ids.component).show();
 			},
 
 
-			values:function() {
+			values: function () {
 
 				var parent = $$(ids.parentList).getValue().trim();
 				if (parent == '-') parent = null;
@@ -212,7 +213,18 @@ width: 400,
 					key: ABPage.common().key
 				}
 
-			}
+			},
+
+
+			showProgress: () => {
+				$$(ids.component).showProgress({ type: "icon" });
+			},
+
+
+			hideProgress: () => {
+				$$(ids.component).hideProgress();
+			},
+
 		}
 
 
@@ -232,7 +244,7 @@ width: 400,
 			 *										we are working with.
 			 */
 			// populateApplicationForm:function(Application){
-				
+
 			// 	_logic.formReset();
 			// 	if (Application) {
 			// 		// populate Form here:
@@ -253,6 +265,8 @@ width: 400,
 		this.errors = _logic.errors;
 		this.show = _logic.show;
 		this.values = _logic.values;
+		this.showProgress = _logic.showProgress;
+		this.hideProgress = _logic.hideProgress;
 
 
 	}

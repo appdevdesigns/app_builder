@@ -19,8 +19,6 @@
 //		.limit(XX)
 //		.loadInto(DataTable);
 
-import EventEmitter from "events"
-
 
 function toDC(data) {
 	return new webix.DataCollection({
@@ -28,12 +26,27 @@ function toDC(data) {
 	});
 }
 
+/**
+ * @method triggerEvent 
+ * Publish a event when data in the model is changed
+ * 
+ * @param {string} action - create, update, delete
+ * @param {ABObject} object
+ * @param {*} data 
+ */
+function triggerEvent(action, object, data) {
 
-export default class ABModel extends EventEmitter {
+	// Trigger a event to data collections of application and the live display pages
+	AD.comm.hub.publish('ab.datacollection.' + action, {
+		objectId: object.id,
+		data: data
+	});
+	
+}
+
+export default class ABModel {
 
 	constructor(object) {
-
-		super();
 
 		// link me to my parent ABApplication
 		this.object = object;
@@ -105,9 +118,13 @@ export default class ABModel extends EventEmitter {
 				})
 					.then((data) => {
 
+						this.normalizeData(data);
+
 						resolve(data);
+
 						// trigger a create event
-						this.emit('create', data);
+						triggerEvent('create', this.object, data);
+
 					})
 					.catch(reject);
 
@@ -133,8 +150,9 @@ export default class ABModel extends EventEmitter {
 				})
 					.then((data) => {
 						resolve(data);
+
 						// trigger a delete event
-						this.emit('delete', id);
+						triggerEvent('delete', this.object, id);
 
 					})
 					.catch(reject);
@@ -176,32 +194,7 @@ export default class ABModel extends EventEmitter {
 				})
 					.then((data) => {
 
-						// if this object has some multilingual fields, translate the data:
-						var mlFields = this.object.multilingualFields();
-
-						// if this object has some date fields, convert the data to date object:
-						var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
-						
-						if (mlFields.length > 0 || dateFields.length > 0) {
-
-							data.data.forEach((d) => {
-
-
-								if (mlFields.length) {
-									OP.Multilingual.translate(d, d, mlFields);
-								}
-
-
-								// convert the data to date object
-								dateFields.forEach((date) => {
-									if (d[date.columnName] != null)
-										d[date.columnName] = new Date(d[date.columnName]);
-								});
-
-
-							});
-
-						}
+						this.normalizeData(data.data);
 
 						resolve(data);
 					})
@@ -359,9 +352,15 @@ export default class ABModel extends EventEmitter {
 					params: values
 				})
 					.then((data) => {
-						resolve(data);
+
+						// .data is an empty object ?? 
+
+						this.normalizeData(values);
+
+						resolve(values);
+
 						// trigger a update event
-						this.emit('update', values);
+						triggerEvent('update', this.object, values);
 
 					})
 					.catch(reject);
@@ -407,6 +406,41 @@ export default class ABModel extends EventEmitter {
 	}
 
 
+	normalizeData(data) {
+
+		// convert to array
+		if (!(data instanceof Array))
+			data = [data];
+
+		// if this object has some multilingual fields, translate the data:
+		var mlFields = this.object.multilingualFields();
+		
+		// if this object has some date fields, convert the data to date object:
+		var dateFields = this.object.fields(function(f) { return f.key == 'date'; }) || [];
+		
+		if (mlFields.length > 0 || dateFields.length > 0) {
+
+			data.forEach((d) => {
+
+
+				if (mlFields.length) {
+					OP.Multilingual.translate(d, d, mlFields);
+				}
+
+
+				// convert the data to date object
+				dateFields.forEach((date) => {
+					if (d[date.columnName] != null)
+						d[date.columnName] = new Date(d[date.columnName]);
+				});
+
+
+			});
+
+		}
+	}
+
+
 	dataCollectionNew(data) {
 		// get a webix data collection
 		var dc = toDC(data || []);
@@ -419,23 +453,6 @@ export default class ABModel extends EventEmitter {
 		dc.addCss = function () { };
 		dc.removeCss = function () { };
 		dc.render = function () { };
-
-		// events
-		this.on('create', (data) => {
-			// TODO
-		});
-
-		this.on('update', (values) => {
-			if(dc.exists(values.id)) {
-				dc.updateItem(values.id, values);
-			}
-		});
-
-		this.on('delete', (id) => {
-			if(dc.exists(id)) {
-				dc.remove(id);
-			}
-		});
 
 		return dc;
 	}

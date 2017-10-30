@@ -164,6 +164,7 @@ maxHeight: 500,
 			
 			buttonSave:function(){
 
+				var SaveButton = $$(ids.buttonSave);
 				var values = CurrentEditor.values();
 				
 				// this interface only creates Root Pages, or pages related to 
@@ -179,6 +180,9 @@ maxHeight: 500,
 					CurrentEditor.errors(validator);
 				} else {
 
+					SaveButton.disable();
+					CurrentEditor.showProgress();
+
 					page.save()
 					.then(()=>{
 						_logic.callbacks.onSave(page);
@@ -189,6 +193,15 @@ maxHeight: 500,
 						// the CurrentApplication has changed it's values, so 
 						// refresh our editors with the curent values:
 						_logic.applicationLoad(CurrentApplication);
+
+						SaveButton.enable();
+						CurrentEditor.hideProgress();
+					})
+					.catch((err) => {
+						// TODO: error message
+
+						SaveButton.enable();
+						CurrentEditor.hideProgress();
 					})
 				}
 			},
