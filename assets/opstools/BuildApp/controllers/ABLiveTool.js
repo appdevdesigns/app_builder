@@ -317,9 +317,13 @@ steal(
 
 
 							// Trigger .onShow to the component
-							if (self.pageComponents[pageId] && 
-								self.pageComponents[pageId].onShow)
-								self.pageComponents[pageId].onShow();
+							setTimeout(function () {
+
+								if (self.pageComponents[pageId] &&
+									self.pageComponents[pageId].onShow)
+									self.pageComponents[pageId].onShow();
+
+							}, 50);
 
 						},
 
@@ -329,11 +333,16 @@ steal(
 
 							if (page == null) return;
 
-							page.on('changePage', (pageId) => {
+							// { pageId: eventId, ..., pageIdn: eventIdn }
+							self.changePageEventIds = self.changePageEventIds || {};
 
-								self.showPage(pageId);
+							if (!self.changePageEventIds[page.id]) {
+								self.changePageEventIds[page.id] = page.on('changePage', function (pageId) {
 
-							});
+									self.showPage(pageId);
+
+								});
+							}
 
 
 							if (!self.updatePageEventId && page.isRoot()) {

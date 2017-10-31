@@ -477,6 +477,7 @@ export default class ABViewTab extends ABViewWidget {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		}
+		var changePageEventIds = {}; // { pageId: eventId, ..., pageIdn: eventIdn }
 
 		var _ui = {};
 
@@ -532,18 +533,32 @@ export default class ABViewTab extends ABViewWidget {
 				v.component.init(options);
 
 				// Trigger 'changePage' event to parent
-				v.view.removeListener('changePage', _logic.changePage)
-					.on('changePage', _logic.changePage);
+				if (changePageEventIds[v.view.id] == null) {
+					changePageEventIds[v.view.id] = v.view.on('changePage', _logic.changePage);
+				}
+
 
 			});
 
+		}
+
+		var _onShow = () => {
+			viewComponents.forEach((v) => {
+
+				if (v.component &&
+					v.component.onShow)
+					v.component.onShow();
+
+			});
 		}
 
 
 		return {
 			ui: _ui,
 			init: _init,
-			logic: _logic
+			logic: _logic,
+
+			onShow: _onShow
 		}
 	}
 

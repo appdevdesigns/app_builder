@@ -518,10 +518,6 @@ export default class ABViewForm extends ABViewContainer {
 				// set data of parent to default value
 				relationField.setValue(relationElem, val);
 
-			},
-
-			changePage: (pageId) => {
-				this.changePage(pageId);
 			}
 
 		};
