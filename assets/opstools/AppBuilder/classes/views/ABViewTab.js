@@ -93,55 +93,57 @@ export default class ABViewTab extends ABViewWidget {
 		var component = this.component(App);
 
 		var tabElem = component.ui;
-		tabElem.rows[0].id = ids.component;
-		tabElem.rows[0].tabbar = {
-			on: {
-				onItemClick: (id, e) => {
+		if (tabElem.rows) {
+			tabElem.rows[0].id = ids.component;
+			tabElem.rows[0].tabbar = {
+				on: {
+					onItemClick: (id, e) => {
 
-					var tabId = $$(ids.component).getValue(),
-						tab = this.views(v => v.id == tabId)[0],
-						currIndex = this._views.findIndex((v) => v.id == tabId);
+						var tabId = $$(ids.component).getValue(),
+							tab = this.views(v => v.id == tabId)[0],
+							currIndex = this._views.findIndex((v) => v.id == tabId);
 
-					// Rename
-					if (e.target.classList.contains('rename')) {
+						// Rename
+						if (e.target.classList.contains('rename')) {
 
-						ABViewTab.showPopup(tab);
+							ABViewTab.showPopup(tab);
+
+						}
+						// Reorder back
+						else if (e.target.classList.contains('move-back')) {
+
+							this.viewReorder(tabId, currIndex - 1);
+
+							this.emit('properties.updated', this);
+
+						}
+						// Reorder next
+						else if (e.target.classList.contains('move-next')) {
+
+							this.viewReorder(tabId, currIndex + 1);
+
+							this.emit('properties.updated', this);
+
+						}
 
 					}
-					// Reorder back
-					else if (e.target.classList.contains('move-back')) {
-
-						this.viewReorder(tabId, currIndex - 1);
-
-						this.emit('properties.updated', this);
-
-					}
-					// Reorder next
-					else if (e.target.classList.contains('move-next')) {
-
-						this.viewReorder(tabId, currIndex + 1);
-
-						this.emit('properties.updated', this);
-
-					}
-
 				}
-			}
-		};
+			};
 
-		// Add action buttons
-		if (tabElem.rows[0].cells && tabElem.rows[0].cells.length > 0) {
-			tabElem.rows[0].cells.forEach((tabView) => {
+			// Add action buttons
+			if (tabElem.rows[0].cells && tabElem.rows[0].cells.length > 0) {
+				tabElem.rows[0].cells.forEach((tabView) => {
 
-				// Add 'move back' icon
-				tabView.header = ('<i class="fa fa-caret-left move-back" style="float: left; padding-left: 10px;"></i>' + tabView.header);
-				// Add 'edit' icon
-				tabView.header += ' <i class="fa fa-pencil-square-o rename"></i>';
-				// Add 'move next' icon
-				tabView.header += ' <i class="fa fa-caret-right move-next" style="float: right; padding-right: 10px;"></i>';
+					// Add 'move back' icon
+					tabView.header = ('<i class="fa fa-caret-left move-back" style="float: left; padding-left: 10px;"></i>' + tabView.header);
+					// Add 'edit' icon
+					tabView.header += ' <i class="fa fa-pencil-square-o rename"></i>';
+					// Add 'move next' icon
+					tabView.header += ' <i class="fa fa-caret-right move-next" style="float: right; padding-right: 10px;"></i>';
 
-			});
+				});
 
+			}			
 		}
 
 		var _ui = {
