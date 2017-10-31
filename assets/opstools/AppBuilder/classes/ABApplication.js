@@ -265,15 +265,6 @@ export default class ABApplication extends ABApplicationBase {
 
 		OP.Multilingual.unTranslate(this, this.json, ABApplication.fieldsMultilingual());
 
-
-		// for each View: compile to json
-		var currPages = [];
-		this._pages.forEach((page) => {
-			currPages.push(page.toObj())
-		})
-		this.json.pages = currPages;
-
-
 		return super.toObj();
 	}
 
@@ -522,11 +513,11 @@ export default class ABApplication extends ABApplicationBase {
 	 */
 	pageDestroy(page) {
 
-		var remainingPages = this.pages(function (p) { return p.id != page.id; })
-		this._pages = remainingPages;
 		// return this.save();
 
-		return this.Model.staticData.pageDestroy(this.id, page.id)
+		var resolveUrl = page.urlPointer();
+
+		return this.Model.staticData.pageDestroy(this.id, resolveUrl)
 			.then(() => {
 				// TODO : Should update _AllApplications in 
 			});
@@ -544,13 +535,16 @@ export default class ABApplication extends ABApplicationBase {
 	 * @return {Promise}
 	 */
 	pageSave(page) {
-		var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
-		if (!isIncluded) {
-			this._pages.push(page);
-		}
+		// var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
+		// if (!isIncluded) {
+		// 	this._pages.push(page);
+		// }
+
+		var resolveUrl = page.urlPointer(),
+			data = page.toObj();
 
 		// return this.save();
-		return this.Model.staticData.pageSave(this.id, page.toObj())
+		return this.Model.staticData.pageSave(this.id, resolveUrl, data)
 			.then(() => {
 
 				// TODO : Should update _AllApplications in 

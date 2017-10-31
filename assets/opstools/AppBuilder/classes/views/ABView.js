@@ -205,30 +205,19 @@ export default class ABView extends ABViewBase {
 
 		OP.Multilingual.unTranslate(this, this, ['label']);
 
+		var result = super.toObj();
+
 		// // for each Object: compile to json
 		var views = [];
 		this._views.forEach((view) => {
 			views.push(view.toObj())
 		})
+		result.views = views;
 
-		// NOTE: ensure we have a uuid() set:
-		if (!this.id) {
-			this.id = OP.Util.uuid();
-		}
+		result.position = this.position;
 
-		return {
-			id: this.id,
-			key: this.key,
-			icon: this.icon,
+		return result;
 
-			// parent: this.parent,
-
-			position: this.position || {},
-			settings: this.settings || {},
-			translations: this.translations || [],
-			views: views,
-
-		}
 	}
 
 
@@ -265,12 +254,16 @@ export default class ABView extends ABViewBase {
 
 
 		// convert from "0" => 0
-		if (this.position) {
-			this.position.x = parseInt(this.position.x || 0);
-			this.position.y = parseInt(this.position.y || 0);
-			this.position.dx = parseInt(this.position.dx || 1);
-			this.position.dy = parseInt(this.position.dy || 1);
-		}
+		this.position = values.position || {};
+
+		if (this.position.x != null)
+			this.position.x = parseInt(this.position.x);
+
+		if (this.position.y != null)
+			this.position.y = parseInt(this.position.y);
+
+		this.position.dx = parseInt(this.position.dx || 1);
+		this.position.dy = parseInt(this.position.dy || 1);
 
 	}
 

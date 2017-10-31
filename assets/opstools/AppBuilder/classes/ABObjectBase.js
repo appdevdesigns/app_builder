@@ -96,7 +96,7 @@ module.exports =  class ABObjectBase {
 	 */
 	toObj () {
 
-		OP.Multilingual.unTranslate(this, this, ["label"]);
+		// OP.Multilingual.unTranslate(this, this, ["label"]);
 
 		// // for each Object: compile to json
 		var currFields = [];

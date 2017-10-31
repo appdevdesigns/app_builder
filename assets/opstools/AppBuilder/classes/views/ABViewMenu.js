@@ -349,7 +349,8 @@ export default class ABViewMenu extends ABViewWidget {
 	AddOrderedPagesToView(parent, menu, pageIds, orderMenu) {
 		var orderMenu = orderMenu;
 		pageIds.forEach((page) => {
-			menu.add(orderMenu[page]);
+			if (orderMenu[page])
+				menu.add(orderMenu[page]);
 		});
 	}
 

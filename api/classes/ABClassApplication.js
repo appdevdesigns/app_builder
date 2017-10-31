@@ -2,7 +2,7 @@ var path = require('path');
 
 var ABApplicationBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "ABApplicationBase.js"));
 var ABObject = require(path.join(__dirname, 'ABObject'));
-var ABViewBase = require(path.join(__dirname,  "..", "..", "assets", "opstools", "AppBuilder", "classes",  "views", "ABViewBase.js"));
+var ABViewPage = require(path.join(__dirname, 'ABViewPage'));
 
 function L(key, altText) {
 	return AD.lang.label.getLabel(key) || altText;
@@ -42,12 +42,9 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	}
 
 
-
 	///
 	/// Objects
 	///
-
-
 
 
 	/**
@@ -74,7 +71,7 @@ module.exports =  class ABClassApplication extends ABApplicationBase {
 	 * @return {ABViewPage}
 	 */
 	pageNew( values ) {
-		return new ABViewBase(values, this);
+		return new ABViewPage(values, this);
 	}
 
 

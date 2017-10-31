@@ -19,7 +19,7 @@ module.exports = {
     'put /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageSave',
 
-    'delete /app_builder/application/:appID/page/:id':
+    'delete /app_builder/application/:appID/page':
         'app_builder/ABApplicationController.pageDestroy',
 
     /* Application permissions */

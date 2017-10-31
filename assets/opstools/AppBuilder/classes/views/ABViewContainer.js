@@ -46,6 +46,23 @@ export default class ABViewContainer extends ABView {
 	}
 
 
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABView instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		var obj = super.toObj();
+
+		return obj;
+
+	}
+
+
 
 	/**
 	 * @method fromValues()
@@ -100,7 +117,7 @@ export default class ABViewContainer extends ABView {
 
 
 			// attach all the .UI views:
-			this.views().forEach((child) => {
+			this.views().reverse().forEach((child) => {
 
 				var component = child.component(App);
 
@@ -413,8 +430,10 @@ export default class ABViewContainer extends ABView {
 					subComponents[v.id] = component;
 
 					// Create a new row
-					if (v.position.y != curRowIndex) {
-						curRowIndex = v.position.y;
+					if (v.position.y == null || 
+						v.position.y != curRowIndex) {
+
+						curRowIndex = v.position.y || rows.length;
 						curColIndex = 0;
 
 						var rowNew = { cols: [] }
@@ -432,7 +451,7 @@ export default class ABViewContainer extends ABView {
 					var curRow = rows[rows.length - 1];
 
 					// Add ui of sub-view to column
-					curRow.cols[v.position.x] = component.ui;
+					curRow.cols[v.position.x || 0] = component.ui;
 
 					curColIndex += 1;
 

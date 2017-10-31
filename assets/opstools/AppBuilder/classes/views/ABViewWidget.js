@@ -42,6 +42,35 @@ export default class ABViewWidget extends ABView {
 
 	}
 
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABView instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		var obj = super.toObj();
+
+		return obj;
+
+	}
+
+
+	/**
+	 * @method fromValues()
+	 *
+	 * initialze this object with the given set of values.
+	 * @param {obj} values
+	 */
+	fromValues(values) {
+
+		super.fromValues(values);
+
+	}
+
 
 	//
 	// Property Editor
@@ -50,7 +79,6 @@ export default class ABViewWidget extends ABView {
 	// static propertyEditorComponent(App) {
 	// 	return ABViewPropertyComponent.component(App);
 	// }
-
 
 	static propertyEditorDefaultElements(App, ids, _logic, ObjectDefaults) {
 

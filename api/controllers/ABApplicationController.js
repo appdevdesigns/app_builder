@@ -11,6 +11,8 @@ var _ = require('lodash');
 var path = require('path');
 var async = require('async');
 
+var ABViewPage = require(path.join('..', 'classes', 'ABViewPage'));
+
 module.exports = {
 
     _config: {
@@ -133,6 +135,7 @@ module.exports = {
      */
     pageSave: function (req, res) {
         var appID = req.param('appID');
+        var resolveUrl = req.body.resolveUrl;
         var page = req.body.page;
 
         Promise.resolve()
@@ -144,62 +147,96 @@ module.exports = {
 
                     ABApplication.findOne({ id: appID })
                         .exec((err, result) => {
-                            if (err) reject(err);
-                            else resolve(result);
+                            if (err) return reject(err);
+
+                            resolve({
+                                app: result,
+                                appClass: result.toABClass()
+                            });
                         });
 
                 });
             })
-            .then((Application) => {
+            .then((data) => {
 
                 // Update page info to application
                 return new Promise((resolve, reject) => {
 
-                    if (Application == null) return resolve();
+                    if (data == null) return resolve();
 
-                    Application.json.pages = Application.json.pages || [];
-
-                    var indexPage = -1;
-                    var updatePage = Application.json.pages.filter(function (p, index) {
-
-                        var isExists = p.id == page.id;
-                        if (isExists) indexPage = index;
-
-                        return isExists;
-                    })[0];
+                    var updatePage = data.appClass.urlResolve(resolveUrl);
 
                     // update
                     if (updatePage) {
-                        Application.json.pages[indexPage] = page;
-                    }
-                    // add new
-                    else {
-                        Application.json.pages.push(page);
+
+                        var ignoreProps = ['id', 'pages', '_pages']
+
+                        // clear old values
+                        for (var key in updatePage) {
+
+                            if (ignoreProps.indexOf(key) > -1)
+                                continue;
+
+                            delete updatePage[key];
+                        }
+
+                        // add update values
+                        for (var key in page) {
+
+                            if (ignoreProps.indexOf(key) > -1)
+                                continue;
+
+                            updatePage[key] = page[key];
+                        }
                     }
 
+
+                    // add new
+                    else {
+
+                        // get the parent of view
+                        var parts = resolveUrl.split('/');
+                        parts.pop();
+                        var parentUrl = parts.join('/');
+                        var parent = data.appClass.urlResolve(parentUrl);
+
+                        // add new page to the parent
+                        if (parent && parent.push) {
+                            parent.push(new ABViewPage(page, data.appClass));
+                        }
+                    }
+
+                    // update data to application
+                    var updateApp = data.appClass.toObj();
+                    data.app.json = updateApp.json;
+
                     // save to database
-                    Application.save(function (err) {
+                    data.app.save(function (err) {
                         if (err)
                             reject(true);
-                        else
-                            resolve(Application);
+                        else {
+
+                            // refresh application class
+                            data.appClass = data.app.toABClass();
+
+                            resolve(data);
+                        }
                     });
 
 
                 });
             })
-            .then((Application) => {
+            .then((data) => {
 
                 // Update page's nav view
                 return new Promise((resolve, reject) => {
 
-                    if (Application == null) return resolve();
+                    if (data == null) return resolve();
 
-                    var appliationClass = Application.toABClass();
-                    var pageClass = appliationClass._pages.filter(p => p.id == page.id)[0];
+                    var pageClass = data.appClass._pages.filter(p => p.id == page.id)[0];
 
                     if (pageClass)
-                        return AppBuilder.updateNavView(Application, pageClass)
+                        return AppBuilder.updateNavView(data.app, pageClass)
                             .catch(reject)
                             .then(resolve);
                     else
@@ -222,13 +259,14 @@ module.exports = {
     },
 
     /**
-     * DELETE /app_builder/application/:appID/page/:id
+     * DELETE /app_builder/application/:appID/:resolveUrl
      * 
      * Delete a page in ABApplication
      */
     pageDestroy: function (req, res) {
         var appID = req.param('appID');
-        var pageID = req.param('id');
+        var resolveUrl = req.body.resolveUrl;
+        var pageName;
 
         Promise.resolve()
             .catch((err) => { res.AD.error(err); })
@@ -252,23 +290,34 @@ module.exports = {
 
                     if (Application == null) return resolve();
 
-                    Application.json.pages = Application.json.pages || []
+                    var appClass = Application.toABClass();
 
-                    var indexPage = -1;
-                    var updatePage = Application.json.pages.filter(function (page, index) {
+                    // get the delete page in list
+                    var deletePage = appClass.urlResolve(resolveUrl);
+                    if (!deletePage) return resolve();
 
-                        var isExists = page.id == pageID;
-                        if (isExists) indexPage = index;
+                    if (deletePage.parent == null)
+                        pageName = deletePage.name;
 
-                        return isExists;
-                    })[0];
+                    // get the parent(array) of view
+                    var parts = resolveUrl.split('/');
+                    parts.pop();
+                    var parentUrl = parts.join('/');
+                    var parent = appClass.urlResolve(parentUrl); // should be a array
+
+                    // get index of item
+                    var indexPage = parent.findIndex(function (page) {
+                        return page.id == deletePage.id;
+                    });
 
                     // remove
                     if (indexPage > -1) {
-
-                        pageName = updatePage.name;
-                        Application.json.pages.splice(indexPage, 1);
+                        parent.splice(indexPage, 1);
                     }
+
+                    // update data to application
+                    var updateApp = appClass.toObj();
+                    Application.json = updateApp.json;
 
                     // save to database
                     Application.save(function (err) {
@@ -285,7 +334,7 @@ module.exports = {
                 // Remove page's nav view
                 return new Promise((resolve, reject) => {
 
-                    if (Application == null) return resolve();
+                    if (Application == null || !pageName) return resolve();
 
                     return AppBuilder.removeNavView(Application, pageName)
                         .catch(reject)
