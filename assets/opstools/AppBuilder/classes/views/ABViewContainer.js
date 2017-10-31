@@ -384,7 +384,7 @@ export default class ABViewContainer extends ABView {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
-		var subComponents = [];
+		var subComponents = {}; // { viewId: componentId, ..., viewIdn: componentIdn }
 
 		var _logic = {
 
@@ -410,7 +410,7 @@ export default class ABViewContainer extends ABView {
 				views.forEach((v) => {
 
 					var component = v.component(App);
-					subComponents.push(component);
+					subComponents[v.id] = component;
 
 					// Create a new row
 					if (v.position.y != curRowIndex) {
@@ -465,12 +465,13 @@ export default class ABViewContainer extends ABView {
 		var _init = (options) => {
 
 			// attach all the .UI views:
-			subComponents.forEach((component) => {
+			for (var key in subComponents) {
+
+				var component = subComponents[key];
 
 				// Initial component
 				component.init();
-
-			});
+			}
 
 		};
 
@@ -478,7 +479,7 @@ export default class ABViewContainer extends ABView {
 
 			this.views().forEach((v) => {
 
-				var component = v.component(App);
+				var component = subComponents[v.id];
 
 				if (component &&
 					component.onShow) {
