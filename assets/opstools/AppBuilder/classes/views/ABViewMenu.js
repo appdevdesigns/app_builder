@@ -30,7 +30,7 @@ export default class ABViewMenu extends ABViewWidget {
 	/**
 	 * @param {obj} values  key=>value hash of ABView values
 	 * @param {ABApplication} application the application object this view is under
-	 * @param {ABView} parent the ABView this view is a child of. (can be null)
+	 * @param {ABViewWidget} parent the ABViewWidget this view is a child of. (can be null)
 	 */
 	constructor(values, application, parent) {
 
@@ -92,8 +92,18 @@ export default class ABViewMenu extends ABViewWidget {
 
 		var menu = component.ui;
 		menu.id = ids.component;
+		menu.rows[0].drag = true;
+		menu.rows[0].id = ids.component;
+		menu.rows[0].on = {
+			onAfterDrop: (context, native_event) => {
+				var newOrder = context.from.data.order.slice(0)
+				this.settings.pages = newOrder;
+				this.save();
+			}				
+		}
 
 		var _ui = {
+			type: "space",
 			rows: [
 				menu,
 				{}
@@ -105,7 +115,11 @@ export default class ABViewMenu extends ABViewWidget {
 			var Menu = $$(ids.component);
 
 			this.ClearPagesInView(Menu);
-			this.AddPagesToView(this.application, Menu, this.settings.pages);
+			if (this.settings.pages && this.settings.pages.length > -1) {
+				var orderMenu = [];
+				var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+				this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);				
+			}
 
 		}
 
@@ -207,7 +221,7 @@ export default class ABViewMenu extends ABViewWidget {
 		// $$(ids.pages).data.unsync();
 		$$(ids.pages).data.importData(pageTree);
 		$$(ids.pages).refresh();
-		// $$(ids.pages).uncheckAll();
+		$$(ids.pages).uncheckAll();
 		$$(ids.pages).openAll();
 		
 		// Select pages
@@ -247,25 +261,37 @@ export default class ABViewMenu extends ABViewWidget {
 
 
 		var _ui = {
-			id: ids.component,
-			view: "menu",
-			autoheight: true,
-			datatype: "json",
-			layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
-			on: {
-				onItemClick: (id, e, node) => {
-					this.changePage(id);
+			type: "form",
+			rows: [
+				{
+					id: ids.component,
+					view: "menu",
+					autoheight: true,
+					datatype: "json",
+					css: "ab_menu",
+					layout: this.settings.orientation || ABViewMenuPropertyComponentDefaults.orientation,
+					on: {
+						onItemClick: (id, e, node) => {
+							this.changePage(id);
+						}
+					}					
 				}
-			}
+			]
 		};
 
 		// make sure each of our child views get .init() called
 		var _init = (options) => {
 
 			var Menu = $$(ids.component);
+			if (Menu) {
+				this.ClearPagesInView(Menu);
+				if (this.settings.pages && this.settings.pages.length > -1) {
+					var orderMenu = [];
+					var orderMenu = this.AddPagesToView(this.application, Menu, this.settings.pages, orderMenu);
+					this.AddOrderedPagesToView(this.application, Menu, this.settings.pages, orderMenu);				
+				}				
+			}
 
-			this.ClearPagesInView(Menu);
-			this.AddPagesToView(this.application, Menu, this.settings.pages);
 
 		}
 
@@ -295,25 +321,36 @@ export default class ABViewMenu extends ABViewWidget {
 		}
 	}
 
-	AddPagesToView(parent, menu, pageIds) {
+	AddPagesToView(parent, menu, pageIds, insertPages) {
 
 		if (!parent || !parent.pages || !menu || !pageIds) return;
 
 		var pages = parent.pages() || [];
+		
+		var insertPages = insertPages;
 
 		pages.forEach((page) => {
-
+		
 			if (pageIds.indexOf(page.id) > -1) {
-				menu.add({
+				insertPages[page.id] = 	{
 					id: page.id,
 					value: page.label
-				});
+				};
 			}
 
-			this.AddPagesToView(page, menu, pageIds);
+			this.AddPagesToView(page, menu, pageIds, insertPages);
 
 		});
+		
+		return insertPages;
 
+	}
+	
+	AddOrderedPagesToView(parent, menu, pageIds, orderMenu) {
+		var orderMenu = orderMenu;
+		pageIds.forEach((page) => {
+			menu.add(orderMenu[page]);
+		});
 	}
 
 
