@@ -93,8 +93,8 @@ export default class ABViewTab extends ABViewWidget {
 		var component = this.component(App);
 
 		var tabElem = component.ui;
-		tabElem.id = ids.component;
-		tabElem.tabbar = {
+		tabElem.rows[0].id = ids.component;
+		tabElem.rows[0].tabbar = {
 			on: {
 				onItemClick: (id, e) => {
 
@@ -130,8 +130,8 @@ export default class ABViewTab extends ABViewWidget {
 		};
 
 		// Add action buttons
-		if (tabElem.cells && tabElem.cells.length > 0) {
-			tabElem.cells.forEach((tabView) => {
+		if (tabElem.rows[0].cells && tabElem.rows[0].cells.length > 0) {
+			tabElem.rows[0].cells.forEach((tabView) => {
 
 				// Add 'move back' icon
 				tabView.header = ('<i class="fa fa-caret-left move-back" style="float: left; padding-left: 10px;"></i>' + tabView.header);
@@ -145,6 +145,7 @@ export default class ABViewTab extends ABViewWidget {
 		}
 
 		var _ui = {
+			type: "space",
 			rows: [
 				tabElem,
 				{}
@@ -481,26 +482,31 @@ export default class ABViewTab extends ABViewWidget {
 
 		if (viewComponents.length > 0) {
 			_ui = {
-				view: 'tabview',
-				id: ids.component,
-				multiview: {
-					height: this.settings.height
-				},
-				cells: viewComponents.map((v) => {
+				type: "form",
+				rows: [
+					{
+						view: 'tabview',
+						id: ids.component,
+						multiview: {
+							height: this.settings.height
+						},
+						cells: viewComponents.map((v) => {
 
-					// able to 'scroll' in tab view
-					var tabUi = {
-						id: v.view.id,
-						view: 'scrollview',
-						body: v.component.ui
-					};
+							// able to 'scroll' in tab view
+							var tabUi = {
+								id: v.view.id,
+								view: 'scrollview',
+								body: v.component.ui
+							};
 
-					return {
-						id: v.view.id,
-						header: v.view.label,
-						body: tabUi
-					};
-				})
+							return {
+								id: v.view.id,
+								header: v.view.label,
+								body: tabUi
+							};
+						})						
+					}
+				]
 			}
 		}
 		else {
