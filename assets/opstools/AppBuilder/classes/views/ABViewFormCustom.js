@@ -132,9 +132,9 @@ export default class ABViewFormCustom extends ABViewFormField {
 		var templateLabel = '';
 		if (settings.showLabel == true) {
 			if (settings.labelPosition == 'top')
-				templateLabel = "<label style='display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;' class='webix_inp_top_label'>#label#</label>";
+				templateLabel = '<label style="display:block; text-align: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" class="webix_inp_top_label">#label#</label>';
 			else
-				templateLabel = "<label style='width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;'>#label#</label>";
+				templateLabel = '<label style="width: #width#px; display: inline-block; line-height: 32px; float: left; margin: 0; padding:1px 7.5px 0 3px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">#label#</label>';
 		}
 
 		var template = (templateLabel + "#template#")

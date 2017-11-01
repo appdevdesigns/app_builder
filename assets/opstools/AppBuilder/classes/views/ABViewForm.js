@@ -502,7 +502,11 @@ export default class ABViewForm extends ABViewContainer {
 
 				var Form = $$(ids.component),
 					relationField = dc.fieldLink,
-					relationElem = $$(this.viewComponents[relationField.id].ui.id),
+					relationFieldCom = this.viewComponents[relationField.id];
+
+				if (relationFieldCom == null) return;
+
+				var relationElem = $$(relationFieldCom.ui.id),
 					relationName = relationField.relationName();
 
 				// pull data of parent's dc

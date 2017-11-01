@@ -114,6 +114,7 @@ export default class ABViewPage extends ABViewContainer {
         if (!this.label || this.label == '?label?')
             this.label = this.name;
 
+
         // now properly handle our sub pages.
         var pages = [];
         (values.pages || []).forEach((child) => {
@@ -175,7 +176,7 @@ export default class ABViewPage extends ABViewContainer {
         // Disable select type of page when this page is root 
         if (view.isRoot())
             $$(ids.type).disable();
-        else 
+        else
             $$(ids.type).enable();
 
     }
@@ -206,11 +207,16 @@ export default class ABViewPage extends ABViewContainer {
                 // verify we have been .save() before:
                 if (this.id) {
 
-                    var parent = this.parent;
-                    if (!parent) parent = this.application;
+                    this.application.pageDestroy(this)
+                        .then(() => {
 
-                    parent.pageDestroy(this)
-                        .then(resolve)
+                            // remove the page in list
+                            var parent = this.parent || this.application;
+                            var remainingPages = parent.pages((p) => { return p.id != this.id; })
+                            parent._pages = remainingPages;
+
+                            resolve();
+                        })
                         .catch(reject);
 
                 } else {
@@ -242,13 +248,18 @@ export default class ABViewPage extends ABViewContainer {
                     this.id = OP.Util.uuid();   // setup default .id
                 }
 
-                // if this is not a child of another view then tell it's
-                // application to save this view.
-                var parent = this.parent;
-                if (!parent) parent = this.application;
+                this.application.pageSave(this)
+                    .then(() => {
 
-                parent.pageSave(this)
-                    .then(resolve)
+                        // persist the current ABViewPage in our list of ._pages.
+                        var parent = this.parent || this.application;
+                        var isIncluded = (parent.pages((p) => { return p.id == this.id }).length > 0);
+                        if (!isIncluded) {
+                            parent._pages.push(this);
+                        }
+
+                        resolve();
+                    })
                     .catch(reject)
             }
         )
@@ -350,24 +361,6 @@ export default class ABViewPage extends ABViewContainer {
         return this.save();
     }
 
-
-
-    /**
-     * @method pageSave()
-     *
-     * persist the current ABViewPage in our list of ._pages.
-     *
-     * @param {ABViewPage} object
-     * @return {Promise}
-     */
-    pageSave(page) {
-        var isIncluded = (this.pages(function (p) { return p.id == page.id }).length > 0);
-        if (!isIncluded) {
-            this._pages.push(page);
-        }
-
-        return this.save();
-    }
 
 
     ///

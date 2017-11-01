@@ -37,6 +37,38 @@ module.exports = class ABViewBase extends EventEmitter {
 	}
 
 	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABView instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		// NOTE: ensure we have a uuid() set:
+		if (!this.id) {
+			this.id = OP.Util.uuid();
+		}
+
+		return {
+			id: this.id,
+			key: this.key,
+			icon: this.icon,
+
+			name: this.name,
+			// parent: this.parent,
+
+			settings: this.settings || {},
+			translations: this.translations || []
+
+		}
+
+
+	}
+
+
+	/**
 	 * @method fromValues()
 	 *
 	 * initialze this object with the given set of values.
@@ -50,8 +82,6 @@ module.exports = class ABViewBase extends EventEmitter {
 		// this.parent = values.parent || null;
 
 		this.name = values.name;
-
-		this.position = values.position || {};
 
 		// if this is being instantiated on a read from the Property UI,
 		// .label is coming in under .settings.label

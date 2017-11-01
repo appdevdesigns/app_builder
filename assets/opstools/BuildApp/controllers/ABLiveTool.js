@@ -357,6 +357,9 @@ steal(
 
 									if (page.id == data.rootPage.id) {
 
+										// clear the cache of events
+										self.changePageEventIds = {};
+
 										// update the root page instance
 										self.rootPage = data.rootPage;
 

@@ -46,6 +46,23 @@ export default class ABViewContainer extends ABView {
 	}
 
 
+	/**
+	 * @method toObj()
+	 *
+	 * properly compile the current state of this ABView instance
+	 * into the values needed for saving to the DB.
+	 *
+	 * @return {json}
+	 */
+	toObj() {
+
+		var obj = super.toObj();
+
+		return obj;
+
+	}
+
+
 
 	/**
 	 * @method fromValues()
@@ -100,7 +117,7 @@ export default class ABViewContainer extends ABView {
 
 
 			// attach all the .UI views:
-			this.views().forEach((child) => {
+			this.views().reverse().forEach((child) => {
 
 				var component = child.component(App);
 
@@ -384,7 +401,7 @@ export default class ABViewContainer extends ABView {
 		var ids = {
 			component: App.unique(idBase + '_component'),
 		};
-		var subComponents = [];
+		var subComponents = {}; // { viewId: componentId, ..., viewIdn: componentIdn }
 
 		var _logic = {
 
@@ -410,11 +427,13 @@ export default class ABViewContainer extends ABView {
 				views.forEach((v) => {
 
 					var component = v.component(App);
-					subComponents.push(component);
+					subComponents[v.id] = component;
 
 					// Create a new row
-					if (v.position.y != curRowIndex) {
-						curRowIndex = v.position.y;
+					if (v.position.y == null || 
+						v.position.y != curRowIndex) {
+
+						curRowIndex = v.position.y || rows.length;
 						curColIndex = 0;
 
 						var rowNew = { cols: [] }
@@ -432,7 +451,7 @@ export default class ABViewContainer extends ABView {
 					var curRow = rows[rows.length - 1];
 
 					// Add ui of sub-view to column
-					curRow.cols[v.position.x] = component.ui;
+					curRow.cols[v.position.x || 0] = component.ui;
 
 					curColIndex += 1;
 
@@ -465,12 +484,13 @@ export default class ABViewContainer extends ABView {
 		var _init = (options) => {
 
 			// attach all the .UI views:
-			subComponents.forEach((component) => {
+			for (var key in subComponents) {
+
+				var component = subComponents[key];
 
 				// Initial component
 				component.init();
-
-			});
+			}
 
 		};
 
@@ -478,7 +498,7 @@ export default class ABViewContainer extends ABView {
 
 			this.views().forEach((v) => {
 
-				var component = v.component(App);
+				var component = subComponents[v.id];
 
 				if (component &&
 					component.onShow) {

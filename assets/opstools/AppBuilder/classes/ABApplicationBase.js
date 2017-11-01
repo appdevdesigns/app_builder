@@ -114,10 +114,20 @@ module.exports = class ABApplicationBase {
 		var currObjects = [];
 		this._objects.forEach((obj) => {
 			currObjects.push(obj.toObj())
-		})
+		});
 		this.json.objects = currObjects;
 
 		this.json.objectListSettings = this.objectListSettings;
+
+
+
+		// for each View: compile to json
+		var currPages = [];
+		this._pages.forEach((page) => {
+			currPages.push(page.toObj())
+		})
+		this.json.pages = currPages;
+
 
 		return {
 			id:this.id,

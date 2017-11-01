@@ -65,7 +65,10 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 
 		// ** Pages
 
-		pageSave: function (appId, page) {
+		pageSave: function (appId, resolveUrl, page) {
+
+			// remove sub-pages properties
+			delete page['pages'];
 
 			return new Promise(
 				(resolve, reject) => {
@@ -73,6 +76,7 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 					AD.comm.service.put({
 						url: '/app_builder/application/' + appId + '/page',
 						data: {
+							resolveUrl: resolveUrl,
 							page: page
 						}
 					}, function (err, result) {
@@ -86,13 +90,16 @@ OP.Model.extend('opstools.BuildApp.ABApplication',
 			);
 		},
 
-		pageDestroy: function (appId, pageId) {
+		pageDestroy: function (appId, resolveUrl) {
 
 			return new Promise(
 				(resolve, reject) => {
 
 					AD.comm.service.delete({
-						url: '/app_builder/application/' + appId + '/page/' + pageId
+						url: '/app_builder/application/' + appId + '/page',
+						data: {
+							resolveUrl: resolveUrl
+						}
 					}, function (err, result) {
 						if (err)
 							reject(err);
