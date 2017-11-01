@@ -215,7 +215,7 @@ export default class AB_Work_Interface_Workspace_Editor extends OP.Component {
 
         var CurrentView = null;
         var CurrentViewPart = 'layout';
-        var CurrentViewMode = 1; // preview mode by default
+        var CurrentViewMode = 0; // preview mode by default
         var PreviousViews = [];
 
         // setting up UI

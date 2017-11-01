@@ -147,7 +147,6 @@ export default class ABViewTab extends ABViewWidget {
 		}
 
 		var _ui = {
-			type: "space",
 			rows: [
 				tabElem,
 				{}
@@ -485,7 +484,7 @@ export default class ABViewTab extends ABViewWidget {
 
 		if (viewComponents.length > 0) {
 			_ui = {
-				type: "form",
+				type: "space",
 				rows: [
 					{
 						view: 'tabview',

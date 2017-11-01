@@ -12,7 +12,6 @@ AD.Control.OpsTool.extend('BuildApp', {
 		var self = this;
 		
 		if (typeof window._currentUser == "undefined") {
-			console.log("start");
 			
 			var xmlHttp = null;
 			xmlHttp     = new XMLHttpRequest();
@@ -30,8 +29,6 @@ AD.Control.OpsTool.extend('BuildApp', {
 				webix: user2
 			};
 
-			console.log("done");
-			
 			// OP.Comm.Service.get({ url: "/site/user/data" }).then((data) => {
 			// 	var user1 = [{ id: data.user.username, text: data.user.username }];
 			// 	var user2 = data.user.username

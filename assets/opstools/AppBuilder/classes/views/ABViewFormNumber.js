@@ -92,7 +92,7 @@ export default class ABViewFormNumber extends ABViewFormField {
 		super.fromValues(values);
 
 		// if this is being instantiated on a read from the Property UI,
-		this.settings.isStepper = this.settings.isStepper || PropertyComponentDefaults.isStepper;
+		this.settings.isStepper = this.settings.isStepper || ABViewFormNumberPropertyComponentDefaults.isStepper;
 
 		// convert from "0" => 0
 		this.settings.isStepper = parseInt(this.settings.isStepper);
@@ -203,8 +203,6 @@ export default class ABViewFormNumber extends ABViewFormField {
 			component: App.unique(idBase + '_component'),
 		}
 		
-		console.log(this);
-		console.log(field);
 		var viewType = this.settings.isStepper ? "counter" : "text";
 
 		component.ui.id = ids.component;
