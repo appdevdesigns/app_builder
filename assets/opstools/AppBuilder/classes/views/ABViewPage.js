@@ -175,9 +175,9 @@ export default class ABViewPage extends ABViewContainer {
 
         // Disable select type of page when this page is root 
         if (view.isRoot())
-            $$(ids.type).disable();
+            $$(ids.type).hide();
         else
-            $$(ids.type).enable();
+            $$(ids.type).show();
 
     }
 

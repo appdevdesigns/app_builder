@@ -365,6 +365,7 @@ export default class ABViewContainer extends ABView {
 				view: 'counter',
 				min: 1,
 				label: L('ab.components.container.columns', "*Columns"),
+				labelWidth: App.config.labelWidthLarge
 			}
 		]);
 

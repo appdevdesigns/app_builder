@@ -136,12 +136,14 @@ export default class ABViewChartPie extends ABViewChart {
 			{
 				name: 'dataSource',
 				view: 'richselect',
-				label: L('ab.component.chart.pie.dataSource', '*Chart Data')
+				label: L('ab.component.chart.pie.dataSource', '*Chart Data'),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'pieType',
 				view: 'richselect',
 				label: L('ab.component.chart.pie.pieType', '*Chart Type'),
+				labelWidth: App.config.labelWidthLarge,
 				options: [
 					{ id: 'pie', value: L('ab.component.chart.pie.standard', '*Standard') },
 					{ id: 'pie3D', value: L('ab.component.chart.pie.pie3d', '*Pie3D') },
@@ -151,12 +153,14 @@ export default class ABViewChartPie extends ABViewChart {
 			{
 				name: 'columnLabel',
 				view: 'richselect',
-				label: L('ab.component.chart.pie.columnLabel', '*Label Column')
+				label: L('ab.component.chart.pie.columnLabel', '*Label Column'),
+				labelWidth: App.config.labelWidthLarge
 			},
 			{
 				name: 'columnValue',
 				view: 'richselect',
-				label: L('ab.component.chart.pie.columnValue', '*Value Column')
+				label: L('ab.component.chart.pie.columnValue', '*Value Column'),
+				labelWidth: App.config.labelWidthLarge
 			},
 			// {
 			// 	name: 'chartWidth',
@@ -174,23 +178,27 @@ export default class ABViewChartPie extends ABViewChart {
 				name: 'innerFontSize',
 				view: 'counter',
 				min: 1,
-				label: L('ab.component.chart.pie.innerFontSize', '*Inner Font Size')
+				label: L('ab.component.chart.pie.innerFontSize', '*Inner Font Size'),
+				labelWidth: App.config.labelWidthXLarge
 			},			
 			{
 				name: 'labelFontSize',
 				view: 'counter',
 				min: 1,
-				label: L('ab.component.chart.pie.labelFontSize', '*Label Font Size')
+				label: L('ab.component.chart.pie.labelFontSize', '*Label Font Size'),
+				labelWidth: App.config.labelWidthXLarge
 			},
 			{
 				name: 'isPercentage',
 				view: 'checkbox',
-				label: L('ab.component.chart.isPercentage', '*Percentage')
+				labelRight: L('ab.component.chart.isPercentage', '*Percentage'),
+				labelWidth: App.config.labelWidthCheckbox
 			},
 			{
 				name: 'isLegend',
 				view: 'checkbox',
-				label: L('ab.component.chart.isLegend', '*Show Legend')
+				labelRight: L('ab.component.chart.isLegend', '*Show Legend'),
+				labelWidth: App.config.labelWidthCheckbox
 			},
 
 		]);

@@ -19,7 +19,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			detailsView: params.detailsView || null,
     			editView: params.editView || null,
     			isEditable: params.isEditable,
-    			massUpdate: params.massUpdate
+    			massUpdate: params.massUpdate,
+                configureHeaders: params.configureHeaders
     		}
         } else {
             var settings = {
@@ -27,7 +28,8 @@ export default class ABWorkObjectDatatable extends OP.Component {
     			detailsView: null,
     			editView: null,
     			isEditable: true,
-    			massUpdate: true
+    			massUpdate: true,
+                configureHeaders: true
     		}
         }
 
@@ -201,7 +203,8 @@ console.error('!! ToDo: onAfterColumnHide()');
     			},
 
     			onHeaderClick: function (id, e, node) {
-    				_logic.onHeaderClick(id, e, node);
+                    if (settings.configureHeaders)
+    	               _logic.onHeaderClick(id, e, node);
     			}
     		}
     	}

@@ -656,7 +656,8 @@ export default class ABViewGrid extends ABViewWidget  {
 			detailsView: this.settings.detailsPage,
 			editView: this.settings.editPage,
 			isEditable: this.settings.isEditable,
-			massUpdate: this.settings.massUpdate
+			massUpdate: this.settings.massUpdate,
+			configureHeaders: false
 		}
 		
 		var isFiltered = false,
