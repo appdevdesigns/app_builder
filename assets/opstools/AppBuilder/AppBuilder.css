@@ -988,6 +988,9 @@ a.ab-delete-photo:hover {
 .detailsView .webix_icon:hover, .edit .webix_icon:hover, .trash .webix_icon:hover {
 	cursor: pointer;
 }
+.ab-data-list .webix_list_item {
+	padding: 2px 0px 2px 10px;
+}
 .transparent {
 	background: transparent !important;
 }

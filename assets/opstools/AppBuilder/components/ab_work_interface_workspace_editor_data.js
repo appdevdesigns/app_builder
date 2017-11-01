@@ -195,6 +195,7 @@ export default class AB_Work_Interface_Workspace_Editor_Data extends OP.Componen
 				{
 					id: ids.dataCollections,
 					view: 'list',
+					css: 'ab-data-list',
 					template: _logic.listTemplate,
 					select: false,
 					onClick: {
